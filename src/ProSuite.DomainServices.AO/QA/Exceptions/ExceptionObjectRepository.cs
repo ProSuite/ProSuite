@@ -66,10 +66,10 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			_featureClassNames =
 				new Dictionary<string, string>
 				{
-					{"IssuePolygons", LocalizableStrings.ExceptionLayerName_Polygon},
-					{"IssueLines", LocalizableStrings.ExceptionLayerName_Polyline},
-					{"IssuePoints", LocalizableStrings.ExceptionLayerName_Multipoint},
-					{"IssueMultiPatches", LocalizableStrings.ExceptionLayerName_MultiPatch}
+					{ "IssuePolygons", LocalizableStrings.ExceptionLayerName_Polygon },
+					{ "IssueLines", LocalizableStrings.ExceptionLayerName_Polyline },
+					{ "IssuePoints", LocalizableStrings.ExceptionLayerName_Multipoint },
+					{ "IssueMultiPatches", LocalizableStrings.ExceptionLayerName_MultiPatch }
 				};
 			_rowClassName = "IssueRows";
 			_rowClassAliasName = LocalizableStrings.ExceptionStandaloneTableName;
@@ -164,7 +164,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			double bufferDistance = xyTolerance * 10;
 
 			IPolygon buffer = AreaOfInterestFactory.CreateBuffer(
-				new[] {areaOfInterest},
+				new[] { areaOfInterest },
 				bufferDistance,
 				densifyDeviation);
 

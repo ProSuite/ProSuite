@@ -331,7 +331,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				return false;
 			}
 
-			return currentProgress.ProgressStep != (int) args.ProgressStep;
+			VerificationProgressStep progressStep = ToVerificationStep(args.ProgressStep);
+
+			return currentProgress.ProgressStep != (int) progressStep;
 		}
 
 		private static bool IsRelevantStep(Step progressStep)

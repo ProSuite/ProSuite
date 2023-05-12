@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -83,8 +84,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaContainedPointsCount_relevantPointCondition))] [CanBeNull]
 			string
 				relevantPointCondition)
-			: this(new[] {polygonClass},
-			       new[] {pointClass},
+			: this(new[] { polygonClass },
+			       new[] { pointClass },
 			       expectedPointCount,
 			       expectedPointCount,
 			       relevantPointCondition,
@@ -103,8 +104,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaContainedPointsCount_relevantPointCondition))] [CanBeNull]
 			string
 				relevantPointCondition)
-			: this(new[] {polygonClass},
-			       new[] {pointClass},
+			: this(new[] { polygonClass },
+			       new[] { pointClass },
 			       minimumPointCount,
 			       maximumPointCount,
 			       relevantPointCondition,
@@ -126,8 +127,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaContainedPointsCount_countPointOnPolygonBorder))]
 			bool
 				countPointOnPolygonBorder)
-			: this(new[] {polygonClass},
-			       new[] {pointClass},
+			: this(new[] { polygonClass },
+			       new[] { pointClass },
 			       minimumPointCount,
 			       maximumPointCount,
 			       relevantPointCondition,

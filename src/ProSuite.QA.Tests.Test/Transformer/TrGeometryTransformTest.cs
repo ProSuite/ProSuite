@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container;
@@ -420,11 +421,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				IFeature f = lineFc.CreateFeature();
 				f.Shape =
 					CurveConstruction
-						.StartPoly(-10, -10).LineTo(90, -10).LineTo(90, 90).
-						LineTo(-10, 90).LineTo(-10, -10).ClosePolygon();
+						.StartPoly(-10, -10).LineTo(90, -10).LineTo(90, 90).LineTo(-10, 90)
+						.LineTo(-10, -10).ClosePolygon();
 				f.Store();
 			}
-
 
 			TrMultipolygonToPolygon tr =
 				new TrMultipolygonToPolygon(ReadOnlyTableFactory.Create(lineFc));

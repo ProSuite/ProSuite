@@ -1,99 +1,75 @@
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
 namespace ProSuite.AGP.Editing.Picker
 {
-	public class PickableFeatureClassItem : IPickableItem
+	public class PickableFeatureClassItem : PropertyChangedBase, IPickableFeatureClassItem
 	{
-		private readonly string _itemText;
-		private bool _isSelected;
-		[CanBeNull] private Geometry _geometry;
-		private readonly Uri _itemImageUri;
-		private List<BasicFeatureLayer> _belongingFeatureLayers;
-		private BitmapImage _img;
+		private readonly string _featureClassName;
+		private BitmapImage _image;
+		private bool _selected;
 
-		public PickableFeatureClassItem(FeatureClass featureClass, esriGeometryType geometryType,
-		                                List<BasicFeatureLayer> belongingFeatureLayers)
+		/// <summary>
+		/// Has to be called on MCT
+		/// </summary>
+		public PickableFeatureClassItem(FeatureClass featureClass,
+		                                IReadOnlyList<Feature> features)
 		{
-			_itemText = featureClass.GetName();
-			_geometry = null;
-			_itemImageUri = GetImagePath(geometryType);
-			BelongingFeatureLayers = belongingFeatureLayers;
+			_featureClassName = featureClass.GetName();
+			Oids = features.Select(feature => feature.GetObjectID()).ToList();
+			Geometry = GeometryUtils.Union(features.Select(feature => feature.GetShape()));
 		}
 
-		public string ItemText => _itemText;
+		public IReadOnlyList<long> Oids { get; }
 
-		public bool IsSelected
+		// todo daro get feature shapes and union
+		public Geometry Geometry { get; }
+
+		public List<BasicFeatureLayer> Layers { get; } = new List<BasicFeatureLayer>();
+
+		public bool Selected
 		{
-			get => _isSelected;
-			set => _isSelected = value;
+			get => _selected;
+			set => SetProperty(ref _selected, value);
 		}
 
-		public Geometry Geometry
-		{
-			get => _geometry;
-			set => _geometry = value;
-		}
+		public string DisplayValue => ToString();
 
-		public ImageSource ItemImageSource
+		[NotNull]
+		public ImageSource ImageSource
 		{
 			get
 			{
-				if (_img == null)
+				BitmapImage image = _image;
+
+				if (image != null)
 				{
-					_img = new BitmapImage(_itemImageUri);
+					return _image;
 				}
 
-				return _img;
+				// todo daro refactor, unkown image
+				BasicFeatureLayer layer = Assert.NotNull(Layers.FirstOrDefault());
+
+				_image = new BitmapImage(PickerUtils.GetImagePath(layer.ShapeType));
+
+				return _image;
 			}
 		}
 
-		public List<BasicFeatureLayer> BelongingFeatureLayers
-		{
-			get => _belongingFeatureLayers;
-			set => _belongingFeatureLayers = value;
-		}
+		public double Score { get; set; }
 
-		private static Uri GetImagePath(esriGeometryType geometryType)
+		public override string ToString()
 		{
-			switch (geometryType)
-			{
-				case esriGeometryType.esriGeometryPoint:
-				case esriGeometryType.esriGeometryMultipoint:
-					return new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
-				case esriGeometryType.esriGeometryLine:
-				case esriGeometryType.esriGeometryPolyline:
-					return new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/LineGeometry.bmp");
-				case esriGeometryType.esriGeometryPolygon:
-					return new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp",
-						UriKind.Absolute);
-				case esriGeometryType.esriGeometryMultiPatch:
-					return new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/MultipatchGeometry.bmp");
-				default:
-					throw new ArgumentOutOfRangeException(
-						$"Unsupported geometry type: {geometryType}");
-			}
-		}
-
-		public event PropertyChangedEventHandler PropertyChanged;
-
-		[NotifyPropertyChangedInvocator]
-		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+			return $"{_featureClassName}: #{Oids.Count}";
 		}
 	}
 }

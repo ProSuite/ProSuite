@@ -13,6 +13,7 @@ using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -450,7 +451,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
 
-			IEnumerable<FeatureClassSelection> featureClassSelections =
+			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
 					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
 

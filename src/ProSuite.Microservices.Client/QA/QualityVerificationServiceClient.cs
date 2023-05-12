@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Grpc.Core;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.QA;
 
@@ -88,6 +89,22 @@ namespace ProSuite.Microservices.Client.QA
 					new QualityVerificationGrpc.QualityVerificationGrpcClient(channel);
 				_staticDdxClient =
 					new QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient(channel);
+			}
+		}
+
+		public IEnumerable<QualityVerificationServiceClient> GetWorkerClients(
+			int maxCount)
+		{
+			Assert.True(ChannelIsLoadBalancer,
+			            "The client must have a channel to a load balancer.");
+
+			Channel lbChannel = Assert.NotNull(Channel);
+
+			foreach (var serviceLocation in GrpcUtils.GetServiceLocationsFromLoadBalancer(
+				         lbChannel, ServiceName, maxCount))
+			{
+				yield return new QualityVerificationServiceClient(
+					serviceLocation.HostName, serviceLocation.Port, UseTls, ClientCertificate);
 			}
 		}
 

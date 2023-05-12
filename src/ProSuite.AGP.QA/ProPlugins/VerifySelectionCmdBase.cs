@@ -12,6 +12,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
 using ProSuite.Commons.AGP;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;

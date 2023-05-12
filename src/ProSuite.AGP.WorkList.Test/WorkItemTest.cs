@@ -6,6 +6,7 @@ using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.AGP.Core.Test;
 using ProSuite.Commons.AGP.Hosting;
 
 namespace ProSuite.AGP.WorkList.Test

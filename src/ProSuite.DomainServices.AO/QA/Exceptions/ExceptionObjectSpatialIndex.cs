@@ -7,7 +7,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
-using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.DomainServices.AO.QA.Exceptions
 {
@@ -167,7 +166,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 
 			if (box != null)
 			{
-				result.InitSize(new IGmtry[] {box});
+				result.InitSize(new IGmtry[] { box });
 			}
 
 			foreach (ExceptionObject exceptionObject in exceptionObjects)

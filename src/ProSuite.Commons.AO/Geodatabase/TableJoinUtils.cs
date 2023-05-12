@@ -118,6 +118,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(relationshipClass, nameof(relationshipClass));
 
 			var relationshipClassList = new List<IRelationshipClass> { relationshipClass };
+
 			return CreateReadOnlyQueryTable(relationshipClassList, joinType,
 			                                includeOnlyOIDFields, excludeShapeField,
 			                                whereClause, queryTableName);
@@ -160,8 +161,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 				relationshipClasses, joinType, name, includeOnlyOIDFields, excludeShapeField,
 				whereClause, out string primaryKeyField);
 
-			return ReadOnlyTableFactory.Create(queryTable, primaryKeyField,
-			                                   createJoinedTable: true);
+			IEnumerable<ITable> baseClasses =
+				RelationshipClassUtils.GetObjectClasses(relationshipClasses).Cast<ITable>();
+
+			var result = ReadOnlyTableFactory.CreateQueryTable(
+				queryTable, primaryKeyField, baseClasses);
+
+			return result;
 		}
 
 		[NotNull]

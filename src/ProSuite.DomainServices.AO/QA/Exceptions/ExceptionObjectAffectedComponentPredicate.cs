@@ -7,7 +7,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 {
 	public class ExceptionObjectAffectedComponentPredicate : ExceptionObjectPredicate
 	{
-		private readonly char[] _separators = {' ', ';', ','};
+		private readonly char[] _separators = { ' ', ';', ',' };
 
 		protected override bool MatchesCore(ExceptionObject exceptionObject,
 		                                    ExceptionObject searchExceptionObject)

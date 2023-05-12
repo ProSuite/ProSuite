@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,21 +9,18 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing
 {
+	// todo daro use GeometryUtils, GeometryFactory
 	public static class ToolUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		/// <summary>
-		/// Loads a cursor from a byte array
-		/// </summary>
-		/// <param name="bytes">The byte array</param>
-		/// <returns>Cursor instance</returns>
 		[NotNull]
 		public static Cursor GetCursor([NotNull] byte[] bytes)
 		{
@@ -33,9 +31,7 @@ namespace ProSuite.AGP.Editing
 
 		public static bool IsSingleClickSketch([NotNull] Geometry sketchGeometry)
 		{
-			bool hasExtent = sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0;
-
-			return ! hasExtent;
+			return ! (sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0);
 		}
 
 		public static Geometry GetSinglePickSelectionArea([NotNull] Geometry sketchGeometry,
@@ -43,19 +39,20 @@ namespace ProSuite.AGP.Editing
 		{
 			MapPoint sketchPoint = CreatePointFromSketchPolygon(sketchGeometry);
 
+			_msg.VerboseDebug(() => $"Selection sketch point: {GeometryUtils.Format(sketchPoint)}");
+
 			return BufferGeometryByPixels(sketchPoint, selectionTolerancePixels);
 		}
 
 		public static Geometry SketchToSearchGeometry([NotNull] Geometry sketch,
 		                                              int selectionTolerancePixels,
-		                                              out bool isSinglePick)
+		                                              out bool singleClick)
 		{
-			isSinglePick = IsSingleClickSketch(sketch);
+			singleClick = IsSingleClickSketch(sketch);
 
-			if (isSinglePick)
+			if (singleClick)
 			{
-				sketch = GetSinglePickSelectionArea(
-					sketch, selectionTolerancePixels);
+				sketch = GetSinglePickSelectionArea(sketch, selectionTolerancePixels);
 			}
 
 			return sketch;
@@ -94,14 +91,10 @@ namespace ProSuite.AGP.Editing
 		/// </summary>
 		/// <param name="newFeatures"></param>
 		/// <param name="mapView"></param>
-		public static void SelectNewFeatures(List<Feature> newFeatures,
-		                                     MapView mapView)
+		public static void SelectNewFeatures(IEnumerable<Feature> newFeatures, MapView mapView)
 		{
-			List<BasicFeatureLayer> layersWithSelection = SelectionUtils.GetSelection(mapView.Map)
-				.Keys
-				.Where(l => l is BasicFeatureLayer)
-				.Cast<BasicFeatureLayer>()
-				.ToList();
+			var layersWithSelection =
+				SelectionUtils.GetSelection(mapView.Map).Keys.OfType<BasicFeatureLayer>().ToList();
 
 			SelectionUtils.SelectFeatures(newFeatures, layersWithSelection);
 		}
@@ -111,19 +104,20 @@ namespace ProSuite.AGP.Editing
 			var clickCoord =
 				new Coordinate2D(sketchGeometry.Extent.XMin, sketchGeometry.Extent.YMin);
 
-			MapPoint sketchPoint =
-				MapPointBuilderEx.CreateMapPoint(clickCoord, sketchGeometry.SpatialReference);
-
-			return sketchPoint;
+			return MapPointBuilderEx.CreateMapPoint(clickCoord, sketchGeometry.SpatialReference);
 		}
 
 		private static Geometry BufferGeometryByPixels(Geometry sketchGeometry,
 		                                               int pixelBufferDistance)
 		{
 			double bufferDistance = MapUtils.ConvertScreenPixelToMapLength(pixelBufferDistance);
+			_msg.VerboseDebug(() => $"Selection tolerance on map {Math.Round(bufferDistance, 0)}");
 
 			Geometry selectionGeometry =
 				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
+
+			_msg.VerboseDebug(
+				() => $"Selection sketch geometry {GeometryUtils.Format(selectionGeometry.Extent)}");
 
 			return selectionGeometry;
 		}

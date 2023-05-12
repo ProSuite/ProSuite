@@ -16,12 +16,12 @@ using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Picker;
-using ProSuite.AGP.Editing.PickerUI;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -267,10 +267,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			       ! KeyboardUtils.IsModifierPressed(Keys.Shift, true);
 		}
 
-		protected virtual bool CanUseAsTargetLayer(FeatureLayer featureLayer)
+		protected virtual bool CanUseAsTargetLayer(Layer layer)
 		{
-			return featureLayer.ShapeType == esriGeometryType.esriGeometryPolyline ||
-			       featureLayer.ShapeType == esriGeometryType.esriGeometryPolygon;
+			if (layer is FeatureLayer featureLayer)
+			{
+				return featureLayer.ShapeType == esriGeometryType.esriGeometryPolyline ||
+				       featureLayer.ShapeType == esriGeometryType.esriGeometryPolygon;
+			}
+
+			return false;
 		}
 
 		protected virtual bool CanUseAsTargetFeature([NotNull] IList<Feature> selection,
@@ -319,14 +324,14 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				TargetFeatureSelection.VisibleSelectableFeatures;
 
 			bool isSingleClick = false;
-			Point pickerWindowLocation = new Point();
-			List<FeatureClassSelection> selectionByClass =
+			Point pickerLocation = new Point();
+			List<FeatureSelectionBase> selectionByClass =
 				await QueuedTaskUtils.Run(() =>
 				{
 					sketch = ToolUtils.SketchToSearchGeometry(
 						sketch, GetSelectionTolerancePixels(), out isSingleClick);
 
-					pickerWindowLocation = MapView.Active.MapToScreen(sketch.Extent.Center);
+					pickerLocation = MapView.Active.MapToScreen(sketch.Extent.Center);
 
 					return FindTargetFeatureCandidates(sketch, targetFeatureSelection,
 					                                   selectedFeatures,
@@ -342,18 +347,25 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			IEnumerable<Feature> targetFeatures;
 
 			if (isSingleClick &&
-			    selectionByClass.Sum(s => s.FeatureCount) > 1)
+			    SelectionUtils.GetFeatureCount(selectionByClass) > 1)
 			{
-				PickableFeatureItem picked =
-					await PickerUtils.PickSingleFeatureAsync(
-						selectionByClass, pickerWindowLocation);
+				IEnumerable<IPickableItem> items =
+					await QueuedTask.Run(
+						() => PickableItemsFactory.CreateFeatureItems(
+							PickerUtils.OrderByGeometryDimension(selectionByClass)));
 
-				if (picked == null)
+				PickerPrecedence.SelectionGeometry = sketch;
+
+				var pickedItem =
+					await ShowPickerAsync<PickableFeatureItem>(
+						items, PickerPrecedence, pickerLocation);
+
+				if (pickedItem == null)
 				{
 					return false;
 				}
 
-				targetFeatures = new[] { picked.Feature };
+				targetFeatures = new[] { pickedItem.Feature };
 			}
 			else
 			{
@@ -367,7 +379,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return true;
 		}
 
-		private List<FeatureClassSelection> FindTargetFeatureCandidates(
+		private List<FeatureSelectionBase> FindTargetFeatureCandidates(
 			[NotNull] Geometry sketch,
 			TargetFeatureSelection targetFeatureSelection,
 			[NotNull] List<Feature> selectedFeatures,

@@ -11,6 +11,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
@@ -65,6 +66,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			public string Description { get; }
 			public List<InvolvedRow> InvolvedRows => EnsureInvolvedRows();
 			private List<InvolvedRow> _involvedRows;
+
 			private List<InvolvedRow> EnsureInvolvedRows()
 			{
 				if (_involvedRows != null)
@@ -79,12 +81,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			public QaError QaError => EnsureQaError();
 			private QaError _qaError;
+
 			private QaError EnsureQaError()
 			{
 				if (_qaError != null)
 				{
 					return _qaError;
 				}
+
 				_qaError = GetQaError();
 				TryClearIssueMsg();
 				return _qaError;
@@ -96,6 +100,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				EnsureQaError();
 				return TryClearIssueMsg();
 			}
+
 			private bool TryClearIssueMsg()
 			{
 				if (_issueMsg == null)
@@ -235,15 +240,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 				return _idConditions.ContainsKey(conditionId);
 			}
 
-			public bool IsFullyProcessed(IssueKey issue, [NotNull]BoxTree<SubVerification> boxTree)
+			public bool IsFullyProcessed(IssueKey issue, [NotNull] BoxTree<SubVerification> boxTree)
 			{
-
 				_idConditions = _idConditions ?? GetIdConditions();
-				if (!_idConditions.ContainsKey(issue.ConditionId))
+				if (! _idConditions.ContainsKey(issue.ConditionId))
 				{
 					return false;
 				}
-				if (!(issue.QaError.InvolvedExtent is WKSEnvelope b))
+
+				if (! (issue.QaError.InvolvedExtent is WKSEnvelope b))
 				{
 					return false;
 				}
@@ -256,6 +261,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 						return false;
 					}
 				}
+
 				// TODO: Check extent of issue with processed area
 				return true;
 			}
@@ -408,6 +414,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					{
 						CompleteSubverification(completed);
 					}
+
 					if (_tasks.Count == 0)
 					{
 						EndVerification(QualityVerification);
@@ -692,6 +699,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				drained = true;
 			}
+
 			w.Stop();
 
 			return drained;
@@ -757,7 +765,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		[NotNull]
-		private IList<IssueKey> ProcessTileCompletion([NotNull]SubVerification forSubVerification, [NotNull]IEnvelope tile)
+		private IList<IssueKey> ProcessTileCompletion([NotNull] SubVerification forSubVerification,
+		                                              [NotNull] IEnvelope tile)
 		{
 			if (_subVerificationsTree == null)
 			{

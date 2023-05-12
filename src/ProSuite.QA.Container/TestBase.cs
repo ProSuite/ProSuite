@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -135,7 +136,7 @@ namespace ProSuite.QA.Container
 		                          [CanBeNull] string affectedComponent,
 		                          [CanBeNull] IEnumerable<object> values = null)
 		{
-			var involvedRows = new List<InvolvedRow> {CreateInvolvedRowForTable(table)};
+			var involvedRows = new List<InvolvedRow> { CreateInvolvedRowForTable(table) };
 
 			const IGeometry geometry = null;
 			var qaError = new QaError(this, description, involvedRows, geometry,

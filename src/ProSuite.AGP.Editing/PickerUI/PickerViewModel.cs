@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
@@ -10,255 +8,245 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using Microsoft.Xaml.Behaviors.Core;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Misc;
+using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
-	public class PickerViewModel : PropertyChangedBase
+	public class PickerViewModel : PropertyChangedBase, IDisposable
 	{
+		private readonly Geometry _selectionGeometry;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-		private readonly CIMLineSymbol _highlightLineSymbol;
 
-		private readonly CIMPointSymbol _highlightPointSymbol;
-		private readonly CIMPolygonSymbol _highlightPolygonSymbol;
+		private readonly Latch _latch = new Latch();
+		private readonly TaskCompletionSource<IPickableItem> _taskCompletionSource;
+
+		private readonly CIMLineSymbol _lineSymbol;
+		private readonly CIMPointSymbol _pointSymbol;
+		private readonly CIMPolygonSymbol _polygonSymbol;
 
 		private readonly List<IDisposable> _overlays = new List<IDisposable>();
-		private readonly TaskCompletionSource<bool> _resultTaskCompletionSource;
+		[CanBeNull] private IDisposable _selectionGeometryOverlay;
 
-		private bool? _dialogResult;
+		[CanBeNull] private IPickableItem _selectedItem;
 
-		private bool _isClosing;
-
-		private bool _isSingleMode;
-
-		private ObservableCollection<IPickableItem> _pickableItems;
-
-		private IPickableItem _selectedPickableItem;
-
-		public PickerViewModel() : this(new List<IPickableItem>(), true) { }
-
-		public PickerViewModel(IList<IPickableItem> pickingCandidates,
-		                       bool isSingleMode)
+		public PickerViewModel(IEnumerable<IPickableItem> pickingCandidates)
 		{
+			_taskCompletionSource = new TaskCompletionSource<IPickableItem>();
+
 			FlashItemCommand = new RelayCommand<IPickableItem>(FlashItem);
+			SelectionChangedCommand = new RelayCommand<ICloseable>(OnSelectionChanged);
+			DeactivatedCommand = new RelayCommand<ICloseable>(OnWindowDeactivated);
+			PressEscapeCommand = new RelayCommand<ICloseable>(OnPressEscape);
+			PressSpaceCommand = new ActionCommand(OnPressSpace);
 
-			CloseCommand = new RelayCommand<PickerWindow>(Close);
-
-			PickableItems =
-				new ObservableCollection<IPickableItem>(pickingCandidates);
-
-			_isSingleMode = isSingleMode;
+			Items = new ObservableCollection<IPickableItem>(pickingCandidates);
 
 			CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
+
+			_lineSymbol =
+				SymbolFactory.Instance.ConstructLineSymbol(magenta, 4);
 
 			CIMStroke outline =
 				SymbolFactory.Instance.ConstructStroke(
 					magenta, 4, SimpleLineStyle.Solid);
 
-			_highlightLineSymbol =
-				SymbolFactory.Instance.ConstructLineSymbol(magenta, 4);
-
-			_highlightPolygonSymbol =
+			_polygonSymbol =
 				SymbolFactory.Instance.ConstructPolygonSymbol(
 					magenta, SimpleFillStyle.Null, outline);
 
-			_highlightPointSymbol =
-				SymbolFactory.Instance.ConstructPointSymbol(magenta, 6);
+			_pointSymbol = SymbolUtils.CreatePointSymbol(magenta, 6);
+		}
 
-			_resultTaskCompletionSource = new TaskCompletionSource<bool>();
+		public PickerViewModel(IEnumerable<IPickableItem> pickingCandidates,
+		                        Geometry selectionGeometry) : this(pickingCandidates)
+		{
+			_selectionGeometry = selectionGeometry;
 		}
 
 		public ICommand FlashItemCommand { get; }
-
-		public ICommand CloseCommand { get; }
-
-		[CanBeNull]
-		public IPickableItem SelectedPickableItem
-		{
-			get => _selectedPickableItem;
-			set
-			{
-				SetProperty(ref _selectedPickableItem, value, () => SelectedPickableItem);
-
-				try
-				{
-					if (value == null)
-					{
-						return;
-					}
-
-					DialogResult = true;
-
-					if (IsSingleMode)
-					{
-						CloseAction();
-					}
-				}
-				catch (Exception e)
-				{
-					_msg.Error("Error setting SelectedPickableItem", e);
-				}
-			}
-		}
-
-		public bool IsSingleMode
-		{
-			get => _isSingleMode;
-			set { SetProperty(ref _isSingleMode, value, () => IsSingleMode); }
-		}
-
-		public ObservableCollection<IPickableItem> PickableItems
-		{
-			get => _pickableItems;
-			private set { SetProperty(ref _pickableItems, value, () => PickableItems); }
-		}
-
-		public IEnumerable<IPickableItem> SelectedItems
-		{
-			get { return _pickableItems.Where(item => item.IsSelected); }
-		}
+		public ICommand SelectionChangedCommand { get; }
+		public ICommand DeactivatedCommand { get; }
+		public ICommand PressSpaceCommand { get; }
+		public ICommand PressEscapeCommand { get; }
 
 		/// <summary>
 		/// The awaitable task that provides the result when the dialog is closed.
 		/// True means a selection has been made, false means nothing was picked.
 		/// </summary>
-		public Task<bool> ResultTask => _resultTaskCompletionSource.Task;
+		public Task<IPickableItem> Task => _taskCompletionSource.Task;
 
-		public Action CloseAction { get; set; }
+		[NotNull]
+		public ObservableCollection<IPickableItem> Items { get; }
 
-		private bool? DialogResult
+		[CanBeNull]
+		public IPickableItem SelectedItem
 		{
-			get => _dialogResult;
+			get => _selectedItem;
 			set
 			{
-				SetProperty(ref _dialogResult, value, () => DialogResult);
+				SetProperty(ref _selectedItem, value);
 
-				bool taskResult = _dialogResult ?? false;
+				_msg.Debug($"Picked {_selectedItem}");
 
-				_resultTaskCompletionSource.SetResult(taskResult);
-			}
-		}
-
-		private void AddOverlay(Geometry geometry,
-		                        CIMSymbol symbol)
-		{
-			IDisposable addedOverlay =
-				MapView.Active.AddOverlay(geometry, symbol.MakeSymbolReference());
-
-			_overlays.Add(addedOverlay);
-		}
-
-		public void DisposeOverlays()
-		{
-			if (_overlays.Any())
-			{
-				_overlays.ForEach(overlay => overlay.Dispose());
-				_overlays.Clear();
-			}
-		}
-
-		private void Close([CanBeNull] PickerWindow window)
-		{
-			try
-			{
-				if (_isClosing)
+				try
 				{
-					return;
+					_taskCompletionSource.SetResult(_selectedItem);
 				}
-
-				if (window != null)
+				catch (Exception e)
 				{
-					window.Close();
+					_msg.Debug("Error setting selected item", e);
 				}
-				else
-				{
-					CloseAction();
-				}
-			}
-			catch (Exception exception)
-			{
-				_msg.Error("Error closing picker window", exception);
 			}
 		}
 
 		private void FlashItem(IPickableItem candidate)
 		{
-			try
+			ViewUtils.Try(() =>
 			{
-				Geometry flashGeometry = candidate.Geometry;
+				Geometry geometry = candidate.Geometry;
 
-				if (flashGeometry == null)
+				if (geometry == null)
 				{
 					return;
 				}
 
 				DisposeOverlays();
 
-				CIMSymbol symbol = _highlightPointSymbol;
+				Geometry flashGeometry = null;
+				CIMSymbol symbol = null;
 
-				if (flashGeometry is Polygon)
+				switch (geometry.GeometryType)
 				{
-					symbol = _highlightPolygonSymbol;
-
-					Envelope clipExtent = MapView.Active?.Extent;
-
-					if (clipExtent != null)
-					{
-						double mapRotation = MapView.Active.Camera.Heading;
-
-						flashGeometry =
-							GeometryUtils.GetClippedPolygon((Polygon) flashGeometry, clipExtent,
-							                                mapRotation);
-					}
-				}
-
-				if (flashGeometry is Polyline)
-				{
-					symbol = _highlightLineSymbol;
+					case GeometryType.Point:
+					case GeometryType.Multipoint:
+						flashGeometry = geometry;
+						symbol = _pointSymbol;
+						break;
+					case GeometryType.Polyline:
+						flashGeometry = geometry;
+						symbol = _lineSymbol;
+						break;
+					case GeometryType.Polygon:
+						flashGeometry = GetPolygonGeometry(geometry);
+						symbol = _polygonSymbol;
+						break;
+					case GeometryType.Unknown:
+					case GeometryType.Envelope:
+					case GeometryType.Multipatch:
+					case GeometryType.GeometryBag:
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
 				}
 
 				QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
-			}
-			catch (Exception exception)
+			}, _msg);
+		}
+
+		private static Geometry GetPolygonGeometry(Geometry geometry)
+		{
+			Envelope clipExtent = MapView.Active?.Extent;
+
+			if (clipExtent == null)
 			{
-				_msg.Warn("Error flashing pickable candidate", exception);
+				return geometry;
 			}
+
+			double mapRotation = MapView.Active.NotNullCallback(mv => mv.Camera.Heading);
+
+			return GeometryUtils.GetClippedPolygon((Polygon) geometry, clipExtent, mapRotation);
 		}
 
-		public void OnWindowDeactivated(object sender, EventArgs e)
+		private void AddOverlay(Geometry geometry, CIMSymbol symbol)
 		{
-			_msg.DebugFormat("PickerWindow_Deactivated. Already closing: {0}", _isClosing);
+			MapView.Active.NotNullCallback(mv =>
+			{
+				IDisposable overlay = mv.AddOverlay(geometry, symbol.MakeSymbolReference());
 
-			Close((PickerWindow) sender);
+				_overlays.Add(Assert.NotNull(overlay));
+			});
 		}
 
-		public void OnWindowClosing(object sender, CancelEventArgs e)
+		private void DisposeOverlays()
 		{
-			_msg.DebugFormat("PickerWindow_Closing");
+			foreach (IDisposable overlay in _overlays)
+			{
+				overlay.Dispose();
+			}
 
+			_overlays.Clear();
+		}
+
+		private void OnSelectionChanged(ICloseable window)
+		{
+			ViewUtils.Try(() =>
+			{
+				if (_latch.IsLatched) return;
+
+				_latch.RunInsideLatch(() =>
+				{
+					if (_selectedItem == null)
+					{
+						return;
+					}
+
+					window?.Close();
+				});
+			}, _msg);
+		}
+
+		private void OnWindowDeactivated(ICloseable window)
+		{
+			ViewUtils.Try(() =>
+			{
+				if (_latch.IsLatched) return;
+
+				_latch.RunInsideLatch(() =>
+				{
+					window?.Close();
+
+					// IMPORTANT set selected item otherwise
+					// task never completes resulting in deadlock
+					SelectedItem = null;
+
+					Dispose();
+				});
+			}, _msg);
+		}
+
+		private void OnPressEscape(ICloseable window)
+		{
+			OnWindowDeactivated(window);
+		}
+
+		private void OnPressSpace()
+		{
+			QueuedTask.Run(() =>
+			{
+				_selectionGeometryOverlay = MapView.Active.NotNullCallback(
+					mv => mv.AddOverlay(_selectionGeometry, _polygonSymbol.MakeSymbolReference()));
+			});
+		}
+
+		public void Dispose()
+		{
+			// Don't set to null here, throws an exception:
+			// An attempt was made to transition a task to a final state
+			// when it had already completed.
+			//SelectedItem = null;
+			
+			_selectionGeometryOverlay?.Dispose();
 			DisposeOverlays();
-
-			// Ensure The task completes and the main UI thread continues
-			if (DialogResult == null)
-			{
-				DialogResult = false;
-			}
-
-			_isClosing = true;
-		}
-
-		public void OnPreviewKeyDown(object sender, KeyEventArgs e)
-		{
-			// NOTE: This event is not fired if it is a normal WPF window (the active tool
-			// receives ESC). It only works for ProWindows!
-			if (e.Key == Key.Escape)
-			{
-				Close((PickerWindow) sender);
-			}
 		}
 	}
 }
