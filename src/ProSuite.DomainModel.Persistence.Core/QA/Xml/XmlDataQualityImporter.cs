@@ -734,47 +734,52 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
 			bool ignoreConditionsForUnknownDatasets)
 		{
-			IList<InstanceConfiguration> configurations = GetAllInstanceConfigurations();
+			IList<InstanceConfiguration> ddxConfigurations = GetAllInstanceConfigurations();
 
-			IDictionary<string, InstanceConfiguration> configsByName =
-				GetExistingConfigurationsByEscapedName(configurations);
-			IDictionary<string, InstanceConfiguration> configsByUuid =
-				GetExistingConfigurationsByUuid(configurations);
+			IDictionary<string, InstanceConfiguration> ddxConfigsByName =
+				GetExistingConfigurationsByEscapedName(ddxConfigurations);
+			IDictionary<string, InstanceConfiguration> ddxConfigsByUuid =
+				GetExistingConfigurationsByUuid(ddxConfigurations);
 
+			List<string> invalidConfigs = new List<string>();
 			foreach (XmlInstanceConfiguration xmlInstanceConfiguration in documentCache
 				         .EnumReferencedConfigurationInstances())
 			{
 				#region Step 1: Add new instance configurations
 
-				InstanceConfiguration existing = GetMatchingConfiguration(
-					xmlInstanceConfiguration, configsByName, configsByUuid);
+				InstanceConfiguration existing = GetMatchingDdxConfiguration(
+					xmlInstanceConfiguration, ddxConfigsByName, ddxConfigsByUuid,
+					out string invalidInstanceConfig);
+
+				if (! string.IsNullOrEmpty(invalidInstanceConfig))
+				{
+					// Let all the warnings accumulate and only fail after all inserts.
+					invalidConfigs.Add(invalidInstanceConfig);
+					continue;
+				}
 
 				if (existing == null)
 				{
+					InstanceDescriptor instanceDescriptor =
+						GetMatchingInstanceDescriptor(xmlInstanceConfiguration, descriptorsByName);
+
 					InstanceConfiguration imported;
-					if (xmlInstanceConfiguration is XmlTransformerConfiguration xmlTransformer)
+					if (instanceDescriptor is TransformerDescriptor transformerDescriptor)
 					{
-						var descriptor =
-							GetDescriptor<TransformerDescriptor>(
-								descriptorsByName, xmlTransformer.TransformerDescriptorName);
-
-						imported = new TransformerConfiguration(xmlTransformer.Name, descriptor);
+						imported =
+							new TransformerConfiguration(xmlInstanceConfiguration.Name,
+							                             transformerDescriptor);
 					}
-					else if (xmlInstanceConfiguration is XmlIssueFilterConfiguration xmlIssueFilter)
+					else if (instanceDescriptor is IssueFilterDescriptor issueFilterDescriptor)
 					{
-						var descriptor =
-							GetDescriptor<IssueFilterDescriptor>(
-								descriptorsByName, xmlIssueFilter.IssueFilterDescriptorName);
-
-						imported = new IssueFilterConfiguration(xmlIssueFilter.Name, descriptor);
+						imported =
+							new IssueFilterConfiguration(xmlInstanceConfiguration.Name,
+							                             issueFilterDescriptor);
 					}
-					else if (xmlInstanceConfiguration is XmlQualityCondition xmlQualityCondition)
+					else if (instanceDescriptor is TestDescriptor testDescriptor)
 					{
-						var descriptor =
-							GetDescriptor<TestDescriptor>(
-								descriptorsByName, xmlQualityCondition.TestDescriptorName);
-
-						imported = new QualityCondition(xmlQualityCondition.Name, descriptor);
+						imported =
+							new QualityCondition(xmlInstanceConfiguration.Name, testDescriptor);
 					}
 					else
 					{
@@ -782,16 +787,32 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 							$"Unsupported XmlInstanceConfiguration type: {xmlInstanceConfiguration.GetType()}");
 					}
 
+					string xmlUuid = xmlInstanceConfiguration.Uuid;
+
+					imported.Uuid = StringUtils.IsNotEmpty(xmlUuid)
+						                ? xmlUuid
+						                : InstanceConfigurationUtils.GenerateUuid();
+
 					_msg.InfoFormat("Adding new {0} '{1}'", imported.TypeDisplayName,
 					                imported.Name);
 					InstanceConfigurations.Save(imported);
 					_msg.VerboseDebug(() => $"Saved {imported.TypeDisplayName} {imported.Name} " +
 					                        $"(id {imported.Id}, uuid {imported.Uuid})");
 
-					configsByName.Add(imported.Name, imported);
+					ddxConfigsByName.Add(imported.Name, imported);
+					ddxConfigsByUuid.Add(imported.Uuid, imported);
 				}
 
 				#endregion
+			}
+
+			if (invalidConfigs.Count > 0)
+			{
+				string message =
+					$"The following {invalidConfigs.Count} instance configurations from the XML have the same name as an existing instance configuration in the DDX but their UUIDs do not match:";
+
+				throw new InvalidOperationException($"{message}:{Environment.NewLine}" +
+				                                    $"{StringUtils.Concatenate(invalidConfigs, Environment.NewLine)}");
 			}
 
 			foreach (XmlInstanceConfiguration xmlInstanceConfiguration in documentCache
@@ -799,8 +820,11 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			{
 				#region Step 2a: Update (existing and new) instance configurations
 
-				InstanceConfiguration config = GetMatchingConfiguration(
-					xmlInstanceConfiguration, configsByName, configsByUuid);
+				InstanceConfiguration ddxConfig = GetMatchingDdxConfiguration(
+					xmlInstanceConfiguration, ddxConfigsByName, ddxConfigsByUuid, out _);
+
+				Assert.NotNull(ddxConfig, "No DDX entity found for {0}",
+				               xmlInstanceConfiguration.Name);
 
 				DataQualityCategory category =
 					documentCache.GetDataQualityCategoryFor(xmlInstanceConfiguration);
@@ -808,16 +832,16 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 				if (xmlInstanceConfiguration is XmlTransformerConfiguration xmlTransformer)
 				{
 					XmlDataQualityUtils.UpdateTransformerConfiguration(
-						(TransformerConfiguration) config, xmlTransformer, category);
+						(TransformerConfiguration) ddxConfig, xmlTransformer, category);
 				}
 				else if (xmlInstanceConfiguration is XmlIssueFilterConfiguration xmlIssueFilter)
 				{
 					XmlDataQualityUtils.UpdateIssueFilterConfiguration(
-						(IssueFilterConfiguration) config, xmlIssueFilter, category);
+						(IssueFilterConfiguration) ddxConfig, xmlIssueFilter, category);
 				}
 				else if (xmlInstanceConfiguration is XmlQualityCondition xmlCondition)
 				{
-					QualityCondition qualityCondition = (QualityCondition) config;
+					QualityCondition qualityCondition = (QualityCondition) ddxConfig;
 
 					XmlDataQualityUtils.UpdateQualityCondition(
 						qualityCondition, xmlCondition, category);
@@ -829,16 +853,16 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 						foreach (string filterName in xmlCondition.Filters.Select(
 							         f => f.IssueFilterName))
 						{
-							if (! documentCache.TryGetIssueFilter(
-								    filterName.Trim(),
+							if (! documentCache.TryGetIssueFilter(filterName.Trim(),
 								    out XmlIssueFilterConfiguration xmlFilterConfig))
 							{
 								Assert.Fail($"missing issue filter named {filterName}");
 							}
 
 							var issueFilterConfig =
-								GetMatchingConfiguration(xmlFilterConfig, configsByName,
-								                         configsByUuid) as IssueFilterConfiguration;
+								GetMatchingDdxConfiguration(xmlFilterConfig, ddxConfigsByName,
+								                            ddxConfigsByUuid, out _) as
+									IssueFilterConfiguration;
 
 							Assert.NotNull(issueFilterConfig,
 							               "IssueFilter '{0}' referenced in quality condition '{1}' does not exist",
@@ -857,24 +881,26 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 						$"Unsupported XmlInstanceConfiguration type: {xmlInstanceConfiguration.GetType()}");
 				}
 
-				if (configsByName.TryGetValue(xmlInstanceConfiguration.Name,
-				                              out InstanceConfiguration existingForName))
+				if (ddxConfigsByName.TryGetValue(xmlInstanceConfiguration.Name,
+				                                 out InstanceConfiguration existingForName))
 				{
 					// There exists an existing configuration for the new name 
 
 					// Fail if it is not the same instance as the matching existing configuration
 					// (this can be the case when the match is made by the Uuid, and the xml configuration
 					// has the same name as an existing configuration with a different Uuid)
-					Assert.True(ReferenceEquals(existingForName, config),
+					Assert.True(ReferenceEquals(existingForName, ddxConfig),
 					            "Instance configuration name '{0}' for UUID {1} in the xml document is equal " +
 					            "to the name of an existing instance configuration with a different UUID ({2}). " +
 					            "Unable to import document (duplicate instance configuration names would result)",
-					            xmlInstanceConfiguration.Name, config.Uuid, existingForName.Uuid);
+					            xmlInstanceConfiguration.Name, ddxConfig.Uuid,
+					            existingForName.Uuid);
 				}
 				else
 				{
+					// TODO: Unit test for cascading name changes: a -> b -> c
 					// there exists no existing configuration with the name from the xml document
-					configsByName.Add(xmlInstanceConfiguration.Name, config);
+					ddxConfigsByName.Add(xmlInstanceConfiguration.Name, ddxConfig);
 				}
 
 				#endregion
@@ -893,19 +919,19 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 				try
 				{
 					instanceInfo =
-						InstanceDescriptorUtils.GetInstanceInfo(config.InstanceDescriptor);
+						InstanceDescriptorUtils.GetInstanceInfo(ddxConfig.InstanceDescriptor);
 				}
 				catch (Exception e)
 				{
 					// TODO: Handle the case where the xmlInstanceConfiguration references a different, valid descriptor.
 					_msg.Warn(
-						$"Error loading instance descriptor {config.InstanceDescriptor.Name}. " +
+						$"Error loading instance descriptor {ddxConfig.InstanceDescriptor.Name}. " +
 						"It will be ignored.", e);
 
 					continue;
 				}
 
-				Assert.NotNull(instanceInfo, "Cannot create instance info for {0}", config);
+				Assert.NotNull(instanceInfo, "Cannot create instance info for {0}", ddxConfig);
 
 				Dictionary<string, TestParameter> testParametersByName =
 					instanceInfo.Parameters.ToDictionary(parameter => parameter.Name,
@@ -921,7 +947,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 						Assert.Fail(
 							"The name '{0}' as a test parameter for {1} '{2}' " +
 							"defined in import document does not match descriptor.",
-							xmlParamValue.TestParameterName, config.TypeDisplayName, config.Name);
+							xmlParamValue.TestParameterName, ddxConfig.TypeDisplayName,
+							ddxConfig.Name);
 					}
 
 					TestParameterValue parameterValue;
@@ -937,8 +964,9 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 						}
 
 						var transformerConfig =
-							GetMatchingConfiguration(xmlTransformerConfig, configsByName,
-							                         configsByUuid) as TransformerConfiguration;
+							GetMatchingDdxConfiguration(xmlTransformerConfig, ddxConfigsByName,
+							                            ddxConfigsByUuid, out _) as
+								TransformerConfiguration;
 
 						Assert.NotNull(transformerConfig,
 						               "Transformer '{0}' defined in dataset parameter for '{1}' does not exist",
@@ -989,16 +1017,16 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 
 					if (parameterValue != null)
 					{
-						config.AddParameterValue(parameterValue);
+						ddxConfig.AddParameterValue(parameterValue);
 					}
 				}
 
 				#endregion
 			}
 
-			WarnForNonUniqueConfigurationsUuid(configsByName);
+			WarnForNonUniqueConfigurationsUuid(ddxConfigsByName);
 
-			return configsByName;
+			return ddxConfigsByName;
 		}
 
 		[NotNull]
@@ -1125,27 +1153,49 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 		}
 
 		[CanBeNull]
-		private static T GetMatchingConfiguration<T>(
+		private static T GetMatchingDdxConfiguration<T>(
 			[NotNull] XmlInstanceConfiguration xmlInstanceConfiguration,
 			[NotNull] IDictionary<string, T> existingConfigsByName,
-			[NotNull] IDictionary<string, T> existingConfigsByUuid) where T : InstanceConfiguration
+			[NotNull] IDictionary<string, T> existingConfigsByUuid,
+			[CanBeNull] out string invalidMatchMessage) where T : InstanceConfiguration
 		{
 			T result;
+			invalidMatchMessage = null;
+			string xmlUuid = xmlInstanceConfiguration.Uuid;
+			string xmlName = xmlInstanceConfiguration.Name;
 
-			string uuid = xmlInstanceConfiguration.Uuid;
-			if (StringUtils.IsNotEmpty(uuid) &&
-			    existingConfigsByUuid.TryGetValue(uuid.Trim(), out result))
+			Assert.True(StringUtils.IsNotEmpty(xmlName), "undefined name");
+
+			if (StringUtils.IsNotEmpty(xmlUuid))
 			{
-				return result;
+				if (existingConfigsByUuid.TryGetValue(xmlUuid.Trim(), out result))
+				{
+					return result;
+				}
+
+				// No match by UUID -> Assume New, unless...
+				if (existingConfigsByName.ContainsKey(xmlName))
+				{
+					invalidMatchMessage = xmlName;
+					_msg.Debug($"Name match without uuid match: {xmlName}");
+				}
+
+				return null;
 			}
 
-			string name = xmlInstanceConfiguration.Name;
-			Assert.True(StringUtils.IsNotEmpty(name), "undefined name");
+			// No uuid in XML -> match by (trimmed) name
+			T matchByName = existingConfigsByName.TryGetValue(xmlName.Trim(), out result)
+				                ? result
+				                : null;
 
-			// no uuid, or no matching uuid - match by (trimmed) name
-			return existingConfigsByName.TryGetValue(name.Trim(), out result)
-				       ? result
-				       : null;
+			if (matchByName != null)
+			{
+				_msg.DebugFormat(
+					"No UUID in XML. Name match found. Existing condition {0} will be updated",
+					xmlName);
+			}
+
+			return matchByName;
 		}
 
 		#endregion
