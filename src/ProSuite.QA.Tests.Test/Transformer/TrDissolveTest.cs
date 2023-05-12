@@ -7,10 +7,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
-using ProSuite.Commons.Exceptions;
-using ProSuite.Commons.Geom;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
@@ -138,7 +134,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			// Ensure unique OID:
 			List<long> objectIDs = dissolve
-			                       .GetTransformed().EnumReadOnlyRows(new QueryFilterClass(), false)
+			                       .GetTransformed().EnumReadOnlyRows(new AoTableFilter(), false)
 			                       .Select(f => f.OID).ToList();
 
 			Assert.AreEqual(objectIDs.Count, objectIDs.Distinct().Count());
@@ -202,7 +198,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			// Ensure unique OID:
 			List<long> objectIDs = dissolve
-			                       .GetTransformed().EnumReadOnlyRows(new QueryFilterClass(), false)
+			                       .GetTransformed().EnumReadOnlyRows(new AoTableFilter(), false)
 			                       .Select(f => f.OID).ToList();
 
 			Assert.AreEqual(objectIDs.Count, objectIDs.Distinct().Count());
@@ -794,7 +790,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			//	Assert.AreEqual(0, runner.Errors.Count);
 			//}
 			{
-				QaExportTables exp = new QaExportTables(tables, "C:\\temp\\TOP_7505")
+				QaExportTables exp = new QaExportTables(tables, "C:\\temp\\TOP_7505_t")
 				{ ExportTileIds = true, ExportTiles = true };
 				var runner = new QaContainerTestRunner(1000, qa, exp);
 //				var runner = new QaContainerTestRunner(1000, qa);

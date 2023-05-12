@@ -94,9 +94,9 @@ namespace ProSuite.QA.Tests
 			                     Format(_maximumDistance));
 		}
 
-		protected override void ConfigureSpatialFilter(ISpatialFilter spatialFilter)
+		protected override void ConfigureSpatialFilter(IFeatureClassFilter spatialFilter)
 		{
-			spatialFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+			spatialFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 		}
 
 		protected override IGeometry GetSearchGeometry(IReadOnlyFeature feature, int tableIndex,

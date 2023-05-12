@@ -49,7 +49,7 @@ namespace ProSuite.QA.Tests
 
 		private bool _isCoveredConditionsInitialized;
 		private QueryFilterHelper[] _helper;
-		private ISpatialFilter[] _queryFilter;
+		private IFeatureClassFilter[] _queryFilter;
 
 		[CanBeNull] private readonly List<string> _isCoveringConditionsSql;
 		[NotNull] private readonly List<GeometryComponent> _geometryComponents;
@@ -1189,11 +1189,11 @@ namespace ProSuite.QA.Tests
 
 			foreach (int aoiClassIndex in _areaOfInterestClassIndexes)
 			{
-				ISpatialFilter filter = _queryFilter[aoiClassIndex];
+				IFeatureClassFilter filter = _queryFilter[aoiClassIndex];
 				IReadOnlyTable table = InvolvedTables[aoiClassIndex];
 				QueryFilterHelper helper = _helper[aoiClassIndex];
 
-				filter.Geometry = feature.Shape;
+				filter.FilterGeometry = feature.Shape;
 
 				if (Search(table, filter, helper).OfType<IReadOnlyFeature>()
 				                                 .Any())
@@ -1384,11 +1384,11 @@ namespace ProSuite.QA.Tests
 
 			foreach (int aoiClassIndex in _areaOfInterestClassIndexes)
 			{
-				ISpatialFilter filter = _queryFilter[aoiClassIndex];
+				IFeatureClassFilter filter = _queryFilter[aoiClassIndex];
 				IReadOnlyTable table = InvolvedTables[aoiClassIndex];
 				QueryFilterHelper helper = _helper[aoiClassIndex];
 
-				filter.Geometry = geometry;
+				filter.FilterGeometry = geometry;
 
 				foreach (IReadOnlyFeature aoiFeature in Search(table, filter, helper)
 					         .OfType<IReadOnlyFeature>())
@@ -1557,10 +1557,10 @@ namespace ProSuite.QA.Tests
 		/// </summary>
 		private void InitFilter()
 		{
-			IList<ISpatialFilter> filters;
+			IList<IFeatureClassFilter> filters;
 			IList<QueryFilterHelper> filterHelpers;
 
-			_queryFilter = new ISpatialFilter[_totalClassesCount];
+			_queryFilter = new IFeatureClassFilter[_totalClassesCount];
 			_helper = new QueryFilterHelper[_totalClassesCount];
 
 			// Create copy of this filter and use it for quering features
@@ -1568,7 +1568,7 @@ namespace ProSuite.QA.Tests
 			for (var i = 0; i < _totalClassesCount; i++)
 			{
 				_queryFilter[i] = filters[i];
-				_queryFilter[i].SpatialRel =
+				_queryFilter[i].SpatialRelationship =
 					esriSpatialRelEnum.esriSpatialRelIntersects;
 
 				_helper[i] = filterHelpers[i];
@@ -1579,11 +1579,11 @@ namespace ProSuite.QA.Tests
 
 		private class CoveringFeatureSearcher
 		{
-			private readonly ISpatialFilter[] _queryFilters;
+			private readonly IFeatureClassFilter[] _queryFilters;
 			private readonly QueryFilterHelper[] _queryFilterHelpers;
 
 			private readonly
-				Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper,
+				Func<IReadOnlyTable, ITableFilter, QueryFilterHelper,
 					IEnumerable<IReadOnlyRow>> _searchFunction;
 
 			private readonly Func<int, double> _getTolerance;
@@ -1605,10 +1605,10 @@ namespace ProSuite.QA.Tests
 			private readonly bool _useSecondaryFilterForTolerance;
 
 			public CoveringFeatureSearcher(
-				[NotNull] ISpatialFilter[] queryFilters,
+				[NotNull] IFeatureClassFilter[] queryFilters,
 				[NotNull] QueryFilterHelper[] queryFilterHelpers,
 				[NotNull]
-				Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper,
+				Func<IReadOnlyTable, ITableFilter, QueryFilterHelper,
 						IEnumerable<IReadOnlyRow>> searchFunction,
 				[NotNull] Func<int, double> getTolerance,
 				double tileEnvelopeXMin,
@@ -1662,7 +1662,7 @@ namespace ProSuite.QA.Tests
 			{
 				IEnvelope expandedEnvelope = GetExpandedEnvelope(uncoveredGeometry, tolerance);
 
-				_queryFilters[coveringClassIndex].Geometry = expandedEnvelope;
+				_queryFilters[coveringClassIndex].FilterGeometry = expandedEnvelope;
 
 				QueryFilterHelper filterHelper = _queryFilterHelpers[coveringClassIndex];
 
@@ -1710,7 +1710,7 @@ namespace ProSuite.QA.Tests
 				[NotNull] IReadOnlyFeatureClass coveringFeatureClass,
 				int coveringClassIndex)
 			{
-				_queryFilters[coveringClassIndex].Geometry = uncoveredGeometry;
+				_queryFilters[coveringClassIndex].FilterGeometry = uncoveredGeometry;
 
 				QueryFilterHelper filterHelper = _queryFilterHelpers[coveringClassIndex];
 				filterHelper.ForNetwork = false;

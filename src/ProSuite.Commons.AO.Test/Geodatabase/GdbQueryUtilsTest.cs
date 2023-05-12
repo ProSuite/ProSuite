@@ -827,7 +827,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			IFeatureClassFilter fcFilter = new AoFeatureClassFilter(searchEnvelope);
 
-			var nativeFilterImpl = (IQueryFilter) fcFilter.ToNativeFilterImpl();
+			var nativeFilterImpl = TableFilterUtils.GetQueryFilter(fcFilter);
 
 			foreach (var feature in
 			         GdbQueryUtils.GetFeatures(featureClass, nativeFilterImpl, false))

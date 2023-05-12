@@ -183,11 +183,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 		[CanBeNull]
 		public IList<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
-		                                  [NotNull] ITableFilter queryFilter,
+		                                  [NotNull] ITableFilter filter,
 		                                  [NotNull] QueryFilterHelper filterHelper)
 		{
-			var spatialFilter = (ISpatialFilter) queryFilter;
-			IGeometry filterGeometry = spatialFilter.Geometry;
+			var spatialFilter = (IFeatureClassFilter) filter;
+			IGeometry filterGeometry = spatialFilter.FilterGeometry;
 
 			IList<IReadOnlyRow> result = new List<IReadOnlyRow>();
 

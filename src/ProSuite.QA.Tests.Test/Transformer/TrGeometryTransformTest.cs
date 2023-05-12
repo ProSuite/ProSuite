@@ -96,7 +96,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 				transformedBackingDataset.DataContainer = new UncachedDataContainer(wksEnvelope);
 
-				IQueryFilter filter = new QueryFilterClass()
+				ITableFilter filter = new AoTableFilter
 				                      {
 					                      SubFields = "",
 					                      WhereClause = "TEXT_FIELD = 'VAL2'"

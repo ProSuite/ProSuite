@@ -40,10 +40,10 @@ namespace ProSuite.QA.Tests.Coincidence
 		private const double _defaultCrossingMinLengthFactor = -1.0;
 		private const int _defaultMaxConnectionErrors = 8;
 
-		private Dictionary<int, ISpatialFilter> _conflictFilters;
+		private Dictionary<int, IFeatureClassFilter> _conflictFilters;
 		private Dictionary<int, QueryFilterHelper> _conflictHelpers;
 
-		private Dictionary<int, ISpatialFilter> _topoFilters;
+		private Dictionary<int, IFeatureClassFilter> _topoFilters;
 		private Dictionary<int, QueryFilterHelper> _topoHelpers;
 		private double _usedJunctionCoincidenceTolerance;
 		private double _junctionCoincidenceToleranceSquare;
@@ -568,8 +568,8 @@ namespace ProSuite.QA.Tests.Coincidence
 				int conflictTableIndex = pair.Key;
 				IReadOnlyFeatureClass conflictTable = pair.Value;
 
-				ISpatialFilter filter = _conflictFilters[conflictTableIndex];
-				filter.Geometry = box0;
+				IFeatureClassFilter filter = _conflictFilters[conflictTableIndex];
+				filter.FilterGeometry = box0;
 				QueryFilterHelper helper = _conflictHelpers[conflictTableIndex];
 
 				foreach (IReadOnlyRow neighborRow in
@@ -661,30 +661,30 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		private void InitFilter()
 		{
-			IList<ISpatialFilter> filters;
+			IList<IFeatureClassFilter> filters;
 			IList<QueryFilterHelper> helpers;
 
 			CopyFilters(out filters, out helpers);
 
-			_conflictFilters = new Dictionary<int, ISpatialFilter>();
+			_conflictFilters = new Dictionary<int, IFeatureClassFilter>();
 			_conflictHelpers = new Dictionary<int, QueryFilterHelper>();
 
 			foreach (int conflictTableIndex in _conflictTables.Keys)
 			{
-				ISpatialFilter filter = filters[conflictTableIndex];
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				IFeatureClassFilter filter = filters[conflictTableIndex];
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 				_conflictFilters.Add(conflictTableIndex, filter);
 
 				_conflictHelpers.Add(conflictTableIndex, helpers[conflictTableIndex]);
 			}
 
 			CopyFilters(out filters, out helpers);
-			_topoFilters = new Dictionary<int, ISpatialFilter>();
+			_topoFilters = new Dictionary<int, IFeatureClassFilter>();
 			_topoHelpers = new Dictionary<int, QueryFilterHelper>();
 			foreach (int topoTableIndex in _topoTables.Keys)
 			{
-				ISpatialFilter topoFilter = filters[topoTableIndex];
-				topoFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				IFeatureClassFilter topoFilter = filters[topoTableIndex];
+				topoFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 				_topoFilters.Add(topoTableIndex, topoFilter);
 				_topoHelpers.Add(topoTableIndex, helpers[topoTableIndex]);
 			}

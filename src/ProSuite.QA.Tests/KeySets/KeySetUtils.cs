@@ -82,7 +82,7 @@ namespace ProSuite.QA.Tests.KeySets
 
 			IKeySet result = CreateKeySet(keyFieldType);
 
-			var queryFilter = new QueryFilterClass
+			var queryFilter = new AoTableFilter()
 			                  {
 				                  SubFields = keyField,
 				                  WhereClause = whereClause
@@ -198,7 +198,7 @@ namespace ProSuite.QA.Tests.KeySets
 
 			ITupleKeySet result = new TupleKeySet();
 
-			IQueryFilter queryFilter = GetQueryFilter(keyFields, whereClause);
+			ITableFilter queryFilter = GetQueryFilter(keyFields, whereClause);
 
 			string keyFieldsString = StringUtils.Concatenate(keyFields, ",");
 			string tableName = table.Name;
@@ -257,12 +257,12 @@ namespace ProSuite.QA.Tests.KeySets
 		}
 
 		[NotNull]
-		private static IQueryFilter GetQueryFilter([NotNull] IEnumerable<string> keyFields,
+		private static ITableFilter GetQueryFilter([NotNull] IEnumerable<string> keyFields,
 		                                           [CanBeNull] string whereClause)
 		{
-			var result = new QueryFilterClass {WhereClause = whereClause};
+			var result = new AoTableFilter {WhereClause = whereClause};
 
-			GdbQueryUtils.SetSubFields(result, keyFields);
+			TableFilterUtils.SetSubFields(result, keyFields);
 
 			return result;
 		}

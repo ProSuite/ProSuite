@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -671,7 +670,7 @@ namespace ProSuite.QA.Tests.Network
 				                                                         InvolvedTables, GroupBys));
 
 		protected sealed override void ConfigureQueryFilter(int tableIndex,
-		                                                    IQueryFilter queryFilter)
+		                                                    ITableFilter queryFilter)
 		{
 			base.ConfigureQueryFilter(tableIndex, queryFilter);
 

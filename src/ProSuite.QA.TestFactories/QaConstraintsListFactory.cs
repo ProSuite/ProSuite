@@ -198,7 +198,7 @@ namespace ProSuite.QA.TestFactories
 			[NotNull] string constraintField,
 			[CanBeNull] string constraintDescriptionField)
 		{
-			IQueryFilter result = new QueryFilterClass
+			ITableFilter result = new AoTableFilter
 			                      {
 				                      WhereClause = filterExpression,
 				                      SubFields = constraintField
@@ -210,7 +210,7 @@ namespace ProSuite.QA.TestFactories
 				subfields.Add(constraintDescriptionField);
 			}
 
-			GdbQueryUtils.SetSubFields(result, subfields);
+			TableFilterUtils.SetSubFields(result, subfields);
 
 			return result;
 		}

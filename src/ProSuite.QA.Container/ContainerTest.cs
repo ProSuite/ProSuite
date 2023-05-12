@@ -8,7 +8,6 @@ using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.TestContainer;
-using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Container
 {
@@ -19,7 +18,7 @@ namespace ProSuite.QA.Container
 	{
 		private readonly List<QueryFilterHelper> _filterHelpers;
 
-		private IList<ISpatialFilter> _defaultFilters;
+		private IList<IFeatureClassFilter> _defaultFilters;
 		private IList<QueryFilterHelper> _defaultFilterHelpers;
 
 		private IEnvelope _lastCompleteTileBox;
@@ -237,7 +236,7 @@ namespace ProSuite.QA.Container
 			{
 				if (! GetQueriedOnly(tableIndex))
 				{
-					IQueryFilter queryFilter = new QueryFilterClass();
+					ITableFilter queryFilter = new AoTableFilter();
 					ConfigureQueryFilter(tableIndex, queryFilter);
 
 					errorCount += Execute(table, tableIndex, queryFilter);
@@ -281,7 +280,7 @@ namespace ProSuite.QA.Container
 			// TODO revise - run over all tables, even if equals --> multiple runs for same row in same involved table in Execute(row)
 			foreach (IReadOnlyTable table in InvolvedTables)
 			{
-				IQueryFilter filter = TestUtils.CreateFilter(boundingBox, AreaOfInterest,
+				ITableFilter filter = TestUtils.CreateFilter(boundingBox, AreaOfInterest,
 				                                             GetConstraint(tableIndex),
 				                                             table, null);
 				errorCount += Execute(table, tableIndex, filter);
@@ -313,7 +312,7 @@ namespace ProSuite.QA.Container
 			var tableIndex = 0;
 			foreach (IReadOnlyTable table in InvolvedTables)
 			{
-				IQueryFilter filter = TestUtils.CreateFilter(area, AreaOfInterest,
+				ITableFilter filter = TestUtils.CreateFilter(area, AreaOfInterest,
 				                                             GetConstraint(tableIndex),
 				                                             table, null);
 				errorCount += Execute(table, tableIndex, filter);
@@ -649,7 +648,7 @@ namespace ProSuite.QA.Container
 		/// <returns></returns>
 		[NotNull]
 		protected IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
-		                                           [NotNull] IQueryFilter queryFilter,
+		                                           [NotNull] ITableFilter queryFilter,
 		                                           [NotNull] QueryFilterHelper filterHelper)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -710,7 +709,7 @@ namespace ProSuite.QA.Container
 			EnsureDefaultFilters();
 
 			IReadOnlyTable table = InvolvedTables[involvedTableIndex];
-			ISpatialFilter filter = _defaultFilters[involvedTableIndex];
+			IFeatureClassFilter filter = _defaultFilters[involvedTableIndex];
 			QueryFilterHelper defaultHelper = _defaultFilterHelpers[involvedTableIndex];
 
 			QueryFilterHelper whereHelper = string.IsNullOrWhiteSpace(where)
@@ -718,8 +717,8 @@ namespace ProSuite.QA.Container
 					                                table, where, GetSqlCaseSensitivity(table))
 				                                : null;
 
-			filter.Geometry = geometry;
-			filter.SpatialRel = spatialRelation;
+			filter.FilterGeometry = geometry;
+			filter.SpatialRelationship = spatialRelation;
 			foreach (var row in Search(table, filter, defaultHelper))
 			{
 				if (whereHelper == null || whereHelper.MatchesConstraint(row))
@@ -808,7 +807,7 @@ namespace ProSuite.QA.Container
 		}
 
 		private int Execute([NotNull] IReadOnlyTable table, int tableIndex,
-		                    [CanBeNull] IQueryFilter queryFilter)
+		                    [CanBeNull] ITableFilter queryFilter)
 		{
 			var cursor = table.EnumRows(queryFilter, ! KeepRows);
 			var errorCount = 0;

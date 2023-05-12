@@ -103,24 +103,24 @@ namespace ProSuite.QA.Tests.Transformers
 				throw new NotImplementedException();
 			}
 
-			public override long GetRowCount(IQueryFilter queryFilter)
+			public override long GetRowCount(ITableFilter queryFilter)
 			{
 				// TODO
 				return _intersected.RowCount(queryFilter);
 			}
 
-			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 			{
-				filter = filter ?? new QueryFilterClass();
+				filter = filter ?? new AoTableFilter();
 
-				ISpatialFilter intersectingFilter = new SpatialFilterClass();
-				intersectingFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				IFeatureClassFilter intersectingFilter = new AoFeatureClassFilter();
+				intersectingFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 
 				bool sameFeatureClass = _intersected.Equals(_intersecting);
 				foreach (var toIntersect in DataContainer.Search(
 					         _intersected, filter, QueryHelpers[0]))
 				{
-					intersectingFilter.Geometry = ((IReadOnlyFeature) toIntersect).Extent;
+					intersectingFilter.FilterGeometry = ((IReadOnlyFeature) toIntersect).Extent;
 					foreach (var intersecting in DataContainer.Search(
 						         _intersecting, intersectingFilter, QueryHelpers[1]))
 					{

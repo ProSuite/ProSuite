@@ -165,7 +165,7 @@ namespace ProSuite.QA.Tests
 				                           ? null
 				                           : geometry;
 
-			IQueryFilter filter = CreateQueryFilter(table, tableIndex, searchGeometry);
+			ITableFilter filter = CreateQueryFilter(table, tableIndex, searchGeometry);
 
 			return table.RowCount(filter);
 		}
@@ -232,7 +232,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter CreateQueryFilter([NotNull] IReadOnlyTable table,
+		private ITableFilter CreateQueryFilter([NotNull] IReadOnlyTable table,
 		                                       int tableIndex,
 		                                       [CanBeNull] IGeometry geometry)
 		{

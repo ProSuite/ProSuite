@@ -9,7 +9,6 @@ using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -24,7 +23,7 @@ namespace ProSuite.QA.Tests
 	{
 		private readonly IPoint _pointTemplate = new PointClass();
 		private QueryFilterHelper _helper;
-		private ISpatialFilter _queryFilter;
+		private IFeatureClassFilter _queryFilter;
 		private readonly esriGeometryType _shapeType;
 
 		#region issue codes
@@ -166,7 +165,7 @@ namespace ProSuite.QA.Tests
 			var errorCount = 0;
 			ISimpleSurface surface = null;
 
-			_queryFilter.Geometry = surfaceRow.Extent;
+			_queryFilter.FilterGeometry = surfaceRow.Extent;
 
 			double xMin;
 			double yMin;
@@ -232,7 +231,7 @@ namespace ProSuite.QA.Tests
 
 						if (xMin > xMax)
 						{
-							((IEnvelope) _queryFilter.Geometry).QueryCoords(out xMin, out yMin,
+							((IEnvelope) _queryFilter.FilterGeometry).QueryCoords(out xMin, out yMin,
 								out xMax, out yMax);
 						}
 
@@ -251,14 +250,14 @@ namespace ProSuite.QA.Tests
 
 		private void InitFilter()
 		{
-			IList<ISpatialFilter> filters;
+			IList<IFeatureClassFilter> filters;
 			IList<QueryFilterHelper> helpers;
 			CopyFilters(out filters, out helpers);
 
 			_queryFilter = filters[0];
 			_helper = helpers[0];
 
-			_queryFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+			_queryFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 		}
 
 		private int CheckPoints(double xMin, double yMin,

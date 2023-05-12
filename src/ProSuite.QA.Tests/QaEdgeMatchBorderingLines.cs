@@ -11,7 +11,6 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
@@ -70,7 +69,7 @@ namespace ProSuite.QA.Tests
 
 		private ISpatialReference _spatialReference;
 		private ISpatialReference _highResolutionSpatialReference;
-		private IList<ISpatialFilter> _filters;
+		private IList<IFeatureClassFilter> _filters;
 		private IList<QueryFilterHelper> _filterHelpers;
 		private readonly IDictionary<int, esriGeometryType> _geometryTypesByTableIndex;
 		private readonly IDictionary<int, double> _xyToleranceByTableIndex;
@@ -887,7 +886,7 @@ namespace ProSuite.QA.Tests
 		private IEnumerable<IReadOnlyFeature> SearchNeighborRows([NotNull] IPolyline borderLine,
 		                                                         int neighborLineClassIndex)
 		{
-			ISpatialFilter spatialFilter = _filters[neighborLineClassIndex];
+			IFeatureClassFilter spatialFilter = _filters[neighborLineClassIndex];
 			IEnvelope cacheEnvelope = borderLine.Envelope;
 
 			WKSEnvelope searchEnvelope;
@@ -900,7 +899,7 @@ namespace ProSuite.QA.Tests
 
 			_searchEnvelopeTemplate.PutWKSCoords(searchEnvelope);
 
-			spatialFilter.Geometry = _searchEnvelopeTemplate;
+			spatialFilter.FilterGeometry = _searchEnvelopeTemplate;
 
 			QueryFilterHelper filterHelper = _filterHelpers[neighborLineClassIndex];
 
@@ -1069,15 +1068,15 @@ namespace ProSuite.QA.Tests
 		{
 			CopyFilters(out _filters, out _filterHelpers);
 
-			foreach (ISpatialFilter filter in _filters)
+			foreach (var filter in _filters)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 			}
 
-			_filters[_borderClass1Index].SpatialRel = GetBorderClassSpatialRelation(
+			_filters[_borderClass1Index].SpatialRelationship = GetBorderClassSpatialRelation(
 				_geometryTypesByTableIndex[_borderClass1Index]);
 
-			_filters[_borderClass2Index].SpatialRel = GetBorderClassSpatialRelation(
+			_filters[_borderClass2Index].SpatialRelationship = GetBorderClassSpatialRelation(
 				_geometryTypesByTableIndex[_borderClass2Index]);
 		}
 

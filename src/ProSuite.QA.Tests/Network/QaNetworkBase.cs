@@ -8,7 +8,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Tests.Network
 {
@@ -27,7 +26,7 @@ namespace ProSuite.QA.Tests.Network
 
 		[NotNull] private readonly IEnvelope _queryEnv = new EnvelopeClass();
 
-		private IList<ISpatialFilter> _filters;
+		private IList<IFeatureClassFilter> _filters;
 		private IList<QueryFilterHelper> _helpers;
 
 		#region Constructors
@@ -221,9 +220,9 @@ namespace ProSuite.QA.Tests.Network
 				helper.ForNetwork = true;
 			}
 
-			foreach (ISpatialFilter filter in _filters)
+			foreach (var filter in _filters)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 			}
 		}
 
@@ -247,7 +246,7 @@ namespace ProSuite.QA.Tests.Network
 					continue;
 				}
 
-				_filters[iTable].Geometry = _queryEnv;
+				_filters[iTable].FilterGeometry = _queryEnv;
 				foreach (
 					IReadOnlyRow feature in
 					Search(InvolvedTables[iTable], _filters[iTable], _helpers[iTable]))

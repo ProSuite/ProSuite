@@ -774,7 +774,7 @@ namespace ProSuite.QA.Tests
 				var subfields = new List<string> { table.OIDFieldName };
 				subfields.AddRange(uniqueFields);
 
-				GdbQueryUtils.SetSubFields(result, subfields);
+				TableFilterUtils.SetSubFields(result, subfields);
 			}
 
 			return result;
@@ -1309,9 +1309,8 @@ namespace ProSuite.QA.Tests
 			                                          [NotNull] string firstUniqueFieldName,
 			                                          int tableIndex)
 			{
-				var filterDefinition = (IQueryFilterDefinition) filter;
-				filterDefinition.PostfixClause = string.Format(" ORDER BY {0}",
-				                                               firstUniqueFieldName);
+				filter.PostfixClause = string.Format(" ORDER BY {0}",
+				                                     firstUniqueFieldName);
 
 				int firstUniqueFieldIndex = table.FindField(firstUniqueFieldName);
 				return new RowEnumerator(table.EnumRows(filter, recycle: true),
@@ -1333,7 +1332,7 @@ namespace ProSuite.QA.Tests
 					TableSortUtils.CreateTableSort(aoTable, firstUniqueFieldName);
 
 				tableSort.Compare = new FieldSortCallback(comparer);
-				tableSort.QueryFilter = (IQueryFilter) filter?.ToNativeFilterImpl();
+				tableSort.QueryFilter = TableFilterUtils.GetQueryFilter(filter);
 				tableSort.Sort(null);
 
 				return new RowEnumerator(

@@ -33,7 +33,7 @@ namespace ProSuite.QA.Tests
 
 		private RelevantPointCondition _relevantPointCondition;
 		private QueryFilterHelper[] _helper;
-		private ISpatialFilter[] _queryFilter;
+		private IFeatureClassFilter[] _queryFilter;
 
 		[NotNull] private readonly IDictionary<int, Dictionary<long, PolygonPoints>>
 			_polygonPointsByTableIndex =
@@ -328,7 +328,7 @@ namespace ProSuite.QA.Tests
 			     pointClassIndex < _totalClassesCount;
 			     pointClassIndex++)
 			{
-				_queryFilter[pointClassIndex].Geometry = containingShape;
+				_queryFilter[pointClassIndex].FilterGeometry = containingShape;
 
 				foreach (IReadOnlyRow pointRow in Search(InvolvedTables[pointClassIndex],
 				                                         _queryFilter[pointClassIndex],
@@ -478,7 +478,7 @@ namespace ProSuite.QA.Tests
 				const bool recycle = true;
 				foreach (
 					IReadOnlyRow polygonRow in
-					GdbQueryUtils.GetRows(featureClass, errorsByOid.Keys, recycle))
+					TableFilterUtils.GetRows(featureClass, errorsByOid.Keys, recycle))
 				{
 					IReadOnlyFeature polygonFeature = (IReadOnlyFeature) polygonRow;
 					IGeometry errorGeometry = polygonFeature.ShapeCopy;
@@ -559,10 +559,10 @@ namespace ProSuite.QA.Tests
 		/// </summary>
 		private void InitFilter()
 		{
-			IList<ISpatialFilter> filters;
+			IList<IFeatureClassFilter> filters;
 			IList<QueryFilterHelper> filterHelpers;
 
-			_queryFilter = new ISpatialFilter[_totalClassesCount];
+			_queryFilter = new IFeatureClassFilter[_totalClassesCount];
 			_helper = new QueryFilterHelper[_totalClassesCount];
 
 			// Create copy of this filter and use it for quering features
@@ -575,9 +575,10 @@ namespace ProSuite.QA.Tests
 				// use Contains when searching points
 				if (i >= _polygonClassesCount)
 				{
-					_queryFilter[i].SpatialRel = _countPointOnPolygonBorder
-						                             ? esriSpatialRelEnum.esriSpatialRelIntersects
-						                             : esriSpatialRelEnum.esriSpatialRelContains;
+					_queryFilter[i].SpatialRelationship =
+						_countPointOnPolygonBorder
+							? esriSpatialRelEnum.esriSpatialRelIntersects
+							: esriSpatialRelEnum.esriSpatialRelContains;
 				}
 			}
 		}

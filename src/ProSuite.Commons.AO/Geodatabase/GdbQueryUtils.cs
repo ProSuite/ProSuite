@@ -463,7 +463,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="searchOrder"></param>
 		/// <returns></returns>
 		[NotNull]
-		public static IQueryFilter CreateSpatialFilter(
+		public static ISpatialFilter CreateSpatialFilter(
 			[CanBeNull] IFeatureClass featureClass,
 			[NotNull] IGeometry searchGeometry,
 			esriSpatialRelEnum spatialRel,
@@ -872,39 +872,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//}
 		}
 
-		public static IEnumerable<IReadOnlyRow> GetRows(
-			[NotNull] IReadOnlyTable table,
-			[NotNull] IEnumerable<long> objectIds,
-			bool recycling)
-		{
-			if (table is ReadOnlyTable roTable)
-			{
-				if (roTable.AlternateOidFieldName != null)
-				{
-					foreach (IReadOnlyRow row in GetRowsInList(
-						         table, roTable.AlternateOidFieldName, objectIds, recycling))
-					{
-						yield return row;
-					}
-				}
-				else
-				{
-					foreach (IRow baseFeature in GetRowsByObjectIds(
-						         roTable.BaseTable, objectIds, recycling))
-					{
-						yield return roTable.CreateRow(baseFeature);
-					}
-				}
-			}
-			else
-			{
-				foreach (long oid in objectIds)
-				{
-					yield return table.GetRow(oid);
-				}
-			}
-		}
-
 		/// <summary>
 		/// Gets the features for a given collection of object ids
 		/// </summary>
@@ -1083,32 +1050,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		[NotNull]
-		public static IEnumerable<IReadOnlyRow> GetRowsInList(
-			[NotNull] IReadOnlyTable table,
-			[NotNull] string fieldName,
-			[NotNull] IEnumerable valueList,
-			bool recycle,
-			[CanBeNull] ITableFilter queryFilter = null)
-		{
-			Assert.ArgumentNotNull(table, nameof(table));
-			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
-			Assert.ArgumentNotNull(valueList, nameof(valueList));
-
-			foreach (IReadOnlyRow row in GetRowsInList(
-				         table.Workspace, DatasetUtils.GetField(table, fieldName), valueList,
-				         (q) => table.EnumRows(q, recycle), queryFilter))
-			{
-				yield return row;
-			}
-		}
-
 		private static IEnumerable<T> GetRowsInList<T>(
 			[NotNull] IWorkspace workspace,
 			[NotNull] IField field,
 			[NotNull] IEnumerable valueList,
-			[NotNull] Func<ITableFilter, IEnumerable<T>> getRows,
-			[CanBeNull] ITableFilter queryFilter = null)
+			[NotNull] Func<IQueryFilter, IEnumerable<T>> getRows,
+			[CanBeNull] IQueryFilter queryFilter = null)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNull(valueList, nameof(valueList));

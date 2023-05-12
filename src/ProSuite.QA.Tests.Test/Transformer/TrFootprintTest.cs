@@ -230,41 +230,44 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			Stopwatch watch = Stopwatch.StartNew();
 			int rowCount = 0;
 			int differentCount = 0;
-			var cursor2 = featureClass2.SearchT(null, false);
-			foreach (IReadOnlyRow footprint in featureClass1.EnumReadOnlyRows(null, false))
-			{
-				IGeometry geometry1 = ((IReadOnlyFeature) footprint).Shape;
+			IReadOnlyTable table2 = featureClass2;
+			using (var cursor2 = table2.EnumRows(null, false).GetEnumerator())
 
-				IntersectionUtils.UseCustomIntersect = false;
-
-				IFeature feature2 = (IFeature) cursor2.NextRow();
-				IGeometry geometry2 = ((IReadOnlyFeature) feature2).Shape;
-
-				IntersectionUtils.UseCustomIntersect = true;
-
-				rowCount++;
-
-				//GeometryUtils.SetXyTolerance(geometry1, 0.001);
-				//GeometryUtils.SetXyTolerance(geometry2, 0.001);
-				bool areEqualInXY = GeometryUtils.AreEqualInXY(geometry1, geometry2);
-				if (! areEqualInXY)
+				foreach (IReadOnlyRow footprint in featureClass1.EnumReadOnlyRows(null, false))
 				{
-					differentCount++;
-					Console.WriteLine($"Differences detected in OID {feature2.OID}");
-				}
-				else
-				{
-					//continue;
-				}
+					IGeometry geometry1 = ((IReadOnlyFeature)footprint).Shape;
 
-				IFeature outFeature1 = resultClass1.CreateFeature();
-				outFeature1.Shape = geometry1;
-				outFeature1.Store();
+					IntersectionUtils.UseCustomIntersect = false;
 
-				IFeature outFeature2 = ressultClass2.CreateFeature();
-				outFeature2.Shape = geometry2;
-				outFeature2.Store();
-			}
+					cursor2.MoveNext();
+					IReadOnlyFeature feature2 = (IReadOnlyFeature) cursor2.Current;
+					IGeometry geometry2 = feature2?.Shape;
+
+					IntersectionUtils.UseCustomIntersect = true;
+
+					rowCount++;
+
+					//GeometryUtils.SetXyTolerance(geometry1, 0.001);
+					//GeometryUtils.SetXyTolerance(geometry2, 0.001);
+					bool areEqualInXY = GeometryUtils.AreEqualInXY(geometry1, geometry2);
+					if (!areEqualInXY)
+					{
+						differentCount++;
+						Console.WriteLine($"Differences detected in OID {feature2?.OID}");
+					}
+					else
+					{
+						//continue;
+					}
+
+					IFeature outFeature1 = resultClass1.CreateFeature();
+					outFeature1.Shape = geometry1;
+					outFeature1.Store();
+
+					IFeature outFeature2 = ressultClass2.CreateFeature();
+					outFeature2.Shape = geometry2;
+					outFeature2.Store();
+				}
 
 			watch.Stop();
 

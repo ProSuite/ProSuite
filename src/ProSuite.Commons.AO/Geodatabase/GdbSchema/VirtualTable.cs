@@ -280,7 +280,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		protected virtual long TableRowCount(IQueryFilter QueryFilter) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		public long RowCount(ITableFilter filter) =>
+		public virtual long RowCount(ITableFilter filter) =>
 				throw new NotImplementedException("Implement in derived class");
 
 		public bool Equals(IReadOnlyTable otherTable)
@@ -313,7 +313,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		protected virtual CursorImpl SearchT(IQueryFilter queryFilter, bool recycling) =>
 			new CursorImpl(this, EnumRows(queryFilter, recycling));
 
-		public virtual IEnumerable<IRow>
+		protected virtual IEnumerable<IRow>
 			EnumRows(IQueryFilter queryFilter, bool recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 

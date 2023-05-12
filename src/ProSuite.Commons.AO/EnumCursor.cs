@@ -97,7 +97,7 @@ namespace ProSuite.Commons.AO
 
 		public static string CreateMessage([NotNull] IReadOnlyTable table,
 		                                   [CanBeNull] ITableFilter filter)
-			=> CreateMessage(table.Name, (IQueryFilter) filter?.ToNativeFilterImpl());
+			=> CreateMessage(table.Name, TableFilterUtils.GetQueryFilter(filter));
 
 		public static string CreateMessage([NotNull] ITable table,
 		                                   [CanBeNull] IQueryFilter filter)

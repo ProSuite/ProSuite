@@ -36,14 +36,16 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return CreateRow(row);
 		}
 
-		public override long GetRowCount(IQueryFilter queryFilter)
+		public override long GetRowCount(ITableFilter filter)
 		{
-			return _backingTable.RowCount(queryFilter);
+			IQueryFilter qf = TableFilterUtils.GetQueryFilter(filter);
+			return _backingTable.RowCount(qf);
 		}
 
-		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 		{
-			foreach (IRow row in GdbQueryUtils.GetRows(_backingTable, filter, recycling))
+			IQueryFilter qf = TableFilterUtils.GetQueryFilter(filter);
+			foreach (IRow row in GdbQueryUtils.GetRows(_backingTable, qf, recycling))
 			{
 				yield return CreateRow(row);
 			}

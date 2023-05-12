@@ -1,5 +1,5 @@
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestContainer
@@ -10,7 +10,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		void SetTargetGeometry([NotNull] IGeometry geometry);
 
-		bool EvaluateRelation([NotNull] ISpatialFilter spatialFilter);
+		bool EvaluateRelation([NotNull] IFeatureClassFilter spatialFilter);
 
 		bool AssumeEnvelopeIntersects { get; set; }
 	}

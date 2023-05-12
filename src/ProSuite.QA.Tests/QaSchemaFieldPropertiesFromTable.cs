@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -33,11 +32,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter GetQueryFilter()
+		private ITableFilter GetQueryFilter()
 		{
 			string constraint = GetConstraint(_fieldSpecificationsTable);
 
-			IQueryFilter result = new QueryFilterClass();
+			ITableFilter result = new AoTableFilter();
 
 			if (StringUtils.IsNotEmpty(constraint))
 			{

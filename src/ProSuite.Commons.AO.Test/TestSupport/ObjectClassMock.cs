@@ -239,7 +239,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		}
 
 		long IReadOnlyTable.RowCount(ITableFilter filter) =>
-			RowCount((IQueryFilter) filter.ToNativeFilterImpl());
+			RowCount(TableFilterUtils.GetQueryFilter(filter));
 
 #if Server11
 		long ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
@@ -262,7 +262,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			IQueryFilter queryFilter = null;
 			try
 			{
-				queryFilter = (IQueryFilter) filter.ToNativeFilterImpl();
+				queryFilter = TableFilterUtils.GetQueryFilter(filter);
 				foreach (var row in new EnumCursor(this, queryFilter, recycle))
 				{
 					if (row is IReadOnlyRow roRow)

@@ -13,7 +13,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestSupport;
 using IPnt = ProSuite.Commons.Geom.IPnt;
@@ -33,7 +32,7 @@ namespace ProSuite.QA.Tests.Coincidence
 		private readonly bool _is3D;
 		private const bool _defaultSumExpressionBasedRowDistances = true;
 
-		private IList<ISpatialFilter> _filter;
+		private IList<IFeatureClassFilter> _filter;
 		private IList<QueryFilterHelper> _helper;
 		private IEnvelope _allBox;
 		private IList<string> _ignoreNeighborConditionsSqlFullMatrix;
@@ -129,7 +128,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			IList<ISpatialFilter> filters = _filter;
+			IList<IFeatureClassFilter> filters = _filter;
 			if (filters == null)
 			{
 				InitFilter();
@@ -188,8 +187,8 @@ namespace ProSuite.QA.Tests.Coincidence
 					continue;
 				}
 
-				ISpatialFilter filter = filters[involvedTableIndex];
-				filter.Geometry = box0;
+				IFeatureClassFilter filter = filters[involvedTableIndex];
+				filter.FilterGeometry = box0;
 
 				foreach (IReadOnlyRow neighborRow in Search(fcNeighbor, filter, helper))
 				{
@@ -477,9 +476,9 @@ namespace ProSuite.QA.Tests.Coincidence
 		private void InitFilter()
 		{
 			CopyFilters(out _filter, out _helper);
-			foreach (ISpatialFilter filter in _filter)
+			foreach (var filter in _filter)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 			}
 		}
 

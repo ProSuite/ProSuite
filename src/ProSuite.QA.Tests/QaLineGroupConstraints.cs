@@ -127,7 +127,7 @@ namespace ProSuite.QA.Tests
 
 		private int _groupCompletedErrorsCount;
 
-		private IList<ISpatialFilter> _endFilters;
+		private IList<IFeatureClassFilter> _endFilters;
 		private IList<QueryFilterHelper> _endHelpers;
 
 		[NotNull] private readonly Dictionary<NodesDirectedRow, DangleProperties>
@@ -1063,8 +1063,8 @@ namespace ProSuite.QA.Tests
 					continue;
 				}
 
-				ISpatialFilter filter = _endFilters[tableIndex];
-				filter.Geometry = search;
+				IFeatureClassFilter filter = _endFilters[tableIndex];
+				filter.FilterGeometry = search;
 
 				foreach (IReadOnlyRow row in Search(InvolvedTables[tableIndex],
 				                                    filter,
@@ -1548,9 +1548,9 @@ namespace ProSuite.QA.Tests
 				helper.ForNetwork = true;
 			}
 
-			foreach (ISpatialFilter filter in _endFilters)
+			foreach (var filter in _endFilters)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 			}
 		}
 

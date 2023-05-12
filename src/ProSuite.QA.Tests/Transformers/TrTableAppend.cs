@@ -142,14 +142,14 @@ namespace ProSuite.QA.Tests.Transformers
 			public override bool HasOID => _hasOid;
 			public override string OIDFieldName => "AppendedOID";
 
-			public override long RowCount(IQueryFilter QueryFilter)
+			public override long RowCount(ITableFilter QueryFilter)
 			{
 				long nRows = InvolvedTables.Sum(involved => involved.RowCount(QueryFilter));
 				return nRows;
 			}
 
 			public override IEnumerable<IReadOnlyRow> EnumReadOnlyRows(
-				IQueryFilter queryFilter, bool recycling)
+				ITableFilter queryFilter, bool recycling)
 			{
 				for (int iTable = 0; iTable < InvolvedTables.Count; iTable++)
 				{
