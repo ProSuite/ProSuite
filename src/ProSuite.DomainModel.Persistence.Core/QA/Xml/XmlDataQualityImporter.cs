@@ -881,7 +881,13 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 
 				#region Step 2b: Update test parameters
 
-				config.ClearParameterValues();
+				// First ensure the correct descriptor as referenced in XML:
+				InstanceDescriptor instanceDescriptor =
+					GetMatchingInstanceDescriptor(xmlInstanceConfiguration, descriptorsByName);
+
+				ddxConfig.InstanceDescriptor = instanceDescriptor;
+
+				ddxConfig.ClearParameterValues();
 
 				IInstanceInfo instanceInfo;
 				try
@@ -993,6 +999,39 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			WarnForNonUniqueConfigurationsUuid(configsByName);
 
 			return configsByName;
+		}
+
+		[NotNull]
+		private static InstanceDescriptor GetMatchingInstanceDescriptor(
+			[NotNull] XmlInstanceConfiguration xmlInstanceConfiguration,
+			[NotNull] IDictionary<string, InstanceDescriptor> descriptorsByName)
+		{
+			InstanceDescriptor result;
+			if (xmlInstanceConfiguration is XmlTransformerConfiguration xmlTransformer)
+			{
+				result = GetDescriptor<TransformerDescriptor>(
+					descriptorsByName, xmlTransformer.TransformerDescriptorName);
+			}
+			else if (xmlInstanceConfiguration is XmlIssueFilterConfiguration xmlIssueFilter)
+			{
+				result =
+					GetDescriptor<IssueFilterDescriptor>(
+						descriptorsByName, xmlIssueFilter.IssueFilterDescriptorName);
+			}
+			else if (xmlInstanceConfiguration is XmlQualityCondition xmlQualityCondition)
+			{
+				result =
+					GetDescriptor<TestDescriptor>(
+						descriptorsByName, xmlQualityCondition.TestDescriptorName);
+			}
+			else
+			{
+				throw new NotSupportedException(
+					$"Unsupported XmlInstanceConfiguration type: {xmlInstanceConfiguration.GetType()}");
+			}
+
+			return Assert.NotNull(
+				result, $"No instance descriptor available for {xmlInstanceConfiguration.Name}");
 		}
 
 		private static void WarnForNonUniqueConfigurationsUuid(
