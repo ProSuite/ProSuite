@@ -11,18 +11,19 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		[UsedImplicitly]
-		public IssueFilterConfiguration() : this(false) { }
+		public IssueFilterConfiguration() : this(assignUuid: false) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="IssueFilterConfiguration" /> class.
 		/// </summary>
 		[UsedImplicitly]
-		public IssueFilterConfiguration(bool assignUuid = false) : base(assignUuid) { }
+		public IssueFilterConfiguration(bool assignUuid) : base(assignUuid) { }
 
 		public IssueFilterConfiguration(string name,
 		                                [NotNull] IssueFilterDescriptor issueFilterDescriptor,
-		                                [CanBeNull] string description = "")
-			: base(name, description)
+		                                [CanBeNull] string description = "",
+		                                bool assignUuid = true)
+			: base(name, description, assignUuid)
 		{
 			Assert.ArgumentNotNull(issueFilterDescriptor, nameof(issueFilterDescriptor));
 

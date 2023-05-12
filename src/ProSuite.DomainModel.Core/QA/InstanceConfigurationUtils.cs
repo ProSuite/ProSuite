@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -414,6 +416,17 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			return sb.ToString();
+		}
+
+		/// <summary>
+		/// Generate instance-configuration styled UUID.
+		/// </summary>
+		/// <returns></returns>
+		[NotNull]
+		public static string GenerateUuid([CanBeNull] string uuidValue = null)
+		{
+			return ComUtils.FormatGuidWithoutCurlyBraces(
+				StringUtils.IsNotEmpty(uuidValue) ? new Guid(uuidValue) : Guid.NewGuid());
 		}
 
 		private static void ReattachAllTransformersAndFilters(

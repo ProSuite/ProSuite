@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.DomainModels;
@@ -53,8 +52,9 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		protected InstanceConfiguration([NotNull] string name,
-		                                [CanBeNull] string description = "")
-			: this(assignUuid: true)
+		                                [CanBeNull] string description = "",
+		                                bool assignUuid = true)
+			: this(assignUuid)
 		{
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 
@@ -254,22 +254,13 @@ namespace ProSuite.DomainModel.Core.QA
 		protected static string GetUuid([NotNull] string value)
 		{
 			// this fails if the string is not a valid guid:
-			var guid = new Guid(value);
-
-			return FormatUuid(guid);
+			return InstanceConfigurationUtils.GenerateUuid(value);
 		}
 
 		[NotNull]
 		protected static string GenerateUuid()
 		{
-			return FormatUuid(Guid.NewGuid());
-		}
-
-		[NotNull]
-		protected static string FormatUuid(Guid guid)
-		{
-			// default format (no curly braces)
-			return guid.ToString().ToUpper();
+			return InstanceConfigurationUtils.GenerateUuid();
 		}
 
 		protected void CopyBaseProperties([NotNull] InstanceConfiguration target)
