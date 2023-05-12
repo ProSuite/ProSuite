@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -80,7 +80,7 @@ namespace ProSuite.QA.Tests.Transformers
 				if (! involvedDict.TryGetValue(entry.Value, out Involved knownInvolved))
 				{
 					knownInvolved =
-						InvolvedRowUtils.EnumInvolved(new[] {entry.Value}).First();
+						InvolvedRowUtils.EnumInvolved(new[] { entry.Value }).First();
 					involvedDict.Add(entry.Value, knownInvolved);
 				}
 

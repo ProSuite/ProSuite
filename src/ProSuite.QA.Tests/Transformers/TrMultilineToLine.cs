@@ -3,6 +3,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -66,12 +67,11 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-
 		public const string AttrPartIndex = "PartIndex";
 		private int? _iAttrPart;
+
 		private readonly SimpleUniqueIdProvider<UniqueIdKey> _uniqueIdProvider =
 			new SimpleUniqueIdProvider<UniqueIdKey>(new UniqueIdKeyComparer());
-
 
 		[DocTr(nameof(DocTrStrings.TrMultilineToLine_0))]
 		public TrMultilineToLine(
