@@ -61,6 +61,25 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Filters all errors, if &apos;Filter&apos; = true (default). If &apos;Filter&apos; = false, no error is filtered.
+        /// </summary>
+        public static string IfAll_0 {
+            get {
+                return ResourceManager.GetString("IfAll_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if true (default): filter all errors
+        ///if false: filter no errors.
+        /// </summary>
+        public static string IfAll_Filter {
+            get {
+                return ResourceManager.GetString("IfAll_Filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Filters errors that intersect any feature in a &apos;featureClass&apos;.
         /// </summary>
         public static string IfIntersecting_0 {
