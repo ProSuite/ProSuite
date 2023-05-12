@@ -52,7 +52,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool RequiresSelection { get; set; } = true;
 
 		/// <summary>
-		/// Whether the required selection can only contain editable fetures.
+		/// Whether the required selection can only contain editable features.
 		/// </summary>
 		protected bool SelectOnlyEditFeatures { get; set; } = true;
 
@@ -751,7 +751,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract SelectionSettings GetSelectionSettings();
 
-		protected abstract void HandleEscape(MapViewKeyEventArgs args);
+		protected abstract bool HandleEscape();
 
 		protected abstract void LogUsingCurrentSelection();
 
