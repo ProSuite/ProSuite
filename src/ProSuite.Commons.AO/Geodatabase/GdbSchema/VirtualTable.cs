@@ -273,7 +273,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			throw new NotImplementedException("Implement in derived class");
 
 #if Server11
-		long ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
+		long ITable.RowCount(IQueryFilter QueryFilter) => TableRowCount(QueryFilter);
 #else
 		int ITable.RowCount(IQueryFilter QueryFilter) => (int)TableRowCount(QueryFilter);
 #endif
