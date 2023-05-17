@@ -14,8 +14,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
 {
-	// todo daro: Rename to MapEditsRowCacheSynchronizer to indicate that only edits in the map
-	// are catched? But that's somehow a implicit fact.
 	// todo daro: is this the right namespace for this type?
 	public class EditEventsRowCacheSynchronizer : IDisposable
 	{
@@ -30,6 +28,11 @@ namespace ProSuite.AGP.WorkList
 
 			_rowCache = rowCache;
 			WireEvents();
+		}
+
+		public void Dispose()
+		{
+			UnwireEvents();
 		}
 
 		private void WireEvents()
@@ -51,8 +54,6 @@ namespace ProSuite.AGP.WorkList
 						await QueuedTask.Run(() => { _rowCache.Invalidate(); });
 						break;
 					case EditCompletedType.Operation:
-						ProcessChanges(args);
-						break;
 					case EditCompletedType.Undo:
 					case EditCompletedType.Redo:
 						await QueuedTask.Run(() => { ProcessChanges(args); });
@@ -61,23 +62,16 @@ namespace ProSuite.AGP.WorkList
 						break;
 					case EditCompletedType.Post:
 						break;
-
-					// TODO: This compiles not in 2.x:
-					//case EditCompletedType.Unknown:
-					//	break;
 					default:
 						throw new ArgumentOutOfRangeException(
 							nameof(EditCompletedType),
 							args.CompletedType,
-							$"Unexpected EditCompletedType: {args.CompletedType}");
+							$@"Unexpected EditCompletedType: {args.CompletedType}");
 				}
 			}
 			catch (Exception ex)
 			{
 				_msg.Error($"Error {nameof(OnEditCompleted)}: {ex.Message}", ex);
-
-				// todo: revise
-				await Task.FromResult(0);
 			}
 		}
 
@@ -89,7 +83,6 @@ namespace ProSuite.AGP.WorkList
 			//	return;
 			//}
 
-			// todo daro: Use GdbTableIdentity and dispose tables immediately?
 			Dictionary<Table, List<long>> creates = GetOidsByTable(args.Creates);
 			Dictionary<Table, List<long>> deletes = GetOidsByTable(args.Deletes);
 			Dictionary<Table, List<long>> modifies = GetOidsByTable(args.Modifies);
@@ -139,11 +132,6 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return result;
-		}
-
-		public void Dispose()
-		{
-			UnwireEvents();
 		}
 
 		private void UnwireEvents()

@@ -459,11 +459,10 @@ namespace ProSuite.AGP.WorkList.Domain
 			return GetItems(null, startIndex, currentSearch, visitedSearch).ToList();
 		}
 
-		private IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, int startIndex = -1,
-		                                        CurrentSearchOption currentSearch =
-			                                        CurrentSearchOption.ExcludeCurrent,
-		                                        VisitedSearchOption visitedSearch =
-			                                        VisitedSearchOption.ExcludeVisited)
+		private IEnumerable<IWorkItem> GetItems(
+			QueryFilter filter = null, int startIndex = -1,
+			CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent,
+			VisitedSearchOption visitedSearch = VisitedSearchOption.ExcludeVisited)
 		{
 			IEnumerable<IWorkItem> query = GetItems(filter, false, startIndex);
 
@@ -1039,6 +1038,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void Invalidate()
 		{
+			_msg.Debug("Invalidate");
+
 			try
 			{
 				if (_invalidRows.Count == 0)
@@ -1065,39 +1066,26 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		// todo daro: Is SDK type Table the right type?
 		public void ProcessChanges(Dictionary<Table, List<long>> inserts,
 		                           Dictionary<Table, List<long>> deletes,
 		                           Dictionary<Table, List<long>> updates)
 		{
-			int capacity = inserts.Values.Sum(list => list.Count) +
-			               deletes.Values.Sum(list => list.Count) +
-			               updates.Values.Sum(list => list.Count);
-
-			var invalidItems = new List<IWorkItem>(capacity);
+			_msg.Debug(
+				$"{nameof(ProcessChanges)} - inserts: {inserts.Count} deletes: {deletes.Count} updates: {updates.Count}");
 
 			foreach (var insert in inserts)
 			{
-				var tableId = new GdbTableIdentity(insert.Key);
-				List<long> oids = insert.Value;
-
-				ProcessInserts(tableId, oids, invalidItems);
+				ProcessInserts(insert.Key, insert.Value);
 			}
 
 			foreach (var delete in deletes)
 			{
-				var tableId = new GdbTableIdentity(delete.Key);
-				List<long> oids = delete.Value;
-
-				ProcessDeletes(tableId, oids, invalidItems);
+				ProcessDeletes(delete.Key, delete.Value);
 			}
 
 			foreach (var update in updates)
 			{
-				var tableId = new GdbTableIdentity(update.Key);
-				List<long> oids = update.Value;
-
-				ProcessUpdates(tableId, oids, invalidItems);
+				ProcessUpdates(update.Key, update.Value);
 
 				// does not work because ObjectIDs = (IReadOnlyList<long>) modify.Value (oids) are the
 				// ObjectIds of source feature not the work item OIDs.
@@ -1111,13 +1099,41 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged();
 		}
 
-		private void ProcessDeletes(GdbTableIdentity tableId, IEnumerable<long> oids,
-		                            ICollection<IWorkItem> invalidItems)
+		private void ProcessInserts(Table table, IReadOnlyList<long> oids)
 		{
+			_msg.Debug($"{nameof(ProcessInserts)}");
+
+			var filter = new QueryFilter { ObjectIDs = oids };
+
+			foreach (IWorkItem item in Repository.GetItems(new GdbTableIdentity(table), filter))
+			{
+				if (_rowMap.ContainsKey(item.Proxy))
+				{
+					_msg.Debug($"work list already contains {item}");
+				}
+				else
+				{
+					_items.Add(item);
+					_rowMap.Add(item.Proxy, item);
+
+					if (! HasCurrentItem)
+					{
+						SetCurrentItem(item);
+					}
+
+					UpdateExtent(item.Extent);
+				}
+			}
+		}
+
+		private void ProcessDeletes(Table table, IEnumerable<long> oids)
+		{
+			_msg.Debug($"{nameof(ProcessDeletes)}");
+
 			foreach (long oid in oids)
 			{
 				// todo daro: refactor, simplify
-				var rowId = new GdbRowIdentity(oid, tableId);
+				var rowId = new GdbRowIdentity(oid, new GdbTableIdentity(table));
 
 				if (HasCurrentItem && Current != null && Current.Proxy.Equals(rowId))
 				{
@@ -1127,13 +1143,28 @@ namespace ProSuite.AGP.WorkList.Domain
 				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
 				{
 					RemoveWorkItem(item);
-
-					invalidItems.Add(item);
 				}
 			}
 
 			// todo daro: update work list extent?
 			Extent = GetExtentFromItems(_items);
+		}
+
+		private void ProcessUpdates(Table table, IEnumerable<long> oids)
+		{
+			_msg.Debug($"{nameof(ProcessUpdates)}");
+
+			foreach (long oid in oids)
+			{
+				var rowId = new GdbRowIdentity(oid, new GdbTableIdentity(table));
+
+				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
+				{
+					Refresh(item);
+
+					_invalidRows.Add(rowId);
+				}
+			}
 		}
 
 		private void RemoveWorkItem(IWorkItem item)
@@ -1156,54 +1187,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged(null, new List<long> {current.OID});
 		}
 
-		private void ProcessInserts(GdbTableIdentity tableId, List<long> oids,
-		                            List<IWorkItem> invalidItems)
-		{
-			var filter = new QueryFilter {ObjectIDs = oids};
-
-			foreach (IWorkItem item in Repository.GetItems(tableId, filter).ToList())
-			{
-				if (_rowMap.ContainsKey(item.Proxy))
-				{
-					// todo daro: warn
-				}
-
-				_items.Add(item);
-				_rowMap.Add(item.Proxy, item);
-
-				if (! HasCurrentItem)
-				{
-					SetCurrentItem(item);
-					// todo daro: WorkListChanged > invalidate map
-				}
-
-				UpdateExtent(item.Extent);
-
-				invalidItems.Add(item);
-			}
-		}
-
 		private void UpdateExtent(Envelope itemExtent)
 		{
 			Extent = Extent?.Union(itemExtent);
-		}
-
-		private void ProcessUpdates(GdbTableIdentity tableId, IEnumerable<long> oids,
-		                            List<IWorkItem> invalidItems)
-		{
-			foreach (long oid in oids)
-			{
-				var rowId = new GdbRowIdentity(oid, tableId);
-
-				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
-				{
-					Refresh(item);
-
-					_invalidRows.Add(rowId);
-
-					invalidItems.Add(item);
-				}
-			}
 		}
 
 		// todo daro: refresh or update?
