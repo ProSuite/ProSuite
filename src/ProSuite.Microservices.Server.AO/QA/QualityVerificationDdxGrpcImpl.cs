@@ -10,6 +10,7 @@ using Grpc.Core;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Com;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -31,9 +32,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		[NotNull] private readonly IDomainTransactionManager _domainTransactions;
+
 		// Technically probably not necessary because no proper AO-objects are used.
 		// But rather be safe than sorry (and experiencing locks and hangs).
 		private readonly StaTaskScheduler _staThreadScheduler = new StaTaskScheduler(5);
+
+		public QualityVerificationDdxGrpcImpl(
+			[NotNull] IDomainTransactionManager domainTransactions)
+		{
+			_domainTransactions = domainTransactions;
+		}
 
 		/// <summary>
 		/// The overall service process health. If it has been set, it will be marked as not serving
@@ -225,8 +234,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
-			var projectWorkspaces =
-				verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
+			IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces = null;
+
+			_domainTransactions.UseTransaction(
+				() =>
+				{
+					projectWorkspaces =
+						verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
+				});
 
 			GetProjectWorkspacesResponse response = PackProjectWorkspaceResponse(projectWorkspaces);
 
@@ -317,9 +332,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
-			IList<QualitySpecification> foundSpecifications =
-				verificationDataDictionary.GetQualitySpecifications(
-					request.DatasetIds, request.IncludeHidden);
+			IList<QualitySpecification> foundSpecifications = null;
+			_domainTransactions.UseTransaction(
+				() =>
+				{
+					foundSpecifications =
+						verificationDataDictionary.GetQualitySpecifications(
+							request.DatasetIds, request.IncludeHidden);
+				});
 
 			response.QualitySpecifications.AddRange(
 				foundSpecifications.Select(qs => new QualitySpecificationRefMsg
@@ -340,80 +360,36 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
-			QualitySpecification qualitySpecification =
-				verificationDataDictionary.GetQualitySpecification(
-					request.QualitySpecificationId);
+			_domainTransactions.UseTransaction(
+				() =>
+				{
+					QualitySpecification qualitySpecification =
+						verificationDataDictionary.GetQualitySpecification(
+							request.QualitySpecificationId);
 
-			if (qualitySpecification == null)
-			{
-				return response;
-			}
+					if (qualitySpecification == null)
+					{
+						return;
+					}
 
-			ConditionListSpecificationMsg specificationMsg =
-				ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
-					qualitySpecification, null, out IDictionary<int, DdxModel> modelsById);
+					ConditionListSpecificationMsg specificationMsg =
+						ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
+							qualitySpecification, null, out IDictionary<int, DdxModel> modelsById);
 
-			response.Specification = specificationMsg;
+					response.Specification = specificationMsg;
 
-			response.ReferencedInstanceDescriptors.AddRange(
-				ProtoDataQualityUtils.GetInstanceDescriptorMsgs(qualitySpecification));
+					response.ReferencedInstanceDescriptors.AddRange(
+						ProtoDataQualityUtils.GetInstanceDescriptorMsgs(qualitySpecification));
 
-			RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
-			foreach (DdxModel model in modelsById.Values)
-			{
-				ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
-				response.ReferencedModels.Add(modelMsg);
-			}
+					RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
+					foreach (DdxModel model in modelsById.Values)
+					{
+						ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
+						response.ReferencedModels.Add(modelMsg);
+					}
+				});
 
 			return response;
-		}
-
-		[NotNull]
-		private static IEnumerable<InstanceDescriptor> GetReferencedDescriptors(
-			[NotNull] IEnumerable<QualityCondition> qualityConditions)
-		{
-			var descriptors = new HashSet<InstanceDescriptor>();
-			var allTransformerConfigurations = new HashSet<TransformerConfiguration>();
-
-			foreach (QualityCondition qualityCondition in qualityConditions)
-			{
-				descriptors.Add(qualityCondition.TestDescriptor);
-
-				CollectTransformers(qualityCondition, allTransformerConfigurations);
-
-				foreach (IssueFilterConfiguration filterConfiguration in
-				         qualityCondition.IssueFilterConfigurations)
-				{
-					descriptors.Add(filterConfiguration.IssueFilterDescriptor);
-
-					CollectTransformers(filterConfiguration, allTransformerConfigurations);
-				}
-			}
-
-			foreach (TransformerConfiguration transformerConfiguration in
-			         allTransformerConfigurations)
-			{
-				descriptors.Add(transformerConfiguration.TransformerDescriptor);
-			}
-
-			return descriptors.ToList();
-		}
-
-		private static void CollectTransformers(
-			[NotNull] InstanceConfiguration configuration,
-			[NotNull] HashSet<TransformerConfiguration> allTransformers)
-		{
-			foreach (TestParameterValue parameterValue in configuration.ParameterValues)
-			{
-				TransformerConfiguration transformer = parameterValue.ValueSource;
-				if (transformer != null)
-				{
-					if (allTransformers.Add(transformer))
-					{
-						CollectTransformers(transformer, allTransformers);
-					}
-				}
-			}
 		}
 
 		private async Task<bool> StartRequestAsync(string peerName, object request,
@@ -447,7 +423,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
-		public async Task<bool> EnsureLicenseAsync()
+		private async Task<bool> EnsureLicenseAsync()
 		{
 			if (LicenseAction == null)
 			{

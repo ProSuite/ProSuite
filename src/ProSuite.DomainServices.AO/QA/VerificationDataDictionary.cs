@@ -19,7 +19,6 @@ namespace ProSuite.DomainServices.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull] private readonly IDomainTransactionManager _domainTransactions;
 		[NotNull] private readonly IQualitySpecificationRepository _qualitySpecifications;
 		[NotNull] private readonly IProjectRepository<TModel> _projects;
 
@@ -28,7 +27,6 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] IQualitySpecificationRepository qualitySpecifications,
 			[NotNull] IProjectRepository<TModel> projects)
 		{
-			_domainTransactions = domainTransactions;
 			_qualitySpecifications = qualitySpecifications;
 			_projects = projects;
 		}
@@ -43,15 +41,11 @@ namespace ProSuite.DomainServices.AO.QA
 
 			var allProjectWorkspaces = new List<ProjectWorkspace>();
 
-			_domainTransactions.UseTransaction(
-				() =>
-				{
-					foreach (var kvp in GetProjectContentByWorkspaceTx(
-						         classesByWorkspace))
-					{
-						allProjectWorkspaces.AddRange(kvp.Value);
-					}
-				});
+			foreach (var kvp in GetProjectContentByWorkspaceTx(
+				         classesByWorkspace))
+			{
+				allProjectWorkspaces.AddRange(kvp.Value);
+			}
 
 			foreach (ProjectWorkspace projectWorkspace in allProjectWorkspaces)
 			{
@@ -65,31 +59,21 @@ namespace ProSuite.DomainServices.AO.QA
 			IList<int> datasetIds,
 			bool includeHidden)
 		{
-			IList<QualitySpecification> result = null;
-
-			_domainTransactions.UseTransaction(
-				() => { result = _qualitySpecifications.Get(datasetIds, ! includeHidden); });
+			IList<QualitySpecification> result =
+				_qualitySpecifications.Get(datasetIds, ! includeHidden);
 
 			return result ?? new List<QualitySpecification>(0);
 		}
 
 		public QualitySpecification GetQualitySpecification(int qualitySpecificationId)
 		{
-			QualitySpecification result = null;
+			QualitySpecification result = _qualitySpecifications.Get(qualitySpecificationId);
 
-			_domainTransactions.UseTransaction(
-				() =>
-				{
-					result = _qualitySpecifications.Get(qualitySpecificationId);
-
-					if (result != null)
-					{
-						// The parameters must be initialized inside the transaction!
-						InstanceConfigurationUtils.InitializeParameterValues(result);
-
-						// TODO: Get datasets, initialize model datasets
-					}
-				});
+			if (result != null)
+			{
+				// The parameters must be initialized!
+				InstanceConfigurationUtils.InitializeParameterValues(result);
+			}
 
 			return result;
 		}
