@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Validation;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.Core.QA
 {
@@ -100,6 +101,8 @@ namespace ProSuite.DomainModel.Core.QA
 				_constructorId = value;
 
 				OnSetConstructorId();
+
+				InstanceInfo = null;
 			}
 		}
 
@@ -133,6 +136,8 @@ namespace ProSuite.DomainModel.Core.QA
 
 					OnSetClass();
 				}
+
+				InstanceInfo = null;
 			}
 		}
 
@@ -154,6 +159,11 @@ namespace ProSuite.DomainModel.Core.QA
 				return base.Id;
 			}
 		}
+
+		/// <summary>
+		/// Optionally cached instance info.
+		/// </summary>
+		public IInstanceInfo InstanceInfo { get; set; }
 
 		/// <summary>
 		/// The clone Id can be set if this instance is a (remote) clone of a persistent instance descriptor.

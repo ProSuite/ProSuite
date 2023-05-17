@@ -333,6 +333,27 @@ namespace ProSuite.Microservices.Client.QA
 				             Type = (int) GetInstanceType(instanceDescriptor)
 			             };
 
+			result.ClassDescriptor = ToClassDescriptorMsg(instanceDescriptor);
+
+			// -1 in case of TestFactory
+			result.Constructor = instanceDescriptor.ConstructorId;
+
+			return result;
+		}
+
+		[NotNull]
+		private static ClassDescriptorMsg ToClassDescriptorMsg(
+			[NotNull] InstanceDescriptor instanceDescriptor)
+		{
+			Type instanceType = instanceDescriptor.InstanceInfo?.InstanceType;
+
+			if (instanceType != null)
+			{
+				// Typically redirected to ProSuite.Qa.Tests/TestFactories
+				ClassDescriptor actualClassDescriptor = new ClassDescriptor(instanceType);
+				return ToClassDescriptorMsg(actualClassDescriptor);
+			}
+
 			ClassDescriptor classDescriptor = instanceDescriptor.Class;
 
 			if (classDescriptor == null &&
@@ -341,17 +362,19 @@ namespace ProSuite.Microservices.Client.QA
 				classDescriptor = testDescriptor.TestFactoryDescriptor;
 			}
 
-			if (classDescriptor != null)
-			{
-				result.ClassDescriptor = new ClassDescriptorMsg()
-				                         {
-					                         TypeName = classDescriptor.TypeName,
-					                         AssemblyName = classDescriptor.AssemblyName
-				                         };
-			}
+			Assert.NotNull(classDescriptor, $"No class descriptor for {instanceDescriptor.Name}");
 
-			// -1 in case of TestFactory
-			result.Constructor = instanceDescriptor.ConstructorId;
+			return ToClassDescriptorMsg(classDescriptor);
+		}
+
+		private static ClassDescriptorMsg ToClassDescriptorMsg(
+			[NotNull] ClassDescriptor classDescriptor)
+		{
+			var result = new ClassDescriptorMsg
+			             {
+				             TypeName = classDescriptor.TypeName,
+				             AssemblyName = classDescriptor.AssemblyName
+			             };
 
 			return result;
 		}
