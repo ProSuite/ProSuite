@@ -3147,14 +3147,26 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			var result = new List<IField>(fieldCount);
 
+			result.AddRange(EnumFields(fields));
+
+			return result;
+		}
+
+		[NotNull]
+		public static IEnumerable<IField> EnumFields([NotNull] IFields fields)
+		{
+			Assert.ArgumentNotNull(fields, nameof(fields));
+
+			int fieldCount = fields.FieldCount;
+
+			var result = new List<IField>(fieldCount);
+
 			for (var fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++)
 			{
 				IField field = fields.Field[fieldIndex];
 
-				result.Add(field);
+				yield return field;
 			}
-
-			return result;
 		}
 
 		/// <summary>

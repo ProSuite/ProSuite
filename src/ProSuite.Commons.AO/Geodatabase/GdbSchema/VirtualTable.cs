@@ -13,10 +13,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		protected VirtualFeatureClass(string name) : base(name) { }
 
 #if Server11
-       
 		long IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => TableRowCount(QueryFilter);
 #else
-		int IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => (int)TableRowCount(QueryFilter);
+		int IFeatureClass.FeatureCount(IQueryFilter QueryFilter) =>
+			(int) TableRowCount(QueryFilter);
 #endif
 
 		IFeatureCursor IFeatureClass.Search(IQueryFilter filter, bool recycling) =>
@@ -24,7 +24,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	}
 
 	public abstract class VirtualTable : IDataset, ITable, IObjectClass, IDatasetEdit, ISchemaLock,
-	                                     ISubtypes, IReadOnlyTable, IRowCreator<VirtualRow>
+	                                     ISubtypes, IDbTable, IReadOnlyTable,
+	                                     IRowCreator<VirtualRow>
 	{
 		protected GdbFields _fields;
 		private TableName _tableName;
@@ -221,13 +222,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			throw new NotImplementedException("Implement in derived class");
 
 #if Server11
-
 		IRow ITable.GetRow(long OID) => GetRow(OID);
 
 		public IFeature GetFeature(long OID) => (IFeature) GetRow(OID);
 #else
 		IRow ITable.GetRow(int OID) => GetRow(OID);
-		public IFeature GetFeature(int OID) => (IFeature)GetRow(OID);
+
+		public IFeature GetFeature(int OID) => (IFeature) GetRow(OID);
 #endif
 
 		IReadOnlyRow IReadOnlyTable.GetRow(long OID) => GetReadOnlyRow(OID);
@@ -276,13 +277,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 #if Server11
 		long ITable.RowCount(IQueryFilter QueryFilter) => TableRowCount(QueryFilter);
 #else
-		int ITable.RowCount(IQueryFilter QueryFilter) => (int)TableRowCount(QueryFilter);
+		int ITable.RowCount(IQueryFilter QueryFilter) => (int) TableRowCount(QueryFilter);
 #endif
 		protected virtual long TableRowCount(IQueryFilter QueryFilter) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		public virtual long RowCount(ITableFilter filter) =>
-				throw new NotImplementedException("Implement in derived class");
+			throw new NotImplementedException("Implement in derived class");
 
 		public bool Equals(IReadOnlyTable otherTable)
 		{
@@ -308,7 +309,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		ICursor ITable.Search(IQueryFilter QueryFilter, bool Recycling) =>
 			SearchT(QueryFilter, Recycling);
 
-		protected virtual IFeatureCursor FeatureClassSearch(IQueryFilter queryFilter, bool recycling) =>
+		protected virtual IFeatureCursor FeatureClassSearch(IQueryFilter queryFilter,
+		                                                    bool recycling) =>
 			SearchT(queryFilter, recycling);
 
 		protected virtual CursorImpl SearchT(IQueryFilter queryFilter, bool recycling) =>
@@ -544,6 +546,46 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			// ReSharper disable once BaseObjectGetHashCodeCallInGetHashCode
 			return base.GetHashCode();
 		}
+
+		#region Implementation of IDbDataset
+
+		private IDbDatasetContainer _datasetContainer;
+
+		IDbDatasetContainer IDbDataset.DbContainer =>
+			_datasetContainer ??
+			(_datasetContainer = new DbWorkspace(Workspace));
+
+		DatasetType IDbDataset.DatasetType =>
+			DatasetType == esriDatasetType.esriDTFeatureClass
+				? Db.DatasetType.FeatureClass
+				: Db.DatasetType.Table;
+
+		bool IDbDataset.Equals(IDbDataset otherDataset)
+		{
+			return Equals(otherDataset);
+		}
+
+		#endregion
+
+		#region Implementation of IDbTableSchema
+
+		IReadOnlyList<ITableField> IDbTableSchema.TableFields => GdbFields;
+
+		#endregion
+
+		#region Implementation of ITableData
+
+		IDbRow IDbTable.GetRow(long oid)
+		{
+			return GetReadOnlyRow(oid);
+		}
+
+		IEnumerable<IDbRow> IDbTable.EnumRows(ITableFilter filter, bool recycle)
+		{
+			return EnumReadOnlyRows(filter, recycle);
+		}
+
+		#endregion
 
 		protected class TableName : IName, IDatasetName, IObjectClassName, ITableName
 		{

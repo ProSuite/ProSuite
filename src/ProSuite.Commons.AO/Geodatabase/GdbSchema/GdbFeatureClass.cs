@@ -1,13 +1,16 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.EsriShape;
+using FieldType = ProSuite.Commons.Db.FieldType;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <inheritdoc cref="GdbTable" />
 	public class GdbFeatureClass : GdbTable, IFeatureClass, IGeoDataset, IReadOnlyFeatureClass,
-	                               IRowCreator<GdbFeature>
+	                               IFeatureClassSchema, IRowCreator<GdbFeature>
 	{
 		private int _shapeFieldIndex = -1;
 
@@ -31,10 +34,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		}
 
 #if Server11
-       
 		long IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => TableRowCount(QueryFilter);
 #else
-		int IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => (int)TableRowCount(QueryFilter);
+		int IFeatureClass.FeatureCount(IQueryFilter QueryFilter) =>
+			(int) TableRowCount(QueryFilter);
 #endif
 
 		IFeatureCursor IFeatureClass.Search(IQueryFilter filter, bool recycling) =>
@@ -117,6 +120,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public override IField LengthField => null;
 
 		public override int FeatureClassID => ObjectClassID;
+
+		#endregion
+
+		#region Implementation of IFeatureClassSchema
+
+		ProSuiteGeometryType IFeatureClassSchema.ShapeType => (ProSuiteGeometryType) ShapeType;
+
+		ITableField IFeatureClassSchema.AreaField =>
+			new TableField(AreaField.Name, FieldType.Double);
+
+		ITableField IFeatureClassSchema.LengthField =>
+			new TableField(LengthField.Name, FieldType.Double);
 
 		#endregion
 	}

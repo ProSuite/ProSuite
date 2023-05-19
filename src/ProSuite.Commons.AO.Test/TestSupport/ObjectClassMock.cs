@@ -1,14 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.Db;
+using FieldType = ProSuite.Commons.Db.FieldType;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
 {
 	public class ObjectClassMock : IObjectClass, ITable, IDataset, ISubtypes, IDatasetEdit,
-	                               IReadOnlyTable
+	                               IReadOnlyTable, IDbTable
 	{
 		private static int _nextObjectClassId;
 
@@ -63,6 +67,57 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 			AddField(fieldEdit);
 		}
+
+		#region Implementation of IDbDataset
+
+		string IDbDataset.Name => _name;
+
+		IDbDatasetContainer IDbDataset.DbContainer => new DbWorkspace(_workspaceMock);
+
+		DatasetType IDbDataset.DatasetType =>
+			((IDataset) this).Type == esriDatasetType.esriDTFeatureClass
+				? DatasetType.FeatureClass
+				: DatasetType.Table;
+
+		bool IDbDataset.Equals(IDbDataset otherDataset)
+		{
+			return Equals(otherDataset);
+		}
+
+		#endregion
+
+		#region Implementation of IDbTableSchema
+
+		IReadOnlyList<ITableField> IDbTableSchema.TableFields
+		{
+			get
+			{
+				return _fieldsMock.FieldList
+				                  .Select(f => new TableField(f.Name, (FieldType) f.Type, f.Length))
+				                  .ToList();
+			}
+		}
+
+		#endregion
+
+		#region Implementation of IDbTable
+
+		IDbRow IDbTable.GetRow(long oid)
+		{
+			throw new NotImplementedException();
+		}
+
+		IEnumerable<IDbRow> IDbTable.EnumRows(ITableFilter filter, bool recycle)
+		{
+			throw new NotImplementedException();
+		}
+
+		long IDbTable.RowCount(ITableFilter filter)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
 
 		public int FindField(string name)
 		{
@@ -213,6 +268,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		public IFeature GetFeature(long OID) => throw new NotImplementedException();
 #else
 		IRow ITable.GetRow(int OID) => throw new NotImplementedException();
+
 		public IFeature GetFeature(int OID) => throw new NotImplementedException();
 #endif
 

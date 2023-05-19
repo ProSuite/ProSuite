@@ -1,13 +1,16 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using FieldType = ProSuite.Commons.Db.FieldType;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	public class ReadOnlyTable : IReadOnlyTable, ISubtypes
+	public class ReadOnlyTable : IDbTable, IReadOnlyTable, ISubtypes
 	{
 		protected static ReadOnlyTable CreateReadOnlyTable(ITable table)
 		{
@@ -84,7 +87,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			else
 			{
-				var queryFilter = TableFilterUtils.GetQueryFilter(filter, BaseTable as IFeatureClass);
+				var queryFilter =
+					TableFilterUtils.GetQueryFilter(filter, BaseTable as IFeatureClass);
 				foreach (var row in new EnumCursor(BaseTable, queryFilter, recycle))
 				{
 					yield return CreateRow(row);
@@ -200,5 +204,55 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return _oidFieldIndex;
 			}
 		}
+
+		#region Implementation of IDbDataset
+
+		private IDbDatasetContainer _datasetContainer;
+
+		IDbDatasetContainer IDbDataset.DbContainer =>
+			_datasetContainer ??
+			(_datasetContainer = new DbWorkspace(DatasetUtils.GetWorkspace(BaseTable)));
+
+		DatasetType IDbDataset.DatasetType =>
+			((IDataset) BaseTable).Type == esriDatasetType.esriDTFeatureClass
+				? DatasetType.FeatureClass
+				: DatasetType.Table;
+
+		bool IDbDataset.Equals(IDbDataset otherDataset)
+		{
+			return Equals(otherDataset);
+		}
+
+		#endregion
+
+		#region Implementation of IDbTableSchema
+
+		IReadOnlyList<ITableField> IDbTableSchema.TableFields
+		{
+			get
+			{
+				// TODO: If this is heavily used, wrap IFields in separate object.
+				return DatasetUtils.EnumFields(BaseTable.Fields)
+				                   .Select(
+					                   f => new TableField(f.Name, (FieldType) f.Type, f.Length))
+				                   .ToList();
+			}
+		}
+
+		#endregion
+
+		#region Implementation of IDbTable
+
+		IDbRow IDbTable.GetRow(long oid)
+		{
+			return GetRow(oid);
+		}
+
+		IEnumerable<IDbRow> IDbTable.EnumRows(ITableFilter filter, bool recycle)
+		{
+			return EnumRows(filter, recycle);
+		}
+
+		#endregion
 	}
 }

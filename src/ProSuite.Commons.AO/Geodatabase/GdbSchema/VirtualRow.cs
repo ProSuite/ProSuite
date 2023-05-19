@@ -2,6 +2,7 @@ using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Db;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -81,6 +82,17 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		ITable IRow.Table => Table;
 		ITable IObject.Table => Table;
 		IReadOnlyTable IReadOnlyRow.Table => ReadOnlyTable;
+
+		#region Implementation of IDbRow
+
+		object IDbRow.GetValue(int index)
+		{
+			return get_Value(index);
+		}
+
+		public IDbTable DbTable => Table;
+
+		#endregion
 
 		public virtual VirtualTable Table =>
 			throw new NotImplementedException("Implement in derived class");

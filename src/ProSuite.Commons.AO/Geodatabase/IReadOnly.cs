@@ -51,12 +51,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		IField LengthField { get; }
 	}
 
-	public interface IReadOnlyRow
+	public interface IReadOnlyRow : IDbRow
 	{
-		bool HasOID { get; }
-
-		long OID { get; }
-
 		object get_Value(int Index);
 
 		IReadOnlyTable Table { get; }
