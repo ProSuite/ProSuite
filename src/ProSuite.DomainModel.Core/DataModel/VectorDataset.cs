@@ -1,8 +1,12 @@
+using System;
+using System.Linq;
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.EsriShape;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
-	public abstract class VectorDataset : ObjectDataset, IVectorDataset
+	public abstract class VectorDataset : ObjectDataset, IVectorDataset, IFeatureClassSchema
 	{
 		[UsedImplicitly] private LayerFile _defaultSymbology;
 
@@ -53,6 +57,30 @@ namespace ProSuite.DomainModel.Core.DataModel
 			get { return _defaultSymbology; }
 			set { _defaultSymbology = value; }
 		}
+
+		#endregion
+
+		public override DatasetType DatasetType => DatasetType.FeatureClass;
+
+		#region Implementation of IFeatureClassSchema
+
+		public string ShapeFieldName =>
+			Attributes.FirstOrDefault(a => a.FieldType == FieldType.Geometry)?.Name;
+
+		public ProSuiteGeometryType ShapeType
+		{
+			get
+			{
+				GeometryTypeShape geometryTypeShape = ((GeometryTypeShape) GeometryType);
+
+				return geometryTypeShape?.ShapeType ?? ProSuiteGeometryType.Null;
+			}
+		}
+
+		public ITableField AreaField =>
+			Attributes.FirstOrDefault(a => AttributeRole.ShapeArea.Equals(a.Role));
+
+		public ITableField LengthField => throw new NotImplementedException();
 
 		#endregion
 	}

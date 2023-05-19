@@ -1,3 +1,4 @@
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel
@@ -18,6 +19,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 			: base(name, abbreviation, aliasName) { }
 
 		public override string TypeDescription => "Mosaic Dataset";
+
+		public override DatasetType DatasetType => DatasetType.RasterMosaic;
 
 		// TODO: Harvested or manually configure the following properties in the DDX
 		// -> No separate DTO modelling is needed for VirtualModelContext!

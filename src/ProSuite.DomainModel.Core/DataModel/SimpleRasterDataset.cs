@@ -1,3 +1,5 @@
+using ProSuite.Commons.Db;
+
 namespace ProSuite.DomainModel.Core.DataModel
 {
 	public class SimpleRasterDataset : Dataset, ISimpleRasterDataset
@@ -5,5 +7,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public SimpleRasterDataset(string name) : base(name) { }
 
 		public LayerFile DefaultLayerFile { get; set; }
+
+		public override DatasetType DatasetType => DatasetType.Raster;
 	}
 }

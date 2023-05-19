@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProSuite.Commons.Db;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -9,7 +10,8 @@ using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
-	public abstract class DdxModel : VersionedEntityWithMetadata, IDetachedState, INamed, IAnnotated
+	public abstract class DdxModel : VersionedEntityWithMetadata, IDetachedState, INamed,
+	                                 IAnnotated, IDbDatasetContainer
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -724,5 +726,29 @@ namespace ProSuite.DomainModel.Core.DataModel
 			// allow subclasses to add their own
 			CheckAssignSpecialDatasetCore(dataset);
 		}
+
+		#region Implementation of IDbDatasetContainer
+
+		public IDbTableSchema OpenTable(string tableName)
+		{
+			Dataset dataset = GetDataset(tableName, true);
+
+			return dataset as IDbTableSchema;
+		}
+
+		public IEnumerable<IDbDataset> GetGdbDatasets()
+		{
+			foreach (Dataset dataset in Datasets)
+			{
+				yield return dataset;
+			}
+		}
+
+		public bool Equals(IDbDatasetContainer otherWorkspace)
+		{
+			return Equals((object) otherWorkspace);
+		}
+
+		#endregion
 	}
 }

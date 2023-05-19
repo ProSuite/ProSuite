@@ -1,3 +1,4 @@
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -45,6 +46,8 @@ namespace ProSuite.DomainModel.Core.DataModel.LegacyTypes
 		#endregion
 
 		public override string TypeDescription => "Geometric Network";
+
+		public override DatasetType DatasetType => DatasetType.Unknown;
 
 		public string FeatureDatasetName
 		{

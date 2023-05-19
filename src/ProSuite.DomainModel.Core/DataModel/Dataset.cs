@@ -1,9 +1,10 @@
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
-	public abstract class Dataset : ModelElement, IDdxDataset
+	public abstract class Dataset : ModelElement, IDdxDataset, IDbDataset
 	{
 		[UsedImplicitly] private string _aliasName;
 		[UsedImplicitly] private string _abbreviation;
@@ -73,6 +74,24 @@ namespace ProSuite.DomainModel.Core.DataModel
 			// return ModelElementUtils.GetUnqualifiedName(fullName);
 			return fullName;
 			// otherwise the abbreviation is not guaranteed to be unique within the model
+		}
+
+		#endregion
+
+		#region Implementation of IDbDataset
+
+		public IDbDatasetContainer DbContainer => Model;
+
+		public abstract DatasetType DatasetType { get; }
+
+		public bool Equals(IDbDataset otherDataset)
+		{
+			if (otherDataset is ObjectDataset otherObjectDataset)
+			{
+				return base.Equals(otherObjectDataset);
+			}
+
+			return false;
 		}
 
 		#endregion

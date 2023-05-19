@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
@@ -38,6 +39,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 		#endregion
 
 		public override string TypeDescription => "SimpleTerrain";
+
+		public override DatasetType DatasetType => DatasetType.Terrain;
 
 		#region ISimpleTerrainDataset Members
 

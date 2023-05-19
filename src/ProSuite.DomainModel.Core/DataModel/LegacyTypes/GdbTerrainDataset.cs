@@ -1,3 +1,4 @@
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -50,5 +51,7 @@ namespace ProSuite.DomainModel.Core.DataModel.LegacyTypes
 				_featureDatasetName = value;
 			}
 		}
+
+		public override DatasetType DatasetType => DatasetType.Terrain;
 	}
 }
