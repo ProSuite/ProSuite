@@ -1,4 +1,4 @@
-namespace ProSuite.Commons.Gdb
+namespace ProSuite.Commons.Db
 {
 	public enum WorkspaceDbType
 	{

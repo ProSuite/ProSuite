@@ -3,6 +3,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.TestContainer;
 

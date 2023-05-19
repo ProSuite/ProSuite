@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Gdb;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.DomainModel.AO.Workflow.WorkspaceFilters

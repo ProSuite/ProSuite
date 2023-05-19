@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using ProSuite.Commons.Db;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.Core.Test.DataModel

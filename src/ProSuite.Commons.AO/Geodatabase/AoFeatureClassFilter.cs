@@ -4,6 +4,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using System;
 using System.Collections.Generic;
+using ProSuite.Commons.Db;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {

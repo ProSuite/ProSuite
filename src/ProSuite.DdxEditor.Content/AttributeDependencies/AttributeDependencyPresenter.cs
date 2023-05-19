@@ -18,7 +18,7 @@ using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.AttributeDependencies;
 using ProSuite.DomainModel.Core.DataModel;
 using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
-using FieldType = ProSuite.DomainModel.Core.DataModel.FieldType;
+using FieldType = ProSuite.Commons.Db.FieldType;
 
 namespace ProSuite.DdxEditor.Content.AttributeDependencies
 {

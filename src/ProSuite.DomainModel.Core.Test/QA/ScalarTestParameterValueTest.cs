@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using NUnit.Framework;
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Globalization;
 using ProSuite.Commons.Test;
 using ProSuite.DomainModel.Core.DataModel;

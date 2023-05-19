@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using ProSuite.Commons.Db;
 using ProSuite.DomainModel.Core.AttributeDependencies;
 using ProSuite.DomainModel.Core.AttributeDependencies.Repositories;
 using ProSuite.DomainModel.Core.DataModel;

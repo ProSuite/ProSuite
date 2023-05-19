@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geometry;
 using Google.Protobuf.Collections;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.AO;
