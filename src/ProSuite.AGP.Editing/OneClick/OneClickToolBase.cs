@@ -503,50 +503,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			PickerMode pickerMode = pickerPrecedence.GetPickerMode(featureCount);
 
-			// todo daro refactor
-			if (featureCount == 1)
-			{
-				if (pickerMode == PickerMode.ShowPicker)
-				{
-					IEnumerable<IPickableItem> items =
-						await QueuedTask.Run(
-							() => PickableItemsFactory.CreateFeatureItems(
-								PickerUtils.OrderByGeometryDimension(candidatesOfLayers)));
-
-					var pickedItem =
-						await ShowPickerAsync<IPickableFeatureItem>(
-							items, pickerPrecedence, pickerLocation);
-
-					if (pickedItem == null)
-					{
-						return false;
-					}
-
-					await QueuedTask.Run(() =>
-					{
-						//since SelectionCombinationMethod.New is only applied to
-						//the current layer but selections of other layers remain,
-						//we manually need to clear all selections first.
-
-						SelectionUtils.SelectFeature(
-							pickedItem.Layer, selectionMethod,
-							pickedItem.Oid,
-							selectionMethod == SelectionCombinationMethod.New);
-					});
-
-					return true;
-				}
-
-				await QueuedTask.Run(() =>
-				{
-					SelectionUtils.SelectFeatures(
-						candidatesOfLayers.First(), selectionMethod,
-						selectionMethod == SelectionCombinationMethod.New);
-				});
-
-				return true;
-			}
-
 			// ALT pressed: select all, do not show picker
 			if (pickerMode == PickerMode.PickAll)
 			{
