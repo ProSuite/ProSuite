@@ -2,6 +2,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -26,6 +27,8 @@ namespace ProSuite.QA.Tests.Surface
 		public override double CellSize => _simpleRasterMosaic.GetCellSize();
 
 		public override bool AssumeInMemory => false;
+
+		public override DatasetType DatasetType => DatasetType.RasterMosaic;
 
 		public override ISimpleSurface CreateSurface(IEnvelope extent)
 		{

@@ -5,12 +5,15 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Surface
 {
-	public class SimpleTerrain : TerrainReference, IReadOnlyDataset, IReadOnlyGeoDataset
+	public class SimpleTerrain : TerrainReference, IReadOnlyDataset, IReadOnlyGeoDataset,
+	                             IDbTerrainSchema
 	{
 		private IName _fullName;
 
@@ -116,6 +119,31 @@ namespace ProSuite.Commons.AO.Surface
 
 				return _extent;
 			}
+		}
+
+		#endregion
+
+		#region Implementation of IDbDataset
+
+		public IDbDatasetContainer DbContainer
+		{
+			get
+			{
+				IWorkspace workspace = ((IReadOnlyDataset) this).Workspace;
+				return new DbWorkspace(workspace);
+			}
+		}
+
+		public DatasetType DatasetType => DatasetType.Terrain;
+
+		public bool Equals(IDbDataset otherDataset)
+		{
+			if (otherDataset is SimpleTerrain simpleTerrain)
+			{
+				return EqualsCore(simpleTerrain);
+			}
+
+			return false;
 		}
 
 		#endregion

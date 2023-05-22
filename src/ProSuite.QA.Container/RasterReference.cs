@@ -1,11 +1,14 @@
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
 {
-	public abstract class RasterReference
+	public abstract class RasterReference : IDbRasterDataset
 	{
 		public abstract bool EqualsCore([NotNull] RasterReference rasterReference);
 
@@ -27,6 +30,33 @@ namespace ProSuite.QA.Container
 		/// requires a sub-tiling to avoid out-of-memory situations.
 		/// </summary>
 		public virtual bool AssumeInMemory => true;
+
+		#region Implementation of IDbDataset
+
+		public string Name => Dataset.Name;
+
+		public IDbDatasetContainer DbContainer
+		{
+			get
+			{
+				IWorkspace workspace = Dataset.Workspace;
+				return new DbWorkspace(workspace);
+			}
+		}
+
+		public abstract DatasetType DatasetType { get; }
+
+		public bool Equals(IDbDataset otherDataset)
+		{
+			if (otherDataset is RasterReference rasterDataset)
+			{
+				return EqualsCore(rasterDataset);
+			}
+
+			return false;
+		}
+
+		#endregion
 
 		public override bool Equals(object obj)
 		{

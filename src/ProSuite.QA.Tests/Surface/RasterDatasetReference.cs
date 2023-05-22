@@ -6,6 +6,7 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
+using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -17,6 +18,13 @@ namespace ProSuite.QA.Tests.Surface
 	{
 		[NotNull] private readonly IRasterDataset2 _rasterDataset;
 		[CanBeNull] private IRaster _fullRaster;
+
+		public RasterDatasetReference([NotNull] IDbRasterDataset rasterDataset)
+		{
+			Assert.ArgumentNotNull(rasterDataset, nameof(rasterDataset));
+
+			_rasterDataset = (IRasterDataset2)rasterDataset;
+		}
 
 		public RasterDatasetReference([NotNull] IRasterDataset2 rasterDataset)
 		{
@@ -31,6 +39,8 @@ namespace ProSuite.QA.Tests.Surface
 			(IGeoDataset) _rasterDataset);
 
 		public override double CellSize => RasterUtils.GetMeanCellSize(FullRaster);
+
+		public override DatasetType DatasetType => DatasetType.Raster;
 
 		private IRaster FullRaster =>
 			_fullRaster
