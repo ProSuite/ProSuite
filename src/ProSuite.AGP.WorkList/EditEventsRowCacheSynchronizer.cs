@@ -40,13 +40,13 @@ namespace ProSuite.AGP.WorkList
 			_eventToken = EditCompletedEvent.Subscribe(OnEditCompleted);
 		}
 
-		private async Task OnEditCompleted(EditCompletedEventArgs args)
+		private async Task OnEditCompleted(EditCompletedEventArgs e)
 		{
 			_msg.VerboseDebug(() => nameof(OnEditCompleted));
 
 			try
 			{
-				switch (args.CompletedType)
+				switch (e.CompletedType)
 				{
 					case EditCompletedType.Save:
 						break;
@@ -56,7 +56,7 @@ namespace ProSuite.AGP.WorkList
 					case EditCompletedType.Operation:
 					case EditCompletedType.Undo:
 					case EditCompletedType.Redo:
-						await QueuedTask.Run(() => { ProcessChanges(args); });
+						await QueuedTask.Run(() => { ProcessChanges(e); });
 						break;
 					case EditCompletedType.Reconcile:
 						break;
@@ -65,8 +65,8 @@ namespace ProSuite.AGP.WorkList
 					default:
 						throw new ArgumentOutOfRangeException(
 							nameof(EditCompletedType),
-							args.CompletedType,
-							$@"Unexpected EditCompletedType: {args.CompletedType}");
+							e.CompletedType,
+							$@"Unexpected EditCompletedType: {e.CompletedType}");
 				}
 			}
 			catch (Exception ex)
@@ -77,8 +77,8 @@ namespace ProSuite.AGP.WorkList
 
 		private void ProcessChanges(EditCompletedEventArgs args)
 		{
-			// On Undo and Redo args.Members is not empty
-			//if (! args.Members.Any(member => _rowCache.CanContain(member)))
+			// On Undo and Redo e.Members is not empty
+			//if (! e.Members.Any(member => _rowCache.CanContain(member)))
 			//{
 			//	return;
 			//}
@@ -86,6 +86,7 @@ namespace ProSuite.AGP.WorkList
 			Dictionary<Table, List<long>> creates = GetOidsByTable(args.Creates);
 			Dictionary<Table, List<long>> deletes = GetOidsByTable(args.Deletes);
 			Dictionary<Table, List<long>> modifies = GetOidsByTable(args.Modifies);
+
 			try
 			{
 				_rowCache.ProcessChanges(creates, deletes, modifies);
@@ -109,11 +110,17 @@ namespace ProSuite.AGP.WorkList
 		private static Dictionary<Table, List<long>> GetOidsByTable(
 			IReadOnlyDictionary<MapMember, IReadOnlyCollection<long>> oidsByMapMember)
 		{
-			var result = new Dictionary<Table, List<long>>();
+			var result = new Dictionary<Table, List<long>>(oidsByMapMember.Count);
+
+			var tableByHandle = new Dictionary<IntPtr, Table>(oidsByMapMember.Count);
+
+			var oidsByHandle = new Dictionary<IntPtr, List<long>>();
 
 			foreach (KeyValuePair<MapMember, IReadOnlyCollection<long>> pair in oidsByMapMember)
 			{
 				MapMember mapMember = pair.Key;
+				IReadOnlyCollection<long> oids = pair.Value;
+
 				if (! (mapMember is FeatureLayer featureLayer))
 				{
 					continue;
@@ -121,13 +128,25 @@ namespace ProSuite.AGP.WorkList
 
 				Table table = featureLayer.GetTable();
 
-				if (! result.ContainsKey(table))
+				if (oidsByHandle.ContainsKey(table.Handle))
 				{
-					result.Add(table, pair.Value.ToList());
+					oidsByHandle[table.Handle].AddRange(oids);
 				}
 				else
 				{
-					result[table].AddRange(pair.Value);
+					tableByHandle.Add(table.Handle, table);
+					oidsByHandle.Add(table.Handle, oids.ToList());
+				}
+			}
+
+			foreach (KeyValuePair<IntPtr, Table> pair in tableByHandle)
+			{
+				IntPtr handle = pair.Key;
+				Table table = pair.Value;
+
+				if (oidsByHandle.TryGetValue(handle, out List<long> oids))
+				{
+					result.Add(table, oids.Distinct().ToList());
 				}
 			}
 
