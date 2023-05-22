@@ -403,8 +403,6 @@ namespace ProSuite.Microservices.Client.QA
 		public static T FromInstanceDescriptorMsg<T>(
 			[NotNull] InstanceDescriptorMsg instanceDescriptorMsg) where T : InstanceDescriptor
 		{
-			// TODO: Use type to determine if test/transformer or issue filter
-			// TODO!!!
 			ClassDescriptorMsg classDescriptorMsg = instanceDescriptorMsg.ClassDescriptor;
 
 			var classDescriptor =
@@ -412,10 +410,30 @@ namespace ProSuite.Microservices.Client.QA
 
 			string name = instanceDescriptorMsg.Name;
 
-			InstanceDescriptor result = new TestDescriptor(name, classDescriptor)
-			                            {
-				                            TestConstructorId = instanceDescriptorMsg.Constructor
-			                            };
+			int constructorId = instanceDescriptorMsg.Constructor;
+
+			InstanceDescriptor result;
+
+			if (typeof(T) == typeof(TestDescriptor))
+			{
+				result =
+					constructorId < 0
+						? new TestDescriptor(name, classDescriptor)
+						: new TestDescriptor(name, classDescriptor,
+						                     constructorId);
+			}
+			else if (typeof(T) == typeof(TransformerDescriptor))
+			{
+				result = new TransformerDescriptor(name, classDescriptor, constructorId);
+			}
+			else if (typeof(T) == typeof(IssueFilterDescriptor))
+			{
+				result = new IssueFilterDescriptor(name, classDescriptor, constructorId);
+			}
+			else
+			{
+				throw new ArgumentOutOfRangeException($"Unknown descriptor type: {typeof(T)}");
+			}
 
 			result.SetCloneId(instanceDescriptorMsg.Id);
 
@@ -468,27 +486,28 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			ProSuiteGeometryType geometryType;
 
-			switch (dataset)
+			GeometryType datasetGeometryType = dataset.GeometryType;
+
+			switch (datasetGeometryType)
 			{
-				case IVectorDataset vds:
+				case GeometryTypeShape shape:
 				{
-					var shapeGeometryType = Assert.NotNull((GeometryTypeShape) vds.GeometryType);
-					geometryType = shapeGeometryType.ShapeType;
+					geometryType = shape.ShapeType;
 					break;
 				}
-				case ITableDataset _:
+				case GeometryTypeNoGeometry _:
 					geometryType = ProSuiteGeometryType.Null;
 					break;
-				case ITopologyDataset _:
+				case GeometryTypeTopology _:
 					geometryType = ProSuiteGeometryType.Topology;
 					break;
-				case RasterDataset _:
+				case GeometryTypeRasterDataset _:
 					geometryType = ProSuiteGeometryType.Raster;
 					break;
-				case IRasterMosaicDataset _:
+				case GeometryTypeRasterMosaic _:
 					geometryType = ProSuiteGeometryType.RasterMosaic;
 					break;
-				case ISimpleTerrainDataset _:
+				case GeometryTypeTerrain _:
 					geometryType = ProSuiteGeometryType.Terrain;
 					break;
 				default:

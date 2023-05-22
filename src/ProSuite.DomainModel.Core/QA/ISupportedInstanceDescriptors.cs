@@ -1,3 +1,5 @@
+using ProSuite.Commons.Essentials.CodeAnnotations;
+
 namespace ProSuite.DomainModel.Core.QA
 {
 	public interface ISupportedInstanceDescriptors
@@ -11,5 +13,7 @@ namespace ProSuite.DomainModel.Core.QA
 		IssueFilterDescriptor GetIssueFilterDescriptor(string name);
 
 		int Count { get; }
+
+		bool AddDescriptor([NotNull] InstanceDescriptor instanceDescriptor);
 	}
 }

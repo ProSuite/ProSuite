@@ -61,7 +61,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				Assert.NotNull(SessionContext.VerificationEnvironment);
 
 			IQualitySpecificationReference qualitySpecification =
-				qaEnvironment.CurrentQualitySpecification;
+				qaEnvironment.CurrentQualitySpecificationReference;
 
 			if (qualitySpecification == null)
 			{

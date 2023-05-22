@@ -20,7 +20,6 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
-using ProSuite.Microservices.Server.AO.QA;
 using GeometryType = ProSuite.DomainModel.Core.DataModel.GeometryType;
 
 namespace ProSuite.Microservices.Client.AGP.QA
@@ -106,6 +105,177 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			return result;
 		}
 
+		public static async Task<QualitySpecification> LoadFullSpecification(
+			int specificationId,
+			[NotNull] ISupportedInstanceDescriptors supportedInstanceDescriptors,
+			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
+		{
+			var request = new GetSpecificationRequest()
+			              {
+				              QualitySpecificationId = specificationId
+			              };
+
+			_msg.DebugFormat("Getting quality specification for <id> {0} datasets.",
+			                 specificationId);
+
+			GetSpecificationResponse response =
+				await RpcCallUtils.TryAsync(async callOptions =>
+					                            await ddxClient.GetQualitySpecificationAsync(
+						                            request, callOptions), CancellationToken.None,
+				                            _timeoutMilliseconds);
+
+			if (response == null)
+			{
+				// Cancelled or timed out:
+				return null;
+			}
+
+			QualitySpecification result =
+				CreateQualitySpecification(response, supportedInstanceDescriptors);
+
+			return result;
+		}
+
+		public static QualitySpecification CreateQualitySpecification(
+			[NotNull] GetSpecificationResponse getSpecificationResponse,
+			[CanBeNull] ISupportedInstanceDescriptors instanceDescriptors = null)
+		{
+			IEnumerable<InstanceDescriptorMsg> descriptorsMsg =
+				getSpecificationResponse.ReferencedInstanceDescriptors;
+
+			if (instanceDescriptors == null)
+			{
+				instanceDescriptors = new SupportedInstanceDescriptors(
+					new List<TestDescriptor>(),
+					new List<TransformerDescriptor>(),
+					new List<IssueFilterDescriptor>());
+			}
+
+			foreach (InstanceDescriptorMsg descriptorMsg in descriptorsMsg)
+			{
+				InstanceDescriptor instanceDescriptor = GetInstanceDescriptor(descriptorMsg);
+				instanceDescriptors.AddDescriptor(instanceDescriptor);
+			}
+
+			Dictionary<int, BasicDataset> datasetsById =
+				FromDatasetMsgs(getSpecificationResponse.ReferencedDatasets);
+
+			var models = new List<BasicModel>();
+
+			foreach (ModelMsg modelMsg in getSpecificationResponse.ReferencedModels)
+			{
+				BasicModel model = new BasicModel(modelMsg.ModelId, modelMsg.Name);
+
+				foreach (int datasetId in modelMsg.DatasetIds)
+				{
+					if (datasetsById.TryGetValue(datasetId, out BasicDataset dataset))
+					{
+						model.AddDataset(dataset);
+					}
+				}
+
+				models.Add(model);
+			}
+
+			IDictionary<string, DdxModel> modelsByWorkspaceId =
+				models.ToDictionary(m => m.Id.ToString(CultureInfo.InvariantCulture),
+				                    m => (DdxModel) m);
+
+			var factory = new ProtoBasedQualitySpecificationFactory(
+				modelsByWorkspaceId, instanceDescriptors);
+
+			QualitySpecification result =
+				factory.CreateQualitySpecification(getSpecificationResponse.Specification);
+
+			return result;
+		}
+
+		private static InstanceDescriptor GetInstanceDescriptor(
+			InstanceDescriptorMsg descriptorMessage)
+		{
+			{
+				InstanceType instanceType = (InstanceType) descriptorMessage.Type;
+
+				InstanceDescriptor result;
+
+				switch (instanceType)
+				{
+					case InstanceType.Test:
+						result = ProtoDataQualityUtils.FromInstanceDescriptorMsg<TestDescriptor>(
+							descriptorMessage);
+						break;
+					case InstanceType.Transformer:
+						result = ProtoDataQualityUtils
+							.FromInstanceDescriptorMsg<TransformerDescriptor>(
+								descriptorMessage);
+						break;
+					case InstanceType.IssueFilter:
+						result = ProtoDataQualityUtils
+							.FromInstanceDescriptorMsg<IssueFilterDescriptor>(
+								descriptorMessage);
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				return result;
+			}
+		}
+
+		private static IEnumerable<IssueFilterDescriptor> GetIssueFilterDescriptors(
+			IEnumerable<InstanceDescriptorMsg> descriptorMessages)
+		{
+			foreach (InstanceDescriptorMsg instanceDescriptorMsg in descriptorMessages)
+			{
+				if (instanceDescriptorMsg.Type != (int) InstanceType.IssueFilter)
+				{
+					continue;
+				}
+
+				IssueFilterDescriptor issueFilterDescriptor =
+					ProtoDataQualityUtils.FromInstanceDescriptorMsg<IssueFilterDescriptor>(
+						instanceDescriptorMsg);
+
+				yield return issueFilterDescriptor;
+			}
+		}
+
+		private static IEnumerable<TransformerDescriptor> GetTransformerDescriptors(
+			IEnumerable<InstanceDescriptorMsg> descriptorMessages)
+		{
+			foreach (InstanceDescriptorMsg instanceDescriptorMsg in descriptorMessages)
+			{
+				if (instanceDescriptorMsg.Type != (int) InstanceType.Transformer)
+				{
+					continue;
+				}
+
+				TransformerDescriptor transformerDescriptor =
+					ProtoDataQualityUtils.FromInstanceDescriptorMsg<TransformerDescriptor>(
+						instanceDescriptorMsg);
+
+				yield return transformerDescriptor;
+			}
+		}
+
+		private static IEnumerable<TestDescriptor> GetTestDescriptors(
+			IEnumerable<InstanceDescriptorMsg> descriptorMessages)
+		{
+			foreach (InstanceDescriptorMsg instanceDescriptorMsg in descriptorMessages)
+			{
+				if (instanceDescriptorMsg.Type != (int) InstanceType.Test)
+				{
+					continue;
+				}
+
+				TestDescriptor testDescriptor =
+					ProtoDataQualityUtils.FromInstanceDescriptorMsg<TestDescriptor>(
+						instanceDescriptorMsg);
+
+				yield return testDescriptor;
+			}
+		}
+
 		private static GetProjectWorkspacesRequest CreateProjectWorkspacesRequest(
 			[NotNull] IEnumerable<Table> objectClasses)
 		{
@@ -160,23 +330,9 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			var candidates = new List<ProjectWorkspace>();
 
-			Dictionary<int, BasicDataset> datasetsById = new Dictionary<int, BasicDataset>();
+			RepeatedField<DatasetMsg> datasetMsgs = response.Datasets;
 
-			foreach (DatasetMsg datasetMsg in response.Datasets)
-			{
-				BasicDataset dataset =
-					new BasicDataset(datasetMsg.DatasetId, datasetMsg.Name, null,
-					                 datasetMsg.AliasName)
-					{
-						GeometryType =
-							GetGeometryType((ProSuiteGeometryType) datasetMsg.GeometryType)
-					};
-
-				if (! datasetsById.ContainsKey(dataset.Id))
-				{
-					datasetsById.Add(dataset.Id, dataset);
-				}
-			}
+			Dictionary<int, BasicDataset> datasetsById = FromDatasetMsgs(datasetMsgs);
 
 			foreach (ProjectWorkspaceMsg projectWorkspaceMsg in response.ProjectWorkspaces)
 			{
@@ -200,6 +356,30 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			}
 
 			return candidates;
+		}
+
+		private static Dictionary<int, BasicDataset> FromDatasetMsgs(
+			[NotNull] IEnumerable<DatasetMsg> datasetMsgs)
+		{
+			Dictionary<int, BasicDataset> datasetsById = new Dictionary<int, BasicDataset>();
+
+			foreach (DatasetMsg datasetMsg in datasetMsgs)
+			{
+				BasicDataset dataset =
+					new BasicDataset(datasetMsg.DatasetId, datasetMsg.Name, null,
+					                 datasetMsg.AliasName)
+					{
+						GeometryType =
+							GetGeometryType((ProSuiteGeometryType) datasetMsg.GeometryType)
+					};
+
+				if (! datasetsById.ContainsKey(dataset.Id))
+				{
+					datasetsById.Add(dataset.Id, dataset);
+				}
+			}
+
+			return datasetsById;
 		}
 
 		private static SpatialReference GetSpatialReference(
