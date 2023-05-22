@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -14,6 +15,8 @@ namespace ProSuite.QA.Core
 		string[] TestCategories { get; }
 
 		IList<TestParameter> Parameters { get; }
+
+		Type InstanceType { get; }
 
 		TestParameter GetParameter([NotNull] string parameterName);
 
