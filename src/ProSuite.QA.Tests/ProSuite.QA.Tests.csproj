@@ -52,21 +52,6 @@
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-    <Compile Update="Documentation\DocIfStrings.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>DocIfStrings.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Documentation\DocStrings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DocStrings.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Documentation\DocTrStrings.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>DocTrStrings.resx</DependentUpon>
-    </Compile>
     <Compile Update="IssueCodes\IssueCodeDescriptions.de-CH.Designer.cs">
       <DependentUpon>IssueCodeDescriptions.de-CH.resx</DependentUpon>
       <AutoGen>True</AutoGen>
@@ -90,19 +75,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Documentation\DocIfStrings.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>DocIfStrings.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Documentation\DocStrings.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>DocStrings.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Documentation\DocTrStrings.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>DocTrStrings.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
     <EmbeddedResource Update="IssueCodes\IssueCodeDescriptions.de.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>IssueCodeDescriptions.de.Designer.cs</LastGenOutput>
@@ -127,5 +99,6 @@
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Tests.Definitions\ProSuite.QA.Tests.Definitions.csproj" />
   </ItemGroup>
 </Project>

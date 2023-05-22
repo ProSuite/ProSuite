@@ -58,6 +58,13 @@ namespace ProSuite.QA.Tests
 
 		#region Constructors
 
+		public QaConstraint([NotNull] QaConstraintDefinition constraintDef)
+			: base(constraintDef.InvolvedTables.Cast<IReadOnlyTable>())
+		{
+			_table = (IReadOnlyTable)constraintDef.Table;
+			_constraint = constraintDef.Constraint;
+		}
+
 		[Doc(nameof(DocStrings.QaConstraint_0))]
 		public QaConstraint(
 				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull]

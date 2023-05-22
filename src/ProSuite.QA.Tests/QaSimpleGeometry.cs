@@ -75,6 +75,10 @@ namespace ProSuite.QA.Tests
 		// Note: ContainerTests cannot test for missing or empty geometries
 		// because the container's search filter will miss such features!
 
+		public QaSimpleGeometry(QaSimpleGeometryDefinition instanceDef)
+			: this((IReadOnlyFeatureClass) instanceDef.FeatureClass,
+			       instanceDef.AllowNonPlanarLines, instanceDef.ToleranceFactor) { }
+
 		[Doc(nameof(DocStrings.QaSimpleGeometry_0))]
 		public QaSimpleGeometry(
 				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]

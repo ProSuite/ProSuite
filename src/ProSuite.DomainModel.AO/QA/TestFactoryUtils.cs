@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
@@ -62,7 +63,26 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (descriptor.TestFactoryDescriptor != null)
 			{
-				return descriptor.TestFactoryDescriptor.CreateInstance<TestFactory>();
+				//return descriptor.TestFactoryDescriptor.CreateInstance<TestFactory>();
+
+
+				TestFactory result = descriptor.TestFactoryDescriptor.CreateInstance<TestFactory>();
+
+				if (result is QaFactoryBase qaFactory)
+				{
+					// Get the FactoryDescription
+					// TODO: Consider hard-coding the factory assembly/type name in the FactoryDefinition?
+					const string definition = "Definition";
+					string assemblyName = $"{descriptor.TestFactoryDescriptor.AssemblyName}.{definition}";
+					string typeName = $"{descriptor.TestFactoryDescriptor.TypeName}{definition}";
+					Type factoryDefType = PrivateAssemblyUtils.LoadType(assemblyName, typeName);
+
+
+					qaFactory.FactoryDefinition =
+						(TestFactoryDefinition) Activator.CreateInstance(factoryDefType);
+				}
+
+				return result;
 			}
 
 			return null;
