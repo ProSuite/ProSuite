@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.Test.Geom
 {
@@ -61,14 +62,15 @@ namespace ProSuite.Commons.Test.Geom
 		[Test]
 		public void CanGetContainsXY()
 		{
-			var ring1 = new List<Pnt3D>();
-
-			ring1.Add(new Pnt3D(0, 0, 10));
-			ring1.Add(new Pnt3D(0, 100, 20));
-			ring1.Add(new Pnt3D(100, 100, 10));
-			ring1.Add(new Pnt3D(50, 50, 10));
-			ring1.Add(new Pnt3D(25, 75, 10));
-			ring1.Add(new Pnt3D(0, 0, 10));
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 10),
+				            new Pnt3D(0, 100, 20),
+				            new Pnt3D(100, 100, 10),
+				            new Pnt3D(50, 50, 10),
+				            new Pnt3D(25, 75, 10),
+				            new Pnt3D(0, 0, 10)
+			            };
 
 			Linestring l = new Linestring(ring1);
 
@@ -140,14 +142,15 @@ namespace ProSuite.Commons.Test.Geom
 		[Test]
 		public void CanDetermineContainsXY()
 		{
-			var ring1 = new List<Pnt3D>();
-
-			ring1.Add(new Pnt3D(0, 0, 10));
-			ring1.Add(new Pnt3D(0, 100, 20));
-			ring1.Add(new Pnt3D(100, 100, 10));
-			ring1.Add(new Pnt3D(50, 50, 10));
-			ring1.Add(new Pnt3D(25, 75, 10));
-			ring1.Add(new Pnt3D(0, 0, 10));
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 10),
+				            new Pnt3D(0, 100, 20),
+				            new Pnt3D(100, 100, 10),
+				            new Pnt3D(50, 50, 10),
+				            new Pnt3D(25, 75, 10),
+				            new Pnt3D(0, 0, 10)
+			            };
 
 			Linestring l = new Linestring(ring1);
 
@@ -218,13 +221,110 @@ namespace ProSuite.Commons.Test.Geom
 
 			source.ReverseOrientation();
 
-			var sourcePoly = new MultiPolycurve(new[] {outerRing, source});
+			var sourcePoly = new MultiPolycurve(new[] { outerRing, source });
 
 			Assert.IsFalse(GeomRelationUtils.AreaContainsXY(sourcePoly, target, 0.0001));
 
 			// And the reverted target:
 			Assert.IsFalse(
 				GeomRelationUtils.AreaContainsXY(sourcePoly, revertedTarget, 0.0001));
+		}
+
+		[Test]
+		public void CanDetermineMultipartSourcePolygonContainsPolygonTouchingBoth()
+		{
+			//                       
+			//    _____*_______     *
+			//    |   /|      |	    |\
+			//    | 1/ |   0  |     | \
+			//    | /  |      |     |  \
+			//    |/   |______|     |___\
+			//     source rings    target
+
+			//    _____*_______ 
+			//    |   /|\  0  |
+			//    | 1/ | \    |
+			//    | /  |  \   |
+			//    |/   |___\__|
+			//     Source rings with target. The target is fully contained in source ring 0
+			//     All three rings touch in *
+
+			var source0Points = new List<Pnt3D>
+			                    {
+				                    new Pnt3D(0, 0, 10),
+				                    new Pnt3D(0, 100, 20),
+				                    new Pnt3D(50, 100, 10),
+				                    new Pnt3D(0, 0, 10)
+			                    };
+
+			Linestring source0 = new Linestring(source0Points);
+
+			var source1Points = new List<Pnt3D>
+			                    {
+				                    new Pnt3D(50, 0, 10),
+				                    new Pnt3D(50, 100, 20),
+				                    new Pnt3D(100, 100, 10),
+				                    new Pnt3D(100, 0, 10),
+				                    new Pnt3D(50, 0, 10)
+			                    };
+			Linestring source1 = new Linestring(source1Points);
+
+			var targetPoints = new List<Pnt3D>()
+			                   {
+				                   new Pnt3D(80, 0, 10),
+				                   new Pnt3D(50, 0, 20),
+				                   new Pnt3D(50, 100, 10),
+				                   new Pnt3D(80, 0, 10)
+			                   };
+
+			Linestring target = new Linestring(targetPoints);
+
+			MultiPolycurve source = new MultiPolycurve(new[] { source0, source1 });
+
+			const double tolerance = 0.0001;
+			Assert.IsTrue(GeomRelationUtils.AreaContainsXY(source, target, tolerance));
+
+			Assert.IsTrue(GeomRelationUtils.IsContainedXY(target, source, tolerance));
+
+			// And hence the union should be equal to the source:
+			MultiLinestring unionAreasXY =
+				GeomTopoOpUtils.GetUnionAreasXY(source, new RingGroup(target), tolerance);
+			Assert.AreEqual(source.GetArea2D(), unionAreasXY.GetArea2D());
+		}
+
+		[Test]
+		public void CanDetermineMultipartSourcePolygonMultitouch()
+		{
+			// The source polygon has two touching rings. The target touches the source-touch point
+			// and additionally the ring 1 in 2 other points (from the inside)
+			MultiPolycurve source = (MultiPolycurve) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("multitouch_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiPolygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("multitouch_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			double tolerance = 0.01;
+
+			Assert.IsTrue(GeomRelationUtils.AreaContainsXY(source, target, tolerance));
+			Assert.IsTrue(GeomRelationUtils.IsContainedXY(target, source, tolerance));
+
+			// And hence the union should be equal to the source:
+			MultiLinestring unionAreasXY =
+				GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+			Assert.AreEqual(source.GetArea2D(), unionAreasXY.GetArea2D());
+
+			//// TODO: The target is multi-part (touching in point) and the start point is at the touch point
+			////       -> filter out touch point type intersections?
+			//// Somehow check that we are not diving into another target part?
+			//// The Outbound source must not be inbound into a touching other source part!
+			//unionAreasXY = GeomTopoOpUtils.GetUnionAreasXY(target, source, tolerance);
+			//Assert.AreEqual(source.GetArea2D(), unionAreasXY.GetArea2D());
 		}
 
 		[Test]

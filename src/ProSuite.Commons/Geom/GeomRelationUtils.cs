@@ -429,6 +429,8 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
+		#region AreaContains, IsContained
+
 		/// <summary>
 		/// Determines whether the specified closed polycurve contains (including the boundary) the
 		/// specified test geometry. This method ignores the orientation.
@@ -564,12 +566,23 @@ namespace ProSuite.Commons.Geom
 				return AreaContainsXY(closedPolycurve, anyPoint, tolerance);
 			}
 
+			// First check the non-touching points. If there is any left-side deviation of the target
+			// it is not contained. If there are only right-side deviations it is contained.
+			List<IntersectionPoint3D> touchPoints = new List<IntersectionPoint3D>();
 			bool hasAnyRightSideDeviation = false;
 			foreach (IntersectionPoint3D intersectionPoint in intersectionPoints)
 			{
+				if (intersectionPoint.Type == IntersectionPointType.TouchingInPoint)
+				{
+					// Touching points can be misleading because it could be a different part that
+					// touches the target ring from the outside but the target could nevertheless
+					// be contained within the main part of the source.
+					touchPoints.Add(intersectionPoint);
+					continue;
+				}
+
 				DetermineTargetDeviationAtIntersection(intersectionPoint, closedPolycurve,
-				                                       targetSegments,
-				                                       tolerance,
+				                                       targetSegments, tolerance,
 				                                       out bool hasRightSideDeviation,
 				                                       out bool hasLeftSideDeviation);
 				if (hasLeftSideDeviation)
@@ -586,8 +599,107 @@ namespace ProSuite.Commons.Geom
 				return true;
 			}
 
-			// No deviations to the left nor to the right -> congruent
-			return null;
+			if (touchPoints.Count == 0)
+			{
+				// No deviations to the left nor to the right -> congruent
+				return null;
+			}
+
+			// No decisive deviation so far -> use the touch points
+			return IsTargetTouchingFromInside(closedPolycurve, targetSegments, touchPoints,
+			                                  tolerance);
+		}
+
+		/// <summary>
+		/// Determines whether the target ring is touching the source area from the inside in one
+		/// of the provided touchPoints. TODO: Duplication with above method
+		/// -> Use record for left/right deviation, provide a Func and the grouping
+		/// </summary>
+		/// <param name="closedPolycurve"></param>
+		/// <param name="targetSegments"></param>
+		/// <param name="touchPoints"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		private static bool? IsTargetTouchingFromInside(ISegmentList closedPolycurve,
+		                                                ISegmentList targetSegments,
+		                                                IEnumerable<IntersectionPoint3D>
+			                                                touchPoints,
+		                                                double tolerance)
+		{
+			// This must be done per source ring to avoid getting a left side deviation from a different
+			// touching source ring despite the target being fully within the adjacent source ring.
+			bool hasAnyLeftSideDeviation = false;
+
+			foreach (IGrouping<int, IntersectionPoint3D> intersectionPointsPerPart in
+			         touchPoints.GroupBy(i => i.SourcePartIndex))
+			{
+				bool hasAnyRightSideDeviation = false;
+				foreach (IntersectionPoint3D intersectionPoint in intersectionPointsPerPart)
+				{
+					DetermineTargetDeviationAtIntersection(intersectionPoint, closedPolycurve,
+					                                       targetSegments, tolerance,
+					                                       out bool hasRightSideDeviation,
+					                                       out bool hasLeftSideDeviation);
+
+					if (hasLeftSideDeviation)
+					{
+						hasAnyLeftSideDeviation = true;
+					}
+
+					hasAnyRightSideDeviation |= hasRightSideDeviation;
+				}
+
+				if (hasAnyRightSideDeviation)
+				{
+					// Completely within this source ring: contained
+					return true;
+				}
+			}
+
+			// No source ring had right-side-only touch points. It must be outside if there was
+			// any touch point with left-side deviation.
+			return ! hasAnyLeftSideDeviation;
+		}
+
+		private static bool? IsSourceTouchingFromInside(ISegmentList sourceArea,
+		                                                ISegmentList targetArea,
+		                                                IEnumerable<IntersectionPoint3D>
+			                                                touchPoints,
+		                                                double tolerance)
+		{
+			// This must be done per target ring to avoid getting a left side deviation from a different
+			// touching target ring despite the source being fully within the adjacent target ring.
+			bool hasAnyLeftSideDeviation = false;
+
+			foreach (IGrouping<int, IntersectionPoint3D> intersectionPointsPerPart in
+			         touchPoints.GroupBy(i => i.TargetPartIndex))
+			{
+				bool hasAnyRightSideDeviation = false;
+				foreach (IntersectionPoint3D intersectionPoint in intersectionPointsPerPart)
+				{
+					DetermineSourceDeviationAtIntersection(intersectionPoint, sourceArea,
+					                                       targetArea, tolerance,
+					                                       out bool hasRightSideDeviation,
+					                                       out bool hasLeftSideDeviation);
+
+					if (hasLeftSideDeviation)
+					{
+						hasAnyLeftSideDeviation = true;
+					}
+
+					hasAnyRightSideDeviation |= hasRightSideDeviation;
+				}
+
+				if (hasAnyRightSideDeviation)
+				{
+					// Completely within this target ring: contained
+					return true;
+				}
+			}
+
+			// No target ring had right-side-only touch points. It must be outside if there was
+			// any touch point with left-side deviation.
+			return ! hasAnyLeftSideDeviation;
 		}
 
 		/// <summary>
@@ -802,9 +914,20 @@ namespace ProSuite.Commons.Geom
 				return AreaContainsXY(containingClosedTarget, anyPoint, tolerance);
 			}
 
+			// TODO: Duplication with AreaContainsXY!
+			List<IntersectionPoint3D> touchPoints = new List<IntersectionPoint3D>();
 			bool hasAnyRightSideDeviation = false;
 			foreach (IntersectionPoint3D intersectionPoint in intersectionPoints)
 			{
+				if (intersectionPoint.Type == IntersectionPointType.TouchingInPoint)
+				{
+					// Touching points can be misleading because it could be a different target part
+					// that touches the source ring from the outside but the source could
+					// nevertheless be contained within the main part of the target.
+					touchPoints.Add(intersectionPoint);
+					continue;
+				}
+
 				DetermineSourceDeviationAtIntersection(intersectionPoint, containedSource,
 				                                       containingClosedTarget, tolerance,
 				                                       out bool hasRightSideDeviation,
@@ -823,8 +946,15 @@ namespace ProSuite.Commons.Geom
 				return true;
 			}
 
-			// No deviations to the left nor to the right -> congruent
-			return null;
+			if (touchPoints.Count == 0)
+			{
+				// No deviations to the left nor to the right -> congruent
+				return null;
+			}
+
+			// No decisive deviation so far -> use the touch points
+			return IsSourceTouchingFromInside(containedSource, containingClosedTarget, touchPoints,
+			                                  tolerance);
 		}
 
 		/// <summary>
@@ -897,6 +1027,8 @@ namespace ProSuite.Commons.Geom
 
 			return properOrientationResult != true;
 		}
+
+		#endregion
 
 		public static bool SourceInteriorIntersectsXY([NotNull] Line3D line1,
 		                                              [NotNull] Line3D line2,

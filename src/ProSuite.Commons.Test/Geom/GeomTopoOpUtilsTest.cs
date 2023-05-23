@@ -4712,6 +4712,24 @@ namespace ProSuite.Commons.Test.Geom
 			double expectedAreaDifference = union.GetArea2D() - target.GetArea2D();
 			Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.05);
 		}
+
+		[Test]
+		public void CanUnionManyUnCrackedRings_Top5714()
+		{
+			Polyhedron source = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("triangulated_building_uncracked.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.01;
+
+			MultiLinestring union = source.GetXYFootprint(tolerance, out _);
+
+			double expectedAreaUnion = 130.324;
+			Assert.AreEqual(expectedAreaUnion, union.GetArea2D(), 0.01);
+		}
+
 		[Test]
 		public void CanIntersectXYSimpleRings()
 		{
