@@ -789,9 +789,11 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 
 					string xmlUuid = xmlInstanceConfiguration.Uuid;
 
-					imported.Uuid = StringUtils.IsNotEmpty(xmlUuid)
-						                ? xmlUuid
-						                : InstanceConfigurationUtils.GenerateUuid();
+					// Assign the XML UUID
+					if (StringUtils.IsNotEmpty(xmlUuid))
+					{
+						imported.Uuid = xmlUuid;
+					}
 
 					_msg.InfoFormat("Adding new {0} '{1}'", imported.TypeDisplayName,
 					                imported.Name);
