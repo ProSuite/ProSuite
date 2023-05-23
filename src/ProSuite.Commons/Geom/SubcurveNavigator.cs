@@ -332,7 +332,7 @@ namespace ProSuite.Commons.Geom
 			}
 
 			foreach (Linestring containedSourcePart in GetUnprocessedSourceParts(
-				         false, false, true, false))
+				         false, false, includeContained: true, includeNotContained: false))
 			{
 				// The source ring is completely inside or completely outside the target area:
 				yield return containedSourcePart;
@@ -846,21 +846,19 @@ namespace ProSuite.Commons.Geom
 
 			RingRingRelation relation = GetRingRelation(sourceRing, targetRing, isContainedXY);
 
-			if (CheckRingRelation(relation,
-			                      includeCongruent, withSameOrientation, includeContained,
-			                      includeNotContained))
-			{
-				if (relation == RingRingRelation.CongruentSameOrientation ||
-				    relation == RingRingRelation.CongruentDifferentOrientation)
-				{
-					// It should not be detected any more as contained target:
-					IntersectedTargetPartIndexes.Add(targetIndex);
-				}
+			bool result = CheckRingRelation(relation, includeCongruent, withSameOrientation,
+			                                includeContained, includeNotContained);
 
-				return true;
+			if (includeCongruent &&
+			    (relation == RingRingRelation.CongruentSameOrientation ||
+			     relation == RingRingRelation.CongruentDifferentOrientation))
+			{
+				// Congruent rings are always handled conclusively (either ignored or added)
+				// Regardless of whether is is used in the result geometry, it should not be detected any more as contained target:
+				IntersectedTargetPartIndexes.Add(targetIndex);
 			}
 
-			return false;
+			return result;
 		}
 
 		private RingRingRelation GetTargetRelation(int sourceRingIndex,
