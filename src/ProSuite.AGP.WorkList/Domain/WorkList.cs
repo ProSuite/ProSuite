@@ -37,9 +37,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		[NotNull] private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
 
-		[NotNull] private readonly List<GdbRowIdentity> _invalidRows =
-			new List<GdbRowIdentity>(_initialCapacity);
-
 		[NotNull] private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
 			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
 
@@ -1040,30 +1037,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			_msg.Debug("Invalidate");
 
-			try
-			{
-				if (_invalidRows.Count == 0)
-				{
-					OnWorkListChanged();
-					return;
-				}
-
-				var invalidItems = new List<long>(_invalidRows.Count);
-
-				foreach (IWorkItem item in _invalidRows.Where(row => _rowMap.ContainsKey(row))
-				                                       .Select(row => _rowMap[row]))
-				{
-					Refresh(item);
-
-					invalidItems.Add(item.OID);
-				}
-
-				OnWorkListChanged(null, invalidItems);
-			}
-			finally
-			{
-				_invalidRows.Clear();
-			}
+			OnWorkListChanged();
 		}
 
 		public void ProcessChanges(Dictionary<Table, List<long>> inserts,
@@ -1086,10 +1060,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			foreach (var update in updates)
 			{
 				ProcessUpdates(update.Key, update.Value);
-
-				// does not work because ObjectIDs = (IReadOnlyList<long>) modify.Value (oids) are the
-				// ObjectIds of source feature not the work item OIDs.
-				//IEnumerable<IWorkItem> workItems = GetItems(filter);
 			}
 
 			// If a item visibility changes to Done the item is not part
@@ -1103,25 +1073,20 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			_msg.Debug($"{nameof(ProcessInserts)}");
 
-			var filter = new QueryFilter { ObjectIDs = oids };
-
-			foreach (IWorkItem item in Repository.GetItems(new GdbTableIdentity(table), filter))
+			foreach (long oid in oids)
 			{
-				if (_rowMap.ContainsKey(item.Proxy))
+				var rowId = new GdbRowIdentity(oid, new GdbTableIdentity(table));
+				
+				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
 				{
-					_msg.Debug($"work list already contains {item}");
-				}
-				else
-				{
+					Refresh(item);
+
 					_items.Add(item);
-					_rowMap.Add(item.Proxy, item);
 
 					if (! HasCurrentItem)
 					{
 						SetCurrentItem(item);
 					}
-
-					UpdateExtent(item.Extent);
 				}
 			}
 		}
@@ -1132,21 +1097,21 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			foreach (long oid in oids)
 			{
-				// todo daro: refactor, simplify
 				var rowId = new GdbRowIdentity(oid, new GdbTableIdentity(table));
 
-				if (HasCurrentItem && Current != null && Current.Proxy.Equals(rowId))
+				if (Current != null && Current.Proxy.Equals(rowId))
 				{
+					Assert.True(HasCurrentItem, $"{nameof(HasCurrentItem)} is false");
+
 					ClearCurrentItem(Current);
 				}
 
 				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
 				{
-					RemoveWorkItem(item);
+					_items.Remove(item);
 				}
 			}
 
-			// todo daro: update work list extent?
 			Extent = GetExtentFromItems(_items);
 		}
 
@@ -1161,16 +1126,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
 				{
 					Refresh(item);
-
-					_invalidRows.Add(rowId);
 				}
 			}
-		}
-
-		private void RemoveWorkItem(IWorkItem item)
-		{
-			_items.Remove(item);
-			_rowMap.Remove(item.Proxy);
 		}
 
 		private void ClearCurrentItem([NotNull] IWorkItem current)
