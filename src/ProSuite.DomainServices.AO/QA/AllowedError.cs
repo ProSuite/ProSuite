@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
@@ -174,7 +175,7 @@ namespace ProSuite.DomainServices.AO.QA
 				if (dataset == null)
 				{
 					// TODO logging
-					_involvedRowsByUnresolvedTableName.Add(tableName, new List<long> {oid});
+					_involvedRowsByUnresolvedTableName.Add(tableName, new List<long> { oid });
 					continue;
 				}
 

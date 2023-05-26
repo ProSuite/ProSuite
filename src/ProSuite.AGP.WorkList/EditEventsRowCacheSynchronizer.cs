@@ -16,8 +16,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
 {
-	// todo daro: Rename to MapEditsRowCacheSynchronizer to indicate that only edits in the map
-	// are catched? But that's somehow a implicit fact.
 	// todo daro: is this the right namespace for this type?
 	public class EditEventsRowCacheSynchronizer : IDisposable
 	{
@@ -34,18 +32,23 @@ namespace ProSuite.AGP.WorkList
 			WireEvents();
 		}
 
+		public void Dispose()
+		{
+			UnwireEvents();
+		}
+
 		private void WireEvents()
 		{
 			_eventToken = EditCompletedEvent.Subscribe(OnEditCompleted);
 		}
 
-		private async Task OnEditCompleted(EditCompletedEventArgs args)
+		private async Task OnEditCompleted(EditCompletedEventArgs e)
 		{
 			_msg.VerboseDebug(() => nameof(OnEditCompleted));
 
 			try
 			{
-				switch (args.CompletedType)
+				switch (e.CompletedType)
 				{
 					case EditCompletedType.Save:
 						break;
@@ -53,11 +56,9 @@ namespace ProSuite.AGP.WorkList
 						await QueuedTask.Run(() => { _rowCache.Invalidate(); });
 						break;
 					case EditCompletedType.Operation:
-						ProcessChanges(args);
-						break;
 					case EditCompletedType.Undo:
 					case EditCompletedType.Redo:
-						await QueuedTask.Run(() => { ProcessChanges(args); });
+						await QueuedTask.Run(() => { ProcessChanges(e); });
 						break;
 					case EditCompletedType.Reconcile:
 						break;
@@ -68,28 +69,24 @@ namespace ProSuite.AGP.WorkList
 					default:
 						throw new ArgumentOutOfRangeException(
 							nameof(EditCompletedType),
-							args.CompletedType,
-							$"Unexpected EditCompletedType: {args.CompletedType}");
+							e.CompletedType,
+							$@"Unexpected EditCompletedType: {e.CompletedType}");
 				}
 			}
 			catch (Exception ex)
 			{
 				_msg.Error($"Error {nameof(OnEditCompleted)}: {ex.Message}", ex);
-
-				// todo: revise
-				await Task.FromResult(0);
 			}
 		}
 
 		private void ProcessChanges(EditCompletedEventArgs args)
 		{
-			// On Undo and Redo args.Members is not empty
-			//if (! args.Members.Any(member => _rowCache.CanContain(member)))
+			// On Undo and Redo e.Members is not empty
+			//if (! e.Members.Any(member => _rowCache.CanContain(member)))
 			//{
 			//	return;
 			//}
 
-			// todo daro: Use GdbTableIdentity and dispose tables immediately?
 
 			var createsByLayer = SelectionUtils.GetSelectedOidsByLayer(args.Creates);
 			var deletesByLayer = SelectionUtils.GetSelectedOidsByLayer(args.Deletes);
@@ -122,11 +119,17 @@ namespace ProSuite.AGP.WorkList
 		private static Dictionary<Table, List<long>> GetOidsByTable(
 			Dictionary<MapMember, List<long>> oidsByMapMember)
 		{
-			var result = new Dictionary<Table, List<long>>();
+			var result = new Dictionary<Table, List<long>>(oidsByMapMember.Count);
+
+			var tableByHandle = new Dictionary<IntPtr, Table>(oidsByMapMember.Count);
+
+			var oidsByHandle = new Dictionary<IntPtr, List<long>>();
 
 			foreach (var pair in oidsByMapMember)
 			{
 				MapMember mapMember = pair.Key;
+				IReadOnlyCollection<long> oids = pair.Value;
+
 				if (! (mapMember is FeatureLayer featureLayer))
 				{
 					continue;
@@ -134,22 +137,29 @@ namespace ProSuite.AGP.WorkList
 
 				Table table = featureLayer.GetTable();
 
-				if (! result.ContainsKey(table))
+				if (oidsByHandle.ContainsKey(table.Handle))
 				{
-					result.Add(table, pair.Value.ToList());
+					oidsByHandle[table.Handle].AddRange(oids);
 				}
 				else
 				{
-					result[table].AddRange(pair.Value);
+					tableByHandle.Add(table.Handle, table);
+					oidsByHandle.Add(table.Handle, oids.ToList());
+				}
+			}
+
+			foreach (KeyValuePair<IntPtr, Table> pair in tableByHandle)
+			{
+				IntPtr handle = pair.Key;
+				Table table = pair.Value;
+
+				if (oidsByHandle.TryGetValue(handle, out List<long> oids))
+				{
+					result.Add(table, oids.Distinct().ToList());
 				}
 			}
 
 			return result;
-		}
-
-		public void Dispose()
-		{
-			UnwireEvents();
 		}
 
 		private void UnwireEvents()

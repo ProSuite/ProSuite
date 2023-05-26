@@ -108,6 +108,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.NoContainer)]
 		public void CanOpenMosaicDataset()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
@@ -120,6 +121,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.NoContainer)]
 		public void CanGetRasterFromMosaicDataset()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
@@ -140,6 +142,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.NoContainer)]
 		public void CanGetRasterFileFromMosaicDatasetUsingSpatialQuery()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();

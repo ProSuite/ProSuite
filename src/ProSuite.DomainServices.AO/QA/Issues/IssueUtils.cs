@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -11,7 +12,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 {
 	public static class IssueUtils
 	{
-		private static readonly string[] _idValueSeparator = {"||"};
+		private static readonly string[] _idValueSeparator = { "||" };
 
 		[NotNull]
 		public static IEnumerable<InvolvedTable> GetInvolvedTables(
@@ -106,7 +107,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			const char fieldNameSeparator = ':';
 
 			string[] tableStrings = involvedTablesString.Split(
-				new[] {tableStringSeparator}, StringSplitOptions.RemoveEmptyEntries);
+				new[] { tableStringSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
 			var result = new List<InvolvedTable>(tableStrings.Length);
 

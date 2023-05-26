@@ -73,7 +73,7 @@ namespace ProSuite.Microservices.Client
 		[CanBeNull]
 		protected Channel Channel { get; private set; }
 
-		protected bool ChannelIsLoadBalancer { get; private set; }
+		public bool ChannelIsLoadBalancer { get; private set; }
 
 		[NotNull]
 		public abstract string ServiceName { get; }

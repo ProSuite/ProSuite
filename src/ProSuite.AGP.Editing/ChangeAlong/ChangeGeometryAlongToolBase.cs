@@ -356,8 +356,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 				PickerPrecedence.SelectionGeometry = sketch;
 
-				var pickedItem =
-					await ShowPickerAsync<PickableFeatureItem>(
+				IPickableFeatureItem pickedItem =
+					await ShowPickerAsync<IPickableFeatureItem>(
 						items, PickerPrecedence, pickerLocation);
 
 				if (pickedItem == null)

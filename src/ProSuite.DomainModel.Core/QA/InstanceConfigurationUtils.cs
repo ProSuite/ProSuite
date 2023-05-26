@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -356,7 +357,63 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			// Consider making configurable similar to batch-create
-			return $"{descriptorName}_{datasetName}";
+			return $"{datasetName}_{descriptorName}";
+		}
+
+		public static void HandleNoConditionCreated(
+			[CanBeNull] string conditionName,
+			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
+			bool ignoreConditionsForUnknownDatasets,
+			[NotNull] ICollection<DatasetTestParameterRecord> unknownDatasetParameters)
+		{
+			Assert.True(ignoreConditionsForUnknownDatasets,
+			            "ignoreConditionsForUnknownDatasets");
+			Assert.True(unknownDatasetParameters.Count > 0,
+			            "Unexpected number of unknown datasets");
+
+			_msg.WarnFormat(
+				unknownDatasetParameters.Count == 1
+					? "Quality condition '{0}' is ignored because the following dataset is not found: {1}"
+					: "Quality condition '{0}' is ignored because the following datasets are not found: {1}",
+				conditionName,
+				ConcatenateUnknownDatasetNames(
+					unknownDatasetParameters,
+					modelsByWorkspaceId,
+					string.Empty));
+		}
+
+		[NotNull]
+		public static string ConcatenateUnknownDatasetNames(
+			[NotNull] IEnumerable<DatasetTestParameterRecord> unknownDatasetParameters,
+			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
+			[NotNull] string anonymousWorkspaceId)
+		{
+			Assert.ArgumentNotNull(unknownDatasetParameters, nameof(unknownDatasetParameters));
+			Assert.ArgumentNotNull(modelsByWorkspaceId, nameof(modelsByWorkspaceId));
+			Assert.ArgumentNotNull(anonymousWorkspaceId, nameof(anonymousWorkspaceId));
+
+			var sb = new StringBuilder();
+
+			foreach (DatasetTestParameterRecord datasetParameter in unknownDatasetParameters)
+			{
+				if (sb.Length > 0)
+				{
+					sb.Append(", ");
+				}
+
+				string workspaceId = datasetParameter.WorkspaceId ?? anonymousWorkspaceId;
+				DdxModel model;
+				if (modelsByWorkspaceId.TryGetValue(workspaceId, out model))
+				{
+					sb.AppendFormat("{0} ({1})", datasetParameter.DatasetName, model.Name);
+				}
+				else
+				{
+					sb.Append(datasetParameter.DatasetName);
+				}
+			}
+
+			return sb.ToString();
 		}
 
 		private static void ReattachAllTransformersAndFilters(

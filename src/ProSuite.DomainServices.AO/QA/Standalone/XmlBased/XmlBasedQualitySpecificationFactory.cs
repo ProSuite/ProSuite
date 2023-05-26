@@ -159,7 +159,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 				if (createdCondition == null)
 				{
-					StandaloneVerificationUtils.HandleNoConditionCreated(
+					InstanceConfigurationUtils.HandleNoConditionCreated(
 						xmlCondition.Name, modelsByWorkspaceId, ignoreConditionsForUnknownDatasets,
 						unknownDatasetParameters);
 				}

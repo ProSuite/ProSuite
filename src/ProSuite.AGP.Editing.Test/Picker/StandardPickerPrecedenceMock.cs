@@ -4,6 +4,7 @@ using System.Linq;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.Test.Picker
@@ -25,7 +26,8 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			}
 		}
 
-		public PickerMode GetPickerMode(int candidateCount, bool areaSelect = false)
+		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
+		                                bool areaSelect = false)
 		{
 			return PickerMode.PickBest;
 		}

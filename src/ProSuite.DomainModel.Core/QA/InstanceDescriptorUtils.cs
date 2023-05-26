@@ -10,13 +10,42 @@ namespace ProSuite.DomainModel.Core.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		[CanBeNull]
+		public static IInstanceInfo GetInstanceInfo([NotNull] InstanceDescriptor descriptor)
+		{
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			if (descriptor.InstanceInfo != null)
+			{
+				return descriptor.InstanceInfo;
+			}
+
+			IInstanceInfo result = null;
+
+			if (descriptor is TestDescriptor testDescriptor)
+			{
+				result = GetInstanceInfo(testDescriptor);
+			}
+			else if (descriptor.Class != null)
+			{
+				result = new InstanceInfo(descriptor.Class.AssemblyName,
+				                          descriptor.Class.TypeName,
+				                          descriptor.ConstructorId);
+			}
+
+			// Cache it
+			descriptor.InstanceInfo = result;
+
+			return result;
+		}
+
 		/// <summary>
 		/// Gets the test implementation info. Requires the test class or the test factory descriptor to be defined.
 		/// </summary>
 		/// <param name="testDescriptor"></param>
 		/// <returns>InstanceInfo or null if neither the test class nor the test factory descriptor are defined.</returns>
 		[CanBeNull]
-		public static IInstanceInfo GetInstanceInfo([NotNull] TestDescriptor testDescriptor)
+		private static IInstanceInfo GetInstanceInfo([NotNull] TestDescriptor testDescriptor)
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
 
@@ -31,26 +60,6 @@ namespace ProSuite.DomainModel.Core.QA
 			{
 				return testDescriptor.TestFactoryDescriptor
 				                     .CreateInstance<IInstanceInfo>();
-			}
-
-			return null;
-		}
-
-		[CanBeNull]
-		public static IInstanceInfo GetInstanceInfo([NotNull] InstanceDescriptor descriptor)
-		{
-			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
-
-			if (descriptor is TestDescriptor testDescriptor)
-			{
-				return GetInstanceInfo(testDescriptor);
-			}
-
-			if (descriptor.Class != null)
-			{
-				return new InstanceInfo(descriptor.Class.AssemblyName,
-				                        descriptor.Class.TypeName,
-				                        descriptor.ConstructorId);
 			}
 
 			return null;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -148,7 +149,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			}
 
 			foreach (string token in managedExceptionOrigin.Split(
-				         new[] {_originSeparator},
+				         new[] { _originSeparator },
 				         StringSplitOptions.RemoveEmptyEntries))
 			{
 				yield return ParseOrigin(token);

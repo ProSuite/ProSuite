@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -222,7 +223,7 @@ namespace ProSuite.QA.Tests.Network
 					string field;
 					string separator = null;
 
-					index = groupByString.IndexOfAny(new[] {';', '('}, position);
+					index = groupByString.IndexOfAny(new[] { ';', '(' }, position);
 
 					if (index < 0)
 					{
@@ -269,7 +270,7 @@ namespace ProSuite.QA.Tests.Network
 							}
 						}
 
-						separators.Add(new[] {separator});
+						separators.Add(new[] { separator });
 					}
 					else if (separators.Count > 0)
 					{
@@ -281,7 +282,7 @@ namespace ProSuite.QA.Tests.Network
 				{
 					if (separators.Count == 0)
 					{
-						separators.Add(new[] {valueSeparator});
+						separators.Add(new[] { valueSeparator });
 					}
 					else
 					{
@@ -292,7 +293,7 @@ namespace ProSuite.QA.Tests.Network
 						{
 							if (separators[separatorIndex] == null)
 							{
-								separators[separatorIndex] = new[] {valueSeparator};
+								separators[separatorIndex] = new[] { valueSeparator };
 							}
 						}
 					}

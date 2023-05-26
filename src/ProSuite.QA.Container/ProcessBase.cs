@@ -22,8 +22,16 @@ namespace ProSuite.QA.Container
 			public string Constraint { get; set; }
 			public bool UseCaseSensitiveSQL { get; set; }
 			public bool QueriedOnly { get; set; }
-			public string RowFiltersExpression { get; set; }
-			public IReadOnlyList<IRowFilter> RowFilters { get; set; }
+
+			/// <summary>
+			/// Currently un-used (replaced with combined filter-transformer)
+			/// </summary>
+			internal string RowFiltersExpression { get; set; }
+
+			/// <summary>
+			/// Currently un-used (replaced with filter-transformers)
+			/// </summary>
+			internal IReadOnlyList<IRowFilter> RowFilters { get; set; }
 		}
 
 		[NotNull]
@@ -160,14 +168,16 @@ namespace ProSuite.QA.Container
 			IReadOnlyTable table = InvolvedTables[tableIndex];
 			string constraint = GetConstraint(tableIndex);
 
-			queryFilter.AddField(table.OIDFieldName);
+			// NOTE: Contrary to the documentation the field is not added if queryFilter.SubFields == "*" which is the default!
+			string subFields =
+				GdbQueryUtils.AppendToFieldList(queryFilter.SubFields, table.OIDFieldName);
 
 			var featureClass = table as IReadOnlyFeatureClass;
 
 			// add shape field
 			if (featureClass != null)
 			{
-				queryFilter.AddField(featureClass.ShapeFieldName);
+				subFields = GdbQueryUtils.AppendToFieldList(subFields, featureClass.ShapeFieldName);
 			}
 
 			// add subtype field
@@ -176,7 +186,8 @@ namespace ProSuite.QA.Container
 			{
 				if (subtypes.HasSubtype)
 				{
-					queryFilter.AddField(subtypes.SubtypeFieldName);
+					subFields =
+						GdbQueryUtils.AppendToFieldList(subFields, subtypes.SubtypeFieldName);
 				}
 			}
 
@@ -187,16 +198,12 @@ namespace ProSuite.QA.Container
 					string fieldName in
 					ExpressionUtils.GetExpressionFieldNames(table, constraint))
 				{
-					queryFilter.AddField(fieldName);
-					// .AddField checks for multiple entries !					
+					subFields = GdbQueryUtils.AppendToFieldList(subFields, fieldName);
 				}
+			}
 
-				queryFilter.WhereClause = constraint;
-			}
-			else
-			{
-				queryFilter.WhereClause = constraint;
-			}
+			queryFilter.SubFields = subFields;
+			queryFilter.WhereClause = constraint;
 		}
 
 		protected virtual void SetConstraintCore(IReadOnlyTable table, int tableIndex,

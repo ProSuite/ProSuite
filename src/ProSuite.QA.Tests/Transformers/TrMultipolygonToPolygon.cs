@@ -3,6 +3,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -91,10 +92,8 @@ namespace ProSuite.QA.Tests.Transformers
 		private int? _iAttrOuterRing;
 		private int? _iAttrInnerRing;
 
-
 		private readonly SimpleUniqueIdProvider<UniqueIdKey> _uniqueIdProvider =
 			new SimpleUniqueIdProvider<UniqueIdKey>(new UniqueIdKeyComparer());
-
 
 		[DocTr(nameof(DocTrStrings.TrMultipolygonToPolygon_0))]
 		public TrMultipolygonToPolygon(

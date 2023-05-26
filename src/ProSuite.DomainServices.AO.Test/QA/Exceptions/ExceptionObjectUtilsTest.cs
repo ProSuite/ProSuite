@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainServices.AO.QA.Exceptions;
 using ProSuite.DomainServices.AO.QA.Issues;
-using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 {

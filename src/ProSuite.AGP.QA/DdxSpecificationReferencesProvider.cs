@@ -25,6 +25,8 @@ namespace ProSuite.AGP.QA
 
 		public string BackendDisplayName => $"{_client.HostName}:{_client.Port}";
 
+		public ISupportedInstanceDescriptors KnownInstanceDescriptors { get; set; }
+
 		public bool CanGetSpecifications()
 		{
 			return _sessionContext.ProjectWorkspace != null &&
@@ -45,6 +47,13 @@ namespace ProSuite.AGP.QA
 			return await DdxUtils.LoadSpecificationsRpcAsync(projectWorkspace.GetDatasetIds(),
 			                                                 IncludeHiddenSpecifications,
 			                                                 Assert.NotNull(_client.DdxClient));
+		}
+
+		public async Task<QualitySpecification> GetCurrentQualitySpecification(int ddxId)
+		{
+			return await DdxUtils.LoadFullSpecification(ddxId,
+			                                            KnownInstanceDescriptors,
+			                                            Assert.NotNull(_client.DdxClient));
 		}
 
 		public Task<IQualitySpecificationReference> GetQualitySpecification(string name)

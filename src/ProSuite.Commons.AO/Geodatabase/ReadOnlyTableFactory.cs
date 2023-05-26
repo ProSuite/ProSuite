@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -21,27 +22,50 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		[NotNull]
 		public static ReadOnlyTable Create([NotNull] ITable table,
-		                                   [CanBeNull] string alternateOIDField = null,
-		                                   bool createJoinedTable = false)
+		                                   [CanBeNull] string alternateOIDField = null)
 		{
-			if (! Cache.TryGetValue(table, out ReadOnlyTable existing))
+			Func<ReadOnlyTable> createFunc =
+				() => table is IFeatureClass fc
+					      ? ReadOnlyFeatureClassHelper.Create(fc)
+					      : ReadOnlyTableHelper.Create(table);
+
+			ReadOnlyTable result = EnsureCached(table, createFunc, alternateOIDField);
+
+			return result;
+		}
+
+		public static ReadOnlyTable CreateQueryTable(
+			[NotNull] ITable aoQueryTable,
+			[NotNull] string alternateOIDField,
+			[NotNull] IEnumerable<ITable> baseTables)
+		{
+			Func<ReadOnlyTable> createFunc =
+				() =>
+				{
+					IEnumerable<ReadOnlyTable> roTables =
+						baseTables.Select(t => Create(t));
+
+					return aoQueryTable is IFeatureClass fc
+						       ? (ReadOnlyTable) ReadOnlyJoinedFeatureClass.Create(fc, roTables)
+						       : ReadOnlyJoinedTable.Create(aoQueryTable, roTables);
+				};
+
+			ReadOnlyTable result = EnsureCached(aoQueryTable, createFunc, alternateOIDField);
+
+			return result;
+		}
+
+		private static ReadOnlyTable EnsureCached([NotNull] ITable aoTable,
+		                                          [NotNull] Func<ReadOnlyTable> createAction,
+		                                          [CanBeNull] string alternateOIDField)
+		{
+			if (! Cache.TryGetValue(aoTable, out ReadOnlyTable existing))
 			{
-				if (table is IFeatureClass fc)
-				{
-					existing = ! createJoinedTable
-						           ? ReadOnlyFeatureClassHelper.Create(fc)
-						           : ReadOnlyJoinedFeatureClassHelper.Create(fc);
-				}
-				else
-				{
-					existing = ! createJoinedTable
-						           ? ReadOnlyTableHelper.Create(table)
-						           : ReadOnlyJoinedTableHelper.Create(table);
-				}
+				existing = createAction();
 
 				existing.AlternateOidFieldName = alternateOIDField;
 
-				Cache.Add(table, existing);
+				Cache.Add(aoTable, existing);
 			}
 
 			return existing;
@@ -51,33 +75,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private class ReadOnlyTableHelper : ReadOnlyTable
 		{
 			private ReadOnlyTableHelper() : base(null) { }
+
 			public static ReadOnlyTable Create(ITable table)
 				=> CreateReadOnlyTable(table);
 		}
-
 
 		[UsedImplicitly]
 		private class ReadOnlyFeatureClassHelper : ReadOnlyFeatureClass
 		{
 			private ReadOnlyFeatureClassHelper() : base(null) { }
+
 			public static ReadOnlyFeatureClass Create(IFeatureClass fc)
 				=> CreateReadOnlyFeatureClass(fc);
-		}
-
-		[UsedImplicitly]
-		private class ReadOnlyJoinedTableHelper : ReadOnlyJoinedTable
-		{
-			private ReadOnlyJoinedTableHelper() : base(null) { }
-			public static ReadOnlyJoinedTable Create(ITable table)
-				=> CreateReadOnlyJoinedTable(table);
-		}
-
-		[UsedImplicitly]
-		private class ReadOnlyJoinedFeatureClassHelper : ReadOnlyJoinedFeatureClass
-		{
-			private ReadOnlyJoinedFeatureClassHelper() : base(null) { }
-			public static ReadOnlyJoinedFeatureClass Create(IFeatureClass fc)
-				=> CreateReadOnlyJoinedFeatureClass(fc);
 		}
 
 		public static void ClearCache()
@@ -101,6 +110,5 @@ namespace ProSuite.Commons.AO.Geodatabase
 				yield return table.CreateRow(row);
 			}
 		}
-
 	}
 }

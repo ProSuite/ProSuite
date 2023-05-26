@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -12,6 +13,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
@@ -390,7 +392,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-
 		/// <summary>
 		/// Appends the specified field name to <see cref="currentSubFields"/> if there are other fields
 		/// already. In case it is null, empty or "*" the specified field name is returned (as single
@@ -405,6 +406,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 			if (string.IsNullOrEmpty(currentSubFields) || currentSubFields == "*")
 			{
 				return fieldName;
+			}
+
+			List<string> currentFieldNames = StringUtils.SplitAndTrim(currentSubFields, ',');
+
+			if (currentFieldNames.Any(f => f.Equals(fieldName, StringComparison.OrdinalIgnoreCase)))
+			{
+				return currentSubFields;
 			}
 
 			return $"{currentSubFields}, {fieldName}";
