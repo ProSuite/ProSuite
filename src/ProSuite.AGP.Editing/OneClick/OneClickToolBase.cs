@@ -582,8 +582,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
 		{
+			var orderedSelection =
+				PickerUtils.OrderByGeometryDimension(candidatesOfLayers).ToList();
+
 			PickerMode pickerMode =
-				pickerPrecedence.GetPickerMode(candidatesOfLayers);
+				pickerPrecedence.GetPickerMode(orderedSelection);
 
 			//CTRL was pressed: picker shows FC's to select from
 			if (pickerMode == PickerMode.ShowPicker)

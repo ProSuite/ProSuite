@@ -26,7 +26,8 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			}
 		}
 
-		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
+		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
+		                                bool areaSelect = false)
 		{
 			return PickerMode.PickBest;
 		}

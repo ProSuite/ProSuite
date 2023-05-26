@@ -16,7 +16,9 @@ namespace ProSuite.AGP.Editing.Picker
 		/// 
 		/// </summary>
 		/// <param name="orderedSelection">Has to be ordered!</param>
+		/// <param name="areaSelect">Select by area.</param>
 		/// <returns></returns>
-		PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection);
+		PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
+		                         bool areaSelect = false);
 	}
 }

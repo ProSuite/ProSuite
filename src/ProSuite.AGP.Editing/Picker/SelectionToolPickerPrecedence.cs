@@ -32,7 +32,8 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 		}
 
-		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
+		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
+		                                bool areaSelect = false)
 		{
 			if (KeyboardUtils.IsModifierPressed(Keys.Alt))
 			{

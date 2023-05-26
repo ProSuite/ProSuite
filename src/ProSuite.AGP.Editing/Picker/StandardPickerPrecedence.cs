@@ -12,7 +12,8 @@ namespace ProSuite.AGP.Editing.Picker
 	{
 		public Geometry SelectionGeometry { get; set; }
 
-		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
+		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
+		                                bool areaSelect = false)
 		{
 			if (KeyboardUtils.IsModifierPressed(Keys.Alt))
 			{
@@ -22,6 +23,11 @@ namespace ProSuite.AGP.Editing.Picker
 			if (KeyboardUtils.IsModifierPressed(Keys.Control))
 			{
 				return PickerMode.ShowPicker;
+			}
+
+			if (areaSelect)
+			{
+				return PickerMode.PickAll;
 			}
 
 			if (CountLowestShapeDimensionFeatures(orderedSelection) > 1)
