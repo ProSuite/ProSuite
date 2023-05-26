@@ -12,10 +12,9 @@ namespace ProSuite.AGP.Editing.Picker
 	{
 		public Geometry SelectionGeometry { get; set; }
 
-		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
-		                                bool areaSelect = false)
+		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
 		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Alt) || areaSelect)
+			if (KeyboardUtils.IsModifierPressed(Keys.Alt))
 			{
 				return PickerMode.PickAll;
 			}
@@ -25,12 +24,12 @@ namespace ProSuite.AGP.Editing.Picker
 				return PickerMode.ShowPicker;
 			}
 
-			ICollection<FeatureSelectionBase> featureSelectionBases =
-				GetLowestEqualShapeDimension(orderedSelection);
+			if (CountLowestShapeDimensionFeatures(orderedSelection) > 1)
+			{
+				return PickerMode.ShowPicker;
+			}
 
-			return featureSelectionBases.Count > 1
-				       ? PickerMode.ShowPicker
-				       : PickerMode.PickBest;
+			return PickerMode.PickBest;
 		}
 
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
@@ -44,10 +43,10 @@ namespace ProSuite.AGP.Editing.Picker
 			return items.FirstOrDefault() as T;
 		}
 
-		private static ICollection<FeatureSelectionBase> GetLowestEqualShapeDimension(
+		private static int CountLowestShapeDimensionFeatures(
 			IEnumerable<FeatureSelectionBase> layerSelection)
 		{
-			var result = new List<FeatureSelectionBase>();
+			var count = 0;
 
 			int? lastShapeDimension = null;
 
@@ -57,7 +56,7 @@ namespace ProSuite.AGP.Editing.Picker
 				{
 					lastShapeDimension = selection.ShapeDimension;
 
-					result.Add(selection);
+					count += selection.GetCount();
 
 					continue;
 				}
@@ -67,10 +66,10 @@ namespace ProSuite.AGP.Editing.Picker
 					continue;
 				}
 
-				result.Add(selection);
+				count += selection.GetCount();
 			}
 
-			return result;
+			return count;
 		}
 	}
 }

@@ -583,7 +583,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			SelectionCombinationMethod selectionMethod)
 		{
 			PickerMode pickerMode =
-				pickerPrecedence.GetPickerMode(candidatesOfLayers, true);
+				pickerPrecedence.GetPickerMode(candidatesOfLayers);
 
 			//CTRL was pressed: picker shows FC's to select from
 			if (pickerMode == PickerMode.ShowPicker)
