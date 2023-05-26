@@ -137,7 +137,6 @@ namespace ProSuite.Commons.AGP.Selection
 				               selectionCombinationMethod,
 				               featuresPerLayer.GetOids().ToList());
 			}
-			}
 		}
 
 		public static IEnumerable<Feature> GetSelectedFeatures([NotNull] MapView activeView)
