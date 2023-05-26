@@ -499,9 +499,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
 		{
-			int featureCount = SelectionUtils.GetFeatureCount(candidatesOfLayers);
+			var orderedSelection =
+				PickerUtils.OrderByGeometryDimension(candidatesOfLayers).ToList();
 
-			PickerMode pickerMode = pickerPrecedence.GetPickerMode(featureCount);
+			PickerMode pickerMode = pickerPrecedence.GetPickerMode(orderedSelection);
 
 			// ALT pressed: select all, do not show picker
 			if (pickerMode == PickerMode.PickAll)
@@ -509,7 +510,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				await QueuedTask.Run(() =>
 				{
 					SelectionUtils.SelectFeatures(
-						candidatesOfLayers, selectionMethod,
+						orderedSelection, selectionMethod,
 						selectionMethod == SelectionCombinationMethod.New);
 				});
 
@@ -524,8 +525,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						// all this code has to be in QueuedTask because
 						// IEnumerables are enumerated later
 						IEnumerable<IPickableItem> items =
-							PickableItemsFactory.CreateFeatureItems(
-								PickerUtils.OrderByGeometryDimension(candidatesOfLayers));
+							PickableItemsFactory.CreateFeatureItems(orderedSelection);
 
 						var pickedItem =
 							pickerPrecedence.PickBest<IPickableFeatureItem>(items);
@@ -547,8 +547,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				IEnumerable<IPickableItem> items =
 					await QueuedTask.Run(
-						() => PickableItemsFactory.CreateFeatureItems(
-							PickerUtils.OrderByGeometryDimension(candidatesOfLayers)));
+						() => PickableItemsFactory.CreateFeatureItems(orderedSelection));
 
 				IPickableFeatureItem pickedItem =
 					await ShowPickerAsync<IPickableFeatureItem>(
@@ -584,8 +583,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			SelectionCombinationMethod selectionMethod)
 		{
 			PickerMode pickerMode =
-				pickerPrecedence.GetPickerMode(
-					SelectionUtils.GetFeatureCount(candidatesOfLayers), true);
+				pickerPrecedence.GetPickerMode(candidatesOfLayers, true);
 
 			//CTRL was pressed: picker shows FC's to select from
 			if (pickerMode == PickerMode.ShowPicker)
