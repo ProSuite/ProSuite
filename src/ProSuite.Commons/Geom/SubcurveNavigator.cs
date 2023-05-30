@@ -301,6 +301,9 @@ namespace ProSuite.Commons.Geom
 					// Finish ring
 					Linestring finishedRing = CreateClosedRing(subcurveInfos, ringStart);
 
+					Assert.True(finishedRing.SegmentCount > 2,
+					            "Insufficient segment count. Please report this geometry.");
+
 					result.Add(finishedRing);
 
 					RememberUsedIntersectionRuns(subcurveInfos);
