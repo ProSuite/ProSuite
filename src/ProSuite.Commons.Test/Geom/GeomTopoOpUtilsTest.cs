@@ -4684,6 +4684,35 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionTargetRingContainingSourceBoundaryLoop()
+		{
+			// This tests the boundary loop detection where both(!) boundary loops have additional
+			// intersections with the target.
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("boundary_loops_union_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"boundary_loops_union_target_intersecting_both_loops.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, 0.01);
+
+			// Now it is a single outer ring without boundary loop and the small island in the west.
+			Assert.AreEqual(2, result.PartCount);
+
+			// Minus the remaining area of the inner boundary loop island
+			double expectedArea = 376.646893;
+
+			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.001);
+		}
+
+		[Test]
 		public void CanUnionWithSubToleranceVertexToIntersection_Top5660()
 		{
 			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
