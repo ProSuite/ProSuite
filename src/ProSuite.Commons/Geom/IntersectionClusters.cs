@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
@@ -255,6 +257,68 @@ namespace ProSuite.Commons.Geom
 		{
 			return _multipleSourceIntersections != null &&
 			       _multipleSourceIntersections.Contains(intersection);
+		}
+
+		/// <summary>
+		/// Returns the source boundary loops, if their connection point is part of the cluster,
+		/// i.e. if there is an intersection with the target at the connection point.
+		/// </summary>
+		/// <returns></returns>
+		public IEnumerable<BoundaryLoop> GetSourceBoundaryLoops()
+		{
+			if (_multipleSourceIntersections == null)
+			{
+				yield break;
+			}
+
+			foreach (var intersectionPairs
+			         in CollectionUtils.GetAllTuples(_multipleSourceIntersections))
+			{
+				var intersection1 = intersectionPairs.Key;
+				var intersection2 = intersectionPairs.Value;
+
+				if (intersection1.SourcePartIndex != intersection2.SourcePartIndex)
+				{
+					continue;
+				}
+
+				if (intersection1.TargetPartIndex != intersection2.TargetPartIndex)
+				{
+					continue;
+				}
+
+				if (! intersection1.ReferencesSameTargetVertex(intersection2, _target, _tolerance))
+				{
+					continue;
+				}
+
+				if (SourceSegmentCountBetween(intersection1, intersection2) > 1 &&
+				    SourceSegmentCountBetween(intersection2, intersection1) > 1)
+				{
+					Linestring fullSourceRing = _source.GetPart(intersection1.SourcePartIndex);
+
+					yield return new BoundaryLoop(intersection1, intersection2, fullSourceRing,
+					                              true);
+				}
+			}
+		}
+
+		private double SourceSegmentCountBetween([NotNull] IntersectionPoint3D firstIntersection,
+		                                         [NotNull] IntersectionPoint3D secondIntersection)
+		{
+			Assert.AreEqual(firstIntersection.SourcePartIndex, secondIntersection.SourcePartIndex,
+			                "Intersections are not from the same part.");
+
+			double result = secondIntersection.VirtualSourceVertex -
+			                firstIntersection.VirtualSourceVertex;
+
+			if (result < 0)
+			{
+				Linestring sourcePart = _source.GetPart(firstIntersection.SourcePartIndex);
+				result += sourcePart.SegmentCount;
+			}
+
+			return Math.Floor(result);
 		}
 	}
 }

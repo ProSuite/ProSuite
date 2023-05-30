@@ -748,18 +748,7 @@ namespace ProSuite.Commons.Geom
 
 		private IEnumerable<BoundaryLoop> GetSourceBoundaryLoops()
 		{
-			List<BoundaryLoop> result = new List<BoundaryLoop>();
-
-			foreach ((IntersectionPoint3D start, IntersectionPoint3D end) in
-			         IntersectionPointNavigator.SourceBoundaryLoopIntersections)
-			{
-				BoundaryLoop boundaryLoop = new BoundaryLoop(
-					start, end, Source.GetPart(start.SourcePartIndex), true);
-
-				result.Add(boundaryLoop);
-			}
-
-			return result.Distinct(new BoundaryLoopComparer());
+			return IntersectionPointNavigator.GetSourceBoundaryLoops(true);
 		}
 
 		private IEnumerable<BoundaryLoop> GetTargetBoundaryLoops()
