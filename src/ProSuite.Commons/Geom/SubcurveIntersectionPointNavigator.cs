@@ -30,10 +30,91 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList target,
 			double tolerance)
 		{
-			IntersectionPoints = intersectionPoints;
 			Source = source;
 			Target = target;
 			Tolerance = tolerance;
+
+			HashSet<IntersectionPoint3D> pointsToIgnore =
+				GetLinearIntersectionPointsWithinOtherLinearIntersection(intersectionPoints);
+
+			IntersectionPoints = intersectionPoints.Where(p => ! pointsToIgnore.Contains(p))
+			                                       .ToList();
+		}
+
+		private HashSet<IntersectionPoint3D>
+			GetLinearIntersectionPointsWithinOtherLinearIntersection(
+				IEnumerable<IntersectionPoint3D> intersections)
+		{
+			HashSet<IntersectionPoint3D> result = new HashSet<IntersectionPoint3D>();
+
+			// Filter linear intersections within linear intersections:
+			IntersectionPoint3D previousPoint = null;
+			Tuple<IntersectionPoint3D, IntersectionPoint3D> previousLinear = null;
+			foreach (IntersectionPoint3D current in intersections)
+			{
+				if (previousPoint != null &&
+				    previousPoint.SourcePartIndex == current.SourcePartIndex &&
+				    previousPoint.TargetPartIndex == current.TargetPartIndex &&
+				    previousPoint.Type == IntersectionPointType.LinearIntersectionStart &&
+				    current.Type == IntersectionPointType.LinearIntersectionEnd)
+				{
+					if (IsWithinCurrentLinearIntersection(previousPoint, current, previousLinear) &&
+					    GeomUtils.GetDistanceXY(previousPoint.Point, current.Point) > Tolerance)
+					{
+						// It is a non-short linear intersection bracketed by the previous linear intersection.
+						// Ignore, most likely an 'inverted' intersection with the other side of a very acute angle
+						// See CanGetDifferenceAreaWithLinearIntersectionWithVertexOnAcuteAngle()
+						result.Add(previousPoint);
+						result.Add(current);
+					}
+
+					previousLinear =
+						new Tuple<IntersectionPoint3D, IntersectionPoint3D>(
+							previousPoint, current);
+				}
+
+				previousPoint = current;
+			}
+
+			return result;
+		}
+
+		private static bool IsWithinCurrentLinearIntersection(
+			[NotNull] IntersectionPoint3D fromPoint,
+			[NotNull] IntersectionPoint3D toPoint,
+			[CanBeNull] Tuple<IntersectionPoint3D, IntersectionPoint3D> previousLinearStretch)
+		{
+			if (previousLinearStretch == null)
+			{
+				return false;
+			}
+
+			IntersectionPoint3D previousLinearStart = previousLinearStretch.Item1;
+			IntersectionPoint3D previousLinearEnd = previousLinearStretch.Item2;
+
+			if (previousLinearStart == null || previousLinearEnd == null)
+			{
+				return false;
+			}
+
+			if (fromPoint.SourcePartIndex != previousLinearStart.SourcePartIndex)
+			{
+				return false;
+			}
+
+			if (fromPoint.TargetPartIndex != previousLinearStart.TargetPartIndex)
+			{
+				return false;
+			}
+
+			// The to-point must be before (or equal) the previous end...
+			if (toPoint.VirtualSourceVertex > previousLinearEnd.VirtualSourceVertex)
+			{
+				return false;
+			}
+
+			// ... and the from point must come after (or equal) the previous start.
+			return fromPoint.VirtualSourceVertex >= previousLinearStart.VirtualSourceVertex;
 		}
 
 		/// <summary>

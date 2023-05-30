@@ -6877,7 +6877,7 @@ namespace ProSuite.Commons.Test.Geom
 			            }.ToList();
 
 			var expectedResult = new Linestring(
-				new Pnt3D[]
+				new[]
 				{
 					new Pnt3D(0, 100, 9),
 					new Pnt3D(100, 100, 9),
@@ -6983,6 +6983,48 @@ namespace ProSuite.Commons.Test.Geom
 			// In the new implementation the very close points get eliminated by pseudo-break
 			// detection and ignoring of these intersection points during the subcurve navigation.
 			Assert.AreEqual(5, intersectionAreasXY.PointCount);
+		}
+
+		[Test]
+		public void CanGetDifferenceAreaWithLinearIntersectionWithVertexOnAcuteAngle()
+		{
+			// In this case the two wedges have a linear intersection in an acute angle.
+			// One of them has a vertex > tolerance from the acute angle point but < tolerance
+			// from the other segment. This is one of the classics where the acute angle would
+			// collapse to a removable line in the simplify operation. However, in this case it
+			// is better to ignore the intermediate linear intersection inside the larger
+			// linear intersection stretch.
+
+			RingGroup ring1 = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("wedge_without_vertex.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup ring2 = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("wedge_with_vertex.wkb"), out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			var poly1 = new MultiPolycurve(ring1.GetLinestrings());
+			var poly2 = new MultiPolycurve(ring2.GetLinestrings());
+			const double tolerance = 0.01;
+
+			MultiLinestring differenceAreasXY =
+				GeomTopoOpUtils.GetDifferenceAreasXY(poly1, poly2, tolerance);
+
+			Assert.AreEqual(1, differenceAreasXY.PartCount);
+			Assert.AreEqual(1.37566, differenceAreasXY.GetArea2D(), 0.001);
+			Assert.AreEqual(5, differenceAreasXY.PointCount);
+
+			MultiLinestring intersectionAreasXY =
+				GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
+
+			Assert.AreEqual(1, intersectionAreasXY.PartCount);
+			double expected = ring1.GetArea2D() - differenceAreasXY.GetArea2D();
+			Assert.AreEqual(expected, intersectionAreasXY.GetArea2D(), 0.001);
+
+			Assert.AreEqual(4, intersectionAreasXY.PointCount);
 		}
 
 		[Test]
