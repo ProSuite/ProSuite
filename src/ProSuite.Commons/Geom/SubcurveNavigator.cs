@@ -1139,6 +1139,15 @@ namespace ProSuite.Commons.Geom
 					if (outsideRemovedIslands)
 					{
 						outsideOtherPolygonRings.Add(targetRing);
+
+						// But it needs extra checking in case it interior intersects a removed island:
+						if (removedInteriorBoundaryLoops.Any(
+							    removedIsland =>
+								    GeomRelationUtils.InteriorIntersectXY(
+									    removedIsland, targetRing, Tolerance)))
+						{
+							RingsCouldContainEachOther = true;
+						}
 					}
 				}
 			}

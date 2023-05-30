@@ -138,39 +138,12 @@ namespace ProSuite.Commons.Geom
 			AssignInteriorRings(remainingIslands, resultRingGroups, unprocessedParts,
 			                    _subcurveNavigator.Tolerance);
 
-			List<MultiLinestring> results = new List<MultiLinestring>(resultRingGroups);
-
 			if (unprocessedParts.Count > 0)
 			{
-				results.Add(FilterUnprocessedRings(unprocessedParts, resultRingGroups));
+				AddUnprocessedRings(unprocessedParts, resultRingGroups);
 			}
 
-			return new MultiPolycurve(results);
-		}
-
-		private MultiLinestring FilterUnprocessedRings(MultiLinestring unprocessed,
-		                                               IList<RingGroup> resultRingGroups)
-		{
-			if (! _subcurveNavigator.HasBoundaryLoops() &&
-			    ! _subcurveNavigator.RingsCouldContainEachOther)
-			{
-				return unprocessed;
-			}
-
-			// extra check necessary, the unprocessed parts could be inside a processed part
-			var remaining = new List<Linestring>();
-			foreach (var unprocessedRing in unprocessed.GetLinestrings())
-			{
-				if (resultRingGroups.All(r => GeomRelationUtils.AreaContainsXY(
-					                              r, unprocessedRing,
-					                              _subcurveNavigator.Tolerance) == false))
-				{
-					// Not contained by any result ring: keep it
-					remaining.Add(unprocessedRing);
-				}
-			}
-
-			return new MultiPolycurve(remaining);
+			return new MultiPolycurve(resultRingGroups);
 		}
 
 		/// <summary>
@@ -411,6 +384,47 @@ namespace ProSuite.Commons.Geom
 			assignedPoly.AddInteriorRing(interiorRing);
 
 			return 1;
+		}
+
+		private void AddUnprocessedRings(MultiLinestring unprocessed,
+		                                 ICollection<RingGroup> resultRingGroups)
+		{
+			if (! _subcurveNavigator.HasBoundaryLoops() &&
+			    ! _subcurveNavigator.RingsCouldContainEachOther)
+			{
+				foreach (var linestring in unprocessed.GetLinestrings())
+				{
+					resultRingGroups.Add(new RingGroup(linestring));
+				}
+
+				return;
+			}
+
+			// By now we know that the rings are not cutting each other, but extra checks are
+			// necessary because the unprocessed parts could be inside a processed part or within
+			// another unprocessed part.
+			foreach (var unprocessedRing in unprocessed.GetLinestrings()
+			                                           .Where(l => l.ClockwiseOriented != false)
+			                                           .OrderByDescending(l => l.GetArea2D()))
+			{
+				if (resultRingGroups.All(r => GeomRelationUtils.AreaContainsXY(
+					                              r, unprocessedRing,
+					                              _subcurveNavigator.Tolerance) == false))
+				{
+					// Not contained by any result ring: keep it
+					resultRingGroups.Add(new RingGroup(unprocessedRing));
+				}
+			}
+
+			// Assign the unprocessed interior rings:
+			MultiLinestring nonassignable = MultiPolycurve.CreateEmpty();
+
+			AssignInteriorRings(
+				unprocessed.GetLinestrings().Where(l => l.ClockwiseOriented == false),
+				resultRingGroups, nonassignable, _subcurveNavigator.Tolerance);
+
+			Assert.AreEqual(0, nonassignable.PartCount,
+			                "Not all interior rings could be assigned.");
 		}
 
 		private static RingGroup GetContainingRingGroup(
