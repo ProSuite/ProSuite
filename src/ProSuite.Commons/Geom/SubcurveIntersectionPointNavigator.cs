@@ -450,63 +450,6 @@ namespace ProSuite.Commons.Geom
 			return nextIntersection;
 		}
 
-		private bool IsNextIntersection(
-			[NotNull] IntersectionPoint3D intersection,
-			[NotNull] IntersectionPoint3D previousIntersection,
-			bool continueOnSource, bool continueForward,
-			Predicate<IntersectionPoint3D> skip)
-		{
-			int sourcePartIdx = intersection.SourcePartIndex;
-
-			IntersectionPoint3D nextIntersection;
-
-			int circuitBreaker = 0;
-			bool skipped;
-			do
-			{
-				if (circuitBreaker++ > 10000)
-				{
-					throw new StackOverflowException(
-						"Breaking the circuit of skipping intersections. " +
-						"The input is probably not simple.");
-				}
-
-				nextIntersection =
-					continueOnSource
-						? GetNextIntersectionAlongSource(previousIntersection)
-						: GetNextIntersectionAlongTarget(
-							previousIntersection, continueForward);
-
-				if (nextIntersection == null)
-				{
-					return false;
-				}
-
-				previousIntersection = nextIntersection;
-
-				skipped = skip(nextIntersection);
-
-				if (! skipped)
-				{
-					// Check the intersection
-					if (nextIntersection == intersection)
-					{
-						return true;
-					}
-
-					if (nextIntersection.SourcePartIndex != sourcePartIdx)
-					{
-						// We're following the wrong ring
-						return false;
-					}
-				}
-
-				// Skip everything except those that were really visited
-			} while (skipped || ! VisitedIntersections.Contains(nextIntersection));
-
-			return false;
-		}
-
 		public bool CanConnectToSourcePartAlongTargetForward(
 			[NotNull] IntersectionPoint3D fromIntersection,
 			int initialSourcePartIdx)
@@ -612,17 +555,14 @@ namespace ProSuite.Commons.Geom
 		/// <param name="andEnd"></param>
 		/// <param name="usedSubcurves"></param>
 		/// <param name="alongSource"></param>
-		/// <param name="forward"></param>
 		/// <returns></returns>
 		/// <exception cref="StackOverflowException"></exception>
 		internal bool IsAnyIntersectionUsedBetween(
 			[NotNull] IntersectionPoint3D start,
 			[NotNull] IntersectionPoint3D andEnd,
 			[NotNull] IList<IntersectionRun> usedSubcurves,
-			bool alongSource, bool forward)
+			bool alongSource)
 		{
-			int sourcePartIdx = start.SourcePartIndex;
-
 			IntersectionPoint3D previousIntersection = start;
 			IntersectionPoint3D nextIntersection;
 
@@ -645,8 +585,7 @@ namespace ProSuite.Commons.Geom
 
 				nextIntersection = alongSource
 					                   ? GetNextIntersectionAlongSource(previousIntersection)
-					                   : GetNextIntersectionAlongTarget(
-						                   previousIntersection, forward);
+					                   : GetNextIntersectionAlongTarget(previousIntersection, true);
 
 				Assert.NotNull(nextIntersection, "No next intersection");
 
@@ -660,12 +599,18 @@ namespace ProSuite.Commons.Geom
 
 				if (nextIntersection.Equals(andEnd))
 				{
-					// Back  to start
+					// Back at the start
 					return false;
 				}
 
 				// TODO: Check this:
-				if (nextIntersection.SourcePartIndex != sourcePartIdx)
+				if (alongSource && nextIntersection.SourcePartIndex != start.SourcePartIndex)
+				{
+					// We're following the wrong ring
+					return false;
+				}
+
+				if (! alongSource && nextIntersection.TargetPartIndex != start.TargetPartIndex)
 				{
 					// We're following the wrong ring
 					return false;
@@ -691,7 +636,15 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			if (intersection.Equals(byIntersectionRun.PreviousIntersection))
+			if (byIntersectionRun.RunsAlongForward &&
+			    intersection.Equals(byIntersectionRun.PreviousIntersection))
+			{
+				return true;
+			}
+
+			// backwards:
+			if (! byIntersectionRun.RunsAlongForward &&
+			    intersection.Equals(byIntersectionRun.NextIntersection))
 			{
 				return true;
 			}
@@ -708,16 +661,6 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return false;
-		}
-
-		public bool IsNextTargetIntersection([NotNull] IntersectionPoint3D thisIntersection,
-		                                     [NotNull] IntersectionPoint3D nextCandidate,
-		                                     bool forward = true)
-		{
-			return IsNextIntersection(
-				nextCandidate, thisIntersection, continueOnSource: false, forward,
-				i => i.SourcePartIndex != thisIntersection.SourcePartIndex &&
-				     i.Point.Equals(thisIntersection.Point));
 		}
 
 		private IntersectionPoint3D GetNextIntersectionAlongSource(
@@ -863,7 +806,7 @@ namespace ProSuite.Commons.Geom
 				}
 
 				// TODO: All this has been copied over from the original implementation. Check
-				// whether it is still necessary:
+				// whether it is still necessary (it seems unnecessary for target boundary loops).
 
 				if (boundaryLoop.Start.Type == IntersectionPointType.TouchingInPoint ||
 				    boundaryLoop.End.Type == IntersectionPointType.TouchingInPoint)
@@ -915,6 +858,14 @@ namespace ProSuite.Commons.Geom
 				{
 					yield return boundaryLoop;
 				}
+			}
+		}
+
+		internal IEnumerable<BoundaryLoop> GetTargetBoundaryLoops()
+		{
+			foreach (BoundaryLoop boundaryLoop in _intersectionClusters.GetTargetBoundaryLoops())
+			{
+				yield return boundaryLoop;
 			}
 		}
 
@@ -1128,37 +1079,15 @@ namespace ProSuite.Commons.Geom
 		private double SourceSegmentCountBetween([NotNull] IntersectionPoint3D firstIntersection,
 		                                         [NotNull] IntersectionPoint3D secondIntersection)
 		{
-			Assert.AreEqual(firstIntersection.SourcePartIndex, secondIntersection.SourcePartIndex,
-			                "Intersections are not from the same part.");
-
-			double result = secondIntersection.VirtualSourceVertex -
-			                firstIntersection.VirtualSourceVertex;
-
-			if (result < 0)
-			{
-				Linestring sourcePart = Source.GetPart(firstIntersection.SourcePartIndex);
-				result += sourcePart.SegmentCount;
-			}
-
-			return Math.Floor(result);
+			return SegmentIntersectionUtils.SourceSegmentCountBetween(
+				Source, firstIntersection, secondIntersection);
 		}
 
 		private double TargetSegmentCountBetween([NotNull] IntersectionPoint3D firstIntersection,
 		                                         [NotNull] IntersectionPoint3D secondIntersection)
 		{
-			Assert.AreEqual(firstIntersection.TargetPartIndex, secondIntersection.TargetPartIndex,
-			                "Intersections are not from the same part.");
-
-			double result = secondIntersection.VirtualTargetVertex -
-			                firstIntersection.VirtualTargetVertex;
-
-			if (result < 0)
-			{
-				Linestring targetPart = Target.GetPart(firstIntersection.TargetPartIndex);
-				result += targetPart.SegmentCount;
-			}
-
-			return Math.Floor(result);
+			return SegmentIntersectionUtils.TargetSegmentCountBetween(
+				Target, firstIntersection, secondIntersection);
 		}
 
 		private bool SkipIntersection([NotNull] IntersectionPoint3D subcurveStartIntersection,

@@ -22,6 +22,8 @@ namespace ProSuite.Commons.Geom
 		public bool RunsAlongSource { get; set; }
 		public bool RunsAlongTarget { get; set; }
 
+		public bool RunsAlongForward { get; set; }
+
 		public bool IsBoundaryLoop { get; set; }
 
 		public bool ContainsSourceStart(out Pnt3D startPoint)

@@ -378,9 +378,6 @@ namespace ProSuite.Commons.Geom
 			// loops to the outside.
 			foreach (BoundaryLoop boundaryLoop in GetSourceBoundaryLoops())
 			{
-				//BoundaryLoop boundaryLoop =
-				//	new BoundaryLoop(start, end, Source.GetPart(start.SourcePartIndex), true);
-
 				if (! boundaryLoop.IsLoopingToOutside &&
 				    unCutSourceIndexes.Contains(boundaryLoop.Start.SourcePartIndex))
 				{
@@ -539,7 +536,7 @@ namespace ProSuite.Commons.Geom
 		                              bool isSource)
 		{
 			return IntersectionPointNavigator.IsAnyIntersectionUsedBetween(
-				boundaryLoop.Start, boundaryLoop.End, UsedSubcurves, isSource, true);
+				boundaryLoop.Start, boundaryLoop.End, UsedSubcurves, isSource);
 		}
 
 		/// <summary>
@@ -555,7 +552,7 @@ namespace ProSuite.Commons.Geom
 		                              bool isSource)
 		{
 			return IntersectionPointNavigator.IsAnyIntersectionUsedBetween(
-				boundaryLoop.End, boundaryLoop.Start, UsedSubcurves, isSource, true);
+				boundaryLoop.End, boundaryLoop.Start, UsedSubcurves, isSource);
 		}
 
 		private IEnumerable<Linestring> CompareToTargetBoundaryLoops(
@@ -756,18 +753,7 @@ namespace ProSuite.Commons.Geom
 
 		private IEnumerable<BoundaryLoop> GetTargetBoundaryLoops()
 		{
-			List<BoundaryLoop> result = new List<BoundaryLoop>();
-
-			foreach ((IntersectionPoint3D start, IntersectionPoint3D end) in
-			         IntersectionPointNavigator.TargetBoundaryLoopIntersections)
-			{
-				BoundaryLoop boundaryLoop = new BoundaryLoop(
-					start, end, Target.GetPart(start.TargetPartIndex), false);
-
-				result.Add(boundaryLoop);
-			}
-
-			return result.Distinct(new BoundaryLoopComparer());
+			return IntersectionPointNavigator.GetTargetBoundaryLoops();
 		}
 
 		/// <summary>
@@ -777,10 +763,10 @@ namespace ProSuite.Commons.Geom
 		/// </summary>
 		/// <returns></returns>
 		private IList<Tuple<IntersectionPoint3D, Linestring>> GetUnprocessedSourceBoundaryLoops(
-			[NotNull] out ICollection<int> targetPartIndexes)
+			[NotNull] out ICollection<int> intersectedTargetPartIndexes)
 		{
 			// In case of touching multipart target rings, the source boundary loop is duplicated!
-			targetPartIndexes = new HashSet<int>();
+			intersectedTargetPartIndexes = new HashSet<int>();
 			var result = new List<Tuple<IntersectionPoint3D, Linestring>>();
 
 			foreach (BoundaryLoop boundaryLoop in GetSourceBoundaryLoops())
@@ -791,7 +777,7 @@ namespace ProSuite.Commons.Geom
 				if (! HasLoop1BeenUsed(boundaryLoop, true))
 				{
 					Linestring loop = boundaryLoop.Loop1;
-					targetPartIndexes.Add(start.TargetPartIndex);
+					intersectedTargetPartIndexes.Add(start.TargetPartIndex);
 
 					if (! result.Any(r => r.Item2.Equals(loop)))
 					{
@@ -803,7 +789,7 @@ namespace ProSuite.Commons.Geom
 				if (! HasLoop2BeenUsed(boundaryLoop, true))
 				{
 					Linestring loop = boundaryLoop.Loop2;
-					targetPartIndexes.Add(start.TargetPartIndex);
+					intersectedTargetPartIndexes.Add(start.TargetPartIndex);
 
 					if (! result.Any(r => r.Item2.Equals(loop)))
 					{
@@ -821,40 +807,42 @@ namespace ProSuite.Commons.Geom
 		/// not yet been detected/processed.
 		/// </summary>
 		/// <returns></returns>
-		private IEnumerable<Tuple<IntersectionPoint3D, Linestring>>
-			GetUnprocessedTargetBoundaryLoops()
+		private IList<Tuple<IntersectionPoint3D, Linestring>> GetUnprocessedTargetBoundaryLoops(
+			[NotNull] out ICollection<int> intersectedSourcePartIndexes)
 		{
-			// TODO: Same logic as source boundary loops: Return all intersected source rings
+			intersectedSourcePartIndexes = new HashSet<int>();
+			var result = new List<Tuple<IntersectionPoint3D, Linestring>>();
 
-			// In some cases the boundary loops are duplicated!
-			List<Linestring> yieldedLoops = new List<Linestring>();
 			foreach (BoundaryLoop boundaryLoop in GetTargetBoundaryLoops())
 			{
-				if (IntersectionPointNavigator.IsNextTargetIntersection(
-					    boundaryLoop.Start, boundaryLoop.End))
+				IntersectionPoint3D start = boundaryLoop.Start;
+				IntersectionPoint3D end = boundaryLoop.End;
+
+				if (! HasLoop1BeenUsed(boundaryLoop, false))
 				{
 					Linestring loop = boundaryLoop.Loop1;
-					if (! yieldedLoops.Contains(loop))
+					intersectedSourcePartIndexes.Add(start.SourcePartIndex);
+
+					if (! result.Any(r => r.Item2.Equals(loop)))
 					{
-						yieldedLoops.Add(loop);
-						yield return new Tuple<IntersectionPoint3D, Linestring>(
-							boundaryLoop.Start, loop);
+						result.Add(new Tuple<IntersectionPoint3D, Linestring>(start, loop));
 					}
 				}
 
 				// And check the other loop too:
-				if (IntersectionPointNavigator.IsNextTargetIntersection(
-					    boundaryLoop.End, boundaryLoop.Start))
+				if (! HasLoop2BeenUsed(boundaryLoop, false))
 				{
 					Linestring loop = boundaryLoop.Loop2;
-					if (! yieldedLoops.Contains(loop))
+					intersectedSourcePartIndexes.Add(start.SourcePartIndex);
+
+					if (! result.Any(r => r.Item2.Equals(loop)))
 					{
-						yieldedLoops.Add(loop);
-						yield return new Tuple<IntersectionPoint3D, Linestring>(
-							boundaryLoop.End, loop);
+						result.Add(new Tuple<IntersectionPoint3D, Linestring>(end, loop));
 					}
 				}
 			}
+
+			return result;
 		}
 
 		#endregion
@@ -1060,28 +1048,55 @@ namespace ProSuite.Commons.Geom
 
 			// Target boundary loops:
 			foreach ((IntersectionPoint3D startIntersection, Linestring targetLoop) in
-			         GetUnprocessedTargetBoundaryLoops())
+			         GetUnprocessedTargetBoundaryLoops(out ICollection<int> sourcePartIndexes))
 			{
-				int sourcePartIndex = startIntersection.SourcePartIndex;
 				int targetPartIndex = startIntersection.TargetPartIndex;
-				Linestring sourceRing = Source.GetPart(sourcePartIndex);
+				Linestring sourceRing = null;
 
-				bool? isContainedXY = GeomRelationUtils.IsContainedXY(
-					sourceRing, targetLoop, Tolerance);
-
-				DetermineRingRelation(sourceRing, targetLoop, isContainedXY,
-				                      sourcePartIndex, targetPartIndex,
-				                      equalOrientationCongruentRings, outsideOtherPolygonRings);
-
-				if (false == GeomRelationUtils.AreaContainsXY(
-					    sourceRing, targetLoop, Tolerance))
+				bool targetContainedByAny = false;
+				foreach (int sourcePartIndex in sourcePartIndexes)
 				{
-					outsideOtherPolygonRings.Add(targetLoop);
+					sourceRing = Source.GetPart(sourcePartIndex);
+
+					bool? isSourceContainedXY =
+						GeomRelationUtils.IsContainedXY(sourceRing, targetLoop, Tolerance);
+
+					if (isSourceContainedXY == false)
+					{
+						continue;
+					}
+
+					DetermineRingRelation(sourceRing, targetLoop, isSourceContainedXY,
+					                      sourcePartIndex, sourcePartIndex,
+					                      equalOrientationCongruentRings, outsideOtherPolygonRings);
+
+					bool? isTargetContained =
+						GeomRelationUtils.AreaContainsXY(sourceRing, targetLoop, Tolerance);
+
+					if (isTargetContained != false)
+					{
+						removedInteriorBoundaryLoops.Add(targetLoop);
+
+						targetContainedByAny = true;
+					}
 				}
-				else
+
+				if (targetContainedByAny)
 				{
 					IntersectedTargetPartIndexes.Add(targetPartIndex);
-					IntersectedSourcePartIndexes.Add(sourcePartIndex);
+				}
+
+				if (! targetContainedByAny && sourceRing != null)
+				{
+					if (false == GeomRelationUtils.AreaContainsXY(
+						    sourceRing, targetLoop, Tolerance))
+					{
+						outsideOtherPolygonRings.Add(targetLoop);
+					}
+					else
+					{
+						IntersectedTargetPartIndexes.Add(targetPartIndex);
+					}
 				}
 			}
 
@@ -1134,12 +1149,12 @@ namespace ProSuite.Commons.Geom
 					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx))
 				{
 					// Except if it is contained by a previously removed island:
-					bool outsideRemovedIslands = removedInteriorBoundaryLoops.All(
+					bool insideRemovedIslands = removedInteriorBoundaryLoops.All(
 						removedIsland =>
 							GeomRelationUtils.AreaContainsXY(
 								removedIsland, targetRing, Tolerance) == true);
 
-					if (outsideRemovedIslands)
+					if (insideRemovedIslands)
 					{
 						outsideOtherPolygonRings.Add(targetRing);
 
@@ -1151,6 +1166,10 @@ namespace ProSuite.Commons.Geom
 						{
 							RingsCouldContainEachOther = true;
 						}
+					}
+					else
+					{
+						outsideOtherPolygonRings.Add(targetRing);
 					}
 				}
 			}
@@ -1393,6 +1412,7 @@ namespace ProSuite.Commons.Geom
 						RunsAlongTarget = SubcurveRunsAlongTarget(
 							continueOnSource, currentIntersection, nextIntersection,
 							isBoundaryLoopIntersection, subcurve),
+						RunsAlongForward = forward,
 						IsBoundaryLoop = isBoundaryLoopIntersection
 					};
 

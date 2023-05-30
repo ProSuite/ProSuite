@@ -4708,7 +4708,11 @@ namespace ProSuite.Commons.Test.Geom
 
 			// Minus the remaining area of the inner boundary loop island
 			double expectedArea = 376.646893;
+			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.001);
 
+			// Vice versa:
+			result = GeomTopoOpUtils.GetUnionAreasXY(target, source, 0.01);
+			Assert.AreEqual(2, result.PartCount);
 			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.001);
 		}
 

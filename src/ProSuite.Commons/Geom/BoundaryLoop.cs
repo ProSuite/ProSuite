@@ -185,39 +185,4 @@ namespace ProSuite.Commons.Geom
 
 		#endregion
 	}
-
-	internal class BoundaryLoopComparer : IEqualityComparer<BoundaryLoop>
-	{
-		#region Implementation of IEqualityComparer<in BoundaryLoop>
-
-		public bool Equals(BoundaryLoop x, BoundaryLoop y)
-		{
-			if (x == null && y == null)
-			{
-				return true;
-			}
-
-			if (x == null || y == null)
-			{
-				return false;
-			}
-
-			if (x.Start.Equals(y.Start) ||
-			    x.Start.Equals(y.End) &&
-			    x.End.Equals(y.End) ||
-			    x.End.Equals(y.Start))
-			{
-				return true;
-			}
-
-			return false;
-		}
-
-		public int GetHashCode(BoundaryLoop obj)
-		{
-			return (obj.Start.GetHashCode()) ^ obj.End.GetHashCode();
-		}
-
-		#endregion
-	}
 }
