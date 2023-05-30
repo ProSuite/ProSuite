@@ -143,32 +143,9 @@ namespace ProSuite.Commons.Geom
 				{
 					_intersectionPoints = new List<IntersectionPoint3D>();
 
-					const bool includeLinearIntersectionIntermediateRingStartEndPoints = true;
-
-					// TODO: Why not calculate the entire source and get the correct (global) segment
-					//       indexes on the SegmentIntersections?
-					for (int i = 0; i < Source.PartCount; i++)
-					{
-						Linestring sourceRing = Source.GetPart(i);
-
-						// NOTE: In order to properly process identical rings, there must be
-						//       at least some intersection point ->
-						// includeLinearIntersectionIntermediateRingStartEndPoints must be true
-						var intersectionsForSource =
-							GeomTopoOpUtils.GetIntersectionPoints(
-								(ISegmentList) sourceRing, Target, Tolerance,
-								includeLinearIntersectionIntermediateRingStartEndPoints);
-
-						foreach (IntersectionPoint3D intersectionPoint in intersectionsForSource)
-						{
-							intersectionPoint.SourcePartIndex = i;
-							_intersectionPoints.Add(intersectionPoint);
-						}
-					}
-
 					_intersectionPoints = GeomTopoOpUtils.GetIntersectionPoints(
 						Source, Target, Tolerance,
-						includeLinearIntersectionIntermediateRingStartEndPoints);
+						includeLinearIntersectionIntermediateRingStartEndPoints: true);
 				}
 
 				return _intersectionPoints;
