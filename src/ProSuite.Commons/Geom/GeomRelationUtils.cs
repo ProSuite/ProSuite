@@ -429,6 +429,36 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
+		public static bool LinesInteriorIntersectXY([NotNull] ISegmentList segments,
+		                                            [NotNull] IPnt testPoint,
+		                                            double tolerance)
+		{
+			foreach (KeyValuePair<int, Line3D> segmentsAroundPoint in
+			         segments.FindSegments(testPoint, tolerance))
+			{
+				Line3D segment = segmentsAroundPoint.Value;
+
+				if (segment.IntersectsPointXY(testPoint, tolerance))
+				{
+					// Unless it is a start/end point
+
+					for (int i = 0; i < segments.PartCount; i++)
+					{
+						Linestring part = segments.GetPart(i);
+
+						if (! part.IsEmpty &&
+						    ! part.StartPoint.EqualsXY(testPoint, tolerance) &&
+						    ! part.EndPoint.EqualsXY(testPoint, tolerance))
+						{
+							return true;
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+
 		#region AreaContains, IsContained
 
 		/// <summary>

@@ -53,6 +53,8 @@ namespace ProSuite.Commons.Geom
 
 		private HashSet<IntersectionPoint3D> VisitedIntersectionsAlongSource { get; set; }
 
+		private IList<IntersectionRun> UsedSubcurves { get; } = new List<IntersectionRun>();
+
 		/// <summary>
 		/// Intersections to be used as start-intersections for right-side ring operations, i.e.
 		/// area-intersection.
@@ -301,6 +303,7 @@ namespace ProSuite.Commons.Geom
 
 					result.Add(finishedRing);
 
+					RememberUsedIntersectionRuns(subcurveInfos);
 					RememberUsedSourceParts(subcurveInfos);
 					RememberUsedTargetParts(subcurveInfos);
 				}
@@ -490,8 +493,7 @@ namespace ProSuite.Commons.Geom
 			bool includeNotContained)
 		{
 			// If the end is the next intersection from the start it means the ring is un-used:
-			if (IntersectionPointNavigator.IsNextSourceIntersection(
-				    boundaryLoop.Start, boundaryLoop.End))
+			if (! HasLoop1BeenUsed(boundaryLoop, true))
 			{
 				Linestring loop1 = boundaryLoop.Loop1;
 
@@ -506,8 +508,7 @@ namespace ProSuite.Commons.Geom
 			}
 
 			// And check the other loop too:
-			if (IntersectionPointNavigator.IsNextSourceIntersection(
-				    boundaryLoop.End, boundaryLoop.Start))
+			if (! HasLoop2BeenUsed(boundaryLoop, true))
 			{
 				Linestring loop2 = boundaryLoop.Loop2;
 
@@ -520,6 +521,38 @@ namespace ProSuite.Commons.Geom
 					yield return loop2;
 				}
 			}
+		}
+
+		/// <summary>
+		/// Determines whether the segments of the loop1 of the specified boundary loop have been
+		/// used already by any uf the <see cref="UsedSubcurves"/> as they were used during the
+		/// subcurve navigation.
+		/// </summary>
+		/// <param name="boundaryLoop"></param>
+		/// <param name="isSource">Whether the boundary loop is a source boundary loop and
+		/// hence it is checked whether the usage runs along the source</param>
+		/// <returns></returns>
+		private bool HasLoop1BeenUsed(BoundaryLoop boundaryLoop,
+		                              bool isSource)
+		{
+			return IntersectionPointNavigator.IsAnyIntersectionUsedBetween(
+				boundaryLoop.Start, boundaryLoop.End, UsedSubcurves, isSource, true);
+		}
+
+		/// <summary>
+		/// Determines whether the segments of the loop2 of the specified boundary loop have been
+		/// used already by any uf the <see cref="UsedSubcurves"/> as they were used during the
+		/// subcurve navigation.
+		/// </summary>
+		/// <param name="boundaryLoop"></param>
+		/// <param name="isSource">Whether the boundary loop is a source boundary loop and
+		/// hence it is checked whether the usage runs along the source</param>
+		/// <returns></returns>
+		private bool HasLoop2BeenUsed(BoundaryLoop boundaryLoop,
+		                              bool isSource)
+		{
+			return IntersectionPointNavigator.IsAnyIntersectionUsedBetween(
+				boundaryLoop.End, boundaryLoop.Start, UsedSubcurves, isSource, true);
 		}
 
 		private IEnumerable<Linestring> CompareToTargetBoundaryLoops(
@@ -763,7 +796,7 @@ namespace ProSuite.Commons.Geom
 				IntersectionPoint3D start = boundaryLoop.Start;
 				IntersectionPoint3D end = boundaryLoop.End;
 
-				if (IntersectionPointNavigator.IsNextSourceIntersection(start, end))
+				if (! HasLoop1BeenUsed(boundaryLoop, true))
 				{
 					Linestring loop = boundaryLoop.Loop1;
 					targetPartIndexes.Add(start.TargetPartIndex);
@@ -775,7 +808,7 @@ namespace ProSuite.Commons.Geom
 				}
 
 				// And check the other loop too:
-				if (IntersectionPointNavigator.IsNextSourceIntersection(end, start))
+				if (! HasLoop2BeenUsed(boundaryLoop, true))
 				{
 					Linestring loop = boundaryLoop.Loop2;
 					targetPartIndexes.Add(start.TargetPartIndex);
@@ -1352,7 +1385,8 @@ namespace ProSuite.Commons.Geom
 				}
 
 				IntersectionRun next =
-					new IntersectionRun(nextIntersection, subcurve, containedSourceStart)
+					new IntersectionRun(startIntersection, nextIntersection, subcurve,
+					                    containedSourceStart)
 					{
 						RunsAlongSource = continueOnSource,
 						RunsAlongTarget = SubcurveRunsAlongTarget(
@@ -2234,6 +2268,14 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		private void RememberUsedIntersectionRuns(List<IntersectionRun> subcurveInfos)
+		{
+			foreach (IntersectionRun intersectionRun in subcurveInfos)
+			{
+				UsedSubcurves.Add(intersectionRun);
+			}
+		}
+
 		private static IEnumerable<Linestring> GetUnused(ISegmentList linestrings,
 		                                                 HashSet<int> usedIndexes)
 		{
@@ -2291,41 +2333,6 @@ namespace ProSuite.Commons.Geom
 			CongruentDifferentOrientation,
 			IsContained,
 			IsNotContained
-		}
-
-		private class IntersectionRun
-		{
-			private readonly Pnt3D _includedRingStartPoint;
-
-			public IntersectionRun(IntersectionPoint3D nextIntersection,
-			                       Linestring subcurve,
-			                       Pnt3D includedRingStartPoint)
-			{
-				_includedRingStartPoint = includedRingStartPoint;
-				NextIntersection = nextIntersection;
-				Subcurve = subcurve;
-			}
-
-			public IntersectionPoint3D NextIntersection { get; }
-			public Linestring Subcurve { get; }
-
-			public bool RunsAlongSource { get; set; }
-			public bool RunsAlongTarget { get; set; }
-
-			public bool IsBoundaryLoop { get; set; }
-
-			public bool ContainsSourceStart(out Pnt3D startPoint)
-			{
-				if (_includedRingStartPoint != null)
-				{
-					startPoint = _includedRingStartPoint;
-
-					return true;
-				}
-
-				startPoint = null;
-				return false;
-			}
 		}
 
 		private enum TurnDirection

@@ -604,13 +604,110 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
-		public bool IsNextSourceIntersection([NotNull] IntersectionPoint3D thisIntersection,
-		                                     [NotNull] IntersectionPoint3D nextCandidate)
+		/// <summary>
+		/// Whether any of the intersection points between start and end point have been used by
+		/// any of the specified used subcurves. The end intersection point itself is excluded.
+		/// </summary>
+		/// <param name="start"></param>
+		/// <param name="andEnd"></param>
+		/// <param name="usedSubcurves"></param>
+		/// <param name="alongSource"></param>
+		/// <param name="forward"></param>
+		/// <returns></returns>
+		/// <exception cref="StackOverflowException"></exception>
+		internal bool IsAnyIntersectionUsedBetween(
+			[NotNull] IntersectionPoint3D start,
+			[NotNull] IntersectionPoint3D andEnd,
+			[NotNull] IList<IntersectionRun> usedSubcurves,
+			bool alongSource, bool forward)
 		{
-			return IsNextIntersection(
-				nextCandidate, thisIntersection, true, true,
-				i => i.TargetPartIndex != thisIntersection.TargetPartIndex &&
-				     i.Point.Equals(thisIntersection.Point));
+			int sourcePartIdx = start.SourcePartIndex;
+
+			IntersectionPoint3D previousIntersection = start;
+			IntersectionPoint3D nextIntersection;
+
+			if (usedSubcurves.Any(
+				    s => IsIntersectionUsed(start, s, alongSource)))
+			{
+				// The start point has been used already:
+				return true;
+			}
+
+			int circuitBreaker = 0;
+			do
+			{
+				if (circuitBreaker++ > 10000)
+				{
+					throw new StackOverflowException(
+						"Breaking the circuit of skipping intersections. " +
+						"The input is probably not simple.");
+				}
+
+				nextIntersection = alongSource
+					                   ? GetNextIntersectionAlongSource(previousIntersection)
+					                   : GetNextIntersectionAlongTarget(
+						                   previousIntersection, forward);
+
+				Assert.NotNull(nextIntersection, "No next intersection");
+
+				bool usedBySubcurveStart = usedSubcurves.Any(
+					s => IsIntersectionUsed(nextIntersection, s, alongSource));
+
+				if (usedBySubcurveStart)
+				{
+					return true;
+				}
+
+				if (nextIntersection.Equals(andEnd))
+				{
+					// Back  to start
+					return false;
+				}
+
+				// TODO: Check this:
+				if (nextIntersection.SourcePartIndex != sourcePartIdx)
+				{
+					// We're following the wrong ring
+					return false;
+				}
+
+				previousIntersection = nextIntersection;
+			} while (true);
+		}
+
+		private bool IsIntersectionUsed(IntersectionPoint3D intersection,
+		                                IntersectionRun byIntersectionRun,
+		                                bool alongSource)
+		{
+			if (alongSource && ! byIntersectionRun.RunsAlongSource)
+			{
+				return false;
+			}
+
+			bool alongTarget = ! alongSource;
+
+			if (alongTarget && ! byIntersectionRun.RunsAlongTarget)
+			{
+				return false;
+			}
+
+			if (intersection.Equals(byIntersectionRun.PreviousIntersection))
+			{
+				return true;
+			}
+
+			// This should be re-considered thoroughly. The reason for this is that in boundary
+			// loops sometimes the intersection run is not broken up at the intersection cluster.
+			// In these cases it must be checked whether the intersection point is in the interior
+			// of the subcurve:
+			if (_intersectionClusters.SourceClusterContains(intersection) &&
+			    GeomRelationUtils.LinesInteriorIntersectXY(
+				    byIntersectionRun.Subcurve, intersection.Point, Tolerance))
+			{
+				return true;
+			}
+
+			return false;
 		}
 
 		public bool IsNextTargetIntersection([NotNull] IntersectionPoint3D thisIntersection,
