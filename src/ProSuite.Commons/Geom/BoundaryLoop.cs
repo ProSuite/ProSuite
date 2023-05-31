@@ -3,7 +3,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
 {
-	internal class BoundaryLoop
+	public class BoundaryLoop
 	{
 		private readonly bool _isSourceRing;
 		private Linestring _loop1;

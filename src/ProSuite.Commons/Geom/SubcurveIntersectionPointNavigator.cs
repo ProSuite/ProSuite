@@ -173,10 +173,6 @@ namespace ProSuite.Commons.Geom
 				if (_navigableIntersections == null)
 				{
 					_navigableIntersections = GetNavigableIntersections(AssumeSourceRings);
-
-					_intersectionClusters =
-						GetMultiIntersectionClusters(IntersectionsAlongSource,
-						                             IntersectionsAlongTarget);
 				}
 
 				return _navigableIntersections;
@@ -274,14 +270,6 @@ namespace ProSuite.Commons.Geom
 		public HashSet<IntersectionPoint3D> VisitedIntersections { get; } =
 			new HashSet<IntersectionPoint3D>();
 
-		public HashSet<Tuple<IntersectionPoint3D, IntersectionPoint3D>>
-			SourceBoundaryLoopIntersections { get; } =
-			new HashSet<Tuple<IntersectionPoint3D, IntersectionPoint3D>>();
-
-		public HashSet<Tuple<IntersectionPoint3D, IntersectionPoint3D>>
-			TargetBoundaryLoopIntersections { get; } =
-			new HashSet<Tuple<IntersectionPoint3D, IntersectionPoint3D>>();
-
 		public HashSet<IntersectionPoint3D> FirstIntersectionsPerPart
 		{
 			get
@@ -324,6 +312,21 @@ namespace ProSuite.Commons.Geom
 				}
 
 				return result;
+			}
+		}
+
+		private IntersectionClusters IntersectionClusters
+		{
+			get
+			{
+				if (_intersectionClusters == null)
+				{
+					_intersectionClusters =
+						GetMultiIntersectionClusters(IntersectionsAlongSource,
+						                             IntersectionsAlongTarget);
+				}
+
+				return _intersectionClusters;
 			}
 		}
 
@@ -412,10 +415,10 @@ namespace ProSuite.Commons.Geom
 
 			List<IntersectionPoint3D> previousCluster =
 				continueOnSource
-					? _intersectionClusters.GetOtherSourceIntersections(previousIntersection)
-					                       .ToList()
-					: _intersectionClusters.GetOtherTargetIntersections(previousIntersection, true)
-					                       .ToList();
+					? IntersectionClusters.GetOtherSourceIntersections(previousIntersection)
+					                      .ToList()
+					: IntersectionClusters.GetOtherTargetIntersections(previousIntersection, true)
+					                      .ToList();
 
 			int circuitBreaker = 0;
 			do
@@ -653,7 +656,7 @@ namespace ProSuite.Commons.Geom
 			// loops sometimes the intersection run is not broken up at the intersection cluster.
 			// In these cases it must be checked whether the intersection point is in the interior
 			// of the subcurve:
-			if (_intersectionClusters.SourceClusterContains(intersection) &&
+			if (IntersectionClusters.SourceClusterContains(intersection) &&
 			    GeomRelationUtils.LinesInteriorIntersectXY(
 				    byIntersectionRun.Subcurve, intersection.Point, Tolerance))
 			{
@@ -692,20 +695,20 @@ namespace ProSuite.Commons.Geom
 
 		public bool HasMultipleSourceIntersections([NotNull] IntersectionPoint3D atIntersection)
 		{
-			return _intersectionClusters.HasMultipleSourceIntersections(atIntersection);
+			return IntersectionClusters.HasMultipleSourceIntersections(atIntersection);
 		}
 
 		public IEnumerable<IntersectionPoint3D> GetOtherSourceIntersections(
 			[NotNull] IntersectionPoint3D atIntersection)
 		{
-			return _intersectionClusters.GetOtherSourceIntersections(atIntersection);
+			return IntersectionClusters.GetOtherSourceIntersections(atIntersection);
 		}
 
 		public IEnumerable<IntersectionPoint3D> GetOtherTargetIntersections(
 			[NotNull] IntersectionPoint3D atIntersection,
 			bool allowSourcePartJump = false)
 		{
-			return _intersectionClusters.GetOtherTargetIntersections(
+			return IntersectionClusters.GetOtherTargetIntersections(
 				atIntersection, allowSourcePartJump);
 		}
 
@@ -729,10 +732,6 @@ namespace ProSuite.Commons.Geom
 
 					if (IsSourceBoundaryLoopIntersection(intersection, samePlaceIntersection))
 					{
-						SourceBoundaryLoopIntersections.Add(
-							new Tuple<IntersectionPoint3D, IntersectionPoint3D>(
-								intersection, samePlaceIntersection));
-
 						return true;
 					}
 
@@ -752,10 +751,6 @@ namespace ProSuite.Commons.Geom
 				{
 					if (IsSourceBoundaryLoopIntersection(intersection, samePlaceIntersection))
 					{
-						SourceBoundaryLoopIntersections.Add(
-							new Tuple<IntersectionPoint3D, IntersectionPoint3D>(
-								intersection, samePlaceIntersection));
-
 						return true;
 					}
 
@@ -795,9 +790,9 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		internal IEnumerable<BoundaryLoop> GetSourceBoundaryLoops(bool filtered = false)
+		public IEnumerable<BoundaryLoop> GetSourceBoundaryLoops(bool filtered = false)
 		{
-			foreach (BoundaryLoop boundaryLoop in _intersectionClusters.GetSourceBoundaryLoops())
+			foreach (BoundaryLoop boundaryLoop in IntersectionClusters.GetSourceBoundaryLoops())
 			{
 				if (! filtered)
 				{
@@ -861,9 +856,9 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		internal IEnumerable<BoundaryLoop> GetTargetBoundaryLoops()
+		public IEnumerable<BoundaryLoop> GetTargetBoundaryLoops()
 		{
-			foreach (BoundaryLoop boundaryLoop in _intersectionClusters.GetTargetBoundaryLoops())
+			foreach (BoundaryLoop boundaryLoop in IntersectionClusters.GetTargetBoundaryLoops())
 			{
 				yield return boundaryLoop;
 			}
@@ -1133,7 +1128,7 @@ namespace ProSuite.Commons.Geom
 			}
 
 			// TODO: This is not probably redundant thanks to the above if (ClusterContains...
-			if (_intersectionClusters.SourceClusterContains(nextIntersection) &&
+			if (IntersectionClusters.SourceClusterContains(nextIntersection) &&
 			    HasDuplicateBeenVisited(nextIntersection))
 			{
 				// Skip it
@@ -1334,21 +1329,6 @@ namespace ProSuite.Commons.Geom
 
 			foreach (IntersectionPoint3D intersectionPoint3D in NavigableIntersections)
 			{
-				// Boundary loop intersections are important to navigate but not as start points
-				if (SourceBoundaryLoopIntersections.Any(
-					    bl => bl.Item1.Equals(intersectionPoint3D) ||
-					          bl.Item2.Equals(intersectionPoint3D)))
-				{
-					continue;
-				}
-
-				if (TargetBoundaryLoopIntersections.Any(
-					    bl => bl.Item1.Equals(intersectionPoint3D) ||
-					          bl.Item2.Equals(intersectionPoint3D)))
-				{
-					continue;
-				}
-
 				intersectionPoint3D.ClassifyTargetTrajectory(source, target,
 				                                             out bool? targetContinuesToRightSide,
 				                                             out bool? targetArrivesFromRightSide,
@@ -1385,21 +1365,6 @@ namespace ProSuite.Commons.Geom
 
 			foreach (IntersectionPoint3D intersectionPoint in NavigableIntersections)
 			{
-				// Boundary loop intersections are important to navigate but not as start points
-				if (SourceBoundaryLoopIntersections.Any(
-					    bl => bl.Item1.Equals(intersectionPoint) ||
-					          bl.Item2.Equals(intersectionPoint)))
-				{
-					continue;
-				}
-
-				if (TargetBoundaryLoopIntersections.Any(
-					    bl => bl.Item1.Equals(intersectionPoint) ||
-					          bl.Item2.Equals(intersectionPoint)))
-				{
-					continue;
-				}
-
 				intersectionPoint.ClassifyTargetTrajectory(source, target,
 				                                           out bool? targetContinuesToRightSide,
 				                                           out bool? targetArrivesFromRightSide,
@@ -1501,7 +1466,7 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList target,
 			bool includeSourceRingStartEnd)
 		{
-			var linearIntersectionBreakEvaluator = new LinearIntersectionBreakEvaluator(true);
+			var linearIntersectionBreakEvaluator = new LinearIntersectionBreakEvaluator();
 
 			if (includeSourceRingStartEnd)
 			{
@@ -1524,27 +1489,6 @@ namespace ProSuite.Commons.Geom
 				yield return linearBreak.Restart;
 			}
 
-			// Side effect: identify all boundary loop intersections
-			// Add the otherwise missed source boundary loops
-			foreach (LinearIntersectionPseudoBreak boundaryLoop in
-			         linearIntersectionBreakEvaluator
-				         .GetAllBoundaryLoops(source, target, Tolerance))
-			{
-				if (boundaryLoop.IsSourceBoundaryLoop)
-				{
-					SourceBoundaryLoopIntersections.Add(
-						new Tuple<IntersectionPoint3D, IntersectionPoint3D>(
-							boundaryLoop.Restart, boundaryLoop.PreviousEnd));
-				}
-
-				if (boundaryLoop.IsTargetBoundaryLoop)
-				{
-					TargetBoundaryLoopIntersections.Add(
-						new Tuple<IntersectionPoint3D, IntersectionPoint3D>(
-							boundaryLoop.Restart, boundaryLoop.PreviousEnd));
-				}
-			}
-
 			if (! AllowBoundaryLoops)
 			{
 				// Filter the single touching points of a ring when union-ing,
@@ -1562,8 +1506,6 @@ namespace ProSuite.Commons.Geom
 						}
 					}
 				}
-
-				// TODO: Consider the same for outer boundary loops?
 			}
 		}
 	}

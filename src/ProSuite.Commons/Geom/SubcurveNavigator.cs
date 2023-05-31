@@ -458,8 +458,8 @@ namespace ProSuite.Commons.Geom
 
 		public bool HasBoundaryLoops()
 		{
-			return IntersectionPointNavigator.TargetBoundaryLoopIntersections.Count != 0 ||
-			       IntersectionPointNavigator.SourceBoundaryLoopIntersections.Count != 0;
+			return IntersectionPointNavigator.GetSourceBoundaryLoops(true).Count() != 0 ||
+			       IntersectionPointNavigator.GetTargetBoundaryLoops().Count() != 0;
 		}
 
 		#region Boundary loop handling
@@ -1428,13 +1428,6 @@ namespace ProSuite.Commons.Geom
 				// At boundary loops, there could be a direction change (inside loop: opposite, outside loop: not)
 				if (isBoundaryLoopIntersection)
 				{
-					if (IntersectionPointNavigator.TargetBoundaryLoopIntersections.Contains(
-						    new Tuple<IntersectionPoint3D, IntersectionPoint3D>(
-							    currentIntersection, nextIntersection)))
-					{
-						// We're going along the 
-					}
-
 					Linestring targetPart =
 						IntersectionPointNavigator.Target.GetPart(
 							currentIntersection.TargetPartIndex);
@@ -1448,10 +1441,8 @@ namespace ProSuite.Commons.Geom
 						return true;
 					}
 				}
-
 				// It's the end of the linear intersection going forward along the source:
 				// true, if the target goes in the opposite direction
-
 				else if (currentIntersection.LinearIntersectionInOppositeDirection == true)
 				{
 					return true;
