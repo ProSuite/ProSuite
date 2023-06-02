@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Geom;
 
@@ -58,12 +59,8 @@ namespace ProSuite.Commons.Test.Geom
 						new SubcurveIntersectionPointNavigator(
 							intersectionPoints, source, target, tolerance);
 
-					// The intersection classification is done lazily:
-					// ReSharper disable once NotAccessedVariable
-					IList<IntersectionPoint3D> navigableIntersections =
-						navigator.NavigableIntersections;
-					Assert.AreEqual(0, navigator.SourceBoundaryLoopIntersections.Count);
-					Assert.AreEqual(1, navigator.TargetBoundaryLoopIntersections.Count);
+					Assert.AreEqual(0, navigator.GetSourceBoundaryLoops(true).Count());
+					Assert.AreEqual(1, navigator.GetTargetBoundaryLoops().Count());
 
 					// With flipped arguments:
 					intersectionPoints =
@@ -74,9 +71,8 @@ namespace ProSuite.Commons.Test.Geom
 						new SubcurveIntersectionPointNavigator(
 							intersectionPoints, target, source, tolerance);
 
-					navigableIntersections = navigator.NavigableIntersections;
-					Assert.AreEqual(1, navigator.SourceBoundaryLoopIntersections.Count);
-					Assert.AreEqual(0, navigator.TargetBoundaryLoopIntersections.Count);
+					Assert.AreEqual(1, navigator.GetSourceBoundaryLoops(true).Count());
+					Assert.AreEqual(0, navigator.GetTargetBoundaryLoops().Count());
 				}
 			}
 		}
@@ -141,12 +137,8 @@ namespace ProSuite.Commons.Test.Geom
 						new SubcurveIntersectionPointNavigator(
 							intersectionPoints, source, target, tolerance);
 
-					// The intersection classification is done lazily:
-					// ReSharper disable once NotAccessedVariable
-					IList<IntersectionPoint3D> navigableIntersections =
-						navigator.NavigableIntersections;
-					Assert.AreEqual(0, navigator.SourceBoundaryLoopIntersections.Count);
-					Assert.AreEqual(2, navigator.TargetBoundaryLoopIntersections.Count);
+					Assert.AreEqual(0, navigator.GetSourceBoundaryLoops(true).Count());
+					Assert.AreEqual(2, navigator.GetTargetBoundaryLoops().Count());
 
 					// With flipped arguments:
 					intersectionPoints =
@@ -157,9 +149,8 @@ namespace ProSuite.Commons.Test.Geom
 						new SubcurveIntersectionPointNavigator(
 							intersectionPoints, target, source, tolerance);
 
-					navigableIntersections = navigator.NavigableIntersections;
-					Assert.AreEqual(2, navigator.SourceBoundaryLoopIntersections.Count);
-					Assert.AreEqual(0, navigator.TargetBoundaryLoopIntersections.Count);
+					Assert.AreEqual(2, navigator.GetSourceBoundaryLoops(true).Count());
+					Assert.AreEqual(0, navigator.GetTargetBoundaryLoops().Count());
 				}
 			}
 		}

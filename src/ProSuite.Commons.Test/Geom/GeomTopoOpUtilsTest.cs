@@ -4684,6 +4684,39 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionTargetRingContainingSourceBoundaryLoop()
+		{
+			// This tests the boundary loop detection where both(!) boundary loops have additional
+			// intersections with the target.
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("boundary_loops_union_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"boundary_loops_union_target_intersecting_both_loops.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, 0.01);
+
+			// Now it is a single outer ring without boundary loop and the small island in the west.
+			Assert.AreEqual(2, result.PartCount);
+
+			// Minus the remaining area of the inner boundary loop island
+			double expectedArea = 376.646893;
+			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.001);
+
+			// Vice versa:
+			result = GeomTopoOpUtils.GetUnionAreasXY(target, source, 0.01);
+			Assert.AreEqual(2, result.PartCount);
+			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.001);
+		}
+
+		[Test]
 		public void CanUnionWithSubToleranceVertexToIntersection_Top5660()
 		{
 			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
@@ -4712,6 +4745,24 @@ namespace ProSuite.Commons.Test.Geom
 			double expectedAreaDifference = union.GetArea2D() - target.GetArea2D();
 			Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.05);
 		}
+
+		[Test]
+		public void CanUnionManyUnCrackedRings_Top5714()
+		{
+			Polyhedron source = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("triangulated_building_uncracked.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.01;
+
+			MultiLinestring union = source.GetXYFootprint(tolerance, out _);
+
+			double expectedAreaUnion = 130.324;
+			Assert.AreEqual(expectedAreaUnion, union.GetArea2D(), 0.01);
+		}
+
 		[Test]
 		public void CanIntersectXYSimpleRings()
 		{
@@ -6859,7 +6910,7 @@ namespace ProSuite.Commons.Test.Geom
 			            }.ToList();
 
 			var expectedResult = new Linestring(
-				new Pnt3D[]
+				new[]
 				{
 					new Pnt3D(0, 100, 9),
 					new Pnt3D(100, 100, 9),
@@ -6965,6 +7016,48 @@ namespace ProSuite.Commons.Test.Geom
 			// In the new implementation the very close points get eliminated by pseudo-break
 			// detection and ignoring of these intersection points during the subcurve navigation.
 			Assert.AreEqual(5, intersectionAreasXY.PointCount);
+		}
+
+		[Test]
+		public void CanGetDifferenceAreaWithLinearIntersectionWithVertexOnAcuteAngle()
+		{
+			// In this case the two wedges have a linear intersection in an acute angle.
+			// One of them has a vertex > tolerance from the acute angle point but < tolerance
+			// from the other segment. This is one of the classics where the acute angle would
+			// collapse to a removable line in the simplify operation. However, in this case it
+			// is better to ignore the intermediate linear intersection inside the larger
+			// linear intersection stretch.
+
+			RingGroup ring1 = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("wedge_without_vertex.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup ring2 = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("wedge_with_vertex.wkb"), out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			var poly1 = new MultiPolycurve(ring1.GetLinestrings());
+			var poly2 = new MultiPolycurve(ring2.GetLinestrings());
+			const double tolerance = 0.01;
+
+			MultiLinestring differenceAreasXY =
+				GeomTopoOpUtils.GetDifferenceAreasXY(poly1, poly2, tolerance);
+
+			Assert.AreEqual(1, differenceAreasXY.PartCount);
+			Assert.AreEqual(1.37566, differenceAreasXY.GetArea2D(), 0.001);
+			Assert.AreEqual(5, differenceAreasXY.PointCount);
+
+			MultiLinestring intersectionAreasXY =
+				GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
+
+			Assert.AreEqual(1, intersectionAreasXY.PartCount);
+			double expected = ring1.GetArea2D() - differenceAreasXY.GetArea2D();
+			Assert.AreEqual(expected, intersectionAreasXY.GetArea2D(), 0.001);
+
+			Assert.AreEqual(4, intersectionAreasXY.PointCount);
 		}
 
 		[Test]

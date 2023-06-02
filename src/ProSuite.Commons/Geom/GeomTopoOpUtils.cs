@@ -312,6 +312,8 @@ namespace ProSuite.Commons.Geom
 				// ReSharper disable once AccessToModifiedClosure
 				_msg.VerboseDebug(() => $"Processed target ring index at {count}");
 
+				ExplodeExteriorBoundaryLoops(result, tolerance);
+
 				count++;
 			}
 
@@ -3456,8 +3458,6 @@ namespace ProSuite.Commons.Geom
 			double tolerance,
 			bool in3D = false)
 		{
-			var result = new List<Line3D>();
-
 			for (int partIdx = 0; partIdx < segmentList.PartCount; partIdx++)
 			{
 				Linestring linestring = segmentList.GetPart(partIdx);
@@ -4026,6 +4026,55 @@ namespace ProSuite.Commons.Geom
 					.ToList();
 
 			return TryCrackAtSelfIntersections(linestring, intersectionPoints, results);
+		}
+
+		/// <summary>
+		/// Exterior boundary loops are considered non-simple in most systems and lead to problems
+		/// especially as they tend to aggregate into multi-loop boundary loops.
+		/// </summary>
+		/// <param name="result"></param>
+		/// <param name="tolerance"></param>
+		private static void ExplodeExteriorBoundaryLoops([NotNull] MultiLinestring result,
+		                                                 double tolerance)
+		{
+			foreach (Linestring linestring in result.GetLinestrings().ToList())
+			{
+				if (linestring.ClockwiseOriented != true)
+				{
+					continue;
+				}
+
+				// In some sliver situations there might be linear self intersections.
+				// Let's not judge them already here.
+				IList<IntersectionPoint3D> selfIntersectionPoints =
+					GetSelfIntersectionPoints(linestring, tolerance)
+						.Where(i => i.Type == IntersectionPointType.TouchingInPoint).ToList();
+
+				Assert.True(
+					selfIntersectionPoints.All(
+						i => i.Type == IntersectionPointType.TouchingInPoint),
+					"Unexpected, probably linear self intersection in result.");
+
+				if (selfIntersectionPoints.Count == 2)
+				{
+					// Positive boundary loops are non-simple and lead to problems, especially if there
+					// are more than 2 loops (which typically happens in cupolas)
+					BoundaryLoop bl = new BoundaryLoop(selfIntersectionPoints[0],
+					                                   selfIntersectionPoints[1], linestring,
+					                                   true);
+
+					result.RemoveLinestring(linestring);
+					result.AddLinestring(bl.Loop1);
+					result.AddLinestring(bl.Loop2);
+				}
+				else if (selfIntersectionPoints.Count > 2)
+				{
+					// TODO: Cluster by point, build pairs
+					_msg.WarnFormat(
+						"Multiple boundary loops or otherwise unexpected self-intersections in {0}",
+						linestring.Segments);
+				}
+			}
 		}
 
 		private static bool TryCrackAtSelfIntersections(Linestring linestring,
