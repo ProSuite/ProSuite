@@ -18,6 +18,7 @@ namespace ProSuite.QA.Tests.Test
 			List<Type> refactoredTypes = new List<Type>
 			                             {
 				                             typeof(QaConstraintsListFactory),
+				                             typeof(QaGdbConstraintFactory)
 			                             };
 
 			foreach (Type factoryType in refactoredTypes)
