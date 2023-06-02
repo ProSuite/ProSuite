@@ -2,6 +2,7 @@ using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Reflection;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.Core.QA
@@ -29,6 +30,12 @@ namespace ProSuite.DomainModel.Core.QA
 
 			if (testDescriptor.TestFactoryDescriptor != null)
 			{
+				if (TryGetTestFactoryDefinition(
+					    testDescriptor, out TestFactoryDefinition factoryDefinition))
+				{
+					return factoryDefinition;
+				}
+
 				return testDescriptor.TestFactoryDescriptor
 				                     .CreateInstance<IInstanceInfo>();
 			}
@@ -54,6 +61,65 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			return null;
+		}
+
+		/// <summary>
+		/// Applies the fixed look-up logic for the assembly/type name in the descriptor and
+		/// attempts loading the respective TestFactoryDefinition.
+		/// </summary>
+		/// <param name="descriptor"></param>
+		/// <returns></returns>
+		[NotNull]
+		public static TestFactoryDefinition GetTestFactoryDefinition(
+			[NotNull] TestDescriptor descriptor)
+		{
+			ClassDescriptor classDescriptor =
+				Assert.NotNull(descriptor.TestFactoryDescriptor, "No test factory descriptor");
+
+			TestFactoryDefinition testFactoryDefinition = GetTestFactoryDefinition(classDescriptor);
+
+			return testFactoryDefinition;
+		}
+
+		/// <summary>
+		/// Applies the fixed look-up logic to the assembly/type name in the descriptor and
+		/// attempts loading the respective TestFactoryDefinition.
+		/// </summary>
+		/// <param name="classDescriptor"></param>
+		/// <returns></returns>
+		public static TestFactoryDefinition GetTestFactoryDefinition(
+			[NotNull] ClassDescriptor classDescriptor)
+		{
+			string assemblyName = GetDefinitionsAssemblyName(classDescriptor);
+
+			string typeName = GetDefinitionTypeName(classDescriptor);
+
+			Type factoryDefType = PrivateAssemblyUtils.LoadType(assemblyName, typeName);
+
+			TestFactoryDefinition testFactoryDefinition =
+				(TestFactoryDefinition) Activator.CreateInstance(factoryDefType);
+			return testFactoryDefinition;
+		}
+
+		public static bool TryGetTestFactoryDefinition(
+			[NotNull] TestDescriptor descriptor,
+			out TestFactoryDefinition testFactoryDefinition)
+		{
+			try
+			{
+				testFactoryDefinition = GetTestFactoryDefinition(descriptor);
+
+				return true;
+			}
+			catch (Exception e)
+			{
+				_msg.Debug(
+					$"Test factory definition {descriptor.TestFactoryDescriptor} could not be loaded",
+					e);
+
+				testFactoryDefinition = null;
+				return false;
+			}
 		}
 
 		public static string GetCanonicalInstanceDescriptorName(
@@ -143,6 +209,42 @@ namespace ProSuite.DomainModel.Core.QA
 			className = descriptorName.Substring(0, indexOfOpenBracket);
 
 			return true;
+		}
+
+		private static string GetDefinitionTypeName([NotNull] ClassDescriptor classDescriptor)
+		{
+			string typeName = Assert.NotNullOrEmpty(classDescriptor.TypeName, "No type name");
+
+			string assemblyName =
+				Assert.NotNullOrEmpty(classDescriptor.AssemblyName, "No assembly name");
+
+			// Substitute first. Definition based tests can never come from the legacy assemblies
+			if (PrivateAssemblyUtils.KnownSubstitutes.TryGetValue(
+				    assemblyName, out string substituteAssembly))
+			{
+				typeName = typeName.Replace(assemblyName, substituteAssembly);
+			}
+
+			const string definition = "Definition";
+
+			return $"{typeName}{definition}";
+		}
+
+		private static string GetDefinitionsAssemblyName([NotNull] ClassDescriptor classDescriptor)
+		{
+			string assemblyName =
+				Assert.NotNullOrEmpty(classDescriptor.AssemblyName, "No assembly name");
+
+			// Substitute first. Definition based tests can never come from the legacy assemblies
+			if (PrivateAssemblyUtils.KnownSubstitutes.TryGetValue(
+				    assemblyName, out string substituteAssembly))
+			{
+				assemblyName = substituteAssembly;
+			}
+
+			const string assemblyDefinitionSuffix = "Definitions";
+
+			return $"{assemblyName}.{assemblyDefinitionSuffix}";
 		}
 	}
 }

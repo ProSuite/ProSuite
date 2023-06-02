@@ -11,6 +11,7 @@ using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
@@ -128,7 +129,8 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (typeof(IFeatureClass) == knownType)
 				return _datasetContext.OpenFeatureClass((IVectorDataset) dataset);
-			if (typeof(IReadOnlyFeatureClass) == knownType)
+			if (typeof(IReadOnlyFeatureClass) == knownType ||
+			    typeof(IFeatureClassSchemaDef) == knownType)
 			{
 				IFeatureClass fc = _datasetContext.OpenFeatureClass((IVectorDataset) dataset);
 				return fc != null ? ReadOnlyTableFactory.Create(fc) : null;
@@ -136,7 +138,8 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (typeof(ITable) == knownType)
 				return _datasetContext.OpenTable((IObjectDataset) dataset);
-			if (typeof(IReadOnlyTable) == knownType)
+			if (typeof(IReadOnlyTable) == knownType ||
+			    typeof(ITableSchemaDef) == knownType)
 			{
 				ITable tbl = _datasetContext.OpenTable((IObjectDataset) dataset);
 				return tbl != null ? ReadOnlyTableFactory.Create(tbl) : null;

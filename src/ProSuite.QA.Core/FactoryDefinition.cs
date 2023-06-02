@@ -1,8 +1,3 @@
-using System.Collections.Generic;
-using ProSuite.Commons.GeoDb;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-
 namespace ProSuite.QA.Core
 {
 	/// <summary>
@@ -17,7 +12,6 @@ namespace ProSuite.QA.Core
 		{
 			return $"{GetType().Name} with parameters: {InstanceUtils.GetTestSignature(this)}";
 		}
-
 
 		protected static string GetAlgorithmName(string algorithmDefinitionName)
 		{

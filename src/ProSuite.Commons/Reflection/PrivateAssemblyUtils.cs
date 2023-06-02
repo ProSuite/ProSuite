@@ -23,11 +23,11 @@ namespace ProSuite.Commons.Reflection
 		[ThreadStatic] private static Dictionary<string, bool> _checkedAssemblyFiles;
 
 		// Redirect legacy references from existing installations:
-		private static readonly Dictionary<string, string> _knownSubstitutes =
+		public static Dictionary<string, string> KnownSubstitutes { get; } =
 			new Dictionary<string, string>
 			{
-				{"EsriDE.ProSuite.QA.Tests", "ProSuite.QA.Tests"},
-				{"EsriDE.ProSuite.QA.TestFactories", "ProSuite.QA.TestFactories"}
+				{ "EsriDE.ProSuite.QA.Tests", "ProSuite.QA.Tests" },
+				{ "EsriDE.ProSuite.QA.TestFactories", "ProSuite.QA.TestFactories" }
 			};
 
 		[NotNull]
@@ -87,7 +87,7 @@ namespace ProSuite.Commons.Reflection
 			Assert.ArgumentNotNullOrEmpty(assemblyName, nameof(assemblyName));
 			Assert.ArgumentNotNullOrEmpty(typeName, nameof(typeName));
 
-			var substitutes = assemblySubstitutes ?? _knownSubstitutes;
+			var substitutes = assemblySubstitutes ?? KnownSubstitutes;
 
 			Assembly assembly = LoadAssembly(assemblyName, substitutes);
 
@@ -117,7 +117,7 @@ namespace ProSuite.Commons.Reflection
 			Assert.ArgumentNotNullOrEmpty(assemblyName, nameof(assemblyName));
 			Assert.ArgumentNotNullOrEmpty(typeName, nameof(typeName));
 
-			var substitutes = assemblySubstitutes ?? _knownSubstitutes;
+			var substitutes = assemblySubstitutes ?? KnownSubstitutes;
 
 			if (substitutes.TryGetValue(assemblyName, out string substituteAssembly))
 			{
@@ -139,13 +139,13 @@ namespace ProSuite.Commons.Reflection
 		{
 			if (assemblySubstitutes == null)
 			{
-				return _knownSubstitutes;
+				return KnownSubstitutes;
 			}
 
 			Dictionary<string, string> substitutes =
 				assemblySubstitutes.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-			foreach (KeyValuePair<string, string> knownSubstitute in _knownSubstitutes)
+			foreach (KeyValuePair<string, string> knownSubstitute in KnownSubstitutes)
 			{
 				if (! substitutes.ContainsKey(knownSubstitute.Key))
 				{
@@ -177,7 +177,7 @@ namespace ProSuite.Commons.Reflection
 			string dllFileName = string.Format("{0}.dll", assemblyName);
 			string exeFileName = string.Format("{0}.exe", assemblyName);
 
-			foreach (string fileName in new[] {dllFileName, exeFileName})
+			foreach (string fileName in new[] { dllFileName, exeFileName })
 			{
 				string filePath = Path.Combine(binDirectory, fileName);
 
@@ -191,7 +191,7 @@ namespace ProSuite.Commons.Reflection
 
 				if (fileExists)
 				{
-					return new AssemblyName(assemblyName) {CodeBase = filePath};
+					return new AssemblyName(assemblyName) { CodeBase = filePath };
 				}
 			}
 

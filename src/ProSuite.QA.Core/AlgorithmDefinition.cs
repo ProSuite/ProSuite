@@ -1,13 +1,13 @@
 using System.Collections.Generic;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.QA.Core
 {
 	/// <summary>
-	/// Base class for instance definitions. The definitions can be instantiated in every
-	/// environment in order to get the metadata.
+	/// Base class for instance definitions. The definitions have minimal dependencies and can be
+	/// instantiated in every environment in order to get the metadata.
 	/// </summary>
 	public abstract class AlgorithmDefinition
 	{

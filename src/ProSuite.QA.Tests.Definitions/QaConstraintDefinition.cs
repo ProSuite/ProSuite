@@ -6,7 +6,7 @@ using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests
 {
-	// Use exactly the same name? Or append Def? -> QaConstraintDef?
+	[UsedImplicitly]
 	[AttributeTest]
 	public class QaConstraintDefinition : AlgorithmDefinition
 	{
