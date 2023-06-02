@@ -11,16 +11,16 @@ namespace ProSuite.QA.Core
 	/// </summary>
 	public abstract class AlgorithmDefinition
 	{
-		public IList<IDbTableSchema> InvolvedTables { get; }
+		public IList<ITableSchemaDef> InvolvedTables { get; }
 
-		protected AlgorithmDefinition([NotNull] IDbTableSchema involvedTable) : this(
+		protected AlgorithmDefinition([NotNull] ITableSchemaDef involvedTable) : this(
 			new[] { involvedTable }) { }
 
-		protected AlgorithmDefinition([NotNull] IEnumerable<IDbTableSchema> involvedTables)
+		protected AlgorithmDefinition([NotNull] IEnumerable<ITableSchemaDef> involvedTables)
 		{
 			Assert.ArgumentNotNull(involvedTables, nameof(involvedTables));
 
-			InvolvedTables = new List<IDbTableSchema>(involvedTables);
+			InvolvedTables = new List<ITableSchemaDef>(involvedTables);
 		}
 	}
 }

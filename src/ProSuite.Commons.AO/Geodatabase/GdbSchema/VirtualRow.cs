@@ -90,7 +90,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return get_Value(index);
 		}
 
-		public IDbTable DbTable => Table;
+		public ITableData DbTable => Table;
 
 		#endregion
 

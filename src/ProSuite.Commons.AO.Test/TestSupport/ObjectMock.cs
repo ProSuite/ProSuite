@@ -49,7 +49,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		#region Implementation of IDbRow
 
-		IDbTable IDbRow.DbTable => _objectClassMock;
+		ITableData IDbRow.DbTable => _objectClassMock;
 
 		object IDbRow.GetValue(int index)
 		{

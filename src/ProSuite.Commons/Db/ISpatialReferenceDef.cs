@@ -1,6 +1,6 @@
 namespace ProSuite.Commons.Db
 {
-	public interface ISpatialReferenceInfo
+	public interface ISpatialReferenceDef
 	{
 		string Name { get; }
 

@@ -6,7 +6,7 @@ using ProSuite.Commons.Geom.EsriShape;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
-	public abstract class VectorDataset : ObjectDataset, IVectorDataset, IFeatureClassSchema
+	public abstract class VectorDataset : ObjectDataset, IVectorDataset, IFeatureClassSchemaDef
 	{
 		[UsedImplicitly] private LayerFile _defaultSymbology;
 

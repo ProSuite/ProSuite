@@ -9,8 +9,8 @@ namespace ProSuite.QA.Tests
 {
 	public abstract class QaSurfaceOffsetDefinition : AlgorithmDefinition
 	{
-		protected QaSurfaceOffsetDefinition([NotNull] IFeatureClassSchema featureClass,
-		                                    [NotNull] IDbTerrainSchema terrain,
+		protected QaSurfaceOffsetDefinition([NotNull] IFeatureClassSchemaDef featureClass,
+		                                    [NotNull] ITerrainDef terrain,
 		                                    double terrainTolerance,
 		                                    double limit,
 		                                    ZOffsetConstraint zOffsetConstraint)
@@ -18,12 +18,12 @@ namespace ProSuite.QA.Tests
 		{
 			Assert.ArgumentNotNull(terrain, nameof(terrain));
 
-			InvolvedTerrains = new List<IDbTerrainSchema> { terrain };
+			InvolvedTerrains = new List<ITerrainDef> { terrain };
 			TerrainTolerance = terrainTolerance;
 		}
 
-		public List<IDbTerrainSchema> InvolvedTerrains { get; set; }
-		public List<IDbRasterDataset> InvolvedRasters { get; set; }
+		public List<ITerrainDef> InvolvedTerrains { get; set; }
+		public List<IRasterDatasetDef> InvolvedRasters { get; set; }
 
 		public double TerrainTolerance { get; set; }
 
@@ -31,18 +31,18 @@ namespace ProSuite.QA.Tests
 
 		public ZOffsetConstraint ZOffsetConstraint { get; }
 
-		protected QaSurfaceOffsetDefinition([NotNull] IFeatureClassSchema featureClass,
-		                                    [NotNull] IDbRasterDataset rasterReference,
+		protected QaSurfaceOffsetDefinition([NotNull] IFeatureClassSchemaDef featureClass,
+		                                    [NotNull] IRasterDatasetDef rasterReference,
 		                                    double limit,
 		                                    ZOffsetConstraint zOffsetConstraint)
 			: this(featureClass, limit, zOffsetConstraint)
 		{
 			Assert.ArgumentNotNull(rasterReference, nameof(rasterReference));
 
-			InvolvedRasters = new List<IDbRasterDataset> { rasterReference };
+			InvolvedRasters = new List<IRasterDatasetDef> { rasterReference };
 		}
 
-		private QaSurfaceOffsetDefinition([NotNull] IFeatureClassSchema featureClass,
+		private QaSurfaceOffsetDefinition([NotNull] IFeatureClassSchemaDef featureClass,
 		                                  double limit,
 		                                  ZOffsetConstraint zOffsetConstraint)
 			: base(featureClass)

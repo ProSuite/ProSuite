@@ -10,7 +10,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <inheritdoc cref="GdbTable" />
 	public class GdbFeatureClass : GdbTable, IFeatureClass, IGeoDataset, IReadOnlyFeatureClass,
-	                               IFeatureClassSchema, IRowCreator<GdbFeature>
+	                               IFeatureClassSchemaDef, IRowCreator<GdbFeature>
 	{
 		private int _shapeFieldIndex = -1;
 
@@ -125,12 +125,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region Implementation of IFeatureClassSchema
 
-		ProSuiteGeometryType IFeatureClassSchema.ShapeType => (ProSuiteGeometryType) ShapeType;
+		ProSuiteGeometryType IFeatureClassSchemaDef.ShapeType => (ProSuiteGeometryType) ShapeType;
 
-		ITableField IFeatureClassSchema.AreaField =>
+		ITableField IFeatureClassSchemaDef.AreaField =>
 			new TableField(AreaField.Name, FieldType.Double);
 
-		ITableField IFeatureClassSchema.LengthField =>
+		ITableField IFeatureClassSchemaDef.LengthField =>
 			new TableField(LengthField.Name, FieldType.Double);
 
 		#endregion

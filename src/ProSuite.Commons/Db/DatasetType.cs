@@ -1,11 +1,12 @@
 namespace ProSuite.Commons.Db
 {
 	/// <summary>
-	/// Dataset type using values corresponding to the Esri dataset types.
+	/// Dataset type using values corresponding to the Esri dataset types, except for Unknown = 0.
 	/// </summary>
 	public enum DatasetType
 	{
-		Unknown = 1,
+		Null = 0,
+		Any = 1,
 		Table = 10,
 		FeatureClass = 5,
 		Topology = 8,

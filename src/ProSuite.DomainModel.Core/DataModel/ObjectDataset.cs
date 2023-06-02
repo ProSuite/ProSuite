@@ -9,7 +9,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
-	public abstract class ObjectDataset : Dataset, IObjectDataset, IAttributes, IDbTableSchema
+	public abstract class ObjectDataset : Dataset, IObjectDataset, IAttributes, ITableSchemaDef
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 

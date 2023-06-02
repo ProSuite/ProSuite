@@ -1,4 +1,4 @@
-﻿using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Db
 {

@@ -19,11 +19,11 @@ namespace ProSuite.QA.Tests.Surface
 		[NotNull] private readonly IRasterDataset2 _rasterDataset;
 		[CanBeNull] private IRaster _fullRaster;
 
-		public RasterDatasetReference([NotNull] IDbRasterDataset rasterDataset)
+		public RasterDatasetReference([NotNull] IRasterDatasetDef rasterDatasetDef)
 		{
-			Assert.ArgumentNotNull(rasterDataset, nameof(rasterDataset));
+			Assert.ArgumentNotNull(rasterDatasetDef, nameof(rasterDatasetDef));
 
-			_rasterDataset = (IRasterDataset2)rasterDataset;
+			_rasterDataset = (IRasterDataset2)rasterDatasetDef;
 		}
 
 		public RasterDatasetReference([NotNull] IRasterDataset2 rasterDataset)

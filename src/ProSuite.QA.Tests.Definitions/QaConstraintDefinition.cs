@@ -10,13 +10,13 @@ namespace ProSuite.QA.Tests
 	[AttributeTest]
 	public class QaConstraintDefinition : AlgorithmDefinition
 	{
-		public IDbTableSchema Table { get; }
+		public ITableSchemaDef Table { get; }
 		public string Constraint { get; }
 
 		[Doc(nameof(DocStrings.QaConstraint_0))]
 		public QaConstraintDefinition(
 				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull]
-				IDbTableSchema table,
+				ITableSchemaDef table,
 				[Doc(nameof(DocStrings.QaConstraint_constraint))]
 				string constraint)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -37,7 +37,7 @@ namespace ProSuite.QA.Tests
 		[InternallyUsedTest]
 		public QaConstraintDefinition(
 			[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull]
-			IDbTableSchema table,
+			ITableSchemaDef table,
 			[Doc(nameof(DocStrings.QaConstraint_constraint))]
 			string constraint,
 			int errorDescriptionVersion)

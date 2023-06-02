@@ -28,9 +28,9 @@ namespace ProSuite.QA.TestFactories
 			var list =
 				new List<TestParameter>
 				{
-					new TestParameter(_tableAttribute, typeof(IDbTableSchema),
+					new TestParameter(_tableAttribute, typeof(ITableSchemaDef),
 					                  DocStrings.QaConstraintsListFactory_table),
-					new TestParameter(_constraintsTableAttribute, typeof(IDbTableSchema),
+					new TestParameter(_constraintsTableAttribute, typeof(ITableSchemaDef),
 					                  DocStrings.QaConstraintsListFactory_constraintsTable),
 					new TestParameter(_expressionField, typeof(string),
 					                  DocStrings.QaConstraintsListFactory_expressionField),

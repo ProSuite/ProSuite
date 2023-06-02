@@ -5,6 +5,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Db;
+using IDatasetContainer = ProSuite.Commons.Db.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -24,7 +25,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	}
 
 	public abstract class VirtualTable : IDataset, ITable, IObjectClass, IDatasetEdit, ISchemaLock,
-	                                     ISubtypes, IDbTable, IReadOnlyTable,
+	                                     ISubtypes, ITableData, IReadOnlyTable,
 	                                     IRowCreator<VirtualRow>
 	{
 		protected GdbFields _fields;
@@ -549,18 +550,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region Implementation of IDbDataset
 
-		private IDbDatasetContainer _datasetContainer;
+		private IDatasetContainer _datasetContainer;
 
-		IDbDatasetContainer IDbDataset.DbContainer =>
+		IDatasetContainer IDatasetDef.DbContainer =>
 			_datasetContainer ??
-			(_datasetContainer = new DbWorkspace(Workspace));
+			(_datasetContainer = new GeoDbWorkspace(Workspace));
 
-		DatasetType IDbDataset.DatasetType =>
+		DatasetType IDatasetDef.DatasetType =>
 			DatasetType == esriDatasetType.esriDTFeatureClass
 				? Db.DatasetType.FeatureClass
 				: Db.DatasetType.Table;
 
-		bool IDbDataset.Equals(IDbDataset otherDataset)
+		bool IDatasetDef.Equals(IDatasetDef otherDataset)
 		{
 			return Equals(otherDataset);
 		}
@@ -569,18 +570,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region Implementation of IDbTableSchema
 
-		IReadOnlyList<ITableField> IDbTableSchema.TableFields => GdbFields;
+		IReadOnlyList<ITableField> ITableSchemaDef.TableFields => GdbFields;
 
 		#endregion
 
 		#region Implementation of ITableData
 
-		IDbRow IDbTable.GetRow(long oid)
+		IDbRow ITableData.GetRow(long oid)
 		{
 			return GetReadOnlyRow(oid);
 		}
 
-		IEnumerable<IDbRow> IDbTable.EnumRows(ITableFilter filter, bool recycle)
+		IEnumerable<IDbRow> ITableData.EnumRows(ITableFilter filter, bool recycle)
 		{
 			return EnumReadOnlyRows(filter, recycle);
 		}

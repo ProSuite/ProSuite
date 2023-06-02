@@ -271,7 +271,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 				#region Overrides of Dataset
 
-				public override DatasetType DatasetType => DatasetType.Unknown;
+				public override DatasetType DatasetType => DatasetType.Null;
 
 				#endregion
 			}

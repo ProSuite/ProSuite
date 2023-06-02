@@ -4,7 +4,7 @@ using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
-	public abstract class Dataset : ModelElement, IDdxDataset, IDbDataset
+	public abstract class Dataset : ModelElement, IDdxDataset, IDatasetDef
 	{
 		[UsedImplicitly] private string _aliasName;
 		[UsedImplicitly] private string _abbreviation;
@@ -80,11 +80,11 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		#region Implementation of IDbDataset
 
-		public IDbDatasetContainer DbContainer => Model;
+		public IDatasetContainer DbContainer => Model;
 
 		public abstract DatasetType DatasetType { get; }
 
-		public bool Equals(IDbDataset otherDataset)
+		public bool Equals(IDatasetDef otherDataset)
 		{
 			if (otherDataset is ObjectDataset otherObjectDataset)
 			{

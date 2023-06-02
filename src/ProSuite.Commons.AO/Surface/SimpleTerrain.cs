@@ -9,11 +9,12 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using IDatasetContainer = ProSuite.Commons.Db.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Surface
 {
 	public class SimpleTerrain : TerrainReference, IReadOnlyDataset, IReadOnlyGeoDataset,
-	                             IDbTerrainSchema
+	                             ITerrainDef
 	{
 		private IName _fullName;
 
@@ -125,18 +126,18 @@ namespace ProSuite.Commons.AO.Surface
 
 		#region Implementation of IDbDataset
 
-		public IDbDatasetContainer DbContainer
+		public IDatasetContainer DbContainer
 		{
 			get
 			{
 				IWorkspace workspace = ((IReadOnlyDataset) this).Workspace;
-				return new DbWorkspace(workspace);
+				return new GeoDbWorkspace(workspace);
 			}
 		}
 
 		public DatasetType DatasetType => DatasetType.Terrain;
 
-		public bool Equals(IDbDataset otherDataset)
+		public bool Equals(IDatasetDef otherDataset)
 		{
 			if (otherDataset is SimpleTerrain simpleTerrain)
 			{

@@ -51,9 +51,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.Qa3dPipe_0))]
 		public QaSurfacePipeDefinition(
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
-			IFeatureClassSchema featureClass,
+			IFeatureClassSchemaDef featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_terrain))] [NotNull]
-			IDbTerrainSchema terrain,
+			ITerrainDef terrain,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit)
 			: this(featureClass, terrain, limit,
@@ -63,9 +63,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSurfacePipe_1))]
 		public QaSurfacePipeDefinition(
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
-			IFeatureClassSchema featureClass,
+			IFeatureClassSchemaDef featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_terrain))] [NotNull]
-			IDbTerrainSchema terrain,
+			ITerrainDef terrain,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfacePipe_zOffsetConstraint))]
@@ -91,9 +91,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSurfacePipe_2))]
 		public QaSurfacePipeDefinition(
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
-			IFeatureClassSchema featureClass,
+			IFeatureClassSchemaDef featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_raster))] [NotNull]
-			IDbRasterDataset raster,
+			IRasterDatasetDef raster,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit)
 			: this(featureClass, raster, limit,
@@ -103,9 +103,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSurfacePipe_2))]
 		public QaSurfacePipeDefinition(
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
-			IFeatureClassSchema featureClass,
+			IFeatureClassSchemaDef featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_raster))] [NotNull]
-			IDbRasterDataset raster,
+			IRasterDatasetDef raster,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfacePipe_zOffsetConstraint))]

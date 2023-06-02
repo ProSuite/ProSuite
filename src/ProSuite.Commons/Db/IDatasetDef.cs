@@ -4,16 +4,16 @@ namespace ProSuite.Commons.Db
 	/// Provides access to methods of datasets that can reside in a database. Common interface for
 	/// DDX datasets and geo database implementations.
 	/// </summary>
-	public interface IDbDataset
+	public interface IDatasetDef
 	{
 		string Name { get; }
 
-		IDbDatasetContainer DbContainer { get; }
+		IDatasetContainer DbContainer { get; }
 
 		// Consider IName property that allows for extensions (queryName implementation with extra properties, etc.)
 
 		DatasetType DatasetType { get; }
 
-		bool Equals(IDbDataset otherDataset);
+		bool Equals(IDatasetDef otherDataset);
 	}
 }

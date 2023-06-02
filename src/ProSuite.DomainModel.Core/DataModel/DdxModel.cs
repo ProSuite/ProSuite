@@ -11,7 +11,7 @@ using ProSuite.Commons.Validation;
 namespace ProSuite.DomainModel.Core.DataModel
 {
 	public abstract class DdxModel : VersionedEntityWithMetadata, IDetachedState, INamed,
-	                                 IAnnotated, IDbDatasetContainer
+	                                 IAnnotated, IDatasetContainer
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -729,14 +729,26 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		#region Implementation of IDbDatasetContainer
 
-		public IDbTableSchema OpenTable(string tableName)
+		public T GetDataset<T>(string tableName) where T : class, IDatasetDef
 		{
 			Dataset dataset = GetDataset(tableName, true);
 
-			return dataset as IDbTableSchema;
+			return dataset as T;
 		}
 
-		public IEnumerable<IDbDataset> GetGdbDatasets()
+		public IEnumerable<IDatasetDef> GetDatasetDefs(DatasetType ofType = DatasetType.Any)
+		{
+			foreach (Dataset dataset in Datasets)
+			{
+				if (ofType == DatasetType.Any ||
+				    dataset.DatasetType == ofType)
+				{
+					yield return dataset;
+				}
+			}
+		}
+
+		public IEnumerable<IDatasetDef> GetGdbDatasets()
 		{
 			foreach (Dataset dataset in Datasets)
 			{
@@ -744,7 +756,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 			}
 		}
 
-		public bool Equals(IDbDatasetContainer otherWorkspace)
+		public bool Equals(IDatasetContainer otherWorkspace)
 		{
 			return Equals((object) otherWorkspace);
 		}

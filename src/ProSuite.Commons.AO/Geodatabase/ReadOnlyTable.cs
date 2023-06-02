@@ -7,10 +7,11 @@ using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using FieldType = ProSuite.Commons.Db.FieldType;
+using IDatasetContainer = ProSuite.Commons.Db.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	public class ReadOnlyTable : IDbTable, IReadOnlyTable, ISubtypes
+	public class ReadOnlyTable : ITableData, IReadOnlyTable, ISubtypes
 	{
 		protected static ReadOnlyTable CreateReadOnlyTable(ITable table)
 		{
@@ -207,18 +208,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#region Implementation of IDbDataset
 
-		private IDbDatasetContainer _datasetContainer;
+		private IDatasetContainer _datasetContainer;
 
-		IDbDatasetContainer IDbDataset.DbContainer =>
+		IDatasetContainer IDatasetDef.DbContainer =>
 			_datasetContainer ??
-			(_datasetContainer = new DbWorkspace(DatasetUtils.GetWorkspace(BaseTable)));
+			(_datasetContainer = new GeoDbWorkspace(DatasetUtils.GetWorkspace(BaseTable)));
 
-		DatasetType IDbDataset.DatasetType =>
+		DatasetType IDatasetDef.DatasetType =>
 			((IDataset) BaseTable).Type == esriDatasetType.esriDTFeatureClass
 				? DatasetType.FeatureClass
 				: DatasetType.Table;
 
-		bool IDbDataset.Equals(IDbDataset otherDataset)
+		bool IDatasetDef.Equals(IDatasetDef otherDataset)
 		{
 			return Equals(otherDataset);
 		}
@@ -227,7 +228,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#region Implementation of IDbTableSchema
 
-		IReadOnlyList<ITableField> IDbTableSchema.TableFields
+		IReadOnlyList<ITableField> ITableSchemaDef.TableFields
 		{
 			get
 			{
@@ -243,12 +244,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#region Implementation of IDbTable
 
-		IDbRow IDbTable.GetRow(long oid)
+		IDbRow ITableData.GetRow(long oid)
 		{
 			return GetRow(oid);
 		}
 
-		IEnumerable<IDbRow> IDbTable.EnumRows(ITableFilter filter, bool recycle)
+		IEnumerable<IDbRow> ITableData.EnumRows(ITableFilter filter, bool recycle)
 		{
 			return EnumRows(filter, recycle);
 		}

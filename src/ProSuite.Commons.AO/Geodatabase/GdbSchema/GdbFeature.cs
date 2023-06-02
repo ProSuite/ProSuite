@@ -158,7 +158,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		IBoundedXY IDbFeature.Extent => GeometryConversionUtils.CreateEnvelopeXY(base.Extent);
 
-		public IFeatureClassSchema FeatureClass => (IFeatureClassSchema) DbTable;
+		public IFeatureClassData FeatureClass => (IFeatureClassData) DbTable;
 
 		#endregion
 

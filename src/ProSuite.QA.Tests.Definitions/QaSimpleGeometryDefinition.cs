@@ -26,7 +26,7 @@ namespace ProSuite.QA.Tests
 		public bool AllowNonPlanarLines { get; }
 		public double ToleranceFactor { get; }
 
-		public IFeatureClassSchema FeatureClass { get; set; }
+		public IFeatureClassSchemaDef FeatureClass { get; set; }
 
 		private const double _defaultToleranceFactor = 0.4; // 0.3546??  -> 1 / (sqrt(2) / 2)
 
@@ -64,14 +64,14 @@ namespace ProSuite.QA.Tests
 		//[Doc(nameof(DocStrings.QaSimpleGeometry_0))]
 		public QaSimpleGeometryDefinition(
 				//[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]
-				IFeatureClassSchema featureClass)
+				IFeatureClassSchemaDef featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, false, _defaultToleranceFactor) { }
 
 		//[Doc(nameof(DocStrings.QaSimpleGeometry_1))]
 		public QaSimpleGeometryDefinition(
 				//[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]
-				IFeatureClassSchema featureClass,
+				IFeatureClassSchemaDef featureClass,
 				//[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
 				bool allowNonPlanarLines)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -80,7 +80,7 @@ namespace ProSuite.QA.Tests
 		//[Doc(nameof(DocStrings.QaSimpleGeometry_2))]
 		public QaSimpleGeometryDefinition(
 			//[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]
-			IFeatureClassSchema featureClass,
+			IFeatureClassSchemaDef featureClass,
 			//[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
 			bool allowNonPlanarLines,
 			//[Doc(nameof(DocStrings.QaSimpleGeometry_toleranceFactor))]

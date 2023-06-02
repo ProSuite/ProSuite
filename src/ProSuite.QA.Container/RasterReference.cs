@@ -5,10 +5,11 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Db;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using IDatasetContainer = ProSuite.Commons.Db.IDatasetContainer;
 
 namespace ProSuite.QA.Container
 {
-	public abstract class RasterReference : IDbRasterDataset
+	public abstract class RasterReference : IRasterDatasetDef
 	{
 		public abstract bool EqualsCore([NotNull] RasterReference rasterReference);
 
@@ -35,18 +36,18 @@ namespace ProSuite.QA.Container
 
 		public string Name => Dataset.Name;
 
-		public IDbDatasetContainer DbContainer
+		public IDatasetContainer DbContainer
 		{
 			get
 			{
 				IWorkspace workspace = Dataset.Workspace;
-				return new DbWorkspace(workspace);
+				return new GeoDbWorkspace(workspace);
 			}
 		}
 
 		public abstract DatasetType DatasetType { get; }
 
-		public bool Equals(IDbDataset otherDataset)
+		public bool Equals(IDatasetDef otherDataset)
 		{
 			if (otherDataset is RasterReference rasterDataset)
 			{

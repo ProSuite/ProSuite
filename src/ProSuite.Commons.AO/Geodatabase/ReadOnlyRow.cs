@@ -59,7 +59,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public ReadOnlyTable Table { get; }
 
-		IDbTable IDbRow.DbTable => Table;
+		ITableData IDbRow.DbTable => Table;
 
 		object IDbRow.GetValue(int index)
 		{

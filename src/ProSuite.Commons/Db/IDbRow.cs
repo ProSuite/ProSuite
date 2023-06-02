@@ -10,7 +10,7 @@ namespace ProSuite.Commons.Db
 
 		object GetValue(int index);
 
-		IDbTable DbTable { get; }
+		ITableData DbTable { get; }
 	}
 
 	public interface IDbFeature : IDbRow
@@ -19,6 +19,6 @@ namespace ProSuite.Commons.Db
 
 		IBoundedXY Extent { get; }
 
-		IFeatureClassSchema FeatureClass { get; }
+		IFeatureClassData FeatureClass { get; }
 	}
 }

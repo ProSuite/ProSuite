@@ -6,10 +6,10 @@ namespace ProSuite.Commons.Db
 	public interface IGeoDbDataset
 	{
 		IBoundedXY Extent { get; }
-		ISpatialReferenceInfo SpatialReference { get; }
+		ISpatialReferenceDef SpatialReference { get; }
 	}
 
-	public interface IFeatureClassSchema : IDbTableSchema
+	public interface IFeatureClassSchemaDef : ITableSchemaDef
 	{
 		string ShapeFieldName { get; }
 
@@ -19,5 +19,5 @@ namespace ProSuite.Commons.Db
 		ITableField LengthField { get; }
 	}
 
-	public interface IFeatureClassData : IFeatureClassSchema, IDbTable { }
+	public interface IFeatureClassData : IFeatureClassSchemaDef, ITableData { }
 }

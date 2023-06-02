@@ -6,7 +6,7 @@ using FieldType = ProSuite.Commons.Db.FieldType;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	public class ReadOnlyFeatureClass : ReadOnlyTable, IReadOnlyFeatureClass, IFeatureClassSchema
+	public class ReadOnlyFeatureClass : ReadOnlyTable, IReadOnlyFeatureClass, IFeatureClassData
 	{
 		protected static ReadOnlyFeatureClass CreateReadOnlyFeatureClass(IFeatureClass fc)
 		{
@@ -31,12 +31,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#region Implementation of IFeatureClassSchema
 
-		ProSuiteGeometryType IFeatureClassSchema.ShapeType => (ProSuiteGeometryType) ShapeType;
+		ProSuiteGeometryType IFeatureClassSchemaDef.ShapeType => (ProSuiteGeometryType) ShapeType;
 
-		ITableField IFeatureClassSchema.AreaField =>
+		ITableField IFeatureClassSchemaDef.AreaField =>
 			new TableField(AreaField.Name, FieldType.Double);
 
-		ITableField IFeatureClassSchema.LengthField =>
+		ITableField IFeatureClassSchemaDef.LengthField =>
 			new TableField(LengthField.Name, FieldType.Double);
 
 		#endregion

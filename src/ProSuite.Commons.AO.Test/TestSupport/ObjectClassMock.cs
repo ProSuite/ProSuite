@@ -8,11 +8,12 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Db;
 using FieldType = ProSuite.Commons.Db.FieldType;
+using IDatasetContainer = ProSuite.Commons.Db.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
 {
 	public class ObjectClassMock : IObjectClass, ITable, IDataset, ISubtypes, IDatasetEdit,
-	                               IReadOnlyTable, IDbTable
+	                               IReadOnlyTable, ITableData
 	{
 		private static int _nextObjectClassId;
 
@@ -70,16 +71,16 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		#region Implementation of IDbDataset
 
-		string IDbDataset.Name => _name;
+		string IDatasetDef.Name => _name;
 
-		IDbDatasetContainer IDbDataset.DbContainer => new DbWorkspace(_workspaceMock);
+		IDatasetContainer IDatasetDef.DbContainer => new GeoDbWorkspace(_workspaceMock);
 
-		DatasetType IDbDataset.DatasetType =>
+		DatasetType IDatasetDef.DatasetType =>
 			((IDataset) this).Type == esriDatasetType.esriDTFeatureClass
 				? DatasetType.FeatureClass
 				: DatasetType.Table;
 
-		bool IDbDataset.Equals(IDbDataset otherDataset)
+		bool IDatasetDef.Equals(IDatasetDef otherDataset)
 		{
 			return Equals(otherDataset);
 		}
@@ -88,7 +89,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		#region Implementation of IDbTableSchema
 
-		IReadOnlyList<ITableField> IDbTableSchema.TableFields
+		IReadOnlyList<ITableField> ITableSchemaDef.TableFields
 		{
 			get
 			{
@@ -102,17 +103,17 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		#region Implementation of IDbTable
 
-		IDbRow IDbTable.GetRow(long oid)
+		IDbRow ITableData.GetRow(long oid)
 		{
 			throw new NotImplementedException();
 		}
 
-		IEnumerable<IDbRow> IDbTable.EnumRows(ITableFilter filter, bool recycle)
+		IEnumerable<IDbRow> ITableData.EnumRows(ITableFilter filter, bool recycle)
 		{
 			throw new NotImplementedException();
 		}
 
-		long IDbTable.RowCount(ITableFilter filter)
+		long ITableData.RowCount(ITableFilter filter)
 		{
 			throw new NotImplementedException();
 		}

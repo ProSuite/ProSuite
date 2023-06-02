@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace ProSuite.Commons.Db
 {
-	public interface IDbTableSchema : IDbDataset
+	public interface ITableSchemaDef : IDatasetDef
 	{
 		IReadOnlyList<ITableField> TableFields { get; }
 
@@ -13,7 +13,7 @@ namespace ProSuite.Commons.Db
 		int FindField(string fieldName);
 	}
 
-	public interface IDbTable : IDbTableSchema
+	public interface ITableData : ITableSchemaDef
 	{
 		IDbRow GetRow(long oid);
 

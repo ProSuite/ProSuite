@@ -2,17 +2,19 @@ using System.Collections.Generic;
 
 namespace ProSuite.Commons.Db
 {
-	public interface IDbDatasetContainer
+	public interface IDatasetContainer
 	{
-		IDbTableSchema OpenTable(string tableName);
+		T GetDataset<T>(string tableName) where T : class, IDatasetDef;
 
-		IEnumerable<IDbDataset> GetGdbDatasets();
+		IEnumerable<IDatasetDef> GetDatasetDefs(DatasetType ofType = DatasetType.Any);
 
-		bool Equals(IDbDatasetContainer otherWorkspace);
+		bool Equals(IDatasetContainer otherWorkspace);
 	}
 
-	public interface IDataStore : IDbDatasetContainer
+	public interface IDataStore : IDatasetContainer
 	{
+		ITableData OpenDataset(string tableName);
+
 		WorkspaceDbType DbType { get; }
 
 		/// <summary>

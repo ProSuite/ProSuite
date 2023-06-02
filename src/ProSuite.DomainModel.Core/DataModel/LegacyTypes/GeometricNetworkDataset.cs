@@ -47,7 +47,7 @@ namespace ProSuite.DomainModel.Core.DataModel.LegacyTypes
 
 		public override string TypeDescription => "Geometric Network";
 
-		public override DatasetType DatasetType => DatasetType.Unknown;
+		public override DatasetType DatasetType => DatasetType.Null;
 
 		public string FeatureDatasetName
 		{
