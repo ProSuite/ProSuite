@@ -619,7 +619,9 @@ namespace ProSuite.QA.Container.TestContainer
 
 					IBox cachedRowExtent = cachedRow.Extent;
 
-					bool disjoint = context.IsDisjointFromExecuteArea(feature.Shape);
+					bool disjoint = shape.GeometryType != esriGeometryType.esriGeometryMultiPatch
+						                ? context.IsDisjointFromExecuteArea(shape)
+						                : context.IsDisjointFromExecuteArea(feature.Extent);
 
 					cachedRow.DisjointFromExecuteArea = disjoint;
 
