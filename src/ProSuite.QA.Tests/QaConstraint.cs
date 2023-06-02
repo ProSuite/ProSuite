@@ -58,11 +58,10 @@ namespace ProSuite.QA.Tests
 
 		#region Constructors
 
-		public QaConstraint([NotNull] QaConstraintDefinition constraintDef)
-			: base(constraintDef.InvolvedTables.Cast<IReadOnlyTable>())
+		// TEST: Static factory method. But its probably better to directly call the last constructor
+		public static QaConstraint Create(QaConstraintDefinition def)
 		{
-			_table = (IReadOnlyTable)constraintDef.Table;
-			_constraint = constraintDef.Constraint;
+			return new QaConstraint(def);
 		}
 
 		[Doc(nameof(DocStrings.QaConstraint_0))]
@@ -117,6 +116,18 @@ namespace ProSuite.QA.Tests
 			_constraintNodes = constraints;
 			_usesSimpleConstraint = false;
 			_errorDescriptionVersion = errorDescriptionVersion;
+		}
+
+		/// <summary>
+		/// Constructor using Definition. Must be last constructor!
+		/// </summary>
+		/// <param name="constraintDef"></param>
+		[InternallyUsedTest]
+		public QaConstraint([NotNull] QaConstraintDefinition constraintDef)
+			: base(constraintDef.InvolvedTables.Cast<IReadOnlyTable>())
+		{
+			_table = (IReadOnlyTable) constraintDef.Table;
+			_constraint = constraintDef.Constraint;
 		}
 
 		#endregion
@@ -294,7 +305,7 @@ namespace ProSuite.QA.Tests
 					IssueCode issueCode = constraintNode.IssueCode ??
 					                      Codes[Code.ConstraintNotFulfilled];
 
-					object[] values = {GetFieldValues(row, constraintNode.Helper, parentHelpers)};
+					object[] values = { GetFieldValues(row, constraintNode.Helper, parentHelpers) };
 
 					errorCount += ReportError(
 						description, InvolvedRowUtils.GetInvolvedRows(row),
