@@ -1,21 +1,12 @@
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests
 {
-	// These classes could be generated in a separate assembly.
-	// However, it might be better to actively maintain them as the test definition
-	// and separate the test execution from the definition.
-	// The TestExecutor could be instantiated with the definition:
-	// QaSimpleGeometryExec(QaSimpleGeometryDefinition testDef) {}
-
-	// Probably we need to support both for a while?
-	// -> Generate the definitions at first, one-by-one add the
-	// ..Exec variant of the test that can be also loaded dynamically?
-
 	/// <summary>
 	/// Finds all invalid geometries (null, empty, not simple)
 	/// </summary>
@@ -58,32 +49,29 @@ namespace ProSuite.QA.Tests
 
 		//#endregion
 
-		// Note: ContainerTests cannot test for missing or empty geometries
-		// because the container's search filter will miss such features!
-
-		//[Doc(nameof(DocStrings.QaSimpleGeometry_0))]
+		[Doc(nameof(DocStrings.QaSimpleGeometry_0))]
 		public QaSimpleGeometryDefinition(
-				//[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]
+				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]
 				IFeatureClassSchemaDef featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, false, _defaultToleranceFactor) { }
 
-		//[Doc(nameof(DocStrings.QaSimpleGeometry_1))]
+		[Doc(nameof(DocStrings.QaSimpleGeometry_1))]
 		public QaSimpleGeometryDefinition(
-				//[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]
+				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]
 				IFeatureClassSchemaDef featureClass,
-				//[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
+				[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
 				bool allowNonPlanarLines)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, allowNonPlanarLines, _defaultToleranceFactor) { }
 
-		//[Doc(nameof(DocStrings.QaSimpleGeometry_2))]
+		[Doc(nameof(DocStrings.QaSimpleGeometry_2))]
 		public QaSimpleGeometryDefinition(
-			//[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]
+			[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))]
 			IFeatureClassSchemaDef featureClass,
-			//[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
+			[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
 			bool allowNonPlanarLines,
-			//[Doc(nameof(DocStrings.QaSimpleGeometry_toleranceFactor))]
+			[Doc(nameof(DocStrings.QaSimpleGeometry_toleranceFactor))]
 			double toleranceFactor)
 			: base(featureClass)
 		{

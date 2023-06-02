@@ -8,6 +8,8 @@ namespace ProSuite.QA.Core
 	/// <summary>
 	/// Base class for instance definitions. The definitions have minimal dependencies and can be
 	/// instantiated in every environment in order to get the metadata.
+	/// The actual test implementation should have a last constructor taking the corresponding
+	/// definition class.
 	/// </summary>
 	public abstract class AlgorithmDefinition
 	{
