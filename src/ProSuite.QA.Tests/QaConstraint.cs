@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Globalization;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
@@ -119,7 +119,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		/// <summary>
-		/// Constructor using Definition. Must be last constructor!
+		/// Constructor using Definition. Must be the last constructor!
 		/// </summary>
 		/// <param name="constraintDef"></param>
 		[InternallyUsedTest]
@@ -128,6 +128,14 @@ namespace ProSuite.QA.Tests
 		{
 			_table = (IReadOnlyTable) constraintDef.Table;
 			_constraint = constraintDef.Constraint;
+
+			if (constraintDef.ConstraintNodes != null)
+			{
+				_constraintNodes = constraintDef.ConstraintNodes.Select(c => new ConstraintNode(c))
+				                                .ToList();
+
+				_usesSimpleConstraint = false;
+			}
 		}
 
 		#endregion
