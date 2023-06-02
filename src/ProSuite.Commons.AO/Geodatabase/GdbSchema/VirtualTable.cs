@@ -4,8 +4,8 @@ using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.Db;
-using IDatasetContainer = ProSuite.Commons.Db.IDatasetContainer;
+using ProSuite.Commons.GeoDb;
+using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -558,8 +558,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		DatasetType IDatasetDef.DatasetType =>
 			DatasetType == esriDatasetType.esriDTFeatureClass
-				? Db.DatasetType.FeatureClass
-				: Db.DatasetType.Table;
+				? GeoDb.DatasetType.FeatureClass
+				: GeoDb.DatasetType.Table;
 
 		bool IDatasetDef.Equals(IDatasetDef otherDataset)
 		{

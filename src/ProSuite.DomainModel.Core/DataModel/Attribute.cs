@@ -1,5 +1,5 @@
 using System;
-using ProSuite.Commons.Db;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;

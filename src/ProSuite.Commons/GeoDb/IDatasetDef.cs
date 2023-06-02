@@ -1,4 +1,4 @@
-namespace ProSuite.Commons.Db
+namespace ProSuite.Commons.GeoDb
 {
 	/// <summary>
 	/// Provides access to methods of datasets that can reside in a database. Common interface for

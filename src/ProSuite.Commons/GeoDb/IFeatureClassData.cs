@@ -1,7 +1,7 @@
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 
-namespace ProSuite.Commons.Db
+namespace ProSuite.Commons.GeoDb
 {
 	public interface IGeoDbDataset
 	{

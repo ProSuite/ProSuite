@@ -18,7 +18,7 @@ using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.AttributeDependencies;
 using ProSuite.DomainModel.Core.DataModel;
 using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
-using FieldType = ProSuite.Commons.Db.FieldType;
+using FieldType = ProSuite.Commons.GeoDb.FieldType;
 
 namespace ProSuite.DdxEditor.Content.AttributeDependencies
 {

@@ -1,4 +1,4 @@
-namespace ProSuite.Commons.Db
+namespace ProSuite.Commons.GeoDb
 {
 	/// <summary>
 	/// Encapsulates the Esri field types into independent enum but with corresponding values.

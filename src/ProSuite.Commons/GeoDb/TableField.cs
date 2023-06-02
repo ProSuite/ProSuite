@@ -1,6 +1,6 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.Db
+namespace ProSuite.Commons.GeoDb
 {
 	public class TableField : ITableField
 	{

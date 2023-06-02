@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.Db;
-using IDatasetContainer = ProSuite.Commons.Db.IDatasetContainer;
+using ProSuite.Commons.GeoDb;
+using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {

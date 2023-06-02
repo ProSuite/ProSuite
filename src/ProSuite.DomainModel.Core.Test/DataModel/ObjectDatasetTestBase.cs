@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using ProSuite.Commons.Db;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Testing;
 using ProSuite.DomainModel.Core.DataModel;

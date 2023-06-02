@@ -6,9 +6,9 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.Db;
-using FieldType = ProSuite.Commons.Db.FieldType;
-using IDatasetContainer = ProSuite.Commons.Db.IDatasetContainer;
+using ProSuite.Commons.GeoDb;
+using FieldType = ProSuite.Commons.GeoDb.FieldType;
+using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
 {

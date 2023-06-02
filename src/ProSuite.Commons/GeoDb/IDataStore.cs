@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ProSuite.Commons.Db
+namespace ProSuite.Commons.GeoDb
 {
 	public interface IDatasetContainer
 	{

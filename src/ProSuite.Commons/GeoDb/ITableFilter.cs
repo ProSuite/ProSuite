@@ -1,4 +1,4 @@
-namespace ProSuite.Commons.Db
+namespace ProSuite.Commons.GeoDb
 {
 	public interface ITableFilter
 	{

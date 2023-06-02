@@ -3,11 +3,11 @@ using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.Db;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using FieldType = ProSuite.Commons.Db.FieldType;
-using IDatasetContainer = ProSuite.Commons.Db.IDatasetContainer;
+using FieldType = ProSuite.Commons.GeoDb.FieldType;
+using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {

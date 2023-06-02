@@ -8,7 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
 using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
-using FieldType = ProSuite.Commons.Db.FieldType;
+using FieldType = ProSuite.Commons.GeoDb.FieldType;
 
 namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 {

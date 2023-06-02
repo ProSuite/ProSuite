@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ProSuite.Commons.Db;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;

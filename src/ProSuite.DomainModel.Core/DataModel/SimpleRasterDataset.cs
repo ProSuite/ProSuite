@@ -1,4 +1,4 @@
-using ProSuite.Commons.Db;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {

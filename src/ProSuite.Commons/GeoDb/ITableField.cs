@@ -1,4 +1,4 @@
-namespace ProSuite.Commons.Db
+namespace ProSuite.Commons.GeoDb
 {
 	/// <summary>
 	/// Basic field interface that can be implemented both by DDX attributes and actual data elements.

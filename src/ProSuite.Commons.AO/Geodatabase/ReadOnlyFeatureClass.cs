@@ -1,8 +1,8 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.Db;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Geom.EsriShape;
-using FieldType = ProSuite.Commons.Db.FieldType;
+using FieldType = ProSuite.Commons.GeoDb.FieldType;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {

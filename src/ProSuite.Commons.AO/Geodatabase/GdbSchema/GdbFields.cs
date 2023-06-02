@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.Db;
-using FieldType = ProSuite.Commons.Db.FieldType;
+using ProSuite.Commons.GeoDb;
+using FieldType = ProSuite.Commons.GeoDb.FieldType;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {

@@ -1,6 +1,6 @@
 using ProSuite.Commons.Geom;
 
-namespace ProSuite.Commons.Db
+namespace ProSuite.Commons.GeoDb
 {
 	public interface IDbRow
 	{

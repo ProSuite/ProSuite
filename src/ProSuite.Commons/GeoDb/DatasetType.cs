@@ -1,4 +1,4 @@
-namespace ProSuite.Commons.Db
+namespace ProSuite.Commons.GeoDb
 {
 	/// <summary>
 	/// Dataset type using values corresponding to the Esri dataset types, except for Unknown = 0.

@@ -64,7 +64,7 @@ namespace ProSuite.DdxEditor.Content.Attributes
 					_fieldType = Attribute.GetTypeName(entity.FieldType);
 
 					if (entity.FieldType ==
-					    Commons.Db.FieldType.Text)
+					    Commons.GeoDb.FieldType.Text)
 					{
 						_length = entity.FieldLength;
 					}
