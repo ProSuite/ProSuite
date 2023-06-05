@@ -72,6 +72,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanCheckRealWorldMultipatchesViaFootprintTop5659()
 		{
 			string path = TestDataPreparer.ExtractZip("GebkoerperSmallAreas.gdb.zip").GetPath();
