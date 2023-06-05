@@ -426,6 +426,26 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return new AoFeatureClassFilter(searchGeometry, spatialRel);
 		}
 
+		public static ITableFilter GetTableFilter(IQueryFilter queryFilter)
+		{
+			ITableFilter tableFilter;
+
+			if (queryFilter is ISpatialFilter spatialFilter)
+			{
+				tableFilter = CreateFeatureClassFilter(
+					spatialFilter.Geometry, spatialFilter.SpatialRel);
+			}
+			else
+			{
+				tableFilter = new AoTableFilter();
+			}
+
+			tableFilter.SubFields = queryFilter.SubFields;
+			tableFilter.WhereClause = queryFilter.WhereClause;
+			tableFilter.PostfixClause = ((IQueryFilterDefinition) queryFilter).PostfixClause;
+			return tableFilter;
+		}
+
 		[NotNull]
 		public static IQueryFilter CreateSpatialFilter(
 			[NotNull] IFeatureClass featureClass,

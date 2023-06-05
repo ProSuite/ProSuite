@@ -148,6 +148,15 @@ namespace ProSuite.QA.Tests.Transformers
 				return nRows;
 			}
 
+			protected override long TableRowCount(IQueryFilter queryFilter)
+			{
+				ITableFilter tableFilter = GdbQueryUtils.GetTableFilter(queryFilter);
+
+				long nRows = InvolvedTables.Sum(involved => involved.RowCount(tableFilter));
+
+				return base.TableRowCount(queryFilter);
+			}
+
 			public override IEnumerable<IReadOnlyRow> EnumReadOnlyRows(
 				ITableFilter queryFilter, bool recycling)
 			{

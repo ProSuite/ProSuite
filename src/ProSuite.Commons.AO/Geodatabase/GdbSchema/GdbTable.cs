@@ -287,14 +287,21 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return CreateRow();
 		}
 
-		public override long RowCount(ITableFilter queryFilter)
+		public override long RowCount(ITableFilter tableFilter)
 		{
 			if (BackingDataset == null)
 			{
 				throw new NotImplementedException("No backing dataset provided for RowCount().");
 			}
 
-			return BackingDataset.GetRowCount(queryFilter);
+			return BackingDataset.GetRowCount(tableFilter);
+		}
+
+		protected override long TableRowCount(IQueryFilter queryFilter)
+		{
+			ITableFilter tableFilter = GdbQueryUtils.GetTableFilter(queryFilter);
+
+			return RowCount(tableFilter);
 		}
 
 		protected override CursorImpl SearchT(IQueryFilter queryFilter, bool recycling)
