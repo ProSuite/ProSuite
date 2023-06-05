@@ -12,18 +12,5 @@ namespace ProSuite.QA.Core
 		{
 			return $"{GetType().Name} with parameters: {InstanceUtils.GetTestSignature(this)}";
 		}
-
-		protected static string GetAlgorithmName(string algorithmDefinitionName)
-		{
-			const string definition = "Definition";
-
-			if (algorithmDefinitionName.EndsWith(definition))
-			{
-				return algorithmDefinitionName.Substring(
-					0, algorithmDefinitionName.Length - definition.Length);
-			}
-
-			return algorithmDefinitionName;
-		}
 	}
 }

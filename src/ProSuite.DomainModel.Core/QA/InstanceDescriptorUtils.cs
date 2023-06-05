@@ -90,14 +90,11 @@ namespace ProSuite.DomainModel.Core.QA
 		public static TestFactoryDefinition GetTestFactoryDefinition(
 			[NotNull] ClassDescriptor classDescriptor)
 		{
-			string assemblyName = GetDefinitionsAssemblyName(classDescriptor);
-
-			string typeName = GetDefinitionTypeName(classDescriptor);
-
-			Type factoryDefType = PrivateAssemblyUtils.LoadType(assemblyName, typeName);
+			Type factoryDefType = GetDefinitionType(classDescriptor);
 
 			TestFactoryDefinition testFactoryDefinition =
 				(TestFactoryDefinition) Activator.CreateInstance(factoryDefType);
+
 			return testFactoryDefinition;
 		}
 
@@ -235,16 +232,7 @@ namespace ProSuite.DomainModel.Core.QA
 			string assemblyName =
 				Assert.NotNullOrEmpty(classDescriptor.AssemblyName, "No assembly name");
 
-			// Substitute first. Definition based tests can never come from the legacy assemblies
-			if (PrivateAssemblyUtils.KnownSubstitutes.TryGetValue(
-				    assemblyName, out string substituteAssembly))
-			{
-				assemblyName = substituteAssembly;
-			}
-
-			const string assemblyDefinitionSuffix = "Definitions";
-
-			return $"{assemblyName}.{assemblyDefinitionSuffix}";
+			return InstanceUtils.GetDefinitionsAssemblyName(assemblyName);
 		}
 	}
 }

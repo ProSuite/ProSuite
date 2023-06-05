@@ -30,7 +30,7 @@ namespace ProSuite.QA.Tests
 			: this(table, constraint, 0) { }
 
 		// Presumably absolutely all constructors must be available in order to avoid
-		// constructer index mix-ups.
+		// constructor index mix-ups.
 		[Doc(nameof(DocStrings.QaConstraint_1))]
 		[InternallyUsedTest]
 		public QaConstraintDefinition(

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
-using ProSuite.Commons.GeoDb;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests;
@@ -45,7 +46,8 @@ namespace ProSuite.QA.TestFactories
 
 		public override string GetTestTypeDescription()
 		{
-			return GetAlgorithmName(nameof(QaConstraintDefinition));
+			return Assert.NotNull(
+				InstanceUtils.TryGetAlgorithmName(nameof(QaConstraintDefinition)));
 		}
 	}
 }

@@ -15,6 +15,8 @@ namespace ProSuite.QA.Core
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private static string AssemblyDefinitionsSuffix => "Definitions";
+
 		[NotNull]
 		public static Type LoadType([NotNull] string assemblyName,
 		                            [NotNull] string typeName,
@@ -31,6 +33,56 @@ namespace ProSuite.QA.Core
 			AssertConstructorExists(result, constructorId);
 
 			return result;
+		}
+
+		/// <summary>
+		/// Returns the name of the assembly containing the test/instance implementations for the
+		/// specified assembly name containing the test/instance definitions.
+		/// </summary>
+		/// <param name="definitionAssembly"></param>
+		/// <returns></returns>
+		public static string GetImplementationAssemblyName(string definitionAssembly)
+		{
+			string assemblyDefinitionSuffix = $".{AssemblyDefinitionsSuffix}";
+
+			if (definitionAssembly.EndsWith(assemblyDefinitionSuffix))
+			{
+				definitionAssembly = definitionAssembly.Remove(assemblyDefinitionSuffix.Length);
+			}
+
+			return definitionAssembly;
+		}
+
+		/// <summary>
+		/// Returns the name of the assembly containing the test/instance definitions for the
+		/// specified assembly name containing the test/instance implementations.
+		/// </summary>
+		/// <param name="implementationAssemblyName"></param>
+		/// <returns></returns>
+		public static string GetDefinitionsAssemblyName(string implementationAssemblyName)
+		{
+			// Substitute first. Definition based tests can never come from the legacy assemblies
+			if (PrivateAssemblyUtils.KnownSubstitutes.TryGetValue(
+				    implementationAssemblyName, out string substituteAssembly))
+			{
+				implementationAssemblyName = substituteAssembly;
+			}
+
+			return $"{implementationAssemblyName}.{AssemblyDefinitionsSuffix}";
+		}
+
+		[CanBeNull]
+		public static string TryGetAlgorithmName(string algorithmDefinitionName)
+		{
+			const string definition = "Definition";
+
+			if (algorithmDefinitionName.EndsWith(definition))
+			{
+				return algorithmDefinitionName.Substring(
+					0, algorithmDefinitionName.Length - definition.Length);
+			}
+
+			return null;
 		}
 
 		public static void AssertConstructorExists([NotNull] Type type, int constructorId)
@@ -93,6 +145,15 @@ namespace ProSuite.QA.Core
 			AssertConstructorExists(type, constructorId);
 
 			ConstructorInfo constructor = type.GetConstructors()[constructorId];
+
+			if (typeof(AlgorithmDefinition).IsAssignableFrom(type))
+			{
+				// Detour via definition;
+				AlgorithmDefinition definition =
+					(AlgorithmDefinition) constructor.Invoke(constructorArgs);
+
+				return (T) definition.CreateInstance(definition);
+			}
 
 			return (T) constructor.Invoke(constructorArgs);
 		}
