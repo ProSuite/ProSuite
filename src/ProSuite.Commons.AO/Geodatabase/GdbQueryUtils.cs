@@ -419,8 +419,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		public static IFeatureClassFilter CreateSpatialFilter(
-			[NotNull] IReadOnlyFeatureClass featureClass,
+		public static IFeatureClassFilter CreateFeatureClassFilter(
 			[NotNull] IGeometry searchGeometry,
 			esriSpatialRelEnum spatialRel = esriSpatialRelEnum.esriSpatialRelIntersects)
 		{
