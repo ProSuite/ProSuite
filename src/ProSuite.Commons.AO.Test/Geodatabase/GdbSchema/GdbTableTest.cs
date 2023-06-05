@@ -24,7 +24,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanCreateGdbTable()
 		{
 			// An in-memory backing dataset is created automatically, if no factory method is provided
@@ -69,7 +68,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanCreateGdbFeatureClass()
 		{
 			// An in-memory backing dataset is created automatically, if no factory method is provided
@@ -127,7 +125,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 
 		[Test]
 		[Category(TestCategory.Sde)]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanCreateGdbFeatureClassWithBackingDataset()
 		{
 			IWorkspace ws = TestUtils.OpenUserWorkspaceOracle();
@@ -192,7 +189,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 
 		[Test]
 		[Category(TestCategory.Sde)]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanCreateGdbFeatureClassWrappingRealFeatureClass()
 		{
 			IWorkspace ws = TestUtils.OpenUserWorkspaceOracle();
