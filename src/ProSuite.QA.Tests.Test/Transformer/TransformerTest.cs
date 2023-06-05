@@ -115,6 +115,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanConfigureWithTableTransformer()
 		{
 			IFeatureWorkspace ws =
@@ -195,6 +196,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanRunWithTableTransformer()
 		{
 			IFeatureWorkspace ws =

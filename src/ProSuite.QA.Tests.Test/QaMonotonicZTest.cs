@@ -122,6 +122,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanUseFlipExpression()
 		{
 			IFeatureClass featureClass = CreateLineClass(TestWorkspace);

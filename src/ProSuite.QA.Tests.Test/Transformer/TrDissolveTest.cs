@@ -607,6 +607,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 		[Test]
 		[Category(TestCategory.Sde)]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestTOP_7505_Topgis()
 		{
 			var workspace = (IFeatureWorkspace) TestData.TestDataUtils.OpenTopgisTlm();

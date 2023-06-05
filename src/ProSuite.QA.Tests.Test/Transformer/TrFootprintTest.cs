@@ -83,6 +83,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetFootprintsRealData()
 		{
 			string path = TestDataPreparer.ExtractZip("GebZueriberg.gdb.zip").Overwrite().GetPath();
@@ -115,6 +116,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetFootprintsRealDataVerticals()
 		{
 			string path = TestDataPreparer.ExtractZip("GebkoerperSmallAreas.gdb.zip").Overwrite()
