@@ -55,6 +55,12 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (classDescriptor != null)
 			{
+				if (InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+					    classDescriptor, out Type definitionType))
+				{
+					return new DefaultTestFactory(definitionType, descriptor.TestConstructorId);
+				}
+
 				return new DefaultTestFactory(classDescriptor.AssemblyName,
 				                              classDescriptor.TypeName,
 				                              descriptor.ConstructorId);

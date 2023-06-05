@@ -23,6 +23,12 @@ namespace ProSuite.DomainModel.Core.QA
 
 			if (testDescriptor.TestClass != null)
 			{
+				if (TryGetAlgorithmDefinitionType(testDescriptor.TestClass,
+				                                  out Type definitionType))
+				{
+					return new InstanceInfo(definitionType, testDescriptor.ConstructorId);
+				}
+
 				return new InstanceInfo(testDescriptor.TestClass.AssemblyName,
 				                        testDescriptor.TestClass.TypeName,
 				                        testDescriptor.TestConstructorId);
@@ -55,6 +61,12 @@ namespace ProSuite.DomainModel.Core.QA
 
 			if (descriptor.Class != null)
 			{
+				if (TryGetAlgorithmDefinitionType(descriptor.Class,
+				                                  out Type definitionType))
+				{
+					return new InstanceInfo(definitionType, descriptor.ConstructorId);
+				}
+
 				return new InstanceInfo(descriptor.Class.AssemblyName,
 				                        descriptor.Class.TypeName,
 				                        descriptor.ConstructorId);
@@ -108,13 +120,31 @@ namespace ProSuite.DomainModel.Core.QA
 
 				return true;
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
 				_msg.Debug(
-					$"Test factory definition {descriptor.TestFactoryDescriptor} could not be loaded",
-					e);
+					$"Test factory definition {descriptor.TestFactoryDescriptor} could not be loaded. The test type will be used directly");
 
 				testFactoryDefinition = null;
+				return false;
+			}
+		}
+
+		public static bool TryGetAlgorithmDefinitionType([NotNull] ClassDescriptor descriptor,
+		                                                 out Type definitionType)
+		{
+			try
+			{
+				definitionType = GetDefinitionType(descriptor);
+				return true;
+			}
+			catch (Exception)
+			{
+				_msg.Debug(
+					$"Instance definition {descriptor} could not be loaded. The instance type will be used directly.");
+
+				definitionType = null;
+
 				return false;
 			}
 		}
@@ -206,6 +236,17 @@ namespace ProSuite.DomainModel.Core.QA
 			className = descriptorName.Substring(0, indexOfOpenBracket);
 
 			return true;
+		}
+
+		private static Type GetDefinitionType([NotNull] ClassDescriptor classDescriptor)
+		{
+			string assemblyName = GetDefinitionsAssemblyName(classDescriptor);
+
+			string typeName = GetDefinitionTypeName(classDescriptor);
+
+			Type factoryDefType = PrivateAssemblyUtils.LoadType(assemblyName, typeName);
+
+			return factoryDefType;
 		}
 
 		private static string GetDefinitionTypeName([NotNull] ClassDescriptor classDescriptor)

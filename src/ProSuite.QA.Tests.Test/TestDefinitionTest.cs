@@ -48,6 +48,37 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
+		[Test]
+		public void CanCreateTests()
+		{
+			List<Type> refactoredTypes = new List<Type>
+			                             {
+				                             typeof(QaConstraint)
+			                             };
+
+			foreach (Type testType in refactoredTypes)
+			{
+				TestDescriptor descriptor = CreateTestDescriptor(testType, 0);
+
+				// Use case 1: Using instance info in DDX:
+				IInstanceInfo instanceInfo = InstanceDescriptorUtils.GetInstanceInfo(descriptor);
+
+				Assert.NotNull(instanceInfo);
+				Assert.NotNull(instanceInfo.TestDescription);
+				Assert.Greater(instanceInfo.TestCategories.Length, 0);
+
+				// Use case 2: Load actual factory:
+				TestFactory testFactory = TestFactoryUtils.GetTestFactory(descriptor);
+
+				Assert.NotNull(testFactory);
+
+				Assert.IsTrue(Compare(instanceInfo, testFactory));
+
+				Assert.Greater(instanceInfo.Parameters.Count, 0);
+				Assert.Greater(testFactory.Parameters.Count, 0);
+			}
+		}
+
 		private bool Compare(IInstanceInfo instanceInfo1, IInstanceInfo instanceInfo2)
 		{
 			if (instanceInfo1.TestDescription != instanceInfo2.TestDescription)
@@ -111,6 +142,15 @@ namespace ProSuite.QA.Tests.Test
 			string testName = $"{factoryType.Name}";
 
 			return new TestDescriptor(testName, new ClassDescriptor(factoryType));
+		}
+
+		private static TestDescriptor CreateTestDescriptor(Type definitionType,
+		                                                   int constructorIndex)
+		{
+			string testName = $"{definitionType.Name}";
+
+			return new TestDescriptor(testName, new ClassDescriptor(definitionType),
+			                          constructorIndex);
 		}
 	}
 }
