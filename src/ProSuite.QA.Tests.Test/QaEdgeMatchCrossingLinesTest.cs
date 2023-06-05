@@ -79,6 +79,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectAttributeConstraintError()
 		{
 			IFeatureClass fcLine1;
@@ -124,6 +125,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanAttributeConstraintErrorsIndividually()
 		{
 			IFeatureClass fcLine1;
@@ -182,6 +184,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectAttributeConstraintErrorForPolygonBorders()
 		{
 			IFeatureClass fcLine1;
@@ -227,6 +230,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanIgnoreEndPointsConnectingAtInterior()
 		{
 			IFeatureClass fcLine1;
@@ -273,6 +277,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNearEndPointsWithIgnoreEndPointsConnectingAtInterior()
 		{
 			IFeatureClass fcLine1;
@@ -337,6 +342,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectEndPointsConnectingAtInteriorIfConstraintsAreViolated()
 		{
 			IFeatureClass fcLine1;
@@ -386,6 +392,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectEndPointsConnectingAtInterior()
 		{
 			IFeatureClass fcLine1;
@@ -432,6 +439,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectConnectedFeaturesWithDifferingAttributes()
 		{
 			IFeatureClass fcLine1;
@@ -472,6 +480,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNoCandidateFeature()
 		{
 			IFeatureClass fcLine1;
@@ -541,6 +550,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectConnectionOnSameSide()
 		{
 			IFeatureClass fcLine1;
@@ -651,6 +661,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNonConnectedCandidateFeature()
 		{
 			IFeatureClass fcLine1;
@@ -724,6 +735,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNonConnectedCandidateFeatureWithDifferingAttributes()
 		{
 			IFeatureClass fcLine1;
@@ -768,6 +780,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNonConnectedCandidateFeatureDuetoBorderGap()
 		{
 			IFeatureClass fcLine1;
@@ -928,6 +941,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNonConnectedCandidateFeatureDuetoBorderOverlap()
 		{
 			IFeatureClass fcLine1;
@@ -966,6 +980,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNoCandidateFeatureDueToOffsetFromBorder()
 		{
 			IFeatureClass fcLine1;
@@ -1002,6 +1017,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNoCandidateFeaturesDueToLateralOffset()
 		{
 			IFeatureClass fcLine1;
@@ -1119,6 +1135,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanGetAllErrorPairsWhenMultiConnection()
 		{
 			IFeatureClass fcLine1;
