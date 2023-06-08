@@ -26,8 +26,8 @@ namespace ProSuite.Commons.Reflection
 		private static readonly Dictionary<string, string> _knownSubstitutes =
 			new Dictionary<string, string>
 			{
-				{"EsriDE.ProSuite.QA.Tests", "ProSuite.QA.Tests"},
-				{"EsriDE.ProSuite.QA.TestFactories", "ProSuite.QA.TestFactories"}
+				{ "EsriDE.ProSuite.QA.Tests", "ProSuite.QA.Tests" },
+				{ "EsriDE.ProSuite.QA.TestFactories", "ProSuite.QA.TestFactories" }
 			};
 
 		[NotNull]
@@ -99,8 +99,11 @@ namespace ProSuite.Commons.Reflection
 			{
 				string substituteType = typeName.Replace(assemblyName, substituteAssembly);
 
-				_msg.DebugFormat("Failed loading type {0} from {1}, trying {2} from {3}",
-				                 typeName, assemblyName, substituteType, substituteAssembly);
+				if (_msg.IsVerboseDebugEnabled)
+				{
+					_msg.DebugFormat("Failed loading type {0} from {1}, trying {2} from {3}",
+					                 typeName, assemblyName, substituteType, substituteAssembly);
+				}
 
 				return LoadType(Assert.NotNull(substituteAssembly), substituteType,
 				                new Dictionary<string, string>(0));
@@ -177,7 +180,7 @@ namespace ProSuite.Commons.Reflection
 			string dllFileName = string.Format("{0}.dll", assemblyName);
 			string exeFileName = string.Format("{0}.exe", assemblyName);
 
-			foreach (string fileName in new[] {dllFileName, exeFileName})
+			foreach (string fileName in new[] { dllFileName, exeFileName })
 			{
 				string filePath = Path.Combine(binDirectory, fileName);
 
@@ -191,7 +194,7 @@ namespace ProSuite.Commons.Reflection
 
 				if (fileExists)
 				{
-					return new AssemblyName(assemblyName) {CodeBase = filePath};
+					return new AssemblyName(assemblyName) { CodeBase = filePath };
 				}
 			}
 

@@ -172,7 +172,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			T response = CreateResponseAction(callStatus, _currentProgressMsg, issuesToSend);
 
-			_msg.DebugFormat("Sending {0} errors back to client...", issuesToSend.Count);
+			if (issuesToSend.Count > 0)
+			{
+				_msg.DebugFormat("Sending {0} errors back to client...", issuesToSend.Count);
+			}
 
 			try
 			{
