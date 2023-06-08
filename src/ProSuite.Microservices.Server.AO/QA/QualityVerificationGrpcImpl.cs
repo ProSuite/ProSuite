@@ -509,6 +509,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (useStandaloneService)
 				{
+					if (distributedTestRunner != null)
+					{
+						// No re-harvesting in all the sub-verifications
+						// TODO: Add SchemaMsg as DataModel property to standard request.
+						// to make the intent more explicit!
+						distributedTestRunner.SendModelsWithRequest = true;
+					}
+
 					// Stand-alone: Xml or specification list (WorkContextMsg is null!)
 					verification = VerifyStandaloneXmlCore(
 						specification, request.Parameters,

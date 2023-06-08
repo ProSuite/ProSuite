@@ -351,6 +351,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public bool Cancelled => CancellationTokenSource.IsCancellationRequested;
 
+		public bool SendModelsWithRequest { get; set; }
+
 		public void Execute(IEnumerable<ITest> tests, AreaOfInterest areaOfInterest,
 		                    CancellationTokenSource cancellationTokenSource)
 		{
@@ -359,7 +361,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			StartVerification(QualityVerification);
 
-			InitializeSchema(QualitySpecification);
+			if (SendModelsWithRequest)
+			{
+				InitializeModelsToSend(QualitySpecification);
+			}
 
 			CancellationTokenSource = cancellationTokenSource;
 
@@ -458,7 +463,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			EndVerification(QualityVerification);
 		}
 
-		private SchemaMsg KnownSchema { get; set; }
+		/// <summary>
+		/// The data model to be used by the server instead of re-harvesting the (entire) schema.
+		/// </summary>
+		private SchemaMsg KnownModels { get; set; }
 
 		private static IEnumerable<DdxModel> GetReferencedModels(
 			[NotNull] QualitySpecification qualitySpecification)
@@ -479,9 +487,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
-		private void InitializeSchema(QualitySpecification qualitySpecification)
+		/// <summary>
+		/// Initializes the <see cref="KnownModels"/> with the referenced data models. In this case
+		/// the SchemaMsg is used to transport the model information for Standalone Verifications
+		/// in order to avoid re-harvesting in each sub-verification.
+		/// </summary>
+		/// <param name="qualitySpecification"></param>
+		private void InitializeModelsToSend(QualitySpecification qualitySpecification)
 		{
-			var schemaMsg = new SchemaMsg();
+			var modelMsg = new SchemaMsg();
 
 			foreach (DdxModel ddxModel in GetReferencedModels(qualitySpecification))
 			{
@@ -507,11 +521,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 					ObjectClassMsg objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(
 						dataset, modelId, spatialReference);
 
-					schemaMsg.ClassDefinitions.Add(objectClassMsg);
+					modelMsg.ClassDefinitions.Add(objectClassMsg);
 				}
 			}
 
-			KnownSchema = schemaMsg;
+			KnownModels = modelMsg;
 		}
 
 		[NotNull]
@@ -586,20 +600,26 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_subveriClientsDict.Add(subVerification, verificationClient);
 			_workingClients.Add(verificationClient);
 
-			// Sends schema as protobuf:
-			Task<bool> task = Task.Run(
-				async () =>
-					await VerifySchemaAsync(
-						Assert.NotNull(verificationClient.QaGrpcClient),
-						subRequest, subResponse, CancellationTokenSource, KnownSchema),
-				CancellationTokenSource.Token);
+			Task<bool> task;
 
-			// Re-harvest model in worker, if necessary:
-			//Task<bool> task = Task.Run(
-			//	async () =>
-			//		await VerifyAsync(Assert.NotNull(verificationClient.QaGrpcClient), subRequest,
-			//						  subResponse, CancellationTokenSource),
-			//CancellationTokenSource.Token);
+			// Sends schema as protobuf:
+			if (KnownModels != null)
+				task = Task.Run(
+					async () =>
+						await VerifySchemaAsync(
+							Assert.NotNull(verificationClient.QaGrpcClient),
+							subRequest, subResponse, CancellationTokenSource, KnownModels),
+					CancellationTokenSource.Token);
+			else
+			{
+				// Re-harvest model in worker or use DDX access, if necessary:
+				task = Task.Run(
+					async () =>
+						await VerifyAsync(Assert.NotNull(verificationClient.QaGrpcClient),
+						                  subRequest,
+						                  subResponse, CancellationTokenSource),
+					CancellationTokenSource.Token);
+			}
 
 			// Process the messages even though the foreground thread is blocking/busy processing results
 			task.ConfigureAwait(false);
