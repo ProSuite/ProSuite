@@ -132,6 +132,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				_msg.InfoFormat("Verification {0}", result);
 			}
+			catch (TaskCanceledException canceledException)
+			{
+				HandleCancellationException(request, context, canceledException);
+			}
 			catch (Exception e)
 			{
 				_msg.Error($"Error verifying quality for request {request}", e);
@@ -200,6 +204,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 						func, context, _staThreadScheduler, true);
 
 				_msg.InfoFormat("Verification {0}", result);
+			}
+			catch (TaskCanceledException canceledException)
+			{
+				HandleCancellationException(request, context, canceledException);
 			}
 			catch (Exception e)
 			{
@@ -940,6 +948,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 				};
 
 			return result;
+		}
+
+		private static void HandleCancellationException(VerificationRequest request,
+		                                                ServerCallContext context,
+		                                                TaskCanceledException canceledException)
+		{
+			_msg.VerboseDebug(() => $"Cancelled request: {request}");
+			_msg.Debug($"Task cancelled: {context.CancellationToken.IsCancellationRequested}",
+			           canceledException);
+			_msg.Warn("Task was cancelled, likely by the client");
 		}
 
 		private static void SendFatalException(
