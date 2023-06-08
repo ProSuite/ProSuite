@@ -1,17 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ProSuite.DomainModel.Core.QA;
 
-namespace ProSuite.Microservices.Client.QA
+namespace ProSuite.DomainModel.Core.QA
 {
-	/// <summary>
-	/// Encapsulates the resolution of the currently available instance descriptors by name.
-	/// This could be the look-up of the instance descriptors as used in the DDX.
-	/// This could be the look-up of the instance descriptors using their canonical name.
-	/// TODO: Consider supporting the look-up by canonical name as automatic fallback.
-	/// TODO: Add methods for the look-up by type name including the old-name/new-name mapping
-	/// </summary>
 	public class SupportedInstanceDescriptors : ISupportedInstanceDescriptors
 	{
 		private readonly IDictionary<string, TestDescriptor> _testDescriptors;
@@ -28,6 +20,8 @@ namespace ProSuite.Microservices.Client.QA
 			_transformerDescriptors = transformerDescriptors?.ToDictionary(d => d.Name);
 			_issueFilterDescriptors = issueFilterDescriptors?.ToDictionary(d => d.Name);
 		}
+
+		public bool FallBackToCanonicalName { get; set; }
 
 		#region Implementation of ISupportedInstanceDescriptors
 
@@ -53,7 +47,17 @@ namespace ProSuite.Microservices.Client.QA
 
 		public TestDescriptor GetTestDescriptor(string name)
 		{
-			_testDescriptors.TryGetValue(name, out TestDescriptor result);
+			if (! _testDescriptors.TryGetValue(name, out TestDescriptor result) &&
+			    FallBackToCanonicalName)
+			{
+				TestDescriptor fallback =
+					_testDescriptors.Values.FirstOrDefault(d => name == d.GetCanonicalName());
+
+				if (fallback != null)
+				{
+					return fallback;
+				}
+			}
 
 			return result;
 		}
@@ -61,7 +65,18 @@ namespace ProSuite.Microservices.Client.QA
 		public TransformerDescriptor GetTransformerDescriptor(string name)
 		{
 			TransformerDescriptor result = null;
-			_transformerDescriptors?.TryGetValue(name, out result);
+			if (_transformerDescriptors?.TryGetValue(name, out result) == false &&
+			    FallBackToCanonicalName)
+			{
+				TransformerDescriptor fallback =
+					_transformerDescriptors.Values.FirstOrDefault(
+						d => name == d.GetCanonicalName());
+
+				if (fallback != null)
+				{
+					return fallback;
+				}
+			}
 
 			return result;
 		}
@@ -69,7 +84,18 @@ namespace ProSuite.Microservices.Client.QA
 		public IssueFilterDescriptor GetIssueFilterDescriptor(string name)
 		{
 			IssueFilterDescriptor result = null;
-			_issueFilterDescriptors?.TryGetValue(name, out result);
+			if (_issueFilterDescriptors?.TryGetValue(name, out result) == false &&
+			    FallBackToCanonicalName)
+			{
+				IssueFilterDescriptor fallback =
+					_issueFilterDescriptors.Values.FirstOrDefault(
+						d => name == d.GetCanonicalName());
+
+				if (fallback != null)
+				{
+					return fallback;
+				}
+			}
 
 			return result;
 		}
