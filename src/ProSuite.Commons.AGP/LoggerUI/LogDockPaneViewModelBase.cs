@@ -12,7 +12,11 @@ namespace ProSuite.Commons.AGP.LoggerUI
 	[UsedImplicitly]
 	public class LogDockPaneViewModelBase : DockPaneViewModelBase, IDisposable
 	{
-		public const string Id = "ProSuiteTools_Logger_ProSuiteLogPane";
+		//TODO: ID from Config.daml; make abstract or similar
+		public const string ConfigId_ProSuiteLogPane = "ProSuiteTools_Logger_ProSuiteLogPane";
+
+		//TODO: ID from Config.daml; make abstract or similar
+		public const string ConfigId_ProSuiteLogPane_ShowButton = "ProSuiteTools_Logger_ProSuiteLogPane_ShowButton";
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -62,7 +66,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
 
 			var pane =
-				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(Id);
+				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(ConfigId_ProSuiteLogPane);
 			if (pane == null)
 			{
 				return;
@@ -124,8 +128,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		private void UpdateLogBtn(bool visible)
 		{
 			IPlugInWrapper buttonWrapper =
-				FrameworkApplication.GetPlugInWrapper(
-					"ProSuiteTools_Logger_ProSuiteLogPane_ShowButton");
+				FrameworkApplication.GetPlugInWrapper(ConfigId_ProSuiteLogPane_ShowButton);
 			if (buttonWrapper == null)
 			{
 				return;
