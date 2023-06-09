@@ -4815,4 +4815,26 @@ The sort order must correspond with 'polylineClasses'.</value>
   <data name="QaAttributeDependency_targetFields" xml:space="preserve">
     <value>fields holding target values</value>
   </data>
+  <data name="QaExportTables_0" xml:space="preserve">
+    <value>Export 'tables' to a newly created file geodatabase</value>
+  </data>
+  <data name="QaExportTables_tables" xml:space="preserve">
+    <value>tables to export.
+Tables can be normal tables or transformers.
+Each table will be exported to a separate table. The name of the created table corresponds to the name of the source table.
+If severale source tables have the same name, a number is added at the end of the exported table in order to have a unique name.</value>
+  </data>
+  <data name="QaExportTables_fileGdbPath" xml:space="preserve">
+    <value>Path  to the newly created file geodatabase.
+The path can contain one * as placeholder for a number to ensure that the path does not already exist.
+If the path already exists (only possible if no * in 'fgdbPath'), it will be deleted. 
+If the path is locked, i.e. because it belongs to a used file geodatabase, an error occurs. </value>
+  </data>
+  <data name="QaExportTables_ExportTileIds" xml:space="preserve">
+    <value>Add a field to each exported table, which contains the id of tile the exported row belongs to.
+Remarks: A source row may be exported several times with different tile ids.</value>
+  </data>
+  <data name="QaExportTables_ExportTiles" xml:space="preserve">
+    <value>If true: Create a feature class which contains the processed tiles</value>
+  </data>
 </root>
