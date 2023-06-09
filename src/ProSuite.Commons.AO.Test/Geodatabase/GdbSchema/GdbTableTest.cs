@@ -61,10 +61,30 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 			Assert.AreEqual(0,
 			                GdbQueryUtils.Count(objectClass, queryFilter));
 
+			{
+				int rowCount = 0;
+				foreach (IRow row in new EnumCursor(gdbTable, queryFilter, recycle: false))
+				{
+					rowCount++;
+				}
+
+				Assert.AreEqual(0, rowCount);
+			}
+
 			queryFilter.WhereClause = "OBJECTID > 0";
 
 			Assert.AreEqual(1,
 			                GdbQueryUtils.Count(objectClass, queryFilter));
+			{
+				int rowCount = 0;
+
+				foreach (IRow row in new EnumCursor(gdbTable, queryFilter, recycle: false))
+				{
+					rowCount++;
+				}
+
+				Assert.AreEqual(1, rowCount);
+			}
 		}
 
 		[Test]

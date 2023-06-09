@@ -311,10 +311,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				throw new NotImplementedException("No backing dataset provided for Search().");
 			}
 
-			throw new NotImplementedException(); // TODO
-			//IEnumerable<VirtualRow> rows = BackingDataset.Search(queryFilter, recycling);
-
-			//return new CursorImpl(this, rows);
+			ITableFilter tableFilter = GdbQueryUtils.GetTableFilter(queryFilter);
+			IEnumerable<VirtualRow> rows = BackingDataset.Search(tableFilter, recycling);
+			return new CursorImpl(this, rows);
 		}
 
 		#endregion
