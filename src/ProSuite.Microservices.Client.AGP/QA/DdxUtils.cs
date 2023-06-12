@@ -98,11 +98,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 				result.Add(specification);
 			}
-
 			_msg.DebugFormat("Found {0} quality specifications for {1} datasets.", result.Count,
-			                 datasetIds.Count);
+							 datasetIds.Count);
 
-			return result;
+			return result.OrderBy(qs => qs.Name).ToList();
+
 		}
 
 		public static async Task<QualitySpecification> LoadFullSpecification(
