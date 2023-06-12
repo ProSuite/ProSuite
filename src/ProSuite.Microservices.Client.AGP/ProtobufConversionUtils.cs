@@ -5,6 +5,7 @@ using System.IO;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
 using Google.Protobuf;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -43,7 +44,7 @@ namespace ProSuite.Microservices.Client.AGP
 
 					return string.IsNullOrEmpty(xml)
 						       ? null
-						       : SpatialReferenceBuilder.FromXML(xml);
+						       : SpatialReferenceBuilder.FromXml(xml);
 
 				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid:
 
@@ -81,7 +82,7 @@ namespace ProSuite.Microservices.Client.AGP
 					break;
 
 				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml:
-					result.SpatialReferenceEsriXml = spatialReference.ToXML();
+					result.SpatialReferenceEsriXml = spatialReference.ToXml();
 					break;
 
 				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid:
@@ -167,7 +168,7 @@ namespace ProSuite.Microservices.Client.AGP
 			}
 
 			var result =
-				EnvelopeBuilder.CreateEnvelope(new Coordinate2D(envProto.XMin, envProto.YMin),
+				EnvelopeBuilderEx.CreateEnvelope(new Coordinate2D(envProto.XMin, envProto.YMin),
 				                               new Coordinate2D(envProto.XMax, envProto.YMax),
 				                               spatialReference);
 
@@ -287,7 +288,7 @@ namespace ProSuite.Microservices.Client.AGP
 
 				// NOTE: The following calls are expensive:
 				// - Geometry.GetShape() (internally, the feature's spatial creation seems costly)
-				// - FeatureClassDefintion.GetSpatialReference()
+				// - FeatureClassDefinition.GetSpatialReference()
 				// In case of a large feature count, they should be avoided on a per-feature basis:
 
 				if (! classesByClassId.ContainsKey(uniqueClassId))
@@ -508,19 +509,19 @@ namespace ProSuite.Microservices.Client.AGP
 			switch (geometryType)
 			{
 				case ProSuiteGeometryType.Point:
-					result = MapPointBuilder.FromEsriShape(byteArray, spatialReference);
+					result = MapPointBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Polyline:
-					result = PolylineBuilder.FromEsriShape(byteArray, spatialReference);
+					result = PolylineBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Polygon:
-					result = PolygonBuilder.FromEsriShape(byteArray, spatialReference);
+					result = PolygonBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Multipoint:
-					result = MultipointBuilder.FromEsriShape(byteArray, spatialReference);
+					result = MultipointBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.MultiPatch:
-					result = MultipatchBuilder.FromEsriShape(byteArray, spatialReference);
+					result = MultipatchBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Bag:
 					result = GeometryBagBuilder.FromEsriShape(

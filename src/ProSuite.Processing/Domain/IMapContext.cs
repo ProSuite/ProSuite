@@ -7,10 +7,14 @@ namespace ProSuite.Processing.Domain
 	{
 		double ReferenceScale { get; }
 
-		int SRID { get; }
+		// TODO double CurrentScale { get; } in case no reference scale is set
 
-		double PointsToMapUnits(double distance);
+		// TODO int SRID { get; } Needed? Don't want SpatialReference here (dependencies)
 
-		double MapUnitsToPoints(double distance);
+		// TODO ColorModel: RGB, CMYK, WithSpotColors?
+
+		double PointsPerMapUnit { get; }
+
+		double MapUnitsPerPoint { get; }
 	}
 }

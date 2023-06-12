@@ -35,7 +35,7 @@ namespace ProSuite.Commons.Misc
 
 		/// <summary>
 		/// Determines whether the current point in time is still within the
-		/// blockin period.
+		/// blocking period.
 		/// </summary>
 		/// <returns>
 		/// 	<c>true</c> if the current point in time is within the

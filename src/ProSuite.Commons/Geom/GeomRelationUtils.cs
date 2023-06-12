@@ -1188,7 +1188,7 @@ namespace ProSuite.Commons.Geom
 
 			foreach (Linestring interiorRing in interiorRings)
 			{
-				// NOTE: disjoint with interor ring means the outer ring is inside:
+				// NOTE: disjoint with interior ring means the outer ring is inside:
 				bool ring1WithinInterior;
 				if (TouchesXY(ring1, interiorRing, tolerance, out ring1WithinInterior,
 				              disregardRingOrientation, ring2CanHaveLinearSelfIntersections))

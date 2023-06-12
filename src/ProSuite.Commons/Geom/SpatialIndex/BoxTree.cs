@@ -401,9 +401,9 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		}
 
 		/// <summary>
-		/// Enlarge Region. Remark: when data is load, numerical problems may occure
+		/// Enlarge Region. Remark: when data is load, numerical problems may occur
 		/// </summary>
-		/// <param name="directedDimension">directed dimension to enlarge: (-dim -1) : add negativ (dim + 1) : add positiv </param>
+		/// <param name="directedDimension">directed dimension to enlarge: (-dim -1) : add negative (dim + 1) : add positive</param>
 		/// <returns>new parent tile</returns>
 		[NotNull]
 		private BoxTile Enlarge(int directedDimension)
@@ -765,7 +765,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			}
 
 			/// <summary>
-			/// Split the tile along the largest dimesion of box
+			/// Split the tile along the largest dimension of box
 			/// Assumption: extent represents the actual extent of the tile (see method BoxExtent in BoxTree)
 			/// </summary>
 			public void Split(Box unit, IList<int> counter0, IList<int> denominator,

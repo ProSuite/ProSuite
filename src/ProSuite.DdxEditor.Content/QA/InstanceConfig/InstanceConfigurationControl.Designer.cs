@@ -108,7 +108,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_textBoxName.Name="_textBoxName";
 			_textBoxName.Size=new System.Drawing.Size(256, 23);
 			_textBoxName.TabIndex=0;
-			_toolTip.SetToolTip(_textBoxName, "Press TAB to suggest a name");
+			_toolTip.SetToolTip(_textBoxName, "Press TAB to suggest a name (a feature class / table must be configured)");
 			_textBoxName.PreviewKeyDown+=_textBoxName_PreviewKeyDown;
 			// 
 			// _labelName

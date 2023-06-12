@@ -43,8 +43,10 @@ namespace ProSuite.Processing.Evaluation
 		/// <param name="stack">The evaluation stack (required; must be empty on entry).</param>
 		public void Execute([NotNull] IEvaluationEnvironment env, [NotNull] Stack<object> stack)
 		{
-			Assert.ArgumentNotNull(env, nameof(env));
-			Assert.ArgumentNotNull(stack, nameof(stack));
+			if (env is null)
+				throw new ArgumentNullException(nameof(env));
+			if (stack is null)
+				throw new ArgumentNullException(nameof(stack));
 
 			if (! _committed)
 			{
@@ -255,7 +257,7 @@ namespace ProSuite.Processing.Evaluation
 						return;
 
 					default:
-						throw EngineBug("Unknown OpCode: {0}", op);
+						throw EngineBug($"Unknown OpCode: {op}");
 				}
 
 				pc = next;
@@ -269,7 +271,8 @@ namespace ProSuite.Processing.Evaluation
 		/// <param name="writer">The writer (required).</param>
 		public void Dump([NotNull] TextWriter writer)
 		{
-			Assert.ArgumentNotNull(writer, nameof(writer));
+			if (writer is null)
+				throw new ArgumentNullException(nameof(writer));
 
 			var sb = new StringBuilder();
 			int pc = 0, count = _program.Count;
@@ -513,7 +516,7 @@ namespace ProSuite.Processing.Evaluation
 					break;
 
 				default:
-					throw EngineBug("Not a stack operation: {0}", op);
+					throw EngineBug($"Not a stack operation: {op}");
 			}
 		}
 
@@ -550,7 +553,7 @@ namespace ProSuite.Processing.Evaluation
 					return order >= 0;
 			}
 
-			throw EngineBug("Invalid OpCode for Compare(a,b,op): {0}", op);
+			throw EngineBug($"Invalid OpCode for Compare(a,b,op): {op}");
 		}
 
 		private static void Invoke(int argCount, Stack<object> stack,
@@ -579,12 +582,12 @@ namespace ProSuite.Processing.Evaluation
 				throw InvocationError("Attempt to invoke null");
 			}
 
-			if (! (target is Function))
+			if (! (target is Function function))
 			{
 				throw InvocationError("Attempt to invoke non-function value");
 			}
 
-			object result = Invoke(environment, (Function) target, args);
+			object result = Invoke(environment, function, args);
 
 			stack.Push(result);
 		}
@@ -609,10 +612,9 @@ namespace ProSuite.Processing.Evaluation
 			}
 		}
 
-		[StringFormatMethod("format")]
-		private static EvaluationException InvocationError(string format, params object[] args)
+		private static EvaluationException InvocationError(string message)
 		{
-			return new EvaluationException(string.Format(format, args));
+			return new EvaluationException(message ?? "most illogical");
 		}
 
 		[StringFormatMethod("format")]
@@ -622,10 +624,9 @@ namespace ProSuite.Processing.Evaluation
 			throw new EvaluationException(string.Format(format, args), inner);
 		}
 
-		[StringFormatMethod("format")]
-		private static AssertionException EngineBug(string format, params object[] args)
+		private static AssertionException EngineBug(string message)
 		{
-			throw new AssertionException(string.Format(format, args));
+			throw new AssertionException(message ?? "most illogical");
 		}
 
 		private static bool IsJumpInstruction(OpCode op)

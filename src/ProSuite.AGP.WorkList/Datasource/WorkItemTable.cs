@@ -131,7 +131,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return false;
 		}
 
-		public override int GetNativeRowCount()
+		public override long GetNativeRowCount()
 		{
 			throw new NotSupportedException();
 		}

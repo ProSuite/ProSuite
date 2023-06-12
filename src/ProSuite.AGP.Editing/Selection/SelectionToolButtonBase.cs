@@ -10,6 +10,9 @@ namespace ProSuite.AGP.Editing.Selection
 	[UsedImplicitly]
 	public abstract class SelectionToolButtonBase : Button
 	{
+		//TODO: ID from Config.daml; make abstract or similar
+		private const string ConfigId_SelectionTool = "ProSuiteTools_Selection_SelectionTool";
+
 		private void WireEvents()
 		{
 			ActiveToolChangedEvent.Subscribe(OnActiveToolChanged);
@@ -22,7 +25,7 @@ namespace ProSuite.AGP.Editing.Selection
 
 		private void OnActiveToolChanged(ToolEventArgs e)
 		{
-			if (string.Equals("ProSuiteTools_Selection_SelectionTool", e.CurrentID,
+			if (string.Equals(ConfigId_SelectionTool, e.CurrentID,
 			                  StringComparison.OrdinalIgnoreCase))
 			{
 				return;
@@ -36,7 +39,7 @@ namespace ProSuite.AGP.Editing.Selection
 		protected override void OnClick()
 		{
 			if (! (FrameworkApplication.GetPlugInWrapper(
-				       "ProSuiteTools_Selection_SelectionTool") is ICommand selectionToolCmd))
+				       ConfigId_SelectionTool) is ICommand selectionToolCmd))
 			{
 				return;
 			}

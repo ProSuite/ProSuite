@@ -212,7 +212,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 				if (string.IsNullOrEmpty(_qualityConditionName))
 				{
-					// for backwards compatiblity
+					// for backwards compatibility
 
 					// _qualityConditionName == null --> _qualityConditionId/ -Version invalid
 					// assume that quality condition is still valid

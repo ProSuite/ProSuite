@@ -34,7 +34,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private const Key _keyShowOptionsPane = Key.O;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-		private StandardPickerPrecedence _pickerPrecedence;
+		private IPickerPrecedence _pickerPrecedence;
 
 		protected OneClickToolBase()
 		{
@@ -51,7 +51,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool RequiresSelection { get; set; } = true;
 
 		/// <summary>
-		/// Whether the required selection can only contain editable fetures.
+		/// Whether the required selection can only contain editable features.
 		/// </summary>
 		protected bool SelectOnlyEditFeatures { get; set; } = true;
 
@@ -481,10 +481,10 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                        pickerLocation,
 				                                        PickerPrecedence,
 				                                        selectionMethod)
-				              : await AreaSelect(candidatesOfManyLayers,
-				                                 pickerLocation,
-				                                 PickerPrecedence,
-				                                 selectionMethod);
+				              : await AreaSelectAsync(candidatesOfManyLayers,
+				                                      pickerLocation,
+				                                      PickerPrecedence,
+				                                      selectionMethod);
 
 			await QueuedTask.Run(() => ProcessSelection(MapView.Active, progressor));
 
@@ -499,58 +499,19 @@ namespace ProSuite.AGP.Editing.OneClick
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
 		{
-			int featureCount = SelectionUtils.GetFeatureCount(candidatesOfLayers);
+			var orderedSelection =
+				PickerUtils.OrderByGeometryDimension(candidatesOfLayers).ToList();
 
-			PickerMode pickerMode = pickerPrecedence.GetPickerMode(featureCount);
-
-			// todo daro refactor
-			if (featureCount == 1)
-			{
-				if (pickerMode == PickerMode.ShowPicker)
-				{
-					IEnumerable<IPickableItem> items =
-						await QueuedTask.Run(
-							() => PickableItemsFactory.CreateFeatureItems(
-								PickerUtils.OrderByGeometryDimension(candidatesOfLayers)));
-
-					var pickedItem =
-						await ShowPickerAsync<IPickableFeatureItem>(
-							items, pickerPrecedence, pickerLocation);
-
-					if (pickedItem == null)
-					{
-						return false;
-					}
-
-					await QueuedTask.Run(() =>
-					{
-						//since SelectionCombinationMethod.New is only applied to
-						//the current layer but selections of other layers remain,
-						//we manually need to clear all selections first.
-
-						SelectionUtils.SelectFeature(
-							pickedItem.Layer, selectionMethod,
-							pickedItem.Oid,
-							selectionMethod == SelectionCombinationMethod.New);
-					});
-
-					return true;
-				}
-
-				await QueuedTask.Run(() =>
-				{
-					SelectionUtils.SelectFeatures(candidatesOfLayers.First(), selectionMethod);
-				});
-
-				return true;
-			}
+			PickerMode pickerMode = pickerPrecedence.GetPickerMode(orderedSelection);
 
 			// ALT pressed: select all, do not show picker
 			if (pickerMode == PickerMode.PickAll)
 			{
 				await QueuedTask.Run(() =>
 				{
-					SelectionUtils.SelectFeatures(candidatesOfLayers, selectionMethod);
+					SelectionUtils.SelectFeatures(
+						orderedSelection, selectionMethod,
+						selectionMethod == SelectionCombinationMethod.New);
 				});
 
 				return true;
@@ -564,8 +525,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						// all this code has to be in QueuedTask because
 						// IEnumerables are enumerated later
 						IEnumerable<IPickableItem> items =
-							PickableItemsFactory.CreateFeatureItems(
-								PickerUtils.OrderByGeometryDimension(candidatesOfLayers));
+							PickableItemsFactory.CreateFeatureItems(orderedSelection);
 
 						var pickedItem =
 							pickerPrecedence.PickBest<IPickableFeatureItem>(items);
@@ -587,8 +547,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				IEnumerable<IPickableItem> items =
 					await QueuedTask.Run(
-						() => PickableItemsFactory.CreateFeatureItems(
-							PickerUtils.OrderByGeometryDimension(candidatesOfLayers)));
+						() => PickableItemsFactory.CreateFeatureItems(orderedSelection));
 
 				IPickableFeatureItem pickedItem =
 					await ShowPickerAsync<IPickableFeatureItem>(
@@ -617,15 +576,17 @@ namespace ProSuite.AGP.Editing.OneClick
 			return false;
 		}
 
-		private static async Task<bool> AreaSelect(
+		private static async Task<bool> AreaSelectAsync(
 			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
 			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
 		{
+			var orderedSelection =
+				PickerUtils.OrderByGeometryDimension(candidatesOfLayers).ToList();
+
 			PickerMode pickerMode =
-				pickerPrecedence.GetPickerMode(
-					SelectionUtils.GetFeatureCount(candidatesOfLayers), true);
+				pickerPrecedence.GetPickerMode(orderedSelection, true);
 
 			//CTRL was pressed: picker shows FC's to select from
 			if (pickerMode == PickerMode.ShowPicker)
@@ -651,7 +612,10 @@ namespace ProSuite.AGP.Editing.OneClick
 						                                  pickedItem.Oids.ToList(), layer,
 						                                  MapView.Active.Map.SpatialReference)))
 					{
-						SelectionUtils.SelectFeatures(featureClassSelection, selectionMethod);
+						SelectionUtils.SelectFeatures(
+							featureClassSelection,
+							selectionMethod,
+							selectionMethod == SelectionCombinationMethod.New);
 					}
 				});
 			}
@@ -660,7 +624,10 @@ namespace ProSuite.AGP.Editing.OneClick
 				//no modifier pressed: select all in envelope
 				await QueuedTask.Run(() =>
 				{
-					SelectionUtils.SelectFeatures(candidatesOfLayers, selectionMethod);
+					SelectionUtils.SelectFeatures(
+						candidatesOfLayers,
+						selectionMethod,
+						selectionMethod == SelectionCombinationMethod.New);
 				});
 			}
 
@@ -682,7 +649,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			T pickedItem =
 				await ViewUtils.TryAsync(showPickerControl(), _msg);
-			
+
 			return pickedItem;
 		}
 

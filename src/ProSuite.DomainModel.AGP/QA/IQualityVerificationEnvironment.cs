@@ -17,18 +17,24 @@ namespace ProSuite.DomainModel.AGP.QA
 		/// </summary>
 		/// <value>The current quality specification.</value>
 		[CanBeNull]
-		IQualitySpecificationReference CurrentQualitySpecification { get; set; }
+		IQualitySpecificationReference CurrentQualitySpecificationReference { get; set; }
 
 		/// <summary>
-		/// The list of applicable quality specifications for the current environment.
+		/// The list of applicable quality specification references for the current environment.
 		/// </summary>
 		[NotNull]
-		IList<IQualitySpecificationReference> QualitySpecifications { get; }
+		IList<IQualitySpecificationReference> QualitySpecificationReferences { get; }
 
 		/// <summary>
 		/// Refresh the list of quality verifications.
 		/// </summary>
-		void RefreshQualitySpecifications();
+		void RefreshQualitySpecificationReferences();
+
+		/// <summary>
+		/// Loads the full specification of the currently selected specification reference.
+		/// </summary>
+		/// <returns></returns>
+		Task<QualitySpecification> GetCurrentQualitySpecification();
 
 		/// <summary>
 		/// Occurs after the list of quality specifications was refreshed.

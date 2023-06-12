@@ -276,7 +276,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (IsInSketchMode)
 			{
 				// take snapshots
-				EditingTemplate currentTemplate = CurrentTemplate;
+				//Todo: In Pro3 this.CurrentTemplate is null. Investigate further...
+				EditingTemplate currentTemplate = EditingTemplate.Current;
 				MapView activeView = ActiveMapView;
 
 				RememberSketch(sketchGeometry);

@@ -138,8 +138,7 @@ namespace ProSuite.AGP.WorkList
 
 				return LayerFactory.Instance.CreateLayer<FeatureLayer>(
 					WorkListUtils.CreateLayerParams((FeatureClass) table, worklist.DisplayName),
-					layerContainer,
-					LayerPosition.AddToTop);
+					layerContainer);
 			}
 			finally
 			{

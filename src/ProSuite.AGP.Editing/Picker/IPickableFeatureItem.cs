@@ -1,3 +1,4 @@
+using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 
 namespace ProSuite.AGP.Editing.Picker
@@ -6,5 +7,6 @@ namespace ProSuite.AGP.Editing.Picker
 	{
 		long Oid { get; }
 		BasicFeatureLayer Layer { get; }
+		Feature Feature { get; }
 	}
 }

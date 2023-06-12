@@ -248,7 +248,7 @@ namespace ProSuite.AGP.WorkList.Test
 			wl.GoPrevious();
 			Assert.AreEqual(item10, wl.Current);
 
-			// Now we can go nearest again which is item7 (nearst to item10)
+			// Now we can go nearest again which is item7 (nearest to item10)
 			Assert.True(wl.CanGoNearest());
 			Assert.NotNull(wl.Current);
 			wl.GoNearest(wl.Current.Extent);

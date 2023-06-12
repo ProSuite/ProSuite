@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Editing.Templates;
@@ -69,12 +70,16 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected override void LogEnteringSketchMode()
 		{
+			EditingTemplate editTemplate = EditingTemplate.Current;
+
+			string layerName = CurrentTargetLayer(editTemplate)?.Name ?? string.Empty;
+
 			_msg.InfoFormat(
 				"Draw one or more points. Finish the sketch to create the individual point features in '{0}'.",
-				CurrentTemplate?.Layer?.Name);
+				layerName);
 		}
 
-		private static FeatureClass GetCurrentTargetFeatureClass(EditingTemplate editTemplate)
+		private static FeatureClass GetCurrentTargetFeatureClass([CanBeNull] EditingTemplate editTemplate)
 		{
 			// TODO: Notifications
 			FeatureLayer featureLayer = CurrentTargetLayer(editTemplate);
@@ -201,7 +206,9 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		private void UpdateEnabled()
 		{
-			esriGeometryType? geometryType = CurrentTargetLayer(CurrentTemplate)?.ShapeType;
+			EditingTemplate editTemplate = EditingTemplate.Current;
+
+			esriGeometryType? geometryType = CurrentTargetLayer(editTemplate)?.ShapeType;
 
 			Enabled = geometryType == esriGeometryType.esriGeometryPoint ||
 			          geometryType == esriGeometryType.esriGeometryMultipoint;
@@ -246,7 +253,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 						       {
 							       newFeatureIds = CreatePointsFeatures(
 								       editContext, currentTargetClass,
-								       CurrentTemplate.Inspector, multipoint,
+								       editTemplate.Inspector, multipoint,
 								       cancelableProgressor);
 
 							       _msg.DebugFormat("Created new featrue IDs: {0}", newFeatureIds);

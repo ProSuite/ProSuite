@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.AGP.Core.Utils
 {
@@ -15,7 +14,7 @@ namespace ProSuite.Processing.AGP.Core.Utils
 
 		public PseudoFeature(IEnumerable<string> fieldNames, string shapeFieldName)
 		{
-			var fields = fieldNames.ToList();
+			var fields = fieldNames?.ToList() ?? new List<string>();
 
 			_shapeFieldIndex = -1;
 			for (int i = 0; i < fields.Count; i++)
@@ -38,12 +37,72 @@ namespace ProSuite.Processing.AGP.Core.Utils
 			_values = new object[fields.Count];
 		}
 
-		public static PseudoFeature FromDefinition(FeatureClassDefinition definition)
+		public static PseudoFeature FromFeature(Feature feature)
+		{
+			using var featureClass = feature.GetTable();
+			using var definition = featureClass.GetDefinition();
+			var pf = FromDefinition(definition);
+			var fields = definition.GetFields();
+			int count = fields.Count;
+			for (int i = 0; i < count; i++)
+			{
+				pf[i] = feature[i];
+			}
+			pf.Shape = feature.GetShape();
+			return pf;
+		}
+
+		public static PseudoFeature FromDefinition(FeatureClassDefinition definition, int subtypeCode = -1)
 		{
 			var shapeField = definition.GetShapeField();
-			var fields = definition.GetFields().Select(f => f.Name);
+			var fields = definition.GetFields();
 
-			return new PseudoFeature(fields, shapeField);
+			var result = new PseudoFeature(fields.Select(f => f.Name), shapeField);
+
+			result.SetDefaultValues(definition, subtypeCode);
+
+			return result;
+		}
+
+		/// <summary>
+		/// Set subtype defaults (if valid subtype code is given) or table defaults
+		/// (otherwise). This feature and the given table definition are assumed to
+		/// have the SAME fields in the SAME order; this assumption is not checked!
+		/// </summary>
+		private void SetDefaultValues(TableDefinition definition, int subtypeCode = -1)
+		{
+			if (definition is null)
+				throw new ArgumentNullException(nameof(definition));
+
+			var subtypes = definition.GetSubtypes();
+			var subtype = subtypes?.FirstOrDefault(s => s.GetCode() == subtypeCode);
+			var subtypeField = definition.GetSubtypeField();
+
+			var fields = definition.GetFields();
+			for (int i = 0; i < fields.Count; i++)
+			{
+				var field = fields[i];
+				var value = field.GetDefaultValue(subtype);
+
+				// empirical: subtype field has no per-subtype default value: set it anyway!
+				if (subtype != null && subtypeField != null &&
+				    string.Equals(field.Name, subtypeField, StringComparison.OrdinalIgnoreCase))
+				{
+					_values[i] = subtypeCode;
+				}
+				else if (value != null)
+				{
+					_values[i] = value;
+				}
+			}
+
+			if (subtypes != null)
+			{
+				foreach (var disposable in subtypes)
+				{
+					disposable.Dispose();
+				}
+			}
 		}
 
 		public Geometry Shape

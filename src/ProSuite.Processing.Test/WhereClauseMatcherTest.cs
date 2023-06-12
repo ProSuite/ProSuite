@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
-using ProSuite.Processing.Evaluation;
+using ProSuite.Commons.Collections;
 using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.Test
@@ -43,7 +43,7 @@ namespace ProSuite.Processing.Test
 			Console.WriteLine(@"Engine: {0}", GetDump(matcher));
 			Assert.IsTrue(matcher.Match(values));
 
-			matcher = new WhereClauseMatcher("A = 'x' AND NOT B IN ('a','b','c') OR A = 'a' AND B IS NOT NULL");
+		matcher = new WhereClauseMatcher("A = 'x' AND NOT B IN ('a','b','c') OR A = 'a' AND B IS NOT NULL");
 			Console.WriteLine(@"Clause: ""{0}""", matcher.Clause);
 			Console.WriteLine(@"Engine: {0}", GetDump(matcher));
 			Assert.IsTrue(matcher.Match(values));
@@ -320,7 +320,20 @@ namespace ProSuite.Processing.Test
 			Assert.IsFalse(new WhereClauseMatcher("TheValueNull = DatabaseNull").Match(values));
 			Assert.IsFalse(new WhereClauseMatcher("TheValueNull = TheValueNull").Match(values));
 			Assert.IsFalse(new WhereClauseMatcher("DatabaseNull = DatabaseNull").Match(values));
+		}
 
+		[Test]
+		public void CanValidate()
+		{
+			var matcher = new WhereClauseMatcher("A = 1 AND 2 = B");
+
+			Assert.True(matcher.Validate(new[] { "A", "B", "C" }));
+
+			Assert.False(matcher.Validate(new[] { "C" }));
+
+			Assert.False(matcher.Validate(Array.Empty<string>()));
+
+			Assert.False(matcher.Validate(null));
 		}
 
 		#region Private helpers

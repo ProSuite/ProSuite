@@ -5,11 +5,10 @@ using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.Shared;
 
 namespace ProSuite.Microservices.AO
@@ -270,7 +269,7 @@ namespace ProSuite.Microservices.AO
 		                                              bool includeFields = false,
 		                                              string aliasName = null)
 		{
-			int geometryType = (int) GetGeometryType(dataset);
+			int geometryType = (int) ProtoDataQualityUtils.GetGeometryType(dataset);
 
 			ObjectClassMsg result =
 				new ObjectClassMsg()
@@ -304,41 +303,6 @@ namespace ProSuite.Microservices.AO
 			}
 
 			return result;
-		}
-
-		public static ProSuiteGeometryType GetGeometryType(Dataset dataset)
-		{
-			ProSuiteGeometryType geometryType;
-
-			switch (dataset)
-			{
-				case IVectorDataset vds:
-				{
-					var shapeGeometryType = Assert.NotNull((GeometryTypeShape) vds.GeometryType);
-					geometryType = shapeGeometryType.ShapeType;
-					break;
-				}
-				case ITableDataset _:
-					geometryType = ProSuiteGeometryType.Null;
-					break;
-				case ITopologyDataset _:
-					geometryType = ProSuiteGeometryType.Topology;
-					break;
-				case RasterDataset _:
-					geometryType = ProSuiteGeometryType.Raster;
-					break;
-				case IRasterMosaicDataset _:
-					geometryType = ProSuiteGeometryType.RasterMosaic;
-					break;
-				case ISimpleTerrainDataset _:
-					geometryType = ProSuiteGeometryType.Terrain;
-					break;
-				default:
-					throw new ArgumentOutOfRangeException(
-						$"Unsupported dataset type: {dataset.Name}");
-			}
-
-			return geometryType;
 		}
 
 		private static FieldMsg ToFieldMsg(IField field)

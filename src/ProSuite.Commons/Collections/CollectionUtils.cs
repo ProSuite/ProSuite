@@ -38,7 +38,7 @@ namespace ProSuite.Commons.Collections
 		}
 
 		/// <summary>
-		/// Splits the specified items into an enumeration of lists of a specified maxiumum list size.
+		/// Splits the specified items into an enumeration of lists of a specified maximum list size.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="items">The items.</param>
@@ -680,14 +680,15 @@ namespace ProSuite.Commons.Collections
 		/// <summary>
 		/// A more efficient way to get the distinct elements compared to group by.
 		/// Author: Jon Skeet (https://stackoverflow.com/questions/489258/linqs-distinct-on-a-particular-property)
+		/// NOTE: It is included in .NET 6
 		/// </summary>
 		/// <typeparam name="TSource"></typeparam>
 		/// <typeparam name="TKey"></typeparam>
 		/// <param name="source"></param>
 		/// <param name="keySelector"></param>
 		/// <returns></returns>
-		public static IEnumerable<TSource> DistinctBy<TSource, TKey>
-			(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
+		public static IEnumerable<TSource> DistinctBy<TSource, TKey>(
+			IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
 		{
 			HashSet<TKey> seenKeys = new HashSet<TKey>();
 

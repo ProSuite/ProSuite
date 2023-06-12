@@ -510,7 +510,7 @@ namespace ProSuite.Microservices.Client
 
 		private void LogHealthStatus(StatusCode statusCode)
 		{
-			// In shutdown state, the ReslovedTarget property throws for certain:
+			// In shutdown state, the ResolvedTarget property throws for certain:
 			string address = "<none>";
 			if (Channel?.State != ChannelState.Shutdown)
 			{

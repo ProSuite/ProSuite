@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq;
 using NUnit.Framework;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -186,21 +187,25 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 			InstanceConfigurationUtils.AddParameterValue(condition, "limit", limit);
 			InstanceConfigurationUtils.AddParameterValue(condition, "is3D", is3D);
 
-			
 			TransformerDescriptor filterDescriptor = new TransformerDescriptor(
-				filterDefName, new ClassDescriptor("ProSuite.QA.Tests.Transformers.Filters.TrOnlyIntersectingFeatures",
-				                                   "ProSuite.QA.Tests"), 0);
+				filterDefName, new ClassDescriptor(
+					"ProSuite.QA.Tests.Transformers.Filters.TrOnlyIntersectingFeatures",
+					"ProSuite.QA.Tests"), 0);
 
-			var filterTransformerConfig = new TransformerConfiguration(filterConfigName, filterDescriptor);
-			InstanceConfigurationUtils.AddParameterValue(filterTransformerConfig, "featureClassToFilter", ds1);
-			InstanceConfigurationUtils.AddParameterValue(filterTransformerConfig, "intersecting", ds2);
+			var filterTransformerConfig =
+				new TransformerConfiguration(filterConfigName, filterDescriptor);
+			InstanceConfigurationUtils.AddParameterValue(filterTransformerConfig,
+			                                             "featureClassToFilter", ds1);
+			InstanceConfigurationUtils.AddParameterValue(filterTransformerConfig, "intersecting",
+			                                             ds2);
 
 			// Instead of the feature class directly, specify the filter-transformer configuration:
 			DatasetTestParameterValue conditionParameter =
-				InstanceConfigurationUtils.AddParameterValue(condition, "featureClass", filterTransformerConfig);
+				InstanceConfigurationUtils.AddParameterValue(
+					condition, "featureClass", filterTransformerConfig);
 
 			Assert.NotNull(conditionParameter.ValueSource);
-			
+
 			CreateSchema(testDescriptor, filterDescriptor, filterTransformerConfig, condition, m);
 
 			UnitOfWork.NewTransaction(
@@ -241,12 +246,12 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 
 					Assert.AreEqual(filterDefName, readFilterConfig.InstanceDescriptor.Name);
 
-					IInstanceInfo filterInfo =
-						InstanceDescriptorUtils.GetInstanceInfo(
-							readFilterConfig.InstanceDescriptor);
+					IInstanceInfo filterInfo = InstanceDescriptorUtils.GetInstanceInfo(
+						readFilterConfig.InstanceDescriptor);
+
 					Assert.IsNotNull(filterInfo);
 
-					Assert.AreEqual(2, filterInfo.Parameters.Count);
+					Assert.AreEqual(2, filterInfo.Parameters.Count(p => p.IsConstructorParameter));
 				}
 			);
 		}

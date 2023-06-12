@@ -168,7 +168,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			request.Parameters.ReportUnusedExceptions = true;
 
 			// Invalid could be
-			// - Involvd row has been deleted (always determined)
+			// - Involved row has been deleted (always determined)
 			// - InvalidateAllowedErrorsIfAnyInvolvedObjectChanged (see below)
 			// - InvalidateAllowedErrorsIfQualityConditionWasUpdated (see below)
 			request.Parameters.ReportInvalidExceptions = true;

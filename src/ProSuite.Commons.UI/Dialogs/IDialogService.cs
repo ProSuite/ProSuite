@@ -108,7 +108,7 @@ namespace ProSuite.Commons.UI.Dialogs
 		/// <param name="owner">The owner.</param>
 		/// <param name="title">The title.</param>
 		/// <param name="message">The message.</param>
-		/// <param name="defaultIsCancel">if set to <c>true</c> the default button is 'Cancel'. Otherswise, 'Ok' is the default.</param>
+		/// <param name="defaultIsCancel">if set to <c>true</c> the default button is 'Cancel'. Otherwise, 'Ok' is the default.</param>
 		/// <returns></returns>
 		bool ShowOkCancel(IWin32Window owner,
 		                  [NotNull] string title,

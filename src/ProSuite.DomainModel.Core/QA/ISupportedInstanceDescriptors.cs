@@ -24,5 +24,7 @@ namespace ProSuite.DomainModel.Core.QA
 		IssueFilterDescriptor GetIssueFilterDescriptor([NotNull] string name);
 
 		int Count { get; }
+
+		bool AddDescriptor([NotNull] InstanceDescriptor instanceDescriptor);
 	}
 }

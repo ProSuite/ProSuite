@@ -160,7 +160,7 @@ namespace ProSuite.Commons.Test.Collections
 		[Test]
 		public void CanUnboundedCapacity()
 		{
-			const int count = 1000; // will trigger reallocations
+			const int count = 1000; // will trigger re-allocations
 
 			var pq = new TestPriorityQueue<int>();
 

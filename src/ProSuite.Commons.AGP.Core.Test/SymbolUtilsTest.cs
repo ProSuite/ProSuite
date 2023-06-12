@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using ArcGIS.Core.CIM;
 using NUnit.Framework;
@@ -23,8 +22,8 @@ namespace ProSuite.Commons.AGP.Core.Test
 			// Create a simple line symbol: black stroke
 
 			var symbol = SymbolUtils.CreateLineSymbol(ColorUtils.BlackRGB, 1.0);
-			var xml = symbol.ToXml(); // may copy-paste into CIM Viewer (fix root elem name!)
-			Assert.IsTrue(xml.Length > 0);
+			var json = symbol.ToJson(); // may copy-paste into CIM Viewer (fix root elem name!)
+			Assert.IsTrue(json.Length > 0);
 		}
 
 		[Test]
@@ -48,8 +47,8 @@ namespace ProSuite.Commons.AGP.Core.Test
 
 			var symbol = SymbolUtils.CreateLineSymbol(blackStroke, circleMarker, squareMarker);
 
-			var xml = symbol.ToXml(); // may copy-paste into CIM Viewer (fix root elem name!)
-			Assert.IsTrue(xml.Length > 0);
+			var json = symbol.ToJson(); // may copy-paste into CIM Viewer (fix root elem name!)
+			Assert.IsTrue(json.Length > 0);
 		}
 
 		[Test]
@@ -62,7 +61,7 @@ namespace ProSuite.Commons.AGP.Core.Test
 			var color = ColorUtils.BlackRGB;
 			const double width = 1.0;
 			var stroke = SymbolUtils.CreateSolidStroke(color, width)
-			                        .LabelLayer(out Guid strokeLabel);
+			                        .LabelLayer(out string strokeLabel);
 
 			var symbol = SymbolUtils.CreateLineSymbol(stroke);
 
@@ -70,8 +69,8 @@ namespace ProSuite.Commons.AGP.Core.Test
 			                      .AddMapping(strokeLabel, "Width", "[WIDTH]")
 			                      .AddMapping(strokeLabel, "Color", "$feature.COLOR");
 
-			var xml = reference.ToXml(); // may copy-paste into CIM Viewer (fix root elem name!)
-			Assert.IsTrue(xml.Length > 0);
+			var json = reference.ToJson(); // may copy-paste into CIM Viewer (fix root elem name!)
+			Assert.IsTrue(json.Length > 0);
 		}
 
 		[Test]
@@ -80,11 +79,11 @@ namespace ProSuite.Commons.AGP.Core.Test
 			var black = ColorUtils.BlackRGB;
 			var pointSymbol = SymbolUtils.CreatePointSymbol(black, 1.5);
 
-			var layer = SymbolUtils.FindPrimitive<CIMSymbolLayer>(pointSymbol, "layer 0");
+			var layer = SymbolUtils.FindPrimitiveByPath<CIMSymbolLayer>(pointSymbol, "layer 0");
 			Assert.NotNull(layer);
 
-			layer.LabelLayer(out Guid markerGuid);
-			var layer2 = SymbolUtils.FindPrimitive<CIMObject>(pointSymbol, markerGuid);
+			layer.LabelLayer(out string markerGuid);
+			var layer2 = SymbolUtils.FindPrimitiveByName<CIMObject>(pointSymbol, markerGuid);
 			Assert.NotNull(layer);
 			Assert.AreSame(layer, layer2);
 
@@ -99,16 +98,16 @@ namespace ProSuite.Commons.AGP.Core.Test
 			var symbol = SymbolUtils.CreateLineSymbol(blackStroke, circleMarker, squareMarker)
 			                        .AddGlobalEffect(SymbolUtils.CreateEffectOffset(10));
 
-			var globalEffect = SymbolUtils.FindPrimitive<CIMGeometricEffect>(symbol, "effect 0");
-			globalEffect.LabelEffect(out Guid offsetLabel);
+			var globalEffect = SymbolUtils.FindPrimitiveByPath<CIMGeometricEffect>(symbol, "effect 0");
+			globalEffect.LabelEffect(out string offsetLabel);
 			var localEffect =
-				SymbolUtils.FindPrimitive<CIMGeometricEffect>(symbol, "layer 0 effect 0");
-			localEffect.LabelEffect(out Guid dashesLabel);
-			var circleLayer = SymbolUtils.FindPrimitive<CIMSymbolLayer>(symbol, "layer 2");
-			circleLayer.LabelLayer(out Guid circleLabel);
+				SymbolUtils.FindPrimitiveByPath<CIMGeometricEffect>(symbol, "layer 0 effect 0");
+			localEffect.LabelEffect(out string dashesLabel);
+			var circleLayer = SymbolUtils.FindPrimitiveByPath<CIMSymbolLayer>(symbol, "layer 2");
+			circleLayer.LabelLayer(out string circleLabel);
 			var markerPlacement =
-				SymbolUtils.FindPrimitive<CIMMarkerPlacement>(symbol, "layer 2 placement");
-			markerPlacement.LabelPlacement(out Guid placementLabel);
+				SymbolUtils.FindPrimitiveByPath<CIMMarkerPlacement>(symbol, "layer 2 placement");
+			markerPlacement.LabelPlacement(out string placementLabel);
 			//var circleGraphic = SymbolUtils.FindPrimitive<CIMMarkerGraphic>(symbol, "layer 2 graphic 0 layer 0");
 			//circleGraphic.LabelGraphic(out Guid graphicLabel);
 
@@ -119,8 +118,8 @@ namespace ProSuite.Commons.AGP.Core.Test
 			reference.AddMapping(placementLabel, "AngleToLine", "[ALIGN]");
 			//reference.AddMapping(graphicLabel, "Color", "[COLOR]")
 
-			var xml = reference.ToXml();
-			Assert.True(xml.Length > 0);
+			var json = reference.ToJson();
+			Assert.True(json.Length > 0);
 		}
 	}
 }

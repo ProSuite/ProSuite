@@ -82,18 +82,18 @@ namespace ProSuite.Processing.AGP.Core.Utils
 
 		private class ConversionFunctions
 		{
-			public IMapContext MapContext { get; set; }
+			public IMapContext MapContext { get; init; }
 
 			public object mm2mu(object value)
 			{
 				if (value == null)
 					return null;
 				if (MapContext == null)
-					throw NoMapContext("mm2mu");
+					throw NoMapContext(nameof(mm2mu));
 				if (IsNumeric(value))
-					return MapContext.PointsToMapUnits(
-						ToDouble(ToDouble(value) * Constants.PointsPerMillimeter));
-				throw InvalidArgumentType("mm2mu", value);
+					return ToDouble(value) * Constants.PointsPerMillimeter *
+					       MapContext.MapUnitsPerPoint;
+				throw InvalidArgumentType(nameof(mm2mu), value);
 			}
 
 			public object mu2mm(object value)
@@ -101,11 +101,11 @@ namespace ProSuite.Processing.AGP.Core.Utils
 				if (value == null)
 					return null;
 				if (MapContext == null)
-					throw NoMapContext("mu2mm");
+					throw NoMapContext(nameof(mu2mm));
 				if (IsNumeric(value))
-					return MapContext.MapUnitsToPoints(ToDouble(value)) /
-					       Constants.PointsPerMillimeter;
-				throw InvalidArgumentType("mu2mm", value);
+					return ToDouble(value) * MapContext.PointsPerMapUnit *
+					       Constants.MillimetersPerPoint;
+				throw InvalidArgumentType(nameof(mu2mm), value);
 			}
 
 			public object pt2mu(object value)
@@ -113,10 +113,10 @@ namespace ProSuite.Processing.AGP.Core.Utils
 				if (value == null)
 					return null;
 				if (MapContext == null)
-					throw NoMapContext("pt2mu");
+					throw NoMapContext(nameof(pt2mu));
 				if (IsNumeric(value))
-					return MapContext.PointsToMapUnits(ToDouble(value));
-				throw InvalidArgumentType("pt2mu", value);
+					return ToDouble(value) * MapContext.MapUnitsPerPoint;
+				throw InvalidArgumentType(nameof(pt2mu), value);
 			}
 
 			public object mu2pt(object value)
@@ -124,10 +124,10 @@ namespace ProSuite.Processing.AGP.Core.Utils
 				if (value == null)
 					return null;
 				if (MapContext == null)
-					throw NoMapContext("mu2pt");
+					throw NoMapContext(nameof(mu2pt));
 				if (IsNumeric(value))
-					return MapContext.MapUnitsToPoints(ToDouble(value));
-				throw InvalidArgumentType("mu2pt", value);
+					return ToDouble(value) * MapContext.PointsPerMapUnit;
+				throw InvalidArgumentType(nameof(mu2pt), value);
 			}
 
 			private static Exception NoMapContext(string functionName)
@@ -143,7 +143,7 @@ namespace ProSuite.Processing.AGP.Core.Utils
 				return null;
 			if (IsNumeric(value))
 				return ToDouble(value) * Constants.PointsPerMillimeter;
-			throw InvalidArgumentType("mm2pt", value);
+			throw InvalidArgumentType(nameof(mm2pt), value);
 		}
 
 		private static object pt2mm(object value)
@@ -152,7 +152,7 @@ namespace ProSuite.Processing.AGP.Core.Utils
 				return null;
 			if (IsNumeric(value))
 				return ToDouble(value) / Constants.PointsPerMillimeter;
-			throw InvalidArgumentType("pt2mm", value);
+			throw InvalidArgumentType(nameof(pt2mm), value);
 		}
 
 		#endregion

@@ -17,6 +17,7 @@
                     Width="300"
                     SizeToContent="WidthAndHeight"
                     WindowStartupLocation="Manual"
+					SaveWindowPosition="False"
                     ShowInTaskbar="False"
                     WindowStyle="None"
                     BorderBrush="{DynamicResource Esri_BorderBrush}"

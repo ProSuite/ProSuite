@@ -262,7 +262,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		private static double EstimateOptimalGridSize(double averageSegmentLength)
 		{
 			// For typical polygons the sweet spot is probably between 2 and 3 times
-			// the avearage segment length.
+			// the average segment length.
 			// TODO: This might be different for multipatches. An estimated number of
 			// segments intersecting the interior of a segments envelope would be useful.
 			return averageSegmentLength * 3;

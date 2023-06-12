@@ -359,7 +359,7 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			// Consider making configurable similar to batch-create
-			return $"{descriptorName}_{datasetName}";
+			return $"{datasetName}_{descriptorName}";
 		}
 
 		public static void HandleNoConditionCreated(

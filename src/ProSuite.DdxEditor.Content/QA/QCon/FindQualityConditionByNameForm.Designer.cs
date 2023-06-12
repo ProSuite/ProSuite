@@ -90,8 +90,8 @@
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this._textBoxName);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
-			this.MaximumSize = new System.Drawing.Size(2000, 107);
-			this.MinimumSize = new System.Drawing.Size(300, 107);
+			this.MaximumSize = new System.Drawing.Size(2000, 125);
+			this.MinimumSize = new System.Drawing.Size(300, 125);
 			this.Name = "FindQualityConditionByNameForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Find Quality Condition by Name";
