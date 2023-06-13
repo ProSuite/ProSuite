@@ -504,6 +504,7 @@ namespace ProSuite.Commons.Geom
 			IntersectionPoint3D current = fromOtherSourceIntersection;
 
 			bool isLoop = false;
+			bool isBoundaryLoop = false;
 
 			// Any following intersection along the same target part that intersects the required source part?
 			while ((current = GetNextIntersectionAlongSource(
@@ -543,11 +544,20 @@ namespace ProSuite.Commons.Geom
 					return true;
 				}
 
-				return false;
+				isBoundaryLoop = IntersectionClusters.GetSourceBoundaryLoops().Any(
+					bl => bl.Start.ReferencesSameTargetVertex(
+						fromOtherSourceIntersection, Target, Tolerance));
+
+				if (! isBoundaryLoop)
+				{
+					// Do not jump onto other rings that only touch in a single point
+					return false;
+				}
 			}
 
 			// All intermediate source intersections where from a different part or were equal to the start
-			return false;
+			// Boundary loops can be traversed!
+			return isBoundaryLoop;
 		}
 
 		/// <summary>
