@@ -730,7 +730,8 @@ namespace ProSuite.Commons.Geom
 						return true;
 					}
 
-					if (IsSourceBoundaryLoopIntersection(intersection, samePlaceIntersection))
+					if (IsSourceBoundaryLoopIntersectionAtStart(
+						    intersection, samePlaceIntersection))
 					{
 						return true;
 					}
@@ -749,7 +750,8 @@ namespace ProSuite.Commons.Geom
 			{
 				if (samePlaceIntersection.Equals(_currentStartIntersection))
 				{
-					if (IsSourceBoundaryLoopIntersection(intersection, samePlaceIntersection))
+					if (IsSourceBoundaryLoopIntersectionAtStart(
+						    intersection, samePlaceIntersection))
 					{
 						return true;
 					}
@@ -864,16 +866,15 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public bool IsBoundaryLoopIntersection([NotNull] IntersectionPoint3D intersection)
+		public bool IsBoundaryLoopIntersectionAtStart([NotNull] IntersectionPoint3D intersection)
 		{
-			// TODO: Use known boundary loop intersections
-
 			foreach (IntersectionPoint3D samePlaceIntersection in
 			         GetOtherSourceIntersections(intersection))
 			{
 				if (samePlaceIntersection.Equals(_currentStartIntersection))
 				{
-					if (IsSourceBoundaryLoopIntersection(intersection, samePlaceIntersection))
+					if (IsSourceBoundaryLoopIntersectionAtStart(
+						    intersection, samePlaceIntersection))
 					{
 						return true;
 					}
@@ -885,7 +886,8 @@ namespace ProSuite.Commons.Geom
 			{
 				if (samePlaceIntersection.Equals(_currentStartIntersection))
 				{
-					if (IsTargetBoundaryLoopIntersection(intersection, samePlaceIntersection))
+					if (IsTargetBoundaryLoopIntersectionAtStart(
+						    intersection, samePlaceIntersection))
 					{
 						return true;
 					}
@@ -895,7 +897,7 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
-		private bool IsSourceBoundaryLoopIntersection(
+		private bool IsSourceBoundaryLoopIntersectionAtStart(
 			[NotNull] IntersectionPoint3D intersectionPoint,
 			[NotNull] IntersectionPoint3D samePlaceAsStartIntersection)
 		{
@@ -962,7 +964,7 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
-		private bool IsTargetBoundaryLoopIntersection(
+		private bool IsTargetBoundaryLoopIntersectionAtStart(
 			[NotNull] IntersectionPoint3D intersectionPoint,
 			[NotNull] IntersectionPoint3D samePlaceAsStartIntersection)
 		{

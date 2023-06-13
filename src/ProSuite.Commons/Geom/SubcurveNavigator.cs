@@ -1363,7 +1363,7 @@ namespace ProSuite.Commons.Geom
 					                      forward);
 
 				bool isBoundaryLoopIntersection =
-					IntersectionPointNavigator.IsBoundaryLoopIntersection(nextIntersection);
+					IntersectionPointNavigator.IsBoundaryLoopIntersectionAtStart(nextIntersection);
 
 				if (continueOnSource)
 				{
