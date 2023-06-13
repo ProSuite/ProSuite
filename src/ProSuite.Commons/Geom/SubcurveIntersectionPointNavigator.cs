@@ -1104,6 +1104,12 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
+			if (EqualsStartIntersection(nextIntersection))
+			{
+				// Always allow navigation back to start
+				return false;
+			}
+
 			// In touch-points allow jumping only between rings with the same orientation:
 			if (AllowBoundaryLoops &&
 			    nextIntersection.Type == IntersectionPointType.TouchingInPoint &&
@@ -1113,12 +1119,6 @@ namespace ProSuite.Commons.Geom
 			    ! IsUnclosedTargetEnd(nextIntersection))
 			{
 				return true;
-			}
-
-			if (EqualsStartIntersection(nextIntersection))
-			{
-				// Always allow navigation back to start
-				return false;
 			}
 
 			if (ClusterContains(previousCluster, nextIntersection))

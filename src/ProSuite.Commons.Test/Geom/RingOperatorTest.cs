@@ -684,6 +684,61 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void InteriorTouchingRingFilledPartiallyWithRingTouchingOuterRing()
+		{
+			// The source has an interior ring that touches the outer ring
+			// The target partially fills the island and also touches the source's outer ring.
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(50, 100, 0),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 0, 9)
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(20, 60, 0),
+				            new Pnt3D(20, 40, 0),
+				            new Pnt3D(50, 40, 0),
+				            new Pnt3D(50, 100, 0)
+			            };
+
+			var targetRingPoints = new List<Pnt3D>
+			                       {
+				                       new Pnt3D(20, 60, 0),
+				                       new Pnt3D(50, 100, 0),
+				                       new Pnt3D(20, 0, 0),
+			                       };
+
+			const double tolerance = 0.01;
+
+			int i = 0;
+			WithRotatedRingGroup(ring1, poly1 =>
+			{
+				poly1.AddLinestring(new Linestring(GeomTestUtils.GetRotatedRing(ring2, i++)));
+
+				WithRotatedRingGroup(targetRingPoints, target =>
+				{
+					RingOperator ringOperator = new RingOperator(poly1, target, tolerance);
+					MultiLinestring intersection = ringOperator.IntersectXY();
+					Assert.IsFalse(intersection.IsEmpty);
+
+					Assert.AreEqual(240, intersection.GetArea2D(), 0.0001);
+
+					// Compare with difference:
+					MultiLinestring difference = ringOperator.DifferenceXY();
+					Assert.AreEqual(2, difference.PartCount);
+					Assert.AreEqual(8560, difference.GetArea2D(), 0.0001);
+
+					Assert.AreEqual(poly1.GetArea2D(),
+					                intersection.GetArea2D() + difference.GetArea2D(), 0.0001);
+				});
+			});
+		}
+
+		[Test]
 		public void TouchingRingsInPointsFilled()
 		{
 			// The source has multiple parts that touch in a point
