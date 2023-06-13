@@ -413,12 +413,8 @@ namespace ProSuite.Commons.Geom
 			IntersectionPoint3D nextIntersection;
 			IntersectionPoint3D subcurveStart = previousIntersection;
 
-			List<IntersectionPoint3D> previousCluster =
-				continueOnSource
-					? IntersectionClusters.GetOtherSourceIntersections(previousIntersection)
-					                      .ToList()
-					: IntersectionClusters.GetOtherTargetIntersections(previousIntersection, true)
-					                      .ToList();
+			HashSet<IntersectionPoint3D> previousCluster =
+				IntersectionClusters.GetOtherIntersections(previousIntersection);
 
 			int circuitBreaker = 0;
 			do
@@ -1099,7 +1095,7 @@ namespace ProSuite.Commons.Geom
 
 		private bool SkipIntersection([NotNull] IntersectionPoint3D subcurveStartIntersection,
 		                              [NotNull] IntersectionPoint3D nextIntersection,
-		                              List<IntersectionPoint3D> previousCluster)
+		                              HashSet<IntersectionPoint3D> previousCluster)
 		{
 			// Instead of all of this it would be better to try the Martinez-2009
 			// approach but by intersection-run instead by segment!
@@ -1136,10 +1132,10 @@ namespace ProSuite.Commons.Geom
 			if (ClusterContains(previousCluster, nextIntersection))
 			{
 				// Make sure to leave the intersection cluster containing the previous intersection
+				// and do not run in circles or emit 0-length subcurves:
 				return true;
 			}
 
-			// TODO: This is not probably redundant thanks to the above if (ClusterContains...
 			if (IntersectionClusters.SourceClusterContains(nextIntersection) &&
 			    HasDuplicateBeenVisited(nextIntersection))
 			{
@@ -1156,8 +1152,11 @@ namespace ProSuite.Commons.Geom
 			{
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
 				if (visitedIntersection != intersection &&
+				    visitedIntersection.SourcePartIndex == intersection.SourcePartIndex &&
 				    visitedIntersection.ReferencesSameTargetVertex(intersection, Target, Tolerance))
 				{
+					// Only skip the intersection if it has been visited AND it is relevant for the same
+					// ring. Otherwise we might miss intersections where rings touch each other.
 					return true;
 				}
 			}
@@ -1245,7 +1244,7 @@ namespace ProSuite.Commons.Geom
 			return next;
 		}
 
-		private static bool ClusterContains(List<IntersectionPoint3D> cluster,
+		private static bool ClusterContains(HashSet<IntersectionPoint3D> cluster,
 		                                    IntersectionPoint3D next)
 		{
 			if (cluster.Contains(next))

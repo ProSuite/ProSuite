@@ -147,6 +147,36 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		public HashSet<IntersectionPoint3D> GetOtherIntersections(
+			[NotNull] IntersectionPoint3D atIntersection)
+		{
+			var resultSet = new HashSet<IntersectionPoint3D>();
+
+			foreach (IntersectionPoint3D intersection in
+			         GetOtherSourceIntersections(atIntersection))
+			{
+				if (resultSet.Contains(intersection))
+				{
+					continue;
+				}
+
+				resultSet.Add(intersection);
+			}
+
+			foreach (IntersectionPoint3D intersection in
+			         GetOtherTargetIntersections(atIntersection))
+			{
+				if (resultSet.Contains(intersection))
+				{
+					continue;
+				}
+
+				resultSet.Add(intersection);
+			}
+
+			return resultSet;
+		}
+
 		public bool HasMultipleSourceIntersections([NotNull] IntersectionPoint3D atIntersection)
 		{
 			if (_multipleSourceIntersections == null || _multipleSourceIntersections.Count == 0)

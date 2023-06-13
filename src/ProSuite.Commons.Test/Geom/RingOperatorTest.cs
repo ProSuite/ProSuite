@@ -734,6 +734,29 @@ namespace ProSuite.Commons.Test.Geom
 
 					Assert.AreEqual(poly1.GetArea2D(),
 					                intersection.GetArea2D() + difference.GetArea2D(), 0.0001);
+
+					// Union:
+					ringOperator = new RingOperator(poly1, target, tolerance);
+					MultiLinestring union = ringOperator.UnionXY();
+					Assert.AreEqual(2, union.PartCount);
+
+					double targetPartInIsland = target.GetArea2D() - intersection.GetArea2D();
+					double expectedArea = poly1.GetArea2D() + targetPartInIsland;
+					Assert.AreEqual(expectedArea, union.GetArea2D(), 0.0001);
+
+					// Vice versa to check symmetry:
+					intersection =
+						GeomTopoOpUtils.GetIntersectionAreasXY(target, poly1, tolerance);
+					Assert.IsFalse(intersection.IsEmpty);
+
+					difference = GeomTopoOpUtils.GetDifferenceAreasXY(target, poly1, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(targetPartInIsland, difference.GetArea2D());
+
+					union =
+						GeomTopoOpUtils.GetUnionAreasXY(target, poly1, tolerance);
+					Assert.AreEqual(2, union.PartCount);
+					Assert.AreEqual(expectedArea, union.GetArea2D());
 				});
 			});
 		}
