@@ -256,12 +256,13 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			return result;
 		}
 
-		public static IPolygon GetFootprint([NotNull] IMultiPatch multipatch)
+		public static IPolygon GetFootprint([NotNull] IMultiPatch multipatch,
+		                                    double? tolerance = null)
 		{
 			IPolygon result = null;
 			if (IntersectionUtils.UseCustomIntersect)
 			{
-				result = TryGetGeomFootprint(multipatch, out _);
+				result = TryGetGeomFootprint(multipatch, tolerance, out _);
 			}
 
 			if (result == null)
@@ -299,11 +300,12 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 
 		[CanBeNull]
 		public static IPolygon TryGetGeomFootprint([NotNull] IMultiPatch multiPatch,
+		                                           double? tolerance,
 		                                           [CanBeNull] out IPolyline verticalRings)
 		{
 			Assert.ArgumentNotNull(multiPatch, nameof(multiPatch));
 
-			double xyTolerance = GetXyTolerance(multiPatch);
+			double xyTolerance = tolerance ?? GetXyTolerance(multiPatch);
 
 			verticalRings = null;
 			try
@@ -316,7 +318,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			catch (Exception e)
 			{
 				_msg.Warn(
-					$"Error calculating footprint at {GeometryUtils.ToString(multiPatch.Envelope, withoutSpatialReference:true)}. " +
+					$"Error calculating footprint at {GeometryUtils.ToString(multiPatch.Envelope, withoutSpatialReference: true)}. " +
 					"Using AO-fallback.");
 				_msg.Debug(
 					$"Error calculating footprint for {GeometryUtils.ToString(multiPatch)}. " +
