@@ -21,6 +21,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 	public static class CreateFootprintUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		private static double? _knownTolerance;
 
 		[NotNull]
 		public static IList<IFeature> GetFootprintableFeatures(
@@ -275,6 +276,21 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 
 		private static double GetXyTolerance(IGeometry geometry)
 		{
+			if (_knownTolerance != null)
+			{
+				return _knownTolerance.Value;
+			}
+
+			string toleranceString =
+				Environment.GetEnvironmentVariable("PROSUITE_FOOTPRINT_TOLERANCE");
+
+			if (toleranceString != null &&
+			    double.TryParse(toleranceString, out double envTolerance))
+			{
+				_knownTolerance = envTolerance;
+				return _knownTolerance.Value;
+			}
+
 			double xyTolerance = GeometryUtils.GetXyTolerance(geometry);
 
 			// Prevent bogus tolerance (everything smaller the resolution) that
