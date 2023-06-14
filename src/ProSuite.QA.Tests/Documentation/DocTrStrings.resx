@@ -370,4 +370,7 @@ See T1Attributes</value>
 -Tile: search for spatially related features only using the current tile
 - All: search for spatially related features in the entire filtering featureClass </value>
   </data>
+  <data name="TrFootprint_Tolerance" xml:space="preserve">
+    <value>The tolerance for the footprint calculation. The vertices of a multipatch geometry should not be closer than the tolerance to any other vertex or segment of the same geometry. If a value below 0 is specified, the tolerance of the multipatchClass is used.</value>
+  </data>
 </root>
