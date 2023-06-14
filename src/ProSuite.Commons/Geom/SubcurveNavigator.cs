@@ -1576,17 +1576,20 @@ namespace ProSuite.Commons.Geom
 		                                              ref IntersectionPoint3D intersection,
 		                                              Line3D entryLine)
 		{
+			double? directionChange;
 			if (! CanFollowSource(intersection, intersection.SourcePartIndex))
 			{
 				// Previously, we continued along the source to the next intersection (being the as the current)
 				// which resulted in a 0-length segment that was ignored  by the caller.
 				// However, by doing this the original entry line is 'forgotten' and the TurnDirection
 				// could have been wrong in some situations.
-				return null;
+				directionChange = null;
 			}
-
-			double? directionChange =
-				GetAlongSourceDirectionChange(intersection, entryLine);
+			else
+			{
+				directionChange =
+					GetAlongSourceDirectionChange(intersection, entryLine);
+			}
 
 			if (! IntersectionPointNavigator.HasMultipleSourceIntersections(intersection))
 			{

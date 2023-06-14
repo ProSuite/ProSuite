@@ -517,18 +517,20 @@ namespace ProSuite.Commons.Geom
 					continue;
 				}
 
-				if (current.Equals(fromOtherSourceIntersection))
+				if (current.Equals(fromOtherSourceIntersection) &&
+				    SourceSegmentCountBetween(current, fromOtherSourceIntersection) > 3)
 				{
-					// we're back where we started
+					// we've come around the ring and are back where we started
 					isLoop = true;
 				}
 
 				foreach (IntersectionPoint3D duplicateOnNext in
 				         GetOtherSourceIntersections(current))
 				{
-					if (duplicateOnNext.Equals(fromOtherSourceIntersection))
+					if (duplicateOnNext.Equals(fromOtherSourceIntersection) &&
+					    SourceSegmentCountBetween(current, duplicateOnNext) > 3)
 					{
-						// we're back
+						// we've come around the ring and are back where we started
 						isLoop = true;
 					}
 				}
