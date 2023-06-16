@@ -165,7 +165,7 @@ namespace ProSuite.DomainModel.Core.QA
 				else
 				{
 					_msg.WarnFormat(
-						"{0} / Test parameter value {1}: No parameter found in {2}. The constructor Id might be incorrect.",
+						"{0} / Test parameter value {1}: No parameter found in {2}. The constructor Id might be incorrect or an optional parameter might have been added or deleted.",
 						instanceConfiguration, parameterValue.TestParameterName, instanceInfo);
 				}
 
