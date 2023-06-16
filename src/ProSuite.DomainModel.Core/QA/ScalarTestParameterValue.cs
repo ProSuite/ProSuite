@@ -84,6 +84,15 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			get
 			{
+				if (string.IsNullOrEmpty(_stringValue))
+				{
+					// DataType might not be initialized if
+					// - A new (optional) parameter was added to the condition but this version of
+					//   the software is not yet aware of the parameter (forward compatibility).
+					// - A parameter has been removed and there is still a value for it (fails unless null)
+					return string.Empty;
+				}
+
 				Assert.NotNull(DataType, "Parameter data type not defined");
 
 				// return the string value in the current culture
