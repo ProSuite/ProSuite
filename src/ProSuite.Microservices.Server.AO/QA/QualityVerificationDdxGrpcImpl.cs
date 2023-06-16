@@ -83,7 +83,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			try
 			{
-				await StartRequestAsync(context.Peer, request);
+				string peer = context.Peer;
+
+				await StartRequestAsync(peer, request);
 
 				Stopwatch watch = _msg.DebugStartTiming();
 
@@ -91,7 +93,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					trackCancel => GetProjectWorkspacesCore(request);
 
 				using (_msg.IncrementIndentation("Getting project workspaces for {0}",
-				                                 context.Peer))
+				                                 peer))
 				{
 					response =
 						await GrpcServerUtils.ExecuteServiceCall(
@@ -101,7 +103,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				_msg.DebugStopTiming(
 					watch, "Gotten project workspaces for peer {0} ({1} object class(es))",
-					context.Peer, request.ObjectClasses.Count);
+					peer, request.ObjectClasses.Count);
 
 				_msg.InfoFormat("Returning {0} project workspaces",
 				                response.ProjectWorkspaces.Count);
