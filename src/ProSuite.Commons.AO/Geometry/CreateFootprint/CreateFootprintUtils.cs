@@ -282,7 +282,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			}
 
 			string toleranceString =
-				Environment.GetEnvironmentVariable("PROSUITE_FOOTPRINT_TOLERANCE");
+				Environment.GetEnvironmentVariable("PROSUITE_FOOTPRINT_VERTICAL_TOLERANCE");
 
 			if (toleranceString != null &&
 			    double.TryParse(toleranceString, out double envTolerance))
@@ -299,6 +299,26 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			double minimumTolerance = 2 * GeometryUtils.GetXyResolution(geometry);
 
 			return Math.Max(xyTolerance, minimumTolerance);
+		}
+
+		private static double GetSmallXyTolerance(IGeometry geometry)
+		{
+			if (_knownTolerance != null)
+			{
+				return _knownTolerance.Value;
+			}
+
+			string toleranceString =
+				Environment.GetEnvironmentVariable("PROSUITE_FOOTPRINT_TOLERANCE");
+
+			if (toleranceString != null &&
+			    double.TryParse(toleranceString, out double envTolerance))
+			{
+				_knownTolerance = envTolerance;
+				return _knownTolerance.Value;
+			}
+
+			return GeometryUtils.GetXyResolution(geometry) / 2;
 		}
 
 		public static IPolygon GetFootprintAO([NotNull] IMultiPatch multiPatch)
@@ -321,13 +341,11 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 		{
 			Assert.ArgumentNotNull(multiPatch, nameof(multiPatch));
 
-			double xyTolerance = tolerance ?? GetXyTolerance(multiPatch);
-
 			verticalRings = null;
 			try
 			{
 				IPolygon footprintPoly =
-					GetFootprintGeom(multiPatch, xyTolerance, out verticalRings);
+					GetFootprintGeom(multiPatch, tolerance, out verticalRings);
 
 				return footprintPoly;
 			}
@@ -344,19 +362,68 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			}
 		}
 
-		private static IPolygon GetFootprintGeom([NotNull] IMultiPatch multiPatch,
-		                                         double xyTolerance,
-		                                         out IPolyline tooSmallRings)
+		/// <summary>
+		/// Returns the footprint as simplified polygon using extended Weiler-Atherthon polygon walk.
+		/// </summary>
+		/// <param name="multiPatch"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="verticalOrSmallRings"></param>
+		/// <returns></returns>
+		[PublicAPI]
+		public static IPolygon GetFootprintGeom([NotNull] IMultiPatch multiPatch,
+		                                        double? tolerance,
+		                                        out IPolyline verticalOrSmallRings)
 		{
-			tooSmallRings = null;
+			double verticalRingDetectionTolerance;
+			double xyTolerance;
+			if (tolerance == null)
+			{
+				// This is a bit of a heuristic. Near-vertical rings cannot be properly processed by
+				// XY-union. Make sure to include all vertical-ish rings by using the default
+				// tolerance. Alternatively each ring could be fully simplified beforehand.
+				// However, a tolerance that is larger than the minimal possible segment
+				// length results in wrong turns in subcurve navigation -> use half the resolution.
+				verticalRingDetectionTolerance = GetXyTolerance(multiPatch);
+				xyTolerance = GetSmallXyTolerance(multiPatch);
+			}
+			else
+			{
+				verticalRingDetectionTolerance = tolerance.Value;
+				xyTolerance = tolerance.Value;
+			}
+
+			IPolygon footprintPoly = GetFootprintGeom(multiPatch, xyTolerance,
+			                                          verticalRingDetectionTolerance,
+			                                          out verticalOrSmallRings);
+
+			GeometryUtils.Simplify(footprintPoly);
+
+			return footprintPoly;
+		}
+
+		/// <summary>
+		/// Returns the footprint as (non-simplified) polygon using extended Weiler-Atherthon polygon walk.
+		/// </summary>
+		/// <param name="multiPatch"></param>
+		/// <param name="xyTolerance"></param>
+		/// <param name="verticalRingDetectionTolerance"></param>
+		/// <param name="tooSmallRings"></param>
+		/// <returns></returns>
+		[PublicAPI]
+		public static IPolygon GetFootprintGeom(IMultiPatch multiPatch, double xyTolerance,
+		                                        double verticalRingDetectionTolerance,
+		                                        out IPolyline tooSmallRings)
+		{
 			Polyhedron polyhedron =
 				GeometryConversionUtils.CreatePolyhedron(multiPatch, false, true);
 
-			MultiLinestring footprint = null;
-			List<Linestring> verticalRings = null;
+			MultiLinestring footprint;
+			List<Linestring> verticalRings;
 			try
 			{
-				footprint = polyhedron.GetXYFootprint(xyTolerance, out verticalRings);
+				footprint =
+					polyhedron.GetXYFootprint(xyTolerance, verticalRingDetectionTolerance,
+					                          out verticalRings);
 			}
 			catch (Exception)
 			{
@@ -398,8 +465,10 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 					GeometryConversionUtils.CreatePolyline(verticalRings,
 					                                       multiPatch.SpatialReference);
 			}
-
-			GeometryUtils.Simplify(footprintPoly);
+			else
+			{
+				tooSmallRings = null;
+			}
 
 			return footprintPoly;
 		}

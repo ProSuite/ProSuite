@@ -4757,7 +4757,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			double tolerance = 0.01;
 
-			MultiLinestring union = source.GetXYFootprint(tolerance, out _);
+			MultiLinestring union = source.GetXYFootprint(tolerance, tolerance, out _);
 
 			double expectedAreaUnion = 130.324;
 			Assert.AreEqual(expectedAreaUnion, union.GetArea2D(), 0.01);

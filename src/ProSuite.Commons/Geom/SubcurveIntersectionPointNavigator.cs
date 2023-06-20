@@ -37,6 +37,14 @@ namespace ProSuite.Commons.Geom
 			HashSet<IntersectionPoint3D> pointsToIgnore =
 				GetLinearIntersectionPointsWithinOtherLinearIntersection(intersectionPoints);
 
+			if (pointsToIgnore.Count > 0)
+			{
+				// This means that the target has several linear intersections in the same source
+				// intersection stretch. The target might be narrower than the tolerance, resulting
+				// in wrong intersection subcurve navigation!
+				PotentiallyNonSimple = true;
+			}
+
 			IntersectionPoints = intersectionPoints.Where(p => ! pointsToIgnore.Contains(p))
 			                                       .ToList();
 		}
@@ -329,6 +337,8 @@ namespace ProSuite.Commons.Geom
 				return _intersectionClusters;
 			}
 		}
+
+		public bool PotentiallyNonSimple { get; set; }
 
 		public IEnumerable<IntersectionPoint3D> GetIntersectionsWithOutBoundTarget(
 			Predicate<IntersectionPoint3D> touchPredicate = null)

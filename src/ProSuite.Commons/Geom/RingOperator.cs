@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Collections;
@@ -143,7 +144,15 @@ namespace ProSuite.Commons.Geom
 				AddUnprocessedRings(unprocessedParts, resultRingGroups);
 			}
 
-			return new MultiPolycurve(resultRingGroups);
+			var result = new MultiPolycurve(resultRingGroups);
+
+			// Guard for TOP-5727:
+			if (_subcurveNavigator.IntersectionPointNavigator.PotentiallyNonSimple)
+			{
+				AssertSimple(result);
+			}
+
+			return result;
 		}
 
 		/// <summary>
@@ -619,6 +628,20 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return result;
+		}
+
+		private void AssertSimple(MultiLinestring result)
+		{
+			foreach (Linestring linestring in result.GetLinestrings())
+			{
+				if (GeomTopoOpUtils.GetLinearSelfIntersectionsXY(
+					    linestring, _subcurveNavigator.Tolerance).Any())
+				{
+					throw new InvalidOperationException(
+						"Result has self-intersections. The input geometries are likely " +
+						"non-simple with respect to tolerance.");
+				}
+			}
 		}
 
 		#region Cookie cutting
