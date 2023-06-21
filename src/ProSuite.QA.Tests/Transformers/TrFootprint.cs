@@ -22,9 +22,9 @@ namespace ProSuite.QA.Tests.Transformers
 			IReadOnlyFeatureClass multipatchClass)
 			: base(multipatchClass, esriGeometryType.esriGeometryPolygon) { }
 
-		[TestParameter(_defaultToleranceValue)]
-		[DocTr(nameof(DocTrStrings.TrFootprint_Tolerance))]
-		public double Tolerance { get; set; }
+		//[TestParameter(_defaultToleranceValue)]
+		//[DocTr(nameof(DocTrStrings.TrFootprint_Tolerance))]
+		//public double Tolerance { get; set; }
 
 		protected override IEnumerable<GdbFeature> Transform(IGeometry source,
 		                                                     long? sourceOid)
@@ -37,9 +37,9 @@ namespace ProSuite.QA.Tests.Transformers
 				                     ? CreateFeature()
 				                     : (GdbFeature) transformedClass.CreateObject(sourceOid.Value);
 
-			double? tolerance = Tolerance < 0 ? (double?) null : Tolerance;
+			//double? tolerance = Tolerance < 0 ? (double?) null : Tolerance;
 
-			IPolygon result = CreateFootprintUtils.GetFootprint(multipatch, tolerance);
+			IPolygon result = CreateFootprintUtils.GetFootprint(multipatch);
 
 			feature.Shape = result;
 
