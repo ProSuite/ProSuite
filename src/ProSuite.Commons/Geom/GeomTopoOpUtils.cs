@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using ProSuite.Commons.Collections;
@@ -695,7 +696,17 @@ namespace ProSuite.Commons.Geom
 				}
 				else
 				{
+					var watch = Stopwatch.StartNew();
 					result = GetUnionAreasXY(result, ringGroup, tolerance);
+					watch.Stop();
+
+					const long timeout300s = 300000;
+
+					if (watch.ElapsedMilliseconds > timeout300s)
+					{
+						// Do not continue, most likely the next result will be even more time-consuming.
+						throw new AssertionException("Unexpectedly long processing time");
+					}
 				}
 			}
 
