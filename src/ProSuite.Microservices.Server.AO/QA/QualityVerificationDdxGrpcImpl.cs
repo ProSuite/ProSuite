@@ -13,6 +13,7 @@ using ProSuite.Commons.Com;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
@@ -395,6 +396,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private async Task<bool> StartRequestAsync(string peerName, object request,
 		                                           bool requiresLicense = true)
 		{
+			// The request comes in on a .NET thread-pool thread, which has no useful name
+			// when it comes to logging. Set the ID as its name.
+			ProcessUtils.TrySetThreadIdAsName();
+
 			CurrentLoad?.StartRequest();
 
 			_msg.InfoFormat("Starting {0} request from {1}", request.GetType().Name, peerName);
