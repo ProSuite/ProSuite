@@ -152,6 +152,23 @@ namespace ProSuite.Commons.Geom
 				AssertSimple(result);
 			}
 
+			// TOP-5731: Guard for general Barrel Roof 'eternal footprint' types: Count outer rings
+			//           because inner rings can be created by combining outer rings (2 bananas)
+			int resultOuterRingCount = result.PartCount -
+			                           result.GetLinestrings()
+			                                 .Count(r => r.ClockwiseOriented == false);
+
+			int resultOuterRingMaxCountTheoreticalMax =
+				GetExteriorRingCount(_subcurveNavigator.Source) +
+				GetExteriorRingCount(_subcurveNavigator.Target) +
+				_subcurveNavigator.GetBoundaryLoopCount();
+
+			if (resultOuterRingCount > resultOuterRingMaxCountTheoreticalMax)
+			{
+				throw new AssertionException(
+					"Failure to calculate union. The input is likely non-simple");
+			}
+
 			return result;
 		}
 
@@ -642,6 +659,22 @@ namespace ProSuite.Commons.Geom
 						"non-simple with respect to tolerance.");
 				}
 			}
+		}
+
+		private static int GetExteriorRingCount(ISegmentList areaGeometry)
+		{
+			int result = 0;
+
+			for (int i = 0; i < areaGeometry.PartCount; i++)
+			{
+				if (areaGeometry.GetPart(i).ClockwiseOriented != false)
+
+				{
+					result++;
+				}
+			}
+
+			return result;
 		}
 
 		#region Cookie cutting

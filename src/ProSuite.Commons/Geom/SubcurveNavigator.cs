@@ -456,10 +456,16 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		public int GetBoundaryLoopCount()
+		{
+			return IntersectionPointNavigator.GetSourceBoundaryLoops(true).Count() +
+			       IntersectionPointNavigator.GetTargetBoundaryLoops().Count();
+		}
+
 		public bool HasBoundaryLoops()
 		{
-			return IntersectionPointNavigator.GetSourceBoundaryLoops(true).Count() != 0 ||
-			       IntersectionPointNavigator.GetTargetBoundaryLoops().Count() != 0;
+			return IntersectionPointNavigator.GetSourceBoundaryLoops(true).Any() ||
+			       IntersectionPointNavigator.GetTargetBoundaryLoops().Any();
 		}
 
 		#region Boundary loop handling
