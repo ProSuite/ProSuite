@@ -7,6 +7,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
@@ -253,7 +254,6 @@ namespace ProSuite.QA.Container.TestContainer
 					continue;
 				}
 
-				engine.SetTargetGeometry(cachedRow.Geometry);
 
 				// Remark: if most of the rows fullfill helper.Check, 
 				// it is better to check the geometric relation first
@@ -267,6 +267,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 					matchesConstraint = true;
 				}
+
+				IGeometry targetGeometry = (targetFeature is IIndexedMultiPatchFeature m)
+					                           ? m.IndexedMultiPatch.GetFootprint()
+					                           : cachedRow.Geometry;
+				engine.SetTargetGeometry(targetGeometry);
 
 				if (engine.EvaluateRelation(spatialFilter))
 				{
