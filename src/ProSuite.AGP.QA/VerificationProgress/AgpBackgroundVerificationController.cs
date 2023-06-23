@@ -14,6 +14,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
@@ -208,7 +209,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return;
 			}
 
-			Process.Start(verificationResult.HtmlReportPath);
+			ProcessUtils.StartProcess(verificationResult.HtmlReportPath);
 		}
 
 		public bool CanShowReport(ServiceCallStatus? currentProgressStep,
@@ -277,9 +278,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 			List<Overlay> overlays = new List<Overlay>(2);
 
-			IEnumerable<Polyline> completedPolylines = tiles.Select(e =>
-				GeometryFactory.CreatePolyline(
-					e, _verificationSpatialReference));
+			var completedPolylines = tiles.Select(e =>
+				GeometryFactory.CreatePolyline(e, _verificationSpatialReference)).ToList();
 
 			Geometry completedLineGeometry = GeometryUtils.Union(completedPolylines);
 

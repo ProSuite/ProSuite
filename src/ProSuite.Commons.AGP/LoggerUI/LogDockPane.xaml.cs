@@ -35,7 +35,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
-			var msSecDelay = 500; // delay to scroll to end to last message - cancealable?
+			var msSecDelay = 500; // delay to scroll to end to last message - cancelable?
 			Task.Delay(msSecDelay).ContinueWith(_ => ScrollMessagesToEnd());
 		}
 

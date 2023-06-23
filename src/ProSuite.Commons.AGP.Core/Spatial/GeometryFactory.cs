@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -13,6 +14,39 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) prototype.Clone();
 		}
 
+		public static T Configure<T>(this T builder, Geometry template) where T : GeometryBuilderEx
+		{
+			if (builder is null) return null;
+			if (template is null) return builder;
+
+			builder.HasZ = template.HasZ;
+			builder.HasM = template.HasM;
+			builder.HasID = template.HasID;
+			builder.SpatialReference = template.SpatialReference;
+
+			return builder;
+		}
+
+		public static GeometryBuilderEx ToBuilder(this Geometry geometry)
+		{
+			if (geometry is null)
+				throw new ArgumentNullException(nameof(geometry));
+
+			switch (geometry)
+			{
+				case Envelope env: return new EnvelopeBuilderEx(env);
+				case MapPoint point: return new MapPointBuilderEx(point);
+				case Multipoint multipoint: return new MultipointBuilderEx(multipoint);
+				case Polyline polyline: return new PolylineBuilderEx(polyline);
+				case Polygon polygon: return new PolygonBuilderEx(polygon);
+				case Multipatch multipatch: return new MultipatchBuilderEx(multipatch);
+				case GeometryBag bag: return new GeometryBagBuilderEx(bag);
+			}
+
+			throw new NotSupportedException(
+				$"Unknown geometry type: {geometry.GetType().Name}");
+		}
+
 		public static MapPoint CreatePoint(double x, double y, SpatialReference sref = null)
 		{
 			return MapPointBuilderEx.CreateMapPoint(x, y, sref);
@@ -25,6 +59,13 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			var p0 = new Coordinate2D(x0, y0);
 			var p1 = new Coordinate2D(x1, y1);
 			return EnvelopeBuilderEx.CreateEnvelope(p0, p1, sref);
+		}
+
+		public static Envelope CreateEmptyEnvelope(Geometry template = null)
+		{
+			var builder = Configure(new EnvelopeBuilderEx(), template);
+
+			return builder.ToGeometry();
 		}
 
 		public static Polygon CreatePolygon(Envelope envelope, SpatialReference sref = null)
@@ -46,7 +87,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		                                      [CanBeNull] SpatialReference sref = null)
 		{
 			return PolylineBuilderEx.CreatePolyline(new[] { startPoint, endPoint },
-			                                        AttributeFlags.NoAttributes, sref);
+			                                        AttributeFlags.None, sref);
 		}
 
 		[NotNull]
@@ -69,13 +110,13 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		{
 			// Approximate a full circle with Bezier curves. (We could use
 			// EllipticArc segments, of course, but in the context of markers,
-			// Béziers are more appropriate.) It is customary to use four cubic
-			// Bézier curves, one for each quadrant. The control points must be
-			// on tangential lines to ensure continuity, their distance from
+			// Bezier curves are more appropriate.) It is customary to use four
+			// cubic Bezier curves, one for each quadrant. The control points must
+			// be on tangential lines to ensure continuity, their distance from
 			// the axes is chosen for minimal deviation from a true circle.
 			// See: https://spencermortensen.com/articles/bezier-circle/
 
-			const double magic = 0.551915; // for best circle approximation
+			const double magic = 0.551915; // for good circle approximation
 
 			double cx = 0, cy = 0;
 
@@ -85,18 +126,19 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				cy = center.Y;
 			}
 
+			// Outer rings are clockwise (with Esri):
 			var p0 = new Coordinate2D(radius, 0).Shifted(cx, cy);
-			var p01 = new Coordinate2D(radius, magic * radius).Shifted(cx, cy);
-			var p10 = new Coordinate2D(magic * radius, radius).Shifted(cx, cy);
-			var p1 = new Coordinate2D(0, radius).Shifted(cx, cy);
-			var p12 = new Coordinate2D(-magic * radius, radius).Shifted(cx, cy);
-			var p21 = new Coordinate2D(-radius, magic * radius).Shifted(cx, cy);
+			var p01 = new Coordinate2D(radius, -radius * magic).Shifted(cx, cy);
+			var p10 = new Coordinate2D(radius * magic, -radius).Shifted(cx, cy);
+			var p1 = new Coordinate2D(0, -radius).Shifted(cx, cy);
+			var p12 = new Coordinate2D(-radius * magic, -radius).Shifted(cx, cy);
+			var p21 = new Coordinate2D(-radius, -radius * magic).Shifted(cx, cy);
 			var p2 = new Coordinate2D(-radius, 0).Shifted(cx, cy);
-			var p23 = new Coordinate2D(-radius, -magic * radius).Shifted(cx, cy);
-			var p32 = new Coordinate2D(-magic * radius, -radius).Shifted(cx, cy);
-			var p3 = new Coordinate2D(0, -radius).Shifted(cx, cy);
-			var p30 = new Coordinate2D(magic * radius, -radius).Shifted(cx, cy);
-			var p03 = new Coordinate2D(radius, -magic * radius).Shifted(cx, cy);
+			var p23 = new Coordinate2D(-radius, radius * magic).Shifted(cx, cy);
+			var p32 = new Coordinate2D(-radius * magic, radius).Shifted(cx, cy);
+			var p3 = new Coordinate2D(0, radius).Shifted(cx, cy);
+			var p30 = new Coordinate2D(radius * magic, radius).Shifted(cx, cy);
+			var p03 = new Coordinate2D(radius, radius * magic).Shifted(cx, cy);
 
 			// segments for each quadrant
 			var q1 = CubicBezierBuilderEx.CreateCubicBezierSegment(p0, p01, p10, p1);
@@ -105,7 +147,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			var q4 = CubicBezierBuilderEx.CreateCubicBezierSegment(p3, p30, p03, p0);
 			var segments = new[] {q1, q2, q3, q4};
 
-			return PolygonBuilderEx.CreatePolygon(segments, AttributeFlags.NoAttributes);
+			return PolygonBuilderEx.CreatePolygon(segments, AttributeFlags.None);
 		}
 
 		public static SpatialReference CreateSpatialReference(int srid)

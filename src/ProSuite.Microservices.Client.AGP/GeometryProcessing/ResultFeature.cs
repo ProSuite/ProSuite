@@ -97,7 +97,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 				string xml = spatialReferenceMsg.SpatialReferenceEsriXml;
 
 				SpatialReference actual =
-					SpatialReferenceBuilder.FromXML(Assert.NotNullOrEmpty(xml));
+					SpatialReferenceBuilder.FromXml(Assert.NotNullOrEmpty(xml));
 
 				return expected.Wkid == actual.Wkid;
 			}

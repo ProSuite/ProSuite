@@ -9,6 +9,7 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Selection;
 
 namespace ProSuite.AGP.WorkList.Selection
 {
@@ -31,7 +32,7 @@ namespace ProSuite.AGP.WorkList.Selection
 				return Enumerable.Empty<BasicFeatureLayer>();
 			}
 
-			Dictionary<MapMember, List<long>> selection = mapView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selection = SelectionUtils.GetSelection(mapView.Map);
 
 			return selection.Count >= 1
 				       ? selection.Keys.OfType<BasicFeatureLayer>()

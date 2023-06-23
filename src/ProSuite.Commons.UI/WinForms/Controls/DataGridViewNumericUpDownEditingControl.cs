@@ -149,7 +149,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				{
 					if (Controls[1] is TextBox textBox)
 					{
-						// If the end of the selection is at the begining of the string
+						// If the end of the selection is at the beginning of the string
 						// or if the entire text is selected and we did not start editing,
 						// send this character to the dataGridView, else process the key message
 						if (RightToLeft == RightToLeft.No &&
@@ -202,7 +202,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 				case Keys.Delete:
 				{
-					// Let the grid handle the key if the carret is at the end of the text.
+					// Let the grid handle the key if the caret is at the end of the text.
 					if (Controls[1] is TextBox textBox)
 					{
 						if (textBox.SelectionLength > 0 ||

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -37,6 +38,8 @@ namespace ProSuite.AGP.Editing
 		                                                  int selectionTolerancePixels)
 		{
 			MapPoint sketchPoint = CreatePointFromSketchPolygon(sketchGeometry);
+
+			_msg.VerboseDebug(() => $"Selection sketch point: {GeometryUtils.Format(sketchPoint)}");
 
 			return BufferGeometryByPixels(sketchPoint, selectionTolerancePixels);
 		}
@@ -108,8 +111,15 @@ namespace ProSuite.AGP.Editing
 		                                               int pixelBufferDistance)
 		{
 			double bufferDistance = MapUtils.ConvertScreenPixelToMapLength(pixelBufferDistance);
+			_msg.VerboseDebug(() => $"Selection tolerance on map {Math.Round(bufferDistance, 0)}");
 
-			return GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
+			Geometry selectionGeometry =
+				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
+
+			_msg.VerboseDebug(
+				() => $"Selection sketch geometry {GeometryUtils.Format(selectionGeometry.Extent)}");
+
+			return selectionGeometry;
 		}
 
 		public static async Task<bool> FlashResultPolygonsAsync(

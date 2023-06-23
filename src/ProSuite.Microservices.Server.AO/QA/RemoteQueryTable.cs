@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
-	public class RemoteQueryTable : GdbTable, ITransformedTableBasedOnTables
+	public class RemoteQueryTable : GdbTable, ITableBased
 	{
 		private readonly IList<IReadOnlyTable> _baseTables;
 
@@ -24,9 +24,22 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_baseTables = baseTables;
 		}
 
-		public IEnumerable<Involved> GetBaseRowReferences(IReadOnlyRow forTransformedRow)
+		#region Implementation of ITableBased
+
+		public IList<IReadOnlyTable> GetInvolvedTables()
 		{
-			return InvolvedRowUtils.GetInvolvedRowsFromJoinedRow(forTransformedRow, _baseTables);
+			return _baseTables;
 		}
+
+		public IEnumerable<Involved> GetInvolvedRows(IReadOnlyRow forTransformedRow)
+		{
+			Func<string, int> findFieldFunc =
+				fieldName => forTransformedRow.Table.FindField(fieldName);
+
+			return TableBasedUtils.GetInvolvedRowsFromJoinedRow(
+				forTransformedRow, _baseTables, findFieldFunc);
+		}
+
+		#endregion
 	}
 }

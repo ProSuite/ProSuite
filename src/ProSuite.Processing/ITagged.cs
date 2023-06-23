@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ProSuite.Processing.Domain
+namespace ProSuite.Processing
 {
 	public interface ITagged
 	{

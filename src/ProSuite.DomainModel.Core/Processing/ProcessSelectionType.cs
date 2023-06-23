@@ -3,6 +3,8 @@ using System.Text.RegularExpressions;
 
 namespace ProSuite.DomainModel.Core.Processing
 {
+	// Note: use ProSuite.Processing.Domain.ProcessSelectionType
+	// keep code here for ArcMap compatibility only
 	[Flags]
 	public enum ProcessSelectionType
 	{

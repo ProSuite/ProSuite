@@ -7,6 +7,7 @@ using Grpc.Health.V1;
 using ProSuite.Commons.Cryptography;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using Quaestor.ServiceDiscovery;
 
 namespace ProSuite.Microservices.Client
 {
@@ -90,7 +91,7 @@ namespace ProSuite.Microservices.Client
 
 		public static Channel CreateChannel(
 			[NotNull] string host, int port,
-			ChannelCredentials credentials,
+			[CanBeNull] ChannelCredentials credentials,
 			int maxMessageLength)
 		{
 			// Sometimes the localhost is not configured as exception in the proxy settings:
@@ -180,6 +181,26 @@ namespace ProSuite.Microservices.Client
 			}
 
 			return statusCode;
+		}
+
+		public static IEnumerable<ServiceLocationMsg> GetServiceLocationsFromLoadBalancer(
+			[NotNull] Channel lbChannel,
+			string serviceName, int maxCount)
+		{
+			ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient lbClient =
+				new ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient(lbChannel);
+
+			DiscoverServicesResponse lbResponse = lbClient.DiscoverTopServices(
+				new DiscoverServicesRequest
+				{
+					ServiceName = serviceName,
+					MaxCount = maxCount
+				});
+
+			foreach (ServiceLocationMsg serviceLocation in lbResponse.ServiceLocations)
+			{
+				yield return serviceLocation;
+			}
 		}
 	}
 }

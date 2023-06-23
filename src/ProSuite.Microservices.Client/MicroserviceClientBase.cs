@@ -73,7 +73,7 @@ namespace ProSuite.Microservices.Client
 		[CanBeNull]
 		protected Channel Channel { get; private set; }
 
-		protected bool ChannelIsLoadBalancer { get; private set; }
+		public bool ChannelIsLoadBalancer { get; private set; }
 
 		[NotNull]
 		public abstract string ServiceName { get; }
@@ -510,7 +510,7 @@ namespace ProSuite.Microservices.Client
 
 		private void LogHealthStatus(StatusCode statusCode)
 		{
-			// In shutdown state, the ReslovedTarget property throws for certain:
+			// In shutdown state, the ResolvedTarget property throws for certain:
 			string address = "<none>";
 			if (Channel?.State != ChannelState.Shutdown)
 			{

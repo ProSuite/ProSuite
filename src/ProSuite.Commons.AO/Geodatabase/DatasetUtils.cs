@@ -16,6 +16,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -971,7 +972,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			else
 			{
-				tableName = fullTableName;
+				// Virtual workspace, such as GdbWorkspace
+				tableName = ModelElementNameUtils.GetUnqualifiedName(fullTableName);
 			}
 
 			return tableName;

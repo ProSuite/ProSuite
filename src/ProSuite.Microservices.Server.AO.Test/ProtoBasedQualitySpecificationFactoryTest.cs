@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using NSubstitute;
 using NUnit.Framework;
@@ -9,6 +10,7 @@ using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Server.AO.QA;
+using TestUtils = ProSuite.Commons.Test.Testing.TestUtils;
 
 namespace ProSuite.Microservices.Server.AO.Test
 {
@@ -18,8 +20,8 @@ namespace ProSuite.Microservices.Server.AO.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
-			TestUtils.InitializeLicense();
+			TestUtils.ConfigureUnitTestLogging();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 		}
 
 		[Test]
@@ -87,7 +89,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			XmlBasedVerificationService service = new XmlBasedVerificationService();
 
-			string tempDirPath = TestUtils.GetTempDirPath(null);
+			string tempDirPath = Commons.AO.Test.TestUtils.GetTempDirPath(null);
 
 			service.ExecuteVerification(qualitySpecification, null, 1000, tempDirPath);
 
@@ -117,7 +119,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			XmlBasedVerificationService service = new XmlBasedVerificationService();
 
-			string tempDirPath = TestUtils.GetTempDirPath(null);
+			string tempDirPath = Commons.AO.Test.TestUtils.GetTempDirPath(null);
 
 			service.ExecuteVerification(qualitySpecification, null, 1000, tempDirPath);
 
@@ -287,14 +289,14 @@ namespace ProSuite.Microservices.Server.AO.Test
 		private static QualitySpecification CreateQualitySpecification(
 			IVerifiedModelFactory modelFactory,
 			ISupportedInstanceDescriptors instanceDescriptors,
-			ConditionListSpecificationMsg conditionListSpecificationMsg, DataSource[] dataSources)
+			ConditionListSpecificationMsg conditionListSpecificationMsg,
+			ICollection<DataSource> dataSources)
 		{
 			var factory = new ProtoBasedQualitySpecificationFactory(
-				modelFactory, instanceDescriptors);
+				modelFactory, dataSources, instanceDescriptors);
 
 			QualitySpecification qualitySpecification =
-				factory.CreateQualitySpecification(conditionListSpecificationMsg,
-				                                   dataSources);
+				factory.CreateQualitySpecification(conditionListSpecificationMsg);
 			return qualitySpecification;
 		}
 	}

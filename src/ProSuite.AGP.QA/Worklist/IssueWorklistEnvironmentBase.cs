@@ -107,7 +107,8 @@ namespace ProSuite.AGP.QA.WorkList
 			return featureClasses.Select(fc =>
 			{
 				FeatureLayer featureLayer =
-					LayerFactory.Instance.CreateFeatureLayer(fc, layerContainer);
+					LayerFactory.Instance.CreateLayer<FeatureLayer>(
+						new FeatureLayerCreationParams(fc), layerContainer);
 
 				featureLayer.SetExpanded(false);
 				featureLayer.SetVisibility(false);
@@ -163,7 +164,7 @@ namespace ProSuite.AGP.QA.WorkList
 			// the GP tool is not going to fail on adding a field with the same name
 			Task<bool> addField =
 				GeoprocessingUtils.AddFieldAsync(path, fieldName, "Status",
-				                                 esriFieldType.esriFieldTypeInteger, null, null,
+				                                 FieldType.Integer, null, null,
 				                                 null, true, false, _domainName);
 
 			Task<bool> assignDefaultValue =

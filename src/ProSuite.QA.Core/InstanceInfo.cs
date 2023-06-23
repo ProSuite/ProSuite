@@ -34,7 +34,7 @@ namespace ProSuite.QA.Core
 		}
 
 		[NotNull]
-		public Type InstanceType => _instanceType;
+		public override Type InstanceType => _instanceType;
 
 		public override string TestDescription =>
 			InstanceUtils.GetDescription(InstanceType, _constructorId);

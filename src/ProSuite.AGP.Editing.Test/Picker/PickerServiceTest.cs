@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using NUnit.Framework;
-using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Hosting;
@@ -57,10 +55,9 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			var pickerPrecedence = new StandardPickerPrecedenceMock();
 			pickerPrecedence.SelectionGeometry = referenceGeometry;
 
-			IToolMouseEventsAware mouseEvents = new MouseEventsMock();
 			Func<Task<IPickableItem>> pickSingle =
-				picker.PickSingle<IPickableItem>(items,
-				                                 pickerPrecedence, mouseEvents, new Point(42, 99));
+				picker.PickSingle<IPickableItem>(items, new Point(42, 99),
+				                                 pickerPrecedence);
 
 			IPickableItem pickedItem = await pickSingle();
 
@@ -77,10 +74,5 @@ namespace ProSuite.AGP.Editing.Test.Picker
 				             };
 			}
 		}
-	}
-
-	public class MouseEventsMock : IToolMouseEventsAware
-	{
-		public event MouseButtonEventHandler MouseDown;
 	}
 }

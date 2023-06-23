@@ -16,6 +16,9 @@ namespace ProSuite.AGP.Editing.Selection
 {
 	public abstract class SelectionToolBase : OneClickToolBase
 	{
+		//TODO: ID from Config.daml; make abstract or similar
+		private const string ConfigId_SelectionToolButton = "ProSuiteTools_Selection_SelectionToolButton";
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// todo daro refactor
@@ -33,14 +36,14 @@ namespace ProSuite.AGP.Editing.Selection
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
-			SetCheckState("ProSuiteTools_Selection_SelectionToolButton", true);
+			SetCheckState(ConfigId_SelectionToolButton, true);
 
 			await base.OnToolActivateAsync(hasMapViewChanged);
 		}
 
 		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
 		{
-			SetCheckState("ProSuiteTools_Selection_SelectionToolButton", false);
+			SetCheckState(ConfigId_SelectionToolButton, false);
 
 			await base.OnToolDeactivateAsync(hasMapViewChanged);
 		}
@@ -66,6 +69,8 @@ namespace ProSuite.AGP.Editing.Selection
 			{
 				SetCursor(SelectionCursor);
 			}
+
+			_msg.VerboseDebug(() => $"Key {k.Key} was pressed.");
 		}
 
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)

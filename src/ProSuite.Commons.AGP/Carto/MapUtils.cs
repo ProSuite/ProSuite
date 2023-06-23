@@ -94,6 +94,13 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
+			[NotNull] SelectionSet selectionSet,
+			[CanBeNull] SpatialReference outputSpatialReference)
+		{
+			return GetFeatures(selectionSet.ToDictionary(), outputSpatialReference);
+		}
+
+		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] Dictionary<MapMember, List<long>> oidsByMapMembers,
 			[CanBeNull] SpatialReference outputSpatialReference)
 		{
@@ -142,7 +149,7 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			// TODO: Use layer search (there might habe been an issue with recycling?!)
+			// TODO: Use layer search (there might have been an issue with recycling?!)
 			var featureClass = layer.GetTable();
 
 			var filter = new QueryFilter
@@ -251,7 +258,7 @@ namespace ProSuite.Commons.AGP.Carto
 					mapPoints.Add(mapPoint);
 				}
 
-				return PolygonBuilder.CreatePolygon(mapPoints, mapView.Camera.SpatialReference);
+				return PolygonBuilderEx.CreatePolygon(mapPoints, mapView.Camera.SpatialReference);
 			}
 
 			return mapView.ScreenToMap(new Point(screenGeometry.Extent.XMin,
@@ -274,7 +281,8 @@ namespace ProSuite.Commons.AGP.Carto
 					screenPoints.Add(new Coordinate2D(screenVertex.X, screenVertex.Y));
 				}
 
-				return PolygonBuilder.CreatePolygon(screenPoints, mapView.Camera.SpatialReference);
+				return PolygonBuilderEx.CreatePolygon(screenPoints,
+				                                      mapView.Camera.SpatialReference);
 			}
 
 			// The screen is probably the entire screen
@@ -284,7 +292,7 @@ namespace ProSuite.Commons.AGP.Carto
 			// with the tool's mouse coordinates in SketchOutputMode.Screen!?!
 			var clientPoint = mapView.ScreenToClient(screenPoint);
 
-			return MapPointBuilder.CreateMapPoint(new Coordinate2D(clientPoint.X, clientPoint.Y));
+			return MapPointBuilderEx.CreateMapPoint(new Coordinate2D(clientPoint.X, clientPoint.Y));
 		}
 
 		public static double ConvertScreenPixelToMapLength(int pixels)

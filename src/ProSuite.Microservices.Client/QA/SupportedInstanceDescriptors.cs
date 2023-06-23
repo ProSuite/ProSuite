@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
 
-namespace ProSuite.Microservices.Server.AO.QA
+namespace ProSuite.Microservices.Client.QA
 {
 	/// <summary>
 	/// Encapsulates the resolution of the currently available instance descriptors by name.
@@ -74,10 +76,55 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
+		public bool AddDescriptor(InstanceDescriptor instanceDescriptor)
+		{
+			Assert.NotNull(instanceDescriptor, nameof(instanceDescriptor));
+
+			bool added;
+			switch (instanceDescriptor)
+			{
+				case TestDescriptor testDescriptor:
+					added = TryAdd(_testDescriptors, testDescriptor);
+					break;
+				case IssueFilterDescriptor issueFilterDescriptor:
+					added = TryAdd(_issueFilterDescriptors, issueFilterDescriptor);
+					break;
+				case TransformerDescriptor transformerDescriptor:
+					added = TryAdd(_transformerDescriptors, transformerDescriptor);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(
+						$"Unsupported or null instance descriptor: {instanceDescriptor.Name}");
+			}
+
+			if (added)
+			{
+				InstanceDescriptorAdded(instanceDescriptor);
+			}
+
+			return added;
+		}
+
 		public int Count => _testDescriptors.Count +
 		                    _transformerDescriptors?.Count ?? 0 +
 		                    _issueFilterDescriptors?.Count ?? 0;
 
 		#endregion
+
+		protected virtual void InstanceDescriptorAdded(
+			[NotNull] InstanceDescriptor instanceDescriptor) { }
+
+		private static bool TryAdd<T>(IDictionary<string, T> toDictionary, T item)
+			where T : InstanceDescriptor
+		{
+			if (toDictionary.ContainsKey(item.Name))
+			{
+				return false;
+			}
+
+			toDictionary.Add(item.Name, item);
+
+			return true;
+		}
 	}
 }

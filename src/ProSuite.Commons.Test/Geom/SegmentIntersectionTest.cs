@@ -24,7 +24,7 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.True(intersection.HasLinearIntersection);
 			Assert.True(intersection.LinearIntersectionInOppositeDirection);
 
-			// Special case: The source end is very far away and deviates more than the tolerance from the target straigh:
+			// Special case: The source end is very far away and deviates more than the tolerance from the target straight:
 			line1.SetEndPoint(new Pnt3D(100, 0.02, 0));
 
 			intersection =
@@ -36,7 +36,7 @@ namespace ProSuite.Commons.Test.Geom
 		[Test]
 		public void CanDetermineCorrectOrientationForPseudoLinearIntersecion()
 		{
-			// The linear intersection can be somewhat un-intuitive if the end points are witin the tolerance to the
+			// The linear intersection can be somewhat un-intuitive if the end points are within the tolerance to the
 			// other line but just outside the tolerance to the other end point.
 
 			Line3D line1 = new Line3D(new Pnt3D(0, 0, 0), new Pnt3D(5, 0, 0));

@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
+using ProSuite.Commons.Collections;
 using ProSuite.Processing.Evaluation;
 
 namespace ProSuite.Processing.Test.Evaluation
@@ -33,7 +34,7 @@ namespace ProSuite.Processing.Test.Evaluation
 			envIgnoreCase.DefineValue("bar", "foo");
 			Assert.AreEqual("bar", envIgnoreCase.Lookup("foo", null));
 			Assert.AreEqual("bar", envIgnoreCase.Lookup("FOO", null));
-			var ex1 = Assert.Catch<EvaluationException>(() => envIgnoreCase.Lookup("foo", "qualifier"));
+		var ex1 = Assert.Catch<EvaluationException>(() => envIgnoreCase.Lookup("foo", "qualifier"));
 			Console.WriteLine(@"Expected exception: {0}", ex1.Message);
 
 			Assert.IsInstanceOf(typeof(Function), envIgnoreCase.Lookup("TRIM", null));
@@ -153,7 +154,7 @@ namespace ProSuite.Processing.Test.Evaluation
 
 			var fabs = GetFunction(env, "ABS");
 
-			Assert.IsNull(env.Invoke(fabs, new object[] {null}));
+			Assert.IsNull(env.Invoke(fabs, new object[] { null }));
 			Assert.AreEqual(13.5, env.Invoke(fabs, Args(13.5)));
 			Assert.AreEqual(7.0, env.Invoke(fabs, Args(-7.0)));
 		}
@@ -176,7 +177,7 @@ namespace ProSuite.Processing.Test.Evaluation
 		{
 			var env = new StandardEnvironment();
 
-			var ffloor = GetFunction(env,"FLOOR");
+			var ffloor = GetFunction(env, "FLOOR");
 
 			Assert.IsNull(env.Invoke(ffloor, new object[] { null }));
 			Assert.AreEqual(13.0, env.Invoke(ffloor, Args(13.5)));
@@ -233,7 +234,7 @@ namespace ProSuite.Processing.Test.Evaluation
 
 			var frand = GetFunction(env, "RAND");
 
-			Assert.AreEqual(0.39908097935797693, (double)env.Invoke(frand, Args()), epsilon); // RAND/0
+		Assert.AreEqual(0.39908097935797693, (double)env.Invoke(frand, Args()), epsilon); // RAND/0
 			Assert.AreEqual(8, env.Invoke(frand, Args(10)));
 			Assert.AreEqual(7, env.Invoke(frand, Args(5, 12)));
 
@@ -276,7 +277,7 @@ namespace ProSuite.Processing.Test.Evaluation
 			// as uncomparable (in which case it returns null):
 
 			Assert.AreEqual(false, env.Invoke(fmin, Args("foo", 123.45, true, "bar", -7, false)));
-			Assert.AreEqual(null, env.Invoke(fmin, Args("foo", 123.45, true, "bar", -7, false, null))); // false
+		Assert.AreEqual(null, env.Invoke(fmin, Args("foo", 123.45, true, "bar", -7, false, null))); // false
 		}
 
 		[Test]
@@ -295,7 +296,7 @@ namespace ProSuite.Processing.Test.Evaluation
 			// as uncomparable (in which case it returns null):
 
 			Assert.AreEqual("foo", env.Invoke(fmax, Args("foo", 123.45, true, "bar", -7, false)));
-			Assert.AreEqual(null, env.Invoke(fmax, Args("foo", 123.45, true, "bar", -7, false, null))); // "foo"
+		Assert.AreEqual(null, env.Invoke(fmax, Args("foo", 123.45, true, "bar", -7, false, null))); // "foo"
 		}
 
 		[Test]
@@ -315,7 +316,7 @@ namespace ProSuite.Processing.Test.Evaluation
 
 			var ex1 = Assert.Catch<EvaluationException>(() => env.Invoke(ftrim, Args()));
 			Console.WriteLine(@"Expected exception: {0}", ex1.Message);
-			var ex2 = Assert.Catch<EvaluationException>(() => env.Invoke(ftrim, "foo", "bar", "bang"));
+		var ex2 = Assert.Catch<EvaluationException>(() => env.Invoke(ftrim, "foo", "bar", "bang"));
 			Console.WriteLine(@"Expected exception: {0}", ex2.Message);
 		}
 
@@ -463,7 +464,7 @@ namespace ProSuite.Processing.Test.Evaluation
 			Assert.IsNull(env.Invoke(fdecode, Args(null)));
 			Assert.IsNull(env.Invoke(fdecode, Args(null, null)));
 			Assert.AreEqual("deflt", env.Invoke(fdecode, Args(null, "deflt")));
-			Assert.AreEqual("deflt", env.Invoke(fdecode, Args(null, "s1", "r1", "s2", "r2", "deflt")));
+		Assert.AreEqual("deflt", env.Invoke(fdecode, Args(null, "s1", "r1", "s2", "r2", "deflt")));
 			Assert.AreEqual("r2", env.Invoke(fdecode, Args(null, "s1", "r1", null, "r2", "deflt")));
 			Assert.IsNull(env.Invoke(fdecode, Args(null, "s1", "r1", "s2", "r2")));
 			Assert.IsNull(env.Invoke(fdecode, Args(null, "s1", "r1", "s2", "r2", null)));
@@ -506,7 +507,7 @@ namespace ProSuite.Processing.Test.Evaluation
 			Assert.AreEqual(true, env.Invoke(fregex, Args("bazaa?r", "What a bazar!")));
 			Assert.AreEqual(false, env.Invoke(fregex, Args("bazaa?r", "What a baz!")));
 
-			var ex = Assert.Catch<EvaluationException>(() => env.Invoke(fregex, Args("something missing")));
+		var ex = Assert.Catch<EvaluationException>(() => env.Invoke(fregex, Args("something missing")));
 			Console.WriteLine(@"Expected exception: {0}", ex.Message);
 		}
 
@@ -523,7 +524,7 @@ namespace ProSuite.Processing.Test.Evaluation
 
 			Assert.AreEqual("a_b_c", env.Invoke(fregex, Args("(\\w)(?=.)", "abc", "$1_")));
 
-			var ex = Assert.Catch<EvaluationException>(() => env.Invoke(fregex, Args("this", "is", "too", "much")));
+		var ex = Assert.Catch<EvaluationException>(() => env.Invoke(fregex, Args("this", "is", "too", "much")));
 			Console.WriteLine(@"Expected exception: {0}", ex.Message);
 		}
 
@@ -686,11 +687,11 @@ namespace ProSuite.Processing.Test.Evaluation
 
 			// Register functions (static):
 			env.Register("Pi", ExtraFunctionality.Pi);
-			env.Register<double,double>("Square", ExtraFunctionality.Square);
+			env.Register<double, double>("Square", ExtraFunctionality.Square);
 
 			// Register methods (need object state):
 			env.Register("Circumference", extra.Circumference, extra);
-			env.Register<double,double>("Volume", extra.Volume, extra);
+			env.Register<double, double>("Volume", extra.Volume, extra);
 			env.Register<object[], double>("Volume", extra.Volume, extra); // variadic
 
 			object r1 = env.Invoke(GetFunction(env, "Pi"));
@@ -762,10 +763,10 @@ namespace ProSuite.Processing.Test.Evaluation
 			// and it can be implicitly converted to the parameter
 			// array type, then this will be done (and null can be
 			// implicitly converted to object[]).
-			return args ?? new object[] {null};
+			return args ?? new object[] { null };
 		}
 
-		private static Function GetFunction(IEvaluationEnvironment env, string name, string qualifier = null)
+	private static Function GetFunction(IEvaluationEnvironment env, string name, string qualifier = null)
 		{
 			object value = env.Lookup(name, qualifier);
 

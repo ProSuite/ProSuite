@@ -68,7 +68,7 @@ namespace ProSuite.QA.Tests.Test
 
 			runner.Execute();
 
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "ForeignKeys.NoReferencedRow");
 		}
 
 		[Test]
@@ -134,7 +134,7 @@ namespace ProSuite.QA.Tests.Test
 
 			runner.Execute();
 
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "ForeignKeys.NoReferencedRow");
 		}
 
 		[Test]
@@ -201,7 +201,51 @@ namespace ProSuite.QA.Tests.Test
 
 			runner.Execute();
 
-			Assert.AreEqual(1, runner.Errors.Count);
+			AssertUtils.OneError(runner, "ForeignKeys.NoReferencedRow");
+		}
+
+		[Test]
+		public void ForeignKeyIsOid()
+		{
+			const string fk = "FKEY1";
+
+			ITable referencedTable = DatasetUtils.CreateTable(
+				_workspace,
+				string.Format("{0}_keys", MethodBase.GetCurrentMethod()?.Name),
+				FieldUtils.CreateOIDField());
+
+			ITable referencingTable = DatasetUtils.CreateTable(
+				_workspace,
+				string.Format("{0}_fkeys", MethodBase.GetCurrentMethod()?.Name),
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateIntegerField(fk));
+
+			IRow r = GdbObjectUtils.CreateRow(referencedTable,
+			                                  new Dictionary<string, object>());
+			r.Store();
+
+			// valid reference
+			GdbObjectUtils.CreateRow(referencingTable,
+			                         new Dictionary<string, object>
+			                         {
+				                         { fk, r.OID },
+			                         }).Store();
+
+			// dangling reference:
+			GdbObjectUtils.CreateRow(referencingTable,
+			                         new Dictionary<string, object>
+			                         {
+				                         { fk, -1 },
+			                         }).Store();
+
+			var runner = new QaTestRunner(
+				new QaForeignKey(
+					ReadOnlyTableFactory.Create(referencingTable), fk,
+					ReadOnlyTableFactory.Create(referencedTable), referencedTable.OIDFieldName));
+
+			runner.Execute();
+
+			AssertUtils.OneError(runner, "ForeignKeys.NoReferencedRow");
 		}
 
 		[Test]

@@ -241,7 +241,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			// First or second phase:
 			if (shiftIsPressed)
 			{
-				// With reshape curves and shift it would mean we're in the targest selection phase
+				// With reshape curves and shift it would mean we're in the target selection phase
 				return ! HasReshapeCurves();
 			}
 
@@ -356,9 +356,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 				PickerPrecedence.SelectionGeometry = sketch;
 
-				var pickedItem =
-					await ShowPickerAsync<PickableFeatureItem>(
-						items, PickerPrecedence, this, pickerLocation);
+				IPickableFeatureItem pickedItem =
+					await ShowPickerAsync<IPickableFeatureItem>(
+						items, PickerPrecedence, pickerLocation);
 
 				if (pickedItem == null)
 				{

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
+using ProSuite.Commons.Collections;
 using ProSuite.Processing.Evaluation;
 
 namespace ProSuite.Processing.Test.Evaluation
@@ -142,13 +143,13 @@ namespace ProSuite.Processing.Test.Evaluation
 
 			var envIgnoreCase = new StandardEnvironment();
 			envIgnoreCase.DefineValue("TheEnv", name);
-			Assert.AreEqual(false, Dump(ExpressionEvaluator.Create("fAlSe")).Evaluate(envIgnoreCase));
+		Assert.AreEqual(false, Dump(ExpressionEvaluator.Create("fAlSe")).Evaluate(envIgnoreCase));
 
 			// When respecting case, "fAlSe" is just a name to be looked up in the environment:
 
 			var envRespectCase = new StandardEnvironment(false);
 			envRespectCase.DefineValue("TheEnv", name);
-			Assert.AreEqual("TheEnv", Dump(ExpressionEvaluator.Create("fAlSe", false)).Evaluate(envRespectCase));
+		Assert.AreEqual("TheEnv", Dump(ExpressionEvaluator.Create("fAlSe", false)).Evaluate(envRespectCase));
 		}
 
 		[Test]
@@ -262,25 +263,22 @@ namespace ProSuite.Processing.Test.Evaluation
 			Console.WriteLine(@"pyth(3, null) == {0} (the null becomes 0.0)", r5);
 			Assert.AreEqual(3.0, r5);
 
-			var ex6 = Assert.Catch<EvaluationException>(() => Evaluate("null('foo')", env));
-			Console.WriteLine(@"Expected exception: {0}", ex6.Message);
+			Assert.Catch<EvaluationException>(() => Evaluate("null('foo')", env));
 
-			var ex7 = Assert.Catch<EvaluationException>(() => Evaluate("'oops'(3)", env));
-			Console.WriteLine(@"Expected exception: {0}", ex7.Message);
+			Assert.Catch<EvaluationException>(() => Evaluate("'oops'(3)", env));
 
-			// Exception in invocate target's code is wrapped in a EvaluationException:
+			// Exception in invoked target's code is wrapped in an EvaluationException:
 			var ex8 = Assert.Catch<EvaluationException>(() => Evaluate("bomb()", env));
-			Console.WriteLine(@"Expected exception: {0}", ex8.Message);
-			Assert.NotNull(ex8.InnerException, "ex.InnerException is null");
+			Assert.NotNull(ex8?.InnerException, "ex.InnerException is null");
 			Assert.AreEqual("TESTING", ex8.InnerException.Message);
 		}
 
 		#region Static methods for the test environment
 
-		private static string Foo() { return "foo"; }
-		private static object Identity(object x) { return x; }
-		private static double Pythagoras(double x, double y) { return Math.Sqrt(x * x + y * y); }
-		private static object Bomb() { throw new Exception("TESTING"); }
+	private static string Foo() { return "foo"; }
+	private static object Identity(object x) { return x; }
+	private static double Pythagoras(double x, double y) { return Math.Sqrt(x * x + y * y); }
+	private static object Bomb() { throw new Exception("TESTING"); }
 
 		#endregion
 
@@ -412,7 +410,7 @@ namespace ProSuite.Processing.Test.Evaluation
 			env.DefineValue(5, "d");
 
 			Assert.AreEqual(5, Evaluate("xyzzy ? length(xyzzy) : -1", env));
-			Assert.AreEqual("Fri", Evaluate("d=0 ? 'Sun' : d=1 ? 'Mon' : d=2 ? 'Tue' : d=3 ? 'Wed' : d=4 ? 'Thu' : d=5 ? 'Fri' : d=6 ? 'Sat' : null", env));
+		Assert.AreEqual("Fri", Evaluate("d=0 ? 'Sun' : d=1 ? 'Mon' : d=2 ? 'Tue' : d=3 ? 'Wed' : d=4 ? 'Thu' : d=5 ? 'Fri' : d=6 ? 'Sat' : null", env));
 		}
 
 		[Test]
@@ -428,7 +426,7 @@ namespace ProSuite.Processing.Test.Evaluation
 			// ?? binds tighter than ?:
 			var env = new StandardEnvironment();
 			env.DefineValue(null, "nothing");
-			Assert.AreEqual("alt", Evaluate("nothing ?? false ? null ?? 'consequent' : 'alt' ?? 'alternative'", env));
+		Assert.AreEqual("alt", Evaluate("nothing ?? false ? null ?? 'consequent' : 'alt' ?? 'alternative'", env));
 		}
 
 		[Test]
@@ -465,10 +463,8 @@ namespace ProSuite.Processing.Test.Evaluation
 			Assert.IsNull(Evaluate("7%null"));
 
 			// However, null/0 is still a division by zero!
-			var ex1 = Assert.Catch<EvaluationException>(() => Evaluate("null/0"));
-			Console.WriteLine(@"Expected exception: {0}", ex1.Message);
-			var ex2 = Assert.Catch<EvaluationException>(() => Evaluate("null%0"));
-			Console.WriteLine(@"Expected exception: {0}", ex2.Message);
+			Assert.Catch<EvaluationException>(() => Evaluate("null/0"));
+			Assert.Catch<EvaluationException>(() => Evaluate("null%0"));
 		}
 
 		[Test]
@@ -568,14 +564,10 @@ namespace ProSuite.Processing.Test.Evaluation
 			// The standard environment throws an exception on divide by zero
 			// (rather than returning some type of double infinity or null):
 
-			var ex1 = Assert.Catch<EvaluationException>(() => Evaluate("3.7/0.0"));
-			Console.WriteLine(@"Expected exception: {0}", ex1.Message);
+			Assert.Catch<EvaluationException>(() => Evaluate("3.7/0.0"));
+			Assert.Catch<EvaluationException>(() => Evaluate("-3/0"));
+			Assert.Catch<EvaluationException>(() => Evaluate("null/0"));
 
-			var ex2 = Assert.Catch<EvaluationException>(() => Evaluate("-3/0"));
-			Console.WriteLine(@"Expected exception: {0}", ex2.Message);
-
-			var ex3 = Assert.Catch<EvaluationException>(() => Evaluate("null/0")); // sic
-			Console.WriteLine(@"Beware: null/0 gives: {0}", ex3.Message);
 			Assert.IsNull(Evaluate("null/2"));
 			Assert.IsNull(Evaluate("2/null"));
 		}
@@ -584,7 +576,7 @@ namespace ProSuite.Processing.Test.Evaluation
 		public void CanParseSubstring()
 		{
 			const string text = "Hello ; 1+2*3  ";
-			
+
 			const int index1 = 0;
 			var ee1 = ExpressionEvaluator.Create(text, index1, out int length1);
 			Assert.AreEqual(6, length1); // white space included
@@ -636,14 +628,14 @@ namespace ProSuite.Processing.Test.Evaluation
 
 			var input = new NamedValues
 			            {
-				            {"KUNSTBAUTE", inputKunstbaute},
-				            {"STUFE", inputStufe}
+				            { "KUNSTBAUTE", inputKunstbaute },
+				            { "STUFE", inputStufe }
 			            };
 
 			var crossing = new NamedValues
 			               {
-				               {"KUNSTBAUTE", crossingKunstbaute},
-				               {"STUFE", crossingStufe}
+				               { "KUNSTBAUTE", crossingKunstbaute },
+				               { "STUFE", crossingStufe }
 			               };
 
 			var env = new StandardEnvironment();
@@ -664,9 +656,9 @@ namespace ProSuite.Processing.Test.Evaluation
 
 		private class NamedValues : Dictionary<string, object>, INamedValues
 		{
-			public NamedValues() : base(StringComparer.OrdinalIgnoreCase)
-			{
-			}
+		public NamedValues() : base(StringComparer.OrdinalIgnoreCase)
+		{
+		}
 
 			public bool Exists(string name)
 			{
@@ -748,15 +740,15 @@ namespace ProSuite.Processing.Test.Evaluation
 				if (lookupComparer.Equals(name, "Bar"))
 				{
 					if (string.IsNullOrEmpty(qualifier) ||
-						lookupComparer.Equals(qualifier, "input"))
+					    lookupComparer.Equals(qualifier, "input"))
 					{
 						return "Bar (input)";
 					}
 				}
 
 				throw string.IsNullOrEmpty(qualifier)
-				      	? new Exception(string.Format("No such field: {0}", name))
-				      	: new Exception(string.Format("No such field: {0}.{1}", qualifier, name));
+					      ? new Exception(string.Format("No such field: {0}", name))
+					      : new Exception(string.Format("No such field: {0}.{1}", qualifier, name));
 			}
 
 			public override object Invoke(Function target, params object[] args)

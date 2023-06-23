@@ -13,7 +13,7 @@ using ProSuite.Commons.Text;
 namespace ProSuite.Commons.AGP.Gdb
 {
 	// TODO Should go to ProSuite.Commons.AGP.Core (but then we have to wrap CancelableProgressor)
-	// Or better just provide the CancellationToken from the CancelabelProgressor in the signatures
+	// Or better just provide the CancellationToken from the CancelableProgressor in the signatures
 	public static class GdbQueryUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();

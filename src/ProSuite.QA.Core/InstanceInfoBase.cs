@@ -28,6 +28,8 @@ namespace ProSuite.QA.Core
 			}
 		}
 
+		public abstract Type InstanceType { get; }
+
 		[NotNull]
 		public TestParameter GetParameter(string parameterName)
 		{

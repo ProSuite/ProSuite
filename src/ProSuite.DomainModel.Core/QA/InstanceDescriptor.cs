@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Validation;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.Core.QA
 {
@@ -16,6 +17,8 @@ namespace ProSuite.DomainModel.Core.QA
 	public abstract class InstanceDescriptor : EntityWithMetadata, INamed, IAnnotated
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private int _cloneId = -1;
 
 		[UsedImplicitly] private string _name;
 		[UsedImplicitly] private string _description;
@@ -98,6 +101,8 @@ namespace ProSuite.DomainModel.Core.QA
 				_constructorId = value;
 
 				OnSetConstructorId();
+
+				InstanceInfo = null;
 			}
 		}
 
@@ -131,6 +136,8 @@ namespace ProSuite.DomainModel.Core.QA
 
 					OnSetClass();
 				}
+
+				InstanceInfo = null;
 			}
 		}
 
@@ -139,6 +146,34 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <value>The name of the assembly.</value>
 		public virtual string TestAssemblyName => Class?.AssemblyName;
+
+		public new int Id
+		{
+			get
+			{
+				if (base.Id < 0 && _cloneId != -1)
+				{
+					return _cloneId;
+				}
+
+				return base.Id;
+			}
+		}
+
+		/// <summary>
+		/// Optionally cached instance info.
+		/// </summary>
+		public IInstanceInfo InstanceInfo { get; set; }
+
+		/// <summary>
+		/// The clone Id can be set if this instance is a (remote) clone of a persistent instance descriptor.
+		/// </summary>
+		/// <param name="id"></param>
+		public void SetCloneId(int id)
+		{
+			Assert.True(base.Id < 0, "Persistent entity or already initialized clone.");
+			_cloneId = id;
+		}
 
 		public abstract InstanceConfiguration CreateConfiguration();
 

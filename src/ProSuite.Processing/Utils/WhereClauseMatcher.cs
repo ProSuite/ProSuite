@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Processing.Evaluation;
 
 namespace ProSuite.Processing.Utils
 {
@@ -63,6 +63,11 @@ namespace ProSuite.Processing.Utils
 
 		public string Clause { get; }
 
+		/// <summary>
+		/// Return true iff the where clause refers to no other
+		/// fields than those listed in <paramref name="fields"/>.
+		/// Optionally, append an error message that lists undefined fields.
+		/// </summary>
 		public bool Validate(IEnumerable<string> fields, StringBuilder messages = null)
 		{
 			var stack = new Stack<object>();
@@ -73,16 +78,10 @@ namespace ProSuite.Processing.Utils
 			return values.Validate(messages);
 		}
 
-		//public bool Match([NotNull] IRowValues row)
-		//{
-		//	Assert.ArgumentNotNull(row, nameof(row));
-
-		//	return Match(new NamedValues(row, _valueCache, _indexCache));
-		//}
-
 		public bool Match([NotNull] INamedValues values)
 		{
-			Assert.ArgumentNotNull(values, nameof(values));
+			if (values is null)
+				throw new ArgumentNullException(nameof(values));
 
 			_stack.Clear();
 			//_valueCache.Clear();
@@ -90,19 +89,21 @@ namespace ProSuite.Processing.Utils
 
 			Execute(_program, values, _stack);
 
-			Assert.AreEqual(1, _stack.Count,
-			                "Bug: Stack has {0} item(s), expected 1", _stack.Count);
+			if (_stack.Count != 1)
+			{
+				throw Bug($"{_stack.Count} items on stack, expected 1");
+			}
 
-			object result = _stack.Pop();
+			object value = _stack.Pop();
 
-			Assert.True(result is bool, "Bug: Result on stack is not of type bool");
-
-			return (bool) result;
+			if (value is bool result) return result;
+			throw Bug("result on stack is not of type bool");
 		}
 
 		public void DumpProgram(StringBuilder sb)
 		{
-			Assert.ArgumentNotNull(sb, nameof(sb));
+			if (sb is null)
+				throw new ArgumentNullException(nameof(sb));
 
 			sb.Append('[');
 
@@ -396,8 +397,7 @@ namespace ProSuite.Processing.Utils
 					return Instruction.Ge;
 			}
 
-			throw new AssertionException(
-				string.Format("Bug: No instruction for token: {0}", token));
+			throw Bug($"No instruction for token {token}");
 		}
 
 		private class ParseState
@@ -724,15 +724,17 @@ namespace ProSuite.Processing.Utils
 
 		private static long ParseUnsigned(string text, ref int index)
 		{
-			Assert.True(index < text.Length, "Bug");
-			Assert.True(char.IsDigit(text, index), "Bug");
+			if (index < 0 || index >= text.Length)
+				throw new ArgumentOutOfRangeException(nameof(index));
+			if (! char.IsDigit(text, index))
+				throw new ArgumentException("Text at index is not a digit");
 
 			long number = 0;
 			while (index < text.Length && char.IsDigit(text, index))
 			{
 				char cc = text[index++];
 				int i = "0123456789".IndexOf(cc);
-				Assert.True(0 <= i && i <= 9, "Bug");
+				if (i < 0 || i > 9) throw Bug();
 				number *= 10;
 				number += i;
 			}
@@ -742,9 +744,11 @@ namespace ProSuite.Processing.Utils
 
 		private static string ParseString(string text, ref int index, StringBuilder sb)
 		{
-			Assert.True(index < text.Length, "Bug");
-			Assert.True(text[index] == '\'', "Bug");
-
+			if (index < 0 || index >= text.Length)
+				throw new ArgumentOutOfRangeException(nameof(index));
+			if (text[index] != '\'')
+				throw new ArgumentException("Text at index is not a quote");
+	
 			sb.Length = 0; // clear
 			int anchor = index;
 			index += 1; // skip opening apostrophe
@@ -776,8 +780,10 @@ namespace ProSuite.Processing.Utils
 
 		private static string ParseSymbol(string text, ref int index, StringBuilder sb)
 		{
-			Assert.True(index < text.Length, "Bug");
-			Assert.True(char.IsLetter(text, index) || text[index] == '_', "Bug");
+			if (index < 0 || index >= text.Length)
+				throw new ArgumentOutOfRangeException(nameof(index));
+			if (! char.IsLetter(text, index) && text[index] != '_')
+				throw new ArgumentException("Text at index is not a symbol");
 
 			sb.Length = 0; // clear
 			while (index < text.Length && (char.IsLetterOrDigit(text, index) || text[index] == '_'))
@@ -790,9 +796,7 @@ namespace ProSuite.Processing.Utils
 
 		private static char Peek(string text, int index)
 		{
-			return index < text.Length
-				       ? text[index]
-				       : '\0';
+			return index < text.Length ? text[index] : '\0';
 		}
 
 		#endregion
@@ -864,8 +868,8 @@ namespace ProSuite.Processing.Utils
 
 						case Instruction.Get:
 							value = stack.Pop();
-							Assert.True(value is string, "Bug: Get: bad type on stack");
-							value = values.GetValue((string) value);
+							if (! (value is string s)) throw Bug("Get: bad type on stack");
+							value = values.GetValue(s);
 							stack.Push(value);
 							break;
 
@@ -895,9 +899,8 @@ namespace ProSuite.Processing.Utils
 
 						case Instruction.Neg:
 							value = stack.Pop();
-							Assert.True(value is bool, "Bug: Neg: bad type on stack");
-							result = ! (bool) value;
-							stack.Push(result);
+							if (value is bool b) stack.Push(! b);
+							else Bug("Neg: bad type on stack");
 							break;
 
 						case Instruction.And:
@@ -905,8 +908,9 @@ namespace ProSuite.Processing.Utils
 							value = stack.Pop();
 							while (! Equals(value, Instruction.Mark))
 							{
-								Assert.True(value is bool, "Bug: And: bad type on stack");
-								if (! (bool) value) result = false;
+								if (! (value is bool proposition))
+									throw Bug("And: bad type on stack");
+								if (! proposition) result = false;
 								value = stack.Pop();
 							}
 
@@ -918,8 +922,9 @@ namespace ProSuite.Processing.Utils
 							value = stack.Pop();
 							while (! Equals(value, Instruction.Mark))
 							{
-								Assert.True(value is bool, "Bug: Or: bad type on stack");
-								if ((bool) value) result = true;
+								if (! (value is bool proposition))
+									throw Bug("Or: bad type on stack");
+								if (proposition) result = true;
 								value = stack.Pop();
 							}
 
@@ -927,8 +932,7 @@ namespace ProSuite.Processing.Utils
 							break;
 
 						default:
-							throw new AssertionException(
-								string.Format("Bug: invalid instruction: {0}", instruction));
+							throw Bug($"invalid instruction: {instruction}");
 					}
 				}
 				else
@@ -1138,6 +1142,11 @@ namespace ProSuite.Processing.Utils
 			throw new ArgumentOutOfRangeException(nameof(comp));
 		}
 
+		private static Exception Bug(string message = null)
+		{
+			return new AssertionException($"Bug: {message ?? "most illogical"}");
+		}
+
 		private enum Instruction
 		{
 			Nop,
@@ -1242,7 +1251,7 @@ namespace ProSuite.Processing.Utils
 					{
 						var s = _badNames.Count == 1 ? "" : "s";
 						messages.AppendFormat("Unknown field name{0}: ", s);
-						messages.Append(string.Join(" ", _badNames.OrderBy(n => n)));
+						messages.Append(string.Join(", ", _badNames.OrderBy(n => n)));
 					}
 
 					return false;

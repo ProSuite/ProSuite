@@ -125,7 +125,7 @@ namespace ProSuite.Commons.AGP.Selection
 			bool clearExistingSelection = false)
 		{
 			Assert.ArgumentNotNull(featuresPerLayers, nameof(featuresPerLayers));
-			
+
 			if (clearExistingSelection)
 			{
 				ClearSelection();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -33,7 +33,7 @@ namespace ProSuite.Commons.ManagedOptions
 			[NotNull] OverridableSettingsProvider<TPartialOptions> settingsProvider,
 			[NotNull] Func<TPartialOptions, TPartialOptions, TOptions> factoryMethod)
 		{
-			// TODO: To get rid of the factory method paramter:
+			// TODO: To get rid of the factory method parameter:
 			//       Add abstract Initialize(TPartialOptions, TPartialOptions) to base class
 			//       --> add parameter-less constructor to TOptions (and ... where TOptions : OptionsBase<TPartialOptions, new())
 			//       and change *all* implementation

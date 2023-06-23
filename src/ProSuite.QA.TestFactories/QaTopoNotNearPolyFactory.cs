@@ -13,12 +13,14 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests;
 using ProSuite.QA.Tests.Coincidence;
 
 namespace ProSuite.QA.TestFactories
 {
 	[UsedImplicitly]
+	[ProximityTest]
 	public class QaTopoNotNearPolyFactory : TestFactory
 	{
 		private static ITestIssueCodes _codes;
@@ -279,7 +281,7 @@ namespace ProSuite.QA.TestFactories
 			var intersectTest =
 				new QaIntersectsOther(featureClass, referenceClass, pars.IgnoreNeighborCondition);
 
-			return new List<ITest> {notNearTest, intersectTest};
+			return new List<ITest> { notNearTest, intersectTest };
 		}
 
 		public override string Export(QualityCondition qualityCondition)

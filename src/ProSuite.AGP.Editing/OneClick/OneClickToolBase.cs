@@ -29,8 +29,7 @@ using Cursor = System.Windows.Input.Cursor;
 namespace ProSuite.AGP.Editing.OneClick
 {
 	// todo daro log more, especially in subclasses
-
-	public abstract class OneClickToolBase : MapTool, IToolMouseEventsAware
+	public abstract class OneClickToolBase : MapTool
 	{
 		private const Key _keyShowOptionsPane = Key.O;
 
@@ -64,7 +63,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
 		public virtual IPickerPrecedence PickerPrecedence =>
-			_pickerPrecedence ?? (_pickerPrecedence = new SelectionToolPickerPrecedence());
+			_pickerPrecedence ?? (_pickerPrecedence = new StandardPickerPrecedence());
 
 		/// <summary>
 		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
@@ -85,8 +84,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected Cursor SelectionCursorUserShift { get; set; }
 		protected Cursor SelectionCursorOriginal { get; set; }
 		protected Cursor SelectionCursorOriginalShift { get; set; }
-
-		#region MapTool
 
 		protected override Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
@@ -145,6 +142,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
 		{
+			_msg.VerboseDebug(() => "OnToolKeyDown");
+
 			try
 			{
 				PressedKeys.Add(k.Key);
@@ -187,6 +186,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolKeyUp(MapViewKeyEventArgs k)
 		{
+			_msg.VerboseDebug(() => "OnToolKeyUp");
+
 			try
 			{
 				QueuedTaskUtils.Run(
@@ -246,19 +247,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			return false;
 		}
-
-		protected override void OnToolMouseDown(MapViewMouseButtonEventArgs e)
-		{
-			MouseDown?.Invoke(this, e);
-		}
-
-		#endregion
-
-		#region IToolMouseEventsAware
-
-		public event MouseButtonEventHandler MouseDown;
-
-		#endregion
 
 		protected virtual void ShiftPressedCore()
 		{
@@ -435,7 +423,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return GetSelectionSettings().SelectionTolerancePixels;
 		}
 
-		// todo daro rename to async
 		private async Task<bool> OnSelectionSketchComplete(Geometry sketchGeometry,
 		                                                   CancelableProgressor progressor)
 		{
@@ -463,6 +450,9 @@ namespace ProSuite.AGP.Editing.OneClick
 					pickerLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
 
+					_msg.VerboseDebug(() => $"Picker location on map {GeometryUtils.Format(selectionGeometry.Extent.Center)}");
+					_msg.VerboseDebug(() => $"Picker location on screen {pickerLocation.X}/{pickerLocation.Y}");
+
 					// find all features spatially related with searchGeometry
 					// TODO: 1. Find all features in point layers, if count > 0 -> skip the rest
 					//       2. Find all features in polyline layers, ...
@@ -488,11 +478,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			// todo daro refactor
 			bool result = singlePick
 				              ? await SingleSelectAsync(candidatesOfManyLayers,
-				                                        PickerPrecedence, this, pickerLocation, selectionMethod)
+				                                        pickerLocation,
+				                                        PickerPrecedence,
+				                                        selectionMethod)
 				              : await AreaSelectAsync(candidatesOfManyLayers,
 				                                      pickerLocation,
 				                                      PickerPrecedence,
-				                                      selectionMethod, this);
+				                                      selectionMethod);
 
 			await QueuedTask.Run(() => ProcessSelection(MapView.Active, progressor));
 
@@ -503,58 +495,14 @@ namespace ProSuite.AGP.Editing.OneClick
 		// todo daro ViewUtils.Try araound it?
 		private static async Task<bool> SingleSelectAsync(
 			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
-			[NotNull] IPickerPrecedence pickerPrecedence,
-			[NotNull] IToolMouseEventsAware mouseEvents,
 			Point pickerLocation,
+			IPickerPrecedence pickerPrecedence,
 			SelectionCombinationMethod selectionMethod)
 		{
-			int featureCount = SelectionUtils.GetFeatureCount(candidatesOfLayers);
+			var orderedSelection =
+				PickerUtils.OrderByGeometryDimension(candidatesOfLayers).ToList();
 
-			PickerMode pickerMode = pickerPrecedence.GetPickerMode(featureCount);
-
-			// todo daro refactor
-			if (featureCount == 1)
-			{
-				if (pickerMode == PickerMode.ShowPicker)
-				{
-					IEnumerable<IPickableItem> items =
-						await QueuedTask.Run(
-							() => PickableItemsFactory.CreateFeatureItems(
-								PickerUtils.OrderByGeometryDimension(candidatesOfLayers)));
-
-					var pickedItem =
-						await ShowPickerAsync<IPickableFeatureItem>(
-							items, pickerPrecedence, mouseEvents, pickerLocation);
-
-					if (pickedItem == null)
-					{
-						return false;
-					}
-
-					await QueuedTask.Run(() =>
-					{
-						//since SelectionCombinationMethod.New is only applied to
-						//the current layer but selections of other layers remain,
-						//we manually need to clear all selections first.
-
-						SelectionUtils.SelectFeature(
-							pickedItem.Layer, selectionMethod,
-							pickedItem.Oid,
-							selectionMethod == SelectionCombinationMethod.New);
-					});
-
-					return true;
-				}
-
-				await QueuedTask.Run(() =>
-				{
-					SelectionUtils.SelectFeatures(
-						candidatesOfLayers.First(), selectionMethod,
-						selectionMethod == SelectionCombinationMethod.New);
-				});
-
-				return true;
-			}
+			PickerMode pickerMode = pickerPrecedence.GetPickerMode(orderedSelection);
 
 			// ALT pressed: select all, do not show picker
 			if (pickerMode == PickerMode.PickAll)
@@ -562,7 +510,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				await QueuedTask.Run(() =>
 				{
 					SelectionUtils.SelectFeatures(
-						candidatesOfLayers, selectionMethod,
+						orderedSelection, selectionMethod,
 						selectionMethod == SelectionCombinationMethod.New);
 				});
 
@@ -577,8 +525,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						// all this code has to be in QueuedTask because
 						// IEnumerables are enumerated later
 						IEnumerable<IPickableItem> items =
-							PickableItemsFactory.CreateFeatureItems(
-								PickerUtils.OrderByGeometryDimension(candidatesOfLayers));
+							PickableItemsFactory.CreateFeatureItems(orderedSelection);
 
 						var pickedItem =
 							pickerPrecedence.PickBest<IPickableFeatureItem>(items);
@@ -600,12 +547,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				IEnumerable<IPickableItem> items =
 					await QueuedTask.Run(
-						() => PickableItemsFactory.CreateFeatureItems(
-							PickerUtils.OrderByGeometryDimension(candidatesOfLayers)));
+						() => PickableItemsFactory.CreateFeatureItems(orderedSelection));
 
 				IPickableFeatureItem pickedItem =
 					await ShowPickerAsync<IPickableFeatureItem>(
-						items, pickerPrecedence, mouseEvents, pickerLocation);
+						items, pickerPrecedence, pickerLocation);
 
 				if (pickedItem == null)
 				{
@@ -634,13 +580,15 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
 			IPickerPrecedence pickerPrecedence,
-			SelectionCombinationMethod selectionMethod, IToolMouseEventsAware mouseEvents)
+			SelectionCombinationMethod selectionMethod)
 		{
-			//CTRL was pressed: picker shows FCs to select from
-			PickerMode pickerMode =
-				pickerPrecedence.GetPickerMode(
-					SelectionUtils.GetFeatureCount(candidatesOfLayers), true);
+			var orderedSelection =
+				PickerUtils.OrderByGeometryDimension(candidatesOfLayers).ToList();
 
+			PickerMode pickerMode =
+				pickerPrecedence.GetPickerMode(orderedSelection, true);
+
+			//CTRL was pressed: picker shows FC's to select from
 			if (pickerMode == PickerMode.ShowPicker)
 			{
 				IEnumerable<IPickableItem> items =
@@ -650,7 +598,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				IPickableFeatureClassItem pickedItem =
 					await ShowPickerAsync<IPickableFeatureClassItem>(
-						items, pickerPrecedence, mouseEvents, pickerLocation);
+						items, pickerPrecedence, pickerLocation);
 
 				if (pickedItem == null)
 				{
@@ -688,9 +636,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		[NotNull]
 		protected static async Task<T> ShowPickerAsync<T>(
-			[NotNull] IEnumerable<IPickableItem> items,
-			[NotNull] IPickerPrecedence pickerPrecedence,
-			[NotNull] IToolMouseEventsAware mouseEvents,
+			IEnumerable<IPickableItem> items, IPickerPrecedence pickerPrecedence,
 			Point pickerLocation)
 			where T : class, IPickableItem
 		{
@@ -698,12 +644,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			Func<Task<T>> showPickerControl =
 				await QueuedTaskUtils.Run(() => picker.PickSingle<T>(
-					                          items, pickerPrecedence,
-					                          mouseEvents, pickerLocation));
+					                          items, pickerLocation,
+					                          pickerPrecedence));
 
 			T pickedItem =
 				await ViewUtils.TryAsync(showPickerControl(), _msg);
-			
+
 			return pickedItem;
 		}
 

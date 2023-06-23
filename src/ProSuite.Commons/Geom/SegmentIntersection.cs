@@ -889,7 +889,7 @@ namespace ProSuite.Commons.Geom
 			//      \
 
 			//   |\   this piece will be considered a linear intersecting if the tolerance
-			//        is smaller than the lenght of | but large enough that the bottom point
+			//        is smaller than the length of | but large enough that the bottom point
 			//        of the vertical line is within the tolerance of the \ line's interior!
 			// 
 			// The condition is (tolerance / sin(alpha)) > dist(intersection point along source) - source start/end)

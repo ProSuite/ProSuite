@@ -38,7 +38,7 @@ namespace ProSuite.Commons.UI.WinForms
 				// get the winforms synchronization context
 				// NOTE: relying on the current synchronization context of the current thread is not sufficient, 
 				//       as this gets changed depending on previous winforms actions:
-				//       - after showing a modal dialog, the synchronization context DOES NOT displatch back to the gui thread
+				//       - after showing a modal dialog, the synchronization context DOES NOT dispatch back to the gui thread
 				//       - after opening/activating a modeless form, it DOES dispatch back to the gui thread
 				// -> better to set the expected synchronization context explicitly
 				// NOTE: this must be done on the gui thread, otherwise even this synchronization context will not dispatch back to it

@@ -295,7 +295,7 @@ namespace ProSuite.AGP.Editing
 			}
 			catch (Exception)
 			{
-				_msg.VerboseDebug(() => $"Error persisting shape {geometry.ToXML()}");
+				_msg.VerboseDebug(() => $"Error persisting shape {geometry.ToXml()}");
 				throw;
 			}
 

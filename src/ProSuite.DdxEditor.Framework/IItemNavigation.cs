@@ -46,7 +46,7 @@ namespace ProSuite.DdxEditor.Framework
 		void RefreshItem([NotNull] Item item);
 
 		/// <summary>
-		/// Attempty to refresh the item corresponding to a given entity.
+		/// Attempt to refresh the item corresponding to a given entity.
 		/// </summary>
 		/// <param name="entity">The entity to refresh it's item for</param>
 		/// <returns><c>true</c> if the item was found and refreshed;

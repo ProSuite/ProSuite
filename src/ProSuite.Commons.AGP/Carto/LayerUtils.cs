@@ -14,6 +14,24 @@ namespace ProSuite.Commons.AGP.Carto
 	public static class LayerUtils
 	{
 		/// <summary>
+		/// Given a layer, find the map to which it belongs.
+		/// </summary>
+		public static Map FindMap(Layer layer)
+		{
+			var parent = layer.Parent;
+
+			while (parent != null)
+			{
+				if (parent is Map map) return map;
+				if (parent is not Layer other) break;
+
+				parent = other.Parent;
+			}
+
+			return null;
+		}
+
+		/// <summary>
 		/// Returns the Rows or features found by the layer search. Honors definition queries,
 		/// layer time, etc. defined on the layer. According to the documentation, valid rows returned
 		/// by a cursor should be disposed.
@@ -30,11 +48,12 @@ namespace ProSuite.Commons.AGP.Carto
 		                                           CancellationToken cancellationToken = default)
 			where T : Row
 		{
-			Assert.ArgumentNotNull(layer, nameof(layer));
+			if (layer is null)
+				throw new ArgumentNullException(nameof(layer));
 
 			if (predicate == null)
 			{
-				predicate = f => true;
+				predicate = _ => true;
 			}
 
 			using (RowCursor cursor = layer.Search(filter))
@@ -140,31 +159,26 @@ namespace ProSuite.Commons.AGP.Carto
 		/// is broken FeatureLayer.GetTable() returns null.
 		/// </summary>
 		public static IEnumerable<Table> GetTables(
-			[NotNull] this IEnumerable<BasicFeatureLayer> layers)
+			this IEnumerable<BasicFeatureLayer> layers)
 		{
-			Assert.ArgumentNotNull(layers, nameof(layers));
-
-			return layers.Select(fl => fl.GetTable()).Where(table => table != null);
+			return layers is null
+				       ? Enumerable.Empty<Table>()
+				       : layers.Select(fl => fl.GetTable()).Where(table => table != null);
 		}
 
 		/// <summary>
-		/// Gets the ObjectIDs of selected features from feature
-		/// layers with valid data source.
-		/// Even tough a layer data source is broken the BasicFeatureLayer.SelectionCount
-		/// can return a valid result.
+		/// Gets the ObjectIDs of selected features from the given <paramref name="layer"/>.
 		/// </summary>
-		/// <param name="layer"></param>
 		/// <remarks>
-		/// Altough a layer data source is broken BasicFeatureLayer.SelectionCount
+		/// Although a layer data source is broken BasicFeatureLayer.SelectionCount
 		/// can return a valid result.
 		/// </remarks>
-		public static IEnumerable<long> GetSelectionOids([NotNull] this BasicFeatureLayer layer)
+		public static IEnumerable<long> GetSelectionOids(this BasicFeatureLayer layer)
 		{
-			Assert.ArgumentNotNull(layer, nameof(layer));
-
-			ArcGIS.Core.Data.Selection selection = layer.GetSelection();
-
-			return selection == null ? Enumerable.Empty<long>() : selection.GetObjectIDs();
+			using (ArcGIS.Core.Data.Selection selection = layer?.GetSelection())
+			{
+				return selection == null ? Enumerable.Empty<long>() : selection.GetObjectIDs();
+			}
 		}
 
 		public static bool HasSelection([CanBeNull] BasicFeatureLayer layer)

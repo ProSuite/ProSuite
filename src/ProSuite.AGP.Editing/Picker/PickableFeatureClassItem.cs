@@ -26,7 +26,7 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			_featureClassName = featureClass.GetName();
 			Oids = features.Select(feature => feature.GetObjectID()).ToList();
-			Geometry = GeometryUtils.Union(features.Select(feature => feature.GetShape()));
+			Geometry = GeometryUtils.Union(features.Select(feature => feature.GetShape()).ToList());
 		}
 
 		public IReadOnlyList<long> Oids { get; }
@@ -69,7 +69,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public override string ToString()
 		{
-			return $"{_featureClassName}: #{Oids.Count} - {Score}";
+			return $"{_featureClassName}: #{Oids.Count}";
 		}
 	}
 }

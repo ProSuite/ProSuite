@@ -17,6 +17,9 @@ namespace ProSuite.DomainModel.AO.QA
 			[NotNull] IList<int> datasetIds,
 			bool includeHidden);
 
+		[CanBeNull]
+		QualitySpecification GetQualitySpecification(int qualitySpecificationId);
+
 		// TODO: Use IGdbTable (In Commons.Gdb) instead of IObjectClass, wrap IObjectClass
 		IList<ProjectWorkspaceBase<Project<TModel>, TModel>> GetProjectWorkspaceCandidates(
 			[NotNull] IList<IObjectClass> objectClasses);

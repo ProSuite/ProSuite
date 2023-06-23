@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using NUnit.Framework;
 
@@ -7,6 +7,15 @@ namespace ProSuite.Commons.Test
 	[TestFixture]
 	public class MathUtilsTest
 	{
+		[Test]
+		public void CanRoundToSignificantDigits0()
+		{
+			Assert.AreEqual(0.0, MathUtils.RoundToSignificantDigits(0.0, 1));
+			Assert.AreEqual(0.0, MathUtils.RoundToSignificantDigits(0.0, 8));
+			Assert.AreEqual(0.0, MathUtils.RoundToSignificantDigits(0.0, 15));
+			Assert.AreEqual(0.0, MathUtils.RoundToSignificantDigits(0.0, 0));
+		}
+
 		[Test]
 		public void CanRoundToSignificantDigits1()
 		{
@@ -34,6 +43,37 @@ namespace ProSuite.Commons.Test
 			// Note the odd 99 at the end
 			Assert.AreEqual(1.1234567891234599,
 			                MathUtils.RoundToSignificantDigits(1.12345678912345678, 15));
+		}
+
+		[Test]
+		public void CanRoundToSignificantDigits5()
+		{
+			Assert.AreEqual(0.0, MathUtils.RoundToSignificantDigits(12.34567, 0));
+			Assert.AreEqual(10.0, MathUtils.RoundToSignificantDigits(12.34567, 1));
+			Assert.AreEqual(12.0, MathUtils.RoundToSignificantDigits(12.34567, 2));
+			Assert.AreEqual(12.3, MathUtils.RoundToSignificantDigits(12.34567, 3));
+			Assert.AreEqual(12.35, MathUtils.RoundToSignificantDigits(12.34567, 4));
+			Assert.AreEqual(12.346, MathUtils.RoundToSignificantDigits(12.34567, 5));
+		}
+
+		[Test]
+		public void CanRoundToSignificantDigits6()
+		{
+			Assert.AreEqual(0.0, MathUtils.RoundToSignificantDigits(-123.4567, 0));
+			Assert.AreEqual(-100.0, MathUtils.RoundToSignificantDigits(-123.4567, 1));
+			Assert.AreEqual(-120.0, MathUtils.RoundToSignificantDigits(-123.4567, 2));
+			Assert.AreEqual(-123.0, MathUtils.RoundToSignificantDigits(-123.4567, 3));
+			Assert.AreEqual(-123.5, MathUtils.RoundToSignificantDigits(-123.4567, 4));
+			Assert.AreEqual(-123.46, MathUtils.RoundToSignificantDigits(-123.4567, 5));
+		}
+
+		[Test]
+		public void CanRoundToSignificantDigits7()
+		{
+			// Rounding 1283554.3404949855 to 8 significant figures gave
+			// 1283554.29999998 with the old code; now it gives the expected result:
+
+			Assert.AreEqual(1283554.3, MathUtils.RoundToSignificantDigits(1283554.3404949855, 8));
 		}
 
 		[Test]

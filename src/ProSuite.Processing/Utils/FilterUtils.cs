@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Processing.Domain;
 
 namespace ProSuite.Processing.Utils
 {

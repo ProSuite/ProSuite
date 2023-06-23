@@ -41,7 +41,7 @@ namespace ProSuite.Commons.Collections
 
 		private static int DetermineMaximumDictionaryEntries()
 		{
-			// It turns out it's actually imposible (by intention) to not be able to determine the 
+			// It turns out it's actually impossible (by intention) to not be able to determine the 
 			// size of a struct.  The best we can do is to assume the largest possible, and just 
 			// accept the wasted space.
 			// (See http://stackoverflow.com/questions/3361986/how-to-check-the-number-of-bytes-consumed-by-my-structure#3362736)
