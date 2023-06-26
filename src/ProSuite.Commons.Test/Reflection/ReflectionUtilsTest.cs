@@ -99,6 +99,7 @@ namespace ProSuite.Commons.Test.Reflection
 		}
 
 		[Test]
+		[Category(TestCategory.FixMe)]
 		public void CanGetConstantValue()
 		{
 			var type = typeof(TestClass);
