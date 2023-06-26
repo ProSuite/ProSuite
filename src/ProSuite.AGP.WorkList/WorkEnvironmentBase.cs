@@ -50,23 +50,19 @@ namespace ProSuite.AGP.WorkList
 			return CreateWorkListCore(repository, uniqueName, displayName);
 		}
 
-		private LayerDocument GetWorkListSymbologyTemplateLayer()
-		{
-			string filePath = GetWorkListSymbologyTemplateLayerPath();
-
-			_msg.DebugFormat("Using work list symbology template layer from {0}", filePath);
-
-			return LayerUtils.CreateLayerDocument(filePath);
-		}
-
 		public FeatureLayer AddLayer([NotNull] IWorkList worklist, string path)
 		{
-			FeatureLayer worklistLayer =
-				CreateWorklistLayer(worklist, path, GetContainer());
+			//Create the work list layer with basic properties and connect to datasource
+			FeatureLayer worklistLayer = CreateWorklistLayer(worklist, path, GetContainer());
 
+			//Set some hard-coded properties
+			worklistLayer.SetScaleSymbols(false);
 			worklistLayer.SetSelectable(false);
+			worklistLayer.SetSnappable(false);
 
-			LayerUtils.ApplyRenderer(worklistLayer, GetWorkListSymbologyTemplateLayer());
+			//Set renderer based on symbology from template layer
+			LayerDocument templateLayer = GetWorkListSymbologyTemplateLayer();
+			LayerUtils.ApplyRenderer(worklistLayer, templateLayer);
 
 			return worklistLayer;
 		}
@@ -102,10 +98,9 @@ namespace ProSuite.AGP.WorkList
 		protected abstract Task<FeatureClass> EnsureStatusFieldCoreAsync(
 			[NotNull] FeatureClass featureClass);
 
-		protected abstract IWorkList
-			CreateWorkListCore([NotNull] IWorkItemRepository repository,
-			                   [NotNull] string uniqueName,
-			                   [CanBeNull] string displayName);
+		protected abstract IWorkList CreateWorkListCore([NotNull] IWorkItemRepository repository,
+		                                                [NotNull] string uniqueName,
+		                                                [CanBeNull] string displayName);
 
 		protected abstract IRepository CreateStateRepositoryCore(string path, string workListName);
 
@@ -119,6 +114,8 @@ namespace ProSuite.AGP.WorkList
 		{
 			return typeof(T);
 		}
+
+		#region Private
 
 		[NotNull]
 		private static FeatureLayer CreateWorklistLayer(
@@ -146,5 +143,16 @@ namespace ProSuite.AGP.WorkList
 				table?.Dispose();
 			}
 		}
+
+		private LayerDocument GetWorkListSymbologyTemplateLayer()
+		{
+			string filePath = GetWorkListSymbologyTemplateLayerPath();
+
+			_msg.DebugFormat("Using work list symbology template layer from {0}", filePath);
+
+			return LayerUtils.CreateLayerDocument(filePath);
+		}
+
+		#endregion
 	}
 }
