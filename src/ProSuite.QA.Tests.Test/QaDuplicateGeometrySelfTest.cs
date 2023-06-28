@@ -244,8 +244,18 @@ namespace ProSuite.QA.Tests.Test
 
 			Assert.AreEqual(0, testRunner.Errors.Count);
 
-			// TODO: Add assertion, that it is < 1 second...
 			Console.WriteLine($"Processed real data in {watch.ElapsedMilliseconds}ms");
+
+			if (Environment.Is64BitProcess)
+			{
+				// Ryzen 9: Processed real data in 621ms
+				Assert.Less(watch.ElapsedMilliseconds, 1000);
+			}
+			else
+			{
+				// Ryzen 9: Processed real data in 27198ms
+				Assert.Less(watch.ElapsedMilliseconds, 35000);
+			}
 		}
 
 		private static void AddFeature([NotNull] IFeatureClass featureClass,
