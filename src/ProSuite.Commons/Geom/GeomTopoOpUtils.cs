@@ -688,7 +688,7 @@ namespace ProSuite.Commons.Geom
 			MultiLinestring result = null;
 
 			// TODO: Optimize and use potential spatial index (change to input polyhedron?)
-			foreach (RingGroup ringGroup in ringGroups)
+			foreach (RingGroup ringGroup in ringGroups.OrderByDescending(r => r.GetArea2D()))
 			{
 				if (result == null)
 				{
