@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -269,5 +270,17 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				}
 			}
 		}
+
+		[CanBeNull]
+		protected virtual IGeometry GetSearchGeometry([NotNull] IReadOnlyFeature feature,
+		                                              int tableIndex)
+		{
+			if (feature is IIndexedMultiPatchFeature m)
+			{
+				return m.IndexedMultiPatch.GetFootprint();
+			}
+			return feature.Shape;
+		}
+
 	}
 }

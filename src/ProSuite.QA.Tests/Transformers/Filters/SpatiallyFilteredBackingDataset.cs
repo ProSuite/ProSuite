@@ -40,6 +40,8 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 		public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 		{
+			QueryHelpers[0].FullGeometrySearch =
+				(_neighborSearchOption == TrSpatiallyFiltered.SearchOption.All);
 			QueryFilterHelper resultFilter = QueryHelpers[0];
 			Assert.NotNull(filter);
 
