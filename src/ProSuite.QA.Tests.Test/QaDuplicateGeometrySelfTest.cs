@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -7,6 +9,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Testing;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -219,6 +222,30 @@ namespace ProSuite.QA.Tests.Test
 			testRunner.Execute();
 
 			Assert.AreEqual(9, testRunner.Errors.Count);
+		}
+
+		[Test]
+		public void TestReportDuplicatesMultipatchPerformance()
+		{
+			string path = TestDataPreparer.ExtractZip("GebZueriberg.gdb.zip").Overwrite().GetPath();
+
+			IFeatureWorkspace featureWorkspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);
+			IFeatureClass featureClass =
+				DatasetUtils.OpenFeatureClass(featureWorkspace, "TLM_GEBAEUDE");
+
+			var test = new QaDuplicateGeometrySelf(
+				ReadOnlyTableFactory.Create(featureClass), null, false);
+
+			var testRunner = new QaContainerTestRunner(1000, test);
+
+			Stopwatch watch = Stopwatch.StartNew();
+			testRunner.Execute();
+			watch.Stop();
+
+			Assert.AreEqual(0, testRunner.Errors.Count);
+
+			// TODO: Add assertion, that it is < 1 second...
+			Console.WriteLine($"Processed real data in {watch.ElapsedMilliseconds}ms");
 		}
 
 		private static void AddFeature([NotNull] IFeatureClass featureClass,
