@@ -644,13 +644,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			if (! string.IsNullOrEmpty(subResponse.CancellationMessage))
 			{
+				// This happens if an error occurred in the worker. 
 				CancellationMessage = subResponse.CancellationMessage;
+			}
+
+			if (subResponse.Status == ServiceCallStatus.Failed &&
+			    QualityVerification != null)
+			{
+				// This happens if an error occurred in the worker (a serious one that stops the process)
+				QualityVerification.Cancelled = true;
 			}
 
 			QualityVerificationMsg verificationMsg = subResponse.VerificationMsg;
 
 			if (verificationMsg != null)
 			{
+				// Failing tests that get reported as issues (and cancel the verification)
+				// end up here:
 				AddVerification(verificationMsg, QualityVerification);
 			}
 
@@ -892,7 +902,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			qualityVerification.EndDate = DateTime.Now;
 
-			qualityVerification.Cancelled = Cancelled;
+			if (Cancelled)
+			{
+				// Cancelled by caller (there is also the possibility that a worker has failed)
+				qualityVerification.Cancelled = true;
+			}
+
 			qualityVerification.CalculateStatistics();
 		}
 

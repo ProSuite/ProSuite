@@ -201,7 +201,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			warningCount = issueProcessor.WarningCount;
 			rowCountWithStopConditions = issueProcessor.RowsWithStopConditionsCount;
 
-			bool fulfilled = errorCount == 0 && ! progressProcessor.Cancelled;
+			// The verification could be un-fulfilled due to an exception
+			bool fulfilled = errorCount == 0 && verification.Fulfilled &&
+			                 ! progressProcessor.Cancelled;
 
 			LogResults(verificationElements.Elements, issueProcessor,
 			           qualityConditionCount, datasetCount,
