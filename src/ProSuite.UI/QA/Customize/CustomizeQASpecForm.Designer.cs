@@ -390,6 +390,7 @@ namespace ProSuite.UI.QA.Customize
 			this._dataGridViewEnabledConditions.RowHeadersWidth = 20;
 			this._dataGridViewEnabledConditions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this._dataGridViewEnabledConditions.Size = new System.Drawing.Size(238, 329);
+			this._dataGridViewEnabledConditions.MinimumSize = new System.Drawing.Size(60, 80);
 			this._dataGridViewEnabledConditions.TabIndex = 2;
 			this._dataGridViewEnabledConditions.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this._dataGridViewEnabledConditions_CellFormatting);
 			this._dataGridViewEnabledConditions.SelectionChanged += new System.EventHandler(this._dataGridViewEnabledConditions_SelectionChanged);
