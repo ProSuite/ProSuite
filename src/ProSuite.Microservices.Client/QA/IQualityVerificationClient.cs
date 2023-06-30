@@ -15,5 +15,7 @@ namespace ProSuite.Microservices.Client.QA
 		bool CanAcceptCalls(bool allowFailOver = false);
 
 		Task<bool> CanAcceptCallsAsync(bool allowFailOver = false);
+
+		string GetAddress();
 	}
 }

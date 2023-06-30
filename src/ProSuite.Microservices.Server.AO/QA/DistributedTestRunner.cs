@@ -265,6 +265,18 @@ namespace ProSuite.Microservices.Server.AO.QA
 				// TODO: Check extent of issue with processed area
 				return true;
 			}
+
+			#region Overrides of Object
+
+			public override string ToString()
+			{
+				return
+					$"{QualityConditionGroup.ExecType} sub-verification with {QualityConditionGroup.QualityConditions.Count} " +
+					$"condition(s) in envelope {GeometryUtils.ToString(TileEnvelope, true)}" +
+					$"{QualityConditionGroup}";
+			}
+
+			#endregion
 		}
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -384,6 +396,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			// TODO: Consider a BlockingCollection or some other way to limit through-put
 			//       or even the consumer/producer pattern?
 
+			OverallProgressTotal = subVerifications.Count;
+
 			Stack<SubVerification> unhandledSubverifications =
 				new Stack<SubVerification>(subVerifications.Reverse());
 			IDictionary<Task, SubVerification> started =
@@ -401,7 +415,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 					IQualityVerificationClient finishedClient = _subveriClientsDict[completed];
 					_workingClients.Remove(finishedClient);
 
-					ProcessFinalResult(task, completed, cancelWhenFaulted: false);
+					string failureMessage =
+						ProcessFinalResult(task, completed, finishedClient,
+						                   cancelWhenFaulted: false);
+
+					if (failureMessage != null)
+					{
+						_msg.WarnFormat("{0}{1}Failed Verification: {2}", failureMessage,
+						                Environment.NewLine, completed);
+						// TODO: Communicate error to client?!
+					}
 
 					if (task.Status == TaskStatus.Faulted)
 					{
@@ -439,11 +462,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 						{
 							reportProgress = true;
 						}
+					}
 
-						if (UpdateOverallProgress(subVerification))
-						{
-							reportProgress = true;
-						}
+					if (UpdateOverallProgress(subVerifications))
+					{
+						reportProgress = true;
 					}
 
 					if (reportProgress)
@@ -626,35 +649,57 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return task;
 		}
 
-		private void ProcessFinalResult(
-			Task<bool> task, SubVerification subVerification,
+		private string ProcessFinalResult(
+			[NotNull] Task<bool> task,
+			[NotNull] SubVerification subVerification,
+			IQualityVerificationClient client,
 			bool cancelWhenFaulted)
 		{
+			string resultMessage = null;
+
 			SubResponse subResponse = subVerification.SubResponse;
 			if (task.IsFaulted)
 			{
-				_msg.WarnFormat("Sub-verification has faulted: {0}", subResponse);
+				// This is probably a network failure or process crash:
+				_msg.WarnFormat("Sub-verification on {0} has faulted: {1}", client.GetAddress(),
+				                subVerification);
 
 				if (cancelWhenFaulted)
 				{
 					CancellationTokenSource.Cancel();
 					CancellationMessage = task.Exception?.InnerException?.Message;
 				}
+
+				resultMessage =
+					$"Failure in worker {client.GetAddress()}: {subResponse.CancellationMessage}";
 			}
 
 			if (! string.IsNullOrEmpty(subResponse.CancellationMessage))
 			{
+				// This happens if an error occurred in the worker. 
 				CancellationMessage = subResponse.CancellationMessage;
+			}
+
+			if (subResponse.Status == ServiceCallStatus.Failed &&
+			    QualityVerification != null)
+			{
+				// This happens if an error occurred in the worker (a serious one that stops the process)
+				QualityVerification.Cancelled = true;
+				resultMessage =
+					$"Failure in worker {client.GetAddress()}: {subResponse.CancellationMessage}";
 			}
 
 			QualityVerificationMsg verificationMsg = subResponse.VerificationMsg;
 
 			if (verificationMsg != null)
 			{
+				// Failures in tests that get reported as issues (typically a configuration error):
 				AddVerification(verificationMsg, QualityVerification);
 			}
 
 			DrainIssues(subVerification);
+
+			return resultMessage;
 		}
 
 		private IDictionary<IssueKey, IssueKey> _knownIssues;
@@ -892,7 +937,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			qualityVerification.EndDate = DateTime.Now;
 
-			qualityVerification.Cancelled = Cancelled;
+			if (Cancelled)
+			{
+				// Cancelled by caller (there is also the possibility that a worker has failed)
+				qualityVerification.Cancelled = true;
+			}
+
 			qualityVerification.CalculateStatistics();
 		}
 
@@ -906,38 +956,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return conditionVerification;
 		}
 
-		private bool UpdateOverallProgress(SubVerification subVerification)
+		private bool UpdateOverallProgress(IEnumerable<SubVerification> subVerifications)
 		{
-			// The 'slowest' wins:
+			int completedCount = subVerifications.Count(v => v.Completed);
 
-			if (subVerification.SubResponse.ProgressTotal == 0)
+			if (completedCount == OverallProgressCurrent)
 			{
 				return false;
 			}
 
-			SubResponse slowest = GetSlowestResponse(_tasks.Select(x => x.Value.SubResponse));
+			OverallProgressCurrent = completedCount;
 
-			OverallProgressCurrent = slowest.ProgressCurrent;
-			OverallProgressTotal = slowest.ProgressTotal;
+			_msg.InfoFormat("Overall progress: {0} of {1} sub-verifications completed",
+			                OverallProgressCurrent, OverallProgressTotal);
 
-			return subVerification.SubResponse == slowest;
-		}
-
-		private static SubResponse GetSlowestResponse(IEnumerable<SubResponse> subResponses)
-		{
-			double slowest = double.MaxValue;
-
-			SubResponse result = null;
-			foreach (SubResponse subResponse in subResponses)
-			{
-				if (subResponse.ProgressRatio < slowest)
-				{
-					result = subResponse;
-					slowest = subResponse.ProgressRatio;
-				}
-			}
-
-			return result;
+			return true;
 		}
 
 		private static bool TryTakeCompletedRun(

@@ -3,7 +3,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Geometry.CreateFootprint;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -18,9 +17,6 @@ namespace ProSuite.QA.Container.TestContainer
 		private IGeometry _sourceGeometry;
 		private IGeometry _targetGeometry;
 
-		private IGeometry _usedSourceGeom;
-		private IGeometry _usedTargetGeom;
-
 		private const string _relationInteriorIntersects = "RELATE (G1, G2, 'T********')";
 
 		#region IGeometryEngine Members
@@ -32,58 +28,47 @@ namespace ProSuite.QA.Container.TestContainer
 			Assert.ArgumentNotNull(sourceGeometry, nameof(sourceGeometry));
 
 			_sourceGeometry = sourceGeometry;
-			_usedSourceGeom = null;
+
+			GeometryUtils.AllowIndexing(_sourceGeometry);
 		}
 
 		public void SetTargetGeometry(IGeometry targetGeometry)
 		{
 			_targetGeometry = targetGeometry;
-			_usedTargetGeom = null;
-		}
 
-		private IGeometry SourceGeometry => _usedSourceGeom ?? (_usedSourceGeom = GetUseGeometry(_sourceGeometry));
-
-		private IGeometry TargetGeometry => _usedTargetGeom ?? (_usedTargetGeom = GetUseGeometry(_targetGeometry));
-
-		private IGeometry GetUseGeometry(IGeometry geometry)
-		{
-			IGeometry useGeometry = (geometry is IMultiPatch mp)
-				                        ? CreateFootprintUtils.GetFootprint(mp)
-				                        : geometry;
-			GeometryUtils.AllowIndexing(useGeometry);
-			return useGeometry;
+			GeometryUtils.AllowIndexing(_targetGeometry);
 		}
 
 		public bool EvaluateRelation(IFeatureClassFilter spatialFilter)
 		{
 			Assert.ArgumentNotNull(spatialFilter, nameof(spatialFilter));
-			Assert.ArgumentNotNull(_sourceGeometry, nameof(_sourceGeometry));
-			Assert.ArgumentNotNull(_targetGeometry, nameof(_targetGeometry));
+			Assert.NotNull(_sourceGeometry, nameof(_sourceGeometry));
+			Assert.NotNull(_targetGeometry, nameof(_targetGeometry));
 
 			esriSpatialRelEnum relation = spatialFilter.SpatialRelationship;
 
 			switch (relation)
 			{
 				case esriSpatialRelEnum.esriSpatialRelIntersects:
-					return EvaluateIntersects(SourceGeometry, TargetGeometry);
+					return EvaluateIntersects(_sourceGeometry, _targetGeometry);
 
 				case esriSpatialRelEnum.esriSpatialRelTouches:
-					return EvaluateTouches(SourceGeometry, TargetGeometry);
+					return EvaluateTouches(_sourceGeometry, _targetGeometry);
 
 				case esriSpatialRelEnum.esriSpatialRelOverlaps:
-					return EvaluateOverlaps(SourceGeometry, TargetGeometry);
+					return EvaluateOverlaps(_sourceGeometry, _targetGeometry);
 
 				case esriSpatialRelEnum.esriSpatialRelCrosses:
-					return EvaluateCrosses(SourceGeometry, TargetGeometry);
+					return EvaluateCrosses(_sourceGeometry, _targetGeometry);
 
 				case esriSpatialRelEnum.esriSpatialRelWithin:
-					return EvaluateWithin(SourceGeometry, TargetGeometry);
+					return EvaluateWithin(_sourceGeometry, _targetGeometry);
 
 				case esriSpatialRelEnum.esriSpatialRelContains:
-					return EvaluateContains(SourceGeometry, TargetGeometry);
+					return EvaluateContains(_sourceGeometry, _targetGeometry);
 
 				case esriSpatialRelEnum.esriSpatialRelRelation:
-					return EvaluateRelation(SourceGeometry, TargetGeometry,
+					return EvaluateRelation(_sourceGeometry, _targetGeometry,
 					                        spatialFilter.SpatialRelDescription);
 
 				case esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects:
