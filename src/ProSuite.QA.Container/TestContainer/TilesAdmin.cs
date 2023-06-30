@@ -64,7 +64,7 @@ namespace ProSuite.QA.Container.TestContainer
 		                                        QueryFilterHelper filterHelper)
 		{
 			HashSet<long> handledOids = new HashSet<long>();
-			foreach (var tile in GetTiles(queryFilter.FilterGeometry))
+			foreach (var tile in GetTiles(queryFilter.FilterGeometry, table))
 			{
 				TileCache tileCache = tile.Item1;
 				EnsureLoaded(tile.Item1, tile.Item2, table);
@@ -85,17 +85,15 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 		}
 
-		private IEnumerable<Tuple<TileCache, Tile>> GetTiles(IGeometry geometry)
+		private IEnumerable<Tuple<TileCache, Tile>> GetTiles(
+			[NotNull]IGeometry geometry,
+			[NotNull]IReadOnlyTable table)
 		{
 			foreach (Tile tile in _tileEnumContext.TileEnum.EnumTiles(geometry))
 			{
 				if (! _caches.TryGetValue(tile.Box, out TileCache cache))
 				{
-					if (_boxComparer.Equals(_tileCache.CurrentTileBox, tile.Box))
-					{
-						cache = _tileCache;
-					}
-					else if (_boxComparer.Equals(_tileCache.LoadingTileBox, tile.Box))
+					if (_tileCache.IsLoaded(table, tile))
 					{
 						cache = _tileCache;
 					}
@@ -103,9 +101,8 @@ namespace ProSuite.QA.Container.TestContainer
 					{
 						cache = _tileCache.Clone();
 						cache.SetCurrentTileBox(tile.Box);
+						_caches.Add(tile.Box, cache);
 					}
-
-					_caches.Add(tile.Box, cache);
 				}
 
 				yield return new Tuple<TileCache, Tile>(cache, tile);

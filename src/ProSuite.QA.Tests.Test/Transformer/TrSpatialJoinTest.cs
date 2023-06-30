@@ -424,8 +424,67 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[Test]
 		public void Top5728()
 		{
-			IWorkspace ws = WorkspaceUtils.OpenFileGdbWorkspace(@"C:\Topgis\20221109_0330_2022-6-30.gdb");
-			var fws = (IFeatureWorkspace) ws;
+
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("Bielersee");
+
+			{
+				IFeatureClass fc =
+					CreateFeatureClass(
+						ws, "TLM_FLIESSGEWAESSER", esriGeometryType.esriGeometryPolyline);
+
+				{
+					IFeature f = fc.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(2576272, 1211983).LineTo(2576125, 1212189)
+					                           .Curve;
+					f.Store();
+				}
+				{
+					IFeature f = fc.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(2576125, 1212189).LineTo(2575705, 1212739)
+					                           .Curve;
+					f.Store();
+				}
+			}
+			string uuid = Guid.NewGuid().ToString("B");
+			{
+				IFeatureClass fc =
+					CreateFeatureClass(
+						ws, "TLM_STEHENDES_GEWAESSER", esriGeometryType.esriGeometryPolyline,
+						new[]
+						{
+							FieldUtils.CreateField("TLM_GEWAESSER_LAUF_UUID",
+							                       esriFieldType.esriFieldTypeGUID)
+						});
+				{
+					IFeature f = fc.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(2576125, 1212189).LineTo(2574259,1210759).
+					                            LineTo(2576119,1211673)
+					                           .Curve;
+					f.Value[1] = uuid;
+					f.Store();
+				}
+				{
+					IFeature f = fc.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(2576119, 1211673).LineTo(2577695, 1213983).
+					                            LineTo(2576125, 1212189)
+												.Curve;
+					f.Value[1] = uuid;
+					f.Store();
+				}
+			}
+			{
+				ITable tb = DatasetUtils.CreateTable(ws, "TLM_GEWAESSER_LAUF",
+				                                     FieldUtils.CreateField(
+					                                     "UUID", esriFieldType.esriFieldTypeGUID));
+				{
+					IRow r = tb.CreateRow();
+					r.Value[0] = uuid;
+					r.Store();
+				}
+			}
+
+
+			var fws = ws;
 			IReadOnlyFeatureClass fcFg =
 				ReadOnlyTableFactory.Create(fws.OpenFeatureClass("TLM_FLIESSGEWAESSER"));
 			IReadOnlyFeatureClass fcSg =
@@ -439,7 +498,6 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrTableJoinInMemory trIm =
 				new TrTableJoinInMemory(
 					fcSg, tbGl, "TLM_GEWAESSER_LAUF_UUID", "UUID", JoinType.InnerJoin);
-			trIm.SetConstraint(0, "OBJECTID IN (69121, 69120)");
 			trIm.TransformerName = "trIm";
 
 			TrOnlyDisjointFeatures trDj =
@@ -456,16 +514,14 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			test.ExportTileIds = true;
 			test.ExportTiles = true;
 
-			//{
-			//	var runner = new QaContainerTestRunner(10000, test);
-			//	runner.Execute(GeometryFactory.CreateEnvelope(2571000, 1209000, 2585000, 1221000));
-			//}
-
 			{
 				var runner = new QaContainerTestRunner(6000, test);
 				runner.Execute(GeometryFactory.CreateEnvelope(2571000, 1209000, 2585000, 1221000));
 			}
 
+			IWorkspace exportWorkspace = WorkspaceUtils.OpenFileGdbWorkspace(test.UsedFileGdbPath);
+			IFeatureClass fcTrDj = ((IFeatureWorkspace) exportWorkspace).OpenFeatureClass("trDj");
+			Assert.AreEqual(0, fcTrDj.FeatureCount(null));
 		}
 		private static void WriteFieldNames(IReadOnlyTable targetTable)
 		{

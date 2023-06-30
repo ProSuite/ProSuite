@@ -44,6 +44,8 @@ namespace ProSuite.QA.Tests
 		[TestParameter]
 		public bool ExportTiles { get; set; }
 
+		public string UsedFileGdbPath => _usedFileGdbPath;
+
 		protected override int CompleteTileCore(TileInfo tileInfo)
 		{
 			const string tileIdField = "TileId";
