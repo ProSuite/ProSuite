@@ -11,6 +11,7 @@ using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
+using ProSuite.QA.Tests.Transformers.Filters;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test.Transformer
@@ -420,6 +421,52 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
+		[Test]
+		public void Top5728()
+		{
+			IWorkspace ws = WorkspaceUtils.OpenFileGdbWorkspace(@"C:\Topgis\20221109_0330_2022-6-30.gdb");
+			var fws = (IFeatureWorkspace) ws;
+			IReadOnlyFeatureClass fcFg =
+				ReadOnlyTableFactory.Create(fws.OpenFeatureClass("TLM_FLIESSGEWAESSER"));
+			IReadOnlyFeatureClass fcSg =
+				ReadOnlyTableFactory.Create(fws.OpenFeatureClass("TLM_STEHENDES_GEWAESSER"));
+			IReadOnlyTable tbGl = ReadOnlyTableFactory.Create(fws.OpenTable("TLM_GEWAESSER_LAUF"));
+
+
+			TrGeometryToPoints trEp = new TrGeometryToPoints(fcFg, GeometryComponent.LineEndPoints);
+			trEp.TransformerName = "trEp";
+
+			TrTableJoinInMemory trIm =
+				new TrTableJoinInMemory(
+					fcSg, tbGl, "TLM_GEWAESSER_LAUF_UUID", "UUID", JoinType.InnerJoin);
+			trIm.SetConstraint(0, "OBJECTID IN (69121, 69120)");
+			trIm.TransformerName = "trIm";
+
+			TrOnlyDisjointFeatures trDj =
+				new TrOnlyDisjointFeatures((IReadOnlyFeatureClass)trIm.GetTransformed(), trEp.GetTransformed());
+			trDj.TransformerName = "trDj";
+			trDj.FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All;
+
+			QaExportTables test = new QaExportTables(
+				new List<IReadOnlyTable>
+				{ fcFg, fcSg,
+					trEp.GetTransformed(), trIm.GetTransformed(), trDj.GetTransformed() },
+				"c:\\temp\\top5728_*.gdb"
+			);
+			test.ExportTileIds = true;
+			test.ExportTiles = true;
+
+			//{
+			//	var runner = new QaContainerTestRunner(10000, test);
+			//	runner.Execute(GeometryFactory.CreateEnvelope(2571000, 1209000, 2585000, 1221000));
+			//}
+
+			{
+				var runner = new QaContainerTestRunner(6000, test);
+				runner.Execute(GeometryFactory.CreateEnvelope(2571000, 1209000, 2585000, 1221000));
+			}
+
+		}
 		private static void WriteFieldNames(IReadOnlyTable targetTable)
 		{
 			for (int i = 0; i < targetTable.Fields.FieldCount; i++)
