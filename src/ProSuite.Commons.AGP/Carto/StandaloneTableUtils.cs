@@ -12,6 +12,22 @@ namespace ProSuite.Commons.AGP.Carto
 			return table?.SelectionCount > 0;
 		}
 
+		public static bool IsStandaloneTableValid([CanBeNull] StandaloneTable table)
+		{
+			// ReSharper disable once UseNullPropagation
+			if (table == null)
+			{
+				return false;
+			}
+
+			if (table.GetTable() == null)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
 		public static IEnumerable<Row> GetSelectedRows([CanBeNull] StandaloneTable table)
 		{
 			ArcGIS.Core.Data.Selection selection = table?.GetSelection();
