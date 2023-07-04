@@ -152,6 +152,16 @@ public class FieldSetterTest
 	}
 
 	[Test]
+	public void CanCatchNoSuchField()
+	{
+		var env = new StandardEnvironment();
+		var row = new RowValuesMock("fieldA", "fieldB");
+
+		var fs = new FieldSetter("fieldA = 1; fieldB = 2; oops = 42");
+		Assert.Catch<EvaluationException>(() => fs.Execute(row, env));
+	}
+
+	[Test]
 	public void CanReferenceManualBindings()
 	{
 		var env = new StandardEnvironment();
