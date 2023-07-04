@@ -155,10 +155,10 @@ namespace ProSuite.Processing.Test
 		[Test]
 		public void CanExpandParameterDescription()
 		{
-		const string text = "{DefaultValue}, {PublicConstant}, {PrivateConstant}, {NoSuchField} end";
+			const string text = "{DefaultValue}, {PublicConstant}, {PrivateConstant}, {NoSuchField} end";
 
 			var processType = typeof(TestProcess);
-		var parameter = ProcessingUtils.GetParameter(processType, nameof(TestProcess.Parameter1));
+			var parameter = ProcessingUtils.GetParameter(processType, nameof(TestProcess.Parameter1));
 			Assert.NotNull(parameter);
 
 			var result = parameter.ExpandParameterDescription(text);
