@@ -10,7 +10,5 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 		List<int> GetPartIndexes(int patchIndex);
 
 		int GetPatchIndex(int partIndex);
-
-		IPolygon GetFootprint();
 	}
 }

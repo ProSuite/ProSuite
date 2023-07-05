@@ -137,5 +137,12 @@ namespace ProSuite.QA.Tests.SpatialRelations
 
 			return union;
 		}
+
+		[CanBeNull]
+		protected virtual IGeometry GetSearchGeometry([NotNull] IReadOnlyFeature feature,
+		                                              int tableIndex)
+		{
+			return feature.Shape;
+		}
 	}
 }

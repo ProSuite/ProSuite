@@ -4,7 +4,6 @@ using ProSuite.Commons.Geom;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ProSuite.Commons.AO.Geometry.CreateFootprint;
 
 namespace ProSuite.Commons.AO.Geometry.Proxy
 {
@@ -12,9 +11,6 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 	{
 		[NotNull] private readonly IEnvelope _envelope;
 		[NotNull] private readonly List<PatchProxy> _patchProxies;
-
-
-		private IPolygon _footprint;
 
 		public IndexedMultiPatch([NotNull] IMultiPatch baseGeometry)
 		{
@@ -34,13 +30,6 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 		{
 			get { return false; }
 			set { }
-		}
-
-		[NotNull]
-		public IPolygon GetFootprint()
-		{
-			_footprint = _footprint ?? CreateFootprintUtils.GetFootprint(BaseGeometry);
-			return _footprint;
 		}
 
 		public IEnumerable<SegmentProxy> GetSegments()

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -72,6 +71,13 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			}
 
 			return errorCount;
+		}
+
+		[CanBeNull]
+		protected virtual IGeometry GetSearchGeometry([NotNull] IReadOnlyFeature feature,
+		                                              int tableIndex)
+		{
+			return feature.Shape;
 		}
 	}
 }
