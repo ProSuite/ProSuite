@@ -6,175 +6,175 @@ using System.Xml.Linq;
 using NUnit.Framework;
 using ProSuite.Processing.Domain;
 
-namespace ProSuite.Processing.Test;
-
-[TestFixture]
-public class CartoProcessRepoTest
+namespace ProSuite.Processing.Test
 {
-	[Test]
-	public void CanLoad()
+	[TestFixture]
+	public class CartoProcessRepoTest
 	{
-		var repo = new CartoProcessRepo();
-
-		var knownTypes = GetKnownTypes();
-		var xml = GetTestXmlConfig();
-
-		using (var reader = new StringReader(xml))
+		[Test]
+		public void CanLoad()
 		{
-			repo.Load(reader, knownTypes);
+			var repo = new CartoProcessRepo();
+
+			var knownTypes = GetKnownTypes();
+			var xml = GetTestXmlConfig();
+
+			using (var reader = new StringReader(xml))
+			{
+				repo.Load(reader, knownTypes);
+			}
+
+			Assert.AreEqual(3, repo.ProcessDefinitions.Count);
+
+			var gcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Group");
+			Assert.AreEqual("Test Group", gcp.Name);
+			Assert.AreEqual("GroupAlias", gcp.TypeAlias);
+			Assert.AreEqual("Testing", gcp.Description);
+			Assert.AreEqual(typeof(GroupCP), gcp.ResolvedType);
+
+			var fcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Foo");
+			Assert.AreEqual("Test Foo", fcp.Name);
+			Assert.AreEqual("FooAlias", fcp.TypeAlias);
+			Assert.AreEqual("Testing Foo", fcp.Description);
+			Assert.AreEqual(typeof(Foo), fcp.ResolvedType);
+
+			var bcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Bar");
+			Assert.AreEqual("Test Bar", bcp.Name);
+			Assert.AreEqual("BarAlias", bcp.TypeAlias);
+			Assert.AreEqual("Testing Bar", bcp.Description);
+			Assert.AreEqual(typeof(Bar), bcp.ResolvedType);
 		}
 
-		Assert.AreEqual(3, repo.ProcessDefinitions.Count);
-
-		var gcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Group");
-		Assert.AreEqual("Test Group", gcp.Name);
-		Assert.AreEqual("GroupAlias", gcp.TypeAlias);
-		Assert.AreEqual("Testing", gcp.Description);
-		Assert.AreEqual(typeof(GroupCP), gcp.ResolvedType);
-
-		var fcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Foo");
-		Assert.AreEqual("Test Foo", fcp.Name);
-		Assert.AreEqual("FooAlias", fcp.TypeAlias);
-		Assert.AreEqual("Testing Foo", fcp.Description);
-		Assert.AreEqual(typeof(Foo), fcp.ResolvedType);
-
-		var bcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Bar");
-		Assert.AreEqual("Test Bar", bcp.Name);
-		Assert.AreEqual("BarAlias", bcp.TypeAlias);
-		Assert.AreEqual("Testing Bar", bcp.Description);
-		Assert.AreEqual(typeof(Bar), bcp.ResolvedType);
-	}
-
-	[Test]
-	public void CanSave()
-	{
-		var repo = new CartoProcessRepo();
-
-		var knownTypes = GetKnownTypes();
-		var xml1 = GetTestXmlConfig();
-
-		using (var reader = new StringReader(xml1))
+		[Test]
+		public void CanSave()
 		{
-			repo.Load(reader, knownTypes);
-		}
+			var repo = new CartoProcessRepo();
 
-		var buffer = new StringBuilder();
+			var knownTypes = GetKnownTypes();
+			var xml1 = GetTestXmlConfig();
 
-		using (var writer = new StringWriter(buffer))
-		{
-			repo.Save(writer);
-		}
+			using (var reader = new StringReader(xml1))
+			{
+				repo.Load(reader, knownTypes);
+			}
 
-		var xml2 = buffer.ToString();
+			var buffer = new StringBuilder();
 
-		var doc1 = XDocument.Parse(xml1);
-		var doc2 = XDocument.Parse(xml2);
+			using (var writer = new StringWriter(buffer))
+			{
+				repo.Save(writer);
+			}
 
-		// compare only the Groups and Processes elements
-		// don't care about the XML declaration and ignore
-		// the Types element, which legally discards info
-		// such as the assembly attribute
+			var xml2 = buffer.ToString();
+
+			var doc1 = XDocument.Parse(xml1);
+			var doc2 = XDocument.Parse(xml2);
+
+			// compare only the Groups and Processes elements
+			// don't care about the XML declaration and ignore
+			// the Types element, which legally discards info
+			// such as the assembly attribute
 
 		Assert.True(XNode.DeepEquals(doc1.Root?.Element("Groups"), doc2.Root?.Element("Groups")));
 		Assert.True(XNode.DeepEquals(doc1.Root?.Element("Processes"), doc2.Root?.Element("Processes")));
-	}
-
-	[Test]
-	public void CanUpdateProcess()
-	{
-		var repo = new CartoProcessRepo();
-
-		var knownTypes = GetKnownTypes();
-		var xml = GetTestXmlConfig();
-
-		using (var reader = new StringReader(xml))
-		{
-			repo.Load(reader, knownTypes);
 		}
 
-		// Update existing CP "Test Foo"
-
-		var config = CartoProcessConfig.Parse("Name=Test Foo\nTypeAlias=FooAlias\n" +
-		                                      "A=one\nC=three\nDescription=Updated");
-		var newType = typeof(NewType);
-
-		repo.UpdateProcess(config, newType);
-
-		Assert.AreEqual(3, repo.ProcessDefinitions.Count);
-
-		var gcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Group");
-		Assert.AreEqual(typeof(GroupCP), gcp.ResolvedType);
-
-		var fcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Foo");
-		Assert.AreEqual("Test Foo", fcp.Name);
-		Assert.AreEqual("NewType", fcp.TypeAlias);
-		Assert.AreEqual("Updated", fcp.Description);
-		Assert.AreEqual(typeof(NewType), fcp.ResolvedType);
-		Assert.AreEqual("one", fcp.Config.GetString("A"));
-		Assert.IsNull(fcp.Config.GetString("B", null));
-		Assert.AreEqual("three", fcp.Config.GetString("C"));
-
-		var bcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Bar");
-		Assert.AreEqual(typeof(Bar), bcp.ResolvedType);
-
-		// Insert ("update") non-existing CP "Test New"
-
-		config = CartoProcessConfig.Parse("Name=Test New\nFoo=Bar");
-
-		repo.UpdateProcess(config, typeof(NewType));
-
-		Assert.AreEqual(4, repo.ProcessDefinitions.Count);
-
-		var ncp = repo.ProcessDefinitions.Single(d => d.Name == "Test New");
-		Assert.AreEqual("Test New", ncp.Name);
-		Assert.IsNull(ncp.Description);
-		Assert.AreEqual("NewType", ncp.TypeAlias);
-		Assert.AreEqual(typeof(NewType), ncp.ResolvedType);
-		Assert.AreEqual("Bar", ncp.Config.GetString("Foo"));
-	}
-
-	[Test]
-	public void CanRemoveProcess()
-	{
-		var repo = new CartoProcessRepo();
-
-		var knownTypes = GetKnownTypes();
-		var xml = GetTestXmlConfig();
-
-		using (var reader = new StringReader(xml))
+		[Test]
+		public void CanUpdateProcess()
 		{
-			repo.Load(reader, knownTypes);
+			var repo = new CartoProcessRepo();
+
+			var knownTypes = GetKnownTypes();
+			var xml = GetTestXmlConfig();
+
+			using (var reader = new StringReader(xml))
+			{
+				repo.Load(reader, knownTypes);
+			}
+
+			// Update existing CP "Test Foo"
+
+			var config = CartoProcessConfig.Parse("Name=Test Foo\nTypeAlias=FooAlias\n" +
+			                                      "A=one\nC=three\nDescription=Updated");
+			var newType = typeof(NewType);
+
+			repo.UpdateProcess(config, newType);
+
+			Assert.AreEqual(3, repo.ProcessDefinitions.Count);
+
+			var gcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Group");
+			Assert.AreEqual(typeof(GroupCP), gcp.ResolvedType);
+
+			var fcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Foo");
+			Assert.AreEqual("Test Foo", fcp.Name);
+			Assert.AreEqual("NewType", fcp.TypeAlias);
+			Assert.AreEqual("Updated", fcp.Description);
+			Assert.AreEqual(typeof(NewType), fcp.ResolvedType);
+			Assert.AreEqual("one", fcp.Config.GetString("A"));
+			Assert.IsNull(fcp.Config.GetString("B", null));
+			Assert.AreEqual("three", fcp.Config.GetString("C"));
+
+			var bcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Bar");
+			Assert.AreEqual(typeof(Bar), bcp.ResolvedType);
+
+			// Insert ("update") non-existing CP "Test New"
+
+			config = CartoProcessConfig.Parse("Name=Test New\nFoo=Bar");
+
+			repo.UpdateProcess(config, typeof(NewType));
+
+			Assert.AreEqual(4, repo.ProcessDefinitions.Count);
+
+			var ncp = repo.ProcessDefinitions.Single(d => d.Name == "Test New");
+			Assert.AreEqual("Test New", ncp.Name);
+			Assert.IsNull(ncp.Description);
+			Assert.AreEqual("NewType", ncp.TypeAlias);
+			Assert.AreEqual(typeof(NewType), ncp.ResolvedType);
+			Assert.AreEqual("Bar", ncp.Config.GetString("Foo"));
 		}
 
-		Assert.False(repo.RemoveProcess("NoSuchProcess"));
-		Assert.AreEqual(3, repo.ProcessDefinitions.Count);
+		[Test]
+		public void CanRemoveProcess()
+		{
+			var repo = new CartoProcessRepo();
 
-		Assert.True(repo.RemoveProcess("Test Foo"));
-		Assert.AreEqual(2, repo.ProcessDefinitions.Count);
+			var knownTypes = GetKnownTypes();
+			var xml = GetTestXmlConfig();
 
-		Assert.True(repo.RemoveProcess("Test Bar"));
-		Assert.AreEqual(1, repo.ProcessDefinitions.Count);
+			using (var reader = new StringReader(xml))
+			{
+				repo.Load(reader, knownTypes);
+			}
 
-		Assert.True(repo.RemoveProcess("Test Group"));
-		Assert.AreEqual(0, repo.ProcessDefinitions.Count);
-	}
+			Assert.False(repo.RemoveProcess("NoSuchProcess"));
+			Assert.AreEqual(3, repo.ProcessDefinitions.Count);
 
-	private class Foo { }
+			Assert.True(repo.RemoveProcess("Test Foo"));
+			Assert.AreEqual(2, repo.ProcessDefinitions.Count);
 
-	private class Bar { }
+			Assert.True(repo.RemoveProcess("Test Bar"));
+			Assert.AreEqual(1, repo.ProcessDefinitions.Count);
 
-	private class GroupCP : IGroupCartoProcess { }
+			Assert.True(repo.RemoveProcess("Test Group"));
+			Assert.AreEqual(0, repo.ProcessDefinitions.Count);
+		}
 
-	private class NewType { }
+		private class Foo { }
 
-	private static Type[] GetKnownTypes()
-	{
-		return new[] { typeof(Foo), typeof(Bar), typeof(GroupCP) };
-	}
+		private class Bar { }
 
-	private static string GetTestXmlConfig()
-	{
-		return @"<?xml version=""1.0""?>
+		private class GroupCP : IGroupCartoProcess { }
+
+		private class NewType { }
+
+		private static Type[] GetKnownTypes()
+		{
+			return new[] { typeof(Foo), typeof(Bar), typeof(GroupCP) };
+		}
+
+		private static string GetTestXmlConfig()
+		{
+			return @"<?xml version=""1.0""?>
 <CartoProcesses>
   <Groups>
     <ProcessGroup name=""Test Group"" description=""Testing"">
@@ -214,5 +214,6 @@ public class CartoProcessRepoTest
   </Types>
 </CartoProcesses>
 ";
+		}
 	}
 }
