@@ -37,6 +37,12 @@ namespace ProSuite.DomainModel.AGP.QA
 		Task<QualitySpecification> GetCurrentQualitySpecification();
 
 		/// <summary>
+		/// Sets the customized quality specification version of the current specification.
+		/// </summary>
+		/// <param name="customSpecification"></param>
+		void SetCustomSpecification(QualitySpecification customSpecification);
+
+		/// <summary>
 		/// Occurs after the list of quality specifications was refreshed.
 		/// </summary>
 		event EventHandler QualitySpecificationsRefreshed;
