@@ -45,6 +45,8 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private string _uuid;
 
+		private int _cloneId = -1;
+
 		#region Constructors
 
 		/// <summary>
@@ -159,6 +161,19 @@ namespace ProSuite.DomainModel.Core.QA
 		[NotNull]
 		public IList<QualitySpecificationElement> Elements
 			=> new ReadOnlyList<QualitySpecificationElement>(_elements);
+
+		public new int Id
+		{
+			get
+			{
+				if (base.Id < 0 && _cloneId != -1)
+				{
+					return _cloneId;
+				}
+
+				return base.Id;
+			}
+		}
 
 		[NotNull]
 		public string GetQualifiedName(string pathSeparator = "/")
@@ -315,7 +330,7 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			Assert.ArgumentNotNull(other, nameof(other));
 
-			var result = new QualitySpecification(Name + "*" + other.Name) {_isUnion = true};
+			var result = new QualitySpecification(Name + "*" + other.Name) { _isUnion = true };
 
 			equal = 0;
 			var minOther = 0;
@@ -565,6 +580,16 @@ namespace ProSuite.DomainModel.Core.QA
 					element.Enabled = false;
 				}
 			}
+		}
+
+		/// <summary>
+		/// The clone Id can be set if this instance is a (remote) clone of a persistent Specification.
+		/// </summary>
+		/// <param name="id"></param>
+		public void SetCloneId(int id)
+		{
+			Assert.True(base.Id < 0, "Persistent entity or already initialized clone.");
+			_cloneId = id;
 		}
 
 		public override string ToString()
