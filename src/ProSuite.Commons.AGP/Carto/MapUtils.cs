@@ -212,7 +212,7 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 			else
 			{
-				// Check for layer validity first because in most cases the specified layerPredicate
+				// Check for validity first because in most cases the specified layerPredicate
 				// uses the FeatureClass name etc. which results in null-pointers if evaluated first.
 				combinedPredicate = l =>
 					LayerUtils.IsLayerValid(l) && (layerPredicate == null || layerPredicate(l));
@@ -225,18 +225,39 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public static IEnumerable<StandaloneTable> GetStandaloneTables(
-			[CanBeNull] Predicate<StandaloneTable> tablePredicate)
+			[CanBeNull] Predicate<StandaloneTable> tablePredicate,
+			[CanBeNull] MapView mapView = null,
+			bool includeInvalid = false)
 		{
-			MapView mapView = MapView.Active;
+			if (mapView == null)
+			{
+				// Only take the active map if no other map has been provided.
+				mapView = MapView.Active;
+			}
 
 			if (mapView == null)
 			{
 				yield break;
 			}
 
+			Predicate<StandaloneTable> combinedPredicate;
+
+			if (includeInvalid)
+			{
+				combinedPredicate = tablePredicate;
+			}
+			else
+			{
+				// Check for validity first because in most cases the specified tablePredicate
+				// uses the Table name etc. which results in null-pointers if evaluated first.
+				combinedPredicate = t =>
+					StandaloneTableUtils.IsStandaloneTableValid(t) &&
+					(tablePredicate == null || tablePredicate(t));
+			}
+
 			foreach (StandaloneTable table in mapView.Map.StandaloneTables)
 			{
-				if (tablePredicate == null || tablePredicate(table))
+				if (combinedPredicate == null || combinedPredicate(table))
 				{
 					yield return table;
 				}

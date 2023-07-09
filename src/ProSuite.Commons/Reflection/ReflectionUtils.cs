@@ -208,16 +208,21 @@ namespace ProSuite.Commons.Reflection
 		/// Get the value of the named "constant" (static field).
 		/// Non-public fields and fields from base classes are included.
 		/// </summary>
-		public static object GetConstantValue(this Type type, string constantName)
+		public static object GetConstantValue(this Type type, string constantName, bool includePrivate = false)
 		{
 			if (type is null)
 				throw new ArgumentNullException(nameof(type));
 			if (constantName is null)
 				return null;
 
-			const BindingFlags flags = BindingFlags.Static | // constants are "static"
-			                           BindingFlags.FlattenHierarchy | // include base classes
-			                           BindingFlags.Public | BindingFlags.NonPublic;
+			var flags = BindingFlags.Static | // constants are "static"
+			            BindingFlags.FlattenHierarchy | // include base classes
+			            BindingFlags.Public;
+
+			if (includePrivate)
+			{
+				flags |= BindingFlags.NonPublic;
+			}
 
 			var field = type.GetField(constantName, flags);
 			return field?.GetValue(null);

@@ -148,7 +148,7 @@ namespace ProSuite.Processing.Utils
 			{
 				var key = m.Groups.Count > 1 ? m.Groups[1].Value : null;
 				bool wantDefault = string.Equals(key, "DefaultValue", StringComparison.OrdinalIgnoreCase);
-				var value = wantDefault ? parameter.DefaultValue : processType?.GetConstantValue(key);
+				var value = wantDefault ? parameter.DefaultValue : processType?.GetConstantValue(key, true);
 				return value is null ? m.Value : Convert.ToString(value);
 			});
 		}
