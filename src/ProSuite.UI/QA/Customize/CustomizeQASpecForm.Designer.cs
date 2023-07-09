@@ -32,9 +32,9 @@ namespace ProSuite.UI.QA.Customize
 		private void InitializeComponent()
 		{
 			components=new System.ComponentModel.Container();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
 			_textBoxDescription=new System.Windows.Forms.TextBox();
 			_labelDescription=new System.Windows.Forms.Label();
 			_textBoxSpecification=new System.Windows.Forms.TextBox();
@@ -59,12 +59,13 @@ namespace ProSuite.UI.QA.Customize
 			toolStripSeparator1=new System.Windows.Forms.ToolStripSeparator();
 			_toolStripButtonEnableAll=new System.Windows.Forms.ToolStripButton();
 			_toolStripButtonEnableNone=new System.Windows.Forms.ToolStripButton();
+			_panelSelectedConditions=new System.Windows.Forms.Panel();
 			_groupBoxSelected=new System.Windows.Forms.GroupBox();
-			_labelEnabledConditions=new System.Windows.Forms.Label();
 			_dataGridViewEnabledConditions=new DoubleBufferedDataGridView();
 			dgcSelType=new System.Windows.Forms.DataGridViewImageColumn();
 			dgcSelTest=new System.Windows.Forms.DataGridViewTextBoxColumn();
 			_bindingSourceEnabledConditions=new System.Windows.Forms.BindingSource(components);
+			_labelEnabledConditions=new System.Windows.Forms.Label();
 			_groupBoxSelectedParameters=new System.Windows.Forms.GroupBox();
 			_splitContainer=new SplitContainerEx();
 			_qualityConditionControl=new QualityConditionControl();
@@ -76,12 +77,15 @@ namespace ProSuite.UI.QA.Customize
 			_toolStripButtonReset=new System.Windows.Forms.ToolStripButton();
 			_tabPageTestDescriptor=new System.Windows.Forms.TabPage();
 			_testDescriptorControl=new TestDescriptorControl();
+			_mainSplitterBottomPanel=new System.Windows.Forms.Panel();
 			dataGridViewCheckBoxColumn1=new System.Windows.Forms.DataGridViewCheckBoxColumn();
 			dataGridViewImageColumn1=new System.Windows.Forms.DataGridViewImageColumn();
 			dataGridViewTextBoxColumn1=new System.Windows.Forms.DataGridViewTextBoxColumn();
 			dataGridViewTextBoxColumn2=new System.Windows.Forms.DataGridViewTextBoxColumn();
 			dataGridViewImageColumn2=new System.Windows.Forms.DataGridViewImageColumn();
 			dataGridViewTextBoxColumn3=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			_panelTop=new System.Windows.Forms.Panel();
+			_panelConditionViews=new System.Windows.Forms.Panel();
 			((System.ComponentModel.ISupportInitialize)_splitContainerSpecification).BeginInit();
 			_splitContainerSpecification.Panel1.SuspendLayout();
 			_splitContainerSpecification.Panel2.SuspendLayout();
@@ -93,6 +97,7 @@ namespace ProSuite.UI.QA.Customize
 			_groupBoxConditions.SuspendLayout();
 			_panelConditions.SuspendLayout();
 			_toolStripConditionList.SuspendLayout();
+			_panelSelectedConditions.SuspendLayout();
 			_groupBoxSelected.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)_dataGridViewEnabledConditions).BeginInit();
 			((System.ComponentModel.ISupportInitialize)_bindingSourceEnabledConditions).BeginInit();
@@ -105,6 +110,9 @@ namespace ProSuite.UI.QA.Customize
 			_tabPageParameterValues.SuspendLayout();
 			_toolStrip.SuspendLayout();
 			_tabPageTestDescriptor.SuspendLayout();
+			_mainSplitterBottomPanel.SuspendLayout();
+			_panelTop.SuspendLayout();
+			_panelConditionViews.SuspendLayout();
 			SuspendLayout();
 			// 
 			// _textBoxDescription
@@ -166,7 +174,7 @@ namespace ProSuite.UI.QA.Customize
 			// _buttonOK
 			// 
 			_buttonOK.Anchor=System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Right;
-			_buttonOK.Location=new System.Drawing.Point(1058, 179);
+			_buttonOK.Location=new System.Drawing.Point(1075, 178);
 			_buttonOK.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
 			_buttonOK.Name="_buttonOK";
 			_buttonOK.Size=new System.Drawing.Size(62, 35);
@@ -179,7 +187,7 @@ namespace ProSuite.UI.QA.Customize
 			// 
 			_buttonCancel.Anchor=System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Right;
 			_buttonCancel.DialogResult=System.Windows.Forms.DialogResult.Cancel;
-			_buttonCancel.Location=new System.Drawing.Point(1058, 221);
+			_buttonCancel.Location=new System.Drawing.Point(1075, 219);
 			_buttonCancel.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
 			_buttonCancel.Name="_buttonCancel";
 			_buttonCancel.Size=new System.Drawing.Size(62, 33);
@@ -190,9 +198,9 @@ namespace ProSuite.UI.QA.Customize
 			// 
 			// _splitContainerSpecification
 			// 
-			_splitContainerSpecification.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_splitContainerSpecification.Dock=System.Windows.Forms.DockStyle.Fill;
 			_splitContainerSpecification.FixedPanel=System.Windows.Forms.FixedPanel.Panel2;
-			_splitContainerSpecification.Location=new System.Drawing.Point(14, 102);
+			_splitContainerSpecification.Location=new System.Drawing.Point(0, 100);
 			_splitContainerSpecification.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
 			_splitContainerSpecification.Name="_splitContainerSpecification";
 			_splitContainerSpecification.Orientation=System.Windows.Forms.Orientation.Horizontal;
@@ -203,17 +211,15 @@ namespace ProSuite.UI.QA.Customize
 			// 
 			// _splitContainerSpecification.Panel2
 			// 
-			_splitContainerSpecification.Panel2.Controls.Add(_groupBoxSelectedParameters);
-			_splitContainerSpecification.Panel2.Controls.Add(_buttonCancel);
-			_splitContainerSpecification.Panel2.Controls.Add(_buttonOK);
-			_splitContainerSpecification.Size=new System.Drawing.Size(1120, 744);
-			_splitContainerSpecification.SplitterDistance=485;
+			_splitContainerSpecification.Panel2.Controls.Add(_mainSplitterBottomPanel);
+			_splitContainerSpecification.Size=new System.Drawing.Size(1148, 756);
+			_splitContainerSpecification.SplitterDistance=488;
 			_splitContainerSpecification.SplitterWidth=5;
 			_splitContainerSpecification.TabIndex=6;
 			// 
 			// _splitContainerConditions
 			// 
-			_splitContainerConditions.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_splitContainerConditions.Dock=System.Windows.Forms.DockStyle.Fill;
 			_splitContainerConditions.FixedPanel=System.Windows.Forms.FixedPanel.Panel2;
 			_splitContainerConditions.Location=new System.Drawing.Point(0, 0);
 			_splitContainerConditions.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -221,13 +227,13 @@ namespace ProSuite.UI.QA.Customize
 			// 
 			// _splitContainerConditions.Panel1
 			// 
-			_splitContainerConditions.Panel1.Controls.Add(_groupBoxConditions);
+			_splitContainerConditions.Panel1.Controls.Add(_panelConditionViews);
 			// 
 			// _splitContainerConditions.Panel2
 			// 
-			_splitContainerConditions.Panel2.Controls.Add(_groupBoxSelected);
-			_splitContainerConditions.Size=new System.Drawing.Size(1120, 481);
-			_splitContainerConditions.SplitterDistance=865;
+			_splitContainerConditions.Panel2.Controls.Add(_panelSelectedConditions);
+			_splitContainerConditions.Size=new System.Drawing.Size(1148, 488);
+			_splitContainerConditions.SplitterDistance=884;
 			_splitContainerConditions.SplitterWidth=5;
 			_splitContainerConditions.TabIndex=0;
 			// 
@@ -240,7 +246,7 @@ namespace ProSuite.UI.QA.Customize
 			_groupBoxConditions.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
 			_groupBoxConditions.Name="_groupBoxConditions";
 			_groupBoxConditions.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
-			_groupBoxConditions.Size=new System.Drawing.Size(865, 481);
+			_groupBoxConditions.Size=new System.Drawing.Size(884, 488);
 			_groupBoxConditions.TabIndex=0;
 			_groupBoxConditions.TabStop=false;
 			_groupBoxConditions.Text="Available Quality Conditions";
@@ -254,7 +260,7 @@ namespace ProSuite.UI.QA.Customize
 			_panelConditions.Location=new System.Drawing.Point(13, 59);
 			_panelConditions.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
 			_panelConditions.Name="_panelConditions";
-			_panelConditions.Size=new System.Drawing.Size(845, 415);
+			_panelConditions.Size=new System.Drawing.Size(864, 422);
 			_panelConditions.TabIndex=13;
 			// 
 			// _conditionsLayerView
@@ -264,7 +270,7 @@ namespace ProSuite.UI.QA.Customize
 			_conditionsLayerView.Location=new System.Drawing.Point(84, 61);
 			_conditionsLayerView.Margin=new System.Windows.Forms.Padding(5, 3, 5, 3);
 			_conditionsLayerView.Name="_conditionsLayerView";
-			_conditionsLayerView.Size=new System.Drawing.Size(601, 321);
+			_conditionsLayerView.Size=new System.Drawing.Size(620, 328);
 			_conditionsLayerView.TabIndex=12;
 			// 
 			// _conditionDatasetsControl
@@ -276,7 +282,7 @@ namespace ProSuite.UI.QA.Customize
 			_conditionDatasetsControl.Margin=new System.Windows.Forms.Padding(5, 3, 5, 3);
 			_conditionDatasetsControl.MatchCase=false;
 			_conditionDatasetsControl.Name="_conditionDatasetsControl";
-			_conditionDatasetsControl.Size=new System.Drawing.Size(795, 333);
+			_conditionDatasetsControl.Size=new System.Drawing.Size(814, 340);
 			_conditionDatasetsControl.TabIndex=11;
 			// 
 			// _conditionListControl
@@ -298,7 +304,7 @@ namespace ProSuite.UI.QA.Customize
 			_toolStripConditionList.Location=new System.Drawing.Point(4, 19);
 			_toolStripConditionList.Name="_toolStripConditionList";
 			_toolStripConditionList.RenderMode=System.Windows.Forms.ToolStripRenderMode.System;
-			_toolStripConditionList.Size=new System.Drawing.Size(857, 25);
+			_toolStripConditionList.Size=new System.Drawing.Size(876, 25);
 			_toolStripConditionList.TabIndex=15;
 			_toolStripConditionList.Text="toolStrip1";
 			// 
@@ -372,29 +378,28 @@ namespace ProSuite.UI.QA.Customize
 			_toolStripButtonEnableNone.Text="None";
 			_toolStripButtonEnableNone.Click+=_toolStripButtonEnableNone_Click;
 			// 
+			// _panelSelectedConditions
+			// 
+			_panelSelectedConditions.Controls.Add(_groupBoxSelected);
+			_panelSelectedConditions.Dock=System.Windows.Forms.DockStyle.Fill;
+			_panelSelectedConditions.Location=new System.Drawing.Point(0, 0);
+			_panelSelectedConditions.Name="_panelSelectedConditions";
+			_panelSelectedConditions.Size=new System.Drawing.Size(259, 488);
+			_panelSelectedConditions.TabIndex=4;
+			// 
 			// _groupBoxSelected
 			// 
-			_groupBoxSelected.Controls.Add(_labelEnabledConditions);
 			_groupBoxSelected.Controls.Add(_dataGridViewEnabledConditions);
+			_groupBoxSelected.Controls.Add(_labelEnabledConditions);
 			_groupBoxSelected.Dock=System.Windows.Forms.DockStyle.Fill;
 			_groupBoxSelected.Location=new System.Drawing.Point(0, 0);
 			_groupBoxSelected.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
 			_groupBoxSelected.Name="_groupBoxSelected";
 			_groupBoxSelected.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
-			_groupBoxSelected.Size=new System.Drawing.Size(250, 481);
+			_groupBoxSelected.Size=new System.Drawing.Size(259, 488);
 			_groupBoxSelected.TabIndex=0;
 			_groupBoxSelected.TabStop=false;
 			_groupBoxSelected.Text="Enabled Quality Conditions";
-			// 
-			// _labelEnabledConditions
-			// 
-			_labelEnabledConditions.AutoSize=true;
-			_labelEnabledConditions.Location=new System.Drawing.Point(7, 30);
-			_labelEnabledConditions.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
-			_labelEnabledConditions.Name="_labelEnabledConditions";
-			_labelEnabledConditions.Size=new System.Drawing.Size(198, 15);
-			_labelEnabledConditions.TabIndex=0;
-			_labelEnabledConditions.Text="### of ### Tests selected to execute";
 			// 
 			// _dataGridViewEnabledConditions
 			// 
@@ -403,42 +408,42 @@ namespace ProSuite.UI.QA.Customize
 			_dataGridViewEnabledConditions.AllowUserToResizeRows=false;
 			_dataGridViewEnabledConditions.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
 			_dataGridViewEnabledConditions.AutoGenerateColumns=false;
-			dataGridViewCellStyle1.Alignment=System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle1.BackColor=System.Drawing.SystemColors.Control;
-			dataGridViewCellStyle1.Font=new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-			dataGridViewCellStyle1.ForeColor=System.Drawing.SystemColors.WindowText;
-			dataGridViewCellStyle1.SelectionBackColor=System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle1.SelectionForeColor=System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle1.WrapMode=System.Windows.Forms.DataGridViewTriState.True;
-			_dataGridViewEnabledConditions.ColumnHeadersDefaultCellStyle=dataGridViewCellStyle1;
+			dataGridViewCellStyle4.Alignment=System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle4.BackColor=System.Drawing.SystemColors.Control;
+			dataGridViewCellStyle4.Font=new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+			dataGridViewCellStyle4.ForeColor=System.Drawing.SystemColors.WindowText;
+			dataGridViewCellStyle4.SelectionBackColor=System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle4.SelectionForeColor=System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle4.WrapMode=System.Windows.Forms.DataGridViewTriState.True;
+			_dataGridViewEnabledConditions.ColumnHeadersDefaultCellStyle=dataGridViewCellStyle4;
 			_dataGridViewEnabledConditions.ColumnHeadersHeightSizeMode=System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			_dataGridViewEnabledConditions.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { dgcSelType, dgcSelTest });
 			_dataGridViewEnabledConditions.DataSource=_bindingSourceEnabledConditions;
-			dataGridViewCellStyle2.Alignment=System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle2.BackColor=System.Drawing.SystemColors.Window;
-			dataGridViewCellStyle2.Font=new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-			dataGridViewCellStyle2.ForeColor=System.Drawing.SystemColors.ControlText;
-			dataGridViewCellStyle2.SelectionBackColor=System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle2.SelectionForeColor=System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle2.WrapMode=System.Windows.Forms.DataGridViewTriState.False;
-			_dataGridViewEnabledConditions.DefaultCellStyle=dataGridViewCellStyle2;
+			dataGridViewCellStyle5.Alignment=System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle5.BackColor=System.Drawing.SystemColors.Window;
+			dataGridViewCellStyle5.Font=new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+			dataGridViewCellStyle5.ForeColor=System.Drawing.SystemColors.ControlText;
+			dataGridViewCellStyle5.SelectionBackColor=System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle5.SelectionForeColor=System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle5.WrapMode=System.Windows.Forms.DataGridViewTriState.False;
+			_dataGridViewEnabledConditions.DefaultCellStyle=dataGridViewCellStyle5;
 			_dataGridViewEnabledConditions.Location=new System.Drawing.Point(7, 57);
 			_dataGridViewEnabledConditions.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
 			_dataGridViewEnabledConditions.MinimumSize=new System.Drawing.Size(70, 92);
 			_dataGridViewEnabledConditions.Name="_dataGridViewEnabledConditions";
 			_dataGridViewEnabledConditions.ReadOnly=true;
-			dataGridViewCellStyle3.Alignment=System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle3.BackColor=System.Drawing.SystemColors.Control;
-			dataGridViewCellStyle3.Font=new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-			dataGridViewCellStyle3.ForeColor=System.Drawing.SystemColors.WindowText;
-			dataGridViewCellStyle3.SelectionBackColor=System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle3.SelectionForeColor=System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle3.WrapMode=System.Windows.Forms.DataGridViewTriState.True;
-			_dataGridViewEnabledConditions.RowHeadersDefaultCellStyle=dataGridViewCellStyle3;
+			dataGridViewCellStyle6.Alignment=System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle6.BackColor=System.Drawing.SystemColors.Control;
+			dataGridViewCellStyle6.Font=new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+			dataGridViewCellStyle6.ForeColor=System.Drawing.SystemColors.WindowText;
+			dataGridViewCellStyle6.SelectionBackColor=System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle6.SelectionForeColor=System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle6.WrapMode=System.Windows.Forms.DataGridViewTriState.True;
+			_dataGridViewEnabledConditions.RowHeadersDefaultCellStyle=dataGridViewCellStyle6;
 			_dataGridViewEnabledConditions.RowHeadersVisible=false;
 			_dataGridViewEnabledConditions.RowHeadersWidth=20;
 			_dataGridViewEnabledConditions.SelectionMode=System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			_dataGridViewEnabledConditions.Size=new System.Drawing.Size(236, 418);
+			_dataGridViewEnabledConditions.Size=new System.Drawing.Size(244, 424);
 			_dataGridViewEnabledConditions.TabIndex=2;
 			_dataGridViewEnabledConditions.CellFormatting+=_dataGridViewEnabledConditions_CellFormatting;
 			_dataGridViewEnabledConditions.SelectionChanged+=_dataGridViewEnabledConditions_SelectionChanged;
@@ -465,6 +470,16 @@ namespace ProSuite.UI.QA.Customize
 			// 
 			_bindingSourceEnabledConditions.DataSource=typeof(SpecificationDataset);
 			// 
+			// _labelEnabledConditions
+			// 
+			_labelEnabledConditions.AutoSize=true;
+			_labelEnabledConditions.Location=new System.Drawing.Point(7, 30);
+			_labelEnabledConditions.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelEnabledConditions.Name="_labelEnabledConditions";
+			_labelEnabledConditions.Size=new System.Drawing.Size(198, 15);
+			_labelEnabledConditions.TabIndex=0;
+			_labelEnabledConditions.Text="### of ### Tests selected to execute";
+			// 
 			// _groupBoxSelectedParameters
 			// 
 			_groupBoxSelectedParameters.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
@@ -473,7 +488,7 @@ namespace ProSuite.UI.QA.Customize
 			_groupBoxSelectedParameters.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
 			_groupBoxSelectedParameters.Name="_groupBoxSelectedParameters";
 			_groupBoxSelectedParameters.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
-			_groupBoxSelectedParameters.Size=new System.Drawing.Size(1051, 251);
+			_groupBoxSelectedParameters.Size=new System.Drawing.Size(1067, 251);
 			_groupBoxSelectedParameters.TabIndex=0;
 			_groupBoxSelectedParameters.TabStop=false;
 			_groupBoxSelectedParameters.Text="Selected Quality Condition";
@@ -494,7 +509,7 @@ namespace ProSuite.UI.QA.Customize
 			// _splitContainer.Panel2
 			// 
 			_splitContainer.Panel2.Controls.Add(_tabControl);
-			_splitContainer.Size=new System.Drawing.Size(1043, 229);
+			_splitContainer.Size=new System.Drawing.Size(1059, 229);
 			_splitContainer.SplitterDistance=352;
 			_splitContainer.SplitterWidth=5;
 			_splitContainer.TabIndex=2;
@@ -519,7 +534,7 @@ namespace ProSuite.UI.QA.Customize
 			_tabControl.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
 			_tabControl.Name="_tabControl";
 			_tabControl.SelectedIndex=0;
-			_tabControl.Size=new System.Drawing.Size(686, 229);
+			_tabControl.Size=new System.Drawing.Size(702, 229);
 			_tabControl.TabIndex=0;
 			// 
 			// _tabPageParameterValues
@@ -530,7 +545,7 @@ namespace ProSuite.UI.QA.Customize
 			_tabPageParameterValues.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
 			_tabPageParameterValues.Name="_tabPageParameterValues";
 			_tabPageParameterValues.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
-			_tabPageParameterValues.Size=new System.Drawing.Size(678, 201);
+			_tabPageParameterValues.Size=new System.Drawing.Size(694, 201);
 			_tabPageParameterValues.TabIndex=0;
 			_tabPageParameterValues.Text="Parameter Values";
 			_tabPageParameterValues.UseVisualStyleBackColor=true;
@@ -541,7 +556,7 @@ namespace ProSuite.UI.QA.Customize
 			_qualityConditionTableViewControl.Location=new System.Drawing.Point(4, 28);
 			_qualityConditionTableViewControl.Margin=new System.Windows.Forms.Padding(5, 3, 5, 3);
 			_qualityConditionTableViewControl.Name="_qualityConditionTableViewControl";
-			_qualityConditionTableViewControl.Size=new System.Drawing.Size(670, 170);
+			_qualityConditionTableViewControl.Size=new System.Drawing.Size(686, 170);
 			_qualityConditionTableViewControl.TabIndex=2;
 			// 
 			// _toolStrip
@@ -552,7 +567,7 @@ namespace ProSuite.UI.QA.Customize
 			_toolStrip.Location=new System.Drawing.Point(4, 3);
 			_toolStrip.Name="_toolStrip";
 			_toolStrip.RenderMode=System.Windows.Forms.ToolStripRenderMode.System;
-			_toolStrip.Size=new System.Drawing.Size(670, 25);
+			_toolStrip.Size=new System.Drawing.Size(686, 25);
 			_toolStrip.TabIndex=4;
 			_toolStrip.Text="Parameter Value Tools";
 			// 
@@ -582,7 +597,7 @@ namespace ProSuite.UI.QA.Customize
 			_tabPageTestDescriptor.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
 			_tabPageTestDescriptor.Name="_tabPageTestDescriptor";
 			_tabPageTestDescriptor.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
-			_tabPageTestDescriptor.Size=new System.Drawing.Size(621, 240);
+			_tabPageTestDescriptor.Size=new System.Drawing.Size(698, 201);
 			_tabPageTestDescriptor.TabIndex=1;
 			_tabPageTestDescriptor.Text="Test";
 			_tabPageTestDescriptor.UseVisualStyleBackColor=true;
@@ -593,9 +608,20 @@ namespace ProSuite.UI.QA.Customize
 			_testDescriptorControl.Location=new System.Drawing.Point(4, 3);
 			_testDescriptorControl.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
 			_testDescriptorControl.Name="_testDescriptorControl";
-			_testDescriptorControl.Size=new System.Drawing.Size(613, 234);
+			_testDescriptorControl.Size=new System.Drawing.Size(690, 195);
 			_testDescriptorControl.TabIndex=1;
 			_testDescriptorControl.TestDescriptor=null;
+			// 
+			// _mainSplitterBottomPanel
+			// 
+			_mainSplitterBottomPanel.Controls.Add(_groupBoxSelectedParameters);
+			_mainSplitterBottomPanel.Controls.Add(_buttonOK);
+			_mainSplitterBottomPanel.Controls.Add(_buttonCancel);
+			_mainSplitterBottomPanel.Dock=System.Windows.Forms.DockStyle.Fill;
+			_mainSplitterBottomPanel.Location=new System.Drawing.Point(0, 0);
+			_mainSplitterBottomPanel.Name="_mainSplitterBottomPanel";
+			_mainSplitterBottomPanel.Size=new System.Drawing.Size(1148, 263);
+			_mainSplitterBottomPanel.TabIndex=2;
 			// 
 			// dataGridViewCheckBoxColumn1
 			// 
@@ -655,6 +681,27 @@ namespace ProSuite.UI.QA.Customize
 			dataGridViewTextBoxColumn3.Name="dataGridViewTextBoxColumn3";
 			dataGridViewTextBoxColumn3.ReadOnly=true;
 			// 
+			// _panelTop
+			// 
+			_panelTop.Controls.Add(_labelDescription);
+			_panelTop.Controls.Add(_labelSpecification);
+			_panelTop.Controls.Add(_textBoxSpecification);
+			_panelTop.Controls.Add(_textBoxDescription);
+			_panelTop.Dock=System.Windows.Forms.DockStyle.Top;
+			_panelTop.Location=new System.Drawing.Point(0, 0);
+			_panelTop.Name="_panelTop";
+			_panelTop.Size=new System.Drawing.Size(1148, 100);
+			_panelTop.TabIndex=8;
+			// 
+			// _panelConditionViews
+			// 
+			_panelConditionViews.Controls.Add(_groupBoxConditions);
+			_panelConditionViews.Dock=System.Windows.Forms.DockStyle.Fill;
+			_panelConditionViews.Location=new System.Drawing.Point(0, 0);
+			_panelConditionViews.Name="_panelConditionViews";
+			_panelConditionViews.Size=new System.Drawing.Size(884, 488);
+			_panelConditionViews.TabIndex=1;
+			// 
 			// CustomizeQASpecForm
 			// 
 			AcceptButton=_buttonOK;
@@ -662,12 +709,9 @@ namespace ProSuite.UI.QA.Customize
 			AutoScaleMode=System.Windows.Forms.AutoScaleMode.Font;
 			CancelButton=_buttonCancel;
 			ClientSize=new System.Drawing.Size(1148, 878);
-			Controls.Add(_statusStrip);
 			Controls.Add(_splitContainerSpecification);
-			Controls.Add(_textBoxDescription);
-			Controls.Add(_labelDescription);
-			Controls.Add(_textBoxSpecification);
-			Controls.Add(_labelSpecification);
+			Controls.Add(_statusStrip);
+			Controls.Add(_panelTop);
 			FormBorderStyle=System.Windows.Forms.FormBorderStyle.SizableToolWindow;
 			KeyPreview=true;
 			Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -692,6 +736,7 @@ namespace ProSuite.UI.QA.Customize
 			_panelConditions.ResumeLayout(false);
 			_toolStripConditionList.ResumeLayout(false);
 			_toolStripConditionList.PerformLayout();
+			_panelSelectedConditions.ResumeLayout(false);
 			_groupBoxSelected.ResumeLayout(false);
 			_groupBoxSelected.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)_dataGridViewEnabledConditions).EndInit();
@@ -707,6 +752,10 @@ namespace ProSuite.UI.QA.Customize
 			_toolStrip.ResumeLayout(false);
 			_toolStrip.PerformLayout();
 			_tabPageTestDescriptor.ResumeLayout(false);
+			_mainSplitterBottomPanel.ResumeLayout(false);
+			_panelTop.ResumeLayout(false);
+			_panelTop.PerformLayout();
+			_panelConditionViews.ResumeLayout(false);
 			ResumeLayout(false);
 			PerformLayout();
 		}
@@ -760,5 +809,9 @@ namespace ProSuite.UI.QA.Customize
 		private System.Windows.Forms.ToolStripButton _toolStripButtonStopConditions;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
 		private System.Windows.Forms.ToolStripButton _toolStripButtonReset;
+		private System.Windows.Forms.Panel _panelTop;
+		private System.Windows.Forms.Panel _mainSplitterBottomPanel;
+		private System.Windows.Forms.Panel _panelSelectedConditions;
+		private System.Windows.Forms.Panel _panelConditionViews;
 	}
 }
