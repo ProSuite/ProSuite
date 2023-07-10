@@ -760,7 +760,7 @@ namespace ProSuite.UI.QA.Customize
 		private void RenderSelectedElement()
 		{
 			QualitySpecificationElement specificationElement =
-				GetSingleSelectedSpecificationDataset();
+				GetSingleSelectedSpecificationElement();
 
 			_msg.VerboseDebug(
 				() =>
@@ -778,7 +778,7 @@ namespace ProSuite.UI.QA.Customize
 			{
 				RenderElement(specificationElement);
 				_groupBoxSelectedParameters.Enabled = true;
-				_toolStripButtonCustomizeTestParameterValues.Enabled = true;
+				_toolStripButtonCustomizeTestParameterValues.Enabled = _testParameterDatasetProvider != null;
 			}
 		}
 
@@ -797,7 +797,7 @@ namespace ProSuite.UI.QA.Customize
 		}
 
 		[CanBeNull]
-		private QualitySpecificationElement GetSingleSelectedSpecificationDataset()
+		private QualitySpecificationElement GetSingleSelectedSpecificationElement()
 		{
 			return _selectedElements.Count == 1
 					   ? _selectedElements.First()
@@ -864,7 +864,7 @@ namespace ProSuite.UI.QA.Customize
 				() =>
 				{
 					QualitySpecificationElement specificationElement =
-						GetSingleSelectedSpecificationDataset();
+						GetSingleSelectedSpecificationElement();
 					if (specificationElement?.QualityCondition == null)
 					{
 						return;
@@ -895,7 +895,8 @@ namespace ProSuite.UI.QA.Customize
 				() =>
 				{
 					QualitySpecificationElement specificationElement =
-						GetSingleSelectedSpecificationDataset();
+						GetSingleSelectedSpecificationElement();
+
 					if (specificationElement?.QualityCondition == null)
 					{
 						return;
