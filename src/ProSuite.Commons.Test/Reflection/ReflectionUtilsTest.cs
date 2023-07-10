@@ -99,12 +99,12 @@ namespace ProSuite.Commons.Test.Reflection
 		}
 
 		[Test]
-		[Category(TestCategory.FixMe)]
 		public void CanGetConstantValue()
 		{
 			var type = typeof(TestClass);
 			Assert.AreEqual(12, type.GetConstantValue("Foo"));
-			Assert.IsNull(type.GetConstantValue("Bar")); // private fields are excluded
+			Assert.IsNull(type.GetConstantValue("Bar")); // private constants are excluded by default
+			Assert.AreEqual(true, type.GetConstantValue("Bar", true)); // but may be included upon request
 			Assert.AreEqual(4.2, type.GetConstantValue("Baz"));
 			Assert.AreEqual("Hey", type.GetConstantValue("Quux")); // base class is included
 			Assert.IsNull(type.GetConstantValue("NoSuchField"));
