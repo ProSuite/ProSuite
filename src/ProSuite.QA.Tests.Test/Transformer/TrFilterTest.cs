@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -432,6 +434,73 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				// Filtered again, no error
 				Assert.AreEqual(1, errors.Count);
 			}
+		}
+
+		[Test]
+		public void CanGetFilteredLinesWithPolyContainedNonSpatialSearch()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrOnlyIntersectingRows");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(
+					ws, "lineFc", esriGeometryType.esriGeometryPolyline,
+					new[] { FieldUtils.CreateIntegerField("Nr_Line") });
+			IFeatureClass polyFc =
+				CreateFeatureClass(
+					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("Nr_Poly") });
+
+			{
+				// Contained:
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 1;
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(10, 10).Curve;
+				f.Store();
+			}
+			{
+				// Not contained:
+				IFeature f = lineFc.CreateFeature();
+				f.Value[1] = 2;
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 80).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 11;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(0, 20).LineTo(20, 20)
+				                           .LineTo(20, 0).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Value[1] = 12;
+				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(0, -70).LineTo(-70, -70)
+				                           .LineTo(-70, 0).ClosePolygon();
+				f.Store();
+			}
+
+			var tr = new TrOnlyContainedFeatures(ReadOnlyTableFactory.Create(lineFc),
+			                                     ReadOnlyTableFactory.Create(polyFc));
+
+			WKSEnvelope wksEnvelope = WksGeometryUtils.CreateWksEnvelope(-100, -100, 100, 100);
+
+			FilteredFeatureClass filteredFeatureClass = tr.GetTransformed();
+
+			ITableFilter tableFilter = new AoTableFilter()
+			                           {
+				                           WhereClause = "OBJECTID < 100"
+			                           };
+
+			Assert.NotNull(filteredFeatureClass.BackingDataset);
+			var transformedBackingDataset =
+				(TransformedBackingData) filteredFeatureClass.BackingDataset;
+
+			transformedBackingDataset.DataSearchContainer = new UncachedDataContainer(wksEnvelope);
+
+			// By now the DatasetContainer should have been assigned -> test non-spatial filter:
+			var filteredRows = filteredFeatureClass.EnumReadOnlyRows(tableFilter, false).ToList();
+			Assert.AreEqual(1, filteredRows.Count);
 		}
 
 		[Test]
