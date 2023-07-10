@@ -22,8 +22,7 @@ namespace ProSuite.AGP.WorkList
 		                           IRepository stateRepository) : base(
 			tablesByGeodatabase, stateRepository) { }
 
-		protected override WorkListStatusSchema CreateStatusSchemaCore(
-			FeatureClassDefinition definition)
+		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{
 			int fieldIndex;
 
@@ -47,8 +46,7 @@ namespace ProSuite.AGP.WorkList
 			                                (int) IssueCorrectionStatus.Corrected);
 		}
 
-		protected override IAttributeReader CreateAttributeReaderCore(
-			FeatureClassDefinition definition)
+		protected override IAttributeReader CreateAttributeReaderCore(TableDefinition definition)
 		{
 			return new AttributeReader(definition,
 			                           Attributes.QualityConditionName,

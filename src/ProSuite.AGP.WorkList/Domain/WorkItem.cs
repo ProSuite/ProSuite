@@ -36,11 +36,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		protected WorkItem(long id, [NotNull] Row row) : this(id, new GdbRowIdentity(row))
 		{
+			Description = GetDescription(row);
+
 			var feature = row as Feature;
 
 			SetGeometryFromFeature(feature);
-
-			Description = GetDescription(feature);
 		}
 
 		protected WorkItem(long id, GdbRowIdentity identity)
@@ -79,7 +79,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public GdbRowIdentity Proxy { get; }
 
-		[CanBeNull]
 		public Envelope Extent { get; private set; }
 
 		public GeometryType? GeometryType { get; set; }
