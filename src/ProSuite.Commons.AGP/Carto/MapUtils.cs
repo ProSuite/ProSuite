@@ -244,7 +244,7 @@ namespace ProSuite.Commons.AGP.Carto
 					(tablePredicate == null || tablePredicate(t));
 			}
 
-			foreach (StandaloneTable table in mapView.Map.StandaloneTables)
+			foreach (StandaloneTable table in mapView.Map.GetStandaloneTablesAsFlattenedList())
 			{
 				if (combinedPredicate == null || combinedPredicate(table))
 				{
