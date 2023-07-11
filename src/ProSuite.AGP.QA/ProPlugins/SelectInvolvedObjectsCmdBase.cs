@@ -97,8 +97,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 			//select features or rows based on involved rows
 			foreach (KeyValuePair<string, List<long>> keyValuePair in involvedRows)
 			{
-				FeatureLayer layer =
-					MapUtils.GetFeatureLayers<FeatureLayer>(
+				BasicFeatureLayer layer =
+					MapUtils.GetFeatureLayers<BasicFeatureLayer>(
 						lyr => string.Equals(
 							lyr.GetFeatureClass().GetName(),
 							keyValuePair.Key,
