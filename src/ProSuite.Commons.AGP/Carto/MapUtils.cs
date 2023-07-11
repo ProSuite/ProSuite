@@ -31,37 +31,29 @@ namespace ProSuite.Commons.AGP.Carto
 			return mapView.Map;
 		}
 
-		[NotNull]
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
-			[NotNull] IEnumerable<BasicFeatureLayer> layers)
+			Dictionary<MapMember, List<long>> oidsByLayer)
 		{
 			var result = new Dictionary<Table, SimpleSet<long>>();
 			var distinctTableIds = new Dictionary<GdbTableIdentity, Table>();
 
-			foreach (BasicFeatureLayer layer in layers.Where(LayerUtils.HasSelection))
+			foreach (KeyValuePair<MapMember, List<long>> pair in oidsByLayer)
 			{
-				IEnumerable<long> selection = layer.GetSelectionOids();
-
-				Table table = layer.GetTable();
-
-				if (table == null)
-				{
-					continue;
-				}
+				Table table = GetTable(pair.Key);
 
 				var tableId = new GdbTableIdentity(table);
 
 				if (! distinctTableIds.ContainsKey(tableId))
 				{
 					distinctTableIds.Add(tableId, table);
-					result.Add(table, new SimpleSet<long>(selection));
+					result.Add(table, new SimpleSet<long>(pair.Value));
 				}
 				else
 				{
 					Table distinctTable = distinctTableIds[tableId];
 
 					SimpleSet<long> ids = result[distinctTable];
-					foreach (long id in selection)
+					foreach (long id in pair.Value)
 					{
 						ids.TryAdd(id);
 					}
@@ -71,26 +63,23 @@ namespace ProSuite.Commons.AGP.Carto
 			return result.ToDictionary(pair => pair.Key, pair => pair.Value.ToList());
 		}
 
-		public static Dictionary<Geodatabase, List<Table>> GetDistinctTables(
-			[NotNull] IEnumerable<BasicFeatureLayer> layers)
+		[NotNull]
+		public static Table GetTable<T>([NotNull] T mapMember) where T : MapMember
 		{
-			var result = new Dictionary<Geodatabase, SimpleSet<Table>>();
+			Assert.ArgumentNotNull(mapMember, nameof(mapMember));
 
-			foreach (Table table in layers.GetTables().Distinct())
+			if (mapMember is BasicFeatureLayer basicFeatureLayer)
 			{
-				var geodatabase = (Geodatabase) table.GetDatastore();
-
-				if (! result.ContainsKey(geodatabase))
-				{
-					result.Add(geodatabase, new SimpleSet<Table> { table });
-				}
-				else
-				{
-					result[geodatabase].TryAdd(table);
-				}
+				return Assert.NotNull(basicFeatureLayer.GetTable());
 			}
 
-			return result.ToDictionary(pair => pair.Key, pair => pair.Value.ToList());
+			if (mapMember is StandaloneTable standaloneTable)
+			{
+				return Assert.NotNull(standaloneTable.GetTable());
+			}
+
+			throw new ArgumentException(
+				$"{nameof(mapMember)} is not of type BasicFeatureLayer nor StandaloneTable");
 		}
 
 		public static IEnumerable<Feature> GetFeatures(

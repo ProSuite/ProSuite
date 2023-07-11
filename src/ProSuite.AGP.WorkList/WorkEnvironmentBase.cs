@@ -41,19 +41,19 @@ namespace ProSuite.AGP.WorkList
 			_msg.Debug($"Create work list state repository in {definitionFilePath}");
 
 			// todo daro: dispose feature classes?
-			FeatureClass[] featureClasses =
-				await Task.WhenAll(GetFeatureClassesCore().Select(EnsureStatusFieldCoreAsync));
+			Table[] tables = await Task.WhenAll(GetTablesCore().Select(EnsureStatusFieldCoreAsync));
 
-			IWorkItemRepository repository =
-				CreateItemRepositoryCore(GetLayersCore(featureClasses), stateRepository);
+			AddToMapCore(tables);
 
-			return CreateWorkListCore(repository, uniqueName, displayName);
+			return CreateWorkListCore(CreateItemRepositoryCore(tables, stateRepository),
+			                          uniqueName,
+			                          displayName);
 		}
 
-		public FeatureLayer AddLayer([NotNull] IWorkList worklist, string path)
+		public void AddLayer([NotNull] IWorkList worklist, string path)
 		{
 			//Create the work list layer with basic properties and connect to datasource
-			FeatureLayer worklistLayer = CreateWorklistLayer(worklist, path, GetContainer());
+			FeatureLayer worklistLayer = CreateWorklistLayer(worklist, path, GetContainerCore<ILayerContainerEdit>());
 
 			//Set some hard-coded properties
 			worklistLayer.SetScaleSymbols(false);
@@ -63,8 +63,6 @@ namespace ProSuite.AGP.WorkList
 			//Set renderer based on symbology from template layer
 			LayerDocument templateLayer = GetWorkListSymbologyTemplateLayer();
 			LayerUtils.ApplyRenderer(worklistLayer, templateLayer);
-
-			return worklistLayer;
 		}
 
 		public string GetDefinitionFile([NotNull] string worklistDisplayName)
@@ -78,25 +76,20 @@ namespace ProSuite.AGP.WorkList
 		/// <summary>
 		/// Loads associated layers if there are any.
 		/// </summary>
-		public virtual IEnumerable<BasicFeatureLayer> LoadLayers()
-		{
-			return Enumerable.Empty<BasicFeatureLayer>();
-		}
+		public virtual void LoadLayers() { }
 
-		protected abstract ILayerContainerEdit GetContainer();
+		protected abstract void AddToMapCore(IEnumerable<Table> tables);
+
+		protected abstract T GetContainerCore<T>() where T : class;
 
 		protected virtual async Task<bool> TryPrepareSchemaCoreAsync()
 		{
 			return await Task.FromResult(true);
 		}
 
-		protected abstract IEnumerable<BasicFeatureLayer> GetLayersCore(
-			[NotNull] IEnumerable<FeatureClass> featureClasses);
+		protected abstract IEnumerable<Table> GetTablesCore();
 
-		protected abstract IEnumerable<FeatureClass> GetFeatureClassesCore();
-
-		protected abstract Task<FeatureClass> EnsureStatusFieldCoreAsync(
-			[NotNull] FeatureClass featureClass);
+		protected abstract Task<Table> EnsureStatusFieldCoreAsync([NotNull] Table table);
 
 		protected abstract IWorkList CreateWorkListCore([NotNull] IWorkItemRepository repository,
 		                                                [NotNull] string uniqueName,
@@ -106,7 +99,7 @@ namespace ProSuite.AGP.WorkList
 
 		// todo daro to IEnumerable<Table>
 		protected abstract IWorkItemRepository CreateItemRepositoryCore(
-			IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository);
+			IEnumerable<Table> tables, IRepository stateRepository);
 
 		protected abstract string GetWorkListSymbologyTemplateLayerPath();
 
