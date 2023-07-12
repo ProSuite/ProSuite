@@ -9,6 +9,7 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.WorkList
 {

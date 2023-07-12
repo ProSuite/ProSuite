@@ -15,6 +15,7 @@ using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.QA.WorkList
 {
