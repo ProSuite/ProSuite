@@ -213,6 +213,17 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		[CanBeNull]
+		public static BasicFeatureLayer GetFeatureLayer(
+			[CanBeNull] string featureClassName,
+			[CanBeNull] MapView mapView = null)
+		{
+			return GetFeatureLayers<BasicFeatureLayer>(
+				lyr => string.Equals(lyr.GetFeatureClass().GetName(),
+				                     featureClassName,
+				                     StringComparison.OrdinalIgnoreCase), mapView).FirstOrDefault();
+		}
+
 		public static IEnumerable<StandaloneTable> GetStandaloneTables(
 			[CanBeNull] Predicate<StandaloneTable> tablePredicate,
 			[CanBeNull] MapView mapView = null,
@@ -251,6 +262,17 @@ namespace ProSuite.Commons.AGP.Carto
 					yield return table;
 				}
 			}
+		}
+
+		[CanBeNull]
+		public static StandaloneTable GetStandaloneTable(
+			[CanBeNull] string tableName,
+			[CanBeNull] MapView mapView = null)
+		{
+			return GetStandaloneTables(
+				table => string.Equals(table.GetTable().GetName(),
+				                       tableName,
+				                       StringComparison.OrdinalIgnoreCase), mapView).FirstOrDefault();
 		}
 
 		public static Geometry ToMapGeometry(MapView mapView,
