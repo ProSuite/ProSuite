@@ -94,6 +94,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			_msg.DebugFormat("Involved rows found from {0} object classes.", involvedRows.Count);
 
+			// todo daro see IssueWorkListViewModel.GetInvolvedMapMembersByLayer
+			// it is the same problem.
+
 			//select features or rows based on involved rows
 			foreach (KeyValuePair<string, List<long>> keyValuePair in involvedRows)
 			{

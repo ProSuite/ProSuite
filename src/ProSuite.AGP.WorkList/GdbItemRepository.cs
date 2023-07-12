@@ -221,11 +221,10 @@ namespace ProSuite.AGP.WorkList
 		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row, ISourceClass source);
 
 		[NotNull]
-		protected abstract ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
-		                                                      [CanBeNull]
-		                                                      IAttributeReader attributeReader,
-		                                                      [CanBeNull]
-		                                                      WorkListStatusSchema statusSchema);
+		protected abstract ISourceClass CreateSourceClassCore(
+			GdbTableIdentity identity,
+			[CanBeNull] IAttributeReader attributeReader,
+			[CanBeNull] WorkListStatusSchema statusSchema);
 
 		private void RegisterDatasets(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase)
 		{
@@ -249,6 +248,7 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
+		// todo daro rename
 		[CanBeNull]
 		protected Table OpenFeatureClass([NotNull] ISourceClass sourceClass)
 		{
@@ -257,25 +257,14 @@ namespace ProSuite.AGP.WorkList
 				       : null;
 		}
 
-		//[CanBeNull]
-		//protected Table OpenFeatureClass2([NotNull] ISourceClass sourceClass)
-		//{
-		//	return GeodatabaseBySourceClasses.TryGetValue(sourceClass, out Geodatabase gdb)
-		//		       ? sourceClass.OpenFeatureClass(gdb)
-		//		       : null;
-		//}
-
 		private ISourceClass CreateSourceClass(GdbTableIdentity identity,
 		                                       TableDefinition definition)
 		{
 			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
 
 			WorkListStatusSchema statusSchema = CreateStatusSchemaCore(definition);
-
-			ISourceClass sourceClass =
-				CreateSourceClassCore(identity, attributeReader, statusSchema);
-
-			return sourceClass;
+			
+			return CreateSourceClassCore(identity, attributeReader, statusSchema);
 		}
 
 		#region unused
@@ -283,21 +272,6 @@ namespace ProSuite.AGP.WorkList
 		public int GetCount(QueryFilter filter = null)
 		{
 			throw new NotImplementedException();
-		}
-
-		public int Count(WorkItemVisibility visibility)
-		{
-			int count = 0;
-
-			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys)
-			{
-				//string whereClause = sourceClass.GetQuery(visibility);
-				//var filter = new QueryFilter {WhereClause = whereClause};
-
-				//count += GetRowsCore(sourceClass, filter, recycle: true).Count();
-			}
-
-			return count;
 		}
 
 		#endregion

@@ -2,6 +2,7 @@ using System;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
+	// todo daro use GdbRowIdentity
 	public class OIDRowReference : RowReference, IEquatable<OIDRowReference>
 	{
 		private readonly int _oid;
