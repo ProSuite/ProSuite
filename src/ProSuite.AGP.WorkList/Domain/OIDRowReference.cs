@@ -7,8 +7,9 @@ namespace ProSuite.AGP.WorkList.Domain
 	{
 		private readonly int _oid;
 
-		public OIDRowReference(int oid)
+		public OIDRowReference(int oid, bool hasGeometry)
 		{
+			HasGeometry = hasGeometry;
 			_oid = oid;
 		}
 
@@ -17,6 +18,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		public override bool UsesOID => true;
 
 		public override object Key => _oid;
+
+		public override bool HasGeometry { get; }
 
 		public override string ToString()
 		{

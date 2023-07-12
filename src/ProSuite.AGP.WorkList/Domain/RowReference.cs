@@ -8,5 +8,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		public abstract bool UsesOID { get; }
 
 		public abstract object Key { get; }
+
+		public abstract bool HasGeometry { get; }
 	}
 }

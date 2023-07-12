@@ -11,11 +11,15 @@ namespace ProSuite.Commons.AGP.Gdb
 			Name = table.GetName();
 			Id = table.GetID();
 
+			HasGeometry = table is FeatureClass;
+
 			using (Datastore datastore = table.GetDatastore())
 			{
 				Workspace = new GdbWorkspaceIdentity(datastore);
 			}
 		}
+
+		public bool HasGeometry { get; }
 
 		public GdbTableIdentity(string name, long id, GdbWorkspaceIdentity workspace)
 		{

@@ -78,8 +78,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 					issueObject.GetTable().GetDefinition().FindField("InvolvedObjects");
 
 				string involvedString = (string) issueObject[fieldIndex];
-
-				var involvedTables = IssueUtils.ParseInvolvedTables(involvedString);
+				
+				var involvedTables =
+					IssueUtils.ParseInvolvedTables(involvedString, issueObject is Feature);
 				foreach (var involved in involvedTables)
 				{
 					if (! involvedRows.ContainsKey(involved.TableName))
