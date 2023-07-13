@@ -168,17 +168,23 @@ namespace ProSuite.AGP.QA.WorkList
 			string path = table.GetPath().LocalPath;
 
 			// the GP tool is not going to fail on adding a field with the same name
-			Task<bool> addField =
-				GeoprocessingUtils.AddFieldAsync(path, fieldName, "Status",
-				                                 FieldType.Integer, null, null,
-				                                 null, true, false, _domainName);
+			// But it still takes hell of a long time...
+			TableDefinition tableDefinition = table.GetDefinition();
 
-			Task<bool> assignDefaultValue =
-				GeoprocessingUtils.AssignDefaultToFieldAsync(path, fieldName, 100);
+			if (tableDefinition.FindField(fieldName) < 0)
+			{
+				Task<bool> addField =
+					GeoprocessingUtils.AddFieldAsync(path, fieldName, "Status",
+					                                 FieldType.Integer, null, null,
+					                                 null, true, false, _domainName);
 
-			await Task.WhenAll(addField, assignDefaultValue);
+				Task<bool> assignDefaultValue =
+					GeoprocessingUtils.AssignDefaultToFieldAsync(path, fieldName, 100);
 
-			_msg.DebugStopTiming(watch, "Prepared schema - status field on {0}", path);
+				await Task.WhenAll(addField, assignDefaultValue);
+
+				_msg.DebugStopTiming(watch, "Prepared schema - status field on {0}", path);
+			}
 
 			return table;
 		}
