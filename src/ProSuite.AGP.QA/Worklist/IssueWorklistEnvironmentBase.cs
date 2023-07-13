@@ -13,6 +13,7 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.GP;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
@@ -119,11 +120,9 @@ namespace ProSuite.AGP.QA.WorkList
 						LayerFactory.Instance.CreateLayer<FeatureLayer>(
 							new FeatureLayerCreationParams(fc), groupLayer);
 
-					if (featureLayer == null)
-					{
-						_msg.WarnFormat("Feature layer for {0} was not created!", table.GetName());
-						continue;
-					}
+					// See DPS/#80: Sometimes a non-reproducible null layer results from the previous method.
+					Assert.NotNull(featureLayer,
+					               $"The feature layer for {table.GetName()} could not be created. Please try again.");
 
 					featureLayer.SetExpanded(false);
 					featureLayer.SetVisibility(false);
