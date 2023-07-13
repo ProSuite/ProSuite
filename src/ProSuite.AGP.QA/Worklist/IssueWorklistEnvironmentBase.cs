@@ -119,6 +119,12 @@ namespace ProSuite.AGP.QA.WorkList
 						LayerFactory.Instance.CreateLayer<FeatureLayer>(
 							new FeatureLayerCreationParams(fc), groupLayer);
 
+					if (featureLayer == null)
+					{
+						_msg.WarnFormat("Feature layer for {0} was not created!", table.GetName());
+						continue;
+					}
+
 					featureLayer.SetExpanded(false);
 					featureLayer.SetVisibility(false);
 
