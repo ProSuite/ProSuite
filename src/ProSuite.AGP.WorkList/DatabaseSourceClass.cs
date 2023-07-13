@@ -58,8 +58,8 @@ namespace ProSuite.AGP.WorkList
 				return WorkItemStatus.Done;
 			}
 
-			_msg.Debug(
-				$"Unknown {nameof(WorkItemStatus)} value {value}, return {nameof(WorkItemStatus.Todo)}");
+			_msg.VerboseDebug(() => $"Unknown {nameof(WorkItemStatus)} value {value}, " +
+			                        $"return {nameof(WorkItemStatus.Todo)}");
 
 			return WorkItemStatus.Todo;
 		}
