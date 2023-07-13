@@ -70,10 +70,13 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
+			_msg.DebugFormat("Added {0} items to work list", _items.Count);
+
 			// initializes the state repository if no states for
 			// the work items are read yet
 			Repository.UpdateVolatileState(_items);
 
+			_msg.DebugFormat("Getting extents for {0} items...", _items.Count);
 			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
 			//			  look old work item implementation
 			Extent = GetExtentFromItems(_items);
@@ -145,7 +148,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			Repository.SetVisited(item);
 
-			OnWorkListChanged(null, new List<long> {item.OID});
+			OnWorkListChanged(null, new List<long> { item.OID });
 		}
 
 		public void Commit()
@@ -339,7 +342,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				return;
 			}
 
-			var filter = new QueryFilter {ObjectIDs = new[] {oid}};
+			var filter = new QueryFilter { ObjectIDs = new[] { oid } };
 			IWorkItem target = GetItems(filter, false).FirstOrDefault();
 
 			if (target != null)
@@ -789,8 +792,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			Repository.SetVisited(nextItem);
 
 			var oids = currentItem != null
-				           ? new List<long> {nextItem.OID, currentItem.OID}
-				           : new List<long> {nextItem.OID};
+				           ? new List<long> { nextItem.OID, currentItem.OID }
+				           : new List<long> { nextItem.OID };
 
 			OnWorkListChanged(null, oids);
 		}
@@ -1076,7 +1079,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			foreach (long oid in oids)
 			{
 				var rowId = new GdbRowIdentity(oid, new GdbTableIdentity(table));
-				
+
 				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
 				{
 					Refresh(item);
@@ -1141,7 +1144,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			CurrentIndex = -1;
 
-			OnWorkListChanged(null, new List<long> {current.OID});
+			OnWorkListChanged(null, new List<long> { current.OID });
 		}
 
 		private void UpdateExtent(Envelope itemExtent)
