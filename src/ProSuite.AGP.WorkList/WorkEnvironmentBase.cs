@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -32,28 +33,36 @@ namespace ProSuite.AGP.WorkList
 				return await Task.FromResult(default(IWorkList));
 			}
 
+			Stopwatch watch = Stopwatch.StartNew();
+
 			string fileName = string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
 
 			string definitionFilePath = GetDefinitionFile(fileName);
 
 			IRepository stateRepository = CreateStateRepositoryCore(definitionFilePath, uniqueName);
 
-			_msg.Debug($"Create work list state repository in {definitionFilePath}");
+			_msg.DebugStopTiming(watch, "Created work list state repository in {0}",
+			                     definitionFilePath);
 
 			// todo daro: dispose feature classes?
 			Table[] tables = await Task.WhenAll(GetTablesCore().Select(EnsureStatusFieldCoreAsync));
 
 			AddToMapCore(tables);
 
-			return CreateWorkListCore(CreateItemRepositoryCore(tables, stateRepository),
-			                          uniqueName,
-			                          displayName);
+			IWorkList result = CreateWorkListCore(
+				CreateItemRepositoryCore(tables, stateRepository),
+				uniqueName, displayName);
+
+			_msg.DebugFormat("Created work list {0}", uniqueName);
+
+			return result;
 		}
 
 		public void AddLayer([NotNull] IWorkList worklist, string path)
 		{
 			//Create the work list layer with basic properties and connect to datasource
-			FeatureLayer worklistLayer = CreateWorklistLayer(worklist, path, GetContainerCore<ILayerContainerEdit>());
+			FeatureLayer worklistLayer =
+				CreateWorklistLayer(worklist, path, GetContainerCore<ILayerContainerEdit>());
 
 			//Set some hard-coded properties
 			worklistLayer.SetScaleSymbols(false);
