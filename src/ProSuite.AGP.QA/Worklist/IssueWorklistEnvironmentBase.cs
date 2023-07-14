@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
@@ -12,9 +13,11 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.GP;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.QA.WorkList
 {
@@ -52,6 +55,8 @@ namespace ProSuite.AGP.QA.WorkList
 				return false;
 			}
 
+			Stopwatch watch = Stopwatch.StartNew();
+
 			using (Geodatabase geodatabase =
 			       new Geodatabase(
 				       new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)))
@@ -73,6 +78,8 @@ namespace ProSuite.AGP.QA.WorkList
 					_path, _domainName, (int) IssueCorrectionStatus.NotCorrected, "Not Corrected"),
 				GeoprocessingUtils.AddCodedValueToDomainAsync(
 					_path, _domainName, (int) IssueCorrectionStatus.Corrected, "Corrected"));
+
+			_msg.DebugStopTiming(watch, "Prepared schema - domain");
 
 			return true;
 		}
@@ -105,11 +112,17 @@ namespace ProSuite.AGP.QA.WorkList
 
 			foreach (var table in tables)
 			{
+				_msg.DebugFormat("Adding table {0} to map...", table.GetName());
+
 				if (table is FeatureClass fc)
 				{
 					FeatureLayer featureLayer =
 						LayerFactory.Instance.CreateLayer<FeatureLayer>(
 							new FeatureLayerCreationParams(fc), groupLayer);
+
+					// See DPS/#80: Sometimes a non-reproducible null layer results from the previous method.
+					Assert.NotNull(featureLayer,
+					               $"The feature layer for {table.GetName()} could not be created. Please try again.");
 
 					featureLayer.SetExpanded(false);
 					featureLayer.SetVisibility(false);
@@ -155,18 +168,28 @@ namespace ProSuite.AGP.QA.WorkList
 		{
 			const string fieldName = "STATUS";
 
+			Stopwatch watch = Stopwatch.StartNew();
+
 			string path = table.GetPath().LocalPath;
 
 			// the GP tool is not going to fail on adding a field with the same name
-			Task<bool> addField =
-				GeoprocessingUtils.AddFieldAsync(path, fieldName, "Status",
-				                                 FieldType.Integer, null, null,
-				                                 null, true, false, _domainName);
+			// But it still takes hell of a long time...
+			TableDefinition tableDefinition = table.GetDefinition();
 
-			Task<bool> assignDefaultValue =
-				GeoprocessingUtils.AssignDefaultToFieldAsync(path, fieldName, 100);
+			if (tableDefinition.FindField(fieldName) < 0)
+			{
+				Task<bool> addField =
+					GeoprocessingUtils.AddFieldAsync(path, fieldName, "Status",
+					                                 FieldType.Integer, null, null,
+					                                 null, true, false, _domainName);
 
-			await Task.WhenAll(addField, assignDefaultValue);
+				Task<bool> assignDefaultValue =
+					GeoprocessingUtils.AssignDefaultToFieldAsync(path, fieldName, 100);
+
+				await Task.WhenAll(addField, assignDefaultValue);
+
+				_msg.DebugStopTiming(watch, "Prepared schema - status field on {0}", path);
+			}
 
 			return table;
 		}
@@ -188,8 +211,14 @@ namespace ProSuite.AGP.QA.WorkList
 		protected override IWorkItemRepository CreateItemRepositoryCore(
 			IEnumerable<Table> tables, IRepository stateRepository)
 		{
-			return new IssueItemRepository(WorkListUtils.GetDistinctTables(tables),
-			                               stateRepository);
+			Stopwatch watch = Stopwatch.StartNew();
+
+			var result = new IssueItemRepository(WorkListUtils.GetDistinctTables(tables),
+			                                     stateRepository);
+
+			_msg.DebugStopTiming(watch, "Created issue work item repository");
+
+			return result;
 		}
 	}
 }

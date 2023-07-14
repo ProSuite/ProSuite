@@ -98,11 +98,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 				result.Add(specification);
 			}
+
 			_msg.DebugFormat("Found {0} quality specifications for {1} datasets.", result.Count,
-							 datasetIds.Count);
+			                 datasetIds.Count);
 
 			return result.OrderBy(qs => qs.Name).ToList();
-
 		}
 
 		public static async Task<QualitySpecification> LoadFullSpecification(
@@ -132,6 +132,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			QualitySpecification result =
 				CreateQualitySpecification(response, supportedInstanceDescriptors);
+
+			result.SetCloneId(specificationId);
 
 			return result;
 		}
