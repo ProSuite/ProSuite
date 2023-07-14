@@ -37,7 +37,7 @@ namespace ProSuite.AGP.WorkList.Selection
 		{
 			Type type = GetWorkListTypeCore<SelectionWorkList>();
 
-			return new XmlWorkItemStateRepository(path, workListName, type);
+			return new XmlSelectionItemStateRepository(path, workListName, type);
 		}
 
 		protected override IWorkItemRepository CreateItemRepositoryCore(

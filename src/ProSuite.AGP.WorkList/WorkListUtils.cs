@@ -101,8 +101,8 @@ namespace ProSuite.AGP.WorkList
 			else if (type == typeof(SelectionWorkList))
 			{
 				stateRepository =
-					new XmlWorkItemStateRepository(definition.Path, definition.Name, type,
-					                               definition.CurrentIndex);
+					new XmlSelectionItemStateRepository(definition.Path, definition.Name, type,
+					                                    definition.CurrentIndex);
 
 				Dictionary<long, Table> tablesById =
 					tablesByGeodatabase.Values
