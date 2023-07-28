@@ -40,13 +40,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				FieldUtils.CreateFields(
 					FieldUtils.CreateOIDField(),
 					FieldUtils.CreateShapeField(
-						"Shape", esriGeometryType.esriGeometryLine, srLv95, 1000)));
+						"Shape", esriGeometryType.esriGeometryPolyline, srLv95, 1000)));
 
 			IFeatureClass fcWgs84 = DatasetUtils.CreateSimpleFeatureClass(ws, "wgs84",
 				FieldUtils.CreateFields(
 					FieldUtils.CreateOIDField(),
 					FieldUtils.CreateShapeField(
-						"Shape", esriGeometryType.esriGeometryLine, srWgs84, 1000)));
+						"Shape", esriGeometryType.esriGeometryPolyline, srWgs84, 1000)));
 
 			{
 				IFeature f = fcLv95.CreateFeature();

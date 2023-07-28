@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -24,22 +25,30 @@ namespace ProSuite.QA.Tests.Transformers
 	                                            IGeometryTransformer, IContainerTransformer
 	{
 		private readonly esriGeometryType _derivedShapeType;
+		private readonly ISpatialReference _derivedSpatialReference;
 
 		protected TrGeometryTransform([NotNull] IReadOnlyFeatureClass fc,
-		                              esriGeometryType derivedShapeType)
+		                              esriGeometryType derivedShapeType,
+		                              ISpatialReference derivedSpatialReference = null)
 			: base(new List<IReadOnlyTable> { fc })
 		{
 			_derivedShapeType = derivedShapeType;
+			_derivedSpatialReference = derivedSpatialReference;
 		}
 
 		[TestParameter]
 		[DocTr(nameof(DocTrStrings.TrGeometryTransform_Attributes))]
 		public IList<string> Attributes { get; set; }
 
+		protected virtual TransformedFc InitTransformedFc(IReadOnlyFeatureClass fc, string name)
+		{
+			return new ShapeTransformedFc(fc, _derivedShapeType, this, name);
+		}
+
 		protected override TransformedFeatureClass GetTransformedCore(string name)
 		{
-			IReadOnlyFeatureClass fc = (IReadOnlyFeatureClass) InvolvedTables[0];
-			var transformedFc = new TransformedFc(fc, _derivedShapeType, this, name);
+			IReadOnlyFeatureClass fc = (IReadOnlyFeatureClass)InvolvedTables[0];
+			TransformedFc transformedFc = InitTransformedFc(fc, name);
 
 			IDictionary<int, int> customValuesDict = new ConcurrentDictionary<int, int>();
 
@@ -109,33 +118,59 @@ namespace ProSuite.QA.Tests.Transformers
 		bool IContainerTransformer.HandlesContainer => HandlesContainer;
 		protected virtual bool HandlesContainer => true;
 
-		private class TransformedFc : TransformedFeatureClass, IDataContainerAware,
+		private class ShapeTransformedFc : TransformedFc
+		{
+			private readonly esriGeometryType _derivedShapeType;
+			public ShapeTransformedFc(IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType,
+			                          IGeometryTransformer transformer,
+			                          string name)
+				: base(fc, derivedShapeType, (t) => new TransformedDataset((TransformedFc) t, fc),
+				       transformer, name)
+			{
+				_derivedShapeType = derivedShapeType;
+				AddStandardFields(fc);
+			}
+
+			protected override IField CreateShapeField(IReadOnlyFeatureClass involvedFc)
+			{
+				IGeometryDef geomDef =
+					involvedFc.Fields.Field[
+						involvedFc.Fields.FindField(involvedFc.ShapeFieldName)].GeometryDef;
+				return FieldUtils.CreateShapeField(
+					_derivedShapeType,
+					geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM);
+			}
+		}
+		protected class TransformedFc : TransformedFeatureClass, IDataContainerAware,
 		                              ITransformedTable
 		{
-			public TransformedFc(IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType,
-			                     IGeometryTransformer transformer, string name)
+			protected TransformedFc(
+				IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType,
+				[NotNull] Func<GdbTable, TransformedBackingDataset> createBackingDataset,
+				IGeometryTransformer transformer, string name)
 				: base(null, ! string.IsNullOrWhiteSpace(name) ? name : "derivedGeometry",
 				       derivedShapeType,
-				       createBackingDataset: (t) => new TransformedDataset((TransformedFc) t, fc),
+				       createBackingDataset: createBackingDataset,
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
 				Transformer = transformer;
 				InvolvedTables = new List<IReadOnlyTable> { fc };
-				AddStandardFields(fc, derivedShapeType);
 			}
 
-			private void AddStandardFields(IReadOnlyFeatureClass fc,
-			                               esriGeometryType derivedShapeType)
+			protected void AddStandardFields(IReadOnlyFeatureClass involvedFc)
+			{
+				AddFieldT(FieldUtils.CreateOIDField());
+				AddFieldT(CreateShapeField(involvedFc));
+			}
+
+			protected virtual IField CreateShapeField(IReadOnlyFeatureClass involvedFc)
 			{
 				IGeometryDef geomDef =
-					fc.Fields.Field[
-						fc.Fields.FindField(fc.ShapeFieldName)].GeometryDef;
-
-				AddFieldT(FieldUtils.CreateOIDField());
-				AddFieldT(FieldUtils.CreateShapeField(
-					          derivedShapeType,
-					          geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ,
-					          geomDef.HasM));
+					involvedFc.Fields.Field[
+						involvedFc.Fields.FindField(involvedFc.ShapeFieldName)].GeometryDef;
+				return FieldUtils.CreateShapeField(
+					involvedFc.ShapeType,
+					geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM);
 			}
 
 			public IGeometryTransformer Transformer { get; }
@@ -273,7 +308,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		private class TransformedDataset : TransformedBackingDataset<TransformedFc>
+		protected class TransformedDataset : TransformedBackingDataset<TransformedFc>
 		{
 			private readonly IReadOnlyFeatureClass _t0;
 
@@ -307,6 +342,16 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 			{
+				if (filter is IFeatureClassFilter fc &&
+				    fc.FilterGeometry?.SpatialReference != _t0.SpatialReference)
+				{
+					IFeatureClassFilter clone = (IFeatureClassFilter)fc.Clone();
+					IGeometry g = GeometryFactory.Clone(fc.FilterGeometry);
+					g.Project(_t0.SpatialReference);
+					clone.FilterGeometry = g; 
+					filter = clone;
+				}
+
 				var involvedDict = new Dictionary<IReadOnlyFeature, Involved>();
 
 				filter = filter ?? new AoTableFilter();
