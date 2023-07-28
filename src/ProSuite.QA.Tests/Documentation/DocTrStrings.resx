@@ -373,4 +373,14 @@ See T1Attributes</value>
   <data name="TrFootprint_Tolerance" xml:space="preserve">
     <value>The tolerance for the footprint calculation. The vertices of a multipatch geometry should not be closer than the tolerance to any other vertex or segment of the same geometry. If a value below 0 is specified, the tolerance of the multipatchClass is used.</value>
   </data>
+  <data name="TrGetNodes_0" xml:space="preserve">
+    <value>Get unique endpoints of 'lineClass'</value>
+  </data>
+  <data name="TrGetNodes_Attributes" xml:space="preserve">
+    <value>Attributes to be transferred to transformed feature class. Must be used with alias and group expression, i.e. 'MAX(LAUF_NR) AS MAX_LAUF_NR'.
+In the resulting feature class, only attributes defined in 'Attributes' can be used.</value>
+  </data>
+  <data name="TrGetNodes_lineClass" xml:space="preserve">
+    <value>Line FeatureClass</value>
+  </data>
 </root>

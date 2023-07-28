@@ -242,6 +242,34 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Get unique endpoints of &apos;lineClass&apos;.
+        /// </summary>
+        public static string TrGetNodes_0 {
+            get {
+                return ResourceManager.GetString("TrGetNodes_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attributes to be transferred to transformed feature class. Must be used with alias and group expression, i.e. &apos;MAX(LAUF_NR) AS MAX_LAUF_NR&apos;.
+        ///In the resulting feature class, only attributes defined in &apos;Attributes&apos; can be used..
+        /// </summary>
+        public static string TrGetNodes_Attributes {
+            get {
+                return ResourceManager.GetString("TrGetNodes_Attributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line FeatureClass.
+        /// </summary>
+        public static string TrGetNodes_lineClass {
+            get {
+                return ResourceManager.GetString("TrGetNodes_lineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transforms features of &apos;intersected&apos; by intersecting them with features from &apos;intersecting&apos;.
         ///If intersected is a line class and intersecting is a polygon class, then the resulting feature class has an attribute &apos;PartIntersected&apos; which contains the (resultingFeature.Shape.Length / intersectedFeature.Shape.Length).
         /// </summary>
