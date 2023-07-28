@@ -784,6 +784,81 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			                                     "ANZAHL_LAEUFE = 2 AND ANZAHL_LOOP_JUNCTIONS = 1 AND ANZAHL_SECONDARY_JUNCTIONS = 1");
 		}
 
+		[Test]
+		public void IssueTOP_5735()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("IssueTOP_5735");
+			IFeatureClass fcGrundriss =
+				CreateFeatureClass(
+					ws, "tlm_grundriss", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("Nr_Line") });
+
+			IFeatureClass fcKanton =
+				CreateFeatureClass(
+					ws, "tlm_kanton", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("Nr_Line") });
+
+			IFeatureClass fcDachgrundriss =
+				CreateFeatureClass(
+					ws, "tlm_dach_grundriss", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("uuid") });
+
+			IFeatureClass fcDach =
+				CreateFeatureClass(
+					ws, "tlm_dach", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("tlm_dach_grundriss_uuid") });
+
+			{
+				IFeature f = fcDachgrundriss.CreateFeature();
+				f.Value[1] = 1;
+				f.Shape = CurveConstruction.StartPoly(10, 10).LineTo(20, 10).LineTo(20, 20)
+				                           .LineTo(10, 20).LineTo(10, 10).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = fcDach.CreateFeature();
+				f.Value[1] = 1;
+				f.Shape = CurveConstruction.StartPoly(10, 10).LineTo(20, 10).LineTo(20, 20)
+				                           .LineTo(10, 20).LineTo(10, 10).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = fcKanton.CreateFeature();
+				f.Shape = CurveConstruction.StartPoly(1, 1).LineTo(99, 1).LineTo(99, 99)
+				                           .LineTo(1, 99).LineTo(1, 1).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = fcGrundriss.CreateFeature();
+				f.Shape = CurveConstruction.StartPoly(30, 30).LineTo(40, 30).LineTo(40, 40)
+				                           .LineTo(30, 40).LineTo(30, 30).ClosePolygon();
+				f.Store();
+			}
+
+
+			IReadOnlyFeatureClass roDachGrundriss = ReadOnlyTableFactory.Create(fcDachgrundriss);
+			IReadOnlyFeatureClass roGrundriss = ReadOnlyTableFactory.Create(fcGrundriss);
+			IReadOnlyFeatureClass roKanton = ReadOnlyTableFactory.Create(fcKanton);
+			IReadOnlyFeatureClass roDach = ReadOnlyTableFactory.Create(fcDach);
+
+			TrTableJoinInMemory trJoinDgDach = new TrTableJoinInMemory(
+				roDachGrundriss, roDach, "uuid", "tlm_dach_grundriss_uuid", JoinType.InnerJoin);
+
+			TrOnlyContainedFeatures trOcf = new TrOnlyContainedFeatures(
+				(IReadOnlyFeatureClass)trJoinDgDach.GetTransformed(),
+				roKanton);
+
+
+			QaMustIntersectOther test = new QaMustIntersectOther(trOcf.GetTransformed(), roGrundriss, "");
+
+			{
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+
+		}
 		private static IList<QaError> ExecuteQaConstraint(TrOnlyContainedFeatures tr,
 		                                                  string constraint)
 		{
