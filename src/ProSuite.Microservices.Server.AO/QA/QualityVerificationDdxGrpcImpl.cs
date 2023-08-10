@@ -74,6 +74,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		public IVerificationDataDictionary<TModel> VerificationDdx { get; set; }
 
+		/// <summary>
+		/// The default value to use if the environment variable that indicates whether or not the
+		/// service should continue serving (or shut down) in case of an exception.
+		/// </summary>
+		public bool KeepServingOnErrorDefaultValue { get; set; }
+
 		#region Overrides of QualityVerificationDdxGrpcBase
 
 		public override async Task<GetProjectWorkspacesResponse> GetProjectWorkspaces(
@@ -83,7 +89,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			try
 			{
-				await StartRequestAsync(context.Peer, request);
+				string peer = context.Peer;
+
+				await StartRequestAsync(peer, request);
 
 				Stopwatch watch = _msg.DebugStartTiming();
 
@@ -91,7 +99,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					trackCancel => GetProjectWorkspacesCore(request);
 
 				using (_msg.IncrementIndentation("Getting project workspaces for {0}",
-				                                 context.Peer))
+				                                 peer))
 				{
 					response =
 						await GrpcServerUtils.ExecuteServiceCall(
@@ -101,7 +109,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				_msg.DebugStopTiming(
 					watch, "Gotten project workspaces for peer {0} ({1} object class(es))",
-					context.Peer, request.ObjectClasses.Count);
+					peer, request.ObjectClasses.Count);
 
 				_msg.InfoFormat("Returning {0} project workspaces",
 				                response.ProjectWorkspaces.Count);
@@ -110,7 +118,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				_msg.Error($"Error getting project workspaces {request}", e);
 
-				SetUnhealthy();
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				{
+					ServiceUtils.SetUnhealthy(Health, GetType());
+				}
 
 				throw;
 			}
@@ -156,7 +167,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				_msg.Error($"Error getting quality specifications {request}", e);
 
-				SetUnhealthy();
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				{
+					ServiceUtils.SetUnhealthy(Health, GetType());
+				}
 
 				throw;
 			}
@@ -202,7 +216,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				_msg.Error($"Error getting quality specifications {request}", e);
 
-				SetUnhealthy();
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				{
+					ServiceUtils.SetUnhealthy(Health, GetType());
+				}
 
 				throw;
 			}
@@ -374,7 +391,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					ConditionListSpecificationMsg specificationMsg =
 						ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
-							qualitySpecification, null, out IDictionary<int, DdxModel> modelsById);
+							qualitySpecification, null,
+							out IDictionary<int, DdxModel> modelsById);
 
 					response.Specification = specificationMsg;
 

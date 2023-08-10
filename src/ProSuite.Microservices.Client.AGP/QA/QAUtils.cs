@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -7,7 +8,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AGP.DataModel;
-using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
@@ -25,6 +25,33 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		/// <param name="projectWorkspace"></param>
 		/// <param name="contextType"></param>
 		/// <param name="contextName"></param>
+		/// <param name="qualitySpecificationId">The desired quality specification's Id.</param>
+		/// <param name="perimeter">The verification perimeter or null for a work unit verification.</param>
+		/// <returns></returns>
+		public static VerificationRequest CreateRequest(
+			[NotNull] ProjectWorkspace projectWorkspace,
+			[NotNull] string contextType,
+			[NotNull] string contextName,
+			int qualitySpecificationId,
+			[CanBeNull] Geometry perimeter)
+		{
+			WorkContextMsg workContextMsg =
+				CreateWorkContextMsg(projectWorkspace, contextType, contextName);
+
+			var specificationMsg = new QualitySpecificationMsg
+			                       {
+				                       QualitySpecificationId = qualitySpecificationId
+			                       };
+
+			return CreateRequest(workContextMsg, specificationMsg, perimeter);
+		}
+
+		/// <summary>
+		/// Creates the verification request for an extent verification.
+		/// </summary>
+		/// <param name="projectWorkspace"></param>
+		/// <param name="contextType"></param>
+		/// <param name="contextName"></param>
 		/// <param name="qualitySpecification">The desired quality specification.</param>
 		/// <param name="perimeter">The verification perimeter or null for a work unit verification.</param>
 		/// <returns></returns>
@@ -32,28 +59,29 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			[NotNull] ProjectWorkspace projectWorkspace,
 			[NotNull] string contextType,
 			[NotNull] string contextName,
-			[NotNull] QualitySpecificationReference qualitySpecification,
+			[NotNull] QualitySpecification qualitySpecification,
 			[CanBeNull] Geometry perimeter)
 		{
-			const int workContextTypeProject = 1;
-			var workContextMsg = new WorkContextMsg
-			                     {
-				                     DdxId = projectWorkspace.ProjectId,
-				                     Type = workContextTypeProject,
-				                     ContextType = contextType,
-				                     ContextName = contextName,
-				                     VersionName = projectWorkspace.GetVersionName() ?? string.Empty
-			                     };
+			WorkContextMsg workContextMsg =
+				CreateWorkContextMsg(projectWorkspace, contextType, contextName);
 
-			workContextMsg.VerifiedDatasetIds.AddRange(projectWorkspace.GetDatasetIds());
+			CustomQualitySpecification customSpecification =
+				(CustomQualitySpecification) qualitySpecification;
+
+			int specificationId = customSpecification.BaseSpecification.Id;
 
 			var specificationMsg = new QualitySpecificationMsg
 			                       {
-				                       QualitySpecificationId = qualitySpecification.Id
+				                       QualitySpecificationId = specificationId
 			                       };
+
+			specificationMsg.ExcludedConditionIds.AddRange(
+				customSpecification.GetDisabledConditions().Select(c => c.Id));
 
 			return CreateRequest(workContextMsg, specificationMsg, perimeter);
 		}
+
+		// TODO: Full specification, once the actual parameter changes are supported:
 
 		/// <summary>
 		/// Creates the verification request using the specified work context message.
@@ -192,6 +220,27 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				CreateQualityVerificationRun(request, clientIssueMessageRepository, progress);
 
 			return await verificationRun.ExecuteAndProcessMessagesAsync(qaClient);
+		}
+
+		private static WorkContextMsg CreateWorkContextMsg(
+			[NotNull] ProjectWorkspace projectWorkspace,
+			string contextType,
+			string contextName)
+		{
+			const int workContextTypeProject = 1;
+
+			var workContextMsg = new WorkContextMsg
+			                     {
+				                     DdxId = projectWorkspace.ProjectId,
+				                     Type = workContextTypeProject,
+				                     ContextType = contextType,
+				                     ContextName = contextName,
+				                     VersionName = projectWorkspace.GetVersionName() ?? string.Empty
+			                     };
+
+			workContextMsg.VerifiedDatasetIds.AddRange(projectWorkspace.GetDatasetIds());
+
+			return workContextMsg;
 		}
 
 		public static BackgroundVerificationRun CreateQualityVerificationRun(

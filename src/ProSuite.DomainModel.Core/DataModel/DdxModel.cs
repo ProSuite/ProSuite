@@ -279,8 +279,12 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 			dataset.Model = this;
 
+			DatasetAddedCore(dataset);
+
 			return dataset;
 		}
+
+		protected virtual void DatasetAddedCore<T>(T dataset) where T : Dataset { }
 
 		public void RemoveDataset([NotNull] Dataset dataset)
 		{

@@ -110,7 +110,10 @@ namespace ProSuite.Processing.Utils
 		private static int GetFieldIndex(IRowValues row, string fieldName)
 		{
 			// Here we *may* want to cache field index (measure)
-			return row.FindField(fieldName);
+			int index = row.FindField(fieldName);
+			if (index < 0)
+				throw new EvaluationException($"No such field: {fieldName}");
+			return index;
 		}
 
 		/// <summary>
