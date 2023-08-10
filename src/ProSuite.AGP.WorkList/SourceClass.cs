@@ -4,19 +4,24 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList
 {
-	public class SourceClass : ISourceClass
+	public abstract class SourceClass : ISourceClass
 	{
 		private GdbTableIdentity _identity;
 
-		protected SourceClass(GdbTableIdentity identity)
+		protected SourceClass(GdbTableIdentity identity, IAttributeReader attributeReader)
 		{
 			_identity = identity;
+			AttributeReader = attributeReader;
 		}
+
+		public bool HasGeometry => _identity.HasGeometry;
 
 		public long Id => _identity.Id;
 
 		[NotNull]
 		public string Name => _identity.Name;
+
+		public IAttributeReader AttributeReader { get; set; }
 
 		public bool Uses(GdbTableIdentity table)
 		{

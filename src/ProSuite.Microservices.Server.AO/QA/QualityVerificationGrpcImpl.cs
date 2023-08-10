@@ -113,6 +113,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 		[CanBeNull]
 		public IList<IQualityVerificationClient> DistributedProcessingClients { get; set; }
 
+		/// <summary>
+		/// The default value to use if the environment variable that indicates whether or not the
+		/// service should continue serving (or shut down) in case of an exception.
+		/// </summary>
 		public bool KeepServingOnErrorDefaultValue { get; set; }
 
 		public override async Task VerifyQuality(
@@ -141,8 +145,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				_msg.Error($"Error verifying quality for request {request}", e);
 
-				SendFatalException(e, responseStream);
-				SetUnhealthy();
+				ServiceUtils.SendFatalException(e, responseStream);
+				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
 			finally
 			{
@@ -214,8 +218,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				_msg.Error($"Error verifying quality for request {request}", e);
 
-				SendFatalException(e, responseStream);
-				SetUnhealthy();
+				ServiceUtils.SendFatalException(e, responseStream);
+				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
 			finally
 			{
@@ -267,8 +271,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				_msg.Error($"Error verifying quality for request {request}", e);
 
-				SendFatalException(e, responseStream);
-				SetUnhealthy();
+				ServiceUtils.SendFatalException(e, responseStream);
+				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
 			finally
 			{
@@ -455,7 +459,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.Error($"Error checking quality for request {request}", e);
 				cancellationMessage = $"Server error: {e.Message}";
 
-				SetUnhealthy();
+				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
 
 			string cancelMessage = cancellationMessage ?? qaService?.CancellationMessage;
@@ -551,10 +555,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.Error($"Error checking quality for request {request}", e);
 				cancellationMessage = $"Server error: {e.Message}";
 
-				if (! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR", KeepServingOnErrorDefaultValue))
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
-					SetUnhealthy();
+					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 			}
 
@@ -614,10 +617,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.DebugFormat("Error during processing of request {0}", request);
 				_msg.Error($"Error verifying quality: {e.Message}", e);
 
-				if (! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR", KeepServingOnErrorDefaultValue))
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
-					SetUnhealthy();
+					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 
 				return ServiceCallStatus.Failed;
@@ -963,79 +965,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_msg.Debug($"Task cancelled: {context.CancellationToken.IsCancellationRequested}",
 			           canceledException);
 			_msg.Warn("Task was cancelled, likely by the client");
-		}
-
-		private static void SendFatalException(
-			[NotNull] Exception exception,
-			IServerStreamWriter<VerificationResponse> responseStream)
-		{
-			void Write(VerificationResponse r) => responseStream.WriteAsync(r);
-
-			SendFatalException(exception, Write);
-		}
-
-		private static void SendFatalException(
-			[NotNull] Exception exception,
-			IServerStreamWriter<DataVerificationResponse> responseStream)
-		{
-			void Write(VerificationResponse r) =>
-				responseStream.WriteAsync(new DataVerificationResponse { Response = r });
-
-			SendFatalException(exception, Write);
-		}
-
-		private static void SendFatalException(
-			[NotNull] Exception exception,
-			Action<VerificationResponse> writeAsync)
-		{
-			var response = new VerificationResponse();
-
-			response.ServiceCallStatus = (int) ServiceCallStatus.Failed;
-
-			if (! string.IsNullOrEmpty(exception.Message))
-			{
-				response.Progress = new VerificationProgressMsg
-				                    {
-					                    Message = exception.Message
-				                    };
-			}
-
-			try
-			{
-				writeAsync(response);
-			}
-			catch (InvalidOperationException ex)
-			{
-				// For example: System.InvalidOperationException: Only one write can be pending at a time
-				_msg.Warn("Error sending progress to the client", ex);
-			}
-		}
-
-		private static void SendFatalException(
-			[NotNull] Exception exception,
-			IServerStreamWriter<StandaloneVerificationResponse> responseStream)
-		{
-			MessagingUtils.SendResponse(responseStream,
-			                            new StandaloneVerificationResponse()
-			                            {
-				                            Message = new LogMsg()
-				                                      {
-					                                      Message = exception.Message,
-					                                      MessageLevel = Level.Error.Value
-				                                      },
-				                            ServiceCallStatus = (int) ServiceCallStatus.Failed
-			                            });
-		}
-
-		private void SetUnhealthy()
-		{
-			if (Health != null)
-			{
-				_msg.Warn("Setting service health to \"not serving\" due to exception " +
-				          "because the process might be compromised.");
-
-				Health?.SetStatus(GetType(), false);
-			}
 		}
 	}
 }

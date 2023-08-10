@@ -11,6 +11,8 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Ado;
+using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -23,7 +25,6 @@ using ProSuite.DomainModel.Core;
 
 namespace ProSuite.AGP.WorkList
 {
-	// todo daro: rename to WorklistUtils
 	public static class WorkListUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -100,8 +101,8 @@ namespace ProSuite.AGP.WorkList
 			else if (type == typeof(SelectionWorkList))
 			{
 				stateRepository =
-					new XmlWorkItemStateRepository(definition.Path, definition.Name, type,
-					                               definition.CurrentIndex);
+					new XmlSelectionItemStateRepository(definition.Path, definition.Name, type,
+					                                    definition.CurrentIndex);
 
 				Dictionary<long, Table> tablesById =
 					tablesByGeodatabase.Values
@@ -421,6 +422,28 @@ namespace ProSuite.AGP.WorkList
 			//}
 
 			return layerParams;
+		}
+
+		public static Dictionary<Geodatabase, List<Table>> GetDistinctTables(
+			[NotNull] IEnumerable<Table> tables)
+		{
+			var result = new Dictionary<Geodatabase, SimpleSet<Table>>(new DatastoreComprarer());
+
+			foreach (Table table in tables.Distinct())
+			{
+				var geodatabase = (Geodatabase) table.GetDatastore();
+
+				if (! result.ContainsKey(geodatabase))
+				{
+					result.Add(geodatabase, new SimpleSet<Table> { table });
+				}
+				else
+				{
+					result[geodatabase].TryAdd(table);
+				}
+			}
+
+			return result.ToDictionary(pair => pair.Key, pair => pair.Value.ToList());
 		}
 	}
 }

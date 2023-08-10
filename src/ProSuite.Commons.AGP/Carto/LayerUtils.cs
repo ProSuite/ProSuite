@@ -228,6 +228,7 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
+		// todo daro to MapUtils?
 		[NotNull]
 		public static FeatureClass GetFeatureClass([NotNull] this BasicFeatureLayer basicFeatureLayer)
 		{
@@ -236,6 +237,7 @@ namespace ProSuite.Commons.AGP.Carto
 				basicFeatureLayer is FeatureLayer || basicFeatureLayer is AnnotationLayer,
 				"AnnotationLayer has it's own GetFeatureClass() method. There is no base method on BasicFeatureLayer.");
 
+			// todo daro try (FeatureClass)BasicFeatureLayer.GetTable()
 			if (basicFeatureLayer is FeatureLayer featureLayer)
 			{
 				return Assert.NotNull(featureLayer.GetFeatureClass());
@@ -247,7 +249,7 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			throw new ArgumentException(
-				$"{nameof(basicFeatureLayer)} is not of type FeatureLayer or AnnotationLayer");
+				$"{nameof(basicFeatureLayer)} is not of type FeatureLayer nor AnnotationLayer");
 		}
 	}
 }

@@ -15,6 +15,8 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 		[NotNull] private readonly List<Field> _fields;
 
+		private readonly List<IDomain> _domains = new List<IDomain>();
+
 		public IssueTableFields([NotNull] IEnumerable<Field> fields)
 		{
 			Assert.ArgumentNotNull(fields, nameof(fields));
@@ -100,7 +102,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 		public IEnumerable<IField> CreateFields()
 		{
-			return _fields.Select(field => field.Definition.CreateField());
+			return _fields.Select(field => FieldFactory.CreateField(field.Definition, _domains));
 		}
 
 		public IField CreateField(IssueAttribute attribute, bool optional = false)
@@ -118,7 +120,67 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 				                            nameof(attribute));
 			}
 
-			return definition.CreateField();
+			IField result = FieldFactory.CreateField(definition, _domains);
+
+			return result;
+		}
+
+		public void CreateReferencedDomains(IFeatureWorkspace featureWorkspace)
+		{
+			_domains.Clear();
+
+			foreach (DomainDefinition domainDefinition in GetReferencedDomains())
+			{
+				IDomain domain = EnsureDomainExists(featureWorkspace, domainDefinition);
+
+				_domains.Add(domain);
+			}
+		}
+
+		private static IDomain EnsureDomainExists(
+			[NotNull] IFeatureWorkspace featureWorkspace,
+			[NotNull] DomainDefinition domainDef)
+		{
+			IDomain result = DomainUtils.GetDomain(featureWorkspace, domainDef.Name);
+
+			if (result != null)
+			{
+				return result;
+			}
+
+			if (domainDef is CodedValueDomainDefinition codedValueDomainDef)
+			{
+				result = (IDomain) DomainUtils.CreateCodedValueDomain(
+					domainDef.Name, domainDef.FieldType,
+					codedValueDomainDef.CodedValues.ToArray());
+
+				return DomainUtils.AddDomain(featureWorkspace, result);
+			}
+
+			// TODO:
+			throw new NotImplementedException("Unsupported domain type");
+		}
+
+		private IEnumerable<DomainDefinition> GetReferencedDomains()
+		{
+			var domainDefinitions = new List<DomainDefinition>();
+
+			foreach (var field in _fields)
+			{
+				DomainDefinition domainDef = field.Definition.Domain;
+
+				if (domainDef != null)
+				{
+					string domainName = domainDef.Name;
+
+					if (domainDefinitions.All(dd => dd.Name != domainName))
+					{
+						domainDefinitions.Add(domainDef);
+					}
+				}
+			}
+
+			return domainDefinitions;
 		}
 
 		public class Field
