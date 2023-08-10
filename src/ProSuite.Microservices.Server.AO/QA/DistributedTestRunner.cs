@@ -421,9 +421,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					if (failureMessage != null)
 					{
-						_msg.WarnFormat("{0}{1}Failed Verification: {2}", failureMessage,
+						_msg.WarnFormat("{0}{1}Failed verification: {2}", failureMessage,
 						                Environment.NewLine, completed);
 						// TODO: Communicate error to client?!
+					}
+					else
+					{
+						_msg.InfoFormat("Finished verification: {0} at {1}", completed,
+						                finishedClient.GetAddress());
 					}
 
 					if (task.Status == TaskStatus.Faulted)
@@ -432,8 +437,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 						SubVerification retry =
 							new SubVerification(completed.SubRequest,
-							                    completed.QualityConditionGroup);
-						retry.TileEnvelope = completed.TileEnvelope;
+							                    completed.QualityConditionGroup)
+							{
+								TileEnvelope = completed.TileEnvelope
+							};
+
 						unhandledSubverifications.Push(retry);
 					}
 
@@ -652,7 +660,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private string ProcessFinalResult(
 			[NotNull] Task<bool> task,
 			[NotNull] SubVerification subVerification,
-			IQualityVerificationClient client,
+			[NotNull] IQualityVerificationClient client,
 			bool cancelWhenFaulted)
 		{
 			string resultMessage = null;
