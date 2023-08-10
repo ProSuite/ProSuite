@@ -3,729 +3,781 @@ using ProSuite.UI.QA.Controls;
 
 namespace ProSuite.UI.QA.Customize
 {
-    partial class CustomizeQASpecForm
-    {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
-        private System.ComponentModel.IContainer components = null;
+	partial class CustomizeQASpecForm
+	{
+		/// <summary>
+		/// Required designer variable.
+		/// </summary>
+		private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
+		/// <summary>
+		/// Clean up any resources being used.
+		/// </summary>
+		/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing && (components != null))
+			{
+				components.Dispose();
+			}
+			base.Dispose(disposing);
+		}
 
-        #region Windows Form Designer generated code
+		#region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
-        private void InitializeComponent()
-        {
-			this.components = new System.ComponentModel.Container();
+		/// <summary>
+		/// Required method for Designer support - do not modify
+		/// the contents of this method with the code editor.
+		/// </summary>
+		private void InitializeComponent()
+		{
+			components=new System.ComponentModel.Container();
 			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
 			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
 			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
-			this._textBoxDescription = new System.Windows.Forms.TextBox();
-			this._labelDescription = new System.Windows.Forms.Label();
-			this._textBoxSpecification = new System.Windows.Forms.TextBox();
-			this._labelSpecification = new System.Windows.Forms.Label();
-			this._toolTips = new System.Windows.Forms.ToolTip(this.components);
-			this._statusStrip = new System.Windows.Forms.StatusStrip();
-			this._buttonOK = new System.Windows.Forms.Button();
-			this._buttonCancel = new System.Windows.Forms.Button();
-			this._splitContainerSpecification = new global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
-			this._splitContainerConditions = new global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
-			this._groupBoxConditions = new System.Windows.Forms.GroupBox();
-			this._panelConditions = new System.Windows.Forms.Panel();
-			this._conditionsLayerView = new ConditionsLayerViewControl();
-			this._conditionDatasetsControl = new ConditionDatasetsControl();
-			this._conditionListControl = new ConditionListControl();
-			this._toolStripConditionList = new global::ProSuite.Commons.UI.WinForms.Controls.ToolStripEx();
-			this._toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
-			this._toolStripComboBoxView = new System.Windows.Forms.ToolStripComboBox();
-			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-			this._groupBoxSelected = new System.Windows.Forms.GroupBox();
-			this._labelEnabledConditions = new System.Windows.Forms.Label();
-			this._dataGridViewEnabledConditions = new global::ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView();
-			this.dgcSelType = new System.Windows.Forms.DataGridViewImageColumn();
-			this.dgcSelTest = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this._bindingSourceEnabledConditions = new System.Windows.Forms.BindingSource(this.components);
-			this._groupBoxSelectedParameters = new System.Windows.Forms.GroupBox();
-			this._toolStripButtonWarningConditions = new System.Windows.Forms.ToolStripButton();
-			this._toolStripButtonErrorConditions = new System.Windows.Forms.ToolStripButton();
-			this._toolStripButtonStopConditions = new System.Windows.Forms.ToolStripButton();
-			this._toolStripButtonEnableAll = new System.Windows.Forms.ToolStripButton();
-			this._toolStripButtonEnableNone = new System.Windows.Forms.ToolStripButton();
-			this._splitContainer = new global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
-			this._qualityConditionControl = new QualityConditionControl();
-			this._tabControl = new System.Windows.Forms.TabControl();
-			this._tabPageParameterValues = new System.Windows.Forms.TabPage();
-			this._qualityConditionTableViewControl = new QualityConditionTableViewControl();
-			this._toolStrip = new global::ProSuite.Commons.UI.WinForms.Controls.ToolStripEx();
-			this._toolStripButtonCustomizeTestParameterValues = new System.Windows.Forms.ToolStripButton();
-			this._toolStripButtonReset = new System.Windows.Forms.ToolStripButton();
-			this._tabPageTestDescriptor = new System.Windows.Forms.TabPage();
-			this._testDescriptorControl = new TestDescriptorControl();
-			this.dataGridViewCheckBoxColumn1 = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-			this.dataGridViewImageColumn1 = new System.Windows.Forms.DataGridViewImageColumn();
-			this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this.dataGridViewImageColumn2 = new System.Windows.Forms.DataGridViewImageColumn();
-			this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			((System.ComponentModel.ISupportInitialize)(this._splitContainerSpecification)).BeginInit();
-			this._splitContainerSpecification.Panel1.SuspendLayout();
-			this._splitContainerSpecification.Panel2.SuspendLayout();
-			this._splitContainerSpecification.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this._splitContainerConditions)).BeginInit();
-			this._splitContainerConditions.Panel1.SuspendLayout();
-			this._splitContainerConditions.Panel2.SuspendLayout();
-			this._splitContainerConditions.SuspendLayout();
-			this._groupBoxConditions.SuspendLayout();
-			this._panelConditions.SuspendLayout();
-			this._toolStripConditionList.SuspendLayout();
-			this._groupBoxSelected.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this._dataGridViewEnabledConditions)).BeginInit();
-			((System.ComponentModel.ISupportInitialize)(this._bindingSourceEnabledConditions)).BeginInit();
-			this._groupBoxSelectedParameters.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this._splitContainer)).BeginInit();
-			this._splitContainer.Panel1.SuspendLayout();
-			this._splitContainer.Panel2.SuspendLayout();
-			this._splitContainer.SuspendLayout();
-			this._tabControl.SuspendLayout();
-			this._tabPageParameterValues.SuspendLayout();
-			this._toolStrip.SuspendLayout();
-			this._tabPageTestDescriptor.SuspendLayout();
-			this.SuspendLayout();
+			_textBoxDescription=new System.Windows.Forms.TextBox();
+			_labelDescription=new System.Windows.Forms.Label();
+			_textBoxSpecification=new System.Windows.Forms.TextBox();
+			_labelSpecification=new System.Windows.Forms.Label();
+			_toolTips=new System.Windows.Forms.ToolTip(components);
+			_statusStrip=new System.Windows.Forms.StatusStrip();
+			_buttonOK=new System.Windows.Forms.Button();
+			_buttonCancel=new System.Windows.Forms.Button();
+			_splitContainerSpecification=new SplitContainerEx();
+			_splitContainerConditions=new SplitContainerEx();
+			_groupBoxConditions=new System.Windows.Forms.GroupBox();
+			_panelConditions=new System.Windows.Forms.Panel();
+			_conditionsLayerView=new ConditionsLayerViewControl();
+			_conditionDatasetsControl=new ConditionDatasetsControl();
+			_conditionListControl=new ConditionListControl();
+			_toolStripConditionList=new ToolStripEx();
+			_toolStripLabel1=new System.Windows.Forms.ToolStripLabel();
+			_toolStripComboBoxView=new System.Windows.Forms.ToolStripComboBox();
+			_toolStripButtonWarningConditions=new System.Windows.Forms.ToolStripButton();
+			_toolStripButtonErrorConditions=new System.Windows.Forms.ToolStripButton();
+			_toolStripButtonStopConditions=new System.Windows.Forms.ToolStripButton();
+			toolStripSeparator1=new System.Windows.Forms.ToolStripSeparator();
+			_toolStripButtonEnableAll=new System.Windows.Forms.ToolStripButton();
+			_toolStripButtonEnableNone=new System.Windows.Forms.ToolStripButton();
+			_panelSelectedConditions=new System.Windows.Forms.Panel();
+			_groupBoxSelected=new System.Windows.Forms.GroupBox();
+			_dataGridViewEnabledConditions=new DoubleBufferedDataGridView();
+			dgcSelType=new System.Windows.Forms.DataGridViewImageColumn();
+			dgcSelTest=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			_bindingSourceEnabledConditions=new System.Windows.Forms.BindingSource(components);
+			_labelEnabledConditions=new System.Windows.Forms.Label();
+			_groupBoxSelectedParameters=new System.Windows.Forms.GroupBox();
+			_splitContainer=new SplitContainerEx();
+			_qualityConditionControl=new QualityConditionControl();
+			_tabControl=new System.Windows.Forms.TabControl();
+			_tabPageParameterValues=new System.Windows.Forms.TabPage();
+			_qualityConditionTableViewControl=new QualityConditionTableViewControl();
+			_toolStrip=new ToolStripEx();
+			_toolStripButtonCustomizeTestParameterValues=new System.Windows.Forms.ToolStripButton();
+			_toolStripButtonReset=new System.Windows.Forms.ToolStripButton();
+			_tabPageTestDescriptor=new System.Windows.Forms.TabPage();
+			_testDescriptorControl=new TestDescriptorControl();
+			_mainSplitterBottomPanel=new System.Windows.Forms.Panel();
+			dataGridViewCheckBoxColumn1=new System.Windows.Forms.DataGridViewCheckBoxColumn();
+			dataGridViewImageColumn1=new System.Windows.Forms.DataGridViewImageColumn();
+			dataGridViewTextBoxColumn1=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			dataGridViewTextBoxColumn2=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			dataGridViewImageColumn2=new System.Windows.Forms.DataGridViewImageColumn();
+			dataGridViewTextBoxColumn3=new System.Windows.Forms.DataGridViewTextBoxColumn();
+			_panelTop=new System.Windows.Forms.Panel();
+			_panelConditionViews=new System.Windows.Forms.Panel();
+			((System.ComponentModel.ISupportInitialize)_splitContainerSpecification).BeginInit();
+			_splitContainerSpecification.Panel1.SuspendLayout();
+			_splitContainerSpecification.Panel2.SuspendLayout();
+			_splitContainerSpecification.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)_splitContainerConditions).BeginInit();
+			_splitContainerConditions.Panel1.SuspendLayout();
+			_splitContainerConditions.Panel2.SuspendLayout();
+			_splitContainerConditions.SuspendLayout();
+			_groupBoxConditions.SuspendLayout();
+			_panelConditions.SuspendLayout();
+			_toolStripConditionList.SuspendLayout();
+			_panelSelectedConditions.SuspendLayout();
+			_groupBoxSelected.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)_dataGridViewEnabledConditions).BeginInit();
+			((System.ComponentModel.ISupportInitialize)_bindingSourceEnabledConditions).BeginInit();
+			_groupBoxSelectedParameters.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)_splitContainer).BeginInit();
+			_splitContainer.Panel1.SuspendLayout();
+			_splitContainer.Panel2.SuspendLayout();
+			_splitContainer.SuspendLayout();
+			_tabControl.SuspendLayout();
+			_tabPageParameterValues.SuspendLayout();
+			_toolStrip.SuspendLayout();
+			_tabPageTestDescriptor.SuspendLayout();
+			_mainSplitterBottomPanel.SuspendLayout();
+			_panelTop.SuspendLayout();
+			_panelConditionViews.SuspendLayout();
+			SuspendLayout();
 			// 
 			// _textBoxDescription
 			// 
-			this._textBoxDescription.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxDescription.BackColor = System.Drawing.SystemColors.Control;
-			this._textBoxDescription.Location = new System.Drawing.Point(124, 38);
-			this._textBoxDescription.Multiline = true;
-			this._textBoxDescription.Name = "_textBoxDescription";
-			this._textBoxDescription.ReadOnly = true;
-			this._textBoxDescription.Size = new System.Drawing.Size(848, 44);
-			this._textBoxDescription.TabIndex = 5;
-			this._textBoxDescription.TabStop = false;
+			_textBoxDescription.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_textBoxDescription.BackColor=System.Drawing.SystemColors.Control;
+			_textBoxDescription.Location=new System.Drawing.Point(145, 44);
+			_textBoxDescription.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxDescription.Multiline=true;
+			_textBoxDescription.Name="_textBoxDescription";
+			_textBoxDescription.ReadOnly=true;
+			_textBoxDescription.Size=new System.Drawing.Size(989, 50);
+			_textBoxDescription.TabIndex=5;
+			_textBoxDescription.TabStop=false;
 			// 
 			// _labelDescription
 			// 
-			this._labelDescription.AutoSize = true;
-			this._labelDescription.Location = new System.Drawing.Point(55, 41);
-			this._labelDescription.Name = "_labelDescription";
-			this._labelDescription.Size = new System.Drawing.Size(63, 13);
-			this._labelDescription.TabIndex = 4;
-			this._labelDescription.Text = "Description:";
-			this._labelDescription.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_labelDescription.AutoSize=true;
+			_labelDescription.Location=new System.Drawing.Point(64, 47);
+			_labelDescription.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelDescription.Name="_labelDescription";
+			_labelDescription.Size=new System.Drawing.Size(70, 15);
+			_labelDescription.TabIndex=4;
+			_labelDescription.Text="Description:";
+			_labelDescription.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _textBoxSpecification
 			// 
-			this._textBoxSpecification.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxSpecification.BackColor = System.Drawing.SystemColors.Control;
-			this._textBoxSpecification.Location = new System.Drawing.Point(124, 12);
-			this._textBoxSpecification.Name = "_textBoxSpecification";
-			this._textBoxSpecification.ReadOnly = true;
-			this._textBoxSpecification.Size = new System.Drawing.Size(848, 20);
-			this._textBoxSpecification.TabIndex = 3;
-			this._textBoxSpecification.TabStop = false;
+			_textBoxSpecification.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_textBoxSpecification.BackColor=System.Drawing.SystemColors.Control;
+			_textBoxSpecification.Location=new System.Drawing.Point(145, 14);
+			_textBoxSpecification.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_textBoxSpecification.Name="_textBoxSpecification";
+			_textBoxSpecification.ReadOnly=true;
+			_textBoxSpecification.Size=new System.Drawing.Size(989, 23);
+			_textBoxSpecification.TabIndex=3;
+			_textBoxSpecification.TabStop=false;
 			// 
 			// _labelSpecification
 			// 
-			this._labelSpecification.AutoSize = true;
-			this._labelSpecification.Location = new System.Drawing.Point(12, 15);
-			this._labelSpecification.Name = "_labelSpecification";
-			this._labelSpecification.Size = new System.Drawing.Size(106, 13);
-			this._labelSpecification.TabIndex = 2;
-			this._labelSpecification.Text = "Quality Specification:";
-			this._labelSpecification.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			_labelSpecification.AutoSize=true;
+			_labelSpecification.Location=new System.Drawing.Point(14, 17);
+			_labelSpecification.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelSpecification.Name="_labelSpecification";
+			_labelSpecification.Size=new System.Drawing.Size(119, 15);
+			_labelSpecification.TabIndex=2;
+			_labelSpecification.Text="Quality Specification:";
+			_labelSpecification.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _statusStrip
 			// 
-			this._statusStrip.Location = new System.Drawing.Point(0, 739);
-			this._statusStrip.Name = "_statusStrip";
-			this._statusStrip.Size = new System.Drawing.Size(984, 22);
-			this._statusStrip.TabIndex = 7;
-			this._statusStrip.Text = "_statusStrip";
+			_statusStrip.Location=new System.Drawing.Point(0, 856);
+			_statusStrip.Name="_statusStrip";
+			_statusStrip.Padding=new System.Windows.Forms.Padding(1, 0, 16, 0);
+			_statusStrip.Size=new System.Drawing.Size(1148, 22);
+			_statusStrip.TabIndex=7;
+			_statusStrip.Text="_statusStrip";
 			// 
 			// _buttonOK
 			// 
-			this._buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this._buttonOK.Location = new System.Drawing.Point(907, 189);
-			this._buttonOK.Name = "_buttonOK";
-			this._buttonOK.Size = new System.Drawing.Size(53, 30);
-			this._buttonOK.TabIndex = 0;
-			this._buttonOK.Text = "OK";
-			this._buttonOK.UseVisualStyleBackColor = true;
-			this._buttonOK.Click += new System.EventHandler(this._buttonOK_Click);
+			_buttonOK.Anchor=System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Right;
+			_buttonOK.Location=new System.Drawing.Point(1075, 178);
+			_buttonOK.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_buttonOK.Name="_buttonOK";
+			_buttonOK.Size=new System.Drawing.Size(62, 35);
+			_buttonOK.TabIndex=0;
+			_buttonOK.Text="OK";
+			_buttonOK.UseVisualStyleBackColor=true;
+			_buttonOK.Click+=_buttonOK_Click;
 			// 
 			// _buttonCancel
 			// 
-			this._buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this._buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this._buttonCancel.Location = new System.Drawing.Point(907, 225);
-			this._buttonCancel.Name = "_buttonCancel";
-			this._buttonCancel.Size = new System.Drawing.Size(53, 29);
-			this._buttonCancel.TabIndex = 1;
-			this._buttonCancel.Text = "Cancel";
-			this._buttonCancel.UseVisualStyleBackColor = true;
-			this._buttonCancel.Click += new System.EventHandler(this._buttonCancel_Click);
+			_buttonCancel.Anchor=System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Right;
+			_buttonCancel.DialogResult=System.Windows.Forms.DialogResult.Cancel;
+			_buttonCancel.Location=new System.Drawing.Point(1075, 219);
+			_buttonCancel.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_buttonCancel.Name="_buttonCancel";
+			_buttonCancel.Size=new System.Drawing.Size(62, 33);
+			_buttonCancel.TabIndex=1;
+			_buttonCancel.Text="Cancel";
+			_buttonCancel.UseVisualStyleBackColor=true;
+			_buttonCancel.Click+=_buttonCancel_Click;
 			// 
 			// _splitContainerSpecification
 			// 
-			this._splitContainerSpecification.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._splitContainerSpecification.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-			this._splitContainerSpecification.Location = new System.Drawing.Point(12, 88);
-			this._splitContainerSpecification.Name = "_splitContainerSpecification";
-			this._splitContainerSpecification.Orientation = System.Windows.Forms.Orientation.Horizontal;
+			_splitContainerSpecification.Dock=System.Windows.Forms.DockStyle.Fill;
+			_splitContainerSpecification.FixedPanel=System.Windows.Forms.FixedPanel.Panel2;
+			_splitContainerSpecification.Location=new System.Drawing.Point(0, 100);
+			_splitContainerSpecification.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_splitContainerSpecification.Name="_splitContainerSpecification";
+			_splitContainerSpecification.Orientation=System.Windows.Forms.Orientation.Horizontal;
 			// 
 			// _splitContainerSpecification.Panel1
 			// 
-			this._splitContainerSpecification.Panel1.Controls.Add(this._splitContainerConditions);
+			_splitContainerSpecification.Panel1.Controls.Add(_splitContainerConditions);
 			// 
 			// _splitContainerSpecification.Panel2
 			// 
-			this._splitContainerSpecification.Panel2.Controls.Add(this._groupBoxSelectedParameters);
-			this._splitContainerSpecification.Panel2.Controls.Add(this._buttonCancel);
-			this._splitContainerSpecification.Panel2.Controls.Add(this._buttonOK);
-			this._splitContainerSpecification.Size = new System.Drawing.Size(960, 645);
-			this._splitContainerSpecification.SplitterDistance = 387;
-			this._splitContainerSpecification.TabIndex = 6;
+			_splitContainerSpecification.Panel2.Controls.Add(_mainSplitterBottomPanel);
+			_splitContainerSpecification.Size=new System.Drawing.Size(1148, 756);
+			_splitContainerSpecification.SplitterDistance=488;
+			_splitContainerSpecification.SplitterWidth=5;
+			_splitContainerSpecification.TabIndex=6;
 			// 
 			// _splitContainerConditions
 			// 
-			this._splitContainerConditions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._splitContainerConditions.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-			this._splitContainerConditions.Location = new System.Drawing.Point(0, 0);
-			this._splitContainerConditions.Name = "_splitContainerConditions";
+			_splitContainerConditions.Dock=System.Windows.Forms.DockStyle.Fill;
+			_splitContainerConditions.FixedPanel=System.Windows.Forms.FixedPanel.Panel2;
+			_splitContainerConditions.Location=new System.Drawing.Point(0, 0);
+			_splitContainerConditions.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_splitContainerConditions.Name="_splitContainerConditions";
 			// 
 			// _splitContainerConditions.Panel1
 			// 
-			this._splitContainerConditions.Panel1.Controls.Add(this._groupBoxConditions);
+			_splitContainerConditions.Panel1.Controls.Add(_panelConditionViews);
 			// 
 			// _splitContainerConditions.Panel2
 			// 
-			this._splitContainerConditions.Panel2.Controls.Add(this._groupBoxSelected);
-			this._splitContainerConditions.Size = new System.Drawing.Size(960, 384);
-			this._splitContainerConditions.SplitterDistance = 706;
-			this._splitContainerConditions.TabIndex = 0;
+			_splitContainerConditions.Panel2.Controls.Add(_panelSelectedConditions);
+			_splitContainerConditions.Size=new System.Drawing.Size(1148, 488);
+			_splitContainerConditions.SplitterDistance=884;
+			_splitContainerConditions.SplitterWidth=5;
+			_splitContainerConditions.TabIndex=0;
 			// 
 			// _groupBoxConditions
 			// 
-			this._groupBoxConditions.Controls.Add(this._panelConditions);
-			this._groupBoxConditions.Controls.Add(this._toolStripConditionList);
-			this._groupBoxConditions.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._groupBoxConditions.Location = new System.Drawing.Point(0, 0);
-			this._groupBoxConditions.Name = "_groupBoxConditions";
-			this._groupBoxConditions.Size = new System.Drawing.Size(706, 384);
-			this._groupBoxConditions.TabIndex = 0;
-			this._groupBoxConditions.TabStop = false;
-			this._groupBoxConditions.Text = "Available Quality Conditions";
+			_groupBoxConditions.Controls.Add(_panelConditions);
+			_groupBoxConditions.Controls.Add(_toolStripConditionList);
+			_groupBoxConditions.Dock=System.Windows.Forms.DockStyle.Fill;
+			_groupBoxConditions.Location=new System.Drawing.Point(0, 0);
+			_groupBoxConditions.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_groupBoxConditions.Name="_groupBoxConditions";
+			_groupBoxConditions.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_groupBoxConditions.Size=new System.Drawing.Size(884, 488);
+			_groupBoxConditions.TabIndex=0;
+			_groupBoxConditions.TabStop=false;
+			_groupBoxConditions.Text="Available Quality Conditions";
 			// 
 			// _panelConditions
 			// 
-			this._panelConditions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._panelConditions.Controls.Add(this._conditionsLayerView);
-			this._panelConditions.Controls.Add(this._conditionDatasetsControl);
-			this._panelConditions.Controls.Add(this._conditionListControl);
-			this._panelConditions.Location = new System.Drawing.Point(11, 51);
-			this._panelConditions.Name = "_panelConditions";
-			this._panelConditions.Size = new System.Drawing.Size(689, 327);
-			this._panelConditions.TabIndex = 13;
+			_panelConditions.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_panelConditions.Controls.Add(_conditionsLayerView);
+			_panelConditions.Controls.Add(_conditionDatasetsControl);
+			_panelConditions.Controls.Add(_conditionListControl);
+			_panelConditions.Location=new System.Drawing.Point(13, 59);
+			_panelConditions.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_panelConditions.Name="_panelConditions";
+			_panelConditions.Size=new System.Drawing.Size(864, 422);
+			_panelConditions.TabIndex=13;
 			// 
 			// _conditionsLayerView
 			// 
-			this._conditionsLayerView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._conditionsLayerView.CustomizeView = null;
-			this._conditionsLayerView.Location = new System.Drawing.Point(72, 53);
-			this._conditionsLayerView.Name = "_conditionsLayerView";
-			this._conditionsLayerView.Size = new System.Drawing.Size(480, 245);
-			this._conditionsLayerView.TabIndex = 12;
+			_conditionsLayerView.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_conditionsLayerView.CustomizeView=null;
+			_conditionsLayerView.Location=new System.Drawing.Point(84, 61);
+			_conditionsLayerView.Margin=new System.Windows.Forms.Padding(5, 3, 5, 3);
+			_conditionsLayerView.Name="_conditionsLayerView";
+			_conditionsLayerView.Size=new System.Drawing.Size(620, 328);
+			_conditionsLayerView.TabIndex=12;
 			// 
 			// _conditionDatasetsControl
 			// 
-			this._conditionDatasetsControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._conditionDatasetsControl.CustomizeView = null;
-			this._conditionDatasetsControl.FilterRows = false;
-			this._conditionDatasetsControl.Location = new System.Drawing.Point(14, 7);
-			this._conditionDatasetsControl.MatchCase = false;
-			this._conditionDatasetsControl.Name = "_conditionDatasetsControl";
-			this._conditionDatasetsControl.Size = new System.Drawing.Size(646, 256);
-			this._conditionDatasetsControl.TabIndex = 11;
+			_conditionDatasetsControl.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_conditionDatasetsControl.CustomizeView=null;
+			_conditionDatasetsControl.FilterRows=false;
+			_conditionDatasetsControl.Location=new System.Drawing.Point(16, 8);
+			_conditionDatasetsControl.Margin=new System.Windows.Forms.Padding(5, 3, 5, 3);
+			_conditionDatasetsControl.MatchCase=false;
+			_conditionDatasetsControl.Name="_conditionDatasetsControl";
+			_conditionDatasetsControl.Size=new System.Drawing.Size(814, 340);
+			_conditionDatasetsControl.TabIndex=11;
 			// 
 			// _conditionListControl
 			// 
-			this._conditionListControl.CustomizeView = null;
-			this._conditionListControl.FilterRows = false;
-			this._conditionListControl.Location = new System.Drawing.Point(3, 42);
-			this._conditionListControl.MatchCase = false;
-			this._conditionListControl.Name = "_conditionListControl";
-			this._conditionListControl.Size = new System.Drawing.Size(575, 161);
-			this._conditionListControl.TabIndex = 15;
+			_conditionListControl.CustomizeView=null;
+			_conditionListControl.FilterRows=false;
+			_conditionListControl.Location=new System.Drawing.Point(4, 48);
+			_conditionListControl.Margin=new System.Windows.Forms.Padding(5, 3, 5, 3);
+			_conditionListControl.MatchCase=false;
+			_conditionListControl.Name="_conditionListControl";
+			_conditionListControl.Size=new System.Drawing.Size(671, 186);
+			_conditionListControl.TabIndex=15;
 			// 
 			// _toolStripConditionList
 			// 
-			this._toolStripConditionList.ClickThrough = true;
-			this._toolStripConditionList.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-			this._toolStripConditionList.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this._toolStripLabel1,
-            this._toolStripComboBoxView,
-            this._toolStripButtonWarningConditions,
-            this._toolStripButtonErrorConditions,
-            this._toolStripButtonStopConditions,
-            this.toolStripSeparator1,
-            this._toolStripButtonEnableAll,
-            this._toolStripButtonEnableNone});
-			this._toolStripConditionList.Location = new System.Drawing.Point(3, 16);
-			this._toolStripConditionList.Name = "_toolStripConditionList";
-			this._toolStripConditionList.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-			this._toolStripConditionList.Size = new System.Drawing.Size(700, 25);
-			this._toolStripConditionList.TabIndex = 15;
-			this._toolStripConditionList.Text = "toolStrip1";
+			_toolStripConditionList.ClickThrough=true;
+			_toolStripConditionList.GripStyle=System.Windows.Forms.ToolStripGripStyle.Hidden;
+			_toolStripConditionList.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _toolStripLabel1, _toolStripComboBoxView, _toolStripButtonWarningConditions, _toolStripButtonErrorConditions, _toolStripButtonStopConditions, toolStripSeparator1, _toolStripButtonEnableAll, _toolStripButtonEnableNone });
+			_toolStripConditionList.Location=new System.Drawing.Point(4, 19);
+			_toolStripConditionList.Name="_toolStripConditionList";
+			_toolStripConditionList.RenderMode=System.Windows.Forms.ToolStripRenderMode.System;
+			_toolStripConditionList.Size=new System.Drawing.Size(876, 25);
+			_toolStripConditionList.TabIndex=15;
+			_toolStripConditionList.Text="toolStrip1";
 			// 
 			// _toolStripLabel1
 			// 
-			this._toolStripLabel1.Name = "_toolStripLabel1";
-			this._toolStripLabel1.Size = new System.Drawing.Size(32, 22);
-			this._toolStripLabel1.Text = "View";
+			_toolStripLabel1.Name="_toolStripLabel1";
+			_toolStripLabel1.Size=new System.Drawing.Size(32, 22);
+			_toolStripLabel1.Text="View";
 			// 
 			// _toolStripComboBoxView
 			// 
-			this._toolStripComboBoxView.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this._toolStripComboBoxView.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
-			this._toolStripComboBoxView.Name = "_toolStripComboBoxView";
-			this._toolStripComboBoxView.Size = new System.Drawing.Size(220, 25);
-			this._toolStripComboBoxView.SelectedIndexChanged += new System.EventHandler(this._toolStripComboBoxView_SelectedIndexChanged);
-			// 
-			// toolStripSeparator1
-			// 
-			this.toolStripSeparator1.Name = "toolStripSeparator1";
-			this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
-			// 
-			// _groupBoxSelected
-			// 
-			this._groupBoxSelected.Controls.Add(this._labelEnabledConditions);
-			this._groupBoxSelected.Controls.Add(this._dataGridViewEnabledConditions);
-			this._groupBoxSelected.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._groupBoxSelected.Location = new System.Drawing.Point(0, 0);
-			this._groupBoxSelected.Name = "_groupBoxSelected";
-			this._groupBoxSelected.Size = new System.Drawing.Size(250, 384);
-			this._groupBoxSelected.TabIndex = 0;
-			this._groupBoxSelected.TabStop = false;
-			this._groupBoxSelected.Text = "Enabled Quality Conditions";
-			// 
-			// _labelEnabledConditions
-			// 
-			this._labelEnabledConditions.AutoSize = true;
-			this._labelEnabledConditions.Location = new System.Drawing.Point(6, 26);
-			this._labelEnabledConditions.Name = "_labelEnabledConditions";
-			this._labelEnabledConditions.Size = new System.Drawing.Size(189, 13);
-			this._labelEnabledConditions.TabIndex = 0;
-			this._labelEnabledConditions.Text = "### of ### Tests selected to execute";
-			// 
-			// _dataGridViewEnabledConditions
-			// 
-			this._dataGridViewEnabledConditions.AllowUserToAddRows = false;
-			this._dataGridViewEnabledConditions.AllowUserToDeleteRows = false;
-			this._dataGridViewEnabledConditions.AllowUserToResizeRows = false;
-			this._dataGridViewEnabledConditions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._dataGridViewEnabledConditions.AutoGenerateColumns = false;
-			dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
-			dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
-			dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-			this._dataGridViewEnabledConditions.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
-			this._dataGridViewEnabledConditions.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-			this._dataGridViewEnabledConditions.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.dgcSelType,
-            this.dgcSelTest});
-			this._dataGridViewEnabledConditions.DataSource = this._bindingSourceEnabledConditions;
-			dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
-			dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
-			dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-			this._dataGridViewEnabledConditions.DefaultCellStyle = dataGridViewCellStyle5;
-			this._dataGridViewEnabledConditions.Location = new System.Drawing.Point(6, 49);
-			this._dataGridViewEnabledConditions.Name = "_dataGridViewEnabledConditions";
-			this._dataGridViewEnabledConditions.ReadOnly = true;
-			dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-			dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
-			dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
-			dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-			dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-			dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-			this._dataGridViewEnabledConditions.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
-			this._dataGridViewEnabledConditions.RowHeadersVisible = false;
-			this._dataGridViewEnabledConditions.RowHeadersWidth = 20;
-			this._dataGridViewEnabledConditions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this._dataGridViewEnabledConditions.Size = new System.Drawing.Size(238, 329);
-			this._dataGridViewEnabledConditions.TabIndex = 2;
-			this._dataGridViewEnabledConditions.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this._dataGridViewEnabledConditions_CellFormatting);
-			this._dataGridViewEnabledConditions.SelectionChanged += new System.EventHandler(this._dataGridViewEnabledConditions_SelectionChanged);
-			// 
-			// dgcSelType
-			// 
-			this.dgcSelType.DataPropertyName = "Type";
-			this.dgcSelType.HeaderText = "";
-			this.dgcSelType.Name = "dgcSelType";
-			this.dgcSelType.ReadOnly = true;
-			this.dgcSelType.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-			this.dgcSelType.Width = 20;
-			// 
-			// dgcSelTest
-			// 
-			this.dgcSelTest.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-			this.dgcSelTest.DataPropertyName = "TestName";
-			this.dgcSelTest.HeaderText = "Quality Condition";
-			this.dgcSelTest.Name = "dgcSelTest";
-			this.dgcSelTest.ReadOnly = true;
-			this.dgcSelTest.ToolTipText = "Quality Condition Name";
-			// 
-			// _bindingSourceEnabledConditions
-			// 
-			this._bindingSourceEnabledConditions.DataSource = typeof(global::ProSuite.UI.QA.Controls.SpecificationDataset);
-			// 
-			// _groupBoxSelectedParameters
-			// 
-			this._groupBoxSelectedParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._groupBoxSelectedParameters.Controls.Add(this._splitContainer);
-			this._groupBoxSelectedParameters.Location = new System.Drawing.Point(0, 3);
-			this._groupBoxSelectedParameters.Name = "_groupBoxSelectedParameters";
-			this._groupBoxSelectedParameters.Size = new System.Drawing.Size(901, 251);
-			this._groupBoxSelectedParameters.TabIndex = 0;
-			this._groupBoxSelectedParameters.TabStop = false;
-			this._groupBoxSelectedParameters.Text = "Selected Quality Condition";
-			this._groupBoxSelectedParameters.EnabledChanged += new System.EventHandler(this._groupBoxSelectedParameters_EnabledChanged);
+			_toolStripComboBoxView.DropDownStyle=System.Windows.Forms.ComboBoxStyle.DropDownList;
+			_toolStripComboBoxView.Font=new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+			_toolStripComboBoxView.Name="_toolStripComboBoxView";
+			_toolStripComboBoxView.Size=new System.Drawing.Size(256, 25);
+			_toolStripComboBoxView.SelectedIndexChanged+=_toolStripComboBoxView_SelectedIndexChanged;
 			// 
 			// _toolStripButtonWarningConditions
 			// 
-			this._toolStripButtonWarningConditions.CheckOnClick = true;
-			this._toolStripButtonWarningConditions.Image = global::ProSuite.UI.Properties.TestTypeImages.TestTypeWarning;
-			this._toolStripButtonWarningConditions.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this._toolStripButtonWarningConditions.Name = "_toolStripButtonWarningConditions";
-			this._toolStripButtonWarningConditions.Size = new System.Drawing.Size(77, 22);
-			this._toolStripButtonWarningConditions.Text = "Warnings";
-			this._toolStripButtonWarningConditions.ToolTipText = "Enable/disable all soft quality conditions (warnings)";
-			this._toolStripButtonWarningConditions.CheckedChanged += new System.EventHandler(this._toolStripButtonWarningConditions_CheckedChanged);
+			_toolStripButtonWarningConditions.CheckOnClick=true;
+			_toolStripButtonWarningConditions.Image=Properties.TestTypeImages.TestTypeWarning;
+			_toolStripButtonWarningConditions.ImageTransparentColor=System.Drawing.Color.Magenta;
+			_toolStripButtonWarningConditions.Name="_toolStripButtonWarningConditions";
+			_toolStripButtonWarningConditions.Size=new System.Drawing.Size(77, 22);
+			_toolStripButtonWarningConditions.Text="Warnings";
+			_toolStripButtonWarningConditions.ToolTipText="Enable/disable all soft quality conditions (warnings)";
+			_toolStripButtonWarningConditions.CheckedChanged+=_toolStripButtonWarningConditions_CheckedChanged;
 			// 
 			// _toolStripButtonErrorConditions
 			// 
-			this._toolStripButtonErrorConditions.CheckOnClick = true;
-			this._toolStripButtonErrorConditions.Image = global::ProSuite.UI.Properties.TestTypeImages.TestTypeError;
-			this._toolStripButtonErrorConditions.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this._toolStripButtonErrorConditions.Name = "_toolStripButtonErrorConditions";
-			this._toolStripButtonErrorConditions.Size = new System.Drawing.Size(57, 22);
-			this._toolStripButtonErrorConditions.Text = "Errors";
-			this._toolStripButtonErrorConditions.ToolTipText = "Enable/disable all hard quality conditions (errors)";
-			this._toolStripButtonErrorConditions.CheckedChanged += new System.EventHandler(this._toolStripButtonErrorConditions_CheckedChanged);
+			_toolStripButtonErrorConditions.CheckOnClick=true;
+			_toolStripButtonErrorConditions.Image=Properties.TestTypeImages.TestTypeError;
+			_toolStripButtonErrorConditions.ImageTransparentColor=System.Drawing.Color.Magenta;
+			_toolStripButtonErrorConditions.Name="_toolStripButtonErrorConditions";
+			_toolStripButtonErrorConditions.Size=new System.Drawing.Size(57, 22);
+			_toolStripButtonErrorConditions.Text="Errors";
+			_toolStripButtonErrorConditions.ToolTipText="Enable/disable all hard quality conditions (errors)";
+			_toolStripButtonErrorConditions.CheckedChanged+=_toolStripButtonErrorConditions_CheckedChanged;
 			// 
 			// _toolStripButtonStopConditions
 			// 
-			this._toolStripButtonStopConditions.CheckOnClick = true;
-			this._toolStripButtonStopConditions.Image = global::ProSuite.UI.Properties.TestTypeImages.TestTypeStop;
-			this._toolStripButtonStopConditions.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this._toolStripButtonStopConditions.Name = "_toolStripButtonStopConditions";
-			this._toolStripButtonStopConditions.Size = new System.Drawing.Size(112, 22);
-			this._toolStripButtonStopConditions.Text = "Stop Conditions";
-			this._toolStripButtonStopConditions.ToolTipText = "Enable/disable all stop conditions";
-			this._toolStripButtonStopConditions.CheckedChanged += new System.EventHandler(this._toolStripButtonStopConditions_CheckedChanged);
+			_toolStripButtonStopConditions.CheckOnClick=true;
+			_toolStripButtonStopConditions.Image=Properties.TestTypeImages.TestTypeStop;
+			_toolStripButtonStopConditions.ImageTransparentColor=System.Drawing.Color.Magenta;
+			_toolStripButtonStopConditions.Name="_toolStripButtonStopConditions";
+			_toolStripButtonStopConditions.Size=new System.Drawing.Size(112, 22);
+			_toolStripButtonStopConditions.Text="Stop Conditions";
+			_toolStripButtonStopConditions.ToolTipText="Enable/disable all stop conditions";
+			_toolStripButtonStopConditions.CheckedChanged+=_toolStripButtonStopConditions_CheckedChanged;
+			// 
+			// toolStripSeparator1
+			// 
+			toolStripSeparator1.Name="toolStripSeparator1";
+			toolStripSeparator1.Size=new System.Drawing.Size(6, 25);
 			// 
 			// _toolStripButtonEnableAll
 			// 
-			this._toolStripButtonEnableAll.Image = global::ProSuite.UI.Properties.Resources.CheckAll;
-			this._toolStripButtonEnableAll.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this._toolStripButtonEnableAll.Name = "_toolStripButtonEnableAll";
-			this._toolStripButtonEnableAll.Size = new System.Drawing.Size(41, 22);
-			this._toolStripButtonEnableAll.Text = "All";
-			this._toolStripButtonEnableAll.Click += new System.EventHandler(this._toolStripButtonEnableAll_Click);
+			_toolStripButtonEnableAll.Image=Properties.Resources.CheckAll;
+			_toolStripButtonEnableAll.ImageTransparentColor=System.Drawing.Color.Magenta;
+			_toolStripButtonEnableAll.Name="_toolStripButtonEnableAll";
+			_toolStripButtonEnableAll.Size=new System.Drawing.Size(41, 22);
+			_toolStripButtonEnableAll.Text="All";
+			_toolStripButtonEnableAll.Click+=_toolStripButtonEnableAll_Click;
 			// 
 			// _toolStripButtonEnableNone
 			// 
-			this._toolStripButtonEnableNone.Image = global::ProSuite.UI.Properties.Resources.UncheckAll;
-			this._toolStripButtonEnableNone.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this._toolStripButtonEnableNone.Name = "_toolStripButtonEnableNone";
-			this._toolStripButtonEnableNone.Size = new System.Drawing.Size(56, 22);
-			this._toolStripButtonEnableNone.Text = "None";
-			this._toolStripButtonEnableNone.Click += new System.EventHandler(this._toolStripButtonEnableNone_Click);
+			_toolStripButtonEnableNone.Image=Properties.Resources.UncheckAll;
+			_toolStripButtonEnableNone.ImageTransparentColor=System.Drawing.Color.Magenta;
+			_toolStripButtonEnableNone.Name="_toolStripButtonEnableNone";
+			_toolStripButtonEnableNone.Size=new System.Drawing.Size(56, 22);
+			_toolStripButtonEnableNone.Text="None";
+			_toolStripButtonEnableNone.Click+=_toolStripButtonEnableNone_Click;
+			// 
+			// _panelSelectedConditions
+			// 
+			_panelSelectedConditions.Controls.Add(_groupBoxSelected);
+			_panelSelectedConditions.Dock=System.Windows.Forms.DockStyle.Fill;
+			_panelSelectedConditions.Location=new System.Drawing.Point(0, 0);
+			_panelSelectedConditions.Name="_panelSelectedConditions";
+			_panelSelectedConditions.Size=new System.Drawing.Size(259, 488);
+			_panelSelectedConditions.TabIndex=4;
+			// 
+			// _groupBoxSelected
+			// 
+			_groupBoxSelected.Controls.Add(_dataGridViewEnabledConditions);
+			_groupBoxSelected.Controls.Add(_labelEnabledConditions);
+			_groupBoxSelected.Dock=System.Windows.Forms.DockStyle.Fill;
+			_groupBoxSelected.Location=new System.Drawing.Point(0, 0);
+			_groupBoxSelected.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_groupBoxSelected.Name="_groupBoxSelected";
+			_groupBoxSelected.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_groupBoxSelected.Size=new System.Drawing.Size(259, 488);
+			_groupBoxSelected.TabIndex=0;
+			_groupBoxSelected.TabStop=false;
+			_groupBoxSelected.Text="Enabled Quality Conditions";
+			// 
+			// _dataGridViewEnabledConditions
+			// 
+			_dataGridViewEnabledConditions.AllowUserToAddRows=false;
+			_dataGridViewEnabledConditions.AllowUserToDeleteRows=false;
+			_dataGridViewEnabledConditions.AllowUserToResizeRows=false;
+			_dataGridViewEnabledConditions.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_dataGridViewEnabledConditions.AutoGenerateColumns=false;
+			dataGridViewCellStyle4.Alignment=System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle4.BackColor=System.Drawing.SystemColors.Control;
+			dataGridViewCellStyle4.Font=new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+			dataGridViewCellStyle4.ForeColor=System.Drawing.SystemColors.WindowText;
+			dataGridViewCellStyle4.SelectionBackColor=System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle4.SelectionForeColor=System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle4.WrapMode=System.Windows.Forms.DataGridViewTriState.True;
+			_dataGridViewEnabledConditions.ColumnHeadersDefaultCellStyle=dataGridViewCellStyle4;
+			_dataGridViewEnabledConditions.ColumnHeadersHeightSizeMode=System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+			_dataGridViewEnabledConditions.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { dgcSelType, dgcSelTest });
+			_dataGridViewEnabledConditions.DataSource=_bindingSourceEnabledConditions;
+			dataGridViewCellStyle5.Alignment=System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle5.BackColor=System.Drawing.SystemColors.Window;
+			dataGridViewCellStyle5.Font=new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+			dataGridViewCellStyle5.ForeColor=System.Drawing.SystemColors.ControlText;
+			dataGridViewCellStyle5.SelectionBackColor=System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle5.SelectionForeColor=System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle5.WrapMode=System.Windows.Forms.DataGridViewTriState.False;
+			_dataGridViewEnabledConditions.DefaultCellStyle=dataGridViewCellStyle5;
+			_dataGridViewEnabledConditions.Location=new System.Drawing.Point(7, 57);
+			_dataGridViewEnabledConditions.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_dataGridViewEnabledConditions.MinimumSize=new System.Drawing.Size(70, 92);
+			_dataGridViewEnabledConditions.Name="_dataGridViewEnabledConditions";
+			_dataGridViewEnabledConditions.ReadOnly=true;
+			dataGridViewCellStyle6.Alignment=System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+			dataGridViewCellStyle6.BackColor=System.Drawing.SystemColors.Control;
+			dataGridViewCellStyle6.Font=new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+			dataGridViewCellStyle6.ForeColor=System.Drawing.SystemColors.WindowText;
+			dataGridViewCellStyle6.SelectionBackColor=System.Drawing.SystemColors.Highlight;
+			dataGridViewCellStyle6.SelectionForeColor=System.Drawing.SystemColors.HighlightText;
+			dataGridViewCellStyle6.WrapMode=System.Windows.Forms.DataGridViewTriState.True;
+			_dataGridViewEnabledConditions.RowHeadersDefaultCellStyle=dataGridViewCellStyle6;
+			_dataGridViewEnabledConditions.RowHeadersVisible=false;
+			_dataGridViewEnabledConditions.RowHeadersWidth=20;
+			_dataGridViewEnabledConditions.SelectionMode=System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+			_dataGridViewEnabledConditions.Size=new System.Drawing.Size(244, 424);
+			_dataGridViewEnabledConditions.TabIndex=2;
+			_dataGridViewEnabledConditions.CellFormatting+=_dataGridViewEnabledConditions_CellFormatting;
+			_dataGridViewEnabledConditions.SelectionChanged+=_dataGridViewEnabledConditions_SelectionChanged;
+			// 
+			// dgcSelType
+			// 
+			dgcSelType.DataPropertyName="Type";
+			dgcSelType.HeaderText="";
+			dgcSelType.Name="dgcSelType";
+			dgcSelType.ReadOnly=true;
+			dgcSelType.SortMode=System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+			dgcSelType.Width=20;
+			// 
+			// dgcSelTest
+			// 
+			dgcSelTest.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+			dgcSelTest.DataPropertyName="TestName";
+			dgcSelTest.HeaderText="Quality Condition";
+			dgcSelTest.Name="dgcSelTest";
+			dgcSelTest.ReadOnly=true;
+			dgcSelTest.ToolTipText="Quality Condition Name";
+			// 
+			// _bindingSourceEnabledConditions
+			// 
+			_bindingSourceEnabledConditions.DataSource=typeof(SpecificationDataset);
+			// 
+			// _labelEnabledConditions
+			// 
+			_labelEnabledConditions.AutoSize=true;
+			_labelEnabledConditions.Location=new System.Drawing.Point(7, 30);
+			_labelEnabledConditions.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelEnabledConditions.Name="_labelEnabledConditions";
+			_labelEnabledConditions.Size=new System.Drawing.Size(198, 15);
+			_labelEnabledConditions.TabIndex=0;
+			_labelEnabledConditions.Text="### of ### Tests selected to execute";
+			// 
+			// _groupBoxSelectedParameters
+			// 
+			_groupBoxSelectedParameters.Anchor=System.Windows.Forms.AnchorStyles.Top|System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Left|System.Windows.Forms.AnchorStyles.Right;
+			_groupBoxSelectedParameters.Controls.Add(_splitContainer);
+			_groupBoxSelectedParameters.Location=new System.Drawing.Point(0, 3);
+			_groupBoxSelectedParameters.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_groupBoxSelectedParameters.Name="_groupBoxSelectedParameters";
+			_groupBoxSelectedParameters.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_groupBoxSelectedParameters.Size=new System.Drawing.Size(1067, 251);
+			_groupBoxSelectedParameters.TabIndex=0;
+			_groupBoxSelectedParameters.TabStop=false;
+			_groupBoxSelectedParameters.Text="Selected Quality Condition";
+			_groupBoxSelectedParameters.EnabledChanged+=_groupBoxSelectedParameters_EnabledChanged;
 			// 
 			// _splitContainer
 			// 
-			this._splitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._splitContainer.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-			this._splitContainer.Location = new System.Drawing.Point(3, 16);
-			this._splitContainer.Name = "_splitContainer";
+			_splitContainer.Dock=System.Windows.Forms.DockStyle.Fill;
+			_splitContainer.FixedPanel=System.Windows.Forms.FixedPanel.Panel1;
+			_splitContainer.Location=new System.Drawing.Point(4, 19);
+			_splitContainer.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_splitContainer.Name="_splitContainer";
 			// 
 			// _splitContainer.Panel1
 			// 
-			this._splitContainer.Panel1.Controls.Add(this._qualityConditionControl);
+			_splitContainer.Panel1.Controls.Add(_qualityConditionControl);
 			// 
 			// _splitContainer.Panel2
 			// 
-			this._splitContainer.Panel2.Controls.Add(this._tabControl);
-			this._splitContainer.Size = new System.Drawing.Size(895, 232);
-			this._splitContainer.SplitterDistance = 352;
-			this._splitContainer.TabIndex = 2;
+			_splitContainer.Panel2.Controls.Add(_tabControl);
+			_splitContainer.Size=new System.Drawing.Size(1059, 229);
+			_splitContainer.SplitterDistance=352;
+			_splitContainer.SplitterWidth=5;
+			_splitContainer.TabIndex=2;
 			// 
 			// _qualityConditionControl
 			// 
-			this._qualityConditionControl.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._qualityConditionControl.Location = new System.Drawing.Point(0, 0);
-			this._qualityConditionControl.Name = "_qualityConditionControl";
-			this._qualityConditionControl.QualityCondition = null;
-			this._qualityConditionControl.ReadOnly = true;
-			this._qualityConditionControl.Size = new System.Drawing.Size(352, 232);
-			this._qualityConditionControl.TabIndex = 0;
+			_qualityConditionControl.Dock=System.Windows.Forms.DockStyle.Fill;
+			_qualityConditionControl.Location=new System.Drawing.Point(0, 0);
+			_qualityConditionControl.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_qualityConditionControl.Name="_qualityConditionControl";
+			_qualityConditionControl.QualityCondition=null;
+			_qualityConditionControl.ReadOnly=true;
+			_qualityConditionControl.Size=new System.Drawing.Size(352, 229);
+			_qualityConditionControl.TabIndex=0;
 			// 
 			// _tabControl
 			// 
-			this._tabControl.Controls.Add(this._tabPageParameterValues);
-			this._tabControl.Controls.Add(this._tabPageTestDescriptor);
-			this._tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._tabControl.Location = new System.Drawing.Point(0, 0);
-			this._tabControl.Name = "_tabControl";
-			this._tabControl.SelectedIndex = 0;
-			this._tabControl.Size = new System.Drawing.Size(539, 232);
-			this._tabControl.TabIndex = 0;
+			_tabControl.Controls.Add(_tabPageParameterValues);
+			_tabControl.Controls.Add(_tabPageTestDescriptor);
+			_tabControl.Dock=System.Windows.Forms.DockStyle.Fill;
+			_tabControl.Location=new System.Drawing.Point(0, 0);
+			_tabControl.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabControl.Name="_tabControl";
+			_tabControl.SelectedIndex=0;
+			_tabControl.Size=new System.Drawing.Size(702, 229);
+			_tabControl.TabIndex=0;
 			// 
 			// _tabPageParameterValues
 			// 
-			this._tabPageParameterValues.Controls.Add(this._qualityConditionTableViewControl);
-			this._tabPageParameterValues.Controls.Add(this._toolStrip);
-			this._tabPageParameterValues.Location = new System.Drawing.Point(4, 22);
-			this._tabPageParameterValues.Name = "_tabPageParameterValues";
-			this._tabPageParameterValues.Padding = new System.Windows.Forms.Padding(3);
-			this._tabPageParameterValues.Size = new System.Drawing.Size(531, 206);
-			this._tabPageParameterValues.TabIndex = 0;
-			this._tabPageParameterValues.Text = "Parameter Values";
-			this._tabPageParameterValues.UseVisualStyleBackColor = true;
+			_tabPageParameterValues.Controls.Add(_qualityConditionTableViewControl);
+			_tabPageParameterValues.Controls.Add(_toolStrip);
+			_tabPageParameterValues.Location=new System.Drawing.Point(4, 24);
+			_tabPageParameterValues.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageParameterValues.Name="_tabPageParameterValues";
+			_tabPageParameterValues.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageParameterValues.Size=new System.Drawing.Size(694, 201);
+			_tabPageParameterValues.TabIndex=0;
+			_tabPageParameterValues.Text="Parameter Values";
+			_tabPageParameterValues.UseVisualStyleBackColor=true;
 			// 
 			// _qualityConditionTableViewControl
 			// 
-			this._qualityConditionTableViewControl.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._qualityConditionTableViewControl.Location = new System.Drawing.Point(3, 28);
-			this._qualityConditionTableViewControl.Name = "_qualityConditionTableViewControl";
-			this._qualityConditionTableViewControl.Size = new System.Drawing.Size(525, 175);
-			this._qualityConditionTableViewControl.TabIndex = 2;
+			_qualityConditionTableViewControl.Dock=System.Windows.Forms.DockStyle.Fill;
+			_qualityConditionTableViewControl.Location=new System.Drawing.Point(4, 28);
+			_qualityConditionTableViewControl.Margin=new System.Windows.Forms.Padding(5, 3, 5, 3);
+			_qualityConditionTableViewControl.Name="_qualityConditionTableViewControl";
+			_qualityConditionTableViewControl.Size=new System.Drawing.Size(686, 170);
+			_qualityConditionTableViewControl.TabIndex=2;
 			// 
 			// _toolStrip
 			// 
-			this._toolStrip.ClickThrough = true;
-			this._toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-			this._toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this._toolStripButtonCustomizeTestParameterValues,
-            this._toolStripButtonReset});
-			this._toolStrip.Location = new System.Drawing.Point(3, 3);
-			this._toolStrip.Name = "_toolStrip";
-			this._toolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-			this._toolStrip.Size = new System.Drawing.Size(525, 25);
-			this._toolStrip.TabIndex = 4;
-			this._toolStrip.Text = "Parameter Value Tools";
+			_toolStrip.ClickThrough=true;
+			_toolStrip.GripStyle=System.Windows.Forms.ToolStripGripStyle.Hidden;
+			_toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { _toolStripButtonCustomizeTestParameterValues, _toolStripButtonReset });
+			_toolStrip.Location=new System.Drawing.Point(4, 3);
+			_toolStrip.Name="_toolStrip";
+			_toolStrip.RenderMode=System.Windows.Forms.ToolStripRenderMode.System;
+			_toolStrip.Size=new System.Drawing.Size(686, 25);
+			_toolStrip.TabIndex=4;
+			_toolStrip.Text="Parameter Value Tools";
 			// 
 			// _toolStripButtonCustomizeTestParameterValues
 			// 
-			this._toolStripButtonCustomizeTestParameterValues.Image = global::ProSuite.UI.Properties.Resources.Edit;
-			this._toolStripButtonCustomizeTestParameterValues.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this._toolStripButtonCustomizeTestParameterValues.Name = "_toolStripButtonCustomizeTestParameterValues";
-			this._toolStripButtonCustomizeTestParameterValues.Size = new System.Drawing.Size(92, 22);
-			this._toolStripButtonCustomizeTestParameterValues.Text = "Customize...";
-			this._toolStripButtonCustomizeTestParameterValues.Click += new System.EventHandler(this._toolStripButtonCustomizeTestParameterValues_Click);
+			_toolStripButtonCustomizeTestParameterValues.Image=Properties.Resources.Edit;
+			_toolStripButtonCustomizeTestParameterValues.ImageTransparentColor=System.Drawing.Color.Magenta;
+			_toolStripButtonCustomizeTestParameterValues.Name="_toolStripButtonCustomizeTestParameterValues";
+			_toolStripButtonCustomizeTestParameterValues.Size=new System.Drawing.Size(92, 22);
+			_toolStripButtonCustomizeTestParameterValues.Text="Customize...";
+			_toolStripButtonCustomizeTestParameterValues.Click+=_toolStripButtonCustomizeTestParameterValues_Click;
 			// 
 			// _toolStripButtonReset
 			// 
-			this._toolStripButtonReset.Image = global::ProSuite.UI.Properties.Resources.Undo_16x;
-			this._toolStripButtonReset.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this._toolStripButtonReset.Name = "_toolStripButtonReset";
-			this._toolStripButtonReset.Size = new System.Drawing.Size(55, 22);
-			this._toolStripButtonReset.Text = "Reset";
-			this._toolStripButtonReset.ToolTipText = "Reset to original parameter values";
-			this._toolStripButtonReset.Click += new System.EventHandler(this._toolStripButtonReset_Click);
+			_toolStripButtonReset.Image=Properties.Resources.Undo_16x;
+			_toolStripButtonReset.ImageTransparentColor=System.Drawing.Color.Magenta;
+			_toolStripButtonReset.Name="_toolStripButtonReset";
+			_toolStripButtonReset.Size=new System.Drawing.Size(55, 22);
+			_toolStripButtonReset.Text="Reset";
+			_toolStripButtonReset.ToolTipText="Reset to original parameter values";
+			_toolStripButtonReset.Click+=_toolStripButtonReset_Click;
 			// 
 			// _tabPageTestDescriptor
 			// 
-			this._tabPageTestDescriptor.Controls.Add(this._testDescriptorControl);
-			this._tabPageTestDescriptor.Location = new System.Drawing.Point(4, 22);
-			this._tabPageTestDescriptor.Name = "_tabPageTestDescriptor";
-			this._tabPageTestDescriptor.Padding = new System.Windows.Forms.Padding(3);
-			this._tabPageTestDescriptor.Size = new System.Drawing.Size(483, 197);
-			this._tabPageTestDescriptor.TabIndex = 1;
-			this._tabPageTestDescriptor.Text = "Test";
-			this._tabPageTestDescriptor.UseVisualStyleBackColor = true;
+			_tabPageTestDescriptor.Controls.Add(_testDescriptorControl);
+			_tabPageTestDescriptor.Location=new System.Drawing.Point(4, 24);
+			_tabPageTestDescriptor.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageTestDescriptor.Name="_tabPageTestDescriptor";
+			_tabPageTestDescriptor.Padding=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_tabPageTestDescriptor.Size=new System.Drawing.Size(698, 201);
+			_tabPageTestDescriptor.TabIndex=1;
+			_tabPageTestDescriptor.Text="Test";
+			_tabPageTestDescriptor.UseVisualStyleBackColor=true;
 			// 
 			// _testDescriptorControl
 			// 
-			this._testDescriptorControl.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._testDescriptorControl.Location = new System.Drawing.Point(3, 3);
-			this._testDescriptorControl.Name = "_testDescriptorControl";
-			this._testDescriptorControl.Size = new System.Drawing.Size(477, 191);
-			this._testDescriptorControl.TabIndex = 1;
-			this._testDescriptorControl.TestDescriptor = null;
+			_testDescriptorControl.Dock=System.Windows.Forms.DockStyle.Fill;
+			_testDescriptorControl.Location=new System.Drawing.Point(4, 3);
+			_testDescriptorControl.Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			_testDescriptorControl.Name="_testDescriptorControl";
+			_testDescriptorControl.Size=new System.Drawing.Size(690, 195);
+			_testDescriptorControl.TabIndex=1;
+			_testDescriptorControl.TestDescriptor=null;
 			// 
-
+			// _mainSplitterBottomPanel
+			// 
+			_mainSplitterBottomPanel.Controls.Add(_groupBoxSelectedParameters);
+			_mainSplitterBottomPanel.Controls.Add(_buttonOK);
+			_mainSplitterBottomPanel.Controls.Add(_buttonCancel);
+			_mainSplitterBottomPanel.Dock=System.Windows.Forms.DockStyle.Fill;
+			_mainSplitterBottomPanel.Location=new System.Drawing.Point(0, 0);
+			_mainSplitterBottomPanel.Name="_mainSplitterBottomPanel";
+			_mainSplitterBottomPanel.Size=new System.Drawing.Size(1148, 263);
+			_mainSplitterBottomPanel.TabIndex=2;
+			// 
 			// dataGridViewCheckBoxColumn1
 			// 
-			this.dataGridViewCheckBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCellsExceptHeader;
-			this.dataGridViewCheckBoxColumn1.DataPropertyName = "Enabled";
-			this.dataGridViewCheckBoxColumn1.HeaderText = "";
-			this.dataGridViewCheckBoxColumn1.MinimumWidth = 25;
-			this.dataGridViewCheckBoxColumn1.Name = "dataGridViewCheckBoxColumn1";
-			this.dataGridViewCheckBoxColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-			this.dataGridViewCheckBoxColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+			dataGridViewCheckBoxColumn1.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCellsExceptHeader;
+			dataGridViewCheckBoxColumn1.DataPropertyName="Enabled";
+			dataGridViewCheckBoxColumn1.HeaderText="";
+			dataGridViewCheckBoxColumn1.MinimumWidth=25;
+			dataGridViewCheckBoxColumn1.Name="dataGridViewCheckBoxColumn1";
+			dataGridViewCheckBoxColumn1.Resizable=System.Windows.Forms.DataGridViewTriState.False;
+			dataGridViewCheckBoxColumn1.SortMode=System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
 			// 
 			// dataGridViewImageColumn1
 			// 
-			this.dataGridViewImageColumn1.DataPropertyName = "Type";
-			this.dataGridViewImageColumn1.HeaderText = "";
-			this.dataGridViewImageColumn1.MinimumWidth = 20;
-			this.dataGridViewImageColumn1.Name = "dataGridViewImageColumn1";
-			this.dataGridViewImageColumn1.ReadOnly = true;
-			this.dataGridViewImageColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-			this.dataGridViewImageColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-			this.dataGridViewImageColumn1.Width = 20;
+			dataGridViewImageColumn1.DataPropertyName="Type";
+			dataGridViewImageColumn1.HeaderText="";
+			dataGridViewImageColumn1.MinimumWidth=20;
+			dataGridViewImageColumn1.Name="dataGridViewImageColumn1";
+			dataGridViewImageColumn1.ReadOnly=true;
+			dataGridViewImageColumn1.Resizable=System.Windows.Forms.DataGridViewTriState.False;
+			dataGridViewImageColumn1.SortMode=System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+			dataGridViewImageColumn1.Width=20;
 			// 
 			// dataGridViewTextBoxColumn1
 			// 
-			this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-			this.dataGridViewTextBoxColumn1.DataPropertyName = "TestType";
-			this.dataGridViewTextBoxColumn1.HeaderText = "Test Type";
-			this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
-			this.dataGridViewTextBoxColumn1.ReadOnly = true;
+			dataGridViewTextBoxColumn1.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+			dataGridViewTextBoxColumn1.DataPropertyName="TestType";
+			dataGridViewTextBoxColumn1.HeaderText="Test Type";
+			dataGridViewTextBoxColumn1.Name="dataGridViewTextBoxColumn1";
+			dataGridViewTextBoxColumn1.ReadOnly=true;
 			// 
 			// dataGridViewTextBoxColumn2
 			// 
-			this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-			this.dataGridViewTextBoxColumn2.DataPropertyName = "DatasetName";
-			this.dataGridViewTextBoxColumn2.HeaderText = "Dataset";
-			this.dataGridViewTextBoxColumn2.MinimumWidth = 50;
-			this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
-			this.dataGridViewTextBoxColumn2.ReadOnly = true;
+			dataGridViewTextBoxColumn2.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+			dataGridViewTextBoxColumn2.DataPropertyName="DatasetName";
+			dataGridViewTextBoxColumn2.HeaderText="Dataset";
+			dataGridViewTextBoxColumn2.MinimumWidth=50;
+			dataGridViewTextBoxColumn2.Name="dataGridViewTextBoxColumn2";
+			dataGridViewTextBoxColumn2.ReadOnly=true;
 			// 
 			// dataGridViewImageColumn2
 			// 
-			this.dataGridViewImageColumn2.DataPropertyName = "DatasetType";
-			this.dataGridViewImageColumn2.HeaderText = "";
-			this.dataGridViewImageColumn2.MinimumWidth = 20;
-			this.dataGridViewImageColumn2.Name = "dataGridViewImageColumn2";
-			this.dataGridViewImageColumn2.ReadOnly = true;
-			this.dataGridViewImageColumn2.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-			this.dataGridViewImageColumn2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-			this.dataGridViewImageColumn2.Width = 20;
+			dataGridViewImageColumn2.DataPropertyName="DatasetType";
+			dataGridViewImageColumn2.HeaderText="";
+			dataGridViewImageColumn2.MinimumWidth=20;
+			dataGridViewImageColumn2.Name="dataGridViewImageColumn2";
+			dataGridViewImageColumn2.ReadOnly=true;
+			dataGridViewImageColumn2.Resizable=System.Windows.Forms.DataGridViewTriState.False;
+			dataGridViewImageColumn2.SortMode=System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+			dataGridViewImageColumn2.Width=20;
 			// 
 			// dataGridViewTextBoxColumn3
 			// 
-			this.dataGridViewTextBoxColumn3.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-			this.dataGridViewTextBoxColumn3.DataPropertyName = "DatasetName";
-			this.dataGridViewTextBoxColumn3.HeaderText = "Dataset";
-			this.dataGridViewTextBoxColumn3.MinimumWidth = 50;
-			this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
-			this.dataGridViewTextBoxColumn3.ReadOnly = true;
+			dataGridViewTextBoxColumn3.AutoSizeMode=System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+			dataGridViewTextBoxColumn3.DataPropertyName="DatasetName";
+			dataGridViewTextBoxColumn3.HeaderText="Dataset";
+			dataGridViewTextBoxColumn3.MinimumWidth=50;
+			dataGridViewTextBoxColumn3.Name="dataGridViewTextBoxColumn3";
+			dataGridViewTextBoxColumn3.ReadOnly=true;
+			// 
+			// _panelTop
+			// 
+			_panelTop.Controls.Add(_labelDescription);
+			_panelTop.Controls.Add(_labelSpecification);
+			_panelTop.Controls.Add(_textBoxSpecification);
+			_panelTop.Controls.Add(_textBoxDescription);
+			_panelTop.Dock=System.Windows.Forms.DockStyle.Top;
+			_panelTop.Location=new System.Drawing.Point(0, 0);
+			_panelTop.Name="_panelTop";
+			_panelTop.Size=new System.Drawing.Size(1148, 100);
+			_panelTop.TabIndex=8;
+			// 
+			// _panelConditionViews
+			// 
+			_panelConditionViews.Controls.Add(_groupBoxConditions);
+			_panelConditionViews.Dock=System.Windows.Forms.DockStyle.Fill;
+			_panelConditionViews.Location=new System.Drawing.Point(0, 0);
+			_panelConditionViews.Name="_panelConditionViews";
+			_panelConditionViews.Size=new System.Drawing.Size(884, 488);
+			_panelConditionViews.TabIndex=1;
 			// 
 			// CustomizeQASpecForm
 			// 
-			this.AcceptButton = this._buttonOK;
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.CancelButton = this._buttonCancel;
-			this.ClientSize = new System.Drawing.Size(984, 761);
-			this.Controls.Add(this._statusStrip);
-			this.Controls.Add(this._splitContainerSpecification);
-			this.Controls.Add(this._textBoxDescription);
-			this.Controls.Add(this._labelDescription);
-			this.Controls.Add(this._textBoxSpecification);
-			this.Controls.Add(this._labelSpecification);
-			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
-			this.KeyPreview = true;
-			this.MinimumSize = new System.Drawing.Size(700, 500);
-			this.Name = "CustomizeQASpecForm";
-			this.ShowInTaskbar = false;
-			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "Customize Quality Specification";
-			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.CustomizeQASpecForm_FormClosed);
-			this.Load += new System.EventHandler(this.CustomizeQASpecForm_Load);
-			this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.CustomizeQASpecForm_KeyDown);
-			this._splitContainerSpecification.Panel1.ResumeLayout(false);
-			this._splitContainerSpecification.Panel2.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this._splitContainerSpecification)).EndInit();
-			this._splitContainerSpecification.ResumeLayout(false);
-			this._splitContainerConditions.Panel1.ResumeLayout(false);
-			this._splitContainerConditions.Panel2.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this._splitContainerConditions)).EndInit();
-			this._splitContainerConditions.ResumeLayout(false);
-			this._groupBoxConditions.ResumeLayout(false);
-			this._groupBoxConditions.PerformLayout();
-			this._panelConditions.ResumeLayout(false);
-			this._toolStripConditionList.ResumeLayout(false);
-			this._toolStripConditionList.PerformLayout();
-			this._groupBoxSelected.ResumeLayout(false);
-			this._groupBoxSelected.PerformLayout();
-			((System.ComponentModel.ISupportInitialize)(this._dataGridViewEnabledConditions)).EndInit();
-			((System.ComponentModel.ISupportInitialize)(this._bindingSourceEnabledConditions)).EndInit();
-			this._groupBoxSelectedParameters.ResumeLayout(false);
-			this._splitContainer.Panel1.ResumeLayout(false);
-			this._splitContainer.Panel2.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this._splitContainer)).EndInit();
-			this._splitContainer.ResumeLayout(false);
-			this._tabControl.ResumeLayout(false);
-			this._tabPageParameterValues.ResumeLayout(false);
-			this._tabPageParameterValues.PerformLayout();
-			this._toolStrip.ResumeLayout(false);
-			this._toolStrip.PerformLayout();
-			this._tabPageTestDescriptor.ResumeLayout(false);
-			this.ResumeLayout(false);
-			this.PerformLayout();
+			AcceptButton=_buttonOK;
+			AutoScaleDimensions=new System.Drawing.SizeF(7F, 15F);
+			AutoScaleMode=System.Windows.Forms.AutoScaleMode.Font;
+			CancelButton=_buttonCancel;
+			ClientSize=new System.Drawing.Size(1148, 878);
+			Controls.Add(_splitContainerSpecification);
+			Controls.Add(_statusStrip);
+			Controls.Add(_panelTop);
+			FormBorderStyle=System.Windows.Forms.FormBorderStyle.SizableToolWindow;
+			KeyPreview=true;
+			Margin=new System.Windows.Forms.Padding(4, 3, 4, 3);
+			MinimumSize=new System.Drawing.Size(814, 571);
+			Name="CustomizeQASpecForm";
+			ShowInTaskbar=false;
+			StartPosition=System.Windows.Forms.FormStartPosition.CenterScreen;
+			Text="Customize Quality Specification";
+			FormClosed+=CustomizeQASpecForm_FormClosed;
+			Load+=CustomizeQASpecForm_Load;
+			KeyDown+=CustomizeQASpecForm_KeyDown;
+			_splitContainerSpecification.Panel1.ResumeLayout(false);
+			_splitContainerSpecification.Panel2.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)_splitContainerSpecification).EndInit();
+			_splitContainerSpecification.ResumeLayout(false);
+			_splitContainerConditions.Panel1.ResumeLayout(false);
+			_splitContainerConditions.Panel2.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)_splitContainerConditions).EndInit();
+			_splitContainerConditions.ResumeLayout(false);
+			_groupBoxConditions.ResumeLayout(false);
+			_groupBoxConditions.PerformLayout();
+			_panelConditions.ResumeLayout(false);
+			_toolStripConditionList.ResumeLayout(false);
+			_toolStripConditionList.PerformLayout();
+			_panelSelectedConditions.ResumeLayout(false);
+			_groupBoxSelected.ResumeLayout(false);
+			_groupBoxSelected.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)_dataGridViewEnabledConditions).EndInit();
+			((System.ComponentModel.ISupportInitialize)_bindingSourceEnabledConditions).EndInit();
+			_groupBoxSelectedParameters.ResumeLayout(false);
+			_splitContainer.Panel1.ResumeLayout(false);
+			_splitContainer.Panel2.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)_splitContainer).EndInit();
+			_splitContainer.ResumeLayout(false);
+			_tabControl.ResumeLayout(false);
+			_tabPageParameterValues.ResumeLayout(false);
+			_tabPageParameterValues.PerformLayout();
+			_toolStrip.ResumeLayout(false);
+			_toolStrip.PerformLayout();
+			_tabPageTestDescriptor.ResumeLayout(false);
+			_mainSplitterBottomPanel.ResumeLayout(false);
+			_panelTop.ResumeLayout(false);
+			_panelTop.PerformLayout();
+			_panelConditionViews.ResumeLayout(false);
+			ResumeLayout(false);
+			PerformLayout();
+		}
 
-        }
+		#endregion
 
-        #endregion
-
-        private global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx _splitContainerConditions;
-        private System.Windows.Forms.GroupBox _groupBoxConditions;
-        private System.Windows.Forms.GroupBox _groupBoxSelected;
-        private System.Windows.Forms.TextBox _textBoxDescription;
-        private System.Windows.Forms.Label _labelDescription;
-        private System.Windows.Forms.TextBox _textBoxSpecification;
-        private System.Windows.Forms.Label _labelSpecification;
-        private System.Windows.Forms.Button _buttonOK;
-        private System.Windows.Forms.Button _buttonCancel;
-        private System.Windows.Forms.ToolTip _toolTips;
+		private global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx _splitContainerConditions;
+		private System.Windows.Forms.GroupBox _groupBoxConditions;
+		private System.Windows.Forms.GroupBox _groupBoxSelected;
+		private System.Windows.Forms.TextBox _textBoxDescription;
+		private System.Windows.Forms.Label _labelDescription;
+		private System.Windows.Forms.TextBox _textBoxSpecification;
+		private System.Windows.Forms.Label _labelSpecification;
+		private System.Windows.Forms.Button _buttonOK;
+		private System.Windows.Forms.Button _buttonCancel;
+		private System.Windows.Forms.ToolTip _toolTips;
 		private System.Windows.Forms.GroupBox _groupBoxSelectedParameters;
-        private System.Windows.Forms.BindingSource _bindingSourceEnabledConditions;
+		private System.Windows.Forms.BindingSource _bindingSourceEnabledConditions;
 		private System.Windows.Forms.Label _labelEnabledConditions;
 		private global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx _splitContainerSpecification;
 		private QualityConditionControl _qualityConditionControl;
-    	private TestDescriptorControl _testDescriptorControl;
+		private TestDescriptorControl _testDescriptorControl;
 		private global::ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView _dataGridViewEnabledConditions;
 		private System.Windows.Forms.StatusStrip _statusStrip;
 		private global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx _splitContainer;
@@ -757,5 +809,9 @@ namespace ProSuite.UI.QA.Customize
 		private System.Windows.Forms.ToolStripButton _toolStripButtonStopConditions;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
 		private System.Windows.Forms.ToolStripButton _toolStripButtonReset;
+		private System.Windows.Forms.Panel _panelTop;
+		private System.Windows.Forms.Panel _mainSplitterBottomPanel;
+		private System.Windows.Forms.Panel _panelSelectedConditions;
+		private System.Windows.Forms.Panel _panelConditionViews;
 	}
 }

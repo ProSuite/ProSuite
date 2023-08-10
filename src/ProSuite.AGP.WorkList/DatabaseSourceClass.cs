@@ -16,21 +16,17 @@ namespace ProSuite.AGP.WorkList
 
 		public DatabaseSourceClass(GdbTableIdentity identity,
 		                           [NotNull] WorkListStatusSchema statusSchema,
-		                           [NotNull] IAttributeReader attributeReader) : base(identity)
+		                           [NotNull] IAttributeReader attributeReader) : base(identity, attributeReader)
 		{
 			Assert.ArgumentNotNull(statusSchema, nameof(statusSchema));
 			Assert.ArgumentNotNull(attributeReader, nameof(attributeReader));
 
 			_statusSchema = statusSchema;
-			AttributeReader = attributeReader;
 		}
 
 		[NotNull]
 		public string StatusFieldName => _statusSchema.FieldName;
-
-		[NotNull]
-		public IAttributeReader AttributeReader { get; }
-
+		
 		public WorkItemStatus GetStatus([NotNull] Row row)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
@@ -62,8 +58,8 @@ namespace ProSuite.AGP.WorkList
 				return WorkItemStatus.Done;
 			}
 
-			_msg.Debug(
-				$"Unknown {nameof(WorkItemStatus)} value {value}, return {nameof(WorkItemStatus.Todo)}");
+			_msg.VerboseDebug(() => $"Unknown {nameof(WorkItemStatus)} value {value}, " +
+			                        $"return {nameof(WorkItemStatus.Todo)}");
 
 			return WorkItemStatus.Todo;
 		}

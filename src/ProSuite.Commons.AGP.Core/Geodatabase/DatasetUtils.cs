@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using Geodatabase = ArcGIS.Core.Data.Geodatabase;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
@@ -96,6 +99,24 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
 			return featureClass.GetDefinition().GetShapeType();
+		}
+
+		public static IEnumerable<Table> OpenTables(ArcGIS.Core.Data.Geodatabase geodatabase,
+		                                            ICollection<string> tableNames)
+		{
+			foreach (string name in geodatabase.GetDefinitions<TableDefinition>()
+			                                   .Select(definition => definition.GetName())
+			                                   .Where(tableNames.Contains))
+			{
+				yield return geodatabase.OpenDataset<Table>(name);
+			}
+
+			foreach (string name in geodatabase.GetDefinitions<FeatureClassDefinition>()
+			                                   .Select(definition => definition.GetName())
+			                                   .Where(tableNames.Contains))
+			{
+				yield return geodatabase.OpenDataset<Table>(name);
+			}
 		}
 	}
 }

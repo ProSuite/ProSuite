@@ -335,8 +335,16 @@ namespace ProSuite.Microservices.Client.QA
 
 			result.ClassDescriptor = ToClassDescriptorMsg(instanceDescriptor);
 
-			// -1 in case of TestFactory
-			result.Constructor = instanceDescriptor.ConstructorId;
+			// -1 in case of TestFactory! It can be 0 in the instanceDescriptor.ConstructorId, see TestFactoryDescriptor setter of TestDescriptor (!)
+			if (instanceDescriptor is TestDescriptor testDescriptor &&
+			    testDescriptor.TestFactoryDescriptor != null)
+			{
+				result.Constructor = -1;
+			}
+			else
+			{
+				result.Constructor = instanceDescriptor.ConstructorId;
+			}
 
 			return result;
 		}

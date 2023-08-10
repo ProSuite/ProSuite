@@ -35,7 +35,31 @@ namespace ProSuite.AGP.QA
 		}
 
 		public override async Task<ServiceCallStatus> VerifyPerimeter(
-			IQualitySpecificationReference qualitySpecification,
+			IQualitySpecificationReference qualitySpecificationRef,
+			Geometry perimeter,
+			ProjectWorkspace projectWorkspace,
+			QualityVerificationProgressTracker progress,
+			string resultsPath)
+		{
+			Assert.ArgumentNotNull(qualitySpecificationRef, nameof(qualitySpecificationRef));
+			Assert.ArgumentNotNull(perimeter, nameof(perimeter));
+			Assert.ArgumentNotNull(projectWorkspace, nameof(projectWorkspace));
+			Assert.ArgumentNotNull(progress, nameof(progress));
+
+			QualitySpecificationReference specificationRef =
+				qualitySpecificationRef as QualitySpecificationReference;
+
+			Assert.NotNull(specificationRef, "Unexpected type of quality specification");
+
+			VerificationRequest request =
+				await CreateVerificationRequest(specificationRef, perimeter, projectWorkspace,
+				                                resultsPath);
+
+			return await QAUtils.Verify(Assert.NotNull(_client.QaGrpcClient), request, progress);
+		}
+
+		public override async Task<ServiceCallStatus> VerifyPerimeter(
+			QualitySpecification qualitySpecification,
 			Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
 			QualityVerificationProgressTracker progress,
@@ -46,20 +70,15 @@ namespace ProSuite.AGP.QA
 			Assert.ArgumentNotNull(projectWorkspace, nameof(projectWorkspace));
 			Assert.ArgumentNotNull(progress, nameof(progress));
 
-			QualitySpecificationReference specification =
-				qualitySpecification as QualitySpecificationReference;
-
-			Assert.NotNull(specification, "Unexpected type of quality specification");
-
 			VerificationRequest request =
-				await CreateVerificationRequest(specification, perimeter, projectWorkspace,
+				await CreateVerificationRequest(qualitySpecification, perimeter, projectWorkspace,
 				                                resultsPath);
 
 			return await QAUtils.Verify(Assert.NotNull(_client.QaGrpcClient), request, progress);
 		}
 
 		public override async Task<ServiceCallStatus> VerifySelection(
-			IQualitySpecificationReference qualitySpecification,
+			IQualitySpecificationReference qualitySpecificationRef,
 			IList<Row> objectsToVerify,
 			Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
@@ -67,7 +86,7 @@ namespace ProSuite.AGP.QA
 			string resultsPath)
 		{
 			QualitySpecificationReference specification =
-				qualitySpecification as QualitySpecificationReference;
+				qualitySpecificationRef as QualitySpecificationReference;
 
 			Assert.NotNull(specification, "Unexpected type of quality specification");
 
@@ -78,8 +97,27 @@ namespace ProSuite.AGP.QA
 			return await QAUtils.Verify(Assert.NotNull(_client.QaGrpcClient), request, progress);
 		}
 
+		public override async Task<ServiceCallStatus> VerifySelection(
+			QualitySpecification qualitySpecification,
+			IList<Row> objectsToVerify,
+			Geometry perimeter,
+			ProjectWorkspace projectWorkspace,
+			QualityVerificationProgressTracker progress,
+			string resultsPath)
+		{
+			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
+			Assert.ArgumentNotNull(projectWorkspace, nameof(projectWorkspace));
+			Assert.ArgumentNotNull(progress, nameof(progress));
+
+			VerificationRequest request =
+				await CreateVerificationRequest(qualitySpecification, perimeter, projectWorkspace,
+				                                resultsPath, objectsToVerify);
+
+			return await QAUtils.Verify(Assert.NotNull(_client.QaGrpcClient), request, progress);
+		}
+
 		private async Task<VerificationRequest> CreateVerificationRequest(
-			[NotNull] QualitySpecificationReference specification,
+			[NotNull] IQualitySpecificationReference specificationRef,
 			[CanBeNull] Geometry perimeter,
 			[NotNull] ProjectWorkspace projectWorkspace,
 			[CanBeNull] string resultsPath,
@@ -92,13 +130,55 @@ namespace ProSuite.AGP.QA
 					() =>
 					{
 						var result = QAUtils.CreateRequest(projectWorkspace, _contextTypePerimeter,
-						                                   projectName, specification, perimeter);
+						                                   projectName, specificationRef.Id,
+						                                   perimeter);
 
 						QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
 
 						return result;
 					});
 
+			SetPathParameters(resultsPath, request);
+
+			QAUtils.SetVerificationParameters(
+				request, GetTileSize(projectWorkspace), false, true, false);
+
+			return request;
+		}
+
+		private async Task<VerificationRequest> CreateVerificationRequest(
+			[NotNull] QualitySpecification specification,
+			[CanBeNull] Geometry perimeter,
+			[NotNull] ProjectWorkspace projectWorkspace,
+			[CanBeNull] string resultsPath,
+			[CanBeNull] IList<Row> objectsToVerify = null)
+		{
+			string projectName = Project.Current.Name;
+
+			VerificationRequest request =
+				await QueuedTask.Run(
+					() =>
+					{
+						VerificationRequest result =
+							QAUtils.CreateRequest(
+								projectWorkspace, _contextTypePerimeter, projectName, specification,
+								perimeter);
+
+						QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
+
+						return result;
+					});
+
+			SetPathParameters(resultsPath, request);
+
+			QAUtils.SetVerificationParameters(
+				request, GetTileSize(projectWorkspace), false, true, false);
+
+			return request;
+		}
+
+		private void SetPathParameters(string resultsPath, VerificationRequest request)
+		{
 			if (! string.IsNullOrEmpty(resultsPath))
 			{
 				string htmlReport = Path.Combine(resultsPath, HtmlReportName);
@@ -109,12 +189,6 @@ namespace ProSuite.AGP.QA
 				request.Parameters.VerificationReportPath = xmlReport;
 				request.Parameters.IssueFileGdbPath = gdbDir;
 			}
-
-			QAUtils.SetVerificationParameters(
-				request, GetTileSize(projectWorkspace), false, true,
-				false);
-
-			return request;
 		}
 
 		private double GetTileSize(ProjectWorkspace projectWorkspace)

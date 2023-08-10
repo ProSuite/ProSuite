@@ -10,6 +10,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
 	public static class WorkspaceUtils
 	{
+		public static bool IsSameDatastore(Datastore datastore1, Datastore datastore2)
+		{
+			// todo daro check ProProcessingUtils
+			if (ReferenceEquals(datastore1, datastore2)) return true;
+			if (Equals(datastore1.Handle, datastore2.Handle)) return true;
+
+			return false;
+		}
+
 		[CanBeNull]
 		public static Version GetDefaultVersion([NotNull] Datastore datastore)
 		{
