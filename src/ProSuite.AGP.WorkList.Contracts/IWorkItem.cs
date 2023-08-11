@@ -14,6 +14,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 		bool Visited { get; set; }
 		GdbRowIdentity Proxy { get; }
 		WorkItemStatus Status { get; set; }
+
+		[CanBeNull]
 		Envelope Extent { get; }
 
 		[CanBeNull]

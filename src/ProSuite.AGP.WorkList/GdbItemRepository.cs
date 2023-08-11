@@ -197,23 +197,22 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			// Todo daro: check recycle
-			foreach (Feature feature in GdbQueryUtils.GetRows<Feature>(
-				         table, filter, recycle))
+			foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
 			{
-				yield return feature;
+				yield return row;
 			}
 		}
 
 		[CanBeNull]
 		protected virtual WorkListStatusSchema CreateStatusSchemaCore(
-			[NotNull] FeatureClassDefinition definition)
+			[NotNull] TableDefinition definition)
 		{
 			return null;
 		}
 
 		[CanBeNull]
 		protected virtual IAttributeReader CreateAttributeReaderCore(
-			[NotNull] FeatureClassDefinition definition)
+			[NotNull] TableDefinition definition)
 		{
 			return null;
 		}
@@ -222,25 +221,25 @@ namespace ProSuite.AGP.WorkList
 		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row, ISourceClass source);
 
 		[NotNull]
-		protected abstract ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
-		                                                      [CanBeNull]
-		                                                      IAttributeReader attributeReader,
-		                                                      [CanBeNull]
-		                                                      WorkListStatusSchema statusSchema);
+		protected abstract ISourceClass CreateSourceClassCore(
+			GdbTableIdentity identity,
+			[CanBeNull] IAttributeReader attributeReader,
+			[CanBeNull] WorkListStatusSchema statusSchema);
 
 		private void RegisterDatasets(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase)
 		{
 			foreach (var pair in tablesByGeodatabase)
 			{
 				Geodatabase geodatabase = pair.Key;
-				var definitions = geodatabase.GetDefinitions<FeatureClassDefinition>()
-				                             .ToLookup(d => d.GetName());
 
 				foreach (Table table in pair.Value)
 				{
 					var identity = new GdbTableIdentity(table);
 
-					FeatureClassDefinition definition = definitions[identity.Name].FirstOrDefault();
+					TableDefinition definition =
+						table is FeatureClass
+							? geodatabase.GetDefinition<FeatureClassDefinition>(identity.Name)
+							: geodatabase.GetDefinition<TableDefinition>(identity.Name);
 
 					ISourceClass sourceClass = CreateSourceClass(identity, definition);
 
@@ -249,6 +248,7 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
+		// todo daro rename
 		[CanBeNull]
 		protected Table OpenFeatureClass([NotNull] ISourceClass sourceClass)
 		{
@@ -257,25 +257,14 @@ namespace ProSuite.AGP.WorkList
 				       : null;
 		}
 
-		//[CanBeNull]
-		//protected Table OpenFeatureClass2([NotNull] ISourceClass sourceClass)
-		//{
-		//	return GeodatabaseBySourceClasses.TryGetValue(sourceClass, out Geodatabase gdb)
-		//		       ? sourceClass.OpenFeatureClass(gdb)
-		//		       : null;
-		//}
-
 		private ISourceClass CreateSourceClass(GdbTableIdentity identity,
-		                                       FeatureClassDefinition definition)
+		                                       TableDefinition definition)
 		{
 			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
 
 			WorkListStatusSchema statusSchema = CreateStatusSchemaCore(definition);
-
-			ISourceClass sourceClass =
-				CreateSourceClassCore(identity, attributeReader, statusSchema);
-
-			return sourceClass;
+			
+			return CreateSourceClassCore(identity, attributeReader, statusSchema);
 		}
 
 		#region unused
@@ -283,21 +272,6 @@ namespace ProSuite.AGP.WorkList
 		public int GetCount(QueryFilter filter = null)
 		{
 			throw new NotImplementedException();
-		}
-
-		public int Count(WorkItemVisibility visibility)
-		{
-			int count = 0;
-
-			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys)
-			{
-				//string whereClause = sourceClass.GetQuery(visibility);
-				//var filter = new QueryFilter {WhereClause = whereClause};
-
-				//count += GetRowsCore(sourceClass, filter, recycle: true).Count();
-			}
-
-			return count;
 		}
 
 		#endregion

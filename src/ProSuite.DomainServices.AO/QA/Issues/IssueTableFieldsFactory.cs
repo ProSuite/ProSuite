@@ -1,10 +1,20 @@
 using System.Collections.Generic;
+using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DomainServices.AO.QA.Issues
 {
+	// TODO: Consider refactoring into proper, non-static, AO-free Fields*Definition*Factory as
+	// opposed to the FieldFactory
+	// It could then go to DomainModel.Core
 	public static class IssueTableFieldsFactory
 	{
+		private const string _correctionStatusDomainName = "CORRECTION_STATUS_CD";
+
+		public static bool AddStatusField { get; set; }
+
 		[NotNull]
 		public static IIssueTableFieldManagement GetIssueTableFields(
 			bool addExceptionFields,
@@ -112,6 +122,16 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			yield return Map(IssueAttribute.IssueAssignment,
 			                 new TextFieldDefintion("IssueAssignment", 255,
 			                                        IssueTableFieldAliases.IssueAssignment));
+
+			if (AddStatusField)
+			{
+				yield return Map(
+					IssueAttribute.CorrectionStatus,
+					new IntegerFieldDefinition("Status")
+					{
+						Domain = GetCorrectionStatusDomain()
+					});
+			}
 
 			if (! addExceptionFields)
 			{
@@ -275,6 +295,19 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		                                          [NotNull] FieldDefinition definition)
 		{
 			return new IssueTableFields.Field(attribute, definition);
+		}
+
+		private static CodedValueDomainDefinition GetCorrectionStatusDomain()
+		{
+			return new CodedValueDomainDefinition(
+				_correctionStatusDomainName,
+				esriFieldType.esriFieldTypeInteger,
+				new List<CodedValue>
+				{
+					new CodedValue((int) IssueCorrectionStatus.NotCorrected,
+					               "Not Corrected"),
+					new CodedValue((int) IssueCorrectionStatus.Corrected, "Corrected")
+				});
 		}
 	}
 }

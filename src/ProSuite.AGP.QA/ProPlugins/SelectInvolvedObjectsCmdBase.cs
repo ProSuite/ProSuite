@@ -78,8 +78,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 					issueObject.GetTable().GetDefinition().FindField("InvolvedObjects");
 
 				string involvedString = (string) issueObject[fieldIndex];
-
-				var involvedTables = IssueUtils.ParseInvolvedTables(involvedString);
+				
+				var involvedTables =
+					IssueUtils.ParseInvolvedTables(involvedString, issueObject is Feature);
 				foreach (var involved in involvedTables)
 				{
 					if (! involvedRows.ContainsKey(involved.TableName))
@@ -94,11 +95,14 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			_msg.DebugFormat("Involved rows found from {0} object classes.", involvedRows.Count);
 
+			// todo daro see IssueWorkListViewModel.GetInvolvedMapMembersByLayer
+			// it is the same problem.
+
 			//select features or rows based on involved rows
 			foreach (KeyValuePair<string, List<long>> keyValuePair in involvedRows)
 			{
-				FeatureLayer layer =
-					MapUtils.GetFeatureLayers<FeatureLayer>(
+				BasicFeatureLayer layer =
+					MapUtils.GetFeatureLayers<BasicFeatureLayer>(
 						lyr => string.Equals(
 							lyr.GetFeatureClass().GetName(),
 							keyValuePair.Key,

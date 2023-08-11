@@ -85,12 +85,12 @@ namespace ProSuite.UI.QA.Customize
 			public ICollection<QualitySpecificationElement> GetFilteredElements()
 			{
 				return _qualitySpecification == null
-					       ? new List<QualitySpecificationElement>()
-					       : _qualitySpecification.Elements;
+						   ? new List<QualitySpecificationElement>()
+						   : _qualitySpecification.Elements;
 			}
 
 			public void SetSelectedElements(ICollection<QualitySpecificationElement> selected,
-			                                bool forceVisible)
+											bool forceVisible)
 			{
 				TreeViewControl.SetSelectedElements(selected, forceVisible);
 			}
@@ -198,14 +198,14 @@ namespace ProSuite.UI.QA.Customize
 
 			ComboBox.ObjectCollection items = _toolStripComboBoxView.Items;
 			items.Add(new DisplayModeItem("Quality Conditions",
-			                              DisplayMode.QualityConditionList));
+										  DisplayMode.QualityConditionList));
 			items.Add(new DisplayModeItem("Datasets", DisplayMode.DatasetList));
 			// items.Add(new DisplayModeItem("Quality Conditions as Treeview", DisplayMode.Plain));
 			items.Add(new DisplayModeItem("Quality Conditions by Dataset", DisplayMode.Layer));
 			items.Add(new DisplayModeItem("Quality Conditions by Involved Datasets",
-			                              DisplayMode.Hierarchic));
+										  DisplayMode.Hierarchic));
 			items.Add(new DisplayModeItem("Quality Conditions by Category",
-			                              DisplayMode.Category));
+										  DisplayMode.Category));
 
 			_formStateManager = new FormStateManager<CustomizeQASpecFormState>(this);
 
@@ -361,52 +361,52 @@ namespace ProSuite.UI.QA.Customize
 		private void CustomizeQASpecForm_KeyDown(object sender, KeyEventArgs e)
 		{
 			Try(nameof(CustomizeQASpecForm_KeyDown),
-			    () =>
-			    {
-				    if (e.KeyCode == Keys.Escape)
-				    {
-					    e.Handled = true;
+				() =>
+				{
+					if (e.KeyCode == Keys.Escape)
+					{
+						e.Handled = true;
 
-					    DialogResult = DialogResult.Cancel;
-					    Close();
-				    }
-			    }, true);
+						DialogResult = DialogResult.Cancel;
+						Close();
+					}
+				}, true);
 		}
 
 		private void _toolStripButtonWarningConditions_CheckedChanged(object sender,
 			EventArgs e)
 		{
 			Try(nameof(_toolStripButtonWarningConditions_CheckedChanged),
-			    () =>
-			    {
-				    ChangeEnabledElements(
-					    () => ApplyCheckedChanged(((ToolStripButton) sender).Checked,
-					                              QualityConditionType.Allowed));
-			    });
+				() =>
+				{
+					ChangeEnabledElements(
+						() => ApplyCheckedChanged(((ToolStripButton)sender).Checked,
+												  QualityConditionType.Allowed));
+				});
 		}
 
 		private void _toolStripButtonErrorConditions_CheckedChanged(object sender,
 			EventArgs e)
 		{
 			Try(nameof(_toolStripButtonErrorConditions_CheckedChanged),
-			    () =>
-			    {
-				    ChangeEnabledElements(
-					    () => ApplyCheckedChanged(((ToolStripButton) sender).Checked,
-					                              QualityConditionType.ContinueOnError));
-			    });
+				() =>
+				{
+					ChangeEnabledElements(
+						() => ApplyCheckedChanged(((ToolStripButton)sender).Checked,
+												  QualityConditionType.ContinueOnError));
+				});
 		}
 
 		private void _toolStripButtonStopConditions_CheckedChanged(object sender,
 			EventArgs e)
 		{
 			Try(nameof(_toolStripButtonStopConditions_CheckedChanged),
-			    () =>
-			    {
-				    ChangeEnabledElements(
-					    () => ApplyCheckedChanged(((ToolStripButton) sender).Checked,
-					                              QualityConditionType.StopOnError));
-			    });
+				() =>
+				{
+					ChangeEnabledElements(
+						() => ApplyCheckedChanged(((ToolStripButton)sender).Checked,
+												  QualityConditionType.StopOnError));
+				});
 		}
 
 		private void _buttonOK_Click(object sender, EventArgs e)
@@ -426,31 +426,31 @@ namespace ProSuite.UI.QA.Customize
 			EventArgs e)
 		{
 			Try(nameof(_dataGridViewEnabledConditions_SelectionChanged),
-			    () =>
-			    {
-				    if (_setting)
-				    {
-					    return;
-				    }
+				() =>
+				{
+					if (_setting)
+					{
+						return;
+					}
 
-				    SetSelectionFromEnabledConditions(forceVisibleInConditionsView: true);
-			    });
+					SetSelectionFromEnabledConditions(forceVisibleInConditionsView: true);
+				});
 		}
 
 		private void _groupBoxSelectedParameters_EnabledChanged(object sender, EventArgs e)
 		{
 			Try(nameof(_groupBoxSelectedParameters_EnabledChanged),
-			    () =>
-			    {
-				    if (_groupBoxSelectedParameters.Enabled)
-				    {
-					    return;
-				    }
+				() =>
+				{
+					if (_groupBoxSelectedParameters.Enabled)
+					{
+						return;
+					}
 
-				    _qualityConditionControl.QualityCondition = null;
-				    _qualityConditionTableViewControl.SetQualityCondition(null);
-				    _testDescriptorControl.TestDescriptor = null;
-			    }, true);
+					_qualityConditionControl.QualityCondition = null;
+					_qualityConditionTableViewControl.SetQualityCondition(null);
+					_testDescriptorControl.TestDescriptor = null;
+				}, true);
 		}
 
 		private void _toolStripButtonEnableAll_Click(object sender, EventArgs e)
@@ -523,13 +523,13 @@ namespace ProSuite.UI.QA.Customize
 				RenderEnabledElements();
 
 				foreach (QualitySpecificationElement elem in
-				         _conditionsView.GetFilteredElements())
+						 _conditionsView.GetFilteredElements())
 				{
 					if (elem.AllowErrors)
 					{
 						RenderCheckState(_toolStripButtonWarningConditions, elem);
 					}
-					else if (! elem.StopOnError)
+					else if (!elem.StopOnError)
 					{
 						RenderCheckState(_toolStripButtonErrorConditions, elem);
 					}
@@ -560,11 +560,11 @@ namespace ProSuite.UI.QA.Customize
 		{
 			List<SpecificationDataset> list =
 				_qualitySpecification.Elements
-				                     .Where(e => e.Enabled && e.QualityCondition != null)
-				                     .OrderBy(e => e.QualityCondition.Name,
-				                              StringComparer.CurrentCulture)
-				                     .Select(e => new SpecificationDataset(e))
-				                     .ToList();
+									 .Where(e => e.Enabled && e.QualityCondition != null)
+									 .OrderBy(e => e.QualityCondition.Name,
+											  StringComparer.CurrentCulture)
+									 .Select(e => new SpecificationDataset(e))
+									 .ToList();
 
 			var bindList = new SortableBindingList<SpecificationDataset>(list);
 
@@ -581,9 +581,9 @@ namespace ProSuite.UI.QA.Customize
 		}
 
 		private void RenderCheckState([NotNull] ToolStripButton toolStripButton,
-		                              [NotNull] QualitySpecificationElement element)
+									  [NotNull] QualitySpecificationElement element)
 		{
-			if (! element.Enabled)
+			if (!element.Enabled)
 			{
 				if (toolStripButton.Tag == null)
 				{
@@ -736,16 +736,16 @@ namespace ProSuite.UI.QA.Customize
 			var selectedElements = new HashSet<QualitySpecificationElement>();
 
 			foreach (DataGridViewRow selectedRow in
-			         _dataGridViewEnabledConditions.SelectedRows)
+					 _dataGridViewEnabledConditions.SelectedRows)
 			{
 				selectedElements.Add(CustomizeUtils.GetSpecificationDataset(selectedRow)
-				                                   .QualitySpecificationElement);
+												   .QualitySpecificationElement);
 			}
 
 			_selectedElements = selectedElements;
 
 			SynchronizeConditionsView(_selectedElements,
-			                          forceVisible: forceVisibleInConditionsView);
+									  forceVisible: forceVisibleInConditionsView);
 
 			RenderSelectedElement();
 		}
@@ -760,7 +760,7 @@ namespace ProSuite.UI.QA.Customize
 		private void RenderSelectedElement()
 		{
 			QualitySpecificationElement specificationElement =
-				GetSingleSelectedSpecificationDataset();
+				GetSingleSelectedSpecificationElement();
 
 			_msg.VerboseDebug(
 				() =>
@@ -778,7 +778,7 @@ namespace ProSuite.UI.QA.Customize
 			{
 				RenderElement(specificationElement);
 				_groupBoxSelectedParameters.Enabled = true;
-				_toolStripButtonCustomizeTestParameterValues.Enabled = true;
+				_toolStripButtonCustomizeTestParameterValues.Enabled = _testParameterDatasetProvider != null;
 			}
 		}
 
@@ -797,11 +797,11 @@ namespace ProSuite.UI.QA.Customize
 		}
 
 		[CanBeNull]
-		private QualitySpecificationElement GetSingleSelectedSpecificationDataset()
+		private QualitySpecificationElement GetSingleSelectedSpecificationElement()
 		{
 			return _selectedElements.Count == 1
-				       ? _selectedElements.First()
-				       : null;
+					   ? _selectedElements.First()
+					   : null;
 		}
 
 		private void CheckAll()
@@ -825,7 +825,7 @@ namespace ProSuite.UI.QA.Customize
 		private void ApplyCheckedChanged(bool check, QualityConditionType type)
 		{
 			foreach (QualitySpecificationElement element in
-			         _conditionsView.GetFilteredElements())
+					 _conditionsView.GetFilteredElements())
 			{
 				if (element.AllowErrors)
 				{
@@ -861,75 +861,76 @@ namespace ProSuite.UI.QA.Customize
 			EventArgs e)
 		{
 			Try(nameof(_toolStripButtonCustomizeTestParameterValues_Click),
-			    () =>
-			    {
-				    QualitySpecificationElement specificationElement =
-					    GetSingleSelectedSpecificationDataset();
-				    if (specificationElement?.QualityCondition == null)
-				    {
-					    return;
-				    }
+				() =>
+				{
+					QualitySpecificationElement specificationElement =
+						GetSingleSelectedSpecificationElement();
+					if (specificationElement?.QualityCondition == null)
+					{
+						return;
+					}
 
-				    QualityCondition editCopy =
-					    (QualityCondition) specificationElement.QualityCondition.CreateCopy();
+					QualityCondition editCopy =
+						(QualityCondition)specificationElement.QualityCondition.CreateCopy();
 
-				    using (var form = new TestParameterValuesEditorForm())
-				    {
-					    form.SetQualityCondition(editCopy, _testParameterDatasetProvider);
-					    if (form.ShowDialog(this) != DialogResult.OK)
-					    {
-						    return;
-					    }
-				    }
+					using (var form = new TestParameterValuesEditorForm())
+					{
+						form.SetQualityCondition(editCopy, _testParameterDatasetProvider);
+						if (form.ShowDialog(this) != DialogResult.OK)
+						{
+							return;
+						}
+					}
 
-				    specificationElement.QualityCondition.UpdateParameterValuesFrom(editCopy);
+					specificationElement.QualityCondition.UpdateParameterValuesFrom(editCopy);
 
-				    RenderElement(specificationElement);
-				    Refresh();
-			    });
+					RenderElement(specificationElement);
+					Refresh();
+				});
 		}
 
 		private void _toolStripButtonReset_Click(object sender, EventArgs e)
 		{
 			Try(nameof(_toolStripButtonReset_Click),
-			    () =>
-			    {
-				    QualitySpecificationElement specificationElement =
-					    GetSingleSelectedSpecificationDataset();
-				    if (specificationElement?.QualityCondition == null)
-				    {
-					    return;
-				    }
+				() =>
+				{
+					QualitySpecificationElement specificationElement =
+						GetSingleSelectedSpecificationElement();
 
-				    foreach (QualitySpecificationElement element in
-				             _qualitySpecification.BaseSpecification.GetCustomizable().Elements)
-				    {
-					    if (element.QualityCondition.Uuid !=
-					        specificationElement.QualityCondition.Uuid)
-					    {
-						    continue;
-					    }
+					if (specificationElement?.QualityCondition == null)
+					{
+						return;
+					}
 
-					    specificationElement.QualityCondition.UpdateParameterValuesFrom(
-						    element.QualityCondition, updateIsOriginal: true);
-				    }
+					foreach (QualitySpecificationElement element in
+							 _qualitySpecification.BaseSpecification.GetCustomizable().Elements)
+					{
+						if (element.QualityCondition.Uuid !=
+							specificationElement.QualityCondition.Uuid)
+						{
+							continue;
+						}
 
-				    RenderElement(specificationElement);
-				    Refresh();
-			    });
+						specificationElement.QualityCondition.UpdateParameterValuesFrom(
+							element.QualityCondition, updateIsOriginal: true);
+					}
+
+					RenderElement(specificationElement);
+					Refresh();
+				});
 		}
 
 		private void _toolStripComboBoxView_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			Try(nameof(_toolStripComboBoxView_SelectedIndexChanged),
-			    () =>
-			    {
-				    var item = _toolStripComboBoxView.SelectedItem as DisplayModeItem;
-				    if (item != null)
-				    {
-					    Render(item.Mode);
-				    }
-			    });
+				() =>
+				{
+					var item = _toolStripComboBoxView.SelectedItem as DisplayModeItem;
+					if (item != null)
+					{
+						Render(item.Mode);
+					}
+				});
 		}
 
 		private void _dataGridViewEnabledConditions_CellFormatting(
@@ -937,17 +938,17 @@ namespace ProSuite.UI.QA.Customize
 			DataGridViewCellFormattingEventArgs e)
 		{
 			Try(nameof(_dataGridViewEnabledConditions_CellFormatting),
-			    () =>
-			    {
-				    Font font = CustomizeUtils.GetFont(
-					    GetSpecificationDataset((DataGridView) sender, e)?.QualityCondition,
-					    e.CellStyle.Font);
+				() =>
+				{
+					Font font = CustomizeUtils.GetFont(
+						GetSpecificationDataset((DataGridView)sender, e)?.QualityCondition,
+						e.CellStyle.Font);
 
-				    if (font != null)
-				    {
-					    e.CellStyle.Font = font;
-				    }
-			    }, true);
+					if (font != null)
+					{
+						e.CellStyle.Font = font;
+					}
+				}, true);
 		}
 
 		[CanBeNull]
@@ -963,7 +964,7 @@ namespace ProSuite.UI.QA.Customize
 		}
 
 		private static void Try([NotNull] string method, [NotNull] Action procedure,
-		                        bool suppressMessageBox = false)
+								bool suppressMessageBox = false)
 		{
 			try
 			{

@@ -1,4 +1,5 @@
 using System;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 
@@ -10,16 +11,20 @@ namespace ProSuite.DomainModel.AGP.DataModel
 	public class BasicModel : DdxModel
 	{
 		public BasicModel(int ddxId,
-		                  [NotNull] string name,
-		                  bool elementNamesAreQualified = true) : base(name)
+		                  [NotNull] string name) : base(name)
 		{
 			Id = ddxId;
-
-			// TODO: Determine when datasets are added
-			ElementNamesAreQualified = elementNamesAreQualified;
 		}
 
 		public new int Id { get; }
+
+		protected override void DatasetAddedCore<T>(T dataset)
+		{
+			if (ModelElementNameUtils.IsQualifiedName(dataset.Name))
+			{
+				ElementNamesAreQualified = true;
+			}
+		}
 
 		#region Overrides of DdxModel
 

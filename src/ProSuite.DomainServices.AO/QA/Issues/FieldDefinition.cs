@@ -1,5 +1,4 @@
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -28,18 +27,13 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		public string Name { get; }
 
 		[NotNull]
-		private string AliasName { get; }
+		public string AliasName { get; }
 
-		private esriFieldType Type { get; }
+		public esriFieldType Type { get; }
 
-		private int Length { get; }
+		public int Length { get; }
 
-		[NotNull]
-		public IField CreateField()
-		{
-			return Type == esriFieldType.esriFieldTypeString
-				       ? FieldUtils.CreateTextField(Name, Length, AliasName)
-				       : FieldUtils.CreateField(Name, Type, AliasName);
-		}
+		[CanBeNull]
+		public DomainDefinition Domain { get; set; }
 	}
 }

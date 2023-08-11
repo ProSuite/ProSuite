@@ -68,7 +68,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return Search((QueryFilter) spatialQueryFilter);
 		}
 
-		private object[] GetValues([NotNull] IWorkItem item, IWorkItem current = null)
+		private static object[] GetValues([NotNull] IWorkItem item, IWorkItem current = null)
 		{
 			var values = new object[5];
 			values[0] = item.OID;
@@ -81,17 +81,25 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		private static PluginField[] GetSchema()
 		{
-			var fields = new List<PluginField>(8);
-			fields.Add(new PluginField("OBJECTID", "ObjectID", FieldType.OID));
-			fields.Add(new PluginField("STATUS", "Status", FieldType.Integer));
-			fields.Add(new PluginField("VISITED", "Visited", FieldType.Integer));
-			fields.Add(new PluginField("CURRENT", "Is Current", FieldType.Integer));
-			fields.Add(new PluginField("SHAPE", "Shape", FieldType.Geometry));
+			var fields = new List<PluginField>(8)
+			             {
+				             new PluginField("OBJECTID", "ObjectID", FieldType.OID),
+				             new PluginField("STATUS", "Status", FieldType.Integer),
+				             new PluginField("VISITED", "Visited", FieldType.Integer),
+				             new PluginField("CURRENT", "Is Current", FieldType.Integer),
+				             new PluginField("SHAPE", "Shape", FieldType.Geometry)
+			             };
 			return fields.ToArray();
 		}
 
-		private Polygon CreatePolygon(IWorkItem item)
+		[CanBeNull]
+		private static Polygon CreatePolygon(IWorkItem item)
 		{
+			if (item?.Extent == null)
+			{
+				return null;
+			}
+
 			Envelope extent = item.Extent;
 
 			if (UseExtent(item))

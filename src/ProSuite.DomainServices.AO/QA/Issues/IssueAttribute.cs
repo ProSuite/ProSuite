@@ -82,6 +82,8 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 		ExportedExceptionUsageCount,
 
-		ExportedExceptionObjectId
+		ExportedExceptionObjectId,
+
+		CorrectionStatus
 	}
 }

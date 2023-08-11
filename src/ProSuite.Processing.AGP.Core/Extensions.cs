@@ -13,12 +13,12 @@ namespace ProSuite.Processing.AGP.Core
 	{
 		public static IRowValues RowValues(this Row row)
 		{
-			return row == null ? null : new RowAdapter(row);
+			return row is null ? null : new RowAdapter(row);
 		}
 
 		public static IRowValues RowValues(this RowBuffer row)
 		{
-			return row == null ? null : new RowBufferAdapter(row);
+			return row is null ? null : new RowBufferAdapter(row);
 		}
 
 		#region FieldSetter & Co.
@@ -26,8 +26,8 @@ namespace ProSuite.Processing.AGP.Core
 		public static FieldSetter ValidateTargetFields(
 			this FieldSetter instance, FeatureClass featureClass, string parameterName)
 		{
-			if (instance == null) return null;
-			if (featureClass == null) return instance;
+			if (instance is null) return null;
+			if (featureClass is null) return instance;
 
 			try
 			{
@@ -44,7 +44,7 @@ namespace ProSuite.Processing.AGP.Core
 		public static StandardEnvironment DefineFields(
 			this StandardEnvironment env, Row row, string qualifier = null)
 		{
-			if (env == null)
+			if (env is null)
 				throw new ArgumentNullException(nameof(env));
 			return env.DefineFields(row.RowValues(), qualifier);
 		}
@@ -52,7 +52,7 @@ namespace ProSuite.Processing.AGP.Core
 		public static StandardEnvironment DefineFields(
 			this StandardEnvironment env, RowBuffer row, string qualifier = null)
 		{
-			if (env == null)
+			if (env is null)
 				throw new ArgumentNullException(nameof(env));
 			return env.DefineFields(row.RowValues(), qualifier);
 		}
@@ -60,7 +60,7 @@ namespace ProSuite.Processing.AGP.Core
 		public static void Execute(
 			this FieldSetter instance, Row row, IEvaluationEnvironment env, Stack<object> stack = null)
 		{
-			if (instance == null)
+			if (instance is null)
 				throw new ArgumentNullException(nameof(instance));
 			instance.Execute(row.RowValues(), env, stack);
 		}
@@ -68,7 +68,7 @@ namespace ProSuite.Processing.AGP.Core
 		public static void Execute(
 			this FieldSetter instance, RowBuffer row, IEvaluationEnvironment env, Stack<object> stack = null)
 		{
-			if (instance == null)
+			if (instance is null)
 				throw new ArgumentNullException(nameof(instance));
 			instance.Execute(row.RowValues(), env, stack);
 		}
@@ -99,13 +99,13 @@ namespace ProSuite.Processing.AGP.Core
 
 			public int FindField(string fieldName)
 			{
-				if (fieldName == null) return -1;
+				if (fieldName is null) return -1;
 				return Row.FindField(fieldName);
 			}
 
 			public bool Exists(string name)
 			{
-				if (name == null) return false;
+				if (name is null) return false;
 				return Row.FindField(name) >= 0;
 			}
 
@@ -140,13 +140,13 @@ namespace ProSuite.Processing.AGP.Core
 
 			public int FindField(string fieldName)
 			{
-				if (fieldName == null) return -1;
+				if (fieldName is null) return -1;
 				return Row.FindField(fieldName);
 			}
 
 			public bool Exists(string name)
 			{
-				if (name == null) return false;
+				if (name is null) return false;
 				return Row.FindField(name) >= 0;
 			}
 
