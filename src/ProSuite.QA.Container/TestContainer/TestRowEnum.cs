@@ -1128,16 +1128,29 @@ namespace ProSuite.QA.Container.TestContainer
 			[NotNull] Tile tile,
 			[NotNull] TileCache tileCache)
 		{
+			bool ignoreOverlappingRows =
+				(table as ITransformedTable)?.IgnoreOverlappingCachedRows ?? false;
+
 			IDictionary<BaseRow, CachedRow> cachedRows =
-				_overlappingFeatures.GetOverlappingCachedRows(table, tile.Box);
+				 !ignoreOverlappingRows
+					? _overlappingFeatures.GetOverlappingCachedRows(table, tile.Box)
+					: new ConcurrentDictionary<BaseRow, CachedRow>();
+
 			int previousCachedRowCount = cachedRows.Count;
 
 			tileCache.LoadCachedTableRows(cachedRows, table, tile, this);
 			// LoadCachedTableRows(cachedRows, table, tile, tileCache);
 
 			int newlyLoadedRows = cachedRows.Count - previousCachedRowCount;
-			_msg.VerboseDebug(() => $"{table.Name}: Added additional {newlyLoadedRows} rows " +
-			                        $"to the previous {previousCachedRowCount} rows in {tile}");
+			if (!ignoreOverlappingRows)
+			{
+				_msg.VerboseDebug(() => $"{table.Name}: Added additional {newlyLoadedRows} rows " +
+				                        $"to the previous {previousCachedRowCount} rows in {tile}");
+			}
+			else
+			{
+				_msg.VerboseDebug(() => $"{table.Name}: Set {newlyLoadedRows} rows in {tile}");
+			}
 
 			if (_loadedRowCountPerTable != null)
 			{

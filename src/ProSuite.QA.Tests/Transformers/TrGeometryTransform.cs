@@ -211,6 +211,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			bool ITransformedTable.NoCaching => false;
+			bool ITransformedTable.IgnoreOverlappingCachedRows => false;
 
 			[CanBeNull]
 			public BoxTree<IReadOnlyFeature> KnownRows { get; private set; }

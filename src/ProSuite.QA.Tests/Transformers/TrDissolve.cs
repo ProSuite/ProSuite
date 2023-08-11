@@ -155,6 +155,9 @@ namespace ProSuite.QA.Tests.Transformers
 
 			bool ITransformedTable.NoCaching => false;
 
+			bool ITransformedTable.IgnoreOverlappingCachedRows =>
+				NeighborSearchOption == SearchOption.Tile;
+
 			private TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
 
 			[CanBeNull]

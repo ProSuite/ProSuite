@@ -120,6 +120,7 @@ namespace ProSuite.QA.Tests.Transformers
 			public IDataContainer DataContainer { get; set; }
 
 			bool ITransformedTable.NoCaching => true;
+			bool ITransformedTable.IgnoreOverlappingCachedRows => true;
 
 			void ITransformedTable.SetKnownTransformedRows(IEnumerable<IReadOnlyRow> knownRows) { }
 

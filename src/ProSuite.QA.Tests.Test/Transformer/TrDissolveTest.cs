@@ -4,6 +4,7 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
@@ -223,6 +224,50 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					Assert.IsTrue(GeometryUtils.AreEqualInXY(errorShape, geometry));
 				}
 			}
+		}
+
+		[Test]
+		public void IsDissolveRowSinglePerTile() // TOP-5743
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrDissolve");
+
+			IFieldsEdit fields = new FieldsClass();
+			fields.AddField(FieldUtils.CreateOIDField());
+			ISpatialReference sr =
+				SpatialReferenceUtils.CreateSpatialReference(
+					(int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+			fields.AddField(
+				FieldUtils.CreateShapeField("Shape", esriGeometryType.esriGeometryPolyline, sr,
+				                            1000));
+
+			const string fclassName = "lineFc";
+			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, fclassName, fields);
+
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(80, 80).Curve;
+				f.Store();
+			}
+
+			{
+				IFeature f = fc.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(80, 80).LineTo(150, 70).Curve;
+				f.Store();
+			}
+
+
+			TrDissolve dissolve =
+				new TrDissolve(ReadOnlyTableFactory.Create(fc))
+				{ Search = 1, NeighborSearchOption = TrDissolve.SearchOption.Tile };
+
+			QaConstraint test = new QaConstraint(dissolve.GetTransformed(), "ObjectId < 0");
+			{
+				var runner = new QaContainerTestRunner(100, test);
+				runner.KeepGeometry = true;
+				runner.Execute();
+			}
+
 		}
 
 		[Test]
