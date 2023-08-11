@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
+using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
@@ -41,7 +43,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 	/// Dispatcher for test or condition groups created by a <see cref="TestAssembler"/>
 	/// to be run in parallel in different processes.
 	/// </summary>
-	public class DistributedTestRunner : ITestRunner
+	public partial class DistributedTestRunner : ITestRunner
 	{
 		private class IssueKey
 		{
@@ -204,6 +206,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			public QualityConditionGroup QualityConditionGroup { get; }
 			public bool Completed { get; set; }
 
+			public long? InvolvedBaseRowsCount { get; set; }
+
 			private Dictionary<int, QualityCondition> _idConditions;
 
 			private Dictionary<int, QualityCondition> GetIdConditions()
@@ -365,6 +369,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public bool SendModelsWithRequest { get; set; }
 
+		private static void AddRecursive(IReadOnlyTable table,
+		                                 HashSet<IReadOnlyTable> usedTables)
+		{
+			usedTables.Add(table);
+			if (! (table is IDataContainerAware transformed))
+			{
+				return;
+			}
+
+			foreach (var baseTable in transformed.InvolvedTables)
+			{
+				AddRecursive(baseTable, usedTables);
+			}
+		}
+
 		public void Execute(IEnumerable<ITest> tests, AreaOfInterest areaOfInterest,
 		                    CancellationTokenSource cancellationTokenSource)
 		{
@@ -405,6 +424,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 			if (started.Count <= 0)
 			{
 				throw new InvalidOperationException("Could not start any subverification");
+			}
+
+			Task countTask = null;
+			if (Debugger.IsAttached)
+			{
+				Thread.Sleep(10);
+
+				IList<ReadOnlyFeatureClass> baseFcs = GetParallelBaseFeatureClasses(qcGroups);
+				IList<WorkspaceInfo> wsInfos = GetWorkspaceInfos(baseFcs);
+				//CountData(subVerifications, wsInfos);
+				countTask = Task.Run(() => CountData(subVerifications, wsInfos));
 			}
 
 			while (_tasks.Count > 0 || unhandledSubverifications.Count > 0)
@@ -480,6 +510,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				}
 
+				if (countTask?.IsCompleted == true)
+				{
+					countTask = null;
+				}
 				Thread.Sleep(100);
 			}
 
