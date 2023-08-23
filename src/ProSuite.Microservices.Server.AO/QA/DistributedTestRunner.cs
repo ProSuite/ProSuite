@@ -1291,6 +1291,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				listSpecification;
 
 			// Sub-requests must not write the issue GDB and reports:
+			subRequest.Parameters.WriteDetailedVerificationReport = false;
 			subRequest.Parameters.IssueFileGdbPath = string.Empty;
 			subRequest.Parameters.VerificationReportPath = string.Empty;
 			subRequest.Parameters.HtmlReportPath = string.Empty;
