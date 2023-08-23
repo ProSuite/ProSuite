@@ -4,14 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
-using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
@@ -522,6 +520,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				{
 					countTask = null;
 				}
+
 				Thread.Sleep(100);
 			}
 
@@ -1295,6 +1294,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 			subRequest.Parameters.IssueFileGdbPath = string.Empty;
 			subRequest.Parameters.VerificationReportPath = string.Empty;
 			subRequest.Parameters.HtmlReportPath = string.Empty;
+
+			// Sub-requests must never save the verification:
+			subRequest.Parameters.SaveVerificationStatistics = false;
 
 			subRequest.Specification.ExcludedConditionIds.AddRange(excludedConditionIds);
 
