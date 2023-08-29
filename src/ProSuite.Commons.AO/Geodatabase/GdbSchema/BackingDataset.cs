@@ -16,9 +16,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public abstract VirtualRow GetRow(long id);
 
-		public abstract long GetRowCount([CanBeNull] IQueryFilter queryFilter);
+		public abstract long GetRowCount([CanBeNull] ITableFilter queryFilter);
 
-		public abstract IEnumerable<VirtualRow> Search([CanBeNull] IQueryFilter filter,
+		public abstract IEnumerable<VirtualRow> Search([CanBeNull] ITableFilter filter,
 		                                               bool recycling);
 	}
 }

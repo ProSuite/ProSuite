@@ -650,7 +650,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 		private class IgnoreProcessArea : RowFilter
 		{
-			private IList<ISpatialFilter> _spatialFilters;
+			private IList<IFeatureClassFilter> _spatialFilters;
 			private IList<QueryFilterHelper> _filterHelpers;
 
 			public IgnoreProcessArea(IReadOnlyFeatureClass areaFc)
@@ -674,10 +674,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				EnsureFilters();
 
 				IReadOnlyTable table = InvolvedTables[0];
-				ISpatialFilter filter = _spatialFilters[0];
+				IFeatureClassFilter filter = _spatialFilters[0];
 				QueryFilterHelper helper = _filterHelpers[0];
 				IGeometry ignoreGeom = f.Shape;
-				filter.Geometry = ignoreGeom;
+				filter.FilterGeometry = ignoreGeom;
 				foreach (var searched in Search(table, filter, helper))
 				{
 					if (! ((IRelationalOperator) ignoreGeom).Disjoint(((IFeature) searched).Shape))

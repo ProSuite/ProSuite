@@ -148,6 +148,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.NoContainer)]
 		public void TestNotReported()
 		{
 			IFeatureClass fc1;

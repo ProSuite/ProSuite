@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -142,6 +143,18 @@ namespace ProSuite.Commons.Essentials.System
 			Process[] processes = Process.GetProcessesByName(processName);
 
 			return processes.Length;
+		}
+
+		public static bool TrySetThreadIdAsName()
+		{
+			if (Thread.CurrentThread.Name != null)
+			{
+				return false;
+			}
+
+			Thread.CurrentThread.Name = $"Thread {Thread.CurrentThread.ManagedThreadId}";
+
+			return true;
 		}
 
 		private static long GetMemoryWorkaround(long rawValue)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -15,6 +16,40 @@ namespace ProSuite.Commons.AO
 			Assert.ArgumentNotNull(propertySet, nameof(propertySet));
 
 			return (IPropertySet) ((IClone) propertySet).Clone();
+		}
+
+		public static string ToXmlString([NotNull] IPropertySet propertySet)
+		{
+			Assert.ArgumentNotNull(propertySet, nameof(propertySet));
+
+			IXMLSerializer xmlSerializer = new XMLSerializerClass();
+			try
+			{
+				return xmlSerializer.SaveToString(propertySet, null, null);
+			}
+			finally
+			{
+				Marshal.ReleaseComObject(xmlSerializer);
+			}
+		}
+
+		[NotNull]
+		public static IPropertySet FromXmlString([NotNull] string xmlPropertySetString)
+		{
+			Assert.ArgumentNotNullOrEmpty(xmlPropertySetString, nameof(xmlPropertySetString));
+
+			IXMLSerializer xmlSerializer = new XMLSerializerClass();
+
+			try
+			{
+				return
+					(IPropertySet)
+					xmlSerializer.LoadFromString(xmlPropertySetString, null, null);
+			}
+			finally
+			{
+				Marshal.ReleaseComObject(xmlSerializer);
+			}
 		}
 
 		[NotNull]

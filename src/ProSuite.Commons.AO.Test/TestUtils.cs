@@ -114,15 +114,28 @@ namespace ProSuite.Commons.AO.Test
 		{
 			string filePath = GetGeometryTestDataPath(xmlOrWkbGeometryFileName);
 
+			string directory = Path.GetDirectoryName(filePath);
+
+			Assert.NotNull(directory);
+
+			return CreateMockFeature(xmlOrWkbGeometryFileName, directory, spatialRef);
+		}
+
+		public static IFeature CreateMockFeature([NotNull] string xmlOrWkbGeometryFileName,
+		                                         [NotNull] string directoryPath,
+		                                         [CanBeNull] ISpatialReference spatialRef)
+		{
+			string fileFullPath = Path.Combine(directoryPath, xmlOrWkbGeometryFileName);
+
 			IGeometry geometry;
 			if (xmlOrWkbGeometryFileName.EndsWith(
 				    "wkb", StringComparison.InvariantCultureIgnoreCase))
 			{
-				geometry = ReadGeometryFromWkb(filePath);
+				geometry = ReadGeometryFromWkb(fileFullPath);
 			}
 			else
 			{
-				geometry = ReadGeometryFromXml(filePath);
+				geometry = ReadGeometryFromXml(fileFullPath);
 			}
 
 			if (spatialRef != null)

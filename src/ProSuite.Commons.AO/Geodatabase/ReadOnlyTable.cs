@@ -42,7 +42,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public IReadOnlyRow GetRow(long oid) => CreateRow(BaseTable.GetRow((int) oid));
 #endif
 
-		public long RowCount(IQueryFilter filter) => BaseTable.RowCount(filter);
+		public long RowCount(ITableFilter filter) =>
+			BaseTable.RowCount(TableFilterUtils.GetQueryFilter(filter, BaseTable as IFeatureClass));
 
 		public virtual int FindField(string name) => BaseTable.FindField(name);
 
@@ -70,11 +71,23 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return new ReadOnlyRow(this, row);
 		}
 
-		public IEnumerable<IReadOnlyRow> EnumRows(IQueryFilter filter, bool recycle)
+		public IEnumerable<IReadOnlyRow> EnumRows(ITableFilter filter, bool recycle)
 		{
-			foreach (var row in new EnumCursor(BaseTable, filter, recycle))
+			if (BaseTable is IReadOnlyTable roTable)
 			{
-				yield return CreateRow(row);
+				foreach (IReadOnlyRow readOnlyRow in roTable.EnumRows(filter, recycle))
+				{
+					IRow baseRow = (IRow) readOnlyRow;
+					yield return CreateRow(baseRow); // TODO : is this necessary
+				}
+			}
+			else
+			{
+				var queryFilter = TableFilterUtils.GetQueryFilter(filter, BaseTable as IFeatureClass);
+				foreach (var row in new EnumCursor(BaseTable, queryFilter, recycle))
+				{
+					yield return CreateRow(row);
+				}
 			}
 		}
 

@@ -386,12 +386,15 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			double toleranceFactor = tolerance / Length3D;
-
-			if (distanceAlong < 0 - toleranceFactor ||
-			    distanceAlong > 1 + toleranceFactor)
+			// Use the same logic as in SegmentIntersection! At end points, check the actual distance:
+			if (distanceAlong < 0)
 			{
-				return false;
+				return GeomUtils.GetDistanceSquaredXY(StartPoint, point) <= tolerance * tolerance;
+			}
+
+			if (distanceAlong > 1)
+			{
+				return GeomUtils.GetDistanceSquaredXY(EndPoint, point) <= tolerance * tolerance;
 			}
 
 			return true;

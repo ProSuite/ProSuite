@@ -241,7 +241,7 @@ namespace ProSuite.QA.Tests
 				geometry = null;
 			}
 
-			IQueryFilter filter = TestUtils.CreateFilter(geometry, AreaOfInterest,
+			ITableFilter filter = TestUtils.CreateFilter(geometry, AreaOfInterest,
 			                                             GetConstraint(0), _table, null);
 
 			const bool recycle = true;

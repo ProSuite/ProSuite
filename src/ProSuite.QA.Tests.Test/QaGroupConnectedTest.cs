@@ -2379,7 +2379,7 @@ namespace ProSuite.QA.Tests.Test
 				                     new[] { "TOPGIS_TLM.TLM_STRASSENROUTE.UUID" },
 				                     QaGroupConnected.ShapeAllowed.Cycles);
 
-			IQueryFilter filter = new QueryFilterClass();
+			ITableFilter filter = new AoTableFilter();
 			filter.WhereClause = "ObjectID in (2370953,2370947)";
 			IEnvelope extent = null;
 			foreach (IReadOnlyRow row in tables[0].EnumRows(filter, false))

@@ -268,18 +268,18 @@ namespace ProSuite.QA.Tests
 			       dimensions.Any(dimension => _requiredDimensions.Contains(dimension));
 		}
 
-		protected override void ConfigureSpatialFilter(ISpatialFilter spatialFilter)
+		protected override void ConfigureSpatialFilter(IFeatureClassFilter spatialFilter)
 		{
 			if (_intersectionMatrices.Count == 1)
 			{
-				spatialFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelRelation;
+				spatialFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelRelation;
 				spatialFilter.SpatialRelDescription =
 					GetSpatialRelDescription(_intersectionMatrices[0]);
 			}
 			else
 			{
 				spatialFilter.SpatialRelDescription = string.Empty;
-				spatialFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+				spatialFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 			}
 		}
 

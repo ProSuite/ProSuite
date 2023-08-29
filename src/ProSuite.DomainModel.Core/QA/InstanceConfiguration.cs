@@ -1,11 +1,12 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.Core.QA
 {
@@ -53,8 +54,9 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		protected InstanceConfiguration([NotNull] string name,
-		                                [CanBeNull] string description = "")
-			: this(assignUuid: true)
+		                                [CanBeNull] string description = "",
+		                                bool assignUuid = true)
+			: this(assignUuid)
 		{
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 
@@ -70,8 +72,14 @@ namespace ProSuite.DomainModel.Core.QA
 		public virtual InstanceDescriptor InstanceDescriptor
 		{
 			get => _instanceDescriptor;
-			set => _instanceDescriptor = value;
+			set
+			{
+				_instanceDescriptor = value;
+				InstanceDescriptorChanged();
+			}
 		}
+
+		protected virtual void InstanceDescriptorChanged() { }
 
 		[Required]
 		public string Uuid
@@ -145,6 +153,19 @@ namespace ProSuite.DomainModel.Core.QA
 		public void ClearParameterValues()
 		{
 			_parameterValues.Clear();
+		}
+
+		public IEnumerable<TestParameterValue> GetDefinedParameterValues()
+		{
+			IList<TestParameter> parameters = InstanceDescriptor.InstanceInfo.Parameters;
+
+			foreach (TestParameterValue parameterValue in ParameterValues)
+			{
+				if (parameters.Any(p => p.Name == parameterValue.TestParameterName))
+				{
+					yield return parameterValue;
+				}
+			}
 		}
 
 		/// <summary>
@@ -254,22 +275,13 @@ namespace ProSuite.DomainModel.Core.QA
 		protected static string GetUuid([NotNull] string value)
 		{
 			// this fails if the string is not a valid guid:
-			var guid = new Guid(value);
-
-			return FormatUuid(guid);
+			return InstanceConfigurationUtils.GenerateUuid(value);
 		}
 
 		[NotNull]
 		protected static string GenerateUuid()
 		{
-			return FormatUuid(Guid.NewGuid());
-		}
-
-		[NotNull]
-		protected static string FormatUuid(Guid guid)
-		{
-			// default format (no curly braces)
-			return guid.ToString().ToUpper();
+			return InstanceConfigurationUtils.GenerateUuid();
 		}
 
 		protected void CopyBaseProperties([NotNull] InstanceConfiguration target)

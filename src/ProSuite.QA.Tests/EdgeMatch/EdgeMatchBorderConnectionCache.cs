@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
@@ -87,9 +86,9 @@ namespace ProSuite.QA.Tests.EdgeMatch
 			int geometryClassIndex,
 			int borderClassIndex,
 			IReadOnlyTable borderClass,
-			ISpatialFilter spatialFilter,
+			IFeatureClassFilter spatialFilter,
 			QueryFilterHelper filterHelper,
-			Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IEnumerable<IReadOnlyRow>> search,
+			Func<IReadOnlyTable, ITableFilter, QueryFilterHelper, IEnumerable<IReadOnlyRow>> search,
 			RowPairCondition borderMatchCondition)
 			where TG : IGeometry
 		{
@@ -141,13 +140,13 @@ namespace ProSuite.QA.Tests.EdgeMatch
 			[NotNull] IReadOnlyFeature geometryFeature, int geometryClassIndex,
 			int borderClassIndex,
 			[NotNull]
-			Func<IReadOnlyTable, IQueryFilter, QueryFilterHelper, IEnumerable<IReadOnlyRow>> search,
+			Func<IReadOnlyTable, ITableFilter, QueryFilterHelper, IEnumerable<IReadOnlyRow>> search,
 			IReadOnlyTable borderClass,
-			ISpatialFilter spatialFilter,
+			IFeatureClassFilter spatialFilter,
 			QueryFilterHelper filterHelper,
 			RowPairCondition borderMatchCondition)
 		{
-			spatialFilter.Geometry = geometry;
+			spatialFilter.FilterGeometry = geometry;
 
 			var result = new List<IReadOnlyFeature>(5);
 

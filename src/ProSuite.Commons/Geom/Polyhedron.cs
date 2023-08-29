@@ -91,6 +91,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public MultiLinestring GetXYFootprint(double tolerance,
+		                                      double verticalRingDetectionTolerance,
 		                                      out List<Linestring> verticalRings)
 		{
 			verticalRings = new List<Linestring>();

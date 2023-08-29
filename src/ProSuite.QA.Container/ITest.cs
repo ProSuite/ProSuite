@@ -116,6 +116,7 @@ namespace ProSuite.QA.Container
 
 		// TODO: What are the rules and restrictions if a transformer wants to use caching?
 		bool NoCaching { get; }
+		bool IgnoreOverlappingCachedRows { get; }
 	}
 
 	public interface INamedFilter : IInvolvesTables

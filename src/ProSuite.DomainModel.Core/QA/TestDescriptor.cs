@@ -179,7 +179,7 @@ namespace ProSuite.DomainModel.Core.QA
 			if (TestFactoryDescriptor != null)
 			{
 				return InstanceDescriptorUtils.GetCanonicalInstanceDescriptorName(
-					TestFactoryDescriptor.TypeName, ConstructorId);
+					TestFactoryDescriptor.TypeName, -1);
 			}
 
 			if (TestClass != null)

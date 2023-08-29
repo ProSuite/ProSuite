@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
@@ -18,6 +19,10 @@ namespace ProSuite.Commons.Geom
 		private readonly ISegmentList _source;
 		private readonly ISegmentList _target;
 		private readonly double _tolerance;
+
+		// Boundary loop cache (there can be very many intersections)
+		private List<BoundaryLoop> _sourceBoundaryLoops;
+		private List<BoundaryLoop> _targetBoundaryLoops;
 
 		public IntersectionClusters(
 			ISegmentList source, ISegmentList target, double tolerance)
@@ -142,6 +147,36 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		public HashSet<IntersectionPoint3D> GetOtherIntersections(
+			[NotNull] IntersectionPoint3D atIntersection)
+		{
+			var resultSet = new HashSet<IntersectionPoint3D>();
+
+			foreach (IntersectionPoint3D intersection in
+			         GetOtherSourceIntersections(atIntersection))
+			{
+				if (resultSet.Contains(intersection))
+				{
+					continue;
+				}
+
+				resultSet.Add(intersection);
+			}
+
+			foreach (IntersectionPoint3D intersection in
+			         GetOtherTargetIntersections(atIntersection))
+			{
+				if (resultSet.Contains(intersection))
+				{
+					continue;
+				}
+
+				resultSet.Add(intersection);
+			}
+
+			return resultSet;
+		}
+
 		public bool HasMultipleSourceIntersections([NotNull] IntersectionPoint3D atIntersection)
 		{
 			if (_multipleSourceIntersections == null || _multipleSourceIntersections.Count == 0)
@@ -255,6 +290,124 @@ namespace ProSuite.Commons.Geom
 		{
 			return _multipleSourceIntersections != null &&
 			       _multipleSourceIntersections.Contains(intersection);
+		}
+
+		/// <summary>
+		/// Returns the source boundary loops, if their connection point is part of the cluster,
+		/// i.e. if there is an intersection with the target at the connection point.
+		/// </summary>
+		/// <returns></returns>
+		public IEnumerable<BoundaryLoop> GetSourceBoundaryLoops()
+		{
+			if (_multipleSourceIntersections == null)
+			{
+				yield break;
+			}
+
+			if (_sourceBoundaryLoops == null)
+			{
+				_sourceBoundaryLoops = CalculateSourceBoundaryLoops().ToList();
+			}
+
+			foreach (BoundaryLoop sourceBoundaryLoop in _sourceBoundaryLoops)
+			{
+				yield return sourceBoundaryLoop;
+			}
+		}
+
+		/// <summary>
+		/// Returns the source boundary loops, if their connection point is part of the cluster,
+		/// i.e. if there is an intersection with the target at the connection point.
+		/// </summary>
+		/// <returns></returns>
+		public IEnumerable<BoundaryLoop> GetTargetBoundaryLoops()
+		{
+			if (_multipleTargetIntersections == null)
+			{
+				yield break;
+			}
+
+			if (_targetBoundaryLoops == null)
+			{
+				_targetBoundaryLoops = CalculateTargetBoundaryLoops().ToList();
+				//_targetBoundaryLoops = CalculateTargetBoundaryLoops().Distinct(new BoundaryLoopComparer()).ToList();
+			}
+
+			foreach (BoundaryLoop boundaryLoop in _targetBoundaryLoops)
+			{
+				yield return boundaryLoop;
+			}
+		}
+
+		private IEnumerable<BoundaryLoop> CalculateSourceBoundaryLoops()
+		{
+			foreach (var intersectionPairs
+			         in CollectionUtils.GetAllTuples(_multipleSourceIntersections))
+			{
+				var intersection1 = intersectionPairs.Key;
+				var intersection2 = intersectionPairs.Value;
+
+				if (intersection1.SourcePartIndex != intersection2.SourcePartIndex)
+				{
+					continue;
+				}
+
+				if (intersection1.TargetPartIndex != intersection2.TargetPartIndex)
+				{
+					continue;
+				}
+
+				if (! intersection1.ReferencesSameTargetVertex(intersection2, _target, _tolerance))
+				{
+					continue;
+				}
+
+				if (SegmentIntersectionUtils.SourceSegmentCountBetween(
+					    _source, intersection1, intersection2) > 1 &&
+				    SegmentIntersectionUtils.SourceSegmentCountBetween(
+					    _source, intersection2, intersection1) > 1)
+				{
+					Linestring fullSourceRing = _source.GetPart(intersection1.SourcePartIndex);
+
+					yield return new BoundaryLoop(intersection1, intersection2, fullSourceRing,
+					                              true);
+				}
+			}
+		}
+
+		private IEnumerable<BoundaryLoop> CalculateTargetBoundaryLoops()
+		{
+			foreach (var intersectionPairs
+			         in CollectionUtils.GetAllTuples(_multipleTargetIntersections))
+			{
+				var intersection1 = intersectionPairs.Key;
+				var intersection2 = intersectionPairs.Value;
+
+				if (intersection1.SourcePartIndex != intersection2.SourcePartIndex)
+				{
+					continue;
+				}
+
+				if (intersection1.TargetPartIndex != intersection2.TargetPartIndex)
+				{
+					continue;
+				}
+
+				if (! intersection1.ReferencesSameSourceVertex(intersection2, _source, _tolerance))
+				{
+					continue;
+				}
+
+				if (SegmentIntersectionUtils.TargetSegmentCountBetween(
+					    _target, intersection1, intersection2) > 1 &&
+				    SegmentIntersectionUtils.TargetSegmentCountBetween(
+					    _target, intersection2, intersection1) > 1)
+				{
+					Linestring fullRing = _target.GetPart(intersection1.TargetPartIndex);
+
+					yield return new BoundaryLoop(intersection1, intersection2, fullRing, false);
+				}
+			}
 		}
 	}
 }

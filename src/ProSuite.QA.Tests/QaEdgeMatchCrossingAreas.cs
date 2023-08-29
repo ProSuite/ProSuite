@@ -11,7 +11,6 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
@@ -39,7 +38,7 @@ namespace ProSuite.QA.Tests
 
 		private ISpatialReference _spatialReference;
 		private ISpatialReference _highResolutionSpatialReference;
-		private IList<ISpatialFilter> _filters;
+		private IList<IFeatureClassFilter> _filters;
 		private IList<QueryFilterHelper> _filterHelpers;
 		private readonly IDictionary<int, esriGeometryType> _geometryTypesByTableIndex;
 		private readonly IDictionary<int, double> _xyToleranceByTableIndex;
@@ -663,11 +662,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private ISpatialFilter GetSearchFilter(int tableIndex,
-		                                       [NotNull] IPolyline line,
-		                                       double searchDistance)
+		private IFeatureClassFilter GetSearchFilter(int tableIndex,
+		                                            [NotNull] IPolyline line,
+		                                            double searchDistance)
 		{
-			ISpatialFilter filter = _filters[tableIndex];
+			IFeatureClassFilter filter = _filters[tableIndex];
 
 			WKSEnvelope envelope = ProxyUtils.GetWKSEnvelope(line);
 
@@ -678,7 +677,7 @@ namespace ProSuite.QA.Tests
 
 			_searchEnvelopeTemplate.PutWKSCoords(envelope);
 
-			filter.Geometry = _searchEnvelopeTemplate;
+			filter.FilterGeometry = _searchEnvelopeTemplate;
 
 			return filter;
 		}
@@ -921,9 +920,9 @@ namespace ProSuite.QA.Tests
 		private IEnumerable<IReadOnlyFeature> SearchNeighborRows([NotNull] IPolyline borderLine,
 		                                                         int neighborLineClassIndex)
 		{
-			ISpatialFilter spatialFilter = GetSearchFilter(neighborLineClassIndex,
-			                                               borderLine,
-			                                               _searchDistance);
+			IFeatureClassFilter spatialFilter = GetSearchFilter(neighborLineClassIndex,
+			                                                    borderLine,
+			                                                    _searchDistance);
 
 			QueryFilterHelper filterHelper = _filterHelpers[neighborLineClassIndex];
 
@@ -947,9 +946,9 @@ namespace ProSuite.QA.Tests
 		private IEnumerable<IReadOnlyFeature> SearchBoundingRows([NotNull] IPolyline borderLine,
 		                                                         int boundingClassIndex)
 		{
-			ISpatialFilter spatialFilter = GetSearchFilter(boundingClassIndex,
-			                                               borderLine,
-			                                               searchDistance: 0);
+			IFeatureClassFilter spatialFilter = GetSearchFilter(boundingClassIndex,
+			                                                    borderLine,
+			                                                    searchDistance: 0);
 
 			return Search(InvolvedTables[boundingClassIndex],
 			              spatialFilter,
@@ -1038,18 +1037,18 @@ namespace ProSuite.QA.Tests
 		{
 			CopyFilters(out _filters, out _filterHelpers);
 
-			foreach (ISpatialFilter filter in _filters)
+			foreach (var filter in _filters)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 			}
 
-			_filters[_borderClass1Index].SpatialRel = GetBorderClassSpatialRelation(
+			_filters[_borderClass1Index].SpatialRelationship = GetBorderClassSpatialRelation(
 				_geometryTypesByTableIndex[_borderClass1Index]);
 
-			_filters[_borderClass2Index].SpatialRel = GetBorderClassSpatialRelation(
+			_filters[_borderClass2Index].SpatialRelationship = GetBorderClassSpatialRelation(
 				_geometryTypesByTableIndex[_borderClass2Index]);
 		}
-
+		
 		private static esriSpatialRelEnum GetBorderClassSpatialRelation(
 			esriGeometryType borderGeometryType)
 		{

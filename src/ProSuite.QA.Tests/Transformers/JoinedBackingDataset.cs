@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
@@ -135,14 +134,14 @@ namespace ProSuite.QA.Tests.Transformers
 			return _joinDatasetImpl.GetRow(id);
 		}
 
-		public override long GetRowCount(IQueryFilter queryFilter)
+		public override long GetRowCount(ITableFilter queryFilter)
 		{
 			AssignFiltersAndContainer();
 
 			return _joinDatasetImpl.GetRowCount(queryFilter);
 		}
 
-		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 		{
 			AssignFiltersAndContainer();
 

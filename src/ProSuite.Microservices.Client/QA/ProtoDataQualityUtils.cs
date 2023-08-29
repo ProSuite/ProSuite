@@ -84,7 +84,7 @@ namespace ProSuite.Microservices.Client.QA
 						                   condition.IssueFilterExpression ?? string.Empty
 				                   };
 
-				AddParameterMessages(condition.ParameterValues, conditionMsg.Parameters,
+				AddParameterMessages(condition.GetDefinedParameterValues(), conditionMsg.Parameters,
 				                     supportedInstanceDescriptors, usedModelsById);
 
 				foreach (IssueFilterConfiguration filterConfiguration in condition
@@ -257,8 +257,8 @@ namespace ProSuite.Microservices.Client.QA
 
 			result.InstanceDescriptorName = descriptorName;
 
-			AddParameterMessages(instanceConfiguration.ParameterValues, result.Parameters,
-			                     supportedInstanceDescriptors, usedModelsById);
+			AddParameterMessages(instanceConfiguration.GetDefinedParameterValues(),
+			                     result.Parameters, supportedInstanceDescriptors, usedModelsById);
 
 			return result;
 		}

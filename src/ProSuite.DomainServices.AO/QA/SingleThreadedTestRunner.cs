@@ -290,7 +290,7 @@ namespace ProSuite.DomainServices.AO.QA
 				return new List<IReadOnlyRow>();
 			}
 
-			return new List<IReadOnlyRow>(GdbQueryUtils.GetRowsInList(
+			return new List<IReadOnlyRow>(TableFilterUtils.GetRowsInList(
 				                              table, table.OIDFieldName, oids,
 				                              recycle: false));
 		}

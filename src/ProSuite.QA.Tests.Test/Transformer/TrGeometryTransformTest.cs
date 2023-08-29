@@ -97,7 +97,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 				transformedBackingDataset.DataContainer = new UncachedDataContainer(wksEnvelope);
 
-				IQueryFilter filter = new QueryFilterClass()
+				ITableFilter filter = new AoTableFilter
 				                      {
 					                      SubFields = "",
 					                      WhereClause = "TEXT_FIELD = 'VAL2'"
@@ -583,7 +583,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table,
-		                                        IQueryFilter queryFilter,
+		                                        ITableFilter queryFilter,
 		                                        QueryFilterHelper filterHelper)
 		{
 			return table.EnumRows(queryFilter, false);

@@ -22,8 +22,8 @@ namespace ProSuite.QA.Tests
 		private readonly bool _reportIndividualParts;
 		private readonly int _containsClassesCount; // # of contains layer
 		private readonly int _totalClassesCount; // total # of layers (contains + isWithin)
-		private ISpatialFilter[] _queryFilter;
-		private ISpatialFilter[] _intersectsFilter;
+		private IFeatureClassFilter[] _queryFilter;
+		private IFeatureClassFilter[] _intersectsFilter;
 		private QueryFilterHelper[] _helper;
 		private readonly List<esriGeometryType> _shapeTypes;
 
@@ -118,7 +118,7 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			ISpatialFilter[] filters = GetQueryFilters();
+			IFeatureClassFilter[] filters = GetQueryFilters();
 
 			IGeometry shape = ((IReadOnlyFeature) row).Shape;
 
@@ -134,7 +134,7 @@ namespace ProSuite.QA.Tests
 			     containsClassIndex < _containsClassesCount;
 			     containsClassIndex++)
 			{
-				filters[containsClassIndex].Geometry = shape;
+				filters[containsClassIndex].FilterGeometry = shape;
 
 				foreach (IReadOnlyRow containingRow in GetContainingRows(containsClassIndex))
 				{
@@ -173,7 +173,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private ISpatialFilter[] GetQueryFilters()
+		private IFeatureClassFilter[] GetQueryFilters()
 		{
 			if (_queryFilter != null)
 			{
@@ -276,7 +276,7 @@ namespace ProSuite.QA.Tests
 		private IEnumerable<IReadOnlyRow> SearchIntersectingFeatures(int classIndex,
 			[NotNull] IGeometry geometry)
 		{
-			_intersectsFilter[classIndex].Geometry = geometry;
+			_intersectsFilter[classIndex].FilterGeometry = geometry;
 
 			return Search(InvolvedTables[classIndex],
 			              _intersectsFilter[classIndex],
@@ -289,10 +289,10 @@ namespace ProSuite.QA.Tests
 		/// </summary>
 		private void InitFilter()
 		{
-			IList<ISpatialFilter> pFilters;
+			IList<IFeatureClassFilter> pFilters;
 			IList<QueryFilterHelper> pHelpers;
-			_queryFilter = new ISpatialFilter[_totalClassesCount];
-			_intersectsFilter = new ISpatialFilter[_totalClassesCount];
+			_queryFilter = new IFeatureClassFilter[_totalClassesCount];
+			_intersectsFilter = new IFeatureClassFilter[_totalClassesCount];
 			_helper = new QueryFilterHelper[_totalClassesCount];
 
 			// Create copy of this filter and use it for quering features
@@ -302,12 +302,13 @@ namespace ProSuite.QA.Tests
 				_queryFilter[i] = pFilters[i];
 				_helper[i] = pHelpers[i];
 
-				_queryFilter[i].SpatialRel = i < _containsClassesCount
-					                             ? esriSpatialRelEnum.esriSpatialRelWithin
-					                             : esriSpatialRelEnum.esriSpatialRelContains;
+				_queryFilter[i].SpatialRelationship =
+					i < _containsClassesCount
+						? esriSpatialRelEnum.esriSpatialRelWithin
+						: esriSpatialRelEnum.esriSpatialRelContains;
 
-				_intersectsFilter[i] = (ISpatialFilter) ((IClone) pFilters[i]).Clone();
-				_intersectsFilter[i].SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+				_intersectsFilter[i] = (IFeatureClassFilter)pFilters[i].Clone();
+				_intersectsFilter[i].SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 			}
 		}
 

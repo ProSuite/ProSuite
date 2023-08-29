@@ -166,7 +166,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		#region VirtualTable overrides
 
 		public override IEnumerable<IReadOnlyRow> EnumReadOnlyRows(
-			IQueryFilter queryFilter, bool recycling)
+			ITableFilter queryFilter, bool recycling)
 		{
 			if (BackingDataset == null)
 			{
@@ -287,25 +287,32 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return CreateRow();
 		}
 
-		public override long RowCount(IQueryFilter queryFilter)
+		public override long RowCount(ITableFilter tableFilter)
 		{
 			if (BackingDataset == null)
 			{
 				throw new NotImplementedException("No backing dataset provided for RowCount().");
 			}
 
-			return BackingDataset.GetRowCount(queryFilter);
+			return BackingDataset.GetRowCount(tableFilter);
 		}
 
-		public override CursorImpl SearchT(IQueryFilter queryFilter, bool recycling)
+		protected override long TableRowCount(IQueryFilter queryFilter)
+		{
+			ITableFilter tableFilter = GdbQueryUtils.GetTableFilter(queryFilter);
+
+			return RowCount(tableFilter);
+		}
+
+		protected override CursorImpl SearchT(IQueryFilter queryFilter, bool recycling)
 		{
 			if (BackingDataset == null)
 			{
 				throw new NotImplementedException("No backing dataset provided for Search().");
 			}
 
-			IEnumerable<VirtualRow> rows = BackingDataset.Search(queryFilter, recycling);
-
+			ITableFilter tableFilter = GdbQueryUtils.GetTableFilter(queryFilter);
+			IEnumerable<VirtualRow> rows = BackingDataset.Search(tableFilter, recycling);
 			return new CursorImpl(this, rows);
 		}
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
@@ -85,6 +86,76 @@ namespace ProSuite.DomainModel.AO.Workflow
 			return objectDataset;
 		}
 
+		[CanBeNull]
+		public static Dataset GetDataset<P, M>([NotNull] P project,
+		                                       [NotNull] IWorkspace workspace,
+		                                       [NotNull] IDatasetName datasetName)
+			where P : Project<M>
+			where M : ProductionModel
+		{
+			bool isModelDefaultDatabase = ModelContextUtils.IsModelDefaultDatabase(
+				workspace, project.ProductionModel);
+
+			return GetDataset<P, M>(project, datasetName,
+			                        isModelDefaultDatabase);
+		}
+
+		[NotNull]
+		public static IEnumerable<WorkspaceDataset> GetWorkspaceDatasets<P, M>(
+			[NotNull] IWorkspace workspace,
+			[NotNull] P project)
+			where P : Project<M>
+			where M : ProductionModel
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			Assert.ArgumentNotNull(project, nameof(project));
+
+			Stopwatch watch = _msg.DebugStartTiming();
+
+			M model = project.ProductionModel;
+
+			IWorkspaceContext masterDatabaseWorkspaceContext =
+				model.MasterDatabaseWorkspaceContext;
+
+			bool isModelMasterDatabase = masterDatabaseWorkspaceContext != null &&
+			                             WorkspaceUtils.IsSameDatabase(
+				                             workspace,
+				                             masterDatabaseWorkspaceContext.Workspace);
+
+			string schemaOwner = isModelMasterDatabase
+				                     ? model.DefaultDatabaseSchemaOwner
+				                     : null;
+
+			IEnumerable<DatasetMapping> datasetMappings = GetDatasetMappings<P, M>(
+				workspace, project, isModelMasterDatabase, schemaOwner);
+
+			List<WorkspaceDataset> result;
+
+			if (! model.ElementNamesAreQualified &&
+			    string.IsNullOrEmpty(schemaOwner) &&
+			    WorkspaceUtils.UsesQualifiedDatasetNames(workspace))
+			{
+				// in this situation, more than one workspace dataset may be mapped to the
+				// same model dataset. This should be supported for error datasets, where
+				// this situation is not uncommon. 
+
+				result = GetWorkspaceDatasetsWithDisambiguation(datasetMappings);
+			}
+			else
+			{
+				result = datasetMappings.Select(CreateWorkspaceDataset).ToList();
+			}
+
+			_msg.DebugStopTiming(
+				watch,
+				"Read datasets for project {0} in workspace {1} ({2} of {3} model datasets found)",
+				project.Name,
+				WorkspaceUtils.GetConnectionString(workspace, true),
+				result.Count, model.GetDatasets().Count);
+
+			return result;
+		}
+
 		[NotNull]
 		public static IEnumerable<WorkspaceAssociation> GetWorkspaceAssociations<P, M>(
 			[NotNull] IWorkspace workspace,
@@ -141,8 +212,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 			[CanBeNull] string childDatabaseRestrictions)
 		{
 			var parser = new NamedValuesParser('=',
-			                                   new[] {";", Environment.NewLine},
-			                                   new[] {","},
+			                                   new[] { ";", Environment.NewLine },
+			                                   new[] { "," },
 			                                   " AND ");
 
 			NotificationCollection notifications;
@@ -454,6 +525,346 @@ namespace ProSuite.DomainModel.AO.Workflow
 			return new WorkspaceAssociation(datasetName.Name,
 			                                featureDatasetName?.Name,
 			                                association);
+		}
+
+		[CanBeNull]
+		private static Dataset GetDataset<P, M>([NotNull] P project,
+		                                        [NotNull] IDatasetName datasetName,
+		                                        bool isModelMasterDatabase)
+			where P : Project<M>
+			where M : ProductionModel
+		{
+			// called when activating a work context
+
+			// assume that the workspace is valid (according to the project) 
+			Model model = project.ProductionModel;
+			if (model == null)
+			{
+				return null;
+			}
+
+			string modelName = GetModelElementName(
+				datasetName.Name,
+				project.ChildDatabaseDatasetNameTransformer,
+				model, isModelMasterDatabase);
+
+			_msg.VerboseDebug(
+				() =>
+					$"Dataset name for {datasetName.Name} in model {model.Name} (from master db: {isModelMasterDatabase}): {modelName ?? "<null>"}");
+
+			if (modelName == null)
+			{
+				return null;
+			}
+
+			Dataset dataset = model.GetDatasetByModelName(modelName);
+
+			if (dataset == null)
+			{
+				return null;
+			}
+
+			return ModelContextUtils.HasMatchingDatasetType(dataset, datasetName)
+				       ? dataset
+				       : null;
+		}
+
+		[NotNull]
+		private static WorkspaceDataset CreateWorkspaceDataset(
+			[NotNull] DatasetMapping datasetMapping)
+		{
+			IDatasetName datasetName = datasetMapping.DatasetName;
+			IDatasetName featureDatasetName =
+				DatasetUtils.GetFeatureDatasetName(datasetName);
+
+			return new WorkspaceDataset(datasetName.Name,
+			                            featureDatasetName?.Name,
+			                            datasetMapping.Dataset);
+		}
+
+		[NotNull]
+		private static IEnumerable<esriDatasetType> GetInvolvedDatasetTypes(
+			[NotNull] Model model)
+		{
+			Assert.ArgumentNotNull(model, nameof(model));
+
+			var result = new HashSet<esriDatasetType>();
+
+			foreach (Dataset dataset in model.GetDatasets())
+			{
+				result.Add(GetDatasetType(dataset));
+			}
+
+			return result;
+		}
+
+		private static esriDatasetType GetDatasetType([NotNull] Dataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			if (dataset is IVectorDataset)
+			{
+				return esriDatasetType.esriDTFeatureClass;
+			}
+
+			if (dataset is ITableDataset)
+			{
+				return esriDatasetType.esriDTTable;
+			}
+
+			if (dataset is ITopologyDataset)
+			{
+				return esriDatasetType.esriDTTopology;
+			}
+
+			if (dataset.GeometryType is GeometryTypeGeometricNetwork)
+			{
+				return esriDatasetType.esriDTGeometricNetwork;
+			}
+
+			if (dataset.GeometryType is GeometryTypeTerrain)
+			{
+				return esriDatasetType.esriDTTerrain;
+			}
+
+			if (dataset is IRasterMosaicDataset)
+			{
+				return esriDatasetType.esriDTMosaicDataset;
+			}
+
+			if (dataset is IDdxRasterDataset)
+			{
+				return esriDatasetType.esriDTRasterDataset;
+			}
+
+			throw new ArgumentException(
+				string.Format("Unsupported dataset type: {0}", dataset.Name));
+		}
+
+		[NotNull]
+		private static IEnumerable<DatasetMapping> GetDatasetMappings<P, M>(
+			[NotNull] IWorkspace workspace,
+			[NotNull] P project,
+			bool isModelMasterDatabase,
+			[CanBeNull] string schemaOwner)
+			where P : Project<M>
+			where M : ProductionModel
+		{
+			var datasetNames = DatasetUtils.GetDatasetNames(workspace,
+			                                                GetInvolvedDatasetTypes(
+				                                                project.ProductionModel),
+			                                                schemaOwner)
+			                               .ToList();
+
+			var result = new List<DatasetMapping>();
+
+			foreach (IDatasetName datasetName in datasetNames)
+			{
+				_msg.VerboseDebug(() => $"Workspace dataset: {datasetName.Name}");
+
+				Dataset dataset = GetDataset<P, M>(project, datasetName,
+				                                   isModelMasterDatabase);
+				if (dataset == null)
+				{
+					continue;
+				}
+
+				_msg.VerboseDebug(() => $"- mapped dataset: {dataset.Name} [{dataset.Model.Name}]");
+
+				result.Add(new DatasetMapping(datasetName, dataset));
+			}
+
+			return result;
+		}
+
+		[NotNull]
+		private static List<WorkspaceDataset> GetWorkspaceDatasetsWithDisambiguation(
+			[NotNull] IEnumerable<DatasetMapping> datasetMappings)
+		{
+			Assert.ArgumentNotNull(datasetMappings, nameof(datasetMappings));
+
+			var errorDatasetMappings =
+				new Dictionary<string, List<DatasetMapping>>(
+					StringComparer.OrdinalIgnoreCase);
+			var otherDatasetMappings =
+				new Dictionary<string, List<DatasetMapping>>(
+					StringComparer.OrdinalIgnoreCase);
+
+			foreach (DatasetMapping datasetMapping in datasetMappings)
+			{
+				// possible extension: distinguish between "model dataset" and "non-model" or "system" dataset
+				// --> abstract method on Model or Project "IsModelDataset()" or "IsSystemDataset()" would be needed
+				AddDatasetMapping(datasetMapping,
+				                  datasetMapping.Dataset is IErrorDataset
+					                  ? errorDatasetMappings
+					                  : otherDatasetMappings);
+			}
+
+			var result = new List<WorkspaceDataset>();
+
+			string uniqueModelDatasetOwner = null;
+			var datasetOwnerIsUnique = true;
+
+			var ambiguousMappingCount = 0;
+			foreach (KeyValuePair<string, List<DatasetMapping>> pair in
+			         otherDatasetMappings)
+			{
+				List<DatasetMapping> mappings = pair.Value;
+
+				if (mappings.Count > 1)
+				{
+					ambiguousMappingCount++;
+
+					_msg.DebugFormat(
+						"Model dataset {0} maps to {1} workspace dataset(s):", pair.Key,
+						mappings.Count);
+					foreach (DatasetMapping mapping in mappings)
+					{
+						_msg.DebugFormat("-> {0}", mapping.FullName);
+					}
+				}
+				else if (mappings.Count == 1)
+				{
+					DatasetMapping mapping = mappings[0];
+
+					result.Add(CreateWorkspaceDataset(mapping));
+
+					if (datasetOwnerIsUnique)
+					{
+						string datasetOwner =
+							DatasetUtils.GetOwnerName(mapping.DatasetName);
+
+						if (uniqueModelDatasetOwner == null)
+						{
+							uniqueModelDatasetOwner = datasetOwner;
+						}
+						else
+						{
+							if (! string.Equals(uniqueModelDatasetOwner, datasetOwner,
+							                    StringComparison.OrdinalIgnoreCase))
+							{
+								datasetOwnerIsUnique = false;
+							}
+						}
+					}
+				}
+				else
+				{
+					throw new AssertionException("Unexpected dataset mapping count");
+				}
+			}
+
+			foreach (KeyValuePair<string, List<DatasetMapping>> pair in
+			         errorDatasetMappings)
+			{
+				List<DatasetMapping> mappings = pair.Value;
+
+				if (mappings.Count > 1)
+				{
+					DatasetMapping mappingForUniqueOwner = null;
+					if (datasetOwnerIsUnique && uniqueModelDatasetOwner != null)
+					{
+						mappingForUniqueOwner = GetMappingForDatasetOwner(
+							uniqueModelDatasetOwner, mappings);
+					}
+
+					if (mappingForUniqueOwner != null)
+					{
+						result.Add(CreateWorkspaceDataset(mappingForUniqueOwner));
+					}
+					else
+					{
+						ambiguousMappingCount++;
+
+						_msg.DebugFormat(
+							"Error dataset {0} maps to {1} workspace dataset(s):",
+							pair.Key,
+							mappings.Count);
+						foreach (DatasetMapping mapping in mappings)
+						{
+							_msg.DebugFormat("-> {0}", mapping.FullName);
+						}
+					}
+				}
+				else if (mappings.Count == 1)
+				{
+					result.Add(CreateWorkspaceDataset(mappings[0]));
+				}
+				else
+				{
+					throw new AssertionException("Unexpected dataset mapping count");
+				}
+			}
+
+			if (ambiguousMappingCount > 0)
+			{
+				throw new InvalidConfigurationException(
+					string.Format(ambiguousMappingCount == 1
+						              ? "{0} dataset corresponds to more than one workspace dataset. See log for details"
+						              : "{0} datasets each correspond to more than one workspace dataset. See log for details",
+					              ambiguousMappingCount));
+			}
+
+			return result;
+		}
+
+		[CanBeNull]
+		private static DatasetMapping GetMappingForDatasetOwner(
+			[NotNull] string datasetOwner,
+			[NotNull] IEnumerable<DatasetMapping> mappings)
+		{
+			foreach (DatasetMapping mapping in mappings)
+			{
+				if (string.Equals(DatasetUtils.GetOwnerName(mapping.DatasetName),
+				                  datasetOwner,
+				                  StringComparison.OrdinalIgnoreCase))
+				{
+					return mapping;
+				}
+			}
+
+			return null;
+		}
+
+		private static void AddDatasetMapping(
+			[NotNull] DatasetMapping datasetMapping,
+			[NotNull] IDictionary<string, List<DatasetMapping>> mappingsPerGdbDatasetName)
+		{
+			string modelName = datasetMapping.Dataset.Name;
+
+			List<DatasetMapping> mappings;
+			if (! mappingsPerGdbDatasetName.TryGetValue(
+				    modelName, out mappings))
+			{
+				mappings = new List<DatasetMapping>();
+				mappingsPerGdbDatasetName.Add(modelName, mappings);
+			}
+
+			mappings.Add(datasetMapping);
+		}
+
+		private class DatasetMapping
+		{
+			[CanBeNull] private string _fullName;
+
+			public DatasetMapping([NotNull] IDatasetName datasetName,
+			                      [NotNull] Dataset dataset)
+			{
+				Assert.ArgumentNotNull(datasetName, nameof(datasetName));
+				Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+				DatasetName = datasetName;
+				Dataset = dataset;
+			}
+
+			[NotNull]
+			public string FullName => _fullName ?? (_fullName = DatasetName.Name);
+
+			[NotNull]
+			public IDatasetName DatasetName { get; }
+
+			[NotNull]
+			public Dataset Dataset { get; }
 		}
 	}
 }

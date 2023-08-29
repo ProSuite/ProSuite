@@ -11,10 +11,12 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
+using ProSuite.QA.Tests.Documentation;
 using Path = System.IO.Path;
 
 namespace ProSuite.QA.Tests
 {
+	[UsedImplicitly]
 	public class QaExportTables : ContainerTest
 	{
 		private const int _tileIdFieldKey = -2;
@@ -26,18 +28,23 @@ namespace ProSuite.QA.Tests
 		private int _tileId;
 		private IFeatureClass _tileFc;
 
+		[Doc(nameof(DocStrings.QaExportTables_0))]
 		public QaExportTables(
-			[NotNull] IList<IReadOnlyTable> tables,
-			[NotNull] string fileGdbPath) : base(tables)
+			[Doc(nameof(DocStrings.QaExportTables_tables))][NotNull] IList<IReadOnlyTable> tables,
+			[Doc(nameof(DocStrings.QaExportTables_fileGdbPath))][NotNull] string fileGdbPath) : base(tables)
 		{
 			_fileGdbPathOrTemplate = fileGdbPath;
 		}
 
+		[Doc(nameof(DocStrings.QaExportTables_ExportTileIds))]
 		[TestParameter]
 		public bool ExportTileIds { get; set; }
 
+		[Doc(nameof(DocStrings.QaExportTables_ExportTiles))]
 		[TestParameter]
 		public bool ExportTiles { get; set; }
+
+		public string UsedFileGdbPath => _usedFileGdbPath;
 
 		protected override int CompleteTileCore(TileInfo tileInfo)
 		{

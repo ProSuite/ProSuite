@@ -14,6 +14,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
@@ -136,6 +137,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				_msg.InfoFormat("Verification {0}", result);
 			}
+			catch (TaskCanceledException canceledException)
+			{
+				HandleCancellationException(request, context, canceledException);
+			}
 			catch (Exception e)
 			{
 				_msg.Error($"Error verifying quality for request {request}", e);
@@ -204,6 +209,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 						func, context, _staThreadScheduler, true);
 
 				_msg.InfoFormat("Verification {0}", result);
+			}
+			catch (TaskCanceledException canceledException)
+			{
+				HandleCancellationException(request, context, canceledException);
 			}
 			catch (Exception e)
 			{
@@ -278,6 +287,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private async Task StartRequest(string peerName, object request, bool requiresLicense)
 		{
+			// The request comes in on a .NET thread-pool thread, which has no useful name
+			// when it comes to logging. Set the ID as its name.
+			ProcessUtils.TrySetThreadIdAsName();
+
 			CurrentLoad?.StartRequest();
 
 			_msg.InfoFormat("Starting {0} request from {1}", request.GetType().Name, peerName);
@@ -513,6 +526,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (useStandaloneService)
 				{
+					if (distributedTestRunner != null)
+					{
+						// No re-harvesting in all the sub-verifications
+						// TODO: Add SchemaMsg as DataModel property to standard request.
+						// to make the intent more explicit!
+						distributedTestRunner.SendModelsWithRequest = true;
+					}
+
 					// Stand-alone: Xml or specification list (WorkContextMsg is null!)
 					verification = VerifyStandaloneXmlCore(
 						specification, request.Parameters,
@@ -934,6 +955,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 				};
 
 			return result;
+		}
+
+		private static void HandleCancellationException(VerificationRequest request,
+		                                                ServerCallContext context,
+		                                                TaskCanceledException canceledException)
+		{
+			_msg.VerboseDebug(() => $"Cancelled request: {request}");
+			_msg.Debug($"Task cancelled: {context.CancellationToken.IsCancellationRequested}",
+			           canceledException);
+			_msg.Warn("Task was cancelled, likely by the client");
 		}
 	}
 }

@@ -71,9 +71,9 @@ namespace ProSuite.QA.Tests
 				       : "Feature is not touched by another feature";
 		}
 
-		protected override void ConfigureSpatialFilter(ISpatialFilter spatialFilter)
+		protected override void ConfigureSpatialFilter(IFeatureClassFilter spatialFilter)
 		{
-			spatialFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelTouches;
+			spatialFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelTouches;
 		}
 	}
 }

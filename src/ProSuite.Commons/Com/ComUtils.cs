@@ -38,6 +38,13 @@ namespace ProSuite.Commons.Com
 			return guid.ToString("B").ToUpper();
 		}
 
+		[NotNull]
+		public static string FormatGuidWithoutCurlyBraces(Guid guid)
+		{
+			// default format (no curly braces)
+			return guid.ToString().ToUpper();
+		}
+
 		public static string GetRegistryKey([NotNull] Type type)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));

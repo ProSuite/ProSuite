@@ -1105,7 +1105,7 @@ namespace ProSuite.QA.Tests.Test
 		private class QaEnvelopeIntersects : ContainerTest
 		{
 			private readonly IReadOnlyFeatureClass _lineClass;
-			private ISpatialFilter _filter;
+			private IFeatureClassFilter _filter;
 			private QueryFilterHelper _helper;
 
 			public QaEnvelopeIntersects(IReadOnlyFeatureClass lineClass)
@@ -1131,7 +1131,7 @@ namespace ProSuite.QA.Tests.Test
 
 				var feature = (IReadOnlyFeature) row;
 
-				_filter.Geometry = feature.Shape.Envelope;
+				_filter.FilterGeometry = feature.Shape.Envelope;
 
 				foreach (IReadOnlyRow otherRow in Search(_lineClass, _filter, _helper))
 				{
@@ -1157,14 +1157,14 @@ namespace ProSuite.QA.Tests.Test
 					return;
 				}
 
-				IList<ISpatialFilter> filters;
+				IList<IFeatureClassFilter> filters;
 				IList<QueryFilterHelper> helpers;
 				CopyFilters(out filters, out helpers);
 
 				_filter = filters[0];
 				_helper = helpers[0];
 
-				_filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				_filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 			}
 		}
 

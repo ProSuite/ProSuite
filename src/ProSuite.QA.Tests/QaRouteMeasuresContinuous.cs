@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests
 	[MValuesTest]
 	public class QaRouteMeasuresContinuous : ContainerTest
 	{
-		private IList<ISpatialFilter> _filter;
+		private IList<IFeatureClassFilter> _filter;
 		private IList<QueryFilterHelper> _helper;
 		private readonly IPoint _fromPoint = new PointClass();
 		private readonly IPoint _toPoint = new PointClass();
@@ -149,7 +149,7 @@ namespace ProSuite.QA.Tests
 
 			IReadOnlyTable searchTable = InvolvedTables[searchTableIndex];
 
-			ISpatialFilter searchFilter = _filter[searchTableIndex];
+			IFeatureClassFilter searchFilter = _filter[searchTableIndex];
 			QueryFilterHelper searchFilterHelper = _helper[searchTableIndex];
 
 			int errorCount = 0;
@@ -164,7 +164,7 @@ namespace ProSuite.QA.Tests
 
 			foreach (IPoint endPoint in GetEndpoints(polyline, _fromPoint, _toPoint))
 			{
-				searchFilter.Geometry = endPoint;
+				searchFilter.FilterGeometry = endPoint;
 
 				foreach (IReadOnlyRow searchRow in Search(searchTable, searchFilter,
 				                                          searchFilterHelper))
@@ -262,9 +262,9 @@ namespace ProSuite.QA.Tests
 		private void InitFilter()
 		{
 			CopyFilters(out _filter, out _helper);
-			foreach (ISpatialFilter filter in _filter)
+			foreach (var filter in _filter)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 			}
 
 			foreach (QueryFilterHelper filterHelper in _helper)

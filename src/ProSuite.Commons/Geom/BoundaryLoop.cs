@@ -3,7 +3,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
 {
-	internal class BoundaryLoop
+	public class BoundaryLoop
 	{
 		private readonly bool _isSourceRing;
 		private Linestring _loop1;
@@ -181,41 +181,6 @@ namespace ProSuite.Commons.Geom
 			{
 				return (Start.GetHashCode() * 397) ^ End.GetHashCode();
 			}
-		}
-
-		#endregion
-	}
-
-	internal class BoundaryLoopComparer : IEqualityComparer<BoundaryLoop>
-	{
-		#region Implementation of IEqualityComparer<in BoundaryLoop>
-
-		public bool Equals(BoundaryLoop x, BoundaryLoop y)
-		{
-			if (x == null && y == null)
-			{
-				return true;
-			}
-
-			if (x == null || y == null)
-			{
-				return false;
-			}
-
-			if (x.Start.Equals(y.Start) ||
-			    x.Start.Equals(y.End) &&
-			    x.End.Equals(y.End) ||
-			    x.End.Equals(y.Start))
-			{
-				return true;
-			}
-
-			return false;
-		}
-
-		public int GetHashCode(BoundaryLoop obj)
-		{
-			return (obj.Start.GetHashCode()) ^ obj.End.GetHashCode();
 		}
 
 		#endregion

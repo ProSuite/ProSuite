@@ -10,7 +10,7 @@ namespace ProSuite.QA.Tests.RowFilters
 	[UsedImplicitly]
 	public class RfExecuteArea : RowFilter
 	{
-		private IList<ISpatialFilter> _spatialFilters;
+		private IList<IFeatureClassFilter> _spatialFilters;
 		private IList<QueryFilterHelper> _filterHelpers;
 
 		public RfExecuteArea(IReadOnlyFeatureClass areaFc)
@@ -21,7 +21,7 @@ namespace ProSuite.QA.Tests.RowFilters
 			if (_spatialFilters == null)
 			{
 				CopyFilters(out _spatialFilters, out _filterHelpers);
-				_spatialFilters[0].SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				_spatialFilters[0].SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 			}
 		}
 
@@ -35,10 +35,10 @@ namespace ProSuite.QA.Tests.RowFilters
 			EnsureFilters();
 
 			IReadOnlyTable table = InvolvedTables[0];
-			ISpatialFilter filter = _spatialFilters[0];
+			IFeatureClassFilter filter = _spatialFilters[0];
 			QueryFilterHelper helper = _filterHelpers[0];
 			IGeometry searchGeom = f.Shape;
-			filter.Geometry = searchGeom;
+			filter.FilterGeometry = searchGeom;
 			foreach (var searched in Search(table, filter, helper))
 			{
 				if (((IRelationalOperator) searchGeom).Within(((IReadOnlyFeature) searched).Shape))

@@ -38,7 +38,7 @@ namespace ProSuite.QA.Tests
 		private bool _expressionHelpersInitialized;
 
 		private IEnvelope _box;
-		private IList<ISpatialFilter> _filter;
+		private IList<IFeatureClassFilter> _filter;
 		private IList<QueryFilterHelper> _helper;
 		private IPoint _nearPoint;
 
@@ -358,9 +358,9 @@ namespace ProSuite.QA.Tests
 			_box = new EnvelopeClass();
 
 			CopyFilters(out _filter, out _helper);
-			foreach (ISpatialFilter filter in _filter)
+			foreach (var filter in _filter)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 			}
 
 			if (_requireLine)
@@ -388,8 +388,8 @@ namespace ProSuite.QA.Tests
 			// - however if the nearest point is a vertex and ANOTHER line connects to the same vertex, then 
 			//   it should be checked too
 
-			ISpatialFilter filter = _filter[neighborTableIndex];
-			filter.Geometry = _box;
+			IFeatureClassFilter filter = _filter[neighborTableIndex];
+			filter.FilterGeometry = _box;
 
 			foreach (IReadOnlyRow row in Search(neighborClass,
 			                                    _filter[neighborTableIndex],

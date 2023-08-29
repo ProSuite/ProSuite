@@ -1,17 +1,19 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Transformers.Filters
 {
 	public class SpatiallyFilteredBackingDataset : FilteredBackingDataset
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly IReadOnlyFeatureClass _filtering;
 		private readonly TrSpatiallyFiltered.SearchOption _neighborSearchOption;
 
@@ -27,7 +29,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			_neighborSearchOption = neighborSearchOption;
 		}
 
-		public ISpatialFilter IntersectingFeatureFilter { get; set; }
+		public IFeatureClassFilter IntersectingFeatureFilter { get; set; }
 
 		/// <summary>
 		/// Whether a feature that is disjoint to any filtering feature passes the filter.
@@ -38,22 +40,50 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 		#region Overrides of BackingDataset
 
-		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 		{
 			QueryFilterHelper resultFilter = QueryHelpers[0];
 			Assert.NotNull(filter);
 
-			// If the features are not in the container, a different approach would be more suitable:
-			// Get all intersecting, search by unioned envelopes, etc.
-			foreach (IReadOnlyRow resultRow in DataSearchContainer.Search(
-				         FeatureClassToFilter, filter, resultFilter))
-			{
-				IReadOnlyFeature resultFeature = (IReadOnlyFeature) resultRow;
+			// Cannot search the container without geometry! (InvalidCastException)
+			bool canUseDataContainer = DataSearchContainer != null &&
+			                           filter is IFeatureClassFilter;
 
-				if (PassesFilter(resultFeature))
+			if (canUseDataContainer)
+			{
+				IFeatureClassFilter featureClassFilter = (IFeatureClassFilter) filter;
+
+				// Search in the container
+				foreach (IReadOnlyRow resultRow in DataSearchContainer.Search(
+					         FeatureClassToFilter, featureClassFilter, resultFilter))
 				{
-					// No caching, just wrap it:
-					yield return CreateFeature(resultFeature);
+					IReadOnlyFeature resultFeature = (IReadOnlyFeature) resultRow;
+
+					if (PassesFilter(resultFeature))
+					{
+						// No caching, just wrap it:
+						yield return CreateFeature(resultFeature);
+					}
+				}
+			}
+			else
+			{
+				// For the moment, use the brute-force approach and circumvent the container:
+				// Consider a different approach (if not DisjointIsPass):
+				// Get all intersecting, search by unioned envelopes, etc.:
+				_msg.DebugFormat(
+					"Cannot search data container. Using feature class search with where clause {0}",
+					filter?.WhereClause);
+
+				foreach (IReadOnlyRow resultRow in FeatureClassToFilter.EnumRows(filter, recycling))
+				{
+					IReadOnlyFeature resultFeature = (IReadOnlyFeature) resultRow;
+
+					if (PassesFilter(resultFeature))
+					{
+						// No caching, just wrap it:
+						yield return CreateFeature(resultFeature);
+					}
 				}
 			}
 		}
@@ -64,9 +94,9 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 		{
 			IGeometry testGeometry = resultFeature.Shape;
 
-			ISpatialFilter spatialFilter = IntersectingFeatureFilter;
+			IFeatureClassFilter spatialFilter = IntersectingFeatureFilter;
 
-			spatialFilter.Geometry = testGeometry;
+			spatialFilter.FilterGeometry = testGeometry;
 			QueryFilterHelper queryFilterHelper = QueryHelpers[1];
 			queryFilterHelper.FullGeometrySearch =
 				_neighborSearchOption == TrSpatiallyFiltered.SearchOption.All;

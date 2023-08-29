@@ -6,7 +6,6 @@ using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Coincidence;
@@ -23,7 +22,7 @@ namespace ProSuite.QA.Tests
 		[NotNull] private readonly bool? _self;
 		// nullable/notnull to ensure initialization in constructors
 
-		private ISpatialFilter _filter;
+		private IFeatureClassFilter _filter;
 		private QueryFilterHelper _helper;
 
 		[Doc(nameof(DocStrings.QaNotNear_0))]
@@ -186,8 +185,8 @@ namespace ProSuite.QA.Tests
 			const bool asRatio = false;
 			box0.Expand(SearchDistance, SearchDistance, asRatio);
 
-			ISpatialFilter filter = Assert.NotNull(_filter);
-			filter.Geometry = box0;
+			IFeatureClassFilter filter = Assert.NotNull(_filter);
+			filter.FilterGeometry = box0;
 
 			var errorCount = 0;
 
@@ -288,7 +287,7 @@ namespace ProSuite.QA.Tests
 
 		private void InitFilter()
 		{
-			IList<ISpatialFilter> filter;
+			IList<IFeatureClassFilter> filter;
 			IList<QueryFilterHelper> helper;
 
 			CopyFilters(out filter, out helper);
@@ -300,7 +299,7 @@ namespace ProSuite.QA.Tests
 			_filter = filter[tableIndex];
 			_helper = helper[tableIndex];
 
-			_filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+			_filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 		}
 
 		protected sealed class NotNearNeighborhoodFinder : NeighborhoodFinder

@@ -12,7 +12,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 	public class IfIntersecting : IssueFilter
 	{
 		private IList<QueryFilterHelper> _filterHelpers;
-		private IList<ISpatialFilter> _spatialFilters;
+		private IList<IFeatureClassFilter> _spatialFilters;
 
 		[DocIf(nameof(DocIfStrings.IfIntersecting_0))]
 		public IfIntersecting(
@@ -32,10 +32,10 @@ namespace ProSuite.QA.Tests.IssueFilters
 			EnsureFilters();
 
 			IReadOnlyTable table = InvolvedTables[0];
-			ISpatialFilter filter = _spatialFilters[0];
+			IFeatureClassFilter filter = _spatialFilters[0];
 			QueryFilterHelper helper = _filterHelpers[0];
 
-			filter.Geometry = errorGeometry;
+			filter.FilterGeometry = errorGeometry;
 			foreach (var searched in Search(table, filter, helper))
 			{
 				if (! ((IRelationalOperator) errorGeometry).Disjoint(
@@ -53,7 +53,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 			if (_spatialFilters == null)
 			{
 				CopyFilters(out _spatialFilters, out _filterHelpers);
-				_spatialFilters[0].SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				_spatialFilters[0].SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 				_filterHelpers[0].FullGeometrySearch = true;
 			}
 		}

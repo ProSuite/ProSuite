@@ -29,9 +29,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		IReadOnlyRow GetRow(long oid);
 
-		IEnumerable<IReadOnlyRow> EnumRows(IQueryFilter filter, bool recycle);
+		IEnumerable<IReadOnlyRow> EnumRows(ITableFilter filter, bool recycle);
 
-		long RowCount(IQueryFilter filter);
+		long RowCount(ITableFilter filter);
 
 		bool Equals(IReadOnlyTable otherTable);
 	}

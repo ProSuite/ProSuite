@@ -36,7 +36,7 @@ namespace ProSuite.QA.Tests
 
 		private readonly IPoint _pointTemplate = new PointClass();
 		private readonly double _interpolateTolerance;
-		private ISpatialFilter _queryFilter;
+		private IFeatureClassFilter _queryFilter;
 		private QueryFilterHelper _helper;
 		private readonly esriGeometryType _shapeType;
 		private SortedDictionary<IReadOnlyRow, ShortPartInfo> _shortParts;
@@ -226,7 +226,7 @@ namespace ProSuite.QA.Tests
 
 			IEnvelope box = surfaceRow.Extent;
 
-			_queryFilter.Geometry = box;
+			_queryFilter.FilterGeometry = box;
 
 			WKSEnvelope wksBox;
 			box.QueryWKSCoords(out wksBox);
@@ -526,14 +526,14 @@ namespace ProSuite.QA.Tests
 
 		private void InitFilter()
 		{
-			IList<ISpatialFilter> filters;
+			IList<IFeatureClassFilter> filters;
 			IList<QueryFilterHelper> helpers;
 			CopyFilters(out filters, out helpers);
 
 			_queryFilter = filters[0];
 			_helper = helpers[0];
 
-			_queryFilter.SpatialRel =
+			_queryFilter.SpatialRelationship =
 				esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 		}
 

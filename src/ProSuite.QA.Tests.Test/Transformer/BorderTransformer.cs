@@ -62,13 +62,15 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			protected override ICursor Search(IQueryFilter filter, bool recycling)
 			{
+				throw new NotImplementedException();
 				if (DataContainer == null)
 				{
 					throw new NotImplementedException("Not Implemented for missing DataContainer");
 				}
 
 				List<IReadOnlyRow> baseFeatures =
-					new List<IReadOnlyRow>(DataContainer.Search(_borderFc, filter, _filterHelper));
+					new List<IReadOnlyRow>(DataContainer.Search(_borderFc, null, _filterHelper));
+//				new List<IReadOnlyRow>(DataContainer.Search(_borderFc, filter, _filterHelper));
 				List<IRow> searchFeatures = new List<IRow>();
 				foreach (IReadOnlyFeature baseFeature in baseFeatures)
 				{

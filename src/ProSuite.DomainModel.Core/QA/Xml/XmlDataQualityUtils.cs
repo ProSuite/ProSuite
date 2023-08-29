@@ -780,16 +780,16 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 			Assert.ArgumentNotNull(xmlInstanceConfiguration, nameof(xmlInstanceConfiguration));
 
+			if (StringUtils.IsNotEmpty(xmlInstanceConfiguration.Uuid))
+			{
+				Assert.AreEqual(instanceConfiguration.Uuid, xmlInstanceConfiguration.Uuid,
+				                "{0}: Non-matching UUIDs in update.", instanceConfiguration.Name);
+			}
+
 			instanceConfiguration.Name = xmlInstanceConfiguration.Name;
 			instanceConfiguration.Description = xmlInstanceConfiguration.Description;
 			instanceConfiguration.Notes = xmlInstanceConfiguration.Notes;
 			instanceConfiguration.Url = xmlInstanceConfiguration.Url;
-
-			string uuid = xmlInstanceConfiguration.Uuid;
-			if (StringUtils.IsNotEmpty(uuid))
-			{
-				instanceConfiguration.Uuid = uuid;
-			}
 
 			ImportMetadata(instanceConfiguration, xmlInstanceConfiguration);
 

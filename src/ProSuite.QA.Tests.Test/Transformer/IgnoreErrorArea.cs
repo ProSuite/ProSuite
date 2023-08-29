@@ -8,7 +8,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 {
 	internal class IgnoreErrorArea : IssueFilter
 	{
-		private IList<ISpatialFilter> _spatialFilters;
+		private IList<IFeatureClassFilter> _spatialFilters;
 		private IList<QueryFilterHelper> _filterHelpers;
 
 		public IgnoreErrorArea(IReadOnlyFeatureClass areaFc)
@@ -27,9 +27,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			EnsureFilters();
 			QaError error = args.QaError;
 			IReadOnlyTable table = InvolvedTables[0];
-			ISpatialFilter filter = _spatialFilters[0];
+			IFeatureClassFilter filter = _spatialFilters[0];
 			QueryFilterHelper helper = _filterHelpers[0];
-			filter.Geometry = error.Geometry;
+			filter.FilterGeometry = error.Geometry;
 			foreach (var row in Search(table, filter, helper))
 			{
 				IGeometry ignoreGeom = ((IFeature) row).Shape;

@@ -175,7 +175,15 @@ namespace ProSuite.Microservices.Client.QA
 			AddIssueFilters(result, conditionMsg, datasetSettings);
 
 			// The result will be set to null, if there are missing datasets:
-			result = ConfigureParameters(result, conditionMsg.Parameters, datasetSettings);
+			try
+			{
+				result = ConfigureParameters(result, conditionMsg.Parameters, datasetSettings);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error creating configuration for condition {conditionMsg.Name}", e);
+				throw;
+			}
 
 			return result;
 		}
