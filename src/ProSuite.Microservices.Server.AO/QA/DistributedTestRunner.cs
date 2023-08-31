@@ -274,8 +274,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				return
 					$"{QualityConditionGroup.ExecType} sub-verification with {QualityConditionGroup.QualityConditions.Count} " +
-					$"condition(s) in envelope {GeometryUtils.ToString(TileEnvelope, true)}" +
-					$"{QualityConditionGroup}";
+					$"condition(s) in envelope {GeometryUtils.ToString(TileEnvelope, true)}";
 			}
 
 			#endregion
@@ -435,6 +434,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				countTask = Task.Run(() => CountData(subVerifications, wsInfos));
 			}
 
+			int failureCount = 0;
+			int successCount = 0;
 			while (_tasks.Count > 0 || unhandledSubverifications.Count > 0)
 			{
 				if (TryTakeCompletedRun(_tasks, out Task<bool> task,
@@ -451,12 +452,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 					{
 						_msg.WarnFormat("{0}{1}Failed verification: {2}", failureMessage,
 						                Environment.NewLine, completed);
+						failureCount++;
 						// TODO: Communicate error to client?!
 					}
 					else
 					{
 						_msg.InfoFormat("Finished verification: {0} at {1}", completed,
 						                finishedClient.GetAddress());
+						successCount++;
 					}
 
 					if (task.Status == TaskStatus.Faulted)
@@ -515,6 +518,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 						Progress?.Invoke(this, eventArgs);
 					}
 				}
+
+				_msg.InfoFormat(
+					"Finished distributed verification with {0} failures and {1} successful sub-verifications",
+					failureCount, successCount);
 
 				if (countTask?.IsCompleted == true)
 				{
