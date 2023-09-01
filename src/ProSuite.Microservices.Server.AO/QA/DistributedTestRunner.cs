@@ -424,7 +424,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			Task countTask = null;
-			if (Debugger.IsAttached)
+			if (ParallelConfiguration.SortByNumberOfObjects)
 			{
 				Thread.Sleep(10);
 
@@ -526,6 +526,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 				if (countTask?.IsCompleted == true)
 				{
 					countTask = null;
+					var listToSort = new List<SubVerification>(unhandledSubverifications);
+					listToSort.Sort((x, y) =>
+						                Math.Sign(
+							                (x.InvolvedBaseRowsCount ?? 0)
+							                - (y.InvolvedBaseRowsCount ?? 0))
+					);
+					unhandledSubverifications = new Stack<SubVerification>(listToSort);
 				}
 
 				Thread.Sleep(100);
@@ -582,7 +589,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (ddxModel is Model model)
 				{
-					spatialReference = model.SpatialReferenceDescriptor.SpatialReference;
+					spatialReference = model.SpatialReferenceDescriptor?.SpatialReference;
 				}
 
 				foreach (Dataset dataset in ddxModel.GetDatasets())

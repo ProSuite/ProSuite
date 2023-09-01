@@ -36,5 +36,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		[XmlArray]
 		public List<QualityConditionExecType> TypePriority { get; set; }
+
+		/// <summary>
+		/// if yes: Count the number of objects per parallel tile verification in a seperate task
+		/// and execute these verifications in descending order, after the task finished
+		/// </summary>
+		[XmlAttribute]
+		public bool SortByNumberOfObjects { get; set; }
 	}
 }
