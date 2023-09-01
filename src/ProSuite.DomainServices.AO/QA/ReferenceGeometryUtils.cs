@@ -74,8 +74,6 @@ namespace ProSuite.DomainServices.AO.QA
 			Assert.ArgumentNotNull(relClassChains, nameof(relClassChains));
 			Assert.ArgumentNotNull(testPerimeter, nameof(testPerimeter));
 
-			string whereClause = string.Empty;
-			string postfixClause = string.Empty;
 			string tableName = table.Name;
 
 			Stopwatch watch =
@@ -105,16 +103,12 @@ namespace ProSuite.DomainServices.AO.QA
 				//   catchable exception in RARE cases
 				// - if only the OID plus the Shape field of the involved feature class are in the subfields, then
 				//   in those same cases a "Shape Integrity Error" exception is thrown.
-				foreach (FieldMappingRowProxy row in
-				         GdbQueryUtils.GetRowProxys(objectClass,
-				                                    testPerimeter,
-				                                    whereClause,
-				                                    relClassChain,
-				                                    postfixClause,
-				                                    subfields: null, includeOnlyOIDFields: true,
-				                                    recycle: true))
+				foreach (var rowOid in
+				         GdbQueryUtils.GetRelatedOids(objectClass,
+				                                      testPerimeter,
+				                                      relClassChain))
 				{
-					result.Add(row.OID);
+					result.Add(rowOid);
 				}
 			}
 
