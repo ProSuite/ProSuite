@@ -6,7 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web.UI;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -633,13 +632,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 					_msg.WarnFormat("New Task already exists in dictioniary!");
 					LogTask(_tasks, newTask, next);
 				}
+
 				_tasks.Add(newTask, next);
 
 				startedVerifications.Add(newTask, next);
 			}
 		}
 
-		private void LogTask(IDictionary<Task<bool>, SubVerification> tasks, Task<bool> newTask, SubVerification newSubVerification)
+		private void LogTask(IDictionary<Task<bool>, SubVerification> tasks, Task<bool> newTask,
+		                     SubVerification newSubVerification)
 		{
 			LogTask(newTask, newSubVerification, "New");
 
@@ -664,7 +665,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private void LogTask(Task task, SubVerification subVerification, string prefix)
 		{
-			_msg.Warn($"{prefix} Task {task}; Task Hashcode: {task.GetHashCode()}; Subverification {subVerification}");
+			_msg.Warn(
+				$"{prefix} Task {task}; Task Hashcode: {task.GetHashCode()}; Subverification {subVerification}");
 		}
 
 		private IQualityVerificationClient GetWorkerClient()
