@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web.UI;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -627,9 +628,43 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				SubVerification next = subVerifications.Pop();
 				Task<bool> newTask = IniTask(next, client);
+				if (_tasks.ContainsKey(newTask))
+				{
+					_msg.WarnFormat("New Task already exists in dictioniary!");
+					LogTask(_tasks, newTask, next);
+				}
 				_tasks.Add(newTask, next);
+
 				startedVerifications.Add(newTask, next);
 			}
+		}
+
+		private void LogTask(IDictionary<Task<bool>, SubVerification> tasks, Task<bool> newTask, SubVerification newSubVerification)
+		{
+			LogTask(newTask, newSubVerification, "New");
+
+			if (tasks.TryGetValue(newTask, out SubVerification existing))
+			{
+				foreach (KeyValuePair<Task<bool>, SubVerification> pair in tasks)
+				{
+					if (pair.Value == existing)
+					{
+						LogTask(pair.Key, pair.Value, "Equal");
+					}
+				}
+			}
+			else
+			{
+				foreach (KeyValuePair<Task<bool>, SubVerification> pair in tasks)
+				{
+					LogTask(pair.Key, pair.Value, "Existing");
+				}
+			}
+		}
+
+		private void LogTask(Task task, SubVerification subVerification, string prefix)
+		{
+			_msg.Warn($"{prefix} Task {task}; Task Hashcode: {task.GetHashCode()}; Subverification {subVerification}");
 		}
 
 		private IQualityVerificationClient GetWorkerClient()
