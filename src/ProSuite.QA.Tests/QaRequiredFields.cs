@@ -135,6 +135,15 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
+		protected override void ConfigureQueryFilter(int tableIndex, ITableFilter filter)
+		{
+			foreach (int requiredFieldIndex in _requiredFieldIndices)
+			{
+				filter.AddField(InvolvedTables[tableIndex].Fields.Field[requiredFieldIndex].Name);
+			}
+			base.ConfigureQueryFilter(tableIndex, filter);
+		}
+
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			int errorCount = 0;
