@@ -7,6 +7,7 @@ using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
@@ -195,6 +196,77 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                    whereClause, relClasses,
 			                    postfixClause, subfields,
 			                    includeOnlyOIDFields, recycle);
+		}
+
+		public static HashSet<long> GetRelatedOids(IObjectClass objectClass,
+		                                               IGeometry intersectedGeometry,
+		                                               IList<IRelationshipClass> relClasses)
+		{
+			IRelationshipClass geomRelClass = relClasses[relClasses.Count - 1];
+			IObjectClass startClass;
+			if (geomRelClass.OriginClass is IFeatureClass fc)
+			{
+				startClass = geomRelClass.DestinationClass;
+			}
+			else
+			{
+				fc = (IFeatureClass) geomRelClass.DestinationClass;
+				startClass = geomRelClass.OriginClass;
+			}
+
+			GdbFeatureClass gdbFc = TableJoinUtils.CreateJoinedGdbFeatureClass(geomRelClass, fc, "geometryRel");
+
+			HashSet<long> oids = GetRelatedOids(gdbFc, new AoFeatureClassFilter(intersectedGeometry));
+
+			for (int iRel = relClasses.Count - 2; iRel >= 0; iRel--)
+			{
+				ITable startTbl = (ITable) startClass;
+				IRelationshipClass relClass = relClasses[iRel];
+				GdbTable gdbTbl = TableJoinUtils.CreateJoinedGdbTable(relClass, startTbl, $"rel_{iRel}");
+
+				HashSet<long> allOids = new HashSet<long>();
+				IWorkspace ws = ((IDataset) relClass).Workspace;
+				int oidFieldIndex = startTbl.FindField(startTbl.OIDFieldName);
+				foreach (var whereClause in EnumWhereClauses(
+					         oids, null, startTbl.Fields.get_Field(oidFieldIndex), ws))
+				{
+					foreach (long oid in GetRelatedOids(
+						         gdbTbl, new AoTableFilter { WhereClause = whereClause }))
+					{
+						allOids.Add(oid);
+					}
+				}
+
+				startClass = relClass.OriginClass == startClass
+					       ? relClass.DestinationClass
+					       : relClass.OriginClass;
+				oids = allOids;
+			}
+
+			if (startClass != objectClass)
+			{
+				throw new InvalidOperationException("relClasses do not start with objectClass");
+			}
+
+			return oids;
+		}
+
+		private static HashSet<long> GetRelatedOids(GdbTable gdbFc, ITableFilter filter)
+		{
+			JoinedDataset joined = Assert.NotNull((JoinedDataset)gdbFc.BackingDataset);
+			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey =
+				joined.GetOtherRowsByFeatureKey(filter, false);
+
+			HashSet<long> oids = new HashSet<long>();
+			foreach (IList<IReadOnlyRow> otherRows in otherRowsByFeatureKey.Values)
+			{
+				foreach (IReadOnlyRow readOnlyRow in otherRows)
+				{
+					oids.Add(readOnlyRow.OID);
+				}
+			}
+
+			return oids;
 		}
 
 		/// <summary>
@@ -1080,75 +1152,77 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(valueList, nameof(valueList));
 			Assert.ArgumentNotNull(getRows, nameof(getRows));
 
-			// TODO: assert that the values match the field type
-
-			esriFieldType fieldType = field.Type;
-
 			if (queryFilter == null)
 			{
 				queryFilter = new QueryFilterClass();
 			}
 
-			int maxWhereClauseLength;
-			int maxValueCount;
-			GetWhereClauseLimits(workspace, out maxWhereClauseLength, out maxValueCount);
-
 			string origWhereClause = queryFilter.WhereClause;
 			try
 			{
-				StringBuilder sb = null;
-				var valueCount = 0;
-				foreach (object value in valueList)
+				foreach (string whereClause in EnumWhereClauses(valueList, origWhereClause, field, workspace))
 				{
-					if (sb == null ||
-					    sb.Length >= maxWhereClauseLength ||
-					    valueCount >= maxValueCount)
-					{
-						if (sb != null)
-						{
-							// NOTE: the last value plus the closing bracket may exceed the maximum length
-							sb.Append(")");
-							queryFilter.WhereClause = sb.ToString();
-
-							foreach (T row in getRows(queryFilter))
-							{
-								yield return row;
-							}
-						}
-
-						sb = new StringBuilder();
-						if (! string.IsNullOrEmpty(origWhereClause))
-						{
-							sb.AppendFormat("({0}) AND ", origWhereClause);
-						}
-
-						sb.AppendFormat("{0} ", field.Name);
-						sb.Append("IN (");
-						valueCount = 0;
-					}
-					else
-					{
-						sb.Append(",");
-					}
-
-					sb.Append(GdbSqlUtils.GetLiteral(value, fieldType, workspace));
-					valueCount++;
-				}
-
-				if (sb != null)
-				{
-					sb.Append(")");
-					queryFilter.WhereClause = sb.ToString();
+					queryFilter.WhereClause = whereClause;
 
 					foreach (T row in getRows(queryFilter))
 					{
 						yield return row;
 					}
+
 				}
 			}
 			finally
 			{
 				queryFilter.WhereClause = origWhereClause;
+			}
+		}
+
+		private static IEnumerable<string> EnumWhereClauses(
+			IEnumerable valueList, string origWhereClause, IField field,
+		    IWorkspace workspace)
+		{
+			// TODO: assert that the values match the field type
+
+			esriFieldType fieldType = field.Type;
+
+			GetWhereClauseLimits(workspace, out int maxWhereClauseLength, out int maxValueCount);
+
+			StringBuilder sb = null;
+			var valueCount = 0;
+			foreach (object value in valueList)
+			{
+				if (sb == null ||
+				    sb.Length >= maxWhereClauseLength ||
+				    valueCount >= maxValueCount)
+				{
+					if (sb != null)
+					{
+						// NOTE: the last value plus the closing bracket may exceed the maximum length
+						yield return $"{sb})";
+					}
+
+					sb = new StringBuilder();
+					if (!string.IsNullOrEmpty(origWhereClause))
+					{
+						sb.AppendFormat("({0}) AND ", origWhereClause);
+					}
+
+					sb.AppendFormat("{0} ", field.Name);
+					sb.Append("IN (");
+					valueCount = 0;
+				}
+				else
+				{
+					sb.Append(",");
+				}
+
+				sb.Append(GdbSqlUtils.GetLiteral(value, fieldType, workspace));
+				valueCount++;
+			}
+
+			if (sb != null)
+			{
+				yield return $"{sb})";
 			}
 		}
 

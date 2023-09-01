@@ -228,14 +228,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#endregion
 
-		/// <summary>
-		/// Performs the join using the filter only by applying the spatial constraint.
-		/// </summary>
-		/// <param name="filter"></param>
-		/// <param name="recycle"></param>
-		/// <returns></returns>
-		private IEnumerable<VirtualRow> GetJoinedRows([CanBeNull] ITableFilter filter,
-		                                              bool recycle)
+		public IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
+			[CanBeNull] ITableFilter filter, bool recycle)
 		{
 			EnsureKeyFieldNames();
 
@@ -273,6 +267,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 				otherRowsByFeatureKey = GetOtherRowsByFeatureKey(filter);
 			}
 
+			return otherRowsByFeatureKey;
+		}
+
+		private IEnumerable<VirtualRow> GetJoinedRows([CanBeNull] ITableFilter filter,
+		                                              bool recycle)
+		{
+			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey =
+				GetOtherRowsByFeatureKey(filter,recycle);
+
 			IEnumerable<IReadOnlyRow> leftRows = PerformFinalGeoClassRead(
 				otherRowsByFeatureKey, filter, recycle);
 
@@ -304,6 +307,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
 			[CanBeNull] ITableFilter filter)
 		{
+			EnsureKeyFieldNames();
+
 			Assert.NotNull(OtherEndClass);
 			Assert.NotNull(OtherClassKeyField);
 
