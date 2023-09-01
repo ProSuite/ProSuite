@@ -4,14 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
-using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
@@ -276,8 +274,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				return
 					$"{QualityConditionGroup.ExecType} sub-verification with {QualityConditionGroup.QualityConditions.Count} " +
-					$"condition(s) in envelope {GeometryUtils.ToString(TileEnvelope, true)}" +
-					$"{QualityConditionGroup}";
+					$"condition(s) in envelope {GeometryUtils.ToString(TileEnvelope, true)}";
 			}
 
 			#endregion
@@ -437,6 +434,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				countTask = Task.Run(() => CountData(subVerifications, wsInfos));
 			}
 
+			int failureCount = 0;
+			int successCount = 0;
 			while (_tasks.Count > 0 || unhandledSubverifications.Count > 0)
 			{
 				if (TryTakeCompletedRun(_tasks, out Task<bool> task,
@@ -453,12 +452,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 					{
 						_msg.WarnFormat("{0}{1}Failed verification: {2}", failureMessage,
 						                Environment.NewLine, completed);
+						failureCount++;
 						// TODO: Communicate error to client?!
 					}
 					else
 					{
 						_msg.InfoFormat("Finished verification: {0} at {1}", completed,
 						                finishedClient.GetAddress());
+						successCount++;
 					}
 
 					if (task.Status == TaskStatus.Faulted)
@@ -518,6 +519,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				}
 
+				_msg.InfoFormat(
+					"Finished distributed verification with {0} failures and {1} successful sub-verifications",
+					failureCount, successCount);
+
 				if (countTask?.IsCompleted == true)
 				{
 					countTask = null;
@@ -529,6 +534,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					);
 					unhandledSubverifications = new Stack<SubVerification>(listToSort);
 				}
+
 				Thread.Sleep(100);
 			}
 
@@ -1298,9 +1304,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 				listSpecification;
 
 			// Sub-requests must not write the issue GDB and reports:
+			subRequest.Parameters.WriteDetailedVerificationReport = false;
 			subRequest.Parameters.IssueFileGdbPath = string.Empty;
 			subRequest.Parameters.VerificationReportPath = string.Empty;
 			subRequest.Parameters.HtmlReportPath = string.Empty;
+
+			// Sub-requests must never save the verification:
+			subRequest.Parameters.SaveVerificationStatistics = false;
 
 			subRequest.Specification.ExcludedConditionIds.AddRange(excludedConditionIds);
 
