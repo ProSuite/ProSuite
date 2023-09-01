@@ -305,7 +305,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 			if (distinctCategories.Count == 1)
 			{
-				return distinctCategories[0].Name;
+				return distinctCategories[0]?.Name;
 			}
 
 			return StringUtils.Concatenate(distinctCategories.OrderBy(c => c?.Name),
