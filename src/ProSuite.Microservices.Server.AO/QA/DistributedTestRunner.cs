@@ -488,7 +488,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 						return;
 					}
 
-					_msg.InfoFormat("Remaining verification tasks: {0}", _tasks.Count);
+					_msg.InfoFormat(
+						"{0} failed and {1} successful sub-verifications. Remaining: {2}.",
+						failureCount, successCount, _tasks.Count);
 				}
 				else
 				{
@@ -519,10 +521,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				}
 
-				_msg.InfoFormat(
-					"Finished distributed verification with {0} failures and {1} successful sub-verifications",
-					failureCount, successCount);
-
 				if (countTask?.IsCompleted == true)
 				{
 					countTask = null;
@@ -537,6 +535,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				Thread.Sleep(100);
 			}
+
+			_msg.InfoFormat(
+				"Finished distributed verification with {0} failures and {1} successful sub-verifications",
+				failureCount, successCount);
+
+			_msg.InfoFormat("Total issue count: {0}", _totalIssueCount);
 
 			EndVerification(QualityVerification);
 		}
