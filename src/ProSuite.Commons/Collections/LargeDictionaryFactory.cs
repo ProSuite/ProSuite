@@ -26,10 +26,12 @@ namespace ProSuite.Commons.Collections
 				"PROSUITE_ROWCACHE_DICTIONARY");
 
 		private static bool UseStandardDictionary =>
+			_largeDictionaryType != null &&
 			_largeDictionaryType.Equals("STANDARD",
 			                            StringComparison.InvariantCultureIgnoreCase);
 
 		private static bool UseRecyclingDictionaries =>
+			_largeDictionaryType != null &&
 			_largeDictionaryType.Equals("RECYCLING",
 			                            StringComparison.InvariantCultureIgnoreCase);
 
