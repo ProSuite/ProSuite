@@ -540,8 +540,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 				"Finished distributed verification with {0} failures and {1} successful sub-verifications",
 				failureCount, successCount);
 
-			_msg.InfoFormat("Total issue count: {0}", _totalIssueCount);
-
 			EndVerification(QualityVerification);
 		}
 
