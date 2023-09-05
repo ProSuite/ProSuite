@@ -501,8 +501,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return new AoFeatureClassFilter(searchGeometry, spatialRel);
 		}
 
-		public static ITableFilter GetTableFilter(IQueryFilter queryFilter)
+		[CanBeNull]
+		public static ITableFilter ToTableFilter([CanBeNull] IQueryFilter queryFilter)
 		{
+			if (queryFilter == null)
+			{
+				return null;
+			}
+
 			ITableFilter tableFilter;
 
 			if (queryFilter is ISpatialFilter spatialFilter)

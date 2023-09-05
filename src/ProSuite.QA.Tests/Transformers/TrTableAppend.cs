@@ -151,7 +151,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			protected override long TableRowCount(IQueryFilter queryFilter)
 			{
-				ITableFilter tableFilter = GdbQueryUtils.GetTableFilter(queryFilter);
+				ITableFilter tableFilter = GdbQueryUtils.ToTableFilter(queryFilter);
 
 				long nRows = InvolvedTables.Sum(involved => involved.RowCount(tableFilter));
 
