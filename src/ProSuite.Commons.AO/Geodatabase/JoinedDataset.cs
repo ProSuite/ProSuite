@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Collections;
@@ -55,9 +53,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 			_joinedSchema = joinedSchema;
 		}
 
+		/// <summary>
+		/// The 'left' table which, if it has a geometry field, will be used to define the
+		/// resulting FeatureClass. If this table has no geometry field, the result will be a
+		/// GdbTable without geometry field.
+		/// </summary>
 		[NotNull]
 		public IReadOnlyTable GeometryEndClass { get; }
 
+		/// <summary>
+		/// The 'right' table, typically the one without geometry or whose geometry field is not
+		/// used.
+		/// </summary>
 		[NotNull]
 		public IReadOnlyTable OtherEndClass { get; }
 
@@ -228,8 +235,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#endregion
 
-		public IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
-			[CanBeNull] ITableFilter filter, bool recycle)
+		/// <summary>
+		/// Performs the join using the filter only by applying the spatial constraint.
+		/// </summary>
+		/// <param name="filter"></param>
+		/// <param name="recycle"></param>
+		/// <returns></returns>
+		private IEnumerable<VirtualRow> GetJoinedRows([CanBeNull] ITableFilter filter,
+		                                              bool recycle)
 		{
 			EnsureKeyFieldNames();
 
@@ -267,15 +280,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 				otherRowsByFeatureKey = GetOtherRowsByFeatureKey(filter);
 			}
 
-			return otherRowsByFeatureKey;
-		}
-
-		private IEnumerable<VirtualRow> GetJoinedRows([CanBeNull] ITableFilter filter,
-		                                              bool recycle)
-		{
-			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey =
-				GetOtherRowsByFeatureKey(filter,recycle);
-
 			IEnumerable<IReadOnlyRow> leftRows = PerformFinalGeoClassRead(
 				otherRowsByFeatureKey, filter, recycle);
 
@@ -304,13 +308,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
+		/// <summary>
+		/// Gets the 'other' class' records by respective key value from the geometry class.
+		/// First, the features from the <see cref="GeometryEndClass"/> are searched using the
+		/// provided filter to get the left features. Using the keys from these features, the
+		/// relevant records from the <see cref="OtherEndClass"/> are fetched and returned as
+		/// values in the result dictionary.
+		/// </summary>
+		/// <param name="filter"></param>
+		/// <returns></returns>
+		public IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
 			[CanBeNull] ITableFilter filter)
 		{
 			EnsureKeyFieldNames();
-
-			Assert.NotNull(OtherEndClass);
-			Assert.NotNull(OtherClassKeyField);
 
 			string originalSubfields = filter?.SubFields;
 

@@ -263,9 +263,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureClass fc = ws.OpenFeatureClass("TOPGIS_TLM.TLM_STRASSE");
 
 			GdbFeatureClass gdbFc = TableJoinUtils.CreateJoinedGdbFeatureClass(rc, fc, "whatever");
-			JoinedDataset joined = (JoinedDataset)gdbFc.BackingDataset;
+			JoinedDataset joined = (JoinedDataset) gdbFc.BackingDataset;
 			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey =
-				joined.GetOtherRowsByFeatureKey(new AoFeatureClassFilter(area), false);
+				joined.GetOtherRowsByFeatureKey(new AoFeatureClassFilter(area));
 
 			HashSet<long> oids = new HashSet<long>();
 			foreach (IList<IReadOnlyRow> otherRows in otherRowsByFeatureKey.Values)

@@ -255,7 +255,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			JoinedDataset joined = Assert.NotNull((JoinedDataset)gdbFc.BackingDataset);
 			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey =
-				joined.GetOtherRowsByFeatureKey(filter, false);
+				joined.GetOtherRowsByFeatureKey(filter);
 
 			HashSet<long> oids = new HashSet<long>();
 			foreach (IList<IReadOnlyRow> otherRows in otherRowsByFeatureKey.Values)
