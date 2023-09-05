@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -11,6 +13,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
@@ -170,9 +173,21 @@ namespace ProSuite.DomainServices.AO.QA
 				using (progressWatch.MakeTransaction(
 					       Step.DataLoading, Step.DataLoaded, tableIndex, tableCount, table))
 				{
-					rows = GetRowsByRelatedGeometry(
-						table, Assert.NotNull(relGeomTest.ObjectDataset), testsForTable[0],
-						Assert.NotNull(relGeomTest.RelClassChains));
+					try
+					{
+						rows = GetRowsByRelatedGeometry(
+							table, Assert.NotNull(relGeomTest.ObjectDataset), testsForTable[0],
+							Assert.NotNull(relGeomTest.RelClassChains));
+					}
+					catch (Exception e)
+					{
+						_msg.Debug("Error getting rows by related geometry", e);
+
+						throw new DataException(
+							$"Error getting rows of {table.Name} by related geometry: {e.Message}{Environment.NewLine}" +
+							$"Used in the following conditions: {StringUtils.Concatenate(testsForTable.Select(t => _verificationElements.GetQualityCondition(t).Name), ", ")}",
+							e);
+					}
 				}
 
 				if (rows.Count == 0)
