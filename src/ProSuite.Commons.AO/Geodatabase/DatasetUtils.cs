@@ -1225,7 +1225,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (workspace is ISQLSyntax sqlWorkspace)
 			{
-				return sqlWorkspace.QualifyColumnName(table.Name, unqualifiedFieldName);
+				string result = sqlWorkspace.QualifyColumnName(table.Name, unqualifiedFieldName);
+
+				return result;
 			}
 
 			return $"{table.Name}.{unqualifiedFieldName}";
