@@ -987,7 +987,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				QualityConditionVerification conditionVerification =
 					FindQualityConditionVerification(toOverallVerification, conditionId);
 
-				conditionVerification.ErrorCount += conditionVerificationMsg.ErrorCount;
+				// NOTE: The errors are counted (and de-duplicated) via ProcessQaError() 
 				conditionVerification.ExecuteTime += conditionVerificationMsg.ExecuteTime;
 				conditionVerification.RowExecuteTime += conditionVerificationMsg.RowExecuteTime;
 				conditionVerification.TileExecuteTime += conditionVerificationMsg.TileExecuteTime;
