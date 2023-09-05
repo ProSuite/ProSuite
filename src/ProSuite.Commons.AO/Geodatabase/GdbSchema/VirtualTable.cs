@@ -4,6 +4,7 @@ using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -277,7 +278,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 #else
 		int ITable.RowCount(IQueryFilter queryFilter) => (int) TableRowCount(queryFilter);
 #endif
-		protected virtual long TableRowCount(IQueryFilter queryFilter) =>
+		protected virtual long TableRowCount([CanBeNull] IQueryFilter queryFilter) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		public virtual long RowCount(ITableFilter filter) =>
@@ -304,25 +305,25 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return false;
 		}
 
-		ICursor ITable.Search(IQueryFilter queryFilter, bool Recycling) =>
+		ICursor ITable.Search([CanBeNull] IQueryFilter queryFilter, bool Recycling) =>
 			SearchT(queryFilter, Recycling);
 
-		protected virtual IFeatureCursor FeatureClassSearch(IQueryFilter queryFilter,
+		protected virtual IFeatureCursor FeatureClassSearch([CanBeNull] IQueryFilter queryFilter,
 		                                                    bool recycling) =>
 			SearchT(queryFilter, recycling);
 
-		protected virtual CursorImpl SearchT(IQueryFilter queryFilter, bool recycling) =>
+		protected virtual CursorImpl SearchT([CanBeNull] IQueryFilter queryFilter, bool recycling) =>
 			new CursorImpl(this, EnumRows(queryFilter, recycling));
 
 		protected virtual IEnumerable<IRow>
-			EnumRows(IQueryFilter queryFilter, bool recycling) =>
+			EnumRows([CanBeNull] IQueryFilter queryFilter, bool recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IEnumerable<IReadOnlyRow> IReadOnlyTable.EnumRows(ITableFilter filter, bool recycling)
 			=> EnumReadOnlyRows(filter, recycling);
 
 		public virtual IEnumerable<IReadOnlyRow>
-			EnumReadOnlyRows(ITableFilter queryFilter, bool recycling) =>
+			EnumReadOnlyRows([CanBeNull] ITableFilter queryFilter, bool recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ICursor ITable.Update(IQueryFilter queryFilter, bool Recycling) =>
