@@ -61,7 +61,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(topology, nameof(topology));
 
-			var container = (IFeatureClassContainer)topology;
+			var container = (IFeatureClassContainer) topology;
 
 			int classCount = container.ClassCount;
 			for (var i = 0; i < classCount; i++)

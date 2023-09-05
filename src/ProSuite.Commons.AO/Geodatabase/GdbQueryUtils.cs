@@ -199,8 +199,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		public static HashSet<long> GetRelatedOids(IObjectClass objectClass,
-		                                               IGeometry intersectedGeometry,
-		                                               IList<IRelationshipClass> relClasses)
+		                                           IGeometry intersectedGeometry,
+		                                           IList<IRelationshipClass> relClasses)
 		{
 			IRelationshipClass geomRelClass = relClasses[relClasses.Count - 1];
 			IObjectClass startClass;
@@ -214,15 +214,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 				startClass = geomRelClass.OriginClass;
 			}
 
-			GdbFeatureClass gdbFc = TableJoinUtils.CreateJoinedGdbFeatureClass(geomRelClass, fc, "geometryRel");
+			GdbFeatureClass gdbFc =
+				TableJoinUtils.CreateJoinedGdbFeatureClass(geomRelClass, fc, "geometryRel");
 
-			HashSet<long> oids = GetRelatedOids(gdbFc, new AoFeatureClassFilter(intersectedGeometry));
+			HashSet<long> oids =
+				GetRelatedOids(gdbFc, new AoFeatureClassFilter(intersectedGeometry));
 
 			for (int iRel = relClasses.Count - 2; iRel >= 0; iRel--)
 			{
 				ITable startTbl = (ITable) startClass;
 				IRelationshipClass relClass = relClasses[iRel];
-				GdbTable gdbTbl = TableJoinUtils.CreateJoinedGdbTable(relClass, startTbl, $"rel_{iRel}");
+				GdbTable gdbTbl =
+					TableJoinUtils.CreateJoinedGdbTable(relClass, startTbl, $"rel_{iRel}");
 
 				HashSet<long> allOids = new HashSet<long>();
 				IWorkspace ws = ((IDataset) relClass).Workspace;
@@ -238,8 +241,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 
 				startClass = relClass.OriginClass == startClass
-					       ? relClass.DestinationClass
-					       : relClass.OriginClass;
+					             ? relClass.DestinationClass
+					             : relClass.OriginClass;
 				oids = allOids;
 			}
 
@@ -253,7 +256,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private static HashSet<long> GetRelatedOids(GdbTable gdbFc, ITableFilter filter)
 		{
-			JoinedDataset joined = Assert.NotNull((JoinedDataset)gdbFc.BackingDataset);
+			JoinedDataset joined = Assert.NotNull((JoinedDataset) gdbFc.BackingDataset);
 			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey =
 				joined.GetOtherRowsByFeatureKey(filter);
 
@@ -1160,7 +1163,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			string origWhereClause = queryFilter.WhereClause;
 			try
 			{
-				foreach (string whereClause in EnumWhereClauses(valueList, origWhereClause, field, workspace))
+				foreach (string whereClause in EnumWhereClauses(
+					         valueList, origWhereClause, field, workspace))
 				{
 					queryFilter.WhereClause = whereClause;
 
@@ -1168,7 +1172,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 					{
 						yield return row;
 					}
-
 				}
 			}
 			finally
@@ -1179,7 +1182,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private static IEnumerable<string> EnumWhereClauses(
 			IEnumerable valueList, string origWhereClause, IField field,
-		    IWorkspace workspace)
+			IWorkspace workspace)
 		{
 			// TODO: assert that the values match the field type
 
@@ -1202,7 +1205,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 					}
 
 					sb = new StringBuilder();
-					if (!string.IsNullOrEmpty(origWhereClause))
+					if (! string.IsNullOrEmpty(origWhereClause))
 					{
 						sb.AppendFormat("({0}) AND ", origWhereClause);
 					}

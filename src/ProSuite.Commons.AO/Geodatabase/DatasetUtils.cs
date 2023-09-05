@@ -1636,7 +1636,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] IFeatureDataset featureDataset)
 		{
 			Assert.ArgumentNotNull(featureDataset, nameof(featureDataset));
-			
+
 			var featureClassContainer = (IFeatureClassContainer) featureDataset;
 
 			return GetFeatureClasses(featureClassContainer);
