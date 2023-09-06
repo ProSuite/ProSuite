@@ -1542,7 +1542,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				subResponse.VerificationMsg = responseMsg.QualityVerification;
 			}
 
-			LogProgress(responseMsg.Progress);
+			LogProgress(responseMsg.Progress, subResponse.Issues.Count);
 		}
 
 		private static void UpdateSubProgress([NotNull] VerificationResponse responseMsg,
@@ -1571,7 +1571,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
-		private static void LogProgress(VerificationProgressMsg progressMsg)
+		private static void LogProgress(VerificationProgressMsg progressMsg,
+		                                int issueCount)
 		{
 			if (progressMsg == null)
 			{
@@ -1580,12 +1581,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			_msg.VerboseDebug(() => $"{DateTime.Now} - {progressMsg}");
 
-			_msg.DebugFormat(
-				"Received service progress of type {0}/{1}: {2} / {3}",
-				(VerificationProgressType) progressMsg.ProgressType,
-				(VerificationProgressStep) progressMsg.ProgressStep,
-				progressMsg.OverallProgressCurrentStep,
-				progressMsg.OverallProgressTotalSteps);
+			if (_msg.IsVerboseDebugEnabled || issueCount % 10 == 0)
+			{
+				string issueText = issueCount > 0 ? $" (Issue count: {issueCount})" : string.Empty;
+
+				string progressText =
+					$"Received service progress of type {(VerificationProgressType) progressMsg.ProgressType}/{(VerificationProgressStep) progressMsg.ProgressStep}:" +
+					$" {progressMsg.OverallProgressCurrentStep} / {progressMsg.OverallProgressTotalSteps}{issueText}";
+
+				_msg.DebugFormat(progressText);
+			}
 		}
 
 		private bool ProcessQaError([NotNull] QaError qaError,
