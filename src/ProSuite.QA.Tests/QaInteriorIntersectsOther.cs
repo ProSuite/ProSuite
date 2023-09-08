@@ -70,7 +70,8 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyFeatureClass> relatedClasses,
 			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_constraint))] [CanBeNull]
 			string constraint)
-			: base(featureClasses, relatedClasses, _intersectionMatrix)
+			: base(featureClasses, relatedClasses, _intersectionMatrix,
+			       new[] { constraint })
 		{
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint

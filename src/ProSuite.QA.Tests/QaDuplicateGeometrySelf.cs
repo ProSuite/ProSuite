@@ -83,7 +83,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_reportSingleErrorPerDuplicateSet))]
 			bool
 				reportSingleErrorPerDuplicateSet)
-			: base(featureClass, esriSpatialRelEnum.esriSpatialRelIntersects)
+			: base(featureClass, esriSpatialRelEnum.esriSpatialRelIntersects,
+			       new[] { validDuplicateConstraint })
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 

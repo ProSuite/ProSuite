@@ -57,7 +57,8 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaIntersectsSelf_validRelationConstraint))]
 			string validRelationConstraint)
-			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
+			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelIntersects,
+				new[] { validRelationConstraint })
 		{
 			Assert.ArgumentCondition(featureClasses.Count > 0, "empty featureClasses");
 

@@ -3,6 +3,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
@@ -56,7 +57,8 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyFeatureClass> crossingClasses,
 			[Doc(nameof(DocStrings.QaCrossesOther_validRelationConstraint))]
 			string validRelationConstraint)
-			: base(crossedClasses, crossingClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
+			: base(crossedClasses, crossingClasses, esriSpatialRelEnum.esriSpatialRelCrosses,
+				new[] {validRelationConstraint})
 		{
 			_validRelationConstraintSql = StringUtils.IsNotEmpty(validRelationConstraint)
 				                              ? validRelationConstraint

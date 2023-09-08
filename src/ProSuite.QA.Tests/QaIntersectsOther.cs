@@ -61,7 +61,8 @@ namespace ProSuite.QA.Tests
 			string validRelationConstraint)
 			: base(
 				intersectedClasses, intersectingClasses,
-				esriSpatialRelEnum.esriSpatialRelIntersects)
+				esriSpatialRelEnum.esriSpatialRelIntersects,
+				new[] { validRelationConstraint })
 		{
 			_validRelationConstraintSql = StringUtils.IsNotEmpty(validRelationConstraint)
 				                              ? validRelationConstraint

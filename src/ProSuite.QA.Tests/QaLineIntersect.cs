@@ -116,7 +116,9 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaLineIntersect_reportOverlaps))]
 			bool reportOverlaps)
 			: base(polylineClasses,
-			       GetSpatialRel(allowedEndpointInteriorIntersections, reportOverlaps))
+			       GetSpatialRel(allowedEndpointInteriorIntersections, reportOverlaps),
+				   new [] { validRelationConstraint }
+				)
 		{
 			Assert.ArgumentNotNull(polylineClasses, nameof(polylineClasses));
 

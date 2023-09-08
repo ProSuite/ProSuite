@@ -77,7 +77,8 @@ namespace ProSuite.QA.Tests
 			[CanBeNull]
 			string
 				allowedNonCoincidenceCondition)
-			: base(featureClasses, relatedClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
+			: base(featureClasses, relatedClasses, esriSpatialRelEnum.esriSpatialRelIntersects,
+				new [] { allowedNonCoincidenceCondition })
 		{
 			double maxXYTolerance = featureClasses
 			                        .Select(fc => DatasetUtils.TryGetXyTolerance(

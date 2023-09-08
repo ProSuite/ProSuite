@@ -110,7 +110,8 @@ namespace ProSuite.QA.Tests
 			double maximumZDifference,
 			[Doc(nameof(DocStrings.QaLineIntersectZ_constraint))]
 			string constraint)
-			: base(polylineClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
+			: base(polylineClasses, esriSpatialRelEnum.esriSpatialRelCrosses,
+			       new [] { constraint })
 		{
 			_minimumZDifference = minimumZDifference;
 			_maximumZDifference = maximumZDifference;

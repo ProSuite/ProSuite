@@ -109,7 +109,7 @@ namespace ProSuite.QA.Tests
 			[CanBeNull]
 			string
 				validIntersectionDimensions)
-			: base(featureClasses, relatedClasses, intersectionMatrix)
+			: base(featureClasses, relatedClasses, intersectionMatrix, new[] { constraint })
 		{
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint
