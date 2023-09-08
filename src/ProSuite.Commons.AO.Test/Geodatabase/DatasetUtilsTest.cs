@@ -449,7 +449,11 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			qualified = DatasetUtils.QualifyFieldName(veloRouteRO, fieldName);
 			Assert.AreEqual($"{tableName}.{fieldName}", qualified);
 
-			IVersion version = WorkspaceUtils.OpenVersion(workspace, "TG_SERVICE.RC_TLM_2021-6-30");
+			IVersionInfo anyVersionInfo =
+				WorkspaceUtils.GetVersionInfos(workspace, null).FirstOrDefault();
+			Assert.IsNotNull(anyVersionInfo);
+
+			IVersion version = WorkspaceUtils.OpenVersion(workspace, anyVersionInfo.VersionName);
 
 			table = DatasetUtils.OpenTable((IFeatureWorkspace) version, tableName);
 			qualified = DatasetUtils.QualifyFieldName(table, fieldName);
