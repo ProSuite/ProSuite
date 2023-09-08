@@ -447,10 +447,38 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		[CanBeNull]
 		private static GeometryType GetGeometryType(ProSuiteGeometryType prosuiteGeometryType)
 		{
-			// TODO: Topology? Other types?
+			if (prosuiteGeometryType == ProSuiteGeometryType.Unknown)
+			{
+				return null;
+			}
+
 			if (prosuiteGeometryType == ProSuiteGeometryType.Null)
 			{
 				return _geometryTypes.OfType<GeometryTypeNoGeometry>()
+				                     .FirstOrDefault();
+			}
+
+			if (prosuiteGeometryType == ProSuiteGeometryType.Topology)
+			{
+				return _geometryTypes.OfType<GeometryTypeTopology>()
+				                     .FirstOrDefault();
+			}
+
+			if (prosuiteGeometryType == ProSuiteGeometryType.Raster)
+			{
+				return _geometryTypes.OfType<GeometryTypeRasterDataset>()
+				                     .FirstOrDefault();
+			}
+
+			if (prosuiteGeometryType == ProSuiteGeometryType.RasterMosaic)
+			{
+				return _geometryTypes.OfType<GeometryTypeRasterMosaic>()
+				                     .FirstOrDefault();
+			}
+
+			if (prosuiteGeometryType == ProSuiteGeometryType.Terrain)
+			{
+				return _geometryTypes.OfType<GeometryTypeTerrain>()
 				                     .FirstOrDefault();
 			}
 
