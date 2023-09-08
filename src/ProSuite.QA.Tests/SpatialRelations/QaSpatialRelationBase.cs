@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -18,23 +19,31 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		private IFeatureClassFilter[] _spatialFiltersIntersects;
 		private readonly bool _disjointIsError;
 
+		private readonly string _relationSqls;
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 
 		protected QaSpatialRelationBase([NotNull] IList<IReadOnlyFeatureClass> featureClasses,
-		                                esriSpatialRelEnum relation)
+		                                esriSpatialRelEnum relation,
+		                                [CanBeNull] IList<string> relationSqls)
 			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) featureClasses))
 		{
 			TotalClassCount = featureClasses.Count;
 			Relation = relation;
 
 			UsesSymmetricRelation = IsKnownSymmetric(relation);
+			if (relationSqls?.Count > 0)
+			{
+				_relationSqls = string.Concat(relationSqls.Select(x => $"{x?.Replace(".", " ")} "));
+			}
 		}
 
 		protected QaSpatialRelationBase([NotNull] IList<IReadOnlyFeatureClass> featureClasses,
-		                                [NotNull] string intersectionMatrix)
-			: this(featureClasses, esriSpatialRelEnum.esriSpatialRelRelation)
+		                                [NotNull] string intersectionMatrix,
+		                                [CanBeNull] IList<string> relationSqls)
+			: this(featureClasses, esriSpatialRelEnum.esriSpatialRelRelation, relationSqls)
 		{
 			Assert.ArgumentNotNullOrEmpty(intersectionMatrix, nameof(intersectionMatrix));
 
@@ -46,14 +55,33 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		}
 
 		protected QaSpatialRelationBase([NotNull] IReadOnlyFeatureClass featureClass,
-		                                esriSpatialRelEnum relation)
-			: this(new[] {featureClass}, relation) { }
+		                                esriSpatialRelEnum relation,
+		                                [CanBeNull] IList<string> relationSqls)
+			: this(new[] { featureClass }, relation, relationSqls) { }
 
 		protected QaSpatialRelationBase([NotNull] IReadOnlyFeatureClass featureClass,
-		                                [NotNull] string intersectionMatrix)
-			: this(new[] {featureClass}, intersectionMatrix) { }
+		                                [NotNull] string intersectionMatrix,
+		                                [CanBeNull] IList<string> relationSqls)
+			: this(new[] { featureClass }, intersectionMatrix, relationSqls) { }
 
 		#endregion
+
+		protected override void ConfigureQueryFilter(int tableIndex, ITableFilter filter)
+		{
+			if (! string.IsNullOrWhiteSpace(_relationSqls))
+			{
+				var table = InvolvedTables[tableIndex];
+
+				foreach (string fieldName in
+				         ExpressionUtils.GetExpressionFieldNames(
+					         table, _relationSqls.Replace(".", " ")))
+				{
+					filter.AddField(fieldName);
+				}
+			}
+
+			base.ConfigureQueryFilter(tableIndex, filter);
+		}
 
 		protected bool UsesSymmetricRelation { get; }
 
@@ -227,7 +255,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		private static IFeatureClassFilter CreateIntersectionFilter(
 			[NotNull] IFeatureClassFilter defaultFilter)
 		{
-			var filter = (IFeatureClassFilter)defaultFilter.Clone();
+			var filter = (IFeatureClassFilter) defaultFilter.Clone();
 
 			filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 			filter.SpatialRelDescription = null;
@@ -246,11 +274,13 @@ namespace ProSuite.QA.Tests.SpatialRelations
 						spatialFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelWithin;
 						break;
 					case esriSpatialRelEnum.esriSpatialRelWithin:
-						spatialFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelContains;
+						spatialFilter.SpatialRelationship =
+							esriSpatialRelEnum.esriSpatialRelContains;
 						break;
 					case esriSpatialRelEnum.esriSpatialRelRelation:
 						string matrixString = Assert.NotNull(IntersectionMatrix).MatrixString;
-						spatialFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelRelation;
+						spatialFilter.SpatialRelationship =
+							esriSpatialRelEnum.esriSpatialRelRelation;
 						spatialFilter.SpatialRelDescription = $"RELATE(G2, G1, '{matrixString}')";
 						break;
 					default:

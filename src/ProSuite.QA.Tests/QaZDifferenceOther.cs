@@ -105,7 +105,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaZDifferenceOther_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
 			: base(featureClasses, relatedClasses,
-			       esriSpatialRelEnum.esriSpatialRelIntersects)
+			       esriSpatialRelEnum.esriSpatialRelIntersects, new[] { zRelationConstraint }
+			)
 		{
 			Assert.ArgumentNotNaN(minimumZDifference, nameof(minimumZDifference));
 			Assert.ArgumentNotNaN(maximumZDifference, nameof(maximumZDifference));

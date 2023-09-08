@@ -62,7 +62,7 @@ namespace ProSuite.QA.Tests
 			double limit,
 			[Doc(nameof(DocStrings.QaLineIntersectAngle_is3D))]
 			bool is3d)
-			: base(polylineClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
+			: base(polylineClasses, esriSpatialRelEnum.esriSpatialRelCrosses, null)
 		{
 			_limitCstr = limit;
 

@@ -55,7 +55,7 @@ namespace ProSuite.QA.Tests
 				intersectionMatrix,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_constraint))]
 			string constraint)
-			: base(featureClasses, intersectionMatrix)
+			: base(featureClasses, intersectionMatrix, new[] {constraint})
 		{
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint
@@ -96,7 +96,7 @@ namespace ProSuite.QA.Tests
 			[CanBeNull]
 			string
 				validIntersectionDimensions)
-			: base(featureClasses, intersectionMatrix)
+			: base(featureClasses, intersectionMatrix, new[] { constraint })
 		{
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint
