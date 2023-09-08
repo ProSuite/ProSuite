@@ -714,6 +714,32 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return result;
 		}
 
+		public static bool EnsureRelationship([NotNull] IRelationshipClass relationshipClass,
+		                                      [NotNull] IObject originObject,
+		                                      [NotNull] IObject destinationObject)
+		{
+			IRelationship existingRelationship =
+				relationshipClass.GetRelationship(originObject,
+				                                  destinationObject);
+
+			if (existingRelationship != null)
+			{
+				_msg.DebugFormat("Relationship from {0} to {1} already exists.",
+				                 GdbObjectUtils.ToString(originObject),
+				                 GdbObjectUtils.ToString(destinationObject));
+
+				return false;
+			}
+
+			_msg.DebugFormat("Creating relationship from {0} to {1}",
+			                 GdbObjectUtils.ToString(originObject),
+			                 GdbObjectUtils.ToString(destinationObject));
+
+			relationshipClass.CreateRelationship(originObject, destinationObject);
+
+			return true;
+		}
+
 		[CanBeNull]
 		public static IRelationship TryCreateRelationship(
 			[NotNull] IObject object1, [NotNull] IObject object2,
