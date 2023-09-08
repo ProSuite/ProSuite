@@ -8,7 +8,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
 using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
-using FieldType = ProSuite.DomainModel.Core.DataModel.FieldType;
 
 namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 {
@@ -175,7 +174,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			if (correctGeometryType?.Id != objectDataset.GeometryType?.Id)
 			{
 				_msg.InfoFormat("Dataset {0} has changed geometry type. Previous: {1}, New: {2}",
-				                objectDataset.Name, objectDataset.GeometryType?.Name,
+				                objectDataset.Name, objectDataset.GeometryType?.Name ?? "<none>",
 				                correctGeometryType?.Name);
 
 				objectDataset.GeometryType = correctGeometryType;

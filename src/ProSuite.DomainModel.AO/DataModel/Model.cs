@@ -923,6 +923,20 @@ namespace ProSuite.DomainModel.AO.DataModel
 						dataset.AliasName = dataset.UnqualifiedName;
 					}
 
+					// missing geometry type:
+					if (dataset.GeometryType == null)
+					{
+						GeometryType newGeometryType =
+							geometryTypeConfigurator.GetGeometryType(dataset);
+
+						if (newGeometryType != null)
+						{
+							_msg.WarnFormat("Assigning new geometry type {0} for dataset {1}",
+							                newGeometryType.Name, dataset.Name);
+							dataset.GeometryType = newGeometryType;
+						}
+					}
+
 					// TODO update feature dataset name for geometric network and terrain datasets (these may change)
 				}
 			}

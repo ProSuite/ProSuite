@@ -46,5 +46,42 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			return null;
 		}
+
+		[CanBeNull]
+		public GeometryType GetGeometryType(Dataset dataset)
+		{
+			if (dataset is IVectorDataset vectorDataset)
+			{
+				// Cannot determine VDS subtype here
+				return null;
+			}
+
+			if (dataset is ITableDataset)
+			{
+				return GetGeometryType<GeometryTypeNoGeometry>();
+			}
+
+			if (dataset is ITopologyDataset)
+			{
+				return GetGeometryType<GeometryTypeTopology>();
+			}
+
+			if (dataset is ISimpleTerrainDataset)
+			{
+				return GetGeometryType<GeometryTypeTerrain>();
+			}
+
+			if (dataset is IRasterMosaicDataset)
+			{
+				return GetGeometryType<GeometryTypeRasterMosaic>();
+			}
+
+			if (dataset is IDdxRasterDataset)
+			{
+				return GetGeometryType<GeometryTypeRasterDataset>();
+			}
+
+			return null;
+		}
 	}
 }
