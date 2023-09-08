@@ -208,6 +208,20 @@ namespace ProSuite.QA.Tests
 			_referenceFlipExpressions =
 				referenceFlipExpressions?.ToList() ?? new List<string>();
 
+			AddCustomQueryFilterExpression(pointDistanceExpression);
+			foreach (string sql in _referenceDistanceExpressionsSql ?? new List<string>())
+			{
+				AddCustomQueryFilterExpression(sql);
+			}
+			foreach (string sql in _referenceRightSideDistanceSqls)
+			{
+				AddCustomQueryFilterExpression(sql);
+			}
+			foreach (string sql in _referenceFlipExpressions)
+			{
+				AddCustomQueryFilterExpression(sql);
+			}
+
 			_filter = null;
 			_tableCount = InvolvedTables.Count;
 			_referenceClassCount = referenceClasses.Count;

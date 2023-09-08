@@ -61,6 +61,7 @@ namespace ProSuite.QA.Container
 		private esriUnits _lengthUnit = esriUnits.esriUnknownUnits;
 		private string _unitString;
 		private readonly List<TableProps> _tableProps;
+		private List<string> _customQueryFilterExpressions;
 
 		#region Constructors
 
@@ -157,6 +158,14 @@ namespace ProSuite.QA.Container
 			}
 		}
 
+		protected void AddCustomQueryFilterExpression([CanBeNull] string expression)
+		{
+			if (! string.IsNullOrWhiteSpace(expression))
+			{
+				_customQueryFilterExpressions = _customQueryFilterExpressions ?? new List<string>();
+				_customQueryFilterExpressions.Add(expression.Replace(".", " "));
+			}
+		}
 		/// <summary>
 		/// Adapts IQueryFilter so that it conforms to the needs of the test
 		/// </summary>
@@ -199,6 +208,20 @@ namespace ProSuite.QA.Container
 					ExpressionUtils.GetExpressionFieldNames(table, constraint))
 				{
 					subFields = GdbQueryUtils.AppendToFieldList(subFields, fieldName);
+				}
+			}
+
+			if (_customQueryFilterExpressions?.Count > 0)
+			{
+				foreach (string filterExpression in _customQueryFilterExpressions)
+				{
+					foreach (
+						string fieldName in
+						ExpressionUtils.GetExpressionFieldNames(table, filterExpression))
+					{
+						subFields = GdbQueryUtils.AppendToFieldList(subFields, fieldName);
+					}
+
 				}
 			}
 

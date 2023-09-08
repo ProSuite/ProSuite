@@ -57,14 +57,14 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaIntersectsSelf_validRelationConstraint))]
 			string validRelationConstraint)
-			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelIntersects,
-				new[] { validRelationConstraint })
+			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
 		{
 			Assert.ArgumentCondition(featureClasses.Count > 0, "empty featureClasses");
 
 			_validRelationConstraintSql = StringUtils.IsNotEmpty(validRelationConstraint)
 				                              ? validRelationConstraint
 				                              : null;
+			AddCustomQueryFilterExpression(validRelationConstraint);
 			_geometryComponents = new ReadOnlyList<GeometryComponent>(
 				featureClasses.Select(_ => GeometryComponent.EntireGeometry)
 				              .ToList());

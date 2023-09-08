@@ -35,6 +35,8 @@ namespace ProSuite.QA.Tests
 		private const bool _defaultAllowConstantValues = true;
 		private const string _defaultFlipExpression = null;
 
+		private string _flipExpression;
+
 		#region issue codes
 
 		[CanBeNull] private static TestIssueCodes _codes;
@@ -79,7 +81,15 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMonotonicZ_FlipExpression))]
 		[TestParameter(_defaultFlipExpression)]
-		public string FlipExpression { get; set; }
+		public string FlipExpression
+		{
+			get => _flipExpression;
+			set
+			{
+				_flipExpression = value;
+				AddCustomQueryFilterExpression(_flipExpression);
+			}
+		}
 
 		#region Overrides of ContainerTest
 

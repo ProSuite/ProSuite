@@ -43,7 +43,7 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyFeatureClass> polygonClasses,
 			[Doc(nameof(DocStrings.QaMinIntersect_limit))]
 			double limit)
-			: base(polygonClasses, esriSpatialRelEnum.esriSpatialRelIntersects, null)
+			: base(polygonClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
 		{
 			_limit = limit;
 		}

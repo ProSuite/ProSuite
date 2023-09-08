@@ -21,9 +21,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		protected QaSpatialRelationOtherBase(
 			[NotNull] IList<IReadOnlyFeatureClass> featureClasses,
 			[NotNull] IList<IReadOnlyFeatureClass> relatedClasses,
-			esriSpatialRelEnum relation,
-			[CanBeNull] IList<string> relationSqls)
-			: base(Union(featureClasses, relatedClasses), relation, relationSqls)
+			esriSpatialRelEnum relation)
+			: base(Union(featureClasses, relatedClasses), relation)
 		{
 			_fromClassCount = featureClasses.Count;
 		}
@@ -31,24 +30,21 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		protected QaSpatialRelationOtherBase(
 			[NotNull] IList<IReadOnlyFeatureClass> featureClasses,
 			[NotNull] IList<IReadOnlyFeatureClass> relatedClasses,
-			[NotNull] string intersectionMatrix,
-			[CanBeNull] IList<string> relationSqls)
-			: base(Union(featureClasses, relatedClasses), intersectionMatrix, relationSqls)
+			[NotNull] string intersectionMatrix)
+			: base(Union(featureClasses, relatedClasses), intersectionMatrix)
 		{
 			_fromClassCount = featureClasses.Count;
 		}
 
 		protected QaSpatialRelationOtherBase([NotNull] IReadOnlyFeatureClass featureClass,
 		                                     [NotNull] IReadOnlyFeatureClass relatedClass,
-		                                     esriSpatialRelEnum relation,
-		                                     [CanBeNull] IList<string> relationSqls)
-			: this(new[] {featureClass}, new[] {relatedClass}, relation, relationSqls) { }
+		                                     esriSpatialRelEnum relation)
+			: this(new[] {featureClass}, new[] {relatedClass}, relation) { }
 
 		protected QaSpatialRelationOtherBase([NotNull] IReadOnlyFeatureClass featureClass,
 		                                     [NotNull] IReadOnlyFeatureClass relatedClass,
-		                                     [NotNull] string intersectionMatrix,
-		                                     [CanBeNull] IList<string> relationSqls)
-			: this(new[] {featureClass}, new[] {relatedClass}, intersectionMatrix, relationSqls) { }
+		                                     [NotNull] string intersectionMatrix)
+			: this(new[] {featureClass}, new[] {relatedClass}, intersectionMatrix) { }
 
 		#endregion
 

@@ -56,12 +56,12 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaOverlapsOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(
-				overlappedClasses, overlappingClasses, esriSpatialRelEnum.esriSpatialRelOverlaps,
-				new [] { validRelationConstraint })
+				overlappedClasses, overlappingClasses, esriSpatialRelEnum.esriSpatialRelOverlaps)
 		{
 			_validRelationConstraintSql = StringUtils.IsNotEmpty(validRelationConstraint)
 				                              ? validRelationConstraint
 				                              : null;
+			AddCustomQueryFilterExpression(validRelationConstraint);
 		}
 
 		[Doc(nameof(DocStrings.QaOverlapsOther_3))]

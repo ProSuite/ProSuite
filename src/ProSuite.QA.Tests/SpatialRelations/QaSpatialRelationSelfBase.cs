@@ -17,24 +17,20 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		#region Constructors
 
 		protected QaSpatialRelationSelfBase([NotNull] IList<IReadOnlyFeatureClass> featureClasses,
-		                                    esriSpatialRelEnum relation,
-		                                    [CanBeNull] IList<string> relationSqls)
-			: base(featureClasses, relation, relationSqls) { }
+		                                    esriSpatialRelEnum relation)
+			: base(featureClasses, relation) { }
 
 		protected QaSpatialRelationSelfBase([NotNull] IList<IReadOnlyFeatureClass> featureClasses,
-		                                    [NotNull] string intersectionMatrix,
-		                                    [CanBeNull] IList<string> relationSqls)
-			: base(featureClasses, intersectionMatrix, relationSqls) { }
+		                                    [NotNull] string intersectionMatrix)
+			: base(featureClasses, intersectionMatrix) { }
 
 		protected QaSpatialRelationSelfBase([NotNull] IReadOnlyFeatureClass featureClass,
-		                                    esriSpatialRelEnum relation,
-		                                    [CanBeNull] IList<string> relationSqls)
-			: this(new[] {featureClass}, relation, relationSqls) { }
+		                                    esriSpatialRelEnum relation)
+			: this(new[] {featureClass}, relation) { }
 
 		protected QaSpatialRelationSelfBase([NotNull] IReadOnlyFeatureClass featureClass,
-		                                    [NotNull] string intersectionMatrix,
-		                                    [CanBeNull] IList<string> relationSqls)
-			: this(new[] {featureClass}, intersectionMatrix, relationSqls) { }
+		                                    [NotNull] string intersectionMatrix)
+			: this(new[] {featureClass}, intersectionMatrix) { }
 
 		#endregion
 

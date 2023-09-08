@@ -58,12 +58,12 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyFeatureClass> touched,
 			[Doc(nameof(DocStrings.QaTouchesOther_validRelationConstraint))]
 			string validRelationConstraint)
-			: base(touching, touched, esriSpatialRelEnum.esriSpatialRelTouches,
-				new [] { validRelationConstraint })
+			: base(touching, touched, esriSpatialRelEnum.esriSpatialRelTouches)
 		{
 			_validRelationConstraintSql = StringUtils.IsNotEmpty(validRelationConstraint)
 				                              ? validRelationConstraint
 				                              : null;
+			AddCustomQueryFilterExpression(validRelationConstraint);
 		}
 
 		[Doc(nameof(DocStrings.QaTouchesOther_3))]

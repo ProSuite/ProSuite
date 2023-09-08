@@ -55,11 +55,12 @@ namespace ProSuite.QA.Tests
 				intersectionMatrix,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_constraint))]
 			string constraint)
-			: base(featureClasses, intersectionMatrix, new[] {constraint})
+			: base(featureClasses, intersectionMatrix)
 		{
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint
 				              : null;
+			AddCustomQueryFilterExpression(constraint);
 		}
 
 		[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_2))]
@@ -96,11 +97,12 @@ namespace ProSuite.QA.Tests
 			[CanBeNull]
 			string
 				validIntersectionDimensions)
-			: base(featureClasses, intersectionMatrix, new[] { constraint })
+			: base(featureClasses, intersectionMatrix)
 		{
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint
 				              : null;
+			AddCustomQueryFilterExpression(constraint);
 			_validIntersectionDimensions = validIntersectionDimensions;
 		}
 

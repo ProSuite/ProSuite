@@ -50,12 +50,12 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaCrossesSelf_validRelationConstraint))]
 			string validRelationConstraint)
-			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelCrosses,
-			       new[] { validRelationConstraint })
+			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
 		{
 			_validRelationConstraintSql = StringUtils.IsNotEmpty(validRelationConstraint)
 				                              ? validRelationConstraint
 				                              : null;
+			AddCustomQueryFilterExpression(validRelationConstraint);
 		}
 
 		[Doc(nameof(DocStrings.QaCrossesSelf_3))]

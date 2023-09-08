@@ -83,8 +83,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_reportSingleErrorPerDuplicateSet))]
 			bool
 				reportSingleErrorPerDuplicateSet)
-			: base(featureClass, esriSpatialRelEnum.esriSpatialRelIntersects,
-			       new[] { validDuplicateConstraint })
+			: base(featureClass, esriSpatialRelEnum.esriSpatialRelIntersects)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -94,6 +93,7 @@ namespace ProSuite.QA.Tests
 			_validRelationConstraintSql = StringUtils.IsNotEmpty(validDuplicateConstraint)
 				                              ? validDuplicateConstraint
 				                              : null;
+			AddCustomQueryFilterExpression(validDuplicateConstraint);
 		}
 
 		public override bool RetestRowsPerIntersectedTile(int tableIndex)

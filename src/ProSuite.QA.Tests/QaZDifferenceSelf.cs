@@ -88,13 +88,13 @@ namespace ProSuite.QA.Tests
 			ZComparisonMethod zComparisonMethod,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
-			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelIntersects,
-				new [] { zRelationConstraint })
+			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
 		{
 			_minimumZDifference = minimumZDifference;
 			_maximumZDifference = maximumZDifference;
 			_zComparisonMethod = zComparisonMethod;
 			_zRelationConstraint = zRelationConstraint;
+			AddCustomQueryFilterExpression(zRelationConstraint);
 		}
 
 		[TestParameter]

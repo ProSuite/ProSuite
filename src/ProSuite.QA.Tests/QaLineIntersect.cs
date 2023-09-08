@@ -116,9 +116,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaLineIntersect_reportOverlaps))]
 			bool reportOverlaps)
 			: base(polylineClasses,
-			       GetSpatialRel(allowedEndpointInteriorIntersections, reportOverlaps),
-				   new [] { validRelationConstraint }
-				)
+			       GetSpatialRel(allowedEndpointInteriorIntersections, reportOverlaps))
 		{
 			Assert.ArgumentNotNull(polylineClasses, nameof(polylineClasses));
 
@@ -127,6 +125,7 @@ namespace ProSuite.QA.Tests
 			_validRelationConstraintSql = StringUtils.IsNotEmpty(validRelationConstraint)
 				                              ? validRelationConstraint
 				                              : null;
+			AddCustomQueryFilterExpression(validRelationConstraint);
 
 			AllowedInteriorIntersections = _defaultAllowedInteriorIntersections;
 

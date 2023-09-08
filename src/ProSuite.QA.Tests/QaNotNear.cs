@@ -153,10 +153,19 @@ namespace ProSuite.QA.Tests
 
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaNotNear_IgnoreNeighborCondition))]
-		public string IgnoreNeighborCondition { get; set; }
+		public string IgnoreNeighborCondition
+		{
+			get => _ignoreNeighborConstraint;
+			set
+			{
+				_ignoreNeighborConstraint = value; 
+				AddCustomQueryFilterExpression(value);
+			}
+		}
 
 		private IgnoreRowNeighborCondition _ignoreNeighborCondition;
 		private bool _isIgnoreNeighborConditionInitialized;
+		private string _ignoreNeighborConstraint;
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{

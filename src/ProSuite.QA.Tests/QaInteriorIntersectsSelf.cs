@@ -76,11 +76,12 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_reportIntersectionsAsMultipart))]
 			bool
 				reportIntersectionsAsMultipart)
-			: base(featureClasses, _intersectionMatrix, new[] { constraint })
+			: base(featureClasses, _intersectionMatrix)
 		{
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint
 				              : null;
+			AddCustomQueryFilterExpression(constraint);
 			_reportIntersectionsAsMultipart = reportIntersectionsAsMultipart;
 		}
 
