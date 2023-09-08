@@ -152,7 +152,6 @@ namespace ProSuite.QA.Tests.Test
 		public void CanTestEmptyGeometrySdeMultipatch()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
-			//IWorkspace workspace = ProSuite.Commons.AO.Test.TestUtils.OpenSDEWorkspaceOracle();
 
 			IMultiPatch normalGeometry = GeometryFactory.CreateMultiPatch(
 				GeometryFactory.CreateRing(new[]
@@ -177,7 +176,6 @@ namespace ProSuite.QA.Tests.Test
 		public void CanTestEmptyGeometrySdePolyline()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
-			//IWorkspace workspace = ProSuite.Commons.AO.Test.TestUtils.OpenSDEWorkspaceOracle();
 
 			IPolyline normalGeometry = GeometryFactory.CreatePolyline(
 				GeometryFactory.CreatePath(new PointClass { X = 2600000, Y = 1200000, Z = 400 },
@@ -199,7 +197,6 @@ namespace ProSuite.QA.Tests.Test
 		public void CanTestEmptyGeometrySdePoint()
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
-			//IWorkspace workspace = ProSuite.Commons.AO.Test.TestUtils.OpenSDEWorkspaceOracle();
 
 			IPoint normalGeometry = GeometryFactory.CreatePoint(2600000, 1200000, 400);
 
