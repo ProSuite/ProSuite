@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -55,6 +54,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			: this(new[] { featureClass }, intersectionMatrix) { }
 
 		#endregion
+
 		protected bool UsesSymmetricRelation { get; }
 
 		protected int TotalClassCount { get; }
@@ -94,25 +94,40 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			relatedFilter.FilterGeometry = searchGeometry;
 
 			var errorCount = 0;
-			var anyFound = false;
-			foreach (IReadOnlyRow relatedRow in Search(relatedTable,
-			                                           relatedFilter,
-			                                           relatedFilterHelper))
+			IReadOnlyRow otherRow = null;
+			try
 			{
-				anyFound = true;
-
-				errorCount += FindErrors(feature, tableIndex,
-				                         relatedRow, relatedTableIndex);
-			}
-
-			if (! anyFound && _disjointIsError)
-			{
-				if (IsDisjoint(searchGeometry,
-				               relatedTable, relatedTableIndex,
-				               relatedFilterHelper))
+				var anyFound = false;
+				foreach (IReadOnlyRow relatedRow in Search(relatedTable,
+				                                           relatedFilter,
+				                                           relatedFilterHelper))
 				{
-					errorCount += FindErrorsNoRelated(feature);
+					anyFound = true;
+					otherRow = relatedRow;
+					// TODO: try catch and throw TestRowException: "Error testing feature {feature} against feature {relatedRow}: {e.Message}
+					errorCount += FindErrors(feature, tableIndex,
+					                         relatedRow, relatedTableIndex);
 				}
+
+				if (! anyFound && _disjointIsError)
+				{
+					if (IsDisjoint(searchGeometry,
+					               relatedTable, relatedTableIndex,
+					               relatedFilterHelper))
+					{
+						errorCount += FindErrorsNoRelated(feature);
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				string otherRowMsg =
+					otherRow == null ? "<null>" : GdbObjectUtils.ToString(otherRow);
+				string msg =
+					$"Error testing row {GdbObjectUtils.ToString(feature)} against {otherRowMsg}: {e.Message}";
+
+				_msg.Debug(msg, e);
+				throw new TestRowException(this, feature, msg);
 			}
 
 			return errorCount;
