@@ -93,7 +93,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			if (qualitySpecification == null)
 			{
-				MessageBox.Show("No Quality Specification is selected", "Verify Extent",
+				MessageBox.Show("No Quality Specification is selected", "Verify Perimeter",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
 				return Task.FromResult(false);
 			}
@@ -111,6 +111,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 			var appController = new AgpBackgroundVerificationController(
 				ProSuiteImpl, MapView.Active, sketchGeometry, spatialRef);
 
+			string perimeterName = "Perimeter";
+
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
 				{
@@ -119,12 +121,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 					ApplicationController = appController
 				};
 
-			string actionTitle = "Verify Perimeter";
-
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
-			                               qaEnvironment.BackendDisplayName, actionTitle);
+			                               Assert.NotNull(qaEnvironment.BackendDisplayName),
+			                               $"Verify {perimeterName}");
 
 			return Task.FromResult(true);
 		}
@@ -161,22 +162,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return await qaEnvironment.VerifyPerimeter(
-							       perimeter, progressTracker, resultsPath);
+							       perimeter, progressTracker, "perimeter", resultsPath);
 					},
 					BackgroundProgressor.None);
 
 			ServiceCallStatus result = await verificationTask;
-
-			if (result == ServiceCallStatus.Finished)
-			{
-				_msg.InfoFormat(
-					"Successfully finished extent verification. The results have been saved in {0}",
-					resultsPath);
-			}
-			else
-			{
-				_msg.WarnFormat("Extent verification was not finished. Status: {0}", result);
-			}
 
 			return result;
 		}

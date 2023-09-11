@@ -131,22 +131,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return qaEnvironment.VerifyPerimeter(
-							perimeter, progressTracker, resultsPath);
+							perimeter, progressTracker, "last extent", resultsPath);
 					},
 					BackgroundProgressor.None);
 
 			ServiceCallStatus result = await verificationTask;
-
-			if (result == ServiceCallStatus.Finished)
-			{
-				_msg.InfoFormat(
-					"Successfully finished extent verification. The results have been saved in {0}",
-					resultsPath);
-			}
-			else
-			{
-				_msg.WarnFormat("Extent verification was not finished. Status: {0}", result);
-			}
 
 			return result;
 		}

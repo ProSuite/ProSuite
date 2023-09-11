@@ -134,17 +134,6 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			ServiceCallStatus result = await verificationTask;
 
-			if (result == ServiceCallStatus.Finished)
-			{
-				_msg.InfoFormat(
-					"Successfully finished selection verification. The results have been saved in {0}",
-					resultsPath);
-			}
-			else
-			{
-				_msg.WarnFormat("Selection verification was not finished. Status: {0}", result);
-			}
-
 			return result;
 		}
 
