@@ -54,7 +54,8 @@ namespace ProSuite.AGP.WorkList
 			                           Attributes.IssueCodeDescription,
 			                           Attributes.InvolvedObjects,
 			                           Attributes.IssueSeverity,
-			                           Attributes.IssueCode);
+			                           Attributes.IssueCode,
+			                           Attributes.IssueDescription);
 		}
 
 		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
@@ -68,9 +69,12 @@ namespace ProSuite.AGP.WorkList
 			if (reader != null)
 			{
 				item.IssueCode = reader.GetValue<string>(row, Attributes.IssueCode);
-				item.IssueCodeDescription = reader.GetValue<string>(row, Attributes.IssueCodeDescription);
+				item.IssueCodeDescription =
+					reader.GetValue<string>(row, Attributes.IssueCodeDescription);
+				item.IssueDescription = reader.GetValue<string>(row, Attributes.IssueDescription);
 				item.InvolvedObjects = reader.GetValue<string>(row, Attributes.InvolvedObjects);
-				item.QualityCondition = reader.GetValue<string>(row, Attributes.QualityConditionName);
+				item.QualityCondition =
+					reader.GetValue<string>(row, Attributes.QualityConditionName);
 				item.TestName = reader.GetValue<string>(row, Attributes.TestName);
 				item.TestDescription = reader.GetValue<string>(row, Attributes.TestDescription);
 				item.TestType = reader.GetValue<string>(row, Attributes.TestType);
@@ -83,21 +87,28 @@ namespace ProSuite.AGP.WorkList
 				item.DoubleValue2 = reader.GetValue<double?>(row, Attributes.DoubleValue2);
 				item.TextValue = reader.GetValue<string>(row, Attributes.TextValue);
 				item.IssueAssignment = reader.GetValue<string>(row, Attributes.IssueAssignment);
-				item.QualityConditionUuid = reader.GetValue<string>(row, Attributes.QualityConditionUuid);
-				item.QualityConditionVersionUuid = reader.GetValue<string>(row, Attributes.QualityConditionVersionUuid);
+				item.QualityConditionUuid =
+					reader.GetValue<string>(row, Attributes.QualityConditionUuid);
+				item.QualityConditionVersionUuid =
+					reader.GetValue<string>(row, Attributes.QualityConditionVersionUuid);
 				item.ExceptionStatus = reader.GetValue<string>(row, Attributes.ExceptionStatus);
 				item.ExceptionNotes = reader.GetValue<string>(row, Attributes.ExceptionNotes);
 				item.ExceptionCategory = reader.GetValue<string>(row, Attributes.ExceptionCategory);
 				item.ExceptionOrigin = reader.GetValue<string>(row, Attributes.ExceptionOrigin);
-				item.ExceptionDefinedDate = reader.GetValue<string>(row, Attributes.ExceptionDefinedDate);
-				item.ExceptionLastRevisionDate = reader.GetValue<string>(row, Attributes.ExceptionLastRevisionDate);
-				item.ExceptionRetirementDate = reader.GetValue<string>(row, Attributes.ExceptionRetirementDate);
-				item.ExceptionShapeMatchCriterion = reader.GetValue<string>(row, Attributes.ExceptionShapeMatchCriterion);
+				item.ExceptionDefinedDate =
+					reader.GetValue<string>(row, Attributes.ExceptionDefinedDate);
+				item.ExceptionLastRevisionDate =
+					reader.GetValue<string>(row, Attributes.ExceptionLastRevisionDate);
+				item.ExceptionRetirementDate =
+					reader.GetValue<string>(row, Attributes.ExceptionRetirementDate);
+				item.ExceptionShapeMatchCriterion =
+					reader.GetValue<string>(row, Attributes.ExceptionShapeMatchCriterion);
 				item.Status = ((DatabaseSourceClass) source).GetStatus(row);
 			}
 
 			// todo daro: use source class to determine whether involved tables have geoemtry?
-			item.InIssueInvolvedTables = IssueUtils.ParseInvolvedTables(item.InvolvedObjects, source.HasGeometry);
+			item.InIssueInvolvedTables =
+				IssueUtils.ParseInvolvedTables(item.InvolvedObjects, source.HasGeometry);
 
 			return RefreshState(item);
 		}
@@ -136,7 +147,7 @@ namespace ProSuite.AGP.WorkList
 
 				_msg.Info($"{description}, {item.Proxy}");
 
-				var operation = new EditOperation {Name = description};
+				var operation = new EditOperation { Name = description };
 				operation.Callback(context =>
 				{
 					// ReSharper disable once AccessToDisposedClosure
