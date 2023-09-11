@@ -616,9 +616,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private static IField CreateQualifiedField(IField prototype, IReadOnlyTable table)
 		{
+			string qualifiedFieldName = DatasetUtils.QualifyFieldName(table, prototype.Name);
+
 			var result = (IField) ((IClone) prototype).Clone();
 
-			((IFieldEdit) result).Name_2 = DatasetUtils.QualifyFieldName(table, prototype.Name);
+			// NOTE: In .NET 6 / ArcObjects 10.8 this does nothing for OBJECTID fields!
+			((IFieldEdit) result).Name_2 = qualifiedFieldName;
 
 			return result;
 		}

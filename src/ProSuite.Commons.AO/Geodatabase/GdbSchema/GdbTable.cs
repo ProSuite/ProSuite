@@ -299,7 +299,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		protected override long TableRowCount(IQueryFilter queryFilter)
 		{
-			ITableFilter tableFilter = GdbQueryUtils.GetTableFilter(queryFilter);
+			ITableFilter tableFilter = GdbQueryUtils.ToTableFilter(queryFilter);
 
 			return RowCount(tableFilter);
 		}
@@ -311,7 +311,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				throw new NotImplementedException("No backing dataset provided for Search().");
 			}
 
-			ITableFilter tableFilter = GdbQueryUtils.GetTableFilter(queryFilter);
+			ITableFilter tableFilter = GdbQueryUtils.ToTableFilter(queryFilter);
 			IEnumerable<VirtualRow> rows = BackingDataset.Search(tableFilter, recycling);
 			return new CursorImpl(this, rows);
 		}

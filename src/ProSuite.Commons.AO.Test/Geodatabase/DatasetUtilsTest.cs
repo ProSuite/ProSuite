@@ -403,6 +403,67 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Assert.IsTrue(isNull || isDBNull);
 		}
 
+		[Test]
+		public void CanQualifyFieldNameFGDB()
+		{
+			const string featureClassName = "lines";
+			const string fieldName = "OBJEKTART";
+
+			IFeatureWorkspace workspace =
+				WorkspaceUtils.OpenFileGdbFeatureWorkspace(_simpleGdbPath);
+
+			IFeatureClass featureClass = DatasetUtils.OpenFeatureClass(workspace,
+				featureClassName);
+
+			string qualified = DatasetUtils.QualifyFieldName(featureClass, fieldName);
+
+			Assert.AreEqual($"{featureClassName}.{fieldName}", qualified);
+		}
+
+		[Test]
+		public void CanQualifyFieldNameOracle()
+		{
+			const string featureClassName = "TOPGIS_TLM.TLM_STRASSE";
+			const string tableName = "TOPGIS_TLM.TLM_VELOROUTE";
+			const string fieldName = "OBJECTID";
+
+			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
+
+			IFeatureClass featureClass = DatasetUtils.OpenFeatureClass(workspace, featureClassName);
+
+			string qualified = DatasetUtils.QualifyFieldName(featureClass, fieldName);
+
+			Assert.AreEqual($"{featureClassName}.{fieldName}", qualified);
+
+			// Now as read-only feature class
+			qualified =
+				DatasetUtils.QualifyFieldName(ReadOnlyTableFactory.Create(featureClass), fieldName);
+			Assert.AreEqual($"{featureClassName}.{fieldName}", qualified);
+
+			ITable table = DatasetUtils.OpenTable(workspace, tableName);
+			qualified = DatasetUtils.QualifyFieldName(table, fieldName);
+			Assert.AreEqual($"{tableName}.{fieldName}", qualified);
+
+			// Now as read-only table
+			ReadOnlyTable veloRouteRO = ReadOnlyTableFactory.Create(table);
+			qualified = DatasetUtils.QualifyFieldName(veloRouteRO, fieldName);
+			Assert.AreEqual($"{tableName}.{fieldName}", qualified);
+
+			IVersionInfo anyVersionInfo =
+				WorkspaceUtils.GetVersionInfos(workspace, null).FirstOrDefault();
+			Assert.IsNotNull(anyVersionInfo);
+
+			IVersion version = WorkspaceUtils.OpenVersion(workspace, anyVersionInfo.VersionName);
+
+			table = DatasetUtils.OpenTable((IFeatureWorkspace) version, tableName);
+			qualified = DatasetUtils.QualifyFieldName(table, fieldName);
+			Assert.AreEqual($"{tableName}.{fieldName}", qualified);
+
+			veloRouteRO = ReadOnlyTableFactory.Create(table);
+			qualified = DatasetUtils.QualifyFieldName(veloRouteRO, fieldName);
+			Assert.AreEqual($"{tableName}.{fieldName}", qualified);
+		}
+
 		private static string GetMemoryConsumptionText(out long privateBytesMB)
 		{
 			long virtualBytes;

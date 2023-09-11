@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -81,6 +82,7 @@ namespace ProSuite.QA.Tests
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint
 				              : null;
+			AddCustomQueryFilterExpression(constraint);
 			_allowPointIntersection = allowPointIntersection;
 		}
 
@@ -125,8 +127,11 @@ namespace ProSuite.QA.Tests
 			_polygonClass = polygonClass;
 			_allowPointIntersection = allowPointIntersection;
 
+			List<string> fieldList = new List<string>(fields);
 			_compareFieldIndexes = new List<int>(
-				GetCompareFieldIndexes(polygonClass, fields, fieldListType));
+				GetCompareFieldIndexes(polygonClass, fieldList, fieldListType));
+
+			AddCustomQueryFilterExpression(string.Concat(fieldList.Select(x => $"{x} ")));
 		}
 
 		#endregion

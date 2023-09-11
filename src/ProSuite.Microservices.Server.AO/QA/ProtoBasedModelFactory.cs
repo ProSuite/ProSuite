@@ -101,7 +101,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 		public void AssignMostFrequentlyUsedSpatialReference(Model model,
 		                                                     IEnumerable<Dataset> usedDatasets)
 		{
-			throw new NotImplementedException();
+			ISpatialReference spatialReference = VerifiedModelFactory.GetMainSpatialReference(
+				model, usedDatasets);
+
+			if (spatialReference != null)
+			{
+				model.SpatialReferenceDescriptor =
+					new SpatialReferenceDescriptor(spatialReference);
+			}
 		}
 
 		#endregion

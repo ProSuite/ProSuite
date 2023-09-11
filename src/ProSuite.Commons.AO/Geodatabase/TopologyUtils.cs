@@ -71,8 +71,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		/// <summary>
-		/// Checks if the given objectclass belongs to an topology.
-		/// If it belongs to one, the name of the toplogy is returned also.
+		/// Checks if the given object class belongs to an topology.
+		/// If it belongs to one, the name of the topology is returned also.
 		/// </summary>
 		/// <param name="objectClass">ObjectClass to check</param>
 		/// <param name="topologyName">Name of the topology if the objectClass belongs to one,
@@ -98,7 +98,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		/// <summary>
 		/// Checks if the given object class belongs to an topology.
-		/// If it belongs to one, the toplogy is returned also.
+		/// If it belongs to one, the topology is returned also.
 		/// </summary>
 		/// <param name="objectClass">ObjectClass to check</param>
 		/// <param name="topology">Topology the object class belongs to (null if none)</param>
@@ -140,10 +140,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				ITopology candidateTopo = topologyContainer.Topology[i];
 
-				ITopologyProperties topoProps = (ITopologyProperties) candidateTopo;
-
-				foreach (IFeatureClass topoClass in
-				         DatasetUtils.GetFeatureClasses(topoProps.Classes))
+				foreach (IFeatureClass topoClass in DatasetUtils.GetFeatureClasses(
+					         (IFeatureClassContainer) candidateTopo))
 				{
 					if (DatasetUtils.IsSameObjectClass(topoClass, featureClass))
 					{

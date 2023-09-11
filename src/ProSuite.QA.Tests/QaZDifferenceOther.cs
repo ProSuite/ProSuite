@@ -114,6 +114,7 @@ namespace ProSuite.QA.Tests
 			_maximumZDifference = maximumZDifference;
 			_zComparisonMethod = zComparisonMethod;
 			_zRelationConstraint = zRelationConstraint;
+			AddCustomQueryFilterExpression(zRelationConstraint);
 		}
 
 		[TestParameter]
