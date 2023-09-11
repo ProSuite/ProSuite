@@ -417,7 +417,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			Stack<SubVerification> unhandledSubverifications =
 				new Stack<SubVerification>(subVerifications.Reverse());
 			IDictionary<Task, SubVerification> started =
-				StartSubverifications(unhandledSubverifications);
+				StartSubVerifications(unhandledSubverifications);
 			if (started.Count <= 0)
 			{
 				throw new InvalidOperationException("Could not start any subverification");
@@ -476,7 +476,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 						unhandledSubverifications.Push(retry);
 					}
 
-					StartSubverifications(unhandledSubverifications);
+					StartSubVerifications(unhandledSubverifications);
+
 					if (task.Status != TaskStatus.Faulted)
 					{
 						CompleteSubverification(completed);
@@ -609,11 +610,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		[NotNull]
-		private IDictionary<Task, SubVerification> StartSubverifications(
+		private IDictionary<Task, SubVerification> StartSubVerifications(
 			[NotNull] Stack<SubVerification> subVerifications)
 		{
 			IDictionary<Task, SubVerification> startedVerifications =
 				new ConcurrentDictionary<Task, SubVerification>();
+
 			while (true)
 			{
 				if (subVerifications.Count == 0)
@@ -622,6 +624,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 
 				IQualityVerificationClient client = GetWorkerClient();
+
 				if (client == null)
 				{
 					return startedVerifications;
@@ -633,6 +636,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 				{
 					_msg.WarnFormat("New Task already exists in dictioniary!");
 					LogTask(_tasks, newTask, next);
+				}
+				else
+				{
+					_msg.Debug(
+						$"Re-adding task  Task {newTask}; Task Hashcode: {newTask.GetHashCode()}; Subverification {next}");
 				}
 
 				_tasks.Add(newTask, next);
@@ -675,7 +683,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			if (_workersClients.Count == 1)
 			{
-				return _workersClients[0];
+				// Single client with potentially multiple threads
+				IQualityVerificationClient onlyClient = _workersClients[0];
+
+				return onlyClient.CanAcceptCalls(allowFailOver: false) ? onlyClient : null;
 			}
 
 			if (_workersClients.Count <= _workingClients.Count)
