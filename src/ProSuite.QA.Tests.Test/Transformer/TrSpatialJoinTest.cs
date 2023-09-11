@@ -11,6 +11,7 @@ using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
+using ProSuite.QA.Tests.Transformers.Filters;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test.Transformer
@@ -420,6 +421,195 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
+		[Test]
+		public void Top5734()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("gebaeude");
+			IFeatureClass fcGe = CreateFeatureClass(
+				ws, "TLM_GEBAEUDEEINHEIT", esriGeometryType.esriGeometryPolygon,
+				new List<IField>
+				{
+					FieldUtils.CreateField("UUID", esriFieldType.esriFieldTypeGUID)
+				});
+
+			IFeatureClass fcGk = CreateFeatureClass(
+				ws, "TLM_GEBAEUDEKOERPER", esriGeometryType.esriGeometryPolygon,
+				new List<IField>
+				{
+					FieldUtils.CreateField("TLM_GEBAEUDEEINHEIT_UUID",
+					                       esriFieldType.esriFieldTypeGUID),
+					FieldUtils.CreateIntegerField("OBJEKTART"),
+				});
+
+			string uuid = Guid.NewGuid().ToString("B");
+			{
+				IFeature f = fcGe.CreateFeature();
+				f.Value[1] = uuid;
+				f.Shape = CurveConstruction.StartPoly(990, 990).LineTo(1010, 990).LineTo(1010, 1010)
+				                           .LineTo(990, 1010).LineTo(990, 990).ClosePolygon();
+				f.Store();
+			}
+
+			{
+				IFeature f = fcGk.CreateFeature();
+				f.Value[1] = uuid;
+				f.Value[2] = 2;
+				f.Shape = CurveConstruction.StartPoly(990, 990).LineTo(1010, 990).LineTo(1010, 1010)
+				                           .LineTo(990, 1010).LineTo(990, 990).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = fcGk.CreateFeature();
+				f.Value[1] = uuid;
+				f.Value[2] = 2;
+				f.Shape = CurveConstruction.StartPoly(990, 990).LineTo(1010, 990).LineTo(1010, 1010)
+				                           .LineTo(990, 1010).LineTo(990, 990).ClosePolygon();
+				f.Store();
+			}
+
+			uuid = Guid.NewGuid().ToString("B");
+			{
+				IFeature f = fcGe.CreateFeature();
+				f.Value[1] = uuid;
+				f.Shape = CurveConstruction.StartPoly(1190, 990).LineTo(1210, 990).LineTo(1210, 1010)
+				                           .LineTo(1190, 1010).LineTo(1190, 990).ClosePolygon();
+				f.Store();
+			}
+			{
+				IFeature f = fcGk.CreateFeature();
+				f.Value[1] = uuid;
+				f.Value[2] = 2;
+				f.Shape = CurveConstruction.StartPoly(1190, 990).LineTo(1210, 990).LineTo(1210, 1010)
+				                           .LineTo(1190, 1010).LineTo(1190, 990).ClosePolygon();
+				f.Store();
+			}
+
+
+			IReadOnlyFeatureClass ge = ReadOnlyTableFactory.Create(fcGe);
+			IReadOnlyFeatureClass gk = ReadOnlyTableFactory.Create(fcGk);
+
+			TrSpatialJoin trSj = new TrSpatialJoin(ge, gk);
+			trSj.Constraint = "t0.UUID = t1.TLM_GEBAEUDEEINHEIT_UUID";
+			trSj.OuterJoin = false;
+			trSj.NeighborSearchOption = TrSpatialJoin.SearchOption.All;
+			trSj.Grouped = true;
+			trSj.T0Attributes = new [] { "UUID" };
+			trSj.T1Attributes = new []{ "SUM(GEBAEUDEKOERPER) AS ANZAHL_GEBAEUDEKOERPER" };
+			trSj.T1CalcAttributes = new[] { "IIF(OBJEKTART=2,1,0)  AS GEBAEUDEKOERPER" };
+
+			QaConstraint test = new QaConstraint(trSj.GetTransformed(), "ANZAHL_GEBAEUDEKOERPER = 1");
+
+			{
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute(GeometryFactory.CreateEnvelope(0, 0, 1200, 1200));
+
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+
+		}
+
+		[Test]
+		public void Top5728()
+		{
+
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("Bielersee");
+
+			{
+				IFeatureClass fc =
+					CreateFeatureClass(
+						ws, "TLM_FLIESSGEWAESSER", esriGeometryType.esriGeometryPolyline);
+
+				{
+					IFeature f = fc.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(2576272, 1211983).LineTo(2576125, 1212189)
+					                           .Curve;
+					f.Store();
+				}
+				{
+					IFeature f = fc.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(2576125, 1212189).LineTo(2575705, 1212739)
+					                           .Curve;
+					f.Store();
+				}
+			}
+			string uuid = Guid.NewGuid().ToString("B");
+			{
+				IFeatureClass fc =
+					CreateFeatureClass(
+						ws, "TLM_STEHENDES_GEWAESSER", esriGeometryType.esriGeometryPolyline,
+						new[]
+						{
+							FieldUtils.CreateField("TLM_GEWAESSER_LAUF_UUID",
+							                       esriFieldType.esriFieldTypeGUID)
+						});
+				{
+					IFeature f = fc.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(2576125, 1212189).LineTo(2574259,1210759).
+					                            LineTo(2576119,1211673)
+					                           .Curve;
+					f.Value[1] = uuid;
+					f.Store();
+				}
+				{
+					IFeature f = fc.CreateFeature();
+					f.Shape = CurveConstruction.StartLine(2576119, 1211673).LineTo(2577695, 1213983).
+					                            LineTo(2576125, 1212189)
+												.Curve;
+					f.Value[1] = uuid;
+					f.Store();
+				}
+			}
+			{
+				ITable tb = DatasetUtils.CreateTable(ws, "TLM_GEWAESSER_LAUF",
+				                                     FieldUtils.CreateField(
+					                                     "UUID", esriFieldType.esriFieldTypeGUID));
+				{
+					IRow r = tb.CreateRow();
+					r.Value[0] = uuid;
+					r.Store();
+				}
+			}
+
+
+			var fws = ws;
+			IReadOnlyFeatureClass fcFg =
+				ReadOnlyTableFactory.Create(fws.OpenFeatureClass("TLM_FLIESSGEWAESSER"));
+			IReadOnlyFeatureClass fcSg =
+				ReadOnlyTableFactory.Create(fws.OpenFeatureClass("TLM_STEHENDES_GEWAESSER"));
+			IReadOnlyTable tbGl = ReadOnlyTableFactory.Create(fws.OpenTable("TLM_GEWAESSER_LAUF"));
+
+
+			TrGeometryToPoints trEp = new TrGeometryToPoints(fcFg, GeometryComponent.LineEndPoints);
+			trEp.TransformerName = "trEp";
+
+			TrTableJoinInMemory trIm =
+				new TrTableJoinInMemory(
+					fcSg, tbGl, "TLM_GEWAESSER_LAUF_UUID", "UUID", JoinType.InnerJoin);
+			trIm.TransformerName = "trIm";
+
+			TrOnlyDisjointFeatures trDj =
+				new TrOnlyDisjointFeatures((IReadOnlyFeatureClass)trIm.GetTransformed(), trEp.GetTransformed());
+			trDj.TransformerName = "trDj";
+			trDj.FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All;
+
+			QaExportTables test = new QaExportTables(
+				new List<IReadOnlyTable>
+				{ fcFg, fcSg,
+					trEp.GetTransformed(), trIm.GetTransformed(), trDj.GetTransformed() },
+				"c:\\temp\\top5728_*.gdb"
+			);
+			test.ExportTileIds = true;
+			test.ExportTiles = true;
+
+			{
+				var runner = new QaContainerTestRunner(6000, test);
+				runner.Execute(GeometryFactory.CreateEnvelope(2571000, 1209000, 2585000, 1221000));
+			}
+
+			IWorkspace exportWorkspace = WorkspaceUtils.OpenFileGdbWorkspace(test.UsedFileGdbPath);
+			IFeatureClass fcTrDj = ((IFeatureWorkspace) exportWorkspace).OpenFeatureClass("trDj");
+			Assert.AreEqual(0, fcTrDj.FeatureCount(null));
+		}
 		private static void WriteFieldNames(IReadOnlyTable targetTable)
 		{
 			for (int i = 0; i < targetTable.Fields.FieldCount; i++)

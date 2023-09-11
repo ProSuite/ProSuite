@@ -77,6 +77,7 @@ namespace ProSuite.QA.Tests.Transformers
 		public virtual void SetKnownTransformedRows(IEnumerable<IReadOnlyRow> knownRows) { }
 
 		public abstract bool NoCaching { get; internal set; }
+		public virtual bool IgnoreOverlappingCachedRows { get; internal set; }
 
 		#endregion
 	}

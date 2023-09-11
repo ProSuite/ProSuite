@@ -128,7 +128,7 @@ namespace ProSuite.Commons.Test.Geom
 		                                             double expectedArea)
 		{
 			MultiLinestring footprint =
-				polyhedron.GetXYFootprint(tolerance, out List<Linestring> verticalRings);
+				polyhedron.GetXYFootprint(tolerance, tolerance, out List<Linestring> verticalRings);
 
 			Assert.AreEqual(polyhedron.Count, footprint.Count + verticalRings.Count);
 			Assert.NotNull(footprint);

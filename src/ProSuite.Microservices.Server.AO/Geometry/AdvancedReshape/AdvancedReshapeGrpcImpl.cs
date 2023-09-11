@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
 using Grpc.Core;
 using ProSuite.Commons.Com;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
@@ -26,6 +27,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
+			ProcessUtils.TrySetThreadIdAsName();
+
 			Func<ITrackCancel, AdvancedReshapeResponse> func =
 				trackCancel => AdvancedReshapeServiceUtils.Reshape(request);
 
@@ -43,6 +46,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 			OpenJawReshapeLineReplacementRequest request,
 			ServerCallContext context)
 		{
+			ProcessUtils.TrySetThreadIdAsName();
+
 			Func<ITrackCancel, ShapeMsg> func =
 				trackCancel => AdvancedReshapeServiceUtils.GetOpenJawReshapeReplaceEndPoint(
 					request, trackCancel);

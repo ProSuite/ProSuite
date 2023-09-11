@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Collections;
@@ -138,39 +139,37 @@ namespace ProSuite.Commons.Geom
 			AssignInteriorRings(remainingIslands, resultRingGroups, unprocessedParts,
 			                    _subcurveNavigator.Tolerance);
 
-			List<MultiLinestring> results = new List<MultiLinestring>(resultRingGroups);
-
 			if (unprocessedParts.Count > 0)
 			{
-				results.Add(FilterUnprocessedRings(unprocessedParts, resultRingGroups));
+				AddUnprocessedRings(unprocessedParts, resultRingGroups);
 			}
 
-			return new MultiPolycurve(results);
-		}
+			var result = new MultiPolycurve(resultRingGroups);
 
-		private MultiLinestring FilterUnprocessedRings(MultiLinestring unprocessed,
-		                                               IList<RingGroup> resultRingGroups)
-		{
-			if (! _subcurveNavigator.HasBoundaryLoops() &&
-			    ! _subcurveNavigator.RingsCouldContainEachOther)
+			// Guard for TOP-5727:
+			if (_subcurveNavigator.IntersectionPointNavigator.PotentiallyNonSimple)
 			{
-				return unprocessed;
+				AssertSimple(result);
 			}
 
-			// extra check necessary, the unprocessed parts could be inside a processed part
-			var remaining = new List<Linestring>();
-			foreach (var unprocessedRing in unprocessed.GetLinestrings())
+			// TOP-5731: Guard for general Barrel Roof 'eternal footprint' types: Count outer rings
+			//           because inner rings can be created by combining outer rings (2 bananas)
+			int resultOuterRingCount = result.PartCount -
+			                           result.GetLinestrings()
+			                                 .Count(r => r.ClockwiseOriented == false);
+
+			int resultOuterRingMaxCountTheoreticalMax =
+				GetExteriorRingCount(_subcurveNavigator.Source) +
+				GetExteriorRingCount(_subcurveNavigator.Target) +
+				_subcurveNavigator.GetBoundaryLoopCount();
+
+			if (resultOuterRingCount > resultOuterRingMaxCountTheoreticalMax)
 			{
-				if (resultRingGroups.All(r => GeomRelationUtils.AreaContainsXY(
-					                              r, unprocessedRing,
-					                              _subcurveNavigator.Tolerance) == false))
-				{
-					// Not contained by any result ring: keep it
-					remaining.Add(unprocessedRing);
-				}
+				throw new AssertionException(
+					"Failure to calculate union. The input is likely non-simple");
 			}
 
-			return new MultiPolycurve(remaining);
+			return result;
 		}
 
 		/// <summary>
@@ -413,6 +412,47 @@ namespace ProSuite.Commons.Geom
 			return 1;
 		}
 
+		private void AddUnprocessedRings(MultiLinestring unprocessed,
+		                                 ICollection<RingGroup> resultRingGroups)
+		{
+			if (! _subcurveNavigator.HasBoundaryLoops() &&
+			    ! _subcurveNavigator.RingsCouldContainEachOther)
+			{
+				foreach (var linestring in unprocessed.GetLinestrings())
+				{
+					resultRingGroups.Add(new RingGroup(linestring));
+				}
+
+				return;
+			}
+
+			// By now we know that the rings are not cutting each other, but extra checks are
+			// necessary because the unprocessed parts could be inside a processed part or within
+			// another unprocessed part.
+			foreach (var unprocessedRing in unprocessed.GetLinestrings()
+			                                           .Where(l => l.ClockwiseOriented != false)
+			                                           .OrderByDescending(l => l.GetArea2D()))
+			{
+				if (resultRingGroups.All(r => GeomRelationUtils.AreaContainsXY(
+					                              r, unprocessedRing,
+					                              _subcurveNavigator.Tolerance) == false))
+				{
+					// Not contained by any result ring: keep it
+					resultRingGroups.Add(new RingGroup(unprocessedRing));
+				}
+			}
+
+			// Assign the unprocessed interior rings:
+			MultiLinestring nonassignable = MultiPolycurve.CreateEmpty();
+
+			AssignInteriorRings(
+				unprocessed.GetLinestrings().Where(l => l.ClockwiseOriented == false),
+				resultRingGroups, nonassignable, _subcurveNavigator.Tolerance);
+
+			Assert.AreEqual(0, nonassignable.PartCount,
+			                "Not all interior rings could be assigned.");
+		}
+
 		private static RingGroup GetContainingRingGroup(
 			[NotNull] Linestring interiorRing,
 			[NotNull] ICollection<RingGroup> candidateRingGroups,
@@ -602,6 +642,36 @@ namespace ProSuite.Commons.Geom
 				         includeContainedSourceRings, false))
 			{
 				result.Add(uncutSourceRing);
+			}
+
+			return result;
+		}
+
+		private void AssertSimple(MultiLinestring result)
+		{
+			foreach (Linestring linestring in result.GetLinestrings())
+			{
+				if (GeomTopoOpUtils.GetLinearSelfIntersectionsXY(
+					    linestring, _subcurveNavigator.Tolerance).Any())
+				{
+					throw new InvalidOperationException(
+						"Result has self-intersections. The input geometries are likely " +
+						"non-simple with respect to tolerance.");
+				}
+			}
+		}
+
+		private static int GetExteriorRingCount(ISegmentList areaGeometry)
+		{
+			int result = 0;
+
+			for (int i = 0; i < areaGeometry.PartCount; i++)
+			{
+				if (areaGeometry.GetPart(i).ClockwiseOriented != false)
+
+				{
+					result++;
+				}
 			}
 
 			return result;

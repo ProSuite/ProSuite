@@ -59,7 +59,7 @@ namespace ProSuite.QA.Tests
 			GeometryComponent.EntireGeometry;
 
 		private IEnvelope _box;
-		private IList<ISpatialFilter> _filter;
+		private IList<IFeatureClassFilter> _filter;
 		private IList<QueryFilterHelper> _helper;
 
 		private readonly IPoint _nearPoint;
@@ -207,6 +207,20 @@ namespace ProSuite.QA.Tests
 				referenceRightSideDistances?.ToList() ?? new List<string>();
 			_referenceFlipExpressions =
 				referenceFlipExpressions?.ToList() ?? new List<string>();
+
+			AddCustomQueryFilterExpression(pointDistanceExpression);
+			foreach (string sql in _referenceDistanceExpressionsSql ?? new List<string>())
+			{
+				AddCustomQueryFilterExpression(sql);
+			}
+			foreach (string sql in _referenceRightSideDistanceSqls)
+			{
+				AddCustomQueryFilterExpression(sql);
+			}
+			foreach (string sql in _referenceFlipExpressions)
+			{
+				AddCustomQueryFilterExpression(sql);
+			}
 
 			_filter = null;
 			_tableCount = InvolvedTables.Count;
@@ -454,7 +468,7 @@ namespace ProSuite.QA.Tests
 
 			foreach (IPoint point in GetNodes(feature.Shape, _pointTemplate))
 			{
-				ISpatialFilter filter = PrepareSpatialFilter(point, referenceClassIndex);
+				IFeatureClassFilter filter = PrepareSpatialFilter(point, referenceClassIndex);
 				QueryFilterHelper helper = _helper[referenceClassIndex];
 
 				const int pointClassIndex = 0;
@@ -666,14 +680,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private ISpatialFilter PrepareSpatialFilter([NotNull] IPoint point,
-		                                            int referenceClassIndex)
+		private IFeatureClassFilter PrepareSpatialFilter([NotNull] IPoint point,
+		                                                 int referenceClassIndex)
 		{
 			point.QueryEnvelope(_box);
 			_box.Expand(SearchDistance, SearchDistance, false);
 
-			ISpatialFilter filter = _filter[referenceClassIndex];
-			filter.Geometry = _box;
+			IFeatureClassFilter filter = _filter[referenceClassIndex];
+			filter.FilterGeometry = _box;
 
 			return filter;
 		}
@@ -1073,9 +1087,9 @@ namespace ProSuite.QA.Tests
 		private void InitFilter()
 		{
 			CopyFilters(out _filter, out _helper);
-			foreach (ISpatialFilter filter in _filter)
+			foreach (var filter in _filter)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 			}
 
 			foreach (QueryFilterHelper filterHelper in _helper)

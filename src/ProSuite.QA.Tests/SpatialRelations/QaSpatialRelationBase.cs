@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -15,8 +14,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 	public abstract class QaSpatialRelationBase : ContainerTest
 	{
 		private QueryFilterHelper[] _filterHelpers;
-		private ISpatialFilter[] _spatialFilters;
-		private ISpatialFilter[] _spatialFiltersIntersects;
+		private IFeatureClassFilter[] _spatialFilters;
+		private IFeatureClassFilter[] _spatialFiltersIntersects;
 		private readonly bool _disjointIsError;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -48,11 +47,11 @@ namespace ProSuite.QA.Tests.SpatialRelations
 
 		protected QaSpatialRelationBase([NotNull] IReadOnlyFeatureClass featureClass,
 		                                esriSpatialRelEnum relation)
-			: this(new[] {featureClass}, relation) { }
+			: this(new[] { featureClass }, relation) { }
 
 		protected QaSpatialRelationBase([NotNull] IReadOnlyFeatureClass featureClass,
 		                                [NotNull] string intersectionMatrix)
-			: this(new[] {featureClass}, intersectionMatrix) { }
+			: this(new[] { featureClass }, intersectionMatrix) { }
 
 		#endregion
 
@@ -89,31 +88,46 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			IReadOnlyTable relatedTable = InvolvedTables[relatedTableIndex];
 
 			// access through properties to allow lazy initialization:
-			ISpatialFilter relatedFilter = SpatialFilters[relatedTableIndex];
+			IFeatureClassFilter relatedFilter = SpatialFilters[relatedTableIndex];
 			QueryFilterHelper relatedFilterHelper = FilterHelpers[relatedTableIndex];
 
-			relatedFilter.Geometry = searchGeometry;
+			relatedFilter.FilterGeometry = searchGeometry;
 
 			var errorCount = 0;
-			var anyFound = false;
-			foreach (IReadOnlyRow relatedRow in Search(relatedTable,
-			                                           relatedFilter,
-			                                           relatedFilterHelper))
+			IReadOnlyRow otherRow = null;
+			try
 			{
-				anyFound = true;
-
-				errorCount += FindErrors(feature, tableIndex,
-				                         relatedRow, relatedTableIndex);
-			}
-
-			if (! anyFound && _disjointIsError)
-			{
-				if (IsDisjoint(searchGeometry,
-				               relatedTable, relatedTableIndex,
-				               relatedFilterHelper))
+				var anyFound = false;
+				foreach (IReadOnlyRow relatedRow in Search(relatedTable,
+				                                           relatedFilter,
+				                                           relatedFilterHelper))
 				{
-					errorCount += FindErrorsNoRelated(feature);
+					anyFound = true;
+					otherRow = relatedRow;
+					// TODO: try catch and throw TestRowException: "Error testing feature {feature} against feature {relatedRow}: {e.Message}
+					errorCount += FindErrors(feature, tableIndex,
+					                         relatedRow, relatedTableIndex);
 				}
+
+				if (! anyFound && _disjointIsError)
+				{
+					if (IsDisjoint(searchGeometry,
+					               relatedTable, relatedTableIndex,
+					               relatedFilterHelper))
+					{
+						errorCount += FindErrorsNoRelated(feature);
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				string otherRowMsg =
+					otherRow == null ? "<null>" : GdbObjectUtils.ToString(otherRow);
+				string msg =
+					$"Error testing row {GdbObjectUtils.ToString(feature)} against {otherRowMsg}: {e.Message}";
+
+				_msg.Debug(msg, e);
+				throw new TestRowException(this, feature, msg);
 			}
 
 			return errorCount;
@@ -155,8 +169,8 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		                        [NotNull] IReadOnlyTable relatedTable, int relatedTableIndex,
 		                        [NotNull] QueryFilterHelper relatedFilterHelper)
 		{
-			ISpatialFilter intersectsFilter = _spatialFiltersIntersects[relatedTableIndex];
-			intersectsFilter.Geometry = shape;
+			IFeatureClassFilter intersectsFilter = _spatialFiltersIntersects[relatedTableIndex];
+			intersectsFilter.FilterGeometry = shape;
 
 			foreach (
 				IReadOnlyRow row in
@@ -184,7 +198,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			}
 		}
 
-		private ISpatialFilter[] SpatialFilters
+		private IFeatureClassFilter[] SpatialFilters
 		{
 			get
 			{
@@ -203,13 +217,13 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		/// </summary>
 		private void InitializeFilters()
 		{
-			_spatialFilters = new ISpatialFilter[TotalClassCount];
+			_spatialFilters = new IFeatureClassFilter[TotalClassCount];
 			_filterHelpers = new QueryFilterHelper[TotalClassCount];
-			_spatialFiltersIntersects = new ISpatialFilter[TotalClassCount];
+			_spatialFiltersIntersects = new IFeatureClassFilter[TotalClassCount];
 
 			// there is one table and hence one filter (see constructor)
 			// Create copy of this filter and use it for quering crossing lines
-			IList<ISpatialFilter> spatialFilters;
+			IList<IFeatureClassFilter> spatialFilters;
 			IList<QueryFilterHelper> filterHelpers;
 			CopyFilters(out spatialFilters, out filterHelpers);
 
@@ -225,18 +239,18 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			}
 		}
 
-		private static ISpatialFilter CreateIntersectionFilter(
-			[NotNull] ISpatialFilter defaultFilter)
+		private static IFeatureClassFilter CreateIntersectionFilter(
+			[NotNull] IFeatureClassFilter defaultFilter)
 		{
-			var filter = (ISpatialFilter) ((IClone) defaultFilter).Clone();
+			var filter = (IFeatureClassFilter) defaultFilter.Clone();
 
-			filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+			filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 			filter.SpatialRelDescription = null;
 
 			return filter;
 		}
 
-		private void ConfigureSpatialFilter([NotNull] ISpatialFilter spatialFilter,
+		private void ConfigureSpatialFilter([NotNull] IFeatureClassFilter spatialFilter,
 		                                    int tableIndex)
 		{
 			if (RequiresInvertedRelation(tableIndex))
@@ -244,24 +258,26 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				switch (Relation)
 				{
 					case esriSpatialRelEnum.esriSpatialRelContains:
-						spatialFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelWithin;
+						spatialFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelWithin;
 						break;
 					case esriSpatialRelEnum.esriSpatialRelWithin:
-						spatialFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelContains;
+						spatialFilter.SpatialRelationship =
+							esriSpatialRelEnum.esriSpatialRelContains;
 						break;
 					case esriSpatialRelEnum.esriSpatialRelRelation:
 						string matrixString = Assert.NotNull(IntersectionMatrix).MatrixString;
-						spatialFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelRelation;
+						spatialFilter.SpatialRelationship =
+							esriSpatialRelEnum.esriSpatialRelRelation;
 						spatialFilter.SpatialRelDescription = $"RELATE(G2, G1, '{matrixString}')";
 						break;
 					default:
-						spatialFilter.SpatialRel = Relation;
+						spatialFilter.SpatialRelationship = Relation;
 						break;
 				}
 			}
 			else
 			{
-				spatialFilter.SpatialRel = Relation;
+				spatialFilter.SpatialRelationship = Relation;
 
 				if (Relation == esriSpatialRelEnum.esriSpatialRelRelation)
 				{

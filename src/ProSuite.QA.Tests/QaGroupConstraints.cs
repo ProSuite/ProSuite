@@ -340,7 +340,7 @@ namespace ProSuite.QA.Tests
 					filterGeometry = null;
 				}
 
-				IQueryFilter queryFilterFullScan =
+				ITableFilter queryFilterFullScan =
 					CreateQueryFilter(filterGeometry, tableIndex);
 
 				var rowsToTest = table.EnumRows(queryFilterFullScan, recycle);
@@ -429,7 +429,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter CreateQueryFilter([CanBeNull] IGeometry geometry,
+		private ITableFilter CreateQueryFilter([CanBeNull] IGeometry geometry,
 		                                       int tableIndex)
 		{
 			return TestUtils.CreateFilter(geometry, AreaOfInterest,

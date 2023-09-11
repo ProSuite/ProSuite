@@ -21,7 +21,7 @@ namespace ProSuite.QA.Container
 		double GetSearchTolerance(IReadOnlyTable table);
 
 		IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
-		                                 [NotNull] IQueryFilter queryFilter,
+		                                 [NotNull] ITableFilter queryFilter,
 		                                 [NotNull] QueryFilterHelper filterHelper);
 
 		[CanBeNull]

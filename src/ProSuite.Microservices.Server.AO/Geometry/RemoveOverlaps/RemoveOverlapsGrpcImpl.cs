@@ -6,6 +6,7 @@ using Grpc.Core;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Definitions.Geometry;
 
@@ -28,6 +29,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
+			ProcessUtils.TrySetThreadIdAsName();
+
 			Func<ITrackCancel, CalculateOverlapsResponse> func =
 				trackCancel => RemoveOverlapsServiceUtils.CalculateOverlaps(request, trackCancel);
 
@@ -45,6 +48,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			RemoveOverlapsRequest request, ServerCallContext context)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
+
+			ProcessUtils.TrySetThreadIdAsName();
 
 			Func<ITrackCancel, RemoveOverlapsResponse> func =
 				trackCancel => RemoveOverlapsServiceUtils.RemoveOverlaps(request, trackCancel);

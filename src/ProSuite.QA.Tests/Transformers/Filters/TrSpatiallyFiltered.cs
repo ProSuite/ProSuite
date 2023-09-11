@@ -55,13 +55,13 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 				SpatiallyFilteredBackingDataset filterBackingData =
 					(SpatiallyFilteredBackingDataset) _resultingClass.BackingData;
 
-				ISpatialFilter filterIntersecting = new SpatialFilterClass();
+				IFeatureClassFilter filterIntersecting = new AoFeatureClassFilter();
 
 				// TODO: Is this the way to do this?
 				int intersectingTableIndex = 1;
 				ConfigureQueryFilter(intersectingTableIndex, filterIntersecting);
 
-				filterIntersecting.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+				filterIntersecting.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 
 				filterBackingData.IntersectingFeatureFilter = filterIntersecting;
 			}

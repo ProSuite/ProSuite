@@ -155,6 +155,9 @@ namespace ProSuite.QA.Tests.Transformers
 
 			bool ITransformedTable.NoCaching => false;
 
+			bool ITransformedTable.IgnoreOverlappingCachedRows =>
+				NeighborSearchOption == SearchOption.Tile;
+
 			private TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
 
 			[CanBeNull]
@@ -275,7 +278,7 @@ namespace ProSuite.QA.Tests.Transformers
 				throw new NotImplementedException();
 			}
 
-			public override long GetRowCount(IQueryFilter queryFilter)
+			public override long GetRowCount(ITableFilter queryFilter)
 			{
 				return Search(queryFilter, true).Count();
 				// TODO: Consider new Method GetRowCountEstimate()? Or add progress token to Search()?
@@ -292,25 +295,25 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
-			private IEnumerable<IReadOnlyRow> GetBaseFeatures(IQueryFilter filter, bool recycling)
+			private IEnumerable<IReadOnlyRow> GetBaseFeatures(ITableFilter filter, bool recycling)
 			{
 				if (DataContainer != null)
 				{
 					var ext = DataContainer.GetLoadedExtent(_dissolve);
 					if (QueryHelpers[0].FullGeometrySearch ||
-					    (filter is ISpatialFilter sf &&
-					     ((IRelationalOperator) ext).Contains(sf.Geometry)))
+					    (filter is IFeatureClassFilter sf &&
+					     ((IRelationalOperator) ext).Contains(sf.FilterGeometry)))
 					{
 						return DataContainer.Search(_dissolve, filter, QueryHelpers[0]);
 					}
 				}
 
-				IQueryFilter f = (IQueryFilter) ((IClone) filter).Clone();
+				ITableFilter f = filter.Clone();
 				f.WhereClause = QueryHelpers[0].TableView.Constraint;
 				return _dissolve.EnumRows(f, recycle: recycling);
 			}
 
-			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 			{
 				foreach (VirtualRow resultRow in DissolveSearchedFeatures(filter, recycling))
 				{
@@ -323,7 +326,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			private IEnumerable<VirtualRow> DissolveSearchedFeatures(
-				IQueryFilter filter, bool recycling)
+				ITableFilter filter, bool recycling)
 			{
 				// Quick & dirty implementation for polygons. TODO: Optimize
 				if (_dissolve.ShapeType == esriGeometryType.esriGeometryPolygon)
@@ -345,13 +348,13 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			private IEnumerable<IReadOnlyFeature> DissolveSearchedLineFeatures(
-				IQueryFilter filter, bool recycling)
+				ITableFilter filter, bool recycling)
 			{
 				// TODO: implement GroupBy
 				_builder = _builder ?? new NetworkBuilder(includeBorderNodes: true);
 				_builder.ClearAll();
 				IRelationalOperator queryEnv =
-					(IRelationalOperator) (filter as ISpatialFilter)?.Geometry.Envelope;
+					(IRelationalOperator) (filter as IFeatureClassFilter)?.FilterGeometry.Envelope;
 				IEnvelope fullBox = null;
 				Dictionary<IReadOnlyFeature, Involved> involvedDict =
 					new Dictionary<IReadOnlyFeature, Involved>();
@@ -408,10 +411,10 @@ namespace ProSuite.QA.Tests.Transformers
 					}
 				}
 
-				if (Resulting.KnownRows != null && filter is ISpatialFilter sp)
+				if (Resulting.KnownRows != null && filter is IFeatureClassFilter sp)
 				{
 					foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
-					         Resulting.KnownRows.Search(ProxyUtils.CreateBox(sp.Geometry)))
+					         Resulting.KnownRows.Search(ProxyUtils.CreateBox(sp.FilterGeometry)))
 					{
 						yield return entry.Value;
 					}
@@ -537,7 +540,7 @@ namespace ProSuite.QA.Tests.Transformers
 				return (IReadOnlyFeature) dissolved;
 			}
 
-			private IEnumerable<VirtualRow> DissolveSearchedAreaFeatures(IQueryFilter filter)
+			private IEnumerable<VirtualRow> DissolveSearchedAreaFeatures(ITableFilter filter)
 			{
 				bool searchAcrossTiles = Resulting.NeighborSearchOption == SearchOption.All;
 
@@ -548,10 +551,10 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
-			private IEnumerable<IReadOnlyFeature> DissolveSearchedAreaFeatures(IQueryFilter filter,
+			private IEnumerable<IReadOnlyFeature> DissolveSearchedAreaFeatures(ITableFilter filter,
 				bool searchAcrossTiles)
 			{
-				IEnvelope spatialFilterEnvelope = (filter as ISpatialFilter)?.Geometry?.Envelope;
+				IEnvelope spatialFilterEnvelope = (filter as IFeatureClassFilter)?.FilterGeometry?.Envelope;
 				EnvelopeXY requestedAreaXy =
 					spatialFilterEnvelope == null
 						? null
@@ -691,7 +694,7 @@ namespace ProSuite.QA.Tests.Transformers
 			private bool AddExtraGeometries(
 				[NotNull] IDictionary<long, IReadOnlyFeature> allFeaturesByOid,
 				[NotNull] ICollection<MultiPolycurve> groupGeometries,
-				[NotNull] IQueryFilter filter,
+				[NotNull] ITableFilter filter,
 				double tolerance)
 			{
 				Assert.ArgumentCondition(allFeaturesByOid.Count > 0, "No rows to dissolve");
@@ -707,14 +710,14 @@ namespace ProSuite.QA.Tests.Transformers
 
 				// TODO: Filter using difference and where clause for group by attribute values
 				// and possibly exclude already found features.
-				ISpatialFilter filterClone = (ISpatialFilter) ((IClone) filter).Clone();
+				IFeatureClassFilter filterClone = (IFeatureClassFilter)filter.Clone();
 
 				// TODO: Instead of the current tile use the union of the previously searched areas
 				IEnvelope currentTile =
 					GeometryFactory.CreateEnvelope(DataContainer.CurrentTileExtent);
 				currentTile.SpatialReference = unionEnvelope.SpatialReference;
 
-				filterClone.Geometry =
+				filterClone.FilterGeometry =
 					IntersectionUtils.Difference(GeometryFactory.CreatePolygon(unionEnvelope),
 					                             GeometryFactory.CreatePolygon(currentTile));
 
@@ -786,7 +789,7 @@ namespace ProSuite.QA.Tests.Transformers
 				return false;
 			}
 
-			private IEnumerable<List<IReadOnlyRow>> GroupedBaseFeatures(IQueryFilter filter,
+			private IEnumerable<List<IReadOnlyRow>> GroupedBaseFeatures(ITableFilter filter,
 				bool recycling)
 			{
 				if (Resulting.GroupBy == null || Resulting.GroupBy.Count == 0)
@@ -814,7 +817,7 @@ namespace ProSuite.QA.Tests.Transformers
 				private readonly HashSet<DirectedRow> _handledRows;
 				private readonly List<DirectedRow> _missing;
 
-				private ISpatialFilter _filter;
+				private IFeatureClassFilter _filter;
 
 				public ConnectedBuilder(TransformedDataset r)
 				{
@@ -855,13 +858,13 @@ namespace ProSuite.QA.Tests.Transformers
 
 					foreach (DirectedRow directedRow in missing)
 					{
-						_filter = _filter ?? new SpatialFilterClass();
-						ISpatialFilter f = _filter;
-						f.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+						_filter = _filter ?? new AoFeatureClassFilter();
+						IFeatureClassFilter f = _filter;
+						f.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 						IEnvelope queryGeom = directedRow.FromPoint.Envelope;
 						double tolerance = GeometryUtils.GetXyTolerance(queryGeom);
 						queryGeom.Expand(tolerance, tolerance, false);
-						f.Geometry = queryGeom;
+						f.FilterGeometry = queryGeom;
 						List<IReadOnlyRow> baseFeatures =
 							new List<IReadOnlyRow>(_r.GetBaseFeatures(f, recycling: false));
 

@@ -61,6 +61,7 @@ namespace ProSuite.QA.Container
 		private esriUnits _lengthUnit = esriUnits.esriUnknownUnits;
 		private string _unitString;
 		private readonly List<TableProps> _tableProps;
+		private List<string> _customQueryFilterExpressions;
 
 		#region Constructors
 
@@ -136,12 +137,12 @@ namespace ProSuite.QA.Container
 			SetRowFiltersCore(tableIndex, rowFiltersExpression, rowFilters);
 		}
 
-		protected void CopyFilters([NotNull] out IList<ISpatialFilter> spatialFilters,
+		protected void CopyFilters([NotNull] out IList<IFeatureClassFilter> spatialFilters,
 		                           [NotNull] out IList<QueryFilterHelper> filterHelpers)
 		{
 			int tableCount = InvolvedTables.Count;
 
-			spatialFilters = new ISpatialFilter[tableCount];
+			spatialFilters = new IFeatureClassFilter[tableCount];
 			filterHelpers = new QueryFilterHelper[tableCount];
 
 			for (var tableIndex = 0; tableIndex < tableCount; tableIndex++)
@@ -151,26 +152,34 @@ namespace ProSuite.QA.Container
 				filterHelpers[tableIndex] = new QueryFilterHelper(table,
 					GetConstraint(tableIndex),
 					GetSqlCaseSensitivity(tableIndex));
-				spatialFilters[tableIndex] = new SpatialFilterClass();
+				spatialFilters[tableIndex] = new AoFeatureClassFilter();
 
 				ConfigureQueryFilter(tableIndex, spatialFilters[tableIndex]);
 			}
 		}
 
+		protected void AddCustomQueryFilterExpression([CanBeNull] string expression)
+		{
+			if (! string.IsNullOrWhiteSpace(expression))
+			{
+				_customQueryFilterExpressions = _customQueryFilterExpressions ?? new List<string>();
+				_customQueryFilterExpressions.Add(expression.Replace(".", " "));
+			}
+		}
 		/// <summary>
 		/// Adapts IQueryFilter so that it conforms to the needs of the test
 		/// </summary>
 		protected virtual void ConfigureQueryFilter(int tableIndex,
-		                                            [NotNull] IQueryFilter queryFilter)
+		                                            [NotNull] ITableFilter filter)
 		{
-			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));
+			Assert.ArgumentNotNull(filter, nameof(filter));
 
 			IReadOnlyTable table = InvolvedTables[tableIndex];
 			string constraint = GetConstraint(tableIndex);
 
 			// NOTE: Contrary to the documentation the field is not added if queryFilter.SubFields == "*" which is the default!
 			string subFields =
-				GdbQueryUtils.AppendToFieldList(queryFilter.SubFields, table.OIDFieldName);
+				GdbQueryUtils.AppendToFieldList(filter.SubFields, table.OIDFieldName);
 
 			var featureClass = table as IReadOnlyFeatureClass;
 
@@ -202,8 +211,22 @@ namespace ProSuite.QA.Container
 				}
 			}
 
-			queryFilter.SubFields = subFields;
-			queryFilter.WhereClause = constraint;
+			if (_customQueryFilterExpressions?.Count > 0)
+			{
+				foreach (string filterExpression in _customQueryFilterExpressions)
+				{
+					foreach (
+						string fieldName in
+						ExpressionUtils.GetExpressionFieldNames(table, filterExpression))
+					{
+						subFields = GdbQueryUtils.AppendToFieldList(subFields, fieldName);
+					}
+
+				}
+			}
+
+			filter.SubFields = subFields;
+			filter.WhereClause = constraint;
 		}
 
 		protected virtual void SetConstraintCore(IReadOnlyTable table, int tableIndex,

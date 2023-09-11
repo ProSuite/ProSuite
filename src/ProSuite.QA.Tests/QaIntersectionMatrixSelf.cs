@@ -60,6 +60,7 @@ namespace ProSuite.QA.Tests
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint
 				              : null;
+			AddCustomQueryFilterExpression(constraint);
 		}
 
 		[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_2))]
@@ -101,6 +102,7 @@ namespace ProSuite.QA.Tests
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint
 				              : null;
+			AddCustomQueryFilterExpression(constraint);
 			_validIntersectionDimensions = validIntersectionDimensions;
 		}
 

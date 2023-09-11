@@ -26,7 +26,7 @@ namespace ProSuite.QA.Tests
 		private readonly bool _ignoreNearEndpoints;
 		private readonly bool _is3D;
 		private IEnvelope _searchEnvelopeTemplate;
-		private IList<ISpatialFilter> _filter;
+		private IList<IFeatureClassFilter> _filter;
 		private IList<QueryFilterHelper> _helper;
 		private readonly IPoint _pointTemplate;
 		private readonly IPoint _neighborPointTemplate;
@@ -765,7 +765,7 @@ namespace ProSuite.QA.Tests
 		{
 			var table = (IReadOnlyTable) nearFeatureClass;
 
-			ISpatialFilter filter = GetSearchFilter(nearTableIndex, node, searchDistance);
+			IFeatureClassFilter filter = GetSearchFilter(nearTableIndex, node, searchDistance);
 
 			QueryFilterHelper filterHelper = _helper[nearTableIndex];
 			filterHelper.MinimumOID = -1; // not symmetrical, can't set MinimumOID
@@ -813,11 +813,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private ISpatialFilter GetSearchFilter(int tableIndex,
-		                                       [NotNull] IPoint point,
-		                                       double searchDistance)
+		private IFeatureClassFilter GetSearchFilter(int tableIndex,
+		                                            [NotNull] IPoint point,
+		                                            double searchDistance)
 		{
-			ISpatialFilter filter = _filter[tableIndex];
+			IFeatureClassFilter filter = _filter[tableIndex];
 
 			double x;
 			double y;
@@ -826,7 +826,7 @@ namespace ProSuite.QA.Tests
 			_searchEnvelopeTemplate.PutCoords(x - searchDistance, y - searchDistance,
 			                                  x + searchDistance, y + searchDistance);
 
-			filter.Geometry = _searchEnvelopeTemplate;
+			filter.FilterGeometry = _searchEnvelopeTemplate;
 
 			return filter;
 		}
@@ -855,9 +855,9 @@ namespace ProSuite.QA.Tests
 		private void InitFilter()
 		{
 			CopyFilters(out _filter, out _helper);
-			foreach (ISpatialFilter filter in _filter)
+			foreach (var filter in _filter)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 			}
 
 			foreach (QueryFilterHelper filterHelper in _helper)

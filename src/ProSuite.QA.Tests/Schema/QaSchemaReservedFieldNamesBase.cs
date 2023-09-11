@@ -112,7 +112,7 @@ namespace ProSuite.QA.Tests.Schema
 			                                      out reasonFieldIndex,
 			                                      out validNameFieldIndex);
 
-			var queryFilter = new QueryFilterClass
+			var queryFilter = new AoTableFilter
 			                  {
 				                  SubFields = subFields,
 				                  WhereClause = GetConstraint(_reservedNamesTable)

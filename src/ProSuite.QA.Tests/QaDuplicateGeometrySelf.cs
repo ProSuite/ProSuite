@@ -93,6 +93,7 @@ namespace ProSuite.QA.Tests
 			_validRelationConstraintSql = StringUtils.IsNotEmpty(validDuplicateConstraint)
 				                              ? validDuplicateConstraint
 				                              : null;
+			AddCustomQueryFilterExpression(validDuplicateConstraint);
 		}
 
 		public override bool RetestRowsPerIntersectedTile(int tableIndex)
@@ -249,7 +250,7 @@ namespace ProSuite.QA.Tests
 
 			string tableName = _featureClass.Name;
 			const bool recycle = true;
-			foreach (IReadOnlyRow r in GdbQueryUtils.GetRows(
+			foreach (IReadOnlyRow r in TableFilterUtils.GetRows(
 				         _featureClass, duplicatesByFirstOid.Keys, recycle))
 			{
 				IReadOnlyFeature feature = (IReadOnlyFeature) r;

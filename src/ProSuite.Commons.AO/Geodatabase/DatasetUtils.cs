@@ -1225,7 +1225,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (workspace is ISQLSyntax sqlWorkspace)
 			{
-				return sqlWorkspace.QualifyColumnName(table.Name, unqualifiedFieldName);
+				string result = sqlWorkspace.QualifyColumnName(table.Name, unqualifiedFieldName);
+
+				return result;
 			}
 
 			return $"{table.Name}.{unqualifiedFieldName}";
@@ -1643,7 +1645,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		/// <summary>
-		/// Gets the feature classes in a feature class container.
+		/// Gets the feature classes in a feature class container (e.g. feature dataset or topology)
 		/// </summary>
 		/// <param name="featureClassContainer">The feature class container.</param>
 		/// <returns></returns>
@@ -1655,21 +1657,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			IEnumFeatureClass enumFeatureClass = featureClassContainer.Classes;
 
-			return GetFeatureClasses(enumFeatureClass);
-		}
-
-		[NotNull]
-		public static IEnumerable<IFeatureClass> GetFeatureClasses(
-			[NotNull] IEnumFeatureClass enumFeatureClass)
-		{
 			enumFeatureClass.Reset();
 
-			IFeatureClass featureClass = enumFeatureClass.Next();
-			while (featureClass != null)
+			IFeatureClass featureClass;
+			while ((featureClass = enumFeatureClass.Next()) != null)
 			{
 				yield return featureClass;
-
-				featureClass = enumFeatureClass.Next();
 			}
 		}
 

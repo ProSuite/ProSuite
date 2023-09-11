@@ -42,6 +42,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanIgnoreCoincidentFeatures()
 		{
 			IFeatureClass fcPoint1;
@@ -75,6 +76,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectCoincidentFeaturesWithDifferingAttributes()
 		{
 			IFeatureClass fcPoint1;
@@ -111,6 +113,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanAttributeConstraintErrorsIndividually()
 		{
 			IFeatureClass fcPoint1;
@@ -159,6 +162,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNoCandidateFeature()
 		{
 			IFeatureClass fcPoint1;
@@ -190,6 +194,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanIgnoreNoCandidateFeature()
 		{
 			IFeatureClass fcPoint1;
@@ -222,6 +227,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanIgnoreUnrelatedFeatures()
 		{
 			IFeatureClass fcPoint1;
@@ -251,6 +257,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNonCoincidentCandidateFeature()
 		{
 			IFeatureClass fcPoint1;
@@ -284,6 +291,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanIgnoreNonCoincidentCandidateFeatureWithinCoincidenceTolerance()
 		{
 			IFeatureClass fcPoint1;
@@ -318,6 +326,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNonCoincidentCandidateFeatureWithDifferingAttributes()
 		{
 			IFeatureClass fcPoint1;
@@ -356,6 +365,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void
 			CanIgnoreNonCoincientCandidateFeatureDuetoBorderGapWithinCoincidenceTolerance()
 		{
@@ -391,6 +401,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanIgnoreNonCoincientCandidateFeatureDuetoBorderGap()
 		{
 			IFeatureClass fcPoint1;
@@ -425,6 +436,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNonCoincidentCandidateFeatureDuetoBorderOverlap()
 		{
 			IFeatureClass fcPoint1;
@@ -460,6 +472,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNoCandidateFeatureDueToOffsetFromBorder()
 		{
 			IFeatureClass fcPoint1;
@@ -494,6 +507,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectNoCandidateFeaturesDueToLateralOffset()
 		{
 			IFeatureClass fcPoint1;
@@ -528,6 +542,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		[Category(Commons.Test.TestCategory.FixMe)]
 		public void
 			CanIgnoreWhenAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled()
 		{

@@ -11,20 +11,6 @@ namespace ProSuite.Commons.Geom
 	/// </summary>
 	internal class LinearIntersectionBreakEvaluator
 	{
-		private readonly bool _identifyBoundaryLoops;
-		private readonly List<IntersectionPoint3D> _potentialSourceBoundaryLoopIntersections;
-		private readonly List<LinearIntersectionPseudoBreak> _basicBoundaryLoops;
-
-		public LinearIntersectionBreakEvaluator(bool identifyBoundaryLoops = false)
-		{
-			_identifyBoundaryLoops = identifyBoundaryLoops;
-			if (_identifyBoundaryLoops)
-			{
-				_basicBoundaryLoops = new List<LinearIntersectionPseudoBreak>();
-				_potentialSourceBoundaryLoopIntersections = new List<IntersectionPoint3D>();
-			}
-		}
-
 		/// <summary>
 		/// Returns the intersection points at the ring start/end points which exist only because
 		/// of the ring start/end point. When the intersection points are calculated these
@@ -84,11 +70,6 @@ namespace ProSuite.Commons.Geom
 				{
 					yield return ringNullPointBreak;
 				}
-
-				if (ringNullPointBreak?.IsBoundaryLoop == true)
-				{
-					_basicBoundaryLoops?.Add(ringNullPointBreak);
-				}
 			}
 		}
 
@@ -113,88 +94,6 @@ namespace ProSuite.Commons.Geom
 			         GetLinearIntersectionPseudoBreaks(source, target, orderedIntersections))
 			{
 				yield return pseudoBreak;
-			}
-		}
-
-		internal IEnumerable<LinearIntersectionPseudoBreak> GetAllBoundaryLoops(
-			[NotNull] ISegmentList source,
-			[NotNull] ISegmentList target,
-			double tolerance)
-		{
-			if (_basicBoundaryLoops == null)
-			{
-				yield break;
-			}
-
-			foreach (var boundaryLoop in _basicBoundaryLoops)
-			{
-				yield return boundaryLoop;
-			}
-
-			foreach (var extraBoundaryLoop in GetAdditionalSourceBoundaryLoops(
-				         source, target, tolerance))
-			{
-				yield return extraBoundaryLoop;
-			}
-		}
-
-		private IEnumerable<LinearIntersectionPseudoBreak> GetAdditionalSourceBoundaryLoops(
-			[NotNull] ISegmentList source,
-			[NotNull] ISegmentList target,
-			double tolerance)
-		{
-			if (_potentialSourceBoundaryLoopIntersections == null)
-			{
-				yield break;
-			}
-
-			// Check candidates, ordered along target
-			IntersectionPoint3D previous = null;
-			foreach (IntersectionPoint3D current in
-			         GetIntersectionPairsOrderedAlongTarget(
-				         _potentialSourceBoundaryLoopIntersections))
-			{
-				if (previous != null)
-				{
-					SegmentIntersectionUtils.AreIntersectionsAdjacent(
-						previous, current, source, target,
-						out bool isSourceBoundaryLoop, out bool isTargetBoundaryLoop, tolerance);
-
-					if (isSourceBoundaryLoop)
-					{
-						var pseudoBreak =
-							new LinearIntersectionPseudoBreak(previous, current)
-							{
-								IsSourceBoundaryLoop = true,
-								IsTargetBoundaryLoop = isTargetBoundaryLoop
-							};
-
-						yield return pseudoBreak;
-					}
-				}
-
-				previous = current;
-			}
-		}
-
-		private IEnumerable<IntersectionPoint3D> GetIntersectionPairsOrderedAlongTarget(
-			IEnumerable<IntersectionPoint3D> intersections)
-		{
-			foreach (IGrouping<int, IntersectionPoint3D> intersectionsByPart in
-			         intersections.GroupBy(p => p.TargetPartIndex))
-			{
-				var orderedIntersections =
-					intersectionsByPart.OrderBy(i => i.VirtualTargetVertex).ToList();
-
-				if (orderedIntersections.Count < 2)
-				{
-					continue;
-				}
-
-				foreach (IntersectionPoint3D intersection in orderedIntersections)
-				{
-					yield return intersection;
-				}
 			}
 		}
 
@@ -223,11 +122,6 @@ namespace ProSuite.Commons.Geom
 					else if (includeBoundaryLoops && pseudoBreak?.IsBoundaryLoop == true)
 					{
 						yield return pseudoBreak;
-					}
-
-					if (pseudoBreak?.IsBoundaryLoop == true)
-					{
-						_basicBoundaryLoops?.Add(pseudoBreak);
 					}
 				}
 
@@ -265,19 +159,6 @@ namespace ProSuite.Commons.Geom
 						IsSourceBoundaryLoop = isSourceBoundaryLoop,
 						IsTargetBoundaryLoop = isTargetBoundaryLoop
 					};
-			}
-
-			if (_identifyBoundaryLoops)
-			{
-				// Additional source boundary loops currently missed by the above method:
-				if (previousIntersection.SourcePartIndex == currentIntersection.SourcePartIndex &&
-				    previousIntersection.TargetPartIndex != currentIntersection.TargetPartIndex &&
-				    currentIntersection.ReferencesSameSourceVertex(
-					    previousIntersection, source, tolerance))
-				{
-					_potentialSourceBoundaryLoopIntersections.Add(previousIntersection);
-					_potentialSourceBoundaryLoopIntersections.Add(currentIntersection);
-				}
 			}
 
 			return adjacent;

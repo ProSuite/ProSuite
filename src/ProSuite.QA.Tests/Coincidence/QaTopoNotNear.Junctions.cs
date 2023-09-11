@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry.Proxy;
@@ -61,8 +60,8 @@ namespace ProSuite.QA.Tests.Coincidence
 					foreach (KeyValuePair<int, IReadOnlyFeatureClass> topoPair in _topoTables)
 					{
 						int neighborTableIdx = topoPair.Key;
-						ISpatialFilter filter = _topoFilters[neighborTableIdx];
-						filter.Geometry = searchBox;
+						IFeatureClassFilter filter = _topoFilters[neighborTableIdx];
+						filter.FilterGeometry = searchBox;
 						QueryFilterHelper helper = _topoHelpers[neighborTableIdx];
 
 						foreach (IReadOnlyRow neighborRow in Search(topoPair.Value, filter, helper)

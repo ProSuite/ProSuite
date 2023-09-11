@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -31,7 +32,7 @@ namespace ProSuite.QA.Tests
 		private readonly List<int> _compareFieldIndexes;
 		private MultiTableView _compareHelper;
 		private QueryFilterHelper _selectHelper;
-		private ISpatialFilter _spatialFilter;
+		private IFeatureClassFilter _spatialFilter;
 		private string _comparedFieldsString;
 
 		#region issue codes
@@ -81,6 +82,7 @@ namespace ProSuite.QA.Tests
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint
 				              : null;
+			AddCustomQueryFilterExpression(constraint);
 			_allowPointIntersection = allowPointIntersection;
 		}
 
@@ -125,8 +127,11 @@ namespace ProSuite.QA.Tests
 			_polygonClass = polygonClass;
 			_allowPointIntersection = allowPointIntersection;
 
+			List<string> fieldList = new List<string>(fields);
 			_compareFieldIndexes = new List<int>(
-				GetCompareFieldIndexes(polygonClass, fields, fieldListType));
+				GetCompareFieldIndexes(polygonClass, fieldList, fieldListType));
+
+			AddCustomQueryFilterExpression(string.Concat(fieldList.Select(x => $"{x} ")));
 		}
 
 		#endregion
@@ -141,7 +146,7 @@ namespace ProSuite.QA.Tests
 
 			// configure filter to find crossing "row"
 			IGeometry shape = ((IReadOnlyFeature) row).Shape;
-			_spatialFilter.Geometry = shape;
+			_spatialFilter.FilterGeometry = shape;
 
 			// optimize query if tests runs "directed"
 			_selectHelper.MinimumOID = IgnoreUndirected
@@ -269,7 +274,7 @@ namespace ProSuite.QA.Tests
 		/// </summary>
 		private void InitFilter()
 		{
-			IList<ISpatialFilter> spatialFilters;
+			IList<IFeatureClassFilter> spatialFilters;
 			IList<QueryFilterHelper> filterHelpers;
 
 			// there is one table and hence one filter (see constructor)
@@ -279,7 +284,7 @@ namespace ProSuite.QA.Tests
 			_spatialFilter = spatialFilters[0];
 			_selectHelper = filterHelpers[0];
 
-			_spatialFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelTouches;
+			_spatialFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelTouches;
 
 			if (_constraint != null)
 			{

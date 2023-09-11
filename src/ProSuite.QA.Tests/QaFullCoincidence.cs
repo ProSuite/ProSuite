@@ -7,7 +7,6 @@ using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
@@ -29,7 +28,7 @@ namespace ProSuite.QA.Tests
 		private readonly IList<IReadOnlyFeatureClass> _referenceList;
 
 		private IList<QueryFilterHelper> _helperList;
-		private IList<ISpatialFilter> _spatialFilters;
+		private IList<IFeatureClassFilter> _spatialFilters;
 
 		private IList<string> _ignoreNeighborConditionsSql;
 		private List<IgnoreRowNeighborCondition> _ignoreNeighborConditions;
@@ -176,7 +175,7 @@ namespace ProSuite.QA.Tests
 				InitFilter();
 			}
 
-			IList<ISpatialFilter> filters = Assert.NotNull(_spatialFilters);
+			IList<IFeatureClassFilter> filters = Assert.NotNull(_spatialFilters);
 
 			// iterating over all needed tables
 			int neighborTableIndex = -1;
@@ -203,8 +202,8 @@ namespace ProSuite.QA.Tests
 			{
 				neighborTableIndex++;
 
-				ISpatialFilter spatialFilter = filters[neighborTableIndex];
-				spatialFilter.Geometry = _queryBox;
+				IFeatureClassFilter spatialFilter = filters[neighborTableIndex];
+				spatialFilter.FilterGeometry = _queryBox;
 
 				var neighborTable = (IReadOnlyTable) neighborFeatureClass;
 
@@ -287,13 +286,13 @@ namespace ProSuite.QA.Tests
 
 		private void InitFilter()
 		{
-			IList<ISpatialFilter> filters;
+			IList<IFeatureClassFilter> filters;
 			IList<QueryFilterHelper> helpers;
 			CopyFilters(out filters, out helpers);
 
 			// only filters for reference layers are needed
 			int filterCount = filters.Count;
-			_spatialFilters = new ISpatialFilter[filterCount - 1];
+			_spatialFilters = new IFeatureClassFilter[filterCount - 1];
 			_helperList = new QueryFilterHelper[filterCount - 1];
 
 			for (var filterIndex = 1; filterIndex < filterCount; filterIndex++)
@@ -302,9 +301,9 @@ namespace ProSuite.QA.Tests
 				_helperList[filterIndex - 1] = helpers[filterIndex];
 			}
 
-			foreach (ISpatialFilter filter in _spatialFilters)
+			foreach (var filter in _spatialFilters)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 			}
 		}
 

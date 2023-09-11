@@ -24,7 +24,7 @@ namespace ProSuite.QA.Tests
 
 		private readonly string _relevantRelationConditionSql;
 		private QueryFilterHelper[] _helper;
-		private ISpatialFilter[] _queryFilter;
+		private IFeatureClassFilter[] _queryFilter;
 		private readonly int _totalClassesCount;
 
 		private RelevantRelationCondition _relevantRelationCondition;
@@ -68,6 +68,8 @@ namespace ProSuite.QA.Tests
 			_relevantRelationConditionSql = StringUtils.IsNotEmpty(relevantRelationCondition)
 				                                ? relevantRelationCondition
 				                                : null;
+			AddCustomQueryFilterExpression(relevantRelationCondition);
+
 			_totalClassesCount = featureClasses.Count;
 		}
 
@@ -149,8 +151,8 @@ namespace ProSuite.QA.Tests
 		{
 			IReadOnlyTable table = InvolvedTables[relatedTableIndex];
 
-			ISpatialFilter spatialFilter = _queryFilter[relatedTableIndex];
-			spatialFilter.Geometry = shape;
+			IFeatureClassFilter spatialFilter = _queryFilter[relatedTableIndex];
+			spatialFilter.FilterGeometry = shape;
 
 			QueryFilterHelper filterHelper = _helper[relatedTableIndex];
 
@@ -171,13 +173,13 @@ namespace ProSuite.QA.Tests
 			// TODO extract base class (QaRequiredSpatialRelationSelf)
 			// TODO use issue code NoTouchingFeature_WithFulfilledConstraint
 			const bool recycling = true;
-			return GdbQueryUtils.GetRows(featureClass, oids, recycling).Cast<IReadOnlyFeature>()
-			                    .Sum(feature => ReportError(
-				                         "Feature is not touched by another feature",
-				                         InvolvedRowUtils.GetInvolvedRows(feature),
-				                         feature.ShapeCopy,
-				                         Codes[MustTouchIssueCodes.NoTouchingFeature],
-				                         TestUtils.GetShapeFieldName(feature)));
+			return TableFilterUtils.GetRows(featureClass, oids, recycling).Cast<IReadOnlyFeature>()
+			                       .Sum(feature => ReportError(
+				                            "Feature is not touched by another feature",
+				                            InvolvedRowUtils.GetInvolvedRows(feature),
+				                            feature.ShapeCopy,
+				                            Codes[MustTouchIssueCodes.NoTouchingFeature],
+				                            TestUtils.GetShapeFieldName(feature)));
 		}
 
 		/// <summary>
@@ -186,10 +188,10 @@ namespace ProSuite.QA.Tests
 		/// </summary>
 		private void InitFilter()
 		{
-			IList<ISpatialFilter> filters;
+			IList<IFeatureClassFilter> filters;
 			IList<QueryFilterHelper> filterHelpers;
 
-			_queryFilter = new ISpatialFilter[_totalClassesCount];
+			_queryFilter = new IFeatureClassFilter[_totalClassesCount];
 			_helper = new QueryFilterHelper[_totalClassesCount];
 
 			// Create copy of this filter and use it for quering features
@@ -197,7 +199,7 @@ namespace ProSuite.QA.Tests
 			for (int i = 0; i < _totalClassesCount; i++)
 			{
 				_queryFilter[i] = filters[i];
-				_queryFilter[i].SpatialRel = esriSpatialRelEnum.esriSpatialRelTouches;
+				_queryFilter[i].SpatialRelationship = esriSpatialRelEnum.esriSpatialRelTouches;
 
 				_helper[i] = filterHelpers[i];
 			}

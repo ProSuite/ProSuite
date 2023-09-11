@@ -120,6 +120,7 @@ namespace ProSuite.QA.Tests.Transformers
 			public IDataContainer DataContainer { get; set; }
 
 			bool ITransformedTable.NoCaching => true;
+			bool ITransformedTable.IgnoreOverlappingCachedRows => true;
 
 			void ITransformedTable.SetKnownTransformedRows(IEnumerable<IReadOnlyRow> knownRows) { }
 
@@ -142,14 +143,23 @@ namespace ProSuite.QA.Tests.Transformers
 			public override bool HasOID => _hasOid;
 			public override string OIDFieldName => "AppendedOID";
 
-			public override long RowCount(IQueryFilter QueryFilter)
+			public override long RowCount(ITableFilter queryFilter)
 			{
-				long nRows = InvolvedTables.Sum(involved => involved.RowCount(QueryFilter));
+				long nRows = InvolvedTables.Sum(involved => involved.RowCount(queryFilter));
 				return nRows;
 			}
 
+			protected override long TableRowCount(IQueryFilter queryFilter)
+			{
+				ITableFilter tableFilter = GdbQueryUtils.ToTableFilter(queryFilter);
+
+				long nRows = InvolvedTables.Sum(involved => involved.RowCount(tableFilter));
+
+				return base.TableRowCount(queryFilter);
+			}
+
 			public override IEnumerable<IReadOnlyRow> EnumReadOnlyRows(
-				IQueryFilter queryFilter, bool recycling)
+				ITableFilter queryFilter, bool recycling)
 			{
 				for (int iTable = 0; iTable < InvolvedTables.Count; iTable++)
 				{

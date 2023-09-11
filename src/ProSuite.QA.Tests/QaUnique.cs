@@ -48,7 +48,7 @@ namespace ProSuite.QA.Tests
 		private readonly IList<string> _commaSeparatedFieldNamesList;
 
 		private int[] _compareFieldIndexes;
-		private IList<IQueryFilter> _globalFilters;
+		private IList<ITableFilter> _globalFilters;
 		private TableView _sortedView;
 		private IList<TableView> _helperViews;
 		private IList<IList<ColumnInfo>> _mappings;
@@ -643,7 +643,7 @@ namespace ProSuite.QA.Tests
 			IList<string> uniqueFields = GetUniqueFields(tableIndex);
 			string firstUniqueFieldName = GetFirstUniqueFieldName(tableIndex);
 
-			IQueryFilter filter = CreateQueryFilter(table, uniqueFields,
+			ITableFilter filter = CreateQueryFilter(table, uniqueFields,
 			                                        _helperViews[tableIndex], null);
 
 			if (inMemoryObjectComparer != null)
@@ -730,7 +730,7 @@ namespace ProSuite.QA.Tests
 				TableView helperView = _helperViews[tableIndex];
 				int firstUniqueFieldIndex = _firstUniqueFieldIndexes[tableIndex];
 
-				IQueryFilter filter =
+				ITableFilter filter =
 					CreateQueryFilter(table, uniqueFields, helperView, geometry);
 
 				const bool recycle = true;
@@ -754,14 +754,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter CreateQueryFilter([NotNull] IReadOnlyTable table,
+		private ITableFilter CreateQueryFilter([NotNull] IReadOnlyTable table,
 		                                       [NotNull] IEnumerable<string> uniqueFields,
 		                                       TableView tableView,
 		                                       [CanBeNull] IGeometry geometry)
 		{
 			// TODO set the required subfields (oid, shape, unique fields, PLUS key fields needed for QaRelConstraint!)
 
-			IQueryFilter result = TestUtils.CreateFilter(geometry, AreaOfInterest,
+			ITableFilter result = TestUtils.CreateFilter(geometry, AreaOfInterest,
 			                                             GetConstraint(table),
 			                                             table, tableView);
 
@@ -775,7 +775,7 @@ namespace ProSuite.QA.Tests
 				var subfields = new List<string> { table.OIDFieldName };
 				subfields.AddRange(uniqueFields);
 
-				GdbQueryUtils.SetSubFields(result, subfields);
+				TableFilterUtils.SetSubFields(result, subfields);
 			}
 
 			return result;
@@ -883,7 +883,7 @@ namespace ProSuite.QA.Tests
 			for (var tableIndex = 0; tableIndex < tablesCount; tableIndex++)
 			{
 				IReadOnlyTable table = _tables[tableIndex];
-				IQueryFilter filter = _globalFilters[tableIndex];
+				ITableFilter filter = _globalFilters[tableIndex];
 				string firstUniqueFieldName = GetFirstUniqueFieldName(tableIndex);
 
 				//ISQLSyntax sql = (ISQLSyntax) ((IDataset) table).Workspace;
@@ -969,7 +969,7 @@ namespace ProSuite.QA.Tests
 			int tablesCount = _tables.Count;
 			_helperViews = new List<TableView>();
 			_mappings = new List<IList<ColumnInfo>>();
-			_globalFilters = new List<IQueryFilter>(tablesCount);
+			_globalFilters = new List<ITableFilter>(tablesCount);
 			_firstUniqueFieldIndexes = new List<int>(tablesCount);
 
 			List<int> masterTableIndices = null;
@@ -1306,13 +1306,12 @@ namespace ProSuite.QA.Tests
 		{
 			[NotNull]
 			public static RowEnumerator CreateOrderBy([NotNull] IReadOnlyTable table,
-			                                          [NotNull] IQueryFilter filter,
+			                                          [NotNull] ITableFilter filter,
 			                                          [NotNull] string firstUniqueFieldName,
 			                                          int tableIndex)
 			{
-				var filterDefinition = (IQueryFilterDefinition) filter;
-				filterDefinition.PostfixClause = string.Format(" ORDER BY {0}",
-				                                               firstUniqueFieldName);
+				filter.PostfixClause = string.Format(" ORDER BY {0}",
+				                                     firstUniqueFieldName);
 
 				int firstUniqueFieldIndex = table.FindField(firstUniqueFieldName);
 				return new RowEnumerator(table.EnumRows(filter, recycle: true),
@@ -1321,7 +1320,7 @@ namespace ProSuite.QA.Tests
 
 			[NotNull]
 			public static RowEnumerator CreateTableSort([NotNull] IReadOnlyTable table,
-			                                            [CanBeNull] IQueryFilter filter,
+			                                            [CanBeNull] ITableFilter filter,
 			                                            [NotNull] string firstUniqueFieldName,
 			                                            [NotNull] IComparer<object> comparer,
 			                                            int tableIndex)
@@ -1334,7 +1333,7 @@ namespace ProSuite.QA.Tests
 					TableSortUtils.CreateTableSort(aoTable, firstUniqueFieldName);
 
 				tableSort.Compare = new FieldSortCallback(comparer);
-				tableSort.QueryFilter = filter;
+				tableSort.QueryFilter = TableFilterUtils.GetQueryFilter(filter);
 				tableSort.Sort(null);
 
 				return new RowEnumerator(

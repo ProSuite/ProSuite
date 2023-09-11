@@ -226,8 +226,15 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					testDescriptorName, xmlCondition.Name);
 			}
 
-			var condition = new QualityCondition(xmlCondition.Name,
-			                                     XmlDataQualityUtils.CreateTestDescriptor(xmlDesc));
+			var condition =
+				new QualityCondition(xmlCondition.Name,
+				                     XmlDataQualityUtils.CreateTestDescriptor(xmlDesc));
+
+			// Use the UUIDs from the XML for consistency (and because of downstream equality assertion)
+			if (StringUtils.IsNotEmpty(xmlCondition.Uuid))
+			{
+				condition.Uuid = xmlCondition.Uuid;
+			}
 
 			XmlDataQualityUtils.UpdateQualityCondition(condition, xmlCondition,
 			                                           GetDataQualityCategoryFor(xmlCondition));
@@ -401,6 +408,12 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				issueFilter = new IssueFilterConfiguration(
 					xmlIssueFilter.Name,
 					XmlDataQualityUtils.CreateIssueFilterDescriptor(xmlDesc));
+				
+				// Use the UUIDs from the XML for consistency (and because of downstream equality assertion)
+				if (StringUtils.IsNotEmpty(xmlIssueFilter.Uuid))
+				{
+					issueFilter.Uuid = xmlIssueFilter.Uuid;
+				}
 
 				XmlDataQualityUtils.UpdateIssueFilterConfiguration(
 					issueFilter, xmlIssueFilter, GetDataQualityCategoryFor(xmlIssueFilter));
@@ -475,6 +488,12 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					xmlTransformer.Name,
 					XmlDataQualityUtils.CreateTransformerDescriptor(xmlDesc));
 
+				// Use the UUIDs from the XML for consistency (and because of downstream equality assertion)
+				if (StringUtils.IsNotEmpty(xmlTransformer.Uuid))
+				{
+					transformer.Uuid = xmlTransformer.Uuid;
+				}
+				
 				XmlDataQualityUtils.UpdateTransformerConfiguration(transformer, xmlTransformer,
 					GetDataQualityCategoryFor(xmlTransformer));
 

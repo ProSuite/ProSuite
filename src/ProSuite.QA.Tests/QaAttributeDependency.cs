@@ -96,6 +96,23 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
+		protected override void ConfigureQueryFilter(int tableIndex, ITableFilter filter)
+		{
+			if (tableIndex == 0)
+			{
+				foreach (var sourceField in _sourceFields)
+				{
+					filter.AddField(sourceField);
+				}
+				foreach (var targetField in _targetFields)
+				{
+					filter.AddField(targetField);
+				}
+			}
+
+			base.ConfigureQueryFilter(tableIndex, filter);
+		}
+
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (_sourceFieldIndices.Count == 0 || _targetFieldIndices.Count == 0)

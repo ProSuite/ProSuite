@@ -433,6 +433,46 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		public static int SourceSegmentCountBetween(
+			[NotNull] ISegmentList source,
+			[NotNull] IntersectionPoint3D firstIntersection,
+			[NotNull] IntersectionPoint3D secondIntersection)
+		{
+			Assert.AreEqual(firstIntersection.SourcePartIndex, secondIntersection.SourcePartIndex,
+			                "Intersections are not from the same part.");
+
+			double result = secondIntersection.VirtualSourceVertex -
+			                firstIntersection.VirtualSourceVertex;
+
+			if (result < 0)
+			{
+				Linestring sourcePart = source.GetPart(firstIntersection.SourcePartIndex);
+				result += sourcePart.SegmentCount;
+			}
+
+			return (int) Math.Floor(result);
+		}
+
+		public static int TargetSegmentCountBetween(
+			[NotNull] ISegmentList target,
+			[NotNull] IntersectionPoint3D firstIntersection,
+			[NotNull] IntersectionPoint3D secondIntersection)
+		{
+			Assert.AreEqual(firstIntersection.TargetPartIndex, secondIntersection.TargetPartIndex,
+			                "Intersections are not from the same part.");
+
+			double result = secondIntersection.VirtualTargetVertex -
+			                firstIntersection.VirtualTargetVertex;
+
+			if (result < 0)
+			{
+				Linestring targetPart = target.GetPart(firstIntersection.TargetPartIndex);
+				result += targetPart.SegmentCount;
+			}
+
+			return (int) Math.Floor(result);
+		}
+
 		private static double TargetSegmentCountBetween(
 			[NotNull] IntersectionPoint3D firstIntersection,
 			[NotNull] IntersectionPoint3D secondIntersection,

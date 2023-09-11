@@ -11,7 +11,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		[UsedImplicitly]
-		public TransformerConfiguration() : this(false) { }
+		public TransformerConfiguration() : this(assignUuid: false) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TransformerConfiguration" /> class.
@@ -21,8 +21,9 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public TransformerConfiguration(string name,
 		                                [NotNull] TransformerDescriptor transformerDescriptor,
-		                                [CanBeNull] string description = "")
-			: base(name, description)
+		                                [CanBeNull] string description = "",
+		                                bool assignUuid = true)
+			: base(name, description, assignUuid)
 		{
 			Assert.ArgumentNotNull(transformerDescriptor, nameof(transformerDescriptor));
 

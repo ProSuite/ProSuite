@@ -31,7 +31,7 @@ namespace ProSuite.QA.Tests
 		private readonly double _searchDistance;
 
 		private ISpatialReference _spatialReference;
-		private IList<ISpatialFilter> _filters;
+		private IList<IFeatureClassFilter> _filters;
 		private IList<QueryFilterHelper> _filterHelpers;
 
 		private string _pointClass1BorderMatchConditionSql;
@@ -637,8 +637,8 @@ namespace ProSuite.QA.Tests
 		{
 			IReadOnlyTable neighborBorderClass = InvolvedTables[neighborBorderClassIndex];
 
-			ISpatialFilter spatialFilter = _filters[neighborBorderClassIndex];
-			spatialFilter.Geometry = borderConnection.Point;
+			IFeatureClassFilter spatialFilter = _filters[neighborBorderClassIndex];
+			spatialFilter.FilterGeometry = borderConnection.Point;
 
 			BorderMatchCondition neighborBorderMatchCondition =
 				GetBorderMatchCondition(neighborLineClassIndex);
@@ -678,7 +678,7 @@ namespace ProSuite.QA.Tests
 		private IEnumerable<IReadOnlyRow> SearchNeighborRows([NotNull] IPoint borderConnection,
 		                                                     int neighborPointClassIndex)
 		{
-			ISpatialFilter spatialFilter = GetSearchFilter(neighborPointClassIndex,
+			IFeatureClassFilter spatialFilter = GetSearchFilter(neighborPointClassIndex,
 			                                               borderConnection,
 			                                               _searchDistance);
 
@@ -688,11 +688,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private ISpatialFilter GetSearchFilter(int tableIndex,
-		                                       [NotNull] IPoint point,
-		                                       double searchDistance)
+		private IFeatureClassFilter GetSearchFilter(int tableIndex,
+		                                            [NotNull] IPoint point,
+		                                            double searchDistance)
 		{
-			ISpatialFilter filter = _filters[tableIndex];
+			IFeatureClassFilter filter = _filters[tableIndex];
 
 			double x;
 			double y;
@@ -701,7 +701,7 @@ namespace ProSuite.QA.Tests
 			_searchEnvelopeTemplate.PutCoords(x - searchDistance, y - searchDistance,
 			                                  x + searchDistance, y + searchDistance);
 
-			filter.Geometry = _searchEnvelopeTemplate;
+			filter.FilterGeometry = _searchEnvelopeTemplate;
 
 			return filter;
 		}
@@ -731,8 +731,8 @@ namespace ProSuite.QA.Tests
 		{
 			IReadOnlyTable borderClass = InvolvedTables[borderClassIndex];
 
-			ISpatialFilter spatialFilter = _filters[borderClassIndex];
-			spatialFilter.Geometry = point;
+			IFeatureClassFilter spatialFilter = _filters[borderClassIndex];
+			spatialFilter.FilterGeometry = point;
 
 			var result = new List<IReadOnlyFeature>(5);
 
@@ -874,15 +874,15 @@ namespace ProSuite.QA.Tests
 		{
 			CopyFilters(out _filters, out _filterHelpers);
 
-			foreach (ISpatialFilter filter in _filters)
+			foreach (var filter in _filters)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 			}
 
-			_filters[_borderClass1Index].SpatialRel = GetBorderClassSpatialRelation(
+			_filters[_borderClass1Index].SpatialRelationship = GetBorderClassSpatialRelation(
 				_geometryTypesByTableIndex[_borderClass1Index]);
 
-			_filters[_borderClass2Index].SpatialRel = GetBorderClassSpatialRelation(
+			_filters[_borderClass2Index].SpatialRelationship = GetBorderClassSpatialRelation(
 				_geometryTypesByTableIndex[_borderClass2Index]);
 		}
 

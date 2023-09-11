@@ -33,7 +33,7 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				return false;
 			}
-			
+
 			var validValuesByParameter =
 				new Dictionary<TestParameter, IList<TestParameterValue>>();
 			var parametersByName = new Dictionary<string, TestParameter>();
@@ -48,6 +48,13 @@ namespace ProSuite.DomainModel.AO.QA
 
 			foreach (TestParameterValue paramValue in instanceConfiguration.ParameterValues)
 			{
+				if (paramValue == null)
+				{
+					// New (optional) parameter value that has not been persisted yed.
+					// The default value will be added below.
+					continue;
+				}
+
 				string name = paramValue.TestParameterName;
 
 				TestParameter param;
@@ -75,7 +82,8 @@ namespace ProSuite.DomainModel.AO.QA
 					validValues.Add(TestParameterTypeUtils.GetEmptyParameterValue(testParam));
 					newParameters = true;
 				}
-				else if (values.Count == 0 && testParam.ArrayDimension > 0 && testParam.IsConstructorParameter)
+				else if (values.Count == 0 && testParam.ArrayDimension > 0 &&
+				         testParam.IsConstructorParameter)
 				{
 					validValues.Add(TestParameterTypeUtils.GetEmptyParameterValue(testParam));
 					newParameters = true;
@@ -153,7 +161,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 			return newParameters || invalidValues.Count > 0;
 		}
-		
+
 		[NotNull]
 		public static TestParameterValue AddParameterValue(
 			[NotNull] InstanceConfiguration instanceConfiguration,
@@ -194,7 +202,7 @@ namespace ProSuite.DomainModel.AO.QA
 			return InstanceConfigurationUtils.AddScalarParameterValue(
 				instanceConfiguration, parameterName, value);
 		}
-		
+
 		public static bool CheckCircularReferencesInGraph(
 			[NotNull] InstanceConfiguration testable,
 			[CanBeNull] out string testParameterName,

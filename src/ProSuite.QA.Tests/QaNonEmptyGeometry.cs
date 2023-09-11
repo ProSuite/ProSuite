@@ -136,7 +136,7 @@ namespace ProSuite.QA.Tests
 			var errorCount = 0;
 
 			const bool recycling = true;
-			IQueryFilter filter = CreateFilter(featureClass, GetConstraint(0));
+			ITableFilter filter = CreateFilter(featureClass, GetConstraint(0));
 
 			long previousOid = -1;
 			bool tryFallbackImplementation = false;
@@ -156,18 +156,29 @@ namespace ProSuite.QA.Tests
 					previousOid = feature.OID;
 				}
 			}
-			catch (COMException e)
+			catch (Exception e)
 			{
 				_msg.Debug($"Error getting feature from {featureClass.Name}. " +
 				           $"Previous successful object id: {previousOid}", e);
 
-				if (e.ErrorCode == -2147220959)
+				Exception inner = e;
+				while (inner != null && ! (inner is COMException))
 				{
-					_msg.Debug(
-						"Error getting feature with presumably empty geometry. Using fall-back implementation (slow) to identify object id.");
+					inner = inner.InnerException;
+				}
+
+				if (inner is COMException com)
+				{
+					string msg =
+						com.ErrorCode == -2147220959 || com.ErrorCode == -2147188959
+							? "Error getting feature with presumably empty geometry. Using fall-back implementation (slow) to identify object id."
+							: "Error getting feature. Using fall-back implementation (slow) to identify object id.";
+
+					_msg.Debug(msg);
 					tryFallbackImplementation = true;
 				}
-				else
+
+				if (! tryFallbackImplementation)
 				{
 					throw;
 				}
@@ -186,8 +197,10 @@ namespace ProSuite.QA.Tests
 			{
 				try
 				{
-					var featureWithGeometry = (IReadOnlyFeature) featureClass.GetRow(feature.OID);
-					Marshal.ReleaseComObject(featureWithGeometry);
+					if (featureClass.GetRow(feature.OID) is ReadOnlyFeature featureWithGeometry)
+					{
+						Marshal.ReleaseComObject(featureWithGeometry.BaseRow);
+					}
 				}
 				catch (Exception e)
 				{
@@ -222,11 +235,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter CreateFilter([NotNull] IReadOnlyFeatureClass featureClass,
+		private ITableFilter CreateFilter([NotNull] IReadOnlyFeatureClass featureClass,
 		                                  [CanBeNull] string filterExpression)
 		{
-			IQueryFilter filter =
-				new QueryFilterClass
+			ITableFilter filter =
+				new AoTableFilter
 				{
 					SubFields = _shapeFieldName,
 					WhereClause =
@@ -240,7 +253,7 @@ namespace ProSuite.QA.Tests
 				subfields.Add(featureClass.OIDFieldName);
 			}
 
-			GdbQueryUtils.SetSubFields(filter, subfields);
+			TableFilterUtils.SetSubFields(filter, subfields);
 
 			return filter;
 		}

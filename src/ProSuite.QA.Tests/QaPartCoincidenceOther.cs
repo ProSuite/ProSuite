@@ -6,7 +6,6 @@ using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Coincidence;
@@ -19,11 +18,12 @@ namespace ProSuite.QA.Tests
 	public class QaPartCoincidenceOther : QaNearCoincidenceBase
 	{
 		private readonly IReadOnlyFeatureClass _reference;
-		private ISpatialFilter _filter;
+		private IFeatureClassFilter _filter;
 		private QueryFilterHelper _helper;
 
 		private IgnoreRowNeighborCondition _ignoreNeighborCondition;
 		private bool _isIgnoreNeighborConditionInitialized;
+		private string _ignoreNeighborConstraint;
 
 		[Doc(nameof(DocStrings.QaPartCoincidenceOther_0))]
 		public QaPartCoincidenceOther(
@@ -118,7 +118,15 @@ namespace ProSuite.QA.Tests
 
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaPartCoincidenceOther_IgnoreNeighborCondition))]
-		public string IgnoreNeighborCondition { get; set; }
+		public string IgnoreNeighborCondition
+		{
+			get => _ignoreNeighborConstraint;
+			set
+			{
+				_ignoreNeighborConstraint = value;
+				AddCustomQueryFilterExpression(value);
+			}
+		}
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
@@ -132,7 +140,7 @@ namespace ProSuite.QA.Tests
 				InitFilter();
 			}
 
-			ISpatialFilter filter = Assert.NotNull(_filter, "_filter");
+			IFeatureClassFilter filter = Assert.NotNull(_filter, "_filter");
 
 			var processed0 = new SegmentNeighbors(new SegmentPartComparer());
 
@@ -140,7 +148,7 @@ namespace ProSuite.QA.Tests
 			IEnvelope box0 = geom0.Envelope;
 			box0.Expand(SearchDistance, SearchDistance, false);
 
-			filter.Geometry = box0;
+			filter.FilterGeometry = box0;
 
 			var errorCount = 0;
 
@@ -208,14 +216,14 @@ namespace ProSuite.QA.Tests
 
 		private void InitFilter()
 		{
-			IList<ISpatialFilter> filter;
+			IList<IFeatureClassFilter> filter;
 			IList<QueryFilterHelper> helper;
 
 			CopyFilters(out filter, out helper);
 			_filter = filter[1];
 			_helper = helper[1];
 
-			_filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+			_filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 		}
 	}
 }

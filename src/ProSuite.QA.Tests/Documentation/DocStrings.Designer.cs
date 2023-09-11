@@ -2103,6 +2103,58 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export &apos;tables&apos; to a newly created file geodatabase.
+        /// </summary>
+        public static string QaExportTables_0 {
+            get {
+                return ResourceManager.GetString("QaExportTables_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add a field to each exported table, which contains the id of tile the exported row belongs to.
+        ///Remarks: A source row may be exported several times with different tile ids..
+        /// </summary>
+        public static string QaExportTables_ExportTileIds {
+            get {
+                return ResourceManager.GetString("QaExportTables_ExportTileIds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If true: Create a feature class which contains the processed tiles.
+        /// </summary>
+        public static string QaExportTables_ExportTiles {
+            get {
+                return ResourceManager.GetString("QaExportTables_ExportTiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Path  to the newly created file geodatabase.
+        ///The path can contain one * as placeholder for a number to ensure that the path does not already exist.
+        ///If the path already exists (only possible if no * in &apos;fgdbPath&apos;), it will be deleted. 
+        ///If the path is locked, i.e. because it belongs to a used file geodatabase, an error occurs. .
+        /// </summary>
+        public static string QaExportTables_fileGdbPath {
+            get {
+                return ResourceManager.GetString("QaExportTables_fileGdbPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to tables to export.
+        ///Tables can be normal tables or transformers.
+        ///Each table will be exported to a separate table. The name of the created table corresponds to the name of the source table.
+        ///If severale source tables have the same name, a number is added at the end of the exported table in order to have a unique name..
+        /// </summary>
+        public static string QaExportTables_tables {
+            get {
+                return ResourceManager.GetString("QaExportTables_tables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; where the largest extension of the bounding box is larger than &apos;limit&apos;.
         /// </summary>
         public static string QaExtent_0 {

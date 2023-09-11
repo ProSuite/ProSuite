@@ -17,12 +17,12 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 		public static QualitySpecification GetTestQualitySpecification(
 			[CanBeNull] VectorDataset lineDataset = null)
 		{
-			var cd1 = new ClassDescriptor("EsriDE.ProSuite.QA.Tests.QaMinLength",
-			                              "EsriDE.ProSuite.QA.Tests");
-			var t1 = new TestDescriptor("test1", cd1, 0);
+			var cd1 = new ClassDescriptor("ProSuite.QA.Tests.QaMinLength",
+			                              "ProSuite.QA.Tests");
+			var t1 = new TestDescriptor("test1", cd1, 1);
 
-			var cd2 = new ClassDescriptor("EsriDE.ProSuite.QA.Tests.QaMinArea",
-			                              "EsriDE.ProSuite.QA.Tests");
+			var cd2 = new ClassDescriptor("ProSuite.QA.Tests.QaMinArea",
+			                              "ProSuite.QA.Tests");
 			var t2 = new TestDescriptor("test2", cd2, 0);
 
 			var transformerDescriptor = new TransformerDescriptor(

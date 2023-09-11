@@ -61,8 +61,7 @@ namespace ProSuite.Microservices.AO
 
 			if (highLevelGeometry != geometry)
 			{
-				_msg.DebugFormat(
-					"Geometry was converted to high-level geometry to encode.");
+				_msg.VerboseDebug(() => "Geometry was converted to high-level geometry to encode.");
 
 				Marshal.ReleaseComObject(highLevelGeometry);
 			}

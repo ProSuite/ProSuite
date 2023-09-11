@@ -10,6 +10,7 @@ using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Gdb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
@@ -34,6 +35,8 @@ namespace ProSuite.Microservices.Server.AO.QualityTestService
 		                                   ServerCallContext context)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
+
+			ProcessUtils.TrySetThreadIdAsName();
 
 			Func<ITrackCancel, ServiceCallStatus> func =
 				trackCancel => ExecuteTest(request, responseStream, trackCancel);

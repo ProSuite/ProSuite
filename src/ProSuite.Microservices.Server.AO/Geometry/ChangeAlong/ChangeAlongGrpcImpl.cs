@@ -5,6 +5,7 @@ using ESRI.ArcGIS.esriSystem;
 using Grpc.Core;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Definitions.Geometry;
 
@@ -27,6 +28,10 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
+			// The request comes in on a .NET thread-pool thread, which has no useful name
+			// when it comes to logging. Set the ID as its name.
+			ProcessUtils.TrySetThreadIdAsName();
+
 			Func<ITrackCancel, CalculateReshapeLinesResponse> func =
 				trackCancel =>
 					ChangeAlongServiceUtils.CalculateReshapeLines(request, trackCancel);
@@ -48,6 +53,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			[NotNull] ServerCallContext context)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
+
+			ProcessUtils.TrySetThreadIdAsName();
 
 			Func<ITrackCancel, CalculateCutLinesResponse> func =
 				trackCancel =>
@@ -72,6 +79,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
+			ProcessUtils.TrySetThreadIdAsName();
+
 			Func<ITrackCancel, ApplyReshapeLinesResponse> func =
 				trackCancel =>
 					ChangeAlongServiceUtils.ApplyReshapeLines(request, trackCancel);
@@ -94,6 +103,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			[NotNull] ServerCallContext context)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
+
+			ProcessUtils.TrySetThreadIdAsName();
 
 			Func<ITrackCancel, ApplyCutLinesResponse> func =
 				trackCancel =>

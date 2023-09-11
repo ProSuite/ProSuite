@@ -35,9 +35,9 @@ namespace ProSuite.QA.Container.Test
 					IEnvelope search = GeometryFactory.Clone(args.CurrentEnvelope);
 					search.Expand(SearchDistance, SearchDistance, false);
 
-					ISpatialFilter filter = new SpatialFilterClass();
-					filter.Geometry = search;
-					filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+					IFeatureClassFilter filter =
+						new AoFeatureClassFilter(
+							search, esriSpatialRelEnum.esriSpatialRelIntersects);
 
 					int tableIndex = 0;
 					foreach (IReadOnlyTable table in InvolvedTables)

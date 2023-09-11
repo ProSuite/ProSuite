@@ -231,6 +231,25 @@ namespace ProSuite.Microservices.Client
 			return lbResponse.ServiceLocations.Count;
 		}
 
+		public string GetAddress()
+		{
+			string address = "<none>";
+			if (Channel?.State != ChannelState.Shutdown)
+			{
+				try
+				{
+					// In shutdown state, the ResolvedTarget property throws for certain:
+					address = Channel?.ResolvedTarget;
+				}
+				catch (Exception e)
+				{
+					_msg.Debug($"Error resolving target address for {ChannelServiceName}", e);
+				}
+			}
+
+			return address;
+		}
+
 		protected void OpenChannel(bool useTls,
 		                           string clientCertificate = null)
 		{
@@ -510,19 +529,7 @@ namespace ProSuite.Microservices.Client
 
 		private void LogHealthStatus(StatusCode statusCode)
 		{
-			// In shutdown state, the ResolvedTarget property throws for certain:
-			string address = "<none>";
-			if (Channel?.State != ChannelState.Shutdown)
-			{
-				try
-				{
-					address = Channel?.ResolvedTarget;
-				}
-				catch (Exception e)
-				{
-					_msg.Debug($"Error resolving target address for {ChannelServiceName}", e);
-				}
-			}
+			string address = GetAddress();
 
 			_msg.DebugFormat("Health status for service {0} at {1}: {2}. Channel state: {3}",
 			                 ChannelServiceName, address, statusCode, Channel?.State);

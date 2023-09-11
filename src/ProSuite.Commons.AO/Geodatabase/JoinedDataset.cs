@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Collections;
@@ -55,9 +53,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 			_joinedSchema = joinedSchema;
 		}
 
+		/// <summary>
+		/// The 'left' table which, if it has a geometry field, will be used to define the
+		/// resulting FeatureClass. If this table has no geometry field, the result will be a
+		/// GdbTable without geometry field.
+		/// </summary>
 		[NotNull]
 		public IReadOnlyTable GeometryEndClass { get; }
 
+		/// <summary>
+		/// The 'right' table, typically the one without geometry or whose geometry field is not
+		/// used.
+		/// </summary>
 		[NotNull]
 		public IReadOnlyTable OtherEndClass { get; }
 
@@ -184,7 +191,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return GetRowManyToMany(id, m2nAssociation);
 		}
 
-		public override long GetRowCount(IQueryFilter filter)
+		public override long GetRowCount(ITableFilter filter)
 		{
 			if (filter != null && ! string.IsNullOrEmpty(filter.WhereClause))
 			{
@@ -206,7 +213,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 		{
 			var filterHelper = FilterHelper.Create(_joinedSchema, filter?.WhereClause);
 
@@ -234,7 +241,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="filter"></param>
 		/// <param name="recycle"></param>
 		/// <returns></returns>
-		private IEnumerable<VirtualRow> GetJoinedRows([CanBeNull] IQueryFilter filter,
+		private IEnumerable<VirtualRow> GetJoinedRows([CanBeNull] ITableFilter filter,
 		                                              bool recycle)
 		{
 			EnsureKeyFieldNames();
@@ -264,7 +271,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			// Do not apply the where clause on the remaining queries (it will be applied applied to the resulting joined rows)
 			if (filterHasWhereClause)
 			{
-				filter = (IQueryFilter) ((IClone) filter).Clone();
+				filter = filter.Clone();
 				filter.WhereClause = null;
 			}
 
@@ -301,17 +308,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
-			[CanBeNull] IQueryFilter filter)
+		/// <summary>
+		/// Gets the 'other' class' records by respective key value from the geometry class.
+		/// First, the features from the <see cref="GeometryEndClass"/> are searched using the
+		/// provided filter to get the left features. Using the keys from these features, the
+		/// relevant records from the <see cref="OtherEndClass"/> are fetched and returned as
+		/// values in the result dictionary.
+		/// </summary>
+		/// <param name="filter"></param>
+		/// <returns></returns>
+		public IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
+			[CanBeNull] ITableFilter filter)
 		{
-			Assert.NotNull(OtherEndClass);
-			Assert.NotNull(OtherClassKeyField);
+			EnsureKeyFieldNames();
 
 			string originalSubfields = filter?.SubFields;
 
 			if (filter == null)
 			{
-				filter = new QueryFilter();
+				filter = new AoTableFilter();
 			}
 
 			filter.SubFields = GeometryClassKeyField;
@@ -373,7 +388,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private IEnumerable<IReadOnlyRow> PerformFinalGeoClassRead(
 			IDictionary<string, IList<IReadOnlyRow>> otherRowsByGeoKey,
-			[CanBeNull] IQueryFilter filter,
+			[CanBeNull] ITableFilter filter,
 			bool recycling)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
@@ -401,7 +416,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private IEnumerable<IReadOnlyRow> PerformFinalGeoClassReadFilteredByKeys(
 			[NotNull] IDictionary<string, IList<IReadOnlyRow>> otherRowsByGeoKey,
 			[NotNull] string featureClassKeyField,
-			[CanBeNull] IQueryFilter filter,
+			[CanBeNull] ITableFilter filter,
 			bool recycling)
 		{
 			int featureClassKeyIdx = GeometryEndClass.FindField(featureClassKeyField);
@@ -443,11 +458,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private static bool FilterHasGeometry(IQueryFilter filter)
+		private static bool FilterHasGeometry(ITableFilter filter)
 		{
-			if (filter is ISpatialFilter spatialFilter)
+			if (filter is IFeatureClassFilter spatialFilter)
 			{
-				return spatialFilter.Geometry != null;
+				return spatialFilter.FilterGeometry != null;
 			}
 
 			return false;
@@ -600,7 +615,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			// Get the non-feature-rows:
 			IDictionary<string, IReadOnlyRow> otherRows = new Dictionary<string, IReadOnlyRow>();
-			foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsInList(
+			foreach (IReadOnlyRow row in TableFilterUtils.GetRowsInList(
 				         OtherEndClass, OtherClassKeyField, keyValues, false))
 			{
 				string otherRowKey = GetKeyValue(row, OtherClassKeyFieldIndex);
@@ -677,7 +692,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			// Get the non-feature-rows:
-			foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsInList(
+			foreach (IReadOnlyRow row in TableFilterUtils.GetRowsInList(
 				         OtherEndClass, OtherClassKeyField, fClassKeys, false))
 			{
 				string otherRowKey = GetKeyValue(row, OtherClassKeyFieldIndex);
@@ -876,7 +891,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] string keyFieldName,
 			bool recycle,
 			bool clientSideKeyFiltering = false,
-			[CanBeNull] IQueryFilter filter = null)
+			[CanBeNull] ITableFilter filter = null)
 		{
 			// TODO: Switch depending on previous input-output count ratio with count
 			// Empirical values:
@@ -938,7 +953,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 					table.Name);
 
 				int count = 0;
-				foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsInList(
+				foreach (IReadOnlyRow row in TableFilterUtils.GetRowsInList(
 					         table, keyFieldName, keys, recycle, filter))
 				{
 					yield return row;
@@ -960,7 +975,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				Stopwatch watch = _msg.DebugStartTiming();
 
-				IQueryFilter filter = new QueryFilterClass
+				ITableFilter filter = new AoTableFilter
 				                      {
 					                      SubFields = table.OIDFieldName
 				                      };
@@ -1000,7 +1015,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return null;
 		}
 
-		private void LogQueryProperties([CanBeNull] IQueryFilter filter)
+		private void LogQueryProperties([CanBeNull] ITableFilter filter)
 		{
 			_msg.DebugFormat("Querying joined table {0} using the following filter:",
 			                 _joinedSchema.Name);
@@ -1013,7 +1028,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			using (_msg.IncrementIndentation())
 			{
-				GdbQueryUtils.LogFilterProperties(filter);
+				GdbQueryUtils.LogFilterProperties(TableFilterUtils.GetQueryFilter(filter));
 			}
 		}
 

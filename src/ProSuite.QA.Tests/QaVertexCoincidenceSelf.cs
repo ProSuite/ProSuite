@@ -92,6 +92,7 @@ namespace ProSuite.QA.Tests
 				StringUtils.IsNotEmpty(allowedNonCoincidenceCondition)
 					? allowedNonCoincidenceCondition
 					: null;
+			AddCustomQueryFilterExpression(allowedNonCoincidenceCondition);
 
 			UpdateSearchDistance();
 		}

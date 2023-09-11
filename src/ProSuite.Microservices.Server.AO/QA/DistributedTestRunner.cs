@@ -41,7 +41,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 	/// Dispatcher for test or condition groups created by a <see cref="TestAssembler"/>
 	/// to be run in parallel in different processes.
 	/// </summary>
-	public class DistributedTestRunner : ITestRunner
+	public partial class DistributedTestRunner : ITestRunner
 	{
 		private class IssueKey
 		{
@@ -204,6 +204,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			public QualityConditionGroup QualityConditionGroup { get; }
 			public bool Completed { get; set; }
 
+			public long? InvolvedBaseRowsCount { get; set; }
+
 			private Dictionary<int, QualityCondition> _idConditions;
 
 			private Dictionary<int, QualityCondition> GetIdConditions()
@@ -265,6 +267,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 				// TODO: Check extent of issue with processed area
 				return true;
 			}
+
+			#region Overrides of Object
+
+			public override string ToString()
+			{
+				return
+					$"{QualityConditionGroup.ExecType} sub-verification with {QualityConditionGroup.QualityConditions.Count} " +
+					$"condition(s) in envelope {GeometryUtils.ToString(TileEnvelope, true)}";
+			}
+
+			#endregion
 		}
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -351,6 +364,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public bool Cancelled => CancellationTokenSource.IsCancellationRequested;
 
+		public bool SendModelsWithRequest { get; set; }
+
+		private static void AddRecursive(IReadOnlyTable table,
+		                                 HashSet<IReadOnlyTable> usedTables)
+		{
+			usedTables.Add(table);
+			if (! (table is IDataContainerAware transformed))
+			{
+				return;
+			}
+
+			foreach (var baseTable in transformed.InvolvedTables)
+			{
+				AddRecursive(baseTable, usedTables);
+			}
+		}
+
 		public void Execute(IEnumerable<ITest> tests, AreaOfInterest areaOfInterest,
 		                    CancellationTokenSource cancellationTokenSource)
 		{
@@ -359,7 +389,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			StartVerification(QualityVerification);
 
-			InitializeSchema(QualitySpecification);
+			if (SendModelsWithRequest)
+			{
+				InitializeModelsToSend(QualitySpecification);
+			}
 
 			CancellationTokenSource = cancellationTokenSource;
 
@@ -379,6 +412,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			// TODO: Consider a BlockingCollection or some other way to limit through-put
 			//       or even the consumer/producer pattern?
 
+			OverallProgressTotal = subVerifications.Count;
+
 			Stack<SubVerification> unhandledSubverifications =
 				new Stack<SubVerification>(subVerifications.Reverse());
 			IDictionary<Task, SubVerification> started =
@@ -388,6 +423,19 @@ namespace ProSuite.Microservices.Server.AO.QA
 				throw new InvalidOperationException("Could not start any subverification");
 			}
 
+			Task countTask = null;
+			if (ParallelConfiguration.SortByNumberOfObjects)
+			{
+				Thread.Sleep(10);
+
+				IList<ReadOnlyFeatureClass> baseFcs = GetParallelBaseFeatureClasses(qcGroups);
+				IList<WorkspaceInfo> wsInfos = GetWorkspaceInfos(baseFcs);
+				//CountData(subVerifications, wsInfos);
+				countTask = Task.Run(() => CountData(subVerifications, wsInfos));
+			}
+
+			int failureCount = 0;
+			int successCount = 0;
 			while (_tasks.Count > 0 || unhandledSubverifications.Count > 0)
 			{
 				if (TryTakeCompletedRun(_tasks, out Task<bool> task,
@@ -396,7 +444,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 					IQualityVerificationClient finishedClient = _subveriClientsDict[completed];
 					_workingClients.Remove(finishedClient);
 
-					ProcessFinalResult(task, completed, cancelWhenFaulted: false);
+					string failureMessage =
+						ProcessFinalResult(task, completed, finishedClient,
+						                   cancelWhenFaulted: false);
+
+					if (failureMessage != null)
+					{
+						_msg.WarnFormat("{0}{1}Failed verification: {2}", failureMessage,
+						                Environment.NewLine, completed);
+						failureCount++;
+						// TODO: Communicate error to client?!
+					}
+					else
+					{
+						_msg.InfoFormat("Finished verification: {0} at {1}", completed,
+						                finishedClient.GetAddress());
+						successCount++;
+					}
 
 					if (task.Status == TaskStatus.Faulted)
 					{
@@ -404,8 +468,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 						SubVerification retry =
 							new SubVerification(completed.SubRequest,
-							                    completed.QualityConditionGroup);
-						retry.TileEnvelope = completed.TileEnvelope;
+							                    completed.QualityConditionGroup)
+							{
+								TileEnvelope = completed.TileEnvelope
+							};
+
 						unhandledSubverifications.Push(retry);
 					}
 
@@ -421,7 +488,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 						return;
 					}
 
-					_msg.InfoFormat("Remaining verification tasks: {0}", _tasks.Count);
+					_msg.InfoFormat(
+						"{0} failed and {1} successful sub-verifications. Remaining: {2}.",
+						failureCount, successCount, _tasks.Count);
 				}
 				else
 				{
@@ -434,11 +503,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 						{
 							reportProgress = true;
 						}
+					}
 
-						if (UpdateOverallProgress(subVerification))
-						{
-							reportProgress = true;
-						}
+					if (UpdateOverallProgress(subVerifications))
+					{
+						reportProgress = true;
 					}
 
 					if (reportProgress)
@@ -452,13 +521,32 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				}
 
+				if (countTask?.IsCompleted == true)
+				{
+					countTask = null;
+					var listToSort = new List<SubVerification>(unhandledSubverifications);
+					listToSort.Sort((x, y) =>
+						                Math.Sign(
+							                (x.InvolvedBaseRowsCount ?? 0)
+							                - (y.InvolvedBaseRowsCount ?? 0))
+					);
+					unhandledSubverifications = new Stack<SubVerification>(listToSort);
+				}
+
 				Thread.Sleep(100);
 			}
+
+			_msg.InfoFormat(
+				"Finished distributed verification with {0} failures and {1} successful sub-verifications",
+				failureCount, successCount);
 
 			EndVerification(QualityVerification);
 		}
 
-		private SchemaMsg KnownSchema { get; set; }
+		/// <summary>
+		/// The data model to be used by the server instead of re-harvesting the (entire) schema.
+		/// </summary>
+		private SchemaMsg KnownModels { get; set; }
 
 		private static IEnumerable<DdxModel> GetReferencedModels(
 			[NotNull] QualitySpecification qualitySpecification)
@@ -479,9 +567,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
-		private void InitializeSchema(QualitySpecification qualitySpecification)
+		/// <summary>
+		/// Initializes the <see cref="KnownModels"/> with the referenced data models. In this case
+		/// the SchemaMsg is used to transport the model information for Standalone Verifications
+		/// in order to avoid re-harvesting in each sub-verification.
+		/// </summary>
+		/// <param name="qualitySpecification"></param>
+		private void InitializeModelsToSend(QualitySpecification qualitySpecification)
 		{
-			var schemaMsg = new SchemaMsg();
+			var modelMsg = new SchemaMsg();
 
 			foreach (DdxModel ddxModel in GetReferencedModels(qualitySpecification))
 			{
@@ -497,7 +591,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (ddxModel is Model model)
 				{
-					spatialReference = model.SpatialReferenceDescriptor.SpatialReference;
+					spatialReference = model.SpatialReferenceDescriptor?.SpatialReference;
 				}
 
 				foreach (Dataset dataset in ddxModel.GetDatasets())
@@ -507,11 +601,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 					ObjectClassMsg objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(
 						dataset, modelId, spatialReference);
 
-					schemaMsg.ClassDefinitions.Add(objectClassMsg);
+					modelMsg.ClassDefinitions.Add(objectClassMsg);
 				}
 			}
 
-			KnownSchema = schemaMsg;
+			KnownModels = modelMsg;
 		}
 
 		[NotNull]
@@ -535,9 +629,46 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				SubVerification next = subVerifications.Pop();
 				Task<bool> newTask = IniTask(next, client);
+				if (_tasks.ContainsKey(newTask))
+				{
+					_msg.WarnFormat("New Task already exists in dictioniary!");
+					LogTask(_tasks, newTask, next);
+				}
+
 				_tasks.Add(newTask, next);
+
 				startedVerifications.Add(newTask, next);
 			}
+		}
+
+		private void LogTask(IDictionary<Task<bool>, SubVerification> tasks, Task<bool> newTask,
+		                     SubVerification newSubVerification)
+		{
+			LogTask(newTask, newSubVerification, "New");
+
+			if (tasks.TryGetValue(newTask, out SubVerification existing))
+			{
+				foreach (KeyValuePair<Task<bool>, SubVerification> pair in tasks)
+				{
+					if (pair.Value == existing)
+					{
+						LogTask(pair.Key, pair.Value, "Equal");
+					}
+				}
+			}
+			else
+			{
+				foreach (KeyValuePair<Task<bool>, SubVerification> pair in tasks)
+				{
+					LogTask(pair.Key, pair.Value, "Existing");
+				}
+			}
+		}
+
+		private void LogTask(Task task, SubVerification subVerification, string prefix)
+		{
+			_msg.Warn(
+				$"{prefix} Task {task}; Task Hashcode: {task.GetHashCode()}; Subverification {subVerification}");
 		}
 
 		private IQualityVerificationClient GetWorkerClient()
@@ -586,55 +717,83 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_subveriClientsDict.Add(subVerification, verificationClient);
 			_workingClients.Add(verificationClient);
 
-			// Sends schema as protobuf:
-			Task<bool> task = Task.Run(
-				async () =>
-					await VerifySchemaAsync(
-						Assert.NotNull(verificationClient.QaGrpcClient),
-						subRequest, subResponse, CancellationTokenSource, KnownSchema),
-				CancellationTokenSource.Token);
+			Task<bool> task;
 
-			// Re-harvest model in worker, if necessary:
-			//Task<bool> task = Task.Run(
-			//	async () =>
-			//		await VerifyAsync(Assert.NotNull(verificationClient.QaGrpcClient), subRequest,
-			//						  subResponse, CancellationTokenSource),
-			//CancellationTokenSource.Token);
+			// Sends schema as protobuf:
+			if (KnownModels != null)
+				task = Task.Run(
+					async () =>
+						await VerifySchemaAsync(
+							Assert.NotNull(verificationClient.QaGrpcClient),
+							subRequest, subResponse, CancellationTokenSource, KnownModels),
+					CancellationTokenSource.Token);
+			else
+			{
+				// Re-harvest model in worker or use DDX access, if necessary:
+				task = Task.Run(
+					async () =>
+						await VerifyAsync(Assert.NotNull(verificationClient.QaGrpcClient),
+						                  subRequest,
+						                  subResponse, CancellationTokenSource),
+					CancellationTokenSource.Token);
+			}
 
 			// Process the messages even though the foreground thread is blocking/busy processing results
 			task.ConfigureAwait(false);
 			return task;
 		}
 
-		private void ProcessFinalResult(
-			Task<bool> task, SubVerification subVerification,
+		private string ProcessFinalResult(
+			[NotNull] Task<bool> task,
+			[NotNull] SubVerification subVerification,
+			[NotNull] IQualityVerificationClient client,
 			bool cancelWhenFaulted)
 		{
+			string resultMessage = null;
+
 			SubResponse subResponse = subVerification.SubResponse;
 			if (task.IsFaulted)
 			{
-				_msg.WarnFormat("Sub-verification has faulted: {0}", subResponse);
+				// This is probably a network failure or process crash:
+				_msg.WarnFormat("Sub-verification on {0} has faulted: {1}", client.GetAddress(),
+				                subVerification);
 
 				if (cancelWhenFaulted)
 				{
 					CancellationTokenSource.Cancel();
 					CancellationMessage = task.Exception?.InnerException?.Message;
 				}
+
+				resultMessage =
+					$"Failure in worker {client.GetAddress()}: {subResponse.CancellationMessage}";
 			}
 
 			if (! string.IsNullOrEmpty(subResponse.CancellationMessage))
 			{
+				// This happens if an error occurred in the worker. 
 				CancellationMessage = subResponse.CancellationMessage;
+			}
+
+			if (subResponse.Status == ServiceCallStatus.Failed &&
+			    QualityVerification != null)
+			{
+				// This happens if an error occurred in the worker (a serious one that stops the process)
+				QualityVerification.Cancelled = true;
+				resultMessage =
+					$"Failure in worker {client.GetAddress()}: {subResponse.CancellationMessage}";
 			}
 
 			QualityVerificationMsg verificationMsg = subResponse.VerificationMsg;
 
 			if (verificationMsg != null)
 			{
+				// Failures in tests that get reported as issues (typically a configuration error):
 				AddVerification(verificationMsg, QualityVerification);
 			}
 
 			DrainIssues(subVerification);
+
+			return resultMessage;
 		}
 
 		private IDictionary<IssueKey, IssueKey> _knownIssues;
@@ -828,7 +987,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				QualityConditionVerification conditionVerification =
 					FindQualityConditionVerification(toOverallVerification, conditionId);
 
-				conditionVerification.ErrorCount += conditionVerificationMsg.ErrorCount;
+				// NOTE: The errors are counted (and de-duplicated) via ProcessQaError() 
 				conditionVerification.ExecuteTime += conditionVerificationMsg.ExecuteTime;
 				conditionVerification.RowExecuteTime += conditionVerificationMsg.RowExecuteTime;
 				conditionVerification.TileExecuteTime += conditionVerificationMsg.TileExecuteTime;
@@ -872,7 +1031,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			qualityVerification.EndDate = DateTime.Now;
 
-			qualityVerification.Cancelled = Cancelled;
+			if (Cancelled)
+			{
+				// Cancelled by caller (there is also the possibility that a worker has failed)
+				qualityVerification.Cancelled = true;
+			}
+
 			qualityVerification.CalculateStatistics();
 		}
 
@@ -886,38 +1050,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return conditionVerification;
 		}
 
-		private bool UpdateOverallProgress(SubVerification subVerification)
+		private bool UpdateOverallProgress(IEnumerable<SubVerification> subVerifications)
 		{
-			// The 'slowest' wins:
+			int completedCount = subVerifications.Count(v => v.Completed);
 
-			if (subVerification.SubResponse.ProgressTotal == 0)
+			if (completedCount == OverallProgressCurrent)
 			{
 				return false;
 			}
 
-			SubResponse slowest = GetSlowestResponse(_tasks.Select(x => x.Value.SubResponse));
+			OverallProgressCurrent = completedCount;
 
-			OverallProgressCurrent = slowest.ProgressCurrent;
-			OverallProgressTotal = slowest.ProgressTotal;
+			_msg.InfoFormat("Overall progress: {0} of {1} sub-verifications completed",
+			                OverallProgressCurrent, OverallProgressTotal);
 
-			return subVerification.SubResponse == slowest;
-		}
-
-		private static SubResponse GetSlowestResponse(IEnumerable<SubResponse> subResponses)
-		{
-			double slowest = double.MaxValue;
-
-			SubResponse result = null;
-			foreach (SubResponse subResponse in subResponses)
-			{
-				if (subResponse.ProgressRatio < slowest)
-				{
-					result = subResponse;
-					slowest = subResponse.ProgressRatio;
-				}
-			}
-
-			return result;
+			return true;
 		}
 
 		private static bool TryTakeCompletedRun(
@@ -1196,9 +1343,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 				listSpecification;
 
 			// Sub-requests must not write the issue GDB and reports:
+			subRequest.Parameters.WriteDetailedVerificationReport = false;
 			subRequest.Parameters.IssueFileGdbPath = string.Empty;
 			subRequest.Parameters.VerificationReportPath = string.Empty;
 			subRequest.Parameters.HtmlReportPath = string.Empty;
+
+			// Sub-requests must never save the verification:
+			subRequest.Parameters.SaveVerificationStatistics = false;
 
 			subRequest.Specification.ExcludedConditionIds.AddRange(excludedConditionIds);
 
@@ -1391,7 +1542,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				subResponse.VerificationMsg = responseMsg.QualityVerification;
 			}
 
-			LogProgress(responseMsg.Progress);
+			LogProgress(responseMsg.Progress, subResponse.Issues.Count);
 		}
 
 		private static void UpdateSubProgress([NotNull] VerificationResponse responseMsg,
@@ -1420,7 +1571,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
-		private static void LogProgress(VerificationProgressMsg progressMsg)
+		private static void LogProgress(VerificationProgressMsg progressMsg,
+		                                int issueCount)
 		{
 			if (progressMsg == null)
 			{
@@ -1429,12 +1581,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			_msg.VerboseDebug(() => $"{DateTime.Now} - {progressMsg}");
 
-			_msg.DebugFormat(
-				"Received service progress of type {0}/{1}: {2} / {3}",
-				(VerificationProgressType) progressMsg.ProgressType,
-				(VerificationProgressStep) progressMsg.ProgressStep,
-				progressMsg.OverallProgressCurrentStep,
-				progressMsg.OverallProgressTotalSteps);
+			if (_msg.IsVerboseDebugEnabled || issueCount % 10 == 0)
+			{
+				string issueText = issueCount > 0 ? $" (Issue count: {issueCount})" : string.Empty;
+
+				string progressText =
+					$"Received service progress of type {(VerificationProgressType) progressMsg.ProgressType}/{(VerificationProgressStep) progressMsg.ProgressStep}:" +
+					$" {progressMsg.OverallProgressCurrentStep} / {progressMsg.OverallProgressTotalSteps}{issueText}";
+
+				_msg.DebugFormat(progressText);
+			}
 		}
 
 		private bool ProcessQaError([NotNull] QaError qaError,

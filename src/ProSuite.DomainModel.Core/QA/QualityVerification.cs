@@ -246,8 +246,11 @@ namespace ProSuite.DomainModel.Core.QA
 			{
 				_fulfilled = false;
 			}
+			else
+			{
+				_fulfilled = fulfilled;
+			}
 
-			_fulfilled = fulfilled;
 			_issueCount = issueCount;
 		}
 

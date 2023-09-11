@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -24,7 +23,7 @@ namespace ProSuite.QA.Tests
 
 		private RelevantRelationCondition _relevantRelationCondition;
 		private QueryFilterHelper[] _helper;
-		private ISpatialFilter[] _queryFilter;
+		private IFeatureClassFilter[] _queryFilter;
 
 		protected QaRequiredSpatialRelationOther(
 			[NotNull] IReadOnlyFeatureClass featureClass,
@@ -50,6 +49,7 @@ namespace ProSuite.QA.Tests
 				StringUtils.IsNotEmpty(relevantRelationCondition)
 					? relevantRelationCondition
 					: null;
+			AddCustomQueryFilterExpression(relevantRelationCondition);
 
 			_firstOtherClassIndex = featureClasses.Count;
 			_totalClassesCount = featureClasses.Count + otherFeatureClasses.Count;
@@ -174,7 +174,7 @@ namespace ProSuite.QA.Tests
 			[CanBeNull] out string affectedComponent);
 
 		protected abstract void ConfigureSpatialFilter(
-			[NotNull] ISpatialFilter spatialFilter);
+			[NotNull] IFeatureClassFilter spatialFilter);
 
 		[CanBeNull]
 		protected virtual IGeometry GetSearchGeometry([NotNull] IReadOnlyFeature feature,
@@ -218,8 +218,8 @@ namespace ProSuite.QA.Tests
 		{
 			IReadOnlyTable table = InvolvedTables[relatedTableIndex];
 
-			ISpatialFilter spatialFilter = _queryFilter[relatedTableIndex];
-			spatialFilter.Geometry = shape;
+			IFeatureClassFilter spatialFilter = _queryFilter[relatedTableIndex];
+			spatialFilter.FilterGeometry = shape;
 
 			QueryFilterHelper filterHelper = _helper[relatedTableIndex];
 
@@ -242,7 +242,7 @@ namespace ProSuite.QA.Tests
 				errorFeatures.ToDictionary(errorFeature => errorFeature.OID);
 
 			const bool recycling = true;
-			return GdbQueryUtils
+			return TableFilterUtils
 			       .GetRows(featureClass, oids, recycling)
 			       .Sum(feature => ReportError((IReadOnlyFeature) feature, tableIndex,
 			                                   errorFeaturesByOid[feature.OID]));
@@ -270,10 +270,10 @@ namespace ProSuite.QA.Tests
 		/// </summary>
 		private void InitFilter()
 		{
-			IList<ISpatialFilter> filters;
+			IList<IFeatureClassFilter> filters;
 			IList<QueryFilterHelper> filterHelpers;
 
-			_queryFilter = new ISpatialFilter[_totalClassesCount];
+			_queryFilter = new IFeatureClassFilter[_totalClassesCount];
 			_helper = new QueryFilterHelper[_totalClassesCount];
 
 			// Create copy of this filter and use it for quering features

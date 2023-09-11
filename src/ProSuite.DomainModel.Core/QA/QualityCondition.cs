@@ -66,7 +66,7 @@ namespace ProSuite.DomainModel.Core.QA
 		                        [NotNull] TestDescriptor testDescriptor,
 		                        [CanBeNull] string description = "",
 		                        bool assignUuids = true)
-			: base(name, description)
+			: base(name, description, assignUuids)
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
 
@@ -74,7 +74,6 @@ namespace ProSuite.DomainModel.Core.QA
 
 			if (assignUuids)
 			{
-				Uuid = GenerateUuid();
 				_versionUuid = GenerateUuid();
 			}
 		}
@@ -88,6 +87,12 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			get { return _testDescriptor; }
 			set { _testDescriptor = value; }
+		}
+
+		protected override void InstanceDescriptorChanged()
+		{
+			// Redundancy (due to Nh mapping) must be accounted for:
+			TestDescriptor = (TestDescriptor) base.InstanceDescriptor;
 		}
 
 		[Required]

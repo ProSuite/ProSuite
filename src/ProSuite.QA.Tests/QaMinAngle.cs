@@ -24,7 +24,7 @@ namespace ProSuite.QA.Tests
 	{
 		private const AngleUnit _defaultAngularUnit = DefaultAngleUnit;
 
-		private IList<ISpatialFilter> _filter;
+		private IList<IFeatureClassFilter> _filter;
 		private IList<QueryFilterHelper> _helper;
 		private bool _is3D;
 		private double _limitCstr;
@@ -221,9 +221,9 @@ namespace ProSuite.QA.Tests
 		                         int compareTableIndex,
 		                         [NotNull] IReadOnlyFeature feature)
 		{
-			ISpatialFilter filter = _filter[compareTableIndex];
+			IFeatureClassFilter filter = _filter[compareTableIndex];
 
-			filter.Geometry = connectPoint; // search at connect point of segment
+			filter.FilterGeometry = connectPoint; // search at connect point of segment
 
 			int errorCount = 0;
 
@@ -331,9 +331,9 @@ namespace ProSuite.QA.Tests
 		private void InitFilter()
 		{
 			CopyFilters(out _filter, out _helper);
-			foreach (ISpatialFilter filter in _filter)
+			foreach (var filter in _filter)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelTouches;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelTouches;
 			}
 		}
 

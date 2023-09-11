@@ -1,13 +1,20 @@
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
 	public class ReadOnlyTable : IReadOnlyTable, ISubtypes
 	{
+		private static readonly bool _provideFailingOidInException =
+			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+				"PROSUITE_DATA_ACCESS_ERROR_WITH_OID");
+
 		protected static ReadOnlyTable CreateReadOnlyTable(ITable table)
 		{
 			return new ReadOnlyTable(table);
@@ -36,13 +43,26 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public string Name => DatasetUtils.GetName(BaseTable);
 		public IFields Fields => BaseTable.Fields;
 
+		public IReadOnlyRow GetRow(long oid)
+		{
+			try
+			{
 #if Server11
-		public IReadOnlyRow GetRow(long oid) => CreateRow(BaseTable.GetRow(oid));
+				return CreateRow(BaseTable.GetRow(oid));
 #else
-		public IReadOnlyRow GetRow(long oid) => CreateRow(BaseTable.GetRow((int) oid));
+				return CreateRow(BaseTable.GetRow((int) oid));
 #endif
+			}
+			catch (Exception e)
+			{
+				string tableName = DatasetUtils.GetName(BaseTable);
+				throw new DataAccessException($"Error getting {tableName} <oid> {oid}", oid,
+				                              tableName, e);
+			}
+		}
 
-		public long RowCount(IQueryFilter filter) => BaseTable.RowCount(filter);
+		public long RowCount(ITableFilter filter) =>
+			BaseTable.RowCount(TableFilterUtils.GetQueryFilter(filter, BaseTable as IFeatureClass));
 
 		public virtual int FindField(string name) => BaseTable.FindField(name);
 
@@ -70,11 +90,31 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return new ReadOnlyRow(this, row);
 		}
 
-		public IEnumerable<IReadOnlyRow> EnumRows(IQueryFilter filter, bool recycle)
+		public IEnumerable<IReadOnlyRow> EnumRows(ITableFilter filter, bool recycle)
 		{
-			foreach (var row in new EnumCursor(BaseTable, filter, recycle))
+			if (BaseTable is IReadOnlyTable roTable)
 			{
-				yield return CreateRow(row);
+				foreach (IReadOnlyRow readOnlyRow in roTable.EnumRows(filter, recycle))
+				{
+					IRow baseRow = (IRow) readOnlyRow;
+					yield return CreateRow(baseRow); // TODO : is this necessary
+				}
+			}
+			else
+			{
+				var queryFilter =
+					TableFilterUtils.GetQueryFilter(filter, BaseTable as IFeatureClass);
+
+				bool withOidInException =
+					_provideFailingOidInException ||
+					(BaseTable is IFeatureClass featureClass &&
+					 featureClass.ShapeType == esriGeometryType.esriGeometryMultiPatch);
+
+				foreach (var row in new EnumCursor(BaseTable, queryFilter, recycle,
+				                                   withOidInException))
+				{
+					yield return CreateRow(row);
+				}
 			}
 		}
 

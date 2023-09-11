@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
@@ -133,14 +132,14 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			IQueryFilter filter = TestUtils.CreateFilter(geometry, AreaOfInterest,
+			ITableFilter filter = TestUtils.CreateFilter(geometry, AreaOfInterest,
 			                                             GetConstraint(0),
 			                                             _featureClass,
 			                                             null);
 
-			GdbQueryUtils.SetSubFields(filter,
-			                           _featureClass.OIDFieldName,
-			                           _featureClass.ShapeFieldName);
+			TableFilterUtils.SetSubFields(filter,
+			                              _featureClass.OIDFieldName,
+			                              _featureClass.ShapeFieldName);
 
 			int errorCount = 0;
 

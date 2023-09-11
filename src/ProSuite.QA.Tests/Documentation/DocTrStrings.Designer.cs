@@ -197,6 +197,15 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The tolerance for the footprint calculation. The vertices of a multipatch geometry should not be closer than the tolerance to any other vertex or segment of the same geometry. If a value below 0 is specified, the tolerance of the multipatchClass is used..
+        /// </summary>
+        public static string TrFootprint_Tolerance {
+            get {
+                return ResourceManager.GetString("TrFootprint_Tolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transforms geometries to points. The transformed feature class has the attribute PartIndex and VertexIndex. These fields index from which polygon part the transformed polygon part was generated.
         /// </summary>
         public static string TrGeometryToPoints_0 {
@@ -229,6 +238,34 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string TrGeometryTransform_Attributes {
             get {
                 return ResourceManager.GetString("TrGeometryTransform_Attributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get unique endpoints of &apos;lineClass&apos;.
+        /// </summary>
+        public static string TrGetNodes_0 {
+            get {
+                return ResourceManager.GetString("TrGetNodes_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attributes to be transferred to transformed feature class. Must be used with alias and group expression, i.e. &apos;MAX(LAUF_NR) AS MAX_LAUF_NR&apos;.
+        ///In the resulting feature class, only attributes defined in &apos;Attributes&apos; can be used..
+        /// </summary>
+        public static string TrGetNodes_Attributes {
+            get {
+                return ResourceManager.GetString("TrGetNodes_Attributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line FeatureClass.
+        /// </summary>
+        public static string TrGetNodes_lineClass {
+            get {
+                return ResourceManager.GetString("TrGetNodes_lineClass", resourceCulture);
             }
         }
         

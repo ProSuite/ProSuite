@@ -16,7 +16,7 @@ namespace ProSuite.QA.Tests
 	public class QaPointOnLine : ContainerTest
 	{
 		private IEnvelope _box;
-		private IList<ISpatialFilter> _filter;
+		private IList<IFeatureClassFilter> _filter;
 		private IList<QueryFilterHelper> _helper;
 
 		private readonly IPoint _nearPoint;
@@ -118,12 +118,12 @@ namespace ProSuite.QA.Tests
 		                        [NotNull] IReadOnlyFeatureClass neighbor,
 		                        int tableIndex)
 		{
-			ISpatialFilter filter = _filter[tableIndex];
+			IFeatureClassFilter filter = _filter[tableIndex];
 
 			point.QueryEnvelope(_box);
 			_box.Expand(SearchDistance, SearchDistance, false);
 
-			filter.Geometry = _box;
+			filter.FilterGeometry = _box;
 
 			foreach (IReadOnlyRow row in
 			         Search(neighbor, _filter[tableIndex], _helper[tableIndex]))
@@ -160,9 +160,9 @@ namespace ProSuite.QA.Tests
 		private void InitFilter()
 		{
 			CopyFilters(out _filter, out _helper);
-			foreach (ISpatialFilter filter in _filter)
+			foreach (var filter in _filter)
 			{
-				filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 			}
 
 			foreach (QueryFilterHelper filterHelper in _helper)

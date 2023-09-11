@@ -1,6 +1,7 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
@@ -38,13 +39,13 @@ namespace ProSuite.QA.Container.TestContainer
 			GeometryUtils.AllowIndexing(_targetGeometry);
 		}
 
-		public bool EvaluateRelation(ISpatialFilter spatialFilter)
+		public bool EvaluateRelation(IFeatureClassFilter spatialFilter)
 		{
 			Assert.ArgumentNotNull(spatialFilter, nameof(spatialFilter));
 			Assert.NotNull(_sourceGeometry, nameof(_sourceGeometry));
 			Assert.NotNull(_targetGeometry, nameof(_targetGeometry));
 
-			esriSpatialRelEnum relation = spatialFilter.SpatialRel;
+			esriSpatialRelEnum relation = spatialFilter.SpatialRelationship;
 
 			switch (relation)
 			{

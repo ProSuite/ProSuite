@@ -4,6 +4,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry.CreateFootprint;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
@@ -13,11 +14,17 @@ namespace ProSuite.QA.Tests.Transformers
 	[GeometryTransformer]
 	public class TrFootprint : TrGeometryTransform
 	{
+		private const double _defaultToleranceValue = -1;
+
 		[DocTr(nameof(DocTrStrings.TrFootprint_0))]
 		public TrFootprint(
 			[NotNull] [DocTr(nameof(DocTrStrings.TrFootprint_multipatchClass))]
 			IReadOnlyFeatureClass multipatchClass)
 			: base(multipatchClass, esriGeometryType.esriGeometryPolygon) { }
+
+		//[TestParameter(_defaultToleranceValue)]
+		//[DocTr(nameof(DocTrStrings.TrFootprint_Tolerance))]
+		//public double Tolerance { get; set; }
 
 		protected override IEnumerable<GdbFeature> Transform(IGeometry source,
 		                                                     long? sourceOid)
@@ -29,6 +36,8 @@ namespace ProSuite.QA.Tests.Transformers
 			GdbFeature feature = sourceOid == null
 				                     ? CreateFeature()
 				                     : (GdbFeature) transformedClass.CreateObject(sourceOid.Value);
+
+			//double? tolerance = Tolerance < 0 ? (double?) null : Tolerance;
 
 			IPolygon result = CreateFootprintUtils.GetFootprint(multipatch);
 

@@ -142,7 +142,8 @@ namespace ProSuite.QA.Tests
 			if (IntersectionUtils.UseCustomIntersect)
 			{
 				footprint =
-					CreateFootprintUtils.TryGetGeomFootprint(multiPatch, out tooSmallRings);
+					CreateFootprintUtils.TryGetGeomFootprint(
+						multiPatch, _xyTolerance, out tooSmallRings);
 			}
 
 			if (footprint == null)
