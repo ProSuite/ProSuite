@@ -8,6 +8,9 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
 using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
+#if ArcGIS
+using FieldType = ProSuite.DomainModel.Core.DataModel.FieldType;
+#endif
 
 namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 {
