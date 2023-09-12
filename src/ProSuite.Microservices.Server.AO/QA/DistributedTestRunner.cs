@@ -206,6 +206,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			public long? InvolvedBaseRowsCount { get; set; }
 
+			public int FailureCount { get; set; }
+
 			private Dictionary<int, QualityCondition> _idConditions;
 
 			private Dictionary<int, QualityCondition> GetIdConditions()
@@ -283,6 +285,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static int _currentModelId = -100;
+
+		private const int _maxReTryCount = 1;
 
 		private readonly IList<IQualityVerificationClient> _workersClients;
 
@@ -436,6 +440,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			int failureCount = 0;
 			int successCount = 0;
+			int retryCount = 0;
 			while (_tasks.Count > 0 || unhandledSubverifications.Count > 0)
 			{
 				if (TryTakeCompletedRun(_tasks, out Task<bool> task,
@@ -452,7 +457,31 @@ namespace ProSuite.Microservices.Server.AO.QA
 					{
 						_msg.WarnFormat("{0}{1}Failed verification: {2}", failureMessage,
 						                Environment.NewLine, completed);
-						failureCount++;
+
+						if (completed.FailureCount >= _maxReTryCount)
+						{
+							_msg.InfoFormat(
+								"Failure count {0} exceeded re-try count  {1}. Giving up.",
+								completed.FailureCount, _maxReTryCount);
+							failureCount++;
+							CompleteSubverification(completed);
+						}
+						else
+						{
+							_msg.Warn($"Task {task.Id} failed, trying rerun");
+
+							SubVerification retry =
+								new SubVerification(completed.SubRequest,
+								                    completed.QualityConditionGroup)
+								{
+									TileEnvelope = completed.TileEnvelope,
+									FailureCount = completed.FailureCount + 1
+								};
+
+							retryCount++;
+							unhandledSubverifications.Push(retry);
+						}
+
 						// TODO: Communicate error to client?!
 					}
 					else
@@ -460,28 +489,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 						_msg.InfoFormat("Finished verification: {0} at {1}", completed,
 						                finishedClient.GetAddress());
 						successCount++;
-					}
-
-					if (task.Status == TaskStatus.Faulted)
-					{
-						_msg.Warn($"Task {task.Id} failed, trying rerun");
-
-						SubVerification retry =
-							new SubVerification(completed.SubRequest,
-							                    completed.QualityConditionGroup)
-							{
-								TileEnvelope = completed.TileEnvelope
-							};
-
-						unhandledSubverifications.Push(retry);
+						CompleteSubverification(completed);
 					}
 
 					StartSubVerifications(unhandledSubverifications);
-
-					if (task.Status != TaskStatus.Faulted)
-					{
-						CompleteSubverification(completed);
-					}
 
 					if (_tasks.Count == 0)
 					{
@@ -490,8 +501,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 
 					_msg.InfoFormat(
-						"{0} failed and {1} successful sub-verifications. Remaining: {2}.",
-						failureCount, successCount, _tasks.Count);
+						"{0} failed and {1} successful sub-verifications. Re-tried verifications: {2}. Remaining: {3}.",
+						failureCount, successCount, retryCount, _tasks.Count);
 				}
 				else
 				{
@@ -789,7 +800,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 			    QualityVerification != null)
 			{
 				// This happens if an error occurred in the worker (a serious one that stops the process)
-				QualityVerification.Cancelled = true;
+				// Cancel the main verification but only on the second attempt.
+				if (subVerification.FailureCount >= _maxReTryCount)
+				{
+					QualityVerification.Cancelled = true;
+				}
+
 				resultMessage =
 					$"Failure in worker {client.GetAddress()}: {subResponse.CancellationMessage}";
 			}
