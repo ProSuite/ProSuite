@@ -1,6 +1,8 @@
+using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 
 namespace ProSuite.QA.Container.TestSupport
 {
@@ -39,11 +41,5 @@ namespace ProSuite.QA.Container.TestSupport
 
 		public bool IsFeatureClass { get; }
 
-		public IGeometry GetGeometry(int oid)
-		{
-			return ! IsFeatureClass
-				       ? null
-				       : TestUtils.GetShapeCopy(Table.GetRow(oid));
-		}
 	}
 }
