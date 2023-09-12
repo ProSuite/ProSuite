@@ -496,6 +496,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					if (_tasks.Count == 0)
 					{
+						Assert.AreEqual(0, unhandledSubverifications.Count,
+						                $"All workers exhausted but {unhandledSubverifications.Count} jobs are left!");
+
 						EndVerification(QualityVerification);
 						return;
 					}
