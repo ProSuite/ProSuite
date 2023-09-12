@@ -833,32 +833,19 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				drainedCount++;
 
-				// TODO: Consider adding the issue to some IssueProcessor that
-				//       keeps track of what has been found and performs
-				//       - de-duplication
-				//       - potentially re-assembling of partial issues on tile boundaries
-				//       - adds the final issues to a 'outbox' colleciton that will be
-				//         sent on the next progress
-
-				bool add = true;
+				// NOTE: This method performs basic de-duplication. In the future it could also
+				//       re-assemble partial issues on tile boundaries.
 
 				// TODO: improve logic to remove issues from KnownIssues (handle it when subVerification finishes)
-				{
-					ITest test = verification.GetFirstTest(issueMsg.ConditionId);
-					IssueKey key = new IssueKey(issueMsg, test, IssueSpatialReference);
-					if (! KnownIssues.ContainsKey(key))
-					{
-						key.EnsureKeyData();
-						KnownIssues.Add(key, key);
-					}
-					else
-					{
-						add = false;
-					}
-				}
+				ITest test = verification.GetFirstTest(issueMsg.ConditionId);
+				IssueKey key = new IssueKey(issueMsg, test, IssueSpatialReference);
 
-				if (add)
+				if (! KnownIssues.ContainsKey(key))
 				{
+					// Add to concurrent HashSet
+					key.EnsureKeyData();
+					KnownIssues.Add(key, key);
+
 					QaError error = ReCreateQaError(issueMsg, verification);
 
 					QualityCondition qualityCondition =
@@ -954,9 +941,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 			}
 
-			IDictionary<IssueKey, IssueKey> knownIssues = KnownIssues;
 			List<IssueKey> fullyProcessed = new List<IssueKey>();
-			foreach (var issue in knownIssues.Keys)
+			foreach (var issue in KnownIssues.Keys)
 			{
 				if (forSubVerification.IsFullyProcessed(issue, _subVerificationsTree))
 				{
