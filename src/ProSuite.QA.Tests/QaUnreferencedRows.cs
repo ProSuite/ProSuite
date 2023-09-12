@@ -60,7 +60,7 @@ namespace ProSuite.QA.Tests
 				referencingTables,
 			[Doc(nameof(DocStrings.QaUnreferencedRows_relations))] [NotNull]
 			IList<string> relations)
-			: base(Union(new[] {referencedTable}, referencingTables))
+			: base(Union(new[] { referencedTable }, referencingTables))
 		{
 			Assert.ArgumentNotNull(referencedTable, nameof(referencedTable));
 			Assert.ArgumentNotNull(referencingTables, nameof(referencingTables));
@@ -114,7 +114,7 @@ namespace ProSuite.QA.Tests
 		{
 			return row.Table != _referencedTable
 				       ? NoError
-				       : VerifyRows(new[] {row});
+				       : VerifyRows(new[] { row });
 		}
 
 		protected override ISpatialReference GetSpatialReference()
@@ -401,7 +401,7 @@ namespace ProSuite.QA.Tests
 		{
 			Assert.ArgumentNotNullOrEmpty(relation, nameof(relation));
 
-			return relation.Split(new[] {',', ';', ' '},
+			return relation.Split(new[] { ',', ';', ' ' },
 			                      StringSplitOptions.RemoveEmptyEntries);
 		}
 
@@ -475,7 +475,10 @@ namespace ProSuite.QA.Tests
 			{
 				Table = GetQueryTable(table, relation, out _foreignKeyFieldName);
 
-				Filter = new AoTableFilter {WhereClause = whereClause};
+				Filter = new AoTableFilter { WhereClause = whereClause };
+
+				TableFilterUtils.SetSubFields(Filter,
+				                              _foreignKeyFieldName);
 
 				_foreignKeyFieldIndex = Table.FindField(_foreignKeyFieldName);
 				ForeignKeyFieldType =
