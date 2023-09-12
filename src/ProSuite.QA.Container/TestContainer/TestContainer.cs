@@ -8,6 +8,7 @@ using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.QA.Container.TestContainer
@@ -516,7 +517,7 @@ namespace ProSuite.QA.Container.TestContainer
 		                                      [CanBeNull] IDataReference dataReference,
 		                                      [NotNull] string message)
 		{
-			var involvedRows = new List<InvolvedRow>();
+			InvolvedRow involvedRow = null;
 			IGeometry errorGeometry = null;
 
 			IReadOnlyRow row = null;
@@ -527,8 +528,23 @@ namespace ProSuite.QA.Container.TestContainer
 
 			if (row != null)
 			{
-				involvedRows.Add(new InvolvedRow(row));
+				involvedRow = new InvolvedRow(row);
 				errorGeometry = TestUtils.GetShapeCopy(row);
+			}
+
+			ReportErrorForFailedTest(test, message, involvedRow, errorGeometry);
+		}
+
+		private void ReportErrorForFailedTest([NotNull] ITest test,
+		                                      [NotNull] string message,
+		                                      [CanBeNull] InvolvedRow involvedRow,
+		                                      [CanBeNull] IGeometry errorGeometry)
+		{
+			var involvedRows = new List<InvolvedRow>();
+
+			if (involvedRow != null)
+			{
+				involvedRows.Add(involvedRow);
 			}
 
 			const bool assertionFailed = true;
@@ -569,26 +585,33 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 				catch (TestException exp)
 				{
-					_msg.Error(string.Format("Non-container test execution failed: {0}",
-					                         exp.Message), exp);
+					_msg.Error($"Non-container test execution failed: {exp.Message}", exp);
 
 					ReportErrorForFailedTest(exp.Test, null,
-					                         string.Format("Test execution failed: {0}",
-					                                       exp.Message));
+					                         $"Test execution failed: {exp.Message}");
 				}
 				catch (TestRowException exp)
 				{
-					_msg.Error(string.Format("Non-container test execution failed for row: {0}",
-					                         exp.Message), exp);
+					_msg.Error($"Non-container test execution failed for row: {exp.Message}", exp);
 
 					ReportErrorForFailedTest(exp.Test, new RowReference(exp.Row, recycled: false),
-					                         string.Format("Test execution failed: {0}",
-					                                       exp.Message));
+					                         $"Test execution failed: {exp.Message}");
+				}
+				catch (DataAccessException dataAccessException)
+				{
+					// Add it to the error list, it could be useful for repairing
+					var involvedRow =
+						new InvolvedRow(dataAccessException.TableName, dataAccessException.RowId);
+					ReportErrorForFailedTest(nonContainerTest,
+					                         $"Error loading row {dataAccessException.TableName} <oid> {dataAccessException.RowId}. It might be corrupt.",
+					                         involvedRow, null);
+					// ...but throw anyway. TODO: Consider disabling this or all tests using the table.
+					// and return a structured warning about not executed conditions to be added to the report.
+					throw;
 				}
 				catch (Exception exp)
 				{
-					_msg.Error(string.Format("Non-container test execution failed: {0}",
-					                         exp.Message), exp);
+					_msg.Error($"Non-container test execution failed: {exp.Message}", exp);
 
 					throw new TestContainerException(nonContainerTest, exp);
 				}
