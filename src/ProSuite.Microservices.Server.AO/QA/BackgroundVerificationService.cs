@@ -15,6 +15,7 @@ using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.VerificationReports.Xml;
+using ProSuite.Microservices.Server.AO.QA.Distributed;
 using ProSuite.QA.Container;
 
 namespace ProSuite.Microservices.Server.AO.QA

@@ -3,7 +3,7 @@ using ProSuite.Commons.Progress;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 
-namespace ProSuite.Microservices.Server.AO.QA
+namespace ProSuite.Microservices.Server.AO.QA.Distributed
 {
 	/// <summary>
 	/// Thread safe container for the results of a sub-verification run of a parallel verification.

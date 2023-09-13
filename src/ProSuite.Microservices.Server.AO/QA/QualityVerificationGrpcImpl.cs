@@ -30,6 +30,7 @@ using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Server.AO.QA.Distributed;
 using Quaestor.LoadReporting;
 
 namespace ProSuite.Microservices.Server.AO.QA

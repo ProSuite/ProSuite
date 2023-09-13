@@ -1,8 +1,8 @@
-using ProSuite.DomainServices.AO.QA;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using ProSuite.DomainServices.AO.QA;
 
-namespace ProSuite.Microservices.Server.AO.QA
+namespace ProSuite.Microservices.Server.AO.QA.Distributed
 {
 	public class ParallelConfiguration
 	{

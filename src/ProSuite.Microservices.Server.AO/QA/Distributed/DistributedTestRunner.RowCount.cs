@@ -1,19 +1,18 @@
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.Microservices.AO;
 using ProSuite.QA.Container;
-using System.Collections.Generic;
-using System;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using System.Linq;
 
-namespace ProSuite.Microservices.Server.AO.QA
+namespace ProSuite.Microservices.Server.AO.QA.Distributed
 {
 	partial class DistributedTestRunner
 	{
@@ -81,8 +80,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 				IPropertySet connectionProps =
 					PropertySetUtils.FromXmlString(workspaceInfo.PropertySet);
 				IWorkspace workspace = factory.Open(connectionProps, 0);
-
-
 
 				foreach (string tableName in workspaceInfo.TableNames)
 				{
@@ -202,4 +199,3 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 	}
 }
-
