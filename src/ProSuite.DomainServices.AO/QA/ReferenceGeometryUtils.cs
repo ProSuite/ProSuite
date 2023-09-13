@@ -485,9 +485,20 @@ namespace ProSuite.DomainServices.AO.QA
 			// TODO REFACTORMODEL revise null handling
 			Assert.NotNull(table, "Dataset not found in workspace: {0}", objectDataset.Name);
 
-			// TODO batch!
-			IObject result = GdbQueryUtils.GetObject((IObjectClass) table, involvedRow.OID);
-			return Assert.NotNull(result);
+			IObject result = null;
+			try
+			{
+				result = GdbQueryUtils.GetObject((IObjectClass) table, involvedRow.OID);
+			}
+			catch (Exception e)
+			{
+				// Most likely another instance of TOP-5786. Consider just catching E_​GEOMETRY_​NONGEOMETRY (0x80047F21).
+				_msg.Debug(
+					$"Error getting object {DatasetUtils.GetName(table)} <oid> {involvedRow.OID}, " +
+					"likely due to a corrupt geometry. A null-error geometry is returned.", e);
+			}
+
+			return result;
 		}
 	}
 }
