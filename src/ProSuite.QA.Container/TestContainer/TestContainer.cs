@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
@@ -607,7 +608,14 @@ namespace ProSuite.QA.Container.TestContainer
 					                         involvedRow, null);
 					// ...but throw anyway. TODO: Consider disabling this or all tests using the table.
 					// and return a structured warning about not executed conditions to be added to the report.
-					throw;
+					// TODO: Create a status feature class with failed AOIs per condition? Could be the same as the real-time progress.
+					// For the moment:
+					if (! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+						    "PROSUITE_SWALLOW_NON_CONTAINER_EXCEPTIONS"))
+					{
+						// This means that the real errors are not reported for this condition!
+						throw;
+					}
 				}
 				catch (Exception exp)
 				{
