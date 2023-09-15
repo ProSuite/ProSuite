@@ -49,22 +49,9 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 		private const int _maxReTryCount = 1;
 
-		private readonly IList<IQualityVerificationClient> _workersClients;
+		[NotNull] private readonly DistributedWorkers _distributedWorkers;
 
 		private readonly VerificationRequest _originalRequest;
-
-		private readonly IDictionary<Task<bool>, SubVerification> _tasks =
-			new ConcurrentDictionary<Task<bool>, SubVerification>();
-
-		private readonly IDictionary<SubVerification, IQualityVerificationClient>
-			_subveriClientsDict =
-				new ConcurrentDictionary<SubVerification, IQualityVerificationClient>();
-
-		private readonly HashSet<IQualityVerificationClient> _workingClients =
-			new HashSet<IQualityVerificationClient>();
-
-		private readonly HashSet<IQualityVerificationClient> _failedClients =
-			new HashSet<IQualityVerificationClient>();
 
 		private BoxTree<SubVerification> _subVerificationsTree;
 
@@ -77,7 +64,25 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			Assert.ArgumentCondition(originalRequest.MaxParallelProcessing > 1,
 			                         "maxParallelDesired must be greater 1");
 
-			_workersClients = workersClients;
+			_distributedWorkers =
+				new DistributedWorkers(
+					workersClients.Cast<QualityVerificationServiceClient>().ToList(),
+					originalRequest.MaxParallelProcessing, null);
+
+			_originalRequest = originalRequest;
+			ParallelConfiguration = new ParallelConfiguration();
+		}
+
+		public DistributedTestRunner(
+			[NotNull] DistributedWorkers distributedWorkers,
+			[NotNull] VerificationRequest originalRequest)
+		{
+			Assert.NotNull(distributedWorkers, nameof(distributedWorkers));
+			Assert.NotNull(originalRequest, nameof(originalRequest));
+			Assert.ArgumentCondition(originalRequest.MaxParallelProcessing > 1,
+			                         "maxParallelDesired must be greater 1");
+
+			_distributedWorkers = distributedWorkers;
 			_originalRequest = originalRequest;
 			ParallelConfiguration = new ParallelConfiguration();
 		}
@@ -202,14 +207,12 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			int failureCount = 0;
 			int successCount = 0;
 			int retryCount = 0;
-			while (_tasks.Count > 0 || unhandledSubverifications.Count > 0)
+			while (_distributedWorkers.ActiveTaskCount > 0 || unhandledSubverifications.Count > 0)
 			{
-				if (TryTakeCompletedRun(_tasks, out Task<bool> task,
-				                        out SubVerification completed))
+				if (_distributedWorkers.TryTakeCompleted(
+					    out Task<bool> task, out SubVerification completed,
+					    out IQualityVerificationClient finishedClient))
 				{
-					IQualityVerificationClient finishedClient = _subveriClientsDict[completed];
-					_workingClients.Remove(finishedClient);
-
 					string failureMessage =
 						ProcessFinalResult(task, completed, finishedClient,
 						                   cancelWhenFaulted: false);
@@ -255,7 +258,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 					StartSubVerifications(unhandledSubverifications);
 
-					if (_tasks.Count == 0)
+					if (_distributedWorkers.ActiveTaskCount == 0)
 					{
 						Assert.AreEqual(0, unhandledSubverifications.Count,
 						                $"All workers exhausted but {unhandledSubverifications.Count} jobs are left!");
@@ -266,14 +269,16 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 					_msg.InfoFormat(
 						"{0} failed and {1} successful sub-verifications. Re-tried verifications: {2}. Remaining: {3}.",
-						failureCount, successCount, retryCount, _tasks.Count);
+						failureCount, successCount, retryCount,
+						_distributedWorkers.ActiveTaskCount);
 				}
 				else
 				{
 					// Process intermediate errors (might need de-duplication or other manipulation in the future)
 
 					bool reportProgress = false;
-					foreach (SubVerification subVerification in _tasks.Values)
+					foreach (SubVerification subVerification in _distributedWorkers
+						         .ActiveSubVerifications)
 					{
 						if (DrainIssues(subVerification))
 						{
@@ -398,7 +403,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					return startedVerifications;
 				}
 
-				IQualityVerificationClient client = GetWorkerClient();
+				IQualityVerificationClient client = _distributedWorkers.GetWorkerClient();
 
 				if (client == null)
 				{
@@ -406,104 +411,21 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				}
 
 				SubVerification next = subVerifications.Pop();
-				Task<bool> newTask = IniTask(next, client);
-				if (_tasks.ContainsKey(newTask))
-				{
-					_msg.WarnFormat("New Task already exists in dictioniary!");
-					LogTask(_tasks, newTask, next);
-				}
-				else
-				{
-					_msg.Debug(
-						$"Re-adding task  Task {newTask}; Task Hashcode: {newTask.GetHashCode()}; Subverification {next}");
-				}
 
-				_tasks.Add(newTask, next);
+				Task<bool> newTask = _distributedWorkers.IniTask(
+					next, client, () => Verify(next, client));
 
 				startedVerifications.Add(newTask, next);
 			}
 		}
 
-		private void LogTask(IDictionary<Task<bool>, SubVerification> tasks, Task<bool> newTask,
-		                     SubVerification newSubVerification)
+		private Task<bool> Verify([NotNull] SubVerification subVerification,
+		                          [NotNull] IQualityVerificationClient verificationClient)
 		{
-			LogTask(newTask, newSubVerification, "New");
-
-			if (tasks.TryGetValue(newTask, out SubVerification existing))
-			{
-				foreach (KeyValuePair<Task<bool>, SubVerification> pair in tasks)
-				{
-					if (pair.Value == existing)
-					{
-						LogTask(pair.Key, pair.Value, "Equal");
-					}
-				}
-			}
-			else
-			{
-				foreach (KeyValuePair<Task<bool>, SubVerification> pair in tasks)
-				{
-					LogTask(pair.Key, pair.Value, "Existing");
-				}
-			}
-		}
-
-		private void LogTask(Task task, SubVerification subVerification, string prefix)
-		{
-			_msg.Warn(
-				$"{prefix} Task {task}; Task Hashcode: {task.GetHashCode()}; Subverification {subVerification}");
-		}
-
-		private IQualityVerificationClient GetWorkerClient()
-		{
-			if (_workersClients.Count == 1)
-			{
-				// Single client with potentially multiple threads
-				IQualityVerificationClient onlyClient = _workersClients[0];
-
-				return onlyClient.CanAcceptCalls(allowFailOver: false) ? onlyClient : null;
-			}
-
-			if (_workersClients.Count <= _workingClients.Count)
-			{
-				return null;
-			}
-
-			foreach (IQualityVerificationClient client in _workersClients)
-			{
-				if (! _workingClients.Contains(client)
-				    && ! _failedClients.Contains(client))
-				{
-					if (client.CanAcceptCalls(allowFailOver: false))
-					{
-						return client;
-					}
-
-					_failedClients.Add(client);
-				}
-			}
-
-			return null;
-		}
-
-		private Task<bool> IniTask([NotNull] SubVerification subVerification,
-		                           [NotNull] IQualityVerificationClient verificationClient)
-		{
-			VerificationRequest subRequest = subVerification.SubRequest;
-
-			SubResponse subResponse = subVerification.SubResponse;
-
-			// Check if there is a free client (and allow failing over if necessary):
-			if (! verificationClient.CanAcceptCalls(true))
-			{
-				// TODO: Do something else? Use a different worker?
-				return Task.FromResult(false);
-			}
-
-			_subveriClientsDict.Add(subVerification, verificationClient);
-			_workingClients.Add(verificationClient);
-
 			Task<bool> task;
+
+			VerificationRequest subRequest = subVerification.SubRequest;
+			SubResponse subResponse = subVerification.SubResponse;
 
 			// Sends schema as protobuf:
 			if (KnownModels != null)
@@ -524,8 +446,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					CancellationTokenSource.Token);
 			}
 
-			// Process the messages even though the foreground thread is blocking/busy processing results
-			task.ConfigureAwait(false);
 			return task;
 		}
 
@@ -842,26 +762,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			                OverallProgressCurrent, OverallProgressTotal);
 
 			return true;
-		}
-
-		private static bool TryTakeCompletedRun(
-			IDictionary<Task<bool>, SubVerification> tasks,
-			out Task<bool> task,
-			out SubVerification subVerification)
-		{
-			KeyValuePair<Task<bool>, SubVerification> keyValuePair =
-				tasks.FirstOrDefault(kvp => kvp.Key.IsCompleted);
-
-			// NOTE: 'Default' is an empty keyValuePair struct
-			task = keyValuePair.Key;
-			subVerification = keyValuePair.Value;
-
-			if (task == null)
-			{
-				return false;
-			}
-
-			return tasks.Remove(task);
 		}
 
 		private IList<SubVerification> CreateSubVerifications(

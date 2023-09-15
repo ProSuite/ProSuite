@@ -27,7 +27,6 @@ using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.AO;
-using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.Microservices.Server.AO.QA.Distributed;
@@ -112,7 +111,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// The client end point used for parallel processing.
 		/// </summary>
 		[CanBeNull]
-		public IList<IQualityVerificationClient> DistributedProcessingClients { get; set; }
+		public DistributedWorkers DistributedProcessingClients { get; set; }
 
 		/// <summary>
 		/// The default value to use if the environment variable that indicates whether or not the

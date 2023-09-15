@@ -14,7 +14,10 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.Microservices.Server.AO.QA.Distributed
 {
-	internal class SubVerification
+	/// <summary>
+	/// Encapsulates the definition and state of a sub-verification that runs on a different client.
+	/// </summary>
+	public class SubVerification
 	{
 		public SubVerification([NotNull] VerificationRequest subRequest,
 		                       [NotNull] QualityConditionGroup qualityConditionGroup)
@@ -73,7 +76,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			return _idConditions.ContainsKey(conditionId);
 		}
 
-		public bool IsFullyProcessed(IssueKey issue, [NotNull] BoxTree<SubVerification> boxTree)
+		internal bool IsFullyProcessed(IssueKey issue, [NotNull] BoxTree<SubVerification> boxTree)
 		{
 			_idConditions = _idConditions ?? GetIdConditions();
 			if (! _idConditions.ContainsKey(issue.ConditionId))
