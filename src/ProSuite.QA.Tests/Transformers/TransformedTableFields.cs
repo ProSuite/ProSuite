@@ -584,7 +584,8 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			// Repeating the name of the current table is not necessary for single tables but might be done for clarity
 
-			if (fieldName.StartsWith(sourceTable.Name, StringComparison.InvariantCultureIgnoreCase))
+			if (!string.IsNullOrWhiteSpace(sourceTable.Name)
+			    && fieldName.StartsWith(sourceTable.Name, StringComparison.InvariantCultureIgnoreCase))
 			{
 				string remainder = fieldName.Substring(sourceTable.Name.Length);
 
