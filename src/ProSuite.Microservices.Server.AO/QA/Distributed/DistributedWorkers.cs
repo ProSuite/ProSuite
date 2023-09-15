@@ -71,6 +71,14 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				throw new InvalidOperationException("All workers are exhausted.");
 			}
 
+			if (_workerClients.Count == 1)
+			{
+				// Single-worker configurations allow worker-side multi-threading. Always return
+				// the worker -> all verifications are sent and the throttling happens in the
+				// worker.
+				return _workerClients[0];
+			}
+
 			foreach (IQualityVerificationClient client in _workerClients)
 			{
 				if (! _workingClients.Contains(client))
