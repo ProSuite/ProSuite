@@ -11,6 +11,7 @@ using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
+using ProSuite.QA.Tests.Transformers.Filters;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {
@@ -651,23 +652,6 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		[Category(TestCategory.Sde)]
-		[Category(Commons.Test.TestCategory.FixMe)]
-		public void TestTOP_7505_Topgis()
-		{
-			var workspace = (IFeatureWorkspace) TestData.TestDataUtils.OpenTopgisTlm();
-
-			IFeatureClass fcSg = workspace.OpenFeatureClass("TOPGIS_TLM.TLM_STEHENDES_GEWAESSER");
-			ITable tblGl = workspace.OpenTable("TOPGIS_TLM.TLM_GEWAESSER_LAUF");
-			IFeatureClass fcGk = workspace.OpenFeatureClass("TOPGIS_TLM.TLM_GEWAESSERNETZKNOTEN");
-			IFeatureClass fcFg = workspace.OpenFeatureClass("TOPGIS_TLM.TLM_FLIESSGEWAESSER");
-
-			QaConstraint qa = TestTOP_7505(fcSg, tblGl, fcGk, fcFg, out _);
-			var runner = new QaContainerTestRunner(10000, qa);
-			runner.Execute();
-		}
-
-		[Test]
 		public void TestTOP_7505_TestData()
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("gewaesser");
@@ -921,5 +905,270 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			return qa;
 		}
 
+		[Test]
+		public void TestTOP_5743()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("strassen");
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference
+				((int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+			IFeatureClass fcStrasse = DatasetUtils.CreateSimpleFeatureClass(ws, "TLM_STRASSE",
+				FieldUtils.CreateFields(
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("OBJEKTART"),
+					FieldUtils.CreateField("TLM_STR_AVS_UUID", esriFieldType.esriFieldTypeGUID),
+					FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolyline, sr)));
+
+			IFeatureClass fcStrassenInfo = DatasetUtils.CreateSimpleFeatureClass(
+				ws, "TLM_STRASSEINFO",
+				FieldUtils.CreateFields(
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPoint, sr)));
+
+			// FcStrassen Features
+			{ // to ensure extent
+				IFeature f = fcStrasse.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(100, 100).Curve;
+				f.Value[1] = 1;
+				f.Store();
+			}
+			Guid avs = Guid.NewGuid();
+			{ 
+				IFeature f = fcStrasse.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(500, 500).LineTo(1020, 200).Curve;
+				f.Value[1] = 2;
+				f.Value[2] = Guid.NewGuid().ToString("B");
+				f.Store();
+			}
+			{
+				IFeature f = fcStrasse.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(1020, 200).LineTo(1800, 500).Curve;
+				f.Value[1] = 2;
+				f.Value[2] = Guid.NewGuid().ToString("B");
+				f.Store();
+			}
+
+			// FcStrassenInfo Features
+			{
+				IFeature f = fcStrassenInfo.CreateFeature();
+				f.Shape = GeometryFactory.CreatePoint(1020, 200);
+				f.Store();
+			}
+
+			IReadOnlyFeatureClass roStrasse = ReadOnlyTableFactory.Create(fcStrasse);
+			IReadOnlyFeatureClass roStrassenInfo = ReadOnlyTableFactory.Create(fcStrassenInfo);
+
+
+			TrDissolve trDisAvs = new TrDissolve(roStrasse)
+			                           {
+				                           Search = 50,
+				                           GroupBy = new[] { "TLM_STR_AVS_UUID" },
+										   TransformerName = "DisAvs"
+			                           };
+			IReadOnlyFeatureClass roDisAvs = trDisAvs.GetTransformed();
+
+			TrDissolve trDisStrassenRest = new TrDissolve(roStrasse)
+			                               {
+				                               Search = 50,
+				                               GroupBy = new[] { "OBJEKTART" },
+				                               TransformerName = "DisRest"
+			                               };
+			IReadOnlyFeatureClass roDisStrassenRest = trDisStrassenRest.GetTransformed();
+
+
+			TrSpatialJoin trSjAvs = new TrSpatialJoin(roStrassenInfo, roDisAvs)
+			                          {
+				                          OuterJoin = true, Grouped = true,
+				                          T1Attributes = new[] { "SUM(ANZAHL_AVS) AS GESAMT_AVS" },
+				                          T1CalcAttributes =
+					                          new[] { "IIF(OBJECTID > 0,1,0) AS ANZAHL_AVS" },
+				                          TransformerName = "SjAvs"
+			                          };
+			IReadOnlyFeatureClass roSjAvs = trSjAvs.GetTransformed();
+
+			TrSpatialJoin trSjRest = new TrSpatialJoin(roSjAvs, roDisStrassenRest)
+			                              {
+				                              OuterJoin = true, Grouped = true,
+				                              T1Attributes =
+					                              new[] { "SUM(ANZAHL_REST) AS GESAMT_REST" },
+				                              T1CalcAttributes =
+					                              new[] { "IIF(OBJECTID > 0,1,0) AS ANZAHL_REST" },
+				                              TransformerName = "SjRest"
+			                              };
+			IReadOnlyTable roSjRest = trSjRest.GetTransformed();
+
+			QaConstraint qa = new QaConstraint(roSjRest, "GESAMT_AVS = 2 AND GESAMT_REST = 1");
+			{
+				QaExportTables exp = new QaExportTables(
+					                     new List<IReadOnlyTable>
+					                     {
+						                     roStrasse, roStrassenInfo,
+						                     roDisAvs, roSjAvs, roDisStrassenRest,
+						                     roSjRest
+					                     }, "C:\\temp\\TOP_5743")
+				                     { ExportTileIds = true, ExportTiles = true };
+				var runner = new QaContainerTestRunner(1000, qa, exp);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+		}
+
+		[Test]
+		public void TestTOP_5753()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("gewaesser");
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference
+				((int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+			IFeatureClass fcFgw = DatasetUtils.CreateSimpleFeatureClass(
+				ws, "TLM_FLIESSGEWAESSER",
+				FieldUtils.CreateFields(
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolyline, sr)));
+
+			IFeatureClass fcSgw = DatasetUtils.CreateSimpleFeatureClass(
+				ws, "TLM_STEHENDES_GEWAESSER",
+				FieldUtils.CreateFields(
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateField("TLM_GEWAESSER_LAUF_UUID", esriFieldType.esriFieldTypeGUID),
+					FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolyline, sr)));
+
+			IFeatureClass fcGwk = DatasetUtils.CreateSimpleFeatureClass(
+				ws, "TLM_GEWAESSERNETZKNOTEN",
+				FieldUtils.CreateFields(
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("Objektart"),
+					FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPoint, sr)));
+
+			ITable tblGwl = DatasetUtils.CreateTable(
+				ws, "TLM_GEWAESSER_LAUF",
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateField("UUID", esriFieldType.esriFieldTypeGUID),
+				FieldUtils.CreateIntegerField("GEWISS_NR")
+			);
+
+			{
+				IFeature f = fcFgw.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(100, 100).Curve;
+				f.Store();
+			}
+			//{
+			//	IFeature f = fcFgw.CreateFeature();
+			//	f.Shape = CurveConstruction.StartLine(1900, 1900).LineTo(2000, 2000).Curve;
+			//	f.Store();
+			//}
+
+			string gwUuid = Guid.NewGuid().ToString("B");
+			{
+				IFeature f = fcSgw.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(50, 980).LineTo(50, 1020).LineTo(70, 1020)
+				                           .Curve;
+				f.Value[1] = gwUuid;
+				f.Store();
+			}
+			{
+				IFeature f = fcSgw.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(70, 1020).LineTo(70, 980).LineTo(50, 980)
+				                           .Curve;
+				f.Value[1] = gwUuid;
+				f.Store();
+			}
+
+			{
+				IRow r = tblGwl.CreateRow();
+				r.Value[1] = gwUuid;
+				r.Value[2] = 123;
+				r.Store();
+			}
+
+			{
+				IFeature f = fcGwk.CreateFeature();
+				f.Value[1] = 1;
+				f.Shape = GeometryFactory.CreatePoint(50, 980);
+				f.Store();
+			}
+			{
+				IFeature f = fcGwk.CreateFeature();
+				f.Value[1] = 2;
+				f.Shape = GeometryFactory.CreatePoint(70, 1020);
+				f.Store();
+			}
+
+			IReadOnlyFeatureClass roSgw = ReadOnlyTableFactory.Create(fcSgw);
+			IReadOnlyFeatureClass roFgw = ReadOnlyTableFactory.Create(fcFgw);
+			IReadOnlyFeatureClass roGwk = ReadOnlyTableFactory.Create(fcGwk);
+			IReadOnlyTable roGwl = ReadOnlyTableFactory.Create(tblGwl);
+
+			TrTableJoinInMemory trMjSgwGl =
+				new TrTableJoinInMemory(roSgw, roGwl, "TLM_GEWAESSER_LAUF_UUID", "UUID",
+				                        JoinType.InnerJoin);
+			IReadOnlyFeatureClass roMjSgwGl = (IReadOnlyFeatureClass) trMjSgwGl.GetTransformed();
+
+			TrGeometryToPoints trEpFgw =
+				new TrGeometryToPoints(roFgw, GeometryComponent.LineEndPoints);
+			IReadOnlyFeatureClass roEpFgw = trEpFgw.GetTransformed();
+
+			TrOnlyDisjointFeatures fiDjSgwFgw =
+					new TrOnlyDisjointFeatures(roMjSgwGl, roEpFgw)
+					{
+						FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All,
+//						TransformerName = "fiDjSgwFgw"
+					};
+			IReadOnlyFeatureClass roDjSgwFgw = fiDjSgwFgw.GetTransformed();
+
+			TrDissolve trDisDjSgwFgw =
+				new TrDissolve(roDjSgwFgw)
+				{
+					NeighborSearchOption = TrDissolve.SearchOption.All,
+					Attributes =
+						new[] { "COUNT(TLM_STEHENDES_GEWAESSER_OBJECTID) AS ANZAHL_LAEUFE" },
+					GroupBy = new[] { "GEWISS_NR" }
+				};
+			//TrDissolve trDisDjSgwFgw =
+			//	new TrDissolve(roSgw)
+			//	{
+			//		NeighborSearchOption = TrDissolve.SearchOption.All,
+			//		Attributes =
+			//			new[] { "COUNT(OBJECTID) AS ANZAHL_LAEUFE" }
+			//	};
+			IReadOnlyFeatureClass roDisDjSgwFgw = trDisDjSgwFgw.GetTransformed();
+
+			TrSpatialJoin trSjDisSgwGwk =
+				new TrSpatialJoin(roDisDjSgwFgw, roGwk)
+				{
+					NeighborSearchOption = TrSpatialJoin.SearchOption.All,
+					Grouped = true,
+					T1Attributes =
+						new[]
+						{
+							"SUM(LOOP_JUNCTION) AS ANZAHL_LOOP_JUNCTIONS",
+							"SUM(SECONDARY_JUNCTION) AS ANZAHL_SECONDARY_JUNCTIONS"
+						},
+					T1CalcAttributes =
+						new[]
+						{
+							"IIF(OBJEKTART=1,1,0) AS LOOP_JUNCTION",
+							"IIF(OBJEKTART=2,1,0) AS SECONDARY_JUNCTION"
+						}
+				};
+
+			IReadOnlyFeatureClass roSjDisSgwGwk = trSjDisSgwGwk.GetTransformed();
+
+			QaConstraint qa =
+				new QaConstraint(
+					roSjDisSgwGwk,
+					"ANZAHL_LAEUFE = 2 AND ANZAHL_LOOP_JUNCTIONS = 1 AND ANZAHL_SECONDARY_JUNCTIONS = 1");
+			{
+				QaExportTables exp = new QaExportTables(
+					                     new List<IReadOnlyTable>
+					                     {
+											 roFgw, roSgw, roGwk, roSjDisSgwGwk
+					                     }, "C:\\temp\\TOP_5753")
+				                     { ExportTileIds = true, ExportTiles = true };
+				var runner = new QaContainerTestRunner(3000, qa, exp);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+		}
 	}
 }

@@ -138,7 +138,7 @@ namespace ProSuite.QA.Tests.Transformers
 						involvedFc.Fields.FindField(involvedFc.ShapeFieldName)].GeometryDef;
 				return FieldUtils.CreateShapeField(
 					_derivedShapeType,
-					geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM);
+					geomDef.SpatialReference, hasZ: geomDef.HasZ, hasM: geomDef.HasM);
 			}
 		}
 		protected class TransformedFc : TransformedFeatureClass, IDataContainerAware,

@@ -208,13 +208,6 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 			{
-				IRelationalOperator t1LoadedExtent = null;
-
-				if (NeighborSearchOption == SearchOption.All)
-				{
-					t1LoadedExtent = (IRelationalOperator) DataSearchContainer.GetLoadedExtent(_t1);
-				}
-
 				IFeatureClassFilter joinFilter = null;
 
 				foreach (var toJoin in DataSearchContainer.Search(
@@ -234,7 +227,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 					List<IReadOnlyRow> joineds = new List<IReadOnlyRow>();
 					bool outerJoin = OuterJoin;
-					foreach (var joined in EnumNeighbors(joinFilter, t1LoadedExtent))
+					foreach (var joined in EnumNeighbors(joinFilter))
 					{
 						if (! HasFulfilledConstraint(toJoin, joined))
 						{
@@ -277,37 +270,13 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			private IEnumerable<IReadOnlyRow> EnumNeighbors(
-				[NotNull] IFeatureClassFilter joinFilter,
-				[CanBeNull] IRelationalOperator loaded)
+				[NotNull] IFeatureClassFilter joinFilter)
 			{
 				QueryHelpers[1].FullGeometrySearch = (NeighborSearchOption == SearchOption.All);
 				foreach (var joined in DataSearchContainer.Search(
 					         _t1, joinFilter, QueryHelpers[1]))
 				{
 					yield return joined;
-				}
-
-				if (loaded == null)
-				{
-					yield break;
-				}
-
-				if (loaded.Contains(joinFilter.FilterGeometry))
-				{
-					yield break;
-				}
-
-				IEnvelope queryGeom = joinFilter.FilterGeometry.Envelope;
-				double tolerance = GeometryUtils.GetXyTolerance(queryGeom);
-				queryGeom.Expand(tolerance, tolerance, false);
-
-				foreach (var row in _t1.EnumRows(joinFilter, recycle: false))
-				{
-					var neighbor = (IReadOnlyFeature) row;
-					if (loaded.Disjoint(neighbor.Extent))
-					{
-						yield return neighbor;
-					}
 				}
 			}
 
