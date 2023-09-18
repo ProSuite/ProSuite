@@ -174,25 +174,44 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				foreach (ContainerTest containerTest in tests)
 				{
-					if (Math.Abs(containerTest.SearchDistance) < double.Epsilon)
-					{
-						continue;
-					}
-
-					foreach (IReadOnlyTable involvedTable in containerTest.InvolvedTables)
-					{
-						if (! _cachedSet.ContainsKey(involvedTable))
-						{
-							continue;
-						}
-
-						overlappingFeatures.AdaptSearchTolerance(
-							involvedTable, containerTest.SearchDistance);
-					}
+					AdaptSearchTolerance(overlappingFeatures, containerTest.SearchDistance, containerTest.InvolvedTables);
 				}
 			}
 
 			return overlappingFeatures;
+		}
+
+		private void AdaptSearchTolerance(
+			[NotNull] OverlappingFeatures overlappingFeatures,
+			double searchDistance, IList<IReadOnlyTable> involvedTables)
+		{
+			foreach (IReadOnlyTable involvedTable in involvedTables)
+			{
+				double tableSearchDistance = searchDistance;
+
+				if (involvedTable is IDataContainerAware transformer)
+				{
+					tableSearchDistance =
+						Math.Max(tableSearchDistance,
+						         (transformer as IHasSearchDistance)?.SearchDistance ?? 0);
+					AdaptSearchTolerance(
+						overlappingFeatures, tableSearchDistance, transformer.InvolvedTables);
+				}
+
+				if (Math.Abs(tableSearchDistance) < double.Epsilon)
+				{
+					continue;
+				}
+
+				if (!_cachedSet.ContainsKey(involvedTable))
+				{
+					continue;
+				}
+
+				overlappingFeatures.AdaptSearchTolerance(
+					involvedTable, tableSearchDistance);
+
+			}
 		}
 
 		private TileCache GetTileCache()
