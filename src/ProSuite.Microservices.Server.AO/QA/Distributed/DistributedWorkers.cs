@@ -179,7 +179,10 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					break;
 				}
 
-				if (_workerClients.Contains(workerClient))
+				string newAddress = workerClient.GetAddress();
+				if (_workerClients.Any(c => c.GetAddress()
+				                             .Equals(newAddress,
+				                                     StringComparison.CurrentCultureIgnoreCase)))
 				{
 					// it's already in the list
 					continue;

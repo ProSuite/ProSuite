@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using NUnit.Framework;
@@ -127,6 +128,30 @@ namespace ProSuite.Commons.Test.Cryptography
 			{
 				Console.WriteLine(cert);
 			}
+		}
+
+		[Test]
+		public void CanExportToPem()
+		{
+			var found = CertificateUtils.GetCertificates(StoreName.My).ToList();
+
+			var cert =
+				found.FirstOrDefault(c => c.SubjectName.Name.Contains("CN=Dira GeoSystems AG"));
+
+			if (cert == null)
+			{
+				return;
+			}
+
+			Assert.IsTrue(found.Count > 0);
+
+			string pem = CertificateUtils.ExportToPem(cert, true);
+
+			string tempFileName = Path.GetTempFileName();
+			File.WriteAllText(tempFileName, pem);
+
+			// TODO: Is PEM not base 64 encoded?
+			Console.WriteLine(pem);
 		}
 
 		// For extra unit tests see 
