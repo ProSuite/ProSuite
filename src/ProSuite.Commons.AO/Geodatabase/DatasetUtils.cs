@@ -527,7 +527,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 				if (string.IsNullOrEmpty(ownerName))
 				{
 					// no owner part in search name, compare only the table name
-					if (string.Compare(GetTableName(workspace, datasetName.Name), name,
+					string tableName = GetTableName(workspace, datasetName.Name);
+
+					if (string.Compare(tableName, name,
 					                   StringComparison.OrdinalIgnoreCase) == 0)
 					{
 						return datasetName;
@@ -970,10 +972,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				sqlSyntax.ParseTableName(fullTableName, out _, out _, out tableName);
 			}
-			else
+			else if (workspace.Type == esriWorkspaceType.esriRemoteDatabaseWorkspace)
 			{
 				// Virtual workspace, such as GdbWorkspace
 				tableName = ModelElementNameUtils.GetUnqualifiedName(fullTableName);
+			}
+			else
+			{
+				// TOP-5790: Shapefiles, rasters or something else. Do not un-qualify names potentially containing a dot.
+				tableName = fullTableName;
 			}
 
 			return tableName;
