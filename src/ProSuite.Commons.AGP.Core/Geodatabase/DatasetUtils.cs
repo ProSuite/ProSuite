@@ -7,7 +7,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using Geodatabase = ArcGIS.Core.Data.Geodatabase;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
@@ -99,6 +98,39 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
 			return featureClass.GetDefinition().GetShapeType();
+		}
+
+		public static T GetDatasetDefinition<T>(Datastore datastore, string name)
+			where T : Definition
+		{
+			if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+			{
+				return geodatabase.GetDefinition<T>(name);
+			}
+
+			if (datastore is FileSystemDatastore fsDatastore)
+			{
+				return fsDatastore.GetDefinition<T>(name);
+			}
+
+			throw new ArgumentOutOfRangeException(
+				$"Unsupported datastore type: {datastore.GetConnectionString()}.");
+		}
+
+		public static T OpenDataset<T>(Datastore datastore, string datasetName) where T : Dataset
+		{
+			if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+			{
+				return geodatabase.OpenDataset<T>(datasetName);
+			}
+
+			if (datastore is FileSystemDatastore fsDatastore)
+			{
+				return fsDatastore.OpenDataset<T>(datasetName);
+			}
+
+			throw new ArgumentOutOfRangeException(
+				$"Unsupported datastore: {datastore.GetConnectionString()}");
 		}
 
 		public static IEnumerable<Table> OpenTables(ArcGIS.Core.Data.Geodatabase geodatabase,

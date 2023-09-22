@@ -41,7 +41,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 			_table0 = _geodatabase.OpenDataset<Table>(_featureClass);
 
-			var tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
+			var tablesByGeodatabase = new Dictionary<Datastore, List<Table>>
 			                          {
 				                          {_geodatabase, new List<Table> {_table0}}
 			                          };

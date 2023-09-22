@@ -19,9 +19,9 @@ namespace ProSuite.AGP.WorkList
 
 		private const string _statusFieldName = "STATUS";
 
-		public IssueItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
+		public IssueItemRepository(Dictionary<Datastore, List<Table>> tablesByDatastore,
 		                           IRepository stateRepository) : base(
-			tablesByGeodatabase, stateRepository) { }
+			tablesByDatastore, stateRepository) { }
 
 		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{
@@ -136,7 +136,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
 		{
-			Table table = OpenFeatureClass(source);
+			Table table = OpenTable(source);
 			Assert.NotNull(table);
 
 			try
