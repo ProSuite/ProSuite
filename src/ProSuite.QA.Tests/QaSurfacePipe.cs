@@ -643,10 +643,9 @@ namespace ProSuite.QA.Tests
 					foreach (IPolyline invalidPart in invalidSegments.GetParts())
 					{
 						const string description = "Terrain is missing";
-						ReportError(
+						errorCount += ReportError(
 							description, InvolvedRowUtils.GetInvolvedRows(searchedRow), invalidPart,
 							Codes[Code.NoTerrainData], null);
-						errorCount++;
 					}
 
 					foreach (IPolyline validPart in validSegments.GetParts())
