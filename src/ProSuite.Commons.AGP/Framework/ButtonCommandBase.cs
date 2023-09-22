@@ -16,8 +16,6 @@ namespace ProSuite.Commons.AGP.Framework
 		{
 			try
 			{
-				_msg.VerboseDebug(() => $"{GetType().Name}.OnUpdate");
-
 				OnUpdateCore();
 			}
 			catch (Exception e)
