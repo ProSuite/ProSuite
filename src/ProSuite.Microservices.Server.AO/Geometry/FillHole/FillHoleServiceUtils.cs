@@ -84,7 +84,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 
 			_msg.DebugStopTiming(
 				watch,
-				"CalculateReshapeLinesImpl: Unpacked {0} source features from request params",
+				"GetFeatures: Unpacked {0} source features from request params",
 				sourceFeatures.Count);
 		}
 	}
