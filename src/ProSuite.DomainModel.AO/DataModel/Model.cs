@@ -1435,6 +1435,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 		[NotNull]
 		protected IWorkspaceContext CreateDefaultMasterDatabaseWorkspaceContext()
 		{
+			_msg.Debug("Opening default master database workspace context...");
+
 			IFeatureWorkspace featureWorkspace = UserConnectionProvider.OpenWorkspace();
 
 			var result = new MasterDatabaseWorkspaceContext(featureWorkspace, this);

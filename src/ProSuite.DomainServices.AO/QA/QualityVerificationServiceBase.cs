@@ -576,6 +576,8 @@ namespace ProSuite.DomainServices.AO.QA
 		                                   int currentStep = 0,
 		                                   int stepCount = 0)
 		{
+			_msg.VerboseDebug(() => $"Preprocessing - {message}");
+
 			var args = new VerificationProgressEventArgs(
 				           VerificationProgressType.PreProcess, currentStep, stepCount)
 			           {
@@ -818,8 +820,8 @@ namespace ProSuite.DomainServices.AO.QA
 						}
 
 						if (qualitySpecification != null &&
-							StringUtils.IsNotEmpty(Parameters.HtmlReportPath) &&
-							StringUtils.IsNotEmpty(Parameters.HtmlSpecificationTemplatePath))
+						    StringUtils.IsNotEmpty(Parameters.HtmlReportPath) &&
+						    StringUtils.IsNotEmpty(Parameters.HtmlSpecificationTemplatePath))
 						{
 							string outputDirectory = Assert.NotNullOrEmpty(
 								Path.GetDirectoryName(Parameters.HtmlReportPath));
