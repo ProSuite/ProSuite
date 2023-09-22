@@ -246,7 +246,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				// Consider Task.FromException?
 			}
 
-			return false;
+			return true;
 		}
 
 		protected virtual void ShiftPressedCore()
