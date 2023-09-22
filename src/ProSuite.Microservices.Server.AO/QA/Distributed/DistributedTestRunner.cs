@@ -34,6 +34,7 @@ using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ProSuite.Microservices.Server.AO.QA.Distributed
 {
@@ -124,6 +125,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 		public event EventHandler<VerificationProgressEventArgs> Progress;
 
+		public ISubverificationObserver SubverificationObserver { get; set; }
+
 		public QualityVerification QualityVerification { get; set; }
 
 		// TODO: Simplify to the number of rows and adapt report builder interface
@@ -186,6 +189,17 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			Stack<SubVerification> unhandledSubverifications =
 				new Stack<SubVerification>(subVerifications.Reverse());
+			int id = 1;
+			foreach (SubVerification subVerification in unhandledSubverifications)
+			{
+				subVerification.Id = id++;
+			}
+
+			if (SubverificationObserver != null)
+			{
+				ReportSubverifcationsCreated(unhandledSubverifications);
+			}
+
 			IDictionary<Task, SubVerification> started =
 				StartSubVerifications(unhandledSubverifications);
 			if (started.Count <= 0)
@@ -229,6 +243,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 								completed.FailureCount, _maxReTryCount);
 							failureCount++;
 							CompleteSubverification(completed);
+
+							SubverificationObserver?.Finished(completed.Id, ServiceCallStatus.Failed);
 						}
 						else
 						{
@@ -241,9 +257,12 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 									TileEnvelope = completed.TileEnvelope,
 									FailureCount = completed.FailureCount + 1
 								};
+							retry.Id = completed.Id;
 
 							retryCount++;
 							unhandledSubverifications.Push(retry);
+
+							SubverificationObserver?.Finished(completed.Id, ServiceCallStatus.Retry);
 						}
 
 						// TODO: Communicate error to client?!
@@ -254,6 +273,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 						                finishedClient.GetAddress());
 						successCount++;
 						CompleteSubverification(completed);
+						SubverificationObserver?.Finished(completed.Id, ServiceCallStatus.Finished);
 					}
 
 					StartSubVerifications(unhandledSubverifications);
@@ -416,6 +436,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					next, client, () => Verify(next, client));
 
 				startedVerifications.Add(newTask, next);
+				SubverificationObserver?.Started(next.Id, _distributedWorkers.GetWorkerClient(next)?.GetAddress());
 			}
 		}
 

@@ -10,6 +10,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.Microservices.AO;
+using ProSuite.Microservices.Definitions.QA;
 using ProSuite.QA.Container;
 
 namespace ProSuite.Microservices.Server.AO.QA.Distributed
@@ -196,6 +197,39 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 
 			return wsInfos;
+		}
+
+		private void ReportSubverifcationsCreated([NotNull] IEnumerable<SubVerification> subVerifications)
+		{
+			if (SubverificationObserver == null)
+			{return;}
+
+			foreach (SubVerification subVerification in subVerifications)
+			{
+				List<string> qcNames = new List<string>();
+
+				var sr = subVerification.SubRequest.Specification;
+				HashSet<int> excludes = new HashSet<int>();
+				foreach (int exclude in sr.ExcludedConditionIds)
+				{
+					excludes.Add(exclude);
+				}
+
+				foreach (QualitySpecificationElementMsg msg in sr.ConditionListSpecification
+				                                                 .Elements)
+				{
+					if (! excludes.Contains(msg.Condition.ConditionId))
+					{
+						qcNames.Add(msg.Condition.Name);
+					}
+				}
+
+				SubverificationObserver?.CreatedSubverification(
+					subVerification.Id,
+					subVerification.QualityConditionGroup.ExecType,
+					qcNames,
+					subVerification.TileEnvelope);
+			}
 		}
 	}
 }

@@ -1,4 +1,4 @@
-﻿namespace ProSuite.Commons.Progress
+namespace ProSuite.Commons.Progress
 {
 	public enum ServiceCallStatus
 	{
@@ -6,6 +6,8 @@
 		Running = 1,
 		Cancelled = 2,
 		Finished = 3,
-		Failed = 4
+		Failed = 4,
+
+		Retry = 5
 	}
 }
