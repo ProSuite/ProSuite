@@ -625,6 +625,33 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			return 0;
 		}
+
+		public static Geometry EnsureGeometrySchema([NotNull] Geometry inputGeometry,
+		                                            bool? hasZ,
+		                                            bool? hasM = null,
+		                                            bool? hasID = null)
+		{
+			bool changeHasZ = hasZ.HasValue && inputGeometry.HasZ != hasZ;
+			bool changeHasM = hasM.HasValue && inputGeometry.HasM != hasM;
+			bool changeHasID = hasID.HasValue && inputGeometry.HasID != hasID;
+
+			if (! changeHasZ &&
+			    ! changeHasM &&
+			    ! changeHasID)
+			{
+				return inputGeometry;
+			}
+
+			var builder = inputGeometry.ToBuilder();
+
+			builder.HasZ = hasZ ?? inputGeometry.HasZ;
+			builder.HasM = hasM ?? inputGeometry.HasM;
+			builder.HasID = hasID ?? inputGeometry.HasID;
+
+			// TODO: SimplifyZ if aware, DropZs if un-aware to ensure simplify cleans up duplicate segments?
+			return builder.ToGeometry();
+		}
+
 		public static IGeometryEngine Engine
 		{
 			get => _engine ??= GeometryEngine.Instance;
