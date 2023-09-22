@@ -12,7 +12,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
@@ -109,6 +108,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override bool IsInSelectionPhase(bool shiftIsPressed)
 		{
 			return ! IsInSketchMode;
+		}
+
+		protected override Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		{
+			return Task.FromResult(! IsInSketchMode);
 		}
 
 		protected override void LogUsingCurrentSelection()

@@ -231,7 +231,8 @@ namespace ProSuite.AGP.Editing.OneClick
 					sketchGeometry = GeometryUtils.Simplify(sketchGeometry);
 				}
 
-				if (RequiresSelection && IsInSelectionPhase())
+				if (RequiresSelection &&
+				    await IsInSelectionPhaseAsync())
 				{
 					return await OnSelectionSketchComplete(sketchGeometry, progressor);
 				}
@@ -675,6 +676,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				fl => CanSelectFromLayer(fl));
 		}
 
+		// TODO: Make obsolete, always use Async overload?
 		protected bool IsInSelectionPhase()
 		{
 			return IsInSelectionPhase(KeyboardUtils.IsModifierPressed(Keys.Shift, true));
@@ -683,6 +685,18 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual bool IsInSelectionPhase(bool shiftIsPressed)
 		{
 			return false;
+		}
+
+		protected Task<bool> IsInSelectionPhaseAsync()
+		{
+			bool shiftIsPressed = KeyboardUtils.IsModifierPressed(Keys.Shift, true);
+
+			return IsInSelectionPhaseAsync(shiftIsPressed);
+		}
+
+		protected virtual Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		{
+			return Task.FromResult(false);
 		}
 
 		protected virtual void OnKeyDownCore(MapViewKeyEventArgs k) { }
