@@ -216,38 +216,7 @@ namespace ProSuite.AGP.Editing.FillHole
 		}
 
 		#region Code duplicates
-
-		protected override Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
-		{
-			// TODO: Duplicate!
-			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
-			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
-
-			//if (_shiftIsPressed) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
-			//{
-			//	return Task.FromResult(true);
-			//}
-
-			CancelableProgressor progressor = GetHoleCalculationProgressor();
-
-			if (IsInSelectionPhase())
-			{
-				var selection = SelectionUtils.GetSelection(e);
-				if (CanUseSelection(selection))
-				{
-					var selectedFeatures = GetApplicableSelectedFeatures(selection).ToList();
-
-					AfterSelection(selectedFeatures, progressor);
-
-					var sketch = GetCurrentSketchAsync().Result;
-
-					SelectAndProcessDerivedGeometry(selection, sketch, progressor);
-				}
-			}
-
-			return Task.FromResult(true);
-		}
-
+		
 		// TODO: Consider upgrading ObjectClassId to long in microservice
 		//       and potentially add it to IReadOnly
 		//       and somehow add support for Shapefiles (OID service? Hash of full path?)
