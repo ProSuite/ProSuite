@@ -224,7 +224,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (_finishingSketch)
 			{
-				_msg.Warn("OnSketchCompleteAsync: Duplicate call!");
+				// This happens if the OnSelectionSketchComplete() method below takes a long time
+				// and the user already creates several new sketches in the mean while.
+				// However, it has also been observed in other situations when seemingly randomly
+				// the method is sometimes called twice.
+				_msg.Debug("OnSketchCompleteAsync: Duplicate call is ignored!");
 				return false;
 			}
 
