@@ -115,11 +115,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				_msg.WarnFormat("New Task already exists in dictionary!");
 				LogTask(_tasks, newTask, subVerification);
 			}
-			else
-			{
-				_msg.Debug(
-					$"Re-adding task  Task {newTask}; Task Hashcode: {newTask.GetHashCode()}; Subverification {subVerification}");
-			}
 
 			_tasks.Add(newTask, subVerification);
 

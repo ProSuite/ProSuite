@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using ProSuite.Commons.Progress;
 using ProSuite.Microservices.Definitions.QA;
@@ -24,5 +25,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		public EnvelopeMsg CurrentBox { get; set; }
 
 		public string CancellationMessage { get; set; }
+
+		public DateTime LastProgressLog { get; set; }
 	}
 }
