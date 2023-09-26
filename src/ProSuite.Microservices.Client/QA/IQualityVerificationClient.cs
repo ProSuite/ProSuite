@@ -12,7 +12,8 @@ namespace ProSuite.Microservices.Client.QA
 	{
 		QualityVerificationGrpc.QualityVerificationGrpcClient QaGrpcClient { get; }
 
-		bool CanAcceptCalls(bool allowFailOver = false);
+		bool CanAcceptCalls(bool allowFailOver = false,
+		                    bool logOnlyIfUnhealthy = false);
 
 		Task<bool> CanAcceptCallsAsync(bool allowFailOver = false);
 

@@ -207,7 +207,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			foreach (IQualityVerificationClient client in workerClients)
 			{
-				if (! client.CanAcceptCalls())
+				if (! client.CanAcceptCalls(allowFailOver: false, logOnlyIfUnhealthy: true))
 				{
 					unhealthyWorkers.Add(client);
 				}
