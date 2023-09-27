@@ -26,7 +26,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.CreateFootprint
 		[Test]
 		public void CanCreateFootprintOnSlightOverlaps()
 		{
-			// TLM_GEBAEUDE {4575A818-C620-4ECF-BF93-1C8173E244A9 }
+			// TLM_GEBAEUDE {4575A818-C620-4ECF-BF93-1C8173E244A9}
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
 
@@ -50,6 +50,32 @@ namespace ProSuite.Commons.AO.Test.Geometry.CreateFootprint
 
 			// NOTE: In 10.8.1 the AO footprint is incorrect (entire ring is missing)
 			//Assert.IsTrue(GeometryUtils.AreEqualInXY(footprintAo, footprintGeom));
+		}
+
+		[Test]
+		public void CanCreateFootprintWithVerticalRings()
+		{
+			// TLM_GEBAEUDE {4529AD24-3E03-4B13-A02F-0A3FC00E2968}
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
+
+			IFeature mockFeature =
+				TestUtils.CreateMockFeature("MultipatchWithVerticalRingsTop5759.wkb", sr);
+
+			IMultiPatch multiPatch = (IMultiPatch) mockFeature.Shape;
+
+			IPolygon footprintGeom =
+				CreateFootprintUtils.TryGetGeomFootprint(multiPatch, null, out _);
+
+			Assert.IsNotNull(footprintGeom);
+
+			Assert.AreEqual(23.106911, footprintGeom.Length, 0.01);
+			Assert.AreEqual(33.334958, ((IArea) footprintGeom).Area, 0.01);
+
+			IPolygon footprintAo =
+				CreateFootprintUtils.GetFootprintAO(multiPatch);
+
+			Assert.IsTrue(GeometryUtils.AreEqualInXY(footprintAo, footprintGeom));
 		}
 	}
 }
