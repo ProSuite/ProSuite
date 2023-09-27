@@ -77,5 +77,38 @@ namespace ProSuite.Commons.AO.Test.Geometry.CreateFootprint
 
 			Assert.IsTrue(GeometryUtils.AreEqualInXY(footprintAo, footprintGeom));
 		}
+
+		[Test]
+		public void CanCreateFootprintRidgedRoofWithVerticals()
+		{
+			// TLM_GEBAEUDE {4D3D66EE-6A45-4E01-833C-02FBD7D3FC02}
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
+
+			// NOTE: With the standard Tolerance/Resolution (0.001/0.0001) this cannot be reproduced
+			((ISpatialReferenceTolerance) sr).XYTolerance = 0.01;
+			((ISpatialReferenceResolution) sr).XYResolution[true] = 0.001;
+
+			IFeature mockFeature =
+				TestUtils.CreateMockFeature(
+					"MultipatchWithIntersectionAtShortishSegmentTop5759.wkb", sr);
+
+			IMultiPatch multiPatch = (IMultiPatch) mockFeature.Shape;
+
+			IPolygon footprintGeom =
+				CreateFootprintUtils.TryGetGeomFootprint(multiPatch, null, out _);
+
+			Assert.IsNotNull(footprintGeom);
+
+			Assert.AreEqual(75.441285, footprintGeom.Length, 0.0001);
+			Assert.AreEqual(349.015, ((IArea) footprintGeom).Area, 0.003);
+
+			IPolygon footprintAo =
+				CreateFootprintUtils.GetFootprintAO(multiPatch);
+
+			GeometryUtils.Simplify(footprintAo);
+
+			//Assert.IsTrue(GeometryUtils.AreEqualInXY(footprintAo, footprintGeom));
+		}
 	}
 }

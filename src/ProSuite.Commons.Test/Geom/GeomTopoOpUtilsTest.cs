@@ -4747,6 +4747,40 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void
+			CanUnionWithIntersectionCloseToShortishSegmentWithNonRepresentativeAngle_Top5795()
+		{
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"union_intersection_at_shortish_segment_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"union_intersection_at_shortish_segment_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			// The interesting situation only arises with tolerance 0.0005!
+			double tolerance = 0.0005;
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			double expectedAreaUnion = 349.015;
+			Assert.AreEqual(expectedAreaUnion, union.GetArea2D(), 0.01);
+
+			// Probably not very accurate due to intersection-jumping in cluster
+			MultiLinestring difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance);
+
+			double expectedAreaDifference = union.GetArea2D() - target.GetArea2D();
+			Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.05);
+		}
+
+		[Test]
 		public void CanUnionManyUnCrackedRings_Top5714()
 		{
 			Polyhedron source = (Polyhedron) GeomUtils.FromWkbFile(

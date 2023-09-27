@@ -1638,6 +1638,16 @@ namespace ProSuite.Commons.Geom
 				GetContinuingDirectionLine(sourceRing, sourceSegmentIdx, distanceAlongSource,
 				                           Tolerance);
 
+			if (intersection.IsTargetVertex(out int targetVertexIndex))
+			{
+				// Start the line the target point because the target directions will also be
+				// measured from the target point. This could be quite significant if the source
+				// segment is short (TOP-5795)!
+				Linestring targetPart = Target.GetPart(intersection.TargetPartIndex);
+				alongSourceLine = new Line3D(targetPart.GetPoint3D(targetVertexIndex),
+				                             alongSourceLine.EndPoint);
+			}
+
 			double? sourceForwardDirection =
 				GeomUtils.GetDirectionChange(entryLine, alongSourceLine);
 
