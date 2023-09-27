@@ -947,6 +947,12 @@ namespace ProSuite.Commons.Geom
 				return true;
 			}
 
+			if (! AllowBoundaryLoops)
+			{
+				// Union: Remaining boundary loops will be cleaned up in ring-ring processing
+				return true;
+			}
+
 			// If the start intersection is both outbound and inbound,
 			// it is presumably a boundary loop:
 			// - If at the start intersection the target continues to the right (intersect, right-side rings)
