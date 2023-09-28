@@ -169,8 +169,8 @@ namespace ProSuite.Microservices.Client.AGP
 
 			var result =
 				EnvelopeBuilderEx.CreateEnvelope(new Coordinate2D(envProto.XMin, envProto.YMin),
-				                               new Coordinate2D(envProto.XMax, envProto.YMax),
-				                               spatialReference);
+				                                 new Coordinate2D(envProto.XMax, envProto.YMax),
+				                                 spatialReference);
 
 			return result;
 		}
@@ -396,10 +396,13 @@ namespace ProSuite.Microservices.Client.AGP
 
 			if (defaultVersion != null)
 			{
+				result.DefaultVersionName = defaultVersion.GetName();
+
 				result.DefaultVersionCreationTicks = defaultVersion.GetCreatedDate().Ticks;
+				result.DefaultVersionModificationTicks = defaultVersion.GetModifiedDate().Ticks;
+
 				// Careful: Version.GetDescription() appears to be localized/translated if run in Pro with localized UI
 				result.DefaultVersionDescription = defaultVersion.GetDescription() ?? string.Empty;
-				result.DefaultVersionName = defaultVersion.GetName();
 			}
 
 			// NOTE: The path is most useful. It is the actual FGDB path or a temporary sde file that can be used to re-open
@@ -413,7 +416,7 @@ namespace ProSuite.Microservices.Client.AGP
 			// However, the child databases are typically local!
 			//DatabaseConnectionProperties connectionProperties =
 			//	datastore.GetConnector() as DatabaseConnectionProperties;
-			
+
 			return result;
 		}
 
