@@ -42,6 +42,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		private string _issueRepositoryDir;
 		private string _issueRepositoryName;
 		private string _xmlVerificationReportPath;
+		private string _progressWorkspaceName;
 		private string _htmlReportDir;
 
 		public XmlBasedVerificationService(
@@ -79,6 +80,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			string verificationReportFileName =
 				VerificationOptionUtils.GetXmlReportFileName(verificationOptions);
 			_xmlVerificationReportPath = Path.Combine(outputDirectory, verificationReportFileName);
+
+			_progressWorkspaceName =
+				VerificationOptionUtils.GetProgressWorkspaceName(verificationOptions);
 
 			_htmlReportDir = outputDirectory;
 		}
@@ -137,6 +141,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			{
 				_msg.Info("No HTML report path was provided and no HTML will be written.");
 			}
+
+			_progressWorkspaceName =
+				VerificationOptionUtils.GetProgressWorkspaceName(options: null);
 		}
 
 		private string XmlVerificationReportFileName =>
@@ -229,8 +236,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				       IssueRepositoryType,
 				       addExceptionFields: true))
 			{
+				ISubverificationObserver subverificationObserver =
+					SubverificationObserverUtils.GetPorgressRepository(_issueRepositoryDir,
+						_progressWorkspaceName, spatialReference,
+						IssueRepositoryType);
+
 				fulfilled = service.Verify(qualitySpecification, datasetContext, datasetResolver,
-				                           issueRepository, tileSize,
+				                           issueRepository, subverificationObserver, tileSize,
 				                           areaOfInterest, trackCancel,
 				                           out int _,
 				                           out int _,

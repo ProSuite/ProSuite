@@ -27,6 +27,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 		[CanBeNull]
 		public string XmlReportName { get; set; }
 
+		[XmlElement("ProgressGdbName")]
+		[CanBeNull]
+		public string ProgressGdbName { get; set; }
+
 		[XmlElement("DefaultTemplateDirectoryPath")]
 		[CanBeNull]
 		public string DefaultTemplateDirectoryPath { get; set; }

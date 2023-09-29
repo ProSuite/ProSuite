@@ -4,15 +4,12 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
@@ -108,6 +105,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		                   [NotNull] IDatasetContext datasetContext,
 		                   [NotNull] IQualityConditionObjectDatasetResolver datasetResolver,
 		                   [CanBeNull] IIssueRepository issueRepository,
+		                   [CanBeNull] ISubverificationObserver subverificationObserver,
 		                   double tileSize,
 		                   [CanBeNull] AreaOfInterest areaOfInterest,
 		                   [CanBeNull] ITrackCancel trackCancel,
@@ -183,12 +181,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				testRunner.QaError += (sender, args) => issueProcessor.Process(args);
 				issueProcessor.IssueFound += (sender, args) => IssueFound?.Invoke(this, args);
 
-				testRunner.SubverificationObserver = new SubverificationObserver(@"C:\temp\Subverifications.gdb", areaOfInterest?.Extent);
+				testRunner.SubverificationObserver = subverificationObserver;
 
 				// run the tests
 				testRunner.Execute(tests, areaOfInterest, CancellationTokenSource);
 			}
-
 
 			_verificationReportBuilder.AddRowsWithStopConditions(
 				issueProcessor.GetRowsWithStopConditions());
@@ -694,90 +691,4 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 		#endregion
 	}
-
-	public class SubverificationObserver : ISubverificationObserver
-	{
-		private readonly IEnvelope _area;
-		private readonly IFeatureClass _fc;
-		private readonly Dictionary<int, long> _subverIdOid;
-		public SubverificationObserver(string fgdbPath, IEnvelope area)
-		{
-			if (System.IO.Directory.Exists(fgdbPath))
-			{
-				System.IO.Directory.Delete(fgdbPath, recursive: true);
-			}
-
-			_area = area;
-			_subverIdOid = new Dictionary<int, long>();
-
-			IWorkspaceName wsName = WorkspaceUtils.CreateFileGdbWorkspace(
-				System.IO.Path.GetDirectoryName(fgdbPath),
-				System.IO.Path.GetFileName(fgdbPath));
-
-			IFeatureWorkspace ws = (IFeatureWorkspace)WorkspaceUtils.OpenWorkspace(wsName);
-
-			ISpatialReference lv95 =
-				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
-
-			_fc = DatasetUtils.CreateSimpleFeatureClass(
-				ws, "Subverifications", null,
-				FieldUtils.CreateOIDField(),
-				FieldUtils.CreateIntegerField("SubVeriId"),
-				FieldUtils.CreateIntegerField("Status"),
-				FieldUtils.CreateDateField("Created"),
-				FieldUtils.CreateDateField("Updated"),
-				FieldUtils.CreateDateField("Started"),
-				FieldUtils.CreateDateField("Finished"),
-				FieldUtils.CreateTextField("WorkerAdress", 200),
-				FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolygon,
-				                            area.SpatialReference ?? lv95));
-		}
-
-		public void CreatedSubverification(
-			int idSubverification, QualityConditionExecType execType,
-			IList<string> QualityConditionNames, IEnvelope area)
-		{
-			area = area ?? _area;
-
-			IFeature f = _fc.CreateFeature();
-			f.Value[1] = idSubverification;
-			f.Value[2] = -1;
-			f.Value[3] = DateTime.Now;
-			f.Value[4] = DateTime.Now;
-			f.Shape = GeometryFactory.CreatePolygon(area);
-			f.Store();
-
-			_subverIdOid.Add(idSubverification, f.OID);
-		}
-
-		public void Started(int id, string workerAddress)
-		{
-			if (_subverIdOid.TryGetValue(id, out long oid))
-			{
-				IFeature f = _fc.GetFeature(oid);
-				f.Value[4] = DateTime.Now;
-
-				f.Value[5] = DateTime.Now;
-				f.Value[2] = (int)ServiceCallStatus.Running;
-				f.Store();
-			}
-		}
-
-		public void Finished(int id, ServiceCallStatus status)
-		{
-			if (_subverIdOid.TryGetValue(id, out long oid))
-			{
-				IFeature f = _fc.GetFeature(oid);
-				f.Value[4] = DateTime.Now;
-
-				f.Value[6] = DateTime.Now;
-				f.Value[2] = (int)status;
-				f.Store();
-			}
-
-		}
-
-
-	}
-
 }
