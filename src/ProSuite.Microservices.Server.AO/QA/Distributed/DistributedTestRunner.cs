@@ -20,6 +20,7 @@ using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
@@ -435,6 +436,9 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				Task<bool> newTask = _distributedWorkers.IniTask(
 					next, client, () => Verify(next, client));
 
+				_msg.Info($"Popped sub-verification {subVerifications.Count} and started " +
+				          $"on {client.GetAddress()}: {next}");
+
 				startedVerifications.Add(newTask, next);
 				SubverificationObserver?.Started(next.Id, _distributedWorkers.GetWorkerClient(next)?.GetAddress());
 			}
@@ -453,17 +457,16 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				task = Task.Run(
 					async () =>
 						await VerifySchemaAsync(
-							Assert.NotNull(verificationClient.QaGrpcClient),
-							subRequest, subResponse, CancellationTokenSource, KnownModels),
+							verificationClient, subRequest, subResponse, CancellationTokenSource,
+							KnownModels),
 					CancellationTokenSource.Token);
 			else
 			{
 				// Re-harvest model in worker or use DDX access, if necessary:
 				task = Task.Run(
 					async () =>
-						await VerifyAsync(Assert.NotNull(verificationClient.QaGrpcClient),
-						                  subRequest,
-						                  subResponse, CancellationTokenSource),
+						await VerifyAsync(verificationClient, subRequest, subResponse,
+						                  CancellationTokenSource),
 					CancellationTokenSource.Token);
 			}
 
@@ -762,9 +765,25 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			QualityVerification toOverallVerification, int conditionId)
 		{
 			QualityConditionVerification conditionVerification =
-				toOverallVerification.ConditionVerifications.First(
-					c => Assert.NotNull(c.QualityCondition).Id ==
-					     conditionId);
+				toOverallVerification.ConditionVerifications.FirstOrDefault(
+					c =>
+					{
+						int qualityConditionid = Assert.NotNull(c.QualityCondition).Id;
+
+						return qualityConditionid == conditionId;
+					});
+
+			if (conditionVerification == null)
+			{
+				Func<QualityConditionVerification, string> conditionVerificationToString =
+					v =>
+						$"Name:{v.QualityConditionName}, Id: {v.QualityConditionId}, Condition Id: {v.QualityCondition?.Id}";
+
+				throw new InvalidOperationException(
+					$"Quality condition id {conditionId} not found in verification {toOverallVerification.SpecificationName}. " +
+					$"Available condition IDs: {StringUtils.Concatenate(toOverallVerification.ConditionVerifications, conditionVerificationToString, Environment.NewLine)}");
+			}
+
 			return conditionVerification;
 		}
 
@@ -1167,18 +1186,23 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		}
 
 		private static async Task<bool> VerifyAsync(
-			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient,
+			[NotNull] IQualityVerificationClient verificationClient,
 			[NotNull] VerificationRequest request,
 			[NotNull] SubResponse subResponse,
 			CancellationTokenSource cancellationSource)
 		{
+			string workerAddress = verificationClient.GetAddress();
+
+			QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient =
+				Assert.NotNull(verificationClient.QaGrpcClient);
+
 			using (var call = rpcClient.VerifyQuality(request))
 			{
 				while (await call.ResponseStream.MoveNext(cancellationSource.Token))
 				{
 					VerificationResponse responseMsg = call.ResponseStream.Current;
 
-					HandleResponseMsg(responseMsg, subResponse);
+					HandleResponseMsg(responseMsg, subResponse, workerAddress);
 				}
 			}
 
@@ -1186,12 +1210,17 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		}
 
 		private static async Task<bool> VerifySchemaAsync(
-			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient,
+			[NotNull] IQualityVerificationClient verificationClient,
 			[NotNull] VerificationRequest request,
 			[NotNull] SubResponse subResponse,
 			[NotNull] CancellationTokenSource cancellationSource,
 			[NotNull] SchemaMsg schemaMsg)
 		{
+			string workerAddress = verificationClient.GetAddress();
+
+			QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient =
+				Assert.NotNull(verificationClient.QaGrpcClient);
+
 			using (var call = rpcClient.VerifyDataQuality())
 			{
 				var initialRequest =
@@ -1213,10 +1242,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 						//await ProvideDataToServer(responseMsg, call.RequestStream,
 						//                          cancellationSource);
 					}
-					else
-					{
-						HandleResponseMsg(responseMsg.Response, subResponse);
-					}
+
+					HandleResponseMsg(responseMsg.Response, subResponse, workerAddress);
 				}
 			}
 
@@ -1224,7 +1251,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		}
 
 		private static void HandleResponseMsg([NotNull] VerificationResponse responseMsg,
-		                                      [NotNull] SubResponse subResponse)
+		                                      [NotNull] SubResponse subResponse,
+		                                      [NotNull] string workerAddress)
 		{
 			foreach (IssueMsg issueMessage in responseMsg.Issues)
 			{
@@ -1240,7 +1268,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				subResponse.VerificationMsg = responseMsg.QualityVerification;
 			}
 
-			LogProgress(responseMsg.Progress, subResponse.Issues.Count);
+			LogProgress(responseMsg, subResponse, workerAddress);
 		}
 
 		private static void UpdateSubProgress([NotNull] VerificationResponse responseMsg,
@@ -1269,25 +1297,40 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 		}
 
-		private static void LogProgress(VerificationProgressMsg progressMsg,
-		                                int issueCount)
+		private static void LogProgress([NotNull] VerificationResponse responseMsg,
+		                                [NotNull] SubResponse subResponse,
+		                                [NotNull] string workerAddress)
 		{
+			var progressMsg = responseMsg.Progress;
+
 			if (progressMsg == null)
 			{
 				return;
 			}
 
-			_msg.VerboseDebug(() => $"{DateTime.Now} - {progressMsg}");
+			// Log every 10 seconds or if there are many errors every 10th error or if verbose:
 
-			if (_msg.IsVerboseDebugEnabled || issueCount % 10 == 0)
+			const int minimumLogInterval = 10;
+			bool itsTimeToLog = subResponse.LastProgressLog <
+			                    DateTime.Now.AddSeconds(-minimumLogInterval);
+
+			int issueCount = subResponse.Issues.Count;
+
+			if (_msg.IsVerboseDebugEnabled || itsTimeToLog ||
+			    (issueCount > 100 && issueCount % 10 == 0))
 			{
 				string issueText = issueCount > 0 ? $" (Issue count: {issueCount})" : string.Empty;
 
+				VerificationProgressType progressType =
+					(VerificationProgressType) progressMsg.ProgressType;
+
 				string progressText =
-					$"Received service progress of type {(VerificationProgressType) progressMsg.ProgressType}/{(VerificationProgressStep) progressMsg.ProgressStep}:" +
+					$"Received service progress from {workerAddress} of type {progressType}/{(VerificationProgressStep) progressMsg.ProgressStep}:" +
 					$" {progressMsg.OverallProgressCurrentStep} / {progressMsg.OverallProgressTotalSteps}{issueText}";
 
 				_msg.DebugFormat(progressText);
+
+				subResponse.LastProgressLog = DateTime.Now;
 			}
 		}
 

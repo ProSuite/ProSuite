@@ -165,7 +165,8 @@ namespace ProSuite.Microservices.Client
 			return true;
 		}
 
-		public bool CanAcceptCalls(bool allowFailOver = false)
+		public bool CanAcceptCalls(bool allowFailOver = false,
+		                           bool logOnlyIfUnhealthy = false)
 		{
 			if (! TryGetHealthClient(out Health.HealthClient healthClient))
 			{
@@ -176,7 +177,10 @@ namespace ProSuite.Microservices.Client
 
 			bool result = GrpcUtils.IsServing(healthClient, serviceName, out StatusCode statusCode);
 
-			LogHealthStatus(statusCode);
+			if (! result || ! logOnlyIfUnhealthy)
+			{
+				LogHealthStatus(statusCode);
+			}
 
 			if (! result && allowFailOver)
 			{

@@ -118,7 +118,7 @@ namespace ProSuite.Commons.Geom
 
 				List<Linestring> spaghetti = new List<Linestring>();
 				if (GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
-					    exteriorRing, tolerance, spaghetti))
+					    exteriorRing, verticalRingDetectionTolerance, spaghetti))
 				{
 					// TODO: Deal with interior rings in case the outer ring is not simple
 
