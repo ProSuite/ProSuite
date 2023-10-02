@@ -110,5 +110,42 @@ namespace ProSuite.Commons.AO.Test.Geometry.CreateFootprint
 
 			//Assert.IsTrue(GeometryUtils.AreEqualInXY(footprintAo, footprintGeom));
 		}
+
+		[Test]
+		public void CanCreateFootprintAcuteTriangleIntersectsZigZagRing()
+		{
+			// TLM_GEBAEUDE {A144DA55-084F-4444-8DB6-08F995D6DBBB}
+
+			// Originally this resulted in an outer ring remaining almost completely inside another outer ring
+			// due to the clean up of a linear intersection within a linear intersection
+
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
+
+			// NOTE: With the standard Tolerance/Resolution (0.001/0.0001) this cannot be reproduced
+			((ISpatialReferenceTolerance) sr).XYTolerance = 0.01;
+			((ISpatialReferenceResolution) sr).XYResolution[true] = 0.001;
+
+			IFeature mockFeature =
+				TestUtils.CreateMockFeature("MultipatchWithTriangleCuttingZigZag.wkb", sr);
+
+			IMultiPatch multiPatch = (IMultiPatch) mockFeature.Shape;
+
+			IPolygon footprintGeom =
+				CreateFootprintUtils.TryGetGeomFootprint(multiPatch, null, out _);
+
+			Assert.IsNotNull(footprintGeom);
+
+			Assert.AreEqual(57.572264, footprintGeom.Length, 0.0001);
+			Assert.AreEqual(199.323799, ((IArea) footprintGeom).Area, 0.01);
+
+			IPolygon footprintAo =
+				CreateFootprintUtils.GetFootprintAO(multiPatch);
+
+			GeometryUtils.Simplify(footprintAo);
+
+			//Assert.IsTrue(GeometryUtils.AreEqualInXY(footprintAo, footprintGeom));
+		}
+
 	}
 }

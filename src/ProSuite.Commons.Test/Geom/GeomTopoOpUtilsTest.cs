@@ -4781,6 +4781,59 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionAtShortishZigZagWithAcuteAngleIntersection()
+		{
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"zigzag_line_with_acute_angle_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"zigzag_line_with_acute_angle_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			// At 0.0005 there is no short segment in the original (it is 0.0007)
+			double tolerance = 0.0005;
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			// Originally, a contained exterior ring resulted!
+			Assert.AreEqual(source.PartCount, union.PartCount);
+
+			double expectedAreaUnion = 199.16113;
+			Assert.AreEqual(expectedAreaUnion, union.GetArea2D(), 0.01);
+
+			// Probably not very accurate due to intersection-jumping in cluster
+			MultiLinestring difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance);
+
+			double expectedAreaDifference = union.GetArea2D() - target.GetArea2D();
+			Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.05);
+
+			// The same with a real short segment does not work (yet):
+			// Either preemptively clean up short segments or properly simplify the full geometry
+			// or deals with more special cases
+			tolerance = 0.01;
+
+			//union = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			//// Originally, a contained exterior ring resulted!
+			//Assert.AreEqual(source.PartCount, union.PartCount);
+
+			//Assert.AreEqual(expectedAreaUnion, union.GetArea2D(), 0.01);
+
+			//// Probably not very accurate due to intersection-jumping in cluster
+			//difference = GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance);
+
+			//Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.05);
+		}
+
+		[Test]
 		public void CanUnionManyUnCrackedRings_Top5714()
 		{
 			Polyhedron source = (Polyhedron) GeomUtils.FromWkbFile(
@@ -7101,6 +7154,9 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(expected, intersectionAreasXY.GetArea2D(), 0.001);
 
 			Assert.AreEqual(4, intersectionAreasXY.PointCount);
+
+			// Make sure the southernmost tip is used in the result:
+			Assert.AreEqual(1268417.929, intersectionAreasXY.YMin, 0.0001);
 		}
 
 		[Test]

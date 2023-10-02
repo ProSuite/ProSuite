@@ -121,8 +121,9 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			// ... and the from point must come after (or equal) the previous start.
-			return fromPoint.VirtualSourceVertex >= previousLinearStart.VirtualSourceVertex;
+			// ... and the from point must come after the previous start.
+			// Ignore equal 1-segments linear intersections (likely inverted) at pointy angles
+			return fromPoint.VirtualSourceVertex > previousLinearStart.VirtualSourceVertex;
 		}
 
 		/// <summary>
