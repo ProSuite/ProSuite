@@ -88,7 +88,6 @@ namespace ProSuite.Commons.Test.Cryptography
 				         StoreName.My, StoreLocation.LocalMachine, c => c.HasPrivateKey))
 			{
 				// No access (must run as admin):
-
 				bool canExport =
 					CertificateUtils.TryExportPrivateKey(certWithPrivateKey, out string _,
 					                                     out string _);
@@ -129,6 +128,31 @@ namespace ProSuite.Commons.Test.Cryptography
 			}
 		}
 
-		// For extra unit tests see 
+		[Test]
+		public void CanGetCertificatesInChainDiraCodeSigning()
+		{
+			var found = CertificateUtils.FindCertificates(
+				                            StoreName.My, StoreLocation.CurrentUser,
+				                            @"CN=Dira GeoSystems AG, O=Dira GeoSystems AG, S=Zürich, C=CH",
+				                            X509FindType.FindBySubjectDistinguishedName, false)
+			                            .ToList();
+
+			if (found.Count == 0)
+			{
+				// The certificate is not installed.
+				return;
+			}
+
+			X509Certificate2 diraCodeSigningCert = found[0];
+
+			int count = 0;
+			foreach (var cert in CertificateUtils.GetCertificatesInChain(diraCodeSigningCert))
+			{
+				Console.WriteLine(cert);
+				count++;
+			}
+
+			Assert.IsTrue(count > 2);
+		}
 	}
 }
