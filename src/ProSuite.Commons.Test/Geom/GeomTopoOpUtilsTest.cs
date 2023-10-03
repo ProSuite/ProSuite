@@ -4834,6 +4834,46 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionMultiBoundaryLoops()
+		{
+			// In the long term it might be better and cleaner to ensure clean geometries
+			// by exploding all (?) boundary loops or at least those where the orientation
+			// of both connecting loops are the same. Outer loops are already exploded!
+			MultiPolycurve source = (MultiPolycurve) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"multi_boundary_loop_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiPolygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"multi_boundary_loop_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			// At 0.0005 there is no short segment in the original (it is 0.0007)
+			double tolerance = 0.001;
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			// The target 'fills' the middle loop of the 3-boundary-loops ring
+			Assert.AreEqual(source.PartCount + 1, union.PartCount);
+
+			double expectedAreaUnion = source.GetArea2D() + target.GetArea2D();
+			Assert.AreEqual(expectedAreaUnion, union.GetArea2D(), 0.01);
+
+			// Probably not very accurate due to intersection-jumping in cluster
+			MultiLinestring difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance);
+
+			Assert.AreEqual(source.PartCount, difference.PartCount);
+			double expectedAreaDifference = union.GetArea2D() - target.GetArea2D();
+			Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.05);
+		}
+
+		[Test]
 		public void CanUnionManyUnCrackedRings_Top5714()
 		{
 			Polyhedron source = (Polyhedron) GeomUtils.FromWkbFile(
