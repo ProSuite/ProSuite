@@ -670,8 +670,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			if (existingPoints.Count == 0)
 			{
-				// NOTE: This sometimes happens because IRelationalOperator.Contains is too relaxed regarding the tolerance
-				//       -> RelationalOperator seems to check the tolerance against delta-x and delta-y separately
 				_msg.DebugFormat("No point found in the original geometry. Point: {0}.", atPoint);
 
 				return false;
@@ -1906,43 +1904,43 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				GetIntersectionPoints3d(sourceGeometry, intersectionTarget, snapTolerance,
 				                        omitNonLinearSegments, includeIntermediatePoints);
 
-			List<IntersectionPoint3D> intersectionPoints;
-			if (In3D || ! UseSourceZs)
+			List<IntersectionPoint3D> intersectionsWithTargetZ =
+				intersectionPointsWithTargetPoint.Select(
+					CreateIntersectionPointWithTargetZ).ToList();
+
+			if (In3D)
 			{
-				List<IntersectionPoint3D> intersectionsWithTargetZ =
-					intersectionPointsWithTargetPoint.Select(
-						CreateIntersectionPointWithTargetZ).ToList();
+				// TODO: This is not covered by a unit test. Is it still relevant at all?
+				// both sets of intersection points:
+				// Use both intersection sets - this is to get the intersections 
+				// at the same XY-location with different Z values. For example there could be
+				// a missing point in the source at Z1 but because at Z2 there is already a
+				// vertex that is reported with UseSourceZ we would miss the extra intersection at Z1
+				//List<IntersectionPoint3D> intersectionPoints = intersectionPointsWithTargetPoint.Select(
+				//	ip => ip.Intersection).ToList();
 
-				if (In3D)
-				{
-					// both sets of intersection points:
-					// Use both intersection sets - this is to get the intersections 
-					// at the same XY-location with different Z values. For example there could be
-					// a missing point in the source at Z1 but because at Z2 there is already a
-					// vertex that is reported with UseSourceZ we would miss the extra intersection at Z1
-					intersectionPoints = intersectionPointsWithTargetPoint.Select(
-						ip => ip.Intersection).ToList();
+				//intersectionPoints.AddRange(intersectionsWithTargetZ);
+			}
 
-					intersectionPoints.AddRange(intersectionsWithTargetZ);
-				}
-				else
-				{
-					// Use target Z:
-					Assert.False(UseSourceZs, "Unexpected UseSourceZ value");
-					intersectionPoints = intersectionsWithTargetZ;
-				}
+			// NOTE: The resulting key's XY should be on the target (because the source shall be snapped onto the target)
+			//       The Z depends on the setting...
+
+			Func<IntersectionWithTargetPoint, IPnt> getPointFunc;
+			if (UseSourceZs)
+			{
+				getPointFunc = CreateTargetPointWithSourceZ;
 			}
 			else
 			{
-				intersectionPoints = intersectionPointsWithTargetPoint.Select(
-					ip => ip.Intersection).ToList();
+				getPointFunc = ip => ip.TargetPoint;
 			}
 
-			// 3D-clustering, even if In3D == false, otherwise the averaged Z values result in
-			// crack points where no crack point should be detected.
 			IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> clusteredIntersections =
-				GeomTopoOpUtils.Cluster(intersectionPoints, ip => ip.Point, snapTolerance,
-				                        snapTolerance);
+				GeomTopoOpUtils.Cluster(intersectionPointsWithTargetPoint, getPointFunc,
+				                        snapTolerance, snapTolerance)
+				               .Select(c => new KeyValuePair<IPnt, List<IntersectionPoint3D>>(
+					                       c.Key, c.Value.Select(v => v.Intersection).ToList()))
+				               .ToList();
 
 			return clusteredIntersections;
 		}
@@ -1954,8 +1952,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			bool omitNonLinearSegments,
 			bool includeIntermediatePoints)
 		{
-			List<IntersectionWithTargetPoint> result;
-
 			ISegmentList sourceSegments = ToSegmentList(sourceGeometry, omitNonLinearSegments);
 
 			ISegmentList targetSegments = ToSegmentList(intersectionTarget, omitNonLinearSegments);
@@ -2083,6 +2079,15 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			result.Point.Z = intersectionWithTarget.TargetPoint.Z;
 
 			return result;
+		}
+
+		private static IPnt CreateTargetPointWithSourceZ(
+			IntersectionWithTargetPoint intersectionWithTarget)
+		{
+			Pnt3D targetPoint = intersectionWithTarget.TargetPoint;
+
+			return new Pnt3D(targetPoint.X, targetPoint.Y,
+			                 intersectionWithTarget.Intersection.Point.Z);
 		}
 
 		private class IntersectionWithTargetPoint
