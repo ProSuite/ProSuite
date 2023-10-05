@@ -36,13 +36,13 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			IRing ring = GeometryFactory.CreateRing(
 				new[]
 				{
-					new WKSPointZ {X = 2600000, Y = 1200000, Z = 500},
-					new WKSPointZ {X = 2600000, Y = 1200020, Z = 500},
-					new WKSPointZ {X = 2600000.009, Y = 1200100, Z = 500},
-					new WKSPointZ {X = 2600100, Y = 1200100, Z = 500},
-					new WKSPointZ {X = 2600100, Y = 1200060, Z = 522.22},
-					new WKSPointZ {X = 2600100, Y = 1200000, Z = 500},
-					new WKSPointZ {X = 2600000, Y = 1200000, Z = 500}
+					new WKSPointZ { X = 2600000, Y = 1200000, Z = 500 },
+					new WKSPointZ { X = 2600000, Y = 1200020, Z = 500 },
+					new WKSPointZ { X = 2600000.009, Y = 1200100, Z = 500 },
+					new WKSPointZ { X = 2600100, Y = 1200100, Z = 500 },
+					new WKSPointZ { X = 2600100, Y = 1200060, Z = 522.22 },
+					new WKSPointZ { X = 2600100, Y = 1200000, Z = 500 },
+					new WKSPointZ { X = 2600000, Y = 1200000, Z = 500 }
 				}, lv95);
 
 			IPolygon originalPoly = GeometryFactory.CreatePolygon(ring);
@@ -67,13 +67,13 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			IRing ring = GeometryFactory.CreateRing(
 				new[]
 				{
-					new WKSPointZ {X = 2600000, Y = 1200000, Z = double.NaN},
-					new WKSPointZ {X = 2600000, Y = 1200020, Z = double.NaN},
-					new WKSPointZ {X = 2600000, Y = 1200100, Z = double.NaN},
-					new WKSPointZ {X = 2600100, Y = 1200100, Z = double.NaN},
-					new WKSPointZ {X = 2600100, Y = 1200060, Z = double.NaN},
-					new WKSPointZ {X = 2600100, Y = 1200000, Z = double.NaN},
-					new WKSPointZ {X = 2600000, Y = 1200000, Z = double.NaN}
+					new WKSPointZ { X = 2600000, Y = 1200000, Z = double.NaN },
+					new WKSPointZ { X = 2600000, Y = 1200020, Z = double.NaN },
+					new WKSPointZ { X = 2600000, Y = 1200100, Z = double.NaN },
+					new WKSPointZ { X = 2600100, Y = 1200100, Z = double.NaN },
+					new WKSPointZ { X = 2600100, Y = 1200060, Z = double.NaN },
+					new WKSPointZ { X = 2600100, Y = 1200000, Z = double.NaN },
+					new WKSPointZ { X = 2600000, Y = 1200000, Z = double.NaN }
 				}, lv95);
 
 			IPolygon originalPoly = GeometryFactory.CreatePolygon(ring);
@@ -96,13 +96,13 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			IRing ring = GeometryFactory.CreateRing(
 				new[]
 				{
-					new WKSPointZ {X = 2600000, Y = 1200020, Z = 500},
-					new WKSPointZ {X = 2600000, Y = 1200100, Z = 500},
-					new WKSPointZ {X = 2600100, Y = 1200100, Z = 500},
-					new WKSPointZ {X = 2600100, Y = 1200060, Z = 520},
-					new WKSPointZ {X = 2600100, Y = 1200000, Z = 500},
-					new WKSPointZ {X = 2600000, Y = 1200000, Z = 500},
-					new WKSPointZ {X = 2600000, Y = 1200020, Z = 500},
+					new WKSPointZ { X = 2600000, Y = 1200020, Z = 500 },
+					new WKSPointZ { X = 2600000, Y = 1200100, Z = 500 },
+					new WKSPointZ { X = 2600100, Y = 1200100, Z = 500 },
+					new WKSPointZ { X = 2600100, Y = 1200060, Z = 520 },
+					new WKSPointZ { X = 2600100, Y = 1200000, Z = 500 },
+					new WKSPointZ { X = 2600000, Y = 1200000, Z = 500 },
+					new WKSPointZ { X = 2600000, Y = 1200020, Z = 500 },
 				}, lv95);
 
 			IPolygon originalPoly = GeometryFactory.CreatePolygon(ring);
@@ -173,7 +173,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			                               };
 
 			var resultGeometries = new Dictionary<IFeature, IGeometry>();
-			CrackUtils.AddRemovePoints(new List<FeatureVertexInfo> {vertexInfo}, resultGeometries,
+			CrackUtils.AddRemovePoints(new List<FeatureVertexInfo> { vertexInfo }, resultGeometries,
 			                           null, null);
 
 			IPolycurve resultGeometry = resultGeometries[mockFeature] as IPolycurve;
@@ -261,7 +261,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			                               };
 
 			var resultGeometries = new Dictionary<IFeature, IGeometry>();
-			CrackUtils.AddRemovePoints(new List<FeatureVertexInfo> {vertexInfo}, resultGeometries,
+			CrackUtils.AddRemovePoints(new List<FeatureVertexInfo> { vertexInfo }, resultGeometries,
 			                           null, null);
 
 			IPolycurve resultGeometry = resultGeometries[mockFeature] as IPolycurve;

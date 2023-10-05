@@ -22,6 +22,72 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		public static CrackPointCalculator CreateChopPointCalculator(
+			[NotNull] ICrackingOptions crackingOptions,
+			bool excludeInteriorInteriorIntersections,
+			[CanBeNull] IEnvelope inExtent = null)
+		{
+			var cracker = new CrackPointCalculator(
+				              crackingOptions,
+				              IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
+				              inExtent)
+			              {
+				              // chopping mode
+				              AddCrackPointsOnExistingVertices = true
+			              };
+
+			if (excludeInteriorInteriorIntersections)
+			{
+				// only use line end points as intersection targets
+				cracker.TargetTransformation =
+					originalTarget =>
+						originalTarget.Dimension == esriGeometryDimension.esriGeometry1Dimension
+							? GeometryUtils.GetBoundary(originalTarget)
+							: null;
+			}
+
+			return cracker;
+		}
+
+		public static CrackPointCalculator CreateCrackPointCalculator(
+			ICrackingOptions crackingOptions,
+			[CanBeNull] IEnvelope inExtent = null)
+		{
+			var cracker = new CrackPointCalculator(
+				crackingOptions,
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				inExtent);
+
+			// Special handling of multipatch targets:
+			cracker.TargetTransformation = ExtractBoundariesForMultipatches;
+
+			return cracker;
+		}
+
+		public static CrackPointCalculator CreateMultipatchCrackPointCalculator(
+			ICrackingOptions crackingOptions)
+		{
+			// Use Extent == null to include all selected features, even the ones outside the extent and those that are
+			// so kaput that they cannot be found by relational operator (such as single vertical walls).
+			var cracker = new CrackPointCalculator(
+				crackingOptions,
+				IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
+				null);
+
+			// Only crack in 2D because roofs can have multiple Z values at the same XY location
+			// Slight Z-differences within Z-tolerance are still corrected (at the cost of coplanarity and horizontal ridges!)
+			// In3D does not work well with UseSourceZ.
+			cracker.In3D = false;
+
+			// only use vertices as intersection targets, do not crack at interior intersections
+			cracker.TargetTransformation = ExtractVertices;
+
+			// Intersect for multipatch rings is very slow with ArcObjects implementation:
+			cracker.UseCustomIntersect = true;
+
+			return cracker;
+		}
+
 		#region Crack point calculation
 
 		[NotNull]
@@ -64,6 +130,40 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				{
 					result.Add(vertexInfo);
 				}
+			}
+
+			return result;
+		}
+
+		[NotNull]
+		public static IList<FeatureVertexInfo> CalculateFeatureVertexInfos(
+			[NotNull] IEnumerable<IFeature> selectedFeatures,
+			[CanBeNull] IEnumerable<IFeature> targetFeatures,
+			[NotNull] CrackPointCalculator crackPointCalculator,
+			[NotNull] ICrackingOptions crackingOptions,
+			[NotNull] IEnvelope inExtent,
+			[CanBeNull] ITrackCancel trackCancel)
+		{
+			TargetFeatureSelection targetSelectionType = crackingOptions.TargetFeatureSelection;
+
+			IList<FeatureVertexInfo> result =
+				CreateFeatureVertexInfos(selectedFeatures, inExtent, crackingOptions);
+
+			if (targetSelectionType == TargetFeatureSelection.SelectedFeatures)
+			{
+				AddFeatureIntersectionCrackPoints(
+					result, crackPointCalculator, trackCancel);
+			}
+			else
+			{
+				if (targetFeatures == null)
+				{
+					throw new InvalidOperationException(
+						"Target features can only be null if target feature selection type is SelectedFeatures");
+				}
+
+				AddTargetIntersectionCrackPoints(
+					result, targetFeatures, targetSelectionType, crackPointCalculator, trackCancel);
 			}
 
 			return result;
@@ -696,13 +796,14 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 				if (firstPart.Length < lastPart.Length)
 				{
-					GeometryUtils.RemoveParts(choppedCollection, new List<int> {0});
+					GeometryUtils.RemoveParts(choppedCollection, new List<int> { 0 });
 					splitPoint = firstPart.ToPoint;
 				}
 				else
 				{
 					GeometryUtils.RemoveParts(choppedCollection,
-					                          new List<int> {choppedCollection.GeometryCount - 1});
+					                          new List<int>
+					                          { choppedCollection.GeometryCount - 1 });
 					splitPoint = lastPart.FromPoint;
 				}
 
@@ -1001,7 +1102,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			newFeature.Store();
 			polylineFeature.Store();
 
-			IList<IFeature> splitFeatures = new List<IFeature>(2) {newFeature, polylineFeature};
+			IList<IFeature> splitFeatures = new List<IFeature>(2) { newFeature, polylineFeature };
 
 			return splitFeatures;
 		}
@@ -1723,6 +1824,27 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 
 			return inputGeometry;
+		}
+
+		private static IGeometry ExtractVertices(IGeometry originalGeometry)
+		{
+			var pointCollection = originalGeometry as IPointCollection;
+
+			return pointCollection != null
+				       ? GeometryFactory.CreateMultipoint(pointCollection)
+				       : originalGeometry;
+		}
+
+		private static IGeometry ExtractBoundariesForMultipatches(IGeometry targetGeometry)
+		{
+			var multipatch = targetGeometry as IMultiPatch;
+
+			if (multipatch == null)
+			{
+				return targetGeometry;
+			}
+
+			return CreatePolylineSalad(targetGeometry);
 		}
 
 		#endregion
