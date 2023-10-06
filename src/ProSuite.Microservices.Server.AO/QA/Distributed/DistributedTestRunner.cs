@@ -152,6 +152,11 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 		}
 
+		public void CancelSubverifications()
+		{
+			CancellationTokenSource.Cancel();
+		}
+
 		public void Execute(IEnumerable<ITest> tests, AreaOfInterest areaOfInterest,
 		                    CancellationTokenSource cancellationTokenSource)
 		{

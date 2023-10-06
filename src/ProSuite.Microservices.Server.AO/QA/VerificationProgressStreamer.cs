@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
 using log4net.Core;
@@ -198,7 +199,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[CanBeNull] QualityVerification verification,
 			[CanBeNull] string qaServiceCancellationMessage,
 			IEnumerable<GdbObjRefMsg> deletableAllowedErrors,
-			[CanBeNull] IEnvelope verifiedPerimeter)
+			[CanBeNull] IEnvelope verifiedPerimeter,
+			[CanBeNull] ITrackCancel cancelTracker)
 		{
 			IList<IssueMsg> issuesToSend = DeQueuePendingIssues();
 
@@ -248,9 +250,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 			catch (InvalidOperationException ex)
 			{
-				if (finalStatus == ServiceCallStatus.Cancelled)
+				if (finalStatus == ServiceCallStatus.Cancelled ||
+				    cancelTracker?.Continue() == false)
 				{
 					// Typically: System.InvalidOperationException: Already finished.
+					_msg.Debug(
+						"The verification has been cancelled and the client is already gone.", ex);
+
 					return finalStatus;
 				}
 
