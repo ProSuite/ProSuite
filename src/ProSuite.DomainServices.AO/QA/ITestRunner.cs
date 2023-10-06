@@ -32,6 +32,8 @@ namespace ProSuite.DomainServices.AO.QA
 
 		bool Cancelled { get; }
 
+		ISubverificationObserver SubverificationObserver { get; set; }
+
 		/// <summary>
 		/// Executes the specified tests in the provided area of interest.
 		/// </summary>

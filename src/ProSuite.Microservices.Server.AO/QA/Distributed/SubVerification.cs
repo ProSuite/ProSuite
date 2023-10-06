@@ -35,6 +35,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		public IEnvelope TileEnvelope { get; set; }
 		public QualityConditionGroup QualityConditionGroup { get; }
 		public bool Completed { get; set; }
+		public int Id { get; set; }
 
 		public long? InvolvedBaseRowsCount { get; set; }
 

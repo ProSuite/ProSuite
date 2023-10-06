@@ -105,6 +105,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		                   [NotNull] IDatasetContext datasetContext,
 		                   [NotNull] IQualityConditionObjectDatasetResolver datasetResolver,
 		                   [CanBeNull] IIssueRepository issueRepository,
+		                   [CanBeNull] ISubverificationObserver subverificationObserver,
 		                   double tileSize,
 		                   [CanBeNull] AreaOfInterest areaOfInterest,
 		                   [CanBeNull] ITrackCancel trackCancel,
@@ -179,6 +180,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 				testRunner.QaError += (sender, args) => issueProcessor.Process(args);
 				issueProcessor.IssueFound += (sender, args) => IssueFound?.Invoke(this, args);
+
+				testRunner.SubverificationObserver = subverificationObserver;
 
 				// run the tests
 				testRunner.Execute(tests, areaOfInterest, CancellationTokenSource);

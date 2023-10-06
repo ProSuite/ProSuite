@@ -145,6 +145,12 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			return _tasks.Remove(completedTask);
 		}
 
+		public IQualityVerificationClient GetWorkerClient(SubVerification subVerification)
+		{
+			_subveriClientsDict.TryGetValue(subVerification, out IQualityVerificationClient workerClient);
+			return workerClient;
+		}
+
 		private void UpdateWorkerClients()
 		{
 			Stopwatch watch = Stopwatch.StartNew();

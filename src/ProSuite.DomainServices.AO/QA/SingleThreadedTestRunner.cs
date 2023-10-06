@@ -59,6 +59,8 @@ namespace ProSuite.DomainServices.AO.QA
 
 		public event EventHandler<VerificationProgressEventArgs> Progress;
 
+		public ISubverificationObserver SubverificationObserver { get; set; }
+
 		public TestAssembler TestAssembler { get; set; }
 
 		public QualityVerification QualityVerification { get; set; }
