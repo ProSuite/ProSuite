@@ -7,6 +7,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
@@ -19,6 +20,8 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 	public class QualityErrorRepositoryDatasets
 	{
 		private readonly IVerificationContext _verificationContext;
+
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[CanBeNull]
 		private IDictionary<esriGeometryType, IssueDatasetWriter> _issueWritersByGeometryType;
@@ -145,8 +148,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			         VerificationContextUtils.GetIssueDatasetsByGeometryType(verificationContext))
 			{
 				IssueDatasetWriter issueWriter = CreateIssueWriter(pair.Value,
-					verificationContext,
-					fieldIndexCache);
+					verificationContext, fieldIndexCache);
 
 				if (issueWriter != null)
 				{
@@ -167,7 +169,17 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			Assert.ArgumentNotNull(datasetContext, nameof(datasetContext));
 			Assert.ArgumentNotNull(fieldIndexCache, nameof(fieldIndexCache));
 
-			ITable table = datasetContext.OpenTable(objectDataset);
+			ITable table = null;
+
+			try
+			{
+				table = datasetContext.OpenTable(objectDataset);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error opening error dataset {objectDataset.Name}. It will be ignored.",
+				          e);
+			}
 
 			return table == null
 				       ? null
