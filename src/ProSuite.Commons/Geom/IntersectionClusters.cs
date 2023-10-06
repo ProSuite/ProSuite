@@ -341,11 +341,26 @@ namespace ProSuite.Commons.Geom
 
 		private IEnumerable<BoundaryLoop> CalculateSourceBoundaryLoops()
 		{
+			foreach (var sourceLoopIntersections in GetSourceBoundaryLoopIntersections()
+				         .GroupBy(t => t.Item1.SourcePartIndex))
+			{
+				// Process intersections grouped by source part - there could be multiple adjoining loops in one ring!
+				foreach (BoundaryLoop boundaryLoop in BoundaryLoop.CreateSourceBoundaryLoops(
+					         sourceLoopIntersections, _source, _tolerance))
+				{
+					yield return boundaryLoop;
+				}
+			}
+		}
+
+		private IEnumerable<Tuple<IntersectionPoint3D, IntersectionPoint3D>>
+			GetSourceBoundaryLoopIntersections()
+		{
 			foreach (var intersectionPairs
 			         in CollectionUtils.GetAllTuples(_multipleSourceIntersections))
 			{
-				var intersection1 = intersectionPairs.Key;
-				var intersection2 = intersectionPairs.Value;
+				IntersectionPoint3D intersection1 = intersectionPairs.Key;
+				IntersectionPoint3D intersection2 = intersectionPairs.Value;
 
 				if (intersection1.SourcePartIndex != intersection2.SourcePartIndex)
 				{
@@ -367,10 +382,8 @@ namespace ProSuite.Commons.Geom
 				    SegmentIntersectionUtils.SourceSegmentCountBetween(
 					    _source, intersection2, intersection1) > 1)
 				{
-					Linestring fullSourceRing = _source.GetPart(intersection1.SourcePartIndex);
-
-					yield return new BoundaryLoop(intersection1, intersection2, fullSourceRing,
-					                              true);
+					yield return new Tuple<IntersectionPoint3D, IntersectionPoint3D>(
+						intersection1, intersection2);
 				}
 			}
 		}

@@ -224,7 +224,13 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			Assert.False(multiPatch.IsEmpty,
 			             "The source geometry is empty. Unable to calculate footprint.");
 
-			IPolygon footprint = GetFootprintAO(multiPatch);
+			bool useCustom =
+				EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+					"PROSUITE_USE_CUSTOM_INTERSECT");
+
+			IPolygon footprint = useCustom
+				                     ? GetFootprint(multiPatch)
+				                     : GetFootprintAO(multiPatch);
 
 			IPolygon result = Math.Abs(bufferDistance) < double.Epsilon
 				                  ? footprint

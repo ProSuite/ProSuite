@@ -8,6 +8,7 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Test;
 using ProSuite.Commons.Test.Testing;
 using ProSuite.Commons.Testing;
 using ProSuite.QA.Tests.Transformers;
@@ -83,7 +84,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
+		[Category(TestCategory.FixMe)]
 		public void CanGetFootprintsRealData()
 		{
 			string path = TestDataPreparer.ExtractZip("GebZueriberg.gdb.zip").Overwrite().GetPath();
@@ -116,7 +117,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
+		[Category(TestCategory.FixMe)]
 		public void CanGetFootprintsRealDataVerticals()
 		{
 			string path = TestDataPreparer.ExtractZip("GebkoerperSmallAreas.gdb.zip").Overwrite()

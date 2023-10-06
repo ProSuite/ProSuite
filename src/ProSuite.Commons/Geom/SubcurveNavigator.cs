@@ -276,16 +276,17 @@ namespace ProSuite.Commons.Geom
 				if (CanMakeRing(subcurveInfos))
 				{
 					// Finish ring
-					Linestring finishedRing = CreateClosedRing(subcurveInfos, ringStart);
+					Linestring finishedRing =
+						SubcurveUtils.CreateClosedRing(subcurveInfos, ringStart, Tolerance);
 
-					Assert.True(finishedRing.SegmentCount > 2,
-					            "Insufficient segment count. Please report this geometry.");
+					if (finishedRing.SegmentCount > 2)
+					{
+						result.Add(finishedRing);
 
-					result.Add(finishedRing);
-
-					RememberUsedIntersectionRuns(subcurveInfos);
-					RememberUsedSourceParts(subcurveInfos);
-					RememberUsedTargetParts(subcurveInfos);
+						RememberUsedIntersectionRuns(subcurveInfos);
+						RememberUsedSourceParts(subcurveInfos);
+						RememberUsedTargetParts(subcurveInfos);
+					}
 				}
 			}
 
@@ -740,7 +741,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Determines the target's boundary loops that have an intersection with a source part that,
+		/// Determines the source's boundary loops that have an intersection with a target part that
 		/// has not yet been processed. The result can be used to determine e.g. equal rings that have
 		/// not yet been detected/processed.
 		/// </summary>
@@ -754,29 +755,27 @@ namespace ProSuite.Commons.Geom
 
 			foreach (BoundaryLoop boundaryLoop in GetSourceBoundaryLoops())
 			{
-				IntersectionPoint3D start = boundaryLoop.Start;
-				IntersectionPoint3D end = boundaryLoop.End;
-
-				if (! HasLoop1BeenUsed(boundaryLoop, true))
+				foreach (IList<IntersectionRun> loopCurves in boundaryLoop.GetLoopSubcurves())
 				{
-					Linestring loop = boundaryLoop.Loop1;
-					intersectedTargetPartIndexes.Add(start.TargetPartIndex);
-
-					if (! result.Any(r => r.Item2.Equals(loop)))
+					if (! HasLoopBeenUsed(loopCurves, true))
 					{
-						result.Add(new Tuple<IntersectionPoint3D, Linestring>(start, loop));
-					}
-				}
+						var start = loopCurves.First().PreviousIntersection;
 
-				// And check the other loop too:
-				if (! HasLoop2BeenUsed(boundaryLoop, true))
-				{
-					Linestring loop = boundaryLoop.Loop2;
-					intersectedTargetPartIndexes.Add(start.TargetPartIndex);
+						Linestring loop =
+							SubcurveUtils.CreateClosedRing(loopCurves, null, Tolerance);
 
-					if (! result.Any(r => r.Item2.Equals(loop)))
-					{
-						result.Add(new Tuple<IntersectionPoint3D, Linestring>(end, loop));
+						// Add intersected targets (not sure if all intersection points are equally relevant)
+						// as some should/could be filtered?
+						foreach (IntersectionRun intersectionRun in loopCurves)
+						{
+							intersectedTargetPartIndexes.Add(
+								intersectionRun.PreviousIntersection.TargetPartIndex);
+						}
+
+						if (! result.Any(r => r.Item2.Equals(loop)))
+						{
+							result.Add(new Tuple<IntersectionPoint3D, Linestring>(start, loop));
+						}
 					}
 				}
 			}
@@ -784,8 +783,25 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		private bool HasLoopBeenUsed(IEnumerable<IntersectionRun> loopCurves, bool isSource)
+		{
+			foreach (IntersectionRun intersectionRun in loopCurves)
+			{
+				bool alreadyUsed = IntersectionPointNavigator.IsAnyIntersectionUsedBetween(
+					intersectionRun.PreviousIntersection, intersectionRun.NextIntersection,
+					UsedSubcurves, isSource);
+
+				if (alreadyUsed)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		/// <summary>
-		/// Determines the target's boundary loops that have an intersection with a source part that,
+		/// Determines the target's boundary loops that have an intersection with a source part that
 		/// has not yet been processed. The result can be used to determine e.g. equal rings that have
 		/// not yet been detected/processed.
 		/// </summary>
@@ -1308,24 +1324,6 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
-		private Linestring CreateClosedRing(List<IntersectionRun> subcurveInfos, Pnt3D ringStart)
-		{
-			// Make sure the ring closes (in case there are multiple intersections within the tolerance)
-
-			Pnt3D firstPoint = subcurveInfos[0].Subcurve.StartPoint;
-			Linestring lastSubcurve = subcurveInfos[subcurveInfos.Count - 1].Subcurve;
-			Line3D lastSegment = lastSubcurve.Segments[lastSubcurve.SegmentCount - 1];
-
-			lastSegment.SetEndPoint(firstPoint.ClonePnt3D());
-
-			Linestring finishedRing = GeomTopoOpUtils.MergeConnectedLinestrings(
-				subcurveInfos.Select(i => i.Subcurve).ToList(), ringStart, Tolerance);
-
-			Assert.True(finishedRing.IsClosed, "The ring is not closed.");
-
-			return finishedRing;
-		}
-
 		private IEnumerable<IntersectionRun> NavigateSubcurves(
 			ICollection<IntersectionPoint3D> startIntersections)
 		{
@@ -1637,6 +1635,16 @@ namespace ProSuite.Commons.Geom
 			Line3D alongSourceLine =
 				GetContinuingDirectionLine(sourceRing, sourceSegmentIdx, distanceAlongSource,
 				                           Tolerance);
+
+			if (intersection.IsTargetVertex(out int targetVertexIndex))
+			{
+				// Start the line the target point because the target directions will also be
+				// measured from the target point. This could be quite significant if the source
+				// segment is short (TOP-5795)!
+				Linestring targetPart = Target.GetPart(intersection.TargetPartIndex);
+				alongSourceLine = new Line3D(targetPart.GetPoint3D(targetVertexIndex),
+				                             alongSourceLine.EndPoint);
+			}
 
 			double? sourceForwardDirection =
 				GeomUtils.GetDirectionChange(entryLine, alongSourceLine);
