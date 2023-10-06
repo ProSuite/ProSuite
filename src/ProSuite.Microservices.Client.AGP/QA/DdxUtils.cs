@@ -433,10 +433,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				}
 			}
 
-			//QueuedTask.Run(() =>
-			{
-				result = ProtobufConversionUtils.FromSpatialReferenceMsg(srMsg);
-			} //);
+			result = ProtobufConversionUtils.FromSpatialReferenceMsg(srMsg);
 
 			return result;
 		}
