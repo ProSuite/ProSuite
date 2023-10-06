@@ -66,7 +66,9 @@ namespace ProSuite.AGP.WorkList
 			{
 				var descriptor = new ClassDescriptor(definition.TypeName, definition.AssemblyName);
 
-				return descriptor.CreateInstance<IWorkList>(CreateWorkItemRepository(definition),
+				IWorkItemRepository workItemRepository = CreateWorkItemRepository(definition);
+
+				return descriptor.CreateInstance<IWorkList>(workItemRepository,
 				                                            definition.Name, displayName);
 			}
 			catch (Exception e)
