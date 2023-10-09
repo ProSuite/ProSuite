@@ -558,6 +558,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
 					distributedTestRunner?.CancelSubverifications();
+
 					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 			}

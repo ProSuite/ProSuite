@@ -199,10 +199,13 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			return wsInfos;
 		}
 
-		private void ReportSubverifcationsCreated([NotNull] IEnumerable<SubVerification> subVerifications)
+		private void ReportSubverifcationsCreated(
+			[NotNull] IEnumerable<SubVerification> subVerifications)
 		{
 			if (SubverificationObserver == null)
-			{return;}
+			{
+				return;
+			}
 
 			foreach (SubVerification subVerification in subVerifications)
 			{

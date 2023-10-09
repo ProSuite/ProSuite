@@ -147,7 +147,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 		public IQualityVerificationClient GetWorkerClient(SubVerification subVerification)
 		{
-			_subveriClientsDict.TryGetValue(subVerification, out IQualityVerificationClient workerClient);
+			_subveriClientsDict.TryGetValue(subVerification,
+			                                out IQualityVerificationClient workerClient);
 			return workerClient;
 		}
 
