@@ -37,7 +37,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 
 			Predicate<IPolygon> predicate =
 				clipEnvelope == null
-					? null
+					? (Predicate<IPolygon>) null
 					: p => GeometryUtils.Intersects(p, clipEnvelope);
 
 			List<IPolygon> holePolygons = GetIslandAndBoundaryLoopPolygons(
