@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
@@ -180,6 +181,10 @@ namespace ProSuite.DomainServices.AO.QA
 				var testIndex = 0;
 				foreach (ITest test in tests)
 				{
+					_msg.VerboseDebug(
+						() =>
+							$"Adding test {test}. Tables: {StringUtils.Concatenate(test.InvolvedTables, t => t.Name, ", ")}. Hashcode: {test.GetHashCode()}");
+
 					testList.Add(test);
 					testVerifications.Add(test,
 					                      new TestVerification(conditionVerification, testIndex));

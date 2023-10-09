@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 
@@ -13,6 +15,8 @@ namespace ProSuite.DomainServices.AO.QA
 	/// </summary>
 	public class VerificationElements
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull]
 		private readonly IDictionary<QualityConditionVerification, QualitySpecificationElement>
 			_elementsByConditionVerification;
@@ -87,6 +91,18 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			if (! TestVerifications.TryGetValue(test, out TestVerification result))
 			{
+				foreach (ITest existingTest in TestVerifications.Keys)
+				{
+					_msg.Debug(
+						$"Existing test: {existingTest}. Tables: {StringUtils.Concatenate(existingTest.InvolvedTables, t => t.Name, ", ")}. Hashcode: {existingTest.GetHashCode()}");
+
+					_msg.Debug(
+						$"Test name: {existingTest.GetType().Name}, {StringUtils.Concatenate(existingTest.InvolvedTables, ", ")}");
+				}
+
+				_msg.Debug(
+					$"Searched test: {test}. Tables: {StringUtils.Concatenate(test.InvolvedTables, t => t.Name, ", ")}. Hashcode: {test.GetHashCode()}");
+
 				throw new ArgumentException(
 					$@"No quality condition found for test instance of type {test.GetType()}",
 					nameof(test));
