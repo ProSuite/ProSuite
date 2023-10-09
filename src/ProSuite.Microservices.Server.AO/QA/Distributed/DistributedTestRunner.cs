@@ -157,7 +157,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 		public void CancelSubverifications()
 		{
-			CancellationTokenSource.Cancel();
+			CancellationTokenSource?.Cancel();
 		}
 
 		public void Execute(IEnumerable<ITest> tests, AreaOfInterest areaOfInterest,
@@ -166,14 +166,14 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			Assert.NotNull(QualitySpecification, "QualitySpecification has not been initialized.");
 			Assert.NotNull(TestAssembler, "TestAssembler has not been initialized.");
 
+			CancellationTokenSource = cancellationTokenSource;
+
 			StartVerification(QualityVerification);
 
 			if (SendModelsWithRequest)
 			{
 				InitializeModelsToSend(QualitySpecification);
 			}
-
-			CancellationTokenSource = cancellationTokenSource;
 
 			IList<QualityConditionGroup> qcGroups =
 				TestAssembler.BuildQualityConditionGroups(tests.ToList(), areaOfInterest,
