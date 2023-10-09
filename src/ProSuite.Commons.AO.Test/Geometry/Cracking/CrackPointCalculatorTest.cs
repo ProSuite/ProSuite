@@ -7,7 +7,6 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Cracking;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 
@@ -16,18 +15,10 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 	[TestFixture]
 	public class CrackPointCalculatorTest
 	{
-		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
-		}
-
-		[OneTimeTearDown]
-		public void TeardownFixture()
-		{
-			_lic.Release();
+			TestUtils.InitializeLicense();
 		}
 
 		[Test]
