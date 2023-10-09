@@ -17,8 +17,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		readonly double _minimumSize = 30;
 
 		private readonly double _extentExpansionFactor = 1.1;
-		private readonly double _minimumSizeDegrees = 15;
-		private readonly double _minimumSizeProjected = 0.001;
+		private readonly double _minimumSizeDegrees = 0.001;
+		private readonly double _minimumSizeProjected = 15;
 		private bool _hasZ;
 		private WorkItemStatus _status;
 		private bool _visited;
