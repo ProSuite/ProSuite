@@ -20,7 +20,10 @@ namespace ProSuite.DomainServices.AO.QA
 		string HtmlReportPath { get; }
 
 		[CanBeNull]
-		string HtmlTemplatePath { get; }
+		string HtmlReportTemplatePath { get; }
+
+		[CanBeNull]
+		string HtmlSpecificationTemplatePath { get; }
 
 		[CanBeNull]
 		string MxdDocumentPath { get; }

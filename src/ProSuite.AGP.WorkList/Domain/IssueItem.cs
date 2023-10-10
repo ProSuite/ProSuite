@@ -73,6 +73,16 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		public string IssueDescription
+		{
+			get => _issueCodeDescription;
+			set
+			{
+				_issueCodeDescription = value;
+				OnPropertyChanged();
+			}
+		}
+
 		public IList<InvolvedTable> InIssueInvolvedTables { get; set; }
 	}
 }

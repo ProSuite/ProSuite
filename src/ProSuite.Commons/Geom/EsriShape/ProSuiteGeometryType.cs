@@ -7,6 +7,10 @@ namespace ProSuite.Commons.Geom.EsriShape
 	/// </summary>
 	public enum ProSuiteGeometryType
 	{
+		// Unknown is different from no geometry
+		Unknown = -1,
+
+		// Also used for tables without geometry
 		Null = 0,
 
 		Point = 1,

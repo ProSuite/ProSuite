@@ -9,6 +9,11 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 {
 	public static class GeomConversionUtils
 	{
+		public static EnvelopeXY CreateEnvelopeXY(Envelope envelope)
+		{
+			return new EnvelopeXY(envelope.XMin, envelope.YMin, envelope.XMax, envelope.YMax);
+		}
+
 		public static Polyhedron CreatePolyhedron(Multipatch multipatch)
 		{
 			var ringGroups = new List<RingGroup>();

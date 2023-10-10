@@ -43,6 +43,10 @@ namespace ProSuite.Commons.AGP.Gdb
 					
 					WorkspaceFactory = WorkspaceFactory.FileGDB;
 					break;
+				case FileSystemConnectionPath fileSystemConnection:
+					ConnectionString = fileSystemConnection.Path.ToString();
+					WorkspaceFactory = WorkspaceFactory.Shapefile;
+					break;
 				default:
 					throw new NotImplementedException(
 						$"connector {connector.GetType()} is not implemented");

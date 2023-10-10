@@ -229,12 +229,16 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		{
 			const int workContextTypeProject = 1;
 
+			WorkspaceMsg workspaceMsg =
+				ProtobufConversionUtils.ToWorkspaceRefMsg(projectWorkspace.Datastore);
+
 			var workContextMsg = new WorkContextMsg
 			                     {
 				                     DdxId = projectWorkspace.ProjectId,
 				                     Type = workContextTypeProject,
 				                     ContextType = contextType,
 				                     ContextName = contextName,
+				                     Workspace = workspaceMsg,
 				                     VersionName = projectWorkspace.GetVersionName() ?? string.Empty
 			                     };
 

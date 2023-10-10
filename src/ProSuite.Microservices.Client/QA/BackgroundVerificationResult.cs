@@ -46,6 +46,14 @@ namespace ProSuite.Microservices.Client.QA
 
 		public bool HasIssues => _resultIssueCollector?.HasIssues ?? false;
 
+		public bool IsFulfilled => Assert.NotNull(VerificationMsg).Fulfilled;
+
+		public int RowCountWithStopConditions =>
+			Assert.NotNull(VerificationMsg).RowsWithStopConditions;
+
+		public int VerifiedConditionCount =>
+			Assert.NotNull(VerificationMsg).ConditionVerifications?.Count ?? 0;
+
 		public bool CanSaveIssues => _resultIssueCollector != null && VerificationMsg != null;
 
 		public int SaveIssues(ErrorDeletionInPerimeter errorDeletion)

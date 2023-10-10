@@ -17,7 +17,8 @@ namespace ProSuite.AGP.Editing.Selection
 	public abstract class SelectionToolBase : OneClickToolBase
 	{
 		//TODO: ID from Config.daml; make abstract or similar
-		private const string ConfigId_SelectionToolButton = "ProSuiteTools_Selection_SelectionToolButton";
+		private const string ConfigId_SelectionToolButton =
+			"ProSuiteTools_Selection_SelectionToolButton";
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -51,6 +52,11 @@ namespace ProSuite.AGP.Editing.Selection
 		protected override bool IsInSelectionPhase(bool shiftIsPressed)
 		{
 			return true;
+		}
+
+		protected override Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		{
+			return Task.FromResult(true);
 		}
 
 		protected override void AfterSelection(IList<Feature> selectedFeatures,

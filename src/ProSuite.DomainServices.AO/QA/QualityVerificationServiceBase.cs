@@ -27,6 +27,7 @@ using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.DomainServices.AO.QA.HtmlReports;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Issues;
+using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options;
 using ProSuite.DomainServices.AO.QA.VerificationReports;
@@ -575,6 +576,8 @@ namespace ProSuite.DomainServices.AO.QA
 		                                   int currentStep = 0,
 		                                   int stepCount = 0)
 		{
+			_msg.VerboseDebug(() => $"Preprocessing - {message}");
+
 			var args = new VerificationProgressEventArgs(
 				           VerificationProgressType.PreProcess, currentStep, stepCount)
 			           {
@@ -797,7 +800,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 						if (verificationReport != null &&
 						    StringUtils.IsNotEmpty(Parameters.HtmlReportPath) &&
-						    StringUtils.IsNotEmpty(Parameters.HtmlTemplatePath))
+						    StringUtils.IsNotEmpty(Parameters.HtmlReportTemplatePath))
 						{
 							string outputDirectory = Assert.NotNullOrEmpty(
 								Path.GetDirectoryName(Parameters.HtmlReportPath));
@@ -805,7 +808,7 @@ namespace ProSuite.DomainServices.AO.QA
 							WriteHtmlReport(qualitySpecification,
 							                Path.GetFileName(Parameters.HtmlReportPath),
 							                outputDirectory,
-							                Parameters.HtmlTemplatePath,
+							                Parameters.HtmlReportTemplatePath,
 							                issueStatistics,
 							                verificationReport,
 							                Path.GetFileName(
@@ -814,6 +817,18 @@ namespace ProSuite.DomainServices.AO.QA
 							                mapDocumentWritten
 								                ? Parameters.MxdDocumentPath
 								                : null);
+						}
+
+						if (qualitySpecification != null &&
+						    StringUtils.IsNotEmpty(Parameters.HtmlReportPath) &&
+						    StringUtils.IsNotEmpty(Parameters.HtmlSpecificationTemplatePath))
+						{
+							string outputDirectory = Assert.NotNullOrEmpty(
+								Path.GetDirectoryName(Parameters.HtmlReportPath));
+
+							StandaloneVerificationUtils.WriteQualitySpecificationReport(
+								qualitySpecification, outputDirectory,
+								Parameters.HtmlSpecificationTemplatePath, null);
 						}
 					}
 

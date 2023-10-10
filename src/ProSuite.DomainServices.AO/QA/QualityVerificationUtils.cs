@@ -134,6 +134,10 @@ namespace ProSuite.DomainServices.AO.QA
 				new HashSet<QualityCondition>(
 					QualitySpecificationUtils.GetOrderedQualityConditions(
 						qualitySpecification, datasetOpener));
+			if (orderedQualityConditions.Count == 0)
+			{
+				throw new ArgumentException("No quality conditions enabled or executable.");
+			}
 
 			Dictionary<QualityConditionVerification, QualitySpecificationElement>
 				elementsByConditionVerification;

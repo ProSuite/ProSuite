@@ -9,6 +9,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Microservices.Definitions.Geometry;
 
@@ -19,6 +20,7 @@ namespace ProSuite.Microservices.Client.AGP
 		private RemoveOverlapsGrpc.RemoveOverlapsGrpcClient RemoveOverlapsClient { get; set; }
 		private ChangeAlongGrpc.ChangeAlongGrpcClient ChangeAlongClient { get; set; }
 		private ReshapeGrpc.ReshapeGrpcClient ReshapeClient { get; set; }
+		private FillHolesGrpc.FillHolesGrpcClient RemoveHolesClient { get; set; }
 
 		public GeometryProcessingClient([NotNull] IClientChannelConfig channelConfig)
 			: base(channelConfig) { }
@@ -36,6 +38,7 @@ namespace ProSuite.Microservices.Client.AGP
 			RemoveOverlapsClient = new RemoveOverlapsGrpc.RemoveOverlapsGrpcClient(channel);
 			ChangeAlongClient = new ChangeAlongGrpc.ChangeAlongGrpcClient(channel);
 			ReshapeClient = new ReshapeGrpc.ReshapeGrpcClient(channel);
+			RemoveHolesClient = new FillHolesGrpc.FillHolesGrpcClient(channel);
 		}
 
 		[CanBeNull]
@@ -55,6 +58,18 @@ namespace ProSuite.Microservices.Client.AGP
 		{
 			return RemoveOverlapsClientUtils.RemoveOverlaps(
 				RemoveOverlapsClient, selectedFeatures, overlapsToRemove, overlappingFeatures,
+				cancellationToken);
+		}
+
+		[CanBeNull]
+		public IList<Holes> CalculateHoles(
+			[NotNull] IList<Feature> selectedFeatures,
+			[NotNull] IList<Envelope> clipEnvelopes,
+			bool unionFeatures,
+			CancellationToken cancellationToken)
+		{
+			return HoleClientUtils.CalculateHoles(
+				RemoveHolesClient, selectedFeatures, clipEnvelopes, unionFeatures,
 				cancellationToken);
 		}
 
