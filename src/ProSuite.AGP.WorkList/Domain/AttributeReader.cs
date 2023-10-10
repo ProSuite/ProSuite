@@ -60,6 +60,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			                               "ExceptionRetirementDate");
 			_fieldNameByIssueAttribute.Add(Attributes.ExceptionShapeMatchCriterion,
 			                               "ExceptionShapeMatchCriterion");
+			_fieldNameByIssueAttribute.Add(Attributes.IssueDescription, "Description");
 
 			foreach (Attributes attribute in attributes)
 			{

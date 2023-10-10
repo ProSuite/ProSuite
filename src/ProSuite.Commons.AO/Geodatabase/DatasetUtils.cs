@@ -1579,6 +1579,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			try
 			{
+				if (_msg.IsVerboseDebugEnabled)
+				{
+					_msg.VerboseDebug(
+						() => $"Getting dataset names of type {datasetType} in " +
+						      $"{WorkspaceUtils.GetWorkspaceDisplayText(workspace)}");
+				}
+
 				return workspace.DatasetNames[datasetType];
 			}
 			catch (Exception exception)

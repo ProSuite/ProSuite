@@ -1107,16 +1107,30 @@ namespace ProSuite.Commons.AO.Geodatabase
 			IVersionInfo default1Info = defaultVersion1.VersionInfo;
 			IVersionInfo default2Info = defaultVersion2.VersionInfo;
 
-			string date1 = default1Info.Created.ToString();
-			string date2 = default2Info.Created.ToString();
+			string creationDate1 = default1Info.Created.ToString();
+			string creationDate2 = default2Info.Created.ToString();
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
 				_msg.DebugFormat("Compare default version creation date: {0},{1}",
-				                 date1, date2);
+				                 creationDate1, creationDate2);
 			}
 
-			return Equals(date1, date2);
+			if (! Equals(creationDate1, creationDate2))
+			{
+				return false;
+			}
+
+			string modifyDate1 = default1Info.Modified.ToString();
+			string modifyDate2 = default2Info.Modified.ToString();
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.DebugFormat("Compare default version last modified date: {0},{1}",
+				                 modifyDate1, modifyDate2);
+			}
+
+			return Equals(modifyDate1, modifyDate2);
 		}
 
 		/// <summary>

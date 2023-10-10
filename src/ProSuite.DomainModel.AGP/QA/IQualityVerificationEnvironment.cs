@@ -63,6 +63,7 @@ namespace ProSuite.DomainModel.AGP.QA
 		Task<ServiceCallStatus> VerifyPerimeter(
 			[NotNull] Geometry perimeter,
 			[NotNull] QualityVerificationProgressTracker progress,
+			[NotNull] string perimeterDisplayName,
 			string resultsPath);
 
 		Task<ServiceCallStatus> VerifySelection(

@@ -1,17 +1,18 @@
-using System.Linq;
+using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
-using ArcGIS.Desktop.Core;
-using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
 using ProSuite.Commons.AGP;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -26,7 +27,7 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
-	public abstract class VerifySelectionCmdBase : Button
+	public abstract class VerifySelectionCmdBase : ButtonCommandBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -44,13 +45,13 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IProSuiteFacade ProSuiteImpl { get; }
 
-		protected override void OnClick()
+		protected override async Task<bool> OnClickCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
 			{
 				MessageBox.Show("No quality verification environment is configured.",
 				                "Verify Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				return false;
 			}
 
 			IQualityVerificationEnvironment qaEnvironment =
@@ -63,15 +64,17 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				MessageBox.Show("No quality specification is selected", "Verify Selection",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				return false;
 			}
 
 			if (! MapUtils.HasSelection(MapView.Active))
 			{
 				MessageBox.Show("No selected features", "Verify Selection",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				return false;
 			}
+
+			IList<Row> selection = await QueuedTask.Run(GetRelevantSelection);
 
 			var progressTracker = new QualityVerificationProgressTracker
 			                      {
@@ -81,8 +84,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			// Consider getting the extent of the selection:
 			Envelope currentExtent = null; //SelectionUtils.
 
-			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification,
-			                                                Project.Current.HomeFolderPath);
+			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
@@ -93,7 +95,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(progressTracker, resultsPath),
+					VerificationAction = () => Verify(selection, progressTracker, resultsPath),
 					ApplicationController = appController
 				};
 
@@ -101,20 +103,19 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 
+			string backendDisplayName = Assert.NotNullOrEmpty(qaEnvironment.BackendDisplayName);
+
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
-			                               qaEnvironment.BackendDisplayName, actionTitle);
+			                               backendDisplayName, actionTitle);
+
+			return true;
 		}
 
 		private async Task<ServiceCallStatus> Verify(
+			[NotNull] IList<Row> selection,
 			[NotNull] QualityVerificationProgressTracker progressTracker,
 			string resultsPath)
 		{
-			var selection = await QueuedTask.Run(
-				                () => SelectionUtils.GetSelectedFeatures(MapView.Active)
-				                                    .Cast<Row>().ToList());
-
-			Assert.True(selection.Count > 0, "No selection");
-
 			Task<ServiceCallStatus> verificationTask =
 				await BackgroundTask.Run(
 					() =>
@@ -131,18 +132,44 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			ServiceCallStatus result = await verificationTask;
 
-			if (result == ServiceCallStatus.Finished)
+			return result;
+		}
+
+		private Task<IList<Row>> GetRelevantSelection()
+		{
+			// Check if the selected feature is part of the project workspace:
+			Datastore projectWorkspaceDatastore = SessionContext.ProjectWorkspace?.Datastore;
+
+			if (projectWorkspaceDatastore == null)
 			{
-				_msg.InfoFormat(
-					"Successfully finished selection verification. The results have been saved in {0}",
-					resultsPath);
-			}
-			else
-			{
-				_msg.WarnFormat("Selection verification was not finished. Status: {0}", result);
+				throw new InvalidOperationException("No active project workspace");
 			}
 
-			return result;
+			var result = new List<Row>();
+			bool anySelected = false;
+			foreach (Feature selectedFeature in SelectionUtils.GetSelectedFeatures(MapView.Active))
+			{
+				anySelected = true;
+				Datastore featureDatastore = selectedFeature.GetTable().GetDatastore();
+
+				if (WorkspaceUtils.IsSameDatastore(projectWorkspaceDatastore, featureDatastore))
+				{
+					result.Add(selectedFeature);
+				}
+			}
+
+			if (result.Count == 0)
+			{
+				if (anySelected)
+				{
+					throw new InvalidOperationException(
+						"The selection is not in the current project workspace");
+				}
+
+				throw new InvalidOperationException("No selection");
+			}
+
+			return Task.FromResult<IList<Row>>(result);
 		}
 	}
 }

@@ -151,16 +151,18 @@ namespace ProSuite.Microservices.Server.AO
 			var container = new GdbTableContainer();
 
 			DateTime? defaultCreationDate =
-				workspaceMessage.DefaultVersionCreationTicks == 0
-					? (DateTime?) null
-					: new DateTime(workspaceMessage.DefaultVersionCreationTicks);
+				FromTicks(workspaceMessage.DefaultVersionCreationTicks);
+
+			DateTime? defaultModificationDate =
+				FromTicks(workspaceMessage.DefaultVersionModificationTicks);
 
 			var gdbWorkspace = new GdbWorkspace(container, workspaceMessage.WorkspaceHandle,
 			                                    (WorkspaceDbType) workspaceMessage.WorkspaceDbType,
 			                                    EmptyToNull(workspaceMessage.Path),
 			                                    EmptyToNull(workspaceMessage.VersionName),
 			                                    EmptyToNull(workspaceMessage.DefaultVersionName),
-			                                    defaultCreationDate);
+			                                    defaultCreationDate,
+			                                    defaultModificationDate);
 
 			foreach (ObjectClassMsg objectClassMsg in objectClassMessages)
 			{
@@ -498,6 +500,15 @@ namespace ProSuite.Microservices.Server.AO
 						throw new ArgumentOutOfRangeException();
 				}
 			}
+		}
+
+		private static DateTime? FromTicks(long ticks)
+		{
+			DateTime? defaultCreationDate =
+				ticks == 0
+					? (DateTime?) null
+					: new DateTime(ticks);
+			return defaultCreationDate;
 		}
 
 		public static string EmptyToNull(string value)

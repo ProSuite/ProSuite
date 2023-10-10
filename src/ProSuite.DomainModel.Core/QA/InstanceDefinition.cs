@@ -122,8 +122,8 @@ namespace ProSuite.DomainModel.Core.QA
 				return false;
 			}
 
-			if (GetSubsituteType(Assert.NotNull(xAssembly), Assert.NotNull(xType))
-			    != GetSubsituteType(yAssembly, yType))
+			if (GetSubstituteType(Assert.NotNull(xAssembly), Assert.NotNull(xType))
+			    != GetSubstituteType(yAssembly, yType))
 			{
 				return false;
 			}
