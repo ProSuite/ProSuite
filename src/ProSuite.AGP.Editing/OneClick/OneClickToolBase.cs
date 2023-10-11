@@ -31,6 +31,7 @@ namespace ProSuite.AGP.Editing.OneClick
 	// todo daro log more, especially in subclasses
 	public abstract class OneClickToolBase : MapTool
 	{
+		private readonly SelectionSettings _selectionSettings;
 		private const Key _keyShowOptionsPane = Key.O;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -43,6 +44,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			UseSnapping = false;
 			HandledKeys.Add(Key.Escape);
 			HandledKeys.Add(_keyShowOptionsPane);
+		}
+
+		protected OneClickToolBase(SelectionSettings selectionSettings) : this()
+		{
+			_selectionSettings = selectionSettings;
+			SetupSketch(selectionSettings.SketchGeometryType, selectionSettings.SketchOutputMode);
 		}
 
 		/// <summary>
