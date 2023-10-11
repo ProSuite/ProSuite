@@ -87,19 +87,19 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected Cursor SelectionCursorOriginal { get; set; }
 		protected Cursor SelectionCursorOriginalShift { get; set; }
 
-		protected override Task OnToolActivateAsync(bool hasMapViewChanged)
+		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
 			_msg.VerboseDebug(() => "OnToolActivateAsync");
 
 			MapPropertyChangedEvent.Subscribe(OnPropertyChanged);
 			MapSelectionChangedEvent.Subscribe(OnMapSelectionChanged);
-			EditCompletedEvent.Subscribe(OnEditCompleted);
+			EditCompletedEvent.Subscribe(OnEditCompletedAsync);
 
 			PressedKeys.Clear();
 
 			try
 			{
-				return QueuedTask.Run(
+				await QueuedTask.Run(
 					() =>
 					{
 						OnToolActivatingCore();
@@ -116,30 +116,26 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				HandleError($"Error in tool activation ({Caption}): {e.Message}", e);
 			}
-
-			return Task.CompletedTask;
 		}
 
-		protected override Task OnToolDeactivateAsync(bool hasMapViewChanged)
+		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
 		{
 			_msg.VerboseDebug(() => "OnToolDeactivateAsync");
 
 			MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
 			MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChanged);
-			EditCompletedEvent.Unsubscribe(OnEditCompleted);
+			EditCompletedEvent.Unsubscribe(OnEditCompletedAsync);
 
 			try
 			{
 				HideOptionsPane();
 
-				return QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
+				await QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
 			}
 			catch (Exception e)
 			{
 				HandleError($"Error in tool deactivation ({Caption}): {e.Message}", e, true);
 			}
-
-			return Task.CompletedTask;
 		}
 
 		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
@@ -235,7 +231,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (RequiresSelection && IsInSelectionPhase())
 				{
-					return await OnSelectionSketchComplete(sketchGeometry, progressor);
+					return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
 				}
 
 				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
@@ -245,9 +241,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				HandleError($"{Caption}: Error completing sketch ({e.Message})", e);
 				// NOTE: Throwing here results in a process crash (Exception while waiting for a Task to complete)
 				// Consider Task.FromException?
-			}
 
-			return false;
+				return await Task.FromResult(true);
+			}
 		}
 
 		protected virtual void ShiftPressedCore()
@@ -356,19 +352,19 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		private Task OnEditCompleted(EditCompletedEventArgs args)
+		private async Task OnEditCompletedAsync(EditCompletedEventArgs args)
 		{
-			_msg.VerboseDebug(() => "OnEditCompleted");
+			_msg.VerboseDebug(() => "OnEditCompletedAsync");
 
 			try
 			{
-				return OnEditCompletedCore(args);
+				await OnEditCompletedCoreAsync(args);
 			}
 			catch (Exception e)
 			{
-				HandleError($"Error OnEditCompleted: {e.Message}", e, true);
+				HandleError($"Error OnEditCompletedAsync: {e.Message}", e, true);
 
-				return Task.FromResult(false);
+				await Task.CompletedTask;
 			}
 		}
 
@@ -384,9 +380,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		/// <param name="args"></param>
 		/// <returns></returns>
-		protected virtual Task OnEditCompletedCore(EditCompletedEventArgs args)
+		protected virtual async Task OnEditCompletedCoreAsync(EditCompletedEventArgs args)
 		{
-			return Task.FromResult(true);
+			await Task.CompletedTask;
 		}
 
 		protected virtual void OnToolActivatingCore() { }
@@ -409,14 +405,15 @@ namespace ProSuite.AGP.Editing.OneClick
 			return new CancelableProgressorSource().Progressor;
 		}
 
-		protected virtual Task<bool> OnSketchCompleteCoreAsync(
+		protected virtual async Task<bool> OnSketchCompleteCoreAsync(
 			[NotNull] Geometry sketchGeometry,
 			[CanBeNull] CancelableProgressor progressor)
 		{
+			return await Task.FromResult(true);
 		}
-
-		private async Task<bool> OnSelectionSketchComplete(Geometry sketchGeometry,
-		                                                   CancelableProgressor progressor)
+		
+		private async Task<bool> OnSelectionSketchCompleteAsync(Geometry sketchGeometry,
+		                                                        CancelableProgressor progressor)
 		{
 			// TODO: Add Utils method to KeyboardUtils to do it in the WPF way
 			SelectionCombinationMethod selectionMethod =
