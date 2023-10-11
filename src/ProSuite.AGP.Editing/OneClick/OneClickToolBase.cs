@@ -50,46 +50,40 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// <summary>
 		/// Whether this tool requires a selection and the base class should handle the selection phase.
 		/// </summary>
-		protected bool RequiresSelection { get; set; } = true;
+		protected bool RequiresSelection { get; init; } = true;
 
 		/// <summary>
 		/// Whether the required selection can only contain editable features.
 		/// </summary>
-		protected bool SelectOnlyEditFeatures { get; set; } = true;
+		protected bool SelectOnlyEditFeatures { get; init; } = true;
 
 		/// <summary>
 		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
 		/// allowed. Otherwise the selection phase will continue until all selected features are
 		/// usable by the tool.
 		/// </summary>
-		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
+		protected bool AllowNotApplicableFeaturesInSelection => true;
 
 		public virtual IPickerPrecedence PickerPrecedence =>
-			_pickerPrecedence ?? (_pickerPrecedence = new StandardPickerPrecedence());
+			_pickerPrecedence ??= new SelectionToolPickerPrecedence();
 
 		/// <summary>
 		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
 		/// will be called (and potentially in the future also MapTool.HandleKeyUpAsync)
 		/// </summary>
-		protected List<Key> HandledKeys { get; } = new List<Key>();
+		protected List<Key> HandledKeys { get; } = new();
 
 		/// <summary>
 		/// The currently pressed keys.
 		/// </summary>
-		protected HashSet<Key> PressedKeys { get; } = new HashSet<Key>();
+		protected HashSet<Key> PressedKeys { get; } = new();
 
-		protected virtual Cursor SelectionCursor { get; set; }
-		protected Cursor SelectionCursorShift { get; set; }
-		protected Cursor SelectionCursorNormal { get; set; }
-		protected Cursor SelectionCursorNormalShift { get; set; }
-		protected Cursor SelectionCursorUser { get; set; }
-		protected Cursor SelectionCursorUserShift { get; set; }
-		protected Cursor SelectionCursorOriginal { get; set; }
-		protected Cursor SelectionCursorOriginalShift { get; set; }
+		protected virtual Cursor SelectionCursor { get; init; }
+		protected Cursor SelectionCursorShift { get; init; }
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
-			_msg.VerboseDebug(() => "OnToolActivateAsync");
+			_msg.VerboseDebug(() => nameof(OnToolActivateAsync));
 
 			MapPropertyChangedEvent.Subscribe(OnPropertyChanged);
 			MapSelectionChangedEvent.Subscribe(OnMapSelectionChanged);
@@ -120,7 +114,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
 		{
-			_msg.VerboseDebug(() => "OnToolDeactivateAsync");
+			_msg.VerboseDebug(() => nameof(OnToolDeactivateAsync));
 
 			MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
 			MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChanged);
@@ -140,7 +134,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
 		{
-			_msg.VerboseDebug(() => "OnToolKeyDown");
+			_msg.VerboseDebug(() => nameof(OnToolKeyDown));
 
 			try
 			{
@@ -184,7 +178,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolKeyUp(MapViewKeyEventArgs k)
 		{
-			_msg.VerboseDebug(() => "OnToolKeyUp");
+			_msg.VerboseDebug(() => nameof(OnToolKeyUp));
 
 			try
 			{
@@ -212,7 +206,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
 		{
-			_msg.VerboseDebug(() => "OnSketchCompleteAsync");
+			_msg.VerboseDebug(() => nameof(OnSketchCompleteAsync));
 
 			if (sketchGeometry == null)
 			{
@@ -323,7 +317,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void OnMapSelectionChanged(MapSelectionChangedEventArgs args)
 		{
-			_msg.VerboseDebug(() => "OnMapSelectionChanged");
+			_msg.VerboseDebug(() => nameof(OnMapSelectionChanged));
 
 			try
 			{
@@ -354,7 +348,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private async Task OnEditCompletedAsync(EditCompletedEventArgs args)
 		{
-			_msg.VerboseDebug(() => "OnEditCompletedAsync");
+			_msg.VerboseDebug(() => nameof(OnEditCompletedAsync));
 
 			try
 			{
@@ -438,9 +432,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					pickerLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
-
-					_msg.VerboseDebug(() => $"Picker location on map {GeometryUtils.Format(selectionGeometry.Extent.Center)}");
-					_msg.VerboseDebug(() => $"Picker location on screen {pickerLocation.X}/{pickerLocation.Y}");
 
 					// find all features spatially related with searchGeometry
 					// TODO: 1. Find all features in point layers, if count > 0 -> skip the rest
@@ -766,7 +757,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			string layerName = layer.Name;
 
-			if (! LayerUtils.IsVisible(layer))
+			if (! layer.IsVisible())
 			{
 				NotificationUtils.Add(notifications, $"Layer {layerName} not visible");
 				return false;
