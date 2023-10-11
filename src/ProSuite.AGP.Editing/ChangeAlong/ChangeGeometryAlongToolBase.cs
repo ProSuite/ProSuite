@@ -313,8 +313,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private void StartTargetSelectionPhase()
 		{
 			Cursor = TargetSelectionCursor;
-
-			SetupRectangleSketch();
+			
+			SetupSketch(SketchGeometryType.Rectangle);
 		}
 
 		private async Task<bool> SelectTargetsAsync(

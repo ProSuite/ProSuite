@@ -27,8 +27,8 @@ using Cursor = System.Windows.Input.Cursor;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
-
-	// TODO DARO is it the duty of the base class to wrap overridable methods into a QeuedTask?
+	// TODO DARO is it the duty of the base class to wrap overridable methods into a QueuedTask?
+	// Shouldn't it be the caller, superclass to do QueuedTask?
 	// compare:
 	// OnEditCompletedCoreAsync vs. OnToolDeactivateCore
 	public abstract class OneClickToolBase : MapTool
@@ -75,13 +75,13 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected List<Key> HandledKeys { get; } = new();
 
-		/// <summary>
-		/// The currently pressed keys.
-		/// </summary>
 		protected HashSet<Key> PressedKeys { get; } = new();
 
 		protected virtual Cursor SelectionCursor { get; init; }
+
 		protected Cursor SelectionCursorShift { get; init; }
+
+		#region overrides
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
@@ -131,7 +131,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				PressedKeys.Add(k.Key);
 
-				if (IsModifierKey(k.Key) || HandledKeys.Contains(k.Key))
+				if (KeyboardUtils.IsModifierKey(k.Key) || HandledKeys.Contains(k.Key))
 				{
 					k.Handled = true;
 				}
@@ -152,23 +152,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			}, _msg);
 		}
 
-		private async Task OnToolKeyDownAsync(MapViewKeyEventArgs k)
-		{
-			await QueuedTask.Run(() =>
-			{
-				if (IsShiftKey(k.Key))
-				{
-					ShiftPressedCore();
-				}
-
-				OnKeyDownCore(k);
-			});
-		}
-
 		protected override async void OnToolKeyUp(MapViewKeyEventArgs k)
 		{
 			_msg.VerboseDebug(() => nameof(OnToolKeyUp));
-			
+
 			try
 			{
 				await ViewUtils.TryAsync(OnTookKeyUpAsync(k), _msg);
@@ -177,19 +164,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				PressedKeys.Remove(k.Key);
 			}
-		}
-
-		private async Task OnTookKeyUpAsync(MapViewKeyEventArgs k)
-		{
-			await QueuedTask.Run(() =>
-			{
-				if (IsShiftKey(k.Key))
-				{
-					ShiftReleasedCore();
-				}
-
-				OnKeyUpCore(k);
-			});
 		}
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
@@ -221,74 +195,34 @@ namespace ProSuite.AGP.Editing.OneClick
 				       OnSketchCompleteCoreAsync(sketchGeometry, GetCancelableProgressor()), _msg);
 		}
 
-		protected virtual void ShiftPressedCore()
+		#endregion
+
+		#region privates
+
+		private async Task OnToolKeyDownAsync(MapViewKeyEventArgs k)
 		{
-			if (SelectionCursorShift != null && IsInSelectionPhase(true))
+			await QueuedTask.Run(() =>
 			{
-				SetCursor(SelectionCursorShift);
-			}
+				if (IsShiftKey(k.Key))
+				{
+					ShiftPressedCore();
+				}
+
+				OnKeyDownCore(k);
+			});
 		}
 
-		protected virtual void ShiftReleasedCore()
+		private async Task OnTookKeyUpAsync(MapViewKeyEventArgs k)
 		{
-			if (SelectionCursor != null && IsInSelectionPhase(true))
+			await QueuedTask.Run(() =>
 			{
-				SetCursor(SelectionCursor);
-			}
-		}
+				if (IsShiftKey(k.Key))
+				{
+					ShiftReleasedCore();
+				}
 
-		protected void StartSelectionPhase()
-		{
-			SetCursor(KeyboardUtils.IsModifierPressed(Keys.Shift, true)
-				          ? SelectionCursorShift
-				          : SelectionCursor);
-
-			OnSelectionPhaseStarted();
-		}
-
-		/// <summary>
-		/// Sets up the tool for a sketch that is typically used to select things (features, graphics, etc.)
-		/// </summary>
-		protected void SetupRectangleSketch()
-		{
-			SetupSketch(SketchGeometryType.Rectangle);
-		}
-
-		protected void SetupSketch(SketchGeometryType? sketchType,
-		                           SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
-		                           bool useSnapping = false,
-		                           bool completeSketchOnMouseUp = true,
-		                           bool enforceSimpleSketch = false)
-		{
-			SketchOutputMode = sketchOutputMode;
-
-			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
-			// otherwise it has no effect!
-			CompleteSketchOnMouseUp = completeSketchOnMouseUp;
-
-			SketchType = sketchType;
-
-			UseSnapping = useSnapping;
-
-			GeomIsSimpleAsFeature = enforceSimpleSketch;
-		}
-
-		protected virtual void OnSelectionPhaseStarted() { }
-
-		private static bool IsModifierKey(Key key)
-		{
-			return key == Key.LeftShift ||
-			       key == Key.RightShift ||
-			       key == Key.LeftCtrl ||
-			       key == Key.RightCtrl ||
-			       key == Key.LeftAlt ||
-			       key == Key.RightAlt;
-		}
-
-		protected static bool IsShiftKey(Key key)
-		{
-			return key == Key.LeftShift ||
-			       key == Key.RightShift;
+				OnKeyUpCore(k);
+			});
 		}
 
 		private async void OnMapSelectionChanged(MapSelectionChangedEventArgs args)
@@ -312,47 +246,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			await ViewUtils.TryAsync(OnEditCompletedCoreAsync(args), _msg);
 		}
 
-		/// <summary>
-		/// The task to be run on edit complete.
-		/// NOTE: This task is run after every edit operation, including undo or delete with DEL key!
-		/// In that case there seems to be no catch block observing the potential exception thrown
-		/// inside the task execution, which leads to a crash of the application due to the finalizer
-		/// thread throwing:
-		/// A Task's exception(s) were not observed either by Waiting on the Task or accessing its
-		/// Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.
-		/// Therefore any exception must be caught inside the Task execution!
-		/// </summary>
-		/// <param name="args"></param>
-		/// <returns></returns>
-		protected virtual async Task OnEditCompletedCoreAsync(EditCompletedEventArgs args)
-		{
-			await Task.CompletedTask;
-		}
-
-		protected virtual void OnToolActivatingCore() { }
-
-		protected virtual bool OnToolActivatedCore(bool hasMapViewChanged)
-		{
-			return true;
-		}
-
-		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
-
-		protected virtual void OnMapSelectionChangedCore(MapSelectionChangedEventArgs args) { }
-
-		[CanBeNull]
-		protected virtual CancelableProgressor GetCancelableProgressor()
-		{
-			return new CancelableProgressorSource().Progressor;
-		}
-
-		protected virtual async Task<bool> OnSketchCompleteCoreAsync(
-			[NotNull] Geometry sketchGeometry,
-			[CanBeNull] CancelableProgressor progressor)
-		{
-			return await Task.FromResult(true);
-		}
-		
 		private async Task<bool> OnSelectionSketchCompleteAsync(Geometry sketchGeometry,
 		                                                        CancelableProgressor progressor)
 		{
@@ -418,8 +311,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return result;
 		}
 
-		// todo daro when return false?
-		// todo daro ViewUtils.Try araound it?
 		private static async Task<bool> SingleSelectAsync(
 			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
@@ -443,6 +334,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				return true;
 			}
+
 			// no key pressed: pick best
 			if (pickerMode == PickerMode.PickBest)
 			{
@@ -469,6 +361,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				return true;
 			}
+
 			// CTRL pressed: show picker
 			if (pickerMode == PickerMode.ShowPicker)
 			{
@@ -477,7 +370,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						() => PickableItemsFactory.CreateFeatureItems(orderedSelection));
 
 				IPickableFeatureItem pickedItem =
-					await ShowPickerAsync<IPickableFeatureItem>(
+					await ShowPickerCoreAsync<IPickableFeatureItem>(
 						items, pickerPrecedence, pickerLocation);
 
 				if (pickedItem == null)
@@ -524,7 +417,7 @@ namespace ProSuite.AGP.Editing.OneClick
 							PickerUtils.OrderByGeometryDimension(candidatesOfLayers)));
 
 				IPickableFeatureClassItem pickedItem =
-					await ShowPickerAsync<IPickableFeatureClassItem>(
+					await ShowPickerCoreAsync<IPickableFeatureClassItem>(
 						items, pickerPrecedence, pickerLocation);
 
 				if (pickedItem == null)
@@ -561,25 +454,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		[NotNull]
-		protected static async Task<T> ShowPickerAsync<T>(
-			IEnumerable<IPickableItem> items, IPickerPrecedence pickerPrecedence,
-			Point pickerLocation)
-			where T : class, IPickableItem
-		{
-			var picker = new PickerService();
-
-			Func<Task<T>> showPickerControl =
-				await QueuedTaskUtils.Run(() => picker.PickSingle<T>(
-					                          items, pickerLocation,
-					                          pickerPrecedence));
-
-			T pickedItem =
-				await ViewUtils.TryAsync(showPickerControl(), _msg);
-
-			return pickedItem;
-		}
-
 		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(
 			[NotNull] Geometry searchGeometry,
 			SpatialRelationship spatialRelationship)
@@ -600,84 +474,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return featureFinder.FindFeaturesByLayer(
 				searchGeometry,
 				fl => CanSelectFromLayer(fl));
-		}
-
-		protected bool IsInSelectionPhase()
-		{
-			return IsInSelectionPhase(KeyboardUtils.IsModifierPressed(Keys.Shift, true));
-		}
-
-		protected virtual bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			return false;
-		}
-
-		protected virtual void OnKeyDownCore(MapViewKeyEventArgs k) { }
-
-		protected virtual void OnKeyUpCore(MapViewKeyEventArgs mapViewKeyEventArgs) { }
-
-		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs e) { }
-
-		protected virtual void ShowOptionsPane() { }
-
-		protected virtual void HideOptionsPane() { }
-
-		protected abstract bool HandleEscape();
-
-		protected abstract void LogUsingCurrentSelection();
-
-		protected abstract void LogPromptForSelection();
-
-		protected abstract int GetSelectionTolerance();
-
-		protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
-		{
-			GeometryType shapeType = DatasetUtils.GetShapeType(feature.GetTable());
-
-			return CanSelectGeometryType(shapeType);
-		}
-
-		protected virtual void AfterSelection([NotNull] IList<Feature> selectedFeatures,
-		                                      [CanBeNull] CancelableProgressor progressor) { }
-
-		private void ProcessSelection([NotNull] MapView activeMapView,
-		                              [CanBeNull] CancelableProgressor progressor = null)
-		{
-			Dictionary<MapMember, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection(activeMapView.Map);
-
-			var notifications = new NotificationCollection();
-			List<Feature> applicableSelection =
-				GetApplicableSelectedFeatures(selectionByLayer, notifications).ToList();
-
-			int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
-
-			if (applicableSelection.Count > 0 &&
-			    (AllowNotApplicableFeaturesInSelection ||
-			     applicableSelection.Count == selectionCount))
-			{
-				LogUsingCurrentSelection();
-
-				AfterSelection(applicableSelection, progressor);
-			}
-			else
-			{
-				if (selectionCount > 0)
-				{
-					_msg.InfoFormat(notifications.Concatenate(Environment.NewLine));
-				}
-
-				LogPromptForSelection();
-				StartSelectionPhase();
-			}
-		}
-
-		protected void SetCursor([CanBeNull] Cursor cursor)
-		{
-			if (cursor != null)
-			{
-				Cursor = cursor;
-			}
 		}
 
 		private bool CanSelectFromLayer([CanBeNull] Layer layer,
@@ -732,10 +528,200 @@ namespace ProSuite.AGP.Editing.OneClick
 			return CanSelectFromLayerCore(basicFeatureLayer);
 		}
 
-		[Obsolete]
-		protected virtual bool CanUseSelection([NotNull] IEnumerable<Feature> selectedFeatures)
+		private void ProcessSelection([NotNull] MapView activeMapView,
+		                              [CanBeNull] CancelableProgressor progressor = null)
 		{
-			return selectedFeatures.Any(CanSelectFeatureGeometryType);
+			Dictionary<MapMember, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection(activeMapView.Map);
+
+			var notifications = new NotificationCollection();
+			List<Feature> applicableSelection =
+				GetApplicableSelectedFeatures(selectionByLayer, notifications).ToList();
+
+			int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
+
+			if (applicableSelection.Count > 0 &&
+			    (AllowNotApplicableFeaturesInSelection ||
+			     applicableSelection.Count == selectionCount))
+			{
+				LogUsingCurrentSelection();
+
+				AfterSelection(applicableSelection, progressor);
+			}
+			else
+			{
+				if (selectionCount > 0)
+				{
+					_msg.InfoFormat(notifications.Concatenate(Environment.NewLine));
+				}
+
+				LogPromptForSelection();
+				StartSelectionPhase();
+			}
+		}
+
+		[NotNull]
+		private static async Task<T> ShowPickerCoreAsync<T>(
+			IEnumerable<IPickableItem> items, IPickerPrecedence pickerPrecedence,
+			Point pickerLocation)
+			where T : class, IPickableItem
+		{
+			var picker = new PickerService();
+
+			Func<Task<T>> showPickerControl =
+				await QueuedTaskUtils.Run(() => picker.PickSingle<T>(
+					                          items, pickerLocation,
+					                          pickerPrecedence));
+
+			T pickedItem =
+				await ViewUtils.TryAsync(showPickerControl(), _msg);
+
+			return pickedItem;
+		}
+
+		#endregion
+
+		#region overridables
+
+		protected virtual void ShiftPressedCore()
+		{
+			if (SelectionCursorShift != null && IsInSelectionPhase(true))
+			{
+				SetCursor(SelectionCursorShift);
+			}
+		}
+
+		protected virtual void ShiftReleasedCore()
+		{
+			if (SelectionCursor != null && IsInSelectionPhase(true))
+			{
+				SetCursor(SelectionCursor);
+			}
+		}
+
+		protected virtual void OnSelectionPhaseStarted() { }
+
+		/// <summary>
+		/// The task to be run on edit complete.
+		/// NOTE: This task is run after every edit operation, including undo or delete with DEL key!
+		/// In that case there seems to be no catch block observing the potential exception thrown
+		/// inside the task execution, which leads to a crash of the application due to the finalizer
+		/// thread throwing:
+		/// A Task's exception(s) were not observed either by Waiting on the Task or accessing its
+		/// Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.
+		/// Therefore any exception must be caught inside the Task execution!
+		/// </summary>
+		/// <param name="args"></param>
+		/// <returns></returns>
+		protected virtual async Task OnEditCompletedCoreAsync(EditCompletedEventArgs args)
+		{
+			await Task.CompletedTask;
+		}
+
+		protected virtual void OnToolActivatingCore() { }
+
+		protected virtual bool OnToolActivatedCore(bool hasMapViewChanged)
+		{
+			return true;
+		}
+
+		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
+
+		protected virtual void OnMapSelectionChangedCore(MapSelectionChangedEventArgs args) { }
+
+		[CanBeNull]
+		protected virtual CancelableProgressor GetCancelableProgressor()
+		{
+			return new CancelableProgressorSource().Progressor;
+		}
+
+		protected virtual async Task<bool> OnSketchCompleteCoreAsync(
+			[NotNull] Geometry sketchGeometry,
+			[CanBeNull] CancelableProgressor progressor)
+		{
+			return await Task.FromResult(true);
+		}
+
+		// todo daro when return false?
+		// todo daro ViewUtils.Try araound it?
+
+		protected virtual bool IsInSelectionPhase(bool shiftIsPressed)
+		{
+			return false;
+		}
+
+		protected virtual void OnKeyDownCore(MapViewKeyEventArgs k) { }
+
+		protected virtual void OnKeyUpCore(MapViewKeyEventArgs mapViewKeyEventArgs) { }
+
+		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs e) { }
+
+		protected virtual void ShowOptionsPane() { }
+
+		protected virtual void HideOptionsPane() { }
+
+		protected abstract bool HandleEscape();
+
+		protected abstract void LogUsingCurrentSelection();
+
+		protected abstract void LogPromptForSelection();
+
+		protected abstract int GetSelectionTolerance();
+
+		protected virtual void AfterSelection([NotNull] IList<Feature> selectedFeatures,
+		                                      [CanBeNull] CancelableProgressor progressor) { }
+		
+		protected virtual bool CanSelectGeometryType(GeometryType geometryType)
+		{
+			return true;
+		}
+
+		protected virtual bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer basicFeatureLayer)
+		{
+			return true;
+		}
+
+		#endregion
+
+		#region protected
+
+		protected void StartSelectionPhase()
+		{
+			SetCursor(KeyboardUtils.IsModifierPressed(Keys.Shift, true)
+				          ? SelectionCursorShift
+				          : SelectionCursor);
+
+			OnSelectionPhaseStarted();
+		}
+
+		protected void SetupSketch(SketchGeometryType? sketchType,
+		                           SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
+		                           bool useSnapping = false,
+		                           bool completeSketchOnMouseUp = true,
+		                           bool enforceSimpleSketch = false)
+		{
+			SketchOutputMode = sketchOutputMode;
+
+			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
+			// otherwise it has no effect!
+			CompleteSketchOnMouseUp = completeSketchOnMouseUp;
+
+			SketchType = sketchType;
+
+			UseSnapping = useSnapping;
+
+			GeomIsSimpleAsFeature = enforceSimpleSketch;
+		}
+
+		protected static bool IsShiftKey(Key key)
+		{
+			return key == Key.LeftShift ||
+			       key == Key.RightShift;
+		}
+
+		protected bool IsInSelectionPhase()
+		{
+			return IsInSelectionPhase(KeyboardUtils.IsModifierPressed(Keys.Shift, true));
 		}
 
 		protected bool CanUseSelection([NotNull] MapView activeMapView)
@@ -801,14 +787,29 @@ namespace ProSuite.AGP.Editing.OneClick
 			return GetApplicableSelectedFeatures(selectionByLayer);
 		}
 
-		protected virtual bool CanSelectGeometryType(GeometryType geometryType)
+		protected void SetCursor([CanBeNull] Cursor cursor)
 		{
-			return true;
+			if (cursor != null)
+			{
+				Cursor = cursor;
+			}
 		}
 
-		protected virtual bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer basicFeatureLayer)
+		protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
 		{
-			return true;
+			GeometryType shapeType = DatasetUtils.GetShapeType(feature.GetTable());
+
+			return CanSelectGeometryType(shapeType);
 		}
+
+		protected static async Task<T> ShowPickerAsync<T>(IEnumerable<IPickableItem> items,
+		                                                  IPickerPrecedence pickerPrecedence,
+		                                                  Point pickerLocation)
+			where T : class, IPickableItem
+		{
+			return await ShowPickerCoreAsync<T>(items, pickerPrecedence, pickerLocation);
+		}
+
+		#endregion
 	}
 }

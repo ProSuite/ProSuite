@@ -39,8 +39,6 @@ namespace ProSuite.AGP.Editing
 		{
 			MapPoint sketchPoint = CreatePointFromSketchPolygon(sketchGeometry);
 
-			_msg.VerboseDebug(() => $"Selection sketch point: {GeometryUtils.Format(sketchPoint)}");
-
 			return BufferGeometryByPixels(sketchPoint, selectionTolerancePixels);
 		}
 
@@ -111,13 +109,9 @@ namespace ProSuite.AGP.Editing
 		                                               int pixelBufferDistance)
 		{
 			double bufferDistance = MapUtils.ConvertScreenPixelToMapLength(pixelBufferDistance);
-			_msg.VerboseDebug(() => $"Selection tolerance on map {Math.Round(bufferDistance, 0)}");
-
+			
 			Geometry selectionGeometry =
 				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
-
-			_msg.VerboseDebug(
-				() => $"Selection sketch geometry {GeometryUtils.Format(selectionGeometry.Extent)}");
 
 			return selectionGeometry;
 		}
