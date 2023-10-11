@@ -4,6 +4,7 @@ using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
@@ -14,7 +15,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected ReshapeAlongToolBase()
+		protected ReshapeAlongToolBase(SelectionSettings selectionSettings) : base(
+			selectionSettings)
 		{
 			SelectionCursor = ToolUtils.GetCursor(Resources.ReshapeAlongToolCursor);
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.ReshapeAlongToolCursorShift);

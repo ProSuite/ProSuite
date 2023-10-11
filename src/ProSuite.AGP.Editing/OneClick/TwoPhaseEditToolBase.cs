@@ -9,7 +9,7 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.Commons.AGP.Carto;
+using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -21,7 +21,8 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected TwoPhaseEditToolBase()
+		protected TwoPhaseEditToolBase(SelectionSettings selectionSettings) : base(
+			selectionSettings)
 		{
 			IsSketchTool = true;
 		}

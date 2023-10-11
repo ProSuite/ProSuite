@@ -17,6 +17,7 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
@@ -42,7 +43,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private ChangeAlongFeedback _feedback;
 
-		protected ChangeGeometryAlongToolBase()
+		protected ChangeGeometryAlongToolBase(SelectionSettings selectionSettings) : base(
+			selectionSettings)
 		{
 			IsSketchTool = true;
 

@@ -273,10 +273,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void StartSelectionPhase()
 		{
-			SelectionSettings settings = GetSelectionSettings();
-
-			SetupSketch(settings.SketchGeometryType, settings.SketchOutputMode);
-
 			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
 			{
 				SetCursor(SelectionCursorShift);
@@ -427,7 +423,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected int GetSelectionTolerancePixels()
 		{
-			return GetSelectionSettings().SelectionTolerancePixels;
+			return _selectionSettings.SelectionTolerancePixels;
 		}
 
 		private async Task<bool> OnSelectionSketchComplete(Geometry sketchGeometry,
@@ -701,8 +697,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual void ShowOptionsPane() { }
 
 		protected virtual void HideOptionsPane() { }
-
-		protected abstract SelectionSettings GetSelectionSettings();
 
 		protected abstract bool HandleEscape();
 

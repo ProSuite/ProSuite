@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
@@ -21,7 +22,7 @@ namespace ProSuite.AGP.Editing.Erase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected EraseToolBase()
+		protected EraseToolBase(SelectionSettings selectionSettings) : base(selectionSettings)
 		{
 			// This is our property:
 			RequiresSelection = true;

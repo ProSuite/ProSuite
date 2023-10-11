@@ -12,7 +12,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Carto;
+using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
@@ -34,7 +34,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private bool _intermittentSelectionPhase;
 
-		protected ConstructionToolBase()
+		protected ConstructionToolBase(SelectionSettings selectionSettings) : base(
+			selectionSettings)
 		{
 			ContextMenuID = "esri_editing_SketchContextMenu";
 

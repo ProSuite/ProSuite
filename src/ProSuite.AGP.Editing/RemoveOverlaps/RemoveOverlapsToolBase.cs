@@ -11,6 +11,7 @@ using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Selection;
@@ -32,7 +33,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		private RemoveOverlapsFeedback _feedback;
 		private IList<Feature> _overlappingFeatures;
 
-		protected RemoveOverlapsToolBase()
+		protected RemoveOverlapsToolBase(SelectionSettings selectionSettings) : base(
+			selectionSettings)
 		{
 			GeomIsSimpleAsFeature = false;
 

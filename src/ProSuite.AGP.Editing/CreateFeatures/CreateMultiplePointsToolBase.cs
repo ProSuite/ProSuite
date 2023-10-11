@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
+using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -24,7 +24,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected CreateMultiplePointsToolBase()
+		protected CreateMultiplePointsToolBase(SelectionSettings selectionSettings) : base(
+			selectionSettings)
 		{
 			UseSnapping = true;
 
@@ -33,12 +34,13 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			// This does not work unless loadOnClick="false" in the daml.xml:
 			// And the tags are not recognized either...
 			Tooltip =
-				"Create several point or multipoint features at once for the current feature template." + Environment.NewLine +
+				"Create several point or multipoint features at once for the current feature template." +
+				Environment.NewLine +
 				Environment.NewLine +
 				"Shortcuts:" + Environment.NewLine +
 				"ESC: Delete sketch points" + Environment.NewLine +
 				"F2:  Finish sketch";
-			
+
 			// how to set up shortcuts?
 			if (Shortcuts != null)
 			{
