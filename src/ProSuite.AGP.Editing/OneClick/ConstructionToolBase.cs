@@ -248,13 +248,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		protected override void OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
 			_msg.VerboseDebug(() => "OnMapSelectionChangedCore");
 
 			if (ActiveMapView == null)
 			{
-				return false;
+				return;
 			}
 
 			// TODO: only if selection was cleared? Generally allow changing the selection through attribute selection?
@@ -264,8 +264,6 @@ namespace ProSuite.AGP.Editing.OneClick
 				//LogPromptForSelection();
 				StartSelectionPhase();
 			}
-
-			return true;
 		}
 
 		protected override async Task<bool> OnSketchCompleteCoreAsync(

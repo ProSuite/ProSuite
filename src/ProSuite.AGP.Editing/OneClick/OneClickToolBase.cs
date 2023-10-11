@@ -18,7 +18,6 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
-using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
@@ -28,7 +27,10 @@ using Cursor = System.Windows.Input.Cursor;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
-	// todo daro log more, especially in subclasses
+
+	// TODO DARO is it the duty of the base class to wrap overridable methods into a QeuedTask?
+	// compare:
+	// OnEditCompletedCoreAsync vs. OnToolDeactivateCore
 	public abstract class OneClickToolBase : MapTool
 	{
 		private const Key _keyShowOptionsPane = Key.O;
@@ -91,9 +93,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			PressedKeys.Clear();
 
-			try
-			{
-				await QueuedTask.Run(
+			await ViewUtils.TryAsync(
+				QueuedTask.Run(
 					() =>
 					{
 						OnToolActivatingCore();
@@ -104,12 +105,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						}
 
 						return OnToolActivatedCore(hasMapViewChanged);
-					});
-			}
-			catch (Exception e)
-			{
-				HandleError($"Error in tool activation ({Caption}): {e.Message}", e);
-			}
+					}), _msg);
 		}
 
 		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
@@ -120,23 +116,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChanged);
 			EditCompletedEvent.Unsubscribe(OnEditCompletedAsync);
 
-			try
-			{
-				HideOptionsPane();
+			HideOptionsPane();
 
-				await QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
-			}
-			catch (Exception e)
-			{
-				HandleError($"Error in tool deactivation ({Caption}): {e.Message}", e, true);
-			}
+			// TODO DARO is it the duty of the base class to wrap overridable methods into a QeuedTask?
+			await ViewUtils.TryAsync(
+				QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged)), _msg);
 		}
 
-		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
+		protected override async void OnToolKeyDown(MapViewKeyEventArgs k)
 		{
 			_msg.VerboseDebug(() => nameof(OnToolKeyDown));
 
-			try
+			await ViewUtils.TryAsync(() =>
 			{
 				PressedKeys.Add(k.Key);
 
@@ -157,51 +148,48 @@ namespace ProSuite.AGP.Editing.OneClick
 					HandleEscape();
 				}
 
-				QueuedTaskUtils.Run(
-					delegate
-					{
-						if (IsShiftKey(k.Key))
-						{
-							ShiftPressedCore();
-						}
-
-						OnKeyDownCore(k);
-
-						return true;
-					});
-			}
-			catch (Exception e)
-			{
-				HandleError($"Error in tool key down ({Caption}): {e.Message}", e, true);
-			}
+				return OnToolKeyDownAsync(k);
+			}, _msg);
 		}
 
-		protected override void OnToolKeyUp(MapViewKeyEventArgs k)
+		private async Task OnToolKeyDownAsync(MapViewKeyEventArgs k)
+		{
+			await QueuedTask.Run(() =>
+			{
+				if (IsShiftKey(k.Key))
+				{
+					ShiftPressedCore();
+				}
+
+				OnKeyDownCore(k);
+			});
+		}
+
+		protected override async void OnToolKeyUp(MapViewKeyEventArgs k)
 		{
 			_msg.VerboseDebug(() => nameof(OnToolKeyUp));
-
+			
 			try
 			{
-				QueuedTaskUtils.Run(
-					delegate
-					{
-						if (IsShiftKey(k.Key))
-						{
-							ShiftReleasedCore();
-						}
-
-						OnKeyUpCore(k);
-						return true;
-					});
-			}
-			catch (Exception e)
-			{
-				HandleError($"Error in tool key up ({Caption}): {e.Message}", e, true);
+				await ViewUtils.TryAsync(OnTookKeyUpAsync(k), _msg);
 			}
 			finally
 			{
 				PressedKeys.Remove(k.Key);
 			}
+		}
+
+		private async Task OnTookKeyUpAsync(MapViewKeyEventArgs k)
+		{
+			await QueuedTask.Run(() =>
+			{
+				if (IsShiftKey(k.Key))
+				{
+					ShiftReleasedCore();
+				}
+
+				OnKeyUpCore(k);
+			});
 		}
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
@@ -213,31 +201,24 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			try
+			if (SketchType == SketchGeometryType.Polygon)
 			{
-				CancelableProgressor progressor = GetCancelableProgressor();
-
-				if (SketchType == SketchGeometryType.Polygon)
+				ViewUtils.Try(() =>
 				{
 					// Otherwise relational operators and spatial queries return the wrong result
 					sketchGeometry = GeometryUtils.Simplify(sketchGeometry);
-				}
-
-				if (RequiresSelection && IsInSelectionPhase())
-				{
-					return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
-				}
-
-				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
+				}, _msg);
 			}
-			catch (Exception e)
+
+			if (RequiresSelection && IsInSelectionPhase())
 			{
-				HandleError($"{Caption}: Error completing sketch ({e.Message})", e);
-				// NOTE: Throwing here results in a process crash (Exception while waiting for a Task to complete)
-				// Consider Task.FromException?
-
-				return await Task.FromResult(true);
+				return await ViewUtils.TryAsync(
+					       OnSelectionSketchCompleteAsync(sketchGeometry,
+					                                      GetCancelableProgressor()), _msg);
 			}
+
+			return await ViewUtils.TryAsync(
+				       OnSketchCompleteCoreAsync(sketchGeometry, GetCancelableProgressor()), _msg);
 		}
 
 		protected virtual void ShiftPressedCore()
@@ -258,14 +239,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void StartSelectionPhase()
 		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
-			{
-				SetCursor(SelectionCursorShift);
-			}
-			else
-			{
-				SetCursor(SelectionCursor);
-			}
+			SetCursor(KeyboardUtils.IsModifierPressed(Keys.Shift, true)
+				          ? SelectionCursorShift
+				          : SelectionCursor);
 
 			OnSelectionPhaseStarted();
 		}
@@ -315,51 +291,25 @@ namespace ProSuite.AGP.Editing.OneClick
 			       key == Key.RightShift;
 		}
 
-		private void OnMapSelectionChanged(MapSelectionChangedEventArgs args)
+		private async void OnMapSelectionChanged(MapSelectionChangedEventArgs args)
 		{
 			_msg.VerboseDebug(() => nameof(OnMapSelectionChanged));
 
-			try
-			{
-				QueuedTaskUtils.Run(
-					delegate
-					{
-						try
-						{
-							// Used to clear derived geometries etc.
-							bool result = OnMapSelectionChangedCore(args);
+			// NOTE: If the exception of this event is not caught here, the application crashes!
+			await ViewUtils.TryAsync(OnMapSelectionChangedAsync(args), _msg);
+		}
 
-							return result;
-						}
-						catch (Exception e)
-						{
-							// NOTE: If the exception of this event is not caught here, the application crashes!
-							HandleError($"Error while processing selection change: {e.Message}", e,
-							            true);
-							return false;
-						}
-					});
-			}
-			catch (Exception e)
-			{
-				HandleError($"Error OnSelectionChanged: {e.Message}", e, true);
-			}
+		private async Task OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
+		{
+			// Used to clear derived geometries etc.
+			await QueuedTask.Run(() => OnMapSelectionChangedCore(args));
 		}
 
 		private async Task OnEditCompletedAsync(EditCompletedEventArgs args)
 		{
 			_msg.VerboseDebug(() => nameof(OnEditCompletedAsync));
 
-			try
-			{
-				await OnEditCompletedCoreAsync(args);
-			}
-			catch (Exception e)
-			{
-				HandleError($"Error OnEditCompletedAsync: {e.Message}", e, true);
-
-				await Task.CompletedTask;
-			}
+			await ViewUtils.TryAsync(OnEditCompletedCoreAsync(args), _msg);
 		}
 
 		/// <summary>
@@ -388,10 +338,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
 
-		protected virtual bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
-		{
-			return true;
-		}
+		protected virtual void OnMapSelectionChangedCore(MapSelectionChangedEventArgs args) { }
 
 		[CanBeNull]
 		protected virtual CancelableProgressor GetCancelableProgressor()
@@ -723,17 +670,6 @@ namespace ProSuite.AGP.Editing.OneClick
 				LogPromptForSelection();
 				StartSelectionPhase();
 			}
-		}
-
-		protected void HandleError(string message, Exception e, bool noMessageBox = false)
-		{
-			if (noMessageBox)
-			{
-				_msg.Error(message, e);
-				return;
-			}
-
-			ErrorHandler.HandleError(message, e, _msg, "Error");
 		}
 
 		protected void SetCursor([CanBeNull] Cursor cursor)

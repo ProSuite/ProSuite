@@ -29,15 +29,15 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Cursor SecondPhaseCursor { get; set; }
 
-		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		protected override void OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
-			if (args.Selection.Count == 0)
+			if (args.Selection.Count != 0)
 			{
-				ResetDerivedGeometries();
-				StartSelectionPhase();
+				return;
 			}
 
-			return true;
+			ResetDerivedGeometries();
+			StartSelectionPhase();
 		}
 
 		protected override Task OnEditCompletedCoreAsync(EditCompletedEventArgs args)
