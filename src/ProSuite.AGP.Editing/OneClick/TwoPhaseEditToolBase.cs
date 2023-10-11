@@ -21,8 +21,8 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected TwoPhaseEditToolBase(SelectionSettings selectionSettings) : base(
-			selectionSettings)
+		protected TwoPhaseEditToolBase(SketchProperties sketchProperties) : base(
+			sketchProperties)
 		{
 			IsSketchTool = true;
 		}

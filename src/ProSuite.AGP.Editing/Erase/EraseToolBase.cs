@@ -22,7 +22,7 @@ namespace ProSuite.AGP.Editing.Erase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected EraseToolBase(SelectionSettings selectionSettings) : base(selectionSettings)
+		protected EraseToolBase(SketchProperties sketchProperties) : base(sketchProperties)
 		{
 			// This is our property:
 			RequiresSelection = true;

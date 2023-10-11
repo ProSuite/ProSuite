@@ -33,8 +33,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		private RemoveOverlapsFeedback _feedback;
 		private IList<Feature> _overlappingFeatures;
 
-		protected RemoveOverlapsToolBase(SelectionSettings selectionSettings) : base(
-			selectionSettings)
+		protected RemoveOverlapsToolBase(SketchProperties sketchProperties) : base(
+			sketchProperties)
 		{
 			GeomIsSimpleAsFeature = false;
 
@@ -322,7 +322,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				return new Overlaps();
 			}
 
-			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
+			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerance(),
 			                                          out bool singlePick);
 
 			// in case of single pick the line has priority...

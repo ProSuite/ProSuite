@@ -24,8 +24,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected CreateMultiplePointsToolBase(SelectionSettings selectionSettings) : base(
-			selectionSettings)
+		protected CreateMultiplePointsToolBase(SketchProperties sketchProperties) : base(
+			sketchProperties)
 		{
 			UseSnapping = true;
 

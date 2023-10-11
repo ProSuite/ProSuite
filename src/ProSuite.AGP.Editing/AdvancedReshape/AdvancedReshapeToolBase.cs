@@ -50,8 +50,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		private CancellationTokenSource _cancellationTokenSource;
 		private const Key _keyToggleNonDefaultSide = Key.S;
 
-		protected AdvancedReshapeToolBase(SelectionSettings selectionSettings) : base(
-			selectionSettings)
+		protected AdvancedReshapeToolBase(SketchProperties sketchProperties) : base(
+			sketchProperties)
 		{
 			// This is our property:
 			RequiresSelection = true;

@@ -31,25 +31,20 @@ namespace ProSuite.AGP.Editing.OneClick
 	// todo daro log more, especially in subclasses
 	public abstract class OneClickToolBase : MapTool
 	{
-		private readonly SelectionSettings _selectionSettings;
 		private const Key _keyShowOptionsPane = Key.O;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private IPickerPrecedence _pickerPrecedence;
 
-		protected OneClickToolBase()
+		protected OneClickToolBase(SketchProperties sketchProperties)
 		{
 			ContextMenuID = "esri_mapping_selection2DContextMenu";
 
 			UseSnapping = false;
 			HandledKeys.Add(Key.Escape);
 			HandledKeys.Add(_keyShowOptionsPane);
-		}
 
-		protected OneClickToolBase(SelectionSettings selectionSettings) : this()
-		{
-			_selectionSettings = selectionSettings;
-			SetupSketch(selectionSettings.SketchGeometryType, selectionSettings.SketchOutputMode);
+			SetupSketch(sketchProperties.SketchGeometryType, sketchProperties.SketchOutputMode);
 		}
 
 		/// <summary>
@@ -418,12 +413,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Geometry sketchGeometry,
 			[CanBeNull] CancelableProgressor progressor)
 		{
-			return Task.FromResult(true);
-		}
-
-		protected int GetSelectionTolerancePixels()
-		{
-			return _selectionSettings.SelectionTolerancePixels;
 		}
 
 		private async Task<bool> OnSelectionSketchComplete(Geometry sketchGeometry,
@@ -448,7 +437,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				await QueuedTaskUtils.Run(() =>
 				{
 					selectionGeometry = ToolUtils.SketchToSearchGeometry(sketchGeometry,
-						GetSelectionTolerancePixels(), out singlePick);
+						GetSelectionTolerance(), out singlePick);
 
 					pickerLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
@@ -703,6 +692,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected abstract void LogUsingCurrentSelection();
 
 		protected abstract void LogPromptForSelection();
+
+		protected abstract int GetSelectionTolerance();
 
 		protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
 		{

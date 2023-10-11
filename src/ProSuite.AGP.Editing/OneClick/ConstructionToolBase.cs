@@ -34,8 +34,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private bool _intermittentSelectionPhase;
 
-		protected ConstructionToolBase(SelectionSettings selectionSettings) : base(
-			selectionSettings)
+		protected ConstructionToolBase(SketchProperties sketchProperties) : base(
+			sketchProperties)
 		{
 			ContextMenuID = "esri_editing_SketchContextMenu";
 

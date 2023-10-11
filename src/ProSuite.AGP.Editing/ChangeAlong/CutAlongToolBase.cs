@@ -15,7 +15,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected CutAlongToolBase(SelectionSettings selectionSettings) : base(selectionSettings)
+		protected CutAlongToolBase(SketchProperties sketchProperties) : base(sketchProperties)
 		{
 			SelectionCursor = ToolUtils.GetCursor(Resources.CutPolygonAlongToolCursor);
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.ReshapeAlongToolCursorShift);

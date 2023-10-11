@@ -43,8 +43,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private ChangeAlongFeedback _feedback;
 
-		protected ChangeGeometryAlongToolBase(SelectionSettings selectionSettings) : base(
-			selectionSettings)
+		protected ChangeGeometryAlongToolBase(SketchProperties sketchProperties) : base(
+			sketchProperties)
 		{
 			IsSketchTool = true;
 
@@ -331,7 +331,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				await QueuedTaskUtils.Run(() =>
 				{
 					sketch = ToolUtils.SketchToSearchGeometry(
-						sketch, GetSelectionTolerancePixels(), out isSingleClick);
+						sketch, GetSelectionTolerance(), out isSingleClick);
 
 					pickerLocation = MapView.Active.MapToScreen(sketch.Extent.Center);
 
@@ -498,7 +498,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private List<CutSubcurve> GetSelectedCutSubcurves([NotNull] Geometry sketch)
 		{
-			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
+			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerance(),
 			                                          out bool singlePick);
 
 			Predicate<CutSubcurve> canReshapePredicate =

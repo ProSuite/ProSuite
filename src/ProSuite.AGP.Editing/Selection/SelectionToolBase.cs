@@ -22,7 +22,7 @@ namespace ProSuite.AGP.Editing.Selection
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// todo daro refactor
-		protected SelectionToolBase(SelectionSettings selectionSettings) : base(selectionSettings)
+		protected SelectionToolBase(SketchProperties sketchProperties) : base(sketchProperties)
 		{
 			IsSketchTool = true;
 
