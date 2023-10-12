@@ -8,6 +8,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -270,9 +271,10 @@ namespace ProSuite.Commons.AGP.Carto
 			[CanBeNull] MapView mapView = null)
 		{
 			return GetStandaloneTables(
-				table => string.Equals(table.GetTable().GetName(),
-				                       tableName,
-				                       StringComparison.OrdinalIgnoreCase), mapView).FirstOrDefault();
+					table => string.Equals(table.GetTable().GetName(),
+					                       tableName,
+					                       StringComparison.OrdinalIgnoreCase), mapView)
+				.FirstOrDefault();
 		}
 
 		public static Geometry ToMapGeometry(MapView mapView,
@@ -338,6 +340,45 @@ namespace ProSuite.Commons.AGP.Carto
 				new Point(screenPoint.X + pixels, screenPoint.Y);
 			var radiusMapPoint = MapView.Active.ScreenToMap(radiusScreenPoint);
 			return GeometryEngine.Instance.Distance(mapPoint, radiusMapPoint);
+		}
+
+		/// <summary>
+		/// Zooms a map to a given envelope, applying an expansion factor and making sure the resulting
+		/// scale denominator is not larger than a given minimum denominator.
+		/// </summary>
+		/// <param name="mapView">The map view to zoom.</param>
+		/// <param name="extent">The extent to zoom to.</param>
+		/// <param name="expansionFactor">The expansion factor to apply to the extent. An expansion
+		/// factor of 1.1 enlarges the extent by 10% in both x and y</param>
+		/// <param name="minimumScale">The minimum scale denominator.</param>
+		public static async Task<bool> ZoomToAsync([NotNull] MapView mapView,
+		                                           [NotNull] Envelope extent,
+		                                           double expansionFactor,
+		                                           double minimumScale)
+		{
+			Assert.ArgumentNotNull(mapView, nameof(mapView));
+			Assert.ArgumentNotNull(extent, nameof(extent));
+			Assert.ArgumentCondition(! extent.IsEmpty, "extent must not be empty");
+
+			Envelope newExtent = extent;
+			if (expansionFactor > 0 && Math.Abs(expansionFactor - 1) > double.Epsilon)
+			{
+				newExtent = GeometryFactory.CreateEnvelope(extent, expansionFactor);
+			}
+
+			Map map = mapView.Map;
+			var newExtentMap =
+				GeometryUtils.EnsureSpatialReference(newExtent, map.SpatialReference);
+
+			Envelope currentExtent = mapView.Extent;
+			double currentScale = mapView.Camera.Scale;
+
+			Envelope zoomExtent = GetZoomExtent(newExtentMap, currentExtent,
+			                                    currentScale, minimumScale);
+
+			await mapView.ZoomToAsync(zoomExtent);
+
+			return true;
 		}
 
 		public static bool HasSelection([CanBeNull] MapView mapView)
@@ -485,6 +526,51 @@ namespace ProSuite.Commons.AGP.Carto
 		public static IEnumerable<T> GetLayers<T>([CanBeNull] this Map map) where T : Layer
 		{
 			return map == null ? Enumerable.Empty<T>() : map.GetLayersAsFlattenedList().OfType<T>();
+		}
+
+		[NotNull]
+		private static Envelope GetZoomExtent([NotNull] Envelope newExtent,
+		                                      [NotNull] Envelope currentExtent,
+		                                      double currentScale,
+		                                      double minimumScale)
+		{
+			Assert.ArgumentNotNull(newExtent, nameof(newExtent));
+			Assert.ArgumentNotNull(currentExtent, nameof(currentExtent));
+
+			if (double.IsNaN(currentScale))
+			{
+				return newExtent;
+			}
+
+			if (currentScale < minimumScale)
+			{
+				// if the user zoomed in to below the minimum scale manually,
+				// allow that scale to be maintained
+				minimumScale = currentScale;
+			}
+
+			double minWidth = currentExtent.Width * (minimumScale / currentScale);
+			double minHeight = currentExtent.Height * (minimumScale / currentScale);
+
+			double width = newExtent.Width;
+			double height = newExtent.Height;
+
+			if (width >= minWidth && height >= minHeight)
+			{
+				return newExtent;
+			}
+
+			MapPoint mapPoint = GeometryUtils.Centroid(newExtent);
+
+			double newWidth = width < minWidth
+				                  ? minWidth
+				                  : width;
+			double newHeight = height < minHeight
+				                   ? minHeight
+				                   : height;
+
+			return GeometryFactory.CreateEnvelope(mapPoint,
+			                                      newWidth, newHeight);
 		}
 	}
 

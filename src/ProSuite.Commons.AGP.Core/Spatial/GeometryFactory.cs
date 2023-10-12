@@ -61,6 +61,29 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return EnvelopeBuilderEx.CreateEnvelope(p0, p1, sref);
 		}
 
+		public static Envelope CreateEnvelope(
+			MapPoint center, double width, double height,
+			SpatialReference sref = null)
+		{
+			double halfWidth = width / 2;
+			double halfHeight = height / 2;
+
+			var p0 = new Coordinate2D(center.X - halfWidth, center.Y - halfHeight);
+			var p1 = new Coordinate2D(center.X + halfWidth, center.Y + halfHeight);
+
+			return EnvelopeBuilderEx.CreateEnvelope(p0, p1, sref);
+		}
+
+		public static Envelope CreateEnvelope(
+			Envelope envelope, double expansionFactor)
+		{
+			Envelope result = (Envelope) envelope.Clone();
+
+			const bool asRatio = true;
+
+			return result.Expand(expansionFactor, expansionFactor, asRatio);
+		}
+
 		public static Envelope CreateEmptyEnvelope(Geometry template = null)
 		{
 			var builder = Configure(new EnvelopeBuilderEx(), template);
@@ -145,7 +168,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			var q2 = CubicBezierBuilderEx.CreateCubicBezierSegment(p1, p12, p21, p2);
 			var q3 = CubicBezierBuilderEx.CreateCubicBezierSegment(p2, p23, p32, p3);
 			var q4 = CubicBezierBuilderEx.CreateCubicBezierSegment(p3, p30, p03, p0);
-			var segments = new[] {q1, q2, q3, q4};
+			var segments = new[] { q1, q2, q3, q4 };
 
 			return PolygonBuilderEx.CreatePolygon(segments, AttributeFlags.None);
 		}
