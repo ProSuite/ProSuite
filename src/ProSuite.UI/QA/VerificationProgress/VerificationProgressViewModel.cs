@@ -12,6 +12,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
+using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.WPF;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
@@ -443,7 +444,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 				{
 					_openWorkListCommand = new RelayCommand<VerificationProgressViewModel>(
 						vm => ApplicationController.OpenWorkList(
-							Assert.NotNull(VerificationResult)),
+							Assert.NotNull(VerificationResult), false),
 						vm => CanOpenWorkList());
 				}
 
@@ -589,6 +590,18 @@ namespace ProSuite.UI.QA.VerificationProgress
 			}
 
 			CommandManager.InvalidateRequerySuggested();
+
+			if (VerificationResult?.HasIssues == true &&
+			    EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+				    "PROSUITE_AUTO_OPEN_ISSUE_WORKLIST"))
+			{
+				ViewUtils.RunOnUIThread(
+					() =>
+					{
+						ApplicationController.OpenWorkList(Assert.NotNull(VerificationResult),
+						                                   true);
+					});
+			}
 
 			return result;
 		}

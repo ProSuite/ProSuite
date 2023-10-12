@@ -6,6 +6,7 @@ namespace ProSuite.Commons.AGP
 	{
 		Task OpenSelectionWorkListAsync();
 
-		Task OpenIssueWorkListAsync(string issuesGdbPath = null);
+		Task OpenIssueWorkListAsync(string issuesGdbPath = null,
+		                            bool removeExisting = false);
 	}
 }

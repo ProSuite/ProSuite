@@ -215,7 +215,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
 		{
-			_msg.VerboseDebug(() => "OnSketchCompleteAsync");
+			_msg.VerboseDebug(() => $"OnSketchCompleteAsync ({Caption})");
 
 			if (sketchGeometry == null)
 			{

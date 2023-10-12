@@ -45,7 +45,8 @@ namespace ProSuite.Microservices.Client.QA
 			return false;
 		}
 
-		public Task OpenWorkList(IQualityVerificationResult verificationResult)
+		public Task OpenWorkList(IQualityVerificationResult verificationResult,
+		                         bool replaceExisting)
 		{
 			throw new NotImplementedException();
 		}
