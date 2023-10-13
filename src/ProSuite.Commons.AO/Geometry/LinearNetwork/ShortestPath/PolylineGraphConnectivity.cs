@@ -46,8 +46,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 			SpatialReference = spatialReference;
 			AreaOfInterest = areaOfInterest;
 
-			_queryPointFrom = new PointClass {SpatialReference = SpatialReference};
-			_queryPointTo = new PointClass {SpatialReference = SpatialReference};
+			_queryPointFrom = new PointClass { SpatialReference = SpatialReference };
+			_queryPointTo = new PointClass { SpatialReference = SpatialReference };
 
 			if (spatialReference != null)
 			{
@@ -123,16 +123,18 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 		public void BuildConnectivity(
 			[NotNull] IEnumerable<IFeature> lineFeatures,
 			bool respectLineOrientation = false,
+			[CanBeNull] Func<IFeature, float> getWeight = null,
 			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			Reset();
 
-			AddConnectivity(lineFeatures, respectLineOrientation, trackCancel);
+			AddConnectivity(lineFeatures, respectLineOrientation, getWeight, trackCancel);
 		}
 
 		public void AddConnectivity(
 			[NotNull] IEnumerable<IFeature> lineFeatures,
 			bool respectLineOrientation,
+			[CanBeNull] Func<IFeature, float> getWeight = null,
 			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			Stopwatch stopwatch =
@@ -149,7 +151,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 					return;
 				}
 
-				AddConnectivity(lineFeature, respectLineOrientation);
+				AddConnectivity(lineFeature, respectLineOrientation, getWeight);
 				count++;
 			}
 
@@ -158,9 +160,12 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 			                     count, Nodes.Count);
 		}
 
-		public void AddConnectivity(IFeature forEdgeFeature, bool respectLineOrientation)
+		public void AddConnectivity([NotNull] IFeature forEdgeFeature,
+		                            bool respectLineOrientation,
+		                            [CanBeNull] Func<IFeature, float> getWeight = null)
 		{
-			AddConnectivity(forEdgeFeature, respectLineOrientation, out int _, out int _);
+			AddConnectivity(forEdgeFeature, respectLineOrientation, getWeight,
+			                out int _, out int _);
 		}
 
 		/// <summary>
@@ -171,10 +176,13 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 		/// <param name="forEdgeFeature">The line feature</param>
 		/// <param name="respectLineOrientation">Whether the connection should only be added
 		/// in one direction (along the line orientation).</param>
+		/// <param name="getWeight">The weight func. If null (or returning NaN), the polyline
+		/// length is used.</param>
 		/// <param name="fromNodeIndex">The from-node index in <see cref="Nodes"/></param>
 		/// <param name="toNodeIndex">The to-node index in <see cref="Nodes"/></param>
 		public void AddConnectivity([NotNull] IFeature forEdgeFeature,
 		                            bool respectLineOrientation,
+		                            Func<IFeature, float> getWeight,
 		                            out int fromNodeIndex, out int toNodeIndex)
 		{
 			var polyline = (IPolyline) forEdgeFeature.Shape;
@@ -184,7 +192,16 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 
 			GdbObjectReference objRef = new GdbObjectReference(forEdgeFeature);
 
-			float weight = (float) polyline.Length;
+			float weight = -1;
+			if (getWeight != null)
+			{
+				weight = getWeight(forEdgeFeature);
+			}
+
+			if (weight < 0)
+			{
+				weight = (float) polyline.Length;
+			}
 
 			fromNodeIndex = AddNode(_queryPointFrom, out List<AdjacentNode> connectedNodesAtFrom);
 			toNodeIndex = AddNode(_queryPointTo, out List<AdjacentNode> connectedNodesAtTo);
