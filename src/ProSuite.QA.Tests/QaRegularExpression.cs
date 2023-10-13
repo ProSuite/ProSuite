@@ -144,6 +144,11 @@ namespace ProSuite.QA.Tests
 
 			// check if all fields exist
 			ValidateFieldNames(table, _fieldNames);
+
+			foreach (var fieldName in _fieldNames)
+			{
+				AddCustomQueryFilterExpression(fieldName);
+			}
 		}
 
 		#endregion

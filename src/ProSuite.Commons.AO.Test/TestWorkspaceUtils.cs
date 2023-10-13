@@ -3,6 +3,7 @@ using System.IO;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -33,6 +34,8 @@ namespace ProSuite.Commons.AO.Test
 		public static IFeatureWorkspace CreateTestAccessWorkspace(
 			[NotNull] string mdbName)
 		{
+			if (Environment.Is64BitProcess) throw new InconclusiveException("AccessDB not supported for 64Bit-Process");
+
 			string dir = Path.GetTempPath();
 
 			string mdb = Path.Combine(dir, mdbName) + ".mdb";

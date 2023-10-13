@@ -163,7 +163,8 @@ namespace ProSuite.QA.Container
 			if (! string.IsNullOrWhiteSpace(expression))
 			{
 				_customQueryFilterExpressions = _customQueryFilterExpressions ?? new List<string>();
-				_customQueryFilterExpressions.Add(expression.Replace(".", " "));
+				_customQueryFilterExpressions.Add(
+					expression.Replace(".", " ").Replace(",", " ").Replace(":", " "));
 			}
 		}
 		/// <summary>

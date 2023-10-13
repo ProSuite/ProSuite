@@ -201,6 +201,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_pointClass1BorderMatchConditionSql = value;
+				AddCustomQueryFilterExpression(value);
 				_pointClass1BorderMatchCondition = null;
 			}
 		}
@@ -213,6 +214,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_pointClass2BorderMatchConditionSql = value;
+				AddCustomQueryFilterExpression(value);
 				_pointClass2BorderMatchCondition = null;
 			}
 		}
@@ -225,6 +227,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_borderingPointMatchConditionSql = value;
+				AddCustomQueryFilterExpression(value);
 				_borderingPointMatchCondition = null;
 			}
 		}
@@ -237,6 +240,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_borderingPointAttributeConstraintSql = value;
+				AddCustomQueryFilterExpression(value);
 				_borderingPointAttributeConstraint = null;
 			}
 		}
@@ -263,6 +267,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_borderingPointEqualAttributes = value;
+				AddCustomQueryFilterExpression(value);
 				_borderPointEqualFieldValuesCondition = null;
 			}
 		}
@@ -275,6 +280,13 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_borderingPointEqualAttributeOptions = value;
+				if (value != null)
+				{
+					foreach (string option in value)
+					{
+						AddCustomQueryFilterExpression(option);
+					}
+				}
 				_borderPointEqualFieldValuesCondition = null;
 			}
 		}
