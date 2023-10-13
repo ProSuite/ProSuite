@@ -8,6 +8,7 @@ using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
@@ -17,11 +18,16 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 {
 	partial class DistributedTestRunner
 	{
-		private class WorkspaceInfo
+		private class WorkspaceInfo : TaskWorkspace
 		{
-			public string FactoryUid { get; set; }
-			public string PropertySet { get; set; }
-			public List<string> TableNames { get; set; }
+			public WorkspaceInfo(IWorkspace workspace)
+				: base(workspace)
+			{
+				TableNames = new List<string>();
+			}
+
+			[NotNull]
+			public List<string> TableNames { get; }
 		}
 
 		[NotNull]
@@ -73,14 +79,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			foreach (WorkspaceInfo workspaceInfo in workspaceInfos)
 			{
-				Guid factoryGuid = new Guid(workspaceInfo.FactoryUid);
-				Type factoryClass = Type.GetTypeFromCLSID(factoryGuid);
-				var factory =
-					Assert.NotNull(
-						(IWorkspaceFactory) Activator.CreateInstance(Assert.NotNull(factoryClass)));
-				IPropertySet connectionProps =
-					PropertySetUtils.FromXmlString(workspaceInfo.PropertySet);
-				IWorkspace workspace = factory.Open(connectionProps, 0);
+				IWorkspace workspace = workspaceInfo.GetWorkspace();
 
 				foreach (string tableName in workspaceInfo.TableNames)
 				{
@@ -179,15 +178,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					continue;
 				}
 
-				IWorkspaceFactory factory = ws.WorkspaceFactory;
-				WorkspaceInfo wsInfo = new WorkspaceInfo
-				                       {
-					                       FactoryUid = $"{factory.GetClassID().Value}",
-					                       PropertySet =
-						                       PropertySetUtils.ToXmlString(
-							                       ws.ConnectionProperties),
-					                       TableNames = new List<string>()
-				                       };
+				WorkspaceInfo wsInfo = new WorkspaceInfo(ws);
+
 				foreach (string fcName in pair.Value)
 				{
 					wsInfo.TableNames.Add(fcName);
