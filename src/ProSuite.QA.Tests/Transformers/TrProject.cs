@@ -31,9 +31,9 @@ namespace ProSuite.QA.Tests.Transformers
 			GdbFeature feature = sourceOid == null
 									 ? CreateFeature()
 									 : (GdbFeature)transformedClass.CreateObject(sourceOid.Value);
-			IGeometry target = (IGeometry)((IClone)source).Clone();
 
-			target.Project(_targetSpatialReference);
+			IGeometry target = SpatialReferenceUtils.ProjectEx(source, _targetSpatialReference);
+
 			feature.Shape = target;
 			yield return feature;
 		}

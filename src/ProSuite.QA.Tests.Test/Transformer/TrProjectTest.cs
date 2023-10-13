@@ -1,3 +1,4 @@
+using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -66,14 +67,44 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			IReadOnlyFeatureClass roWgs84 = ReadOnlyTableFactory.Create(fcWgs84);
+			IReadOnlyFeatureClass roLv75 = ReadOnlyTableFactory.Create(fcLv95);
 			TrProject tr = new TrProject(roWgs84, idLv95);
 			QaInteriorIntersectsOther test =
-				new QaInteriorIntersectsOther(tr.GetTransformed(),
-				                              ReadOnlyTableFactory.Create(fcLv95));
+				new QaInteriorIntersectsOther(tr.GetTransformed(), roLv75);
 
-			var runner = new QaContainerTestRunner(1000, test);
-			runner.Execute();
-			Assert.AreEqual(1, runner.Errors.Count);
+			{
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+
+			// same spatial references in QaContainer --> valid
+			{
+				var runner = new QaContainerTestRunner(
+					1000,
+					new QaMinLength(tr.GetTransformed(), 0.0001),
+					new QaMinLength(roLv75, 0.0001));
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+
+			// differing spatial references in QaContainer --> exception
+			{
+				var runner = new QaContainerTestRunner(
+					1000,
+					new QaMinLength(roWgs84, 0.0001),
+					new QaMinLength(roLv75, 0.0001));
+				bool success = false;
+				try
+				{
+					runner.Execute();
+					success = true;
+				}
+				catch (ArgumentException)
+				{ }
+				Assert.IsFalse(success);
+			}
+
 		}
 	}
 }
