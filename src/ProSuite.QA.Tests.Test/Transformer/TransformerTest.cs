@@ -12,6 +12,7 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
+using ProSuite.QA.Tests.Transformers;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test.Transformer
@@ -115,7 +116,6 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanConfigureWithTableTransformer()
 		{
 			IFeatureWorkspace ws =
@@ -164,7 +164,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new ModelVectorDataset(DatasetUtils.GetName(borderFc)));
 
 			TransformerDescriptor transformDescriptor =
-				new TransformerDescriptor("bt", new ClassDescriptor(typeof(BorderTransformer)), 0);
+				new TransformerDescriptor("bt", new ClassDescriptor(typeof(TrLineToPolygon)), 0);
 			TransformerConfiguration transformerConfig =
 				new TransformerConfiguration(
 					"bt", transformDescriptor); // TODO: rename QualityCondition?
@@ -173,7 +173,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				InstanceFactoryUtils.CreateTransformerFactory(transformerConfig);
 			Assert.NotNull(transformerFactory);
 
-			TestParameterValueUtils.AddParameterValue(transformerConfig, "borderFc", borderDs);
+			TestParameterValueUtils.AddParameterValue(transformerConfig, "closedLineClass", borderDs);
 
 			TestDescriptor td =
 				new TestDescriptor("td", new ClassDescriptor(typeof(QaContainsOther)), 1);
@@ -196,7 +196,6 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanRunWithTableTransformer()
 		{
 			IFeatureWorkspace ws =
@@ -238,7 +237,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				b.Store();
 			}
 
-			var transformer = new BorderTransformer(ReadOnlyTableFactory.Create(borderFc));
+			var transformer = new TrLineToPolygon(ReadOnlyTableFactory.Create(borderFc));
 			var polyFc = transformer.GetTransformed();
 			var test = new QaContainsOther(
 				polyFc, ReadOnlyTableFactory.Create(bbFc));
