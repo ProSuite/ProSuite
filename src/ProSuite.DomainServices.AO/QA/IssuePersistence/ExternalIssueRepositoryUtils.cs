@@ -50,6 +50,8 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		{
 			Assert.ArgumentNotNullOrEmpty(gdbFullPath, nameof(gdbFullPath));
 
+			var watch = _msg.DebugStartTiming("Creating issue repository {0}...", gdbFullPath);
+
 			string directoryPath = Path.GetDirectoryName(gdbFullPath);
 			Assert.NotNull(directoryPath,
 			               "Invalid full path to gdb (undefined directory): {0}",
@@ -59,8 +61,12 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			Assert.NotNull(gdbName, "Invalid full path to gdb (undefined file name): {0}",
 			               gdbFullPath);
 
-			return GetIssueRepository(directoryPath, gdbName, spatialReference,
-			                          issueRepositoryType);
+			IIssueRepository result = GetIssueRepository(directoryPath, gdbName, spatialReference,
+			                                             issueRepositoryType);
+
+			_msg.DebugStopTiming(watch, "Created issue repository");
+
+			return result;
 		}
 
 		[CanBeNull]

@@ -12,7 +12,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
@@ -71,8 +70,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
 			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
 
-			if (_intermittentSelectionPhase
-			   ) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
+			// This method is presumably called in the following situation only:
+			// MapTool.UseSelection is true and your MapTool does sketching (i.e. i used SketchType = SketchGeometryType.Line)
+			// After start sketching and shift is pressed to change the selection and then the selection is changed:
+			// https://community.esri.com/t5/arcgis-pro-sdk-questions/maptool-onselectionchangedasync-not-triggered/td-p/1199664
+
+			if (_intermittentSelectionPhase) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
 			{
 				return Task.FromResult(true);
 			}
@@ -109,6 +112,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override bool IsInSelectionPhase(bool shiftIsPressed)
 		{
 			return ! IsInSketchMode;
+		}
+
+		protected override Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		{
+			return Task.FromResult(! IsInSketchMode);
 		}
 
 		protected override void LogUsingCurrentSelection()

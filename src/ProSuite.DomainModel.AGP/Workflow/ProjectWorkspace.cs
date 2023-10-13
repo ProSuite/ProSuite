@@ -27,6 +27,7 @@ namespace ProSuite.DomainModel.AGP.Workflow
 			Datasets = datasets;
 			Datastore = datastore;
 			ModelSpatialReference = modelSpatialReference;
+			DisplayName = $"{ProjectName} - {WorkspaceUtils.GetDatastoreDisplayText(Datastore)}";
 		}
 
 		public int ProjectId { get; }
@@ -34,6 +35,8 @@ namespace ProSuite.DomainModel.AGP.Workflow
 		public IList<BasicDataset> Datasets { get; }
 		public Datastore Datastore { get; }
 		public SpatialReference ModelSpatialReference { get; }
+
+		public string DisplayName { get; }
 
 		public string GetVersionName()
 		{

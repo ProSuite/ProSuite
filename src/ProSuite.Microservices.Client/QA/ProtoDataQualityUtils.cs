@@ -496,6 +496,12 @@ namespace ProSuite.Microservices.Client.QA
 
 			GeometryType datasetGeometryType = dataset.GeometryType;
 
+			if (datasetGeometryType == null)
+			{
+				// DPS-91: The geometry type can be null
+				return ProSuiteGeometryType.Unknown;
+			}
+
 			switch (datasetGeometryType)
 			{
 				case GeometryTypeShape shape:

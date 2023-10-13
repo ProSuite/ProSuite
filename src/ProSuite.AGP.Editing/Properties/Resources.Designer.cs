@@ -19,7 +19,7 @@ namespace ProSuite.AGP.Editing.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -153,9 +153,69 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] FillHoleToolCursor {
+            get {
+                object obj = ResourceManager.GetObject("FillHoleToolCursor", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] FillHoleToolCursorProcess {
+            get {
+                object obj = ResourceManager.GetObject("FillHoleToolCursorProcess", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] FillHoleToolCursorShift {
+            get {
+                object obj = ResourceManager.GetObject("FillHoleToolCursorShift", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] PolygonDrawerCursor {
             get {
                 object obj = ResourceManager.GetObject("PolygonDrawerCursor", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] RemoveHoleToolCursor {
+            get {
+                object obj = ResourceManager.GetObject("RemoveHoleToolCursor", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] RemoveHoleToolCursorProcess {
+            get {
+                object obj = ResourceManager.GetObject("RemoveHoleToolCursorProcess", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] RemoveHoleToolCursorShift {
+            get {
+                object obj = ResourceManager.GetObject("RemoveHoleToolCursorShift", resourceCulture);
                 return ((byte[])(obj));
             }
         }

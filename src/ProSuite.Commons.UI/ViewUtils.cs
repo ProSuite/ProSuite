@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Dialogs;
 
@@ -12,6 +13,7 @@ namespace ProSuite.Commons.UI
 	public static class ViewUtils
 	{
 		public static void Try([NotNull] Action action, [NotNull] IMsg msg,
+		                       bool suppressErrorMessageBox = false,
 		                       [CallerMemberName] string caller = null)
 		{
 			Assert.ArgumentNotNull(action, nameof(action));
@@ -25,14 +27,16 @@ namespace ProSuite.Commons.UI
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, msg);
+				HandleError(e, msg, suppressErrorMessageBox);
 			}
 		}
 
 		// todo daro revise method signature. Could be replaces with
 		// async Task TryAsync([NotNull] Task action, [NotNull] IMsg msg,[CallerMemberName] string caller = null)
 		// ??
-		public static async Task TryAsync([NotNull] Func<Task> func, [NotNull] IMsg msg,
+		public static async Task TryAsync([NotNull] Func<Task> func,
+		                                  [NotNull] IMsg msg,
+		                                  bool suppressErrorMessageBox = false,
 		                                  [CallerMemberName] string caller = null)
 		{
 			Assert.ArgumentNotNull(func, nameof(func));
@@ -46,11 +50,13 @@ namespace ProSuite.Commons.UI
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, msg);
+				HandleError(e, msg, suppressErrorMessageBox);
 			}
 		}
 
-		public static async Task TryAsync([NotNull] Task action, [NotNull] IMsg msg,
+		public static async Task TryAsync([NotNull] Task action,
+		                                  [NotNull] IMsg msg,
+		                                  bool suppressErrorMessageBox = false,
 		                                  [CallerMemberName] string caller = null)
 		{
 			Assert.ArgumentNotNull(action, nameof(action));
@@ -64,7 +70,7 @@ namespace ProSuite.Commons.UI
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, msg);
+				HandleError(e, msg, suppressErrorMessageBox);
 			}
 		}
 
@@ -93,6 +99,19 @@ namespace ProSuite.Commons.UI
 			Assert.ArgumentNotNull(msg, nameof(msg));
 
 			msg.VerboseDebug(() => $"{method}");
+		}
+
+		private static void HandleError(Exception exception, IMsg msg,
+		                                bool suppressErrorMessageBox)
+		{
+			if (suppressErrorMessageBox)
+			{
+				msg.Error(ExceptionUtils.FormatMessage(exception), exception);
+			}
+			else
+			{
+				ErrorHandler.HandleError(exception, msg);
+			}
 		}
 
 		public static void RunOnUIThread([NotNull] Action action)
