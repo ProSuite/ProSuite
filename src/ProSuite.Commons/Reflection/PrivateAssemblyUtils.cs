@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -30,10 +31,27 @@ namespace ProSuite.Commons.Reflection
 				{ "EsriDE.ProSuite.QA.TestFactories", "ProSuite.QA.TestFactories" }
 			};
 
+		private static ConcurrentBag<string> _extraCodeBase;
+
 		[NotNull]
 		private static string BinDirectory
 		{
 			get { return _binDirectory ?? (_binDirectory = GetBinDirectory()); }
+		}
+
+		/// <summary>
+		/// In case the code base is distributed across multiple directories, adds an extra
+		/// bin directory which is searched in the LoadAssembly method. This 
+		/// </summary>
+		/// <param name="additionalBinDir"></param>
+		public static void AddCodeBaseDir(string additionalBinDir)
+		{
+			if (_extraCodeBase == null)
+			{
+				_extraCodeBase = new ConcurrentBag<string>();
+			}
+
+			_extraCodeBase.Add(additionalBinDir);
 		}
 
 		public static Assembly LoadAssembly(
@@ -48,7 +66,7 @@ namespace ProSuite.Commons.Reflection
 			Assembly assembly;
 			try
 			{
-				AssemblyName name = GetAssemblyName(BinDirectory, assemblyName);
+				AssemblyName name = GetAssemblyName(assemblyName, BinDirectory, _extraCodeBase);
 
 				if (string.IsNullOrEmpty(name.CodeBase))
 				{
@@ -112,7 +130,7 @@ namespace ProSuite.Commons.Reflection
 			return type;
 		}
 
-		public static string GetSubsituteType(
+		public static string GetSubstituteType(
 			[NotNull] string assemblyName,
 			[NotNull] string typeName,
 			IReadOnlyDictionary<string, string> assemblySubstitutes = null)
@@ -160,25 +178,57 @@ namespace ProSuite.Commons.Reflection
 		}
 
 		[NotNull]
-		private static AssemblyName GetAssemblyName([NotNull] string binDirectory,
-		                                            [NotNull] string assemblyName)
+		private static AssemblyName GetAssemblyName(
+			[NotNull] string assemblyNameString,
+			[NotNull] string binDirectory,
+			[CanBeNull] IEnumerable<string> alternateBinDirectories)
 		{
 			Assert.ArgumentNotNullOrEmpty(binDirectory, nameof(binDirectory));
-			Assert.ArgumentNotNullOrEmpty(assemblyName, nameof(assemblyName));
+			Assert.ArgumentNotNullOrEmpty(assemblyNameString, nameof(assemblyNameString));
 
-			if (IsFullyQualified(assemblyName))
+			if (IsFullyQualified(assemblyNameString))
 			{
-				return new AssemblyName(assemblyName);
+				return new AssemblyName(assemblyNameString);
 			}
 
+			AssemblyName assemblyName = TryGetAssemblyName(assemblyNameString, binDirectory);
+
+			if (assemblyName != null)
+			{
+				return assemblyName;
+			}
+
+			if (alternateBinDirectories != null)
+			{
+				foreach (string alternateBinDirectory in alternateBinDirectories)
+				{
+					assemblyName = TryGetAssemblyName(assemblyNameString, alternateBinDirectory);
+
+					if (assemblyName != null)
+					{
+						return assemblyName;
+					}
+				}
+			}
+
+			throw new ArgumentException(
+				string.Format("Assembly file not found for {0} in directory {1}",
+				              assemblyNameString, binDirectory),
+				nameof(assemblyNameString));
+		}
+
+		private static AssemblyName TryGetAssemblyName(
+			[NotNull] string assemblyNameString,
+			[NotNull] string binDirectory)
+		{
 			if (_checkedAssemblyFiles == null)
 			{
 				_checkedAssemblyFiles =
 					new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
 			}
 
-			string dllFileName = string.Format("{0}.dll", assemblyName);
-			string exeFileName = string.Format("{0}.exe", assemblyName);
+			string dllFileName = string.Format("{0}.dll", assemblyNameString);
+			string exeFileName = string.Format("{0}.exe", assemblyNameString);
 
 			foreach (string fileName in new[] { dllFileName, exeFileName })
 			{
@@ -194,14 +244,11 @@ namespace ProSuite.Commons.Reflection
 
 				if (fileExists)
 				{
-					return new AssemblyName(assemblyName) { CodeBase = filePath };
+					return new AssemblyName(assemblyNameString) { CodeBase = filePath };
 				}
 			}
 
-			throw new ArgumentException(
-				string.Format("Assembly file not found for {0} in directory {1}",
-				              assemblyName, binDirectory),
-				nameof(assemblyName));
+			return null;
 		}
 
 		private static bool IsFullyQualified([NotNull] string assemblyName)

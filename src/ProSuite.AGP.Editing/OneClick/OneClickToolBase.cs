@@ -35,6 +35,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private IPickerPrecedence _pickerPrecedence;
+		private bool _finishingSketch;
 
 		protected OneClickToolBase()
 		{
@@ -221,8 +222,20 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
+			if (_finishingSketch)
+			{
+				// This happens if the OnSelectionSketchComplete() method below takes a long time
+				// and the user already creates several new sketches in the mean while.
+				// However, it has also been observed in other situations when seemingly randomly
+				// the method is sometimes called twice.
+				_msg.Debug("OnSketchCompleteAsync: Duplicate call is ignored!");
+				return false;
+			}
+
 			try
 			{
+				_finishingSketch = true;
+
 				CancelableProgressor progressor = GetCancelableProgressor();
 
 				if (SketchType == SketchGeometryType.Polygon)
@@ -231,7 +244,8 @@ namespace ProSuite.AGP.Editing.OneClick
 					sketchGeometry = GeometryUtils.Simplify(sketchGeometry);
 				}
 
-				if (RequiresSelection && IsInSelectionPhase())
+				if (RequiresSelection &&
+				    await IsInSelectionPhaseAsync())
 				{
 					return await OnSelectionSketchComplete(sketchGeometry, progressor);
 				}
@@ -244,8 +258,12 @@ namespace ProSuite.AGP.Editing.OneClick
 				// NOTE: Throwing here results in a process crash (Exception while waiting for a Task to complete)
 				// Consider Task.FromException?
 			}
+			finally
+			{
+				_finishingSketch = false;
+			}
 
-			return false;
+			return true;
 		}
 
 		protected virtual void ShiftPressedCore()
@@ -450,8 +468,11 @@ namespace ProSuite.AGP.Editing.OneClick
 					pickerLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
 
-					_msg.VerboseDebug(() => $"Picker location on map {GeometryUtils.Format(selectionGeometry.Extent.Center)}");
-					_msg.VerboseDebug(() => $"Picker location on screen {pickerLocation.X}/{pickerLocation.Y}");
+					_msg.VerboseDebug(
+						() =>
+							$"Picker location on map {GeometryUtils.Format(selectionGeometry.Extent.Center)}");
+					_msg.VerboseDebug(
+						() => $"Picker location on screen {pickerLocation.X}/{pickerLocation.Y}");
 
 					// find all features spatially related with searchGeometry
 					// TODO: 1. Find all features in point layers, if count > 0 -> skip the rest
@@ -516,6 +537,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				return true;
 			}
+
 			// no key pressed: pick best
 			if (pickerMode == PickerMode.PickBest)
 			{
@@ -542,6 +564,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				return true;
 			}
+
 			// CTRL pressed: show picker
 			if (pickerMode == PickerMode.ShowPicker)
 			{
@@ -675,6 +698,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				fl => CanSelectFromLayer(fl));
 		}
 
+		// TODO: Make obsolete, always use Async overload?
 		protected bool IsInSelectionPhase()
 		{
 			return IsInSelectionPhase(KeyboardUtils.IsModifierPressed(Keys.Shift, true));
@@ -683,6 +707,18 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual bool IsInSelectionPhase(bool shiftIsPressed)
 		{
 			return false;
+		}
+
+		protected Task<bool> IsInSelectionPhaseAsync()
+		{
+			bool shiftIsPressed = KeyboardUtils.IsModifierPressed(Keys.Shift, true);
+
+			return IsInSelectionPhaseAsync(shiftIsPressed);
+		}
+
+		protected virtual Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		{
+			return Task.FromResult(false);
 		}
 
 		protected virtual void OnKeyDownCore(MapViewKeyEventArgs k) { }

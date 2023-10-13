@@ -517,7 +517,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 
 			_msg.DebugStopTiming(
 				watch,
-				"CalculateReshapeLinesImpl: Unpacked {0} source and {1} target features from request params",
+				"GetFeatures: Unpacked {0} source and {1} target features from request params",
 				sourceFeatures.Count, targetFeatures.Count);
 		}
 

@@ -466,7 +466,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(
 				verification, cancelMessage, deletableAllowedErrorRefs,
-				qaService?.VerifiedPerimeter);
+				qaService?.VerifiedPerimeter, trackCancel);
 
 			return result;
 		}
@@ -488,10 +488,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			string cancellationMessage = null;
 
+			DistributedTestRunner distributedTestRunner = null;
+
 			try
 			{
-				DistributedTestRunner distributedTestRunner = null;
-
 				bool useStandaloneService =
 					IsStandAloneVerification(request, null, out QualitySpecification specification);
 
@@ -557,13 +557,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
+					distributedTestRunner?.CancelSubverifications();
+
 					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 			}
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
 				cancellationMessage ?? qaService?.CancellationMessage, deletableAllowedErrorRefs,
-				qaService?.VerifiedPerimeter);
+				qaService?.VerifiedPerimeter, trackCancel);
 
 			return result;
 		}

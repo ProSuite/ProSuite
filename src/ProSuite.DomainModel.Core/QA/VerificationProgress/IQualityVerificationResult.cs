@@ -15,7 +15,13 @@ namespace ProSuite.DomainModel.Core.QA.VerificationProgress
 		[CanBeNull]
 		string IssuesGdbPath { get; }
 
+		int VerifiedConditionCount { get; }
+
 		bool HasIssues { get; }
+
+		bool IsFulfilled { get; }
+
+		int RowCountWithStopConditions { get; }
 
 		bool CanSaveIssues { get; }
 

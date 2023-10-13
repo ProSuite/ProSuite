@@ -10,7 +10,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 		public const string SubverificationFeatureClassName = "SubverificationProgress";
 
 		[CanBeNull]
-		public static SubverificationObserver GetPorgressRepository(
+		public static ISubverificationObserver GetProgressRepository(
 			[NotNull] string directoryFullPath,
 			[CanBeNull] string gdbName,
 			[CanBeNull] ISpatialReference spatialReference,

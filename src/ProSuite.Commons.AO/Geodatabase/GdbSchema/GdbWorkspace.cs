@@ -25,6 +25,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		private readonly string _defaultVersionName;
 		private readonly DateTime? _defaultVersionCreationDate;
+		private readonly DateTime? _defaultVersionModificationDate;
 
 		private IName _fullName;
 
@@ -63,10 +64,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			DateTime? defaultVersionCreationDate =
 				(DateTime?) sdeWorkspace.DefaultVersion.VersionInfo.Created;
 
+			DateTime? defaultVersionModificationDate =
+				(DateTime?) sdeWorkspace.DefaultVersion.VersionInfo.Modified;
+
 			return new GdbWorkspace(dataStore, sdeWorkspace.GetHashCode(),
 			                        WorkspaceUtils.GetWorkspaceDbType((IWorkspace) sdeWorkspace),
 			                        null, versionName, defaultVersionName,
-			                        defaultVersionCreationDate);
+			                        defaultVersionCreationDate, defaultVersionModificationDate);
 		}
 
 		/// <summary>
@@ -81,13 +85,16 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		/// comparisons.</param>
 		/// <param name="defaultVersionCreationDate">The creation date of the default version, used
 		/// for equality comparisons.</param>
+		/// <param name="defaultVersionModificationDate">The creation date of the default version, used
+		/// for equality comparisons</param>
 		public GdbWorkspace([NotNull] BackingDataStore backingDataStore,
 		                    long? workspaceHandle = null,
 		                    WorkspaceDbType dbType = WorkspaceDbType.ArcSDE,
 		                    string path = null,
 		                    string versionName = null,
 		                    string defaultVersionName = null,
-		                    DateTime? defaultVersionCreationDate = null)
+		                    DateTime? defaultVersionCreationDate = null,
+		                    DateTime? defaultVersionModificationDate = null)
 		{
 			_backingDataStore = backingDataStore;
 
@@ -99,6 +106,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			_versionName = versionName;
 			_defaultVersionName = defaultVersionName;
 			_defaultVersionCreationDate = defaultVersionCreationDate;
+			_defaultVersionModificationDate = defaultVersionModificationDate;
 		}
 
 		/// <summary>
@@ -451,15 +459,32 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			IVersionInfo otherDefaultInfo = otherDefaultVersion.VersionInfo;
 
-			string date1 = _defaultVersionCreationDate?.ToString();
-			string date2 = otherDefaultInfo.Created?.ToString();
+			string creationDateThis = _defaultVersionCreationDate?.ToString();
+			string creationDateOther = otherDefaultInfo.Created?.ToString();
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.DebugFormat("Compare default version creation dates ({0}, {1})", date1, date2);
+				_msg.DebugFormat("Compare default version creation dates ({0}, {1})",
+				                 creationDateThis, creationDateOther);
 			}
 
-			return Equals(date1, date2);
+			if (! Equals(creationDateThis, creationDateOther))
+			{
+				return false;
+			}
+
+			// NOTE: To be completely sure both dates should be a few seconds in the past
+			//       to prevent comparing a stale date with a current date.
+			string modificationDateThis = _defaultVersionModificationDate?.ToString();
+			string modificationDateOther = otherDefaultInfo.Modified?.ToString();
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.DebugFormat("Compare default version modification dates ({0}, {1})",
+				                 modificationDateThis, modificationDateOther);
+			}
+
+			return Equals(modificationDateThis, modificationDateOther);
 		}
 
 		public bool Equals([CanBeNull] GdbWorkspace other)
@@ -479,7 +504,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			       PathName == other.PathName &&
 			       _versionName == other._versionName &&
 			       _defaultVersionName == other._defaultVersionName &&
-			       _defaultVersionCreationDate == other._defaultVersionCreationDate;
+			       _defaultVersionCreationDate == other._defaultVersionCreationDate &&
+			       _defaultVersionModificationDate == other._defaultVersionModificationDate;
 		}
 
 		public bool Equals(IWorkspace other)
@@ -531,6 +557,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				hashCode = (hashCode * 397) ^
 				           (_versionName != null ? _versionName.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ _defaultVersionCreationDate.GetHashCode();
+				hashCode = (hashCode * 397) ^ _defaultVersionModificationDate.GetHashCode();
 				hashCode = (hashCode * 397) ^ WorkspaceHandle.GetHashCode();
 				hashCode = (hashCode * 397) ^ (PathName != null ? PathName.GetHashCode() : 0);
 				return hashCode;

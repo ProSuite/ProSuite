@@ -169,8 +169,8 @@ namespace ProSuite.Microservices.Client.AGP
 
 			var result =
 				EnvelopeBuilderEx.CreateEnvelope(new Coordinate2D(envProto.XMin, envProto.YMin),
-				                               new Coordinate2D(envProto.XMax, envProto.YMax),
-				                               spatialReference);
+				                                 new Coordinate2D(envProto.XMax, envProto.YMax),
+				                                 spatialReference);
 
 			return result;
 		}
@@ -396,15 +396,26 @@ namespace ProSuite.Microservices.Client.AGP
 
 			if (defaultVersion != null)
 			{
+				result.DefaultVersionName = defaultVersion.GetName();
+
 				result.DefaultVersionCreationTicks = defaultVersion.GetCreatedDate().Ticks;
+				result.DefaultVersionModificationTicks = defaultVersion.GetModifiedDate().Ticks;
+
 				// Careful: Version.GetDescription() appears to be localized/translated if run in Pro with localized UI
 				result.DefaultVersionDescription = defaultVersion.GetDescription() ?? string.Empty;
-				result.DefaultVersionName = defaultVersion.GetName();
 			}
-			else
-			{
-				result.Path = datastore.GetPath().AbsoluteUri;
-			}
+
+			// NOTE: The path is most useful. It is the actual FGDB path or a temporary sde file that can be used to re-open
+			//       the data store. This shall work in every case if the service is local. If the service is remote
+			//       the path is useless (unless it is an FGDB on a UNC path that can be seen by the server)
+			// -> Use data-verification (if no unsupported tests are included)
+			result.Path = datastore.GetPath().AbsoluteUri;
+
+			// The connection properties are useful, but the password is encrypted. Consider using the password
+			// stored in the DDX - look it up by Instance/Database/User (or just Instance/Database) from all connection providers.
+			// However, the child databases are typically local!
+			//DatabaseConnectionProperties connectionProperties =
+			//	datastore.GetConnector() as DatabaseConnectionProperties;
 
 			return result;
 		}

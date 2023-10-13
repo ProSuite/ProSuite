@@ -35,7 +35,6 @@ using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ProSuite.Microservices.Server.AO.QA.Distributed
 {
@@ -155,11 +154,18 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 		}
 
+		public void CancelSubverifications()
+		{
+			CancellationTokenSource?.Cancel();
+		}
+
 		public void Execute(IEnumerable<ITest> tests, AreaOfInterest areaOfInterest,
 		                    CancellationTokenSource cancellationTokenSource)
 		{
 			Assert.NotNull(QualitySpecification, "QualitySpecification has not been initialized.");
 			Assert.NotNull(TestAssembler, "TestAssembler has not been initialized.");
+
+			CancellationTokenSource = cancellationTokenSource;
 
 			StartVerification(QualityVerification);
 
@@ -167,8 +173,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			{
 				InitializeModelsToSend(QualitySpecification);
 			}
-
-			CancellationTokenSource = cancellationTokenSource;
 
 			IList<QualityConditionGroup> qcGroups =
 				TestAssembler.BuildQualityConditionGroups(tests.ToList(), areaOfInterest,
@@ -245,7 +249,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 							failureCount++;
 							CompleteSubverification(completed);
 
-							SubverificationObserver?.Finished(completed.Id, ServiceCallStatus.Failed);
+							SubverificationObserver?.Finished(
+								completed.Id, ServiceCallStatus.Failed);
 						}
 						else
 						{
@@ -263,7 +268,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 							retryCount++;
 							unhandledSubverifications.Push(retry);
 
-							SubverificationObserver?.Finished(completed.Id, ServiceCallStatus.Retry);
+							SubverificationObserver?.Finished(
+								completed.Id, ServiceCallStatus.Retry);
 						}
 
 						// TODO: Communicate error to client?!
@@ -440,7 +446,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				          $"on {client.GetAddress()}: {next}");
 
 				startedVerifications.Add(newTask, next);
-				SubverificationObserver?.Started(next.Id, _distributedWorkers.GetWorkerClient(next)?.GetAddress());
+				SubverificationObserver?.Started(
+					next.Id, _distributedWorkers.GetWorkerClient(next)?.GetAddress());
 			}
 		}
 

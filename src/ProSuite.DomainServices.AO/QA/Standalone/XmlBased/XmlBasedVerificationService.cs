@@ -237,7 +237,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				       addExceptionFields: true))
 			{
 				ISubverificationObserver subverificationObserver =
-					SubverificationObserverUtils.GetPorgressRepository(_issueRepositoryDir,
+					SubverificationObserverUtils.GetProgressRepository(_issueRepositoryDir,
 						_progressWorkspaceName, spatialReference,
 						IssueRepositoryType);
 

@@ -55,6 +55,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 
 		public void Started(int id, string workerAddress)
 		{
+#if Server11
 			if (_subverIdOid.TryGetValue(id, out long oid))
 			{
 				IFeature f = _fc.GetFeature(oid);
@@ -65,10 +66,12 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 				f.Value[GetIdx(WorkerAdressField)] = workerAddress;
 				f.Store();
 			}
+#endif
 		}
 
 		public void Finished(int id, ServiceCallStatus status)
 		{
+#if Server11
 			if (_subverIdOid.TryGetValue(id, out long oid))
 			{
 				IFeature f = _fc.GetFeature(oid);
@@ -78,6 +81,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 				f.Value[GetIdx(StatusField)] = (int) status;
 				f.Store();
 			}
+#endif
 		}
 
 		[NotNull]

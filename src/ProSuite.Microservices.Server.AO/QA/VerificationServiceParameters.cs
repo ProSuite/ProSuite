@@ -64,7 +64,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public string HtmlReportPath { get; set; }
 
-		public string HtmlTemplatePath { get; set; }
+		public string HtmlReportTemplatePath { get; set; }
+
+		public string HtmlSpecificationTemplatePath { get; set; }
 
 		public string MxdDocumentPath => null;
 

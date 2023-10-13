@@ -318,11 +318,11 @@ namespace ProSuite.Microservices.Client.QA
 				issueCount > 0 ? $" (New issues received: {issueCount})" : string.Empty;
 
 			_msg.DebugFormat(
-				"Received service progress of type {0}/{1}: {2} / {3}{4}",
+				"Received service progress of type {0}/{1}: {2} / {3}{4}: {5}",
 				(VerificationProgressType) progressMsg.ProgressType,
 				(VerificationProgressStep) progressMsg.ProgressStep,
 				progressMsg.OverallProgressCurrentStep,
-				progressMsg.OverallProgressTotalSteps, issueText);
+				progressMsg.OverallProgressTotalSteps, issueText, progressMsg.Message);
 		}
 
 		private static void UpdateServiceProgress(
