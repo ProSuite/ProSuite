@@ -84,14 +84,14 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] SelectionSet selectionSet,
-			[CanBeNull] SpatialReference outputSpatialReference)
+			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
 			return GetFeatures(selectionSet.ToDictionary(), outputSpatialReference);
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
-			[NotNull] Dictionary<MapMember, List<long>> oidsByMapMembers,
-			[CanBeNull] SpatialReference outputSpatialReference)
+			[NotNull] IEnumerable<KeyValuePair<MapMember, List<long>>> oidsByMapMembers,
+			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
 			foreach (var oidsByMapMember in oidsByMapMembers)
 			{

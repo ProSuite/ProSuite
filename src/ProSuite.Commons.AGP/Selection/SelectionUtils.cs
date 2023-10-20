@@ -141,11 +141,9 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public static IEnumerable<Feature> GetSelectedFeatures([NotNull] MapView activeView)
 		{
-			Dictionary<MapMember, List<long>> selection = GetSelection(activeView.Map);
+			SpatialReference sref = activeView.Map.SpatialReference;
 
-			SpatialReference spatialReference = activeView.Map.SpatialReference;
-
-			foreach (Feature feature in MapUtils.GetFeatures(selection, spatialReference))
+			foreach (Feature feature in MapUtils.GetFeatures(GetSelection(activeView.Map), sref))
 			{
 				yield return feature;
 			}
@@ -171,10 +169,10 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public static Dictionary<MapMember, List<long>> GetSelection(Map map)
 		{
-			return map.GetSelection().ToDictionary();
+			return GetSelection(map.GetSelection());
 		}
 
-		public static Dictionary<MapMember, List<long>> GetSelectedOidsByLayer(
+		public static Dictionary<MapMember, List<long>> GetSelection(
 			SelectionSet selectionSet)
 		{
 			return selectionSet.ToDictionary();
@@ -183,7 +181,7 @@ namespace ProSuite.Commons.AGP.Selection
 		public static Dictionary<MapMember, List<long>> GetSelection(
 			MapSelectionChangedEventArgs selectionChangedArgs)
 		{
-			return selectionChangedArgs.Selection.ToDictionary();
+			return GetSelection(selectionChangedArgs.Selection);
 		}
 
 		public static int GetFeatureCount(
