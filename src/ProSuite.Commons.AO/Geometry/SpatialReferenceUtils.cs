@@ -1292,18 +1292,21 @@ namespace ProSuite.Commons.AO.Geometry
 		public static T ProjectEx<T>(
 			[NotNull] T geometry,
 			[NotNull] ISpatialReference targetSr,
-			[CanBeNull] string transformation = null)
+			[CanBeNull] string transformation = null,
+			bool noNewInstance = false)
 			where T : IGeometry
 		{
 			ISpatialReference sourceSr = geometry.SpatialReference;
 
 			GeoTrans trans = GetGeoTrans(sourceSr.FactoryCode, targetSr.FactoryCode, transformation);
 
-			T clone = SysUtils.Clone(geometry);
-			IGeometry2 geom = (IGeometry2)clone;
+			IGeometry2 geom = noNewInstance == false
+				                  ? (IGeometry2) SysUtils.Clone(geometry)
+				                  : (IGeometry2) geometry;
+
 			geom.ProjectEx(targetSr, trans.Dir, trans.GeogrTrans, false, 0, 0);
 
-			return clone;
+			return (T)geom;
 		}
 
 		private class GeoTrans
