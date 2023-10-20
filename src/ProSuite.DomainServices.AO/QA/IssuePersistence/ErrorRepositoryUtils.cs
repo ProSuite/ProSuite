@@ -45,7 +45,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 			try
 			{
-				GeometryUtils.EnsureSpatialReference(result, spatialReference);
+				GeometryUtils.EnsureSpatialReference(result, spatialReference, useProjectEx: true);
 
 				// this was previously needed for the exact coordinate comparison with allowed errors:
 				result.SnapToSpatialReference();

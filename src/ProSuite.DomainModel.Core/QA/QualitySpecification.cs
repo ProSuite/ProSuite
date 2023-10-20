@@ -152,6 +152,8 @@ namespace ProSuite.DomainModel.Core.QA
 
 		protected virtual bool IsCustomCore => false;
 
+		public int? IssuesSpatialReferenceId { get; set; }
+
 		[NotNull]
 		public virtual QualitySpecification BaseSpecification => this;
 

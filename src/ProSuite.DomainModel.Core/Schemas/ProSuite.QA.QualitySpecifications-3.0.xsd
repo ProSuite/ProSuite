@@ -33,6 +33,7 @@
 		<xs:attribute name="uuid" type="xs:string" />
 		<xs:attribute default="-1" name="listOrder" type="xs:int" />
 		<xs:attribute default="0" name="tileSize" type="xs:double" />
+		<xs:attribute default="0" name="issuesSpatialReferenceId" type="xs:int" />
 		<xs:attribute name="url" type="xs:string" />
 		<xs:attribute default="false" name="hidden" type="xs:boolean" />
 		<xs:attribute name="createdDate" type="xs:string" />

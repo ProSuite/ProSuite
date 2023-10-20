@@ -689,6 +689,10 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			qualitySpecification.TileSize = xmlSpecification.TileSize <= 0
 				                                ? (double?) null
 				                                : xmlSpecification.TileSize;
+			qualitySpecification.IssuesSpatialReferenceId =
+				xmlSpecification.IssuesSpatialReferenceId <= 0
+					? (int?) null
+					: xmlSpecification.IssuesSpatialReferenceId;
 			qualitySpecification.Url = xmlSpecification.Url;
 			qualitySpecification.Hidden = xmlSpecification.Hidden;
 			qualitySpecification.Category = category;
