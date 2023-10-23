@@ -114,7 +114,6 @@ namespace ProSuite.AGP.Editing
 			Geometry selectionGeometry =
 				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
 
-					$"Selection sketch geometry {GeometryUtils.Format(selectionGeometry.Extent)}");
 			return selectionGeometry;
 		}
 
