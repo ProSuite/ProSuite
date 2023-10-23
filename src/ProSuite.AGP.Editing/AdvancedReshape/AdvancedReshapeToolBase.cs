@@ -12,7 +12,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
@@ -50,8 +49,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		private CancellationTokenSource _cancellationTokenSource;
 		private const Key _keyToggleNonDefaultSide = Key.S;
 
-		protected AdvancedReshapeToolBase(SketchProperties sketchProperties) : base(
-			sketchProperties)
+		protected AdvancedReshapeToolBase()
 		{
 			// This is our property:
 			RequiresSelection = true;

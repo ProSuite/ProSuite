@@ -9,6 +9,7 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -20,26 +21,25 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected TwoPhaseEditToolBase(SketchProperties sketchProperties) : base(
-			sketchProperties)
+		protected TwoPhaseEditToolBase()
 		{
 			IsSketchTool = true;
 		}
 
 		protected Cursor SecondPhaseCursor { get; set; }
 
-		protected override void OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
-			if (args.Selection.Count != 0)
+			if (args.Selection.Count == 0)
 			{
-				return;
+				ResetDerivedGeometries();
+				StartSelectionPhase();
 			}
 
-			ResetDerivedGeometries();
-			StartSelectionPhase();
+			return true;
 		}
 
-		protected override Task OnEditCompletedCoreAsync(EditCompletedEventArgs args)
+		protected override Task OnEditCompletedCore(EditCompletedEventArgs args)
 		{
 			bool requiresRecalculate = args.CompletedType == EditCompletedType.Discard ||
 			                           args.CompletedType == EditCompletedType.Reconcile ||
@@ -69,7 +69,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					});
 			}
 
-			return base.OnEditCompletedCoreAsync(args);
+			return base.OnEditCompletedCore(args);
 		}
 
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
@@ -101,22 +101,24 @@ namespace ProSuite.AGP.Editing.OneClick
 				return true;
 			}
 
-			var task = QueuedTask.Run(IsInSelectionPhaseQueued);
+			var task = QueuedTask.Run(
+				() =>
+				{
+					bool result;
 
-			// This can dead-lock! Remove everywhere, use async overload
+					if (! CanUseSelection(ActiveMapView))
+					{
+						result = true;
+					}
+					else
+					{
+						result = ! CanUseDerivedGeometries();
+					}
+
+					return result;
+				});
+
 			return task.Result;
-		}
-
-		protected override async Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
-		{
-			if (shiftIsPressed)
-			{
-				return true;
-			}
-
-			bool result = await QueuedTask.Run(IsInSelectionPhaseQueued);
-
-			return result;
 		}
 
 		protected override bool HandleEscape()
@@ -187,27 +189,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			LogDerivedGeometriesCalculated(progressor);
 		}
 
-		private bool IsInSelectionPhaseQueued()
-		{
-			bool result;
-
-			if (! CanUseSelection(ActiveMapView))
-			{
-				result = true;
-			}
-			else
-			{
-				result = ! CanUseDerivedGeometries();
-			}
-
-			return result;
-		}
-
 		private void StartSecondPhase()
 		{
 			Cursor = SecondPhaseCursor;
-			
-			SetupSketch(SketchGeometryType.Rectangle);
+
+			SetupRectangleSketch();
 		}
 	}
 }

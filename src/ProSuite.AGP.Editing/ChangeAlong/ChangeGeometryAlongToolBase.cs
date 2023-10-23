@@ -17,7 +17,6 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
@@ -43,8 +42,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private ChangeAlongFeedback _feedback;
 
-		protected ChangeGeometryAlongToolBase(SketchProperties sketchProperties) : base(
-			sketchProperties)
+		protected ChangeGeometryAlongToolBase()
 		{
 			IsSketchTool = true;
 
@@ -97,18 +95,18 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_feedback = null;
 		}
 
-		protected override void OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
-			if (args.Selection.Count != 0)
+			if (args.Selection.Count == 0)
 			{
-				return;
+				ResetDerivedGeometries();
+				StartSelectionPhase();
 			}
 
-			ResetDerivedGeometries();
-			StartSelectionPhase();
+			return true;
 		}
 
-		protected override Task OnEditCompletedCoreAsync(EditCompletedEventArgs args)
+		protected override Task OnEditCompletedCore(EditCompletedEventArgs args)
 		{
 			bool requiresRecalculate = args.CompletedType == EditCompletedType.Discard ||
 			                           args.CompletedType == EditCompletedType.Reconcile ||
@@ -139,7 +137,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					});
 			}
 
-			return base.OnEditCompletedCoreAsync(args);
+			return base.OnEditCompletedCore(args);
 		}
 
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
@@ -249,25 +247,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			var task = QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
 
-			// NOTE: In rare situations this can result in a dead-lock / hang of the application.
+			// NOTE: In rare situations this has resulted in a dead-lock / hang of the application.
+			// According to the docs, the only problem with this is blocking the UI thread.
+			// It presumably corresponds to the 'thread pool hack' of Brownfield Async Development.
+			// However, probably an async overload would be useful for async callers!
 			return task.Result;
-		}
-
-		protected override async Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
-		{
-			if (HasReshapeCurves())
-			{
-				return false;
-			}
-
-			// First or second phase:
-			if (shiftIsPressed)
-			{
-				// With reshape curves and shift it would mean we're in the target selection phase
-				return ! HasReshapeCurves();
-			}
-
-			return await QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
 		}
 
 		private bool HasReshapeCurves()
@@ -327,8 +311,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private void StartTargetSelectionPhase()
 		{
 			Cursor = TargetSelectionCursor;
-			
-			SetupSketch(SketchGeometryType.Rectangle);
+
+			SetupRectangleSketch();
 		}
 
 		private async Task<bool> SelectTargetsAsync(
@@ -345,7 +329,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				await QueuedTaskUtils.Run(() =>
 				{
 					sketch = ToolUtils.SketchToSearchGeometry(
-						sketch, GetSelectionTolerance(), out isSingleClick);
+						sketch, GetSelectionTolerancePixels(), out isSingleClick);
 
 					pickerLocation = MapView.Active.MapToScreen(sketch.Extent.Center);
 
@@ -512,7 +496,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private List<CutSubcurve> GetSelectedCutSubcurves([NotNull] Geometry sketch)
 		{
-			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerance(),
+			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
 			                                          out bool singlePick);
 
 			Predicate<CutSubcurve> canReshapePredicate =
