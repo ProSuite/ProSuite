@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -246,6 +247,18 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 
 			if (datasetName is IFeatureClassName featureClassName)
 			{
+				if (featureClassName.ShapeType != esriGeometryType.esriGeometryAny)
+				{
+					// Note: A raster in a geodatabase is IFeatureClassName with ShapeType -1!
+					// -> Get actual dataset
+					var dataset = (IDataset) ((IName) datasetName).Open();
+
+					if (dataset.Type == esriDatasetType.esriDTRasterCatalog)
+					{
+						return GetRasterDataset(datasetName.Name);
+					}
+				}
+
 				return GetVectorDataset(featureClassName);
 			}
 
@@ -267,7 +280,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 
 			if (datasetName is IRasterDatasetName)
 			{
-				return GetRasterDataset(datasetName);
+				return GetRasterDataset(datasetName.Name);
 			}
 
 			return CreateDatasetCore(datasetName);
@@ -312,6 +325,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			Assert.ArgumentNotNull(featureClassName, nameof(featureClassName));
 
 			esriGeometryType shapeType = DatasetUtils.GetShapeType(featureClassName);
+
 			GeometryTypeShape geometryType = GetGeometryType(shapeType);
 
 			if (geometryType == null)
@@ -472,7 +486,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 		}
 
 		[CanBeNull]
-		private RasterDataset GetRasterDataset([NotNull] IDatasetName datasetName)
+		private RasterDataset GetRasterDataset([NotNull] string datasetName)
 		{
 			var geometryType = GetGeometryType<GeometryTypeRasterDataset>();
 
@@ -482,7 +496,8 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 				// -> ignore the dataset
 				_msg.WarnFormat(
 					"Ignoring dataset {0}: raster dataset geometry type not defined in data dictionary",
-					datasetName.Name);
+					datasetName);
+
 				return null;
 			}
 

@@ -249,11 +249,25 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			var task = QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
 
-			// NOTE: In rare situations this has resulted in a dead-lock / hang of the application.
-			// According to the docs, the only problem with this is blocking the UI thread.
-			// It presumably corresponds to the 'thread pool hack' of Brownfield Async Development.
-			// However, probably an async overload would be useful for async callers!
+			// NOTE: In rare situations this can result in a dead-lock / hang of the application.
 			return task.Result;
+		}
+
+		protected override async Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		{
+			if (HasReshapeCurves())
+			{
+				return false;
+			}
+
+			// First or second phase:
+			if (shiftIsPressed)
+			{
+				// With reshape curves and shift it would mean we're in the target selection phase
+				return ! HasReshapeCurves();
+			}
+
+			return await QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
 		}
 
 		private bool HasReshapeCurves()

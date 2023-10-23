@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Windows;
+using ArcGIS.Desktop.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
@@ -27,13 +28,22 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		public static string GetResultsPath(
 			[NotNull] IQualitySpecificationReference qualitySpecification,
-			[NotNull] string outputFolderPath)
+			[CanBeNull] string outputFolderPath = null)
 		{
 			string specificationName =
 				FileSystemUtils.ReplaceInvalidFileNameChars(
 					qualitySpecification.Name, '_');
 
 			string directoryName = $"{specificationName}_{DateTime.Now:yyyyMMdd_HHmmss}";
+
+			if (outputFolderPath == null)
+			{
+				// TODO: Global (non-APRX) settings per user -> Edit Options dialog? Project Settings?
+				string resultDir =
+					Environment.GetEnvironmentVariable("PROSUITE_VERIFICATION_RESULT_DIR");
+
+				outputFolderPath = resultDir ?? Project.Current.HomeFolderPath;
+			}
 
 			string outputParentFolder = Path.Combine(outputFolderPath, "Verifications");
 

@@ -145,8 +145,26 @@
   <data name="EraseToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\EraseToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="FillHoleToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\FillHoleToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="FillHoleToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\FillHoleToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="FillHoleToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\FillHoleToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="PolygonDrawerCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\PolygonDrawerCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RemoveHoleToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\RemoveHoleToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RemoveHoleToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\RemoveHoleToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RemoveHoleToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\RemoveHoleToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="RemoveOverlapsToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\RemoveOverlapsToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

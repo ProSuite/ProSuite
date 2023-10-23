@@ -4,14 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
-using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
@@ -276,8 +274,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				return
 					$"{QualityConditionGroup.ExecType} sub-verification with {QualityConditionGroup.QualityConditions.Count} " +
-					$"condition(s) in envelope {GeometryUtils.ToString(TileEnvelope, true)}" +
-					$"{QualityConditionGroup}";
+					$"condition(s) in envelope {GeometryUtils.ToString(TileEnvelope, true)}";
 			}
 
 			#endregion
@@ -427,7 +424,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			Task countTask = null;
-			if (Debugger.IsAttached)
+			if (ParallelConfiguration.SortByNumberOfObjects)
 			{
 				Thread.Sleep(10);
 
@@ -437,6 +434,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				countTask = Task.Run(() => CountData(subVerifications, wsInfos));
 			}
 
+			int failureCount = 0;
+			int successCount = 0;
 			while (_tasks.Count > 0 || unhandledSubverifications.Count > 0)
 			{
 				if (TryTakeCompletedRun(_tasks, out Task<bool> task,
@@ -453,12 +452,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 					{
 						_msg.WarnFormat("{0}{1}Failed verification: {2}", failureMessage,
 						                Environment.NewLine, completed);
+						failureCount++;
 						// TODO: Communicate error to client?!
 					}
 					else
 					{
 						_msg.InfoFormat("Finished verification: {0} at {1}", completed,
 						                finishedClient.GetAddress());
+						successCount++;
 					}
 
 					if (task.Status == TaskStatus.Faulted)
@@ -487,7 +488,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 						return;
 					}
 
-					_msg.InfoFormat("Remaining verification tasks: {0}", _tasks.Count);
+					_msg.InfoFormat(
+						"{0} failed and {1} successful sub-verifications. Remaining: {2}.",
+						failureCount, successCount, _tasks.Count);
 				}
 				else
 				{
@@ -521,9 +524,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 				if (countTask?.IsCompleted == true)
 				{
 					countTask = null;
+					var listToSort = new List<SubVerification>(unhandledSubverifications);
+					listToSort.Sort((x, y) =>
+						                Math.Sign(
+							                (x.InvolvedBaseRowsCount ?? 0)
+							                - (y.InvolvedBaseRowsCount ?? 0))
+					);
+					unhandledSubverifications = new Stack<SubVerification>(listToSort);
 				}
+
 				Thread.Sleep(100);
 			}
+
+			_msg.InfoFormat(
+				"Finished distributed verification with {0} failures and {1} successful sub-verifications",
+				failureCount, successCount);
 
 			EndVerification(QualityVerification);
 		}
@@ -576,7 +591,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (ddxModel is Model model)
 				{
-					spatialReference = model.SpatialReferenceDescriptor.SpatialReference;
+					spatialReference = model.SpatialReferenceDescriptor?.SpatialReference;
 				}
 
 				foreach (Dataset dataset in ddxModel.GetDatasets())
@@ -614,9 +629,46 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				SubVerification next = subVerifications.Pop();
 				Task<bool> newTask = IniTask(next, client);
+				if (_tasks.ContainsKey(newTask))
+				{
+					_msg.WarnFormat("New Task already exists in dictioniary!");
+					LogTask(_tasks, newTask, next);
+				}
+
 				_tasks.Add(newTask, next);
+
 				startedVerifications.Add(newTask, next);
 			}
+		}
+
+		private void LogTask(IDictionary<Task<bool>, SubVerification> tasks, Task<bool> newTask,
+		                     SubVerification newSubVerification)
+		{
+			LogTask(newTask, newSubVerification, "New");
+
+			if (tasks.TryGetValue(newTask, out SubVerification existing))
+			{
+				foreach (KeyValuePair<Task<bool>, SubVerification> pair in tasks)
+				{
+					if (pair.Value == existing)
+					{
+						LogTask(pair.Key, pair.Value, "Equal");
+					}
+				}
+			}
+			else
+			{
+				foreach (KeyValuePair<Task<bool>, SubVerification> pair in tasks)
+				{
+					LogTask(pair.Key, pair.Value, "Existing");
+				}
+			}
+		}
+
+		private void LogTask(Task task, SubVerification subVerification, string prefix)
+		{
+			_msg.Warn(
+				$"{prefix} Task {task}; Task Hashcode: {task.GetHashCode()}; Subverification {subVerification}");
 		}
 
 		private IQualityVerificationClient GetWorkerClient()
@@ -935,7 +987,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				QualityConditionVerification conditionVerification =
 					FindQualityConditionVerification(toOverallVerification, conditionId);
 
-				conditionVerification.ErrorCount += conditionVerificationMsg.ErrorCount;
+				// NOTE: The errors are counted (and de-duplicated) via ProcessQaError() 
 				conditionVerification.ExecuteTime += conditionVerificationMsg.ExecuteTime;
 				conditionVerification.RowExecuteTime += conditionVerificationMsg.RowExecuteTime;
 				conditionVerification.TileExecuteTime += conditionVerificationMsg.TileExecuteTime;
@@ -1291,9 +1343,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 				listSpecification;
 
 			// Sub-requests must not write the issue GDB and reports:
+			subRequest.Parameters.WriteDetailedVerificationReport = false;
 			subRequest.Parameters.IssueFileGdbPath = string.Empty;
 			subRequest.Parameters.VerificationReportPath = string.Empty;
 			subRequest.Parameters.HtmlReportPath = string.Empty;
+
+			// Sub-requests must never save the verification:
+			subRequest.Parameters.SaveVerificationStatistics = false;
 
 			subRequest.Specification.ExcludedConditionIds.AddRange(excludedConditionIds);
 
@@ -1486,7 +1542,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				subResponse.VerificationMsg = responseMsg.QualityVerification;
 			}
 
-			LogProgress(responseMsg.Progress);
+			LogProgress(responseMsg.Progress, subResponse.Issues.Count);
 		}
 
 		private static void UpdateSubProgress([NotNull] VerificationResponse responseMsg,
@@ -1515,7 +1571,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
-		private static void LogProgress(VerificationProgressMsg progressMsg)
+		private static void LogProgress(VerificationProgressMsg progressMsg,
+		                                int issueCount)
 		{
 			if (progressMsg == null)
 			{
@@ -1524,12 +1581,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			_msg.VerboseDebug(() => $"{DateTime.Now} - {progressMsg}");
 
-			_msg.DebugFormat(
-				"Received service progress of type {0}/{1}: {2} / {3}",
-				(VerificationProgressType) progressMsg.ProgressType,
-				(VerificationProgressStep) progressMsg.ProgressStep,
-				progressMsg.OverallProgressCurrentStep,
-				progressMsg.OverallProgressTotalSteps);
+			if (_msg.IsVerboseDebugEnabled || issueCount % 10 == 0)
+			{
+				string issueText = issueCount > 0 ? $" (Issue count: {issueCount})" : string.Empty;
+
+				string progressText =
+					$"Received service progress of type {(VerificationProgressType) progressMsg.ProgressType}/{(VerificationProgressStep) progressMsg.ProgressStep}:" +
+					$" {progressMsg.OverallProgressCurrentStep} / {progressMsg.OverallProgressTotalSteps}{issueText}";
+
+				_msg.DebugFormat(progressText);
+			}
 		}
 
 		private bool ProcessQaError([NotNull] QaError qaError,

@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
-using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
@@ -70,8 +69,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			Envelope currentExtent = MapView.Active.Extent;
 
-			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification,
-			                                                Project.Current.HomeFolderPath);
+			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
@@ -110,22 +108,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return qaEnvironment.VerifyPerimeter(
-							currentExtent, progressTracker, resultsPath);
+							currentExtent, progressTracker, "visible extent", resultsPath);
 					},
 					BackgroundProgressor.None);
 
 			ServiceCallStatus result = await verificationTask;
-
-			if (result == ServiceCallStatus.Finished)
-			{
-				_msg.InfoFormat(
-					"Successfully finished extent verification. The results have been saved in {0}",
-					resultsPath);
-			}
-			else
-			{
-				_msg.WarnFormat("Extent verification was not finished. Status: {0}", result);
-			}
 
 			return result;
 		}

@@ -3,20 +3,26 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Runtime.InteropServices;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO
 {
 	public class EnumCursor : IEnumerable<IRow>
 	{
+		private readonly bool _provideFailingOidInException;
 		private readonly bool _isSpatialFilter;
 		private readonly string _subFields;
 		[NotNull] private readonly ITable _table;
 		private readonly string _whereClause;
 		private ICursor _cursor;
+
+		private readonly IQueryFilter _queryFilter;
 
 		#region Constructors
 
@@ -58,9 +64,18 @@ namespace ProSuite.Commons.AO
 
 		public EnumCursor([NotNull] ITable table,
 		                  [CanBeNull] IQueryFilter queryFilter,
-		                  bool recycle) : this(table, queryFilter)
+		                  bool recycle,
+		                  bool provideFailingOidInException = false)
+			: this(table, queryFilter)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
+
+			_provideFailingOidInException = provideFailingOidInException;
+
+			if (provideFailingOidInException)
+			{
+				_queryFilter = queryFilter;
+			}
 
 			try
 			{
@@ -199,6 +214,8 @@ namespace ProSuite.Commons.AO
 
 		private class RowEnumerator : IEnumerator<IRow>
 		{
+			private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 			private readonly EnumCursor _enumerable;
 
 			public RowEnumerator([NotNull] EnumCursor enumerable)
@@ -238,6 +255,23 @@ namespace ProSuite.Commons.AO
 				}
 				catch (Exception exp)
 				{
+					if (_enumerable._provideFailingOidInException)
+					{
+						// Try finding out if it is just an empty geometry and if so which one -> catchable exception
+						ITable table = _enumerable._table;
+
+						long? oid = TryGetInvalidOid(table, _enumerable._queryFilter);
+
+						if (oid != null)
+						{
+							string tableName = GetTableName(table);
+
+							throw new DataAccessException(
+								$"Error getting {tableName} <oid> {oid}. Its geometry might be corrupt.",
+								oid.Value, tableName, exp);
+						}
+					}
+
 					throw new DataException(_enumerable.CreateMessage(lastRow), exp);
 				}
 
@@ -248,6 +282,63 @@ namespace ProSuite.Commons.AO
 
 				Dispose();
 				return false;
+			}
+
+			private static long? TryGetInvalidOid([NotNull] ITable table,
+			                                      [CanBeNull] IQueryFilter filter)
+			{
+				try
+				{
+					if (! table.HasOID)
+					{
+						return null;
+					}
+
+					IQueryFilter oidOnlyFilter
+						= filter == null
+							  ? new QueryFilterClass()
+							  : (IQueryFilter) ((IClone) filter).Clone();
+
+					oidOnlyFilter.SubFields = table.OIDFieldName;
+
+					long lastOid = -1;
+					try
+					{
+						foreach (IRow row in GdbQueryUtils.GetRows(table, oidOnlyFilter, true))
+						{
+							try
+							{
+								var fullRow = table.GetRow(row.OID);
+								lastOid = row.OID;
+
+								Marshal.ReleaseComObject(fullRow);
+							}
+							catch (Exception e)
+							{
+								_msg.Debug($"Error at row {row.OID}. Last successful: {lastOid}",
+								           e);
+
+								return row.OID;
+							}
+						}
+					}
+					catch (COMException comException)
+					{
+						_msg.Debug(
+							$"Unexpected Error reading objects. Last successful OID: {lastOid}",
+							comException);
+
+						return null;
+					}
+
+					_msg.DebugFormat("The exception did not occur any more!");
+					return null;
+				}
+				catch (Exception e)
+				{
+					_msg.Debug("Error in exception handling", e);
+					return null;
+				}
 			}
 
 			#endregion

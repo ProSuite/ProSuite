@@ -18,6 +18,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
@@ -27,74 +28,77 @@ using Cursor = System.Windows.Input.Cursor;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
-	// TODO DARO is it the duty of the base class to wrap overridable methods into a QueuedTask?
-	// Shouldn't it be the caller, superclass to do QueuedTask?
-	// compare:
-	// OnEditCompletedCoreAsync vs. OnToolDeactivateCore
+	// todo daro log more, especially in subclasses
 	public abstract class OneClickToolBase : MapTool
 	{
 		private const Key _keyShowOptionsPane = Key.O;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private IPickerPrecedence _pickerPrecedence;
+		private bool _finishingSketch;
 
-		protected OneClickToolBase(SketchProperties sketchProperties)
+		protected OneClickToolBase()
 		{
 			ContextMenuID = "esri_mapping_selection2DContextMenu";
 
 			UseSnapping = false;
 			HandledKeys.Add(Key.Escape);
 			HandledKeys.Add(_keyShowOptionsPane);
-
-			SetupSketch(sketchProperties.SketchGeometryType, sketchProperties.SketchOutputMode);
 		}
 
 		/// <summary>
 		/// Whether this tool requires a selection and the base class should handle the selection phase.
 		/// </summary>
-		protected bool RequiresSelection { get; init; } = true;
+		protected bool RequiresSelection { get; set; } = true;
 
 		/// <summary>
 		/// Whether the required selection can only contain editable features.
 		/// </summary>
-		protected bool SelectOnlyEditFeatures { get; init; } = true;
+		protected bool SelectOnlyEditFeatures { get; set; } = true;
 
 		/// <summary>
 		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
 		/// allowed. Otherwise the selection phase will continue until all selected features are
 		/// usable by the tool.
 		/// </summary>
-		protected bool AllowNotApplicableFeaturesInSelection => true;
+		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
 		public virtual IPickerPrecedence PickerPrecedence =>
-			_pickerPrecedence ??= new SelectionToolPickerPrecedence();
+			_pickerPrecedence ?? (_pickerPrecedence = new StandardPickerPrecedence());
 
 		/// <summary>
 		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
 		/// will be called (and potentially in the future also MapTool.HandleKeyUpAsync)
 		/// </summary>
-		protected List<Key> HandledKeys { get; } = new();
+		protected List<Key> HandledKeys { get; } = new List<Key>();
 
-		protected HashSet<Key> PressedKeys { get; } = new();
+		/// <summary>
+		/// The currently pressed keys.
+		/// </summary>
+		protected HashSet<Key> PressedKeys { get; } = new HashSet<Key>();
 
-		protected virtual Cursor SelectionCursor { get; init; }
+		protected virtual Cursor SelectionCursor { get; set; }
+		protected Cursor SelectionCursorShift { get; set; }
+		protected Cursor SelectionCursorNormal { get; set; }
+		protected Cursor SelectionCursorNormalShift { get; set; }
+		protected Cursor SelectionCursorUser { get; set; }
+		protected Cursor SelectionCursorUserShift { get; set; }
+		protected Cursor SelectionCursorOriginal { get; set; }
+		protected Cursor SelectionCursorOriginalShift { get; set; }
 
-		protected Cursor SelectionCursorShift { get; init; }
-
-		#region overrides
-
-		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
+		protected override Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
-			_msg.VerboseDebug(() => nameof(OnToolActivateAsync));
+			_msg.VerboseDebug(() => "OnToolActivateAsync");
 
 			MapPropertyChangedEvent.Subscribe(OnPropertyChanged);
 			MapSelectionChangedEvent.Subscribe(OnMapSelectionChanged);
-			EditCompletedEvent.Subscribe(OnEditCompletedAsync);
+			EditCompletedEvent.Subscribe(OnEditCompleted);
 
 			PressedKeys.Clear();
 
-			await ViewUtils.TryAsync(
-				QueuedTask.Run(
+			try
+			{
+				return QueuedTask.Run(
 					() =>
 					{
 						OnToolActivatingCore();
@@ -105,33 +109,47 @@ namespace ProSuite.AGP.Editing.OneClick
 						}
 
 						return OnToolActivatedCore(hasMapViewChanged);
-					}), _msg);
+					});
+			}
+			catch (Exception e)
+			{
+				HandleError($"Error in tool activation ({Caption}): {e.Message}", e);
+			}
+
+			return Task.CompletedTask;
 		}
 
-		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
+		protected override Task OnToolDeactivateAsync(bool hasMapViewChanged)
 		{
-			_msg.VerboseDebug(() => nameof(OnToolDeactivateAsync));
+			_msg.VerboseDebug(() => "OnToolDeactivateAsync");
 
 			MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
 			MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChanged);
-			EditCompletedEvent.Unsubscribe(OnEditCompletedAsync);
+			EditCompletedEvent.Unsubscribe(OnEditCompleted);
 
-			HideOptionsPane();
+			try
+			{
+				HideOptionsPane();
 
-			// TODO DARO is it the duty of the base class to wrap overridable methods into a QeuedTask?
-			await ViewUtils.TryAsync(
-				QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged)), _msg);
+				return QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
+			}
+			catch (Exception e)
+			{
+				HandleError($"Error in tool deactivation ({Caption}): {e.Message}", e, true);
+			}
+
+			return Task.CompletedTask;
 		}
 
-		protected override async void OnToolKeyDown(MapViewKeyEventArgs k)
+		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
 		{
-			_msg.VerboseDebug(() => nameof(OnToolKeyDown));
+			_msg.VerboseDebug(() => "OnToolKeyDown");
 
-			await ViewUtils.TryAsync(() =>
+			try
 			{
 				PressedKeys.Add(k.Key);
 
-				if (KeyboardUtils.IsModifierKey(k.Key) || HandledKeys.Contains(k.Key))
+				if (IsModifierKey(k.Key) || HandledKeys.Contains(k.Key))
 				{
 					k.Handled = true;
 				}
@@ -148,17 +166,46 @@ namespace ProSuite.AGP.Editing.OneClick
 					HandleEscape();
 				}
 
-				return OnToolKeyDownAsync(k);
-			}, _msg);
+				QueuedTaskUtils.Run(
+					delegate
+					{
+						if (IsShiftKey(k.Key))
+						{
+							ShiftPressedCore();
+						}
+
+						OnKeyDownCore(k);
+
+						return true;
+					});
+			}
+			catch (Exception e)
+			{
+				HandleError($"Error in tool key down ({Caption}): {e.Message}", e, true);
+			}
 		}
 
-		protected override async void OnToolKeyUp(MapViewKeyEventArgs k)
+		protected override void OnToolKeyUp(MapViewKeyEventArgs k)
 		{
-			_msg.VerboseDebug(() => nameof(OnToolKeyUp));
+			_msg.VerboseDebug(() => "OnToolKeyUp");
 
 			try
 			{
-				await ViewUtils.TryAsync(OnTookKeyUpAsync(k), _msg);
+				QueuedTaskUtils.Run(
+					delegate
+					{
+						if (IsShiftKey(k.Key))
+						{
+							ShiftReleasedCore();
+						}
+
+						OnKeyUpCore(k);
+						return true;
+					});
+			}
+			catch (Exception e)
+			{
+				HandleError($"Error in tool key up ({Caption}): {e.Message}", e, true);
 			}
 			finally
 			{
@@ -168,86 +215,234 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
 		{
-			_msg.VerboseDebug(() => nameof(OnSketchCompleteAsync));
+			_msg.VerboseDebug(() => "OnSketchCompleteAsync");
 
 			if (sketchGeometry == null)
 			{
 				return false;
 			}
 
-			if (SketchType == SketchGeometryType.Polygon)
+			if (_finishingSketch)
 			{
-				ViewUtils.Try(() =>
+				// This happens if the OnSelectionSketchComplete() method below takes a long time
+				// and the user already creates several new sketches in the mean while.
+				// However, it has also been observed in other situations when seemingly randomly
+				// the method is sometimes called twice.
+				_msg.Debug("OnSketchCompleteAsync: Duplicate call is ignored!");
+				return false;
+			}
+
+			try
+			{
+				_finishingSketch = true;
+
+				CancelableProgressor progressor = GetCancelableProgressor();
+
+				if (SketchType == SketchGeometryType.Polygon)
 				{
 					// Otherwise relational operators and spatial queries return the wrong result
 					sketchGeometry = GeometryUtils.Simplify(sketchGeometry);
-				}, _msg);
-			}
-
-			if (RequiresSelection && IsInSelectionPhase())
-			{
-				return await ViewUtils.TryAsync(
-					       OnSelectionSketchCompleteAsync(sketchGeometry,
-					                                      GetCancelableProgressor()), _msg);
-			}
-
-			return await ViewUtils.TryAsync(
-				       OnSketchCompleteCoreAsync(sketchGeometry, GetCancelableProgressor()), _msg);
-		}
-
-		#endregion
-
-		#region privates
-
-		private async Task OnToolKeyDownAsync(MapViewKeyEventArgs k)
-		{
-			await QueuedTask.Run(() =>
-			{
-				if (IsShiftKey(k.Key))
-				{
-					ShiftPressedCore();
 				}
 
-				OnKeyDownCore(k);
-			});
-		}
-
-		private async Task OnTookKeyUpAsync(MapViewKeyEventArgs k)
-		{
-			await QueuedTask.Run(() =>
-			{
-				if (IsShiftKey(k.Key))
+				if (RequiresSelection &&
+				    await IsInSelectionPhaseAsync())
 				{
-					ShiftReleasedCore();
+					return await OnSelectionSketchComplete(sketchGeometry, progressor);
 				}
 
-				OnKeyUpCore(k);
-			});
+				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
+			}
+			catch (Exception e)
+			{
+				HandleError($"{Caption}: Error completing sketch ({e.Message})", e);
+				// NOTE: Throwing here results in a process crash (Exception while waiting for a Task to complete)
+				// Consider Task.FromException?
+			}
+			finally
+			{
+				_finishingSketch = false;
+			}
+
+			return true;
 		}
 
-		private async void OnMapSelectionChanged(MapSelectionChangedEventArgs args)
+		protected virtual void ShiftPressedCore()
 		{
-			_msg.VerboseDebug(() => nameof(OnMapSelectionChanged));
-
-			// NOTE: If the exception of this event is not caught here, the application crashes!
-			await ViewUtils.TryAsync(OnMapSelectionChangedAsync(args), _msg);
+			if (SelectionCursorShift != null && IsInSelectionPhase(true))
+			{
+				SetCursor(SelectionCursorShift);
+			}
 		}
 
-		private async Task OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
+		protected virtual void ShiftReleasedCore()
 		{
-			// Used to clear derived geometries etc.
-			await QueuedTask.Run(() => OnMapSelectionChangedCore(args));
+			if (SelectionCursor != null && IsInSelectionPhase(true))
+			{
+				SetCursor(SelectionCursor);
+			}
 		}
 
-		private async Task OnEditCompletedAsync(EditCompletedEventArgs args)
+		protected void StartSelectionPhase()
 		{
-			_msg.VerboseDebug(() => nameof(OnEditCompletedAsync));
+			SelectionSettings settings = GetSelectionSettings();
 
-			await ViewUtils.TryAsync(OnEditCompletedCoreAsync(args), _msg);
+			SetupSketch(settings.SketchGeometryType, settings.SketchOutputMode);
+
+			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
+			{
+				SetCursor(SelectionCursorShift);
+			}
+			else
+			{
+				SetCursor(SelectionCursor);
+			}
+
+			OnSelectionPhaseStarted();
 		}
 
-		private async Task<bool> OnSelectionSketchCompleteAsync(Geometry sketchGeometry,
-		                                                        CancelableProgressor progressor)
+		/// <summary>
+		/// Sets up the tool for a sketch that is typically used to select things (features, graphics, etc.)
+		/// </summary>
+		protected void SetupRectangleSketch()
+		{
+			SetupSketch(SketchGeometryType.Rectangle);
+		}
+
+		protected void SetupSketch(SketchGeometryType? sketchType,
+		                           SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
+		                           bool useSnapping = false,
+		                           bool completeSketchOnMouseUp = true,
+		                           bool enforceSimpleSketch = false)
+		{
+			SketchOutputMode = sketchOutputMode;
+
+			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
+			// otherwise it has no effect!
+			CompleteSketchOnMouseUp = completeSketchOnMouseUp;
+
+			SketchType = sketchType;
+
+			UseSnapping = useSnapping;
+
+			GeomIsSimpleAsFeature = enforceSimpleSketch;
+		}
+
+		protected virtual void OnSelectionPhaseStarted() { }
+
+		private static bool IsModifierKey(Key key)
+		{
+			return key == Key.LeftShift ||
+			       key == Key.RightShift ||
+			       key == Key.LeftCtrl ||
+			       key == Key.RightCtrl ||
+			       key == Key.LeftAlt ||
+			       key == Key.RightAlt;
+		}
+
+		protected static bool IsShiftKey(Key key)
+		{
+			return key == Key.LeftShift ||
+			       key == Key.RightShift;
+		}
+
+		private void OnMapSelectionChanged(MapSelectionChangedEventArgs args)
+		{
+			_msg.VerboseDebug(() => "OnMapSelectionChanged");
+
+			try
+			{
+				QueuedTaskUtils.Run(
+					delegate
+					{
+						try
+						{
+							// Used to clear derived geometries etc.
+							bool result = OnMapSelectionChangedCore(args);
+
+							return result;
+						}
+						catch (Exception e)
+						{
+							// NOTE: If the exception of this event is not caught here, the application crashes!
+							HandleError($"Error while processing selection change: {e.Message}", e,
+							            true);
+							return false;
+						}
+					});
+			}
+			catch (Exception e)
+			{
+				HandleError($"Error OnSelectionChanged: {e.Message}", e, true);
+			}
+		}
+
+		private Task OnEditCompleted(EditCompletedEventArgs args)
+		{
+			_msg.VerboseDebug(() => "OnEditCompleted");
+
+			try
+			{
+				return OnEditCompletedCore(args);
+			}
+			catch (Exception e)
+			{
+				HandleError($"Error OnEditCompleted: {e.Message}", e, true);
+
+				return Task.FromResult(false);
+			}
+		}
+
+		/// <summary>
+		/// The task to be run on edit complete.
+		/// NOTE: This task is run after every edit operation, including undo or delete with DEL key!
+		/// In that case there seems to be no catch block observing the potential exception thrown
+		/// inside the task execution, which leads to a crash of the application due to the finalizer
+		/// thread throwing:
+		/// A Task's exception(s) were not observed either by Waiting on the Task or accessing its
+		/// Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.
+		/// Therefore any exception must be caught inside the Task execution!
+		/// </summary>
+		/// <param name="args"></param>
+		/// <returns></returns>
+		protected virtual Task OnEditCompletedCore(EditCompletedEventArgs args)
+		{
+			return Task.FromResult(true);
+		}
+
+		protected virtual void OnToolActivatingCore() { }
+
+		protected virtual bool OnToolActivatedCore(bool hasMapViewChanged)
+		{
+			return true;
+		}
+
+		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
+
+		protected virtual bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		{
+			return true;
+		}
+
+		[CanBeNull]
+		protected virtual CancelableProgressor GetCancelableProgressor()
+		{
+			return new CancelableProgressorSource().Progressor;
+		}
+
+		protected virtual Task<bool> OnSketchCompleteCoreAsync(
+			[NotNull] Geometry sketchGeometry,
+			[CanBeNull] CancelableProgressor progressor)
+		{
+			return Task.FromResult(true);
+		}
+
+		protected int GetSelectionTolerancePixels()
+		{
+			return GetSelectionSettings().SelectionTolerancePixels;
+		}
+
+		private async Task<bool> OnSelectionSketchComplete(Geometry sketchGeometry,
+		                                                   CancelableProgressor progressor)
 		{
 			// TODO: Add Utils method to KeyboardUtils to do it in the WPF way
 			SelectionCombinationMethod selectionMethod =
@@ -268,10 +463,16 @@ namespace ProSuite.AGP.Editing.OneClick
 				await QueuedTaskUtils.Run(() =>
 				{
 					selectionGeometry = ToolUtils.SketchToSearchGeometry(sketchGeometry,
-						GetSelectionTolerance(), out singlePick);
+						GetSelectionTolerancePixels(), out singlePick);
 
 					pickerLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
+
+					_msg.VerboseDebug(
+						() =>
+							$"Picker location on map {GeometryUtils.Format(selectionGeometry.Extent.Center)}");
+					_msg.VerboseDebug(
+						() => $"Picker location on screen {pickerLocation.X}/{pickerLocation.Y}");
 
 					// find all features spatially related with searchGeometry
 					// TODO: 1. Find all features in point layers, if count > 0 -> skip the rest
@@ -311,6 +512,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			return result;
 		}
 
+		// todo daro when return false?
+		// todo daro ViewUtils.Try araound it?
 		private static async Task<bool> SingleSelectAsync(
 			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
@@ -370,7 +573,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						() => PickableItemsFactory.CreateFeatureItems(orderedSelection));
 
 				IPickableFeatureItem pickedItem =
-					await ShowPickerCoreAsync<IPickableFeatureItem>(
+					await ShowPickerAsync<IPickableFeatureItem>(
 						items, pickerPrecedence, pickerLocation);
 
 				if (pickedItem == null)
@@ -417,7 +620,7 @@ namespace ProSuite.AGP.Editing.OneClick
 							PickerUtils.OrderByGeometryDimension(candidatesOfLayers)));
 
 				IPickableFeatureClassItem pickedItem =
-					await ShowPickerCoreAsync<IPickableFeatureClassItem>(
+					await ShowPickerAsync<IPickableFeatureClassItem>(
 						items, pickerPrecedence, pickerLocation);
 
 				if (pickedItem == null)
@@ -454,6 +657,25 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
+		[NotNull]
+		protected static async Task<T> ShowPickerAsync<T>(
+			IEnumerable<IPickableItem> items, IPickerPrecedence pickerPrecedence,
+			Point pickerLocation)
+			where T : class, IPickableItem
+		{
+			var picker = new PickerService();
+
+			Func<Task<T>> showPickerControl =
+				await QueuedTaskUtils.Run(() => picker.PickSingle<T>(
+					                          items, pickerLocation,
+					                          pickerPrecedence));
+
+			T pickedItem =
+				await ViewUtils.TryAsync(showPickerControl(), _msg);
+
+			return pickedItem;
+		}
+
 		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(
 			[NotNull] Geometry searchGeometry,
 			SpatialRelationship spatialRelationship)
@@ -476,6 +698,108 @@ namespace ProSuite.AGP.Editing.OneClick
 				fl => CanSelectFromLayer(fl));
 		}
 
+		// TODO: Make obsolete, always use Async overload?
+		protected bool IsInSelectionPhase()
+		{
+			return IsInSelectionPhase(KeyboardUtils.IsModifierPressed(Keys.Shift, true));
+		}
+
+		protected virtual bool IsInSelectionPhase(bool shiftIsPressed)
+		{
+			return false;
+		}
+
+		protected Task<bool> IsInSelectionPhaseAsync()
+		{
+			bool shiftIsPressed = KeyboardUtils.IsModifierPressed(Keys.Shift, true);
+
+			return IsInSelectionPhaseAsync(shiftIsPressed);
+		}
+
+		protected virtual Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		{
+			return Task.FromResult(false);
+		}
+
+		protected virtual void OnKeyDownCore(MapViewKeyEventArgs k) { }
+
+		protected virtual void OnKeyUpCore(MapViewKeyEventArgs mapViewKeyEventArgs) { }
+
+		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs e) { }
+
+		protected virtual void ShowOptionsPane() { }
+
+		protected virtual void HideOptionsPane() { }
+
+		protected abstract SelectionSettings GetSelectionSettings();
+
+		protected abstract bool HandleEscape();
+
+		protected abstract void LogUsingCurrentSelection();
+
+		protected abstract void LogPromptForSelection();
+
+		protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
+		{
+			GeometryType shapeType = DatasetUtils.GetShapeType(feature.GetTable());
+
+			return CanSelectGeometryType(shapeType);
+		}
+
+		protected virtual void AfterSelection([NotNull] IList<Feature> selectedFeatures,
+		                                      [CanBeNull] CancelableProgressor progressor) { }
+
+		private void ProcessSelection([NotNull] MapView activeMapView,
+		                              [CanBeNull] CancelableProgressor progressor = null)
+		{
+			Dictionary<MapMember, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection(activeMapView.Map);
+
+			var notifications = new NotificationCollection();
+			List<Feature> applicableSelection =
+				GetApplicableSelectedFeatures(selectionByLayer, notifications).ToList();
+
+			int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
+
+			if (applicableSelection.Count > 0 &&
+			    (AllowNotApplicableFeaturesInSelection ||
+			     applicableSelection.Count == selectionCount))
+			{
+				LogUsingCurrentSelection();
+
+				AfterSelection(applicableSelection, progressor);
+			}
+			else
+			{
+				if (selectionCount > 0)
+				{
+					_msg.InfoFormat(notifications.Concatenate(Environment.NewLine));
+				}
+
+				LogPromptForSelection();
+				StartSelectionPhase();
+			}
+		}
+
+		protected void HandleError(string message, Exception e, bool noMessageBox = false)
+		{
+			if (noMessageBox)
+			{
+				_msg.Error(message, e);
+				return;
+			}
+
+			ErrorHandler.HandleError(message, e, _msg, "Error");
+		}
+
+		protected void SetCursor([CanBeNull] Cursor cursor)
+		{
+			if (cursor != null)
+			{
+				Cursor = cursor;
+			}
+		}
+
 		private bool CanSelectFromLayer([CanBeNull] Layer layer,
 		                                NotificationCollection notifications = null)
 		{
@@ -489,7 +813,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			string layerName = layer.Name;
 
-			if (! layer.IsVisible())
+			if (! LayerUtils.IsVisible(layer))
 			{
 				NotificationUtils.Add(notifications, $"Layer {layerName} not visible");
 				return false;
@@ -528,200 +852,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			return CanSelectFromLayerCore(basicFeatureLayer);
 		}
 
-		private void ProcessSelection([NotNull] MapView activeMapView,
-		                              [CanBeNull] CancelableProgressor progressor = null)
+		[Obsolete]
+		protected virtual bool CanUseSelection([NotNull] IEnumerable<Feature> selectedFeatures)
 		{
-			Dictionary<MapMember, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection(activeMapView.Map);
-
-			var notifications = new NotificationCollection();
-			List<Feature> applicableSelection =
-				GetApplicableSelectedFeatures(selectionByLayer, notifications).ToList();
-
-			int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
-
-			if (applicableSelection.Count > 0 &&
-			    (AllowNotApplicableFeaturesInSelection ||
-			     applicableSelection.Count == selectionCount))
-			{
-				LogUsingCurrentSelection();
-
-				AfterSelection(applicableSelection, progressor);
-			}
-			else
-			{
-				if (selectionCount > 0)
-				{
-					_msg.InfoFormat(notifications.Concatenate(Environment.NewLine));
-				}
-
-				LogPromptForSelection();
-				StartSelectionPhase();
-			}
-		}
-
-		[NotNull]
-		private static async Task<T> ShowPickerCoreAsync<T>(
-			IEnumerable<IPickableItem> items, IPickerPrecedence pickerPrecedence,
-			Point pickerLocation)
-			where T : class, IPickableItem
-		{
-			var picker = new PickerService();
-
-			Func<Task<T>> showPickerControl =
-				await QueuedTaskUtils.Run(() => picker.PickSingle<T>(
-					                          items, pickerLocation,
-					                          pickerPrecedence));
-
-			T pickedItem =
-				await ViewUtils.TryAsync(showPickerControl(), _msg);
-
-			return pickedItem;
-		}
-
-		#endregion
-
-		#region overridables
-
-		protected virtual void ShiftPressedCore()
-		{
-			if (SelectionCursorShift != null && IsInSelectionPhase(true))
-			{
-				SetCursor(SelectionCursorShift);
-			}
-		}
-
-		protected virtual void ShiftReleasedCore()
-		{
-			if (SelectionCursor != null && IsInSelectionPhase(true))
-			{
-				SetCursor(SelectionCursor);
-			}
-		}
-
-		protected virtual void OnSelectionPhaseStarted() { }
-
-		/// <summary>
-		/// The task to be run on edit complete.
-		/// NOTE: This task is run after every edit operation, including undo or delete with DEL key!
-		/// In that case there seems to be no catch block observing the potential exception thrown
-		/// inside the task execution, which leads to a crash of the application due to the finalizer
-		/// thread throwing:
-		/// A Task's exception(s) were not observed either by Waiting on the Task or accessing its
-		/// Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.
-		/// Therefore any exception must be caught inside the Task execution!
-		/// </summary>
-		/// <param name="args"></param>
-		/// <returns></returns>
-		protected virtual async Task OnEditCompletedCoreAsync(EditCompletedEventArgs args)
-		{
-			await Task.CompletedTask;
-		}
-
-		protected virtual void OnToolActivatingCore() { }
-
-		protected virtual bool OnToolActivatedCore(bool hasMapViewChanged)
-		{
-			return true;
-		}
-
-		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
-
-		protected virtual void OnMapSelectionChangedCore(MapSelectionChangedEventArgs args) { }
-
-		[CanBeNull]
-		protected virtual CancelableProgressor GetCancelableProgressor()
-		{
-			return new CancelableProgressorSource().Progressor;
-		}
-
-		protected virtual async Task<bool> OnSketchCompleteCoreAsync(
-			[NotNull] Geometry sketchGeometry,
-			[CanBeNull] CancelableProgressor progressor)
-		{
-			return await Task.FromResult(true);
-		}
-
-		// todo daro when return false?
-		// todo daro ViewUtils.Try araound it?
-
-		protected virtual bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			return false;
-		}
-
-		protected virtual void OnKeyDownCore(MapViewKeyEventArgs k) { }
-
-		protected virtual void OnKeyUpCore(MapViewKeyEventArgs mapViewKeyEventArgs) { }
-
-		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs e) { }
-
-		protected virtual void ShowOptionsPane() { }
-
-		protected virtual void HideOptionsPane() { }
-
-		protected abstract bool HandleEscape();
-
-		protected abstract void LogUsingCurrentSelection();
-
-		protected abstract void LogPromptForSelection();
-
-		protected abstract int GetSelectionTolerance();
-
-		protected virtual void AfterSelection([NotNull] IList<Feature> selectedFeatures,
-		                                      [CanBeNull] CancelableProgressor progressor) { }
-		
-		protected virtual bool CanSelectGeometryType(GeometryType geometryType)
-		{
-			return true;
-		}
-
-		protected virtual bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer basicFeatureLayer)
-		{
-			return true;
-		}
-
-		#endregion
-
-		#region protected
-
-		protected void StartSelectionPhase()
-		{
-			SetCursor(KeyboardUtils.IsModifierPressed(Keys.Shift, true)
-				          ? SelectionCursorShift
-				          : SelectionCursor);
-
-			OnSelectionPhaseStarted();
-		}
-
-		protected void SetupSketch(SketchGeometryType? sketchType,
-		                           SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
-		                           bool useSnapping = false,
-		                           bool completeSketchOnMouseUp = true,
-		                           bool enforceSimpleSketch = false)
-		{
-			SketchOutputMode = sketchOutputMode;
-
-			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
-			// otherwise it has no effect!
-			CompleteSketchOnMouseUp = completeSketchOnMouseUp;
-
-			SketchType = sketchType;
-
-			UseSnapping = useSnapping;
-
-			GeomIsSimpleAsFeature = enforceSimpleSketch;
-		}
-
-		protected static bool IsShiftKey(Key key)
-		{
-			return key == Key.LeftShift ||
-			       key == Key.RightShift;
-		}
-
-		protected bool IsInSelectionPhase()
-		{
-			return IsInSelectionPhase(KeyboardUtils.IsModifierPressed(Keys.Shift, true));
+			return selectedFeatures.Any(CanSelectFeatureGeometryType);
 		}
 
 		protected bool CanUseSelection([NotNull] MapView activeMapView)
@@ -787,29 +921,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			return GetApplicableSelectedFeatures(selectionByLayer);
 		}
 
-		protected void SetCursor([CanBeNull] Cursor cursor)
+		protected virtual bool CanSelectGeometryType(GeometryType geometryType)
 		{
-			if (cursor != null)
-			{
-				Cursor = cursor;
-			}
+			return true;
 		}
 
-		protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
+		protected virtual bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer basicFeatureLayer)
 		{
-			GeometryType shapeType = DatasetUtils.GetShapeType(feature.GetTable());
-
-			return CanSelectGeometryType(shapeType);
+			return true;
 		}
-
-		protected static async Task<T> ShowPickerAsync<T>(IEnumerable<IPickableItem> items,
-		                                                  IPickerPrecedence pickerPrecedence,
-		                                                  Point pickerLocation)
-			where T : class, IPickableItem
-		{
-			return await ShowPickerCoreAsync<T>(items, pickerPrecedence, pickerLocation);
-		}
-
-		#endregion
 	}
 }

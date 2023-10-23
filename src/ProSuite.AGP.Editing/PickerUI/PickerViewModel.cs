@@ -68,7 +68,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 		}
 
 		public PickerViewModel(IEnumerable<IPickableItem> pickingCandidates,
-		                        Geometry selectionGeometry) : this(pickingCandidates)
+		                       Geometry selectionGeometry) : this(pickingCandidates)
 		{
 			_selectionGeometry = selectionGeometry;
 		}
@@ -150,7 +150,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 				}
 
 				QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
-			}, _msg);
+			}, _msg, true);
 		}
 
 		private static Geometry GetPolygonGeometry(Geometry geometry)
@@ -202,7 +202,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 					window?.Close();
 				});
-			}, _msg);
+			}, _msg, true);
 		}
 
 		private void OnWindowDeactivated(ICloseable window)
@@ -221,7 +221,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 					Dispose();
 				});
-			}, _msg);
+			}, _msg, true);
 		}
 
 		private void OnPressEscape(ICloseable window)
@@ -244,7 +244,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 			// An attempt was made to transition a task to a final state
 			// when it had already completed.
 			//SelectedItem = null;
-			
+
 			_selectionGeometryOverlay?.Dispose();
 			DisposeOverlays();
 		}

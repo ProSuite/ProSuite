@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -113,6 +114,7 @@ namespace ProSuite.AGP.Editing
 			Geometry selectionGeometry =
 				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
 
+					$"Selection sketch geometry {GeometryUtils.Format(selectionGeometry.Extent)}");
 			return selectionGeometry;
 		}
 
@@ -158,6 +160,23 @@ namespace ProSuite.AGP.Editing
 			                                     .ToHashSet();
 
 			return editableClassHandles;
+		}
+
+		public static FeatureClass GetCurrentTargetFeatureClass(
+			[CanBeNull] EditingTemplate editTemplate)
+		{
+			// TODO: Notifications
+			FeatureLayer featureLayer = CurrentTargetLayer(editTemplate);
+
+			return featureLayer?.GetFeatureClass();
+		}
+
+		[CanBeNull]
+		public static FeatureLayer CurrentTargetLayer([CanBeNull] EditingTemplate editTemplate)
+		{
+			var featureLayer = editTemplate?.Layer as FeatureLayer;
+
+			return featureLayer;
 		}
 	}
 }

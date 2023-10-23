@@ -6,7 +6,6 @@ using System.Windows.Forms;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
-using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
 using ProSuite.Commons.AGP;
@@ -91,8 +90,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				                      CancellationTokenSource = new CancellationTokenSource()
 			                      };
 
-			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification,
-			                                                Project.Current.HomeFolderPath);
+			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
@@ -131,22 +129,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return qaEnvironment.VerifyPerimeter(
-							perimeter, progressTracker, resultsPath);
+							perimeter, progressTracker, "last extent", resultsPath);
 					},
 					BackgroundProgressor.None);
 
 			ServiceCallStatus result = await verificationTask;
-
-			if (result == ServiceCallStatus.Finished)
-			{
-				_msg.InfoFormat(
-					"Successfully finished extent verification. The results have been saved in {0}",
-					resultsPath);
-			}
-			else
-			{
-				_msg.WarnFormat("Extent verification was not finished. Status: {0}", result);
-			}
 
 			return result;
 		}

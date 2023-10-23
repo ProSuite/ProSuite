@@ -7,6 +7,7 @@ using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -22,22 +23,22 @@ namespace ProSuite.AGP.WorkList
 
 		private int _lastUsedOid;
 
-		protected GdbItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
+		protected GdbItemRepository(Dictionary<Datastore, List<Table>> tablesByDatastore,
 		                            IRepository workItemStateRepository)
 		{
-			RegisterDatasets(tablesByGeodatabase);
+			RegisterDatasets(tablesByDatastore);
 
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
 		protected IRepository WorkItemStateRepository { get; }
 
-		public Dictionary<ISourceClass, Geodatabase> GeodatabaseBySourceClasses { get; } =
-			new Dictionary<ISourceClass, Geodatabase>();
+		protected Dictionary<ISourceClass, Datastore> DatastoreBySourceClasses { get; } =
+			new Dictionary<ISourceClass, Datastore>();
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
-			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys)
+			foreach (ISourceClass sourceClass in DatastoreBySourceClasses.Keys)
 			{
 				int count = 0;
 
@@ -54,14 +55,12 @@ namespace ProSuite.AGP.WorkList
 				_msg.DebugStopTiming(
 					watch, $"{nameof(GetItems)}() {sourceClass.Name}: {count} items");
 			}
-
-			// return GeodatabaseBySourceClasses.Keys.SelectMany(sourceClass => GetItemsCore(sourceClass, filter, recycle));
 		}
 
 		public IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter,
 		                                       bool recycle = true)
 		{
-			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys.Where(
+			foreach (ISourceClass sourceClass in DatastoreBySourceClasses.Keys.Where(
 				         source => source.Uses(tableId)))
 			{
 				int count = 0;
@@ -77,8 +76,6 @@ namespace ProSuite.AGP.WorkList
 				_msg.DebugStopTiming(
 					watch, $"{nameof(GetItems)}() {sourceClass.Name}: {count} items");
 			}
-
-			// return GeodatabaseBySourceClasses.Keys.Where(source => source.Uses(table)).SelectMany(sourceClass => GetItemsCore(sourceClass, filter, recycle));
 		}
 
 		public void Refresh(IWorkItem item)
@@ -87,7 +84,7 @@ namespace ProSuite.AGP.WorkList
 
 			// todo daro: log message
 			ISourceClass source =
-				GeodatabaseBySourceClasses.Keys.FirstOrDefault(sc => sc.Uses(tableId));
+				DatastoreBySourceClasses.Keys.FirstOrDefault(sc => sc.Uses(tableId));
 			Assert.NotNull(source);
 
 			Row row = GetRow(source, item.Proxy.ObjectId);
@@ -104,7 +101,7 @@ namespace ProSuite.AGP.WorkList
 		[CanBeNull]
 		private Row GetRow([NotNull] ISourceClass sourceClass, long oid)
 		{
-			var filter = new QueryFilter {ObjectIDs = new List<long> {oid}};
+			var filter = new QueryFilter { ObjectIDs = new List<long> { oid } };
 
 			// todo daro: log message
 			return GetRowsCore(sourceClass, filter, recycle: true).FirstOrDefault();
@@ -126,7 +123,7 @@ namespace ProSuite.AGP.WorkList
 			GdbTableIdentity tableId = item.Proxy.Table;
 
 			ISourceClass source =
-				GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(tableId));
+				DatastoreBySourceClasses.Keys.FirstOrDefault(s => s.Uses(tableId));
 			Assert.NotNull(source);
 
 			// todo daro: read / restore item again from db? restore pattern in case of failure?
@@ -172,7 +169,7 @@ namespace ProSuite.AGP.WorkList
 
 		public void Dispose()
 		{
-			foreach (Geodatabase gdb in GeodatabaseBySourceClasses.Values)
+			foreach (Datastore gdb in DatastoreBySourceClasses.Values)
 			{
 				gdb?.Dispose();
 			}
@@ -189,7 +186,7 @@ namespace ProSuite.AGP.WorkList
 		protected virtual IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
 		                                               [CanBeNull] QueryFilter filter, bool recycle)
 		{
-			Table table = OpenFeatureClass(sourceClass);
+			Table table = OpenTable(sourceClass);
 
 			if (table == null)
 			{
@@ -226,11 +223,11 @@ namespace ProSuite.AGP.WorkList
 			[CanBeNull] IAttributeReader attributeReader,
 			[CanBeNull] WorkListStatusSchema statusSchema);
 
-		private void RegisterDatasets(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase)
+		private void RegisterDatasets(Dictionary<Datastore, List<Table>> tablesByDatastore)
 		{
-			foreach (var pair in tablesByGeodatabase)
+			foreach (var pair in tablesByDatastore)
 			{
-				Geodatabase geodatabase = pair.Key;
+				Datastore datastore = pair.Key;
 
 				foreach (Table table in pair.Value)
 				{
@@ -238,23 +235,29 @@ namespace ProSuite.AGP.WorkList
 
 					TableDefinition definition =
 						table is FeatureClass
-							? geodatabase.GetDefinition<FeatureClassDefinition>(identity.Name)
-							: geodatabase.GetDefinition<TableDefinition>(identity.Name);
+							? DatasetUtils.GetDatasetDefinition<FeatureClassDefinition>(
+								datastore, identity.Name)
+							: DatasetUtils.GetDatasetDefinition<TableDefinition>(
+								datastore, identity.Name);
 
 					ISourceClass sourceClass = CreateSourceClass(identity, definition);
 
-					GeodatabaseBySourceClasses.Add(sourceClass, geodatabase);
+					DatastoreBySourceClasses.Add(sourceClass, datastore);
 				}
 			}
 		}
 
-		// todo daro rename
 		[CanBeNull]
-		protected Table OpenFeatureClass([NotNull] ISourceClass sourceClass)
+		protected Table OpenTable([NotNull] ISourceClass sourceClass)
 		{
-			return GeodatabaseBySourceClasses.TryGetValue(sourceClass, out Geodatabase gdb)
-				       ? gdb.OpenDataset<Table>(sourceClass.Name)
-				       : null;
+			if (! DatastoreBySourceClasses.TryGetValue(sourceClass, out Datastore datastore))
+			{
+				return null;
+			}
+
+			string datasetName = sourceClass.Name;
+
+			return DatasetUtils.OpenDataset<Table>(datastore, datasetName);
 		}
 
 		private ISourceClass CreateSourceClass(GdbTableIdentity identity,
@@ -263,7 +266,7 @@ namespace ProSuite.AGP.WorkList
 			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
 
 			WorkListStatusSchema statusSchema = CreateStatusSchemaCore(definition);
-			
+
 			return CreateSourceClassCore(identity, attributeReader, statusSchema);
 		}
 

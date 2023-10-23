@@ -47,11 +47,11 @@ namespace ProSuite.QA.Tests.SpatialRelations
 
 		protected QaSpatialRelationBase([NotNull] IReadOnlyFeatureClass featureClass,
 		                                esriSpatialRelEnum relation)
-			: this(new[] {featureClass}, relation) { }
+			: this(new[] { featureClass }, relation) { }
 
 		protected QaSpatialRelationBase([NotNull] IReadOnlyFeatureClass featureClass,
 		                                [NotNull] string intersectionMatrix)
-			: this(new[] {featureClass}, intersectionMatrix) { }
+			: this(new[] { featureClass }, intersectionMatrix) { }
 
 		#endregion
 
@@ -94,25 +94,40 @@ namespace ProSuite.QA.Tests.SpatialRelations
 			relatedFilter.FilterGeometry = searchGeometry;
 
 			var errorCount = 0;
-			var anyFound = false;
-			foreach (IReadOnlyRow relatedRow in Search(relatedTable,
-			                                           relatedFilter,
-			                                           relatedFilterHelper))
+			IReadOnlyRow otherRow = null;
+			try
 			{
-				anyFound = true;
-
-				errorCount += FindErrors(feature, tableIndex,
-				                         relatedRow, relatedTableIndex);
-			}
-
-			if (! anyFound && _disjointIsError)
-			{
-				if (IsDisjoint(searchGeometry,
-				               relatedTable, relatedTableIndex,
-				               relatedFilterHelper))
+				var anyFound = false;
+				foreach (IReadOnlyRow relatedRow in Search(relatedTable,
+				                                           relatedFilter,
+				                                           relatedFilterHelper))
 				{
-					errorCount += FindErrorsNoRelated(feature);
+					anyFound = true;
+					otherRow = relatedRow;
+					// TODO: try catch and throw TestRowException: "Error testing feature {feature} against feature {relatedRow}: {e.Message}
+					errorCount += FindErrors(feature, tableIndex,
+					                         relatedRow, relatedTableIndex);
 				}
+
+				if (! anyFound && _disjointIsError)
+				{
+					if (IsDisjoint(searchGeometry,
+					               relatedTable, relatedTableIndex,
+					               relatedFilterHelper))
+					{
+						errorCount += FindErrorsNoRelated(feature);
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				string otherRowMsg =
+					otherRow == null ? "<null>" : GdbObjectUtils.ToString(otherRow);
+				string msg =
+					$"Error testing row {GdbObjectUtils.ToString(feature)} against {otherRowMsg}: {e.Message}";
+
+				_msg.Debug(msg, e);
+				throw new TestRowException(this, feature, msg);
 			}
 
 			return errorCount;
@@ -227,7 +242,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 		private static IFeatureClassFilter CreateIntersectionFilter(
 			[NotNull] IFeatureClassFilter defaultFilter)
 		{
-			var filter = (IFeatureClassFilter)defaultFilter.Clone();
+			var filter = (IFeatureClassFilter) defaultFilter.Clone();
 
 			filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
 			filter.SpatialRelDescription = null;
@@ -246,11 +261,13 @@ namespace ProSuite.QA.Tests.SpatialRelations
 						spatialFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelWithin;
 						break;
 					case esriSpatialRelEnum.esriSpatialRelWithin:
-						spatialFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelContains;
+						spatialFilter.SpatialRelationship =
+							esriSpatialRelEnum.esriSpatialRelContains;
 						break;
 					case esriSpatialRelEnum.esriSpatialRelRelation:
 						string matrixString = Assert.NotNull(IntersectionMatrix).MatrixString;
-						spatialFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelRelation;
+						spatialFilter.SpatialRelationship =
+							esriSpatialRelEnum.esriSpatialRelRelation;
 						spatialFilter.SpatialRelDescription = $"RELATE(G2, G1, '{matrixString}')";
 						break;
 					default:

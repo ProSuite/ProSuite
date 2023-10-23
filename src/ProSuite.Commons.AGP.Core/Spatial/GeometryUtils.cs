@@ -218,6 +218,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				// Note: GeometryEngine's Buffer() does not support Envelope
 				return extent.Expand(distance, distance, false);
 			}
+
 			var buffer = Engine.Buffer(geometry, distance);
 			// Note: buffer may NOT be a Polygon if distance is almost zero!
 			return buffer;
@@ -239,7 +240,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			throw UnexpectedResultFrom("GeometryEngine.Move()", typeof(T), moved);
 		}
 
-		public static T Rotate<T>(T geometry, MapPoint origin, double angleRadians) where T : Geometry
+		public static T Rotate<T>(T geometry, MapPoint origin, double angleRadians)
+			where T : Geometry
 		{
 			if (geometry is null) return null;
 			if (Math.Abs(angleRadians) < double.Epsilon) return geometry;
@@ -274,7 +276,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				return geometry;
 			}
 
-			var generalized = Engine.Generalize(geometry, maxDeviation, removeDegenerateParts, preserveCurves);
+			var generalized =
+				Engine.Generalize(geometry, maxDeviation, removeDegenerateParts, preserveCurves);
 			if (generalized is T result) return result;
 			throw UnexpectedResultFrom("GeometryEngine.Generalize()", typeof(T), generalized);
 		}
@@ -570,6 +573,85 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return Engine.Centroid(geometry);
 		}
 
+		/// <summary>
+		/// Returns a reference to the smallest (area for IArea objects, length for ICurve objects) 
+		/// geometry of the given geometries. If several geometries have the smallest size, the first 
+		/// in the list will be returned.
+		/// </summary>
+		/// <param name="geometries">The geometries which must all be of the same geometry type.</param>
+		/// <returns></returns>
+		public static T GetSmallestGeometry<T>([NotNull] IEnumerable<T> geometries)
+			where T : Geometry
+		{
+			Geometry smallestPart = null;
+			double smallestSize = double.PositiveInfinity;
+
+			foreach (T candidate in geometries)
+			{
+				double candidateSize = GetGeometrySize(candidate);
+
+				if (candidateSize < smallestSize)
+				{
+					smallestPart = candidate;
+					smallestSize = candidateSize;
+				}
+			}
+
+			return (T) smallestPart;
+		}
+
+		/// <summary>
+		/// Returns a value that indicates the size of the specified geometry:
+		/// - Multipatch, Polygon, Ring: 2D area
+		/// - Polyline, Path, Segment: 2D length
+		/// - Multipoint: Point count
+		/// - Point: 0
+		/// </summary>
+		/// <param name="geometry"></param>
+		/// <returns></returns>
+		public static double GetGeometrySize([NotNull] Geometry geometry)
+		{
+			var multipart = geometry as Multipart;
+
+			if (multipart != null && multipart.Area > 0)
+			{
+				return Math.Abs(multipart.Area);
+			}
+
+			if (multipart != null)
+			{
+				return multipart.Length;
+			}
+
+			return 0;
+		}
+
+		public static Geometry EnsureGeometrySchema([NotNull] Geometry inputGeometry,
+		                                            bool? hasZ,
+		                                            bool? hasM = null,
+		                                            bool? hasID = null)
+		{
+			bool changeHasZ = hasZ.HasValue && inputGeometry.HasZ != hasZ;
+			bool changeHasM = hasM.HasValue && inputGeometry.HasM != hasM;
+			bool changeHasID = hasID.HasValue && inputGeometry.HasID != hasID;
+
+			if (! changeHasZ &&
+			    ! changeHasM &&
+			    ! changeHasID)
+			{
+				return inputGeometry;
+			}
+
+			var builder = inputGeometry.ToBuilder();
+
+			builder.HasZ = hasZ ?? inputGeometry.HasZ;
+			builder.HasM = hasM ?? inputGeometry.HasM;
+			builder.HasID = hasID ?? inputGeometry.HasID;
+
+			// TODO: SimplifyZ if aware, DropZs if un-aware to ensure simplify cleans up duplicate segments?
+			return builder.ToGeometry();
+		}
+
 		public static IGeometryEngine Engine
 		{
 			get => _engine ??= GeometryEngine.Instance;
@@ -578,12 +660,15 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		#region Access points of a multipart geometry builder
 
-		public static int GetPointCount(this MultipartBuilderEx builder, int partIndex)
+		public static int GetPointCount(this MultipartBuilderEx builder,
+		                                int partIndex)
 		{
 			return builder.GetSegmentCount(partIndex) + 1;
 		}
 
-		public static MapPoint GetPoint(this MultipartBuilderEx builder, int partIndex, int pointIndex)
+		public static MapPoint GetPoint(this MultipartBuilderEx builder,
+		                                int partIndex,
+		                                int pointIndex)
 		{
 			if (builder is null)
 				throw new ArgumentNullException(nameof(builder));
@@ -598,8 +683,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return isEndPoint ? segment.EndPoint : segment.StartPoint;
 		}
 
-		public static void SetPoint(
-			this MultipartBuilderEx builder, int partIndex, int pointIndex, MapPoint point)
+		public static void SetPoint(this MultipartBuilderEx builder,
+		                            int partIndex,
+		                            int pointIndex,
+		                            MapPoint point)
 		{
 			if (builder is null)
 				throw new ArgumentNullException(nameof(builder));
@@ -622,12 +709,14 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 						post = SetPoints(post, point, null);
 						builder.ReplaceSegment(partIndex, pointIndex, post);
 					}
+
 					if (pointIndex > 0)
 					{
 						pre = builder.GetSegment(partIndex, pointIndex - 1);
 						pre = SetPoints(pre, null, point);
 						builder.ReplaceSegment(partIndex, pointIndex - 1, pre);
 					}
+
 					break;
 
 				case PolygonBuilderEx:
@@ -653,8 +742,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		#endregion
 
-		public static T SetPoints<T>(
-			T segment, [CanBeNull] MapPoint startPoint, [CanBeNull] MapPoint endPoint)
+		public static T SetPoints<T>(T segment, [CanBeNull] MapPoint startPoint,
+		                             [CanBeNull] MapPoint endPoint)
 			where T : Segment
 		{
 			if (segment is null)
@@ -705,7 +794,9 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			}
 		}
 
-		private static Exception UnexpectedResultFrom(string action, Type expectedType, object actualValue)
+		private static Exception UnexpectedResultFrom(string action,
+		                                              Type expectedType,
+		                                              object actualValue)
 		{
 			return new AssertionException(
 				$"Unexpected result from {action}: " +

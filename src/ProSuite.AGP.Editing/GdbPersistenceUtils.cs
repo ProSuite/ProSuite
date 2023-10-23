@@ -12,6 +12,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing;
+using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
 
 namespace ProSuite.AGP.Editing
 {
@@ -133,6 +134,71 @@ namespace ProSuite.AGP.Editing
 			}
 
 			_msg.InfoFormat("Successfully created {0} new feature(s).", insertCount);
+		}
+
+		public static IList<Feature> InsertTx(
+			[NotNull] EditOperation.IEditContext editContext,
+			[NotNull] FeatureClass featureClass,
+			[NotNull] IList<Geometry> geometries,
+			IEnumerable<Attribute> attributes)
+		{
+			Assert.ArgumentNotNull(editContext, nameof(editContext));
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+			Assert.ArgumentCondition(geometries.Count > 0, "List of geometries is empty.");
+
+			var newFeatures = new List<Feature>();
+
+			RowBuffer rowBuffer = null;
+
+			try
+			{
+				// Set the attributes
+				rowBuffer = featureClass.CreateRowBuffer();
+
+				FeatureClassDefinition classDefinition = featureClass.GetDefinition();
+				GeometryType geometryType = classDefinition.GetShapeType();
+				bool classHasZ = classDefinition.HasZ();
+				bool classHasM = classDefinition.HasM();
+
+				SpatialReference spatialReference = classDefinition.GetSpatialReference();
+
+				foreach (Attribute attribute in attributes)
+				{
+					if (! attribute.IsSystemField && ! attribute.IsGeometryField)
+					{
+						rowBuffer[attribute.Index] = attribute.CurrentValue;
+					}
+				}
+
+				foreach (Geometry geometry in geometries)
+				{
+					Assert.True(geometryType == featureClass.GetDefinition().GetShapeType(),
+					            "Geometry type does not match target feature class' shape type.");
+
+					Geometry geometryToStore =
+						GeometryUtils.EnsureGeometrySchema(geometry, classHasZ, classHasM);
+
+					geometryToStore = GeometryUtils.EnsureSpatialReference(
+						geometryToStore, spatialReference);
+
+					var feature = featureClass.CreateRow(rowBuffer);
+
+					feature.SetShape(geometryToStore);
+
+					feature.Store();
+
+					//To Indicate that the attribute table has to be updated
+					editContext.Invalidate(feature);
+
+					newFeatures.Add(feature);
+				}
+			}
+			finally
+			{
+				rowBuffer?.Dispose();
+			}
+
+			return newFeatures;
 		}
 
 		public static void UpdateTx(EditOperation.IEditContext editContext,

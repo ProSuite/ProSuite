@@ -74,37 +74,11 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 		{
 			EditingTemplate editTemplate = EditingTemplate.Current;
 
-			string layerName = CurrentTargetLayer(editTemplate)?.Name ?? string.Empty;
+			string layerName = ToolUtils.CurrentTargetLayer(editTemplate)?.Name ?? string.Empty;
 
 			_msg.InfoFormat(
 				"Draw one or more points. Finish the sketch to create the individual point features in '{0}'.",
 				layerName);
-		}
-
-		private static FeatureClass GetCurrentTargetFeatureClass([CanBeNull] EditingTemplate editTemplate)
-		{
-			// TODO: Notifications
-			FeatureLayer featureLayer = CurrentTargetLayer(editTemplate);
-
-			if (featureLayer == null)
-			{
-				return null;
-			}
-
-			return featureLayer.GetFeatureClass();
-		}
-
-		[CanBeNull]
-		private static FeatureLayer CurrentTargetLayer([CanBeNull] EditingTemplate editTemplate)
-		{
-			if (editTemplate == null)
-			{
-				return null;
-			}
-
-			var featureLayer = editTemplate.Layer as FeatureLayer;
-
-			return featureLayer;
 		}
 
 		private static List<long> CreatePointsFeatures(
@@ -143,15 +117,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 				foreach (MapPoint point in multipoint.Points)
 				{
-					if (cancelableProgressor != null &&
-					    cancelableProgressor.CancellationToken.IsCancellationRequested)
-					{
-						return result;
-					}
-
-					// Set Z/M awareness
-					feature = featureClass.CreateRow(rowBuffer);
-
 					Geometry resultGeometry;
 					if (geometryType == GeometryType.Point)
 					{
@@ -161,6 +126,15 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 					{
 						resultGeometry = CreateSingleMultipoint(point, classHasZ, classHasM);
 					}
+
+					if (cancelableProgressor != null &&
+					    cancelableProgressor.CancellationToken.IsCancellationRequested)
+					{
+						return result;
+					}
+
+					// Set Z/M awareness
+					feature = featureClass.CreateRow(rowBuffer);
 
 					feature.SetShape(resultGeometry);
 
@@ -210,7 +184,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 		{
 			EditingTemplate editTemplate = EditingTemplate.Current;
 
-			esriGeometryType? geometryType = CurrentTargetLayer(editTemplate)?.ShapeType;
+			esriGeometryType? geometryType = ToolUtils.CurrentTargetLayer(editTemplate)?.ShapeType;
 
 			Enabled = geometryType == esriGeometryType.esriGeometryPoint ||
 			          geometryType == esriGeometryType.esriGeometryMultipoint;
@@ -233,7 +207,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 					List<long> newFeatureIds;
 
-					FeatureClass currentTargetClass = GetCurrentTargetFeatureClass(editTemplate);
+					FeatureClass currentTargetClass =
+						ToolUtils.GetCurrentTargetFeatureClass(editTemplate);
 
 					if (currentTargetClass == null)
 					{

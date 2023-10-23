@@ -192,7 +192,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			return model;
 		}
 
-		private static ISpatialReference GetMainSpatialReference(
+		public static ISpatialReference GetMainSpatialReference(
 			Model model, IEnumerable<Dataset> referencedDatasets)
 		{
 			var spatialDatasetReferenceCount =

@@ -41,7 +41,7 @@ namespace ProSuite.AGP.WorkList.Test
 			_issuePoints = _geodatabase.OpenDataset<Table>(_issuePointsName);
 			_issueLines = _geodatabase.OpenDataset<Table>(_issueLinesName);
 
-			var tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
+			var tablesByGeodatabase = new Dictionary<Datastore, List<Table>>
 			                          {
 				                          {
 					                          _geodatabase,
@@ -436,8 +436,8 @@ namespace ProSuite.AGP.WorkList.Test
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 
 				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
-				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
-					new Dictionary<Geodatabase, List<Table>>
+				Dictionary<Datastore, List<Table>> tablesByGeodatabase =
+					new Dictionary<Datastore, List<Table>>
 					{
 						{geodatabase, new List<Table> {table}}
 					};
@@ -486,8 +486,8 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
-				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
-					new Dictionary<Geodatabase, List<Table>>
+				Dictionary<Datastore, List<Table>> tablesByGeodatabase =
+					new Dictionary<Datastore, List<Table>>
 					{
 						{geodatabase, new List<Table> {table}}
 					};
@@ -545,8 +545,8 @@ namespace ProSuite.AGP.WorkList.Test
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 
 				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
-				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
-					new Dictionary<Geodatabase, List<Table>>
+				Dictionary<Datastore, List<Table>> tablesByGeodatabase =
+					new Dictionary<Datastore, List<Table>>
 					{
 						{geodatabase, new List<Table> {table}}
 					};
@@ -596,8 +596,8 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
-				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
-					new Dictionary<Geodatabase, List<Table>>
+				Dictionary<Datastore, List<Table>> tablesByGeodatabase =
+					new Dictionary<Datastore, List<Table>>
 					{
 						{geodatabase, new List<Table> {table}}
 					};

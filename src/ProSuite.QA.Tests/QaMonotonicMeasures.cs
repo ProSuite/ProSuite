@@ -76,6 +76,7 @@ namespace ProSuite.QA.Tests
 			_flipExpression = StringUtils.IsNotEmpty(flipExpression)
 				                  ? flipExpression
 				                  : null;
+			AddCustomQueryFilterExpression(flipExpression);
 
 			_hasM = DatasetUtils.GetGeometryDef(lineClass).HasM;
 

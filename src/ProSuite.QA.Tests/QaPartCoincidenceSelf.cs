@@ -165,7 +165,17 @@ namespace ProSuite.QA.Tests
 		public IList<string> IgnoreNeighborConditions
 		{
 			get { return IgnoreNeighborConditionsSqlFullMatrix; }
-			set { IgnoreNeighborConditionsSqlFullMatrix = value; }
+			set
+			{
+				IgnoreNeighborConditionsSqlFullMatrix = value;
+				if (value.Count > 0)
+				{
+					foreach (var sql in value)
+					{
+						AddCustomQueryFilterExpression(sql);
+					}
+				}
+			}
 		}
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)

@@ -93,6 +93,7 @@ namespace ProSuite.QA.Tests
 			_validRelationConstraintSql = StringUtils.IsNotEmpty(validDuplicateConstraint)
 				                              ? validDuplicateConstraint
 				                              : null;
+			AddCustomQueryFilterExpression(validDuplicateConstraint);
 		}
 
 		public override bool RetestRowsPerIntersectedTile(int tableIndex)

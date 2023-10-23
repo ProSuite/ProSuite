@@ -9,7 +9,6 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -102,24 +101,22 @@ namespace ProSuite.AGP.Editing.OneClick
 				return true;
 			}
 
-			var task = QueuedTask.Run(
-				() =>
-				{
-					bool result;
+			var task = QueuedTask.Run(IsInSelectionPhaseQueued);
 
-					if (! CanUseSelection(ActiveMapView))
-					{
-						result = true;
-					}
-					else
-					{
-						result = ! CanUseDerivedGeometries();
-					}
-
-					return result;
-				});
-
+			// This can dead-lock! Remove everywhere, use async overload
 			return task.Result;
+		}
+
+		protected override async Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		{
+			if (shiftIsPressed)
+			{
+				return true;
+			}
+
+			bool result = await QueuedTask.Run(IsInSelectionPhaseQueued);
+
+			return result;
 		}
 
 		protected override bool HandleEscape()
@@ -188,6 +185,22 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			LogDerivedGeometriesCalculated(progressor);
+		}
+
+		private bool IsInSelectionPhaseQueued()
+		{
+			bool result;
+
+			if (! CanUseSelection(ActiveMapView))
+			{
+				result = true;
+			}
+			else
+			{
+				result = ! CanUseDerivedGeometries();
+			}
+
+			return result;
 		}
 
 		private void StartSecondPhase()
