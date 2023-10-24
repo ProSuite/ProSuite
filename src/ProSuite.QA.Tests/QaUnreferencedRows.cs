@@ -299,8 +299,8 @@ namespace ProSuite.QA.Tests
 			var queryFilter =
 				new AoTableFilter
 				{
-					WhereClause = string.Format("{0} IS NOT NULL",
-					                            referencingTableInfo.ForeignKeyFieldName)
+					SubFields = referencingTableInfo.Filter.SubFields,
+					WhereClause = $"{referencingTableInfo.ForeignKeyFieldName} IS NOT NULL"
 				};
 
 			return referencingTableInfo.Table.EnumRows(queryFilter, recycle);
