@@ -253,10 +253,13 @@ namespace ProSuite.Commons.AO
 				{
 					Current = _enumerable._cursor.NextRow();
 				}
-				catch (Exception exp)
+				catch (Exception e)
 				{
 					if (_enumerable._provideFailingOidInException)
 					{
+						_msg.Warn("Error in cursor.NextRow(). " +
+						          "Using fall-back implementation (slow)...", e);
+
 						// Try finding out if it is just an empty geometry and if so which one -> catchable exception
 						ITable table = _enumerable._table;
 
@@ -268,11 +271,11 @@ namespace ProSuite.Commons.AO
 
 							throw new DataAccessException(
 								$"Error getting {tableName} <oid> {oid}. Its geometry might be corrupt.",
-								oid.Value, tableName, exp);
+								oid.Value, tableName, e);
 						}
 					}
 
-					throw new DataException(_enumerable.CreateMessage(lastRow), exp);
+					throw new DataException(_enumerable.CreateMessage(lastRow), e);
 				}
 
 				if (Current != null)
