@@ -80,16 +80,16 @@ namespace ProSuite.Commons.Reflection
 
 				assembly = Assembly.Load(name);
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
-				_msg.Debug($"Loading {assemblyName} from {BinDirectory} failed.", e);
-
 				if (throwOnError)
 				{
 					throw;
 				}
 
-				_msg.DebugFormat("Trying assembly substitute {0}...", substituteAssembly);
+				_msg.VerboseDebug(
+					() => $"Loading {assemblyName} from {BinDirectory} failed. " +
+					      $"Trying assembly substitute {substituteAssembly}...");
 
 				assembly = Assembly.Load(substituteAssembly);
 			}
