@@ -45,7 +45,9 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 			try
 			{
-				GeometryUtils.EnsureSpatialReference(result, spatialReference, useProjectEx: true);
+				// Revert to useProjectEx: false due to
+				// BUG: TOP-5806, TOP-5805, TOP-5804
+				GeometryUtils.EnsureSpatialReference(result, spatialReference, useProjectEx: false);
 
 				// this was previously needed for the exact coordinate comparison with allowed errors:
 				result.SnapToSpatialReference();
