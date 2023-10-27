@@ -248,16 +248,9 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[CanBeNull]
-		protected Table OpenTable([NotNull] ISourceClass sourceClass)
+		protected static Table OpenTable([NotNull] ISourceClass sourceClass)
 		{
-			if (! DatastoreBySourceClasses.TryGetValue(sourceClass, out Datastore datastore))
-			{
-				return null;
-			}
-
-			string datasetName = sourceClass.Name;
-
-			return DatasetUtils.OpenDataset<Table>(datastore, datasetName);
+			return sourceClass.OpenDataset<Table>();
 		}
 
 		private ISourceClass CreateSourceClass(GdbTableIdentity identity,
