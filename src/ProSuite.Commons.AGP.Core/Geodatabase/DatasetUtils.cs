@@ -88,11 +88,6 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return featureClass.GetDefinition()?.GetSpatialReference();
 		}
 
-		public static bool IsSameClass(Table featureClass1, Table featureClass2)
-		{
-			return featureClass1.Handle == featureClass2.Handle;
-		}
-
 		public static GeometryType GetShapeType([NotNull] FeatureClass featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
@@ -149,6 +144,28 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			{
 				yield return geodatabase.OpenDataset<Table>(name);
 			}
+		}
+
+		public static bool IsSameTable(Table fc1, Table fc2)
+		{
+			if (ReferenceEquals(fc1, fc2)) return true;
+			if (Equals(fc1.Handle, fc2.Handle)) return true;
+
+			var id1 = fc1.GetID();
+			var id2 = fc2.GetID();
+			if (id1 != id2) return false;
+			if (id1 >= 0) return true;
+
+			// table id is negative for tables not registered with the Geodatabase
+			// compare table name and workspace -- for now, give up and assume not same
+
+			return false;
+		}
+
+		public static IEnumerable<Table> Distinct(
+			this IEnumerable<Table> tables)
+		{
+			return tables.Distinct(new TableComparer());
 		}
 	}
 }
