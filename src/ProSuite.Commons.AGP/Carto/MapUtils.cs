@@ -85,7 +85,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] SelectionSet selectionSet,
-			[CanBeNull] SpatialReference outputSpatialReference)
+			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
 			return GetFeatures(selectionSet.ToDictionary(), outputSpatialReference);
 		}
