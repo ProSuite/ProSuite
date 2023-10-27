@@ -19,24 +19,7 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public static void ClearSelection()
 		{
-			MapView mapView = MapView.Active;
-
-			if (mapView == null)
-			{
-				return;
-			}
-
-			Dictionary<MapMember, List<long>> selection = mapView.Map.GetSelection().ToDictionary();
-
-			foreach (MapMember mapMembersWithSelection in selection.Keys)
-			{
-				var basicLayer = mapMembersWithSelection as BasicFeatureLayer;
-
-				if (basicLayer != null)
-				{
-					basicLayer.ClearSelection();
-				}
-			}
+			MapView.Active?.Map.ClearSelection();
 		}
 
 		public static void SelectFeature(BasicFeatureLayer basicFeatureLayer,
