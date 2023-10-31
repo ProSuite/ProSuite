@@ -335,6 +335,10 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 			catch (TestContainerException e)
 			{
+				_msg.Debug(
+					"TestContainerException occurred. It will be stored as qaError and the verification will be cancelled.",
+					e);
+
 				QualityCondition qualityCondition =
 					_verificationElements.GetQualityCondition(e.Test);
 
