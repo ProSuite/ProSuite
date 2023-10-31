@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -14,6 +13,7 @@ using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.SpatialIndex;
+using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Tests.Documentation;
@@ -47,7 +47,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		protected override TransformedFeatureClass GetTransformedCore(string name)
 		{
-			IReadOnlyFeatureClass fc = (IReadOnlyFeatureClass)InvolvedTables[0];
+			IReadOnlyFeatureClass fc = (IReadOnlyFeatureClass) InvolvedTables[0];
 			TransformedFc transformedFc = InitTransformedFc(fc, name);
 
 			IDictionary<int, int> customValuesDict = new ConcurrentDictionary<int, int>();
@@ -121,6 +121,7 @@ namespace ProSuite.QA.Tests.Transformers
 		private class ShapeTransformedFc : TransformedFc
 		{
 			private readonly esriGeometryType _derivedShapeType;
+
 			public ShapeTransformedFc(IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType,
 			                          IGeometryTransformer transformer,
 			                          string name)
@@ -141,8 +142,9 @@ namespace ProSuite.QA.Tests.Transformers
 					geomDef.SpatialReference, hasZ: geomDef.HasZ, hasM: geomDef.HasM);
 			}
 		}
+
 		protected class TransformedFc : TransformedFeatureClass, IDataContainerAware,
-		                              ITransformedTable
+		                                ITransformedTable
 		{
 			protected TransformedFc(
 				IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType,
@@ -311,6 +313,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 		protected class TransformedDataset : TransformedBackingDataset<TransformedFc>
 		{
+			private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 			private readonly IReadOnlyFeatureClass _t0;
 
 			public TransformedDataset(
@@ -343,13 +347,16 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 			{
+				_msg.VerboseDebug(
+					() => $"Transformer {Resulting.Name}: Searching input table {_t0.Name}...");
+
 				if (filter is IFeatureClassFilter fc &&
 				    fc.FilterGeometry?.SpatialReference != _t0.SpatialReference)
 				{
-					IFeatureClassFilter clone = (IFeatureClassFilter)fc.Clone();
+					IFeatureClassFilter clone = (IFeatureClassFilter) fc.Clone();
 					IGeometry g = GeometryFactory.Clone(fc.FilterGeometry);
 					g.Project(_t0.SpatialReference);
-					clone.FilterGeometry = g; 
+					clone.FilterGeometry = g;
 					filter = clone;
 				}
 
@@ -361,6 +368,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 				foreach (var row in DataContainer.Search(_t0, filter, QueryHelpers[0]))
 				{
+					_msg.VerboseDebug(() => $"Processing input row <oid> {row.OID}...");
+
 					IReadOnlyFeature baseFeature = (IReadOnlyFeature) row;
 
 					if (IsKnown(baseFeature, involvedDict))
