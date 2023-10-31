@@ -19,9 +19,8 @@ namespace ProSuite.AGP.WorkList
 
 		private const string _statusFieldName = "STATUS";
 
-		public IssueItemRepository(Dictionary<Datastore, List<Table>> tablesByDatastore,
-		                           IRepository stateRepository) : base(
-			tablesByDatastore, stateRepository) { }
+		public IssueItemRepository(IEnumerable<Table> tables, IRepository stateRepository) : base(
+			tables, stateRepository) { }
 
 		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{

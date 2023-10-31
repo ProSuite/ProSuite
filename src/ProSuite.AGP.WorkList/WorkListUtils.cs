@@ -87,8 +87,8 @@ namespace ProSuite.AGP.WorkList
 
 			Type type = descriptor.GetInstanceType();
 
-			Dictionary<Datastore, List<Table>> tablesByDatastore =
-				GetTablesByDatastore(definition.Workspaces);
+			// todo daro simplify method?
+			List<Table> tablesByGeodatabase = GetDistinctTables(definition.Workspaces);
 
 			IRepository stateRepository;
 			IWorkItemRepository repository;
@@ -98,7 +98,7 @@ namespace ProSuite.AGP.WorkList
 				stateRepository =
 					new XmlWorkItemStateRepository(definition.Path, definition.Name, type,
 					                               definition.CurrentIndex);
-				repository = new IssueItemRepository(tablesByDatastore, stateRepository);
+				repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 			}
 			else if (type == typeof(SelectionWorkList))
 			{
@@ -107,8 +107,7 @@ namespace ProSuite.AGP.WorkList
 					                                    definition.CurrentIndex);
 
 				Dictionary<long, Table> tablesById =
-					tablesByDatastore.Values
-					                 .SelectMany(table => table)
+					tablesByGeodatabase.Select(table => table)
 					                 .ToDictionary(table => new GdbTableIdentity(table).Id,
 					                               table => table);
 
@@ -116,7 +115,7 @@ namespace ProSuite.AGP.WorkList
 					GetOidsByTable(definition.Items, tablesById);
 
 				repository =
-					new SelectionItemRepository(tablesByDatastore, oidsByTable, stateRepository);
+					new SelectionItemRepository(tablesByGeodatabase, oidsByTable, stateRepository);
 			}
 			else
 			{
@@ -127,7 +126,7 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[NotNull]
-		private static Dictionary<Datastore, List<Table>> GetTablesByDatastore(
+		private static List<Table> GetDistinctTables(
 			ICollection<XmlWorkListWorkspace> workspaces)
 		{
 			var result = new Dictionary<Datastore, List<Table>>(workspaces.Count);
@@ -155,14 +154,14 @@ namespace ProSuite.AGP.WorkList
 
 			if (notifications.Count <= 0)
 			{
-				return result;
+				return result.SelectMany(pair => pair.Value).ToList();
 			}
 
 			_msg.Info(string.Format(
 				          "Cannot open work item workspaces from connection strings:{0}{1}",
 				          Environment.NewLine, notifications.Concatenate(Environment.NewLine)));
 
-			return result;
+			return new List<Table>(0);
 		}
 
 		[CanBeNull]

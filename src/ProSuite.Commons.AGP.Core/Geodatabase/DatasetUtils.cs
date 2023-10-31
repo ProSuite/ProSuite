@@ -163,7 +163,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		public static IEnumerable<Table> Distinct(
-			this IEnumerable<Table> tables)
+			IEnumerable<Table> tables)
 		{
 			return tables.Distinct(new TableComparer());
 		}

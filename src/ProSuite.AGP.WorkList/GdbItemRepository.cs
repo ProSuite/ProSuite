@@ -7,7 +7,6 @@ using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -23,22 +22,26 @@ namespace ProSuite.AGP.WorkList
 
 		private int _lastUsedOid;
 
-		protected GdbItemRepository(Dictionary<Datastore, List<Table>> tablesByDatastore,
-		                            IRepository workItemStateRepository)
+		protected GdbItemRepository(IEnumerable<Table> tables, IRepository workItemStateRepository)
 		{
-			RegisterDatasets(tablesByDatastore);
+			foreach (Table table in tables)
+			{
+				ISourceClass sourceClass =
+					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition());
+
+				SourceClasses.Add(sourceClass);
+			}
 
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
 		protected IRepository WorkItemStateRepository { get; }
 
-		protected Dictionary<ISourceClass, Datastore> DatastoreBySourceClasses { get; } =
-			new Dictionary<ISourceClass, Datastore>();
+		public List<ISourceClass> SourceClasses { get; } = new();
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
-			foreach (ISourceClass sourceClass in DatastoreBySourceClasses.Keys)
+			foreach (ISourceClass sourceClass in SourceClasses)
 			{
 				int count = 0;
 
@@ -53,28 +56,7 @@ namespace ProSuite.AGP.WorkList
 				}
 
 				_msg.DebugStopTiming(
-					watch, $"{nameof(GetItems)}() {sourceClass.Name}: {count} items");
-			}
-		}
-
-		public IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter,
-		                                       bool recycle = true)
-		{
-			foreach (ISourceClass sourceClass in DatastoreBySourceClasses.Keys.Where(
-				         source => source.Uses(tableId)))
-			{
-				int count = 0;
-
-				Stopwatch watch = _msg.DebugStartTiming();
-
-				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
-				{
-					count += 1;
-					yield return CreateWorkItemCore(row, sourceClass);
-				}
-
-				_msg.DebugStopTiming(
-					watch, $"{nameof(GetItems)}() {sourceClass.Name}: {count} items");
+					watch, $"GetItems() {sourceClass.Name}: {count} items");
 			}
 		}
 
@@ -84,7 +66,7 @@ namespace ProSuite.AGP.WorkList
 
 			// todo daro: log message
 			ISourceClass source =
-				DatastoreBySourceClasses.Keys.FirstOrDefault(sc => sc.Uses(tableId));
+				SourceClasses.FirstOrDefault(sc => sc.Uses(tableId));
 			Assert.NotNull(source);
 
 			Row row = GetRow(source, item.Proxy.ObjectId);
@@ -98,6 +80,7 @@ namespace ProSuite.AGP.WorkList
 			RefreshCore(item, source, row);
 		}
 
+		// todo daro reorder members
 		[CanBeNull]
 		private Row GetRow([NotNull] ISourceClass sourceClass, long oid)
 		{
@@ -123,7 +106,7 @@ namespace ProSuite.AGP.WorkList
 			GdbTableIdentity tableId = item.Proxy.Table;
 
 			ISourceClass source =
-				DatastoreBySourceClasses.Keys.FirstOrDefault(s => s.Uses(tableId));
+				SourceClasses.FirstOrDefault(s => s.Uses(tableId));
 			Assert.NotNull(source);
 
 			// todo daro: read / restore item again from db? restore pattern in case of failure?
@@ -167,14 +150,6 @@ namespace ProSuite.AGP.WorkList
 			return WorkItemStateRepository.CurrentIndex ?? -1;
 		}
 
-		public void Dispose()
-		{
-			foreach (Datastore gdb in DatastoreBySourceClasses.Values)
-			{
-				gdb?.Dispose();
-			}
-		}
-
 		protected virtual void UpdateStateRepositoryCore(string path) { }
 
 		protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
@@ -193,10 +168,17 @@ namespace ProSuite.AGP.WorkList
 				yield break;
 			}
 
-			// Todo daro: check recycle
-			foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
+			try
 			{
-				yield return row;
+				// Todo daro: check recycle
+				foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
+				{
+					yield return row;
+				}
+			}
+			finally
+			{
+				table.Dispose();
 			}
 		}
 
@@ -222,30 +204,6 @@ namespace ProSuite.AGP.WorkList
 			GdbTableIdentity identity,
 			[CanBeNull] IAttributeReader attributeReader,
 			[CanBeNull] WorkListStatusSchema statusSchema);
-
-		private void RegisterDatasets(Dictionary<Datastore, List<Table>> tablesByDatastore)
-		{
-			foreach (var pair in tablesByDatastore)
-			{
-				Datastore datastore = pair.Key;
-
-				foreach (Table table in pair.Value)
-				{
-					var identity = new GdbTableIdentity(table);
-
-					TableDefinition definition =
-						table is FeatureClass
-							? DatasetUtils.GetDatasetDefinition<FeatureClassDefinition>(
-								datastore, identity.Name)
-							: DatasetUtils.GetDatasetDefinition<TableDefinition>(
-								datastore, identity.Name);
-
-					ISourceClass sourceClass = CreateSourceClass(identity, definition);
-
-					DatastoreBySourceClasses.Add(sourceClass, datastore);
-				}
-			}
-		}
 
 		[CanBeNull]
 		protected static Table OpenTable([NotNull] ISourceClass sourceClass)
