@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using ConcurrentCollections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Client.QA;
@@ -22,13 +23,12 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		private readonly int _desiredParallelCount;
 		private readonly Predicate<IQualityVerificationClient> _clientPredicate;
 
-		private readonly List<IQualityVerificationClient> _workerClients =
-			new List<IQualityVerificationClient>();
+		private readonly ConcurrentHashSet<IQualityVerificationClient> _workerClients =
+			new ConcurrentHashSet<IQualityVerificationClient>();
 
-		// This should be a concurrent hashset. Work-around: Use concurrent dictionary.
-		private readonly IDictionary<IQualityVerificationClient, IQualityVerificationClient>
+		private readonly ConcurrentHashSet<IQualityVerificationClient>
 			_workingClients =
-				new ConcurrentDictionary<IQualityVerificationClient, IQualityVerificationClient>();
+				new ConcurrentHashSet<IQualityVerificationClient>();
 
 		private readonly IDictionary<SubVerification, IQualityVerificationClient>
 			_subveriClientsDict =
@@ -78,14 +78,13 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				// Single-worker configurations allow worker-side multi-threading. Always return
 				// the worker -> all verifications are sent and the throttling happens in the
 				// worker.
-				return _workerClients[0];
+				return _workerClients.FirstOrDefault();
 			}
 
 			foreach (IQualityVerificationClient client in _workerClients)
 			{
-				if (! _workingClients.ContainsKey(client))
+				if (! _workingClients.Contains(client))
 				{
-					//if (client.CanAcceptCalls(allowFailOver: false))
 					return client;
 				}
 			}
@@ -93,21 +92,41 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			return null;
 		}
 
-		internal Task<bool> IniTask([NotNull] SubVerification subVerification,
-		                            [NotNull] IQualityVerificationClient verificationClient,
-		                            [NotNull] Func<Task<bool>> verifyFunc)
+		public bool HasFreeWorkers()
 		{
-			// Check if there is a free client (and allow failing over if necessary):
-			if (! verificationClient.CanAcceptCalls(true))
+			return _workerClients.Any(client => ! _workingClients.Contains(client));
+		}
+
+		internal Task<bool> StartNext(
+			[NotNull] Stack<SubVerification> subVerifications,
+			[NotNull] Func<SubVerification, IQualityVerificationClient, Task<bool>> verifyFunc,
+			[CanBeNull] out SubVerification started)
+		{
+			IQualityVerificationClient client = GetWorkerClient();
+
+			started = null;
+			if (client == null)
 			{
-				// TODO: Do something else? Use a different worker?
-				return Task.FromResult(false);
+				return null;
 			}
 
-			_subveriClientsDict.Add(subVerification, verificationClient);
-			_workingClients.Add(verificationClient, verificationClient);
+			// Check if there is a free client (and allow failing over if necessary):
+			if (! client.CanAcceptCalls(true))
+			{
+				return null;
+			}
 
-			Task<bool> newTask = verifyFunc();
+			if (! _workingClients.Add(client))
+			{
+				// Race condition! Another call has already used (and added it to the _workingClients):
+				return null;
+			}
+
+			started = subVerifications.Pop();
+
+			_subveriClientsDict.Add(started, client);
+
+			Task<bool> newTask = verifyFunc(started, client);
 
 			// Process the messages even though the foreground thread is blocking/busy processing results
 			newTask.ConfigureAwait(false);
@@ -115,10 +134,13 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			if (_tasks.ContainsKey(newTask))
 			{
 				_msg.WarnFormat("New Task already exists in dictionary!");
-				LogTask(_tasks, newTask, subVerification);
+				LogTask(_tasks, newTask, started);
 			}
 
-			_tasks.Add(newTask, subVerification);
+			_tasks.Add(newTask, started);
+
+			_msg.Info($"Popped sub-verification {subVerifications.Count} and started " +
+			          $"on {client.GetAddress()}: {started}");
 
 			return newTask;
 		}
@@ -142,7 +164,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 
 			finishedClient = _subveriClientsDict[subVerification];
-			_workingClients.Remove(finishedClient);
+			_workingClients.TryRemove(finishedClient);
 
 			return _tasks.Remove(completedTask);
 		}

@@ -430,24 +430,23 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					return startedVerifications;
 				}
 
-				IQualityVerificationClient client = _distributedWorkers.GetWorkerClient();
-
-				if (client == null)
+				if (! _distributedWorkers.HasFreeWorkers())
 				{
 					return startedVerifications;
 				}
 
-				SubVerification next = subVerifications.Pop();
+				Task<bool> newTask = _distributedWorkers.StartNext(
+					subVerifications, Verify, out SubVerification next);
 
-				Task<bool> newTask = _distributedWorkers.IniTask(
-					next, client, () => Verify(next, client));
+				if (newTask != null)
+				{
+					Assert.NotNull(next, "Task started without sub-verification!");
 
-				_msg.Info($"Popped sub-verification {subVerifications.Count} and started " +
-				          $"on {client.GetAddress()}: {next}");
+					startedVerifications.Add(newTask, next);
 
-				startedVerifications.Add(newTask, next);
-				SubverificationObserver?.Started(
-					next.Id, _distributedWorkers.GetWorkerClient(next)?.GetAddress());
+					SubverificationObserver?.Started(
+						next.Id, _distributedWorkers.GetWorkerClient(next)?.GetAddress());
+				}
 			}
 		}
 
