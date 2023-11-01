@@ -25,8 +25,10 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		private readonly List<IQualityVerificationClient> _workerClients =
 			new List<IQualityVerificationClient>();
 
-		private readonly HashSet<IQualityVerificationClient> _workingClients =
-			new HashSet<IQualityVerificationClient>();
+		// This should be a concurrent hashset. Work-around: Use concurrent dictionary.
+		private readonly IDictionary<IQualityVerificationClient, IQualityVerificationClient>
+			_workingClients =
+				new ConcurrentDictionary<IQualityVerificationClient, IQualityVerificationClient>();
 
 		private readonly IDictionary<SubVerification, IQualityVerificationClient>
 			_subveriClientsDict =
@@ -81,7 +83,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			foreach (IQualityVerificationClient client in _workerClients)
 			{
-				if (! _workingClients.Contains(client))
+				if (! _workingClients.ContainsKey(client))
 				{
 					//if (client.CanAcceptCalls(allowFailOver: false))
 					return client;
@@ -103,7 +105,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 
 			_subveriClientsDict.Add(subVerification, verificationClient);
-			_workingClients.Add(verificationClient);
+			_workingClients.Add(verificationClient, verificationClient);
 
 			Task<bool> newTask = verifyFunc();
 
