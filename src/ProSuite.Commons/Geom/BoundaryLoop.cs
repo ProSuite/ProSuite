@@ -197,15 +197,35 @@ namespace ProSuite.Commons.Geom
 		/// <returns></returns>
 		public IEnumerable<IList<IntersectionRun>> GetLoopSubcurves()
 		{
+			int loopCount = 0;
+
 			foreach (IList<IntersectionRun> loopSubcurves in GetLoopSubcurves(Start, End))
 			{
 				yield return loopSubcurves;
+				loopCount = ValidateLoopCount(loopCount, loopSubcurves.Count);
 			}
 
 			foreach (IList<IntersectionRun> loopSubcurves in GetLoopSubcurves(End, Start))
 			{
 				yield return loopSubcurves;
+				loopCount = ValidateLoopCount(loopCount, loopSubcurves.Count);
 			}
+		}
+
+		private static int ValidateLoopCount(int previousCount,
+		                                     int addedLoopCount)
+		{
+			const int maxLoops = 100;
+
+			int result = previousCount + addedLoopCount;
+
+			if (result > maxLoops)
+			{
+				throw new InvalidOperationException(
+					"Maximum number of boundary loops exceeded");
+			}
+
+			return previousCount;
 		}
 
 		private IEnumerable<IList<IntersectionRun>> GetLoopSubcurves(
