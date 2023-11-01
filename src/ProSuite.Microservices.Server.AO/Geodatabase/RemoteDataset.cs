@@ -154,9 +154,9 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 			var dataRequest = new DataRequest
 			                  {
-				                  WhereClause = filter?.WhereClause,
+				                  SubFields = filter?.SubFields ?? string.Empty,
+				                  WhereClause = filter?.WhereClause ?? string.Empty,
 				                  SearchGeometry = searchGeoMsg,
-				                  SubFields = filter?.SubFields
 			                  };
 
 			if (_queryDefinition != null)
