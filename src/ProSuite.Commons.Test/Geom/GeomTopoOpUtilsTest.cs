@@ -5,6 +5,7 @@ using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.Wkb;
 
@@ -307,14 +308,14 @@ namespace ProSuite.Commons.Test.Geom
 							IList<RingGroup> result = CutPlanarBothWays(poly1, o, 2, 0);
 
 							var expected = GeomTestUtils.CreateRing(new List<Pnt3D>
-								{
-									new Pnt3D(0, 0, 9),
-									new Pnt3D(0, 100, 9),
-									new Pnt3D(100, 100, 9),
-									new Pnt3D(100, 30, 9),
-									new Pnt3D(40, 30, 9),
-									new Pnt3D(40, 0, 9)
-								});
+									{
+										new Pnt3D(0, 0, 9),
+										new Pnt3D(0, 100, 9),
+										new Pnt3D(100, 100, 9),
+										new Pnt3D(100, 30, 9),
+										new Pnt3D(40, 30, 9),
+										new Pnt3D(40, 0, 9)
+									});
 
 							Assert.True(
 								GeomTopoOpUtils.AreEqualXY(expected, result[0].ExteriorRing,
@@ -4874,6 +4875,38 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionMultiBoundaryLoopsWithoutStackoverflowTop5809()
+		{
+			// Prevent a type of stack overfly by two methods recursively calling each other.
+			// The source geometry is very non-simple and the seemingly better strategy would
+			// be an a-priori explosion of boundary loops. However, with a proper cracking
+			// strategy we would probably never get into this situation and we do not have
+			// to distinguish between used and unused loops.
+			MultiPolycurve source = (MultiPolycurve) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"multi_boundary_loop_source_nonsimple_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiPolygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"multi_boundary_loop_source_nonsimple_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			// At 0.0005 there is no short segment in the original (it is 0.0007)
+			double tolerance = 0.001;
+
+			var exception = Assert.Throws<GeomException>(
+				() => GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance));
+
+			Assert.NotNull(exception);
+			Assert.IsTrue(exception.InnerException is InvalidOperationException);
+		}
+
+		[Test]
 		public void CanUnionManyUnCrackedRings_Top5714()
 		{
 			Polyhedron source = (Polyhedron) GeomUtils.FromWkbFile(
@@ -7485,10 +7518,10 @@ namespace ProSuite.Commons.Test.Geom
 			containedSource.ReverseOrientation();
 			Assert.IsTrue(intersectionLinesXY[0].Equals(containedSource));
 			Assert.IsTrue(intersectionLinesXY[1].Equals(new Linestring(new[]
-				                                            {
-					                                            new Pnt3D(100, 40, 2),
-					                                            new Pnt3D(100, 20, 2)
-				                                            })));
+					                                            {
+						                                            new Pnt3D(100, 40, 2),
+						                                            new Pnt3D(100, 20, 2)
+					                                            })));
 
 			// Excluded target boundary line:
 			intersectionLinesXY =
