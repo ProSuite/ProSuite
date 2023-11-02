@@ -233,8 +233,21 @@ namespace ProSuite.AGP.Editing.PickerUI
 		{
 			QueuedTask.Run(() =>
 			{
-				_selectionGeometryOverlay = MapView.Active.NotNullCallback(
-					mv => mv.AddOverlay(_selectionGeometry, _polygonSymbol.MakeSymbolReference()));
+				if (_selectionGeometryOverlay == null)
+				{
+					_selectionGeometryOverlay = MapView.Active.NotNullCallback(
+						mv => mv.AddOverlay(_selectionGeometry,
+						                    _polygonSymbol.MakeSymbolReference()));
+				}
+				else
+				{
+					MapView.Active.NotNullCallback(mv =>
+					{
+						mv.UpdateOverlay(
+							_selectionGeometryOverlay,
+							_selectionGeometry);
+					});
+				}
 			});
 		}
 
