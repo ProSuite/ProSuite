@@ -225,7 +225,7 @@ namespace ProSuite.Commons.Geom
 					"Maximum number of boundary loops exceeded");
 			}
 
-			return previousCount;
+			return result;
 		}
 
 		private IEnumerable<IList<IntersectionRun>> GetLoopSubcurves(
