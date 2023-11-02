@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -306,7 +307,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (! licensed)
 				{
-					_msg.Warn("Could not check out the specified license");
+					throw new ConfigurationErrorsException(
+						"No ArcGIS License could be initialized.");
 				}
 			}
 		}
