@@ -209,7 +209,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				StartSubVerifications(unhandledSubverifications);
 			if (started.Count <= 0)
 			{
-				throw new InvalidOperationException("Could not start any subverification");
+				_msg.Debug(
+					"Could not start any sub-verification. They will be started once free workers are available...");
 			}
 
 			Task countTask = null;
@@ -427,11 +428,13 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			{
 				if (subVerifications.Count == 0)
 				{
+					_msg.Debug("No subverifications provided.");
 					return startedVerifications;
 				}
 
 				if (! _distributedWorkers.HasFreeWorkers())
 				{
+					_msg.Debug("Currently no free workers. Sub-verifications will be queued...");
 					return startedVerifications;
 				}
 
