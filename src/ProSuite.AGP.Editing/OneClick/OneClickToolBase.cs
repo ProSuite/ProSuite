@@ -64,7 +64,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
 		public virtual IPickerPrecedence PickerPrecedence =>
-			_pickerPrecedence ??= new SelectionToolPickerPrecedence();
+			_pickerPrecedence ?? (_pickerPrecedence = new StandardPickerPrecedence());
 
 		/// <summary>
 		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
