@@ -88,9 +88,9 @@ namespace ProSuite.AGP.WorkList
 			//}
 
 
-			var createsByLayer = SelectionUtils.GetSelectedOidsByLayer(args.Creates);
-			var deletesByLayer = SelectionUtils.GetSelectedOidsByLayer(args.Deletes);
-			var modsByLayer = SelectionUtils.GetSelectedOidsByLayer(args.Modifies);
+			var createsByLayer = SelectionUtils.GetSelection(args.Creates);
+			var deletesByLayer = SelectionUtils.GetSelection(args.Deletes);
+			var modsByLayer = SelectionUtils.GetSelection(args.Modifies);
 
 			Dictionary<Table, List<long>> creates = GetOidsByTable(createsByLayer);
 			Dictionary<Table, List<long>> deletes = GetOidsByTable(deletesByLayer);

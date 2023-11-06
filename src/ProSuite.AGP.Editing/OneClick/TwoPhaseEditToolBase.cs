@@ -205,8 +205,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		private void StartSecondPhase()
 		{
 			Cursor = SecondPhaseCursor;
-
-			SetupRectangleSketch();
+			
+			SetupSketch(SketchGeometryType.Rectangle);
 		}
 	}
 }
