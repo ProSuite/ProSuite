@@ -5,6 +5,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Progress;
 
 namespace ProSuite.DomainServices.AO.QA.VerificationReports
@@ -21,6 +22,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 
 		private readonly Dictionary<string, int> _idxs = new Dictionary<string, int>();
 
+		[CanBeNull] private readonly ISpatialReference _spatialReference;
 		private readonly IEnvelope _area;
 		private readonly IFeatureClass _fc;
 		private readonly Dictionary<int, long> _subverIdOid;
@@ -32,22 +34,26 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 		{
 			_subverIdOid = new Dictionary<int, long>();
 
+			_spatialReference = spatialReference;
 			_fc = DatasetUtils.CreateSimpleFeatureClass(
 				workspace, featureClassName, GetFields(spatialReference));
 		}
 
 		public void CreatedSubverification(
 			int idSubverification, QualityConditionExecType execType,
-			IList<string> QualityConditionNames, IEnvelope area)
+			IList<string> QualityConditionNames, EnvelopeXY area)
 		{
-			area = area ?? _area;
+			IGeometry shape = area != null
+				                  ? GeometryFactory.CreatePolygon(area, _spatialReference)
+				                  : null;
 
 			IFeature f = _fc.CreateFeature();
 			f.Value[GetIdx(SubVeriIdField)] = idSubverification;
 			f.Value[GetIdx(StatusField)] = -1;
 			f.Value[GetIdx(CreatedField)] = DateTime.Now;
 			f.Value[GetIdx(UpdatedField)] = DateTime.Now;
-			f.Shape = area != null ? GeometryFactory.CreatePolygon(area) : null;
+
+			f.Shape = shape;
 			f.Store();
 
 			_subverIdOid.Add(idSubverification, f.OID);

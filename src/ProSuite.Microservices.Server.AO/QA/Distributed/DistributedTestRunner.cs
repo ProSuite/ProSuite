@@ -629,7 +629,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		{
 			Thread.Sleep(100);
 			forSubVerification.Completed = true;
-			IEnvelope tile = forSubVerification.TileEnvelope;
+			EnvelopeXY tile = forSubVerification.TileEnvelope;
 			IDictionary<IssueKey, IssueKey> knownIssues = KnownIssues;
 			IList<IssueKey> fullyProcessed;
 			if (tile != null)
@@ -656,7 +656,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 		[NotNull]
 		private IList<IssueKey> ProcessTileCompletion([NotNull] SubVerification forSubVerification,
-		                                              [NotNull] IEnvelope tile)
+		                                              [NotNull] EnvelopeXY tile)
 		{
 			if (_subVerificationsTree == null)
 			{
@@ -664,7 +664,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 
 			Box.BoxComparer cmp = new Box.BoxComparer();
-			Box tileBox = ProxyUtils.CreateBox(tile);
+			Box tileBox = new Box(tile.GetLowerLeftPoint(), tile.GetUpperRightPoint());
 			foreach (BoxTree<SubVerification>.TileEntry tileEntry
 			         in _subVerificationsTree.Search(tileBox))
 			{
@@ -890,7 +890,12 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				_subVerificationsTree =
 					BoxTreeUtils.CreateBoxTree(
 						tileParallelVerifications,
-						x => ProxyUtils.CreateBox(Assert.NotNull(x.TileEnvelope)), 4);
+						x =>
+						{
+							EnvelopeXY envelope = Assert.NotNull(x.TileEnvelope);
+							return new Box(envelope.GetLowerLeftPoint(),
+							               envelope.GetUpperRightPoint());
+						}, 4);
 
 				_msg.Info(
 					$"Built {tileParallelVerifications.Count} tile parallel subverifications for {parallelGroup.QualityConditions.Count} quality conditions");
@@ -1157,7 +1162,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 				SubVerification subVerification =
 					new SubVerification(subRequest, qualityConditionGroup);
-				subVerification.TileEnvelope = tileBox;
+				subVerification.TileEnvelope = GeometryConversionUtils.CreateEnvelopeXY(tileBox);
 				subVerifications.Add(subVerification);
 			}
 

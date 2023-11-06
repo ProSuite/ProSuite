@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -32,7 +30,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 		public VerificationRequest SubRequest { get; }
 		public SubResponse SubResponse { get; }
-		public IEnvelope TileEnvelope { get; set; }
+		public EnvelopeXY TileEnvelope { get; set; }
 		public QualityConditionGroup QualityConditionGroup { get; }
 		public bool Completed { get; set; }
 		public int Id { get; set; }
@@ -109,7 +107,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		{
 			return
 				$"{QualityConditionGroup.ExecType} sub-verification with {QualityConditionGroup.QualityConditions.Count} " +
-				$"condition(s) in envelope {GeometryUtils.ToString(TileEnvelope, true)}";
+				$"condition(s) in envelope {TileEnvelope}";
 		}
 
 		#endregion

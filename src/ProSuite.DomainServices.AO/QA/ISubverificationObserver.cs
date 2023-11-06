@@ -3,6 +3,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Progress;
 using System.Collections.Generic;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.DomainServices.AO.QA
 {
@@ -12,7 +13,7 @@ namespace ProSuite.DomainServices.AO.QA
 			int idSubverification,
 			QualityConditionExecType execType,
 			[NotNull] IList<string> QualityConditionNames,
-			[CanBeNull] IEnvelope area);
+			[CanBeNull] EnvelopeXY area);
 		void Finished(int id, ServiceCallStatus failed);
 		void Started(int id, string workerAddress);
 	}
