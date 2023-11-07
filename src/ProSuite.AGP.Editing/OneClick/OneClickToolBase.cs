@@ -48,12 +48,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// <summary>
 		/// Whether this tool requires a selection and the base class should handle the selection phase.
 		/// </summary>
-		protected bool RequiresSelection { get; set; } = true;
+		protected bool RequiresSelection { get; init; } = true;
 
 		/// <summary>
 		/// Whether the required selection can only contain editable features.
 		/// </summary>
-		protected bool SelectOnlyEditFeatures { get; set; } = true;
+		protected bool SelectOnlyEditFeatures { get; init; } = true;
 
 		/// <summary>
 		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
@@ -62,28 +62,22 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
-		public virtual IPickerPrecedence PickerPrecedence =>
+		protected virtual IPickerPrecedence PickerPrecedence =>
 			_pickerPrecedence ?? (_pickerPrecedence = new StandardPickerPrecedence());
 
 		/// <summary>
 		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
 		/// will be called (and potentially in the future also MapTool.HandleKeyUpAsync)
 		/// </summary>
-		protected List<Key> HandledKeys { get; } = new List<Key>();
+		protected List<Key> HandledKeys { get; } = new();
 
 		/// <summary>
 		/// The currently pressed keys.
 		/// </summary>
-		protected HashSet<Key> PressedKeys { get; } = new HashSet<Key>();
+		protected HashSet<Key> PressedKeys { get; } = new();
 
-		protected virtual Cursor SelectionCursor { get; set; }
-		protected Cursor SelectionCursorShift { get; set; }
-		protected Cursor SelectionCursorNormal { get; set; }
-		protected Cursor SelectionCursorNormalShift { get; set; }
-		protected Cursor SelectionCursorUser { get; set; }
-		protected Cursor SelectionCursorUserShift { get; set; }
-		protected Cursor SelectionCursorOriginal { get; set; }
-		protected Cursor SelectionCursorOriginalShift { get; set; }
+		protected virtual Cursor SelectionCursor { get; init; }
+		protected Cursor SelectionCursorShift { get; init; }
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{

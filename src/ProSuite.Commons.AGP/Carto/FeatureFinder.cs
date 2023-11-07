@@ -263,7 +263,7 @@ namespace ProSuite.Commons.AGP.Carto
 			TargetFeatureSelection? targetSelectionType,
 			[CanBeNull] ICollection<Feature> selectedFeatures)
 		{
-			if (! basicFeatureLayer.IsVisible())
+			if (! LayerUtils.IsVisible(basicFeatureLayer))
 			{
 				return false;
 			}

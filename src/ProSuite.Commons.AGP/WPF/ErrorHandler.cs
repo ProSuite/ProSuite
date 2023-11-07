@@ -17,6 +17,7 @@ namespace ProSuite.Commons.AGP.WPF
 		private const string
 			_failuretitle = "Attention"; // todo daro think of a better title. Warning? Ooops? Shit?
 
+		[Obsolete("Use ProSuite.Commons.UI\\Dialogs\\ErrorHandler.cs instead")]
 		public static void HandleError([NotNull] Exception exception,
 		                               [CanBeNull] IMsg msg,
 		                               [CanBeNull] string title = null)
@@ -26,6 +27,7 @@ namespace ProSuite.Commons.AGP.WPF
 			HandleError(ExceptionUtils.FormatMessage(exception), exception, msg, title);
 		}
 
+		[Obsolete("Use ProSuite.Commons.UI\\Dialogs\\ErrorHandler.cs instead")]
 		public static void HandleFailure([NotNull] string message,
 		                                 [CanBeNull] IMsg msg = null,
 		                                 [CanBeNull] string title = null)
@@ -43,6 +45,7 @@ namespace ProSuite.Commons.AGP.WPF
 			Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Exclamation);
 		}
 
+		[Obsolete("Use ProSuite.Commons.UI\\Dialogs\\ErrorHandler.cs instead")]
 		public static void HandleError([NotNull] string message,
 		                               [CanBeNull] Exception exception,
 		                               [CanBeNull] IMsg msg = null,

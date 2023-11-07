@@ -197,7 +197,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <summary>
 		/// Gets the layer's visibility state. Works as well for layers nested in group layers.
 		/// </summary>
-		public static bool IsVisible(this Layer layer)
+		public static bool IsVisible([NotNull] Layer layer)
 		{
 			if (! layer.IsVisible)
 			{
