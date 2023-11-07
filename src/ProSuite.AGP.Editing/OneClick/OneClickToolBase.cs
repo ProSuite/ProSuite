@@ -120,75 +120,64 @@ namespace ProSuite.AGP.Editing.OneClick
 			await ViewUtils.TryAsync(task, _msg);
 		}
 
-		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
+		protected override void OnToolKeyDown(MapViewKeyEventArgs args)
 		{
 			_msg.VerboseDebug(() => "OnToolKeyDown");
 
-			try
+			ViewUtils.Try(() =>
 			{
-				PressedKeys.Add(k.Key);
+				PressedKeys.Add(args.Key);
 
-				if (IsModifierKey(k.Key) || HandledKeys.Contains(k.Key))
+				if (KeyboardUtils.IsModifierDown(args.Key) || HandledKeys.Contains(args.Key))
 				{
-					k.Handled = true;
+					args.Handled = true;
 				}
 
-				if (k.Key == _keyShowOptionsPane)
+				if (args.Key == _keyShowOptionsPane)
 				{
 					ShowOptionsPane();
 				}
 
 				// Cancel outside a queued task otherwise the current task that blocks the queue
 				// cannot be cancelled.
-				if (k.Key == Key.Escape)
+				if (args.Key == Key.Escape)
 				{
 					HandleEscape();
 				}
 
-				QueuedTaskUtils.Run(
-					delegate
-					{
-						if (IsShiftKey(k.Key))
-						{
-							ShiftPressedCore();
-						}
+				if (KeyboardUtils.IsShiftKey(args.Key))
+				{
+					// todo daro rename to SetShiftCursor?
+					// This sets shift cursor. But don't do it in QueuedTask because
+					// tool cursor is not updated until mouse is moved for the first time.
+					ShiftPressedCore();
+				}
 
-						OnKeyDownCore(k);
+				OnKeyDownCore(args);
 
-						return true;
-					});
-			}
-			catch (Exception e)
-			{
-				HandleError($"Error in tool key down ({Caption}): {e.Message}", e, true);
-			}
+			}, _msg, suppressErrorMessageBox: true);
 		}
 
-		protected override void OnToolKeyUp(MapViewKeyEventArgs k)
+		protected override void OnToolKeyUp(MapViewKeyEventArgs args)
 		{
 			_msg.VerboseDebug(() => "OnToolKeyUp");
 
 			try
 			{
-				QueuedTaskUtils.Run(
-					delegate
+				ViewUtils.Try(() =>
+				{
+					if (KeyboardUtils.IsShiftKey(args.Key))
 					{
-						if (IsShiftKey(k.Key))
-						{
-							ShiftReleasedCore();
-						}
+						ShiftReleasedCore();
+					}
 
-						OnKeyUpCore(k);
-						return true;
-					});
-			}
-			catch (Exception e)
-			{
-				HandleError($"Error in tool key up ({Caption}): {e.Message}", e, true);
+					OnKeyUpCore(args);
+
+				}, _msg, suppressErrorMessageBox: true);
 			}
 			finally
 			{
-				PressedKeys.Remove(k.Key);
+				PressedKeys.Remove(args.Key);
 			}
 		}
 
