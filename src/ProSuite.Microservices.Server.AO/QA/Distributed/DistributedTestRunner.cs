@@ -13,7 +13,6 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -230,7 +229,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			while (_distributedWorkers.ActiveTaskCount > 0 || unhandledSubverifications.Count > 0)
 			{
 				if (_distributedWorkers.TryTakeCompleted(
-					    out Task<bool> task, out SubVerification completed,
+					    out Task task, out SubVerification completed,
 					    out IQualityVerificationClient finishedClient))
 				{
 					string failureMessage =
@@ -438,7 +437,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					return startedVerifications;
 				}
 
-				Task<bool> newTask = _distributedWorkers.StartNext(
+				Task newTask = _distributedWorkers.StartNext(
 					subVerifications, Verify, out SubVerification next);
 
 				if (newTask != null)
@@ -453,37 +452,68 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 		}
 
-		private Task<bool> Verify([NotNull] SubVerification subVerification,
-		                          [NotNull] IQualityVerificationClient verificationClient)
+		/// <summary>
+		/// Starts the verification on a separate thread-pool(!) thread which will also handle
+		/// the worker's responses (progress, issue messages). No COM or other thread-affine state
+		/// should be used here!
+		/// </summary>
+		/// <param name="subVerification"></param>
+		/// <param name="verificationClient"></param>
+		/// <returns></returns>
+		private Task Verify([NotNull] SubVerification subVerification,
+		                    [NotNull] IQualityVerificationClient verificationClient)
 		{
-			Task<bool> task;
+			Task task;
 
 			VerificationRequest subRequest = subVerification.SubRequest;
 			SubResponse subResponse = subVerification.SubResponse;
 
+			Task<bool> verifyAsync;
+
 			// Sends schema as protobuf:
 			if (KnownModels != null)
-				task = Task.Run(
-					async () =>
-						await VerifySchemaAsync(
-							verificationClient, subRequest, subResponse, CancellationTokenSource,
-							KnownModels),
-					CancellationTokenSource.Token);
+			{
+				verifyAsync = VerifySchemaAsync(
+					verificationClient, subRequest, subResponse,
+					CancellationTokenSource, KnownModels);
+			}
 			else
 			{
 				// Re-harvest model in worker or use DDX access, if necessary:
-				task = Task.Run(
-					async () =>
-						await VerifyAsync(verificationClient, subRequest, subResponse,
-						                  CancellationTokenSource),
-					CancellationTokenSource.Token);
+				verifyAsync = VerifyAsync(verificationClient, subRequest, subResponse,
+				                          CancellationTokenSource);
 			}
+
+			// BUG TOP-5814 (and TOP-5813):
+			//task = Task.Run(
+			//	async () => await verifyAsync,
+			//	CancellationTokenSource.Token);
+
+			// BUG TOP-5814: If two parallel DistributedRunner instances are active, in some
+			// situations the issue draining and handling runs on the OTHER STA thread!
+			// It appears that the execution context flows across threads. See
+			// https://devblogs.microsoft.com/dotnet/how-async-await-really-works/.
+			// It is not quite clear and obvious (not even from the logs) how and why this
+			// happens. We would probably need a custom synchronization context.
+			// See blog 'Await, SynchronizationContext, and Console Apps' by Stephen Toub.
+			// Alternatively we could probably also declare all the Thread-Local members
+			// AsyncLocal.
+
+			// Solution: TaskCreationOptions.LongRunning
+			// This starts a task on the thread-pool task scheduler scheduler.
+			// LongRunning gives it a dedicated thread because we know it's taking a long time
+			// and because it is mostly waiting for the workers' progress, over-scheduling is
+			// absolutely justified!
+
+			task = Task.Factory.StartNew(
+				() => verifyAsync,
+				TaskCreationOptions.LongRunning);
 
 			return task;
 		}
 
 		private string ProcessFinalResult(
-			[NotNull] Task<bool> task,
+			[NotNull] Task task,
 			[NotNull] SubVerification subVerification,
 			[NotNull] IQualityVerificationClient client,
 			bool cancelWhenFaulted)
@@ -1209,6 +1239,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient =
 				Assert.NotNull(verificationClient.QaGrpcClient);
+
+			_msg.Debug($"Calling rpc VerifyQuality on {workerAddress}...");
 
 			using (var call = rpcClient.VerifyQuality(request))
 			{

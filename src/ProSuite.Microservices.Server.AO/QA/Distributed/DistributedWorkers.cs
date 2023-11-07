@@ -34,8 +34,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			_subveriClientsDict =
 				new ConcurrentDictionary<SubVerification, IQualityVerificationClient>();
 
-		private readonly IDictionary<Task<bool>, SubVerification> _tasks =
-			new ConcurrentDictionary<Task<bool>, SubVerification>();
+		private readonly IDictionary<Task, SubVerification> _tasks =
+			new ConcurrentDictionary<Task, SubVerification>();
 
 		public DistributedWorkers(
 			[NotNull] IList<QualityVerificationServiceClient> configuredClients,
@@ -97,9 +97,18 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			return _workerClients.Any(client => ! _workingClients.Contains(client));
 		}
 
-		internal Task<bool> StartNext(
+		/// <summary>
+		/// Starts the specified <see cref="verifyFunc"/> on the next available client and returns
+		/// the task. It returns null if no worker client is available.
+		/// </summary>
+		/// <param name="subVerifications"></param>
+		/// <param name="verifyFunc"></param>
+		/// <param name="started"></param>
+		/// <returns></returns>
+		[CanBeNull]
+		internal Task StartNext(
 			[NotNull] Stack<SubVerification> subVerifications,
-			[NotNull] Func<SubVerification, IQualityVerificationClient, Task<bool>> verifyFunc,
+			[NotNull] Func<SubVerification, IQualityVerificationClient, Task> verifyFunc,
 			[CanBeNull] out SubVerification started)
 		{
 			IQualityVerificationClient client = GetWorkerClient();
@@ -124,9 +133,12 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			started = subVerifications.Pop();
 
+			_msg.Debug($"Popped sub-verification {subVerifications.Count} to be started " +
+			           $"on {client.GetAddress()}");
+
 			_subveriClientsDict.Add(started, client);
 
-			Task<bool> newTask = verifyFunc(started, client);
+			Task newTask = verifyFunc(started, client);
 
 			// Process the messages even though the foreground thread is blocking/busy processing results
 			newTask.ConfigureAwait(false);
@@ -146,11 +158,11 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		}
 
 		internal bool TryTakeCompleted(
-			out Task<bool> completedTask,
+			out Task completedTask,
 			out SubVerification subVerification,
 			out IQualityVerificationClient finishedClient)
 		{
-			KeyValuePair<Task<bool>, SubVerification> keyValuePair =
+			KeyValuePair<Task, SubVerification> keyValuePair =
 				_tasks.FirstOrDefault(kvp => kvp.Key.IsCompleted);
 
 			// NOTE: 'Default' is an empty keyValuePair struct
@@ -288,15 +300,15 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 		}
 
-		private static void LogTask(IDictionary<Task<bool>, SubVerification> tasks,
-		                            Task<bool> newTask,
+		private static void LogTask(IDictionary<Task, SubVerification> tasks,
+		                            Task newTask,
 		                            SubVerification newSubVerification)
 		{
 			LogTask(newTask, newSubVerification, "New");
 
 			if (tasks.TryGetValue(newTask, out SubVerification existing))
 			{
-				foreach (KeyValuePair<Task<bool>, SubVerification> pair in tasks)
+				foreach (KeyValuePair<Task, SubVerification> pair in tasks)
 				{
 					if (pair.Value == existing)
 					{
@@ -306,7 +318,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 			else
 			{
-				foreach (KeyValuePair<Task<bool>, SubVerification> pair in tasks)
+				foreach (KeyValuePair<Task, SubVerification> pair in tasks)
 				{
 					LogTask(pair.Key, pair.Value, "Existing");
 				}
