@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -26,7 +25,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Keyboard;
+using ProSuite.Commons.UI.Input;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
@@ -277,8 +276,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected bool IsInSubcurveSelectionPhase()
 		{
-			return HasReshapeCurves() &&
-			       ! KeyboardUtils.IsModifierPressed(Keys.Shift, true);
+			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+
+			return HasReshapeCurves() && ! shiftDown;
 		}
 
 		protected virtual bool CanUseAsTargetLayer(Layer layer)
@@ -426,10 +427,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			[NotNull] IEnumerable<Feature> targetFeatures,
 			[CanBeNull] CancelableProgressor progressor)
 		{
-			bool shiftPressed = KeyboardUtils.IsModifierPressed(Keys.Shift);
+			bool shiftDown = KeyboardUtils.IsShiftDown();
 
 			IList<Feature> actualTargetFeatures = GetDistinctTargetFeatures(
-				targetFeatures, ChangeAlongCurves?.TargetFeatures, shiftPressed);
+				targetFeatures, ChangeAlongCurves?.TargetFeatures, shiftDown);
 
 			if (actualTargetFeatures.Count == 0)
 			{

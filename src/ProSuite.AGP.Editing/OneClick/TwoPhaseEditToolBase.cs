@@ -13,6 +13,7 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -137,7 +138,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		{
-			if (IsShiftKey(k.Key))
+			if (KeyboardUtils.IsShiftKey(k.Key))
 			{
 				Cursor = IsInSelectionPhase(true) ? SelectionCursor : SecondPhaseCursor;
 			}

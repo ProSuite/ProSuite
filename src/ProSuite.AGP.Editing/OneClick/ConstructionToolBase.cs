@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -15,7 +14,7 @@ using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Keyboard;
+using ProSuite.Commons.UI.Input;
 using Cursor = System.Windows.Input.Cursor;
 
 namespace ProSuite.AGP.Editing.OneClick
@@ -137,7 +136,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => "OnKeyDownCore");
 
-			if (IsShiftKey(k.Key))
+			if (KeyboardUtils.IsShiftKey(k.Key))
 			{
 				if (_intermittentSelectionPhase)
 				{
@@ -179,7 +178,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => "OnKeyUpCore");
 
-			if (IsShiftKey(k.Key))
+			if (KeyboardUtils.IsShiftKey(k.Key))
 			{
 				_intermittentSelectionPhase = false;
 
@@ -372,7 +371,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private bool CanStartSketchPhase(IList<Feature> selectedFeatures)
 		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
+			if (KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+			    KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true))
 			{
 				return false;
 			}

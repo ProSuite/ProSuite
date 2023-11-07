@@ -2,7 +2,6 @@ using System;
 using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
-using System.Windows.Input;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Keyboard;
@@ -50,17 +49,6 @@ namespace ProSuite.Commons.UI.Keyboard
 			}
 
 			return (Control.ModifierKeys & modifier) != 0;
-		}
-
-		public static bool IsModifierKey(Key key)
-		{
-			return key is
-				       Key.LeftShift or
-				       Key.RightShift or
-				       Key.LeftCtrl or
-				       Key.RightCtrl or
-				       Key.LeftAlt or
-				       Key.RightAlt;
 		}
 
 		/// <summary>

@@ -280,14 +280,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			SetupSketch(settings.SketchGeometryType, settings.SketchOutputMode);
 
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
-			{
-				SetCursor(SelectionCursorShift);
-			}
-			else
-			{
-				SetCursor(SelectionCursor);
-			}
+			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+							 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+
+			_msg.VerboseDebug(() => $"{nameof(StartSelectionPhase)} exclusively: {shiftDown}");
+
+			SetCursor(shiftDown ? SelectionCursorShift : SelectionCursor);
 
 			OnSelectionPhaseStarted();
 		}
@@ -633,7 +631,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		// TODO: Make obsolete, always use Async overload?
 		protected bool IsInSelectionPhase()
 		{
-			return IsInSelectionPhase(KeyboardUtils.IsModifierPressed(Keys.Shift, true));
+			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+
+			_msg.VerboseDebug(() => $"{nameof(IsInSelectionPhase)} exclusively: {shiftDown}");
+
+			return IsInSelectionPhase(shiftDown);
 		}
 
 		protected virtual bool IsInSelectionPhase(bool shiftIsPressed)
@@ -643,7 +646,10 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Task<bool> IsInSelectionPhaseAsync()
 		{
-			bool shiftIsPressed = KeyboardUtils.IsModifierPressed(Keys.Shift, true);
+			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+
+			_msg.VerboseDebug(() => $"{nameof(IsInSelectionPhaseAsync)} exclusively: {shiftDown}");
 
 			return IsInSelectionPhaseCoreAsync(shiftDown);
 		}
