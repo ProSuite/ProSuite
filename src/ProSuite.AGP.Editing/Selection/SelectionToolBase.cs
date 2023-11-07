@@ -54,7 +54,7 @@ namespace ProSuite.AGP.Editing.Selection
 			return true;
 		}
 
-		protected override Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftIsPressed)
 		{
 			return Task.FromResult(true);
 		}

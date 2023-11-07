@@ -38,7 +38,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		protected override Task OnEditCompletedCore(EditCompletedEventArgs args)
+		protected override Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
 		{
 			bool requiresRecalculate = args.CompletedType == EditCompletedType.Discard ||
 			                           args.CompletedType == EditCompletedType.Reconcile ||
@@ -68,7 +68,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					});
 			}
 
-			return base.OnEditCompletedCore(args);
+			return base.OnEditCompletedAsyncCore(args);
 		}
 
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
@@ -106,9 +106,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			return task.Result;
 		}
 
-		protected override async Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
-			if (shiftIsPressed)
+			if (shiftDown)
 			{
 				return true;
 			}

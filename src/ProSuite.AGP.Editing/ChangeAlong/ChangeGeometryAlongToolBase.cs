@@ -106,7 +106,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return true;
 		}
 
-		protected override Task OnEditCompletedCore(EditCompletedEventArgs args)
+		protected override Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
 		{
 			bool requiresRecalculate = args.CompletedType == EditCompletedType.Discard ||
 			                           args.CompletedType == EditCompletedType.Reconcile ||
@@ -137,7 +137,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					});
 			}
 
-			return base.OnEditCompletedCore(args);
+			return base.OnEditCompletedAsyncCore(args);
 		}
 
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
@@ -251,7 +251,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return task.Result;
 		}
 
-		protected override async Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
 			if (HasReshapeCurves())
 			{
@@ -259,7 +259,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 
 			// First or second phase:
-			if (shiftIsPressed)
+			if (shiftDown)
 			{
 				// With reshape curves and shift it would mean we're in the target selection phase
 				return ! HasReshapeCurves();

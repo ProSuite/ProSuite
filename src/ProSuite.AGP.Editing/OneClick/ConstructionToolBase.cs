@@ -114,7 +114,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return ! IsInSketchMode;
 		}
 
-		protected override Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
 			return Task.FromResult(! IsInSketchMode);
 		}
