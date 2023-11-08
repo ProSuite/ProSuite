@@ -131,7 +131,9 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			Task newTask = verifyFunc(started, client);
 
-			// Process the messages even though the foreground thread is blocking/busy processing results
+			// The worker's messages can be processed in any thread.
+			// This is not needed in console apps but included for clarity (and re-usability in
+			// environments that contain a SyncronizationContext):
 			newTask.ConfigureAwait(false);
 
 			_msg.Info($"Popped sub-verification {subVerifications.Count} and started " +
