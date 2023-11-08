@@ -437,17 +437,13 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			IDictionary<Task, SubVerification> startedVerifications =
 				new ConcurrentDictionary<Task, SubVerification>();
 
+			int originialCount = subVerifications.Count;
+
 			while (true)
 			{
 				if (subVerifications.Count == 0)
 				{
 					_msg.Debug("No subverifications provided.");
-					return startedVerifications;
-				}
-
-				if (! _distributedWorkers.HasFreeWorkers())
-				{
-					_msg.Debug("Currently no free workers. Sub-verifications will be queued...");
 					return startedVerifications;
 				}
 
@@ -464,6 +460,18 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 					SubverificationObserver?.Started(
 						next.Id, _distributedWorkers.GetWorkerClient(next)?.GetAddress());
+				}
+				else
+				{
+					if (! _distributedWorkers.HasFreeWorkers())
+					{
+						_msg.Debug("No more free workers.");
+					}
+
+					_msg.Debug($"Started {startedVerifications.Count} sub-verifications of " +
+					           $"{originialCount}. Remaining sub-verifications will be queued...");
+
+					return startedVerifications;
 				}
 			}
 		}
