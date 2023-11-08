@@ -588,6 +588,10 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			SubVerification verification = fromSubVerification;
 
+			_msg.VerboseDebug(
+				() =>
+					$"Draining {verification.SubResponse.Issues.Count} from {verification} with hashcode {verification.GetHashCode()}");
+
 			bool drained = false;
 			int drainedCount = 0;
 			Stopwatch w = Stopwatch.StartNew();
@@ -1065,6 +1069,9 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			SubVerification subVerification =
 				new SubVerification(subRequest, qualityConditionGroup);
+
+			_msg.Debug($"Created sub-verification {subVerification} " +
+			           $"with hashcode {subVerification.GetHashCode()}");
 
 			return subVerification;
 		}

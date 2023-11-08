@@ -91,17 +91,10 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			if (! TestVerifications.TryGetValue(test, out TestVerification result))
 			{
-				foreach (ITest existingTest in TestVerifications.Keys)
-				{
-					_msg.Debug(
-						$"Existing test: {existingTest}. Tables: {StringUtils.Concatenate(existingTest.InvolvedTables, t => t.Name, ", ")}. Hashcode: {existingTest.GetHashCode()}");
-
-					_msg.Debug(
-						$"Test name: {existingTest.GetType().Name}, {StringUtils.Concatenate(existingTest.InvolvedTables, ", ")}");
-				}
-
 				_msg.Debug(
-					$"Searched test: {test}. Tables: {StringUtils.Concatenate(test.InvolvedTables, t => t.Name, ", ")}. Hashcode: {test.GetHashCode()}");
+					$"Searched test not found, which could be indicative of a threading issue: {test}. " +
+					$"Tables: {StringUtils.Concatenate(test.InvolvedTables, t => t.Name, ", ")}. " +
+					$"Hashcode: {test.GetHashCode()}");
 
 				throw new ArgumentException(
 					$@"No quality condition found for test instance of type {test.GetType()}",
