@@ -12,8 +12,7 @@ using ProSuite.Microservices.Client.QA;
 namespace ProSuite.Microservices.Server.AO.QA.Distributed
 {
 	/// <summary>
-	/// Manages the list of distributed clients and the currently active tasks / sub-verifications
-	/// being processed in parallel.
+	/// Manages the list of distributed clients used by all (!) distributed test runners.
 	/// </summary>
 	public class DistributedWorkers
 	{
@@ -34,9 +33,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			_subveriClientsDict =
 				new ConcurrentDictionary<SubVerification, IQualityVerificationClient>();
 
-		private readonly IDictionary<Task, SubVerification> _tasks =
-			new ConcurrentDictionary<Task, SubVerification>();
-
 		public DistributedWorkers(
 			[NotNull] IList<QualityVerificationServiceClient> configuredClients,
 			int desiredParallelCount,
@@ -50,11 +46,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		}
 
 		public int MaxParallelCount => _desiredParallelCount;
-
-		public int ActiveTaskCount => _tasks.Count;
-
-		public IReadOnlyCollection<SubVerification> ActiveSubVerifications =>
-			_tasks.Values.ToList();
 
 		/// <summary>
 		/// Gets an available working client. If all clients are busy, null is returned.
@@ -158,12 +149,13 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		}
 
 		internal bool TryTakeCompleted(
+			IDictionary<Task, SubVerification> tasks,
 			out Task completedTask,
 			out SubVerification subVerification,
 			out IQualityVerificationClient finishedClient)
 		{
 			KeyValuePair<Task, SubVerification> keyValuePair =
-				_tasks.FirstOrDefault(kvp => kvp.Key.IsCompleted);
+				tasks.FirstOrDefault(kvp => kvp.Key.IsCompleted);
 
 			// NOTE: 'Default' is an empty keyValuePair struct
 			completedTask = keyValuePair.Key;
@@ -178,7 +170,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			finishedClient = _subveriClientsDict[subVerification];
 			_workingClients.TryRemove(finishedClient);
 
-			return _tasks.Remove(completedTask);
+			return tasks.Remove(completedTask);
 		}
 
 		public IQualityVerificationClient GetWorkerClient(SubVerification subVerification)

@@ -39,7 +39,9 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 {
 	/// <summary>
 	/// Dispatcher for test or condition groups created by a <see cref="TestAssembler"/>
-	/// to be run in parallel in different processes.
+	/// to be run in parallel in different processes. This class exists once per request
+	/// where the request has MaxParallelProcessing property > 1 which signals the desire
+	/// to run a distributed verification.
 	/// </summary>
 	public partial class DistributedTestRunner : ITestRunner
 	{
@@ -54,6 +56,9 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		private readonly VerificationRequest _originalRequest;
 
 		private BoxTree<SubVerification> _subVerificationsTree;
+
+		private readonly IDictionary<Task, SubVerification> _tasks =
+			new ConcurrentDictionary<Task, SubVerification>();
 
 		public DistributedTestRunner(
 			[NotNull] IList<IQualityVerificationClient> workersClients,
@@ -226,9 +231,10 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			int failureCount = 0;
 			int successCount = 0;
 			int retryCount = 0;
-			while (_distributedWorkers.ActiveTaskCount > 0 || unhandledSubverifications.Count > 0)
+			while (_tasks.Count > 0 || unhandledSubverifications.Count > 0)
 			{
 				if (_distributedWorkers.TryTakeCompleted(
+					    _tasks,
 					    out Task task, out SubVerification completed,
 					    out IQualityVerificationClient finishedClient))
 				{
@@ -285,7 +291,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 					StartSubVerifications(unhandledSubverifications);
 
-					if (_distributedWorkers.ActiveTaskCount == 0)
+					if (_tasks.Count == 0)
 					{
 						Assert.AreEqual(0, unhandledSubverifications.Count,
 						                $"All workers exhausted but {unhandledSubverifications.Count} jobs are left!");
@@ -296,16 +302,16 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 					_msg.InfoFormat(
 						"{0} failed and {1} successful sub-verifications. Re-tried verifications: {2}. Remaining: {3}.",
-						failureCount, successCount, retryCount,
-						_distributedWorkers.ActiveTaskCount);
+						failureCount, successCount, retryCount, _tasks.Count);
 				}
 				else
 				{
 					// Process intermediate errors (might need de-duplication or other manipulation in the future)
 
 					bool reportProgress = false;
-					foreach (SubVerification subVerification in _distributedWorkers
-						         .ActiveSubVerifications)
+
+					var activeSubverifications = _tasks.Values.ToList();
+					foreach (SubVerification subVerification in activeSubverifications)
 					{
 						if (DrainIssues(subVerification))
 						{
@@ -443,6 +449,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				if (newTask != null)
 				{
 					Assert.NotNull(next, "Task started without sub-verification!");
+
+					_tasks.Add(newTask, next);
 
 					startedVerifications.Add(newTask, next);
 
