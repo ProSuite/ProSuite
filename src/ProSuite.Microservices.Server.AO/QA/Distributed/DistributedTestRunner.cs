@@ -291,15 +291,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 					StartSubVerifications(unhandledSubverifications);
 
-					if (_tasks.Count == 0)
-					{
-						Assert.AreEqual(0, unhandledSubverifications.Count,
-						                $"All workers exhausted but {unhandledSubverifications.Count} jobs are left!");
-
-						EndVerification(QualityVerification);
-						return;
-					}
-
 					_msg.InfoFormat(
 						"{0} failed and {1} successful sub-verifications. Re-tried verifications: {2}. Remaining: {3}.",
 						failureCount, successCount, retryCount, _tasks.Count);
@@ -466,6 +457,13 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					if (! _distributedWorkers.HasFreeWorkers())
 					{
 						_msg.Debug("No more free workers.");
+					}
+
+					if (_tasks.Count == 0 && subVerifications.Count > 0)
+					{
+						_msg.Warn(
+							$"All workers busy or exhausted. However, {subVerifications.Count} jobs are left! " +
+							$"Possibly, the parallel runner is overwhelmed by multiple requests.");
 					}
 
 					_msg.Debug($"Started {startedVerifications.Count} sub-verifications of " +
