@@ -487,51 +487,55 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		private Task Verify([NotNull] SubVerification subVerification,
 		                    [NotNull] IQualityVerificationClient verificationClient)
 		{
-			Task task;
-
 			VerificationRequest subRequest = subVerification.SubRequest;
 			SubResponse subResponse = subVerification.SubResponse;
 
-			Task<bool> verifyAsync;
+			Func<Task<bool>> verifyAsync;
 
 			// Sends schema as protobuf:
 			if (KnownModels != null)
 			{
-				verifyAsync = VerifySchemaAsync(
-					verificationClient, subRequest, subResponse,
-					CancellationTokenSource, KnownModels);
+				verifyAsync = async () => await VerifySchemaAsync(
+					                          verificationClient, subRequest, subResponse,
+					                          CancellationTokenSource, KnownModels);
 			}
 			else
 			{
 				// Re-harvest model in worker or use DDX access, if necessary:
-				verifyAsync = VerifyAsync(verificationClient, subRequest, subResponse,
-				                          CancellationTokenSource);
+				verifyAsync = async () => await VerifyAsync(verificationClient, subRequest,
+				                                            subResponse,
+				                                            CancellationTokenSource);
 			}
 
-			// BUG TOP-5814 (and TOP-5813):
-			//task = Task.Run(
-			//	async () => await verifyAsync,
-			//	CancellationTokenSource.Token);
-
-			// BUG TOP-5814: If two parallel DistributedRunner instances are active, in some
-			// situations the issue draining and handling runs on the OTHER STA thread!
-			// It appears that the execution context flows across threads. See
+			// The objective is to make sure does not flow across threads inside the scheduling
+			// and handling of running sub-verifications and the error processing.
+			// The sub-verifications are all scheduled on one of the worker clients using the
+			// DistributedWorkers class.
+			// This is a kind of inverse work stealing strategy (a.k.a work sharing) where the
+			// results are all dealt with on the main (STA) thread.
+			// The sub-verifications are scheduled using the default (thread-pool) task scheduler
+			// and the task continuations (i.e. handling the worker's progress stream) do not
+			// require thread affinity and not special synchronization context is required. See
+			// https://devblogs.microsoft.com/pfxteam/await-synchronizationcontext-and-console-apps/
+			// This makes the progress stream handling a lot more efficient and applies no extra
+			// load on the StaTaskScheduler used for the main request(s).
+			//
+			// Additionally, we do not want execution context flow back to the STA thread which
+			// is ensured by separating the worker-calls onto an MTA thread. See
 			// https://devblogs.microsoft.com/dotnet/how-async-await-really-works/.
-			// It is not quite clear and obvious (not even from the logs) how and why this
-			// happens. We would probably need a custom synchronization context.
-			// See blog 'Await, SynchronizationContext, and Console Apps' by Stephen Toub.
-			// Alternatively we could probably also declare all the Thread-Local members
-			// AsyncLocal.
+			// This is achieved by
+			// - Using the Task.Factory.StartNew overload with the creation option
+			//   TaskCreationOptions.HideScheduler and the default task scheduler (most likely a
+			//   redundant overkill but it makes it clear).
+			// - Unwrapping the task created by Task.Factory.StartNew() ensures that the correct
+			//   parent task is used in the sub-tasks created in the async code flow inside the
+			//   verifyAsync delegate.
 
-			// Solution: TaskCreationOptions.LongRunning
-			// This starts a task on the thread-pool task scheduler scheduler.
-			// LongRunning gives it a dedicated thread because we know it's taking a long time
-			// and because it is mostly waiting for the workers' progress, over-scheduling is
-			// absolutely justified!
-
-			task = Task.Factory.StartNew(
-				() => verifyAsync,
-				TaskCreationOptions.LongRunning);
+			Task<bool> task = Task.Factory.StartNew(
+				                      verifyAsync, CancellationTokenSource.Token,
+				                      TaskCreationOptions.HideScheduler,
+				                      TaskScheduler.Default)
+			                      .Unwrap();
 
 			return task;
 		}
@@ -1402,7 +1406,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					(VerificationProgressType) progressMsg.ProgressType;
 
 				string progressText =
-					$"Received service progress from {workerAddress} of type {progressType}/{(VerificationProgressStep) progressMsg.ProgressStep}:" +
+					$"Received service progress on {Thread.CurrentThread.GetApartmentState()} thread from {workerAddress} of type {progressType}/{(VerificationProgressStep) progressMsg.ProgressStep}:" +
 					$" {progressMsg.OverallProgressCurrentStep} / {progressMsg.OverallProgressTotalSteps}{issueText}";
 
 				_msg.DebugFormat(progressText);

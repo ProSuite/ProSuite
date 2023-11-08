@@ -134,14 +134,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			// Process the messages even though the foreground thread is blocking/busy processing results
 			newTask.ConfigureAwait(false);
 
-			if (_tasks.ContainsKey(newTask))
-			{
-				_msg.WarnFormat("New Task already exists in dictionary!");
-				LogTask(_tasks, newTask, started);
-			}
-
-			_tasks.Add(newTask, started);
-
 			_msg.Info($"Popped sub-verification {subVerifications.Count} and started " +
 			          $"on {client.GetAddress()}: {started}");
 
