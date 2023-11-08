@@ -333,6 +333,14 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 						eventArgs.Tag = "TODO";
 						Progress?.Invoke(this, eventArgs);
 					}
+
+					if (_tasks.Count < _distributedWorkers.MaxParallelCount &&
+					    _tasks.Count < _originalRequest.MaxParallelProcessing &&
+					    unhandledSubverifications.Count > 0)
+					{
+						// Running under-powered. Check if another worker has become available.
+						StartSubVerifications(unhandledSubverifications);
+					}
 				}
 
 				if (countTask?.IsCompleted == true)
