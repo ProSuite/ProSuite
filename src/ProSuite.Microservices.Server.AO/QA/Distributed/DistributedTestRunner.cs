@@ -143,6 +143,11 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 		public bool SendModelsWithRequest { get; set; }
 
+		/// <summary>
+		/// The data model to be used by the server instead of re-harvesting the (entire) schema.
+		/// </summary>
+		private SchemaMsg KnownModels { get; set; }
+
 		private static void AddRecursive(IReadOnlyTable table,
 		                                 HashSet<IReadOnlyTable> usedTables)
 		{
@@ -217,6 +222,18 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					"Could not start any sub-verification. They will be started once free workers are available...");
 			}
 
+			if (ProcessesSubVerifications(qcGroups, subVerifications,
+			                              unhandledSubverifications))
+			{
+				EndVerification(QualityVerification);
+			}
+		}
+
+		private bool ProcessesSubVerifications(
+			[NotNull] IList<QualityConditionGroup> qcGroups,
+			[NotNull] IList<SubVerification> subVerifications,
+			[NotNull] Stack<SubVerification> unhandledSubverifications)
+		{
 			Task countTask = null;
 			if (ParallelConfiguration.SortByNumberOfObjects)
 			{
@@ -353,13 +370,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				"Finished distributed verification with {0} failures and {1} successful sub-verifications",
 				failureCount, successCount);
 
-			EndVerification(QualityVerification);
+			return true;
 		}
-
-		/// <summary>
-		/// The data model to be used by the server instead of re-harvesting the (entire) schema.
-		/// </summary>
-		private SchemaMsg KnownModels { get; set; }
 
 		private static IEnumerable<DdxModel> GetReferencedModels(
 			[NotNull] QualitySpecification qualitySpecification)
