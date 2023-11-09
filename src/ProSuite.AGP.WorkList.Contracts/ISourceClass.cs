@@ -1,3 +1,4 @@
+using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -13,5 +14,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		bool HasGeometry { get; }
 
 		bool Uses(GdbTableIdentity table);
+
+		T OpenDataset<T>() where T : Table;
 	}
 }

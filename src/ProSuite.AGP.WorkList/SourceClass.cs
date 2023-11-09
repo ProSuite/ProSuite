@@ -1,3 +1,4 @@
+using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -26,6 +27,14 @@ namespace ProSuite.AGP.WorkList
 		public bool Uses(GdbTableIdentity table)
 		{
 			return _identity.Equals(table);
+		}
+
+		public T OpenDataset<T>() where T : Table
+		{
+			using (_identity.Workspace.OpenGeodatabase())
+			{
+				return _identity.Workspace.OpenGeodatabase().OpenDataset<T>(_identity.Name);
+			}
 		}
 	}
 }
