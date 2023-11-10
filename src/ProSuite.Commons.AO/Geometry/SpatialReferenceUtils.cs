@@ -1298,6 +1298,19 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			ISpatialReference sourceSr = geometry.SpatialReference;
 
+			if (sourceSr == null)
+			{
+				_msg.Warn($"no spatial reference for {GeometryUtils.ToString(geometry)}");
+				T result = noNewInstance ? geometry : SysUtils.Clone(geometry);
+				result.Project(targetSr);
+				return result;
+			}
+
+			if (sourceSr.FactoryCode == targetSr.FactoryCode)
+			{
+				return noNewInstance ? geometry : SysUtils.Clone(geometry);
+			}
+
 			GeoTrans trans = GetGeoTrans(sourceSr.FactoryCode, targetSr.FactoryCode, transformation);
 
 			IGeometry2 geom = noNewInstance == false

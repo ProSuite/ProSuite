@@ -135,7 +135,7 @@ namespace ProSuite.QA.Tests
 
 			return errorPointSequencesList.Sum(
 				errorPoints => ReportError(errorMessage, InvolvedRowUtils.GetInvolvedRows(row),
-				                           GetErrorGeometry(errorPoints),
+				                           GetErrorGeometry(errorPoints, shape.SpatialReference),
 				                           issueCode, TestUtils.GetShapeFieldName(row)));
 		}
 
@@ -182,13 +182,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IGeometry GetErrorGeometry([NotNull] List<WKSPointZ> errPoints)
+		private static IGeometry GetErrorGeometry([NotNull] List<WKSPointZ> errPoints,
+		                                          [NotNull] ISpatialReference sr)
 		{
 			IGeometry result = new MultipointClass();
 
 			WKSPointZ[] errArray = errPoints.ToArray();
 			GeometryUtils.SetWKSPointZs((IPointCollection4) result, errArray);
-
+			result.SpatialReference = sr;
 			return result;
 		}
 

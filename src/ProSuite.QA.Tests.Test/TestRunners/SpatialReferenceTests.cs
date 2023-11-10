@@ -2,6 +2,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
+using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
@@ -65,6 +66,27 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 				f.Shape = line;
 				f.Store();
 			}
+
+			{
+				IFeature f = fcLv95.CreateFeature();
+
+				IPolyline clone = SpatialReferenceUtils.ProjectEx(line, srLv95);
+
+				f.Shape = clone;
+				f.Store();
+			}
+
+			{
+				IFeature f = fcLv95.CreateFeature();
+
+				IPolyline clone = SysUtils.Clone(line);
+				clone.SpatialReference = null;
+				clone = SpatialReferenceUtils.ProjectEx(clone, srLv95);
+
+				f.Shape = clone;
+				f.Store();
+			}
+
 
 			{
 				IFeature f = fcWgs84_prj.CreateFeature();
