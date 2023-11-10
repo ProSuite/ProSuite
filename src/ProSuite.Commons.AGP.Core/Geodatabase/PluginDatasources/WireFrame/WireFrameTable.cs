@@ -213,9 +213,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 		{
 			var fields = new List<PluginField>(8)
 			             {
-				             new PluginField("FEATURE_OID", "Feature OID", FieldType.BigInteger),
-				             new PluginField("FEATURE_CLASS", "FeatureClass", FieldType.String),
-				             new PluginField("SHAPE_TYPE", "Shape Type", FieldType.String),
+				             new PluginField("SOURCE_FEATURE_OID", "Source Feature OID",
+				                             FieldType.BigInteger),
+				             new PluginField("SOURCE_FEATURE_CLASS", "Source FeatureClass",
+				                             FieldType.String),
+				             new PluginField("SOURCE_SHAPE_TYPE", "Source Shape Type",
+				                             FieldType.String),
 				             new PluginField("SHAPE", "Shape", FieldType.Geometry)
 			             };
 			return fields.ToArray();
