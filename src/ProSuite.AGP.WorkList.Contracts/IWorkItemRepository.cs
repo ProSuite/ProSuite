@@ -1,20 +1,14 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
-using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
-	public interface IWorkItemRepository : IDisposable
+	public interface IWorkItemRepository
 	{
 		int GetCount(QueryFilter filter = null);
 
 		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true);
-
-		// todo daro: extract Interface ISource
-		IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter,
-		                                bool recycle = true);
 
 		void Refresh(IWorkItem item);
 
@@ -36,5 +30,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		Task SetStatus(IWorkItem item, WorkItemStatus status);
 
 		void UpdateStateRepository(string path);
+
+		List<ISourceClass> SourceClasses { get; }
 	}
 }

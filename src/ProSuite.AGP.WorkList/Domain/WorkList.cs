@@ -205,18 +205,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public virtual void Dispose()
-		{
-			Repository.Dispose();
-		}
-
-		/* Navigation */
-
-		// note daro: only change the item index for navigation! the index is the only valid truth!
-
-		/* This base class provides an overly simplistic implementation */
-		/* TODO should honour Status, Visibility, and AreaOfInterest */
-
 		#region Navigation public
 
 		public virtual bool CanGoFirst()

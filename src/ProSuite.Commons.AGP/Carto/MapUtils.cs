@@ -85,14 +85,14 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] SelectionSet selectionSet,
-			[CanBeNull] SpatialReference outputSpatialReference)
+			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
 			return GetFeatures(selectionSet.ToDictionary(), outputSpatialReference);
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
-			[NotNull] Dictionary<MapMember, List<long>> oidsByMapMembers,
-			[CanBeNull] SpatialReference outputSpatialReference)
+			[NotNull] IEnumerable<KeyValuePair<MapMember, List<long>>> oidsByMapMembers,
+			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
 			foreach (var oidsByMapMember in oidsByMapMembers)
 			{
@@ -386,12 +386,6 @@ namespace ProSuite.Commons.AGP.Carto
 			return mapView?.Map?.SelectionCount > 0;
 		}
 
-		public static IEnumerable<Table> Distinct(
-			this IEnumerable<Table> tables)
-		{
-			return tables.Distinct(new TableComparer());
-		}
-
 		public static IEnumerable<BasicFeatureLayer> Distinct(
 			this IEnumerable<BasicFeatureLayer> layers)
 		{
@@ -571,60 +565,6 @@ namespace ProSuite.Commons.AGP.Carto
 
 			return GeometryFactory.CreateEnvelope(mapPoint,
 			                                      newWidth, newHeight);
-		}
-	}
-
-	public class TableComparer : IEqualityComparer<Table>
-	{
-		public bool Equals(Table x, Table y)
-		{
-			if (ReferenceEquals(x, y))
-			{
-				// both null or reference equal
-				return true;
-			}
-
-			if (x == null || y == null)
-			{
-				return false;
-			}
-
-			var left = new GdbTableIdentity(x);
-			var right = new GdbTableIdentity(y);
-
-			return Equals(left, right);
-		}
-
-		public int GetHashCode(Table obj)
-		{
-			return new GdbTableIdentity(obj).GetHashCode();
-		}
-	}
-
-	public class BasicFeatureLayerComparer : IEqualityComparer<BasicFeatureLayer>
-	{
-		public bool Equals(BasicFeatureLayer x, BasicFeatureLayer y)
-		{
-			if (ReferenceEquals(x, y))
-			{
-				// both null or reference equal
-				return true;
-			}
-
-			if (x == null || y == null)
-			{
-				return false;
-			}
-
-			var left = new GdbTableIdentity(x.GetTable());
-			var right = new GdbTableIdentity(y.GetTable());
-
-			return Equals(left, right);
-		}
-
-		public int GetHashCode(BasicFeatureLayer obj)
-		{
-			return new GdbTableIdentity(obj.GetTable()).GetHashCode();
 		}
 	}
 }

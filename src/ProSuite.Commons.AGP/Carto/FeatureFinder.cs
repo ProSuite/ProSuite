@@ -300,7 +300,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 			if (targetSelectionType == TargetFeatureSelection.SameClass &&
 			    ! Assert.NotNull(selectedFeatures).Any(
-				    f => DatasetUtils.IsSameClass(f.GetTable(), basicFeatureLayer.GetTable())))
+				    f => DatasetUtils.IsSameTable(f.GetTable(), basicFeatureLayer.GetTable())))
 			{
 				return false;
 			}
