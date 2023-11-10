@@ -3,7 +3,7 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;

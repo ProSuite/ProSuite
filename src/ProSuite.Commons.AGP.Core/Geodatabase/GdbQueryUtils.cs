@@ -10,7 +10,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
-namespace ProSuite.Commons.AGP.Gdb
+namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
 	public static class GdbQueryUtils
 	{
