@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
-using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -70,7 +69,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 				    if (name == _tableNames[0])
 				    {
-					    result = new WireFrameTable(_mapId, _tableNames[0], GeometryType.Polyline);
+					    result = new WireFrameTable(_mapId, name);
 				    }
 				    else
 				    {
@@ -83,7 +82,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 		public override IReadOnlyList<string> GetTableNames()
 		{
-			return _tableNames ?? Array.Empty<string>();
+			return _tableNames;
 		}
 
 		public override bool IsQueryLanguageSupported()

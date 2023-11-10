@@ -15,21 +15,20 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private const GeometryType _geometryType = GeometryType.Polyline;
+
 		private readonly IReadOnlyList<PluginField> _fields;
 
 		private readonly string _mapId;
 		private readonly string _tableName;
-		private readonly GeometryType _geometryType;
 
 		private IWireFrameSourceLayers _wireFrameSourceLayers;
 
 		public WireFrameTable([NotNull] string mapId,
-		                      [NotNull] string tableName,
-		                      GeometryType geometryType)
+		                      [NotNull] string tableName)
 		{
 			_mapId = mapId;
 			_tableName = tableName;
-			_geometryType = geometryType;
 			_fields = new ReadOnlyCollection<PluginField>(GetSchema());
 		}
 
@@ -53,7 +52,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 		public override Envelope GetExtent()
 		{
-			// Do not return not an empty envelope.
+			// Do not return an empty envelope.
 			// Pluggable Datasource cannot handle an empty envelope. Null seems fine.
 			Envelope result = null;
 
@@ -136,8 +135,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 			foreach (IWireFrameSourceLayer wireFrameClass in SourceLayers.Get(_mapId))
 			{
-				if (wireFrameClass == null ||
-				    ! wireFrameClass.Visible)
+				if (wireFrameClass == null || ! wireFrameClass.Visible)
 				{
 					continue;
 				}
