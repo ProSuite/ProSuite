@@ -52,6 +52,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			}
 		}
 
+		[Obsolete("Only used in unit test")]
 		[Pure]
 		[CanBeNull]
 		public Row GetRow()

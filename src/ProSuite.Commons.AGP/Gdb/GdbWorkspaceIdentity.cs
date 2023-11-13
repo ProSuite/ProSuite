@@ -15,7 +15,6 @@ namespace ProSuite.Commons.AGP.Gdb
 		private readonly string _instance;
 		private readonly string _version;
 		private readonly string _user;
-		private readonly EnterpriseDatabaseType _dbms;
 
 		public GdbWorkspaceIdentity([NotNull] Datastore datastore) :
 			this(datastore.GetConnector(), datastore.GetConnectionString()) { }
@@ -29,7 +28,6 @@ namespace ProSuite.Commons.AGP.Gdb
 			_instance = null;
 			_version = null;
 			_user = null;
-			_dbms = EnterpriseDatabaseType.Unknown;
 			ConnectionString = string.Empty;
 
 			switch (connector)
@@ -38,7 +36,6 @@ namespace ProSuite.Commons.AGP.Gdb
 					_instance = connectionProperties.Instance;
 					_version = connectionProperties.Version;
 					_user = connectionProperties.User;
-					_dbms = connectionProperties.DBMS;
 					ConnectionString = connectionString;
 					WorkspaceFactory = WorkspaceFactory.SDE;
 					break;
@@ -63,24 +60,7 @@ namespace ProSuite.Commons.AGP.Gdb
 
 		public WorkspaceFactory WorkspaceFactory { get; }
 
-		[CanBeNull]
-		public T CreateConnector<T>() where T : Connector
-		{
-			Type type = typeof(T);
-			if (type == typeof(DatabaseConnectionProperties))
-			{
-				return new DatabaseConnectionProperties(_dbms) as T;
-			}
-
-			if (type == typeof(FileGeodatabaseConnectionPath))
-			{
-				return new FileGeodatabaseConnectionPath(
-					       new Uri(ConnectionString, UriKind.Absolute)) as T;
-			}
-
-			return null;
-		}
-
+		// TODO: Currently only used from un-used classes and unit test. Remove?
 		public Geodatabase OpenGeodatabase()
 		{
 			return (Geodatabase) OpenDatastore();
