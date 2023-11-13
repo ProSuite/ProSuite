@@ -12,10 +12,6 @@ namespace ProSuite.Commons.AGP.Gdb
 	{
 		[NotNull] private readonly DatastoreName _datastoreName;
 
-		private readonly string _instance;
-		private readonly string _version;
-		private readonly string _user;
-
 		public GdbWorkspaceIdentity([NotNull] Datastore datastore) :
 			this(datastore.GetConnector(), datastore.GetConnectionString()) { }
 
@@ -25,17 +21,12 @@ namespace ProSuite.Commons.AGP.Gdb
 
 			_datastoreName = new DatastoreName(connector);
 
-			_instance = null;
-			_version = null;
-			_user = null;
 			ConnectionString = string.Empty;
 
 			switch (connector)
 			{
 				case DatabaseConnectionProperties connectionProperties:
-					_instance = connectionProperties.Instance;
-					_version = connectionProperties.Version;
-					_user = connectionProperties.User;
+
 					ConnectionString = connectionString;
 					WorkspaceFactory = WorkspaceFactory.SDE;
 					break;
@@ -80,14 +71,11 @@ namespace ProSuite.Commons.AGP.Gdb
 			return _datastoreName.GetDisplayText();
 		}
 
-		#region IEquatable<GdbRowIdentity> implementation
+		#region IEquatable<GdbWorkspaceIdentity> implementation
 
 		public bool Equals(GdbWorkspaceIdentity other)
 		{
-			return string.Equals(_instance, other._instance) &&
-			       string.Equals(_version, other._version) &&
-			       string.Equals(_user, other._user) &&
-			       Equals(ConnectionString, other.ConnectionString);
+			return _datastoreName.Equals(other._datastoreName);
 		}
 
 		public override bool Equals(object obj)
@@ -104,11 +92,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		{
 			unchecked
 			{
-				int hashCode = _instance != null ? _instance.GetHashCode() : 0;
-				hashCode = (hashCode * 397) ^ (_version != null ? _version.GetHashCode() : 0);
-				hashCode = (hashCode * 397) ^ (_user != null ? _user.GetHashCode() : 0);
-				hashCode = (hashCode * 397) ^ ConnectionString.GetHashCode();
-				return hashCode;
+				return _datastoreName.GetHashCode();
 			}
 		}
 
