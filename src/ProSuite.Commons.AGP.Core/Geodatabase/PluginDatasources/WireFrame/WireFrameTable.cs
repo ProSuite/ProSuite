@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
@@ -17,8 +16,6 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 		private const GeometryType _geometryType = GeometryType.Polyline;
 
-		private readonly IReadOnlyList<PluginField> _fields;
-
 		private readonly string _mapId;
 		private readonly string _tableName;
 
@@ -29,7 +26,6 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 		{
 			_mapId = mapId;
 			_tableName = tableName;
-			_fields = new ReadOnlyCollection<PluginField>(GetSchema());
 		}
 
 		/// <summary>
@@ -47,7 +43,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 		public override IReadOnlyList<PluginField> GetFields()
 		{
-			return _fields;
+			return GetSchema();
 		}
 
 		public override Envelope GetExtent()
@@ -169,11 +165,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 		{
 			try
 			{
-				var values = new object[4];
+				var values = new object[5];
+
+				// TODO: static ConcurrentDictionary<GdbObjectReference, long> _oidByObjRef;
+				//       to avoid duplicate OIDs
 				values[0] = sourceFeature.GetObjectID();
-				values[1] = className;
-				values[2] = shapeType;
-				values[3] = CreatePolyline(sourceFeature.GetShape());
+				values[1] = CreatePolyline(sourceFeature.GetShape());
+				values[2] = sourceFeature.GetObjectID();
+				values[3] = className;
+				values[4] = shapeType;
 
 				return values;
 			}
@@ -211,14 +211,24 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 		{
 			var fields = new List<PluginField>(8)
 			             {
+				             new PluginField("OBJECTID", "ObjectID", FieldType.OID),
+				             new PluginField("SHAPE", "Shape", FieldType.Geometry),
 				             new PluginField("SOURCE_FEATURE_OID", "Source Feature OID",
-				                             FieldType.BigInteger),
+				                             FieldType.Integer),
+
 				             new PluginField("SOURCE_FEATURE_CLASS", "Source FeatureClass",
-				                             FieldType.String),
+				                             FieldType.String)
+				             {
+					             Length = 50
+				             },
+
 				             new PluginField("SOURCE_SHAPE_TYPE", "Source Shape Type",
-				                             FieldType.String),
-				             new PluginField("SHAPE", "Shape", FieldType.Geometry)
+				                             FieldType.String)
+				             {
+					             Length = 15
+				             }
 			             };
+
 			return fields.ToArray();
 		}
 	}
