@@ -25,8 +25,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			Assert.ArgumentNotNull(datastore, nameof(datastore));
 
-			// NOTE: Connectors are not thread-affine.
+			// NOTE: Connectors have no thread affinity.
 			_connector = datastore.GetConnector();
+		}
+
+		public DatastoreName([NotNull] Connector connector)
+		{
+			Assert.ArgumentNotNull(connector, nameof(connector));
+
+			_connector = connector;
 		}
 
 		public Datastore Open()

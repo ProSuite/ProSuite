@@ -1,6 +1,7 @@
 using System;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -9,6 +10,8 @@ namespace ProSuite.Commons.AGP.Gdb
 	// todo daro: check correct handle / instantiation of Uri
 	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>
 	{
+		[NotNull] private readonly DatastoreName _datastoreName;
+
 		private readonly string _instance;
 		private readonly string _version;
 		private readonly string _user;
@@ -20,6 +23,8 @@ namespace ProSuite.Commons.AGP.Gdb
 		public GdbWorkspaceIdentity([NotNull] Connector connector, string connectionString)
 		{
 			Assert.ArgumentNotNull(connector, nameof(connector));
+
+			_datastoreName = new DatastoreName(connector);
 
 			_instance = null;
 			_version = null;
@@ -40,7 +45,7 @@ namespace ProSuite.Commons.AGP.Gdb
 				case FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath:
 					// connectionString is "DATABASE=C:\\git\\KtLU.Dabank\\data\\Testdaten\\dabank_test_data\\Default.gdb"
 					ConnectionString = fileGeodatabaseConnectionPath.Path.ToString();
-					
+
 					WorkspaceFactory = WorkspaceFactory.FileGDB;
 					break;
 				case FileSystemConnectionPath fileSystemConnection:
@@ -78,22 +83,21 @@ namespace ProSuite.Commons.AGP.Gdb
 
 		public Geodatabase OpenGeodatabase()
 		{
-			if (string.IsNullOrEmpty(ConnectionString))
-			{
-				return new Geodatabase(
-					new DatabaseConnectionProperties(_dbms)
-					{
-						Instance = _instance, Version = _version, User = _user
-					});
-			}
+			return (Geodatabase) OpenDatastore();
+		}
 
-			return new Geodatabase(
-				new FileGeodatabaseConnectionPath(new Uri(ConnectionString, UriKind.Absolute)));
+		/// <summary>
+		/// Opens the associated datastore
+		/// </summary>
+		/// <returns></returns>
+		public Datastore OpenDatastore()
+		{
+			return _datastoreName.Open();
 		}
 
 		public override string ToString()
 		{
-			return $"instance={_instance} version={_version} user={_user}, path={ConnectionString}";
+			return _datastoreName.GetDisplayText();
 		}
 
 		#region IEquatable<GdbRowIdentity> implementation
