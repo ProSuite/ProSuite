@@ -81,11 +81,14 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// </summary>
 		/// <param name="connector">The connector.</param>
 		/// <returns></returns>
-		public static string GetDatastoreDisplayText([NotNull] Connector connector)
+		public static string GetDatastoreDisplayText([CanBeNull] Connector connector)
 		{
 			// TODO: Add parameter bool detailed which includes the full info including user names etc.
 
-			Assert.ArgumentNotNull(connector, nameof(connector));
+			if (connector == null)
+			{
+				return "<null>";
+			}
 
 			const string nullPathText = "<undefined path>";
 
@@ -125,8 +128,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				default:
 					throw new ArgumentOutOfRangeException(
-						string.Format("Unsupported workspace type: {0}",
-						              connector?.GetType()));
+						$"Unsupported workspace type: {connector?.GetType()}");
 			}
 		}
 

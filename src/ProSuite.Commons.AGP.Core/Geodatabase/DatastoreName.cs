@@ -4,6 +4,7 @@ using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
@@ -12,10 +13,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 	/// The datastore can be re-opened from the name object.
 	/// Aspirationally, this could
 	/// - be turned into a proper serializable memento
-	/// - implement some equality comparison
+	/// - implement the equality comparison
 	/// </summary>
 	public class DatastoreName
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly Connector _connector;
 
 		public DatastoreName([NotNull] Datastore datastore)
@@ -28,41 +31,51 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public Datastore Open()
 		{
-			switch (_connector)
+			try
 			{
-				case DatabaseConnectionFile dbConnection:
-					return new ArcGIS.Core.Data.Geodatabase(dbConnection);
+				switch (_connector)
+				{
+					case DatabaseConnectionFile dbConnection:
+						return new ArcGIS.Core.Data.Geodatabase(dbConnection);
 
-				case DatabaseConnectionProperties dbConnectionProps:
-					return new ArcGIS.Core.Data.Geodatabase(dbConnectionProps);
+					case DatabaseConnectionProperties dbConnectionProps:
+						return new ArcGIS.Core.Data.Geodatabase(dbConnectionProps);
 
-				case FileGeodatabaseConnectionPath fileGdbConnection:
-					return new ArcGIS.Core.Data.Geodatabase(fileGdbConnection);
+					case FileGeodatabaseConnectionPath fileGdbConnection:
+						return new ArcGIS.Core.Data.Geodatabase(fileGdbConnection);
 
-				case FileSystemConnectionPath fileSystemConnection:
-					return new FileSystemDatastore(fileSystemConnection);
+					case FileSystemConnectionPath fileSystemConnection:
+						return new FileSystemDatastore(fileSystemConnection);
 
-				case MemoryConnectionProperties memoryConnectionProperties:
-					return new ArcGIS.Core.Data.Geodatabase(memoryConnectionProperties);
+					case MemoryConnectionProperties memoryConnectionProperties:
+						return new ArcGIS.Core.Data.Geodatabase(memoryConnectionProperties);
 
-				case MobileGeodatabaseConnectionPath mobileConnectionProperties:
-					return new ArcGIS.Core.Data.Geodatabase(mobileConnectionProperties);
+					case MobileGeodatabaseConnectionPath mobileConnectionProperties:
+						return new ArcGIS.Core.Data.Geodatabase(mobileConnectionProperties);
 
-				case PluginDatasourceConnectionPath pluginConnectionPath:
-					return new PluginDatastore(pluginConnectionPath);
+					case PluginDatasourceConnectionPath pluginConnectionPath:
+						return new PluginDatastore(pluginConnectionPath);
 
-				case RealtimeServiceConnectionProperties realtimeServiceConnection:
-					return new RealtimeDatastore(realtimeServiceConnection);
+					case RealtimeServiceConnectionProperties realtimeServiceConnection:
+						return new RealtimeDatastore(realtimeServiceConnection);
 
-				case ServiceConnectionProperties serviceConnection:
-					return new ArcGIS.Core.Data.Geodatabase(serviceConnection);
+					case ServiceConnectionProperties serviceConnection:
+						return new ArcGIS.Core.Data.Geodatabase(serviceConnection);
 
-				case SQLiteConnectionPath sqLiteConnection:
-					return new Database(sqLiteConnection);
+					case SQLiteConnectionPath sqLiteConnection:
+						return new Database(sqLiteConnection);
 
-				default:
-					throw new ArgumentOutOfRangeException(
-						$"Unsupported workspace type: {_connector?.GetType()}");
+					default:
+						throw new ArgumentOutOfRangeException(
+							$"Unsupported workspace type: {_connector?.GetType()}");
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Debug(
+					$"Error opening datastore {WorkspaceUtils.GetDatastoreDisplayText(_connector)}",
+					e);
+				throw;
 			}
 		}
 
