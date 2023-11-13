@@ -7,6 +7,7 @@ using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -31,6 +32,15 @@ namespace ProSuite.Commons.AGP.Carto
 			Assert.NotNull(mapView, "no active MapView");
 
 			return mapView.Map;
+		}
+
+		[NotNull]
+		public static Uri GetMapUri(Project project, Map map)
+		{
+			Uri projectUri = new Uri(project.URI);
+			Uri mapUri = new Uri(projectUri, map.URI);
+
+			return mapUri;
 		}
 
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
