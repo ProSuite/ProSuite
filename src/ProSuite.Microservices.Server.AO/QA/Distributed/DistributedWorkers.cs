@@ -19,7 +19,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly IList<QualityVerificationServiceClient> _configuredClients;
-		private readonly int _desiredParallelCount;
+		private readonly int _maxDesiredParallelCount;
 		private readonly Predicate<IQualityVerificationClient> _clientPredicate;
 
 		private readonly ConcurrentHashSet<IQualityVerificationClient> _workerClients =
@@ -33,19 +33,30 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			_subveriClientsDict =
 				new ConcurrentDictionary<SubVerification, IQualityVerificationClient>();
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="DistributedWorkers"/> class.
+		/// </summary>
+		/// <param name="configuredClients">The worker clients that can be used.</param>
+		/// <param name="maxDesiredParallelCount">The maximum number of worker clients that shall
+		/// be used at a given moment.</param>
+		/// <param name="clientPredicate">A predicate that restricts the number of clients
+		/// from the list of <see cref="configuredClients"/>.</param>
 		public DistributedWorkers(
 			[NotNull] IList<QualityVerificationServiceClient> configuredClients,
-			int desiredParallelCount,
-			[CanBeNull] Predicate<IQualityVerificationClient> clientPredicate)
+			int maxDesiredParallelCount = int.MaxValue,
+			[CanBeNull] Predicate<IQualityVerificationClient> clientPredicate = null)
 		{
 			_configuredClients = configuredClients;
-			_desiredParallelCount = desiredParallelCount;
+			_maxDesiredParallelCount = maxDesiredParallelCount;
 			_clientPredicate = clientPredicate;
 
 			UpdateWorkerClients();
 		}
 
-		public int MaxParallelCount => _desiredParallelCount;
+		/// <summary>
+		/// Theoretical maximum of parallel worker processes that can be employed.
+		/// </summary>
+		public int MaxParallelCount => _maxDesiredParallelCount;
 
 		/// <summary>
 		/// Gets an available working client. If all clients are busy, null is returned.
@@ -167,7 +178,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			return tasks.Remove(completedTask);
 		}
 
-		public IQualityVerificationClient GetWorkerClient(SubVerification subVerification)
+		internal IQualityVerificationClient GetWorkerClient(SubVerification subVerification)
 		{
 			_subveriClientsDict.TryGetValue(subVerification,
 			                                out IQualityVerificationClient workerClient);
@@ -183,7 +194,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			_msg.DebugStopTiming(watch, "Removed {0} unhealthy workers from worker client list.",
 			                     removedWorkers);
 
-			int desiredNewWorkerCount = _desiredParallelCount - _workerClients.Count;
+			int desiredNewWorkerCount = _maxDesiredParallelCount - _workerClients.Count;
 
 			if (desiredNewWorkerCount <= 0)
 			{
@@ -197,9 +208,9 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			foreach (IQualityVerificationClient workerClient in GetNewWorkerClients(
 				         desiredNewWorkerCount))
 			{
-				if (_workerClients.Count >= _desiredParallelCount)
+				if (_workerClients.Count >= MaxParallelCount)
 				{
-					// it's enough
+					// it's enough or we have no more clients
 					break;
 				}
 
@@ -284,37 +295,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					yield return workerClient;
 				}
 			}
-		}
-
-		private static void LogTask(IDictionary<Task, SubVerification> tasks,
-		                            Task newTask,
-		                            SubVerification newSubVerification)
-		{
-			LogTask(newTask, newSubVerification, "New");
-
-			if (tasks.TryGetValue(newTask, out SubVerification existing))
-			{
-				foreach (KeyValuePair<Task, SubVerification> pair in tasks)
-				{
-					if (pair.Value == existing)
-					{
-						LogTask(pair.Key, pair.Value, "Equal");
-					}
-				}
-			}
-			else
-			{
-				foreach (KeyValuePair<Task, SubVerification> pair in tasks)
-				{
-					LogTask(pair.Key, pair.Value, "Existing");
-				}
-			}
-		}
-
-		private static void LogTask(Task task, SubVerification subVerification, string prefix)
-		{
-			_msg.Warn(
-				$"{prefix} Task {task}; Task Hashcode: {task.GetHashCode()}; Subverification {subVerification}");
 		}
 	}
 }

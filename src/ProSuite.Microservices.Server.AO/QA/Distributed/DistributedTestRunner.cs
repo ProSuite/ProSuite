@@ -71,8 +71,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			_distributedWorkers =
 				new DistributedWorkers(
-					workersClients.Cast<QualityVerificationServiceClient>().ToList(),
-					originalRequest.MaxParallelProcessing, null);
+					workersClients.Cast<QualityVerificationServiceClient>().ToList());
 
 			_originalRequest = originalRequest;
 			ParallelConfiguration = new ParallelConfiguration();
@@ -183,11 +182,12 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				InitializeModelsToSend(QualitySpecification);
 			}
 
+			bool singleProcess = _originalRequest.MaxParallelProcessing <= 1;
+
 			IList<QualityConditionGroup> qcGroups =
 				TestAssembler.BuildQualityConditionGroups(tests.ToList(), areaOfInterest,
 				                                          FilterTableRowsUsingRelatedGeometry,
-				                                          _originalRequest.MaxParallelProcessing <=
-				                                          1);
+				                                          singleProcess);
 
 			IList<SubVerification> subVerifications = CreateSubVerifications(
 				_originalRequest, QualitySpecification,
