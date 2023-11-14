@@ -56,7 +56,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		/// <summary>
 		/// Theoretical maximum of parallel worker processes that can be employed.
 		/// </summary>
-		public int MaxParallelCount => _maxDesiredParallelCount;
+		public int MaxParallelCount => Math.Min(_configuredClients.Count, _maxDesiredParallelCount);
 
 		/// <summary>
 		/// Gets an available working client. If all clients are busy, null is returned.
@@ -194,7 +194,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			_msg.DebugStopTiming(watch, "Removed {0} unhealthy workers from worker client list.",
 			                     removedWorkers);
 
-			int desiredNewWorkerCount = _maxDesiredParallelCount - _workerClients.Count;
+			int desiredNewWorkerCount = MaxParallelCount - _workerClients.Count;
 
 			if (desiredNewWorkerCount <= 0)
 			{
