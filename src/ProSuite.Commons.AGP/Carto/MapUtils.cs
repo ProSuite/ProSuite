@@ -183,7 +183,19 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			foreach (Layer layer in mapView.Map.GetLayersAsFlattenedList())
+			Map map = mapView.Map;
+
+			foreach (T resultLayer in GetLayers(map, layerPredicate))
+			{
+				yield return resultLayer;
+			}
+		}
+
+		public static IEnumerable<T> GetLayers<T>([NotNull] Map map,
+		                                          [CanBeNull] Predicate<T> layerPredicate)
+			where T : Layer
+		{
+			foreach (Layer layer in map.GetLayersAsFlattenedList())
 			{
 				var matchingTypeLayer = layer as T;
 
