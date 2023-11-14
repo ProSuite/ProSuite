@@ -33,9 +33,13 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private const Key _keyShowOptionsPane = Key.O;
 
+		private readonly TimeSpan _sketchBlockingPeriod = TimeSpan.FromSeconds(1);
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private IPickerPrecedence _pickerPrecedence;
-		private bool _finishingSketch;
+
+		private Geometry _lastSketch;
+		private DateTime _lastSketchFinishedTime;
 
 		protected OneClickToolBase()
 		{
@@ -222,19 +226,25 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			if (_finishingSketch)
+			if (DateTime.Now - _lastSketchFinishedTime < _sketchBlockingPeriod &&
+			    GeometryUtils.Engine.Equals(_lastSketch, sketchGeometry))
 			{
-				// This happens if the OnSelectionSketchComplete() method below takes a long time
-				// and the user already creates several new sketches in the mean while.
-				// However, it has also been observed in other situations when seemingly randomly
-				// the method is sometimes called twice.
-				_msg.Debug("OnSketchCompleteAsync: Duplicate call is ignored!");
+				// In some situations, seemingly randomly, this method is called twice
+				// - On the same instance
+				// - Both times on the UI thread
+#if DEBUG
+				_msg.Warn($"OnSketchCompleteAsync: Duplicate call is ignored for {Caption}!");
+#else
+				_msg.Debug($"OnSketchCompleteAsync: Duplicate call is ignored for {Caption}.");
+#endif
+
 				return false;
 			}
 
 			try
 			{
-				_finishingSketch = true;
+				_lastSketch = sketchGeometry;
+				_lastSketchFinishedTime = DateTime.Now;
 
 				CancelableProgressor progressor = GetCancelableProgressor();
 
@@ -257,10 +267,6 @@ namespace ProSuite.AGP.Editing.OneClick
 				HandleError($"{Caption}: Error completing sketch ({e.Message})", e);
 				// NOTE: Throwing here results in a process crash (Exception while waiting for a Task to complete)
 				// Consider Task.FromException?
-			}
-			finally
-			{
-				_finishingSketch = false;
 			}
 
 			return true;
