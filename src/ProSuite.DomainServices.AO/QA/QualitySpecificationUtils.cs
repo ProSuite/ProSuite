@@ -236,8 +236,28 @@ namespace ProSuite.DomainServices.AO.QA
 			sb.AppendFormat("Specification {0}", specification.Name);
 			sb.AppendLine();
 
+			int elementsCount = specification.Elements.Count;
+
+			int disabledCount = elementsCount -
+			                    specification.Elements.Count(e => e.Enabled);
+
+			if (disabledCount > 0)
+			{
+				sb.AppendFormat("{0} conditions of {1} have been disabled.", disabledCount,
+				                elementsCount);
+
+				sb.AppendLine();
+			}
+
+			sb.AppendLine("Enabled conditions:");
+
 			foreach (QualitySpecificationElement element in specification.Elements)
 			{
+				if (! element.Enabled)
+				{
+					continue;
+				}
+
 				sb.AppendFormat(
 					"QualityCondition {0}: StopOnError {1}, AllowErrors {2}, TestDescriptor {3}",
 					element.QualityCondition.Name, element.StopOnError,
