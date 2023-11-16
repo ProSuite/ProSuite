@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.QA.Container;
 
 namespace ProSuite.Microservices.Server.AO.QA.Distributed
@@ -33,7 +34,18 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 		public int GetHashCode(IssueKey obj)
 		{
-			return obj.ConditionId ^ 29 * obj.Description.GetHashCode();
+			unchecked
+			{
+				int hashCode = obj.ConditionId;
+				hashCode = (hashCode * 397) ^ obj.Description.GetHashCode();
+
+				foreach (InvolvedRow involvedRow in obj.InvolvedRows)
+				{
+					hashCode = (hashCode * 397) ^ involvedRow.OID.GetHashCode();
+				}
+
+				return hashCode;
+			}
 		}
 	}
 }
