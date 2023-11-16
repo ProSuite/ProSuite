@@ -33,6 +33,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			_subveriClientsDict =
 				new ConcurrentDictionary<SubVerification, IQualityVerificationClient>();
 
+		private int _maxAvailableClientCount;
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DistributedWorkers"/> class.
 		/// </summary>
@@ -56,7 +58,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		/// <summary>
 		/// Theoretical maximum of parallel worker processes that can be employed.
 		/// </summary>
-		public int MaxParallelCount => Math.Min(_configuredClients.Count, _maxDesiredParallelCount);
+		public int MaxParallelCount => Math.Min(_maxAvailableClientCount, _maxDesiredParallelCount);
 
 		/// <summary>
 		/// Gets an available working client. If all clients are busy, null is returned.
@@ -194,23 +196,23 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			_msg.DebugStopTiming(watch, "Removed {0} unhealthy workers from worker client list.",
 			                     removedWorkers);
 
-			int desiredNewWorkerCount = MaxParallelCount - _workerClients.Count;
-
-			if (desiredNewWorkerCount <= 0)
+			if (_workerClients.Count >= _maxDesiredParallelCount)
 			{
+				// We have enough
 				return;
 			}
 
+			// Even if the current maximum of available workers is below the desired count let's
+			// try and get new workers to pick up workers that have been added in the meanwhile.
+
 			watch.Restart();
 
-			int extraWorkers = _clientPredicate == null ? 0 : 2;
-			desiredNewWorkerCount += extraWorkers;
 			foreach (IQualityVerificationClient workerClient in GetNewWorkerClients(
-				         desiredNewWorkerCount))
+				         _maxDesiredParallelCount))
 			{
-				if (_workerClients.Count >= MaxParallelCount)
+				if (_workerClients.Count >= _maxDesiredParallelCount)
 				{
-					// it's enough or we have no more clients
+					// We have enough
 					break;
 				}
 
@@ -231,8 +233,11 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				}
 			}
 
-			_msg.DebugStopTiming(watch, "Updated worker client list. It now contains {0} clients.",
-			                     _workerClients.Count);
+			_msg.DebugStopTiming(
+				watch,
+				"Updated worker client list. It now contains {0} clients. Desired workers: {1}. " +
+				"Maximum available workers: {2}",
+				_workerClients.Count, _maxDesiredParallelCount, _maxAvailableClientCount);
 		}
 
 		private static int RemoveUnhealthyWorkers(
@@ -282,14 +287,25 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			if (client.ChannelIsLoadBalancer)
 			{
-				foreach (QualityVerificationServiceClient workerClient in client.GetWorkerClients(
-					         desiredNewWorkerCount))
+				// Get some extra to make up for the predicate or failures during the process
+				if (desiredNewWorkerCount < int.MaxValue - 10)
+				{
+					desiredNewWorkerCount += 10;
+				}
+
+				var availableClients = client.GetWorkerClients(desiredNewWorkerCount).ToList();
+
+				_maxAvailableClientCount = availableClients.Count;
+
+				foreach (QualityVerificationServiceClient workerClient in availableClients)
 				{
 					yield return workerClient;
 				}
 			}
 			else
 			{
+				_maxAvailableClientCount = _configuredClients.Count;
+
 				foreach (var workerClient in _configuredClients)
 				{
 					yield return workerClient;
