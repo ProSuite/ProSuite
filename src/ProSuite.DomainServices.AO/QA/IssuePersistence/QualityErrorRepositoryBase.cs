@@ -489,9 +489,9 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		#region Delete Errors
 
 		/// <summary>
-		/// Deletes all issues of the specified quality conditions within the
-		/// <see cref="Perimeter"/>. All errors will be deleted if the Perimeter property is
-		/// not set or the provided quality conditions list is null.
+		/// Deletes all issues of the specified quality conditions within the <see cref="Perimeter"/>.
+		/// All errors except allowed errors will be deleted if the Perimeter property is not set or
+		/// the provided quality conditions list is null.
 		/// </summary>
 		/// <param name="qualityConditions">The quality conditions.</param>
 		/// <param name="objectSelection">The object selection.</param>
