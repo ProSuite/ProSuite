@@ -269,7 +269,7 @@ namespace ProSuite.DomainServices.AO.QA
 			_msg.Debug(sb.ToString());
 		}
 
-		internal static void LogQualityVerification(
+		public static void LogQualityVerification(
 			[NotNull] QualityVerification verification)
 		{
 			try
