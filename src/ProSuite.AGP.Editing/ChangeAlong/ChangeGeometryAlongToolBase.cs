@@ -20,7 +20,6 @@ using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -101,6 +100,17 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			{
 				ResetDerivedGeometries();
 				StartSelectionPhase();
+			}
+
+			// TODO: Consider consolidation with sketch tools. Call ProcessSelection here?
+			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
+			Dictionary<MapMember, List<long>> selectionByLayer = args.Selection.ToDictionary();
+
+			var applicableSelection = GetApplicableSelectedFeatures(selectionByLayer).ToList();
+
+			if (applicableSelection.Count > 0)
+			{
+				AfterSelection(applicableSelection, GetCancelableProgressor());
 			}
 
 			return true;
@@ -325,7 +335,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private void StartTargetSelectionPhase()
 		{
 			Cursor = TargetSelectionCursor;
-			
+
 			SetupSketch(SketchGeometryType.Rectangle);
 		}
 
