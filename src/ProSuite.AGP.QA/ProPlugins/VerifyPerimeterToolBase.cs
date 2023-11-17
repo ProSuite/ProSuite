@@ -121,9 +121,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 
+			string actionTitle = $"{qualitySpecification.Name}: Verify {perimeterName}";
+
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
 			                               Assert.NotNull(qaEnvironment.BackendDisplayName),
-			                               $"Verify {perimeterName}");
+			                               actionTitle);
 
 			return Task.FromResult(true);
 		}

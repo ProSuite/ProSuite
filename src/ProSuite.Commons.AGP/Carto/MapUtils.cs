@@ -7,7 +7,9 @@ using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
@@ -30,6 +32,15 @@ namespace ProSuite.Commons.AGP.Carto
 			Assert.NotNull(mapView, "no active MapView");
 
 			return mapView.Map;
+		}
+
+		[NotNull]
+		public static Uri GetMapUri(Project project, Map map)
+		{
+			Uri projectUri = new Uri(project.URI);
+			Uri mapUri = new Uri(projectUri, map.URI);
+
+			return mapUri;
 		}
 
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
@@ -172,7 +183,19 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			foreach (Layer layer in mapView.Map.GetLayersAsFlattenedList())
+			Map map = mapView.Map;
+
+			foreach (T resultLayer in GetLayers(map, layerPredicate))
+			{
+				yield return resultLayer;
+			}
+		}
+
+		public static IEnumerable<T> GetLayers<T>([NotNull] Map map,
+		                                          [CanBeNull] Predicate<T> layerPredicate)
+			where T : Layer
+		{
+			foreach (Layer layer in map.GetLayersAsFlattenedList())
 			{
 				var matchingTypeLayer = layer as T;
 

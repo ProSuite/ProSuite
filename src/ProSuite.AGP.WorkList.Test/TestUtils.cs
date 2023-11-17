@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 
 namespace ProSuite.AGP.WorkList.Test
 {

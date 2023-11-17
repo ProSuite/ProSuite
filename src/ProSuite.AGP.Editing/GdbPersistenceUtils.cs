@@ -170,6 +170,8 @@ namespace ProSuite.AGP.Editing
 					}
 				}
 
+				string shapeFieldName = featureClass.GetDefinition().GetShapeField();
+
 				foreach (Geometry geometry in geometries)
 				{
 					Assert.True(geometryType == featureClass.GetDefinition().GetShapeType(),
@@ -181,9 +183,9 @@ namespace ProSuite.AGP.Editing
 					geometryToStore = GeometryUtils.EnsureSpatialReference(
 						geometryToStore, spatialReference);
 
-					var feature = featureClass.CreateRow(rowBuffer);
+					rowBuffer[shapeFieldName] = geometryToStore;
 
-					feature.SetShape(geometryToStore);
+					var feature = featureClass.CreateRow(rowBuffer);
 
 					feature.Store();
 

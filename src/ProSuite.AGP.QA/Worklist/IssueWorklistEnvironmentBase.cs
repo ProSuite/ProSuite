@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -105,6 +106,7 @@ namespace ProSuite.AGP.QA.WorkList
 
 			if (groupLayer == null)
 			{
+				_msg.DebugFormat("Creating new group layer {0}", groupLayerName);
 				return
 					LayerFactory.Instance.CreateGroupLayer(
 						MapView.Active.Map, 0, groupLayerName) as T;
@@ -126,6 +128,15 @@ namespace ProSuite.AGP.QA.WorkList
 					FeatureLayer featureLayer =
 						LayerFactory.Instance.CreateLayer<FeatureLayer>(
 							new FeatureLayerCreationParams(fc), groupLayer);
+
+					if (featureLayer == null)
+					{
+						_msg.DebugFormat("Created layer is null! Trying again...");
+						Thread.Sleep(500);
+						featureLayer =
+							LayerFactory.Instance.CreateLayer<FeatureLayer>(
+								new FeatureLayerCreationParams(fc), groupLayer);
+					}
 
 					// See DPS/#80: Sometimes a non-reproducible null layer results from the previous method.
 					Assert.NotNull(featureLayer,

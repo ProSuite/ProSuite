@@ -1,3 +1,4 @@
+using System;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
@@ -31,9 +32,22 @@ namespace ProSuite.AGP.WorkList
 
 		public T OpenDataset<T>() where T : Table
 		{
-			using (_identity.Workspace.OpenGeodatabase())
+			GdbWorkspaceIdentity workspaceIdentity = _identity.Workspace;
+
+			using (Datastore datastore = workspaceIdentity.OpenDatastore())
 			{
-				return _identity.Workspace.OpenGeodatabase().OpenDataset<T>(_identity.Name);
+				if (datastore is Geodatabase geodatabase)
+				{
+					return geodatabase.OpenDataset<T>(_identity.Name);
+				}
+
+				if (datastore is FileSystemDatastore fsDatastore)
+				{
+					return fsDatastore.OpenDataset<T>(_identity.Name);
+				}
+
+				throw new NotSupportedException(
+					$"Datastore type is not supported ({workspaceIdentity})");
 			}
 		}
 	}

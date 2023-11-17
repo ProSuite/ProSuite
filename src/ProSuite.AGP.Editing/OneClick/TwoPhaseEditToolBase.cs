@@ -30,10 +30,22 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
+			_msg.VerboseDebug(() => "OnMapSelectionChangedCore");
+
 			if (args.Selection.Count == 0)
 			{
 				ResetDerivedGeometries();
 				StartSelectionPhase();
+			}
+
+			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
+			Dictionary<MapMember, List<long>> selectionByLayer = args.Selection.ToDictionary();
+
+			var applicableSelection = GetApplicableSelectedFeatures(selectionByLayer).ToList();
+
+			if (applicableSelection.Count > 0)
+			{
+				AfterSelection(applicableSelection, GetCancelableProgressor());
 			}
 
 			return true;
@@ -206,7 +218,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private void StartSecondPhase()
 		{
 			Cursor = SecondPhaseCursor;
-			
+
 			SetupSketch(SketchGeometryType.Rectangle);
 		}
 	}
