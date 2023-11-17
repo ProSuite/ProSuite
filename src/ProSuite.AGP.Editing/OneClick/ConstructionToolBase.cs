@@ -264,13 +264,13 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			// TODO: only if selection was cleared? Generally allow changing the selection through attribute selection?
-
 			if (! CanUseSelection(ActiveMapView))
 			{
 				//LogPromptForSelection();
 				StartSelectionPhase();
 			}
+
+			// TODO: virtual RefreshFeedbackCoreAsync(), override in AdvancedReshape
 
 			return true;
 		}

@@ -353,6 +353,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void OnMapSelectionChanged(MapSelectionChangedEventArgs args)
 		{
+			// TODO: Use async overload added at 3.0
 			_msg.VerboseDebug(() => "OnMapSelectionChanged");
 
 			try
