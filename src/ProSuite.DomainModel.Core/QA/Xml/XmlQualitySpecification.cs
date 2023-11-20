@@ -57,11 +57,6 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		[DefaultValue(0)]
 		public double TileSize { get; set; }
 
-		[XmlAttribute("issuesSpatialReferenceId")]
-		[DefaultValue(0)]
-		public int IssuesSpatialReferenceId { get; set; }
-
-
 		[CanBeNull]
 		[XmlAttribute("url")]
 		public string Url { get; set; }

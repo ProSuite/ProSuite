@@ -645,7 +645,9 @@ namespace ProSuite.DomainServices.AO.QA
 				{
 					ReportPreProcessing("Creating external issue file geodatabase");
 
-					ISpatialReference issueSpatialReference = GetSpatialReferenceForIssueDatasets();
+					ISpatialReference issueSpatialReference =
+						Parameters.IssueFgdbSpatialReference ??
+						GetSpatialReferenceForIssueDatasets();
 
 					_externalIssueRepository = ExternalIssueRepositoryUtils.GetIssueRepository(
 						Assert.NotNull(Parameters.IssueFgdbPath),

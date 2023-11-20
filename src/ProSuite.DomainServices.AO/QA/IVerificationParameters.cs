@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
 
@@ -33,6 +34,9 @@ namespace ProSuite.DomainServices.AO.QA
 
 		[CanBeNull]
 		string IssueFgdbPath { get; }
+
+		[CanBeNull]
+		ISpatialReference IssueFgdbSpatialReference { get; }
 
 		bool CompressIssueFgdb { get; }
 

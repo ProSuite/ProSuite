@@ -6,7 +6,6 @@ using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -62,6 +61,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		public ITestRunner DistributedTestRunner { get; set; }
 
 		public IssueRepositoryType IssueRepositoryType { get; set; } = IssueRepositoryType.FileGdb;
+
+		public ISpatialReference IssueRepositorySpatialReference { get; set; }
 
 		public QualityVerification Verification { get; set; }
 
@@ -231,16 +232,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			StringBuilder sb = new StringBuilder();
 
-
-			ISpatialReference issuesSpatialReference;
-			{
-				int? srid = qualitySpecification.IssuesSpatialReferenceId;
-				issuesSpatialReference =
-					srid > 0
-						? SpatialReferenceUtils.CreateSpatialReference(srid.Value)
-						: spatialReference;
-			}
-
+			ISpatialReference issuesSpatialReference =
+				IssueRepositorySpatialReference ?? spatialReference;
+			
 			using (IIssueRepository issueRepository =
 			       ExternalIssueRepositoryUtils.GetIssueRepository(
 				       _issueRepositoryDir, _issueRepositoryName, issuesSpatialReference,

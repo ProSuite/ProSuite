@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
@@ -56,6 +57,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// Path for the (external) issue file geodatabase.
 		/// </summary>
 		public string IssueFgdbPath { get; set; }
+
+		public ISpatialReference IssueFgdbSpatialReference { get; set; }
 
 		// Do not compress file geodatabases (better zip them) because
 		// - it can result in file locks

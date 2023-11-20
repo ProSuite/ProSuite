@@ -677,7 +677,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			XmlBasedVerificationService xmlService = new XmlBasedVerificationService(
 				HtmlReportTemplatePath, QualitySpecificationTemplatePath);
 
-			// TODO: Determine if the report paths are including the files or just the dirs (probably better: dirs)
+			// NOTE: The report paths include the file names.
 			xmlService.SetupOutputPaths(parameters.IssueFileGdbPath,
 			                            parameters.VerificationReportPath,
 			                            parameters.HtmlReportPath);
@@ -711,6 +711,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				return null;
 			}
+
+			xmlService.IssueRepositorySpatialReference =
+				ProtobufGeometryUtils.FromSpatialReferenceMsg(
+					parameters.IssueRepositorySpatialReference);
 
 			xmlService.ExecuteVerification(qualitySpecification, aoi, parameters.TileSize,
 			                               trackCancel);
