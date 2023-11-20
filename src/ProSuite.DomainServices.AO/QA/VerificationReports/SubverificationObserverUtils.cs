@@ -26,6 +26,11 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 				return null;
 			}
 
+			if (spatialReference == null)
+			{
+				return null;
+			}
+
 			IFeatureWorkspace workspace =
 				ExternalIssueRepositoryUtils.GetOrCreateDatabase(
 					directoryFullPath, gdbName, issueRepositoryType);
