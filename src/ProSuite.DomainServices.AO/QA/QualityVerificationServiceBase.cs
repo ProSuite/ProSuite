@@ -653,6 +653,9 @@ namespace ProSuite.DomainServices.AO.QA
 						Assert.NotNull(Parameters.IssueFgdbPath),
 						issueSpatialReference, IssueRepositoryType.FileGdb);
 
+					// TODO: Extract Reporting and External Gdbs into VerificationReporter class
+					// in order to further unify the standalone and the ddx verification service!
+
 					_statisticsBuilder = new IssueStatisticsBuilder();
 
 					datasetsCollector = new InvolvedDatasetsCollector();
