@@ -238,13 +238,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			using (IIssueRepository issueRepository =
 			       ExternalIssueRepositoryUtils.GetIssueRepository(
 				       _issueRepositoryDir, _issueRepositoryName, issuesSpatialReference,
-				       IssueRepositoryType,
-				       addExceptionFields: true))
+				       IssueRepositoryType, addExceptionFields: true))
 			{
 				ISubverificationObserver subverificationObserver =
-					SubverificationObserverUtils.GetProgressRepository(_issueRepositoryDir,
-						_progressWorkspaceName, spatialReference,
-						IssueRepositoryType);
+					DistributedTestRunner == null
+						? null
+						: SubverificationObserverUtils.GetProgressRepository(_issueRepositoryDir,
+							_progressWorkspaceName, issuesSpatialReference, IssueRepositoryType);
 
 				fulfilled = service.Verify(qualitySpecification, datasetContext, datasetResolver,
 				                           issueRepository, subverificationObserver, tileSize,
