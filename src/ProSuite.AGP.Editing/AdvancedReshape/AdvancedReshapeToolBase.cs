@@ -144,7 +144,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_msg.VerboseDebug(() => "OnSketchModifiedAsync");
 
 			// Does it make any difference what the return value is?
-			return await ViewUtils.TryAsync(TryUpdateFeedback(), _msg, true);
+			return await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
 		}
 
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs k)
@@ -308,7 +308,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_nonDefaultSideMode = false;
 		}
 
-		private async Task<bool> TryUpdateFeedback()
+		private async Task<bool> TryUpdateFeedbackAsync()
 		{
 			if (_updateFeedbackTask != null)
 			{
