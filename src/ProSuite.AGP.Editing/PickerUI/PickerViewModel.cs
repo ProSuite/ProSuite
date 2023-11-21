@@ -241,7 +241,8 @@ namespace ProSuite.AGP.Editing.PickerUI
 				}
 				else
 				{
-					MapView.Active.UpdateOverlay(_selectionGeometryOverlay, _selectionGeometry);
+					MapView.Active.UpdateOverlay(_selectionGeometryOverlay, _selectionGeometry,
+						_polygonSymbol.MakeSymbolReference());
 				}
 			});
 		}

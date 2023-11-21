@@ -29,10 +29,12 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		[NotNull] private readonly DataTable _parameterTbl;
 
-		[NotNull] private readonly
+		[NotNull]
+		private readonly
 			BoundDataGridHandler<QualitySpecificationReferenceTableRow> _qSpecGridHandler;
 
-		[NotNull] private readonly
+		[NotNull]
+		private readonly
 			BoundDataGridHandler<InstanceConfigurationReferenceTableRow> _issueFilterGridHandler;
 
 		[CanBeNull] private static string _lastSelectedDetailsTab;
@@ -67,7 +69,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_tableStateQSpec = tableStateQSpec;
 			_tableStateIssueFilter = tableStateIssueFilter;
 			_tableViewControl = tableViewControl;
-			var qualityConditionTableViewControl = (Control) tableViewControl;
+			var qualityConditionTableViewControl = (Control)tableViewControl;
 
 			InitializeComponent();
 
@@ -87,58 +89,58 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 #endif
 
 			NullableBooleanItems.UseFor(_columnIssueType,
-			                            trueText: "Warning",
-			                            falseText: "Error");
+										trueText: "Warning",
+										falseText: "Error");
 			NullableBooleanItems.UseFor(_columnStopOnError);
 
 			_binder = new ScreenBinder<QualityCondition>(
 				new ErrorProviderValidationMonitor(_errorProvider));
 
 			_binder.Bind(m => m.Name)
-			       .To(_textBoxName)
-			       .WithLabel(_labelName);
+				   .To(_textBoxName)
+				   .WithLabel(_labelName);
 
 			_binder.Bind(m => m.Description)
-			       .To(_textBoxDescription)
-			       .WithLabel(_labelDescription);
+				   .To(_textBoxDescription)
+				   .WithLabel(_labelDescription);
 
 			_binder.Bind(m => m.Url)
-			       .To(_textBoxUrl)
-			       .WithLabel(_labelUrl);
+				   .To(_textBoxUrl)
+				   .WithLabel(_labelUrl);
 
 			_binder.Bind(m => m.Uuid)
-			       .To(_textBoxUuid)
-			       .WithLabel(_labelUuid)
-			       .AsReadOnly();
+				   .To(_textBoxUuid)
+				   .WithLabel(_labelUuid)
+				   .AsReadOnly();
 
 			_binder.Bind(m => m.VersionUuid)
-			       .To(_textBoxVersionUuid)
-			       .WithLabel(_labelVersionUuid)
-			       .AsReadOnly();
+				   .To(_textBoxVersionUuid)
+				   .WithLabel(_labelVersionUuid)
+				   .AsReadOnly();
 
 			_binder.Bind(m => m.Notes)
-			       .To(_textBoxNotes);
+				   .To(_textBoxNotes);
 
 			_binder.AddElement(new NullableBooleanComboboxElement(
-				                   _binder.GetAccessor(m => m.StopOnErrorOverride),
-				                   _nullableBooleanComboboxStopOnError));
+								   _binder.GetAccessor(m => m.StopOnErrorOverride),
+								   _nullableBooleanComboboxStopOnError));
 
 			_binder.AddElement(new NullableBooleanComboboxElement(
-				                   _binder.GetAccessor(m => m.AllowErrorsOverride),
-				                   _nullableBooleanComboboxIssueType));
+								   _binder.GetAccessor(m => m.AllowErrorsOverride),
+								   _nullableBooleanComboboxIssueType));
 
 			_binder.AddElement(new ObjectReferenceScreenElement(
-				                   _binder.GetAccessor(m => m.TestDescriptor),
-				                   _objectReferenceControlTestDescriptor));
+								   _binder.GetAccessor(m => m.TestDescriptor),
+								   _objectReferenceControlTestDescriptor));
 
 			_objectReferenceControlTestDescriptor.FormatTextDelegate =
 				FormatTestDescriptor;
 
 			_binder.Bind(m => m.NeverFilterTableRowsUsingRelatedGeometry)
-			       .To(_checkBoxNeverFilterTableRowsUsingRelatedGeometry);
+				   .To(_checkBoxNeverFilterTableRowsUsingRelatedGeometry);
 
 			_binder.Bind(m => m.NeverStoreRelatedGeometryForTableRowIssues)
-			       .To(_checkBoxNeverStoreRelatedGeometryForTableRowIssues);
+				   .To(_checkBoxNeverStoreRelatedGeometryForTableRowIssues);
 
 			_binder.OnChange = BinderChanged;
 
@@ -166,14 +168,14 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_issueFilterGridHandler.SelectionChanged += _issueFilterGridHandler_SelectionChanged;
 
 			_binder.Bind(m => m.IssueFilterExpression)
-			       .To(_textBoxFilterExpression)
-			       .WithLabel(_labelFilterExpression);
+				   .To(_textBoxFilterExpression)
+				   .WithLabel(_labelFilterExpression);
 
-			if (! ignoreLastDetailsTab)
+			if (!ignoreLastDetailsTab)
 			{
 				TabControlUtils.SelectTabPage(_tabControlDetails, _lastSelectedDetailsTab);
 				TabControlUtils.SelectTabPage(_tabControlParameterValues,
-				                              _lastSelectedParameterValuesTab);
+											  _lastSelectedParameterValuesTab);
 			}
 
 			_tableViewShown = _tabControlParameterValues.SelectedTab == _tabPageTableView;
@@ -208,14 +210,10 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_dataGridViewParamGrid.ClearSelection();
 		}
 
-		bool IQualityConditionView.TestDescriptorLinkEnabled
+		bool IQualityConditionView.GoToTestDescriptorEnabled
 		{
-			get => ! _labelTestDescriptor.LinkArea.IsEmpty;
-			set =>
-				_labelTestDescriptor.LinkArea =
-					value
-						? new LinkArea(0, _labelTestDescriptor.Text.Length)
-						: new LinkArea(0, 0);
+			get => _buttonGoToTestDescriptor.Enabled;
+			set => _buttonGoToTestDescriptor.Enabled = value;
 		}
 
 		bool IQualityConditionView.ExportEnabled
@@ -345,7 +343,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			_latch.RunInsideLatch(
 				() => _issueFilterGridHandler.SelectRows(
-					row => selectable.Contains((IssueFilterConfiguration) row.InstanceConfig)));
+					row => selectable.Contains((IssueFilterConfiguration)row.InstanceConfig)));
 
 			_issueFilterStateManager?.SaveState(_tableStateIssueFilter);
 
@@ -518,9 +516,9 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		private static string FormatNewLine([CanBeNull] string value)
 		{
 			return value == null
-				       ? string.Empty
-				       : value.Replace("\n", "\r\n")
-				              .Replace("\r\r", "\r");
+					   ? string.Empty
+					   : value.Replace("\n", "\r\n")
+							  .Replace("\r\r", "\r");
 		}
 
 		private void OnSpecificationSelectionChanged()
@@ -581,9 +579,9 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			else if (_tabControlParameterValues.SelectedTab == _tabPageTableView)
 			{
 				BindToParameterValues(Observer?.GetTestParameterItems() ??
-				                      new BindingList<ParameterValueListItem>());
+									  new BindingList<ParameterValueListItem>());
 
-				if (! _tableViewShown)
+				if (!_tableViewShown)
 				{
 					_dataGridViewParamGrid.ClearSelection();
 				}
@@ -594,9 +592,9 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		}
 
 		private void _propertyGrid_PropertyValueChanged(object s,
-		                                                PropertyValueChangedEventArgs e)
+														PropertyValueChangedEventArgs e)
 		{
-			var configurator = (ITestConfigurator) _propertyGrid.SelectedObject;
+			var configurator = (ITestConfigurator)_propertyGrid.SelectedObject;
 			if (_propertyGrid.SelectedGridItem.Expandable)
 			{
 				_propertyGrid.SelectedGridItem.Expanded = true;
@@ -676,7 +674,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		}
 
 		private void _dataGridViewIssueFilters_CellEndEdit(object sender,
-		                                                   DataGridViewCellEventArgs e)
+														   DataGridViewCellEventArgs e)
 		{
 			_dataGridViewIssueFilters.InvalidateRow(e.RowIndex);
 		}
@@ -714,12 +712,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			}
 		}
 
-		private void _labelTestDescriptor_LinkClicked(object sender,
-		                                              LinkLabelLinkClickedEventArgs e)
+		private void _buttonGoToTestDescriptor_Clicked(object sender, EventArgs e)
 		{
 			var testDescriptor = _objectReferenceControlTestDescriptor.DataSource as TestDescriptor;
 
-			Observer?.TestDescriptorLinkClicked(testDescriptor);
+			Observer?.GoToTestDescriptorClicked(testDescriptor);
 		}
 
 		private void _buttonOpenUrl_Click(object sender, EventArgs e)
@@ -738,8 +735,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		}
 
 		private void _dataGridViewParamGrid_DataBindingComplete(object sender,
-		                                                        DataGridViewBindingCompleteEventArgs
-			                                                        e)
+																DataGridViewBindingCompleteEventArgs
+																	e)
 		{
 			_dataGridViewParamGrid.ClearSelection();
 		}
@@ -776,14 +773,14 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			bool tabKeyPressed = e.KeyData == Keys.Tab;
 
 			if (tabKeyPressed &&
-			    string.IsNullOrEmpty(_textBoxName.Text))
+				string.IsNullOrEmpty(_textBoxName.Text))
 			{
 				// Generate a name
 				_textBoxName.Text = Observer?.GenerateName();
 			}
 
-			if (! tabKeyPressed ||
-			    ! string.IsNullOrEmpty(_textBoxName.Text))
+			if (!tabKeyPressed ||
+				!string.IsNullOrEmpty(_textBoxName.Text))
 			{
 				// Do not show the tooltip once the user has started typing or the name has bee generated:
 				_toolTip.SetToolTip(_textBoxName, null);

@@ -6,6 +6,10 @@ namespace ProSuite.DdxEditor.Content.Models
 {
 	public interface IModelView<T> : IBoundView<T, IModelObserver> where T : Model
 	{
+		bool GoToSpatialReferenceEnabled { get; set; }
+
+		bool GoToUserConnectionEnabled { get; set; }
+
 		Func<object> FindUserConnectionProviderDelegate { get; set; }
 
 		Func<object> FindSpatialReferenceDescriptorDelegate { get; set; }

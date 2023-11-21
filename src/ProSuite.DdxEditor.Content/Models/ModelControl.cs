@@ -138,6 +138,16 @@ namespace ProSuite.DdxEditor.Content.Models
 				                  _objectReferenceControlAttributeConfiguratorFactoryClassDescriptor));
 
 			TabControlUtils.SelectTabPage(_tabControl, _lastSelectedTabPage);
+
+			_objectReferenceControlSpatialReferenceDescriptor.Changed -=
+				_objectReferenceControlSpatialReferenceDescriptor_Changed;
+			_objectReferenceControlSpatialReferenceDescriptor.Changed +=
+				_objectReferenceControlSpatialReferenceDescriptor_Changed;
+
+			_objectReferenceControlUserConnectionProvider.Changed -=
+				_objectReferenceControlUserConnectionProvider_Changed;
+			_objectReferenceControlUserConnectionProvider.Changed +=
+				_objectReferenceControlUserConnectionProvider_Changed;
 		}
 
 		public void OnBoundTo(T entity)
@@ -154,6 +164,18 @@ namespace ProSuite.DdxEditor.Content.Models
 		#endregion
 
 		#region IModelView Members
+
+		public bool GoToSpatialReferenceEnabled
+		{
+			get => _buttonGoToSpatialReference.Enabled;
+			set => _buttonGoToSpatialReference.Enabled = value;
+		}
+
+		public bool GoToUserConnectionEnabled
+		{
+			get => _buttonGoToUserConnectionProvider.Enabled;
+			set => _buttonGoToUserConnectionProvider.Enabled = value;
+		}
 
 		public Func<object> FindUserConnectionProviderDelegate
 		{
@@ -232,6 +254,26 @@ namespace ProSuite.DdxEditor.Content.Models
 		private void _buttonHarvestingPreview_Click(object sender, EventArgs e)
 		{
 			Observer?.HarvestingPreviewClicked();
+		}
+
+		private void _buttonGoToSpatialReference_Click(object sender, EventArgs e)
+		{
+			Observer?.GoToSpatialReferenceClicked();
+		}
+
+		private void _buttonGoToUserConnectionProvider_Clicked(object sender, EventArgs e)
+		{
+			Observer?.GoToUserConnectionClicked();
+		}
+
+		private void _objectReferenceControlSpatialReferenceDescriptor_Changed(object sender, EventArgs e)
+		{
+			Observer?.SpatialReferenceDescriptorChanged();
+		}
+
+		private void _objectReferenceControlUserConnectionProvider_Changed(object sender, EventArgs e)
+		{
+			Observer?.UserConnectionProviderChanged();
 		}
 
 		private void _tabControl_SelectedIndexChanged(object sender, EventArgs e)

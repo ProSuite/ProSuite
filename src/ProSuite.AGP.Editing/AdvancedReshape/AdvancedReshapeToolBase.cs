@@ -142,36 +142,14 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_msg.VerboseDebug(() => "OnSketchModifiedAsync");
 
-			if (_updateFeedbackTask != null)
-			{
-				// Still working on the previous update (large polygons!)
-				// -> Consider using latch (but ensure that the overlay must probably be scheduled properly)
-				return false;
-			}
-
-			bool nonDefaultSide =
-				_nonDefaultSideMode || PressedKeys.Contains(_keyToggleNonDefaultSide);
-
 			bool updated = false;
 			try
 			{
-				if (! PressedKeys.Contains(Key.Space))
-				{
-					// TODO: Exclude finish sketch by double clicking -> should not calculate preview
-					//       E.g. wait for SystemInformation.DoubleClickTime for the second click
-					//       and only start if it has not occurred
-					_updateFeedbackTask = UpdateFeedbackAsync(nonDefaultSide);
-					updated = await _updateFeedbackTask;
-				}
+				updated = await TryUpdateFeedback();
 			}
 			catch (Exception e)
 			{
-				_msg.Warn($"Error generating preview: {e.Message}", e);
-				return false;
-			}
-			finally
-			{
-				_updateFeedbackTask = null;
+				HandleError($"Error in sketch modified ({Caption}): {e.Message}", e, true);
 			}
 
 			// Does it make any difference what the return value is?
@@ -337,6 +315,44 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_feedback.Clear();
 			_nonDefaultSideMode = false;
+		}
+
+		private async Task<bool> TryUpdateFeedback()
+		{
+			if (_updateFeedbackTask != null)
+			{
+				// Still working on the previous update (large polygons!)
+				// -> Consider using latch (but ensure that the overlay must probably be scheduled properly)
+				return false;
+			}
+
+			bool nonDefaultSide =
+				_nonDefaultSideMode || PressedKeys.Contains(_keyToggleNonDefaultSide);
+
+			bool updated = false;
+
+			try
+			{
+				if (! PressedKeys.Contains(Key.Space))
+				{
+					// TODO: Exclude finish sketch by double clicking -> should not calculate preview
+					//       E.g. wait for SystemInformation.DoubleClickTime for the second click
+					//       and only start if it has not occurred
+					_updateFeedbackTask = UpdateFeedbackAsync(nonDefaultSide);
+					updated = await _updateFeedbackTask;
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error generating preview: {e.Message}", e);
+				return false;
+			}
+			finally
+			{
+				_updateFeedbackTask = null;
+			}
+
+			return updated;
 		}
 
 		private async Task<bool> UpdateFeedbackAsync(bool nonDefaultSide)

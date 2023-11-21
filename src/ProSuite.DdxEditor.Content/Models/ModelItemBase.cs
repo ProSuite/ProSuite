@@ -306,7 +306,7 @@ namespace ProSuite.DdxEditor.Content.Models
 		{
 			var view = new ModelControl<E>();
 
-			new ModelControlPresenter<E>(this, view);
+			new ModelControlPresenter<E>(this, view, ItemNavigation);
 
 			compositeControl.AddPanel(view);
 		}

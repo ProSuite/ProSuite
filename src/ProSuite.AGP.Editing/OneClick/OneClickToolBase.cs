@@ -310,6 +310,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
 		{
+			// TODO: Use async overload added at 3.0
 			// NOTE: If the exception of this event is not caught here, the application crashes!
 			// TODO daro: isn't it the responsibility of the calling code to wrap a QueuedTask around it?
 			Task<bool> task = QueuedTask.Run(() => OnMapSelectionChangedCore(args));
