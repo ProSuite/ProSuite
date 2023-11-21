@@ -10,6 +10,7 @@ using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.AGP.Editing.Selection
@@ -65,45 +66,17 @@ namespace ProSuite.AGP.Editing.Selection
 			StartSelectionPhase();
 		}
 
-		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
+		protected override async Task HandleEscapeAsync()
 		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
-			{
-				SetCursor(SelectionCursorShift);
-			}
-			else
-			{
-				SetCursor(SelectionCursor);
-			}
-
-			_msg.VerboseDebug(() => $"Key {k.Key} was pressed.");
-		}
-
-		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
-		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
-			{
-				SetCursor(SelectionCursorShift);
-			}
-			else
-			{
-				SetCursor(SelectionCursor);
-			}
-		}
-
-		protected override bool HandleEscape()
-		{
-			QueuedTaskUtils.Run(
+			Task task = QueuedTask.Run(
 				() =>
 				{
 					SelectionUtils.ClearSelection();
 
 					StartSelectionPhase();
-
-					return true;
 				});
 
-			return true;
+			await ViewUtils.TryAsync(task, _msg);
 		}
 
 		protected override void LogUsingCurrentSelection()

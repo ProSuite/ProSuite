@@ -130,9 +130,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 			return Task.FromResult(true);
 		}
 
-		protected override bool HandleEscape()
+		protected override Task HandleEscapeAsync()
 		{
-			return true;
+			return Task.CompletedTask;
 		}
 
 		protected override void LogUsingCurrentSelection()

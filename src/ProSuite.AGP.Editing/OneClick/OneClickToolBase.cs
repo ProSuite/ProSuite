@@ -140,13 +140,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					ShowOptionsPane();
 				}
 
-				// Cancel outside a queued task otherwise the current task that blocks the queue
-				// cannot be cancelled.
-				if (args.Key == Key.Escape)
-				{
-					HandleEscape();
-				}
-
 				if (KeyboardUtils.IsShiftKey(args.Key))
 				{
 					// todo daro rename to SetShiftCursor?
@@ -157,6 +150,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				OnKeyDownCore(args);
 			}, _msg, suppressErrorMessageBox: true);
+		}
+
+		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
+		{
+			if (args.Key == Key.Escape)
+			{
+				await ViewUtils.TryAsync(HandleEscapeAsync, _msg);
+			}
 		}
 
 		protected override void OnToolKeyUp(MapViewKeyEventArgs args)
@@ -173,12 +174,19 @@ namespace ProSuite.AGP.Editing.OneClick
 					}
 
 					OnKeyUpCore(args);
+					args.Handled = true;
+
 				}, _msg, suppressErrorMessageBox: true);
 			}
 			finally
 			{
 				PressedKeys.Remove(args.Key);
 			}
+		}
+
+		protected override Task HandleKeyUpAsync(MapViewKeyEventArgs args)
+		{
+			return HandleKeyUpCoreAsync(args);
 		}
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
@@ -266,8 +274,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
 							 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
-
-			_msg.VerboseDebug(() => $"{nameof(StartSelectionPhase)} exclusively: {shiftDown}");
 
 			SetCursor(shiftDown ? SelectionCursorShift : SelectionCursor);
 
@@ -619,8 +625,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
 			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
 
-			_msg.VerboseDebug(() => $"{nameof(IsInSelectionPhase)} exclusively: {shiftDown}");
-
 			return IsInSelectionPhase(shiftDown);
 		}
 
@@ -634,8 +638,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
 			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
 
-			_msg.VerboseDebug(() => $"{nameof(IsInSelectionPhaseAsync)} exclusively: {shiftDown}");
-
 			return IsInSelectionPhaseCoreAsync(shiftDown);
 		}
 
@@ -648,6 +650,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnKeyUpCore(MapViewKeyEventArgs mapViewKeyEventArgs) { }
 
+		protected virtual Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
+		{
+			return Task.CompletedTask;
+		}
+
 		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs e) { }
 
 		protected virtual void ShowOptionsPane() { }
@@ -656,7 +663,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract SelectionSettings GetSelectionSettings();
 
-		protected abstract bool HandleEscape();
+		protected abstract Task HandleEscapeAsync();
 
 		protected abstract void LogUsingCurrentSelection();
 

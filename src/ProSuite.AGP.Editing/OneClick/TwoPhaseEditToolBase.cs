@@ -13,6 +13,7 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
@@ -131,9 +132,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			return result;
 		}
 
-		protected override bool HandleEscape()
+		protected override async Task HandleEscapeAsync()
 		{
-			QueuedTaskUtils.Run(
+			Task task = QueuedTask.Run(
 				() =>
 				{
 					SelectionUtils.ClearSelection();
@@ -141,11 +142,9 @@ namespace ProSuite.AGP.Editing.OneClick
 					ResetDerivedGeometries();
 
 					StartSelectionPhase();
-
-					return true;
 				});
 
-			return true;
+			await ViewUtils.TryAsync(task, _msg);
 		}
 
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)

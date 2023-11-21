@@ -72,11 +72,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					"Microservice not found or not started. Please make sure the latest ProSuite Extension is installed.";
 		}
 
-		protected override bool HandleEscape()
+		protected override Task HandleEscapeAsync()
 		{
 			_cancellationTokenSource?.Cancel();
 
-			return base.HandleEscape();
+			return base.HandleEscapeAsync();
 		}
 
 		protected override void LogPromptForSelection()
