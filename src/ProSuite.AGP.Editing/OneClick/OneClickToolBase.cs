@@ -23,7 +23,6 @@ using ProSuite.Commons.Notifications;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Input;
-using Cursor = System.Windows.Input.Cursor;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -105,7 +104,6 @@ namespace ProSuite.AGP.Editing.OneClick
 				return OnToolActivatedCore(hasMapViewChanged);
 			});
 
-
 			await ViewUtils.TryAsync(task, _msg);
 		}
 
@@ -158,7 +156,6 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 
 				OnKeyDownCore(args);
-
 			}, _msg, suppressErrorMessageBox: true);
 		}
 
@@ -176,7 +173,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					}
 
 					OnKeyUpCore(args);
-
 				}, _msg, suppressErrorMessageBox: true);
 			}
 			finally
@@ -225,8 +221,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				Task<bool> task;
 
-				if (RequiresSelection &&
-				    await IsInSelectionPhaseAsync())
+				if (RequiresSelection && await IsInSelectionPhaseAsync())
 				{
 					task = OnSelectionSketchCompleteAsync(sketchGeometry,
 					                                      GetCancelableProgressor());
