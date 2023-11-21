@@ -46,7 +46,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		int FirstIssueFilterIndex { get; }
 
-		bool TestDescriptorLinkEnabled { get; set; }
+		bool GoToTestDescriptorEnabled { get; set; }
 
 		string QualitySpecificationSummary { get; set; }
 
