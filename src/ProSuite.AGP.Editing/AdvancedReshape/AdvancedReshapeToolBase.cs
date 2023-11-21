@@ -19,6 +19,7 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.UI;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
@@ -142,18 +143,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_msg.VerboseDebug(() => "OnSketchModifiedAsync");
 
-			bool updated = false;
-			try
-			{
-				updated = await TryUpdateFeedback();
-			}
-			catch (Exception e)
-			{
-				HandleError($"Error in sketch modified ({Caption}): {e.Message}", e, true);
-			}
-
 			// Does it make any difference what the return value is?
-			return updated;
+			return await ViewUtils.TryAsync(TryUpdateFeedback(), _msg, true);
 		}
 
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs k)

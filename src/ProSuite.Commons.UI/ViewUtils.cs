@@ -74,8 +74,10 @@ namespace ProSuite.Commons.UI
 			}
 		}
 
-		public static async Task<T> TryAsync<T>([NotNull] Task<T> action, IMsg msg,
-		                                        [CallerMemberName] string caller = null)
+		public static async Task<T> TryAsync<T>([NotNull] Task<T> action,
+		                                        [NotNull] IMsg msg,
+		                                        bool suppressErrorMessageBox = false,
+												[CallerMemberName] string caller = null)
 		{
 			Assert.ArgumentNotNull(action, nameof(action));
 			Assert.ArgumentNotNull(msg, nameof(msg));
@@ -88,7 +90,7 @@ namespace ProSuite.Commons.UI
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, msg);
+				HandleError(e, msg, suppressErrorMessageBox);
 			}
 
 			return await Task.FromResult(default(T));
