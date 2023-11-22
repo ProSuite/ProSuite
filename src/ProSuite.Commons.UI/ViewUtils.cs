@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -12,6 +13,8 @@ namespace ProSuite.Commons.UI
 {
 	public static class ViewUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		public static void Try([NotNull] Action action, [NotNull] IMsg msg,
 		                       bool suppressErrorMessageBox = false,
 		                       [CallerMemberName] string caller = null)
@@ -77,7 +80,7 @@ namespace ProSuite.Commons.UI
 		public static async Task<T> TryAsync<T>([NotNull] Task<T> action,
 		                                        [NotNull] IMsg msg,
 		                                        bool suppressErrorMessageBox = false,
-												[CallerMemberName] string caller = null)
+		                                        [CallerMemberName] string caller = null)
 		{
 			Assert.ArgumentNotNull(action, nameof(action));
 			Assert.ArgumentNotNull(msg, nameof(msg));
@@ -120,15 +123,34 @@ namespace ProSuite.Commons.UI
 		{
 			Assert.ArgumentNotNull(action, nameof(action));
 
-			if (Application.Current.Dispatcher.CheckAccess())
+			// NOTE: Application.Current is null in ArcMap
+
+			Dispatcher dispatcher = Application.Current?.Dispatcher;
+
+			// Do not throw from this method! A crash is almost guaranteed.
+
+			if (dispatcher == null)
 			{
-				//No invoke needed
-				action();
+				_msg.Warn("No dispatcher in this application");
+				return;
 			}
-			else
+
+			try
 			{
-				//We are not on the UI
-				Application.Current.Dispatcher.BeginInvoke(action);
+				if (dispatcher.CheckAccess())
+				{
+					//No invoke needed
+					action();
+				}
+				else
+				{
+					//We are not on the UI
+					dispatcher.BeginInvoke(action);
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Error("Error running action on UI thread", e);
 			}
 		}
 	}
