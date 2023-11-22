@@ -4,11 +4,11 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
-using NUnit.Framework.Internal;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Tests.Test.Construction;
+using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
 using ProSuite.QA.Tests.Transformers.Filters;
@@ -21,7 +21,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.InitializeLicense(activateAdvancedLicense:true);
+			TestUtils.InitializeLicense(activateAdvancedLicense: true);
 		}
 
 		[OneTimeTearDown]
@@ -48,10 +48,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				IFeature f = fc.CreateFeature();
 				f.Shape = CurveConstruction.StartLine(10, 10).LineTo(50, 80).LineTo(90, 20)
-										   .LineTo(10, 10).Curve;
+				                           .LineTo(10, 10).Curve;
 				f.Store();
 			}
-
 
 			{
 				IFeature f = fc.CreateFeature();
@@ -236,7 +235,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			fields.AddField(FieldUtils.CreateOIDField());
 			ISpatialReference sr =
 				SpatialReferenceUtils.CreateSpatialReference(
-					(int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+					(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
 
 			fields.AddField(
 				FieldUtils.CreateShapeField("Shape", esriGeometryType.esriGeometryPolyline, sr,
@@ -257,7 +256,6 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-
 			TrDissolve dissolve =
 				new TrDissolve(ReadOnlyTableFactory.Create(fc))
 				{ Search = 1, NeighborSearchOption = TrDissolve.SearchOption.Tile };
@@ -268,7 +266,6 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				runner.KeepGeometry = true;
 				runner.Execute();
 			}
-
 		}
 
 		[Test]
@@ -623,7 +620,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[Category(TestCategory.Sde)]
 		public void Test491()
 		{
-			var workspace = (IFeatureWorkspace)TestData.TestDataUtils.OpenTopgisTlm();
+			var workspace = (IFeatureWorkspace) TestDataUtils.OpenTopgisTlm();
 
 			IReadOnlyFeatureClass fg =
 				ReadOnlyTableFactory.Create(
@@ -643,12 +640,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrIntersect trIntersect = new TrIntersect(trDissolve.GetTransformed(), bo);
 			trIntersect.SetConstraint(1, "OBJEKTART = 5");
 
-			QaConstraint qa = new QaConstraint(trIntersect.GetTransformed(), "PartIntersected <= 0.1");
+			QaConstraint qa =
+				new QaConstraint(trIntersect.GetTransformed(), "PartIntersected <= 0.1");
 
 			var runner = new QaContainerTestRunner(10000, qa);
 			runner.TestContainer.MaxCachedPointCount = 5000000;
 			runner.Execute();
-
 		}
 
 		[Test]
@@ -659,12 +656,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference
 				((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
 
-
 			IFeatureClass fcSg = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "TLM_STEHENDES_GEWAESSER", FieldUtils.CreateFields(
 					FieldUtils.CreateOIDField(),
 					FieldUtils.CreateIntegerField("OBJEKTART"),
-					FieldUtils.CreateField("TLM_GEWAESSER_LAUF_UUID", esriFieldType.esriFieldTypeGUID),
+					FieldUtils.CreateField("TLM_GEWAESSER_LAUF_UUID",
+					                       esriFieldType.esriFieldTypeGUID),
 					FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolyline, sr)));
 
 			ITable tblGl = DatasetUtils.CreateTable(
@@ -814,8 +811,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				}
 			}
 
-
-			QaConstraint qa = TestTOP_7505(fcSg, tblGl, fcGk, fcFg, out List<IReadOnlyTable> tables);
+			QaConstraint qa =
+				TestTOP_7505(fcSg, tblGl, fcGk, fcFg, out List<IReadOnlyTable> tables);
 
 			//{
 			//	var runner = new QaContainerTestRunner(10000, qa);
@@ -824,9 +821,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			//}
 			{
 				QaExportTables exp = new QaExportTables(tables, "C:\\temp\\TOP_7505")
-				{ ExportTileIds = true, ExportTiles = true };
+				                     { ExportTileIds = true, ExportTiles = true };
 				var runner = new QaContainerTestRunner(1000, qa, exp);
-//				var runner = new QaContainerTestRunner(1000, qa);
+				//				var runner = new QaContainerTestRunner(1000, qa);
 				runner.Execute();
 				Assert.AreEqual(0, runner.Errors.Count);
 			}
@@ -910,7 +907,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("strassen");
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference
-				((int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+				((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
 
 			IFeatureClass fcStrasse = DatasetUtils.CreateSimpleFeatureClass(ws, "TLM_STRASSE",
 				FieldUtils.CreateFields(
@@ -926,14 +923,15 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPoint, sr)));
 
 			// FcStrassen Features
-			{ // to ensure extent
+			{
+				// to ensure extent
 				IFeature f = fcStrasse.CreateFeature();
 				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(100, 100).Curve;
 				f.Value[1] = 1;
 				f.Store();
 			}
 			Guid avs = Guid.NewGuid();
-			{ 
+			{
 				IFeature f = fcStrasse.CreateFeature();
 				f.Shape = CurveConstruction.StartLine(500, 500).LineTo(1020, 200).Curve;
 				f.Value[1] = 2;
@@ -958,13 +956,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			IReadOnlyFeatureClass roStrasse = ReadOnlyTableFactory.Create(fcStrasse);
 			IReadOnlyFeatureClass roStrassenInfo = ReadOnlyTableFactory.Create(fcStrassenInfo);
 
-
 			TrDissolve trDisAvs = new TrDissolve(roStrasse)
-			                           {
-				                           Search = 50,
-				                           GroupBy = new[] { "TLM_STR_AVS_UUID" },
-										   TransformerName = "DisAvs"
-			                           };
+			                      {
+				                      Search = 50,
+				                      GroupBy = new[] { "TLM_STR_AVS_UUID" },
+				                      TransformerName = "DisAvs"
+			                      };
 			IReadOnlyFeatureClass roDisAvs = trDisAvs.GetTransformed();
 
 			TrDissolve trDisStrassenRest = new TrDissolve(roStrasse)
@@ -975,26 +972,25 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			                               };
 			IReadOnlyFeatureClass roDisStrassenRest = trDisStrassenRest.GetTransformed();
 
-
 			TrSpatialJoin trSjAvs = new TrSpatialJoin(roStrassenInfo, roDisAvs)
-			                          {
-				                          OuterJoin = true, Grouped = true,
-				                          T1Attributes = new[] { "SUM(ANZAHL_AVS) AS GESAMT_AVS" },
-				                          T1CalcAttributes =
-					                          new[] { "IIF(OBJECTID > 0,1,0) AS ANZAHL_AVS" },
-				                          TransformerName = "SjAvs"
-			                          };
+			                        {
+				                        OuterJoin = true, Grouped = true,
+				                        T1Attributes = new[] { "SUM(ANZAHL_AVS) AS GESAMT_AVS" },
+				                        T1CalcAttributes =
+					                        new[] { "IIF(OBJECTID > 0,1,0) AS ANZAHL_AVS" },
+				                        TransformerName = "SjAvs"
+			                        };
 			IReadOnlyFeatureClass roSjAvs = trSjAvs.GetTransformed();
 
 			TrSpatialJoin trSjRest = new TrSpatialJoin(roSjAvs, roDisStrassenRest)
-			                              {
-				                              OuterJoin = true, Grouped = true,
-				                              T1Attributes =
-					                              new[] { "SUM(ANZAHL_REST) AS GESAMT_REST" },
-				                              T1CalcAttributes =
-					                              new[] { "IIF(OBJECTID > 0,1,0) AS ANZAHL_REST" },
-				                              TransformerName = "SjRest"
-			                              };
+			                         {
+				                         OuterJoin = true, Grouped = true,
+				                         T1Attributes =
+					                         new[] { "SUM(ANZAHL_REST) AS GESAMT_REST" },
+				                         T1CalcAttributes =
+					                         new[] { "IIF(OBJECTID > 0,1,0) AS ANZAHL_REST" },
+				                         TransformerName = "SjRest"
+			                         };
 			IReadOnlyTable roSjRest = trSjRest.GetTransformed();
 
 			QaConstraint qa = new QaConstraint(roSjRest, "GESAMT_AVS = 2 AND GESAMT_REST = 1");
@@ -1018,7 +1014,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("gewaesser");
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference
-				((int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+				((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
 
 			IFeatureClass fcFgw = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "TLM_FLIESSGEWAESSER",
@@ -1030,7 +1026,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				ws, "TLM_STEHENDES_GEWAESSER",
 				FieldUtils.CreateFields(
 					FieldUtils.CreateOIDField(),
-					FieldUtils.CreateField("TLM_GEWAESSER_LAUF_UUID", esriFieldType.esriFieldTypeGUID),
+					FieldUtils.CreateField("TLM_GEWAESSER_LAUF_UUID",
+					                       esriFieldType.esriFieldTypeGUID),
 					FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolyline, sr)));
 
 			IFeatureClass fcGwk = DatasetUtils.CreateSimpleFeatureClass(
@@ -1109,11 +1106,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			IReadOnlyFeatureClass roEpFgw = trEpFgw.GetTransformed();
 
 			TrOnlyDisjointFeatures fiDjSgwFgw =
-					new TrOnlyDisjointFeatures(roMjSgwGl, roEpFgw)
-					{
-						FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All,
-//						TransformerName = "fiDjSgwFgw"
-					};
+				new TrOnlyDisjointFeatures(roMjSgwGl, roEpFgw)
+				{
+					FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All,
+					//						TransformerName = "fiDjSgwFgw"
+				};
 			IReadOnlyFeatureClass roDjSgwFgw = fiDjSgwFgw.GetTransformed();
 
 			TrDissolve trDisDjSgwFgw =
@@ -1162,7 +1159,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				QaExportTables exp = new QaExportTables(
 					                     new List<IReadOnlyTable>
 					                     {
-											 roFgw, roSgw, roGwk, roSjDisSgwGwk
+						                     roFgw, roSgw, roGwk, roSjDisSgwGwk
 					                     }, "C:\\temp\\TOP_5753")
 				                     { ExportTileIds = true, ExportTiles = true };
 				var runner = new QaContainerTestRunner(3000, qa, exp);
