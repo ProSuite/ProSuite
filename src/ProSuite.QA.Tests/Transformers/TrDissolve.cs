@@ -11,6 +11,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
@@ -554,7 +555,8 @@ namespace ProSuite.QA.Tests.Transformers
 			private IEnumerable<IReadOnlyFeature> DissolveSearchedAreaFeatures(ITableFilter filter,
 				bool searchAcrossTiles)
 			{
-				IEnvelope spatialFilterEnvelope = (filter as IFeatureClassFilter)?.FilterGeometry?.Envelope;
+				IEnvelope spatialFilterEnvelope =
+					(filter as IFeatureClassFilter)?.FilterGeometry?.Envelope;
 				EnvelopeXY requestedAreaXy =
 					spatialFilterEnvelope == null
 						? null
@@ -569,15 +571,17 @@ namespace ProSuite.QA.Tests.Transformers
 						rowsToDissolve.ToDictionary(r => (long) r.OID, r => (IReadOnlyFeature) r);
 
 					var geomList = new List<MultiPolycurve>();
+					IReadOnlyFeature feature = null;
 					foreach (IReadOnlyRow row in rowsToDissolve)
 					{
-						MultiPolycurve multiPolycurve = GetMultiPolycurve(row);
+						feature = (IReadOnlyFeature) row;
+						MultiPolycurve multiPolycurve = GetMultiPolycurve(feature);
 						geomList.Add(multiPolycurve);
 					}
 
 					// 1. Step: Reduce number of polys per group by assembling union-able group:
 					IList<ICollection<MultiPolycurve>> unionablePolygons =
-						GetUnionablePolygonGroups(geomList, tolerance);
+						GetUnionablePolygonGroups(geomList, tolerance, feature);
 
 					//  Enlarge groups if necessary with neighboring tile's features:
 					foreach (ICollection<MultiPolycurve> group in unionablePolygons)
@@ -646,37 +650,53 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			private static IList<ICollection<MultiPolycurve>> GetUnionablePolygonGroups(
-				IEnumerable<MultiPolycurve> polygons, double tolerance)
+				IEnumerable<MultiPolycurve> polygons, double tolerance,
+				IReadOnlyFeature templateFeature)
 			{
 				IList<ICollection<MultiPolycurve>> unionablePolygons =
 					GeomTopoOpUtils.GroupPolygons(
 						polygons.ToList(),
 						(m1, m2) =>
 						{
-							bool canUnion = GeomTopoOpUtils.CanDissolveAreasXY(
-								m1, m2, tolerance,
-								out IList<IntersectionPoint3D> intersectionPoints);
-
-							if (canUnion)
+							try
 							{
-								// TODO: Remember intersection points which are the most expensive part to calculate, usually
-							}
+								bool canUnion = GeomTopoOpUtils.CanDissolveAreasXY(
+									m1, m2, tolerance,
+									out IList<IntersectionPoint3D> intersectionPoints);
 
-							return canUnion;
+								if (canUnion)
+								{
+									// TODO: Remember intersection points which are the most expensive part to calculate, usually
+								}
+
+								return canUnion;
+							}
+							catch (GeomException e)
+							{
+								_msg.Warn("Error calculating Geom-Union. Using fall-back", e);
+
+								var group = new List<MultiPolycurve> { m1, m2 };
+
+								IPolygon result = Union(group, tolerance, templateFeature.Shape);
+
+								int resultPartCount = GeometryUtils.GetPartCount(result);
+
+								return resultPartCount != m1.PartCount + m2.PartCount;
+							}
 						}, tolerance);
 
 				return unionablePolygons;
 			}
 
-			private static MultiPolycurve GetMultiPolycurve(IReadOnlyRow row)
+			private static MultiPolycurve GetMultiPolycurve(IReadOnlyFeature feature)
 			{
-				IReadOnlyFeature feature = (IReadOnlyFeature) row;
 				IPolycurve polycurve = (IPolycurve) feature.Shape;
 
 				MultiPolycurve multiPolycurve =
 					GeometryConversionUtils.CreateMultiPolycurve(polycurve);
 
 				multiPolycurve.Id = feature.OID;
+
 				return multiPolycurve;
 			}
 
@@ -710,7 +730,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				// TODO: Filter using difference and where clause for group by attribute values
 				// and possibly exclude already found features.
-				IFeatureClassFilter filterClone = (IFeatureClassFilter)filter.Clone();
+				IFeatureClassFilter filterClone = (IFeatureClassFilter) filter.Clone();
 
 				// TODO: Instead of the current tile use the union of the previously searched areas
 				IEnvelope currentTile =
@@ -745,19 +765,21 @@ namespace ProSuite.QA.Tests.Transformers
 					// Create lists with the new features/polygons
 					var expandedPolygonList = new List<MultiPolycurve>(groupGeometries);
 					var additionalFeaturesByOid = new Dictionary<long, IReadOnlyFeature>();
+					IReadOnlyFeature feature = null;
 					foreach (IReadOnlyRow extraRow in expandedGroup)
 					{
 						if (! allFeaturesByOid.ContainsKey(extraRow.OID))
 						{
-							additionalFeaturesByOid.Add(extraRow.OID, (IReadOnlyFeature) extraRow);
-							expandedPolygonList.Add(GetMultiPolycurve(extraRow));
+							feature = (IReadOnlyFeature) extraRow;
+							additionalFeaturesByOid.Add(extraRow.OID, feature);
+							expandedPolygonList.Add(GetMultiPolycurve(feature));
 						}
 					}
 
 					// Determine the new grouping considering the newly gotten features
 					IList<ICollection<MultiPolycurve>> newGroupings =
 						GetUnionablePolygonGroups(
-							expandedPolygonList, tolerance);
+							expandedPolygonList, tolerance, feature);
 
 					// Now find the (potentially enlarged) original group
 					long anyOriginalOid = Assert.NotNull(groupGeometries.First().Id).Value;
