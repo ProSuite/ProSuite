@@ -7,6 +7,7 @@ using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.Attributes;
+using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.DataModel;
@@ -37,15 +38,14 @@ namespace ProSuite.DdxEditor.Content.ObjectCategories
 		}
 
 		protected override void AddEntityPanels(
-			ICompositeEntityControl<ObjectSubtype, IViewObserver> compositeControl)
+			ICompositeEntityControl<ObjectSubtype, IViewObserver> compositeControl,
+			IItemNavigation itemNavigation)
 		{
-			base.AddEntityPanels(compositeControl);
+			base.AddEntityPanels(compositeControl, itemNavigation);
 
-			var control =
-				new ObjectSubtypeControl<ObjectSubtype>();
+			var control = new ObjectSubtypeControl<ObjectSubtype>();
 
-			control.Observer =
-				new ObjectSubtypePresenter(this, control, GetCriteriumToAdd);
+			control.Observer = new ObjectSubtypePresenter(this, control, GetCriteriumToAdd);
 
 			compositeControl.AddPanel(control);
 		}

@@ -4,6 +4,7 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.Properties;
+using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
@@ -63,7 +64,8 @@ namespace ProSuite.DdxEditor.Content.Connections
 		}
 
 		protected override void AddEntityPanels(
-			ICompositeEntityControl<E, IViewObserver> compositeControl)
+			ICompositeEntityControl<E, IViewObserver> compositeControl,
+			IItemNavigation itemNavigation)
 		{
 			compositeControl.AddPanel(new ConnectionProviderControl<E>(this));
 		}

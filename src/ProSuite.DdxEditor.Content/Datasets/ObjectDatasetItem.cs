@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ProSuite.Commons.DomainModels;
+using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.DataModel;
@@ -34,9 +35,10 @@ namespace ProSuite.DdxEditor.Content.Datasets
 		}
 
 		protected override void AddEntityPanels(
-			ICompositeEntityControl<T, IViewObserver> compositeControl)
+			ICompositeEntityControl<T, IViewObserver> compositeControl,
+			IItemNavigation itemNavigation)
 		{
-			base.AddEntityPanels(compositeControl);
+			base.AddEntityPanels(compositeControl, itemNavigation);
 
 			// could attach panel-specific presenter here, if needed
 			IEntityPanel<T> control = new ObjectDatasetControl<T>();

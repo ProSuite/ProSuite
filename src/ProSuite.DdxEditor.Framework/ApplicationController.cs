@@ -602,7 +602,6 @@ namespace ProSuite.DdxEditor.Framework
 
 			_currentItem = item;
 			_currentItem.Changed += _currentItem_Changed;
-			Assert.NotNull(_currentItem).ItemNavigation = this;
 
 			StartEditing();
 

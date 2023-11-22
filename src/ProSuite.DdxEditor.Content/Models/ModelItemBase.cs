@@ -79,12 +79,10 @@ namespace ProSuite.DdxEditor.Content.Models
 
 			if (Environment.Version < new Version(6, 0))
 			{
-				commands.Add(new AssignLayerFilesCommand<E>(
-					             this, applicationController));
+				commands.Add(new AssignLayerFilesCommand<E>(this, applicationController));
 			}
 
-			commands.Add(new RefreshModelContentCommand<E>(
-				             this, applicationController));
+			commands.Add(new RefreshModelContentCommand<E>(this, applicationController));
 
 			commands.Add(new CheckSpatialReferencesCommand<E>(
 				             this, applicationController, _modelBuilder));
@@ -302,12 +300,12 @@ namespace ProSuite.DdxEditor.Content.Models
 		}
 
 		protected override void AddEntityPanels(
-			ICompositeEntityControl<E, IViewObserver> compositeControl)
+			ICompositeEntityControl<E, IViewObserver> compositeControl,
+			IItemNavigation itemNavigation)
 		{
 			var view = new ModelControl<E>();
 
-			new ModelControlPresenter<E>(this, view, ItemNavigation);
-
+			new ModelControlPresenter<E>(this, view, itemNavigation);
 			compositeControl.AddPanel(view);
 		}
 
