@@ -85,7 +85,9 @@ namespace ProSuite.AGP.WorkList
 		/// <summary>
 		/// Loads associated layers if there are any.
 		/// </summary>
-		public virtual void LoadLayers() { }
+		public virtual void LoadAssociatedLayers() { }
+
+		public virtual void RemoveAssociatedLayers() { }
 
 		protected abstract void AddToMapCore(IEnumerable<Table> tables);
 

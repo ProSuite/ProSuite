@@ -53,6 +53,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
     <Content Include="Properties\Images\Add.png" />
     <Content Include="Properties\Images\CannotRemoveDependency.png" />
+    <Content Include="Properties\Images\GoToItem.png" />
     <Resource Include="Properties\Images\ConfigurationEditor.png" />
     <Content Include="Properties\Images\DdxEditor.ico" />
     <Content Include="Properties\Images\DefaultItemImage.png" />

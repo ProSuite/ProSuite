@@ -43,7 +43,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		void IssueFilterDoubleClicked(
 			[NotNull] InstanceConfigurationReferenceTableRow filterConfigTableRow);
 
-		void TestDescriptorLinkClicked([CanBeNull] TestDescriptor testDescriptor);
+		void GoToTestDescriptorClicked([CanBeNull] TestDescriptor testDescriptor);
 
 		void OpenUrlClicked();
 

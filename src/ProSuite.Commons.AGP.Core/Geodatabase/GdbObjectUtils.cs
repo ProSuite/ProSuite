@@ -99,17 +99,16 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return IsSameRow(feature1, feature2);
 		}
 
+		/// <returns>True iff the two rows are the same</returns>
+		/// <remarks>
+		/// This is a cheap test, but it assumes that both rows are from
+		/// the <b>same workspace</b>.  If the two rows are from different workspaces,
+		/// this method <em>may</em> return true even though the rows are different!
+		/// </remarks>
 		public static bool IsSameRow(Row row1, Row row2)
 		{
-			if (row1 == null && row2 == null)
-			{
-				return true;
-			}
-
-			if (row1 == null || row2 == null)
-			{
-				return false;
-			}
+			if (ReferenceEquals(row1, row2)) return true;
+			if (Equals(row1.Handle, row2.Handle)) return true;
 
 			if (row1.Handle == row2.Handle)
 			{
@@ -121,10 +120,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				return false;
 			}
 
-			Table table1 = row1.GetTable();
-			Table table2 = row2.GetTable();
-
-			return DatasetUtils.IsSameClass(table1, table2);
+			using (var table1 = row1.GetTable())
+			using (var table2 = row2.GetTable())
+			{
+				return DatasetUtils.IsSameTable(table1, table2);
+			}
 		}
 	}
 }

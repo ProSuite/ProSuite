@@ -2,15 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Essentials.Assertions;
@@ -84,9 +87,14 @@ namespace ProSuite.AGP.QA.WorkList
 			return true;
 		}
 
-		public override void LoadLayers()
+		public override void LoadAssociatedLayers()
 		{
 			AddToMapCore(GetTablesCore());
+		}
+
+		public override void RemoveAssociatedLayers()
+		{
+			RemoveFromMapCore(GetTablesCore());
 		}
 
 		protected override T GetContainerCore<T>()
@@ -98,6 +106,7 @@ namespace ProSuite.AGP.QA.WorkList
 
 			if (groupLayer == null)
 			{
+				_msg.DebugFormat("Creating new group layer {0}", groupLayerName);
 				return
 					LayerFactory.Instance.CreateGroupLayer(
 						MapView.Active.Map, 0, groupLayerName) as T;
@@ -119,6 +128,15 @@ namespace ProSuite.AGP.QA.WorkList
 					FeatureLayer featureLayer =
 						LayerFactory.Instance.CreateLayer<FeatureLayer>(
 							new FeatureLayerCreationParams(fc), groupLayer);
+
+					if (featureLayer == null)
+					{
+						_msg.DebugFormat("Created layer is null! Trying again...");
+						Thread.Sleep(500);
+						featureLayer =
+							LayerFactory.Instance.CreateLayer<FeatureLayer>(
+								new FeatureLayerCreationParams(fc), groupLayer);
+					}
 
 					// See DPS/#80: Sometimes a non-reproducible null layer results from the previous method.
 					Assert.NotNull(featureLayer,
@@ -143,6 +161,65 @@ namespace ProSuite.AGP.QA.WorkList
 
 				StandaloneTableFactory.Instance.CreateStandaloneTable(
 					new StandaloneTableCreationParams(table), groupLayer);
+			}
+		}
+
+		protected void RemoveFromMapCore(IEnumerable<Table> tables)
+		{
+			GroupLayer groupLayer = GetContainerCore<GroupLayer>();
+
+			var tableList = tables.ToList();
+
+			var layersToRemove = new List<MapMember>();
+			foreach (MapMember basicFeatureLayer in GetAssociatedLayers(groupLayer, tableList))
+			{
+				layersToRemove.Add(basicFeatureLayer);
+			}
+
+			QueuedTask.Run(() =>
+			{
+				Map activeMap = MapUtils.GetActiveMap();
+
+				activeMap.RemoveLayers(layersToRemove
+				                       .Where(mm => mm is Layer)
+				                       .Cast<Layer>());
+
+				activeMap.RemoveStandaloneTables(layersToRemove
+				                                 .Where(mm => mm is StandaloneTable)
+				                                 .Cast<StandaloneTable>());
+			});
+		}
+
+		private static IEnumerable<MapMember> GetAssociatedLayers(
+			[NotNull] GroupLayer groupLayer,
+			[NotNull] List<Table> associatedTables)
+		{
+			foreach (Layer layer in groupLayer.Layers)
+			{
+				if (layer is not BasicFeatureLayer featureLayer)
+				{
+					continue;
+				}
+
+				FeatureClass layerClass = featureLayer.GetFeatureClass();
+
+				foreach (Table table in associatedTables)
+				{
+					if (DatasetUtils.IsSameTable(table, layerClass))
+					{
+						yield return featureLayer;
+					}
+				}
+			}
+
+			foreach (StandaloneTable standaloneTable in groupLayer.StandaloneTables)
+			{
+				Table table = standaloneTable.GetTable();
+
+				if (associatedTables.Any(t => DatasetUtils.IsSameTable(t, table)))
+				{
+					yield return standaloneTable;
+				}
 			}
 		}
 
@@ -213,8 +290,7 @@ namespace ProSuite.AGP.QA.WorkList
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			var result = new IssueItemRepository(WorkListUtils.GetDistinctTables(tables),
-			                                     stateRepository);
+			var result = new IssueItemRepository(tables.Distinct(), stateRepository);
 
 			_msg.DebugStopTiming(watch, "Created issue work item repository");
 

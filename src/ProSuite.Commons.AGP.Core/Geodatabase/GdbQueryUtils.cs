@@ -1,19 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
-namespace ProSuite.Commons.AGP.Gdb
+namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
-	// TODO Should go to ProSuite.Commons.AGP.Core (but then we have to wrap CancelableProgressor)
-	// Or better just provide the CancellationToken from the CancelableProgressor in the signatures
 	public static class GdbQueryUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -22,7 +20,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		{
 			Assert.ArgumentNotNull(oids, nameof(oids));
 
-			return new QueryFilter {ObjectIDs = oids};
+			return new QueryFilter { ObjectIDs = oids };
 		}
 
 		[NotNull]
@@ -53,7 +51,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			[NotNull] IEnumerable<long> objectIds,
 			[CanBeNull] SpatialReference outputSpatialReference,
 			bool recycle,
-			[CanBeNull] CancelableProgressor cancelableProgressor = null)
+			CancellationToken cancellationToken = default)
 		{
 			IReadOnlyList<long> oidList = objectIds.ToList();
 
@@ -63,7 +61,7 @@ namespace ProSuite.Commons.AGP.Gdb
 
 				filter.OutputSpatialReference = outputSpatialReference;
 
-				return GetFeatures(featureClass, filter, recycle, cancelableProgressor);
+				return GetFeatures(featureClass, filter, recycle, cancellationToken);
 			}
 			catch (Exception e)
 			{
@@ -73,7 +71,7 @@ namespace ProSuite.Commons.AGP.Gdb
 				const int maxRowCount = 1000;
 				return GetRowsByObjectIdsBatched<Feature>(
 					featureClass, oidList, outputSpatialReference, recycle, maxRowCount,
-					cancelableProgressor);
+					cancellationToken);
 			}
 		}
 
@@ -81,7 +79,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			[NotNull] Table featureClass,
 			[CanBeNull] QueryFilter filter,
 			bool recycling,
-			[CanBeNull] CancelableProgressor cancelableProgressor = null)
+			CancellationToken cancellationToken = default)
 		{
 			var cursor = featureClass.Search(filter, recycling);
 
@@ -89,8 +87,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			{
 				while (cursor.MoveNext())
 				{
-					if (cancelableProgressor != null &&
-					    cancelableProgressor.CancellationToken.IsCancellationRequested)
+					if (cancellationToken.IsCancellationRequested)
 					{
 						yield break;
 					}
@@ -118,7 +115,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
-			QueryFilter filter = CreateFilter(new[] {oid});
+			QueryFilter filter = CreateFilter(new[] { oid });
 
 			using (RowCursor cursor = table.Search(filter, false))
 			{
@@ -140,7 +137,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			[NotNull] Table table,
 			[CanBeNull] QueryFilter filter = null,
 			bool recycle = true,
-			[CanBeNull] CancelableProgressor cancelableProgressor = null)
+			CancellationToken cancellationToken = default)
 			where T : Row
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -149,8 +146,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			{
 				while (cursor.MoveNext())
 				{
-					if (cancelableProgressor != null &&
-					    cancelableProgressor.CancellationToken.IsCancellationRequested)
+					if (cancellationToken.IsCancellationRequested)
 					{
 						yield break;
 					}
@@ -168,7 +164,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		/// <param name="outputSpatialReference"></param>
 		/// <param name="recycle"></param>
 		/// <param name="maxRowCount"></param>
-		/// <param name="cancelableProgressor"></param>
+		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
 		private static IEnumerable<T> GetRowsByObjectIdsBatched<T>(
 			[NotNull] Table table,
@@ -176,7 +172,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			SpatialReference outputSpatialReference,
 			bool recycle,
 			int maxRowCount,
-			[CanBeNull] CancelableProgressor cancelableProgressor = null) where T : Row
+			CancellationToken cancellationToken = default) where T : Row
 		{
 			foreach (IList<long> oidBatch in CollectionUtils.Split(objectIds, maxRowCount))
 			{
@@ -187,7 +183,7 @@ namespace ProSuite.Commons.AGP.Gdb
 
 				QueryFilter filter = GetOidListFilter(table, oidBatch, outputSpatialReference);
 
-				foreach (var row in GetRows<T>(table, filter, recycle, cancelableProgressor))
+				foreach (var row in GetRows<T>(table, filter, recycle, cancellationToken))
 				{
 					yield return row;
 				}

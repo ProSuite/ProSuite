@@ -16,16 +16,16 @@ namespace ProSuite.AGP.WorkList
 			new Dictionary<ISourceClass, List<long>>();
 
 		// todo daro: refactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
-		public SelectionItemRepository(Dictionary<Datastore, List<Table>> tablesByDatastore,
+		public SelectionItemRepository(IEnumerable<Table> tables,
 		                               Dictionary<Table, List<long>> selection,
 		                               IRepository stateRepository) : base(
-			tablesByDatastore, stateRepository)
+			tables, stateRepository)
 		{
 			foreach (var pair in selection)
 			{
 				var id = new GdbTableIdentity(pair.Key);
 				ISourceClass sourceClass =
-					DatastoreBySourceClasses.Keys.FirstOrDefault(s => s.Uses(id));
+					SourceClasses.FirstOrDefault(s => s.Uses(id));
 
 				if (sourceClass == null)
 				{

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
+using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
@@ -10,7 +10,7 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Keyboard;
+using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.Picker
 {
@@ -35,12 +35,14 @@ namespace ProSuite.AGP.Editing.Picker
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                bool areaSelect = false)
 		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Alt))
+			if (KeyboardUtils.IsModifierDown(Key.LeftAlt, exclusive: true) ||
+			    KeyboardUtils.IsModifierDown(Key.RightAlt, exclusive: true))
 			{
 				return PickerMode.PickAll;
 			}
 
-			if (KeyboardUtils.IsModifierPressed(Keys.Control))
+			if (KeyboardUtils.IsModifierDown(Key.LeftCtrl, exclusive: true) ||
+			    KeyboardUtils.IsModifierDown(Key.RightCtrl, exclusive: true))
 			{
 				return PickerMode.ShowPicker;
 			}

@@ -7,7 +7,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
-	public interface IWorkList : IRowCache, IDisposable, INotifyPropertyChanged
+	public interface IWorkList : IRowCache, INotifyPropertyChanged
 	{
 		[NotNull]
 		string Name { get; set; }

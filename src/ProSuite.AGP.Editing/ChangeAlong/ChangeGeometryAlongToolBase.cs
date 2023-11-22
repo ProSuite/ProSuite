@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -20,13 +19,13 @@ using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Keyboard;
+using ProSuite.Commons.UI;
+using ProSuite.Commons.UI.Input;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
@@ -60,9 +59,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected abstract string EditOperationDescription { get; }
 		protected abstract GeometryProcessingClient MicroserviceClient { get; }
 
-		protected override bool HandleEscape()
+		protected override async Task HandleEscapeAsync()
 		{
-			QueuedTaskUtils.Run(
+			Task task = QueuedTask.Run(
 				() =>
 				{
 					if (IsInSubcurveSelectionPhase())
@@ -74,11 +73,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 						SelectionUtils.ClearSelection();
 						StartSelectionPhase();
 					}
-
-					return true;
 				});
 
-			return true;
+			await ViewUtils.TryAsync(task, _msg);
 		}
 
 		protected override void OnToolActivatingCore()
@@ -102,11 +99,20 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				ResetDerivedGeometries();
 				StartSelectionPhase();
 			}
+			else
+			{
+				// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
+				Dictionary<MapMember, List<long>> selectionByLayer = args.Selection.ToDictionary();
+				IList<Feature> applicableSelection =
+					GetApplicableSelectedFeatures(selectionByLayer).ToList();
+
+				RefreshExistingChangeAlongCurves(applicableSelection, GetCancelableProgressor());
+			}
 
 			return true;
 		}
 
-		protected override Task OnEditCompletedCore(EditCompletedEventArgs args)
+		protected override Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
 		{
 			bool requiresRecalculate = args.CompletedType == EditCompletedType.Discard ||
 			                           args.CompletedType == EditCompletedType.Reconcile ||
@@ -137,7 +143,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					});
 			}
 
-			return base.OnEditCompletedCore(args);
+			return base.OnEditCompletedAsyncCore(args);
 		}
 
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
@@ -251,7 +257,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return task.Result;
 		}
 
-		protected override async Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
 			if (HasReshapeCurves())
 			{
@@ -259,7 +265,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 
 			// First or second phase:
-			if (shiftIsPressed)
+			if (shiftDown)
 			{
 				// With reshape curves and shift it would mean we're in the target selection phase
 				return ! HasReshapeCurves();
@@ -277,8 +283,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected bool IsInSubcurveSelectionPhase()
 		{
-			return HasReshapeCurves() &&
-			       ! KeyboardUtils.IsModifierPressed(Keys.Shift, true);
+			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+
+			return HasReshapeCurves() && ! shiftDown;
 		}
 
 		protected virtual bool CanUseAsTargetLayer(Layer layer)
@@ -326,7 +334,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			Cursor = TargetSelectionCursor;
 
-			SetupRectangleSketch();
+			SetupSketch(SketchGeometryType.Rectangle);
 		}
 
 		private async Task<bool> SelectTargetsAsync(
@@ -426,10 +434,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			[NotNull] IEnumerable<Feature> targetFeatures,
 			[CanBeNull] CancelableProgressor progressor)
 		{
-			bool shiftPressed = KeyboardUtils.IsModifierPressed(Keys.Shift);
+			bool shiftDown = KeyboardUtils.IsShiftDown();
 
 			IList<Feature> actualTargetFeatures = GetDistinctTargetFeatures(
-				targetFeatures, ChangeAlongCurves?.TargetFeatures, shiftPressed);
+				targetFeatures, ChangeAlongCurves?.TargetFeatures, shiftDown);
 
 			if (actualTargetFeatures.Count == 0)
 			{

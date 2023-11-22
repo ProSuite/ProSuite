@@ -7,7 +7,10 @@ using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -29,6 +32,15 @@ namespace ProSuite.Commons.AGP.Carto
 			Assert.NotNull(mapView, "no active MapView");
 
 			return mapView.Map;
+		}
+
+		[NotNull]
+		public static Uri GetMapUri(Project project, Map map)
+		{
+			Uri projectUri = new Uri(project.URI);
+			Uri mapUri = new Uri(projectUri, map.URI);
+
+			return mapUri;
 		}
 
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
@@ -84,14 +96,14 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] SelectionSet selectionSet,
-			[CanBeNull] SpatialReference outputSpatialReference)
+			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
 			return GetFeatures(selectionSet.ToDictionary(), outputSpatialReference);
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
-			[NotNull] Dictionary<MapMember, List<long>> oidsByMapMembers,
-			[CanBeNull] SpatialReference outputSpatialReference)
+			[NotNull] IEnumerable<KeyValuePair<MapMember, List<long>>> oidsByMapMembers,
+			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
 			foreach (var oidsByMapMember in oidsByMapMembers)
 			{
@@ -171,7 +183,19 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			foreach (Layer layer in mapView.Map.GetLayersAsFlattenedList())
+			Map map = mapView.Map;
+
+			foreach (T resultLayer in GetLayers(map, layerPredicate))
+			{
+				yield return resultLayer;
+			}
+		}
+
+		public static IEnumerable<T> GetLayers<T>([NotNull] Map map,
+		                                          [CanBeNull] Predicate<T> layerPredicate)
+			where T : Layer
+		{
+			foreach (Layer layer in map.GetLayersAsFlattenedList())
 			{
 				var matchingTypeLayer = layer as T;
 
@@ -270,9 +294,10 @@ namespace ProSuite.Commons.AGP.Carto
 			[CanBeNull] MapView mapView = null)
 		{
 			return GetStandaloneTables(
-				table => string.Equals(table.GetTable().GetName(),
-				                       tableName,
-				                       StringComparison.OrdinalIgnoreCase), mapView).FirstOrDefault();
+					table => string.Equals(table.GetTable().GetName(),
+					                       tableName,
+					                       StringComparison.OrdinalIgnoreCase), mapView)
+				.FirstOrDefault();
 		}
 
 		public static Geometry ToMapGeometry(MapView mapView,
@@ -340,15 +365,48 @@ namespace ProSuite.Commons.AGP.Carto
 			return GeometryEngine.Instance.Distance(mapPoint, radiusMapPoint);
 		}
 
+		/// <summary>
+		/// Zooms a map to a given envelope, applying an expansion factor and making sure the resulting
+		/// scale denominator is not larger than a given minimum denominator.
+		/// </summary>
+		/// <param name="mapView">The map view to zoom.</param>
+		/// <param name="extent">The extent to zoom to.</param>
+		/// <param name="expansionFactor">The expansion factor to apply to the extent. An expansion
+		/// factor of 1.1 enlarges the extent by 10% in both x and y</param>
+		/// <param name="minimumScale">The minimum scale denominator.</param>
+		public static async Task<bool> ZoomToAsync([NotNull] MapView mapView,
+		                                           [NotNull] Envelope extent,
+		                                           double expansionFactor,
+		                                           double minimumScale)
+		{
+			Assert.ArgumentNotNull(mapView, nameof(mapView));
+			Assert.ArgumentNotNull(extent, nameof(extent));
+			Assert.ArgumentCondition(! extent.IsEmpty, "extent must not be empty");
+
+			Envelope newExtent = extent;
+			if (expansionFactor > 0 && Math.Abs(expansionFactor - 1) > double.Epsilon)
+			{
+				newExtent = GeometryFactory.CreateEnvelope(extent, expansionFactor);
+			}
+
+			Map map = mapView.Map;
+			var newExtentMap =
+				GeometryUtils.EnsureSpatialReference(newExtent, map.SpatialReference);
+
+			Envelope currentExtent = mapView.Extent;
+			double currentScale = mapView.Camera.Scale;
+
+			Envelope zoomExtent = GetZoomExtent(newExtentMap, currentExtent,
+			                                    currentScale, minimumScale);
+
+			await mapView.ZoomToAsync(zoomExtent);
+
+			return true;
+		}
+
 		public static bool HasSelection([CanBeNull] MapView mapView)
 		{
 			return mapView?.Map?.SelectionCount > 0;
-		}
-
-		public static IEnumerable<Table> Distinct(
-			this IEnumerable<Table> tables)
-		{
-			return tables.Distinct(new TableComparer());
 		}
 
 		public static IEnumerable<BasicFeatureLayer> Distinct(
@@ -486,59 +544,50 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			return map == null ? Enumerable.Empty<T>() : map.GetLayersAsFlattenedList().OfType<T>();
 		}
-	}
 
-	public class TableComparer : IEqualityComparer<Table>
-	{
-		public bool Equals(Table x, Table y)
+		[NotNull]
+		private static Envelope GetZoomExtent([NotNull] Envelope newExtent,
+		                                      [NotNull] Envelope currentExtent,
+		                                      double currentScale,
+		                                      double minimumScale)
 		{
-			if (ReferenceEquals(x, y))
+			Assert.ArgumentNotNull(newExtent, nameof(newExtent));
+			Assert.ArgumentNotNull(currentExtent, nameof(currentExtent));
+
+			if (double.IsNaN(currentScale))
 			{
-				// both null or reference equal
-				return true;
+				return newExtent;
 			}
 
-			if (x == null || y == null)
+			if (currentScale < minimumScale)
 			{
-				return false;
+				// if the user zoomed in to below the minimum scale manually,
+				// allow that scale to be maintained
+				minimumScale = currentScale;
 			}
 
-			var left = new GdbTableIdentity(x);
-			var right = new GdbTableIdentity(y);
+			double minWidth = currentExtent.Width * (minimumScale / currentScale);
+			double minHeight = currentExtent.Height * (minimumScale / currentScale);
 
-			return Equals(left, right);
-		}
+			double width = newExtent.Width;
+			double height = newExtent.Height;
 
-		public int GetHashCode(Table obj)
-		{
-			return new GdbTableIdentity(obj).GetHashCode();
-		}
-	}
-
-	public class BasicFeatureLayerComparer : IEqualityComparer<BasicFeatureLayer>
-	{
-		public bool Equals(BasicFeatureLayer x, BasicFeatureLayer y)
-		{
-			if (ReferenceEquals(x, y))
+			if (width >= minWidth && height >= minHeight)
 			{
-				// both null or reference equal
-				return true;
+				return newExtent;
 			}
 
-			if (x == null || y == null)
-			{
-				return false;
-			}
+			MapPoint mapPoint = GeometryUtils.Centroid(newExtent);
 
-			var left = new GdbTableIdentity(x.GetTable());
-			var right = new GdbTableIdentity(y.GetTable());
+			double newWidth = width < minWidth
+				                  ? minWidth
+				                  : width;
+			double newHeight = height < minHeight
+				                   ? minHeight
+				                   : height;
 
-			return Equals(left, right);
-		}
-
-		public int GetHashCode(BasicFeatureLayer obj)
-		{
-			return new GdbTableIdentity(obj.GetTable()).GetHashCode();
+			return GeometryFactory.CreateEnvelope(mapPoint,
+			                                      newWidth, newHeight);
 		}
 	}
 }

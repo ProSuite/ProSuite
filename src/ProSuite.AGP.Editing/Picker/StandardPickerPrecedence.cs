@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.UI.Keyboard;
+using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.Picker
 {
@@ -15,12 +14,12 @@ namespace ProSuite.AGP.Editing.Picker
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                bool areaSelect = false)
 		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Alt))
+			if (KeyboardUtils.IsAltDown())
 			{
 				return PickerMode.PickAll;
 			}
 
-			if (KeyboardUtils.IsModifierPressed(Keys.Control))
+			if (KeyboardUtils.IsCtrlDown())
 			{
 				return PickerMode.ShowPicker;
 			}

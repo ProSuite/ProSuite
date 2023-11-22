@@ -106,7 +106,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 					ApplicationController = appController
 				};
 
-			string actionTitle = "Verify Last";
+			string actionTitle = $"{qualitySpecification.Name}: Verify Last Perimeter";
 
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 

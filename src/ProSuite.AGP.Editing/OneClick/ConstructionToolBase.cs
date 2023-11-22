@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -15,7 +14,8 @@ using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Keyboard;
+using ProSuite.Commons.UI;
+using ProSuite.Commons.UI.Input;
 using Cursor = System.Windows.Input.Cursor;
 
 namespace ProSuite.AGP.Editing.OneClick
@@ -114,7 +114,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return ! IsInSketchMode;
 		}
 
-		protected override Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
 			return Task.FromResult(! IsInSketchMode);
 		}
@@ -137,7 +137,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => "OnKeyDownCore");
 
-			if (IsShiftKey(k.Key))
+			if (KeyboardUtils.IsShiftKey(k.Key))
 			{
 				if (_intermittentSelectionPhase)
 				{
@@ -165,6 +165,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				// By backing up and re-setting the edit sketch the individual operations that made up the 
 				// sketch are lost.
+				// todo daro await
 				_editSketchBackup = GetCurrentSketchAsync().Result;
 
 				// TODO: Only clear the sketch and switch to selection phase if REALLY required
@@ -175,21 +176,27 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
+		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{
-			_msg.VerboseDebug(() => "OnKeyUpCore");
+			// todo daro more ViewUtils
+			_msg.VerboseDebug(() => $"HandleKeyUpCoreAsync ({Caption})");
 
-			if (IsShiftKey(k.Key))
+			if (KeyboardUtils.IsShiftKey(args.Key))
 			{
 				_intermittentSelectionPhase = false;
 
-				if (CanUseSelection(ActiveMapView))
+				Task<bool> task = QueuedTask.Run(() => CanUseSelection(ActiveMapView));
+
+				bool canUseSelection =
+					await ViewUtils.TryAsync(task, _msg, suppressErrorMessageBox: true);
+
+				if (canUseSelection)
 				{
 					StartSketchPhase();
 
 					if (_editSketchBackup != null)
 					{
-						ActiveMapView.SetCurrentSketchAsync(_editSketchBackup);
+						await ActiveMapView.SetCurrentSketchAsync(_editSketchBackup);
 
 						// This puts back the edit operations in the undo stack, but when clicking on the top one, the sketch 
 						// is cleared and undoing any previous operation has no effect any more.
@@ -208,16 +215,16 @@ namespace ProSuite.AGP.Editing.OneClick
 				_editSketchBackup = null;
 			}
 
-			if (k.Key == _keyRestorePrevious)
+			if (args.Key == _keyRestorePrevious)
 			{
 				RestorePreviousSketch();
 			}
 		}
 
-		protected override bool HandleEscape()
+		protected override async Task HandleEscapeAsync()
 		{
-			QueuedTaskUtils.Run(
-				delegate
+			Task task = QueuedTask.Run(
+				() => 
 				{
 					if (IsInSketchMode)
 					{
@@ -230,6 +237,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						}
 						else
 						{
+							// todo daro await
 							Geometry sketch = GetCurrentSketchAsync().Result;
 
 							if (sketch != null && ! sketch.IsEmpty)
@@ -239,7 +247,6 @@ namespace ProSuite.AGP.Editing.OneClick
 							else
 							{
 								SelectionUtils.ClearSelection();
-
 								StartSelectionPhase();
 							}
 						}
@@ -249,10 +256,9 @@ namespace ProSuite.AGP.Editing.OneClick
 						ClearSketchAsync();
 						SelectionUtils.ClearSelection();
 					}
-
-					return true;
 				});
-			return true;
+
+			await ViewUtils.TryAsync(task, _msg);
 		}
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
@@ -264,13 +270,13 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			// TODO: only if selection was cleared? Generally allow changing the selection through attribute selection?
-
 			if (! CanUseSelection(ActiveMapView))
 			{
 				//LogPromptForSelection();
 				StartSelectionPhase();
 			}
+
+			// TODO: virtual RefreshFeedbackCoreAsync(), override in AdvancedReshape
 
 			return true;
 		}
@@ -372,7 +378,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private bool CanStartSketchPhase(IList<Feature> selectedFeatures)
 		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
+			if (KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+			    KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true))
 			{
 				return false;
 			}

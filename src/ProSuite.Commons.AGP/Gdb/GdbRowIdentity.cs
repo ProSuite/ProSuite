@@ -1,5 +1,6 @@
 using System;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -51,6 +52,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			}
 		}
 
+		[Obsolete("Only used in unit test")]
 		[Pure]
 		[CanBeNull]
 		public Row GetRow()
