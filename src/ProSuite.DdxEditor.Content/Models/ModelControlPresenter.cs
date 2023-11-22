@@ -1,4 +1,5 @@
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
@@ -13,8 +14,8 @@ namespace ProSuite.DdxEditor.Content.Models
 		private readonly IModelView<E> _view;
 		private readonly IItemNavigation _itemNavigation;
 
-		public ModelControlPresenter(ModelItemBase<E> item, IModelView<E> view,
-		                             IItemNavigation itemNavigation)
+		public ModelControlPresenter([NotNull] ModelItemBase<E> item, [NotNull] IModelView<E> view,
+		                             [NotNull] IItemNavigation itemNavigation)
 			: base(item, view)
 		{
 			Assert.ArgumentNotNull(itemNavigation, nameof(itemNavigation));

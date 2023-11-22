@@ -10,18 +10,19 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 	public class DataQualityCategoryPresenter :
 		SimpleEntityItemPresenter<DataQualityCategoryItem>, IDataQualityCategoryObserver
 	{
-		public delegate Model FindModel(
+		public delegate Model FindModelDelegate(
 			IWin32Window owner, params ColumnDescriptor[] columns);
 
-		public DataQualityCategoryPresenter([NotNull] IDataQualityCategoryView view,
-		                                    [NotNull] DataQualityCategoryItem item,
-		                                    [NotNull] FindModel findModel)
+		public DataQualityCategoryPresenter([NotNull] DataQualityCategoryItem item,
+		                                    [NotNull] IDataQualityCategoryView view,
+		                                    [NotNull] FindModelDelegate findModelDelegate)
 			: base(item)
 		{
 			Assert.ArgumentNotNull(view, nameof(view));
+			Assert.ArgumentNotNull(findModelDelegate, nameof(findModelDelegate));
 
 			view.Observer = this;
-			view.FindDefaultModelDelegate = () => findModel(
+			view.FindDefaultModelDelegate = () => findModelDelegate(
 				view,
 				new ColumnDescriptor(nameof(Model.Name)),
 				new ColumnDescriptor(nameof(Model.Description)),
