@@ -99,7 +99,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 					ApplicationController = appController
 				};
 
-			string actionTitle = "Verify Selection";
+			string actionTitle = $"{qualitySpecification.Name}: Verify Selection";
 
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 

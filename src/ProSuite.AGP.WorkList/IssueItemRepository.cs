@@ -6,6 +6,7 @@ using ArcGIS.Desktop.Editing;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
@@ -19,9 +20,8 @@ namespace ProSuite.AGP.WorkList
 
 		private const string _statusFieldName = "STATUS";
 
-		public IssueItemRepository(Dictionary<Datastore, List<Table>> tablesByDatastore,
-		                           IRepository stateRepository) : base(
-			tablesByDatastore, stateRepository) { }
+		public IssueItemRepository(IEnumerable<Table> tables, IRepository stateRepository) : base(
+			tables, stateRepository) { }
 
 		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{

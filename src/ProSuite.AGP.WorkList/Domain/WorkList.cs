@@ -6,6 +6,7 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
@@ -204,18 +205,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				return GetItems(filter, ignoreListSettings).Count();
 			}
 		}
-
-		public virtual void Dispose()
-		{
-			Repository.Dispose();
-		}
-
-		/* Navigation */
-
-		// note daro: only change the item index for navigation! the index is the only valid truth!
-
-		/* This base class provides an overly simplistic implementation */
-		/* TODO should honour Status, Visibility, and AreaOfInterest */
 
 		#region Navigation public
 

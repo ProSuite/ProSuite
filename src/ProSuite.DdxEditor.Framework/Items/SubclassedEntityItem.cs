@@ -23,16 +23,17 @@ namespace ProSuite.DdxEditor.Framework.Items
 			ICompositeEntityControl<E, IViewObserver> control =
 				new SegmentedEntityControl<E>();
 
-			AddEntityPanels(control);
+			AddEntityPanels(control, itemNavigation);
 			AttachPresenter(control);
 
 			return (Control) control;
 		}
 
 		protected abstract void AttachPresenter(
-			ICompositeEntityControl<E, IViewObserver> control);
+			[NotNull] ICompositeEntityControl<E, IViewObserver> control);
 
 		protected abstract void AddEntityPanels(
-			ICompositeEntityControl<E, IViewObserver> compositeControl);
+			[NotNull] ICompositeEntityControl<E, IViewObserver> compositeControl,
+			[NotNull] IItemNavigation itemNavigation);
 	}
 }

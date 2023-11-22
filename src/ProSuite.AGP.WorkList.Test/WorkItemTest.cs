@@ -42,7 +42,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 			IRepository stateRepository =
 				new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-			_repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
+			_repository = new IssueItemRepository(new List<Table> { _table0, _table1 }, stateRepository);
 		}
 
 		[TearDown]

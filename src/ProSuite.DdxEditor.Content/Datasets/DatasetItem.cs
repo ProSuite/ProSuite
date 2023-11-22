@@ -7,6 +7,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.Commons.Validation;
+using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
@@ -87,7 +88,8 @@ namespace ProSuite.DdxEditor.Content.Datasets
 		}
 
 		protected override void AddEntityPanels(
-			ICompositeEntityControl<E, IViewObserver> compositeControl)
+			ICompositeEntityControl<E, IViewObserver> compositeControl,
+			IItemNavigation itemNavigation)
 		{
 			var control = new DatasetControl<E>();
 			new DatasetControlPresenter(control, FindDatasetCategory);

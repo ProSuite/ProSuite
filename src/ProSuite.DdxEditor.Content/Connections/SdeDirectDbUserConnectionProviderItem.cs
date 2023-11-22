@@ -1,5 +1,6 @@
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.Geodatabase;
 
@@ -16,9 +17,9 @@ namespace ProSuite.DdxEditor.Content.Connections
 
 		protected override void AddEntityPanels(
 			ICompositeEntityControl<SdeDirectDbUserConnectionProvider, IViewObserver>
-				compositeControl)
+				compositeControl, IItemNavigation itemNavigation)
 		{
-			base.AddEntityPanels(compositeControl);
+			base.AddEntityPanels(compositeControl, itemNavigation);
 
 			compositeControl.AddPanel(
 				new SdeDirectDbUserConnProviderCtrl<SdeDirectDbUserConnectionProvider>());

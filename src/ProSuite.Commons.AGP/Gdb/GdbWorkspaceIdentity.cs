@@ -1,6 +1,7 @@
 using System;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -9,10 +10,7 @@ namespace ProSuite.Commons.AGP.Gdb
 	// todo daro: check correct handle / instantiation of Uri
 	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>
 	{
-		private readonly string _instance;
-		private readonly string _version;
-		private readonly string _user;
-		private readonly EnterpriseDatabaseType _dbms;
+		[NotNull] private readonly DatastoreName _datastoreName;
 
 		public GdbWorkspaceIdentity([NotNull] Datastore datastore) :
 			this(datastore.GetConnector(), datastore.GetConnectionString()) { }
@@ -21,26 +19,21 @@ namespace ProSuite.Commons.AGP.Gdb
 		{
 			Assert.ArgumentNotNull(connector, nameof(connector));
 
-			_instance = null;
-			_version = null;
-			_user = null;
-			_dbms = EnterpriseDatabaseType.Unknown;
+			_datastoreName = new DatastoreName(connector);
+
 			ConnectionString = string.Empty;
 
 			switch (connector)
 			{
 				case DatabaseConnectionProperties connectionProperties:
-					_instance = connectionProperties.Instance;
-					_version = connectionProperties.Version;
-					_user = connectionProperties.User;
-					_dbms = connectionProperties.DBMS;
+
 					ConnectionString = connectionString;
 					WorkspaceFactory = WorkspaceFactory.SDE;
 					break;
 				case FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath:
 					// connectionString is "DATABASE=C:\\git\\KtLU.Dabank\\data\\Testdaten\\dabank_test_data\\Default.gdb"
 					ConnectionString = fileGeodatabaseConnectionPath.Path.ToString();
-					
+
 					WorkspaceFactory = WorkspaceFactory.FileGDB;
 					break;
 				case FileSystemConnectionPath fileSystemConnection:
@@ -58,52 +51,31 @@ namespace ProSuite.Commons.AGP.Gdb
 
 		public WorkspaceFactory WorkspaceFactory { get; }
 
-		[CanBeNull]
-		public T CreateConnector<T>() where T : Connector
-		{
-			Type type = typeof(T);
-			if (type == typeof(DatabaseConnectionProperties))
-			{
-				return new DatabaseConnectionProperties(_dbms) as T;
-			}
-
-			if (type == typeof(FileGeodatabaseConnectionPath))
-			{
-				return new FileGeodatabaseConnectionPath(
-					       new Uri(ConnectionString, UriKind.Absolute)) as T;
-			}
-
-			return null;
-		}
-
+		// TODO: Currently only used from un-used classes and unit test. Remove?
 		public Geodatabase OpenGeodatabase()
 		{
-			if (string.IsNullOrEmpty(ConnectionString))
-			{
-				return new Geodatabase(
-					new DatabaseConnectionProperties(_dbms)
-					{
-						Instance = _instance, Version = _version, User = _user
-					});
-			}
+			return (Geodatabase) OpenDatastore();
+		}
 
-			return new Geodatabase(
-				new FileGeodatabaseConnectionPath(new Uri(ConnectionString, UriKind.Absolute)));
+		/// <summary>
+		/// Opens the associated datastore
+		/// </summary>
+		/// <returns></returns>
+		public Datastore OpenDatastore()
+		{
+			return _datastoreName.Open();
 		}
 
 		public override string ToString()
 		{
-			return $"instance={_instance} version={_version} user={_user}, path={ConnectionString}";
+			return _datastoreName.GetDisplayText();
 		}
 
-		#region IEquatable<GdbRowIdentity> implementation
+		#region IEquatable<GdbWorkspaceIdentity> implementation
 
 		public bool Equals(GdbWorkspaceIdentity other)
 		{
-			return string.Equals(_instance, other._instance) &&
-			       string.Equals(_version, other._version) &&
-			       string.Equals(_user, other._user) &&
-			       Equals(ConnectionString, other.ConnectionString);
+			return _datastoreName.Equals(other._datastoreName);
 		}
 
 		public override bool Equals(object obj)
@@ -120,11 +92,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		{
 			unchecked
 			{
-				int hashCode = _instance != null ? _instance.GetHashCode() : 0;
-				hashCode = (hashCode * 397) ^ (_version != null ? _version.GetHashCode() : 0);
-				hashCode = (hashCode * 397) ^ (_user != null ? _user.GetHashCode() : 0);
-				hashCode = (hashCode * 397) ^ ConnectionString.GetHashCode();
-				return hashCode;
+				return _datastoreName.GetHashCode();
 			}
 		}
 

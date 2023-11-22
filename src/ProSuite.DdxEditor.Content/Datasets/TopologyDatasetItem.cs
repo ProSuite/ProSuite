@@ -1,4 +1,5 @@
 using ProSuite.Commons.DomainModels;
+using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.DataModel;
 
@@ -12,14 +13,14 @@ namespace ProSuite.DdxEditor.Content.Datasets
 			: base(modelBuilder, dataset, repository) { }
 
 		protected override void AddEntityPanels(
-			ICompositeEntityControl<TopologyDataset, IViewObserver> compositeControl)
+			ICompositeEntityControl<TopologyDataset, IViewObserver> compositeControl,
+			IItemNavigation itemNavigation)
 		{
 			// Dataset
-			base.AddEntityPanels(compositeControl);
+			base.AddEntityPanels(compositeControl, itemNavigation);
 
 			// TopologyDataset
-			IEntityPanel<TopologyDataset> control =
-				new TopologyDatasetControl<TopologyDataset>();
+			IEntityPanel<TopologyDataset> control = new TopologyDatasetControl<TopologyDataset>();
 
 			compositeControl.AddPanel(control);
 		}

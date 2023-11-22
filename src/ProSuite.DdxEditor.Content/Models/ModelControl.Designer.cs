@@ -51,6 +51,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			this._tabControl = new System.Windows.Forms.TabControl();
 			this._tabPageDefaultDatabase = new System.Windows.Forms.TabPage();
 			this._labelUseDefaultDatabaseForSchemaOnly = new System.Windows.Forms.Label();
+			this._booleanComboboxUseDefaultDatabaseForSchemaOnly = new ProSuite.Commons.UI.WinForms.Controls.BooleanCombobox();
 			this.groupBox4 = new System.Windows.Forms.GroupBox();
 			this._labelElementNameQualificationStatus = new System.Windows.Forms.Label();
 			this._textBoxLastHarvestedByUser = new System.Windows.Forms.TextBox();
@@ -65,6 +66,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			this._textBoxDefaultDatabaseSchemaOwner = new System.Windows.Forms.TextBox();
 			this._labelDefaultDatabaseName = new System.Windows.Forms.Label();
 			this._labelDefaultDatabaseSchemaOwner = new System.Windows.Forms.Label();
+			this._objectReferenceControlUserConnectionProvider = new ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
 			this.groupBox2 = new System.Windows.Forms.GroupBox();
 			this._buttonHarvestingPreview = new System.Windows.Forms.Button();
@@ -76,18 +78,18 @@ namespace ProSuite.DdxEditor.Content.Models
 			this._labelDatasetExclusionCriteria = new System.Windows.Forms.Label();
 			this._checkboxIgnoreUnregisteredTables = new System.Windows.Forms.CheckBox();
 			this._tabPageAdvanced = new System.Windows.Forms.TabPage();
-			this.groupBox3 = new System.Windows.Forms.GroupBox();
-			this.groupBox1 = new System.Windows.Forms.GroupBox();
-			this._comboBoxSqlCaseSensitivity = new System.Windows.Forms.ComboBox();
-			this._labelSqlCaseSensitivity = new System.Windows.Forms.Label();
-			this._booleanComboboxUseDefaultDatabaseForSchemaOnly = new global::ProSuite.Commons.UI.WinForms.Controls.BooleanCombobox();
-			this._objectReferenceControlUserConnectionProvider = new global::ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
-			this._objectReferenceControlSchemaOwnerConnectionProvider = new global::ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
-			this._objectReferenceControlRepositoryOwnerConnectionProvider = new global::ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
-			this._objectReferenceControlDatasetListBuilderFactoryClassDescriptor = new global::ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
-			this._objectReferenceControlAttributeConfiguratorFactoryClassDescriptor = new global::ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
-			this._objectReferenceControlSpatialReferenceDescriptor = new global::ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
 			this.label3 = new System.Windows.Forms.Label();
+			this._comboBoxSqlCaseSensitivity = new System.Windows.Forms.ComboBox();
+			this.groupBox3 = new System.Windows.Forms.GroupBox();
+			this._objectReferenceControlSchemaOwnerConnectionProvider = new ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
+			this._objectReferenceControlRepositoryOwnerConnectionProvider = new ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
+			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this._objectReferenceControlDatasetListBuilderFactoryClassDescriptor = new ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
+			this._objectReferenceControlAttributeConfiguratorFactoryClassDescriptor = new ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
+			this._labelSqlCaseSensitivity = new System.Windows.Forms.Label();
+			this._objectReferenceControlSpatialReferenceDescriptor = new ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl();
+			this._buttonGoToSpatialReference = new System.Windows.Forms.Button();
+			this._buttonGoToUserConnectionProvider = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this._numericUpDownDefaultMinimumSegmentLength)).BeginInit();
 			this._tabControl.SuspendLayout();
 			this._tabPageDefaultDatabase.SuspendLayout();
@@ -102,7 +104,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			// _labelName
 			// 
 			this._labelName.AutoSize = true;
-			this._labelName.Location = new System.Drawing.Point(69, 6);
+			this._labelName.Location = new System.Drawing.Point(81, 6);
 			this._labelName.Name = "_labelName";
 			this._labelName.Size = new System.Drawing.Size(38, 13);
 			this._labelName.TabIndex = 0;
@@ -113,15 +115,15 @@ namespace ProSuite.DdxEditor.Content.Models
 			// 
 			this._textBoxName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxName.Location = new System.Drawing.Point(113, 3);
+			this._textBoxName.Location = new System.Drawing.Point(125, 3);
 			this._textBoxName.Name = "_textBoxName";
-			this._textBoxName.Size = new System.Drawing.Size(533, 20);
+			this._textBoxName.Size = new System.Drawing.Size(527, 20);
 			this._textBoxName.TabIndex = 0;
 			// 
 			// _labelSpatialReferenceDescriptor
 			// 
 			this._labelSpatialReferenceDescriptor.AutoSize = true;
-			this._labelSpatialReferenceDescriptor.Location = new System.Drawing.Point(17, 103);
+			this._labelSpatialReferenceDescriptor.Location = new System.Drawing.Point(29, 103);
 			this._labelSpatialReferenceDescriptor.Name = "_labelSpatialReferenceDescriptor";
 			this._labelSpatialReferenceDescriptor.Size = new System.Drawing.Size(90, 13);
 			this._labelSpatialReferenceDescriptor.TabIndex = 29;
@@ -162,17 +164,17 @@ namespace ProSuite.DdxEditor.Content.Models
 			// 
 			this._textBoxDescription.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._textBoxDescription.Location = new System.Drawing.Point(113, 29);
+			this._textBoxDescription.Location = new System.Drawing.Point(125, 29);
 			this._textBoxDescription.Multiline = true;
 			this._textBoxDescription.Name = "_textBoxDescription";
 			this._textBoxDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxDescription.Size = new System.Drawing.Size(533, 65);
+			this._textBoxDescription.Size = new System.Drawing.Size(527, 65);
 			this._textBoxDescription.TabIndex = 1;
 			// 
 			// _labelDescription
 			// 
 			this._labelDescription.AutoSize = true;
-			this._labelDescription.Location = new System.Drawing.Point(44, 32);
+			this._labelDescription.Location = new System.Drawing.Point(56, 32);
 			this._labelDescription.Name = "_labelDescription";
 			this._labelDescription.Size = new System.Drawing.Size(63, 13);
 			this._labelDescription.TabIndex = 39;
@@ -296,6 +298,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			this._tabPageDefaultDatabase.Controls.Add(this._booleanComboboxUseDefaultDatabaseForSchemaOnly);
 			this._tabPageDefaultDatabase.Controls.Add(this.groupBox4);
 			this._tabPageDefaultDatabase.Controls.Add(this._labelUserConnectionProvider);
+			this._tabPageDefaultDatabase.Controls.Add(this._buttonGoToUserConnectionProvider);
 			this._tabPageDefaultDatabase.Controls.Add(this._objectReferenceControlUserConnectionProvider);
 			this._tabPageDefaultDatabase.Location = new System.Drawing.Point(4, 22);
 			this._tabPageDefaultDatabase.Name = "_tabPageDefaultDatabase";
@@ -314,6 +317,17 @@ namespace ProSuite.DdxEditor.Content.Models
 			this._labelUseDefaultDatabaseForSchemaOnly.TabIndex = 47;
 			this._labelUseDefaultDatabaseForSchemaOnly.Text = "Use master database for:";
 			this._labelUseDefaultDatabaseForSchemaOnly.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			// 
+			// _booleanComboboxUseDefaultDatabaseForSchemaOnly
+			// 
+			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.FalseText = "Schema and data (central database)";
+			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.FlatStyle = System.Windows.Forms.FlatStyle.Standard;
+			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.Location = new System.Drawing.Point(248, 45);
+			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.Name = "_booleanComboboxUseDefaultDatabaseForSchemaOnly";
+			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.Size = new System.Drawing.Size(257, 21);
+			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.TabIndex = 1;
+			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.TrueText = "Schema only";
+			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.Value = false;
 			// 
 			// groupBox4
 			// 
@@ -468,6 +482,20 @@ namespace ProSuite.DdxEditor.Content.Models
 			this._labelDefaultDatabaseSchemaOwner.Text = "Schema owner:";
 			this._labelDefaultDatabaseSchemaOwner.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			// 
+			// _objectReferenceControlUserConnectionProvider
+			// 
+			this._objectReferenceControlUserConnectionProvider.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this._objectReferenceControlUserConnectionProvider.DataSource = null;
+			this._objectReferenceControlUserConnectionProvider.DisplayMember = null;
+			this._objectReferenceControlUserConnectionProvider.FindObjectDelegate = null;
+			this._objectReferenceControlUserConnectionProvider.FormatTextDelegate = null;
+			this._objectReferenceControlUserConnectionProvider.Location = new System.Drawing.Point(144, 19);
+			this._objectReferenceControlUserConnectionProvider.Name = "_objectReferenceControlUserConnectionProvider";
+			this._objectReferenceControlUserConnectionProvider.ReadOnly = false;
+			this._objectReferenceControlUserConnectionProvider.Size = new System.Drawing.Size(495, 20);
+			this._objectReferenceControlUserConnectionProvider.TabIndex = 0;
+			// 
 			// tabPage2
 			// 
 			this.tabPage2.Controls.Add(this.groupBox2);
@@ -603,6 +631,23 @@ namespace ProSuite.DdxEditor.Content.Models
 			this._tabPageAdvanced.Text = "Advanced";
 			this._tabPageAdvanced.UseVisualStyleBackColor = true;
 			// 
+			// label3
+			// 
+			this.label3.AutoSize = true;
+			this.label3.Location = new System.Drawing.Point(341, 17);
+			this.label3.Name = "label3";
+			this.label3.Size = new System.Drawing.Size(260, 13);
+			this.label3.TabIndex = 30;
+			this.label3.Text = "used for SQL statements processed by the QA engine";
+			// 
+			// _comboBoxSqlCaseSensitivity
+			// 
+			this._comboBoxSqlCaseSensitivity.FormattingEnabled = true;
+			this._comboBoxSqlCaseSensitivity.Location = new System.Drawing.Point(200, 14);
+			this._comboBoxSqlCaseSensitivity.Name = "_comboBoxSqlCaseSensitivity";
+			this._comboBoxSqlCaseSensitivity.Size = new System.Drawing.Size(135, 21);
+			this._comboBoxSqlCaseSensitivity.TabIndex = 0;
+			// 
 			// groupBox3
 			// 
 			this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -617,64 +662,6 @@ namespace ProSuite.DdxEditor.Content.Models
 			this.groupBox3.TabIndex = 3;
 			this.groupBox3.TabStop = false;
 			this.groupBox3.Text = "Master database connections";
-			// 
-			// groupBox1
-			// 
-			this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.groupBox1.Controls.Add(this._labelAttributeConfiguratorFactoryClassDescriptor);
-			this.groupBox1.Controls.Add(this._objectReferenceControlDatasetListBuilderFactoryClassDescriptor);
-			this.groupBox1.Controls.Add(this._labelDatasetListBuilderFactoryClassDescriptor);
-			this.groupBox1.Controls.Add(this._objectReferenceControlAttributeConfiguratorFactoryClassDescriptor);
-			this.groupBox1.Location = new System.Drawing.Point(8, 67);
-			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(631, 90);
-			this.groupBox1.TabIndex = 2;
-			this.groupBox1.TabStop = false;
-			this.groupBox1.Text = "Harvesting components";
-			// 
-			// _comboBoxSqlCaseSensitivity
-			// 
-			this._comboBoxSqlCaseSensitivity.FormattingEnabled = true;
-			this._comboBoxSqlCaseSensitivity.Location = new System.Drawing.Point(200, 14);
-			this._comboBoxSqlCaseSensitivity.Name = "_comboBoxSqlCaseSensitivity";
-			this._comboBoxSqlCaseSensitivity.Size = new System.Drawing.Size(135, 21);
-			this._comboBoxSqlCaseSensitivity.TabIndex = 0;
-			// 
-			// _labelSqlCaseSensitivity
-			// 
-			this._labelSqlCaseSensitivity.AutoSize = true;
-			this._labelSqlCaseSensitivity.Location = new System.Drawing.Point(89, 17);
-			this._labelSqlCaseSensitivity.Name = "_labelSqlCaseSensitivity";
-			this._labelSqlCaseSensitivity.Size = new System.Drawing.Size(105, 13);
-			this._labelSqlCaseSensitivity.TabIndex = 29;
-			this._labelSqlCaseSensitivity.Text = "SQL case sensitivity:";
-			this._labelSqlCaseSensitivity.TextAlign = System.Drawing.ContentAlignment.TopRight;
-			// 
-			// _booleanComboboxUseDefaultDatabaseForSchemaOnly
-			// 
-			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.FalseText = "Schema and data (central database)";
-			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.FlatStyle = System.Windows.Forms.FlatStyle.Standard;
-			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.Location = new System.Drawing.Point(248, 45);
-			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.Name = "_booleanComboboxUseDefaultDatabaseForSchemaOnly";
-			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.Size = new System.Drawing.Size(257, 21);
-			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.TabIndex = 1;
-			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.TrueText = "Schema only";
-			this._booleanComboboxUseDefaultDatabaseForSchemaOnly.Value = false;
-			// 
-			// _objectReferenceControlUserConnectionProvider
-			// 
-			this._objectReferenceControlUserConnectionProvider.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this._objectReferenceControlUserConnectionProvider.DataSource = null;
-			this._objectReferenceControlUserConnectionProvider.DisplayMember = null;
-			this._objectReferenceControlUserConnectionProvider.FindObjectDelegate = null;
-			this._objectReferenceControlUserConnectionProvider.FormatTextDelegate = null;
-			this._objectReferenceControlUserConnectionProvider.Location = new System.Drawing.Point(120, 19);
-			this._objectReferenceControlUserConnectionProvider.Name = "_objectReferenceControlUserConnectionProvider";
-			this._objectReferenceControlUserConnectionProvider.ReadOnly = false;
-			this._objectReferenceControlUserConnectionProvider.Size = new System.Drawing.Size(519, 20);
-			this._objectReferenceControlUserConnectionProvider.TabIndex = 0;
 			// 
 			// _objectReferenceControlSchemaOwnerConnectionProvider
 			// 
@@ -704,6 +691,21 @@ namespace ProSuite.DdxEditor.Content.Models
 			this._objectReferenceControlRepositoryOwnerConnectionProvider.Size = new System.Drawing.Size(414, 20);
 			this._objectReferenceControlRepositoryOwnerConnectionProvider.TabIndex = 1;
 			// 
+			// groupBox1
+			// 
+			this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.groupBox1.Controls.Add(this._labelAttributeConfiguratorFactoryClassDescriptor);
+			this.groupBox1.Controls.Add(this._objectReferenceControlDatasetListBuilderFactoryClassDescriptor);
+			this.groupBox1.Controls.Add(this._labelDatasetListBuilderFactoryClassDescriptor);
+			this.groupBox1.Controls.Add(this._objectReferenceControlAttributeConfiguratorFactoryClassDescriptor);
+			this.groupBox1.Location = new System.Drawing.Point(8, 67);
+			this.groupBox1.Name = "groupBox1";
+			this.groupBox1.Size = new System.Drawing.Size(631, 90);
+			this.groupBox1.TabIndex = 2;
+			this.groupBox1.TabStop = false;
+			this.groupBox1.Text = "Harvesting components";
+			// 
 			// _objectReferenceControlDatasetListBuilderFactoryClassDescriptor
 			// 
 			this._objectReferenceControlDatasetListBuilderFactoryClassDescriptor.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -732,6 +734,16 @@ namespace ProSuite.DdxEditor.Content.Models
 			this._objectReferenceControlAttributeConfiguratorFactoryClassDescriptor.Size = new System.Drawing.Size(414, 20);
 			this._objectReferenceControlAttributeConfiguratorFactoryClassDescriptor.TabIndex = 0;
 			// 
+			// _labelSqlCaseSensitivity
+			// 
+			this._labelSqlCaseSensitivity.AutoSize = true;
+			this._labelSqlCaseSensitivity.Location = new System.Drawing.Point(89, 17);
+			this._labelSqlCaseSensitivity.Name = "_labelSqlCaseSensitivity";
+			this._labelSqlCaseSensitivity.Size = new System.Drawing.Size(105, 13);
+			this._labelSqlCaseSensitivity.TabIndex = 29;
+			this._labelSqlCaseSensitivity.Text = "SQL case sensitivity:";
+			this._labelSqlCaseSensitivity.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			// 
 			// _objectReferenceControlSpatialReferenceDescriptor
 			// 
 			this._objectReferenceControlSpatialReferenceDescriptor.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -740,25 +752,43 @@ namespace ProSuite.DdxEditor.Content.Models
 			this._objectReferenceControlSpatialReferenceDescriptor.DisplayMember = null;
 			this._objectReferenceControlSpatialReferenceDescriptor.FindObjectDelegate = null;
 			this._objectReferenceControlSpatialReferenceDescriptor.FormatTextDelegate = null;
-			this._objectReferenceControlSpatialReferenceDescriptor.Location = new System.Drawing.Point(113, 100);
+			this._objectReferenceControlSpatialReferenceDescriptor.Location = new System.Drawing.Point(147, 100);
 			this._objectReferenceControlSpatialReferenceDescriptor.Name = "_objectReferenceControlSpatialReferenceDescriptor";
 			this._objectReferenceControlSpatialReferenceDescriptor.ReadOnly = false;
-			this._objectReferenceControlSpatialReferenceDescriptor.Size = new System.Drawing.Size(533, 20);
+			this._objectReferenceControlSpatialReferenceDescriptor.Size = new System.Drawing.Size(505, 20);
 			this._objectReferenceControlSpatialReferenceDescriptor.TabIndex = 2;
 			// 
-			// label3
+			// _buttonGoToSpatialReference
 			// 
-			this.label3.AutoSize = true;
-			this.label3.Location = new System.Drawing.Point(341, 17);
-			this.label3.Name = "label3";
-			this.label3.Size = new System.Drawing.Size(260, 13);
-			this.label3.TabIndex = 30;
-			this.label3.Text = "used for SQL statements processed by the QA engine";
+			this._buttonGoToSpatialReference.FlatAppearance.BorderSize = 0;
+			this._buttonGoToSpatialReference.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this._buttonGoToSpatialReference.Image = global::ProSuite.DdxEditor.Framework.Properties.Resources.GoToItem;
+			this._buttonGoToSpatialReference.Location = new System.Drawing.Point(125, 98);
+			this._buttonGoToSpatialReference.Margin = new System.Windows.Forms.Padding(1);
+			this._buttonGoToSpatialReference.Name = "_buttonGoToSpatialReference";
+			this._buttonGoToSpatialReference.Size = new System.Drawing.Size(18, 22);
+			this._buttonGoToSpatialReference.TabIndex = 40;
+			this._buttonGoToSpatialReference.UseVisualStyleBackColor = true;
+			this._buttonGoToSpatialReference.Click += new System.EventHandler(this._buttonGoToSpatialReference_Click);
+			// 
+			// _buttonGoToUserConnectionProvider
+			// 
+			this._buttonGoToUserConnectionProvider.FlatAppearance.BorderSize = 0;
+			this._buttonGoToUserConnectionProvider.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this._buttonGoToUserConnectionProvider.Image = global::ProSuite.DdxEditor.Framework.Properties.Resources.GoToItem;
+			this._buttonGoToUserConnectionProvider.Location = new System.Drawing.Point(122, 17);
+			this._buttonGoToUserConnectionProvider.Margin = new System.Windows.Forms.Padding(1);
+			this._buttonGoToUserConnectionProvider.Name = "_buttonGoToUserConnectionProvider";
+			this._buttonGoToUserConnectionProvider.Size = new System.Drawing.Size(18, 22);
+			this._buttonGoToUserConnectionProvider.TabIndex = 40;
+			this._buttonGoToUserConnectionProvider.UseVisualStyleBackColor = true;
+			this._buttonGoToUserConnectionProvider.Click += _buttonGoToUserConnectionProvider_Clicked;
 			// 
 			// ModelControl
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+			this.Controls.Add(this._buttonGoToSpatialReference);
 			this.Controls.Add(this._tabControl);
 			this.Controls.Add(this._textBoxDescription);
 			this.Controls.Add(this._labelDescription);
@@ -848,5 +878,7 @@ namespace ProSuite.DdxEditor.Content.Models
 		private System.Windows.Forms.ComboBox _comboBoxSqlCaseSensitivity;
 		private System.Windows.Forms.Label _labelSqlCaseSensitivity;
 		private System.Windows.Forms.Label label3;
-    }
+		private System.Windows.Forms.Button _buttonGoToSpatialReference;
+		private System.Windows.Forms.Button _buttonGoToUserConnectionProvider;
+	}
 }

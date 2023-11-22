@@ -27,14 +27,14 @@ namespace ProSuite.AGP.Editing.PickerUI
 		private readonly Geometry _selectionGeometry;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly Latch _latch = new Latch();
+		private readonly Latch _latch = new();
 		private readonly TaskCompletionSource<IPickableItem> _taskCompletionSource;
 
 		private readonly CIMLineSymbol _lineSymbol;
 		private readonly CIMPointSymbol _pointSymbol;
 		private readonly CIMPolygonSymbol _polygonSymbol;
 
-		private readonly List<IDisposable> _overlays = new List<IDisposable>();
+		private readonly List<IDisposable> _overlays = new();
 		[CanBeNull] private IDisposable _selectionGeometryOverlay;
 
 		[CanBeNull] private IPickableItem _selectedItem;
@@ -233,8 +233,17 @@ namespace ProSuite.AGP.Editing.PickerUI
 		{
 			QueuedTask.Run(() =>
 			{
-				_selectionGeometryOverlay = MapView.Active.NotNullCallback(
-					mv => mv.AddOverlay(_selectionGeometry, _polygonSymbol.MakeSymbolReference()));
+				if (_selectionGeometryOverlay == null)
+				{
+					_selectionGeometryOverlay =
+						MapView.Active.AddOverlay(_selectionGeometry,
+						                          _polygonSymbol.MakeSymbolReference());
+				}
+				else
+				{
+					MapView.Active.UpdateOverlay(_selectionGeometryOverlay, _selectionGeometry,
+						_polygonSymbol.MakeSymbolReference());
+				}
 			});
 		}
 

@@ -9,6 +9,7 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 
 namespace ProSuite.AGP.WorkList.Selection
 {
@@ -50,7 +51,7 @@ namespace ProSuite.AGP.WorkList.Selection
 			Dictionary<Table, List<long>> selection =
 				MapUtils.GetDistinctSelectionByTable(oidsByLayer);
 
-			return new SelectionItemRepository(WorkListUtils.GetDistinctTables(selection.Keys),
+			return new SelectionItemRepository(DatasetUtils.Distinct(selection.Keys),
 			                                   selection,
 			                                   stateRepository);
 		}

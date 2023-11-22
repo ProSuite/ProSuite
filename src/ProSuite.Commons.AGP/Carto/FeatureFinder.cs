@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -9,7 +10,6 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Selection;
-using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -102,7 +102,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 					if (objectIds.Count > 0)
 					{
-						yield return new OidSelection(objectIds, basicFeatureLayer, outputSpatialReference);
+						yield return new OidSelection(objectIds, basicFeatureLayer,
+						                              outputSpatialReference);
 					}
 				}
 				else
@@ -161,6 +162,9 @@ namespace ProSuite.Commons.AGP.Carto
 
 			SpatialReference outputSpatialReference = _mapView.Map.SpatialReference;
 
+			CancellationToken cancellationToken =
+				cancelableProgressor?.CancellationToken ?? CancellationToken.None;
+
 			foreach (IGrouping<IntPtr, BasicFeatureLayer> layersInClass in layersGroupedByClass)
 			{
 				// One query per distinct definition query, then make OIDs distinct
@@ -171,8 +175,7 @@ namespace ProSuite.Commons.AGP.Carto
 				foreach (IGrouping<string, BasicFeatureLayer> layers in layersInClass.GroupBy(
 					         fl => fl.DefinitionQuery))
 				{
-					if (cancelableProgressor != null
-					    && cancelableProgressor.CancellationToken.IsCancellationRequested)
+					if (cancellationToken.IsCancellationRequested)
 					{
 						yield break;
 					}
@@ -186,17 +189,18 @@ namespace ProSuite.Commons.AGP.Carto
 
 					filter.OutputSpatialReference = outputSpatialReference;
 
-					IEnumerable<Feature> foundFeatures = GdbQueryUtils
-					                                     .GetFeatures(featureClass, filter, false)
-					                                     .Where(f => featurePredicate == null ||
-						                                            featurePredicate(f));
+					IEnumerable<Feature> foundFeatures =
+						GdbQueryUtils.GetFeatures(featureClass, filter, false, cancellationToken)
+						             .Where(f => featurePredicate == null || featurePredicate(f));
+
 					features.AddRange(foundFeatures);
 				}
 
 				if (featureClass != null && features.Count > 0)
 				{
-					yield return new FeatureSelection(features.DistinctBy(f => f.GetObjectID()).ToList(),
-					                                  basicFeatureLayer);
+					yield return new FeatureSelection(
+						features.DistinctBy(f => f.GetObjectID()).ToList(),
+						basicFeatureLayer);
 				}
 			}
 		}
@@ -263,7 +267,7 @@ namespace ProSuite.Commons.AGP.Carto
 			TargetFeatureSelection? targetSelectionType,
 			[CanBeNull] ICollection<Feature> selectedFeatures)
 		{
-			if (! basicFeatureLayer.IsVisible())
+			if (! LayerUtils.IsVisible(basicFeatureLayer))
 			{
 				return false;
 			}
@@ -300,7 +304,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 			if (targetSelectionType == TargetFeatureSelection.SameClass &&
 			    ! Assert.NotNull(selectedFeatures).Any(
-				    f => DatasetUtils.IsSameClass(f.GetTable(), basicFeatureLayer.GetTable())))
+				    f => DatasetUtils.IsSameTable(f.GetTable(), basicFeatureLayer.GetTable())))
 			{
 				return false;
 			}
@@ -378,7 +382,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 				// multipatches are not supported by ISpatialFilter (and neither are bags containing them)
 				Multipart polycurve = multiPatch != null
-					                ? PolygonBuilderEx.CreatePolygon(
+					                      ? PolygonBuilderEx.CreatePolygon(
 						                      multiPatch
 							                      .Extent) // GeometryFactory.CreatePolygon(multiPatch)
 					                      : geometry as Multipart;

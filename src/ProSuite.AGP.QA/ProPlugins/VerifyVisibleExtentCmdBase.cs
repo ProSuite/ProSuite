@@ -85,7 +85,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 					ApplicationController = appController
 				};
 
-			string actionTitle = "Verify Visible Extent";
+			string actionTitle = $"{qualitySpecification.Name}: Verify Visible Extent";
 
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 

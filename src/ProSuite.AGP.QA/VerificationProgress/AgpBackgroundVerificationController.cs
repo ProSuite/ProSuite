@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -152,10 +151,12 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			return true;
 		}
 
-		public async Task OpenWorkList(IQualityVerificationResult verificationResult)
+		public async Task OpenWorkList(IQualityVerificationResult verificationResult,
+		                               bool replaceExisting)
 		{
 			await ViewUtils.TryAsync(
-				_proSuiteFacade.OpenIssueWorkListAsync(verificationResult.IssuesGdbPath), _msg);
+				_proSuiteFacade.OpenIssueWorkListAsync(verificationResult.IssuesGdbPath,
+				                                       replaceExisting), _msg);
 		}
 
 		public bool CanOpenWorkList(ServiceCallStatus? currentProgressStep,
@@ -279,7 +280,9 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			List<Overlay> overlays = new List<Overlay>(2);
 
 			var completedPolylines = tiles.Select(e =>
-				GeometryFactory.CreatePolyline(e, _verificationSpatialReference)).ToList();
+				                                      GeometryFactory.CreatePolyline(
+					                                      e, _verificationSpatialReference))
+			                              .ToList();
 
 			Geometry completedLineGeometry = GeometryUtils.Union(completedPolylines);
 

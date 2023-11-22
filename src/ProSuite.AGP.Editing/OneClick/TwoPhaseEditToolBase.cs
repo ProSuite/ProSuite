@@ -13,6 +13,8 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
+using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -29,16 +31,28 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
+			_msg.VerboseDebug(() => "OnMapSelectionChangedCore");
+
 			if (args.Selection.Count == 0)
 			{
 				ResetDerivedGeometries();
 				StartSelectionPhase();
 			}
 
+			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
+			Dictionary<MapMember, List<long>> selectionByLayer = args.Selection.ToDictionary();
+
+			var applicableSelection = GetApplicableSelectedFeatures(selectionByLayer).ToList();
+
+			if (applicableSelection.Count > 0)
+			{
+				AfterSelection(applicableSelection, GetCancelableProgressor());
+			}
+
 			return true;
 		}
 
-		protected override Task OnEditCompletedCore(EditCompletedEventArgs args)
+		protected override Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
 		{
 			bool requiresRecalculate = args.CompletedType == EditCompletedType.Discard ||
 			                           args.CompletedType == EditCompletedType.Reconcile ||
@@ -68,7 +82,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					});
 			}
 
-			return base.OnEditCompletedCore(args);
+			return base.OnEditCompletedAsyncCore(args);
 		}
 
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
@@ -106,9 +120,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			return task.Result;
 		}
 
-		protected override async Task<bool> IsInSelectionPhaseAsync(bool shiftIsPressed)
+		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
-			if (shiftIsPressed)
+			if (shiftDown)
 			{
 				return true;
 			}
@@ -118,9 +132,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			return result;
 		}
 
-		protected override bool HandleEscape()
+		protected override async Task HandleEscapeAsync()
 		{
-			QueuedTaskUtils.Run(
+			Task task = QueuedTask.Run(
 				() =>
 				{
 					SelectionUtils.ClearSelection();
@@ -128,16 +142,14 @@ namespace ProSuite.AGP.Editing.OneClick
 					ResetDerivedGeometries();
 
 					StartSelectionPhase();
-
-					return true;
 				});
 
-			return true;
+			await ViewUtils.TryAsync(task, _msg);
 		}
 
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		{
-			if (IsShiftKey(k.Key))
+			if (KeyboardUtils.IsShiftKey(k.Key))
 			{
 				Cursor = IsInSelectionPhase(true) ? SelectionCursor : SecondPhaseCursor;
 			}
@@ -206,7 +218,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Cursor = SecondPhaseCursor;
 
-			SetupRectangleSketch();
+			SetupSketch(SketchGeometryType.Rectangle);
 		}
 	}
 }

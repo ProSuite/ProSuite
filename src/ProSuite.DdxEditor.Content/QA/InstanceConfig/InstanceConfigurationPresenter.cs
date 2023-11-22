@@ -102,7 +102,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_itemNavigation.GoToItem(instanceReferenceTableRow.InstanceConfig);
 		}
 
-		void IInstanceConfigurationObserver.InstanceDescriptorLinkClicked(
+		void IInstanceConfigurationObserver.GoToInstanceDescriptorClicked(
 			InstanceDescriptor instanceDescriptor)
 		{
 			if (instanceDescriptor == null)
@@ -199,7 +199,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			}
 
 			_view.ReferenceingInstancesSummary = sb.Length == 0
-				                                     ? "<no quality condition, transformer or filter uses this instance>"
+				                                     ? "<no quality condition, transformer or issue filter uses this instance>"
 				                                     : sb.ToString();
 		}
 
@@ -270,7 +270,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			_view.SetParameterDescriptions(testParams);
 
-			_view.InstanceDescriptorLinkEnabled = instanceConfig.InstanceDescriptor != null;
+			_view.GoToInstanceDescriptorEnabled = instanceConfig.InstanceDescriptor != null;
 		}
 	}
 }

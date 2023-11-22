@@ -13,6 +13,14 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 {
 	public partial class LinearNetworkControl : UserControl, ILinearNetworkView
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private readonly ScreenBinder<LinearNetwork> _binder;
+
+		private readonly BoundDataGridHandler<LinearNetworkDatasetTableRow> _gridHandler;
+
+		private readonly Latch _latch = new Latch();
+
 		public LinearNetworkControl()
 		{
 			InitializeComponent();
@@ -26,20 +34,7 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 					new ErrorProviderValidationMonitor(_errorProvider));
 		}
 
-		private readonly ScreenBinder<LinearNetwork> _binder;
-
-		private readonly BoundDataGridHandler<LinearNetworkDatasetTableRow> _gridHandler;
-
-		private readonly Latch _latch = new Latch();
-
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		public ILinearNetworkObserver Observer { get; set; }
-
-		public void BindTo(LinearNetwork target)
-		{
-			throw new NotImplementedException();
-		}
 
 		public IEnumerable<LinearNetworkDataset> GetSelectedNetworkDatasets()
 		{
@@ -65,16 +60,25 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 
 		public void SetBinder(ScreenBinder<LinearNetwork> binder)
 		{
-			binder.Bind(m => m.Name)
-			      .To(_textBoxName);
-
-			binder.Bind(m => m.CustomTolerance).To(_updownCustomTolerance);
-
-			binder.Bind(m => m.EnforceFlowDirection).To(_cbEnforceFd);
+			binder.Bind(m => m.Name).To(_textBoxName);
 
 			binder.Bind(m => m.Description).To(_textBoxDescription);
 
+			binder.Bind(m => m.CustomTolerance).To(_updownCustomTolerance);
+
+			binder.Bind(m => m.EnforceFlowDirection).To(_checkBoxEnforceFlowDirection);
+
 			binder.OnChange = BinderChanged;
+		}
+
+		public void OnBoundTo(LinearNetwork entity)
+		{
+			Observer.OnBoundTo(entity);
+		}
+
+		public void BindTo(LinearNetwork target)
+		{
+			throw new NotImplementedException();
 		}
 
 		private static void Try(Action proc)
@@ -94,11 +98,6 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 			Observer?.NotifyChanged(_binder.IsDirty());
 		}
 
-		public void OnBoundTo(LinearNetwork entity)
-		{
-			Observer.OnBoundTo(entity);
-		}
-
 		private void _buttonAddNetworkDatasets_Click(object sender, EventArgs e)
 		{
 			Try(delegate { Observer?.AddTargetClicked(); });
@@ -108,10 +107,6 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 		{
 			Try(delegate { Observer?.RemoveTargetClicked(); });
 		}
-
-		private void _customTolerance_Click(object sender, EventArgs e) { }
-
-		private void labelEnforceFd_Click(object sender, EventArgs e) { }
 
 		private void _dataGridViewLinearNetworkDatasets_CellValueChanged(
 			object sender, DataGridViewCellEventArgs e)

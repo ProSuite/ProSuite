@@ -146,10 +146,10 @@ namespace ProSuite.Commons.AGP.Carto
 			return new LayerDocument(cimLayerDocument);
 		}
 
-		public static void ApplyRenderer(FeatureLayer layer, LayerDocument template)
+		public static void ApplyRenderer([NotNull] FeatureLayer layer,
+		                                 [NotNull] LayerDocument fromTemplate)
 		{
-			// todo daro: inline
-			var renderer = GetRenderer<CIMUniqueValueRenderer>(template);
+			var renderer = GetRenderer<CIMRenderer>(fromTemplate);
 			layer.SetRenderer(renderer);
 		}
 
@@ -197,7 +197,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <summary>
 		/// Gets the layer's visibility state. Works as well for layers nested in group layers.
 		/// </summary>
-		public static bool IsVisible(this Layer layer)
+		public static bool IsVisible([NotNull] Layer layer)
 		{
 			if (! layer.IsVisible)
 			{
@@ -230,7 +230,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 		// todo daro to MapUtils?
 		[NotNull]
-		public static FeatureClass GetFeatureClass([NotNull] this BasicFeatureLayer basicFeatureLayer)
+		public static FeatureClass GetFeatureClass(
+			[NotNull] this BasicFeatureLayer basicFeatureLayer)
 		{
 			Assert.ArgumentNotNull(basicFeatureLayer, nameof(basicFeatureLayer));
 			Assert.ArgumentCondition(

@@ -19,7 +19,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		void InstanceReferenceDoubleClicked(
 			[NotNull] InstanceConfigurationReferenceTableRow instanceReferenceTableRow);
 
-		void InstanceDescriptorLinkClicked([CanBeNull] InstanceDescriptor instanceDescriptor);
+		void GoToInstanceDescriptorClicked([CanBeNull] InstanceDescriptor instanceDescriptor);
 
 		void OpenUrlClicked();
 
