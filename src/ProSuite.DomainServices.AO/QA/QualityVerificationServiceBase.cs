@@ -669,17 +669,9 @@ namespace ProSuite.DomainServices.AO.QA
 				XmlVerificationReport verificationReport =
 					verificationReporter.WriteReports(qualitySpecification);
 
-				IEnumerable<string> compressibleDatasetPaths;
-
 				if (_externalIssueRepository != null)
 				{
 					verificationReporter.CreateIssueRepositoryIndexes(_externalIssueRepository);
-
-					List<IObjectClass> nonEmptyIssueRepositoryClasses =
-						_externalIssueRepository.IssueDatasets
-						                        .Where(issueDataset => issueDataset.IssueCount > 0)
-						                        .Select(issueDataset => issueDataset.ObjectClass)
-						                        .ToList();
 
 					string issueTableName =
 						verificationReporter.WriteIssueStatistics(_externalIssueRepository);
@@ -708,31 +700,12 @@ namespace ProSuite.DomainServices.AO.QA
 
 					#endregion
 
-					// TODO: Drop support for issue FGDB compression. Parameters.CompressIssueFgdb is likely never true
-					//       and the compression only happens inside the legacy XML-based GP Tools
-
-					// get the paths to the compressible issue datasets now, to release all references before compress
-					compressibleDatasetPaths =
-						VerificationUtils.GetCompressibleFgdbDatasetPaths(
-							nonEmptyIssueRepositoryClasses);
-
-					nonEmptyIssueRepositoryClasses.Clear();
-
 					_externalIssueRepository.Dispose();
 					_externalIssueRepository = null;
-				}
-				else
-				{
-					compressibleDatasetPaths = null;
 				}
 
 				GC.Collect();
 				GC.WaitForPendingFinalizers();
-
-				if (Parameters?.CompressIssueFgdb == true && compressibleDatasetPaths != null)
-				{
-					Compress(compressibleDatasetPaths);
-				}
 			}
 			finally
 			{
