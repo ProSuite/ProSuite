@@ -194,7 +194,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		private void ReportSubverifcationsCreated(
 			[NotNull] IEnumerable<SubVerification> subVerifications)
 		{
-			if (SubverificationObserver == null)
+			if (SubVerificationObserver == null)
 			{
 				return;
 			}
@@ -219,7 +219,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					}
 				}
 
-				SubverificationObserver?.CreatedSubverification(
+				SubVerificationObserver?.CreatedSubverification(
 					subVerification.Id,
 					subVerification.QualityConditionGroup.ExecType,
 					qcNames,

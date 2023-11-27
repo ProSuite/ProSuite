@@ -85,10 +85,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		protected override bool WriteIssueMapDocument(QualitySpecification qualitySpecification,
 		                                              IIssueRepository issueRepository,
-		                                              IIssueStatisticsTable issueStatisticsTable,
+		                                              string issueStatisticsTableName,
 		                                              IList<IObjectClass> verifiedObjectClasses,
 		                                              XmlVerificationReport verificationReport,
-		                                              IFeatureClass aoiFeatureClass)
+		                                              string aoiFeatureClassName)
 		{
 			// No op: Writing mxds is not supported here.
 			return false;
