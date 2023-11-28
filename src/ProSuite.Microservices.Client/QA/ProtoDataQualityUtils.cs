@@ -62,9 +62,6 @@ namespace ProSuite.Microservices.Client.QA
 
 				string categoryName = condition.Category?.Name ?? string.Empty;
 
-				string descriptorName =
-					GetDescriptorName(condition.TestDescriptor, supportedInstanceDescriptors);
-
 				var elementMsg = new QualitySpecificationElementMsg
 				                 {
 					                 AllowErrors = element.AllowErrors,
@@ -72,28 +69,9 @@ namespace ProSuite.Microservices.Client.QA
 					                 CategoryName = categoryName
 				                 };
 
-				var conditionMsg = new QualityConditionMsg
-				                   {
-					                   ConditionId = condition.Id,
-					                   TestDescriptorName = descriptorName,
-					                   Name = Assert.NotNull(
-						                   condition.Name, "Condition name is null"),
-					                   Description = condition.Description ?? string.Empty,
-					                   Url = condition.Url ?? string.Empty,
-					                   IssueFilterExpression =
-						                   condition.IssueFilterExpression ?? string.Empty
-				                   };
-
-				AddParameterMessages(condition.GetDefinedParameterValues(), conditionMsg.Parameters,
-				                     supportedInstanceDescriptors, usedModelsById);
-
-				foreach (IssueFilterConfiguration filterConfiguration in condition
-					         .IssueFilterConfigurations)
-				{
-					conditionMsg.ConditionIssueFilters.Add(
-						CreateInstanceConfigMsg<IssueFilterDescriptor>(
-							filterConfiguration, supportedInstanceDescriptors, usedModelsById));
-				}
+				QualityConditionMsg conditionMsg =
+					CreateQualityConditionMsg(condition, supportedInstanceDescriptors,
+					                          usedModelsById);
 
 				elementMsg.Condition = conditionMsg;
 
@@ -112,6 +90,40 @@ namespace ProSuite.Microservices.Client.QA
 					       }));
 
 			return result;
+		}
+
+		public static QualityConditionMsg CreateQualityConditionMsg(
+			[NotNull] QualityCondition condition,
+			[CanBeNull] ISupportedInstanceDescriptors supportedInstanceDescriptors,
+			IDictionary<int, DdxModel> usedModelsById)
+		{
+			string descriptorName =
+				GetDescriptorName(condition.TestDescriptor, supportedInstanceDescriptors);
+
+			var conditionMsg = new QualityConditionMsg
+			                   {
+				                   ConditionId = condition.Id,
+				                   TestDescriptorName = descriptorName,
+				                   Name = Assert.NotNull(
+					                   condition.Name, "Condition name is null"),
+				                   Description = condition.Description ?? string.Empty,
+				                   Url = condition.Url ?? string.Empty,
+				                   IssueFilterExpression =
+					                   condition.IssueFilterExpression ?? string.Empty
+			                   };
+
+			AddParameterMessages(condition.GetDefinedParameterValues(), conditionMsg.Parameters,
+			                     supportedInstanceDescriptors, usedModelsById);
+
+			foreach (IssueFilterConfiguration filterConfiguration in condition
+				         .IssueFilterConfigurations)
+			{
+				conditionMsg.ConditionIssueFilters.Add(
+					CreateInstanceConfigMsg<IssueFilterDescriptor>(
+						filterConfiguration, supportedInstanceDescriptors, usedModelsById));
+			}
+
+			return conditionMsg;
 		}
 
 		private static string GetDescriptorName<T>(
@@ -266,8 +278,21 @@ namespace ProSuite.Microservices.Client.QA
 		public static IEnumerable<InstanceDescriptorMsg> GetInstanceDescriptorMsgs(
 			[NotNull] QualitySpecification specification)
 		{
-			var referencedDescriptors =
-				GetReferencedDescriptors(specification.Elements.Select(e => e.QualityCondition));
+			IEnumerable<QualityCondition> qualityConditions =
+				specification.Elements.Select(e => e.QualityCondition);
+
+			foreach (InstanceDescriptorMsg instanceDescriptorMsg in GetInstanceDescriptorMsgs(
+				         qualityConditions))
+			{
+				yield return instanceDescriptorMsg;
+			}
+		}
+
+		public static IEnumerable<InstanceDescriptorMsg> GetInstanceDescriptorMsgs(
+			[NotNull] IEnumerable<QualityCondition> qualityConditions)
+		{
+			ICollection<InstanceDescriptor> referencedDescriptors =
+				GetReferencedDescriptors(qualityConditions);
 
 			foreach (InstanceDescriptor instanceDescriptor in referencedDescriptors)
 			{

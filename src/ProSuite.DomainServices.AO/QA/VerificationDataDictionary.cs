@@ -20,14 +20,17 @@ namespace ProSuite.DomainServices.AO.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly IQualitySpecificationRepository _qualitySpecifications;
+		[NotNull] private readonly IQualityConditionRepository _qualityConditions;
 		[NotNull] private readonly IProjectRepository<TModel> _projects;
 
 		public VerificationDataDictionary(
 			[NotNull] IDomainTransactionManager domainTransactions,
 			[NotNull] IQualitySpecificationRepository qualitySpecifications,
+			[NotNull] IQualityConditionRepository qualityConditions,
 			[NotNull] IProjectRepository<TModel> projects)
 		{
 			_qualitySpecifications = qualitySpecifications;
+			_qualityConditions = qualityConditions;
 			_projects = projects;
 		}
 
@@ -53,6 +56,11 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			return result;
+		}
+
+		public QualityCondition GetQualityCondition(string conditionName)
+		{
+			return _qualityConditions.Get(conditionName);
 		}
 
 		public IList<QualitySpecification> GetQualitySpecifications(

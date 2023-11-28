@@ -122,9 +122,17 @@ namespace ProSuite.DomainModel.Core.QA
 		public static void InitializeParameterValues(
 			[NotNull] QualitySpecification qualitySpecification)
 		{
+			IEnumerable<QualityCondition> qualityConditions =
+				qualitySpecification.Elements.Select(e => e.QualityCondition);
+
+			InitializeParameterValues(qualityConditions);
+		}
+
+		public static void InitializeParameterValues(
+			[NotNull] IEnumerable<QualityCondition> qualityConditions)
+		{
 			foreach (QualityCondition condition in
-			         qualitySpecification.Elements.Select(
-				         e => e.QualityCondition))
+			         qualityConditions)
 			{
 				InitializeParameterValues(condition);
 
