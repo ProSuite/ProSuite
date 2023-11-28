@@ -381,11 +381,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ModelMsg modelMsg =
 				ProtoDataQualityUtils.ToDdxModelMsg(productionModel, srWkId, referencedDatasetMsgs);
 
-			IWorkspace masterWorkspace =
-				productionModel.GetMasterDatabaseWorkspace();
-
 			// If necessary, return the list of referenced workspaces
-			modelMsg.MasterDbWorkspaceHandle = masterWorkspace?.GetHashCode() ?? -1;
+			// However, this is currently not needed anywhere and requires opening workpaces, which is slow!
+
+			//IWorkspace masterWorkspace =
+			//	productionModel.GetMasterDatabaseWorkspace();
+			//modelMsg.MasterDbWorkspaceHandle = masterWorkspace?.GetHashCode() ?? -1;
 
 			return modelMsg;
 		}
