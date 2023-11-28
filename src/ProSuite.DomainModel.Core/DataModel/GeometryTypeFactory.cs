@@ -23,7 +23,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		{
 			foreach (GeometryType entity in CreateGeometryTypes(excludeLegacyTypes))
 			{
-				if (existingGeometryTypes.All(gt => gt.Name != entity.Name))
+				if (existingGeometryTypes.All(gt => ! gt.Equals(entity)))
 				{
 					yield return entity;
 				}
@@ -37,7 +37,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 			yield return new GeometryTypeShape("Point", ProSuiteGeometryType.Point);
 			yield return new GeometryTypeShape("Polygon", ProSuiteGeometryType.Polygon);
 			yield return new GeometryTypeShape("Polyline", ProSuiteGeometryType.Polyline);
-			yield return new GeometryTypeShape("MultiPatch", ProSuiteGeometryType.MultiPatch);
+			yield return new GeometryTypeShape("Multipatch", ProSuiteGeometryType.MultiPatch);
 			yield return new GeometryTypeShape("Multipoint", ProSuiteGeometryType.Multipoint);
 
 			yield return new GeometryTypeTerrain("Terrain");

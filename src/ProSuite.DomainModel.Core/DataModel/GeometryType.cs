@@ -48,5 +48,40 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 			return clone;
 		}
+
+		#region Overrides of Object
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((GeometryType) obj);
+		}
+
+		private bool Equals(GeometryType other)
+		{
+			return _name.Equals(other._name, StringComparison.OrdinalIgnoreCase);
+		}
+
+		public override int GetHashCode()
+		{
+			// ReSharper disable once NonReadonlyMemberInGetHashCode
+			return StringComparer.OrdinalIgnoreCase.GetHashCode(_name);
+		}
+
+		#endregion
 	}
 }
