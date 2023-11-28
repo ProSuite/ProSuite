@@ -263,6 +263,68 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		[CanBeNull]
 		public static IObjectClass TryOpenObjectClass(
+			[NotNull] IWorkspace workspace,
+			[NotNull] string featureClassName,
+			out string message)
+		{
+			message = null;
+
+			string errorPrefix =
+				$"Cannot open feature class {featureClassName} in workspace {workspace.PathName}";
+
+			IObjectClass objectClass = null;
+
+			try
+			{
+				objectClass = OpenObjectClass((IFeatureWorkspace) workspace, featureClassName);
+			}
+			catch (COMException comException)
+			{
+				string error = Enum.GetName(typeof(fdoError), comException.ErrorCode);
+
+				message = $"{errorPrefix}: {error}";
+				_msg.Debug(message, comException);
+			}
+			catch (Exception e)
+			{
+				message = errorPrefix;
+				_msg.Debug(message, e);
+			}
+
+			return objectClass;
+		}
+
+		[CanBeNull]
+		public static IObjectClass TryOpenObjectClass([NotNull] string catalogPath,
+		                                              out string message)
+		{
+			string workspaceCatalogPath =
+				GetGdbWorkspaceCatalogPath(catalogPath, out _, out string featureClassName);
+
+			if (workspaceCatalogPath == null)
+			{
+				message =
+					$"{catalogPath} does not contain a supported workspace or is not a valid catalog path.";
+
+				return null;
+			}
+
+			IWorkspace workspace =
+				WorkspaceUtils.TryOpenWorkspace(workspaceCatalogPath, out message);
+
+			if (workspace == null)
+			{
+				message =
+					$"{catalogPath} does not contain a supported workspace or is not a valid catalog path.";
+
+				return null;
+			}
+
+			return TryOpenObjectClass(workspace, Assert.NotNull(featureClassName), out message);
+		}
+
+		[CanBeNull]
+		public static IObjectClass TryOpenObjectClass(
 			[NotNull] IFeatureWorkspace featureWorkspace,
 			int classId)
 		{
