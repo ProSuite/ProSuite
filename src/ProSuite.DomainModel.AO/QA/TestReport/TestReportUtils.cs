@@ -104,6 +104,18 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			builder.WriteReport();
 		}
 
+		[NotNull]
+		public static string WriteDescriptorDoc([NotNull] InstanceDescriptor descriptor)
+		{
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			var stringWriter = new StringWriter();
+
+			WriteDescriptorDoc(descriptor, stringWriter);
+
+			return stringWriter.ToString();
+		}
+
 		public static void WriteDescriptorDoc([NotNull] InstanceDescriptor descriptor,
 		                                      [NotNull] TextWriter writer)
 		{

@@ -1,6 +1,5 @@
 using System;
 using System.Drawing;
-using System.IO;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
@@ -59,11 +58,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				throw new InvalidOperationException("No instance descriptor available.");
 			}
 
-			StringWriter stringWriter = new StringWriter();
-			TestReportUtils.WriteDescriptorDoc(descriptor, stringWriter);
-
-			ApplicationController.ShowHelpForm(descriptor.TypeDisplayName,
-			                                   stringWriter.ToString());
+			string title = descriptor.TypeDisplayName;
+			string html = TestReportUtils.WriteDescriptorDoc(descriptor);
+			ApplicationController.ShowItemHelp(title, html);
 		}
 
 		[CanBeNull]

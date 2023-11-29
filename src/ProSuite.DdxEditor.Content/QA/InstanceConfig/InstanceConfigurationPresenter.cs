@@ -270,7 +270,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			_view.SetParameterDescriptions(testParams);
 
-			_view.GoToInstanceDescriptorEnabled = instanceConfig.InstanceDescriptor != null;
+			InstanceDescriptor instanceDescriptor = instanceConfig.InstanceDescriptor;
+
+			_view.GoToInstanceDescriptorEnabled = instanceDescriptor != null;
+
+			string html = _item.GetWebHelp(instanceDescriptor, out string title);
+			_itemNavigation.UpdateItemHelp(title, html ?? string.Empty);
 		}
 	}
 }
