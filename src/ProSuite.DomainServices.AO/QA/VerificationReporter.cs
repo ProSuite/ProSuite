@@ -70,9 +70,9 @@ namespace ProSuite.DomainServices.AO.QA
 		                            [CanBeNull] string xmlReportPath,
 		                            [CanBeNull] string htmlReportDir)
 		{
-			_issueGdbPath = issueGdbPath;
-			_xmlReportPath = xmlReportPath;
-			_htmlReportDir = htmlReportDir;
+			_issueGdbPath = string.IsNullOrEmpty(issueGdbPath) ? null : issueGdbPath;
+			_xmlReportPath = string.IsNullOrEmpty(xmlReportPath) ? null : xmlReportPath;
+			_htmlReportDir = string.IsNullOrEmpty(htmlReportDir) ? null : htmlReportDir;
 		}
 
 		[CanBeNull]
