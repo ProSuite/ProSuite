@@ -120,11 +120,11 @@ public class MarkerPlacementsTest
 		const double delta = 0.000001;
 		var options = new MarkerPlacements.PolygonCenterOptions();
 
-		// ArcGIS setting | ForceInside | UseBoundingBox
-		// ---------------+-------------+---------------
-		// On polygon     | True        | False
-		// Center of mass | False       | False
-		// Bbox center    | (any)       | True
+		// ArcGIS setting | CenterType
+		// ---------------+------------------
+		// On polygon     | LabelPoint
+		// Center of mass | Centroid
+		// Bbox center    | BoundingBoxCenter
 		//
 		// Test each setting, once per polygon, once per part, on this polygon:
 		//
@@ -149,8 +149,7 @@ public class MarkerPlacementsTest
 
 		// On polygon:
 
-		options.ForceInsidePolygon = true;
-		options.UseBoundingBox = false;
+		options.CenterType = MarkerPlacements.PolygonCenterType.LabelPoint;
 		options.PlacePerPart = false;
 		var placed = MarkerPlacements.PolygonCenter(marker, polygon, options).ToArray();
 		Assert.AreEqual(1, placed.Length);
@@ -159,8 +158,7 @@ public class MarkerPlacementsTest
 		Assert.AreEqual(lp.X, placed.Single().X, delta);
 		Assert.AreEqual(lp.Y, placed.Single().Y, delta);
 
-		options.ForceInsidePolygon = true;
-		options.UseBoundingBox = false;
+		options.CenterType = MarkerPlacements.PolygonCenterType.LabelPoint;
 		options.PlacePerPart = true;
 		placed = MarkerPlacements.PolygonCenter(marker, polygon, options)
 		                         .OrderBy(p => p.X).ToArray();
@@ -175,8 +173,7 @@ public class MarkerPlacementsTest
 
 		// Center of mass:
 
-		options.ForceInsidePolygon = false;
-		options.UseBoundingBox = false;
+		options.CenterType = MarkerPlacements.PolygonCenterType.Centroid;
 		options.PlacePerPart = false;
 		placed = MarkerPlacements.PolygonCenter(marker, polygon, options).ToArray();
 		Assert.AreEqual(1, placed.Length);
@@ -184,8 +181,7 @@ public class MarkerPlacementsTest
 		Assert.AreEqual(ct.X, placed.Single().X, delta);
 		Assert.AreEqual(ct.Y, placed.Single().Y, delta);
 
-		options.ForceInsidePolygon = false;
-		options.UseBoundingBox = false;
+		options.CenterType = MarkerPlacements.PolygonCenterType.Centroid;
 		options.PlacePerPart = true;
 		placed = MarkerPlacements.PolygonCenter(marker, polygon, options).ToArray();
 		Assert.AreEqual(2, placed.Length);
@@ -199,16 +195,14 @@ public class MarkerPlacementsTest
 
 		// Bounding box center
 
-		options.ForceInsidePolygon = false;
-		options.UseBoundingBox = true;
+		options.CenterType = MarkerPlacements.PolygonCenterType.BoundingBoxCenter;
 		options.PlacePerPart = false;
 		placed = MarkerPlacements.PolygonCenter(marker, polygon, options).ToArray();
 		Assert.AreEqual(1, placed.Length);
 		Assert.AreEqual(15.0, placed.Single().X, delta);
 		Assert.AreEqual(15.0, placed.Single().Y, delta);
 
-		options.ForceInsidePolygon = false;
-		options.UseBoundingBox = true;
+		options.CenterType = MarkerPlacements.PolygonCenterType.BoundingBoxCenter;
 		options.PlacePerPart = true;
 		placed = MarkerPlacements.PolygonCenter(marker, polygon, options)
 		                         .OrderBy(p => p.X).ToArray();

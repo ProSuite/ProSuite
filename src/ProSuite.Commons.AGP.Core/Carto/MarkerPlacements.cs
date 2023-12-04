@@ -5,6 +5,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
@@ -270,12 +271,17 @@ public static class MarkerPlacements
 			$"Marker placement {nameof(AlongLine)} not yet implemented");
 	}
 
+	public enum PolygonCenterType
+	{
+		BoundingBoxCenter, Centroid, LabelPoint
+	}
+
 	public class PolygonCenterOptions : FillOptions
 	{
-		public bool UseBoundingBox { get; set; }
-		public bool ForceInsidePolygon { get; set; }
+		public PolygonCenterType CenterType { get; set; }
 		public double OffsetX { get; set; }
 		public double OffsetY { get; set; }
+		public bool ClipAtBoundary { get; set; }
 	}
 
 	public static IEnumerable<T> PolygonCenter<T>(
@@ -290,18 +296,22 @@ public static class MarkerPlacements
 			foreach (var part in polygon.Parts)
 			{
 				var partPoly = PolygonBuilderEx.CreatePolygon(part);
-				MapPoint center = GetCenter(partPoly, options);
+				MapPoint center = GetCenter(partPoly, options.CenterType);
+				if (center is null || center.IsEmpty) continue;
 				double dx = center.X + options.OffsetX;
 				double dy = center.Y + options.OffsetY;
-				yield return Translated(marker, dx, dy);
+				var translated = Translated(marker, dx, dy);
+				yield return options.ClipAtBoundary ? Clipped(translated, polygon) : translated;
 			}
 		}
 		else
 		{
-			MapPoint center = GetCenter(polygon, options);
+			MapPoint center = GetCenter(polygon, options.CenterType);
+			if (center is null || center.IsEmpty) yield break;
 			double dx = center.X + options.OffsetX;
 			double dy = center.Y + options.OffsetY;
-			yield return Translated(marker, dx, dy);
+			var translated = Translated(marker, dx, dy);
+			yield return options.ClipAtBoundary ? Clipped(translated, polygon) : translated;
 		}
 	}
 
@@ -336,11 +346,25 @@ public static class MarkerPlacements
 
 	#region Private utilities
 
-	private static MapPoint GetCenter(Polygon polygon, PolygonCenterOptions options)
+	[CanBeNull]
+	private static MapPoint GetCenter(Polygon polygon, PolygonCenterType centerType)
 	{
-		if (options.UseBoundingBox) return polygon.Extent.Center;
-		if (options.ForceInsidePolygon) return GeometryEngine.Instance.LabelPoint(polygon);
-		return GeometryEngine.Instance.Centroid(polygon);
+		if (polygon is null || polygon.IsEmpty)
+		{
+			return null;
+		}
+
+		switch (centerType)
+		{
+			case PolygonCenterType.BoundingBoxCenter:
+				return polygon.Extent.Center;
+			case PolygonCenterType.Centroid:
+				return GeometryUtils.Centroid(polygon);
+			case PolygonCenterType.LabelPoint:
+				return GeometryUtils.GetLabelPoint(polygon);
+			default:
+				throw new ArgumentOutOfRangeException(nameof(centerType), centerType, null);
+		}
 	}
 
 	private static Pair GetTangent(Segment segment, double distanceAlong)
@@ -438,6 +462,14 @@ public static class MarkerPlacements
 	{
 		if (shape is null) return null;
 		return (T) GeometryEngine.Instance.Move(shape, dx, dy);
+	}
+
+	private static T Clipped<T>(T shape, Polygon boundary) where T : Geometry
+	{
+		if (shape is null) return null;
+		if (boundary is null) return shape;
+		var result = GeometryUtils.Intersection(shape, boundary);
+		return result as T; // null if intersection is lower dim than shape
 	}
 
 	private static T Placed<T>(
