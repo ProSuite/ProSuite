@@ -26,7 +26,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// checks whether interpolated height values are close enough to height model
 	/// </summary>
-	//Remark: Implement for "ISurfaceProvider"
 	[UsedImplicitly]
 	[ZValuesTest]
 	public class QaSurfacePipe : QaSurfaceOffset
@@ -71,7 +70,7 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		#region constructors
+		#region Constructors
 
 		[Doc(nameof(DocStrings.Qa3dPipe_0))]
 		public QaSurfacePipe(
@@ -264,8 +263,6 @@ namespace ProSuite.QA.Tests
 
 				case esriGeometryType.esriGeometryPoint:
 					IGeometry interpolatedPoint = InterpolateShape(surface, shape);
-
-					Assert.NotNull(interpolatedPoint, "Interpolated Point is null");
 
 					return CheckPoint((IPoint) shape, (IPoint) interpolatedPoint, searchedRow);
 
@@ -467,7 +464,7 @@ namespace ProSuite.QA.Tests
 					desc.Append(GetOffsetMessage(partInfo.MaxOffset, out issueCode));
 					errorCount += ReportError(
 						desc.ToString(), InvolvedRowUtils.GetInvolvedRows(row), partInfo.Shape,
-						issueCode, null, values: new object[] {partInfo.MaxOffset});
+						issueCode, null, values: new object[] { partInfo.MaxOffset });
 				}
 
 				remove.Add(row);
@@ -614,9 +611,9 @@ namespace ProSuite.QA.Tests
 					{
 						IPolyline segLine = ProxyUtils.CreatePolyline(segment);
 						((ISegmentCollection) segLine).AddSegment(recycling
-								? GeometryFactory.Clone(
-									segment)
-								: segment,
+									? GeometryFactory.Clone(
+										segment)
+									: segment,
 							ref missing, ref missing);
 
 						interpol = InterpolateShape(surface, segLine);
@@ -809,10 +806,12 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckPoint([NotNull] IPoint shape,
-		                       [NotNull] IPoint interpolatedPoint,
+		                       [CanBeNull] IPoint interpolatedPoint,
 		                       [NotNull] IReadOnlyRow row)
 		{
-			double diff = shape.Z - interpolatedPoint.Z;
+			// interpolatedPoint can be null if outside the terrain -> ErrorType.NoTerrain
+			double interpolatedZ = interpolatedPoint?.Z ?? double.NaN;
+			double diff = shape.Z - interpolatedZ;
 
 			double max = Limit;
 			ErrorType errorType = GetErrorType(diff, ref max);
@@ -820,6 +819,14 @@ namespace ProSuite.QA.Tests
 			if (errorType == ErrorType.None)
 			{
 				return NoError;
+			}
+
+			if (errorType == ErrorType.NoTerrain)
+			{
+				return ReportError(
+					MissingTerrainDescription,
+					InvolvedRowUtils.GetInvolvedRows(row), GeometryFactory.Clone(shape),
+					Codes[Code.NoTerrainData], TestUtils.GetShapeFieldName(row));
 			}
 
 			string description;
@@ -832,12 +839,12 @@ namespace ProSuite.QA.Tests
 				description = string.Format("Distance from terrain {0:N1} > {1:N1}",
 				                            Math.Abs(diff), Limit);
 				issueCode = Codes[Code.ZOffset_TooFarFromTerrain];
-				values = new object[] {diff};
+				values = new object[] { diff };
 			}
 			else
 			{
 				description = GetOffsetMessage(max, out issueCode);
-				values = new object[] {max};
+				values = new object[] { max };
 			}
 
 			return ReportError(
@@ -1054,7 +1061,7 @@ namespace ProSuite.QA.Tests
 				errorCount += ReportError(
 					description, InvolvedRowUtils.GetInvolvedRows(errorRow), part,
 					issueCode, TestUtils.GetShapeFieldName(errorRow),
-					values: new object[] {maxOffset});
+					values: new object[] { maxOffset });
 			}
 
 			error.Clear();

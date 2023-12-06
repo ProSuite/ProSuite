@@ -207,7 +207,8 @@ namespace ProSuite.QA.Tests
 
 							case ErrorType.NoTerrain:
 								errorCount += ReportError(
-									"Missing Terrain", InvolvedRowUtils.GetInvolvedRows(feature), p,
+									MissingTerrainDescription,
+									InvolvedRowUtils.GetInvolvedRows(feature), p,
 									Codes[Code.NoTerrainData],
 									TestUtils.GetShapeFieldName(feature));
 								break;
@@ -231,7 +232,8 @@ namespace ProSuite.QA.Tests
 
 						if (xMin > xMax)
 						{
-							((IEnvelope) _queryFilter.FilterGeometry).QueryCoords(out xMin, out yMin,
+							((IEnvelope) _queryFilter.FilterGeometry).QueryCoords(
+								out xMin, out yMin,
 								out xMax, out yMax);
 						}
 
@@ -368,10 +370,9 @@ namespace ProSuite.QA.Tests
 
 			if (errorPoints.Count > 0)
 			{
-				const string description = "Missing Terrain";
 				IssueCode issueCode = Codes[Code.NoTerrainData];
-				errorCount += ReportError(errorPoints, geometry, description, issueCode, row,
-				                          final);
+				errorCount += ReportError(errorPoints, geometry, MissingTerrainDescription,
+				                          issueCode, row, final);
 			}
 
 			return errorCount;
