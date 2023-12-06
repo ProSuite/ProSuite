@@ -127,7 +127,8 @@ namespace ProSuite.QA.Tests
 			return ErrorType.None;
 		}
 
-		protected static string MissingTerrainDescription => "Missing Terrain";
+		protected static string MissingTerrainDescription =>
+			"Missing surface or geometry outside defined surface area";
 
 		#region Nested type: ErrorType
 
