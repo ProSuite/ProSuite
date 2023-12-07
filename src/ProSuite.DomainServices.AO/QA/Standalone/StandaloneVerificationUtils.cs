@@ -163,7 +163,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				}
 
 				string filePath = Path.Combine(directory, reportDefinition.FileName);
-				FileSystemUtils.EnsureFolderExists(directory);
+				FileSystemUtils.EnsureDirectoryExists(directory);
 
 				HtmlQualitySpecification model =
 					SpecificationReportUtils.CreateHtmlQualitySpecification(qualitySpecification,

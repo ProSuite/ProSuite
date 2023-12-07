@@ -63,7 +63,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 		public void SetupOutputPaths(string outputDirectory)
 		{
-			FileSystemUtils.EnsureFolderExists(outputDirectory);
+			FileSystemUtils.EnsureDirectoryExists(outputDirectory);
 
 			_issueRepositoryDir = outputDirectory;
 

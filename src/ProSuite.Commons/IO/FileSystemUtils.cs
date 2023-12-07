@@ -369,7 +369,7 @@ namespace ProSuite.Commons.IO
 			return false;
 		}
 
-		public static bool EnsureFolderExists([NotNull] string path)
+		public static bool EnsureDirectoryExists([NotNull] string path)
 		{
 			if (Directory.Exists(path))
 			{
