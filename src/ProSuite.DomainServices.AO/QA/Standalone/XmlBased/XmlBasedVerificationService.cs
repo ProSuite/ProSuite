@@ -1,10 +1,10 @@
 using System;
-using System.IO;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
@@ -63,7 +63,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 		public void SetupOutputPaths(string outputDirectory)
 		{
-			Directory.CreateDirectory(outputDirectory);
+			FileSystemUtils.EnsureFolderExists(outputDirectory);
 
 			_issueRepositoryDir = outputDirectory;
 
