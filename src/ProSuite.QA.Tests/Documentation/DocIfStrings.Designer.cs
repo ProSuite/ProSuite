@@ -126,6 +126,33 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Filters errors that are completey near any feature of &apos;featureClass&apos;.
+        /// </summary>
+        public static string IfNear_0 {
+            get {
+                return ResourceManager.GetString("IfNear_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polycurve featureclass.
+        /// </summary>
+        public static string IfNear_featureClass {
+            get {
+                return ResourceManager.GetString("IfNear_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Distance.
+        /// </summary>
+        public static string IfNear_near {
+            get {
+                return ResourceManager.GetString("IfNear_near", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Filters errors that are completely within any feature in a &apos;featureClass&apos;.
         /// </summary>
         public static string IfWithin_0 {

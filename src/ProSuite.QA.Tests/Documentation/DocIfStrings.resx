@@ -146,4 +146,13 @@ If not specified, all involved rows are check for the constraint</value>
     <value>if true (default): filter all errors
 if false: filter no errors</value>
   </data>
+  <data name="IfNear_0" xml:space="preserve">
+    <value>Filters errors that are completey near any feature of 'featureClass'</value>
+  </data>
+  <data name="IfNear_featureClass" xml:space="preserve">
+    <value>Polycurve featureclass</value>
+  </data>
+  <data name="IfNear_near" xml:space="preserve">
+    <value>Distance</value>
+  </data>
 </root>

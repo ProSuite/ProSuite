@@ -107,8 +107,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 				TestWorkspaceUtils.CreateTestFgdbWorkspace("HarvestUsedDatasets");
 
 			TestWorkspaceUtils.CreateSimpleFeatureClass(
-				fdgbWorkspace, "TLM_STRASSE", FieldUtils.CreateFields(FieldUtils.CreateOIDField()),
-				esriGeometryType.esriGeometryLine, esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
+				fdgbWorkspace, "TLM_STRASSE", esriGeometryType.esriGeometryLine);
 			TestWorkspaceUtils.CreateSimpleTable(
 				fdgbWorkspace, "TLM_STRASSEN_NAME",
 				FieldUtils.CreateFields(FieldUtils.CreateOIDField()));

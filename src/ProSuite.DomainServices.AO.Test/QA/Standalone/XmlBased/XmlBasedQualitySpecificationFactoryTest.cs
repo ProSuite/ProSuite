@@ -235,13 +235,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace("TestQualitySpecification");
 			IFeatureClass localityFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
-				ws, "AMTOVZ_LOCALITY", null,
-				esriGeometryType.esriGeometryPolyline,
-				esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
+				ws, "AMTOVZ_LOCALITY", esriGeometryType.esriGeometryPolyline);
 			IFeatureClass zipFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
-				ws, "AMTOVZ_ZIP", null,
-				esriGeometryType.esriGeometryPolyline,
-				esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
+				ws, "AMTOVZ_ZIP", esriGeometryType.esriGeometryPolyline);
 
 			XmlDataQualityDocument xmlDocument;
 			IList<XmlQualitySpecification> qualitySpecifications;
