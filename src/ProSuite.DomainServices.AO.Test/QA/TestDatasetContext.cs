@@ -8,6 +8,7 @@ using ProSuite.DomainModel.Core.DataModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ProSuite.Commons.Com;
 
 namespace ProSuite.DomainServices.AO.Test.QA
 {
@@ -15,8 +16,8 @@ namespace ProSuite.DomainServices.AO.Test.QA
 	{
 		private readonly IFeatureWorkspace _workspace;
 
-		public TestDatasetContext([NotNull] string gdbFileName)
-			: this(GetWorkspace(gdbFileName)) { }
+		public TestDatasetContext([NotNull] string connection, object factoryId = null)
+			: this(GetWorkspace(connection, factoryId)) { }
 
 		public TestDatasetContext([NotNull] IFeatureWorkspace workspace)
 		{
@@ -25,17 +26,17 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			_workspace = workspace;
 		}
 
-		private static IFeatureWorkspace GetWorkspace(string gdbFileName)
+		private static IFeatureWorkspace GetWorkspace(string connection, object factoryId)
 		{
-			string ext = Path.GetExtension(gdbFileName);
+			string ext = Path.GetExtension(connection);
 
 			if (ext == ".gdb")
 			{
 				return WorkspaceUtils.OpenFileGdbFeatureWorkspace(
-					gdbFileName);
+					connection);
 			}
 
-			throw new NotImplementedException($"Unhandled extension {ext}");
+			return (IFeatureWorkspace) WorkspaceUtils.OpenWorkspace(connection, $"{factoryId}");
 		}
 
 		protected IFeatureWorkspace Workspace => _workspace;

@@ -233,16 +233,37 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		[Test]
 		public void CanReadQualitySpecificationsCurve()
 		{
-			IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace("TestQualitySpecification");
-			IFeatureClass localityFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
-				ws, "AMTOVZ_LOCALITY", esriGeometryType.esriGeometryPolyline);
-			IFeatureClass zipFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
-				ws, "AMTOVZ_ZIP", esriGeometryType.esriGeometryPolyline);
+			{
+				IFeatureWorkspace ws =
+					TestWorkspaceUtils.CreateTestFgdbWorkspace("TestQualitySpecification");
+				IFeatureClass localityFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
+					ws, "TLM_FLIESSGEWAESSER", esriGeometryType.esriGeometryPolyline);
+				IFeatureClass zipFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
+					ws, "TLM_STEHENDES_GEWAESSER", esriGeometryType.esriGeometryPolyline);
 
+				string wsConn = ((IWorkspaceName)((IDataset)ws).FullName).PathName;
+
+				ValidateConfig(CurveSpezification, wsConn);
+				ValidateConfig(CurveSpezification.Replace("TOPGIS_TLM.", ""), wsConn);
+			}
+
+			{
+				IWorkspace userWs = TestUtils.OpenUserWorkspaceOracle();
+				string wsConn = WorkspaceUtils.GetConnectionString(userWs);
+
+				ValidateConfig(CurveSpezification, wsConn, userWs.WorkspaceFactory.GetClassID().Value);
+				ValidateConfig(
+					CurveSpezification.Replace("TOPGIS_TLM.", ""),
+					wsConn, userWs.WorkspaceFactory.GetClassID().Value);
+			}
+		}
+
+		private void ValidateConfig(string specification, string wsConn, object factoryId = null)
+		{
 			XmlDataQualityDocument xmlDocument;
 			IList<XmlQualitySpecification> qualitySpecifications;
 
-			using (Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(CurveSpezification)))
+			using (Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(specification)))
 			using (StreamReader xmlReader = new StreamReader(stream))
 			{
 				xmlDocument =
@@ -255,10 +276,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			var factory = new XmlBasedQualitySpecificationFactory(modelFactory);
 
-			string wsName = ((IWorkspaceName)((IDataset)ws).FullName).PathName;
 			DataSource[] dataSources =
 			{
-				new DataSource("AMTOVZ FGDB DM","AMTOVZ FGDB DM"){ WorkspaceAsText = wsName }
+				new DataSource("TOPGIS DM","TOPGIS DM"){ WorkspaceAsText = wsConn }
 			};
 
 			int nSpecs = 0;
@@ -269,8 +289,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 					xmlDocument, spec.Name ?? string.Empty,
 					dataSources, ignoreConditionsForUnknownDatasets: false);
 
-				var fws = WorkspaceUtils.OpenFeatureWorkspace(wsName);
-				SimpleDatasetOpener dsOpener = new SimpleDatasetOpener(new TestDatasetContext(wsName));
+				SimpleDatasetOpener dsOpener = new SimpleDatasetOpener(new TestDatasetContext(wsConn, factoryId));
 				var tests =
 					QualityVerificationUtils.GetTestsAndDictionaries(
 						qualitySpecification, dsOpener, out _, out _, out _, null);
@@ -279,6 +298,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				Assert.NotNull(qualitySpecification);
 			}
 			Assert.AreEqual(1, nSpecs);
+
 		}
 
 		private const string CurveSpezification =
@@ -287,23 +307,23 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
   <QualitySpecifications>
     <QualitySpecification name=""Curve"">
       <Elements>
-        <Element qualityCondition=""AMTOVZ_MANAGER.AMTOVZ_LOCALITY_Curve(0)"" />
-        <Element qualityCondition=""AMTOVZ_MANAGER.AMTOVZ_ZIP_Curve(0)"" />
+        <Element qualityCondition=""TOPGIS_TLM.TLM_FLIESSGEWAESSER_Curve(0)"" />
+        <Element qualityCondition=""TOPGIS_TLM.TLM_STEHENDES_GEWAESSER_Curve(0)"" />
       </Elements>
     </QualitySpecification>
   </QualitySpecifications>
   <QualityConditions>
-    <QualityCondition name=""AMTOVZ_MANAGER.AMTOVZ_LOCALITY_Curve(0)"" testDescriptor=""Curve(0)"">
+    <QualityCondition name=""TOPGIS_TLM.TLM_FLIESSGEWAESSER_Curve(0)"" testDescriptor=""Curve(0)"">
       <Description>Finds non-linear line and polygon segments, i.e. circular or elliptic arcs and Bezier curves.</Description>
       <Parameters>
-        <Dataset parameter=""featureClass"" value=""AMTOVZ_MANAGER.AMTOVZ_LOCALITY"" workspace=""AMTOVZ FGDB DM"" />
+        <Dataset parameter=""featureClass"" value=""TOPGIS_TLM.TLM_FLIESSGEWAESSER"" workspace=""TOPGIS DM"" />
         <Scalar parameter=""GroupIssuesBySegmentType"" value=""True"" />
       </Parameters>
     </QualityCondition>
-    <QualityCondition name=""AMTOVZ_MANAGER.AMTOVZ_ZIP_Curve(0)"" testDescriptor=""Curve(0)"">
+    <QualityCondition name=""TOPGIS_TLM.TLM_STEHENDES_GEWAESSER_Curve(0)"" testDescriptor=""Curve(0)"">
       <Description>Finds non-linear line and polygon segments, i.e. circular or elliptic arcs and Bezier curves.</Description>
       <Parameters>
-        <Dataset parameter=""featureClass"" value=""AMTOVZ_MANAGER.AMTOVZ_ZIP"" workspace=""AMTOVZ FGDB DM"" />
+        <Dataset parameter=""featureClass"" value=""TOPGIS_TLM.TLM_STEHENDES_GEWAESSER"" workspace=""TOPGIS DM"" />
         <Scalar parameter=""GroupIssuesBySegmentType"" value=""True"" />
       </Parameters>
     </QualityCondition>
@@ -314,7 +334,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
     </TestDescriptor>
   </TestDescriptors>
   <Workspaces>
-    <Workspace id=""AMTOVZ FGDB DM"" modelName=""AMTOVZ FGDB DM"" />
+    <Workspace id=""TOPGIS DM"" modelName=""TOPGIS DM"" schemaOwner=""TOPGIS_TLM"" />
   </Workspaces>
 </DataQuality>";
 
