@@ -180,9 +180,16 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			Model primaryModel = StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			Assert.NotNull(primaryModel, "no primary model found for quality specification");
 
+			string issueGdbPath = null;
+
+			if (! string.IsNullOrEmpty(_issueRepositoryDir) &&
+			    ! string.IsNullOrEmpty(_issueRepositoryName))
+			{
+				issueGdbPath = Path.Combine(_issueRepositoryDir, _issueRepositoryName);
+			}
+
 			VerificationReporter verificationReporter =
-				new VerificationReporter(Path.Combine(_issueRepositoryDir, _issueRepositoryName),
-				                         _xmlVerificationReportPath, _htmlReportDir)
+				new VerificationReporter(issueGdbPath, _xmlVerificationReportPath, _htmlReportDir)
 				{
 					WriteDetailedVerificationReport = true,
 					HtmlReportTemplatePath = _htmlReportTemplatePath,
