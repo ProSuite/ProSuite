@@ -30,7 +30,6 @@ namespace ProSuite.DomainServices.AO.QA
 
 		[CanBeNull] private readonly string _issueGdbPath;
 		[CanBeNull] private readonly string _xmlReportPath;
-		[CanBeNull] private readonly string _htmlReportDir;
 
 		private const string _progressWorkspaceName = "progress";
 
@@ -44,7 +43,7 @@ namespace ProSuite.DomainServices.AO.QA
 		public VerificationReporter([CanBeNull] IVerificationParameters verificationParameters)
 			: this(verificationParameters?.IssueFgdbPath,
 			       verificationParameters?.VerificationReportPath,
-			       verificationParameters?.VerificationReportPath)
+			       TryGetDirectory(verificationParameters?.VerificationReportPath))
 		{
 			WriteDetailedVerificationReport =
 				verificationParameters?.WriteDetailedVerificationReport ?? false;
@@ -72,7 +71,7 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			_issueGdbPath = string.IsNullOrEmpty(issueGdbPath) ? null : issueGdbPath;
 			_xmlReportPath = string.IsNullOrEmpty(xmlReportPath) ? null : xmlReportPath;
-			_htmlReportDir = string.IsNullOrEmpty(htmlReportDir) ? null : htmlReportDir;
+			HtmlReportDir = string.IsNullOrEmpty(htmlReportDir) ? null : htmlReportDir;
 		}
 
 		[CanBeNull]
@@ -85,7 +84,10 @@ namespace ProSuite.DomainServices.AO.QA
 		private string XmlReportDirectory =>
 			_xmlReportPath != null
 				? Path.GetDirectoryName(_xmlReportPath)
-				: _htmlReportDir;
+				: HtmlReportDir;
+
+		[CanBeNull]
+		public string HtmlReportDir { get; }
 
 		/// <summary>
 		/// The specification template path for the output HTML specification.
@@ -258,19 +260,19 @@ namespace ProSuite.DomainServices.AO.QA
 				List<string> specificationReportFilePaths = null;
 
 				if (verificationReport != null &&
-				    ! string.IsNullOrWhiteSpace(_htmlReportDir) &&
+				    ! string.IsNullOrWhiteSpace(HtmlReportDir) &&
 				    ! string.IsNullOrWhiteSpace(_xmlVerificationReportPath))
 				{
 					specificationReportFilePaths =
 						StandaloneVerificationUtils.WriteQualitySpecificationReport(
-							qualitySpecification, _htmlReportDir,
+							qualitySpecification, HtmlReportDir,
 							HtmlQualitySpecificationTemplatePath, XmlVerificationOptions);
 
 					string xmlVerificationReportFileName =
 						Path.GetFileName(_xmlVerificationReportPath);
 
 					htmlReportFilePaths = StandaloneVerificationUtils.WriteHtmlReports(
-						qualitySpecification, _htmlReportDir, _statisticsBuilder.IssueStatistics,
+						qualitySpecification, HtmlReportDir, _statisticsBuilder.IssueStatistics,
 						verificationReport, xmlVerificationReportFileName, HtmlReportTemplatePath,
 						XmlVerificationOptions, _issueGdbPath, null, specificationReportFilePaths);
 				}
@@ -394,6 +396,13 @@ namespace ProSuite.DomainServices.AO.QA
 
 			_msg.Info(message);
 			fullMessage?.AppendLine(message);
+		}
+
+		private static string TryGetDirectory([CanBeNull] string verificationReportFilePath)
+		{
+			return string.IsNullOrEmpty(verificationReportFilePath)
+				       ? null
+				       : Path.GetDirectoryName(verificationReportFilePath);
 		}
 	}
 }

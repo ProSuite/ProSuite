@@ -371,6 +371,8 @@ namespace ProSuite.Commons.IO
 
 		public static bool EnsureDirectoryExists([NotNull] string path)
 		{
+			Assert.ArgumentNotNullOrEmpty(nameof(path));
+
 			if (Directory.Exists(path))
 			{
 				return true;

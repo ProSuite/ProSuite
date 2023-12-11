@@ -181,6 +181,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			[CanBeNull] string qualitySpecificationName,
 			[CanBeNull] IEnumerable<KeyValuePair<string, string>> properties = null)
 		{
+			Assert.NotNull(_stopWatch, "BeginVerification has not been called");
 			Assert.False(_verificationOngoing, "verification not finished");
 
 			// evaluate options
@@ -529,7 +530,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			[NotNull] string tableName,
 			[NotNull] IEnumerable<ExceptionObject> exceptionObjects)
 		{
-			var result = new XmlUnknownTableName {TableName = tableName};
+			var result = new XmlUnknownTableName { TableName = tableName };
 
 			foreach (ExceptionObject exceptionObject in exceptionObjects)
 			{

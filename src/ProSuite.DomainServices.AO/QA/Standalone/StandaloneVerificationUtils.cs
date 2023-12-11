@@ -163,7 +163,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				}
 
 				string filePath = Path.Combine(directory, reportDefinition.FileName);
-				FileSystemUtils.EnsureDirectoryExists(directory);
+
+				Assert.True(FileSystemUtils.EnsureDirectoryExists(directory),
+				            $"Invalid directory: {directory}");
 
 				HtmlQualitySpecification model =
 					SpecificationReportUtils.CreateHtmlQualitySpecification(qualitySpecification,

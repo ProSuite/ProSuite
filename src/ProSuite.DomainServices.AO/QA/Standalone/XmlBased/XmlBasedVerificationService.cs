@@ -63,7 +63,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 		public void SetupOutputPaths(string outputDirectory)
 		{
-			FileSystemUtils.EnsureDirectoryExists(outputDirectory);
+			Assert.True(FileSystemUtils.EnsureDirectoryExists(outputDirectory),
+			            $"Invalid directory: {outputDirectory}");
 
 			_issueRepositoryDir = outputDirectory;
 
