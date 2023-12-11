@@ -24,6 +24,9 @@ using Path = System.IO.Path;
 
 namespace ProSuite.DomainServices.AO.QA
 {
+	/// <summary>
+	/// Encapsulates the report creation during a quality verification.
+	/// </summary>
 	public class VerificationReporter
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -86,6 +89,9 @@ namespace ProSuite.DomainServices.AO.QA
 				? Path.GetDirectoryName(_xmlReportPath)
 				: HtmlReportDir;
 
+		/// <summary>
+		/// The directory of the HTML report.
+		/// </summary>
 		[CanBeNull]
 		public string HtmlReportDir { get; }
 
