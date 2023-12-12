@@ -7,6 +7,7 @@ using ESRI.ArcGIS.GeoDatabaseExtensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -588,22 +589,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 					esriFeatureType.esriFTSimple,
 					shapeFieldName ?? FieldUtils.GetShapeFieldName(), configKeyWord);
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
-				try
+				LogCreateFeatureClassParameters(workspace, fclassName, fields, configKeyWord);
+
+				if (e is COMException comEx &&
+				    comEx.ErrorCode == (int) fdoError.FDO_E_TABLE_ALREADY_EXISTS)
 				{
-					_msg.DebugFormat("Error creating feature class '{0}'", fclassName);
-					_msg.DebugFormat("Workspace: {0}", WorkspaceUtils.GetConnectionString(
-						                 (IWorkspace) workspace, true));
-					_msg.DebugFormat("Config keyword: {0}", configKeyWord ?? "<null>");
-					LogFields(fields);
-				}
-				catch (Exception e)
-				{
-					_msg.Debug("Error writing to log", e);
+					throw new DataException(
+						$"Error creating feature class '{fclassName}' because it already exists.",
+						comEx);
 				}
 
-				throw new Exception($"Error creating feature class '{fclassName}'", ex);
+				throw new Exception($"Error creating feature class '{fclassName}'", e);
 			}
 		}
 
@@ -4206,6 +4204,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return Directory.Exists(catalogPath);
+		}
+
+		private static void LogCreateFeatureClassParameters(IFeatureWorkspace workspace,
+		                                                    string fclassName,
+		                                                    IFields fields,
+		                                                    string configKeyWord)
+		{
+			try
+			{
+				_msg.DebugFormat("Error creating feature class '{0}'", fclassName);
+				_msg.DebugFormat("Workspace: {0}", WorkspaceUtils.GetConnectionString(
+					                 (IWorkspace) workspace, true));
+				_msg.DebugFormat("Config keyword: {0}", configKeyWord ?? "<null>");
+				LogFields(fields);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug("Error writing to log", e);
+			}
 		}
 
 		#endregion
