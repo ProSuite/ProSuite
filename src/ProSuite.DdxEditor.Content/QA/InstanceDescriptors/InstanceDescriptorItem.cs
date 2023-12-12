@@ -101,28 +101,16 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 				var descriptorWithSameName =
 					_modelBuilder.InstanceDescriptors.Get(entity.Name);
 
-				if (descriptorWithSameName != null &&
-				    descriptorWithSameName.Id != entity.Id)
-				{
-					notification.RegisterMessage("Name",
-					                             "Instance descriptor with the same name already exists",
-					                             Severity.Error);
-				}
+				InstanceDescriptorItemUtils.ValidateDescriptorAgainstDuplicateName(
+					entity, descriptorWithSameName, notification);
 			}
 
 			// check if another test descriptor with the implementation exists
 			InstanceDescriptor descriptorWithSameImplementation =
 				_modelBuilder.InstanceDescriptors.GetWithSameImplementation(entity);
 
-			if (descriptorWithSameImplementation != null &&
-			    descriptorWithSameImplementation.Id != entity.Id)
-			{
-				notification.RegisterMessage(string.Format(
-					                             "Instance descriptor {0} has the same implementation " +
-					                             "(factory or test class/constructor)",
-					                             descriptorWithSameImplementation.Name),
-				                             Severity.Error);
-			}
+			InstanceDescriptorItemUtils.ValidateDescriptorAgainstDuplicateImplementation(
+				entity, descriptorWithSameImplementation, notification);
 		}
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
