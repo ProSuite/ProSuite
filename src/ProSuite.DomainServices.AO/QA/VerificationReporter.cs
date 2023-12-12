@@ -213,12 +213,13 @@ namespace ProSuite.DomainServices.AO.QA
 				return null;
 			}
 
-			var watch = _msg.DebugStartTiming(
-				"Creating sub-verification progress file geodatabase {0}...", _issueGdbPath);
-
 			string directoryPath = Path.GetDirectoryName(_issueGdbPath);
 			Assert.NotNull(directoryPath,
 			               "Invalid full path to gdb (undefined directory): {0}", _issueGdbPath);
+
+			var watch = _msg.DebugStartTiming(
+				"Creating sub-verification progress file geodatabase {0} in {1}...",
+				_progressWorkspaceName, directoryPath);
 
 			ISubverificationObserver result = SubverificationObserverUtils.GetProgressRepository(
 				directoryPath, _progressWorkspaceName, spatialReference, issueRepositoryType);

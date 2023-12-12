@@ -171,9 +171,17 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		public void AddObserver(VerificationReporter verificationReporter,
 		                        ISpatialReference spatialReference)
 		{
-			SubVerificationObserver =
-				verificationReporter.CreateSubVerificationObserver(
-					IssueRepositoryType.FileGdb, spatialReference);
+			try
+			{
+				SubVerificationObserver =
+					verificationReporter.CreateSubVerificationObserver(
+						IssueRepositoryType.FileGdb, spatialReference);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error creating sub-verification progress geodatabase. " +
+				          "No sub-verification progress will be reported.", e);
+			}
 		}
 
 		public void Execute(IEnumerable<ITest> tests, AreaOfInterest areaOfInterest,
