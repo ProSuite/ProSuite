@@ -632,26 +632,17 @@ namespace ProSuite.DomainServices.AO.QA
 				testRunner.AddObserver(verificationReporter, spatialReference);
 			}
 
-			_verificationReportBuilder = verificationReporter.CreateReportBuilders();
-
-			// TODO indicate if polygon, perimeter name, perimeter type etc.
-			_verificationReportBuilder.BeginVerification(areaOfInterest);
-
-			verificationReporter.AddVerifiedDatasets(
-				qualityVerification.VerificationDatasets.Select(vds => vds.Dataset));
-
-			verificationReporter.AddVerifiedConditions(
-				qualityVerification.ConditionVerifications.Select(
-					cv => _verificationElements.GetSpecificationElement(cv)));
-
-			testRunner.QaError += container_QaError;
-			testRunner.Progress += TestRunner_Progress;
-
 			_warningCount = 0;
 			_errorCount = 0;
 
 			try
 			{
+				_verificationReportBuilder =
+					InitializeReporting(verificationReporter, qualityVerification, areaOfInterest);
+
+				testRunner.QaError += container_QaError;
+				testRunner.Progress += TestRunner_Progress;
+
 				testRunner.Execute(tests, areaOfInterest, CancellationTokenSource);
 
 				CancellationMessage = testRunner.CancellationMessage;
@@ -699,19 +690,39 @@ namespace ProSuite.DomainServices.AO.QA
 					}
 
 					#endregion
-
-					_externalIssueRepository.Dispose();
-					_externalIssueRepository = null;
 				}
-
-				GC.Collect();
-				GC.WaitForPendingFinalizers();
 			}
 			finally
 			{
 				testRunner.QaError -= container_QaError;
 				testRunner.Progress -= TestRunner_Progress;
+
+				_externalIssueRepository?.Dispose();
+				_externalIssueRepository = null;
+
+				GC.Collect();
+				GC.WaitForPendingFinalizers();
 			}
+		}
+
+		private IVerificationReportBuilder InitializeReporting(
+			[NotNull] VerificationReporter verificationReporter,
+			[NotNull] QualityVerification qualityVerification,
+			[CanBeNull] AreaOfInterest areaOfInterest)
+		{
+			IVerificationReportBuilder reportBuilder = verificationReporter.CreateReportBuilders();
+
+			// TODO indicate if polygon, perimeter name, perimeter type etc.
+			reportBuilder.BeginVerification(areaOfInterest);
+
+			verificationReporter.AddVerifiedDatasets(
+				qualityVerification.VerificationDatasets.Select(vds => vds.Dataset));
+
+			verificationReporter.AddVerifiedConditions(
+				qualityVerification.ConditionVerifications.Select(
+					cv => _verificationElements.GetSpecificationElement(cv)));
+
+			return reportBuilder;
 		}
 
 		private ISpatialReference GetSpatialReferenceForIssueDatasets()
