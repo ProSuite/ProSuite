@@ -28,28 +28,28 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		public void CanMatch()
 		{
 			Assert.True(Matches(1, 2, "test",
-			                    new object[] {1, 2, "test"}));
+			                    new object[] { 1, 2, "test" }));
 		}
 
 		[Test]
 		public void CanMatchOnlyText()
 		{
 			Assert.True(Matches(null, null, "test",
-			                    new object[] {"test"}));
+			                    new object[] { "test" }));
 		}
 
 		[Test]
 		public void CanMatchOnlyDoubleValue()
 		{
 			Assert.True(Matches(99, null, null,
-			                    new object[] {99}));
+			                    new object[] { 99 }));
 		}
 
 		[Test]
 		public void CanMatchIgnoringInsignificantDifferences()
 		{
 			Assert.True(Matches(1, 2, "test",
-			                    new object[] {1.000000000000001, 2, "test"},
+			                    new object[] { 1.000000000000001, 2, "test" },
 			                    significantDigits: 1E-14));
 		}
 
@@ -57,21 +57,21 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		public void CanMatchWithUndefinedExceptionValues()
 		{
 			Assert.True(Matches(null, null, null,
-			                    new object[] {1, 2, "test"}));
+			                    new object[] { 1, 2, "test" }));
 		}
 
 		[Test]
 		public void CanMatchWithAdditionalErrorValues()
 		{
 			Assert.True(Matches(1, 2, "test",
-			                    new object[] {1, 2, "test", "more_text", 99}));
+			                    new object[] { 1, 2, "test", "more_text", 99 }));
 		}
 
 		[Test]
 		public void CanDetectSignificantDifferences()
 		{
 			Assert.False(Matches(1, 2, "test",
-			                     new object[] {1.0000000000001, 2, "test"},
+			                     new object[] { 1.0000000000001, 2, "test" },
 			                     significantDigits: 1E-14));
 		}
 
@@ -79,14 +79,14 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		public void CanDetectTextDifference()
 		{
 			Assert.False(Matches(null, null, "test",
-			                     new object[] {"TEST"}));
+			                     new object[] { "TEST" }));
 		}
 
 		[Test]
 		public void CanIgnoreCaseOnlyTextDifference()
 		{
 			Assert.True(Matches(null, null, "test",
-			                    new object[] {"TEST"},
+			                    new object[] { "TEST" },
 			                    ignoreCase: true));
 		}
 
@@ -94,14 +94,14 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		public void CanIgnoreTextDifferenceDueToLeadingOrTrailingWhitespace()
 		{
 			Assert.True(Matches(null, null, " test",
-			                    new object[] {"test "}));
+			                    new object[] { "test " }));
 		}
 
 		[Test]
 		public void CanDetectMissingErrorValues()
 		{
 			Assert.False(Matches(1, 2, "test",
-			                     new object[] {1}));
+			                     new object[] { 1 }));
 		}
 
 		private static bool Matches(double? doubleValue1, double? doubleValue2,
@@ -112,8 +112,8 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		                            bool ignoreCase = false)
 		{
 			ExceptionObject exceptionObject = CreateExceptionObject(1, doubleValue1,
-			                                                        doubleValue2,
-			                                                        textValue);
+				doubleValue2,
+				textValue);
 			ITable table = ExceptionObjectTestUtils.GetMockTable();
 
 			QaError qaError = ExceptionObjectTestUtils.CreateQaError(table, null, null, values);

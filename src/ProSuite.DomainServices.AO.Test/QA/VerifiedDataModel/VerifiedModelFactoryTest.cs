@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Test;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
+using TestUtils = ProSuite.Commons.Test.Testing.TestUtils;
 
 namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 {
@@ -19,22 +20,22 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
+			TestUtils.ConfigureUnitTestLogging();
 
-			TestUtils.InitializeLicense();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			TestUtils.ReleaseLicense();
+			Commons.AO.Test.TestUtils.ReleaseLicense();
 		}
 
 		[Test]
 		[Category(TestCategory.Sde)]
 		public void CanHarvestSimpleModel()
 		{
-			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
+			IWorkspace workspace = Commons.AO.Test.TestUtils.OpenUserWorkspaceOracle();
 
 			VerifiedModelFactory modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
@@ -73,7 +74,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanHarvestUsedSimpleModel()
 		{
-			IWorkspace userWorkspace = TestUtils.OpenUserWorkspaceOracle();
+			IWorkspace userWorkspace = Commons.AO.Test.TestUtils.OpenUserWorkspaceOracle();
 			IList<string> qualifiedUsedDatasetNames =
 				new[]
 				{
@@ -126,7 +127,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 		[Category(TestCategory.Sde)]
 		public void ComparePerformance()
 		{
-			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
+			IWorkspace workspace = Commons.AO.Test.TestUtils.OpenUserWorkspaceOracle();
 
 			VerifiedModelFactory modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),

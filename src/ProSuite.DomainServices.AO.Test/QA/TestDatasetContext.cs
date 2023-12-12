@@ -1,14 +1,14 @@
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Surface.Raster;
-using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.Core.DataModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ProSuite.Commons.Com;
+using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainServices.AO.Test.QA
 {
@@ -21,7 +21,7 @@ namespace ProSuite.DomainServices.AO.Test.QA
 
 		public TestDatasetContext([NotNull] IFeatureWorkspace workspace)
 		{
-			Commons.Essentials.Assertions.Assert.ArgumentNotNull(workspace, nameof(workspace));
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
 
 			_workspace = workspace;
 		}
@@ -72,10 +72,6 @@ namespace ProSuite.DomainServices.AO.Test.QA
 		public virtual SimpleRasterMosaic OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			throw new NotImplementedException();
-			//IMosaicDataset mosaic =
-			//	DatasetUtils.OpenMosaicDataset((IWorkspace)_workspace, dataset.Name);
-
-			//return new SimpleRasterMosaic(mosaic);
 		}
 
 		public ITopology OpenTopology(ITopologyDataset dataset)
@@ -85,7 +81,7 @@ namespace ProSuite.DomainServices.AO.Test.QA
 
 		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
 		{
-			return DatasetUtils.OpenRasterDataset((IWorkspace)_workspace, dataset.Name);
+			return DatasetUtils.OpenRasterDataset((IWorkspace) _workspace, dataset.Name);
 		}
 
 		public IRelationshipClass OpenRelationshipClass(Association association)

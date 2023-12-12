@@ -37,9 +37,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.HtmlReports
 
 			var test = new TestDescriptor("test", new ClassDescriptor(typeof(QaMinSegAngle)));
 
-			var qc1 = new QualityCondition("qc1", test) {Category = catA11};
-			var qc2 = new QualityCondition("qc2", test) {Category = catB11};
-			var qc3 = new QualityCondition("qc3", test) {Category = catB11};
+			var qc1 = new QualityCondition("qc1", test) { Category = catA11 };
+			var qc2 = new QualityCondition("qc2", test) { Category = catB11 };
+			var qc3 = new QualityCondition("qc3", test) { Category = catB11 };
 
 			var issueGroups = new List<IssueGroup>
 			                  {
@@ -102,9 +102,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.HtmlReports
 
 			var test = new TestDescriptor("test", new ClassDescriptor(typeof(QaMinSegAngle)));
 
-			var qc1 = new QualityCondition("qc1", test) {Category = catA11};
-			var qc2 = new QualityCondition("qc2", test) {Category = catB11};
-			var qc3 = new QualityCondition("qc3", test) {Category = catB11};
+			var qc1 = new QualityCondition("qc1", test) { Category = catA11 };
+			var qc2 = new QualityCondition("qc2", test) { Category = catB11 };
+			var qc3 = new QualityCondition("qc3", test) { Category = catB11 };
 
 			var issueGroups = new List<IssueGroup>
 			                  {
@@ -152,9 +152,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.HtmlReports
 
 			var test = new TestDescriptor("test", new ClassDescriptor(typeof(QaMinSegAngle)));
 
-			var qc1 = new QualityCondition("qc1", test) {Category = catA11};
-			var qc2 = new QualityCondition("qc2", test) {Category = catA11};
-			var qc3 = new QualityCondition("qc3", test) {Category = catA11};
+			var qc1 = new QualityCondition("qc1", test) { Category = catA11 };
+			var qc2 = new QualityCondition("qc2", test) { Category = catA11 };
+			var qc3 = new QualityCondition("qc3", test) { Category = catA11 };
 
 			var issueGroups = new List<IssueGroup>
 			                  {
@@ -201,9 +201,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.HtmlReports
 
 			var test = new TestDescriptor("test", new ClassDescriptor(typeof(QaMinSegAngle)));
 
-			var qc1 = new QualityCondition("qc1", test) {Category = catA11};
-			var qc2 = new QualityCondition("qc2", test) {Category = catA11};
-			var qc3 = new QualityCondition("qc3", test) {Category = catA11};
+			var qc1 = new QualityCondition("qc1", test) { Category = catA11 };
+			var qc2 = new QualityCondition("qc2", test) { Category = catA11 };
+			var qc3 = new QualityCondition("qc3", test) { Category = catA11 };
 
 			var issueGroups = new List<IssueGroup>
 			                  {
@@ -251,9 +251,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.HtmlReports
 
 			var test = new TestDescriptor("test", new ClassDescriptor(typeof(QaMinSegAngle)));
 
-			var qc1 = new QualityCondition("qc1", test) {Category = catA};
-			var qc2 = new QualityCondition("qc2", test) {Category = catA1};
-			var qc3 = new QualityCondition("qc3", test) {Category = catA11};
+			var qc1 = new QualityCondition("qc1", test) { Category = catA };
+			var qc2 = new QualityCondition("qc2", test) { Category = catA1 };
+			var qc3 = new QualityCondition("qc3", test) { Category = catA11 };
 
 			var issueGroups = new List<IssueGroup>
 			                  {
@@ -300,9 +300,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.HtmlReports
 
 			var test = new TestDescriptor("test", new ClassDescriptor(typeof(QaMinSegAngle)));
 
-			var qc1 = new QualityCondition("qc1", test) {Category = catA11};
-			var qc2 = new QualityCondition("qc2", test) {Category = catA11};
-			var qc3 = new QualityCondition("qc3", test) {Category = catA11};
+			var qc1 = new QualityCondition("qc1", test) { Category = catA11 };
+			var qc2 = new QualityCondition("qc2", test) { Category = catA11 };
+			var qc3 = new QualityCondition("qc3", test) { Category = catA11 };
 
 			var issueGroups = new List<IssueGroup>
 			                  {

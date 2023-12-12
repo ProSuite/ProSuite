@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using NSubstitute;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Test;
@@ -17,7 +16,7 @@ using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
-using ProSuite.QA.Tests;
+using TestUtils = ProSuite.Commons.Test.Testing.TestUtils;
 
 namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 {
@@ -32,14 +31,14 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
-			TestUtils.InitializeLicense();
+			TestUtils.ConfigureUnitTestLogging();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			TestUtils.ReleaseLicense();
+			Commons.AO.Test.TestUtils.ReleaseLicense();
 		}
 
 		[SetUp]
@@ -52,11 +51,11 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				{
 					Name = "qaSimpleGeometry(0)",
 					TestClass = new XmlClassDescriptor
-					{
-						TypeName = "ProSuite.QA.Tests.QaSimpleGeometry",
-						AssemblyName = "ProSuite.QA.Tests",
-						ConstructorId = 0
-					}
+					            {
+						            TypeName = "ProSuite.QA.Tests.QaSimpleGeometry",
+						            AssemblyName = "ProSuite.QA.Tests",
+						            ConstructorId = 0
+					            }
 				};
 
 			_xmlTestDescriptorMinArea =
@@ -64,11 +63,11 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				{
 					Name = "QaMinArea(1)",
 					TestClass = new XmlClassDescriptor
-					{
-						TypeName = "EsriDE.ProSuite.QA.Tests.QaMinArea",
-						AssemblyName = "EsriDE.ProSuite.QA.Tests",
-						ConstructorId = 1
-					}
+					            {
+						            TypeName = "EsriDE.ProSuite.QA.Tests.QaMinArea",
+						            AssemblyName = "EsriDE.ProSuite.QA.Tests",
+						            ConstructorId = 1
+					            }
 				};
 
 			_xmlTransformerDescriptor =
@@ -76,12 +75,12 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				{
 					Name = "TrMultipolygonToPolygon(0)",
 					TransformerClass = new XmlClassDescriptor
-					{
-						TypeName =
-											   "ProSuite.QA.Tests.Transformers.TrMultipolygonToPolygon",
-						AssemblyName = "ProSuite.QA.Tests",
-						ConstructorId = 0
-					}
+					                   {
+						                   TypeName =
+							                   "ProSuite.QA.Tests.Transformers.TrMultipolygonToPolygon",
+						                   AssemblyName = "ProSuite.QA.Tests",
+						                   ConstructorId = 0
+					                   }
 				};
 		}
 
@@ -127,24 +126,24 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		public void CanCreateQualitySpecificationIgnoringUnknownDatasets()
 		{
 			string catalogPath = TestDataPreparer.ExtractZip("QATestData.gdb.zip", @"QA\TestData")
-												 .GetPath();
+			                                     .GetPath();
 
 			var xmlQCon = new XmlQualityCondition
-			{
-				Name = "Simple",
-				TestDescriptorName = _xmlTestDescriptorSimpleGeometry.Name
-			};
+			              {
+				              Name = "Simple",
+				              TestDescriptorName = _xmlTestDescriptorSimpleGeometry.Name
+			              };
 
 			xmlQCon.ParameterValues.Add(new XmlDatasetTestParameterValue
-			{
-				TestParameterName = "featureClass",
-				Value = "UNKNOWN",
-				WorkspaceId = _xmlWorkspace.ID
-			});
+			                            {
+				                            TestParameterName = "featureClass",
+				                            Value = "UNKNOWN",
+				                            WorkspaceId = _xmlWorkspace.ID
+			                            });
 
 			var xmlQSpec = new XmlQualitySpecification { Name = "qspec" };
 			xmlQSpec.Elements.Add(new XmlQualitySpecificationElement
-			{ QualityConditionName = xmlQCon.Name });
+			                      { QualityConditionName = xmlQCon.Name });
 
 			var xmlDocument = new XmlDataQualityDocument();
 
@@ -155,7 +154,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			var modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
-										 new SimpleVerifiedDatasetHarvester());
+				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new XmlBasedQualitySpecificationFactory(modelFactory);
 
@@ -165,8 +164,8 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			QualitySpecification qualitySpecification =
 				factory.CreateQualitySpecification(xmlDocument, xmlQSpec.Name,
-												   new[] { dataSource },
-												   ignoreConditionsForUnknownDatasets);
+				                                   new[] { dataSource },
+				                                   ignoreConditionsForUnknownDatasets);
 
 			Assert.AreEqual(xmlQSpec.Name, qualitySpecification.Name);
 			Assert.AreEqual(0, qualitySpecification.Elements.Count);
@@ -182,13 +181,13 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			var modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
-										 new SimpleVerifiedDatasetHarvester());
+				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new XmlBasedQualitySpecificationFactory(modelFactory);
 
 			QualitySpecification qualitySpecification =
 				factory.CreateQualitySpecification(xmlDocument, xmlQSpec.Name,
-												   new DataSource[] { });
+				                                   new DataSource[] { });
 
 			Assert.AreEqual(xmlQSpec.Name, qualitySpecification.Name);
 		}
@@ -200,7 +199,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			XmlDataQualityDocument xmlDocument;
 			IList<XmlQualitySpecification> qualitySpecifications;
 			using (StreamReader xmlReader =
-				   new StreamReader(@"c:\temp\QaConfigWithEmptyDatasetsParameters.xml"))
+			       new StreamReader(@"c:\temp\QaConfigWithEmptyDatasetsParameters.xml"))
 			{
 				xmlDocument =
 					XmlDataQualityUtils.ReadXmlDocument(xmlReader, out qualitySpecifications);
@@ -208,7 +207,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			var modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
-										 new SimpleVerifiedDatasetHarvester());
+				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new XmlBasedQualitySpecificationFactory(modelFactory);
 
@@ -241,17 +240,18 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				IFeatureClass zipFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
 					ws, "TLM_STEHENDES_GEWAESSER", esriGeometryType.esriGeometryPolyline);
 
-				string wsConn = ((IWorkspaceName)((IDataset)ws).FullName).PathName;
+				string wsConn = ((IWorkspaceName) ((IDataset) ws).FullName).PathName;
 
 				ValidateConfig(CurveSpezification, wsConn);
 				ValidateConfig(CurveSpezification.Replace("TOPGIS_TLM.", ""), wsConn);
 			}
 
 			{
-				IWorkspace userWs = TestUtils.OpenUserWorkspaceOracle();
+				IWorkspace userWs = Commons.AO.Test.TestUtils.OpenUserWorkspaceOracle();
 				string wsConn = WorkspaceUtils.GetConnectionString(userWs);
 
-				ValidateConfig(CurveSpezification, wsConn, userWs.WorkspaceFactory.GetClassID().Value);
+				ValidateConfig(CurveSpezification, wsConn,
+				               userWs.WorkspaceFactory.GetClassID().Value);
 				ValidateConfig(
 					CurveSpezification.Replace("TOPGIS_TLM.", ""),
 					wsConn, userWs.WorkspaceFactory.GetClassID().Value);
@@ -272,13 +272,13 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			var modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
-										 new SimpleVerifiedDatasetHarvester());
+				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new XmlBasedQualitySpecificationFactory(modelFactory);
 
 			DataSource[] dataSources =
 			{
-				new DataSource("TOPGIS DM","TOPGIS DM"){ WorkspaceAsText = wsConn }
+				new DataSource("TOPGIS DM", "TOPGIS DM") { WorkspaceAsText = wsConn }
 			};
 
 			int nSpecs = 0;
@@ -289,7 +289,8 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 					xmlDocument, spec.Name ?? string.Empty,
 					dataSources, ignoreConditionsForUnknownDatasets: false);
 
-				SimpleDatasetOpener dsOpener = new SimpleDatasetOpener(new TestDatasetContext(wsConn, factoryId));
+				SimpleDatasetOpener dsOpener =
+					new SimpleDatasetOpener(new TestDatasetContext(wsConn, factoryId));
 				var tests =
 					QualityVerificationUtils.GetTestsAndDictionaries(
 						qualitySpecification, dsOpener, out _, out _, out _, null);
@@ -297,12 +298,12 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				Assert.AreEqual(2, tests.Count);
 				Assert.NotNull(qualitySpecification);
 			}
-			Assert.AreEqual(1, nSpecs);
 
+			Assert.AreEqual(1, nSpecs);
 		}
 
 		private const string CurveSpezification =
-@"<?xml version=""1.0"" encoding=""utf-8""?>
+			@"<?xml version=""1.0"" encoding=""utf-8""?>
 <DataQuality xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns=""urn:ProSuite.QA.QualitySpecifications-3.0"">
   <QualitySpecifications>
     <QualitySpecification name=""Curve"">
@@ -338,11 +339,10 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
   </Workspaces>
 </DataQuality>";
 
-
 		private void CanCreateQualitySpecificationCore()
 		{
 			string catalogPath = TestDataPreparer.ExtractZip("QATestData.gdb.zip", @"QA\TestData")
-												 .GetPath();
+			                                     .GetPath();
 
 			var xmlCategory = new XmlDataQualityCategory { Name = "Category A" };
 			var xmlSubCategory = new XmlDataQualityCategory { Name = "Category A.1" };
@@ -354,38 +354,38 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			xmlSubCategory.AddSubCategory(xmlSubSubCategory2);
 
 			var xmlTrans = new XmlTransformerConfiguration
-			{
-				Name = "TrMultipolygonToPolygon",
-				TransformerDescriptorName = _xmlTransformerDescriptor.Name
-			};
+			               {
+				               Name = "TrMultipolygonToPolygon",
+				               TransformerDescriptorName = _xmlTransformerDescriptor.Name
+			               };
 			xmlTrans.ParameterValues.Add(new XmlDatasetTestParameterValue
-			{
-				TestParameterName = "featureClass",
-				Value = "polygons",
-				WorkspaceId = _xmlWorkspace.ID
-			});
+			                             {
+				                             TestParameterName = "featureClass",
+				                             Value = "polygons",
+				                             WorkspaceId = _xmlWorkspace.ID
+			                             });
 			xmlTrans.Url = "github.com/prosuite";
 
 			var xmlQCon = new XmlQualityCondition
-			{
-				Name = "MinArea",
-				TestDescriptorName = _xmlTestDescriptorMinArea.Name
-			};
+			              {
+				              Name = "MinArea",
+				              TestDescriptorName = _xmlTestDescriptorMinArea.Name
+			              };
 
 			xmlQCon.ParameterValues.Add(new XmlDatasetTestParameterValue
-			{
-				TestParameterName = "polygonClass",
-				TransformerName = xmlTrans.Name
-			});
+			                            {
+				                            TestParameterName = "polygonClass",
+				                            TransformerName = xmlTrans.Name
+			                            });
 			xmlQCon.ParameterValues.Add(new XmlScalarTestParameterValue
-			{
-				TestParameterName = "limit",
-				Value = "12.34"
-			});
+			                            {
+				                            TestParameterName = "limit",
+				                            Value = "12.34"
+			                            });
 
 			var xmlQSpec = new XmlQualitySpecification { Name = "qspec" };
 			xmlQSpec.Elements.Add(new XmlQualitySpecificationElement
-			{ QualityConditionName = xmlQCon.Name });
+			                      { QualityConditionName = xmlQCon.Name });
 
 			xmlSubCategory.AddQualitySpecification(xmlQSpec);
 			xmlSubSubCategory.AddQualityCondition(xmlQCon);
@@ -401,7 +401,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			var modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
-										 new SimpleVerifiedDatasetHarvester());
+				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new XmlBasedQualitySpecificationFactory(modelFactory);
 
@@ -409,7 +409,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			QualitySpecification qualitySpecification =
 				factory.CreateQualitySpecification(xmlDocument, xmlQSpec.Name,
-												   new[] { dataSource });
+				                                   new[] { dataSource });
 
 			Assert.NotNull(qualitySpecification.Category);
 			Assert.AreEqual(xmlQSpec.Name, qualitySpecification.Name);
@@ -421,7 +421,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				if (qualitySpecification.Category.ParentCategory != null)
 				{
 					Assert.AreEqual(xmlCategory.Name,
-									qualitySpecification.Category.ParentCategory.Name);
+					                qualitySpecification.Category.ParentCategory.Name);
 				}
 
 				Assert.AreEqual(2, qualitySpecification.Category.SubCategories.Count);
@@ -439,18 +439,18 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				if (qualityCondition.Category.ParentCategory != null)
 				{
 					Assert.AreEqual(xmlSubCategory.Name,
-									qualityCondition.Category.ParentCategory.Name);
+					                qualityCondition.Category.ParentCategory.Name);
 				}
 			}
 
 			Assert.AreEqual(_xmlTestDescriptorMinArea.Name, qualityCondition.TestDescriptor.Name);
 
 			var scalarValue =
-				(ScalarTestParameterValue)qualityCondition.GetParameterValues("limit")[0];
+				(ScalarTestParameterValue) qualityCondition.GetParameterValues("limit")[0];
 			Assert.AreEqual(12.34, scalarValue.GetValue(typeof(double)));
 
 			var transValue =
-				(DatasetTestParameterValue)qualityCondition.GetParameterValues("polygonClass")[0];
+				(DatasetTestParameterValue) qualityCondition.GetParameterValues("polygonClass")[0];
 
 			TransformerConfiguration transformerConfiguration = transValue.ValueSource;
 			Assert.NotNull(transformerConfiguration);
@@ -464,16 +464,16 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				if (transformerConfiguration.Category.ParentCategory != null)
 				{
 					Assert.AreEqual(xmlSubCategory.Name,
-									transformerConfiguration.Category.ParentCategory.Name);
+					                transformerConfiguration.Category.ParentCategory.Name);
 				}
 			}
 
 			var datasetValue =
-				(DatasetTestParameterValue)transformerConfiguration.ParameterValues[0];
+				(DatasetTestParameterValue) transformerConfiguration.ParameterValues[0];
 			Assert.NotNull(datasetValue.DatasetValue);
 
 			Assert.AreEqual(_xmlTransformerDescriptor.Name,
-							transformerConfiguration.TransformerDescriptor.Name);
+			                transformerConfiguration.TransformerDescriptor.Name);
 		}
 	}
 }
