@@ -63,8 +63,11 @@ namespace ProSuite.DomainServices.AO.QA
 
 		public QualityVerification QualityVerification { get; set; }
 
-		public void AddObserver(VerificationReporter verificationReporter,
-		                        ISpatialReference spatialReference) { }
+		public ISubVerificationObserver AddObserver(VerificationReporter verificationReporter,
+		                                            ISpatialReference spatialReference)
+		{
+			return null;
+		}
 
 		public void Execute(IEnumerable<ITest> tests,
 		                    AreaOfInterest areaOfInterest,

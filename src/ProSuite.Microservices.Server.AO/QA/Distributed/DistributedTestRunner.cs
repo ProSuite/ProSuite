@@ -129,7 +129,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 		public event EventHandler<VerificationProgressEventArgs> Progress;
 
-		private ISubverificationObserver SubVerificationObserver { get; set; }
+		private ISubVerificationObserver SubVerificationObserver { get; set; }
 
 		public QualityVerification QualityVerification { get; set; }
 
@@ -168,8 +168,9 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			CancellationTokenSource?.Cancel();
 		}
 
-		public void AddObserver(VerificationReporter verificationReporter,
-		                        ISpatialReference spatialReference)
+		public ISubVerificationObserver AddObserver(
+			VerificationReporter verificationReporter,
+			ISpatialReference spatialReference)
 		{
 			try
 			{
@@ -182,6 +183,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				_msg.Warn("Error creating sub-verification progress geodatabase. " +
 				          "No sub-verification progress will be reported.", e);
 			}
+
+			return SubVerificationObserver;
 		}
 
 		public void Execute(IEnumerable<ITest> tests, AreaOfInterest areaOfInterest,

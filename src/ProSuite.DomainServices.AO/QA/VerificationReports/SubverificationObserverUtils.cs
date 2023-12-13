@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -5,12 +6,12 @@ using ProSuite.DomainServices.AO.QA.IssuePersistence;
 
 namespace ProSuite.DomainServices.AO.QA.VerificationReports
 {
-	public static class SubverificationObserverUtils
+	public static class SubVerificationObserverUtils
 	{
-		public const string SubverificationFeatureClassName = "SubverificationProgress";
+		public const string SubVerificationFeatureClassName = "SubverificationProgress";
 
 		[CanBeNull]
-		public static ISubverificationObserver GetProgressRepository(
+		public static ISubVerificationObserver GetProgressRepository(
 			[NotNull] string directoryFullPath,
 			[CanBeNull] string gdbName,
 			[CanBeNull] ISpatialReference spatialReference,
@@ -40,8 +41,12 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 				return null;
 			}
 
-			return new SubverificationObserver(workspace, SubverificationFeatureClassName,
-			                                   spatialReference);
+			var result = new SubVerificationObserver(workspace, SubVerificationFeatureClassName,
+			                                         spatialReference);
+
+			Marshal.ReleaseComObject(workspace);
+
+			return result;
 		}
 	}
 }

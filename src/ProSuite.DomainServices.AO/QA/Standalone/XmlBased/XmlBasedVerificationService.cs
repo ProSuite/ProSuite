@@ -222,12 +222,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			bool fulfilled;
 
-			DistributedTestRunner?.AddObserver(verificationReporter, issuesSpatialReference);
-
 			service.DistributedTestRunner = DistributedTestRunner;
 			service.ProgressStreamer = ProgressStreamer;
 
-			StringBuilder sb = new StringBuilder();
+			ISubVerificationObserver subVerificationObserver =
+				DistributedTestRunner?.AddObserver(verificationReporter, issuesSpatialReference);
 
 			using (IIssueRepository issueRepository =
 			       verificationReporter.CreateIssueRepository(

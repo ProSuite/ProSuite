@@ -204,7 +204,7 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[CanBeNull]
-		public ISubverificationObserver CreateSubVerificationObserver(
+		public ISubVerificationObserver CreateSubVerificationObserver(
 			IssueRepositoryType issueRepositoryType,
 			[CanBeNull] ISpatialReference spatialReference)
 		{
@@ -221,7 +221,7 @@ namespace ProSuite.DomainServices.AO.QA
 				"Creating sub-verification progress file geodatabase {0} in {1}...",
 				_progressWorkspaceName, directoryPath);
 
-			ISubverificationObserver result = SubverificationObserverUtils.GetProgressRepository(
+			ISubVerificationObserver result = SubVerificationObserverUtils.GetProgressRepository(
 				directoryPath, _progressWorkspaceName, spatialReference, issueRepositoryType);
 
 			_msg.DebugStopTiming(watch, "Created sub-verification progress repository");

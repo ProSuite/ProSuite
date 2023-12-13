@@ -39,8 +39,8 @@ namespace ProSuite.DomainServices.AO.QA
 		/// </summary>
 		/// <param name="verificationReporter"></param>
 		/// <param name="spatialReference"></param>
-		void AddObserver([NotNull] VerificationReporter verificationReporter,
-		                 [CanBeNull] ISpatialReference spatialReference);
+		ISubVerificationObserver AddObserver([NotNull] VerificationReporter verificationReporter,
+		                                     [CanBeNull] ISpatialReference spatialReference);
 
 		/// <summary>
 		/// Executes the specified tests in the provided area of interest.

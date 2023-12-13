@@ -1,14 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
@@ -221,8 +217,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 				SubVerificationObserver?.CreatedSubverification(
 					subVerification.Id,
-					subVerification.QualityConditionGroup.ExecType,
-					qcNames,
 					subVerification.TileEnvelope);
 			}
 		}

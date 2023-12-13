@@ -103,7 +103,7 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			Assert.IsNotNull(issueRepository);
 			Assert.IsTrue(Directory.Exists($@"{tempDir}\issues.gdb"));
 
-			ISubverificationObserver subVerificationObserver =
+			ISubVerificationObserver subVerificationObserver =
 				reporter.CreateSubVerificationObserver(IssueRepositoryType.FileGdb, sr);
 
 			Assert.IsNotNull(subVerificationObserver);

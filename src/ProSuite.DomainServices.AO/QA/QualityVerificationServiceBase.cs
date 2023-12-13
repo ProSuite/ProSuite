@@ -620,6 +620,7 @@ namespace ProSuite.DomainServices.AO.QA
 					ProgressStreamer = ProgressStreamer
 				};
 
+			ISubVerificationObserver subVerificationObserver = null;
 			if (verificationReporter.CanCreateIssueRepository)
 			{
 				ISpatialReference spatialReference =
@@ -629,7 +630,8 @@ namespace ProSuite.DomainServices.AO.QA
 				_externalIssueRepository = verificationReporter.CreateIssueRepository(
 					IssueRepositoryType.FileGdb, spatialReference);
 
-				testRunner.AddObserver(verificationReporter, spatialReference);
+				subVerificationObserver =
+					testRunner.AddObserver(verificationReporter, spatialReference);
 			}
 
 			_warningCount = 0;
