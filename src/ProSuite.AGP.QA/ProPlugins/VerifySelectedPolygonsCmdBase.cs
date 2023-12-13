@@ -83,7 +83,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				_msg.InfoFormat("Calculating union of {0} polygons", selectedPolygons.Count);
 
-				selectedPolygonGeometry = (Polygon)GeometryUtils.Union(selectedPolygons);
+				await QueuedTask.Run(() => selectedPolygonGeometry =
+											   (Polygon)GeometryUtils.Union(selectedPolygons));
 			}
 
 			var progressTracker = new QualityVerificationProgressTracker
