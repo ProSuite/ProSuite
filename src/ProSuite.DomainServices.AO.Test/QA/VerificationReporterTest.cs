@@ -1,9 +1,14 @@
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Progress;
+using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
@@ -11,6 +16,7 @@ using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.VerificationReports;
 using ProSuite.DomainServices.AO.QA.VerificationReports.Xml;
 using ProSuite.Microservices.Server.AO.QA;
+using ProSuite.QA.Tests;
 
 namespace ProSuite.DomainServices.AO.Test.QA
 {
@@ -114,6 +120,70 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			Assert.Throws<DataException>(
 				() => subVerificationObserver =
 					      reporter.CreateSubVerificationObserver(IssueRepositoryType.FileGdb, sr));
+		}
+
+		[Test]
+		public void CanDeleteGeodatabasesAfterUse()
+		{
+			string tempDir = TestUtils.GetTempDirPath();
+			Directory.CreateDirectory(tempDir);
+
+			var issueFgdbPath = $@"{tempDir}\issues.gdb";
+
+			IVerificationParameters parameters =
+				new VerificationServiceParameters(
+					"testContextType", "testContext", 12345)
+				{
+					HtmlReportPath = $@"{tempDir}\bla.html",
+					IssueFgdbPath = issueFgdbPath,
+					VerificationReportPath = $@"{tempDir}\verification.xml",
+					WriteDetailedVerificationReport = true
+				};
+
+			var reporter = new VerificationReporter(parameters);
+
+			Assert.IsTrue(reporter.CanCreateIssueRepository);
+
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
+
+			IIssueRepository issueRepository =
+				reporter.CreateIssueRepository(IssueRepositoryType.FileGdb, sr);
+
+			Assert.IsNotNull(issueRepository);
+			Assert.IsTrue(Directory.Exists(issueFgdbPath));
+
+			var element = new QualitySpecificationElement(
+				new QualityCondition(
+					"test",
+					new TestDescriptor("testDescriptor", new ClassDescriptor(typeof(Qa3dConstantZ)),
+					                   0)));
+			IEnumerable<InvolvedTable> involvedRows = new List<InvolvedTable>();
+			issueRepository.AddIssue(new Issue(element, "testError", involvedRows), null);
+
+			ISubVerificationObserver subVerificationObserver =
+				reporter.CreateSubVerificationObserver(IssueRepositoryType.FileGdb, sr);
+
+			Assert.IsNotNull(subVerificationObserver);
+
+			var progressGdbPath = $@"{tempDir}\progress.gdb";
+
+			Assert.IsTrue(Directory.Exists(progressGdbPath));
+
+			subVerificationObserver.CreatedSubverification(
+				42,
+				new EnvelopeXY(2600000, 1200000, 2601000, 1201000));
+			subVerificationObserver.Finished(42, ServiceCallStatus.Finished);
+
+			subVerificationObserver.Dispose();
+			issueRepository.Dispose();
+
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+
+			// No lock, can delete!
+			Directory.Delete(issueFgdbPath, true);
+			Directory.Delete(progressGdbPath, true);
 		}
 	}
 }

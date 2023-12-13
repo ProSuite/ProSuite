@@ -702,6 +702,8 @@ namespace ProSuite.DomainServices.AO.QA
 				_externalIssueRepository?.Dispose();
 				_externalIssueRepository = null;
 
+				subVerificationObserver?.Dispose();
+
 				GC.Collect();
 				GC.WaitForPendingFinalizers();
 			}

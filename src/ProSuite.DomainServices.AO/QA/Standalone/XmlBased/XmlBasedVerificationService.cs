@@ -249,6 +249,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				verificationReporter.WriteReports(qualitySpecification);
 			}
 
+			subVerificationObserver?.Dispose();
+
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 
