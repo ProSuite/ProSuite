@@ -14,7 +14,8 @@
 
     <ArcGISServerVersion Condition="$(VSArcGISVersion.StartsWith('11.'))">Server11</ArcGISServerVersion>
 
-    <NoWarn>1591</NoWarn>
+    <!-- CA1416: Disable platform compatibility validation, because net6.0-windows is not enough. -->		
+    <NoWarn>1591;CA1416;</NoWarn>
 
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
 

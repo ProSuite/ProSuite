@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Runtime.Versioning;
 using System.Threading;
 using Microsoft.Win32;
 using NUnit.Framework;
@@ -9,9 +10,10 @@ namespace ProSuite.Commons.Test
 {
 	/// <summary>
 	/// A container for unit tests (and experiments) that depend on nothing
-	/// but .NET (and probably Windows). For lack of a better idea, it's called
+	/// but .NET (and Windows). For lack of a better idea, it's called
 	/// SystemTest (true to the maxim that it's a system if it doesn't have one).
 	/// </summary>
+	[SupportedOSPlatform("windows")]
 	[TestFixture]
 	public class SystemTest
 	{

@@ -2,8 +2,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-[assembly: AssemblyTitle("ProSuite.Commons.AGP.Hosting")]
-[assembly: AssemblyDescription("For unit tests that need ArcGIS.Core")]
+[assembly: AssemblyTitle("ProSuite.DdxEditor.Content.Blazor")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyCulture("")]
 
 [assembly: ComVisible(false)]
@@ -13,4 +13,4 @@ using System.Runtime.Versioning;
 #endif
 
 // This GUID is for the ID of the typelib if this project is exposed to COM:
-[assembly: Guid("3dc28369-b605-455b-88a2-a45e324631a6")]
+[assembly: Guid("81052BC5-3FD4-47AE-8938-C8CD9E756A2F")]
