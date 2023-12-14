@@ -84,6 +84,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public IList<InvolvedTable> InIssueInvolvedTables { get; set; }
+		public IList<InvolvedTable> InvolvedTables { get; set; }
 	}
 }

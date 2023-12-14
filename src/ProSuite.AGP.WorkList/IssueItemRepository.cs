@@ -64,7 +64,7 @@ namespace ProSuite.AGP.WorkList
 
 			IAttributeReader reader = source.AttributeReader;
 
-			var item = new IssueItem(id, row);
+			IIssueItem item = new IssueItem(id, row);
 
 			if (reader != null)
 			{
@@ -120,7 +120,7 @@ namespace ProSuite.AGP.WorkList
 					try
 					{
 						// todo daro: use source class to determine whether involved tables have geoemtry?
-						item.InIssueInvolvedTables =
+						item.InvolvedTables =
 							IssueUtils.ParseInvolvedTables(item.InvolvedObjects,
 							                               source.HasGeometry);
 					}

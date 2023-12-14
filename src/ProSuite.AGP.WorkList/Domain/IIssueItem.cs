@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain;
 
@@ -32,5 +33,7 @@ public interface IIssueItem : IWorkItem
 	string IssueCode { get; set; }
 	string IssueCodeDescription { get; set; }
 	string IssueDescription { get; set; }
-	IList<InvolvedTable> InIssueInvolvedTables { get; set; }
+
+	[CanBeNull]
+	IList<InvolvedTable> InvolvedTables { get; set; }
 }
