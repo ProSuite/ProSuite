@@ -68,47 +68,69 @@ namespace ProSuite.AGP.WorkList
 
 			if (reader != null)
 			{
-				item.IssueCode = reader.GetValue<string>(row, Attributes.IssueCode);
-				item.IssueCodeDescription =
-					reader.GetValue<string>(row, Attributes.IssueCodeDescription);
-				item.IssueDescription = reader.GetValue<string>(row, Attributes.IssueDescription);
-				item.InvolvedObjects = reader.GetValue<string>(row, Attributes.InvolvedObjects);
-				item.QualityCondition =
-					reader.GetValue<string>(row, Attributes.QualityConditionName);
-				item.TestName = reader.GetValue<string>(row, Attributes.TestName);
-				item.TestDescription = reader.GetValue<string>(row, Attributes.TestDescription);
-				item.TestType = reader.GetValue<string>(row, Attributes.TestType);
-				item.IssueSeverity = reader.GetValue<string>(row, Attributes.IssueSeverity);
-				item.StopCondition = reader.GetValue<string>(row, Attributes.IsStopCondition);
-				item.Category = reader.GetValue<string>(row, Attributes.Category);
-				item.AffectedComponent = reader.GetValue<string>(row, Attributes.AffectedComponent);
-				item.Url = reader.GetValue<string>(row, Attributes.Url);
-				item.DoubleValue1 = reader.GetValue<double?>(row, Attributes.DoubleValue1);
-				item.DoubleValue2 = reader.GetValue<double?>(row, Attributes.DoubleValue2);
-				item.TextValue = reader.GetValue<string>(row, Attributes.TextValue);
-				item.IssueAssignment = reader.GetValue<string>(row, Attributes.IssueAssignment);
-				item.QualityConditionUuid =
-					reader.GetValue<string>(row, Attributes.QualityConditionUuid);
-				item.QualityConditionVersionUuid =
-					reader.GetValue<string>(row, Attributes.QualityConditionVersionUuid);
-				item.ExceptionStatus = reader.GetValue<string>(row, Attributes.ExceptionStatus);
-				item.ExceptionNotes = reader.GetValue<string>(row, Attributes.ExceptionNotes);
-				item.ExceptionCategory = reader.GetValue<string>(row, Attributes.ExceptionCategory);
-				item.ExceptionOrigin = reader.GetValue<string>(row, Attributes.ExceptionOrigin);
-				item.ExceptionDefinedDate =
-					reader.GetValue<string>(row, Attributes.ExceptionDefinedDate);
-				item.ExceptionLastRevisionDate =
-					reader.GetValue<string>(row, Attributes.ExceptionLastRevisionDate);
-				item.ExceptionRetirementDate =
-					reader.GetValue<string>(row, Attributes.ExceptionRetirementDate);
-				item.ExceptionShapeMatchCriterion =
-					reader.GetValue<string>(row, Attributes.ExceptionShapeMatchCriterion);
-				item.Status = ((DatabaseSourceClass) source).GetStatus(row);
-			}
+				try
+				{
+					item.IssueCode = reader.GetValue<string>(row, Attributes.IssueCode);
+					item.IssueCodeDescription =
+						reader.GetValue<string>(row, Attributes.IssueCodeDescription);
+					item.IssueDescription =
+						reader.GetValue<string>(row, Attributes.IssueDescription);
+					item.InvolvedObjects = reader.GetValue<string>(row, Attributes.InvolvedObjects);
+					item.QualityCondition =
+						reader.GetValue<string>(row, Attributes.QualityConditionName);
+					item.TestName = reader.GetValue<string>(row, Attributes.TestName);
+					item.TestDescription = reader.GetValue<string>(row, Attributes.TestDescription);
+					item.TestType = reader.GetValue<string>(row, Attributes.TestType);
+					item.IssueSeverity = reader.GetValue<string>(row, Attributes.IssueSeverity);
+					item.StopCondition = reader.GetValue<string>(row, Attributes.IsStopCondition);
+					item.Category = reader.GetValue<string>(row, Attributes.Category);
+					item.AffectedComponent =
+						reader.GetValue<string>(row, Attributes.AffectedComponent);
+					item.Url = reader.GetValue<string>(row, Attributes.Url);
+					item.DoubleValue1 = reader.GetValue<double?>(row, Attributes.DoubleValue1);
+					item.DoubleValue2 = reader.GetValue<double?>(row, Attributes.DoubleValue2);
+					item.TextValue = reader.GetValue<string>(row, Attributes.TextValue);
+					item.IssueAssignment = reader.GetValue<string>(row, Attributes.IssueAssignment);
+					item.QualityConditionUuid =
+						reader.GetValue<string>(row, Attributes.QualityConditionUuid);
+					item.QualityConditionVersionUuid =
+						reader.GetValue<string>(row, Attributes.QualityConditionVersionUuid);
+					item.ExceptionStatus = reader.GetValue<string>(row, Attributes.ExceptionStatus);
+					item.ExceptionNotes = reader.GetValue<string>(row, Attributes.ExceptionNotes);
+					item.ExceptionCategory =
+						reader.GetValue<string>(row, Attributes.ExceptionCategory);
+					item.ExceptionOrigin = reader.GetValue<string>(row, Attributes.ExceptionOrigin);
+					item.ExceptionDefinedDate =
+						reader.GetValue<string>(row, Attributes.ExceptionDefinedDate);
+					item.ExceptionLastRevisionDate =
+						reader.GetValue<string>(row, Attributes.ExceptionLastRevisionDate);
+					item.ExceptionRetirementDate =
+						reader.GetValue<string>(row, Attributes.ExceptionRetirementDate);
+					item.ExceptionShapeMatchCriterion =
+						reader.GetValue<string>(row, Attributes.ExceptionShapeMatchCriterion);
+					item.Status = ((DatabaseSourceClass) source).GetStatus(row);
+				}
+				catch (Exception e)
+				{
+					_msg.Warn($"An error occurred reading issue item properties from {item}", e);
+				}
 
-			// todo daro: use source class to determine whether involved tables have geoemtry?
-			item.InIssueInvolvedTables =
-				IssueUtils.ParseInvolvedTables(item.InvolvedObjects, source.HasGeometry);
+				if (item.InvolvedObjects != null)
+				{
+					try
+					{
+						// todo daro: use source class to determine whether involved tables have geoemtry?
+						item.InIssueInvolvedTables =
+							IssueUtils.ParseInvolvedTables(item.InvolvedObjects,
+							                               source.HasGeometry);
+					}
+					catch (Exception e)
+					{
+						_msg.Warn(
+							$"An error occurred parsing involved tables from issue item {item}", e);
+					}
+				}
+			}
 
 			return RefreshState(item);
 		}
