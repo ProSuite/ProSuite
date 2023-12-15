@@ -101,7 +101,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestExcludedFields()
 		{
 			IFeatureWorkspace initTestWs = _testWs;
