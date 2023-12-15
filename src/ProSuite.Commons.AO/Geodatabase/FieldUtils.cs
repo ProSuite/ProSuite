@@ -258,6 +258,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		/// <summary>
+		/// Creates a GUID field.
+		/// </summary>
+		/// <param name="fieldName">Name of the field.</param>
+		/// <param name="aliasName">Name of the alias.</param>
+		/// <returns></returns>
+		[NotNull]
+		public static IField CreateGuidField([NotNull] string fieldName,
+		                                     [CanBeNull] string aliasName = null)
+		{
+			return CreateField(fieldName, esriFieldType.esriFieldTypeGUID, aliasName);
+		}
+
+		/// <summary>
 		/// Creates a BLOB field.
 		/// </summary>
 		/// <param name="fieldName">The field name (required).</param>
