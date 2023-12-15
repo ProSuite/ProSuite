@@ -74,6 +74,7 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))] [NotNull]
 			IReadOnlyFeatureClass referenceFeatureClass,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_compareXYPrecision))]
 			bool compareXYPrecision, bool compareZPrecision,
 			bool compareMPrecision, bool compareTolerances,
 			bool compareVerticalCoordinateSystems)
@@ -91,6 +92,7 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))] [NotNull]
 			string spatialReferenceXml,
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_compareXYPrecision))]
 			bool compareXYPrecision, bool compareZPrecision,
 			bool compareMPrecision, bool compareTolerances,
 			bool compareVerticalCoordinateSystems)

@@ -9068,6 +9068,15 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Compare XY-Domain and XY-Resolution of the spatial references. If any value is different, an error is reported. If you want to compare only the XY-Domain or XY-Resolution, use the optional parameters CompareXYDomainOrigin or CompareXYResolution.
+        /// </summary>
+        public static string QaSchemaSpatialReference_compareXYPrecision {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_compareXYPrecision", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Compare the xy-Resolutions of the spatial references.
         /// </summary>
         public static string QaSchemaSpatialReference_CompareXYResolution {
