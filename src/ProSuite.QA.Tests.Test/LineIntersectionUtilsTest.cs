@@ -1,3 +1,4 @@
+using System;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
@@ -34,7 +35,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectEndPointSegmentIntersection()
 		{
 			IPolyline polyline1 = CreatePolyline(
@@ -124,7 +124,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectEndPointSegmentIntersectionWithConnectedEndpoint1()
 		{
 			IPolyline polyline1 = CreatePolyline(
@@ -153,7 +152,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanDetectEndPointSegmentIntersectionWithConnectedEndpoint2()
 		{
 			IPolyline polyline1 = CreatePolyline(
@@ -262,8 +260,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IPoint point = ((IPointCollection) points).get_Point(index);
 			point.SnapToSpatialReference();
-			Assert.AreEqual(expectedPoint.X, point.X, "point {0}, X", index);
-			Assert.AreEqual(expectedPoint.Y, point.Y, "point {0}, Y", index);
+			double t = SpatialReferenceUtils.GetXyTolerance(expectedPoint.SpatialReference);
+			Assert.IsTrue(Math.Abs(expectedPoint.X - point.X) < t, $"point {index}, X");
+			Assert.IsTrue(Math.Abs(expectedPoint.Y - point.Y) < t, $"point {index}, Y");
 		}
 	}
 }
