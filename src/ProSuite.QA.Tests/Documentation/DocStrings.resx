@@ -4837,4 +4837,22 @@ Remarks: A source row may be exported several times with different tile ids.</va
   <data name="QaExportTables_ExportTiles" xml:space="preserve">
     <value>If true: Create a feature class which contains the processed tiles</value>
   </data>
+  <data name="QaSchemaSpatialReference_CompareXYDomainOrigin" xml:space="preserve">
+    <value>Compare the xMins and yMins of the XY-Domains</value>
+  </data>
+  <data name="QaSchemaSpatialReference_CompareZDomainOrigin" xml:space="preserve">
+    <value>Compare the zMins of the Z-Domains</value>
+  </data>
+  <data name="QaSchemaSpatialReference_CompareMDomainOrigin" xml:space="preserve">
+    <value>Compare the mMins of the M-Domains</value>
+  </data>
+  <data name="QaSchemaSpatialReference_CompareMResolution" xml:space="preserve">
+    <value>Compare the m-Resolutions of the spatial references</value>
+  </data>
+  <data name="QaSchemaSpatialReference_CompareXYResolution" xml:space="preserve">
+    <value>Compare the xy-Resolutions of the spatial references</value>
+  </data>
+  <data name="QaSchemaSpatialReference_CompareZResolution" xml:space="preserve">
+    <value>Compare the z-Resolutions of the spatial references</value>
+  </data>
 </root>
