@@ -118,39 +118,39 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="IfWithin_0" xml:space="preserve">
-    <value>Filters errors that are completely within any feature in a 'featureClass'</value>
+    <value>Filters issues that are completely within any feature in a 'featureClass'</value>
   </data>
   <data name="IfWithin_featureClass" xml:space="preserve">
     <value>point, multipoint, polyline or polygon feature class</value>
   </data>
   <data name="IfIntersecting_0" xml:space="preserve">
-    <value>Filters errors that intersect any feature in a 'featureClass'</value>
+    <value>Filters issues that intersect any feature in a 'featureClass'</value>
   </data>
   <data name="IfIntersecting_featureClass" xml:space="preserve">
     <value>point, multipoint, polyline or polygon feature class</value>
   </data>
   <data name="IfInvolvedRows_0" xml:space="preserve">
-    <value>Filters errors where any involved row fulfills 'constraint'</value>
+    <value>Filters issues where any involved row fulfills 'constraint'</value>
   </data>
   <data name="IfInvolvedRows_constraint" xml:space="preserve">
     <value>constraint </value>
   </data>
   <data name="IfInvolvedRows_Tables" xml:space="preserve">
-    <value>List of tables, to which a involved row must belong to to be checked.
+    <value>List of tables, to which a involved row must belong to, to be checked.
 If not specified, all involved rows are check for the constraint</value>
   </data>
   <data name="IfAll_0" xml:space="preserve">
-    <value>Filters all errors, if 'Filter' = true (default). If 'Filter' = false, no error is filtered</value>
+    <value>Filters all issues, if 'Filter' = true (default). If 'Filter' = false, no issue is filtered</value>
   </data>
   <data name="IfAll_Filter" xml:space="preserve">
-    <value>if true (default): filter all errors
-if false: filter no errors</value>
+    <value>if true (default): filter all issues
+if false: filter no issues</value>
   </data>
   <data name="IfNear_0" xml:space="preserve">
-    <value>Filters errors that are completey near any feature of 'featureClass'</value>
+    <value>Filters issues that are completey near any feature of 'featureClass'</value>
   </data>
   <data name="IfNear_featureClass" xml:space="preserve">
-    <value>Polycurve featureclass</value>
+    <value>Polyline or polygon feature class</value>
   </data>
   <data name="IfNear_near" xml:space="preserve">
     <value>Distance</value>
