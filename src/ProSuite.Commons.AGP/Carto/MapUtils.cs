@@ -212,6 +212,91 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		public static IEnumerable<IDisplayTable> GetFeatureLayersForSelection<T>(
+			[CanBeNull] FeatureClass featureClass,
+			[CanBeNull] MapView mapView = null) where T : BasicFeatureLayer
+		{
+			// TODO: WorkspaceEquality.SameVersion
+			Predicate<T> sameTablePredicate =
+				l => DatasetUtils.IsSameTable(l.GetFeatureClass(), featureClass);
+
+			mapView ??= MapView.Active;
+
+			return GetFeatureLayersForSelection(mapView, sameTablePredicate);
+		}
+
+		/// <summary>
+		/// Gets the first visible, selectable feature layer without definition query.
+		/// If all visible, selectable layers have a definition query, all layers are yielded.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="mapView"></param>
+		/// <param name="layerPredicate">The layer predicate</param>
+		/// <returns></returns>
+		public static IEnumerable<IDisplayTable> GetFeatureLayersForSelection<T>(
+			[NotNull] MapView mapView,
+			[NotNull] Predicate<T> layerPredicate) where T : BasicFeatureLayer
+		{
+			var filteredVisibleSelectableLayers = new List<T>();
+
+			foreach (T featureLayer in GetFeatureLayers<T>(
+				         l => LayerUtils.IsVisible(l) && l.IsSelectable, mapView))
+			{
+				if (! layerPredicate(featureLayer))
+				{
+					continue;
+				}
+
+				if (string.IsNullOrWhiteSpace(featureLayer.DefinitionQuery))
+				{
+					// Return the first layer without definition query:
+					// TODO: Consider favoring editable layers, if there are several.
+					return new List<T> { featureLayer };
+				}
+
+				// TODO: Check if it references a relquery table -> skip them
+				filteredVisibleSelectableLayers.Add(featureLayer);
+			}
+
+			// TODO: Exclude joined layers?
+			return filteredVisibleSelectableLayers;
+		}
+
+		/// <summary>
+		/// Gets the first selectable stand-alone table without definition query.
+		/// If all selectable stand-alone tables have a definition query, all tables are yielded.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="mapView"></param>
+		/// <param name="tablePredicate"></param>
+		/// <returns></returns>
+		public static IEnumerable<IDisplayTable> GetStandaloneTablesForSelection<T>(
+			[NotNull] MapView mapView,
+			[NotNull] Predicate<T> tablePredicate) where T : StandaloneTable
+		{
+			var filteredSelectableLayers = new List<T>();
+
+			foreach (StandaloneTable standaloneTable in
+			         GetStandaloneTables(tablePredicate, mapView)
+				         .Where(st => st is T))
+			{
+				if (! standaloneTable.IsSelectable)
+				{
+					continue;
+				}
+
+				if (string.IsNullOrWhiteSpace(standaloneTable.DefinitionQuery))
+				{
+					// Return just the first layer without definition query:
+					return new List<T> { (T) standaloneTable };
+				}
+
+				filteredSelectableLayers.Add((T) standaloneTable);
+			}
+
+			return filteredSelectableLayers;
+		}
+
 		public static IEnumerable<T> GetFeatureLayers<T>(
 			[CanBeNull] Predicate<T> layerPredicate,
 			[CanBeNull] MapView mapView = null,
@@ -248,10 +333,10 @@ namespace ProSuite.Commons.AGP.Carto
 				                     StringComparison.OrdinalIgnoreCase), mapView).FirstOrDefault();
 		}
 
-		public static IEnumerable<StandaloneTable> GetStandaloneTables(
-			[CanBeNull] Predicate<StandaloneTable> tablePredicate,
+		public static IEnumerable<StandaloneTable> GetStandaloneTables<T>(
+			[CanBeNull] Predicate<T> tablePredicate,
 			[CanBeNull] MapView mapView = null,
-			bool includeInvalid = false)
+			bool includeInvalid = false) where T : StandaloneTable
 		{
 			if (mapView == null)
 			{
@@ -264,7 +349,7 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			Predicate<StandaloneTable> combinedPredicate;
+			Predicate<T> combinedPredicate;
 
 			if (includeInvalid)
 			{
@@ -281,7 +366,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 			foreach (StandaloneTable table in mapView.Map.GetStandaloneTablesAsFlattenedList())
 			{
-				if (combinedPredicate == null || combinedPredicate(table))
+				if (combinedPredicate == null || combinedPredicate(table as T))
 				{
 					yield return table;
 				}
@@ -293,7 +378,7 @@ namespace ProSuite.Commons.AGP.Carto
 			[CanBeNull] string tableName,
 			[CanBeNull] MapView mapView = null)
 		{
-			return GetStandaloneTables(
+			return GetStandaloneTables<StandaloneTable>(
 					table => string.Equals(table.GetTable().GetName(),
 					                       tableName,
 					                       StringComparison.OrdinalIgnoreCase), mapView)

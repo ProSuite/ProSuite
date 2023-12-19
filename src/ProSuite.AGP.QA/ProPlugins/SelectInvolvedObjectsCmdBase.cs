@@ -52,7 +52,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 					await QueuedTask.Run(() => SelectionUtils.GetSelectedFeatures(layer)));
 			}
 
-			var tables = MapUtils.GetStandaloneTables(
+			var tables = MapUtils.GetStandaloneTables<StandaloneTable>(
 				tbl => IssueGdbSchema.IssueFeatureClassNames.Contains(
 					tbl.GetTable().GetName()));
 
@@ -78,7 +78,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 					issueObject.GetTable().GetDefinition().FindField("InvolvedObjects");
 
 				string involvedString = (string) issueObject[fieldIndex];
-				
+
 				var involvedTables =
 					IssueUtils.ParseInvolvedTables(involvedString, issueObject is Feature);
 				foreach (var involved in involvedTables)
@@ -117,7 +117,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				}
 
 				StandaloneTable table =
-					MapUtils.GetStandaloneTables(
+					MapUtils.GetStandaloneTables<StandaloneTable>(
 						tbl => string.Equals(
 							tbl.GetTable().GetName(),
 							keyValuePair.Key,

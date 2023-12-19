@@ -27,27 +27,27 @@ namespace ProSuite.Commons.AGP.Selection
 		                                 long objectId,
 		                                 bool clearExistingSelection = false)
 		{
-			SelectFeatures(basicFeatureLayer, selectionMethod, new[] { objectId },
-			               clearExistingSelection);
+			SelectRows(basicFeatureLayer, selectionMethod, new[] { objectId },
+			           clearExistingSelection);
 		}
 
 		/// <summary>
-		/// Selects the requested features from the specified layer and immediately disposes
-		/// the selection to avoid selection and immediate de-selection (for selection method XOR)
-		/// because it is called in 2 threads.
+		/// Selects the requested features or rows from the specified layer or stand-alone table
+		/// and immediately disposes the selection to avoid selection and immediate de-selection
+		/// (for selection method XOR) because it is called in 2 threads.
 		/// </summary>
-		/// <param name="basicFeatureLayer"></param>
+		/// <param name="tableBasedMapMember"></param>
 		/// <param name="combinationMethod"></param>
 		/// <param name="objectIds"></param>
 		/// <param name="clearExistingSelection"></param>
-		public static void SelectFeatures([NotNull] BasicFeatureLayer basicFeatureLayer,
-		                                  SelectionCombinationMethod combinationMethod,
-		                                  [NotNull] IReadOnlyList<long> objectIds,
-		                                  bool clearExistingSelection = false)
+		public static long SelectRows([NotNull] IDisplayTable tableBasedMapMember,
+		                              SelectionCombinationMethod combinationMethod,
+		                              [NotNull] IReadOnlyList<long> objectIds,
+		                              bool clearExistingSelection = false)
 		{
 			if (objectIds.Count == 0)
 			{
-				return;
+				return 0;
 			}
 
 			if (clearExistingSelection)
@@ -60,16 +60,17 @@ namespace ProSuite.Commons.AGP.Selection
 				                  ObjectIDs = objectIds
 			                  };
 
+			long actualSelectionCount;
+
 			using (ArcGIS.Core.Data.Selection selection =
-			       basicFeatureLayer.Select(queryFilter, combinationMethod))
+			       tableBasedMapMember.Select(queryFilter, combinationMethod))
 			{
-				if (_msg.IsVerboseDebugEnabled)
-				{
-					_msg.Debug(
-						$"Selected OIDs {StringUtils.Concatenate(selection.GetObjectIDs(), ", ")} " +
-						$"from {basicFeatureLayer.Name}");
-				}
+				actualSelectionCount = selection.GetCount();
+
+				LogFeatureSelection(tableBasedMapMember, selection, actualSelectionCount);
 			}
+
+			return actualSelectionCount;
 		}
 
 		public static void SelectFeatures([NotNull] IEnumerable<Feature> features,
@@ -85,24 +86,24 @@ namespace ProSuite.Commons.AGP.Selection
 				foreach (var layer in inLayers.Where(
 					         fl => fl.GetTable().Handle.ToInt64() == classHandle))
 				{
-					SelectFeatures(layer, SelectionCombinationMethod.Add, objectIds);
+					SelectRows(layer, SelectionCombinationMethod.Add, objectIds);
 				}
 			}
 		}
 
-		public static void SelectFeatures([NotNull] FeatureSelectionBase featuresPerLayer,
+		public static long SelectFeatures([NotNull] FeatureSelectionBase featuresPerLayer,
 		                                  SelectionCombinationMethod selectionCombinationMethod,
 		                                  bool clearExistingSelection = false)
 		{
 			Assert.ArgumentNotNull(featuresPerLayer, nameof(featuresPerLayer));
 
-			SelectFeatures(featuresPerLayer.BasicFeatureLayer,
-			               selectionCombinationMethod,
-			               featuresPerLayer.GetOids().ToList(),
-			               clearExistingSelection);
+			return SelectRows(featuresPerLayer.BasicFeatureLayer,
+			                  selectionCombinationMethod,
+			                  featuresPerLayer.GetOids().ToList(),
+			                  clearExistingSelection);
 		}
 
-		public static void SelectFeatures(
+		public static long SelectFeatures(
 			[NotNull] IEnumerable<FeatureSelectionBase> featuresPerLayers,
 			SelectionCombinationMethod selectionCombinationMethod,
 			bool clearExistingSelection = false)
@@ -114,12 +115,16 @@ namespace ProSuite.Commons.AGP.Selection
 				ClearSelection();
 			}
 
+			long result = 0;
+
 			foreach (FeatureSelectionBase featuresPerLayer in featuresPerLayers)
 			{
-				SelectFeatures(featuresPerLayer.BasicFeatureLayer,
-				               selectionCombinationMethod,
-				               featuresPerLayer.GetOids().ToList());
+				result += SelectRows(featuresPerLayer.BasicFeatureLayer,
+				                     selectionCombinationMethod,
+				                     featuresPerLayer.GetOids().ToList());
 			}
+
+			return result;
 		}
 
 		public static IEnumerable<Feature> GetSelectedFeatures([NotNull] MapView activeView)
@@ -173,6 +178,37 @@ namespace ProSuite.Commons.AGP.Selection
 			Assert.ArgumentNotNull(selection, nameof(selection));
 
 			return selection.Sum(set => set.GetCount());
+		}
+
+		private static void LogFeatureSelection([NotNull] IDisplayTable tableBasedMapMember,
+		                                        ArcGIS.Core.Data.Selection selection,
+		                                        long selectionCount)
+		{
+			var mapMember = (MapMember) tableBasedMapMember;
+
+			string mapMemberName = mapMember.Name;
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				var tableDefinition = tableBasedMapMember as ITableDefinitionQueries;
+
+				_msg.Debug(
+					$"Selected OIDs: {StringUtils.Concatenate(selection.GetObjectIDs(), ", ")} " +
+					$"from {mapMemberName}. Definition query: {tableDefinition?.DefinitionQuery}");
+			}
+
+			if (selectionCount == 0)
+			{
+				return;
+			}
+
+			string mapMemberType = mapMember is StandaloneTable ? "table" : "layer";
+
+			string format = selectionCount == 1
+				                ? "-> {0:N0} feature selected in {1} '{2}'"
+				                : "-> {0:N0} features selected in {1} '{2}'";
+
+			_msg.InfoFormat(format, selectionCount, mapMemberType, mapMemberName);
 		}
 	}
 }
