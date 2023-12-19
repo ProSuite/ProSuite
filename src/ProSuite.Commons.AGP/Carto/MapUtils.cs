@@ -212,6 +212,62 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		/// <summary>
+		/// Returns feature layers that contain a set of specified OIDs. This method can be used
+		/// to filter out layers that have a restrictive definition query which potentially
+		/// excludes the specified OIDs. These layers ca be used for flashing or zooming to the
+		/// respective features.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="mapView"></param>
+		/// <param name="layerPredicate"></param>
+		/// <param name="objectIds"></param>
+		/// <returns></returns>
+		public static IEnumerable<T> GetFeatureLayersContainingOids<T>(
+			[NotNull] MapView mapView,
+			[NotNull] Predicate<T> layerPredicate,
+			IReadOnlyList<long> objectIds) where T : BasicFeatureLayer
+		{
+			// NOTE: Flashing works fine on invisible layers, but not if there is a definition
+			//       query that excludes the feature.
+
+			var filteredLayers = new List<T>();
+
+			foreach (T featureLayer in GetFeatureLayers(layerPredicate, mapView))
+			{
+				if (string.IsNullOrWhiteSpace(featureLayer.DefinitionQuery))
+				{
+					// Return the first layer without definition query:
+					return new[] { featureLayer };
+				}
+
+				filteredLayers.Add(featureLayer);
+			}
+
+			var layersWithSomeOids = new List<T>();
+			foreach (T restrictedLayer in filteredLayers)
+			{
+				var queryFilter = new QueryFilter
+				                  {
+					                  ObjectIDs = objectIds
+				                  };
+
+				int foundCount = LayerUtils.SearchObjectIds(restrictedLayer, queryFilter).Count();
+
+				if (objectIds.Count == foundCount)
+				{
+					return new[] { restrictedLayer };
+				}
+
+				if (foundCount > 0)
+				{
+					layersWithSomeOids.Add(restrictedLayer);
+				}
+			}
+
+			return layersWithSomeOids;
+		}
+
 		public static IEnumerable<IDisplayTable> GetFeatureLayersForSelection<T>(
 			[CanBeNull] FeatureClass featureClass,
 			[CanBeNull] MapView mapView = null) where T : BasicFeatureLayer
