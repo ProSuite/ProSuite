@@ -60,8 +60,16 @@ namespace ProSuite.DomainModel.AGP.QA
 		[CanBeNull]
 		string BackendDisplayName { get; }
 
+		/// <summary>
+		/// Verifies the provided perimeter or the full extent if no perimeter is provided.
+		/// </summary>
+		/// <param name="perimeter">The perimeter. Null means 'full extent'.</param>
+		/// <param name="progress"></param>
+		/// <param name="perimeterDisplayName">The display name for the provided perimeter.</param>
+		/// <param name="resultsPath"></param>
+		/// <returns></returns>
 		Task<ServiceCallStatus> VerifyPerimeter(
-			[NotNull] Geometry perimeter,
+			[CanBeNull] Geometry perimeter,
 			[NotNull] QualityVerificationProgressTracker progress,
 			[NotNull] string perimeterDisplayName,
 			string resultsPath);

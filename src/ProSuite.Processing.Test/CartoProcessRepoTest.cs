@@ -113,6 +113,7 @@ namespace ProSuite.Processing.Test
 			Assert.AreEqual("one", fcp.Config.GetString("A"));
 			Assert.IsNull(fcp.Config.GetString("B", null));
 			Assert.AreEqual("three", fcp.Config.GetString("C"));
+			Assert.AreEqual(2, fcp.Config.Count);
 
 			var bcp = repo.ProcessDefinitions.Single(d => d.Name == "Test Bar");
 			Assert.AreEqual(typeof(Bar), bcp.ResolvedType);
@@ -131,6 +132,7 @@ namespace ProSuite.Processing.Test
 			Assert.AreEqual("NewType", ncp.TypeAlias);
 			Assert.AreEqual(typeof(NewType), ncp.ResolvedType);
 			Assert.AreEqual("Bar", ncp.Config.GetString("Foo"));
+			Assert.AreEqual(1, ncp.Config.Count);
 		}
 
 		[Test]
