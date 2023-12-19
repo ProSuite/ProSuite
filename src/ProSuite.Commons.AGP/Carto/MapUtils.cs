@@ -233,7 +233,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="mapView"></param>
 		/// <param name="layerPredicate">The layer predicate</param>
 		/// <returns></returns>
-		public static IEnumerable<IDisplayTable> GetFeatureLayersForSelection<T>(
+		public static IEnumerable<T> GetFeatureLayersForSelection<T>(
 			[NotNull] MapView mapView,
 			[NotNull] Predicate<T> layerPredicate) where T : BasicFeatureLayer
 		{

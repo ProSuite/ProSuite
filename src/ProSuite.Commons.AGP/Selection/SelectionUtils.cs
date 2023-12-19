@@ -32,6 +32,46 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		/// <summary>
+		/// Selects the requested features or rows from the specified layers or stand-alone tables.
+		/// Selections are only performed on visible selectable layers, preferably on the first
+		/// layer or table without definition query.
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <param name="mapMemberPredicate"></param>
+		/// <param name="objectIds"></param>
+		/// <returns>The number of actually selected rows.</returns>
+		public static long SelectRows([NotNull] MapView mapView,
+		                              [NotNull] Predicate<IDisplayTable> mapMemberPredicate,
+		                              [NotNull] IReadOnlyList<long> objectIds)
+		{
+			long totalSelected = 0;
+
+			Predicate<BasicFeatureLayer> layerPredicate =
+				l => l is IDisplayTable displayTable &&
+				     mapMemberPredicate(displayTable);
+
+			foreach (BasicFeatureLayer featureLayer in
+			         MapUtils.GetFeatureLayersForSelection(mapView, layerPredicate))
+			{
+				totalSelected +=
+					SelectRows(featureLayer, SelectionCombinationMethod.Add, objectIds);
+			}
+
+			Predicate<StandaloneTable> tablePredicate =
+				t => t is IDisplayTable displayTable &&
+				     mapMemberPredicate(displayTable);
+
+			foreach (IDisplayTable standaloneTable in
+			         MapUtils.GetStandaloneTablesForSelection(mapView, tablePredicate))
+			{
+				totalSelected +=
+					SelectRows(standaloneTable, SelectionCombinationMethod.Add, objectIds);
+			}
+
+			return totalSelected;
+		}
+
+		/// <summary>
 		/// Selects the requested features or rows from the specified layer or stand-alone table
 		/// and immediately disposes the selection to avoid selection and immediate de-selection
 		/// (for selection method XOR) because it is called in 2 threads.
@@ -40,6 +80,7 @@ namespace ProSuite.Commons.AGP.Selection
 		/// <param name="combinationMethod"></param>
 		/// <param name="objectIds"></param>
 		/// <param name="clearExistingSelection"></param>
+		/// <returns>The number of actually selected rows.</returns>
 		public static long SelectRows([NotNull] IDisplayTable tableBasedMapMember,
 		                              SelectionCombinationMethod combinationMethod,
 		                              [NotNull] IReadOnlyList<long> objectIds,
