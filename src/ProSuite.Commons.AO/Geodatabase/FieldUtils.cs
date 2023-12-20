@@ -78,6 +78,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                      bool hasZ = false,
 		                                      bool hasM = false)
 		{
+			if (geometryType == esriGeometryType.esriGeometryMultiPatch && ! hasZ)
+			{
+				throw new ArgumentException("Multipatch geometries must have Z values.");
+			}
+
 			return CreateShapeField(GetShapeFieldName(), geometryType, spatialReference,
 			                        gridSize, hasZ, hasM);
 		}
@@ -380,7 +385,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		[NotNull]
 		public static esriFieldType GetFieldType(Type dataType)
 		{
 			if (dataType == typeof(int))
