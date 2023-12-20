@@ -1520,6 +1520,13 @@ namespace ProSuite.Commons.AO.Geometry
 			return ((ISpatialReferenceResolution)spatialReference).ZResolution[false];
 		}
 
+		public static double GetMResolution([NotNull] ISpatialReference spatialReference)
+		{
+			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
+
+			return ((ISpatialReferenceResolution)spatialReference).MResolution;
+		}
+
 		public static double GetXyTolerance([NotNull] ISpatialReference spatialReference)
 		{
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
