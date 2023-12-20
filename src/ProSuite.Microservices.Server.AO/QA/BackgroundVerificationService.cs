@@ -256,12 +256,30 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public IEnumerable<AllowedError> GetInvalidatedAllowedErrors()
 		{
-			return _issueRepository.GetAllowedErrors(ae => ae.Invalidated);
+			if (_issueRepository == null)
+			{
+				yield break;
+			}
+
+			foreach (AllowedError allowedError in _issueRepository.GetAllowedErrors(
+				         ae => ae.Invalidated))
+			{
+				yield return allowedError;
+			}
 		}
 
 		public IEnumerable<AllowedError> GetUnusedAllowedErrors()
 		{
-			return _issueRepository.GetAllowedErrors(ae => ! ae.IsUsed);
+			if (_issueRepository == null)
+			{
+				yield break;
+			}
+
+			foreach (AllowedError allowedError in _issueRepository.GetAllowedErrors(
+				         ae => ! ae.IsUsed))
+			{
+				yield return allowedError;
+			}
 		}
 	}
 }

@@ -43,5 +43,26 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			Assert.IsTrue(Directory.Exists(Path.Combine(tempDirPath, "issues.gdb")));
 			Assert.IsTrue(File.Exists(Path.Combine(tempDirPath, "verification.xml")));
 		}
+
+		[Test]
+		public void CanExecuteEmptySpecification()
+		{
+			const string specificationName = "TestSpec";
+			string gdbPath = TestData.GetGdb1Path();
+			const string featureClassName = "lines";
+
+			QualitySpecification qualitySpecification = new QualitySpecification(specificationName);
+
+			XmlBasedVerificationService service = new XmlBasedVerificationService();
+
+			string tempDirPath = Commons.AO.Test.TestUtils.GetTempDirPath(null);
+
+			bool fulfilled = service.ExecuteVerification(qualitySpecification, null, 1000,
+			                                             tempDirPath);
+
+			Assert.IsTrue(fulfilled);
+			Assert.IsFalse(Directory.Exists(Path.Combine(tempDirPath, "issues.gdb")));
+			Assert.IsFalse(File.Exists(Path.Combine(tempDirPath, "verification.xml")));
+		}
 	}
 }

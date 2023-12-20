@@ -475,6 +475,17 @@ namespace ProSuite.DomainServices.AO.QA
 			IList<ITest> tests = GetTests(qualitySpecification,
 			                              out QualityVerification qualityVerification);
 
+			if (tests.Count == 0)
+			{
+				// TODO: report warning via progress to client
+				_msg.Warn("The provided quality specification contains no quality conditions. " +
+				          "The specification is fulfilled but no reports will be generated.");
+
+				// Sets the fulfilled flag to true:
+				qualityVerification.CalculateStatistics();
+				return qualityVerification;
+			}
+
 			_datasetResolver = new QualityConditionObjectDatasetResolver(_verificationContext);
 
 			_objectSelection = _selection == null

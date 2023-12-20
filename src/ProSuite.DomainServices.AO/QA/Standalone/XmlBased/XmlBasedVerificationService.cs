@@ -136,7 +136,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			}
 		}
 
-		public void ExecuteVerification(
+		public bool ExecuteVerification(
 			[NotNull] QualitySpecification specification,
 			[CanBeNull] AreaOfInterest areaOfInterest,
 			double tileSize,
@@ -153,23 +153,26 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			{
 				_msg.WarnFormat("The {0} workspace '{1}' in {2} already exists",
 				                issueRepositoryType, issueWorkspaceName, outputDirectoryPath);
-				return;
+				return false;
 			}
 
 			IssueRepositoryType = issueRepositoryType;
 			SetupOutputPaths(outputDirectoryPath);
 
+			bool fulfilled;
 			try
 			{
-				bool fulfilled = ExecuteVerification(specification,
-				                                     areaOfInterest,
-				                                     tileSize, cancelTracker);
+				fulfilled = ExecuteVerification(specification,
+				                                areaOfInterest,
+				                                tileSize, cancelTracker);
 			}
 			catch (Exception)
 			{
 				StandaloneVerificationUtils.TryDeleteOutputDirectory(outputDirectoryPath);
 				throw;
 			}
+
+			return fulfilled;
 		}
 
 		public bool ExecuteVerification(
@@ -178,6 +181,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			double tileSize,
 			[CanBeNull] ITrackCancel trackCancel)
 		{
+			if (qualitySpecification.Elements.Count == 0)
+			{
+				// TODO: report warning via progress to client
+				_msg.Warn("The provided quality specification contains no quality conditions. " +
+				          "The specification is fulfilled but no reports will be generated.");
+
+				return true;
+			}
+
 			Model primaryModel = StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			Assert.NotNull(primaryModel, "no primary model found for quality specification");
 

@@ -134,10 +134,6 @@ namespace ProSuite.DomainServices.AO.QA
 				new HashSet<QualityCondition>(
 					QualitySpecificationUtils.GetOrderedQualityConditions(
 						qualitySpecification, datasetOpener));
-			if (orderedQualityConditions.Count == 0)
-			{
-				throw new ArgumentException("No quality conditions enabled or executable.");
-			}
 
 			Dictionary<QualityConditionVerification, QualitySpecificationElement>
 				elementsByConditionVerification;
@@ -149,6 +145,13 @@ namespace ProSuite.DomainServices.AO.QA
 			qualityConditions = new List<QualityCondition>();
 			var testsByCondition = new Dictionary<QualityCondition, IList<ITest>>();
 			var testVerifications = new Dictionary<ITest, TestVerification>();
+
+			if (orderedQualityConditions.Count == 0)
+			{
+				verificationDictionaries = new VerificationElements(
+					testVerifications, testsByCondition, elementsByConditionVerification);
+				return testList;
+			}
 
 			int index = 0;
 			int count = orderedQualityConditions.Count;
