@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -27,6 +28,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		private XmlTestDescriptor _xmlTestDescriptorSimpleGeometry;
 		private XmlTestDescriptor _xmlTestDescriptorMinArea;
 		private XmlTransformerDescriptor _xmlTransformerDescriptor;
+		private string _wsTestQualitySpecification;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
@@ -160,12 +162,12 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			var dataSource = new DataSource(_xmlWorkspace) { WorkspaceAsText = catalogPath };
 
-			const bool ignoreConditionsForUnknownDatasets = true;
-
 			QualitySpecification qualitySpecification =
-				factory.CreateQualitySpecification(xmlDocument, xmlQSpec.Name,
-				                                   new[] { dataSource },
-				                                   ignoreConditionsForUnknownDatasets);
+				factory.CreateQualitySpecification(
+					xmlDocument, xmlQSpec.Name,
+					new[] { dataSource },
+					new FactorySettings
+					{ IgnoreConditionsForUnknownDatasets = true });
 
 			Assert.AreEqual(xmlQSpec.Name, qualitySpecification.Name);
 			Assert.AreEqual(0, qualitySpecification.Elements.Count);
@@ -222,8 +224,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			foreach (XmlQualitySpecification spec in qualitySpecifications)
 			{
 				var qualitySpecification = factory.CreateQualitySpecification(
-					xmlDocument, spec.Name ?? string.Empty,
-					dataSources, ignoreConditionsForUnknownDatasets: true);
+					xmlDocument, spec.Name ?? string.Empty, dataSources,
+					new FactorySettings
+					{ IgnoreConditionsForUnknownDatasets = true });
 
 				Assert.NotNull(qualitySpecification);
 			}
@@ -233,15 +236,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		public void CanReadQualitySpecificationsCurve()
 		{
 			{
-				IFeatureWorkspace ws =
-					TestWorkspaceUtils.CreateTestFgdbWorkspace("TestQualitySpecification");
-				IFeatureClass localityFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
-					ws, "TLM_FLIESSGEWAESSER", esriGeometryType.esriGeometryPolyline);
-				IFeatureClass zipFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
-					ws, "TLM_STEHENDES_GEWAESSER", esriGeometryType.esriGeometryPolyline);
-
-				string wsConn = ((IWorkspaceName) ((IDataset) ws).FullName).PathName;
-
+				string wsConn = EnsureWorkspaceTestQualitySpecification();
 				ValidateConfig(CurveSpezification, wsConn);
 				ValidateConfig(CurveSpezification.Replace("TOPGIS_TLM.", ""), wsConn);
 			}
@@ -251,14 +246,58 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				string wsConn = WorkspaceUtils.GetConnectionString(userWs);
 
 				ValidateConfig(CurveSpezification, wsConn,
-				               userWs.WorkspaceFactory.GetClassID().Value);
+				               factoryId: userWs.WorkspaceFactory.GetClassID().Value);
 				ValidateConfig(
 					CurveSpezification.Replace("TOPGIS_TLM.", ""),
-					wsConn, userWs.WorkspaceFactory.GetClassID().Value);
+					wsConn, factoryId: userWs.WorkspaceFactory.GetClassID().Value);
 			}
 		}
 
-		private void ValidateConfig(string specification, string wsConn, object factoryId = null)
+		[Test]
+		public void CanCreateSpezificationWithUnknownParameter()
+		{
+			string wsConn = EnsureWorkspaceTestQualitySpecification();
+			string unknownParamConfig = CurveSpezification.Replace(
+				"<Scalar parameter=\"GroupIssuesBySegmentType\" value=\"True\" />",
+				"<Scalar parameter=\"GroupIssuesBySegmentType\" value=\"True\" /> <Scalar parameter=\"UnknownParam\" value=\"1\" />");
+
+			bool success;
+			try
+			{
+				ValidateConfig(unknownParamConfig, wsConn);
+				success = true;
+			}
+			catch
+			{
+				success = false;
+			}
+
+			ValidateConfig(unknownParamConfig, wsConn,
+			               factorySettings: new FactorySettings { IgnoreUnknownParameters = true });
+
+			Assert.IsFalse(success);
+		}
+
+		private string EnsureWorkspaceTestQualitySpecification()
+		{
+			if (string.IsNullOrEmpty(_wsTestQualitySpecification))
+			{
+				IFeatureWorkspace ws =
+					TestWorkspaceUtils.CreateTestFgdbWorkspace("TestQualitySpecification");
+				IFeatureClass localityFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
+					ws, "TLM_FLIESSGEWAESSER", esriGeometryType.esriGeometryPolyline);
+				IFeatureClass zipFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
+					ws, "TLM_STEHENDES_GEWAESSER", esriGeometryType.esriGeometryPolyline);
+
+				_wsTestQualitySpecification = ((IWorkspaceName) ((IDataset) ws).FullName).PathName;
+			}
+
+			return _wsTestQualitySpecification;
+		}
+
+		private void ValidateConfig(string specification, string wsConn,
+									FactorySettings factorySettings = null,
+		                            object factoryId = null)
 		{
 			XmlDataQualityDocument xmlDocument;
 			IList<XmlQualitySpecification> qualitySpecifications;
@@ -287,7 +326,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				nSpecs++;
 				var qualitySpecification = factory.CreateQualitySpecification(
 					xmlDocument, spec.Name ?? string.Empty,
-					dataSources, ignoreConditionsForUnknownDatasets: false);
+					dataSources, factorySettings ?? new FactorySettings());
 
 				SimpleDatasetOpener dsOpener =
 					new SimpleDatasetOpener(new TestDatasetContext(wsConn, factoryId));
