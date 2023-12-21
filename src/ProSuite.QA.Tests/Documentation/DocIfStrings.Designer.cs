@@ -61,7 +61,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Filters all errors, if &apos;Filter&apos; = true (default). If &apos;Filter&apos; = false, no error is filtered.
+        ///   Looks up a localized string similar to Filters all issues, if &apos;Filter&apos; = true (default). If &apos;Filter&apos; = false, no issue is filtered.
         /// </summary>
         public static string IfAll_0 {
             get {
@@ -70,8 +70,8 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to if true (default): filter all errors
-        ///if false: filter no errors.
+        ///   Looks up a localized string similar to if true (default): filter all issues
+        ///if false: filter no issues.
         /// </summary>
         public static string IfAll_Filter {
             get {
@@ -80,7 +80,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Filters errors that intersect any feature in a &apos;featureClass&apos;.
+        ///   Looks up a localized string similar to Filters issues that intersect any feature in a &apos;featureClass&apos;.
         /// </summary>
         public static string IfIntersecting_0 {
             get {
@@ -98,7 +98,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Filters errors where any involved row fulfills &apos;constraint&apos;.
+        ///   Looks up a localized string similar to Filters issues where any involved row fulfills &apos;constraint&apos;.
         /// </summary>
         public static string IfInvolvedRows_0 {
             get {
@@ -116,7 +116,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to List of tables, to which a involved row must belong to to be checked.
+        ///   Looks up a localized string similar to List of tables, to which a involved row must belong to, to be checked.
         ///If not specified, all involved rows are check for the constraint.
         /// </summary>
         public static string IfInvolvedRows_Tables {
@@ -126,7 +126,34 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Filters errors that are completely within any feature in a &apos;featureClass&apos;.
+        ///   Looks up a localized string similar to Filters issues that are completey near any feature of &apos;featureClass&apos;.
+        /// </summary>
+        public static string IfNear_0 {
+            get {
+                return ResourceManager.GetString("IfNear_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline or polygon feature class.
+        /// </summary>
+        public static string IfNear_featureClass {
+            get {
+                return ResourceManager.GetString("IfNear_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Distance.
+        /// </summary>
+        public static string IfNear_near {
+            get {
+                return ResourceManager.GetString("IfNear_near", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filters issues that are completely within any feature in a &apos;featureClass&apos;.
         /// </summary>
         public static string IfWithin_0 {
             get {

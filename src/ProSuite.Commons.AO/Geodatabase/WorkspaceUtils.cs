@@ -837,6 +837,34 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
+		[CanBeNull]
+		public static IWorkspace TryOpenWorkspace(
+			[NotNull] string workspaceCatalogPath,
+			out string message)
+		{
+			IWorkspace workspace = null;
+			message = null;
+
+			try
+			{
+				workspace = OpenWorkspace(workspaceCatalogPath);
+			}
+			catch (COMException comException)
+			{
+				string error = Enum.GetName(typeof(fdoError), comException.ErrorCode);
+
+				message = $"Cannot open workspace {workspaceCatalogPath}: {error}";
+				_msg.Debug(message, comException);
+			}
+			catch (Exception e)
+			{
+				message = $"Cannot open workspace {workspaceCatalogPath}";
+				_msg.Debug(message, e);
+			}
+
+			return workspace;
+		}
+
 		public static IWorkspace OpenWorkspace([NotNull] string catalogPath)
 		{
 			Assert.ArgumentNotNullOrEmpty(catalogPath, nameof(catalogPath));

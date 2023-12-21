@@ -29,10 +29,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("Ws3dConstantZ");
 
 			IFeatureClass fc = TestWorkspaceUtils.CreateSimpleFeatureClass(
-				ws, "testFc",
-				FieldUtils.CreateFields(FieldUtils.CreateOIDField()),
-				esriGeometryType.esriGeometryPolyline,
-				esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, hasZ: true);
+				ws, "testFc", esriGeometryType.esriGeometryPolyline, hasZ: true);
 
 			{
 				IFeature f = fc.CreateFeature();

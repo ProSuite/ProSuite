@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -189,8 +189,8 @@
     <value>XMin: {0} YMin: {1} XMax: {2} YMax: {3} XY Resolution: {4}</value>
     <comment>0: minimum X value, 1: minimum Y value, 2: maximum X value, 3: maximum Y value, XY resolution</comment>
   </data>
-  <data name="QaSchemaSpatialReference_XYDomainOrPrecisionDifferent" xml:space="preserve">
-    <value>XY domain/precision is different (expected: {0} actual: {1}); </value>
+  <data name="QaSchemaSpatialReference_XYPrecisionDifferent" xml:space="preserve">
+    <value>XY precision is different (expected: {0} actual: {1}); </value>
     <comment>0: expected XY precision (see QaSchemaSpatialReference_XYPrecision or QaSchemaSpatialReference_NotDefined), 1: actual XY precision (see QaSchemaSpatialReference_XYPrecision or QaSchemaSpatialReference_NotDefined)</comment>
   </data>
   <data name="QaSchemaSpatialReference_ZPrecision" xml:space="preserve">
@@ -431,5 +431,23 @@
   </data>
   <data name="VertexCoincidenceChecker_NearbyVertexNotCoincident_ReportCoordinatesSuffix" xml:space="preserve">
     <value>. Vertex: {0}, {1}; nearby vertex: {2}, {3}</value>
+  </data>
+  <data name="QaSchemaSpatialReference_XYDomainOriginDifferent" xml:space="preserve">
+    <value>XY Domain Origin is different (expected: {0} actual: {1}); </value>
+  </data>
+  <data name="QaSchemaSpatialReference_MDomainOriginDifferent" xml:space="preserve">
+    <value>M Domain Origin is different (expected: {0} actual: {1}); </value>
+  </data>
+  <data name="QaSchemaSpatialReference_ZDomainOriginDifferent" xml:space="preserve">
+    <value>Z Domain Origin is different (expected: {0} actual: {1}); </value>
+  </data>
+  <data name="QaSchemaSpatialReference_MResolutionDifferent" xml:space="preserve">
+    <value>M Resolution is different (expected: {0} actual: {1}); </value>
+  </data>
+  <data name="QaSchemaSpatialReference_XYResolutionDifferent" xml:space="preserve">
+    <value>XY Resolution is different (expected: {0} actual: {1}); </value>
+  </data>
+  <data name="QaSchemaSpatialReference_ZResolutionDifferent" xml:space="preserve">
+    <value>Z Resolution is different (expected: {0} actual: {1}); </value>
   </data>
 </root>

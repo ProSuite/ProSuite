@@ -33,7 +33,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			ITable table = DatasetUtils.OpenTable(featureWs, "TLM_NUTZUNGSAREAL");
 
 			const string operatorFieldName = "OPERATEUR";
-			ICursor cursor = TableSortUtils.GetSortedTableCursor(table, operatorFieldName);
+			ICursor cursor = TableSortUtils.GetSortedTableCursor(table, operatorFieldName, null);
 
 			int fieldIndex = cursor.FindField(operatorFieldName);
 			Assert.True(fieldIndex >= 0, "Field not found");
@@ -71,7 +71,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			const string uuidFieldName = "UUID";
 
-			ICursor cursor = TableSortUtils.GetGuidFieldSortedCursor(table, uuidFieldName);
+			ICursor cursor = TableSortUtils.GetGuidFieldSortedCursor(table, uuidFieldName, null);
 
 			int fieldIndex = cursor.FindField(uuidFieldName);
 			Assert.True(fieldIndex >= 0, "Field not found");
@@ -111,7 +111,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			var watch = new Stopwatch();
 			watch.Start();
 
-			ICursor cursor = TableSortUtils.GetSortedTableCursor(table, uuidFieldName);
+			ICursor cursor = TableSortUtils.GetSortedTableCursor(table, uuidFieldName, null);
 			LoopAndWrite(cursor, uuidFieldName);
 
 			watch.Stop();
@@ -123,7 +123,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			watch = new Stopwatch();
 			watch.Start();
 
-			cursor = TableSortUtils.GetGuidFieldSortedCursor(table, uuidFieldName);
+			cursor = TableSortUtils.GetGuidFieldSortedCursor(table, uuidFieldName, null);
 			LoopAndWrite(cursor, uuidFieldName);
 
 			watch.Stop();

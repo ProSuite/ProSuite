@@ -1,20 +1,16 @@
-
-using ESRI.ArcGIS.Geometry;
+using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Progress;
-using System.Collections.Generic;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.Progress;
 
 namespace ProSuite.DomainServices.AO.QA
 {
-	public interface ISubverificationObserver
+	public interface ISubVerificationObserver : IDisposable
 	{
-		void CreatedSubverification(
-			int idSubverification,
-			QualityConditionExecType execType,
-			[NotNull] IList<string> QualityConditionNames,
-			[CanBeNull] EnvelopeXY area);
-		void Finished(int id, ServiceCallStatus failed);
+		void CreatedSubverification(int idSubverification, [CanBeNull] EnvelopeXY area);
+
 		void Started(int id, string workerAddress);
+
+		void Finished(int id, ServiceCallStatus failed);
 	}
 }

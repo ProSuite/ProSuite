@@ -31,8 +31,8 @@ namespace ProSuite.QA.Tests.Test.IssueFilters
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("IfWithinTest");
 
-			IFeatureClass lineFc =
-				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolyline);
+			IFeatureClass lineFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
+				ws, "lineFc", esriGeometryType.esriGeometryPolyline);
 
 			{
 				IFeature f = lineFc.CreateFeature();
@@ -50,8 +50,8 @@ namespace ProSuite.QA.Tests.Test.IssueFilters
 				f.Store();
 			}
 
-			IFeatureClass polyFc =
-				CreateFeatureClass(ws, "polyFc", esriGeometryType.esriGeometryPolygon);
+			IFeatureClass polyFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
+				ws, "polyFc", esriGeometryType.esriGeometryPolygon);
 			{
 				IFeature f = polyFc.CreateFeature();
 				f.Shape = CurveConstruction.StartPoly(0, 0).LineTo(10, 0).LineTo(10, 10)
@@ -77,30 +77,5 @@ namespace ProSuite.QA.Tests.Test.IssueFilters
 				Assert.AreEqual(2, runner.Errors.Count);
 			}
 		}
-
-
-		private IFeatureClass CreateFeatureClass(IFeatureWorkspace ws, string name,
-												 esriGeometryType geometryType,
-												 IList<IField> customFields = null)
-		{
-			List<IField> fields = new List<IField>();
-			fields.Add(FieldUtils.CreateOIDField());
-			if (customFields != null)
-			{
-				fields.AddRange(customFields);
-			}
-
-			bool hasZ = geometryType == esriGeometryType.esriGeometryMultiPatch;
-			fields.Add(FieldUtils.CreateShapeField(
-						   "Shape", geometryType,
-						   SpatialReferenceUtils.CreateSpatialReference
-						   ((int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
-							true), 1000, hasZ));
-
-			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, name,
-				FieldUtils.CreateFields(fields));
-			return fc;
-		}
-
 	}
 }

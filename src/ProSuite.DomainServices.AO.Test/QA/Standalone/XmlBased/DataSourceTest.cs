@@ -72,7 +72,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				throw;
 			}
 
-			var dataSource = new DataSource("test", "test") {WorkspaceAsText = catalogPath};
+			var dataSource = new DataSource("test", "test") { WorkspaceAsText = catalogPath };
 
 			IWorkspace openedWorkspace = dataSource.OpenWorkspace();
 			Assert.IsNotNull(openedWorkspace);
@@ -107,7 +107,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			string connectionString = WorkspaceUtils.GetConnectionString(workspace);
 
 			var dataSource = new DataSource("test", "test")
-			                 {WorkspaceAsText = connectionString};
+			                 { WorkspaceAsText = connectionString };
 
 			IWorkspace openedWorkspace = dataSource.OpenWorkspace();
 			Assert.IsNotNull(openedWorkspace);
@@ -122,7 +122,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			string connectionString = WorkspaceUtils.GetConnectionString(workspace);
 
 			var dataSource = new DataSource("test", "test")
-			                 {WorkspaceAsText = connectionString};
+			                 { WorkspaceAsText = connectionString };
 
 			IWorkspace openedWorkspace = dataSource.OpenWorkspace();
 			Assert.IsNotNull(openedWorkspace);

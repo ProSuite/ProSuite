@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests
 		{
 			Assert.ArgumentNotNull(terrain, nameof(terrain));
 
-			InvolvedTerrains = new List<TerrainReference> {terrain};
+			InvolvedTerrains = new List<TerrainReference> { terrain };
 			TerrainTolerance = terrainTolerance;
 		}
 
@@ -31,7 +31,7 @@ namespace ProSuite.QA.Tests
 		{
 			Assert.ArgumentNotNull(rasterReference, nameof(rasterReference));
 
-			InvolvedRasters = new List<RasterReference> {rasterReference};
+			InvolvedRasters = new List<RasterReference> { rasterReference };
 		}
 
 		private QaSurfaceOffset([NotNull] IReadOnlyFeatureClass featureClass,
@@ -126,6 +126,9 @@ namespace ProSuite.QA.Tests
 
 			return ErrorType.None;
 		}
+
+		protected static string MissingTerrainDescription =>
+			"Missing surface or geometry outside defined surface area";
 
 		#region Nested type: ErrorType
 

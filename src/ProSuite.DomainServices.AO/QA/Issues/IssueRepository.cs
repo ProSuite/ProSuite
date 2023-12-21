@@ -83,6 +83,8 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			}
 			catch (Exception e)
 			{
+				_msg.DebugFormat("Error adding issue with geometry {0}",
+				                 GeometryUtils.ToString(issueGeometry));
 				_msg.ErrorFormat("Error adding issue: {0} ({1})",
 				                 FormatIssue(issue),
 				                 e.Message);

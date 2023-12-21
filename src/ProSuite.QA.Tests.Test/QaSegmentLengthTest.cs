@@ -42,16 +42,12 @@ namespace ProSuite.QA.Tests.Test
 				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
 				IFeatureClass featureClass =
-					TestWorkspaceUtils.CreateSimpleFeatureClass(_testWs,
-					                                            "TestFormat", null,
-					                                            esriGeometryType
-						                                            .esriGeometryPolyline,
-					                                            esriSRProjCS2Type
-						                                            .esriSRProjCS_CH1903Plus_LV95);
+					TestWorkspaceUtils.CreateSimpleFeatureClass(
+						_testWs, "TestFormat", esriGeometryType.esriGeometryPolyline);
 
 				// make sure the table is known by the workspace
-				((IWorkspaceEdit) _testWs).StartEditing(false);
-				((IWorkspaceEdit) _testWs).StopEditing(true);
+				((IWorkspaceEdit)_testWs).StartEditing(false);
+				((IWorkspaceEdit)_testWs).StopEditing(true);
 
 				{
 					// Create error Feature
@@ -83,12 +79,12 @@ namespace ProSuite.QA.Tests.Test
 		{
 			IFeatureClass featureClass =
 				TestWorkspaceUtils.CreateSimpleFeatureClass(
-					_testWs, "TestMultipatch", null, esriGeometryType.esriGeometryMultiPatch,
-					esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, 0.001, true);
+					_testWs, "TestMultipatch", esriGeometryType.esriGeometryMultiPatch,
+					xyTolerance: 0.001, hasZ: true);
 
 			// make sure the table is known by the workspace
-			((IWorkspaceEdit) _testWs).StartEditing(false);
-			((IWorkspaceEdit) _testWs).StopEditing(true);
+			((IWorkspaceEdit)_testWs).StartEditing(false);
+			((IWorkspaceEdit)_testWs).StopEditing(true);
 
 			{
 				// Create error Feature
@@ -97,9 +93,9 @@ namespace ProSuite.QA.Tests.Test
 				const double y = 1200000;
 				const double z = 500;
 				row.Shape = new MultiPatchConstruction().StartRing(x, y, z)
-				                                        .Add(x + 0.3, y, z)
-				                                        .Add(x + 0.3, y, z + 10)
-				                                        .MultiPatch;
+														.Add(x + 0.3, y, z)
+														.Add(x + 0.3, y, z + 10)
+														.MultiPatch;
 
 				row.Store();
 			}

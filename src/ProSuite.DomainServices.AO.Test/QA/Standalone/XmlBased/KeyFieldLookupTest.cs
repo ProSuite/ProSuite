@@ -100,9 +100,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 					DataSourceKeyFields =
 						new[]
 						{
-							new XmlDataSourceKeyFields {ModelName = "MODEL1"},
-							new XmlDataSourceKeyFields {ModelName = "MODEL2"},
-							new XmlDataSourceKeyFields {ModelName = "MODEL1"}
+							new XmlDataSourceKeyFields { ModelName = "MODEL1" },
+							new XmlDataSourceKeyFields { ModelName = "MODEL2" },
+							new XmlDataSourceKeyFields { ModelName = "MODEL1" }
 						}.ToList()
 				};
 
@@ -118,7 +118,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				new XmlKeyFields
 				{
 					DefaultKeyField = "DEFAULT_ID",
-					DataSourceKeyFields = new[] {new XmlDataSourceKeyFields()}.ToList()
+					DataSourceKeyFields = new[] { new XmlDataSourceKeyFields() }.ToList()
 				};
 
 			var e = Assert.Throws<InvalidConfigurationException>(

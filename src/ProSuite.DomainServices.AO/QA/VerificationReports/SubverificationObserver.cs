@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -10,7 +11,7 @@ using ProSuite.Commons.Progress;
 
 namespace ProSuite.DomainServices.AO.QA.VerificationReports
 {
-	public class SubverificationObserver : ISubverificationObserver
+	public class SubVerificationObserver : ISubVerificationObserver
 	{
 		public const string SubVeriIdField = "SubVeriId";
 		public const string StatusField = "Status";
@@ -23,11 +24,11 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 		private readonly Dictionary<string, int> _idxs = new Dictionary<string, int>();
 
 		[CanBeNull] private readonly ISpatialReference _spatialReference;
-		private readonly IEnvelope _area;
 		private readonly IFeatureClass _fc;
+
 		private readonly Dictionary<int, long> _subverIdOid;
 
-		public SubverificationObserver(
+		public SubVerificationObserver(
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] string featureClassName,
 			[CanBeNull] ISpatialReference spatialReference)
@@ -40,8 +41,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 		}
 
 		public void CreatedSubverification(
-			int idSubverification, QualityConditionExecType execType,
-			IList<string> QualityConditionNames, EnvelopeXY area)
+			int idSubverification, EnvelopeXY area)
 		{
 			IGeometry shape = area != null
 				                  ? GeometryFactory.CreatePolygon(area, _spatialReference)
@@ -121,5 +121,22 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 
 			return idx;
 		}
+
+		#region IDisposable
+
+		public void Dispose()
+		{
+			if (_spatialReference != null)
+			{
+				Marshal.ReleaseComObject(_spatialReference);
+			}
+
+			if (_fc != null)
+			{
+				Marshal.ReleaseComObject(_fc);
+			}
+		}
+
+		#endregion
 	}
 }
