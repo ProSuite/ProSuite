@@ -16,7 +16,6 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Input;
-using Cursor = System.Windows.Input.Cursor;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -215,6 +214,17 @@ namespace ProSuite.AGP.Editing.OneClick
 				_editSketchBackup = null;
 			}
 
+			if (args.Key == Key.F2)
+			{
+				// #114: F2 has no effect unless another tool has been used before:
+				Geometry currentSketch = await GetCurrentSketchAsync();
+
+				if (CanFinishSketch(currentSketch))
+				{
+					await OnSketchCompleteAsync(currentSketch);
+				}
+			}
+
 			if (args.Key == _keyRestorePrevious)
 			{
 				RestorePreviousSketch();
@@ -224,7 +234,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override async Task HandleEscapeAsync()
 		{
 			Task task = QueuedTask.Run(
-				() => 
+				() =>
 				{
 					if (IsInSketchMode)
 					{
@@ -357,6 +367,26 @@ namespace ProSuite.AGP.Editing.OneClick
 			StartSketchAsync();
 
 			LogEnteringSketchMode();
+		}
+
+		private static bool CanFinishSketch(Geometry sketch)
+		{
+			if (sketch == null || sketch.IsEmpty)
+			{
+				return false;
+			}
+
+			if (sketch.GeometryType == GeometryType.Polygon)
+			{
+				return sketch.PointCount > 2;
+			}
+
+			if (sketch.GeometryType == GeometryType.Polyline)
+			{
+				return sketch.PointCount > 1;
+			}
+
+			return true;
 		}
 
 		/// <summary>
