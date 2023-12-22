@@ -53,7 +53,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 					await QueuedTask.Run(() => SelectionUtils.GetSelectedFeatures(layer)));
 			}
 
-			var tables = MapUtils.GetStandaloneTables<StandaloneTable>(
+			var tables = MapUtils.GetStandaloneTables(
 				tbl => IssueGdbSchema.IssueFeatureClassNames.Contains(
 					tbl.GetTable().GetName()));
 

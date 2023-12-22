@@ -322,19 +322,18 @@ namespace ProSuite.Commons.AGP.Carto
 		/// Gets the first selectable stand-alone table without definition query.
 		/// If all selectable stand-alone tables have a definition query, all tables are yielded.
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
 		/// <param name="mapView"></param>
 		/// <param name="tablePredicate"></param>
 		/// <returns></returns>
-		public static IEnumerable<IDisplayTable> GetStandaloneTablesForSelection<T>(
+		public static IEnumerable<IDisplayTable> GetStandaloneTablesForSelection(
 			[NotNull] MapView mapView,
-			[NotNull] Predicate<T> tablePredicate) where T : StandaloneTable
+			[NotNull] Predicate<StandaloneTable> tablePredicate)
 		{
-			var filteredSelectableLayers = new List<T>();
+			var filteredSelectableLayers = new List<StandaloneTable>();
 
 			foreach (StandaloneTable standaloneTable in
 			         GetStandaloneTables(tablePredicate, mapView)
-				         .Where(st => st is T))
+				         .Where(st => st != null))
 			{
 				if (! standaloneTable.IsSelectable)
 				{
@@ -344,10 +343,10 @@ namespace ProSuite.Commons.AGP.Carto
 				if (string.IsNullOrWhiteSpace(standaloneTable.DefinitionQuery))
 				{
 					// Return just the first layer without definition query:
-					return new List<T> { (T) standaloneTable };
+					return new List<StandaloneTable> { standaloneTable };
 				}
 
-				filteredSelectableLayers.Add((T) standaloneTable);
+				filteredSelectableLayers.Add(standaloneTable);
 			}
 
 			return filteredSelectableLayers;
@@ -389,10 +388,10 @@ namespace ProSuite.Commons.AGP.Carto
 				                     StringComparison.OrdinalIgnoreCase), mapView).FirstOrDefault();
 		}
 
-		public static IEnumerable<StandaloneTable> GetStandaloneTables<T>(
-			[CanBeNull] Predicate<T> tablePredicate,
+		public static IEnumerable<StandaloneTable> GetStandaloneTables(
+			[CanBeNull] Predicate<StandaloneTable> tablePredicate,
 			[CanBeNull] MapView mapView = null,
-			bool includeInvalid = false) where T : StandaloneTable
+			bool includeInvalid = false)
 		{
 			if (mapView == null)
 			{
@@ -405,7 +404,7 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			Predicate<T> combinedPredicate;
+			Predicate<StandaloneTable> combinedPredicate;
 
 			if (includeInvalid)
 			{
@@ -422,7 +421,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 			foreach (StandaloneTable table in mapView.Map.GetStandaloneTablesAsFlattenedList())
 			{
-				if (combinedPredicate == null || combinedPredicate(table as T))
+				if (combinedPredicate == null || combinedPredicate(table))
 				{
 					yield return table;
 				}
@@ -434,7 +433,7 @@ namespace ProSuite.Commons.AGP.Carto
 			[CanBeNull] string tableName,
 			[CanBeNull] MapView mapView = null)
 		{
-			return GetStandaloneTables<StandaloneTable>(
+			return GetStandaloneTables(
 					table => string.Equals(table.GetTable().GetName(),
 					                       tableName,
 					                       StringComparison.OrdinalIgnoreCase), mapView)
