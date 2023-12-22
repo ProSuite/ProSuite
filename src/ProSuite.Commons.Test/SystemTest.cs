@@ -13,7 +13,9 @@ namespace ProSuite.Commons.Test
 	/// but .NET (and Windows). For lack of a better idea, it's called
 	/// SystemTest (true to the maxim that it's a system if it doesn't have one).
 	/// </summary>
+#if !NET48
 	[SupportedOSPlatform("windows")]
+#endif
 	[TestFixture]
 	public class SystemTest
 	{
