@@ -51,7 +51,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 			if (! ModelElementNameUtils.IsQualifiedName(modelElementName) &&
 			    model.ElementNamesAreQualified)
 			{
-				model.QualifyModelElementName(modelElementName);
+				return model.QualifyModelElementName(modelElementName);
 			}
 
 			if (! model.ElementNamesAreQualified)

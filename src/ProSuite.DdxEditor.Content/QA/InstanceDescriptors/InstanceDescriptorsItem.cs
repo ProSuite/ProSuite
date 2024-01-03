@@ -37,8 +37,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		protected override bool SortChildren => true;
 
-		public void AddInstanceDescriptors(string dllFilePath,
-		                                   IApplicationController applicationController)
+		public void AddInstanceDescriptors(string dllFilePath, IItemNavigation itemNavigation)
 		{
 			// NOTE: This method could profit from a re-unification with TestDescriptorsItem
 
@@ -47,12 +46,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			{
 				Assembly assembly = Assembly.LoadFile(dllFilePath);
 
-				AddInstanceDescriptors(applicationController, assembly);
+				AddInstanceDescriptors(itemNavigation, assembly);
 			}
 		}
 
-		protected void AddInstanceDescriptors(IApplicationController applicationController,
-		                                      Assembly assembly)
+		protected void AddInstanceDescriptors(IItemNavigation itemNavigation, Assembly assembly)
 		{
 			const bool includeObsolete = false;
 			const bool includeInternallyUsed = false;
@@ -82,7 +80,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 			_msg.InfoFormat("The assembly contains {0} {1}s", count, DescriptorTypeDisplayName);
 
-			applicationController.GoToItem(this);
+			itemNavigation.GoToItem(this);
 
 			TryAddInstanceDescriptors(newDescriptors, ModelBuilder.InstanceDescriptors);
 		}

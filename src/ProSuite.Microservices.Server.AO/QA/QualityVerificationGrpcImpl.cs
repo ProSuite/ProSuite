@@ -904,9 +904,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			var qaService = new BackgroundVerificationService(backgroundVerificationInputs)
 			                {
-				                CustomErrorFilter = backgroundVerificationInputs.CustomErrorFilter
+				                ProgressStreamer = responseStreamer
 			                };
 
+			// TODO: Consider channeling all issues/progress through the above progress streamer
 			qaService.IssueFound +=
 				(sender, args) => responseStreamer.AddPendingIssue(args);
 

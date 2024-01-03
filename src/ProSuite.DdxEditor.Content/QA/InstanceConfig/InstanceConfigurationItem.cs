@@ -18,6 +18,7 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.AO.QA.TestReport;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA.ResourceLookup;
@@ -345,6 +346,20 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		public void ExecuteWebHelpCommand()
 		{
 			_webHelpCommand?.Execute();
+		}
+
+		[CanBeNull]
+		public string GetWebHelp([CanBeNull] InstanceDescriptor instanceDescriptor,
+		                         [CanBeNull] out string title)
+		{
+			if (instanceDescriptor == null)
+			{
+				title = null;
+				return null;
+			}
+
+			title = instanceDescriptor.TypeDisplayName;
+			return TestReportUtils.WriteDescriptorDoc(instanceDescriptor);
 		}
 	}
 }

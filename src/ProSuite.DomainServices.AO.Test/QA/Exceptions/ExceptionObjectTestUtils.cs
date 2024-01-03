@@ -20,7 +20,8 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		                                    [CanBeNull] string affectedComponent,
 		                                    [CanBeNull] IEnumerable<object> values = null)
 		{
-			return new QaError(new DummyTest(ReadOnlyTableFactory.Create(tableMock)), "error description",
+			return new QaError(new DummyTest(ReadOnlyTableFactory.Create(tableMock)),
+			                   "error description",
 			                   new List<InvolvedRow>(), null,
 			                   issueCode == null
 				                   ? null
@@ -33,7 +34,8 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		public static QaError CreateQaError([NotNull] ITable tableMock,
 		                                    [NotNull] IEnumerable<InvolvedRow> involvedRows)
 		{
-			return new QaError(new DummyTest(ReadOnlyTableFactory.Create(tableMock)), "error description",
+			return new QaError(new DummyTest(ReadOnlyTableFactory.Create(tableMock)),
+			                   "error description",
 			                   involvedRows, null, null, null);
 		}
 

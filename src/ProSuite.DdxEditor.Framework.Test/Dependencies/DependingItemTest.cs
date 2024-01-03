@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Runtime.Versioning;
 using NUnit.Framework;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -7,6 +8,7 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 
 namespace ProSuite.DdxEditor.Framework.Test.Dependencies
 {
+	[SupportedOSPlatform("windows")]
 	[TestFixture]
 	public class DependingItemTest
 	{
@@ -103,6 +105,7 @@ namespace ProSuite.DdxEditor.Framework.Test.Dependencies
 
 		private class TestDependingItem : DependingItem
 		{
+			[SupportedOSPlatform("windows")]
 			public TestDependingItem([NotNull] Entity entity, [NotNull] string name)
 				: base(entity, name) { }
 

@@ -47,10 +47,10 @@ namespace ProSuite.QA.Container.Test
 			helper.ExpectedMaximumRowCountPerTile = 1;
 
 			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
-			           {
-				           OnExecuteCore = helper.ExecuteRow,
-				           OnCompleteTile = helper.CompleteTile
-			           };
+			{
+				OnExecuteCore = helper.ExecuteRow,
+				OnCompleteTile = helper.CompleteTile
+			};
 			test.SetSearchDistance(10);
 
 			var container = new TestContainer.TestContainer { TileSize = 600 };
@@ -87,10 +87,10 @@ namespace ProSuite.QA.Container.Test
 			helper.ExpectedMaximumRowCountPerTile = 1;
 
 			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
-			           {
-				           OnExecuteCore = helper.ExecuteRow,
-				           OnCompleteTile = helper.CompleteTile
-			           };
+			{
+				OnExecuteCore = helper.ExecuteRow,
+				OnCompleteTile = helper.CompleteTile
+			};
 			test.SetSearchDistance(10);
 
 			var container = new TestContainer.TestContainer { TileSize = 600 };
@@ -134,11 +134,11 @@ namespace ProSuite.QA.Container.Test
 			helper.ExpectedMaximumRowCountPerTile = 2;
 
 			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
-			           {
-				           OnExecuteCore = helper.ExecuteRow,
-				           OnCompleteTile = helper.CompleteTile,
-				           OnCachedRow = helper.CachedRow
-			           };
+			{
+				OnExecuteCore = helper.ExecuteRow,
+				OnCompleteTile = helper.CompleteTile,
+				OnCachedRow = helper.CachedRow
+			};
 			test.SetSearchDistance(2);
 
 			var container = new TestContainer.TestContainer { TileSize = 600 };
@@ -172,10 +172,10 @@ namespace ProSuite.QA.Container.Test
 			helper.ExpectedMaximumRowCountPerTile = 1;
 
 			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
-			           {
-				           OnExecuteCore = helper.ExecuteRow,
-				           OnCompleteTile = helper.CompleteTile
-			           };
+			{
+				OnExecuteCore = helper.ExecuteRow,
+				OnCompleteTile = helper.CompleteTile
+			};
 			test.SetSearchDistance(0.5);
 
 			var container = new TestContainer.TestContainer { TileSize = 600 };
@@ -233,18 +233,18 @@ namespace ProSuite.QA.Container.Test
 
 			var helper = new CanHandleCachedPointCountHelper();
 			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
-			           {
-				           OnExecuteCore = helper.HandleRows,
-				           OnCompleteTile = helper.HandleTiles
-			           };
+			{
+				OnExecuteCore = helper.HandleRows,
+				OnCompleteTile = helper.HandleTiles
+			};
 			test.SetSearchDistance(10);
 
 			// Unlimited Cache
 			var container1 = new TestContainer.TestContainer
-			                 {
-				                 TileSize = 600,
-				                 MaxCachedPointCount = -1
-			                 };
+			{
+				TileSize = 600,
+				MaxCachedPointCount = -1
+			};
 			// Assert.IsTrue(container1.MaxCachedPointCount < 0);
 
 			helper.Reset();
@@ -255,10 +255,10 @@ namespace ProSuite.QA.Container.Test
 
 			// Very large Cache
 			var container2 = new TestContainer.TestContainer
-			                 {
-				                 MaxCachedPointCount = int.MaxValue,
-				                 TileSize = 600
-			                 };
+			{
+				MaxCachedPointCount = int.MaxValue,
+				TileSize = 600
+			};
 
 			helper.Reset();
 			helper.Container = container2;
@@ -268,10 +268,10 @@ namespace ProSuite.QA.Container.Test
 
 			// small feature Cache
 			var container3 = new TestContainer.TestContainer
-			                 {
-				                 MaxCachedPointCount = 10,
-				                 TileSize = 600
-			                 };
+			{
+				MaxCachedPointCount = 10,
+				TileSize = 600
+			};
 
 			helper.Reset();
 			helper.Container = container3;
@@ -282,10 +282,10 @@ namespace ProSuite.QA.Container.Test
 
 			// very small feature Cache
 			var container4 = new TestContainer.TestContainer
-			                 {
-				                 MaxCachedPointCount = 4,
-				                 TileSize = 600
-			                 };
+			{
+				MaxCachedPointCount = 4,
+				TileSize = 600
+			};
 
 			helper.Reset();
 			helper.Container = container4;
@@ -296,10 +296,10 @@ namespace ProSuite.QA.Container.Test
 			container4.Execute(GeometryFactory.CreateEnvelope(x, y, x + 1500, y + 1500));
 			// no feature Cache
 			var container5 = new TestContainer.TestContainer
-			                 {
-				                 MaxCachedPointCount = 0,
-				                 TileSize = 600
-			                 };
+			{
+				MaxCachedPointCount = 0,
+				TileSize = 600
+			};
 
 			helper.Reset();
 			helper.Container = container5;
@@ -334,28 +334,23 @@ namespace ProSuite.QA.Container.Test
 
 		[NotNull]
 		private IFeatureClass CreatePolylineFeatureClass([NotNull] string name,
-		                                                 double tolerance)
+														 double tolerance)
 		{
 			return TestWorkspaceUtils.CreateSimpleFeatureClass(
-				_testWs, name, null,
-				esriGeometryType.esriGeometryPolyline,
-				esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
-				tolerance);
+				_testWs, name, esriGeometryType.esriGeometryPolyline, xyTolerance: tolerance);
 		}
 
 		[NotNull]
 		private IFeatureClass CreatePointFeatureClass([NotNull] string name,
-		                                              double tolerance)
+													  double tolerance)
 		{
 			return TestWorkspaceUtils.CreateSimpleFeatureClass(
-				_testWs, name, null,
-				esriGeometryType.esriGeometryPoint,
-				esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, tolerance);
+				_testWs, name, esriGeometryType.esriGeometryPoint, xyTolerance: tolerance);
 		}
 
 		private static void AddPointFeature([NotNull] IFeatureClass featureClass,
-		                                    double x,
-		                                    double y)
+											double x,
+											double y)
 		{
 			IFeature feature = featureClass.CreateFeature();
 			feature.Shape = GeometryFactory.CreatePoint(x, y);
@@ -365,7 +360,7 @@ namespace ProSuite.QA.Container.Test
 		private class CacheTest : ContainerTest
 		{
 			public CacheTest(IReadOnlyFeatureClass dummy)
-				: base((IReadOnlyTable) dummy) { }
+				: base((IReadOnlyTable)dummy) { }
 
 			public override bool IsQueriedTable(int tableIndex)
 			{

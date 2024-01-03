@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
-using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
 using ProSuite.Commons.AGP;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -20,7 +20,7 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
-	public abstract class VerifyVisibleExtentCmdBase : Button
+	public abstract class VerifyVisibleExtentCmdBase : ButtonCommandBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -40,13 +40,13 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IProSuiteFacade ProSuiteImpl { get; }
 
-		protected override void OnClick()
+		protected override Task<bool> OnClickCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
 			{
 				MessageBox.Show("No quality verification environment is configured.",
 				                "Verify Extent", MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				return Task.FromResult(false);
 			}
 
 			IQualityVerificationEnvironment qaEnvironment =
@@ -59,7 +59,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				MessageBox.Show("No Quality Specification is selected", "Verify Extent",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				return Task.FromResult(false);
 			}
 
 			var progressTracker = new QualityVerificationProgressTracker
@@ -91,6 +91,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
 			                               qaEnvironment.BackendDisplayName, actionTitle);
+
+			return Task.FromResult(true);
 		}
 
 		private async Task<ServiceCallStatus> Verify(

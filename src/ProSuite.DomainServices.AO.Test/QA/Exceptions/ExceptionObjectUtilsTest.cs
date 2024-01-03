@@ -68,7 +68,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		[Test]
 		public void CanGetEqualKeysNoRows()
 		{
-			AssertEqualKeys(new List<InvolvedRow> {new InvolvedRow("Table1")});
+			AssertEqualKeys(new List<InvolvedRow> { new InvolvedRow("Table1") });
 		}
 
 		[Test]

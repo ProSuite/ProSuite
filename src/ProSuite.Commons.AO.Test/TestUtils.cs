@@ -202,7 +202,7 @@ namespace ProSuite.Commons.AO.Test
 			return geometry;
 		}
 
-		public static string GetTempDirPath([CanBeNull] string tempDirName)
+		public static string GetTempDirPath([CanBeNull] string tempDirName = null)
 		{
 			if (tempDirName == null)
 			{

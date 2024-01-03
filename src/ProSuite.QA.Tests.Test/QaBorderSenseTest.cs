@@ -30,8 +30,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace("CanHandleZeroLengthEndSegments");
 			IFeatureClass featureClass = TestWorkspaceUtils.CreateSimpleFeatureClass(
-				ws, "polylines", null, esriGeometryType.esriGeometryPolyline,
-				esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
+				ws, "polylines", esriGeometryType.esriGeometryPolyline);
 
 			{
 				IFeature f = featureClass.CreateFeature();

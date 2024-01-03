@@ -3,6 +3,7 @@ using System.Linq;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Validation;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 
@@ -68,6 +69,40 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			}
 
 			return addedCount;
+		}
+
+		public static void ValidateDescriptorAgainstDuplicateName(InstanceDescriptor entity,
+			InstanceDescriptor descriptorWithSameName,
+			Notification notification)
+		{
+			if (descriptorWithSameName != null &&
+			    descriptorWithSameName.Id != entity.Id)
+			{
+				notification.RegisterMessage(
+					"Name",
+					$"A {descriptorWithSameName.TypeDisplayName} with the same name already exists",
+					Severity.Error);
+			}
+		}
+
+		public static void ValidateDescriptorAgainstDuplicateImplementation(
+			[NotNull] InstanceDescriptor entity,
+			[CanBeNull] InstanceDescriptor descriptorWithSameImplementation,
+			[NotNull] Notification notification)
+		{
+			if (descriptorWithSameImplementation == null ||
+			    descriptorWithSameImplementation.Id == entity.Id)
+			{
+				return;
+			}
+
+			string typeDisplayName = descriptorWithSameImplementation.TypeDisplayName;
+
+			notification.RegisterMessage(
+				$"{typeDisplayName} {descriptorWithSameImplementation.Name} " +
+				"already has the same implementation as the current instance (factory or class/constructor). " +
+				$"Please use the existing {typeDisplayName}.",
+				Severity.Error);
 		}
 
 		private static IEnumerable<InstanceDescriptorTableRow> GetInstanceDescriptorTableRows<D, C>(

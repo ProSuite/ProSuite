@@ -153,17 +153,13 @@ namespace ProSuite.Commons.AO.Test
 		public static IFeatureClass CreateSimpleFeatureClass(
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] string name,
-			[CanBeNull] IFieldsEdit fieldsWithoutShapeField,
 			esriGeometryType geometryType,
-			esriSRProjCS2Type projType,
+			[CanBeNull] IFieldsEdit fieldsWithoutShapeField = null,
+			esriSRProjCS2Type projType = esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
 			double xyTolerance = 0,
 			bool hasZ = false)
 		{
-			if (fieldsWithoutShapeField == null)
-			{
-				fieldsWithoutShapeField = new FieldsClass();
-				fieldsWithoutShapeField.AddField(FieldUtils.CreateOIDField());
-			}
+			IFieldsEdit allFields = InitFieldsWithOID(fieldsWithoutShapeField);
 
 			ISpatialReference spatialReference = SpatialReferenceUtils
 				.CreateSpatialReference
@@ -174,24 +170,52 @@ namespace ProSuite.Commons.AO.Test
 					xyTolerance;
 			}
 
+			if (geometryType == esriGeometryType.esriGeometryMultiPatch)
+			{
+				hasZ = true;
+			}
 			if (hasZ)
 			{
 				SpatialReferenceUtils.SetZDomain(spatialReference, -10000, 10000,
 												 0.0001, 0.001);
 			}
 
-			fieldsWithoutShapeField.AddField(
+			allFields.AddField(
 				FieldUtils.CreateShapeField("Shape", geometryType, spatialReference, 1000, hasZ));
 
 			IFeatureClass featureClass =
-				DatasetUtils.CreateSimpleFeatureClass(
-					workspace, name, fieldsWithoutShapeField);
+				DatasetUtils.CreateSimpleFeatureClass(workspace, name, allFields);
 
 			// make sure the table is known by the workspace
 			((IWorkspaceEdit)workspace).StartEditing(false);
 			((IWorkspaceEdit)workspace).StopEditing(true);
 
 			return featureClass;
+		}
+
+		private static IFieldsEdit InitFieldsWithOID(IFieldsEdit customFields)
+		{
+			bool hasOidField = false;
+			if (customFields != null)
+			{
+				for (int iField = 0; iField < customFields.FieldCount; iField++)
+				{
+					IField field = customFields.Field[iField];
+					if (field.Type == esriFieldType.esriFieldTypeOID)
+					{
+						hasOidField = true;
+						break;
+					}
+				}
+			}
+
+			IFieldsEdit fields = customFields ?? new FieldsClass();
+			if (! hasOidField)
+			{
+				fields.AddField(FieldUtils.CreateOIDField());
+			}
+
+			return fields;
 		}
 	}
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -38,6 +39,7 @@ namespace ProSuite.DomainServices.AO.QA
 		[CanBeNull]
 		ISpatialReference IssueFgdbSpatialReference { get; }
 
+		[Obsolete("FGDB compression must be performed by the client, if needed.")]
 		bool CompressIssueFgdb { get; }
 
 		bool UpdateIssuesInVerifiedModelContext { get; }

@@ -1352,7 +1352,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 		private static readonly ThreadLocal<ISpatialReferenceFactory2> _spatialReferenceFactory =
 			new ThreadLocal<ISpatialReferenceFactory2>(
-				() => SysUtils
+				() => ComUtils
 					.Create<SpatialReferenceEnvironmentClass, ISpatialReferenceFactory2>());
 
 		private static IList<GeoTrans> GetTransList(int fromSr, int toSr)
@@ -1518,6 +1518,13 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
 			return ((ISpatialReferenceResolution)spatialReference).ZResolution[false];
+		}
+
+		public static double GetMResolution([NotNull] ISpatialReference spatialReference)
+		{
+			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
+
+			return ((ISpatialReferenceResolution)spatialReference).MResolution;
 		}
 
 		public static double GetXyTolerance([NotNull] ISpatialReference spatialReference)

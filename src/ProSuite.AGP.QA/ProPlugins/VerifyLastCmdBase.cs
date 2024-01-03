@@ -21,12 +21,11 @@ using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.UI.QA.VerificationProgress;
-using Button = ArcGIS.Desktop.Framework.Contracts.Button;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
-	public abstract class VerifyLastCmdBase : Button
+	public abstract class VerifyLastCmdBase : ButtonCommandBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -47,13 +46,13 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IProSuiteFacade ProSuiteImpl { get; }
 
-		protected override void OnClick()
+		protected override Task<bool> OnClickCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
 			{
 				MessageBox.Show("No quality verification environment is configured.",
 				                "Verify Last", MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				return Task.FromResult(false);
 			}
 
 			IQualityVerificationEnvironment qaEnvironment =
@@ -66,7 +65,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				MessageBox.Show("No Quality Specification is selected", "Verify Last",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				return Task.FromResult(false);
 			}
 
 			Geometry perimeter = qaEnvironment.LastVerificationPerimeter;
@@ -75,14 +74,14 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				MessageBox.Show("No last verification perimeter", "Verify Last",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				return Task.FromResult(false);
 			}
 
 			if (KeyboardUtils.IsModifierPressed(Keys.Alt, exclusive: true))
 			{
 				ZoomTo(perimeter);
 
-				return;
+				return Task.FromResult(true);
 			}
 
 			var progressTracker = new QualityVerificationProgressTracker
@@ -112,6 +111,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
 			                               qaEnvironment.BackendDisplayName, actionTitle);
+
+			return Task.FromResult(true);
 		}
 
 		private async Task<ServiceCallStatus> Verify(

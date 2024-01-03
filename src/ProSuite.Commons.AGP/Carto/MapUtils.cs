@@ -212,6 +212,146 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		/// <summary>
+		/// Returns feature layers that contain a set of specified OIDs. This method can be used
+		/// to filter out layers that have a restrictive definition query which potentially
+		/// excludes the specified OIDs. These layers ca be used for flashing or zooming to the
+		/// respective features.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="mapView"></param>
+		/// <param name="layerPredicate"></param>
+		/// <param name="objectIds"></param>
+		/// <returns></returns>
+		public static IEnumerable<T> GetFeatureLayersContainingOids<T>(
+			[NotNull] MapView mapView,
+			[NotNull] Predicate<T> layerPredicate,
+			IReadOnlyList<long> objectIds) where T : BasicFeatureLayer
+		{
+			// NOTE: Flashing works fine on invisible layers, but not if there is a definition
+			//       query that excludes the feature.
+
+			var filteredLayers = new List<T>();
+
+			foreach (T featureLayer in GetFeatureLayers(layerPredicate, mapView))
+			{
+				if (string.IsNullOrWhiteSpace(featureLayer.DefinitionQuery))
+				{
+					// Return the first layer without definition query:
+					return new[] { featureLayer };
+				}
+
+				filteredLayers.Add(featureLayer);
+			}
+
+			var layersWithSomeOids = new List<T>();
+			foreach (T restrictedLayer in filteredLayers)
+			{
+				var queryFilter = new QueryFilter
+				                  {
+					                  ObjectIDs = objectIds
+				                  };
+
+				int foundCount = LayerUtils.SearchObjectIds(restrictedLayer, queryFilter).Count();
+
+				if (objectIds.Count == foundCount)
+				{
+					return new[] { restrictedLayer };
+				}
+
+				if (foundCount > 0)
+				{
+					layersWithSomeOids.Add(restrictedLayer);
+				}
+			}
+
+			return layersWithSomeOids;
+		}
+
+		public static IEnumerable<IDisplayTable> GetFeatureLayersForSelection<T>(
+			[CanBeNull] FeatureClass featureClass,
+			[CanBeNull] MapView mapView = null) where T : BasicFeatureLayer
+		{
+			// TODO: WorkspaceEquality.SameVersion
+			Predicate<T> sameTablePredicate =
+				l => DatasetUtils.IsSameTable(l.GetFeatureClass(), featureClass);
+
+			mapView ??= MapView.Active;
+
+			return GetFeatureLayersForSelection(mapView, sameTablePredicate);
+		}
+
+		/// <summary>
+		/// Gets the first visible, selectable feature layer without definition query.
+		/// If all visible, selectable layers have a definition query, all layers are yielded.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="mapView"></param>
+		/// <param name="layerPredicate">The layer predicate</param>
+		/// <returns></returns>
+		public static IEnumerable<T> GetFeatureLayersForSelection<T>(
+			[NotNull] MapView mapView,
+			[NotNull] Predicate<T> layerPredicate) where T : BasicFeatureLayer
+		{
+			var filteredVisibleSelectableLayers = new List<T>();
+
+			foreach (T featureLayer in GetFeatureLayers<T>(
+				         l => LayerUtils.IsVisible(l) && l.IsSelectable, mapView))
+			{
+				if (! layerPredicate(featureLayer))
+				{
+					continue;
+				}
+
+				if (string.IsNullOrWhiteSpace(featureLayer.DefinitionQuery))
+				{
+					// Return the first layer without definition query:
+					// TODO: Consider favoring editable layers, if there are several.
+					return new List<T> { featureLayer };
+				}
+
+				// TODO: Check if it references a relquery table -> skip them
+				filteredVisibleSelectableLayers.Add(featureLayer);
+			}
+
+			// TODO: Exclude joined layers?
+			return filteredVisibleSelectableLayers;
+		}
+
+		/// <summary>
+		/// Gets the first selectable stand-alone table without definition query.
+		/// If all selectable stand-alone tables have a definition query, all tables are yielded.
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <param name="tablePredicate"></param>
+		/// <returns></returns>
+		public static IEnumerable<IDisplayTable> GetStandaloneTablesForSelection(
+			[NotNull] MapView mapView,
+			[NotNull] Predicate<StandaloneTable> tablePredicate)
+		{
+			var filteredSelectableLayers = new List<StandaloneTable>();
+
+			foreach (StandaloneTable standaloneTable in
+			         GetStandaloneTables(tablePredicate, mapView)
+				         .Where(st => st != null))
+			{
+				if (! standaloneTable.IsSelectable)
+				{
+					continue;
+				}
+
+				if (string.IsNullOrWhiteSpace(standaloneTable.DefinitionQuery))
+				{
+					// Return just the first layer without definition query:
+					return new List<StandaloneTable> { standaloneTable };
+				}
+
+				filteredSelectableLayers.Add(standaloneTable);
+			}
+
+			return filteredSelectableLayers;
+		}
+
 		public static IEnumerable<T> GetFeatureLayers<T>(
 			[CanBeNull] Predicate<T> layerPredicate,
 			[CanBeNull] MapView mapView = null,

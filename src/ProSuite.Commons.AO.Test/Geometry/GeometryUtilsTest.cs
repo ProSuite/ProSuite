@@ -3036,16 +3036,19 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		[Test]
 		public void CanConvertFromToEsriGeometryType()
 		{
-			// Guard against changes in future versions:
+			// Guard against changes in future versions of esriGeometryType:
 
 			// The ProSuiteGeometryType is a superset, count only the ones below 30:
 			int typeCount = Enum.GetValues(typeof(ProSuiteGeometryType))
 			                    .Cast<ProSuiteGeometryType>()
 			                    .Count(value => (int) value < 30);
 
-			Assert.AreEqual(
-				Enum.GetValues(typeof(esriGeometryType)).Length,
-				typeCount);
+			int esriGeometryTypesCount = Enum.GetValues(typeof(esriGeometryType)).Length;
+
+			// We also have 'unknown' (-1):
+			int expected = esriGeometryTypesCount + 1;
+
+			Assert.AreEqual(expected, typeCount);
 
 			foreach (object value in Enum.GetValues(typeof(esriGeometryType)))
 			{

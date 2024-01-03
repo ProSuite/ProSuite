@@ -9041,6 +9041,69 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Compare the mMins of the M-Domains.
+        /// </summary>
+        public static string QaSchemaSpatialReference_CompareMDomainOrigin {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_CompareMDomainOrigin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compare the m-Resolutions of the spatial references.
+        /// </summary>
+        public static string QaSchemaSpatialReference_CompareMResolution {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_CompareMResolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compare the xMins and yMins of the XY-Domains.
+        /// </summary>
+        public static string QaSchemaSpatialReference_CompareXYDomainOrigin {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_CompareXYDomainOrigin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compare XY-Domain and XY-Resolution of the spatial references. If any value is different, an error is reported. If you want to compare only the XY-Domain or XY-Resolution, use the optional parameters CompareXYDomainOrigin or CompareXYResolution.
+        /// </summary>
+        public static string QaSchemaSpatialReference_compareXYPrecision {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_compareXYPrecision", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compare the xy-Resolutions of the spatial references.
+        /// </summary>
+        public static string QaSchemaSpatialReference_CompareXYResolution {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_CompareXYResolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compare the zMins of the Z-Domains.
+        /// </summary>
+        public static string QaSchemaSpatialReference_CompareZDomainOrigin {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_CompareZDomainOrigin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compare the z-Resolutions of the spatial references.
+        /// </summary>
+        public static string QaSchemaSpatialReference_CompareZResolution {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_CompareZResolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The feature class to check the spatial reference for..
         /// </summary>
         public static string QaSchemaSpatialReference_featureClass {

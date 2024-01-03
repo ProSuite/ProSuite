@@ -248,7 +248,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			IFieldsEdit fields = new FieldsClass();
 			fields.AddField(FieldUtils.CreateOIDField());
-			fields.AddField(FieldUtils.CreateField("Group",
+			fields.AddField(FieldUtils.CreateField("GroupField",
 			                                       esriFieldType.esriFieldTypeInteger));
 			fields.AddField(FieldUtils.CreateShapeField(
 				                "Shape", esriGeometryType.esriGeometryPolyline,
@@ -295,7 +295,7 @@ namespace ProSuite.QA.Tests.Test
 			((IWorkspaceEdit) ws).StopEditing(true);
 
 			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
-			                                new List<string> { "Group" }, null,
+			                                new List<string> { "GroupField" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
 			                                QaGroupConnected.GroupErrorReporting.CombineParts,
 			                                7);
@@ -1864,7 +1864,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestMultiPartErrorsTestextent()
 		{
 			TestMultiPartErrorsTestextent(_fgdbWorkspace);

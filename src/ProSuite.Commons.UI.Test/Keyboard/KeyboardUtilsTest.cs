@@ -1,9 +1,11 @@
+using System.Runtime.Versioning;
 using System.Windows.Forms;
 using NUnit.Framework;
 using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.Commons.UI.Test.Keyboard
 {
+	[SupportedOSPlatform("windows")]
 	[TestFixture]
 	public class KeyboardUtilsTest
 	{

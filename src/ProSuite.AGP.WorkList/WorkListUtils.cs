@@ -46,7 +46,7 @@ namespace ProSuite.AGP.WorkList
 			//var baseUri = new Uri("worklist://localhost/");
 			string folder = GetLocalWorklistsFolder(homeFolderPath);
 
-			if (! FileSystemUtils.EnsureFolderExists(folder))
+			if (! FileSystemUtils.EnsureDirectoryExists(folder))
 			{
 				Assert.True(Directory.Exists(homeFolderPath), $"{homeFolderPath} does not exist");
 				return homeFolderPath;
