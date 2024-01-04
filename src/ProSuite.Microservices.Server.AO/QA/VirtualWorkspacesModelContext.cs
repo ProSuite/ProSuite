@@ -61,7 +61,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			if (model == null)
 			{
-				model = Assert.NotNull(_modelRepository.Get(modelId.Value));
+				model = Assert.NotNull(_modelRepository.Get(modelId.Value),
+				                       $"No module found with Id {modelId}");
 				_knownModels.Add(model);
 			}
 
