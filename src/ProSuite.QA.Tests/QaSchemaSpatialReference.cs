@@ -1,5 +1,6 @@
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -83,7 +84,7 @@ namespace ProSuite.QA.Tests
 				   compareTolerances, compareTolerances, compareTolerances,
 				   compareVerticalCoordinateSystems)
 		{
-			AddMissingFeatureClass(referenceFeatureClass);
+			AddDummyTable(referenceFeatureClass);
 		}
 
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_1))]
@@ -119,7 +120,7 @@ namespace ProSuite.QA.Tests
 				   compareTolerances && DatasetUtils.GetGeometryDef(featureClass).HasM,
 				   compareVerticalCoordinateSystems)
 		{
-			AddMissingFeatureClass(referenceFeatureClass);
+			AddDummyTable(referenceFeatureClass);
 		}
 
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_3))]
@@ -197,10 +198,23 @@ namespace ProSuite.QA.Tests
 		/// <summary>
 		/// Prevents an exception saying that the number of constraints is not equal the number of involved tables.
 		/// </summary>
-		/// <param name="referenceFeatureClass"></param>
-		private void AddMissingFeatureClass(IReadOnlyFeatureClass referenceFeatureClass)
+		private void AddDummyTable(IReadOnlyFeatureClass referenceFc)
 		{
-			AddInvolvedTable(referenceFeatureClass, null, false);
+			AddInvolvedTable(new DummyTable(referenceFc), null, false);
+		}
+
+		private class DummyTable : VirtualTable
+		{
+			private readonly IReadOnlyFeatureClass _referenceFc;
+			public DummyTable(IReadOnlyFeatureClass referenceFc) : base(referenceFc.Name)
+			{
+				_referenceFc = referenceFc;
+			}
+
+			protected override bool EqualsCore(IReadOnlyTable obj)
+			{
+				return _referenceFc == obj;
+			}
 		}
 
 		#endregion

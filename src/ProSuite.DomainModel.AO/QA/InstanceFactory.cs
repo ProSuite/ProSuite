@@ -115,7 +115,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 					IReadOnlyTable table = tableConstraint.Table;
 
-					if (table != instance.InvolvedTables[tableIndex])
+					if (!instance.InvolvedTables[tableIndex].Equals(table))
 					{
 						throw new InvalidOperationException(
 							string.Format(
