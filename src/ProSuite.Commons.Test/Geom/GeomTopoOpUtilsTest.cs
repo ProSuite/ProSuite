@@ -4782,6 +4782,52 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		[Category(TestCategory.FixMe)]
+		public void CanUnionUnCrackedSourceRingAtTargetVertex()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 0, 9)
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 80, 9),
+				            new Pnt3D(100.011, 80, 9),
+				            new Pnt3D(0, 60, 9)
+			            };
+
+			RingGroup source = GeomTestUtils.CreatePoly(ring1);
+			RingGroup target = GeomTestUtils.CreatePoly(ring2);
+
+			const double tolerance = 0.01;
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
+				source, target, tolerance);
+
+			Assert.AreEqual(1, union.PartCount);
+			Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+			Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.0001);
+
+			//var expected = GeomTestUtils.CreateRing(ring2);
+			//double expectedArea = expected.GetArea2D();
+
+			//Assert.AreEqual(expectedArea, union.GetArea2D(), 0.0001);
+
+			//// and vice-versa:
+			//union = GeomTopoOpUtils.GetIntersectionAreasXY(
+			//	target, source, tolerance);
+
+			//Assert.AreEqual(1, union.PartCount);
+			//Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+
+			//Assert.AreEqual(expectedArea, union.GetArea2D(), 0.0001);
+		}
+
+		[Test]
 		public void CanUnionAtShortishZigZagWithAcuteAngleIntersection()
 		{
 			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(

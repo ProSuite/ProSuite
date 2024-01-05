@@ -1667,6 +1667,8 @@ namespace ProSuite.Commons.Geom
 			// for target rings touching another target ring or target boundary loops
 			// or geometries with intersection points within the tolerance (alternatively
 			// both geometries would need to be fully clustered in the 2D plane!)
+			// TODO: Make sure not to invert the direction in small-and-spiky intersections
+			//       see GeomTopoUtilsTest.CanUnionUnCrackedSourceRingAtTargetVertex()
 			foreach (IntersectionPoint3D otherTargetIntersection in
 			         IntersectionPointNavigator.GetOtherTargetIntersections(intersection, true))
 			{
