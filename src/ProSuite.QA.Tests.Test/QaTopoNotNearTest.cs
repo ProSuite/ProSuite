@@ -331,7 +331,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestNotReportedLineCapWithAura()
 		{
 			IFeatureClass fc1;
@@ -374,7 +373,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestNotReportedNearCoincidentLineCap()
 		{
 			IFeatureClass fc1;
@@ -1641,7 +1639,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestReference()
 		{
 			IFeatureClass fc1;

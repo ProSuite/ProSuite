@@ -654,13 +654,14 @@ namespace ProSuite.QA.Tests.Coincidence
 
 				if (junctionSegments.Count > 0)
 				{
-					var rule = new QaConnectionRule(new[] {junctionSegments[0].BaseFeature.Table},
-					                                new List<string> {JunctionIsEndExpression});
-					TableView[] tableFilterHelpers;
+					List<string> tableRules = string.IsNullOrWhiteSpace(JunctionIsEndExpression)
+						                          ? new List<string> { "false" }
+						                          : new List<string> { JunctionIsEndExpression };
+					var rule = new QaConnectionRule(new[] { junctionSegments[0].BaseFeature.Table },
+					                                tableRules);
 					IList<QaConnectionRuleHelper> helpers = QaConnectionRuleHelper.CreateList(
-						new[] {rule},
-						out
-						tableFilterHelpers);
+						new[] { rule },
+						out TableView[] tableFilterHelpers);
 
 					foreach (NeighboredSegmentsSubpart junctionSegment in junctionSegments)
 					{
