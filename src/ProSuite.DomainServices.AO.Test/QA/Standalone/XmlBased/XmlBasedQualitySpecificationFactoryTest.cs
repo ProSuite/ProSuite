@@ -271,11 +271,11 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			{
 				success = false;
 			}
+			Assert.IsFalse(success);
 
 			ValidateConfig(unknownParamConfig, wsConn,
 			               factorySettings: new FactorySettings { IgnoreUnknownParameters = true });
 
-			Assert.IsFalse(success);
 		}
 
 		private string EnsureWorkspaceTestQualitySpecification()
