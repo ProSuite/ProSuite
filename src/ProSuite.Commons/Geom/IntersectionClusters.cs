@@ -111,6 +111,50 @@ namespace ProSuite.Commons.Geom
 						{
 							result.Add(p1);
 							result.Add(p2);
+
+							// Prevent navigation within the cluster (zig-zag back to the same cluster), as in
+							// GeomTopoUtilsTest.CanUnionUnCrackedRingAtSmallOvershootVertex():
+							//
+							//       source
+							//    \  |
+							//     \ |
+							//      \|
+							//       |\
+							//       |/
+							//      /|
+							//     / |
+							//    /
+							// target
+
+							// TODO: The side-effect of setting the DisallowTarget properties on the intersection points should be removed!
+							// TODO: Extract GeometryIntersections class/interrace from SubcurveIntersectionPointNavigator (or rename it)
+							// This class should be interrogated for disallowed navigation at specific intersections 
+							// also by RelationalOperators. -> Remove the DisallowTargetForward flags on the intersection point
+							if (p1.TargetPartIndex == p2.TargetPartIndex)
+							{
+								double segmentRatioDistance =
+									SegmentIntersectionUtils.GetVirtualVertexRatioDistance(
+										p1.VirtualTargetVertex, p2.VirtualTargetVertex,
+										_target.GetPart(p1.TargetPartIndex).SegmentCount);
+
+								// Typically it is very very small, but theoretically it could be almost the entire segments
+								// if the angle is extremely acute.
+								if (Math.Abs(segmentRatioDistance) < 2)
+								{
+									if (segmentRatioDistance > 0)
+									{
+										// p1 is just before p2 along target
+										p1.DisallowTargetForward = true;
+										p2.DisallowTargetBackward = true;
+									}
+									else if (segmentRatioDistance < 0)
+									{
+										// p1 is just after p2 along target
+										p1.DisallowTargetBackward = true;
+										p2.DisallowTargetForward = true;
+									}
+								}
+							}
 						}
 					});
 			}

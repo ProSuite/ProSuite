@@ -1570,7 +1570,9 @@ namespace ProSuite.Commons.Geom
 			out bool hasRightSideDeviation,
 			out bool hasLeftSideDeviation)
 		{
-			if (intersection.Type == IntersectionPointType.Crossing)
+			if (intersection.Type == IntersectionPointType.Crossing &&
+			    ! intersection.DisallowTargetForward &&
+			    ! intersection.DisallowTargetBackward)
 			{
 				hasLeftSideDeviation = true;
 				hasRightSideDeviation = true;
@@ -1582,18 +1584,20 @@ namespace ProSuite.Commons.Geom
 			bool? continuesToRightSide =
 				intersection.TargetContinuesToRightSide(source, target, tolerance);
 
-			hasLeftSideDeviation = continuesToRightSide == false;
-			hasRightSideDeviation = continuesToRightSide == true;
+			hasLeftSideDeviation =
+				continuesToRightSide == false && ! intersection.DisallowTargetForward;
+			hasRightSideDeviation =
+				continuesToRightSide == true && ! intersection.DisallowTargetForward;
 
 			bool? arrivesFromRightSide =
 				intersection.TargetArrivesFromRightSide(source, target, tolerance);
 
-			if (arrivesFromRightSide == false)
+			if (arrivesFromRightSide == false && ! intersection.DisallowTargetBackward)
 			{
 				hasLeftSideDeviation = true;
 			}
 
-			if (arrivesFromRightSide == true)
+			if (arrivesFromRightSide == true && ! intersection.DisallowTargetBackward)
 			{
 				hasRightSideDeviation = true;
 			}

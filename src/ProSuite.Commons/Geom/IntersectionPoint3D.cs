@@ -62,6 +62,10 @@ namespace ProSuite.Commons.Geom
 			set => _linearIntersectionInOppositeDirection = value;
 		}
 
+		// TODO: These properties should probably be determined on the fly by the IntersectionPointNavigator
+		public bool DisallowTargetForward { get; set; }
+		public bool DisallowTargetBackward { get; set; }
+
 		public IntersectionPoint3D(
 			[NotNull] Pnt3D point,
 			double virtualSourceVertexIdx,

@@ -4782,8 +4782,7 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
-		[Category(TestCategory.FixMe)]
-		public void CanUnionUnCrackedSourceRingAtTargetVertex()
+		public void CanUnionUnCrackedRingAtSmallOvershootVertex()
 		{
 			var ring1 = new List<Pnt3D>
 			            {
@@ -4800,17 +4799,57 @@ namespace ProSuite.Commons.Test.Geom
 				            new Pnt3D(0, 60, 9)
 			            };
 
-			RingGroup source = GeomTestUtils.CreatePoly(ring1);
-			RingGroup target = GeomTestUtils.CreatePoly(ring2);
-
 			const double tolerance = 0.01;
 
-			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
-				source, target, tolerance);
+			for (var i = 0; i < 5; i++)
+			{
+				RingGroup source = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring1, i));
 
-			Assert.AreEqual(1, union.PartCount);
-			Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
-			Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.0001);
+				for (var t = 0; t < 4; t++)
+				{
+					RingGroup target =
+						GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring2, t));
+
+					MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
+						source, target, tolerance);
+
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+					Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.0001);
+
+					//// TODO: Disallow source naviagation flags:
+					//// swap source and target:
+					//union = GeomTopoOpUtils.GetUnionAreasXY(
+					//	target, source, tolerance);
+
+					//Assert.AreEqual(1, union.PartCount);
+					//Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+					//Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.0001);
+
+					// TODO: Intersection, Difference
+					// Check intersection:
+					//MultiLinestring intersection = GeomTopoOpUtils.GetIntersectionAreasXY(
+					//	source, target, tolerance);
+
+					//Assert.AreEqual(1, intersection.PartCount);
+					//Assert.AreEqual(true, intersection.GetLinestring(0).ClockwiseOriented);
+					//Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D(), 0.11);
+
+					// 
+					//// Intersection of result with target/source:
+					//MultiLinestring intersection =
+					//	GeomTopoOpUtils.GetIntersectionAreasXY(union, target, tolerance);
+
+					//Assert.AreEqual(1, intersection.PartCount);
+					//Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D(), tolerance);
+
+					//// Difference, to compare
+					//MultiLinestring difference =
+					//	GeomTopoOpUtils.GetDifferenceAreasXY(union, target, tolerance);
+					//Assert.AreEqual(2, difference.PartCount);
+					//Assert.AreEqual(source.GetArea2D(), difference.GetArea2D(), tolerance);
+				}
+			}
 
 			//var expected = GeomTestUtils.CreateRing(ring2);
 			//double expectedArea = expected.GetArea2D();

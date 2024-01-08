@@ -1663,12 +1663,22 @@ namespace ProSuite.Commons.Geom
 			GetAlongTargetDirectionChanges(initialSourcePartForRingResult, intersection, entryLine,
 			                               out targetForwardDirection, out targetBackwardDirection);
 
+			if (intersection.DisallowTargetForward)
+			{
+				targetForwardDirection = null;
+			}
+
+			if (intersection.DisallowTargetBackward)
+			{
+				targetBackwardDirection = null;
+			}
+
 			// Allow jumping between intersection points at the same location. This is necessary
 			// for target rings touching another target ring or target boundary loops
 			// or geometries with intersection points within the tolerance (alternatively
 			// both geometries would need to be fully clustered in the 2D plane!)
 			// TODO: Make sure not to invert the direction in small-and-spiky intersections
-			//       see GeomTopoUtilsTest.CanUnionUnCrackedSourceRingAtTargetVertex()
+			//       see GeomTopoUtilsTest.CanUnionUnCrackedRingAtSmallOvershootVertex()
 			foreach (IntersectionPoint3D otherTargetIntersection in
 			         IntersectionPointNavigator.GetOtherTargetIntersections(intersection, true))
 			{
@@ -1685,6 +1695,16 @@ namespace ProSuite.Commons.Geom
 				GetAlongTargetDirectionChanges(
 					initialSourcePartForRingResult, otherTargetIntersection, entryLine,
 					out otherTargetForwardDirection, out otherTargetBackwardDirection);
+
+				if (otherTargetIntersection.DisallowTargetForward)
+				{
+					otherTargetForwardDirection = null;
+				}
+
+				if (otherTargetIntersection.DisallowTargetBackward)
+				{
+					otherTargetBackwardDirection = null;
+				}
 
 				// Which intersection one has the most preferred direction?
 				// 1. Get the maximum from the current intersection:
