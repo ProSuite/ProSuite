@@ -1660,7 +1660,8 @@ namespace ProSuite.Commons.Geom
 
 			// Filter pseudo breaks of linear intersection stretches (e.g. at ring start/end)
 			var unusable =
-				GeomTopoOpUtils.GetAllLinearIntersectionBreaks(source, target, intersectionPoints);
+				GeomTopoOpUtils.GetAllLinearIntersectionBreaks(source, target, intersectionPoints)
+				               .ToList();
 
 			intersectionPoints = intersectionPoints.Where(i => ! unusable.Contains(i)).ToList();
 
