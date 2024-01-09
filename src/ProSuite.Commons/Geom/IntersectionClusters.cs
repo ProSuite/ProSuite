@@ -81,6 +81,12 @@ namespace ProSuite.Commons.Geom
 
 							result.Add(p1);
 							result.Add(p2);
+
+							if (! p1.Point.EqualsXY(p2.Point, double.Epsilon))
+							{
+								// The geometries are not cracked / clustered
+								HasUnClusteredIntersections = true;
+							}
 						}
 					});
 			}
@@ -111,6 +117,12 @@ namespace ProSuite.Commons.Geom
 						{
 							result.Add(p1);
 							result.Add(p2);
+
+							if (! p1.Point.EqualsXY(p2.Point, double.Epsilon))
+							{
+								// The geometries are not cracked / clustered
+								HasUnClusteredIntersections = true;
+							}
 
 							// Prevent navigation within the cluster (zig-zag back to the same cluster), as in
 							// GeomTopoUtilsTest.CanUnionUnCrackedRingAtSmallOvershootVertex():
@@ -161,6 +173,8 @@ namespace ProSuite.Commons.Geom
 
 			return result.Count == 0 ? null : result;
 		}
+
+		public bool HasUnClusteredIntersections { get; set; }
 
 		private static void WithRingIntersectionPairs(
 			IEnumerable<IntersectionPoint3D> intersectionsPerRing,

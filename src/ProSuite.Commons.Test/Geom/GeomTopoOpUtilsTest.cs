@@ -4784,6 +4784,21 @@ namespace ProSuite.Commons.Test.Geom
 		[Test]
 		public void CanUnionUnCrackedRingAtSmallOvershootVertex()
 		{
+			// Prevent navigation within the cluster (zig-zag back to the same cluster), as in
+			// GeomTopoUtilsTest.CanUnionUnCrackedRingAtSmallOvershootVertex():
+			//
+			//       source
+			//    \  |
+			//     \ |
+			//      \|
+			//       |\
+			//       | * target vertex (source has no vertices in this situation)
+			//       |/
+			//      /|
+			//     / |
+			//    /
+			// target
+
 			var ring1 = new List<Pnt3D>
 			            {
 				            new Pnt3D(0, 0, 9),
@@ -4864,6 +4879,69 @@ namespace ProSuite.Commons.Test.Geom
 			//Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
 
 			//Assert.AreEqual(expectedArea, union.GetArea2D(), 0.0001);
+		}
+
+		[Test]
+		[Category(TestCategory.FixMe)]
+		public void CanUnionUnClusteredMiniLinearIntersection()
+		{
+			// Repro for Gebaeudekoerper {4192ABE0-AB7E-490B-B92F-4EF921738212} in TOP-5767:
+			// The distance between the two vertices is just above the tolerance,
+			// but the distance to the other geometry's respective line interiors is below.
+			//     |
+			//r1 __| /|
+			//      / |
+			//   r2/  |
+			//
+			// These situations can be fixed by clustering the vertices.
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(2, 100, 9),
+				            new Pnt3D(2, 120, 9),
+				            new Pnt3D(100, 120, 9),
+				            new Pnt3D(100, 0, 9)
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 10, 9),
+				            new Pnt3D(2.007, 100.008, 9),
+				            new Pnt3D(2, 10, 9),
+			            };
+
+			const double tolerance = 0.01;
+			for (var i = 0; i < 5; i++)
+			{
+				RingGroup source = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring1, i));
+
+				for (var t = 0; t < 4; t++)
+				{
+					RingGroup target =
+						GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring2, t));
+
+					MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
+						source, target, tolerance);
+
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+					// A slight difference is due snapping point 2 to cluster centre:
+					Assert.AreNotEqual(source.GetArea2D(), union.GetArea2D());
+					Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.005);
+
+					// swap source and target:
+					union = GeomTopoOpUtils.GetUnionAreasXY(
+						target, source, tolerance);
+
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+
+					// Must be slightly different due to snapping to cluster centre:
+					Assert.AreNotEqual(source.GetArea2D(), union.GetArea2D());
+					Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.07);
+				}
+			}
 		}
 
 		[Test]

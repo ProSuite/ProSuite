@@ -611,7 +611,10 @@ namespace ProSuite.Commons.Geom
 					IntersectionPoints = intersectionPoints
 				};
 
-			var ringOperator = new RingOperator(subcurveNavigator);
+			var ringOperator = new RingOperator(subcurveNavigator)
+			                   {
+				                   AllowPointClustering = true
+			                   };
 
 			MultiLinestring resultUnion;
 			try
@@ -870,7 +873,10 @@ namespace ProSuite.Commons.Geom
 
 			var subcurveNavigator = new SubcurveNavigator(sourceRings, targetRings, tolerance);
 
-			var ringOperator = new RingOperator(subcurveNavigator);
+			var ringOperator = new RingOperator(subcurveNavigator)
+			                   {
+				                   AllowPointClustering = true
+			                   };
 
 			if (_msg.IsVerboseDebugEnabled)
 			{

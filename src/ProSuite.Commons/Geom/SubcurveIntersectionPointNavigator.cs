@@ -142,6 +142,9 @@ namespace ProSuite.Commons.Geom
 
 		public IList<IntersectionPoint3D> IntersectionPoints { get; }
 
+		public bool HasUnClusteredIntersectionPoints =>
+			IntersectionClusters.HasUnClusteredIntersections;
+
 		private IList<IntersectionPoint3D> IntersectionsNotUsedForNavigation { get; } =
 			new List<IntersectionPoint3D>();
 

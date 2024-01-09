@@ -42,9 +42,9 @@ namespace ProSuite.Commons.Geom
 		/// </summary>
 		public bool PreferTargetZsAtIntersections { get; set; }
 
-		public ISegmentList Source { get; }
+		public ISegmentList Source { get; private set; }
 
-		public ISegmentList Target { get; }
+		public ISegmentList Target { get; private set; }
 
 		public double Tolerance { get; }
 
@@ -467,6 +467,24 @@ namespace ProSuite.Commons.Geom
 		{
 			return IntersectionPointNavigator.GetSourceBoundaryLoops(true).Any() ||
 			       IntersectionPointNavigator.GetTargetBoundaryLoops().Any();
+		}
+
+		public void Invalidate([NotNull] ISegmentList newSource,
+		                       [NotNull] ISegmentList newTarget)
+		{
+			_intersectionPoints = null;
+			_intersectionPointNavigator = null;
+			_targetTargetIntersectionPoints?.Clear();
+			_congruentRings.Clear();
+
+			IntersectedSourcePartIndexes.Clear();
+			IntersectedTargetPartIndexes.Clear();
+			VisitedIntersectionsAlongSource?.Clear();
+			UsedSubcurves.Clear();
+			RingsCouldContainEachOther = false;
+
+			Source = newSource;
+			Target = newTarget;
 		}
 
 		#region Boundary loop handling
