@@ -710,9 +710,11 @@ namespace ProSuite.Commons.Geom
 			List<IntersectionPoint3D> intersectionList =
 				(List<IntersectionPoint3D>) _subcurveNavigator.IntersectionPoints;
 
+			// Consider adapting cluster tolerance (Sqrt(2)?) -> better make configurable
+			double clusterDistance = _subcurveNavigator.Tolerance;
 			IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> clusteredIntersections =
 				GeomTopoOpUtils.Cluster(intersectionList, ip => ip.Point,
-				                        _subcurveNavigator.Tolerance);
+				                        clusterDistance);
 
 			bool sourceUpdated = false;
 			bool targetUpdated = false;
