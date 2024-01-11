@@ -354,7 +354,8 @@ namespace ProSuite.Commons.Geom
 			// loop has been used. Additionally process all boundary loops if they loop to the
 			// outside - they must be split up because subcurve navigation does not really support
 			// loops to the outside.
-			foreach (BoundaryLoop boundaryLoop in GetSourceBoundaryLoops())
+			// TODO: Is filtered == true still needed? Anywhere? 
+			foreach (BoundaryLoop boundaryLoop in GetSourceBoundaryLoops(true))
 			{
 				if (! boundaryLoop.IsLoopingToOutside &&
 				    unCutSourceIndexes.Contains(boundaryLoop.Start.SourcePartIndex))
@@ -459,13 +460,13 @@ namespace ProSuite.Commons.Geom
 
 		public int GetBoundaryLoopCount()
 		{
-			return IntersectionPointNavigator.GetSourceBoundaryLoops(true).Count() +
+			return IntersectionPointNavigator.GetSourceBoundaryLoops().Count() +
 			       IntersectionPointNavigator.GetTargetBoundaryLoops().Count();
 		}
 
 		public bool HasBoundaryLoops()
 		{
-			return IntersectionPointNavigator.GetSourceBoundaryLoops(true).Any() ||
+			return IntersectionPointNavigator.GetSourceBoundaryLoops().Any() ||
 			       IntersectionPointNavigator.GetTargetBoundaryLoops().Any();
 		}
 
@@ -748,9 +749,9 @@ namespace ProSuite.Commons.Geom
 			return loop1Relation;
 		}
 
-		private IEnumerable<BoundaryLoop> GetSourceBoundaryLoops()
+		private IEnumerable<BoundaryLoop> GetSourceBoundaryLoops(bool filtered)
 		{
-			return IntersectionPointNavigator.GetSourceBoundaryLoops(true);
+			return IntersectionPointNavigator.GetSourceBoundaryLoops(filtered);
 		}
 
 		private IEnumerable<BoundaryLoop> GetTargetBoundaryLoops()
@@ -771,7 +772,7 @@ namespace ProSuite.Commons.Geom
 			intersectedTargetPartIndexes = new HashSet<int>();
 			var result = new List<Tuple<IntersectionPoint3D, Linestring>>();
 
-			foreach (BoundaryLoop boundaryLoop in GetSourceBoundaryLoops())
+			foreach (BoundaryLoop boundaryLoop in GetSourceBoundaryLoops(false))
 			{
 				foreach (IList<IntersectionRun> loopCurves in boundaryLoop.GetLoopSubcurves())
 				{

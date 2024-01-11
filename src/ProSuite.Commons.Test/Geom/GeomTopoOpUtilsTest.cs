@@ -4998,8 +4998,10 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
-		public void CanUnionMultiBoundaryLoops()
+		public void CanUnionMultiBoundaryLoopsWithCongruentTarget()
 		{
+			// In this case the target is congruent with the middle boundary loop
+
 			// In the long term it might be better and cleaner to ensure clean geometries
 			// by exploding all (?) boundary loops or at least those where the orientation
 			// of both connecting loops are the same. Outer loops are already exploded!
@@ -5035,6 +5037,51 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(source.PartCount, difference.PartCount);
 			double expectedAreaDifference = union.GetArea2D() - target.GetArea2D();
 			Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.05);
+		}
+
+		[Test]
+		public void CanUnionMultiBoundaryLoopsWithContainingTarget()
+		{
+			// In this case the target contains with the middle boundary loop
+			// Rings are from Gebaeudekoerper {BF72C681-0C83-49BD-AF09-96B32BE675C1}:
+
+			// In the long term it might be better and cleaner to ensure clean geometries
+			// by exploding all (?) boundary loops or at least those where the orientation
+			// of both connecting loops are the same. Outer loops are already exploded!
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"multi_boundary_loop_middle_contained_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"multi_boundary_loop_middle_contained_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			// At 0.0005 there is no short segment in the original (it is 0.0007)
+			double tolerance = 0.001;
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			// The target 'fills' the middle loop of the 3-boundary-loops ring
+			Assert.AreEqual(source.PartCount + 1, union.PartCount);
+
+			double expectedAreaUnion = 204.933;
+			Assert.AreEqual(expectedAreaUnion, union.GetArea2D(), 0.001);
+
+			// Probably not very accurate due to intersection-jumping in cluster
+			MultiLinestring difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance);
+
+			// TODO:
+			// These currently fails because the island gets removed incorrectly:
+			//Assert.AreEqual(2, difference.PartCount);
+			//double expectedAreaDifference = expectedAreaUnion - target.GetArea2D();
+			//Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.01);
 		}
 
 		[Test]
@@ -7035,6 +7082,7 @@ namespace ProSuite.Commons.Test.Geom
 
 				RingGroup poly2 = GeomTestUtils.CreatePoly(ring2);
 
+				// TODO: 
 				MultiLinestring result =
 					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
 				Assert.AreEqual(1, result.PartCount);
