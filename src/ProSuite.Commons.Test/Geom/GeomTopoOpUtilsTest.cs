@@ -5077,11 +5077,9 @@ namespace ProSuite.Commons.Test.Geom
 			MultiLinestring difference =
 				GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance);
 
-			// TODO:
-			// These currently fails because the island gets removed incorrectly:
-			//Assert.AreEqual(2, difference.PartCount);
-			//double expectedAreaDifference = expectedAreaUnion - target.GetArea2D();
-			//Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.01);
+			Assert.AreEqual(2, difference.PartCount);
+			double expectedAreaDifference = expectedAreaUnion - target.GetArea2D();
+			Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.01);
 		}
 
 		[Test]

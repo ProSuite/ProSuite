@@ -350,29 +350,23 @@ namespace ProSuite.Commons.Geom
 			var unCutSourceIndexes = GetUnusedIndexes(
 				Source.PartCount, IntersectedSourcePartIndexes).ToList();
 
-			// Process the boundary loops of partially 'used' source parts, where only the other
-			// loop has been used. Additionally process all boundary loops if they loop to the
-			// outside - they must be split up because subcurve navigation does not really support
-			// loops to the outside.
-			// TODO: Is filtered == true still needed? Anywhere? 
-			foreach (BoundaryLoop boundaryLoop in GetSourceBoundaryLoops(true))
+			// Completely uncut boundary loops to the inside can be handled like normal rings (below)
+			Predicate<BoundaryLoop> outsideAndIntersectedLoops =
+				bl => bl.IsLoopingToOutside ||
+				      ! unCutSourceIndexes.Contains(bl.Start.SourcePartIndex);
+
+			foreach ((IntersectionPoint3D startIntersection, Linestring sourceLoop) in
+			         GetUnprocessedSourceBoundaryLoops(out ICollection<int> _,
+			                                           outsideAndIntersectedLoops))
 			{
-				if (! boundaryLoop.IsLoopingToOutside &&
-				    unCutSourceIndexes.Contains(boundaryLoop.Start.SourcePartIndex))
-				{
-					// Completely uncut boundary loops to the inside can be handled like
-					// normal rings (below)
-					continue;
-				}
+				int targetIndex = startIntersection.TargetPartIndex;
 
-				foreach (Linestring resultRing in
-				         ProcessSourceBoundaryLoops(boundaryLoop, includeCongruent,
-				                                    withSameOrientation,
-				                                    includeContained, includeNotContained))
+				if (ProcessSourceRing(sourceLoop, targetIndex, includeCongruent,
+				                      withSameOrientation, includeContained,
+				                      includeNotContained))
 				{
-					yield return resultRing;
-
-					IntersectedSourcePartIndexes.Add(boundaryLoop.Start.SourcePartIndex);
+					yield return sourceLoop;
+					IntersectedSourcePartIndexes.Add(startIntersection.SourcePartIndex);
 				}
 			}
 
@@ -489,42 +483,6 @@ namespace ProSuite.Commons.Geom
 		}
 
 		#region Boundary loop handling
-
-		private IEnumerable<Linestring> ProcessSourceBoundaryLoops(
-			[NotNull] BoundaryLoop boundaryLoop, bool includeCongruent,
-			bool withSameOrientation, bool includeContained,
-			bool includeNotContained)
-		{
-			// If the end is the next intersection from the start it means the ring is un-used:
-			if (! HasLoop1BeenUsed(boundaryLoop, true))
-			{
-				Linestring loop1 = boundaryLoop.Loop1;
-
-				int targetIndex = boundaryLoop.Start.TargetPartIndex;
-
-				if (ProcessSourceRing(loop1, targetIndex, includeCongruent,
-				                      withSameOrientation, includeContained,
-				                      includeNotContained))
-				{
-					yield return loop1;
-				}
-			}
-
-			// And check the other loop too:
-			if (! HasLoop2BeenUsed(boundaryLoop, true))
-			{
-				Linestring loop2 = boundaryLoop.Loop2;
-
-				int targetIndex = boundaryLoop.End.TargetPartIndex;
-
-				if (ProcessSourceRing(loop2, targetIndex, includeCongruent,
-				                      withSameOrientation, includeContained,
-				                      includeNotContained))
-				{
-					yield return loop2;
-				}
-			}
-		}
 
 		/// <summary>
 		/// Determines whether the segments of the loop1 of the specified boundary loop have been
@@ -766,7 +724,8 @@ namespace ProSuite.Commons.Geom
 		/// </summary>
 		/// <returns></returns>
 		private IList<Tuple<IntersectionPoint3D, Linestring>> GetUnprocessedSourceBoundaryLoops(
-			[NotNull] out ICollection<int> intersectedTargetPartIndexes)
+			[NotNull] out ICollection<int> intersectedTargetPartIndexes,
+			[CanBeNull] Predicate<BoundaryLoop> predicate = null)
 		{
 			// In case of touching multipart target rings, the source boundary loop is duplicated!
 			intersectedTargetPartIndexes = new HashSet<int>();
@@ -774,6 +733,11 @@ namespace ProSuite.Commons.Geom
 
 			foreach (BoundaryLoop boundaryLoop in GetSourceBoundaryLoops(false))
 			{
+				if (predicate != null && ! predicate(boundaryLoop))
+				{
+					continue;
+				}
+
 				foreach (IList<IntersectionRun> loopCurves in boundaryLoop.GetLoopSubcurves())
 				{
 					if (! HasLoopBeenUsed(loopCurves, true))
