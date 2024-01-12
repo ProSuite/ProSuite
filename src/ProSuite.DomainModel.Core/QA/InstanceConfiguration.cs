@@ -157,7 +157,10 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public IEnumerable<TestParameterValue> GetDefinedParameterValues()
 		{
-			IList<TestParameter> parameters = InstanceDescriptor.InstanceInfo.Parameters;
+			IInstanceInfo instanceInfo =
+				Assert.NotNull(InstanceDescriptorUtils.GetInstanceInfo(InstanceDescriptor));
+
+			IList<TestParameter> parameters = instanceInfo.Parameters;
 
 			foreach (TestParameterValue parameterValue in ParameterValues)
 			{

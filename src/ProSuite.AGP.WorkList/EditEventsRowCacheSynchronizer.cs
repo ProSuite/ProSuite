@@ -8,7 +8,6 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -87,6 +86,15 @@ namespace ProSuite.AGP.WorkList
 			//	return;
 			//}
 
+			// Note This event is fired (to) many times!
+			// Add work list to map -> it fires 6 times. There are
+			// 6 layers in group layer QA..
+			// Remove group layer, save project and add work list again.
+			// The event fires more often! Wtf..?!
+			if (args.Creates.IsEmpty && args.Deletes.IsEmpty && args.Modifies.IsEmpty)
+			{
+				return;
+			}
 
 			var createsByLayer = SelectionUtils.GetSelection(args.Creates);
 			var deletesByLayer = SelectionUtils.GetSelection(args.Deletes);

@@ -23,16 +23,16 @@ namespace ProSuite.AGP.QA
 		[CanBeNull]
 		public ISupportedInstanceDescriptors SupportedInstanceDescriptors { get; set; }
 
-		public abstract Task<ServiceCallStatus> VerifyPerimeter(
+		public abstract Task<ServiceCallStatus> Verify(
 			[NotNull] IQualitySpecificationReference qualitySpecificationRef,
-			[NotNull] Geometry perimeter,
+			[CanBeNull] Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
 			[NotNull] QualityVerificationProgressTracker progress,
 			[CanBeNull] string resultsPath);
 
-		public abstract Task<ServiceCallStatus> VerifyPerimeter(
+		public abstract Task<ServiceCallStatus> Verify(
 			[NotNull] QualitySpecification qualitySpecification,
-			[NotNull] Geometry perimeter,
+			[CanBeNull] Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
 			[NotNull] QualityVerificationProgressTracker progress,
 			[CanBeNull] string resultsPath);

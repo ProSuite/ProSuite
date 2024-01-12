@@ -23,5 +23,7 @@ namespace ProSuite.DomainModel.AO.QA
 		// TODO: Use IGdbTable (In Commons.Gdb) instead of IObjectClass, wrap IObjectClass
 		IList<ProjectWorkspaceBase<Project<TModel>, TModel>> GetProjectWorkspaceCandidates(
 			[NotNull] IList<IObjectClass> objectClasses);
+
+		QualityCondition GetQualityCondition(string conditionName);
 	}
 }

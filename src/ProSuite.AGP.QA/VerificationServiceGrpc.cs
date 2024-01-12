@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -34,7 +35,7 @@ namespace ProSuite.AGP.QA
 			_client = client;
 		}
 
-		public override async Task<ServiceCallStatus> VerifyPerimeter(
+		public override async Task<ServiceCallStatus> Verify(
 			IQualitySpecificationReference qualitySpecificationRef,
 			Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
@@ -42,7 +43,6 @@ namespace ProSuite.AGP.QA
 			string resultsPath)
 		{
 			Assert.ArgumentNotNull(qualitySpecificationRef, nameof(qualitySpecificationRef));
-			Assert.ArgumentNotNull(perimeter, nameof(perimeter));
 			Assert.ArgumentNotNull(projectWorkspace, nameof(projectWorkspace));
 			Assert.ArgumentNotNull(progress, nameof(progress));
 
@@ -53,12 +53,12 @@ namespace ProSuite.AGP.QA
 
 			VerificationRequest request =
 				await CreateVerificationRequest(specificationRef, perimeter, projectWorkspace,
-				                                resultsPath);
+												resultsPath);
 
 			return await QAUtils.Verify(Assert.NotNull(_client.QaGrpcClient), request, progress);
 		}
 
-		public override async Task<ServiceCallStatus> VerifyPerimeter(
+		public override async Task<ServiceCallStatus> Verify(
 			QualitySpecification qualitySpecification,
 			Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
@@ -66,7 +66,6 @@ namespace ProSuite.AGP.QA
 			string resultsPath)
 		{
 			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
-			Assert.ArgumentNotNull(perimeter, nameof(perimeter));
 			Assert.ArgumentNotNull(projectWorkspace, nameof(projectWorkspace));
 			Assert.ArgumentNotNull(progress, nameof(progress));
 

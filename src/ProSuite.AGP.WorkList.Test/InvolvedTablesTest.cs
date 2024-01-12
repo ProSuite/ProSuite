@@ -52,7 +52,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 		//	Assert.AreEqual(9, issues.Count);
 
-		//	//var failedIssues = issues.Count(i => (i.InIssueInvolvedTables.Any<InvolvedTable>(t => t.KeyField == null)));
+		//	//var failedIssues = issues.Count(i => (i.InvolvedTables.Any<InvolvedTable>(t => t.KeyField == null)));
 		//	//Assert.AreEqual(0, failedIssues);
 		//}
 	}

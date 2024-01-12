@@ -712,14 +712,25 @@ public static class DrawingOutline
 	private static MarkerPlacements.PolygonCenterOptions GetOptions(
 		CIMMarkerPlacementPolygonCenter cim, double scaleFactor = 1.0)
 	{
+		var centerType = cim.Method switch
+		{
+			PlacementPolygonCenterMethod.BoundingBoxCenter =>
+				MarkerPlacements.PolygonCenterType.BoundingBoxCenter,
+			PlacementPolygonCenterMethod.CenterOfMass =>
+				MarkerPlacements.PolygonCenterType.Centroid,
+			PlacementPolygonCenterMethod.OnPolygon =>
+				MarkerPlacements.PolygonCenterType.LabelPoint,
+			_ => throw new ArgumentOutOfRangeException(nameof(cim.Method), cim.Method, "Unknown value")
+		};
+
 		return new MarkerPlacements.PolygonCenterOptions
 		       {
 			       PlacePerPart = cim.PlacePerPart,
 
-			       UseBoundingBox = cim.Method == PlacementPolygonCenterMethod.BoundingBoxCenter,
-			       ForceInsidePolygon = cim.Method == PlacementPolygonCenterMethod.OnPolygon,
+			       CenterType = centerType,
 			       OffsetX = cim.OffsetX * scaleFactor,
-			       OffsetY = cim.OffsetY * scaleFactor
+			       OffsetY = cim.OffsetY * scaleFactor,
+				   ClipAtBoundary = cim.ClipAtBoundary
 		       };
 	}
 

@@ -23,6 +23,15 @@ namespace ProSuite.Processing
 		private CartoProcessConfig([NotNull] IList<Setting> settings,
 		                           string name, string typeAlias, string description)
 		{
+			var reservedParams = settings.Where(
+				s => string.Equals(s.Name, nameof(Name), Comparison) ||
+				     string.Equals(s.Name, nameof(TypeAlias), Comparison) ||
+				     string.Equals(s.Name, nameof(Description), Comparison)).ToList();
+			foreach (Setting setting in reservedParams)
+			{
+				settings.Remove(setting);
+			}
+			
 			_settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
 			Name = name;

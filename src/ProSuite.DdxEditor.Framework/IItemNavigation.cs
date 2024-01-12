@@ -52,5 +52,9 @@ namespace ProSuite.DdxEditor.Framework
 		/// <returns><c>true</c> if the item was found and refreshed;
 		/// <c>false</c> if no corresponding item was found for the entity.</returns>
 		bool RefreshItem([NotNull] Entity entity);
+
+		void ShowItemHelp([CanBeNull] string title, [NotNull] string html);
+
+		void UpdateItemHelp([CanBeNull] string title, [NotNull] string html);
 	}
 }
