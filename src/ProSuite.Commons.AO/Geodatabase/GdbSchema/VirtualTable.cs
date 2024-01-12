@@ -312,7 +312,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		                                                    bool recycling) =>
 			SearchT(queryFilter, recycling);
 
-		protected virtual CursorImpl SearchT([CanBeNull] IQueryFilter queryFilter, bool recycling) =>
+		protected virtual CursorImpl
+			SearchT([CanBeNull] IQueryFilter queryFilter, bool recycling) =>
 			new CursorImpl(this, EnumRows(queryFilter, recycling));
 
 		protected virtual IEnumerable<IRow>
@@ -390,7 +391,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual int FeatureClassID =>
 			throw new NotImplementedException("Implement in derived class");
 
-		public virtual esriGeometryType ShapeType => GeometryDef.GeometryType;
+		public virtual esriGeometryType ShapeType =>
+			GeometryDef?.GeometryType ?? esriGeometryType.esriGeometryNull;
 
 		public virtual IGeometryDef GeometryDef
 		{
