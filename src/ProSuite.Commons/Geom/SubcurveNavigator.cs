@@ -1043,7 +1043,7 @@ namespace ProSuite.Commons.Geom
 					}
 
 					DetermineRingRelation(sourceRing, targetLoop, isSourceContainedXY,
-					                      sourcePartIndex, sourcePartIndex,
+					                      sourcePartIndex, targetPartIndex,
 					                      equalOrientationCongruentRings, outsideOtherPolygonRings);
 
 					bool? isTargetContained =
