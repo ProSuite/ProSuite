@@ -305,6 +305,35 @@ namespace ProSuite.Microservices.AO
 			return result;
 		}
 
+		public static ObjectClassMsg ToRelationshipClassMsg(
+			[NotNull] IRelationshipClass relationshipClass)
+		{
+			ObjectClassMsg relTableMsg;
+			if (relationshipClass.IsAttributed ||
+			    relationshipClass.Cardinality == esriRelCardinality.esriRelCardinalityManyToMany)
+			{
+				// it's also a real table:
+				var table = (ITable) relationshipClass;
+				relTableMsg = ToObjectClassMsg(table, relationshipClass.RelationshipClassID, true);
+			}
+			else
+			{
+				// so far just the name is used
+				relTableMsg =
+					new ObjectClassMsg()
+					{
+						Name = DatasetUtils.GetName(relationshipClass),
+						ClassHandle = relationshipClass.RelationshipClassID,
+					};
+			}
+
+			IWorkspace workspace = ((IDataset) relationshipClass).Workspace;
+
+			relTableMsg.WorkspaceHandle = workspace?.GetHashCode() ?? -1;
+
+			return relTableMsg;
+		}
+
 		private static FieldMsg ToFieldMsg(IField field)
 		{
 			var result = new FieldMsg

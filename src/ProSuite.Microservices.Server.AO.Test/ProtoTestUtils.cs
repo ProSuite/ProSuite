@@ -15,25 +15,37 @@ namespace ProSuite.Microservices.Server.AO.Test
 		                                        int modelId)
 		{
 			// Initial harvest:
+			Model model = HarvestModel(gdbPath);
+
+			// Create SchemaMsg (client side):
+			return CreateSchemaMsg(model, modelId);
+		}
+
+		public static Model HarvestModel(string gdbPath,
+		                                 bool harvestAttributes = false,
+		                                 bool harvestObjectTypes = false)
+		{
 			IWorkspace workspace = WorkspaceUtils.OpenFileGdbWorkspace(gdbPath);
 
 			VerifiedModelFactory modelFactory =
 				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
 				                         new SimpleVerifiedDatasetHarvester())
 				{
-					HarvestAttributes = false,
-					HarvestObjectTypes = false
+					HarvestAttributes = harvestAttributes,
+					HarvestObjectTypes = harvestObjectTypes
 				};
 
 			Model model = modelFactory.CreateModel(workspace, "TestModel", -100, null, null);
 			modelFactory.AssignMostFrequentlyUsedSpatialReference(model, model.Datasets);
+			return model;
+		}
 
-			// Create SchemaMsg (client side):
+		public static SchemaMsg CreateSchemaMsg(Model model, int modelId)
+		{
 			SchemaMsg schemaMsg = new SchemaMsg();
 			foreach (Dataset dataset in model.GetDatasets())
 			{
 				// If persistent, use model id
-
 				ObjectClassMsg objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(
 					dataset, modelId, model.SpatialReferenceDescriptor.SpatialReference);
 
@@ -41,6 +53,41 @@ namespace ProSuite.Microservices.Server.AO.Test
 			}
 
 			return schemaMsg;
+		}
+
+		public static SchemaMsg CreateGdbSchemaMsg(IFeatureWorkspace workspace, int modelId)
+		{
+			SchemaMsg dataSchema = new SchemaMsg();
+
+			foreach (IObjectClass objectClass in DatasetUtils.GetObjectClasses(
+				         (IWorkspace) workspace))
+			{
+				var objectClassMsg =
+					ProtobufGdbUtils.ToObjectClassMsg((ITable) objectClass,
+					                                  objectClass.ObjectClassID,
+					                                  true,
+					                                  DatasetUtils.GetAliasName(objectClass));
+
+				if (modelId >= 0)
+					objectClassMsg.WorkspaceHandle = modelId;
+
+				dataSchema.ClassDefinitions.Add(objectClassMsg);
+			}
+
+			foreach (IRelationshipClass relationshipClass in
+			         DatasetUtils.GetRelationshipClasses(workspace))
+			{
+				var relTableMsg = ProtobufGdbUtils.ToRelationshipClassMsg(relationshipClass);
+
+				relTableMsg.Name = DatasetUtils.GetName(relationshipClass);
+
+				if (modelId >= 0)
+					relTableMsg.WorkspaceHandle = modelId;
+
+				dataSchema.RelclassDefinitions.Add(relTableMsg);
+			}
+
+			return dataSchema;
 		}
 	}
 }

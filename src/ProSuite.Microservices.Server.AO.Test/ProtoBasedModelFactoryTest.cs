@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Geom.EsriShape;
+using ProSuite.Commons.Testing;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
@@ -62,6 +65,43 @@ namespace ProSuite.Microservices.Server.AO.Test
 			Assert.AreEqual(modelId, polyDataset.Model.Id);
 		}
 
+		[Test]
+		public void CanCreateWorkspaceWithRelClassesFromSchemaMsg()
+		{
+			string gdbPath = TestDataPreparer
+			                 .ExtractZip("TableJoinUtilsTest.gdb.zip",
+			                             @"..\ProSuite.Commons.AO.Test\TestData")
+			                 .GetPath();
+
+			int modelId = 23;
+
+			var workspace = (IFeatureWorkspace) WorkspaceUtils.OpenFileGdbWorkspace(gdbPath);
+
+			// Create SchemaMsg (client side):
+			SchemaMsg schemaMsg = ProtoTestUtils.CreateGdbSchemaMsg(workspace, modelId);
+
+			GdbWorkspace gdbWorkspace = CreateGdbSchema(schemaMsg).First();
+
+			Assert.AreEqual(4, gdbWorkspace.GetDatasets().Count());
+
+			IFeatureClass pointFeatureClass = gdbWorkspace.OpenFeatureClass("Points");
+
+			Assert.AreEqual("Points", DatasetUtils.GetName(pointFeatureClass));
+
+			// ObjectClasses get a process-wide unique ID assigned.
+			Assert.Greater(pointFeatureClass.FeatureClassID, 0);
+
+			IFeatureClass streetFeatureClass = gdbWorkspace.OpenFeatureClass("Streets");
+
+			Assert.AreEqual("Streets", DatasetUtils.GetName(streetFeatureClass));
+			Assert.Greater(streetFeatureClass.FeatureClassID, 0);
+
+			// Now open the m:n relationship class as table:
+			ITable relationshipTable = gdbWorkspace.OpenTable("Rel_Streets_Routes");
+			Assert.Greater(relationshipTable.Fields.FindField("STREET_OID"), 0);
+			Assert.Greater(relationshipTable.Fields.FindField("ROUTE_OID"), 0);
+		}
+
 		private static Model CreateModel(string gdbPath,
 		                                 int modelId)
 		{
@@ -77,8 +117,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 			IVerifiedModelFactory modelFactory =
 				new ProtoBasedModelFactory(schemaMsg, new MasterDatabaseWorkspaceContextFactory());
 
-			IList<GdbWorkspace> gdbWorkspaces =
-				ProtobufConversionUtils.CreateSchema(schemaMsg.ClassDefinitions);
+			IList<GdbWorkspace> gdbWorkspaces = CreateGdbSchema(schemaMsg);
 
 			Assert.AreEqual(1, gdbWorkspaces.Count);
 			var workspace = gdbWorkspaces[0];
@@ -92,6 +131,13 @@ namespace ProSuite.Microservices.Server.AO.Test
 			                                     null, null);
 
 			return model;
+		}
+
+		private static IList<GdbWorkspace> CreateGdbSchema(SchemaMsg schemaMsg)
+		{
+			return ProtobufConversionUtils.CreateSchema(
+				schemaMsg.ClassDefinitions,
+				schemaMsg.RelclassDefinitions);
 		}
 	}
 }
