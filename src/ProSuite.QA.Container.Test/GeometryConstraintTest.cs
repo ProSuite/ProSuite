@@ -28,7 +28,7 @@ namespace ProSuite.QA.Container.Test
 		{
 			IPolygon polygon =
 				GeometryFactory.CreatePolygon(GeometryFactory.CreateEnvelope(0, 0, 10, 10,
-					                              100, 100));
+												  100, 100));
 
 			IMultiPatch multiPatch = GeometryFactory.CreateMultiPatch(polygon, 10);
 			multiPatch.SpatialReference = CreateSpatialReference();
@@ -66,6 +66,23 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("$MMAX IS NULL", multiPatch);
 			AssertFulfilled("$UNDEFINEDMVALUECOUNT = 20", multiPatch);
 			AssertFulfilled("$CONTROLPOINTCOUNT = 0", multiPatch);
+
+			AssertFulfilled("NOT $ISPOINTIDAWARE", multiPatch);
+
+			((IPointIDAware)multiPatch).PointIDAware = true;
+			AssertFulfilled("$ISPOINTIDAWARE", multiPatch);
+			{
+				IPoint p = ((IPointCollection)multiPatch).Point[3];
+				p.ID = 5;
+				((IPointCollection)multiPatch).ReplacePoints(3, 1, 1, ref p);
+			}
+			AssertFulfilled("$POINTIDMAX = 5", multiPatch);
+			{
+				IPoint p = ((IPointCollection)multiPatch).Point[7];
+				p.ID = -3;
+				((IPointCollection)multiPatch).ReplacePoints(7, 1, 1, ref p);
+			}
+			AssertFulfilled("$POINTIDMIN = -3", multiPatch);
 		}
 
 		[Test]
@@ -105,6 +122,9 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("$MMAX IS NULL", geometry);
 			AssertFulfilled("$UNDEFINEDMVALUECOUNT = 0", geometry);
 			AssertFulfilled("$CONTROLPOINTCOUNT = 0", geometry);
+			AssertFulfilled("NOT $ISPOINTIDAWARE", geometry);
+			AssertFulfilled("$POINTIDMAX = 0", geometry);
+			AssertFulfilled("$POINTIDMIN = 0", geometry);
 		}
 
 		[Test]
@@ -307,18 +327,18 @@ namespace ProSuite.QA.Container.Test
 				GeometryFactory.CreatePoint(100, 100), 10);
 
 			AssertFulfilled("$ISCLOSED AND $CIRCULARARCCOUNT = 1 AND $SEGMENTCOUNT = 1",
-			                polygon);
+							polygon);
 			AssertNotFulfilled(
 				"NOT ($ISCLOSED AND $CIRCULARARCCOUNT = 1 AND $SEGMENTCOUNT = 1)", polygon);
 
 			// NOTE: for some reason, the constructed polygon is not simple.
 			//       However the geometry properties can deal with that.
 			AssertFulfilled("$ISCLOSED AND $CIRCULARARCCOUNT = 1 AND " +
-			                "$SEGMENTCOUNT = 1 AND $PARTCOUNT = 1 AND " +
-			                "$VERTEXCOUNT = 2  AND NOT $ISMULTIPART AND " +
-			                "$AREA > 10 AND $LENGTH > 10 AND $DIMENSION = 2 AND " +
-			                "$INTERIORRINGCOUNT = 0 AND $EXTERIORRINGCOUNT = 1",
-			                polygon);
+							"$SEGMENTCOUNT = 1 AND $PARTCOUNT = 1 AND " +
+							"$VERTEXCOUNT = 2  AND NOT $ISMULTIPART AND " +
+							"$AREA > 10 AND $LENGTH > 10 AND $DIMENSION = 2 AND " +
+							"$INTERIORRINGCOUNT = 0 AND $EXTERIORRINGCOUNT = 1",
+							polygon);
 		}
 
 		[Test]
@@ -330,18 +350,18 @@ namespace ProSuite.QA.Container.Test
 			// NOTE: for some reason, the constructed polygon is not simple.
 			//       However the geometry properties can deal with that.
 			AssertFulfilled("$ISCLOSED AND $CIRCULARARCCOUNT = 1 AND " +
-			                "$SEGMENTCOUNT = 1 AND $PARTCOUNT = 1 AND " +
-			                "$VERTEXCOUNT = 2  AND NOT $ISMULTIPART AND " +
-			                "$AREA > 10 AND $LENGTH > 10 AND $DIMENSION = 2 AND " +
-			                "$INTERIORRINGCOUNT = 1 AND $EXTERIORRINGCOUNT = 0",
-			                polygon);
+							"$SEGMENTCOUNT = 1 AND $PARTCOUNT = 1 AND " +
+							"$VERTEXCOUNT = 2  AND NOT $ISMULTIPART AND " +
+							"$AREA > 10 AND $LENGTH > 10 AND $DIMENSION = 2 AND " +
+							"$INTERIORRINGCOUNT = 1 AND $EXTERIORRINGCOUNT = 0",
+							polygon);
 		}
 
 		[Test]
 		public void CanCheckPolyline()
 		{
 			IPolyline line = GeometryFactory.CreatePolyline(0, 100, 1000,
-			                                                10, 100, 1010);
+															10, 100, 1010);
 			line.SpatialReference = CreateSpatialReference();
 			line.SnapToSpatialReference(); // to allow check for double equality
 
@@ -386,18 +406,18 @@ namespace ProSuite.QA.Container.Test
 			AssertNotFulfilled("$SLIVERRATIO > 100", line);
 
 			AssertFulfilled("NOT ($ISCLOSED AND $CIRCULARARCCOUNT = 1 AND $SEGMENTCOUNT = 1)",
-			                line);
+							line);
 		}
 
 		[Test]
 		public void CanCheckPolylineMValues()
 		{
 			IPolyline line = GeometryFactory.CreatePolyline(0, 100, 1000,
-			                                                10, 100, 1010);
+															10, 100, 1010);
 			line.SpatialReference = CreateSpatialReference();
 
 			GeometryUtils.MakeMAware(line);
-			((IMSegmentation) line).SetMsAsDistance(asRatio: true);
+			((IMSegmentation)line).SetMsAsDistance(asRatio: true);
 
 			line.SnapToSpatialReference(); // to allow check for double equality
 
@@ -410,16 +430,16 @@ namespace ProSuite.QA.Container.Test
 		public void CanCheckPolylineControlPoints()
 		{
 			IPolyline line = GeometryFactory.CreatePolyline(0, 100, 1000,
-			                                                10, 100, 1010);
+															10, 100, 1010);
 			line.SpatialReference = CreateSpatialReference();
 
 			GeometryUtils.MakePointIDAware(line);
 
 			const int vertexIdx = 1;
 
-			IPoint point = ((IPointCollection) line).Point[vertexIdx];
+			IPoint point = ((IPointCollection)line).Point[vertexIdx];
 			point.ID = 1;
-			((IPointCollection) line).UpdatePoint(vertexIdx, point);
+			((IPointCollection)line).UpdatePoint(vertexIdx, point);
 
 			line.SnapToSpatialReference(); // to allow check for double equality
 
@@ -481,8 +501,8 @@ namespace ProSuite.QA.Container.Test
 			IPolygon area = GeometryFactory.CreatePolygon(0, 0, 10, 10);
 
 			var constraint = new GeometryConstraint("$AREA > 50 AND $LENGTH > 30 AND " +
-			                                        "$SLIVERRATIO < 100 AND $PARTCOUNT = 1 AND " +
-			                                        "$VERTEXCOUNT = 5 AND $ISCLOSED AND NOT $ISMULTIPART");
+													"$SLIVERRATIO < 100 AND $PARTCOUNT = 1 AND " +
+													"$VERTEXCOUNT = 5 AND $ISCLOSED AND NOT $ISMULTIPART");
 
 			string values = constraint.FormatValues(area, CultureInfo.InvariantCulture);
 
@@ -574,9 +594,9 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("$CONTROLPOINTCOUNT = 0", point);
 
 			AssertFulfilled("$AREA = 0 AND $LENGTH = 0 AND $SLIVERRATIO IS NULL AND " +
-			                "$PARTCOUNT = 1 AND $VERTEXCOUNT = 1 AND $DIMENSION = 0 AND " +
-			                "$ISCLOSED IS NULL AND NOT $ISMULTIPART",
-			                point);
+							"$PARTCOUNT = 1 AND $VERTEXCOUNT = 1 AND $DIMENSION = 0 AND " +
+							"$ISCLOSED IS NULL AND NOT $ISMULTIPART",
+							point);
 			AssertFulfilled("$SLIVERRATIO IS NULL", point);
 			AssertFulfilled("1 = 1", point);
 			AssertFulfilled(" ", point);
@@ -592,9 +612,9 @@ namespace ProSuite.QA.Container.Test
 			IPolygon area = GeometryFactory.CreatePolygon(0, 0, 10, 10);
 
 			var constraint = new GeometryConstraint("$AREA > 50 AND $LENGTH > 30 AND " +
-			                                        "$SLIVERRATIO < 100 AND NOT $ISMULTIPART AND " +
-			                                        "$PARTCOUNT = 1 AND $VERTEXCOUNT = 5 AND " +
-			                                        "$SEGMENTCOUNT = 4 AND $ELLIPTICARCCOUNT = 0");
+													"$SLIVERRATIO < 100 AND NOT $ISMULTIPART AND " +
+													"$PARTCOUNT = 1 AND $VERTEXCOUNT = 5 AND " +
+													"$SEGMENTCOUNT = 4 AND $ELLIPTICARCCOUNT = 0");
 
 			var watch = new Stopwatch();
 			watch.Start();
@@ -610,7 +630,7 @@ namespace ProSuite.QA.Container.Test
 
 			Console.WriteLine(@"{0} s for {1:N0} operations", milliseconds / 1000d, count);
 
-			double millisecondsPerOperation = (double) milliseconds / count;
+			double millisecondsPerOperation = (double)milliseconds / count;
 			Console.WriteLine(@"{0} ms per operation", millisecondsPerOperation);
 
 			const double maximumMilliseconds = 0.15;
@@ -622,33 +642,33 @@ namespace ProSuite.QA.Container.Test
 		{
 			ISpatialReference sref =
 				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95, true);
-			((ISpatialReferenceResolution) sref).set_XYResolution(true, 0.01);
+			((ISpatialReferenceResolution)sref).set_XYResolution(true, 0.01);
 			return sref;
 		}
 
 		private static void AssertFulfilled([NotNull] string expression,
-		                                    [CanBeNull] IGeometry geometry)
+											[CanBeNull] IGeometry geometry)
 		{
 			AssertFulfilled(expression, geometry, out string _);
 		}
 
 		private static void AssertFulfilled([NotNull] string expression,
-		                                    [CanBeNull] IGeometry geometry,
-		                                    [NotNull] out string values)
+											[CanBeNull] IGeometry geometry,
+											[NotNull] out string values)
 		{
 			Assert.True(IsFulfilled(expression, geometry, out values), values);
 		}
 
 		private static void AssertNotFulfilled([NotNull] string expression,
-		                                       [CanBeNull] IGeometry geometry)
+											   [CanBeNull] IGeometry geometry)
 		{
 			string values;
 			Assert.False(IsFulfilled(expression, geometry, out values), values);
 		}
 
 		private static bool IsFulfilled([NotNull] string expression,
-		                                [CanBeNull] IGeometry geometry,
-		                                [NotNull] out string values)
+										[CanBeNull] IGeometry geometry,
+										[NotNull] out string values)
 		{
 			var constraint = new GeometryConstraint(expression);
 
