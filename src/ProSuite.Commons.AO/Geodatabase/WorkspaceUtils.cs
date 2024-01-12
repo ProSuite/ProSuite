@@ -1814,6 +1814,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			string replaced = ReplacePassword(connectionString, passwordPadding);
 			Assert.NotNull(replaced, "replaced string is null");
+
 			return replaced;
 		}
 
@@ -2598,14 +2599,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return true;
 			}
 
-			const int workspaceTypeInMemory = 99;
-			if ((int) workspaceName.WorkspaceFactory.WorkspaceType ==
-			    workspaceTypeInMemory)
-			{
-				return true;
-			}
+			int intWorkspaceType =
+				(int) (workspaceName.WorkspaceFactory?.WorkspaceType ?? workspaceName.Type);
 
-			return false;
+			const int workspaceTypeInMemory = 99;
+
+			return intWorkspaceType == workspaceTypeInMemory;
 		}
 
 		/// <summary>

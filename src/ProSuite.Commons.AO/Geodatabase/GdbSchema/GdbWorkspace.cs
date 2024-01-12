@@ -641,7 +641,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			set => throw new NotImplementedException();
 		}
 
-		IWorkspaceFactory IWorkspaceName.WorkspaceFactory => throw new NotImplementedException();
+		IWorkspaceFactory IWorkspaceName.WorkspaceFactory => null;
 
 		IPropertySet IWorkspaceName.ConnectionProperties
 		{
@@ -661,7 +661,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			set => throw new NotImplementedException();
 		}
 
-		IWorkspaceFactory IWorkspaceName2.WorkspaceFactory => throw new NotImplementedException();
+		IWorkspaceFactory IWorkspaceName2.WorkspaceFactory => null;
 
 		string IWorkspaceName2.Category => throw new NotImplementedException();
 
