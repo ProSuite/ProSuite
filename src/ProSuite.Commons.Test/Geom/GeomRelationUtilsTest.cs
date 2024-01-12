@@ -293,6 +293,65 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanDetermineMultipartSourcePolygonTouchingPolygonAtInnerRingTouchPoint()
+		{
+			// A touching interior ring (no boundary loop) should not result in an incorrect
+			// determination of contains:
+			//      ___
+			//      \  | target
+			//       \ |
+			//        \|
+			//    _____*_______ 
+			//    |   /|      |
+			//    | 1/ |   0  |
+			//    | /__|      |
+			//    |___________|
+			//     source rings with interior ring 1 touching ring 0 from the inside.
+
+			var source0Points = new List<Pnt3D>
+			                    {
+				                    new Pnt3D(0, 0, 10),
+				                    new Pnt3D(0, 100, 20),
+				                    new Pnt3D(100, 100, 10),
+				                    new Pnt3D(100, 0, 10),
+				                    new Pnt3D(0, 0, 10)
+			                    };
+
+			Linestring source0 = new Linestring(source0Points);
+
+			var source1Points = new List<Pnt3D>
+			                    {
+				                    new Pnt3D(50, 100, 10),
+				                    new Pnt3D(25, 20, 20),
+				                    new Pnt3D(50, 20, 10),
+				                    new Pnt3D(50, 100, 10)
+			                    };
+			Linestring source1 = new Linestring(source1Points);
+
+			var targetPoints = new List<Pnt3D>()
+			                   {
+				                   new Pnt3D(50, 100, 10),
+				                   new Pnt3D(30, 150, 20),
+				                   new Pnt3D(50, 150, 10),
+				                   new Pnt3D(50, 100, 10),
+			                   };
+
+			Linestring target = new Linestring(targetPoints);
+
+			MultiPolycurve source = new MultiPolycurve(new[] { source0, source1 });
+
+			const double tolerance = 0.0001;
+			Assert.IsFalse(GeomRelationUtils.AreaContainsXY(source, target, tolerance));
+
+			Assert.IsFalse(GeomRelationUtils.IsContainedXY(target, source, tolerance));
+
+			// And hence the union should be equal to the sum:
+			MultiLinestring unionAreasXY =
+				GeomTopoOpUtils.GetUnionAreasXY(source, new RingGroup(target), tolerance);
+			Assert.AreEqual(source.GetArea2D() + target.GetArea2D(), unionAreasXY.GetArea2D());
+		}
+
+		[Test]
 		public void CanDetermineMultipartSourcePolygonMultitouch()
 		{
 			// The source polygon has two touching rings. The target touches the source-touch point
