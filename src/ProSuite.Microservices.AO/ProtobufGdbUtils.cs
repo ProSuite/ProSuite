@@ -79,7 +79,7 @@ namespace ProSuite.Microservices.AO
 				// NOTE: Normal fields just return null if they have not been fetched due to sub-field restrictions.
 				//       However, the Shape property E_FAILs.
 				bool canGetShape =
-					subFields == null || subFields == "*" ||
+					string.IsNullOrEmpty(subFields) || subFields == "*" ||
 					StringUtils.Contains(subFields, ((IFeatureClass) feature.Class).ShapeFieldName,
 					                     StringComparison.InvariantCultureIgnoreCase);
 
@@ -93,8 +93,8 @@ namespace ProSuite.Microservices.AO
 							: ShapeMsg.FormatOneofCase.EsriShape;
 
 					SpatialReferenceMsg.FormatOneofCase spatialRefFormat = includeSpatialRef
-						? SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml
-						: SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid;
+							? SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml
+							: SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid;
 
 					result.Shape =
 						ProtobufGeometryUtils.ToShapeMsg(featureShape, shapeFormat,
