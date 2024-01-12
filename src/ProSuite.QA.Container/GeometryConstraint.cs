@@ -139,6 +139,11 @@ namespace ProSuite.QA.Container
 			yield return Get("$IsExteriorRing", typeof(bool), GetIsExteriorRing);
 			yield return Get("$IsInteriorRing", typeof(bool), GetIsInteriorRing);
 
+			// for pointIDs
+			yield return Get("$IsPointIdAware", typeof(bool), GetIsPointIdAware);
+			yield return Get("$PointIdMin", typeof(int), GetPointIdMin);
+			yield return Get("$PointIdMax", typeof(int), GetPointIdMax);
+
 			// for multipatches
 			yield return Get("$RingCount", typeof(int), GetRingCount);
 			yield return Get("$TriangleFanCount", typeof(int), GetTriangleFanCount);
@@ -312,6 +317,21 @@ namespace ProSuite.QA.Container
 		private static object GetMMax(IGeometry geometry, PropertyCache propertyCache)
 		{
 			return propertyCache.MMax ?? (object) DBNull.Value;
+		}
+
+		private static object GetIsPointIdAware(IGeometry geometry, PropertyCache propertyCache)
+		{
+			return propertyCache.IsPointIdAware;
+		}
+
+		private static object GetPointIdMin(IGeometry geometry, PropertyCache propertyCache)
+		{
+			return propertyCache.PointIdMin ?? 0;
+		}
+
+		private static object GetPointIdMax(IGeometry geometry, PropertyCache propertyCache)
+		{
+			return propertyCache.PointIdMax ?? 0;
 		}
 
 		[NotNull]
@@ -537,6 +557,9 @@ namespace ProSuite.QA.Container
 			private readonly bool _zAware;
 			private readonly bool _mAware;
 			private readonly bool _isEmpty;
+			private readonly bool _isPointIdAware;
+			private int? _pointIdMin;
+			private int? _pointIdMax;
 			private IEnvelope _envelope;
 
 			public PropertyCache([CanBeNull] IGeometry geometry)
@@ -546,6 +569,7 @@ namespace ProSuite.QA.Container
 				_isEmpty = geometry == null || geometry.IsEmpty;
 				_zAware = geometry != null && GeometryUtils.IsZAware(geometry);
 				_mAware = geometry != null && GeometryUtils.IsMAware(geometry);
+				_isPointIdAware = geometry != null && GeometryUtils.IsPointIDAware(geometry);
 			}
 
 			public double? XMin => Envelope?.XMin;
@@ -563,6 +587,12 @@ namespace ProSuite.QA.Container
 			public double? ZMin => _zAware ? NaNtoNull(Envelope?.ZMin) : null;
 
 			public double? ZMax => _zAware ? NaNtoNull(Envelope?.ZMax) : null;
+
+			public bool IsPointIdAware => _isPointIdAware;
+
+			public int? PointIdMin => IsPointIdAware ? PointIdMinCore : (int?)null;
+
+			public int? PointIdMax => IsPointIdAware ? PointIdMaxCore : (int?)null;
 
 			public int SegmentCount => _segments?.SegmentCount ?? 0;
 
@@ -633,6 +663,77 @@ namespace ProSuite.QA.Container
 					}
 
 					return _interiorRingCount.Value;
+				}
+			}
+
+			private int PointIdMinCore
+			{
+				get
+				{
+					if (_pointIdMin == null)
+					{
+						InitPointIds(out int min, out int max);
+						_pointIdMin = min;
+						_pointIdMax = max;
+					}
+					return _pointIdMin.Value;
+				}
+			}
+			private int PointIdMaxCore
+			{
+				get
+				{
+					if (_pointIdMax == null)
+					{
+						InitPointIds(out int min, out int max);
+						_pointIdMin = min;
+						_pointIdMax = max;
+					}
+					return _pointIdMax.Value;
+				}
+			}
+
+			private void InitPointIds(out int idMin, out int idMax)
+			{
+				if (_geometry == null || _geometry.IsEmpty)
+				{
+					idMin = 0;
+					idMax = 0;
+					return;
+				}
+
+				if (_geometry is IPointCollection points && points.PointCount > 0)
+				{
+					int min = int.MaxValue;
+					int max = int.MinValue;
+					IEnumVertex pts = points.EnumVertices;
+
+					do
+					{
+						pts.Next(out IPoint p, out _, out _);
+						if (p == null)
+						{
+							break;
+						}
+
+						int id = p.ID;
+						min = Math.Min(min, id);
+						max = Math.Max(max, id);
+					} while (true);
+
+
+					idMin = min;
+					idMax = max;
+				}
+				else if (_geometry is IPoint p)
+				{
+					idMin = p.ID;
+					idMax = idMin;
+				}
+				else
+				{
+					idMin = 0;
+					idMax = 0;
 				}
 			}
 		}
