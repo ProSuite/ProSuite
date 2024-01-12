@@ -800,8 +800,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 			{
 				throw new InvalidConfigurationException(
 					string.Format(ambiguousMappingCount == 1
-						              ? "{0} dataset corresponds to more than one workspace dataset. See log for details"
-						              : "{0} datasets each correspond to more than one workspace dataset. See log for details",
+						              ? "{0} dataset corresponds to more than one workspace dataset. This can happen if the datasets have been harvested without qualified names. See log for details"
+						              : "{0} datasets each correspond to more than one workspace dataset. This can happen if the datasets have been harvested without qualified names. See log for details",
 					              ambiguousMappingCount));
 			}
 

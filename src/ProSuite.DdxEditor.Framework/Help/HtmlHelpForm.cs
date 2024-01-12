@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
@@ -14,10 +15,12 @@ namespace ProSuite.DdxEditor.Framework.Help
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly FormStateManager<FormState> _formStateManager;
-		private string _html;
+		[NotNull] private string _html;
 
-		public HtmlHelpForm(string html)
+		public HtmlHelpForm([NotNull] string html)
 		{
+			Assert.ArgumentNotNull(html, nameof(html)); //but can be string.empty
+
 			_html = html;
 			InitializeComponent();
 
@@ -25,8 +28,10 @@ namespace ProSuite.DdxEditor.Framework.Help
 			_formStateManager.RestoreState();
 		}
 
-		public void NavigateToString(string html)
+		public void NavigateToString([NotNull] string html)
 		{
+			Assert.ArgumentNotNull(html, nameof(html)); //but can be string.empty
+
 			_html = html;
 
 			ViewUtils.Try(() => _webView.NavigateToString(_html), _msg);

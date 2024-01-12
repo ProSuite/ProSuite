@@ -329,21 +329,6 @@ namespace ProSuite.DdxEditor.Framework
 			return _unitOfWork.ReadOnlyTransaction(function);
 		}
 
-		public void ShowHelpForm(string title, string html)
-		{
-			if (_htmlHelpForm == null || _htmlHelpForm.IsDisposed)
-			{
-				_htmlHelpForm = new HtmlHelpForm(html);
-				_htmlHelpForm.Show(_view);
-			}
-			else
-			{
-				_htmlHelpForm.NavigateToString(html);
-			}
-
-			_htmlHelpForm.Text = title;
-		}
-
 		#endregion
 
 		#region IItemNavigation
@@ -408,6 +393,30 @@ namespace ProSuite.DdxEditor.Framework
 			Item item = _view.FindItem(entity);
 
 			return item != null && _view.GoToItem(item);
+		}
+
+		void IItemNavigation.ShowItemHelp(string title, string html)
+		{
+			if (_htmlHelpForm == null || _htmlHelpForm.IsDisposed)
+			{
+				_htmlHelpForm = new HtmlHelpForm(html);
+				_htmlHelpForm.Show(_view);
+			}
+			else
+			{
+				_htmlHelpForm.NavigateToString(html);
+			}
+
+			_htmlHelpForm.Text = title;
+		}
+
+		void IItemNavigation.UpdateItemHelp(string title, string html)
+		{
+			if (_htmlHelpForm is { IsDisposed: false })
+			{
+				_htmlHelpForm.NavigateToString(html);
+				_htmlHelpForm.Text = title;
+			}
 		}
 
 		#endregion

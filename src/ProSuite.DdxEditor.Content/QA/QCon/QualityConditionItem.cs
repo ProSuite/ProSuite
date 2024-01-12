@@ -23,6 +23,7 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.AO.QA.TestReport;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -359,6 +360,20 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		public void ExecuteWebHelpCommand()
 		{
 			_webHelpCommand?.Execute();
+		}
+
+		[CanBeNull]
+		public string GetWebHelp([CanBeNull] TestDescriptor testDescriptor,
+		                         [CanBeNull] out string title)
+		{
+			if (testDescriptor == null)
+			{
+				title = null;
+				return null;
+			}
+
+			title = testDescriptor.TypeDisplayName;
+			return TestReportUtils.WriteDescriptorDoc(testDescriptor);
 		}
 
 		private void UpdateImage([CanBeNull] QualityCondition qualityCondition)

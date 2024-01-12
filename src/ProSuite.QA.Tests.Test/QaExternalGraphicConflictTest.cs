@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using ESRI.ArcGIS.Geodatabase;
@@ -52,6 +53,7 @@ namespace ProSuite.QA.Tests.Test
 
 		[Test]
 		[Category(Commons.Test.TestCategory.FixMe)]
+		[SupportedOSPlatform("windows")]
 		public void TestWithFgdb()
 		{
 			try

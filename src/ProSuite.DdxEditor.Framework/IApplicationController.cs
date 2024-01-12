@@ -32,7 +32,5 @@ namespace ProSuite.DdxEditor.Framework
 
 		[CanBeNull]
 		T ReadInTransaction<T>([NotNull] Func<T> function);
-
-		void ShowHelpForm(string title, string html);
 	}
 }

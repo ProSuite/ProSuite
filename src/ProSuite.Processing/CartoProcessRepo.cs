@@ -61,7 +61,7 @@ namespace ProSuite.Processing
 
 		public void Save(string xmlFilePath)
 		{
-			using (var stream = File.OpenWrite(xmlFilePath))
+			using (var stream = File.Create(xmlFilePath))
 			using (var writer = new StreamWriter(stream))
 			{
 				Save(writer);

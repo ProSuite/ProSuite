@@ -147,11 +147,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
 		}
 
-		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs k)
+		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
 		{
 			try
 			{
-				if (k.Key == _keyToggleNonDefaultSide)
+				await base.HandleKeyDownAsync(args);
+
+				if (args.Key == _keyToggleNonDefaultSide)
 				{
 					_nonDefaultSideMode = ! _nonDefaultSideMode;
 

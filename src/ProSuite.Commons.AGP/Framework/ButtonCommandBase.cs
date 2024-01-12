@@ -32,7 +32,7 @@ namespace ProSuite.Commons.AGP.Framework
 		{
 			try
 			{
-				_msg.VerboseDebug(() => $"{GetType().Name}.OnUpdate");
+				_msg.VerboseDebug(() => $"{GetType().Name}.OnClick");
 
 				bool success = await OnClickCore();
 

@@ -1,36 +1,35 @@
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
 using ProSuite.Commons.AGP;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
-using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
+using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.QA.VerificationProgress;
-using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
-	public abstract class VerifyVisibleExtentCmdBase : ButtonCommandBase
+	public abstract class VerifyFullExtentCmdBase : ButtonCommandBase
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-		protected VerifyVisibleExtentCmdBase()
+		protected VerifyFullExtentCmdBase()
 		{
 			// Instead of wiring each single button and tool and calling SessionContext.CanVerifyQuality
 			// for each one, the singleton event aggregator updates all at once:
 			Register();
 		}
-
 		private void Register()
 		{
 			VerificationPlugInController.GetInstance(SessionContext).Register(this);
@@ -39,13 +38,12 @@ namespace ProSuite.AGP.QA.ProPlugins
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
 		protected abstract IProSuiteFacade ProSuiteImpl { get; }
-
 		protected override Task<bool> OnClickCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
 			{
 				MessageBox.Show("No quality verification environment is configured.",
-				                "Verify Extent", MessageBoxButton.OK, MessageBoxImage.Warning);
+								"Verify Full Extent", MessageBoxButton.OK, MessageBoxImage.Warning);
 				return Task.FromResult(false);
 			}
 
@@ -57,46 +55,45 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			if (qualitySpecification == null)
 			{
-				MessageBox.Show("No Quality Specification is selected", "Verify Extent",
-				                MessageBoxButton.OK, MessageBoxImage.Warning);
+				MessageBox.Show("No Quality Specification is selected", "Verify Full Extent",
+								MessageBoxButton.OK, MessageBoxImage.Warning);
 				return Task.FromResult(false);
 			}
 
 			var progressTracker = new QualityVerificationProgressTracker
-			                      {
-				                      CancellationTokenSource = new CancellationTokenSource()
-			                      };
+			{
+				CancellationTokenSource = new CancellationTokenSource()
+			};
 
-			Envelope currentExtent = MapView.Active.Extent;
+			Envelope fullExtent = null;
 
 			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController =
-				new AgpBackgroundVerificationController(ProSuiteImpl, MapView.Active, currentExtent,
-				                                        spatialRef);
+				new AgpBackgroundVerificationController(ProSuiteImpl, MapView.Active, fullExtent,
+														spatialRef);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(currentExtent, progressTracker, resultsPath),
+					VerificationAction = () => Verify(progressTracker, resultsPath),
 					ApplicationController = appController
 				};
 
-			string actionTitle = $"{qualitySpecification.Name}: Verify Visible Extent";
+			string actionTitle = $"{qualitySpecification.Name}: Verify Full Extent";
 
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
-			                               qaEnvironment.BackendDisplayName, actionTitle);
+										   qaEnvironment.BackendDisplayName, actionTitle);
 
 			return Task.FromResult(true);
 		}
 
 		private async Task<ServiceCallStatus> Verify(
-			[NotNull] Envelope currentExtent,
 			[NotNull] QualityVerificationProgressTracker progressTracker,
 			string resultsPath)
 		{
@@ -110,7 +107,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return qaEnvironment.VerifyPerimeter(
-							currentExtent, progressTracker, "visible extent", resultsPath);
+							null, progressTracker, "full extent", resultsPath);
 					},
 					BackgroundProgressor.None);
 

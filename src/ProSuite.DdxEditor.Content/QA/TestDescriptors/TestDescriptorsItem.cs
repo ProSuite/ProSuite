@@ -83,8 +83,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			return item;
 		}
 
-		public void AddTestDescriptors(string dllFilePath,
-		                               IApplicationController applicationController)
+		public void AddTestDescriptors(string dllFilePath, IItemNavigation itemNavigation)
 		{
 			using (_msg.IncrementIndentation(
 				       "Adding test descriptors from assembly {0}", dllFilePath))
@@ -138,7 +137,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				_msg.InfoFormat("The assembly contains {0} tests and {1} test factories",
 				                testCount, testFactoryCount);
 
-				applicationController.GoToItem(this);
+				itemNavigation.GoToItem(this);
 
 				TryAddTestDescriptors(newDescriptors);
 			}
