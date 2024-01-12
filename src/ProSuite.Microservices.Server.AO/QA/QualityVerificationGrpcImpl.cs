@@ -190,6 +190,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				await StartRequest(request);
 
+				// TODO: Separate data request handler class with async method
 				Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest =
 					delegate(DataVerificationResponse r)
 					{
@@ -372,21 +373,29 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			DataVerificationRequest resultData = null;
 
-			Task responseReaderTask = Task.Run(
-				async () =>
-				{
-					while (resultData == null)
+			try
+			{
+				Task responseReaderTask = Task.Run(
+					async () =>
 					{
-						while (await requestStream.MoveNext().ConfigureAwait(false))
+						while (resultData == null)
 						{
-							resultData = requestStream.Current;
-							break;
+							while (await requestStream.MoveNext().ConfigureAwait(false))
+							{
+								resultData = requestStream.Current;
+								break;
+							}
 						}
-					}
-				});
+					});
 
-			await responseStream.WriteAsync(r).ConfigureAwait(false);
-			await responseReaderTask.ConfigureAwait(false);
+				await responseStream.WriteAsync(r).ConfigureAwait(false);
+				await responseReaderTask.ConfigureAwait(false);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error getting more data for class id " +
+				          $"{r.DataRequest?.ClassDef?.ClassHandle}", e);
+			}
 
 			return resultData;
 		}
