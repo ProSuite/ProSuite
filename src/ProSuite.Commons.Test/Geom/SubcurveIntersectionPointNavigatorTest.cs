@@ -59,7 +59,7 @@ namespace ProSuite.Commons.Test.Geom
 						new SubcurveIntersectionPointNavigator(
 							intersectionPoints, source, target, tolerance);
 
-					Assert.AreEqual(0, navigator.GetSourceBoundaryLoops(true).Count());
+					Assert.AreEqual(0, navigator.GetSourceBoundaryLoops().Count());
 					Assert.AreEqual(1, navigator.GetTargetBoundaryLoops().Count());
 
 					// With flipped arguments:
@@ -71,7 +71,7 @@ namespace ProSuite.Commons.Test.Geom
 						new SubcurveIntersectionPointNavigator(
 							intersectionPoints, target, source, tolerance);
 
-					Assert.AreEqual(1, navigator.GetSourceBoundaryLoops(true).Count());
+					Assert.AreEqual(1, navigator.GetSourceBoundaryLoops().Count());
 					Assert.AreEqual(0, navigator.GetTargetBoundaryLoops().Count());
 				}
 			}
@@ -137,7 +137,7 @@ namespace ProSuite.Commons.Test.Geom
 						new SubcurveIntersectionPointNavigator(
 							intersectionPoints, source, target, tolerance);
 
-					Assert.AreEqual(0, navigator.GetSourceBoundaryLoops(true).Count());
+					Assert.AreEqual(0, navigator.GetSourceBoundaryLoops().Count());
 					Assert.AreEqual(2, navigator.GetTargetBoundaryLoops().Count());
 
 					// With flipped arguments:
@@ -149,7 +149,7 @@ namespace ProSuite.Commons.Test.Geom
 						new SubcurveIntersectionPointNavigator(
 							intersectionPoints, target, source, tolerance);
 
-					Assert.AreEqual(2, navigator.GetSourceBoundaryLoops(true).Count());
+					Assert.AreEqual(2, navigator.GetSourceBoundaryLoops().Count());
 					Assert.AreEqual(0, navigator.GetTargetBoundaryLoops().Count());
 				}
 			}
@@ -219,7 +219,7 @@ namespace ProSuite.Commons.Test.Geom
 						new SubcurveIntersectionPointNavigator(
 							intersectionPoints, source, target, tolerance);
 
-					Assert.AreEqual(0, navigator.GetSourceBoundaryLoops(true).Count());
+					Assert.AreEqual(0, navigator.GetSourceBoundaryLoops().Count());
 					Assert.AreEqual(3, navigator.GetTargetBoundaryLoops().Count());
 
 					// With flipped arguments:
@@ -231,11 +231,10 @@ namespace ProSuite.Commons.Test.Geom
 						new SubcurveIntersectionPointNavigator(
 							intersectionPoints, target, source, tolerance);
 
-					Assert.AreEqual(2, navigator.GetSourceBoundaryLoops(true).Count());
+					Assert.AreEqual(2, navigator.GetSourceBoundaryLoops().Count());
 					Assert.AreEqual(0, navigator.GetTargetBoundaryLoops().Count());
 
-					foreach (BoundaryLoop sourceBoundaryLoop in navigator.GetSourceBoundaryLoops(
-						         true))
+					foreach (BoundaryLoop sourceBoundaryLoop in navigator.GetSourceBoundaryLoops())
 					{
 						List<Linestring> rings = new List<Linestring>();
 						foreach (IList<IntersectionRun> intersectionRuns in sourceBoundaryLoop

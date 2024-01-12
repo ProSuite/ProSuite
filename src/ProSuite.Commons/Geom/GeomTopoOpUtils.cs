@@ -721,7 +721,7 @@ namespace ProSuite.Commons.Geom
 			double tolerance)
 		{
 			// 1. Create a spatially indexed list of all geometries and group on the polygon
-			//    level using just the envelope entersections. Often there are no actual
+			//    level using just the envelope intersections. Often there are no actual
 			//    intersections and the geometries are well dispersed.
 			//    This strategy can make a gigantic difference (TOP-5595)
 			IList<ICollection<MultiLinestring>> connectedGroups =

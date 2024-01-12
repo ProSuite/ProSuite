@@ -392,37 +392,35 @@ namespace ProSuite.Commons.Geom
 			foreach (int unCutSourceIdx in GetUnusedIndexes(
 				         Source.PartCount, IntersectedSourcePartIndexes))
 			{
+				bool? isContainedXY = GeomRelationUtils.IsContainedXY(
+					Source, Target, Tolerance,
+					IntersectionPointNavigator.IntersectionsAlongSource,
+					unCutSourceIdx);
+
+				Linestring sourceRing = Source.GetPart(unCutSourceIdx);
+				Linestring targetRing = null;
+
+				if (isContainedXY == null)
 				{
-					bool? isContainedXY = GeomRelationUtils.IsContainedXY(
-						Source, Target, Tolerance,
-						IntersectionPointNavigator.IntersectionsAlongSource,
-						unCutSourceIdx);
+					int targetIndex =
+						IntersectionPointNavigator.IntersectionsAlongSource
+						                          .Where(
+							                          i =>
+								                          i.SourcePartIndex == unCutSourceIdx &&
+								                          i.Type == IntersectionPointType
+									                          .LinearIntersectionStart &&
+								                          i.VirtualSourceVertex == 0)
+						                          .GroupBy(i => i.TargetPartIndex)
+						                          .Single().Key;
 
-					Linestring sourceRing = Source.GetPart(unCutSourceIdx);
-					Linestring targetRing = null;
+					targetRing = Target.GetPart(targetIndex);
+				}
 
-					if (isContainedXY == null)
-					{
-						int targetIndex =
-							IntersectionPointNavigator.IntersectionsAlongSource
-							                          .Where(
-								                          i =>
-									                          i.SourcePartIndex == unCutSourceIdx &&
-									                          i.Type == IntersectionPointType
-										                          .LinearIntersectionStart &&
-									                          i.VirtualSourceVertex == 0)
-							                          .GroupBy(i => i.TargetPartIndex)
-							                          .Single().Key;
-
-						targetRing = Target.GetPart(targetIndex);
-					}
-
-					if (CheckRingRelation(sourceRing, targetRing, isContainedXY, includeCongruent,
-					                      withSameOrientation, includeContained,
-					                      includeNotContained))
-					{
-						yield return sourceRing;
-					}
+				if (CheckRingRelation(sourceRing, targetRing, isContainedXY, includeCongruent,
+				                      withSameOrientation, includeContained,
+				                      includeNotContained))
+				{
+					yield return sourceRing;
 				}
 			}
 
@@ -707,9 +705,10 @@ namespace ProSuite.Commons.Geom
 			return loop1Relation;
 		}
 
-		private IEnumerable<BoundaryLoop> GetSourceBoundaryLoops(bool filtered)
+		private IEnumerable<BoundaryLoop> GetSourceBoundaryLoops(
+			[CanBeNull] Predicate<BoundaryLoop> predicate = null)
 		{
-			return IntersectionPointNavigator.GetSourceBoundaryLoops(filtered);
+			return IntersectionPointNavigator.GetSourceBoundaryLoops(predicate);
 		}
 
 		private IEnumerable<BoundaryLoop> GetTargetBoundaryLoops()
@@ -731,13 +730,8 @@ namespace ProSuite.Commons.Geom
 			intersectedTargetPartIndexes = new HashSet<int>();
 			var result = new List<Tuple<IntersectionPoint3D, Linestring>>();
 
-			foreach (BoundaryLoop boundaryLoop in GetSourceBoundaryLoops(false))
+			foreach (BoundaryLoop boundaryLoop in GetSourceBoundaryLoops(predicate))
 			{
-				if (predicate != null && ! predicate(boundaryLoop))
-				{
-					continue;
-				}
-
 				foreach (IList<IntersectionRun> loopCurves in boundaryLoop.GetLoopSubcurves())
 				{
 					if (! HasLoopBeenUsed(loopCurves, true))
@@ -1660,8 +1654,6 @@ namespace ProSuite.Commons.Geom
 			// for target rings touching another target ring or target boundary loops
 			// or geometries with intersection points within the tolerance (alternatively
 			// both geometries would need to be fully clustered in the 2D plane!)
-			// TODO: Make sure not to invert the direction in small-and-spiky intersections
-			//       see GeomTopoUtilsTest.CanUnionUnCrackedRingAtSmallOvershootVertex()
 			foreach (IntersectionPoint3D otherTargetIntersection in
 			         IntersectionPointNavigator.GetOtherTargetIntersections(intersection, true))
 			{
