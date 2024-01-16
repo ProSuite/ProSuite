@@ -295,7 +295,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			CurrentLoad?.StartRequest();
 
-			_msg.InfoFormat("Starting {0} request from {1}", request.GetType().Name, peerName);
+			string concurrentRequestMsg =
+				CurrentLoad == null
+					? string.Empty
+					: $"Concurrent requests: {CurrentLoad.CurrentProcessCount}";
+
+			_msg.InfoFormat("Starting {0} request from {1}. {2}", request.GetType().Name, peerName,
+			                concurrentRequestMsg);
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
@@ -317,6 +323,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private void EndRequest()
 		{
 			CurrentLoad?.EndRequest();
+
+			if (CurrentLoad != null)
+			{
+				_msg.DebugFormat("Remaining requests that are inprogress: {0}",
+				                 CurrentLoad.CurrentProcessCount);
+			}
 		}
 
 		private async Task<bool> EnsureLicenseAsync()
