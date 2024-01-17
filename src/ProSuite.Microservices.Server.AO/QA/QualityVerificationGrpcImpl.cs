@@ -47,6 +47,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private readonly Func<VerificationRequest, IBackgroundVerificationInputs>
 			_verificationInputsFactoryMethod;
 
+		private bool _licensed;
+
 		public QualityVerificationGrpcImpl(
 			Func<VerificationRequest, IBackgroundVerificationInputs> inputsFactoryMethod,
 			int maxThreadCount)
@@ -308,11 +310,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.VerboseDebug(() => $"Request details: {request}");
 			}
 
-			if (requiresLicense)
+			if (requiresLicense && ! _licensed)
 			{
-				bool licensed = await EnsureLicenseAsync();
+				_licensed = await EnsureLicenseAsync();
 
-				if (! licensed)
+				if (! _licensed)
 				{
 					throw new ConfigurationErrorsException(
 						"No ArcGIS License could be initialized.");
