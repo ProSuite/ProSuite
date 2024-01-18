@@ -35,9 +35,9 @@ namespace ProSuite.QA.Tests
 
 		private readonly List<IPolygon> _tileAreasOfInterest;
 		private readonly List<IReadOnlyFeature> _tileFeatures;
-		private readonly ISpatialReference _spatialReference;
-		private readonly double _tolerance;
-		private readonly double _minimumSubtileWidth;
+		private ISpatialReference _spatialReference;
+		private double _tolerance;
+		private double _minimumSubtileWidth;
 
 		private Box _allBox;
 		private KnownGaps _knownGaps;
@@ -191,26 +191,13 @@ namespace ProSuite.QA.Tests
 			_tileFeatures = new List<IReadOnlyFeature>();
 			_tileAreasOfInterest = new List<IPolygon>();
 
-			if (findGapsBelowTolerance)
-			{
-				double maximumResolution;
-				_spatialReference = GetSpatialReferenceAtMaximumResolution(polygonClasses,
-					out maximumResolution);
-
-				_tolerance = maximumResolution * 2;
-				_minimumSubtileWidth = maximumResolution * 10000;
-			}
-			else
-			{
-				_spatialReference = GetUniqueSpatialReference(polygonClasses, out _tolerance);
-				_minimumSubtileWidth = _tolerance * 100;
-			}
-
 			KeepRows = true;
 		}
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
+			EnsureSpatialReference();
+
 			var feature = row as IReadOnlyFeature;
 			if (feature != null)
 			{
@@ -231,6 +218,46 @@ namespace ProSuite.QA.Tests
 			return NoError;
 		}
 
+		private void EnsureSpatialReference()
+		{
+			if (_spatialReference != null || _allBox == null)
+			{
+				return;
+			}
+
+			List<IReadOnlyFeatureClass> polygonClasses = new List<IReadOnlyFeatureClass>();
+			for (int iClass = 0; iClass < _firstAreaOfInterestClassIndex; iClass++)
+			{
+				polygonClasses.Add((IReadOnlyFeatureClass) InvolvedTables[iClass]);
+			}
+
+			if (_findGapsBelowTolerance)
+			{
+				double maximumResolution;
+				_spatialReference = GetSpatialReferenceAtMaximumResolution(polygonClasses, _allBox,
+					out maximumResolution);
+
+				_tolerance = maximumResolution * 2;
+				_minimumSubtileWidth = maximumResolution * 10000;
+			}
+			else
+			{
+				_spatialReference = GetUniqueSpatialReference(polygonClasses, out _tolerance);
+				_minimumSubtileWidth = _tolerance * 100;
+			}
+
+		}
+
+		protected override void BeginTileCore(BeginTileParameters parameters)
+		{
+			if (_allBox == null)
+			{
+				Assert.NotNull(parameters.TestRunEnvelope, "parameters.TestRunEnvelope");
+				_allBox = ProxyUtils.CreateBox(Assert.NotNull(parameters.TestRunEnvelope, "AllBox"));
+				EnsureSpatialReference();
+			}
+		}
+
 		protected override int CompleteTileCore(TileInfo args)
 		{
 			if (args.State == TileState.Initial)
@@ -248,6 +275,7 @@ namespace ProSuite.QA.Tests
 				{
 					Assert.NotNull(args.AllBox, "args.AllBox");
 					_allBox = ProxyUtils.CreateBox(Assert.NotNull(args.AllBox, "AllBox"));
+					EnsureSpatialReference();
 				}
 
 				if (_knownGaps == null)
@@ -765,12 +793,17 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private static ISpatialReference GetSpatialReferenceAtMaximumResolution(
 			[NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses,
+			[NotNull] Box allBox,
 			out double maxResolution)
 		{
 			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));
+			Assert.ArgumentNotNull(allBox, nameof(allBox));
 
 			ISpatialReference result = null;
 			maxResolution = 0;
+
+			bool allXyPrecisionsEqual = true;
+
 			foreach (IReadOnlyFeatureClass featureClass in featureClasses)
 			{
 				var geoDataset = (IReadOnlyGeoDataset) featureClass;
@@ -782,6 +815,8 @@ namespace ProSuite.QA.Tests
 					result = Clone(spatialReference);
 				}
 
+				allXyPrecisionsEqual &= ((ISpatialReference2)spatialReference).IsXYPrecisionEqual(result);
+
 				double xyResolution = SpatialReferenceUtils.GetXyResolution(spatialReference);
 
 				maxResolution = Math.Max(xyResolution, maxResolution);
@@ -789,7 +824,31 @@ namespace ProSuite.QA.Tests
 
 			Assert.NotNull(result, "no spatial reference found");
 
-			((ISpatialReferenceTolerance) result).XYTolerance = maxResolution;
+			if (allXyPrecisionsEqual)
+			{
+				// --> no differences between the XY-Domains, so the resolution can be reduced.
+				// reduce the resolution, because XYTolerance = Resolution results in XYTolerance = ~ 2 * Resolution
+				result.GetDomain(out double txMin, out double txMax, out double tyMin,
+				                 out double tyMax);
+
+				double f = 8;
+				double srResolution = maxResolution / f;
+				double tolerance = srResolution;
+
+				double xc = (allBox.Min.X + allBox.Max.X) / 2;
+				double yc = (allBox.Min.Y + allBox.Max.Y) / 2;
+
+				double dx = (txMax - txMin) / (2 * f);
+				double dy = (tyMax - tyMin) / (2 * f);
+
+				SpatialReferenceUtils.SetXYDomain(result, xc - dx, yc - dy, xc + dx, yc + dy,
+				                                  srResolution, tolerance);
+			}
+			else
+			{
+				// If the domains are different: be more conservativ because of snapping between different domains
+				((ISpatialReferenceTolerance)result).XYTolerance = maxResolution;
+			}
 
 			return result;
 		}

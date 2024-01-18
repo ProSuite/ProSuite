@@ -620,6 +620,65 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		public void TestTolerance()
+		{
+			ISpatialReference sref = CreateSpatialReference();
+			SpatialReferenceUtils.SetXYDomain(sref, -10000, -10000, 10000, 10000,
+			                                  0.01, 0.01);
+
+			IFieldsEdit fields = new FieldsClass();
+			fields.AddField(FieldUtils.CreateOIDField());
+			fields.AddField(FieldUtils.CreateShapeField(
+				                "Shape", esriGeometryType.esriGeometryPolygon, sref, 1000));
+
+			IFeatureClass fc =
+				DatasetUtils.CreateSimpleFeatureClass(_testWs, "TestTolerance", fields);
+
+			{
+				IFeature row = fc.CreateFeature();
+
+				row.Shape = CurveConstruction.StartPoly(100, 100)
+				                             .LineTo(100, 200)
+				                             .LineTo(200, 200)
+				                             .LineTo(200, 100)
+				                             .LineTo(160, 100)
+				                             .LineTo(150, 100.01)
+				                             .LineTo(140, 100)
+				                             .LineTo(100, 100)
+				                             .ClosePolygon();
+				row.Store();
+			}
+
+			{
+				IFeature row = fc.CreateFeature();
+				row.Shape = CurveConstruction.StartPoly(100, 100)
+				                             .LineTo(200, 100)
+				                             .LineTo(200, 0)
+				                             .LineTo(100, 0)
+				                             .LineTo(100, 100)
+				                             .ClosePolygon();
+				row.Store();
+			}
+
+			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
+			{
+				QaNoGaps test = new QaNoGaps(roFc, -1, -1, 0, findGapsBelowTolerance: false);
+
+				var runner = new QaContainerTestRunner(10000, test);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+
+			{
+				QaNoGaps test = new QaNoGaps(roFc, -1, -1, 0, findGapsBelowTolerance: true);
+
+				var runner = new QaContainerTestRunner(10000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+		}
+
+		[Test]
 		public void LearnToleranceBehavior()
 		{
 			ISpatialReference sref = CreateSpatialReference();
