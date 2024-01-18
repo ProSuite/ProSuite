@@ -127,7 +127,7 @@ namespace ProSuite.QA.Container
 			yield return Get("$MMin", typeof(double), GetMMin);
 			yield return Get("$MMax", typeof(double), GetMMax);
 			yield return Get("$UndefinedMValueCount", typeof(int), GetUndefinedMValueCount);
-			yield return Get("$ControlPointCount", typeof(int), GetControlPointCount);
+			yield return Get("$ControlPointCount", typeof(int), GetPointIdCount);
 
 			// for use on entire shape
 			yield return Get("$PartCount", typeof(int), GetPartCount);
@@ -143,6 +143,7 @@ namespace ProSuite.QA.Container
 			yield return Get("$IsPointIdAware", typeof(bool), GetIsPointIdAware);
 			yield return Get("$PointIdMin", typeof(int), GetPointIdMin);
 			yield return Get("$PointIdMax", typeof(int), GetPointIdMax);
+			yield return Get("$PointIdCount", typeof(int), GetPointIdCount);
 
 			// for multipatches
 			yield return Get("$RingCount", typeof(int), GetRingCount);
@@ -334,6 +335,12 @@ namespace ProSuite.QA.Container
 			return propertyCache.PointIdMax ?? 0;
 		}
 
+		private static object GetPointIdCount(IGeometry geometry, PropertyCache propertyCache)
+		{
+			return propertyCache.PointIdCount ?? 0;
+		}
+
+
 		[NotNull]
 		private static object GetSegmentCount([CanBeNull] IGeometry geometry,
 		                                      [NotNull] PropertyCache propertyCache)
@@ -367,28 +374,6 @@ namespace ProSuite.QA.Container
 
 			return GeometryUtils.GetPoints(geometry, recycle: true)
 			                    .Count(point => double.IsNaN(point.M));
-		}
-
-		[NotNull]
-		private static object GetControlPointCount([CanBeNull] IGeometry geometry,
-		                                           [NotNull] PropertyCache propertyCache)
-		{
-			if (geometry == null || geometry.IsEmpty)
-			{
-				return 0;
-			}
-
-			if (! GeometryUtils.IsPointIDAware(geometry))
-			{
-				return 0;
-			}
-
-			var points = geometry as IPointCollection;
-
-			// points do not support control points
-			return points == null
-				       ? 0
-				       : GeometryUtils.GetPoints(points).Count(point => point.ID != 0);
 		}
 
 		[NotNull]
@@ -560,6 +545,7 @@ namespace ProSuite.QA.Container
 			private readonly bool _isPointIdAware;
 			private int? _pointIdMin;
 			private int? _pointIdMax;
+			private int? _pointIdCount;
 			private IEnvelope _envelope;
 
 			public PropertyCache([CanBeNull] IGeometry geometry)
@@ -590,9 +576,11 @@ namespace ProSuite.QA.Container
 
 			public bool IsPointIdAware => _isPointIdAware;
 
-			public int? PointIdMin => IsPointIdAware ? PointIdMinCore : (int?)null;
+			public int? PointIdMin => IsPointIdAware ? PointIdMinCore : (int?) null;
 
-			public int? PointIdMax => IsPointIdAware ? PointIdMaxCore : (int?)null;
+			public int? PointIdMax => IsPointIdAware ? PointIdMaxCore : (int?) null;
+
+			public int? PointIdCount => IsPointIdAware ? PointIdCountCore : (int?)null;
 
 			public int SegmentCount => _segments?.SegmentCount ?? 0;
 
@@ -672,33 +660,46 @@ namespace ProSuite.QA.Container
 				{
 					if (_pointIdMin == null)
 					{
-						InitPointIds(out int min, out int max);
-						_pointIdMin = min;
-						_pointIdMax = max;
+						InitPointIds();
 					}
-					return _pointIdMin.Value;
+
+					return Assert.NotNull(_pointIdMin).Value;
 				}
 			}
+
 			private int PointIdMaxCore
 			{
 				get
 				{
 					if (_pointIdMax == null)
 					{
-						InitPointIds(out int min, out int max);
-						_pointIdMin = min;
-						_pointIdMax = max;
+						InitPointIds();
 					}
-					return _pointIdMax.Value;
+
+					return Assert.NotNull(_pointIdMax).Value;
 				}
 			}
 
-			private void InitPointIds(out int idMin, out int idMax)
+			private int PointIdCountCore
+			{
+				get
+				{
+					if (_pointIdCount == null)
+					{
+						InitPointIds();
+					}
+
+					return Assert.NotNull(_pointIdCount).Value;
+				}
+			}
+
+			private void InitPointIds()
 			{
 				if (_geometry == null || _geometry.IsEmpty)
 				{
-					idMin = 0;
-					idMax = 0;
+					_pointIdMin = 0;
+					_pointIdMax = 0;
+					_pointIdCount = 0;
 					return;
 				}
 
@@ -706,6 +707,7 @@ namespace ProSuite.QA.Container
 				{
 					int min = int.MaxValue;
 					int max = int.MinValue;
+					int n = 0;
 					IEnumVertex pts = points.EnumVertices;
 
 					do
@@ -719,21 +721,28 @@ namespace ProSuite.QA.Container
 						int id = p.ID;
 						min = Math.Min(min, id);
 						max = Math.Max(max, id);
+						if (id != 0)
+						{
+							n++;
+						}
 					} while (true);
 
 
-					idMin = min;
-					idMax = max;
+					_pointIdMin = min;
+					_pointIdMax = max;
+					_pointIdCount = n;
 				}
 				else if (_geometry is IPoint p)
 				{
-					idMin = p.ID;
-					idMax = idMin;
+					_pointIdMin = p.ID;
+					_pointIdMax = _pointIdMin;
+					_pointIdCount = _pointIdMin == 0 ? 0 : 1;
 				}
 				else
 				{
-					idMin = 0;
-					idMax = 0;
+					_pointIdMin = 0;
+					_pointIdMax = 0;
+					_pointIdCount = 0;
 				}
 			}
 		}

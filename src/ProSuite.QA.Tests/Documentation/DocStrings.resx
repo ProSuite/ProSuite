@@ -4393,7 +4393,11 @@ The number of geometry components in the list must be either 0 (in which case 'E
 - $MMin (double): the minimum M value (NULL if the geometry has no M values)
 - $MMax (double): the maximum M value (NULL if the geometry has no M values)
 - $UndefinedMValueCount (integer): the number of vertices with undefined (NaN) M in the geometry
-- $ControlPointCount (integer): the number of control points (vertices with ID != 0) in the geometry
+- $ControlPointCount (integer): the number of control points (vertices with ID != 0) in the geometry (same as PointIdCount)
+- $PointIdAware(bool): indicates if geometry is pointId aware
+- $PointIdMin (integer): the minimum value of the point ids 
+- $PointIdMax (integer): the maximum value of the point ids 
+- $PointIdCount (integer): the number of control points (vertices with ID != 0) in the geometry (same as ControlPointCount)
 
 For use on entire feature geometries (i.e. perPart = False):
 

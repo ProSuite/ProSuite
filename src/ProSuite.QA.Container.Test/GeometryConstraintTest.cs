@@ -66,6 +66,7 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("$MMAX IS NULL", multiPatch);
 			AssertFulfilled("$UNDEFINEDMVALUECOUNT = 20", multiPatch);
 			AssertFulfilled("$CONTROLPOINTCOUNT = 0", multiPatch);
+			AssertFulfilled("$POINTIDCOUNT = 0", multiPatch);
 
 			AssertFulfilled("NOT $ISPOINTIDAWARE", multiPatch);
 
@@ -77,12 +78,14 @@ namespace ProSuite.QA.Container.Test
 				((IPointCollection)multiPatch).ReplacePoints(3, 1, 1, ref p);
 			}
 			AssertFulfilled("$POINTIDMAX = 5", multiPatch);
+			AssertFulfilled("$POINTIDCOUNT = 1", multiPatch);
 			{
 				IPoint p = ((IPointCollection)multiPatch).Point[7];
 				p.ID = -3;
 				((IPointCollection)multiPatch).ReplacePoints(7, 1, 1, ref p);
 			}
 			AssertFulfilled("$POINTIDMIN = -3", multiPatch);
+			AssertFulfilled("$POINTIDCOUNT = 2", multiPatch);
 		}
 
 		[Test]
@@ -125,6 +128,7 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("NOT $ISPOINTIDAWARE", geometry);
 			AssertFulfilled("$POINTIDMAX = 0", geometry);
 			AssertFulfilled("$POINTIDMIN = 0", geometry);
+			AssertFulfilled("$POINTIDCOUNT = 0", geometry);
 		}
 
 		[Test]
@@ -164,6 +168,7 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("$MMAX IS NULL", geometry);
 			AssertFulfilled("$UNDEFINEDMVALUECOUNT = 0", geometry);
 			AssertFulfilled("$CONTROLPOINTCOUNT = 0", geometry);
+			AssertFulfilled("$POINTIDCOUNT = 0", geometry);
 		}
 
 		[Test]
@@ -203,6 +208,7 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("$MMAX IS NULL", geometry);
 			AssertFulfilled("$UNDEFINEDMVALUECOUNT = 0", geometry);
 			AssertFulfilled("$CONTROLPOINTCOUNT = 0", geometry);
+			AssertFulfilled("$POINTIDCOUNT = 0", geometry);
 		}
 
 		[Test]
@@ -242,6 +248,7 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("$MMAX IS NULL", geometry);
 			AssertFulfilled("$UNDEFINEDMVALUECOUNT = 0", geometry);
 			AssertFulfilled("$CONTROLPOINTCOUNT = 0", geometry);
+			AssertFulfilled("$POINTIDCOUNT = 0", geometry);
 		}
 
 		[Test]
@@ -281,6 +288,7 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("$MMAX IS NULL", geometry);
 			AssertFulfilled("$UNDEFINEDMVALUECOUNT = 0", geometry);
 			AssertFulfilled("$CONTROLPOINTCOUNT = 0", geometry);
+			AssertFulfilled("$POINTIDCOUNT = 0", geometry);
 		}
 
 		[Test]
@@ -318,6 +326,7 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("$MMAX IS NULL", null);
 			AssertFulfilled("$UNDEFINEDMVALUECOUNT = 0", null);
 			AssertFulfilled("$CONTROLPOINTCOUNT = 0", null);
+			AssertFulfilled("$POINTIDCOUNT = 0", null);
 		}
 
 		[Test]
@@ -397,6 +406,7 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("$MMAX IS NULL", line);
 			AssertFulfilled("$UNDEFINEDMVALUECOUNT = 2", line);
 			AssertFulfilled("$CONTROLPOINTCOUNT = 0", line);
+			AssertFulfilled("$POINTIDCOUNT = 0", line);
 
 			AssertFulfilled("1 = 1", line);
 			AssertFulfilled(" ", line);
@@ -485,6 +495,7 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("$MMAX IS NULL", area);
 			AssertFulfilled("$UNDEFINEDMVALUECOUNT = 5", area);
 			AssertFulfilled("$CONTROLPOINTCOUNT = 0", area);
+			AssertFulfilled("$POINTIDCOUNT = 0", area);
 
 			AssertFulfilled("$SLIVERRATIO = $LENGTH * $LENGTH / $AREA", area);
 			AssertFulfilled("1 = 1", area);
@@ -592,6 +603,7 @@ namespace ProSuite.QA.Container.Test
 			AssertFulfilled("$MMAX = 1000", point);
 			AssertFulfilled("$UNDEFINEDMVALUECOUNT = 0", point);
 			AssertFulfilled("$CONTROLPOINTCOUNT = 0", point);
+			AssertFulfilled("$POINTIDCOUNT = 0", point);
 
 			AssertFulfilled("$AREA = 0 AND $LENGTH = 0 AND $SLIVERRATIO IS NULL AND " +
 							"$PARTCOUNT = 1 AND $VERTEXCOUNT = 1 AND $DIMENSION = 0 AND " +
