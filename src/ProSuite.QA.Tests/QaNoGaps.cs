@@ -831,7 +831,7 @@ namespace ProSuite.QA.Tests
 				result.GetDomain(out double txMin, out double txMax, out double tyMin,
 				                 out double tyMax);
 
-				double f = 8;
+				double f = 10000;
 				double srResolution = maxResolution / f;
 				double tolerance = srResolution;
 
@@ -841,8 +841,21 @@ namespace ProSuite.QA.Tests
 				double dx = (txMax - txMin) / (2 * f);
 				double dy = (tyMax - tyMin) / (2 * f);
 
-				SpatialReferenceUtils.SetXYDomain(result, xc - dx, yc - dy, xc + dx, yc + dy,
-				                                  srResolution, tolerance);
+				if (xc - dx < allBox.Min.X && yc - dy < allBox.Min.Y)
+				{
+					SpatialReferenceUtils.SetXYDomain(result, xc - dx, yc - dy, xc + dx, yc + dy,
+					                                  srResolution, tolerance);
+				}
+				else
+				{
+					Pnt d = 0.01 * (allBox.Max - allBox.Min);
+					result.SetDomain(allBox.Min.X - d.X, allBox.Max.X + d.X, allBox.Min.Y - d.Y, allBox.Max.Y + d.Y);
+					srResolution = SpatialReferenceUtils.GetXyResolution(result);
+					tolerance = srResolution;
+					result.GetDomain(out txMin, out txMax, out tyMin, out tyMax);
+					SpatialReferenceUtils.SetXYDomain(result, txMin, tyMin, txMax, tyMax,
+					                                  srResolution, tolerance);
+				}
 			}
 			else
 			{

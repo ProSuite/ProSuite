@@ -641,7 +641,7 @@ namespace ProSuite.QA.Tests.Test
 				                             .LineTo(100, 200)
 				                             .LineTo(200, 200)
 				                             .LineTo(200, 100)
-				                             .LineTo(160, 100)
+				                             .LineTo(190, 100)
 				                             .LineTo(150, 100.01)
 				                             .LineTo(140, 100)
 				                             .LineTo(100, 100)
@@ -652,6 +652,9 @@ namespace ProSuite.QA.Tests.Test
 			{
 				IFeature row = fc.CreateFeature();
 				row.Shape = CurveConstruction.StartPoly(100, 100)
+				                             .LineTo(140, 100)
+				                             .LineTo(150, 100.01)
+				                             .LineTo(189.99, 100)
 				                             .LineTo(200, 100)
 				                             .LineTo(200, 0)
 				                             .LineTo(100, 0)
