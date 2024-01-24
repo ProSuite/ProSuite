@@ -68,8 +68,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			Enabled = MicroserviceClient != null;
 
 			if (MicroserviceClient == null)
-				DisabledTooltip =
-					"Microservice not found or not started. Please make sure the latest ProSuite Extension is installed.";
+				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
 		protected override Task HandleEscapeAsync()

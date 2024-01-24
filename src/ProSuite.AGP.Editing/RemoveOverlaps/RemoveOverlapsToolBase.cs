@@ -48,9 +48,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			Enabled = MicroserviceClient != null;
 
-			Tooltip = Enabled
-				          ? "Remove a part of a feature that overlaps with other polygon features"
-				          : "Microservice not found / not started. Please make sure the latest ProSuite Extension is installed.";
+			if (MicroserviceClient == null)
+				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
 		protected override void OnToolActivatingCore()

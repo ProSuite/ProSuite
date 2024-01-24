@@ -30,6 +30,12 @@ namespace ProSuite.AGP.Editing
 			return new Cursor(new MemoryStream(bytes));
 		}
 
+		public static string GetDisabledReasonNoGeometryMicroservice()
+		{
+			return
+				"Geometry Microservice not found or not started. Please make sure the latest ProSuite Extension is installed.";
+		}
+
 		public static bool IsSingleClickSketch([NotNull] Geometry sketchGeometry)
 		{
 			return ! (sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0);

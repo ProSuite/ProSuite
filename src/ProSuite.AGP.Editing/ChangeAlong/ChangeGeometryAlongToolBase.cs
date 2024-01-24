@@ -57,7 +57,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected Cursor PolygonSketchCursor { get; set; }
 
 		protected abstract string EditOperationDescription { get; }
+
 		protected abstract GeometryProcessingClient MicroserviceClient { get; }
+
+		protected override void OnUpdate()
+		{
+			Enabled = MicroserviceClient != null;
+
+			if (MicroserviceClient == null)
+				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
+		}
 
 		protected override async Task HandleEscapeAsync()
 		{
