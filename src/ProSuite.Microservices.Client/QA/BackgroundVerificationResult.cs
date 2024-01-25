@@ -164,7 +164,18 @@ namespace ProSuite.Microservices.Client.QA
 
 				var conditionVerification = new QualityConditionVerification(element);
 
-				conditionVerification.Fulfilled = conditionVerificationMsg.Fulfilled;
+				bool fullFilled = conditionVerificationMsg.Fulfilled;
+				conditionVerification.Fulfilled = fullFilled;
+				if (! fullFilled)
+				{
+					_msg.Warn($"Condition {qualityConditionId} not fulfilled");
+				}
+				else
+				{
+					_msg.Debug($"Condition {qualityConditionId} fulfilled");
+				}
+
+				// TODO: verify, because ErrorCount is never assigned to conditionVerficationMsg!
 				conditionVerification.ErrorCount = conditionVerificationMsg.ErrorCount;
 
 				conditionVerification.ExecuteTime = conditionVerificationMsg.ExecuteTime;
