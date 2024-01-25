@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -28,7 +29,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly IProSuiteFacade _proSuiteFacade;
+		private readonly IWorkListOpener _workListOpener;
 		private readonly MapView _mapView;
 		[CanBeNull] private readonly Geometry _verifiedPerimeter;
 		[CanBeNull] private readonly SpatialReference _verificationSpatialReference;
@@ -36,20 +37,20 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AgpBackgroundVerificationController"/> class.
 		/// </summary>
-		/// <param name="proSuiteFacade"></param>
+		/// <param name="workListOpener"></param>
 		/// <param name="mapView"></param>
 		/// <param name="verifiedPerimeter"></param>
 		/// <param name="verificationSpatialReference"></param>
 		public AgpBackgroundVerificationController(
-			[NotNull] IProSuiteFacade proSuiteFacade,
+			[NotNull] IWorkListOpener workListOpener,
 			[NotNull] MapView mapView,
 			[CanBeNull] Geometry verifiedPerimeter,
 			[CanBeNull] SpatialReference verificationSpatialReference)
 		{
-			Assert.ArgumentNotNull(proSuiteFacade, nameof(proSuiteFacade));
+			Assert.ArgumentNotNull(workListOpener, nameof(workListOpener));
 			Assert.ArgumentNotNull(mapView, nameof(mapView));
 
-			_proSuiteFacade = proSuiteFacade;
+			_workListOpener = workListOpener;
 			_mapView = mapView;
 			_verifiedPerimeter = verifiedPerimeter;
 			_verificationSpatialReference = verificationSpatialReference;
@@ -155,7 +156,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		                               bool replaceExisting)
 		{
 			await ViewUtils.TryAsync(
-				_proSuiteFacade.OpenIssueWorkListAsync(verificationResult.IssuesGdbPath,
+				_workListOpener.OpenIssueWorkListAsync(verificationResult.IssuesGdbPath,
 				                                       replaceExisting), _msg);
 		}
 

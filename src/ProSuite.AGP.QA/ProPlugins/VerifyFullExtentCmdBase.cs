@@ -1,7 +1,6 @@
 using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
-using ProSuite.Commons.AGP;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Progress;
@@ -10,14 +9,11 @@ using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.QA.VerificationProgress;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.Geometry;
+using ProSuite.AGP.WorkList;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.QA.ProPlugins
@@ -37,7 +33,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
-		protected abstract IProSuiteFacade ProSuiteImpl { get; }
+		protected abstract IWorkListOpener WorkListOpener { get; }
 		protected override Task<bool> OnClickCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
@@ -72,7 +68,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController =
-				new AgpBackgroundVerificationController(ProSuiteImpl, MapView.Active, fullExtent,
+				new AgpBackgroundVerificationController(WorkListOpener, MapView.Active, fullExtent,
 														spatialRef);
 
 			var qaProgressViewmodel =
