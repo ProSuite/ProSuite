@@ -182,9 +182,10 @@ namespace ProSuite.Commons.Geom
 
 		public static IEnumerable<SegmentIntersection> GetFilteredIntersectionsOrderedAlongSource(
 			[NotNull] IEnumerable<SegmentIntersection> intersections,
-			[NotNull] ISegmentList source)
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target)
 		{
-			var intersectionFilter = new SegmentIntersectionFilter(source);
+			var intersectionFilter = new SegmentIntersectionFilter(source, target);
 
 			return intersectionFilter.GetFilteredIntersectionsOrderedAlongSourceSegments(
 				intersections);

@@ -2878,7 +2878,7 @@ namespace ProSuite.Commons.Geom
 		{
 			IEnumerable<SegmentIntersection> sortedRelevantIntersections =
 				SegmentIntersectionUtils.GetFilteredIntersectionsOrderedAlongSource(
-					allIntersections, sourceSegments);
+					allIntersections, sourceSegments, targetSegments);
 
 			IList<IntersectionPoint3D> intersectionPoints =
 				SegmentIntersectionUtils.CollectIntersectionPoints(
@@ -3444,7 +3444,7 @@ namespace ProSuite.Commons.Geom
 
 			IEnumerable<SegmentIntersection> sortedRelevantIntersections =
 				SegmentIntersectionUtils.GetFilteredIntersectionsOrderedAlongSource(
-					selfIntersections, segments);
+					selfIntersections, segments, segments);
 
 			IList<IntersectionPoint3D> intersectionPoints =
 				SegmentIntersectionUtils.CollectIntersectionPoints(

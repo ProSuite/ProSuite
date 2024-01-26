@@ -95,9 +95,9 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Finds intersections at the same location which reference the same
-		/// target location. These could be just a break in a linear intersection
-		/// or a boundary loop in the source
+		/// Finds intersections at the same (or very similar) target location which reference the
+		/// same location along the source. These could be just a break in a linear intersection
+		/// or a boundary loop in the source.
 		/// </summary>
 		/// <param name="intersectionsAlongSource"></param>
 		/// <returns></returns>
@@ -144,22 +144,26 @@ namespace ProSuite.Commons.Geom
 							// also by RelationalOperators. -> Remove the DisallowTargetForward flags on the intersection point
 							if (p1.TargetPartIndex == p2.TargetPartIndex)
 							{
-								double segmentRatioDistance =
+								// The pairs are ordered along the source and the target order might be swapped
+								double p1AlongTarget = p1.VirtualTargetVertex;
+								double p2AlongTarget = p2.VirtualTargetVertex;
+
+								double distAlongSource =
 									SegmentIntersectionUtils.GetVirtualVertexRatioDistance(
-										p1.VirtualTargetVertex, p2.VirtualTargetVertex,
+										p1AlongTarget, p2AlongTarget,
 										_target.GetPart(p1.TargetPartIndex).SegmentCount);
 
 								// Typically it is very very small, but theoretically it could be almost the entire segments
 								// if the angle is extremely acute.
-								if (Math.Abs(segmentRatioDistance) < 2)
+								if (Math.Abs(distAlongSource) < 2)
 								{
-									if (segmentRatioDistance > 0)
+									if (distAlongSource > 0)
 									{
 										// p1 is just before p2 along target
 										p1.DisallowTargetForward = true;
 										p2.DisallowTargetBackward = true;
 									}
-									else if (segmentRatioDistance < 0)
+									else if (distAlongSource < 0)
 									{
 										// p1 is just after p2 along target
 										p1.DisallowTargetBackward = true;
