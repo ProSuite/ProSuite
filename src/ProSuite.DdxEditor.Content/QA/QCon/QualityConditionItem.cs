@@ -214,26 +214,34 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		}
 
 		[NotNull]
-		public IEnumerable<KeyValuePair<QualitySpecification, QualitySpecificationElement>>
+		public IDictionary<QualitySpecification, QualitySpecificationElement>
 			GetQualitySpecificationReferences()
 		{
 			QualityCondition qualityCondition = Assert.NotNull(GetEntity());
 
-			IList<QualitySpecification> qualitySpecifications =
-				_modelBuilder.QualitySpecifications.Get(qualityCondition);
+			var result = new Dictionary<QualitySpecification, QualitySpecificationElement>();
 
-			foreach (QualitySpecification specification in qualitySpecifications)
-			{
-				QualitySpecificationElement element = specification.GetElement(qualityCondition);
+			_modelBuilder.ReadOnlyTransaction(
+				delegate
+				{
+					IList<QualitySpecification> qualitySpecifications =
+						_modelBuilder.QualitySpecifications.Get(qualityCondition);
 
-				Assert.NotNull(element,
-				               "Element for {0} not found in referencing quality specification {1}",
-				               qualityCondition.Name, specification.Name);
+					foreach (QualitySpecification specification in qualitySpecifications)
+					{
+						QualitySpecificationElement element =
+							specification.GetElement(qualityCondition);
 
-				yield return
-					new KeyValuePair<QualitySpecification, QualitySpecificationElement>(
-						specification, element);
-			}
+						Assert.NotNull(element,
+						               "Element for {0} not found in referencing quality specification {1}",
+						               qualityCondition.Name, specification.Name);
+
+						result.Add(specification, element);
+					}
+				}
+			);
+
+			return result;
 		}
 
 		[CanBeNull]
@@ -247,7 +255,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			DdxModel model = DataQualityCategoryUtils.GetDefaultModel(qualityCondition.Category);
 
 			IList<QualitySpecification> qualitySpecifications =
-				_modelBuilder.QualitySpecifications.Get(qualityCondition);
+				_modelBuilder.ReadOnlyTransaction(
+					() => _modelBuilder.QualitySpecifications.Get(qualityCondition));
 
 			var queries = new List<FinderQuery<QualitySpecificationTableRow>>
 			              {
