@@ -186,14 +186,11 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				delegate
 				{
 					IDictionary<int, int> refCountMap =
-						_modelBuilder.TestDescriptors
-						             .GetReferencingQualityConditionCount();
+						_modelBuilder.TestDescriptors.GetReferencingQualityConditionCount();
 
-					foreach (TestDescriptor descriptor in _modelBuilder
-					                                      .TestDescriptors.GetAll())
+					foreach (TestDescriptor descriptor in _modelBuilder.TestDescriptors.GetAll())
 					{
-						int refCount;
-						if (! refCountMap.TryGetValue(descriptor.Id, out refCount))
+						if (! refCountMap.TryGetValue(descriptor.Id, out int refCount))
 						{
 							refCount = 0;
 						}
@@ -214,26 +211,34 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		}
 
 		[NotNull]
-		public IEnumerable<KeyValuePair<QualitySpecification, QualitySpecificationElement>>
+		public IDictionary<QualitySpecification, QualitySpecificationElement>
 			GetQualitySpecificationReferences()
 		{
 			QualityCondition qualityCondition = Assert.NotNull(GetEntity());
 
-			IList<QualitySpecification> qualitySpecifications =
-				_modelBuilder.QualitySpecifications.Get(qualityCondition);
+			var result = new Dictionary<QualitySpecification, QualitySpecificationElement>();
 
-			foreach (QualitySpecification specification in qualitySpecifications)
-			{
-				QualitySpecificationElement element = specification.GetElement(qualityCondition);
+			_modelBuilder.ReadOnlyTransaction(
+				delegate
+				{
+					IList<QualitySpecification> qualitySpecifications =
+						_modelBuilder.QualitySpecifications.Get(qualityCondition);
 
-				Assert.NotNull(element,
-				               "Element for {0} not found in referencing quality specification {1}",
-				               qualityCondition.Name, specification.Name);
+					foreach (QualitySpecification specification in qualitySpecifications)
+					{
+						QualitySpecificationElement element =
+							specification.GetElement(qualityCondition);
 
-				yield return
-					new KeyValuePair<QualitySpecification, QualitySpecificationElement>(
-						specification, element);
-			}
+						Assert.NotNull(element,
+						               "Element for {0} not found in referencing quality specification {1}",
+						               qualityCondition.Name, specification.Name);
+
+						result.Add(specification, element);
+					}
+				}
+			);
+
+			return result;
 		}
 
 		[CanBeNull]
@@ -247,7 +252,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			DdxModel model = DataQualityCategoryUtils.GetDefaultModel(qualityCondition.Category);
 
 			IList<QualitySpecification> qualitySpecifications =
-				_modelBuilder.QualitySpecifications.Get(qualityCondition);
+				_modelBuilder.ReadOnlyTransaction(
+					() => _modelBuilder.QualitySpecifications.Get(qualityCondition));
 
 			var queries = new List<FinderQuery<QualitySpecificationTableRow>>
 			              {
@@ -255,8 +261,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 					              "<All>", "[all]",
 					              () =>
 						              QSpec.TableRows.GetQualitySpecificationTableRows(
-							              _modelBuilder,
-							              qualitySpecifications))
+							              _modelBuilder, qualitySpecifications))
 			              };
 
 			if (model != null)
@@ -265,9 +270,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 					            $"Quality specifications involving datasets in {model.Name}",
 					            $"model{model.Id}",
 					            () => QSpec.TableRows.GetQualitySpecificationTableRows(
-						            _modelBuilder,
-						            qualitySpecifications,
-						            model)));
+						            _modelBuilder, qualitySpecifications, model)));
 			}
 
 			var finder = new Finder<QualitySpecificationTableRow>();
@@ -347,8 +350,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		public void AssignNewVersionUuid()
 		{
-			QualityCondition qualityCondition =
-				_modelBuilder.ReadOnlyTransaction(GetEntity);
+			QualityCondition qualityCondition = _modelBuilder.ReadOnlyTransaction(GetEntity);
 
 			Assert.NotNull(qualityCondition, "Quality condition no longer exists");
 
@@ -421,9 +423,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				}
 			}
 
-			_msg.Info(string.Format(
-				          "Exported parameters of quality condition '{0}' to {1}",
-				          qualityCondition.Name, exportFileName));
+			_msg.InfoFormat("Exported parameters of quality condition '{0}' to {1}",
+			                qualityCondition.Name, exportFileName);
 		}
 
 		/// <summary>
@@ -457,8 +458,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				}
 			}
 
-			Assert.NotNull(paramValuesQa,
-			               "Unable to import quality condition parameters");
+			Assert.NotNull(paramValuesQa, "Unable to import quality condition parameters");
 
 			qualityCondition.ClearParameterValues();
 
@@ -467,9 +467,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				qualityCondition.AddParameterValue(value);
 			}
 
-			_msg.Info(string.Format(
-				          "Imported parameters of quality condition {0} from {1}",
-				          qualityCondition.Name, importFileName));
+			_msg.InfoFormat("Imported parameters of quality condition {0} from {1}",
+			                qualityCondition.Name, importFileName);
 		}
 
 		[CanBeNull]
@@ -521,11 +520,9 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			if (_containerItem != null)
 			{
-				commands.Add(
-					new CopyQualityConditionCommand(this, applicationController));
+				commands.Add(new CopyQualityConditionCommand(this, applicationController));
 				commands.Add(new AssignQualityConditionsToCategoryCommand(new[] { this },
-					             _containerItem,
-					             applicationController));
+					             _containerItem, applicationController));
 
 				_webHelpCommand = new ShowInstanceWebHelpCommand<QualityConditionItem>(
 					this, applicationController);
