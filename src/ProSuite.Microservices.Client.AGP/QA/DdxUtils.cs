@@ -300,7 +300,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				{
 					using (Datastore datastore = table.GetDatastore())
 					{
-						workspaceMsg = ProtobufConversionUtils.ToWorkspaceRefMsg(datastore);
+						workspaceMsg = ProtobufConversionUtils.ToWorkspaceRefMsg(datastore, true);
 
 						workspaceMessages.Add(workspaceMsg);
 					}
@@ -379,9 +379,15 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					                                                 datasetsById[datasetId])
 				                                                 .ToList();
 
+				var projectWorkspace = new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
+				                                            projectMsg.Name,
+				                                            datasets, datastore, sr)
+				                       {
+					                       IsMasterDatabaseWorkspace =
+						                       projectWorkspaceMsg.IsMasterDatabaseWorkspace
+				                       };
 				result.Add(
-					new ProjectWorkspace(projectWorkspaceMsg.ProjectId, projectMsg.Name,
-					                     datasets, datastore, sr));
+					projectWorkspace);
 			}
 
 			return result;

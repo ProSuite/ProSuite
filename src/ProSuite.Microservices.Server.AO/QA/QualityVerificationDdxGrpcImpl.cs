@@ -335,6 +335,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				projectWorkspaceMsg.DatasetIds.AddRange(
 					projectWorkspace.Datasets.Select(ds => ds.Id));
 
+				projectWorkspaceMsg.IsMasterDatabaseWorkspace =
+					projectWorkspace.IsModelMasterDatabase;
+
 				response.ProjectWorkspaces.Add(projectWorkspaceMsg);
 
 				projects.Add(projectWorkspace.Project);
