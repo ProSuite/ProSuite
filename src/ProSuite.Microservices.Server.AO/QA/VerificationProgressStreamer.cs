@@ -566,10 +566,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			else
 			{
 				issueProto = ProtobufQaUtils.CreateIssueProto(
-					issueFoundEventArgs,
-					Assert.NotNull(KnownIssueSpatialReference,
-					               "Either background verification inputs or known spatial refereance must be specified"),
-					_standaloneIssueGeometryTypes);
+					issueFoundEventArgs, KnownIssueSpatialReference, _standaloneIssueGeometryTypes);
 			}
 
 			_pendingIssues.Add(issueProto);

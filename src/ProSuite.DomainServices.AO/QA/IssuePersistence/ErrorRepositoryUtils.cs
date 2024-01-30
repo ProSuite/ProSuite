@@ -19,18 +19,20 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		[CanBeNull]
 		public static IGeometry GetGeometryToStore(
 			[CanBeNull] IGeometry geometry,
-			[NotNull] ISpatialReference spatialReference,
+			[CanBeNull] ISpatialReference spatialReference,
 			[NotNull] ICollection<esriGeometryType> storedGeometryTypes,
 			bool forPre10Geodatabase = false,
 			bool forceSimplify = false)
 		{
-			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 			Assert.ArgumentNotNull(storedGeometryTypes, nameof(storedGeometryTypes));
 
 			if (geometry == null || geometry.IsEmpty)
 			{
 				return null;
 			}
+
+			Assert.ArgumentNotNull(spatialReference,
+			                       $"{nameof(spatialReference)} is null. Either background verification inputs or known spatial reference must be specified");
 
 			IGeometry result = CreateGeometryToStore(geometry, storedGeometryTypes);
 
