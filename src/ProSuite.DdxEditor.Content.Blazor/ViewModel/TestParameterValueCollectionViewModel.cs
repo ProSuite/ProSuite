@@ -1,5 +1,6 @@
-using System.Collections.Generic;
+using System;
 using System.Linq;
+using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -67,9 +68,11 @@ public class TestParameterValueCollectionViewModel : ViewModelBase, IDataGridVie
 				yield break;
 			}
 
+			Assert.NotNull(v.Value);
+
 			if (DataType.IsEnum)
 			{
-				yield return TestParameterTypeUtils.GetDefault(DataType)?.ToString();
+				yield return Enum.GetName(v.DataType, v.Value);
 			}
 			else if (TestParameterTypeUtils.IsDatasetType(DataType))
 			{

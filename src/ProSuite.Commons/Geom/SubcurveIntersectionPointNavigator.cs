@@ -142,6 +142,9 @@ namespace ProSuite.Commons.Geom
 
 		public IList<IntersectionPoint3D> IntersectionPoints { get; }
 
+		public bool HasUnClusteredIntersectionPoints =>
+			IntersectionClusters.HasUnClusteredIntersections;
+
 		private IList<IntersectionPoint3D> IntersectionsNotUsedForNavigation { get; } =
 			new List<IntersectionPoint3D>();
 
@@ -811,69 +814,17 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public IEnumerable<BoundaryLoop> GetSourceBoundaryLoops(bool filtered = false)
+		public IEnumerable<BoundaryLoop> GetSourceBoundaryLoops(
+			[CanBeNull] Predicate<BoundaryLoop> predicate = null)
 		{
 			foreach (BoundaryLoop boundaryLoop in IntersectionClusters.GetSourceBoundaryLoops())
 			{
-				if (! filtered)
+				if (predicate != null && ! predicate(boundaryLoop))
 				{
-					yield return boundaryLoop;
 					continue;
 				}
 
-				// TODO: All this has been copied over from the original implementation. Check
-				// whether it is still necessary (it seems unnecessary for target boundary loops).
-
-				if (boundaryLoop.Start.Type == IntersectionPointType.TouchingInPoint ||
-				    boundaryLoop.End.Type == IntersectionPointType.TouchingInPoint)
-				{
-					// NOTE: Sometimes the start point is not in the OutboundTarget points.
-					// This should probably get additional unit-testing
-					yield return boundaryLoop;
-					continue;
-				}
-
-				// If the start intersection is both outbound and inbound,
-				// it is presumably a boundary loop:
-				// - If at the start intersection the target continues to the right (intersect, right-side rings)
-				//   and the source boundary loop goes to the outside of the target:
-				//   The outbound targets contains the start, the inbound target contains the intersection
-				if (IntersectionsOutboundTarget.Contains(boundaryLoop.Start) &&
-				    IntersectionsInboundTarget.Contains(boundaryLoop.End) &&
-				    SourceSegmentCountBetween(boundaryLoop.End, boundaryLoop.Start) > 1)
-				{
-					yield return boundaryLoop;
-					continue;
-				}
-
-				// ...
-				// - If at the start intersection the target continues to the left (difference, left-side rings)
-				//   and the source boundary loop goes to the outside of the target:
-				//   The inbound targets contains the start, the outbound target contains the intersection
-				if (IntersectionsInboundTarget.Contains(boundaryLoop.Start) &&
-				    IntersectionsOutboundTarget.Contains(boundaryLoop.End) &&
-				    SourceSegmentCountBetween(boundaryLoop.Start, boundaryLoop.End) > 1)
-				{
-					yield return boundaryLoop;
-					continue;
-				}
-
-				// If the target intersects both segments of the boundary loop (i.e. partially 'fills'
-				// the boundary loop)
-				if (boundaryLoop.Start.Type == IntersectionPointType.LinearIntersectionStart &&
-				    boundaryLoop.End.Type == IntersectionPointType.LinearIntersectionEnd &&
-				    SourceSegmentCountBetween(boundaryLoop.Start, boundaryLoop.End) > 1)
-				{
-					yield return boundaryLoop;
-					continue;
-				}
-
-				if (boundaryLoop.Start.Type == IntersectionPointType.LinearIntersectionEnd &&
-				    boundaryLoop.End.Type == IntersectionPointType.LinearIntersectionStart &&
-				    SourceSegmentCountBetween(boundaryLoop.Start, boundaryLoop.End) > 1)
-				{
-					yield return boundaryLoop;
-				}
+				yield return boundaryLoop;
 			}
 		}
 

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+#if NET6_0_OR_GREATER
 using System.Runtime.Versioning;
+#endif
 using System.Security.AccessControl;
 using System.Security.Principal;
 using ESRI.ArcGIS.Geodatabase;
@@ -53,7 +55,9 @@ namespace ProSuite.QA.Tests.Test
 
 		[Test]
 		[Category(Commons.Test.TestCategory.FixMe)]
+#if NET6_0_OR_GREATER
 		[SupportedOSPlatform("windows")]
+#endif
 		public void TestWithFgdb()
 		{
 			try

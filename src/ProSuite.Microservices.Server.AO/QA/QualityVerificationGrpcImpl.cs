@@ -47,6 +47,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private readonly Func<VerificationRequest, IBackgroundVerificationInputs>
 			_verificationInputsFactoryMethod;
 
+		private bool _licensed;
+
 		public QualityVerificationGrpcImpl(
 			Func<VerificationRequest, IBackgroundVerificationInputs> inputsFactoryMethod,
 			int maxThreadCount)
@@ -190,6 +192,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				await StartRequest(request);
 
+				// TODO: Separate data request handler class with async method
 				Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest =
 					delegate(DataVerificationResponse r)
 					{
@@ -294,18 +297,24 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			CurrentLoad?.StartRequest();
 
-			_msg.InfoFormat("Starting {0} request from {1}", request.GetType().Name, peerName);
+			string concurrentRequestMsg =
+				CurrentLoad == null
+					? string.Empty
+					: $"Concurrent requests: {CurrentLoad.CurrentProcessCount}";
+
+			_msg.InfoFormat("Starting {0} request from {1}. {2}", request.GetType().Name, peerName,
+			                concurrentRequestMsg);
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
 				_msg.VerboseDebug(() => $"Request details: {request}");
 			}
 
-			if (requiresLicense)
+			if (requiresLicense && ! _licensed)
 			{
-				bool licensed = await EnsureLicenseAsync();
+				_licensed = await EnsureLicenseAsync();
 
-				if (! licensed)
+				if (! _licensed)
 				{
 					throw new ConfigurationErrorsException(
 						"No ArcGIS License could be initialized.");
@@ -316,6 +325,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private void EndRequest()
 		{
 			CurrentLoad?.EndRequest();
+
+			if (CurrentLoad != null)
+			{
+				_msg.DebugFormat("Remaining requests that are inprogress: {0}",
+				                 CurrentLoad.CurrentProcessCount);
+			}
 		}
 
 		private async Task<bool> EnsureLicenseAsync()
@@ -372,21 +387,29 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			DataVerificationRequest resultData = null;
 
-			Task responseReaderTask = Task.Run(
-				async () =>
-				{
-					while (resultData == null)
+			try
+			{
+				Task responseReaderTask = Task.Run(
+					async () =>
 					{
-						while (await requestStream.MoveNext().ConfigureAwait(false))
+						while (resultData == null)
 						{
-							resultData = requestStream.Current;
-							break;
+							while (await requestStream.MoveNext().ConfigureAwait(false))
+							{
+								resultData = requestStream.Current;
+								break;
+							}
 						}
-					}
-				});
+					});
 
-			await responseStream.WriteAsync(r).ConfigureAwait(false);
-			await responseReaderTask.ConfigureAwait(false);
+				await responseStream.WriteAsync(r).ConfigureAwait(false);
+				await responseReaderTask.ConfigureAwait(false);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error getting more data for class id " +
+				          $"{r.DataRequest?.ClassDef?.ClassHandle}", e);
+			}
 
 			return resultData;
 		}

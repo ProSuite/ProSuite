@@ -98,8 +98,18 @@ namespace ProSuite.DomainServices.AO.QA
 					.DatasetLoadTimes)
 			{
 				IReadOnlyDataset gdbDataset = pair.Key;
+				Dataset dataset;
 
-				Dataset dataset = datasetLookup.GetDataset((IDatasetName) gdbDataset.FullName);
+				try
+				{
+					dataset = datasetLookup.GetDataset((IDatasetName) gdbDataset.FullName);
+				}
+				catch (Exception e)
+				{
+					_msg.Warn($"Error getting dataset for {gdbDataset.Name}. " +
+					          "No load times will be assigned.", e);
+					continue;
+				}
 
 				if (dataset == null)
 				{

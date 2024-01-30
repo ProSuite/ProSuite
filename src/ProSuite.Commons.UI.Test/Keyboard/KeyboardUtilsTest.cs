@@ -1,11 +1,16 @@
+#if NET6_0_OR_GREATER
 using System.Runtime.Versioning;
+#endif
 using System.Windows.Forms;
 using NUnit.Framework;
 using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.Commons.UI.Test.Keyboard
 {
+
+#if NET6_0_OR_GREATER
 	[SupportedOSPlatform("windows")]
+#endif
 	[TestFixture]
 	public class KeyboardUtilsTest
 	{

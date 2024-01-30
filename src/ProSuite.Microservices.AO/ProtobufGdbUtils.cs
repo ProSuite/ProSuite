@@ -79,7 +79,7 @@ namespace ProSuite.Microservices.AO
 				// NOTE: Normal fields just return null if they have not been fetched due to sub-field restrictions.
 				//       However, the Shape property E_FAILs.
 				bool canGetShape =
-					subFields == null || subFields == "*" ||
+					string.IsNullOrEmpty(subFields) || subFields == "*" ||
 					StringUtils.Contains(subFields, ((IFeatureClass) feature.Class).ShapeFieldName,
 					                     StringComparison.InvariantCultureIgnoreCase);
 
@@ -93,8 +93,8 @@ namespace ProSuite.Microservices.AO
 							: ShapeMsg.FormatOneofCase.EsriShape;
 
 					SpatialReferenceMsg.FormatOneofCase spatialRefFormat = includeSpatialRef
-						? SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml
-						: SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid;
+							? SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml
+							: SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid;
 
 					result.Shape =
 						ProtobufGeometryUtils.ToShapeMsg(featureShape, shapeFormat,
@@ -303,6 +303,35 @@ namespace ProSuite.Microservices.AO
 			}
 
 			return result;
+		}
+
+		public static ObjectClassMsg ToRelationshipClassMsg(
+			[NotNull] IRelationshipClass relationshipClass)
+		{
+			ObjectClassMsg relTableMsg;
+			if (relationshipClass.IsAttributed ||
+			    relationshipClass.Cardinality == esriRelCardinality.esriRelCardinalityManyToMany)
+			{
+				// it's also a real table:
+				var table = (ITable) relationshipClass;
+				relTableMsg = ToObjectClassMsg(table, relationshipClass.RelationshipClassID, true);
+			}
+			else
+			{
+				// so far just the name is used
+				relTableMsg =
+					new ObjectClassMsg()
+					{
+						Name = DatasetUtils.GetName(relationshipClass),
+						ClassHandle = relationshipClass.RelationshipClassID,
+					};
+			}
+
+			IWorkspace workspace = ((IDataset) relationshipClass).Workspace;
+
+			relTableMsg.WorkspaceHandle = workspace?.GetHashCode() ?? -1;
+
+			return relTableMsg;
 		}
 
 		private static FieldMsg ToFieldMsg(IField field)

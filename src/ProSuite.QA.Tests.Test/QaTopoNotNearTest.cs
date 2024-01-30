@@ -331,7 +331,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestNotReportedLineCapWithAura()
 		{
 			IFeatureClass fc1;
@@ -374,7 +373,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestNotReportedNearCoincidentLineCap()
 		{
 			IFeatureClass fc1;
@@ -490,7 +488,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestLineCaps()
 		{
 			IFeatureClass fc1;
@@ -501,22 +498,22 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve,
 			           doubleValue: 1);
 			AddFeature(fc1, CurveConstruction.StartLine(8, 6.5)
-			                                 .LineTo(8, 10)
-			                                 .Curve,
-			           doubleValue: 1);
+											 .LineTo(8, 10)
+											 .Curve,
+					   doubleValue: 1);
 			AddFeature(fc1, CurveConstruction.StartLine(3, 10)
-			                                 .LineTo(3, 6.5)
-			                                 .Curve,
-			           doubleValue: 1);
+											 .LineTo(3, 6.5)
+											 .Curve,
+					   doubleValue: 1);
 
 			AddFeature(fc1, CurveConstruction.StartLine(13, 10)
-			                                 .LineTo(13, 5.5)
-			                                 .Curve,
-			           doubleValue: 1);
+											 .LineTo(13, 5.5)
+											 .Curve,
+					   doubleValue: 1);
 			AddFeature(fc1, CurveConstruction.StartLine(18, 4.5)
-			                                 .LineTo(18, 10)
-			                                 .Curve,
-			           doubleValue: 1);
+											 .LineTo(18, 10)
+											 .Curve,
+					   doubleValue: 1);
 
 			var test = new QaTopoNotNear(
 				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 1, 0, false);
@@ -525,12 +522,12 @@ namespace ProSuite.QA.Tests.Test
 			Assert.AreEqual(8, errors.Count);
 
 			test.UnconnectedLineCapStyle = LineCapStyle.Butt;
+			// Check in QaTopoNotNear.LineEndsAdapter.RecalcFlatEnd near RecalcPart() (line # 220)
 			errors = Run(test, 1000);
 			Assert.AreEqual(4, errors.Count);
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestLineCaps1()
 		{
 			IFeatureClass fc1;
@@ -557,7 +554,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestLineCaps2()
 		{
 			IFeatureClass fc1;
@@ -586,7 +582,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestLineCapsShortSegment()
 		{
 			IFeatureClass fc1;
@@ -611,7 +606,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestLineCapsAngledEnds()
 		{
 			IFeatureClass fc1;
@@ -1330,8 +1324,8 @@ namespace ProSuite.QA.Tests.Test
 				double tMax = double.MinValue;
 				Assert.IsTrue(y.Cut(x, ref tMin, ref tMax));
 
-				Assert.AreEqual(0.42, tMin);
-				Assert.IsTrue(Math.Abs(0.613 - tMax) < 0.001);
+				Assert.IsTrue(Math.Abs(0.387 - tMin) < 0.001);
+				Assert.AreEqual(0.58, tMax);
 			}
 			{
 				var x = new HullLineArc
@@ -1345,8 +1339,8 @@ namespace ProSuite.QA.Tests.Test
 				double tMax = double.MinValue;
 				Assert.IsTrue(y.Cut(x, ref tMin, ref tMax));
 
-				Assert.AreEqual(0.42, tMin);
-				Assert.IsTrue(Math.Abs(0.613 - tMax) < 0.001);
+				Assert.IsTrue(Math.Abs(0.387 - tMin) < 0.001);
+				Assert.AreEqual(0.42, tMax);
 			}
 
 			{
@@ -1361,8 +1355,8 @@ namespace ProSuite.QA.Tests.Test
 				double tMax = double.MinValue;
 				Assert.IsTrue(y.Cut(x, ref tMin, ref tMax));
 
-				Assert.IsTrue(Math.Abs(0.387 - tMin) < 0.001);
-				Assert.AreEqual(0.58, tMax);
+				Assert.AreEqual(0.42, tMin);
+				Assert.IsTrue(Math.Abs(0.613 - tMax) < 0.001);
 			}
 			{
 				var x = new HullLineArc
@@ -1376,8 +1370,8 @@ namespace ProSuite.QA.Tests.Test
 				double tMax = double.MinValue;
 				Assert.IsTrue(y.Cut(x, ref tMin, ref tMax));
 
-				Assert.IsTrue(Math.Abs(0.387 - tMin) < 0.001);
-				Assert.AreEqual(0.58, tMax);
+				Assert.AreEqual(0.58, tMin);
+				Assert.IsTrue(Math.Abs(0.613 - tMax) < 0.001);
 			}
 		}
 
@@ -1645,7 +1639,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TestReference()
 		{
 			IFeatureClass fc1;

@@ -551,7 +551,7 @@ namespace ProSuite.Commons.Geom
 		/// <paramref name="closedPolycurve"/>.
 		/// false, if the <paramref name="targetSegments"/> is not contained inside the
 		/// <paramref name="closedPolycurve"/>.
-		/// null, if the <paramref name="targetSegments"/> are congnruent with the
+		/// null, if the <paramref name="targetSegments"/> are congruent with the
 		/// <paramref name="closedPolycurve"/></returns>
 		public static bool? AreaContainsXY(
 			[NotNull] ISegmentList closedPolycurve,
@@ -635,11 +635,56 @@ namespace ProSuite.Commons.Geom
 				return null;
 			}
 
+			// There are only touch points, now determine on which side:
+			if (touchPoints.Count > 1 &&
+			    AreTouchingExteriorAndInteriorRings(touchPoints, closedPolycurve,
+			                                        ip => ip.SourcePartIndex))
+			{
+				// Special case:
+				// An interior ring could be touching its exterior ring and the same point is the
+				// touch point of the target ring. Just checking the deviation from the touch
+				// point can lead to wrong results -> Use point-in-polygon check.
+				int targetPartIndex = touchPoints.First().TargetPartIndex;
+				Linestring targetRing = targetSegments.GetPart(targetPartIndex);
+
+				Pnt3D nonIntersectingTargetPnt =
+					GetNonIntersectingTargetPoint(
+						targetRing,
+						intersectionPoints.Where(ip => ip.TargetPartIndex == targetPartIndex));
+
+				Assert.NotNull(nonIntersectingTargetPnt,
+				               $"No point to check in target ring {targetPartIndex}.");
+
+				return PolycurveContainsXY(closedPolycurve, nonIntersectingTargetPnt, tolerance);
+			}
+
 			// No decisive deviation so far -> use the touch points
 			return IsTargetTouchingFromInside(closedPolycurve, targetSegments, touchPoints,
 			                                  tolerance);
 		}
 
+		private static bool AreTouchingExteriorAndInteriorRings(
+			[NotNull] IList<IntersectionPoint3D> touchPoints,
+			[NotNull] ISegmentList rings,
+			[NotNull] Func<IntersectionPoint3D, int> getPartFunc)
+		{
+			// TODO: This method could be simplified or even removed if we had
+			// the IntersectionPointNavigator with its knowledge about dupicate/clustered
+			// intersections. We could then do this check on a per touch point basis.
+			List<int> partIndexes = touchPoints.Select(getPartFunc).ToList();
+
+			if (partIndexes.Distinct().Count() == 1)
+			{
+				// all from the same part
+				return false;
+			}
+
+			bool allHaveSameOrientation =
+				partIndexes.Select(i => rings.GetPart(i).ClockwiseOriented)
+				           .Distinct().Count() == 1;
+
+			return !allHaveSameOrientation;
+		}
 		/// <summary>
 		/// Determines whether the target ring is touching the source area from the inside in one
 		/// of the provided touchPoints. TODO: Duplication with above method
@@ -1570,7 +1615,9 @@ namespace ProSuite.Commons.Geom
 			out bool hasRightSideDeviation,
 			out bool hasLeftSideDeviation)
 		{
-			if (intersection.Type == IntersectionPointType.Crossing)
+			if (intersection.Type == IntersectionPointType.Crossing &&
+			    ! intersection.DisallowTargetForward &&
+			    ! intersection.DisallowTargetBackward)
 			{
 				hasLeftSideDeviation = true;
 				hasRightSideDeviation = true;
@@ -1582,18 +1629,20 @@ namespace ProSuite.Commons.Geom
 			bool? continuesToRightSide =
 				intersection.TargetContinuesToRightSide(source, target, tolerance);
 
-			hasLeftSideDeviation = continuesToRightSide == false;
-			hasRightSideDeviation = continuesToRightSide == true;
+			hasLeftSideDeviation =
+				continuesToRightSide == false && ! intersection.DisallowTargetForward;
+			hasRightSideDeviation =
+				continuesToRightSide == true && ! intersection.DisallowTargetForward;
 
 			bool? arrivesFromRightSide =
 				intersection.TargetArrivesFromRightSide(source, target, tolerance);
 
-			if (arrivesFromRightSide == false)
+			if (arrivesFromRightSide == false && ! intersection.DisallowTargetBackward)
 			{
 				hasLeftSideDeviation = true;
 			}
 
-			if (arrivesFromRightSide == true)
+			if (arrivesFromRightSide == true && ! intersection.DisallowTargetBackward)
 			{
 				hasRightSideDeviation = true;
 			}
@@ -1656,7 +1705,8 @@ namespace ProSuite.Commons.Geom
 
 			// Filter pseudo breaks of linear intersection stretches (e.g. at ring start/end)
 			var unusable =
-				GeomTopoOpUtils.GetAllLinearIntersectionBreaks(source, target, intersectionPoints);
+				GeomTopoOpUtils.GetAllLinearIntersectionBreaks(source, target, intersectionPoints)
+				               .ToList();
 
 			intersectionPoints = intersectionPoints.Where(i => ! unusable.Contains(i)).ToList();
 

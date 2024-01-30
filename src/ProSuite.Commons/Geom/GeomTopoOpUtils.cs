@@ -611,7 +611,10 @@ namespace ProSuite.Commons.Geom
 					IntersectionPoints = intersectionPoints
 				};
 
-			var ringOperator = new RingOperator(subcurveNavigator);
+			var ringOperator = new RingOperator(subcurveNavigator)
+			                   {
+				                   AllowPointClustering = true
+			                   };
 
 			MultiLinestring resultUnion;
 			try
@@ -718,7 +721,7 @@ namespace ProSuite.Commons.Geom
 			double tolerance)
 		{
 			// 1. Create a spatially indexed list of all geometries and group on the polygon
-			//    level using just the envelope entersections. Often there are no actual
+			//    level using just the envelope intersections. Often there are no actual
 			//    intersections and the geometries are well dispersed.
 			//    This strategy can make a gigantic difference (TOP-5595)
 			IList<ICollection<MultiLinestring>> connectedGroups =
@@ -870,7 +873,10 @@ namespace ProSuite.Commons.Geom
 
 			var subcurveNavigator = new SubcurveNavigator(sourceRings, targetRings, tolerance);
 
-			var ringOperator = new RingOperator(subcurveNavigator);
+			var ringOperator = new RingOperator(subcurveNavigator)
+			                   {
+				                   AllowPointClustering = true
+			                   };
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
@@ -2872,7 +2878,7 @@ namespace ProSuite.Commons.Geom
 		{
 			IEnumerable<SegmentIntersection> sortedRelevantIntersections =
 				SegmentIntersectionUtils.GetFilteredIntersectionsOrderedAlongSource(
-					allIntersections, sourceSegments);
+					allIntersections, sourceSegments, targetSegments);
 
 			IList<IntersectionPoint3D> intersectionPoints =
 				SegmentIntersectionUtils.CollectIntersectionPoints(
@@ -3438,7 +3444,7 @@ namespace ProSuite.Commons.Geom
 
 			IEnumerable<SegmentIntersection> sortedRelevantIntersections =
 				SegmentIntersectionUtils.GetFilteredIntersectionsOrderedAlongSource(
-					selfIntersections, segments);
+					selfIntersections, segments, segments);
 
 			IList<IntersectionPoint3D> intersectionPoints =
 				SegmentIntersectionUtils.CollectIntersectionPoints(

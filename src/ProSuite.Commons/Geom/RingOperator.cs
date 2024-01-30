@@ -21,6 +21,9 @@ namespace ProSuite.Commons.Geom
 		                    double tolerance)
 			: this(new SubcurveNavigator(source, target, tolerance)) { }
 
+		// TODO: Test with true for all cases, consider implementation without geometry updates and remove.
+		public bool AllowPointClustering { get; set; }
+
 		/// <summary>
 		/// Returns the difference between source and target.
 		/// </summary>
@@ -31,6 +34,8 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(_subcurveNavigator.Target.IsClosed, "Target must be closed.");
 
 			// Based on Weiler–Atherton clipping algorithm, added specific logic for linear intersections and multi-parts.
+			ClusterPointsIfNecessary();
+
 			IList<Linestring> rightRings = GetRightSideRings(true, true);
 
 			// Build the result polygons from the outer rings:
@@ -65,6 +70,8 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(_subcurveNavigator.Target.IsClosed, "Target must be closed.");
 
 			// Based on Weiler–Atherton clipping algorithm, added specific logic for linear intersections and multi-parts.
+
+			ClusterPointsIfNecessary();
 
 			IList<Linestring> leftRings = GetLeftSideRings(true, true);
 
@@ -102,6 +109,8 @@ namespace ProSuite.Commons.Geom
 		{
 			Assert.ArgumentCondition(_subcurveNavigator.Source.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(_subcurveNavigator.Target.IsClosed, "Target must be closed.");
+
+			ClusterPointsIfNecessary();
 
 			IList<Linestring> processedRingsResult =
 				_subcurveNavigator.FollowSubcurvesTurningLeft();
@@ -675,6 +684,133 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return result;
+		}
+
+		private void ClusterPointsIfNecessary()
+		{
+			if (AllowPointClustering &&
+			    _subcurveNavigator.IntersectionPointNavigator.HasUnClusteredIntersectionPoints)
+			{
+				if (ClusterGeometries(out ISegmentList newSource, out ISegmentList newTarget))
+				{
+					// Recalculate intersections with updated geometries:
+					_subcurveNavigator.Invalidate(
+						newSource ?? _subcurveNavigator.Source,
+						newTarget ?? _subcurveNavigator.Target);
+				}
+			}
+		}
+
+		private bool ClusterGeometries([CanBeNull] out ISegmentList newSource,
+		                               [CanBeNull] out ISegmentList newTarget)
+		{
+			newSource = null;
+			newTarget = null;
+
+			List<IntersectionPoint3D> intersectionList =
+				(List<IntersectionPoint3D>) _subcurveNavigator.IntersectionPoints;
+
+			// Consider adapting cluster tolerance (Sqrt(2)?) -> better make configurable
+			double clusterDistance = _subcurveNavigator.Tolerance;
+			IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> clusteredIntersections =
+				GeomTopoOpUtils.Cluster(intersectionList, ip => ip.Point,
+				                        clusterDistance);
+
+			bool sourceUpdated = false;
+			bool targetUpdated = false;
+
+			// TODO: IGeom interface with Clone() and other generic methods?
+
+			ISegmentList source = Clone(_subcurveNavigator.Source);
+			ISegmentList target = Clone(_subcurveNavigator.Target);
+			foreach (KeyValuePair<IPnt, List<IntersectionPoint3D>> cluster in
+			         clusteredIntersections)
+			{
+				if (cluster.Value.Count == 1)
+				{
+					continue;
+				}
+
+				IPnt clusterPoint = cluster.Key;
+
+				foreach (IntersectionPoint3D intersection in cluster.Value)
+				{
+					if (intersection.IsSourceVertex())
+					{
+						Linestring linestring =
+							source.GetPart(intersection.SourcePartIndex);
+
+						int sourceVertexIdx = (int) intersection.VirtualSourceVertex;
+
+						double origZ = intersection.Point.Z;
+
+						linestring.UpdatePoint(sourceVertexIdx,
+						                       clusterPoint.X, clusterPoint.Y, origZ);
+						sourceUpdated = true;
+						// TODO: Make IUpdateableSegmentList interface to allow changing potential spatial index
+						linestring.SpatialIndex = null;
+					}
+
+					if (intersection.IsTargetVertex(out int targetVertexIdx))
+					{
+						Linestring linestring =
+							target.GetPart(intersection.TargetPartIndex);
+
+						double origZ = linestring.GetPoint3D(targetVertexIdx).Z;
+
+						linestring.UpdatePoint(targetVertexIdx,
+						                       clusterPoint.X, clusterPoint.Y, origZ);
+
+						targetUpdated = true;
+						// TODO: Make IUpdateableSegmentList interface to allow changing potential spatial index
+						linestring.SpatialIndex = null;
+					}
+				}
+
+				// TODO: Consider proper cracking (including segment splits) if
+				//       IntersectionPoint3d.Disallow Forward/Backward is not enough.
+			}
+
+			if (sourceUpdated)
+			{
+				// TODO: Make IUpdateableSegmentList interface to allow changing potential spatial index
+				if (source is MultiLinestring sourceMultiLinestring)
+				{
+					sourceMultiLinestring.SpatialIndex = null;
+				}
+
+				newSource = source;
+			}
+
+			if (targetUpdated)
+			{
+				if (target is MultiLinestring targetMultiLinestring)
+				{
+					targetMultiLinestring.SpatialIndex = null;
+				}
+
+				newTarget = target;
+			}
+
+			return sourceUpdated || targetUpdated;
+		}
+
+		private static ISegmentList Clone(ISegmentList source)
+		{
+			if (source is MultiLinestring multiLinestring)
+			{
+				source = multiLinestring.Clone();
+			}
+			else if (source is Linestring linestring)
+			{
+				source = linestring.Clone();
+			}
+			else
+			{
+				throw new ArgumentException("Unexpected segment list type");
+			}
+
+			return source;
 		}
 
 		#region Cookie cutting

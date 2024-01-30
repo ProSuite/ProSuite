@@ -308,14 +308,14 @@ namespace ProSuite.Commons.Test.Geom
 							IList<RingGroup> result = CutPlanarBothWays(poly1, o, 2, 0);
 
 							var expected = GeomTestUtils.CreateRing(new List<Pnt3D>
-									{
-										new Pnt3D(0, 0, 9),
-										new Pnt3D(0, 100, 9),
-										new Pnt3D(100, 100, 9),
-										new Pnt3D(100, 30, 9),
-										new Pnt3D(40, 30, 9),
-										new Pnt3D(40, 0, 9)
-									});
+								{
+									new Pnt3D(0, 0, 9),
+									new Pnt3D(0, 100, 9),
+									new Pnt3D(100, 100, 9),
+									new Pnt3D(100, 30, 9),
+									new Pnt3D(40, 30, 9),
+									new Pnt3D(40, 0, 9)
+								});
 
 							Assert.True(
 								GeomTopoOpUtils.AreEqualXY(expected, result[0].ExteriorRing,
@@ -4782,6 +4782,253 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionUnCrackedRingAtSmallOvershootVertex()
+		{
+			// Prevent navigation within the cluster (zig-zag back to the same cluster), as in
+			// GeomTopoUtilsTest.CanUnionUnCrackedRingAtSmallOvershootVertex():
+			//
+			//       source
+			//    \  |
+			//     \ |
+			//      \|
+			//       |\
+			//       | * target vertex (source has no vertices in this situation)
+			//       |/
+			//      /|
+			//     / |
+			//    /
+			// target
+
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 0, 9)
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 80, 9),
+				            new Pnt3D(100.011, 80, 9),
+				            new Pnt3D(0, 60, 9)
+			            };
+
+			const double tolerance = 0.01;
+
+			for (var i = 0; i < 5; i++)
+			{
+				RingGroup source = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring1, i));
+
+				for (var t = 0; t < 4; t++)
+				{
+					RingGroup target =
+						GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring2, t));
+
+					MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
+						source, target, tolerance);
+
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+					Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.0001);
+
+					//// TODO: Disallow source naviagation flags:
+					//// swap source and target:
+					//union = GeomTopoOpUtils.GetUnionAreasXY(
+					//	target, source, tolerance);
+
+					//Assert.AreEqual(1, union.PartCount);
+					//Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+					//Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.0001);
+
+					// TODO: Intersection, Difference
+					// Check intersection:
+					//MultiLinestring intersection = GeomTopoOpUtils.GetIntersectionAreasXY(
+					//	source, target, tolerance);
+
+					//Assert.AreEqual(1, intersection.PartCount);
+					//Assert.AreEqual(true, intersection.GetLinestring(0).ClockwiseOriented);
+					//Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D(), 0.11);
+
+					// 
+					//// Intersection of result with target/source:
+					//MultiLinestring intersection =
+					//	GeomTopoOpUtils.GetIntersectionAreasXY(union, target, tolerance);
+
+					//Assert.AreEqual(1, intersection.PartCount);
+					//Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D(), tolerance);
+
+					//// Difference, to compare
+					//MultiLinestring difference =
+					//	GeomTopoOpUtils.GetDifferenceAreasXY(union, target, tolerance);
+					//Assert.AreEqual(2, difference.PartCount);
+					//Assert.AreEqual(source.GetArea2D(), difference.GetArea2D(), tolerance);
+				}
+			}
+
+			//var expected = GeomTestUtils.CreateRing(ring2);
+			//double expectedArea = expected.GetArea2D();
+
+			//Assert.AreEqual(expectedArea, union.GetArea2D(), 0.0001);
+
+			//// and vice-versa:
+			//union = GeomTopoOpUtils.GetIntersectionAreasXY(
+			//	target, source, tolerance);
+
+			//Assert.AreEqual(1, union.PartCount);
+			//Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+
+			//Assert.AreEqual(expectedArea, union.GetArea2D(), 0.0001);
+		}
+
+		[Test]
+		public void CanUnionSmallOvershootBeforeLinearIntersection()
+		{
+			//
+			//          |\
+			//          | \
+			//          |  \
+			// _________|_  \
+			// source   | \  \
+			//          |  \  \
+			//          |   \  \target
+			// 
+
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(50.004, 99.98, 9),
+				            new Pnt3D(70, 0, 9)
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(50, 0, 9),
+				            new Pnt3D(50, 100, 9),
+				            new Pnt3D(70, 0, 9)
+			            };
+
+			const double tolerance = 0.01;
+
+			for (var i = 0; i < 5; i++)
+			{
+				RingGroup source = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring1, i));
+
+				for (var t = 0; t < 4; t++)
+				{
+					RingGroup target =
+						GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring2, t));
+
+					MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
+						source, target, tolerance);
+
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+					Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.0001,
+					                $"Error in i={i}/t={t}");
+
+					// TODO: Correct contains:
+					// swap source and target:
+					//union = GeomTopoOpUtils.GetUnionAreasXY(
+					//	target, source, tolerance);
+
+					//Assert.AreEqual(1, union.PartCount);
+					//Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+					//Assert.AreEqual(target.GetArea2D(), union.GetArea2D(), 0.0001,
+					//                $"Error in i={i}/t={t}");
+
+					// TODO: Intersection, Difference
+					// Check intersection:
+					MultiLinestring intersection = GeomTopoOpUtils.GetIntersectionAreasXY(
+						source, target, tolerance);
+
+					Assert.AreEqual(1, intersection.PartCount);
+					Assert.AreEqual(true, intersection.GetLinestring(0).ClockwiseOriented);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D(), 0.21);
+
+					// 
+					// Intersection of result with target/source:
+					intersection =
+						GeomTopoOpUtils.GetIntersectionAreasXY(union, target, tolerance);
+					Assert.AreEqual(true, intersection.GetLinestring(0).ClockwiseOriented);
+					Assert.AreEqual(1, intersection.PartCount);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D(), 0.21);
+
+					// Difference, to compare
+					MultiLinestring difference =
+						GeomTopoOpUtils.GetDifferenceAreasXY(union, target, tolerance);
+					Assert.AreEqual(1, difference.PartCount);
+					Assert.AreEqual(source.GetArea2D() - target.GetArea2D(), difference.GetArea2D(),
+					                0.21);
+				}
+			}
+		}
+
+		[Test]
+		[Category(TestCategory.FixMe)]
+		public void CanUnionUnClusteredMiniLinearIntersection()
+		{
+			// Repro for Gebaeudekoerper {4192ABE0-AB7E-490B-B92F-4EF921738212} in TOP-5767:
+			// The distance between the two vertices is just above the tolerance,
+			// but the distance to the other geometry's respective line interiors is below.
+			//     |
+			//r1 __| /|
+			//      / |
+			//   r2/  |
+			//
+			// These situations can be fixed by clustering the vertices.
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(2, 100, 9),
+				            new Pnt3D(2, 120, 9),
+				            new Pnt3D(100, 120, 9),
+				            new Pnt3D(100, 0, 9)
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 10, 9),
+				            new Pnt3D(2.007, 100.008, 9),
+				            new Pnt3D(2, 10, 9),
+			            };
+
+			const double tolerance = 0.01;
+			for (var i = 0; i < 5; i++)
+			{
+				RingGroup source = GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring1, i));
+
+				for (var t = 0; t < 4; t++)
+				{
+					RingGroup target =
+						GeomTestUtils.CreatePoly(GeomTestUtils.GetRotatedRing(ring2, t));
+
+					MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
+						source, target, tolerance);
+
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+					// A slight difference is due snapping point 2 to cluster centre:
+					Assert.AreNotEqual(source.GetArea2D(), union.GetArea2D());
+					Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.005);
+
+					// swap source and target:
+					union = GeomTopoOpUtils.GetUnionAreasXY(
+						target, source, tolerance);
+
+					Assert.AreEqual(1, union.PartCount);
+					Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+
+					// Must be slightly different due to snapping to cluster centre:
+					Assert.AreNotEqual(source.GetArea2D(), union.GetArea2D());
+					Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.07);
+				}
+			}
+		}
+
+		[Test]
 		public void CanUnionAtShortishZigZagWithAcuteAngleIntersection()
 		{
 			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
@@ -4835,8 +5082,10 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
-		public void CanUnionMultiBoundaryLoops()
+		public void CanUnionMultiBoundaryLoopsWithCongruentTarget()
 		{
+			// In this case the target is congruent with the middle boundary loop
+
 			// In the long term it might be better and cleaner to ensure clean geometries
 			// by exploding all (?) boundary loops or at least those where the orientation
 			// of both connecting loops are the same. Outer loops are already exploded!
@@ -4872,6 +5121,49 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(source.PartCount, difference.PartCount);
 			double expectedAreaDifference = union.GetArea2D() - target.GetArea2D();
 			Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.05);
+		}
+
+		[Test]
+		public void CanUnionMultiBoundaryLoopsWithContainingTarget()
+		{
+			// In this case the target contains with the middle boundary loop
+			// Rings are from Gebaeudekoerper {BF72C681-0C83-49BD-AF09-96B32BE675C1}:
+
+			// In the long term it might be better and cleaner to ensure clean geometries
+			// by exploding all (?) boundary loops or at least those where the orientation
+			// of both connecting loops are the same. Outer loops are already exploded!
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"multi_boundary_loop_middle_contained_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"multi_boundary_loop_middle_contained_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			// At 0.0005 there is no short segment in the original (it is 0.0007)
+			double tolerance = 0.001;
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			// The target 'fills' the middle loop of the 3-boundary-loops ring
+			Assert.AreEqual(source.PartCount + 1, union.PartCount);
+
+			double expectedAreaUnion = 204.933;
+			Assert.AreEqual(expectedAreaUnion, union.GetArea2D(), 0.001);
+
+			// Probably not very accurate due to intersection-jumping in cluster
+			MultiLinestring difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance);
+
+			Assert.AreEqual(2, difference.PartCount);
+			double expectedAreaDifference = expectedAreaUnion - target.GetArea2D();
+			Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.01);
 		}
 
 		[Test]
@@ -6872,6 +7164,7 @@ namespace ProSuite.Commons.Test.Geom
 
 				RingGroup poly2 = GeomTestUtils.CreatePoly(ring2);
 
+				// TODO: 
 				MultiLinestring result =
 					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
 				Assert.AreEqual(1, result.PartCount);
@@ -7518,10 +7811,10 @@ namespace ProSuite.Commons.Test.Geom
 			containedSource.ReverseOrientation();
 			Assert.IsTrue(intersectionLinesXY[0].Equals(containedSource));
 			Assert.IsTrue(intersectionLinesXY[1].Equals(new Linestring(new[]
-					                                            {
-						                                            new Pnt3D(100, 40, 2),
-						                                            new Pnt3D(100, 20, 2)
-					                                            })));
+				                                            {
+					                                            new Pnt3D(100, 40, 2),
+					                                            new Pnt3D(100, 20, 2)
+				                                            })));
 
 			// Excluded target boundary line:
 			intersectionLinesXY =

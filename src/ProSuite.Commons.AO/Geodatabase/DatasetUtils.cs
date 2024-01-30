@@ -2021,6 +2021,27 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return -1;
 		}
 
+		public static bool AreSameObjectClass(IEnumerable<IObjectClass> objectClasses)
+		{
+			IObjectClass first = null;
+			foreach (IObjectClass objectClass in objectClasses)
+			{
+				if (first == null)
+				{
+					first = objectClass;
+				}
+				else
+				{
+					if (! IsSameObjectClass(first, objectClass))
+					{
+						return false;
+					}
+				}
+			}
+
+			return true;
+		}
+
 		/// <summary>
 		/// Determine if two object classes are the same in the sense
 		/// that they refer to the same database table, ignoring versions.

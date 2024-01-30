@@ -412,7 +412,7 @@ namespace ProSuite.DdxEditor.Framework
 
 		void IItemNavigation.UpdateItemHelp(string title, string html)
 		{
-			if (_htmlHelpForm is { IsDisposed: false })
+			if (_htmlHelpForm?.IsDisposed == false)
 			{
 				_htmlHelpForm.NavigateToString(html);
 				_htmlHelpForm.Text = title;

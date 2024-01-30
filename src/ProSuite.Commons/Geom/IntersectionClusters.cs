@@ -81,6 +81,12 @@ namespace ProSuite.Commons.Geom
 
 							result.Add(p1);
 							result.Add(p2);
+
+							if (! p1.Point.EqualsXY(p2.Point, double.Epsilon))
+							{
+								// The geometries are not cracked / clustered
+								HasUnClusteredIntersections = true;
+							}
 						}
 					});
 			}
@@ -89,9 +95,9 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Finds intersections at the same location which reference the same
-		/// target location. These could be just a break in a linear intersection
-		/// or a boundary loop in the source
+		/// Finds intersections at the same (or very similar) target location which reference the
+		/// same location along the source. These could be just a break in a linear intersection
+		/// or a boundary loop in the source.
 		/// </summary>
 		/// <param name="intersectionsAlongSource"></param>
 		/// <returns></returns>
@@ -111,12 +117,68 @@ namespace ProSuite.Commons.Geom
 						{
 							result.Add(p1);
 							result.Add(p2);
+
+							if (! p1.Point.EqualsXY(p2.Point, double.Epsilon))
+							{
+								// The geometries are not cracked / clustered
+								HasUnClusteredIntersections = true;
+							}
+
+							// Prevent navigation within the cluster (zig-zag back to the same cluster), as in
+							// GeomTopoUtilsTest.CanUnionUnCrackedRingAtSmallOvershootVertex():
+							//
+							//       source
+							//    \  |
+							//     \ |
+							//      \|
+							//       |\
+							//       |/
+							//      /|
+							//     / |
+							//    /
+							// target
+
+							// TODO: The side-effect of setting the DisallowTarget properties on the intersection points should be removed!
+							// TODO: Extract GeometryIntersections class/interrace from SubcurveIntersectionPointNavigator (or rename it)
+							// This class should be interrogated for disallowed navigation at specific intersections 
+							// also by RelationalOperators. -> Remove the DisallowTargetForward flags on the intersection point
+							if (p1.TargetPartIndex == p2.TargetPartIndex)
+							{
+								// The pairs are ordered along the source and the target order might be swapped
+								double p1AlongTarget = p1.VirtualTargetVertex;
+								double p2AlongTarget = p2.VirtualTargetVertex;
+
+								double distAlongSource =
+									SegmentIntersectionUtils.GetVirtualVertexRatioDistance(
+										p1AlongTarget, p2AlongTarget,
+										_target.GetPart(p1.TargetPartIndex).SegmentCount);
+
+								// Typically it is very very small, but theoretically it could be almost the entire segments
+								// if the angle is extremely acute.
+								if (Math.Abs(distAlongSource) < 2)
+								{
+									if (distAlongSource > 0)
+									{
+										// p1 is just before p2 along target
+										p1.DisallowTargetForward = true;
+										p2.DisallowTargetBackward = true;
+									}
+									else if (distAlongSource < 0)
+									{
+										// p1 is just after p2 along target
+										p1.DisallowTargetBackward = true;
+										p2.DisallowTargetForward = true;
+									}
+								}
+							}
 						}
 					});
 			}
 
 			return result.Count == 0 ? null : result;
 		}
+
+		public bool HasUnClusteredIntersections { get; set; }
 
 		private static void WithRingIntersectionPairs(
 			IEnumerable<IntersectionPoint3D> intersectionsPerRing,
