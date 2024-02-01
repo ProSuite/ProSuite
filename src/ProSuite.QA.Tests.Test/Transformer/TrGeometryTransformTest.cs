@@ -8,6 +8,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Test.Construction;
@@ -580,6 +581,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		public double GetSearchTolerance(IReadOnlyTable table)
 		{
 			throw new NotImplementedException();
+		}
+
+		public ISimpleSurface GetSimpleSurface(RasterReference rasterReference, IEnvelope envelope)
+		{
+			return rasterReference.CreateSurface(envelope);
 		}
 
 		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table,
