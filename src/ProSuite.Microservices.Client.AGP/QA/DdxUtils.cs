@@ -287,6 +287,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (Table table in objectClasses)
 			{
+				if (table.GetDatastore() is not Geodatabase)
+				{
+					continue;
+				}
+
 				ObjectClassMsg objectClassMsg = ProtobufConversionUtils.ToObjectClassMsg(
 					table, Convert.ToInt32(table.GetID()));
 
