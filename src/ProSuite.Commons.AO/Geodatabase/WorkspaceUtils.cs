@@ -2535,24 +2535,29 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public static bool IsFileGeodatabase([NotNull] IWorkspace workspace)
 		{
-			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			return GetWorkspacePath(workspace).EndsWith(".gdb", StringComparison.OrdinalIgnoreCase);
 
-			const string fgdbClassId = "{71FE75F0-EA0C-4406-873E-B7D53748AE7E}";
+			// Original implementation which fails for GdbWorkspace implelmentations:
+			//const string fgdbClassId = "{71FE75F0-EA0C-4406-873E-B7D53748AE7E}";
 
-			return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
-			       fgdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
-			                          StringComparison.OrdinalIgnoreCase);
+			//return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
+			//       fgdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
+			//                          StringComparison.OrdinalIgnoreCase);
 		}
 
 		public static bool IsPersonalGeodatabase([NotNull] IWorkspace workspace)
 		{
-			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			return GetWorkspacePath(workspace).EndsWith(".mdb", StringComparison.OrdinalIgnoreCase);
 
-			const string pgdbClassId = "{DD48C96A-D92A-11D1-AA81-00C04FA33A15}";
+			// Original implementation which fails for GdbWorkspace implelmentations:
 
-			return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
-			       pgdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
-			                          StringComparison.OrdinalIgnoreCase);
+			//Assert.ArgumentNotNull(workspace, nameof(workspace));
+
+			//const string pgdbClassId = "{DD48C96A-D92A-11D1-AA81-00C04FA33A15}";
+
+			//return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
+			//       pgdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
+			//                          StringComparison.OrdinalIgnoreCase);
 		}
 
 		/// <summary>
@@ -3262,6 +3267,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				throw deleter.LastException;
 			}
+		}
+
+		[CanBeNull]
+		private static string GetWorkspacePath([NotNull] IWorkspace workspace)
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+
+			if (string.IsNullOrEmpty(workspace.PathName))
+			{
+				return null;
+			}
+
+			return workspace.PathName;
 		}
 
 		#endregion
