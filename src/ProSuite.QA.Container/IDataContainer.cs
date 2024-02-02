@@ -3,6 +3,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.TestContainer;
 
@@ -23,6 +24,9 @@ namespace ProSuite.QA.Container
 		IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
 		                                 [NotNull] ITableFilter queryFilter,
 		                                 [NotNull] QueryFilterHelper filterHelper);
+
+		ISimpleSurface GetSimpleSurface([NotNull] RasterReference rasterReference,
+		                                [NotNull] IEnvelope extent);
 
 		[CanBeNull]
 		IUniqueIdProvider GetUniqueIdProvider([NotNull] IReadOnlyTable table);

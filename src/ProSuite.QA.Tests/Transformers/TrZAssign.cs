@@ -9,6 +9,7 @@ using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -22,14 +23,18 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private const AssignOption _defaultZAssignOption = AssignOption.Tile;
 		private readonly RasterReference _raster;
-		private readonly esriGeometryType _shapeType;
 
 		private ISimpleSurface _searchedSurface;
+		private bool _surfaceToDispose;
 
-		public TrZAssign(IReadOnlyFeatureClass featureClass, RasterReference raster)
+		[DocTr(nameof(DocTrStrings.TrZAssign_0))]
+		public TrZAssign(
+			[DocTr(nameof(DocTrStrings.TrZAssign_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[DocTr(nameof(DocTrStrings.TrZAssign_raster))]
+			RasterReference raster)
 			: base(featureClass, featureClass.ShapeType)
 		{
-			_shapeType = featureClass.ShapeType;
 			_raster = raster;
 		}
 
@@ -59,13 +64,26 @@ namespace ProSuite.QA.Tests.Transformers
 			yield return feature;
 		}
 
-		private void SetSearchedExtent(IEnvelope extent)
+		private void SetSearchedExtent(IEnvelope extent, [CanBeNull] IDataContainer dataContainer)
 		{
-			_searchedSurface = _raster.CreateSurface(extent);
+			_searchedSurface = null;
+			_surfaceToDispose = false;
+			_searchedSurface = dataContainer?.GetSimpleSurface(_raster, extent);
+
+			if (_searchedSurface == null)
+			{
+				_searchedSurface = _raster.CreateSurface(extent);
+				_surfaceToDispose = true;
+			}
 		}
 
 		private void ClearSearchedExtent()
 		{
+			if (_surfaceToDispose)
+			{
+				_searchedSurface.Dispose();
+			}
+
 			_searchedSurface = null;
 		}
 
@@ -116,7 +134,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				if (filter is IFeatureClassFilter sf)
 				{
-					tr.SetSearchedExtent(sf.FilterGeometry.Envelope);
+					tr.SetSearchedExtent(sf.FilterGeometry.Envelope, Resulting.DataContainer);
 				}
 
 				foreach (var searched in base.Search(filter, recycling))
