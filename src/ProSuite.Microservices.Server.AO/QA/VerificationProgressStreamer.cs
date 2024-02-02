@@ -142,12 +142,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			int messageLevel = Level.Info.Value;
 
+			_msg.Info(text);
+
 			WriteMessage(text, messageLevel);
 		}
 
 		public void Warning(string text)
 		{
 			int messageLevel = Level.Warn.Value;
+
+			_msg.Warn(text);
 
 			WriteMessage(text, messageLevel);
 		}
