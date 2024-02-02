@@ -101,6 +101,17 @@
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">
                     <EventSetter Event="MouseRightButtonUp" Handler="logMessagesGrid_MouseRightButtonUp" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Type}" Value="Warn">
+                            <Setter Property="Background" Value="LemonChiffon"></Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Type}" Value="Error">
+                            <Setter Property="Background" Value="LightSalmon"></Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Type}" Value="Fatal">
+                            <Setter Property="Background" Value="Coral"></Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
                 </Style>
             </DataGrid.RowStyle>
         </DataGrid>
