@@ -459,6 +459,35 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
+		public static bool HaveLinearIntersectionsXY([NotNull] ISegmentList segments1,
+		                                             [NotNull] ISegmentList segments2,
+		                                             double tolerance)
+		{
+			IEnumerable<SegmentIntersection> intersections =
+				SegmentIntersectionUtils.GetSegmentIntersectionsXY(
+					segments1, segments2, tolerance);
+
+			foreach (SegmentIntersection linearIntersection in intersections)
+			{
+				Line3D line = linearIntersection.TryGetIntersectionLine(segments1);
+
+				if (line == null)
+				{
+					continue;
+				}
+
+				if (line.Length2D <= tolerance)
+				{
+					// TODO: Sum length of consecutive sub-tolerance lines
+					continue;
+				}
+
+				return true;
+			}
+
+			return false;
+		}
+
 		#region AreaContains, IsContained
 
 		/// <summary>
@@ -683,8 +712,9 @@ namespace ProSuite.Commons.Geom
 				partIndexes.Select(i => rings.GetPart(i).ClockwiseOriented)
 				           .Distinct().Count() == 1;
 
-			return !allHaveSameOrientation;
+			return ! allHaveSameOrientation;
 		}
+
 		/// <summary>
 		/// Determines whether the target ring is touching the source area from the inside in one
 		/// of the provided touchPoints. TODO: Duplication with above method
