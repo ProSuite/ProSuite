@@ -1010,6 +1010,10 @@ namespace ProSuite.Commons.Geom
 			                                               tolerance, intersectionPoints,
 			                                               predicate);
 
+			// TODO: This can be wrong if a short linear intersection has been filtered out as pseudo-breaks
+			//       and the respective point is selected because it is the start point -> null
+			//       Either we need to be less aggressive with pseudo-break filtering or more points
+			//       need to be tested (ideally one that has no intersection whatsoever).
 			// if there is no real intersection, the boundaries do not intersect at all or everywhere
 			if (intersectionPoints.Count == 0)
 			{
@@ -1733,7 +1737,7 @@ namespace ProSuite.Commons.Geom
 				                     .ToList();
 			}
 
-			// Filter pseudo breaks of linear intersection stretches (e.g. at ring start/end)
+			//Filter pseudo breaks of linear intersection stretches(e.g.at ring start/end)
 			var unusable =
 				GeomTopoOpUtils.GetAllLinearIntersectionBreaks(source, target, intersectionPoints)
 				               .ToList();

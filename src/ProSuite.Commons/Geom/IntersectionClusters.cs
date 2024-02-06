@@ -148,26 +148,28 @@ namespace ProSuite.Commons.Geom
 								double p1AlongTarget = p1.VirtualTargetVertex;
 								double p2AlongTarget = p2.VirtualTargetVertex;
 
-								double distAlongSource =
+								double distanceAlongTarget =
 									SegmentIntersectionUtils.GetVirtualVertexRatioDistance(
 										p1AlongTarget, p2AlongTarget,
 										_target.GetPart(p1.TargetPartIndex).SegmentCount);
 
 								// Typically it is very very small, but theoretically it could be almost the entire segments
 								// if the angle is extremely acute.
-								if (Math.Abs(distAlongSource) < 2)
+								if (Math.Abs(distanceAlongTarget) < 2)
 								{
-									if (distAlongSource > 0)
+									if (distanceAlongTarget > 0)
 									{
 										// p1 is just before p2 along target
 										p1.DisallowTargetForward = true;
 										p2.DisallowTargetBackward = true;
+										DisableTargetNavigationBetween(p1, p2, pointsPerRing);
 									}
-									else if (distAlongSource < 0)
+									else if (distanceAlongTarget < 0)
 									{
 										// p1 is just after p2 along target
 										p1.DisallowTargetBackward = true;
 										p2.DisallowTargetForward = true;
+										DisableTargetNavigationBetween(p2, p1, pointsPerRing);
 									}
 								}
 							}
@@ -176,6 +178,36 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return result.Count == 0 ? null : result;
+		}
+
+		private static void DisableTargetNavigationBetween(IntersectionPoint3D p1,
+		                                                   IntersectionPoint3D p2,
+		                                                   IGrouping<int, IntersectionPoint3D>
+			                                                   pointsPerRing)
+		{
+			List<IntersectionPoint3D> orderedAlongTarget =
+				pointsPerRing.OrderBy(i => i.VirtualTargetVertex).ToList();
+
+			bool disableTargetNavigation = false;
+			foreach (IntersectionPoint3D intersectionPoint in CollectionUtils.Cycle(
+				         orderedAlongTarget, 2))
+			{
+				if (intersectionPoint == p2 && disableTargetNavigation)
+				{
+					return;
+				}
+
+				if (disableTargetNavigation)
+				{
+					intersectionPoint.DisallowTargetBackward = true;
+					intersectionPoint.DisallowTargetForward = true;
+				}
+
+				if (intersectionPoint == p1)
+				{
+					disableTargetNavigation = true;
+				}
+			}
 		}
 
 		public bool HasUnClusteredIntersections { get; set; }
