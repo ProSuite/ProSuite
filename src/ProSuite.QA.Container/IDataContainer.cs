@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
@@ -26,7 +25,11 @@ namespace ProSuite.QA.Container
 		                                 [NotNull] QueryFilterHelper filterHelper);
 
 		ISimpleSurface GetSimpleSurface([NotNull] RasterReference rasterReference,
-		                                [NotNull] IEnvelope extent);
+		                                [NotNull] IEnvelope extent,
+		                                double? defaultValueForUnassignedZs = null,
+		                                UnassignedZValueHandling? unassignedZValueHandling = null);
+
+		IEnumerable<Tile> EnumInvolvedTiles([NotNull] IGeometry geometry);
 
 		[CanBeNull]
 		IUniqueIdProvider GetUniqueIdProvider([NotNull] IReadOnlyTable table);
