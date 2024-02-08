@@ -42,7 +42,15 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		public ISimpleRaster GetSimpleRaster(double atX, double atY)
 		{
-			return new SimpleAoRaster(_raster);
+			return GeometryUtils.Intersects(
+				       _interpolationDomain,
+				       new PointClass
+				       {
+					       X = atX, Y = atY,
+					       SpatialReference = _interpolationDomain.SpatialReference
+				       })
+				       ? new SimpleAoRaster(_raster)
+				       : null;
 		}
 
 		public IEnumerable<ISimpleRaster> GetSimpleRasters(IEnvelope envelope)

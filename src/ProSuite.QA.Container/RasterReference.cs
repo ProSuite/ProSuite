@@ -1,6 +1,7 @@
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
@@ -12,7 +13,11 @@ namespace ProSuite.QA.Container
 		public abstract int GetHashCodeCore();
 
 		[NotNull]
-		public abstract ISimpleSurface CreateSurface([NotNull] IEnvelope extent);
+		public abstract ISimpleSurface CreateSurface(
+			[NotNull] IEnvelope extent,
+			double? defaultValueForUnassignedZs = null,
+			UnassignedZValueHandling? unassignedZValueHandling = null
+		);
 
 		[NotNull]
 		public abstract IReadOnlyDataset Dataset { get; }
@@ -27,6 +32,9 @@ namespace ProSuite.QA.Container
 		/// requires a sub-tiling to avoid out-of-memory situations.
 		/// </summary>
 		public virtual bool AssumeInMemory => true;
+
+		public double DefaultValueForUnassignedZs { get; set; } = double.NaN;
+		public bool ReturnNullGeometryIfNotCompletelyCovered { get; set; } = true;
 
 		public override bool Equals(object obj)
 		{

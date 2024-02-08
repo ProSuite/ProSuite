@@ -351,14 +351,26 @@ namespace ProSuite.QA.Container.TestContainer
 			return _tileCache.Search(table, queryFilter, filterHelper);
 		}
 
+		public IEnumerable<Tile> EnumInvolvedTiles(IGeometry geometry)
+		{
+			foreach (Tile tile in TileEnum.EnumTiles(geometry))
+			{
+				yield return tile;
+			}
+		}
+
 		private ISimpleSurface _currentSimpleSurface;
 		private RasterReference _currentRasterReference;
 		private IEnvelope _currentRasterBox;
 
-		public ISimpleSurface GetSimpleSurface(RasterReference rasterReference, IEnvelope box)
+		public ISimpleSurface GetSimpleSurface(
+			RasterReference rasterReference, IEnvelope box,
+			double? defaultValueForUnassignedZs = null,
+			UnassignedZValueHandling? unassignedZValueHandling = null)
 		{
 			if (_currentSimpleSurface != null && rasterReference == _currentRasterReference &&
-			    (GeometryUtils.AreEqual(_currentRasterBox, box) || ((IRelationalOperator)_currentRasterBox).Contains(box)))
+			    (GeometryUtils.AreEqual(_currentRasterBox, box) ||
+			     ((IRelationalOperator) _currentRasterBox).Contains(box)))
 			{
 				return _currentSimpleSurface;
 			}
@@ -367,7 +379,9 @@ namespace ProSuite.QA.Container.TestContainer
 			_currentSimpleSurface = null;
 			_currentRasterReference = rasterReference;
 			_currentRasterBox = box;
-			_currentSimpleSurface = rasterReference.CreateSurface(box);
+
+			_currentSimpleSurface = rasterReference.CreateSurface(
+				box, defaultValueForUnassignedZs, unassignedZValueHandling);
 
 			return _currentSimpleSurface;
 		}

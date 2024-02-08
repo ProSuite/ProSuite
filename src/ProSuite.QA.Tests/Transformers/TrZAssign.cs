@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
 using ProSuite.QA.Tests.Documentation;
 
@@ -27,6 +30,9 @@ namespace ProSuite.QA.Tests.Transformers
 		private ISimpleSurface _searchedSurface;
 		private bool _surfaceToDispose;
 
+		private ISimpleSurface _domainSurface;
+		private IPolygon _searchedDomain;
+
 		[DocTr(nameof(DocTrStrings.TrZAssign_0))]
 		public TrZAssign(
 			[DocTr(nameof(DocTrStrings.TrZAssign_featureClass))]
@@ -39,25 +45,54 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter(_defaultZAssignOption)]
+		//		[DocTr(nameof(DocTrStrings.TrZAssign_ZAssignOption))]
 		public AssignOption ZAssignOption { get; set; } = _defaultZAssignOption;
+
+		private IRelationalOperator SearchedDomain
+		{
+			get
+			{
+				if (_domainSurface != _searchedSurface)
+				{
+					_searchedDomain = null;
+				}
+
+				if (_searchedDomain == null && _searchedSurface != null)
+				{
+					_searchedDomain = _searchedSurface.GetDomain();
+					_domainSurface = _searchedSurface;
+				}
+
+				return (IRelationalOperator)_searchedDomain;
+			}
+		}
 
 		protected override IEnumerable<GdbFeature> Transform(IGeometry source, long? sourceOid)
 		{
 			AssignedFc transformedClass = (AssignedFc)GetTransformed();
-			GdbFeature feature = sourceOid == null
-									 ? CreateFeature()
-									 : (GdbFeature)transformedClass.CreateObject(sourceOid.Value);
 
-			IGeometry transformed;
-			if (_searchedSurface != null)
+			IGeometry transformed = GeometryFactory.Clone(source);
+			((IZAware)transformed).ZAware = true;
+			if (transformed is IPoint p)
 			{
-				transformed = _searchedSurface.Drape(source);
+				p.Z = double.NaN;
+			}
+			else if (transformed is IZ iz)
+			{
+				iz.SetConstantZ(double.NaN);
 			}
 			else
 			{
-				transformed = GeometryFactory.Clone(source);
-				((IZAware)transformed).ZAware = true;
-				((IZ)transformed).SetConstantZ(0);
+				throw new NotImplementedException($"Unhandled geometry type '{transformed.GeometryType}'");
+			}
+
+			GdbFeature feature = ZAssignOption == AssignOption.All && sourceOid != null
+				                     ? (GdbFeature) transformedClass.CreateObject(sourceOid.Value)
+				                     : CreateFeature();
+
+			if (_searchedSurface != null)
+			{
+				transformed = _searchedSurface.SetShapeVerticesZ(transformed);
 			}
 
 			feature.Shape = transformed;
@@ -68,11 +103,14 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			_searchedSurface = null;
 			_surfaceToDispose = false;
-			_searchedSurface = dataContainer?.GetSimpleSurface(_raster, extent);
+			_searchedSurface = dataContainer?.GetSimpleSurface(
+				_raster, extent, unassignedZValueHandling: UnassignedZValueHandling.IgnoreVertex);
 
 			if (_searchedSurface == null)
 			{
-				_searchedSurface = _raster.CreateSurface(extent);
+				_searchedSurface =
+					_raster.CreateSurface(
+						extent, unassignedZValueHandling: UnassignedZValueHandling.IgnoreVertex);
 				_surfaceToDispose = true;
 			}
 		}
@@ -143,6 +181,57 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 
 				tr.ClearSearchedExtent();
+			}
+
+			protected override void CompleteRawFeatures(IList<TransformedFeature> rawFeatures)
+			{
+				TrZAssign tr = (TrZAssign)Resulting.Transformer;
+				if (tr.ZAssignOption == AssignOption.Tile)
+				{ return; }
+
+				Dictionary<Tile, IList<TransformedFeature>> tileFeatures =
+					new Dictionary<Tile, IList<TransformedFeature>>(new Tile.TileComparer());
+
+				foreach (TransformedFeature f in rawFeatures)
+				{
+					if (tr.SearchedDomain.Contains(f.Shape))
+					{ continue; }
+
+					foreach (var tile in Resulting.DataContainer.EnumInvolvedTiles(f.Shape))
+					{
+						if (!tileFeatures.TryGetValue(
+								tile, out IList<TransformedFeature> features))
+						{
+							features = new List<TransformedFeature>();
+							tileFeatures.Add(tile, features);
+						}
+						features.Add(f);
+					}
+				}
+
+				foreach (var pair in tileFeatures)
+				{
+					Tile tile = pair.Key;
+
+					tile.FilterEnvelope.SpatialReference =
+						((IGeometry) tr.SearchedDomain).SpatialReference;
+
+					if (GeometryUtils.InteriorIntersects(((IGeometry)tr.SearchedDomain).Envelope, tile.FilterEnvelope))
+					{
+						continue;
+					}
+
+					IList<TransformedFeature> features = pair.Value;
+
+					ISimpleSurface surface = Resulting.DataContainer.GetSimpleSurface(
+						tr._raster, tile.FilterEnvelope,
+						unassignedZValueHandling: UnassignedZValueHandling.IgnoreVertex);
+
+					foreach (var feature in features)
+					{
+						feature.Shape = surface.SetShapeVerticesZ(feature.Shape);
+					}
+				}
 			}
 		}
 	}
