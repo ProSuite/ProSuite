@@ -688,8 +688,11 @@ namespace ProSuite.Commons.Geom
 
 		private void ClusterPointsIfNecessary()
 		{
-			if (AllowPointClustering &&
-			    _subcurveNavigator.IntersectionPointNavigator.HasUnClusteredIntersectionPoints)
+			// Desired side-effect: determine target navigability
+			bool hasUnClusteredIntersectionPoints =
+				_subcurveNavigator.IntersectionPointNavigator.HasUnClusteredIntersectionPoints;
+
+			if (AllowPointClustering && hasUnClusteredIntersectionPoints)
 			{
 				if (ClusterGeometries(out ISegmentList newSource, out ISegmentList newTarget))
 				{

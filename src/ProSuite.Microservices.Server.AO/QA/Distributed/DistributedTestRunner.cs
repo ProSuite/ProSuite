@@ -816,6 +816,9 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 				if (! conditionVerificationMsg.Fulfilled)
 				{
+					_msg.Debug(
+						$"The condition {conditionVerification.QualityConditionName} is not fulfilled.");
+
 					conditionVerification.Fulfilled = false;
 				}
 
@@ -860,6 +863,15 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 
 			qualityVerification.CalculateStatistics();
+
+			if (! qualityVerification.Fulfilled)
+			{
+				_msg.InfoFormat("Un-fulfilled conditions: {0}",
+				                StringUtils.Concatenate(
+					                qualityVerification.ConditionVerifications.Where(
+						                cv => ! cv.Fulfilled), cv => cv.QualityConditionName,
+					                Environment.NewLine));
+			}
 		}
 
 		private static QualityConditionVerification FindQualityConditionVerification(
