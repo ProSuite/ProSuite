@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -32,6 +33,10 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private ISimpleSurface _domainSurface;
 		private IPolygon _searchedDomain;
+
+		private readonly ArrayProvider<WKSPointZ> _wksPointArrayProvider =
+			new ArrayProvider<WKSPointZ>();
+
 
 		[DocTr(nameof(DocTrStrings.TrZAssign_0))]
 		public TrZAssign(
@@ -80,6 +85,19 @@ namespace ProSuite.QA.Tests.Transformers
 			else if (transformed is IZ iz)
 			{
 				iz.SetConstantZ(double.NaN);
+			}
+			else if (transformed is IPointCollection4 pointCollection)
+			{
+				int pointCount = pointCollection.PointCount;
+				WKSPointZ[] wksPointZs = _wksPointArrayProvider.GetArray(pointCount);
+				GeometryUtils.QueryWKSPointZs(pointCollection, wksPointZs, 0, pointCount);
+				for (int i = 0; i < pointCount; i++)
+				{
+					WKSPointZ pt = wksPointZs[i];
+					pt.Z = double.NaN;
+					wksPointZs[i] = pt;
+				}
+				GeometryUtils.SetWKSPointZs(pointCollection, wksPointZs, pointCount);
 			}
 			else
 			{
