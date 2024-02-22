@@ -216,9 +216,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			// TODO: Create a structure to check which tileParallel verifications are completed
 
-			// TODO: Consider a BlockingCollection or some other way to limit through-put
-			//       or even the consumer/producer pattern?
-
 			OverallProgressTotal = subVerifications.Count;
 
 			Stack<SubVerification> unhandledSubverifications =

@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using ProSuite.Microservices.Definitions.QA;
 
@@ -18,5 +19,7 @@ namespace ProSuite.Microservices.Client.QA
 		Task<bool> CanAcceptCallsAsync(bool allowFailOver = false);
 
 		string GetAddress();
+
+		bool TryGetRunningRequestCount(TimeSpan timeOut, out int runningRequestCount);
 	}
 }
