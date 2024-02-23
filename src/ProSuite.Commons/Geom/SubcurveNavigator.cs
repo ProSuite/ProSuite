@@ -1321,20 +1321,18 @@ namespace ProSuite.Commons.Geom
 			// Always start by following the source:
 			bool continueOnSource = true;
 			bool forward = true;
+			IntersectionContinuedOnSource(currentIntersection, startIntersections);
 			while (nextIntersection == null ||
 			       ! IntersectionPointNavigator.EqualsStartIntersection(nextIntersection))
 			{
 				Assert.True(count++ <= IntersectionPoints.Count,
 				            "Intersections seen twice. Make sure the input has no self intersections.");
 
-				if (nextIntersection != null)
-				{
-					// Determine if at the next intersection we must
-					// - continue along the source (e.g. because the source touches from the inside)
-					// - continue along the target (forward or backward)
-					SetTurnDirection(startIntersection, PreferredTurnDirection,
-					                 ref currentIntersection, ref continueOnSource, ref forward);
-				}
+				// Determine if at the next intersection we must
+				// - continue along the source
+				// - continue along the target (forward or backward)
+				SetTurnDirection(startIntersection, PreferredTurnDirection,
+				                 ref currentIntersection, ref continueOnSource, ref forward);
 
 				nextIntersection = FollowUntilNextIntersection(
 					currentIntersection, continueOnSource, forward, out Linestring subcurve);
@@ -1348,12 +1346,7 @@ namespace ProSuite.Commons.Geom
 
 				if (continueOnSource)
 				{
-					startIntersections.Remove(currentIntersection);
-
-					// Cut operations with un-closed targets: A ring can be both on the right and the
-					// left side! -> Remember the start intersections along the source to avoid using
-					// an intersection twice which would result in duplicate rings.
-					VisitedIntersectionsAlongSource?.Add(currentIntersection);
+					IntersectionContinuedOnSource(currentIntersection, startIntersections);
 				}
 
 				if (isBoundaryLoopIntersection)
@@ -1378,6 +1371,18 @@ namespace ProSuite.Commons.Geom
 
 				currentIntersection = nextIntersection;
 			}
+		}
+
+		private void IntersectionContinuedOnSource(
+			[NotNull] IntersectionPoint3D currentIntersection,
+			[NotNull] ICollection<IntersectionPoint3D> startIntersections)
+		{
+			startIntersections.Remove(currentIntersection);
+
+			// Cut operations with un-closed targets: A ring can be both on the right and the
+			// left side! -> Remember the start intersections along the source to avoid using
+			// an intersection twice which would result in duplicate rings.
+			VisitedIntersectionsAlongSource?.Add(currentIntersection);
 		}
 
 		private bool SubcurveRunsAlongTarget(
@@ -1439,6 +1444,27 @@ namespace ProSuite.Commons.Geom
 			ref IntersectionPoint3D intersection,
 			ref bool alongSource, ref bool forward)
 		{
+			if (intersection == startIntersection)
+			{
+				// First intersection: Always forward along the source
+				alongSource = true;
+				forward = true;
+
+				if (! intersection.DisallowSourceForward)
+				{
+					return;
+				}
+
+				// Except if that would mean navigating a spike that would collapse in a simplify
+				// operation. Pretend the spike has been navigated and continue:
+				intersection =
+					IntersectionPointNavigator.GetOtherSourceIntersections(intersection)
+					                          .FirstOrDefault();
+
+				Assert.NotNull(intersection,
+				               "Source forward is not allowed but no other intersection was found.");
+			}
+
 			// First set the base line, along which we're arriving at the junction:
 			Linestring sourceRing = Source.GetPart(intersection.SourcePartIndex);
 			Linestring target = Target.GetPart(intersection.TargetPartIndex);
@@ -1779,9 +1805,14 @@ namespace ProSuite.Commons.Geom
 			return true;
 		}
 
-		private bool CanFollowSource(IntersectionPoint3D fromSourceIntersection,
+		private bool CanFollowSource([NotNull] IntersectionPoint3D fromSourceIntersection,
 		                             int initialSourcePartToReturnTo)
 		{
+			if (fromSourceIntersection.DisallowSourceForward)
+			{
+				return false;
+			}
+
 			return IntersectionPointNavigator.AllowConnectToSourcePartAlongOtherSourcePart(
 				fromSourceIntersection,
 				initialSourcePartToReturnTo);

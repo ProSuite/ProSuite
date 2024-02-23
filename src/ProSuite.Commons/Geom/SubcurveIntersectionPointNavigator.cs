@@ -327,7 +327,7 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		private IntersectionClusters IntersectionClusters
+		internal IntersectionClusters IntersectionClusters
 		{
 			get
 			{

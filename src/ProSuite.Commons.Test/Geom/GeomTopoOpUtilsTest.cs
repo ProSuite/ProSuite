@@ -4809,9 +4809,9 @@ namespace ProSuite.Commons.Test.Geom
 
 			var ring2 = new List<Pnt3D>
 			            {
-				            new Pnt3D(0, 80, 9),
+				            new Pnt3D(10, 80, 9),
 				            new Pnt3D(100.011, 80, 9),
-				            new Pnt3D(0, 60, 9)
+				            new Pnt3D(10, 60, 9)
 			            };
 
 			const double tolerance = 0.01;
@@ -4832,23 +4832,23 @@ namespace ProSuite.Commons.Test.Geom
 					Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
 					Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.0001);
 
-					//// TODO: Disallow source naviagation flags:
-					//// swap source and target:
-					//union = GeomTopoOpUtils.GetUnionAreasXY(
-					//	target, source, tolerance);
+					// swap source and target:
+					union = GeomTopoOpUtils.GetUnionAreasXY(
+						target, source, tolerance);
 
-					//Assert.AreEqual(1, union.PartCount);
-					//Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
-					//Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.0001);
+					Assert.AreEqual(1, union.PartCount);
+					Assert.IsTrue(union.IsClosed);
+					Assert.AreEqual(true, union.GetLinestring(0).ClockwiseOriented);
+					Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.0001);
 
 					// TODO: Intersection, Difference
 					// Check intersection:
-					//MultiLinestring intersection = GeomTopoOpUtils.GetIntersectionAreasXY(
-					//	source, target, tolerance);
+					MultiLinestring intersection = GeomTopoOpUtils.GetIntersectionAreasXY(
+						source, target, tolerance);
 
-					//Assert.AreEqual(1, intersection.PartCount);
-					//Assert.AreEqual(true, intersection.GetLinestring(0).ClockwiseOriented);
-					//Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D(), 0.11);
+					Assert.AreEqual(1, intersection.PartCount);
+					Assert.AreEqual(true, intersection.GetLinestring(0).ClockwiseOriented);
+					Assert.AreEqual(target.GetArea2D(), intersection.GetArea2D(), 0.111);
 
 					// 
 					//// Intersection of result with target/source:
@@ -4964,8 +4964,6 @@ namespace ProSuite.Commons.Test.Geom
 				}
 			}
 		}
-
-
 
 		[Test]
 		public void CanUnionSpikeAlongLinearIntersectionShortSegment()
@@ -5303,6 +5301,11 @@ namespace ProSuite.Commons.Test.Geom
 
 			double expectedAreaUnion = 130.324;
 			Assert.AreEqual(expectedAreaUnion, union.GetArea2D(), 0.01);
+
+			//IList<IntersectionPoint3D> intersectionPoints =
+			//	GeomTopoOpUtils.GetSelfIntersectionPoints(source, 0.01);
+
+			//GeomTopoOpUtils.TryCrackSelfCrossingLinestring()
 		}
 
 		[Test]
