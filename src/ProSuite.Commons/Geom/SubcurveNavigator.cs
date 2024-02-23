@@ -273,20 +273,18 @@ namespace ProSuite.Commons.Geom
 					}
 				}
 
-				if (CanMakeRing(subcurveInfos))
+				if (CanMakeRing(subcurveInfos) &&
+				    subcurveInfos.Sum(s => s.Subcurve.SegmentCount) > 2)
 				{
 					// Finish ring
 					Linestring finishedRing =
 						SubcurveUtils.CreateClosedRing(subcurveInfos, ringStart, Tolerance);
 
-					if (finishedRing.SegmentCount > 2)
-					{
-						result.Add(finishedRing);
+					result.Add(finishedRing);
 
-						RememberUsedIntersectionRuns(subcurveInfos);
-						RememberUsedSourceParts(subcurveInfos);
-						RememberUsedTargetParts(subcurveInfos);
-					}
+					RememberUsedIntersectionRuns(subcurveInfos);
+					RememberUsedSourceParts(subcurveInfos);
+					RememberUsedTargetParts(subcurveInfos);
 				}
 			}
 
