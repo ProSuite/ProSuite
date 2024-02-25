@@ -229,8 +229,12 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		{
 			const int workContextTypeProject = 1;
 
+			// NOTE: If it is not a child workspace we should absolutely not include the path
+			//       because this triggers the notoriously slow GetDatasetMappings() method.
+			bool includePath = ! projectWorkspace.IsMasterDatabaseWorkspace;
+
 			WorkspaceMsg workspaceMsg =
-				ProtobufConversionUtils.ToWorkspaceRefMsg(projectWorkspace.Datastore);
+				ProtobufConversionUtils.ToWorkspaceRefMsg(projectWorkspace.Datastore, includePath);
 
 			var workContextMsg = new WorkContextMsg
 			                     {

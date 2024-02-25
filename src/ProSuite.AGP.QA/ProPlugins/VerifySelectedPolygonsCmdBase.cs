@@ -9,7 +9,7 @@ using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
-using ProSuite.Commons.AGP;
+using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -43,7 +43,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
-		protected abstract IProSuiteFacade ProSuiteImpl { get; }
+		protected abstract IWorkListOpener WorkListOpener { get; }
 		protected override async Task<bool> OnClickCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
@@ -96,7 +96,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
-			var appController = new AgpBackgroundVerificationController(ProSuiteImpl,
+			var appController = new AgpBackgroundVerificationController(WorkListOpener,
 				MapView.Active, selectedPolygonGeometry, spatialRef);
 
 			var qaProgressViewmodel =

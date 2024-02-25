@@ -287,6 +287,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (Table table in objectClasses)
 			{
+				if (table.GetDatastore() is not Geodatabase)
+				{
+					continue;
+				}
+
 				ObjectClassMsg objectClassMsg = ProtobufConversionUtils.ToObjectClassMsg(
 					table, Convert.ToInt32(table.GetID()));
 
@@ -300,7 +305,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				{
 					using (Datastore datastore = table.GetDatastore())
 					{
-						workspaceMsg = ProtobufConversionUtils.ToWorkspaceRefMsg(datastore);
+						workspaceMsg = ProtobufConversionUtils.ToWorkspaceRefMsg(datastore, true);
 
 						workspaceMessages.Add(workspaceMsg);
 					}
@@ -379,9 +384,15 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					                                                 datasetsById[datasetId])
 				                                                 .ToList();
 
+				var projectWorkspace = new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
+				                                            projectMsg.Name,
+				                                            datasets, datastore, sr)
+				                       {
+					                       IsMasterDatabaseWorkspace =
+						                       projectWorkspaceMsg.IsMasterDatabaseWorkspace
+				                       };
 				result.Add(
-					new ProjectWorkspace(projectWorkspaceMsg.ProjectId, projectMsg.Name,
-					                     datasets, datastore, sr));
+					projectWorkspace);
 			}
 
 			return result;

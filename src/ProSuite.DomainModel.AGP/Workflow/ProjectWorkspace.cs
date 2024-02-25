@@ -8,7 +8,7 @@ using ProSuite.DomainModel.AGP.DataModel;
 namespace ProSuite.DomainModel.AGP.Workflow
 {
 	/// <summary>
-	/// The workspace and the project with the datasets currently relevant to the user  e.g.
+	/// The workspace and the project with the datasets currently relevant to the user e.g.
 	/// because they are in the map. The project workspace is a concept the users need to be
 	/// aware of in order to get the expected specifications and for the system to know which
 	/// datasets from which version shall be verified. For more details, see the admin help.
@@ -37,6 +37,8 @@ namespace ProSuite.DomainModel.AGP.Workflow
 		public SpatialReference ModelSpatialReference { get; }
 
 		public string DisplayName { get; }
+
+		public bool IsMasterDatabaseWorkspace { get; set; }
 
 		public string GetVersionName()
 		{

@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Gdb;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA.Xml;
@@ -156,9 +157,11 @@ namespace ProSuite.Microservices.Server.AO
 			DateTime? defaultModificationDate =
 				FromTicks(workspaceMessage.DefaultVersionModificationTicks);
 
+			string path = FileSystemUtils.FromPathUri(workspaceMessage.Path);
+
 			var gdbWorkspace = new GdbWorkspace(container, workspaceMessage.WorkspaceHandle,
 			                                    (WorkspaceDbType) workspaceMessage.WorkspaceDbType,
-			                                    EmptyToNull(workspaceMessage.Path),
+			                                    path,
 			                                    EmptyToNull(workspaceMessage.VersionName),
 			                                    EmptyToNull(workspaceMessage.DefaultVersionName),
 			                                    defaultCreationDate,

@@ -31,9 +31,7 @@ namespace ProSuite.Commons.AGP.Gdb
 					WorkspaceFactory = WorkspaceFactory.SDE;
 					break;
 				case FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath:
-					// connectionString is "DATABASE=C:\\git\\KtLU.Dabank\\data\\Testdaten\\dabank_test_data\\Default.gdb"
 					ConnectionString = fileGeodatabaseConnectionPath.Path.ToString();
-
 					WorkspaceFactory = WorkspaceFactory.FileGDB;
 					break;
 				case FileSystemConnectionPath fileSystemConnection:

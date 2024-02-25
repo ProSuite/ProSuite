@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
 
-namespace ProSuite.Commons.AGP
+namespace ProSuite.AGP.WorkList
 {
-	public interface IProSuiteFacade
+	public interface IWorkListOpener
 	{
 		Task OpenSelectionWorkListAsync();
 

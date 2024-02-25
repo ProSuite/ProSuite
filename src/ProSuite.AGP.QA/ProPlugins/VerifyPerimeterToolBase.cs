@@ -8,7 +8,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.QA.VerificationProgress;
-using ProSuite.Commons.AGP;
+using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -48,7 +48,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
-		protected abstract IProSuiteFacade ProSuiteImpl { get; }
+		protected abstract IWorkListOpener WorkListOpener { get; }
 
 		protected override Task OnToolActivateAsync(bool active)
 		{
@@ -107,7 +107,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(
-				ProSuiteImpl, MapView.Active, sketchGeometry, spatialRef);
+				WorkListOpener, MapView.Active, sketchGeometry, spatialRef);
 
 			string perimeterName = "Perimeter";
 

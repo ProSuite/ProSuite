@@ -383,7 +383,8 @@ namespace ProSuite.Microservices.Client.AGP
 		}
 
 		[NotNull]
-		public static WorkspaceMsg ToWorkspaceRefMsg([NotNull] Datastore datastore)
+		public static WorkspaceMsg ToWorkspaceRefMsg([NotNull] Datastore datastore,
+		                                             bool includePath)
 		{
 			var result =
 				new WorkspaceMsg
@@ -405,12 +406,14 @@ namespace ProSuite.Microservices.Client.AGP
 				result.DefaultVersionDescription = defaultVersion.GetDescription() ?? string.Empty;
 			}
 
-			// NOTE: The path is most useful. It is the actual FGDB path or a temporary sde file that can be used to re-open
-			//       the data store. This shall work in every case if the service is local. If the service is remote
-			//       the path is useless (unless it is an FGDB on a UNC path that can be seen by the server)
-			// -> Use data-verification (if no unsupported tests are included)
-			result.Path = datastore.GetPath().AbsoluteUri;
-
+			if (includePath)
+			{
+				// NOTE: The path is most useful. It is the actual FGDB path or a temporary sde file that can be used to re-open
+				//       the data store. This shall work in every case if the service is local. If the service is remote
+				//       the path is useless (unless it is an FGDB on a UNC path that can be seen by the server)
+				// -> Use data-verification (if no unsupported tests are included)
+				result.Path = datastore.GetPath().AbsoluteUri;
+			}
 			// The connection properties are useful, but the password is encrypted. Consider using the password
 			// stored in the DDX - look it up by Instance/Database/User (or just Instance/Database) from all connection providers.
 			// However, the child databases are typically local!

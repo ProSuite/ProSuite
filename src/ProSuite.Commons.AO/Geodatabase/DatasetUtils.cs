@@ -1521,6 +1521,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(featureWorkspace, nameof(featureWorkspace));
 			Assert.ArgumentNotNull(datasetTypes, nameof(datasetTypes));
 
+			// This is very slow for workspaces with many datasets. Either it should be cached
+			// or we can replace it by only searching for the required datasets
 			IList<IDatasetName> featureDatasetNames =
 				GetFeatureDatasetNames((IWorkspace) featureWorkspace, owner).ToList();
 

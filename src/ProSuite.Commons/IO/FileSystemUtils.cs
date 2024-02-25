@@ -433,5 +433,20 @@ namespace ProSuite.Commons.IO
 
 			return result.ToArray();
 		}
+
+		[CanBeNull]
+		public static string FromPathUri([CanBeNull] string pathUri)
+		{
+			if (string.IsNullOrEmpty(pathUri))
+			{
+				return null;
+			}
+
+			Uri uri = new Uri(pathUri, UriKind.Absolute);
+
+			string path = uri.LocalPath;
+
+			return path;
+		}
 	}
 }

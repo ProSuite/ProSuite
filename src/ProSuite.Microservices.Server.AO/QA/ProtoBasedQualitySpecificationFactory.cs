@@ -70,9 +70,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				if (! int.TryParse(dataSource.ID, out int modelId))
 				{
-					// If the the model is harvested using VerifiedModelFactory
-					// it is not important that the modelId matches the dataSource.ID.
-					// Just use a unique, non-persistent model id
+					// TODO: The following is not correct! Otherwise, no SR can be assigned to the model
+					// If the model is harvested using VerifiedModelFactory it is not important
+					// that the modelId matches the dataSource.ID. Just use a unique, non-persistent model id
 					modelId = _currentModelId--;
 				}
 
@@ -154,8 +154,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 						continue;
 					}
 
-					if (! string.Equals(parameterMsg.WorkspaceId, workspaceId,
-					                    StringComparison.OrdinalIgnoreCase))
+					bool equalsModelId = string.Equals(parameterMsg.WorkspaceId, workspaceId,
+					                                   StringComparison.OrdinalIgnoreCase);
+
+					bool equalsModelName = string.Equals(parameterMsg.WorkspaceId,
+					                                     model.Name,
+					                                     StringComparison.OrdinalIgnoreCase);
+
+					if (! equalsModelId && ! equalsModelName)
 					{
 						continue;
 					}

@@ -48,9 +48,8 @@ namespace ProSuite.AGP.Editing.FillHole
 		{
 			Enabled = MicroserviceClient != null;
 
-			Tooltip = Enabled
-				          ? "Remove holes or boundary loops from polygon features"
-				          : "Microservice not found / not started.";
+			if (MicroserviceClient == null)
+				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
 		protected override void OnToolActivatingCore()

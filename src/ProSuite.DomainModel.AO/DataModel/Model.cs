@@ -847,6 +847,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 			// remove obsolete datasets
 			foreach (Dataset dataset in Datasets)
 			{
+				_msg.VerboseDebug(() => $"Checking existing dataset {dataset.Name}");
+
 				string gdbDatasetName = ModelElementUtils.GetGdbElementName(dataset, workspace,
 					DefaultDatabaseName,
 					DefaultDatabaseSchemaOwner);

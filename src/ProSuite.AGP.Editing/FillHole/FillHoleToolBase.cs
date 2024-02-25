@@ -54,9 +54,8 @@ namespace ProSuite.AGP.Editing.FillHole
 		{
 			Enabled = MicroserviceClient != null;
 
-			Tooltip = Enabled
-				          ? "Creates a new polygon feature filling a hole or filling a gap between selected polygons"
-				          : "Microservice not found / not started. Please make sure the latest ProSuite Extension is installed.";
+			if (MicroserviceClient == null)
+				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
 		protected override void OnToolActivatingCore()
