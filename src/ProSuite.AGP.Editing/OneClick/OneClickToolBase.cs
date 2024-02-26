@@ -154,6 +154,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
 		{
+			_msg.VerboseDebug(() => "HandleKeyDownAsync");
+
 			if (args.Key == Key.Escape)
 			{
 				await ViewUtils.TryAsync(HandleEscapeAsync, _msg);

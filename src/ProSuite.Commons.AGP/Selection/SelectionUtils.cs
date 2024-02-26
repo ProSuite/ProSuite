@@ -198,7 +198,9 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public static Dictionary<MapMember, List<long>> GetSelection(Map map)
 		{
-			return GetSelection(map.GetSelection());
+			SelectionSet selectionSet = map.GetSelection();
+
+			return GetSelection(selectionSet);
 		}
 
 		public static Dictionary<MapMember, List<long>> GetSelection(

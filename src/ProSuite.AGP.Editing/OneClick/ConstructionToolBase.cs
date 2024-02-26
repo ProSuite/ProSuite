@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -228,7 +229,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (args.Key == _keyRestorePrevious)
 			{
-				RestorePreviousSketch();
+				try
+				{
+					RestorePreviousSketch();
+				}
+				catch (Exception e)
+				{
+					throw new ApplicationException("Error restoring the previous sketch", e);
+				}
 			}
 		}
 
