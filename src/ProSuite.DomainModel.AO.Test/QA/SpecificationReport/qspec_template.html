@@ -1,0 +1,408 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>{{specification.Name}}</title>
+    <style type="text/css">
+        @page {
+            margin-top: 1cm;
+            margin-bottom: 1cm;
+            margin-left: 1cm;
+            margin-right: 1cm;
+        }
+
+        body {
+            font-family: Verdana, Arial;
+            font-size: 8pt;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: inherit;
+        }
+
+            table.issueCodes {
+                border-style: hidden;
+            }
+
+        th {
+            border: 1px solid #DDDDDD;
+            padding: 4px 4px 4px 4px;
+            font-weight: bold;
+        }
+
+        tr {
+            page-break-inside: avoid;
+        }
+
+            tr.oddRow td {
+            }
+
+            tr.evenRow td {
+                background-color: #F6F7F9;
+            }
+
+            tr.categoryTitle {
+                page-break-after: avoid;
+                background-color: #85ae92;
+                font-size: 9pt;
+            }
+
+                tr.categoryTitle th {
+                    color: white;
+                    border-top-color: white;
+                    border-left-color: #85ae92;
+                    border-right-color: #85ae92;
+                    border-bottom-color: white;
+                    text-align: left;
+                }
+
+            tr.categorySeparator {
+                height: 12px;
+            }
+
+                tr.categorySeparator td {
+                    border: 0 none;
+                }
+
+            tr.qualityConditionTitle {
+                page-break-after: avoid;
+                background-color: #616498;
+                border: 0;
+                text-align: left;
+            }
+
+                tr.qualityConditionTitle th {
+                    color: white;
+                    border: 0;
+                    padding-left: 6px;
+                    padding-right: 6px;
+                    padding-top: 4px;
+                    padding-bottom: 4px;
+                    font-size: 9pt;
+                }
+
+            tr.qualityConditionSeparator {
+                height: 12px;
+            }
+
+                tr.qualityConditionSeparator td {
+                    border: 0 none;
+                }
+
+            tr.testTitle {
+                page-break-after: avoid;
+                background-color: #757575;
+                border: 0;
+                text-align: left;
+            }
+
+                tr.testTitle th {
+                    color: white;
+                    border: 0;
+                    padding-left: 6px;
+                    padding-right: 6px;
+                    padding-top: 4px;
+                    padding-bottom: 4px;
+                    font-size: 9pt;
+                }
+
+            tr.testSeparator {
+                height: 12px;
+            }
+
+                tr.testSeparator td {
+                    border: 0 none;
+                }
+
+            tr.columnHeaders {
+                page-break-after: avoid;
+                background-color: #DCE8FF;
+            }
+
+                tr.columnHeaders th {
+                    white-space: nowrap;
+                    padding: 2px 4px 2px 4px;
+                }
+
+            tr.element td {
+                padding: 4px;
+                border: 0;
+            }
+
+                tr.element td.name {
+                    white-space: nowrap;
+                }
+
+                tr.element td.description {
+                    width: 100%;
+                }
+
+                tr.element td.warning {
+                    background-color: #fff366;
+                    text-align: center;
+                    border: 1px solid white;
+                }
+
+                tr.element td.error {
+                    background-color: #ffa669;
+                    text-align: center;
+                    border: 1px solid white;
+                }
+
+        td {
+            border: 1px solid #DDDDDD;
+            padding: 4px 4px 4px 4px;
+            vertical-align: top;
+            -webkit-print-color-adjust: exact; /* otherwise chrome/iron won't print background colors*/
+        }
+
+            td.testSignature {
+                font-family: monospace;
+            }
+
+            td.uuid {
+                font-family: monospace;
+            }
+
+            td.name {
+                white-space: nowrap;
+            }
+
+            td.issueCodeID {
+                word-break: break-all;
+                word-wrap: break-word;
+                font-family: monospace;
+                font-size: 7.5pt;
+                min-width: 350px;
+            }
+
+            td.parameterName {
+                white-space: nowrap;
+                background-color: #DCE8FF;
+                font-size: 7.5pt;
+            }
+
+            td.parameterType {
+                white-space: nowrap;
+                font-family: monospace;
+                font-size: 7.5pt;
+            }
+
+            td.value {
+                width: 100%;
+            }
+
+            td.dataset {
+            }
+
+            td.dataModel {
+            }
+
+            td.referenceData {
+            }
+
+            td.filterExpression {
+                width: 100%;
+            }
+
+            td.notApplicableValue {
+                background-color: #F6F6F6;
+                width: 100%;
+            }
+
+        h1 {
+            font-size: 14pt;
+            font-weight: bold;
+        }
+
+        h2 {
+            font-size: 12pt;
+            font-weight: bold;
+        }
+
+        div.header {
+            width: 100%;
+            inline-size: inherit;
+            border-width: 1px;
+            border-color: #98C7E1;
+            border-style: solid;
+            background-color: #98C7E1;
+            padding-top: 0;
+            padding-left: 8px;
+            padding-bottom: 8px;
+            padding-right: 8px;
+        }
+
+            div.header h1 {
+                margin-top: 8px;
+            }
+
+        div.description {
+            padding-bottom: 8px;
+        }
+
+        div.url {
+            padding-bottom: 8px;
+        }
+
+        div.creationDate {
+            font-size: 8pt;
+        }
+
+        @media print {
+            /* not for a in general (would also apply to link targets) */
+            a:link, a:visited {
+                color: black;
+                text-decoration: none;
+            }
+        }
+    </style>
+
+
+</head>
+<body>
+    <div class="header">
+        <h1>{{specification.Name}}</h1>
+        {% if specification.Description %}
+        <div class="description">{{specification.Description}}</div>
+        {% endif %}
+        {% if specification.UrlText %}
+        <div class="url"><a href="{{specification.UrlLink}}" target="_blank">{{specification.UrlText}}</a></div>
+        {% endif %}
+        <div class="creationDate">{{specification.ReportCreationDate | Format:'dd.MM.yyyy'}}</div>
+    </div>
+
+    <h2>{{text.ContentsTitle}}</h2>
+
+    <table style="margin-top: 12px">
+        {% include 'category_elements' with specification.RootCategories %}
+    </table>
+
+    <h2>{{text.QualityConditionsTitle}}</h2>
+
+    <table>
+        {% for element in specification.Elements -%}
+        <tr class="qualityConditionTitle">
+            <th colspan="5"><a id="{{element.QualityCondition.Name}}">{{element.QualityCondition.Name}}</a></th>
+        </tr>
+        <tr>
+            <td class="name">{{text.Category}}</td>
+            <td class="value" colspan="4">{{element.QualityCondition.Category.QualifiedName}}</td>
+        </tr>
+        {% if element.QualityCondition.Description %}
+        <tr>
+            <td class="name">{{text.Description}}</td>
+            <td class="value" colspan="4">{{element.QualityCondition.Description | NewlineToBr}}</td>
+        </tr>
+        {% endif %}
+        {% if element.QualityCondition.UrlText %}
+        <tr>
+            <td class="name">{{text.Url}}</td>
+            <td class="value" colspan="4"><a href="{{element.QualityCondition.UrlLink}}" target="_blank">{{element.QualityCondition.UrlText}}</a></td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td class="name">{{text.Test}}</td>
+            <td class="value" colspan="4"><a href="#{{element.QualityCondition.TestDescriptor.Name}}">{{element.QualityCondition.TestDescriptor.Name}}</a></td>
+        </tr>
+        {% if specification.ShowQualityConditionUuids %}
+        <tr>
+            <td class="name">{{text.Uuid}}</td>
+            <td class="value uuid" colspan="4">{{element.QualityCondition.Uuid}}</td>
+        </tr>
+        <tr>
+            <td class="name">{{text.VersionUuid}}</td>
+            <td class="value uuid" colspan="4">{{element.QualityCondition.VersionUuid}}</td>
+        </tr>
+        {% endif %}
+
+        <tr class="columnHeaders">
+            <th>{{text.ColumnHeaderParameter}}</th>
+            <th>{{text.ColumnHeaderValue}}</th>
+            <th>{{text.ColumnHeaderDataModel}}</th>
+            <th>{{text.ColumnHeaderFilterExpression}}</th>
+            <th>{{text.ColumnHeaderReferenceData}}</th>
+        </tr>
+        {% for parameterValue in element.QualityCondition.ParameterValues -%}
+        <tr>
+            <td class="parameterName">{{parameterValue.Name}}</td>
+            {% if parameterValue.IsDatasetParameter %}
+            <td class="dataset">{{parameterValue.Dataset}}{% if parameterValue.DatasetGeometryType %}&nbsp;({{parameterValue.DatasetGeometryType}}){% endif %}</td>
+            <td class="dataModel">{{parameterValue.DataModel}}</td>
+            <td class="filterExpression">{{parameterValue.FilterExpression}}</td>
+            <td class="referenceData">{% if parameterValue.UsedAsReferenceData %}{{text.Yes}}{% else %}{{text.No}}{% endif %}</td>
+            {% else %}
+            <td colspan="4">{{parameterValue.Value}}</td>
+            {% endif %}
+        </tr>
+        {% endfor -%}
+        <tr class="qualityConditionSeparator"><td colspan="5" /></tr>
+        {% endfor -%}
+    </table>
+
+    <h2>{{text.TestsTitle}}</h2>
+
+    <table>
+        {% for test in specification.TestDescriptors -%}
+        <tr class="testTitle">
+            <th class="value" colspan="3"><a id="{{test.Name}}"></a>{{test.Name}}</th>
+        </tr>
+        <tr>
+            <td class="name">{{text.TestCategories}}</td>
+            <td class="value" colspan="2">{{test.TestCategories | Join:","}}</td>
+        </tr>
+        {% if test.Description %}
+        <tr>
+            <td class="name">{{text.Description}}</td>
+            <td class="value" colspan="2">{{test.Description | NewlineToBr}}</td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td class="name">{{text.TestDescription}}</td>
+            <td class="value" colspan="2">{{test.TestDescription | NewlineToBr}}</td>
+        </tr>
+        <tr>
+            <td class="name">{{text.Implementation}}</td>
+            <td class="value" colspan="2">{{test.ClassName}}, {{test.AssemblyName}}{% if test.UsesConstructor %}&nbsp;(constructor id: {{test.ConstructorId}}){% endif %}</td>
+        </tr>
+        <tr>
+            <td class="name">{{text.TestSignature}}</td>
+            <td class="value testSignature" colspan="2">{{test.Signature}}</td>
+        </tr>
+        <tr>
+            <td colspan="3" style="padding: 0">
+                <table class="issueCodes">
+                    <tr class="columnHeaders">
+                        <th>{{text.ColumnHeaderIssueType}}</th>
+                        <th>{{text.ColumnHeaderDescription}}</th>
+                    </tr>
+                    {% for issueCode in test.IssueCodes -%}
+                    <tr>
+                        <td class="issueCodeID">{{issueCode.ID}}</td>
+                        <td class="value">{{issueCode.Description | NewlineToBr}}</td>
+                    </tr>
+                    {% endfor -%}
+                </table>
+            </td>
+        </tr>
+
+        <tr class="columnHeaders">
+            <th>{{text.ColumnHeaderParameter}}</th>
+            <th>{{text.ColumnHeaderType}}</th>
+            <th>{{text.ColumnHeaderDescription}}</th>
+        </tr>
+        {% for parameter in test.Parameters -%}
+        <tr>
+            <td class="parameterName">{{parameter.Name}}</td>
+            <td class="parameterType">{{parameter.Type}}</td>
+            <td class="value">{{parameter.Description | NewlineToBr }}</td>
+        </tr>
+        {% endfor -%}
+        <tr class="testSeparator"><td colspan="3" /></tr>
+        {% endfor -%}
+    </table>
+
+</body>
+</html>
