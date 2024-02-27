@@ -21,8 +21,8 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		private static RelayCommand _openLinkMessage;
 
 		//private LoggingEventsAppender _appenderDelegate = new LoggingEventsAppender();
-		private readonly List<LogType> _disabledLogTypes = new List<LogType>();
-		public readonly object _lockLogMessages = new object();
+		private readonly List<LogType> _disabledLogTypes = new();
+		private readonly object _lockLogMessages = new();
 
 		private LoggingEventItem _selectedRow;
 
@@ -38,7 +38,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		public static Exception LoggingConfigurationException { get; set; }
 
-		public ObservableCollection<LoggingEventItem> LogMessageList { get; set; }
+		public ObservableCollection<LoggingEventItem> LogMessageList { get; }
 
 		public LoggingEventItem SelectedRow
 		{
@@ -46,7 +46,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			set
 			{
 				_selectedRow = value;
-				NotifyPropertyChanged(nameof(SelectedRow));
+				NotifyPropertyChanged();
 			}
 		}
 
@@ -54,8 +54,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		{
 			get
 			{
-				return _openLinkMessage ??
-				       (_openLinkMessage = new RelayCommand(OpenLogLinkMessage, () => true));
+				return _openLinkMessage ??= new RelayCommand(OpenLogLinkMessage, () => true);
 			}
 		}
 
@@ -214,18 +213,13 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		{
 			get
 			{
-				return _openMessage ??
-				       (_openMessage = new RelayCommand(OpenLogMessage, () => true));
+				return _openMessage ??= new RelayCommand(OpenLogMessage, () => true);
 			}
 		}
 
-		private void OpenLogMessage(object msg)
+		private static void OpenLogMessage(object msg)
 		{
-			var message = (LoggingEventItem) msg;
-			if (message == null)
-			{
-				return;
-			}
+			if (msg is not LoggingEventItem message) return;
 
 			//_msg.Info($"Open message: {message?.Time} {message?.Message}");
 			LogMessageActionEvent.Publish(

@@ -1,19 +1,18 @@
+using System;
 using System.Windows.Controls;
 using ArcGIS.Desktop.Framework.Contracts;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Framework
 {
 	public abstract class DockPaneViewModelBase : DockPane
 	{
-		[NotNull] private readonly Control _contentControl;
+		private readonly Control _contentControl;
 
 		protected DockPaneViewModelBase([NotNull] Control contentControl)
 		{
-			Assert.ArgumentNotNull(contentControl, nameof(contentControl));
-
-			_contentControl = contentControl;
+			_contentControl =
+				contentControl ?? throw new ArgumentNullException(nameof(contentControl));
 		}
 
 		protected override Control OnCreateContent()
