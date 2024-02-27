@@ -37,6 +37,9 @@
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="Quaestor.LoadReporting">
+      <HintPath>..\..\lib\Quaestor\Quaestor.LoadReporting.dll</HintPath>
+    </Reference>
     <Reference Include="Quaestor.ServiceDiscovery">
       <HintPath>..\..\lib\Quaestor\Quaestor.ServiceDiscovery.dll</HintPath>
     </Reference>

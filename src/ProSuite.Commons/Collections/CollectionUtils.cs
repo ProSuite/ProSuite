@@ -318,6 +318,55 @@ namespace ProSuite.Commons.Collections
 		}
 
 		/// <summary>
+		/// Cycles through the full list <see cref="maximumFullCycles"/> times.
+		/// At the end of the list it will continue at the beginning.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="list"></param>
+		/// <param name="maximumFullCycles"></param>
+		/// <returns></returns>
+		public static IEnumerable<T> Cycle<T>([NotNull] IList<T> list,
+		                                      int maximumFullCycles)
+		{
+			int length = list.Count;
+			int cycleCount = -1;
+			int i = 0;
+			while (cycleCount < maximumFullCycles)
+			{
+				i %= length;
+
+				if (i == 0)
+				{
+					cycleCount++;
+
+					if (cycleCount == maximumFullCycles)
+					{
+						yield break;
+					}
+				}
+
+				yield return list[i];
+
+				i++;
+			}
+
+			//for (int i = 0; i < list.Count; i++)
+			//{
+			//	if (i == 0)
+			//	{
+			//		cycleCount++;
+
+			//		if (cycleCount == maximumFullCycles)
+			//		{
+			//			yield break;
+			//		}
+			//	}
+
+			//	yield return list[i];
+			//}
+		}
+
+		/// <summary>
 		/// Check if two collections have the same elements.
 		/// </summary>
 		/// <typeparam name="T">The type of elements in the collections.</typeparam>
@@ -881,7 +930,7 @@ namespace ProSuite.Commons.Collections
 				{
 					while (e1.MoveNext() && e2.MoveNext())
 					{
-						result.AddRange(new[] {e1.Current, e2.Current});
+						result.AddRange(new[] { e1.Current, e2.Current });
 					}
 
 					while (e1.MoveNext())
@@ -918,7 +967,7 @@ namespace ProSuite.Commons.Collections
 					{
 						while (e1.MoveNext() && e2.MoveNext() && e3.MoveNext())
 						{
-							result.AddRange(new[] {e1.Current, e2.Current, e3.Current});
+							result.AddRange(new[] { e1.Current, e2.Current, e3.Current });
 						}
 
 						while (e1.MoveNext())

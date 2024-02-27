@@ -383,4 +383,13 @@ In the resulting feature class, only attributes defined in 'Attributes' can be u
   <data name="TrGetNodes_lineClass" xml:space="preserve">
     <value>Line FeatureClass</value>
   </data>
+  <data name="TrZAssign_0" xml:space="preserve">
+    <value>Creates a featureclass, where the height of vertices correspond to 'raster'. Remark: the height is only assign within each processsed tile. </value>
+  </data>
+  <data name="TrZAssign_featureClass" xml:space="preserve">
+    <value>featureclass to assign the raster z-values</value>
+  </data>
+  <data name="TrZAssign_raster" xml:space="preserve">
+    <value>raster with z-Values</value>
+  </data>
 </root>

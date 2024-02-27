@@ -67,10 +67,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		protected virtual ITableFilter Clone()
 		{
-			AoTableFilter clone = (AoTableFilter) Activator.CreateInstance(GetType());
-			clone.SubFields = SubFields;
-			clone.WhereClause = WhereClause;
-			clone.PostfixClause = PostfixClause;
+			AoTableFilter clone = (AoTableFilter) MemberwiseClone();
 			return clone;
 		}
 	}
@@ -105,8 +102,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 				clone.FilterGeometry = GeometryFactory.Clone(FilterGeometry);
 			}
 
-			clone.SpatialRelationship = SpatialRelationship;
-			clone.SpatialRelDescription = SpatialRelDescription;
+			if (TileExtent != null)
+			{
+				clone.TileExtent = GeometryFactory.Clone(TileExtent);
+			}
+
 			return clone;
 		}
 

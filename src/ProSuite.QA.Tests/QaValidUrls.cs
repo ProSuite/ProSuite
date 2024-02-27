@@ -106,6 +106,8 @@ namespace ProSuite.QA.Tests
 			_table = table;
 			_urlExpression = urlExpression;
 
+			AddCustomQueryFilterExpression(urlExpression);
+
 			_maximumParallelTasks = _defaultMaximumParallelTasks;
 
 			// if the url expression is a single field, then direclty read from the field
