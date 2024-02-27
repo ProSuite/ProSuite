@@ -15,7 +15,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		AddLayer
 	}
 
-	public class LogMessageActionEventArgs : EventBase
+	public class LogMessageActionEventArgs : EventBase // TODO really derive from EventBase?
 	{
 		public LoggingEventItem LogMessage { get; }
 

@@ -10,13 +10,11 @@ using ProSuite.Commons.Logging;
 namespace ProSuite.Commons.AGP.LoggerUI
 {
 	[UsedImplicitly]
-	public class LogDockPaneViewModelBase : DockPaneViewModelBase, IDisposable
+	public abstract class LogDockPaneViewModelBase : DockPaneViewModelBase, IDisposable
 	{
-		//TODO: ID from Config.daml; make abstract or similar
-		public const string ConfigId_ProSuiteLogPane = "ProSuiteTools_Logger_ProSuiteLogPane";
+		protected abstract string LogDockPaneDamlID { get; }
 
-		//TODO: ID from Config.daml; make abstract or similar
-		public const string ConfigId_ProSuiteLogPane_ShowButton = "ProSuiteTools_Logger_ProSuiteLogPane_ShowButton";
+		protected abstract string ShowLogButtonDamlID { get; }
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -28,7 +26,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private LoggingEventItem _selectedRow;
 
-		public LogDockPaneViewModelBase() : base(new LogDockPane())
+		protected LogDockPaneViewModelBase() : base(new LogDockPane())
 		{
 			LogMessageList = new ObservableCollection<LoggingEventItem>();
 			BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
@@ -66,7 +64,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
 
 			var pane =
-				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(ConfigId_ProSuiteLogPane);
+				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(LogDockPaneDamlID);
 			if (pane == null)
 			{
 				return;
@@ -83,7 +81,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		{
 			var message = (LoggingEventItem) msg;
 
-			// TODO inform UI than "Hyperlink" is clicked
+			// TODO inform UI that "Hyperlink" is clicked
 			//_msg.Info($"Hyperlink clicked {message.LinkMessage}");
 		}
 
@@ -127,9 +125,8 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private void UpdateLogBtn(bool visible)
 		{
-			IPlugInWrapper buttonWrapper =
-				FrameworkApplication.GetPlugInWrapper(ConfigId_ProSuiteLogPane_ShowButton);
-			if (buttonWrapper == null)
+			IPlugInWrapper buttonWrapper = FrameworkApplication.GetPlugInWrapper(ShowLogButtonDamlID);
+			if (buttonWrapper is null)
 			{
 				return;
 			}
