@@ -4782,6 +4782,41 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionWithIntersectionOfVeryNarrowIsland_Top5795()
+		{
+			// This is OID BuildingBody with OID 793. The error occurs at ring 39
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"cut_mini_interior_ring_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"cut_mini_interior_ring_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			const double tolerance = 0.01;
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			Assert.AreEqual(source.PartCount - 1, union.PartCount);
+
+			// The extremely narrow island part was completely removed.
+			Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.03);
+
+			MultiLinestring difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance);
+
+			// Likely incorrect!
+			double expectedAreaDifference = source.GetArea2D() - target.GetArea2D();
+			//Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.05);
+		}
+
+		[Test]
 		public void CanUnionUnCrackedRingAtSmallOvershootVertex()
 		{
 			// Prevent navigation within the cluster (zig-zag back to the same cluster), as in

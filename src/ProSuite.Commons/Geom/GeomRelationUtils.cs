@@ -576,6 +576,7 @@ namespace ProSuite.Commons.Geom
 		/// breaks at the start end point (if congruence should be detected correctly).</param>
 		/// <param name="filterTargetByPartIndex">Specify the target part, that should be checked.
 		/// If null, the entire target geometry is checked.</param>
+		/// <param name="intersectionClusters"></param>
 		/// <returns>true, if the <paramref name="targetSegments"/> are contained inside the
 		/// <paramref name="closedPolycurve"/>.
 		/// false, if the <paramref name="targetSegments"/> is not contained inside the
@@ -587,7 +588,8 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList targetSegments,
 			double tolerance,
 			IList<IntersectionPoint3D> intersectionPoints = null,
-			int? filterTargetByPartIndex = null)
+			int? filterTargetByPartIndex = null,
+			IntersectionClusters intersectionClusters = null)
 		{
 			if (closedPolycurve.IsEmpty)
 			{
@@ -640,10 +642,11 @@ namespace ProSuite.Commons.Geom
 					continue;
 				}
 
-				DetermineTargetDeviationAtIntersection(intersectionPoint, closedPolycurve,
-				                                       targetSegments, tolerance,
-				                                       out bool hasRightSideDeviation,
-				                                       out bool hasLeftSideDeviation);
+				DetermineTargetDeviationAtIntersection(
+					intersectionPoint, closedPolycurve, targetSegments, tolerance,
+					intersectionClusters,
+					out bool hasRightSideDeviation, out bool hasLeftSideDeviation);
+
 				if (hasLeftSideDeviation)
 				{
 					return false;
@@ -725,11 +728,11 @@ namespace ProSuite.Commons.Geom
 		/// <param name="touchPoints"></param>
 		/// <param name="tolerance"></param>
 		/// <returns></returns>
-		private static bool? IsTargetTouchingFromInside(ISegmentList closedPolycurve,
-		                                                ISegmentList targetSegments,
-		                                                IEnumerable<IntersectionPoint3D>
-			                                                touchPoints,
-		                                                double tolerance)
+		private static bool? IsTargetTouchingFromInside(
+			ISegmentList closedPolycurve,
+			ISegmentList targetSegments,
+			IEnumerable<IntersectionPoint3D> touchPoints,
+			double tolerance)
 		{
 			// This must be done per source ring to avoid getting a left side deviation from a different
 			// touching source ring despite the target being fully within the adjacent source ring.
@@ -742,7 +745,7 @@ namespace ProSuite.Commons.Geom
 				foreach (IntersectionPoint3D intersectionPoint in intersectionPointsPerPart)
 				{
 					DetermineTargetDeviationAtIntersection(intersectionPoint, closedPolycurve,
-					                                       targetSegments, tolerance,
+					                                       targetSegments, tolerance, null,
 					                                       out bool hasRightSideDeviation,
 					                                       out bool hasLeftSideDeviation);
 
@@ -1646,39 +1649,112 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList source,
 			[NotNull] ISegmentList target,
 			double tolerance,
+			[CanBeNull] IntersectionClusters intersectionClusters,
 			out bool hasRightSideDeviation,
 			out bool hasLeftSideDeviation)
 		{
 			if (intersection.Type == IntersectionPointType.Crossing &&
 			    ! intersection.DisallowTargetForward &&
-			    ! intersection.DisallowTargetBackward)
+			    ! intersection.DisallowTargetBackward &&
+			    ! intersection.DisallowSourceForward &&
+			    ! intersection.DisallowSourceBackward)
 			{
+				// Shortcut:
 				hasLeftSideDeviation = true;
 				hasRightSideDeviation = true;
 
 				return;
 			}
 
+			// If there is a cluster at a spike (that would collapse when cracking) treat it as
+			// touch point, but determine the deviations on the proper intersection points:
+			DetermineRelevantIntersections(intersection, intersectionClusters, target,
+			                               out IntersectionPoint3D targetContinuationPoint,
+			                               out IntersectionPoint3D targetArrivalPoint);
+
 			// If the target arrives or continues to the outside (i.e. left side) then it's not contained
 			bool? continuesToRightSide =
-				intersection.TargetContinuesToRightSide(source, target, tolerance);
+				targetContinuationPoint.TargetContinuesToRightSide(source, target, tolerance);
 
 			hasLeftSideDeviation =
-				continuesToRightSide == false && ! intersection.DisallowTargetForward;
+				continuesToRightSide == false && ! targetContinuationPoint.DisallowTargetForward;
 			hasRightSideDeviation =
-				continuesToRightSide == true && ! intersection.DisallowTargetForward;
+				continuesToRightSide == true && ! targetContinuationPoint.DisallowTargetForward;
 
 			bool? arrivesFromRightSide =
-				intersection.TargetArrivesFromRightSide(source, target, tolerance);
+				targetArrivalPoint.TargetArrivesFromRightSide(source, target, tolerance);
 
-			if (arrivesFromRightSide == false && ! intersection.DisallowTargetBackward)
+			if (arrivesFromRightSide == false && ! targetArrivalPoint.DisallowTargetBackward)
 			{
 				hasLeftSideDeviation = true;
 			}
 
-			if (arrivesFromRightSide == true && ! intersection.DisallowTargetBackward)
+			if (arrivesFromRightSide == true && ! targetArrivalPoint.DisallowTargetBackward)
 			{
 				hasRightSideDeviation = true;
+			}
+		}
+
+		/// <summary>
+		/// Determines the intersection points that are relevant to determine the deviation of the target
+		/// or backward direction.
+		/// </summary>
+		/// <param name="intersection"></param>
+		/// <param name="intersectionClusters"></param>
+		/// <param name="target"></param>
+		/// <param name="targetContinuationPoint"></param>
+		/// <param name="targetArrivalPoint"></param>
+		private static void DetermineRelevantIntersections(
+			[NotNull] IntersectionPoint3D intersection,
+			[CanBeNull] IntersectionClusters intersectionClusters,
+			ISegmentList target,
+			out IntersectionPoint3D targetContinuationPoint,
+			out IntersectionPoint3D targetArrivalPoint)
+		{
+			// The intersection point that is relevant to determine the deviation of the target forward direction
+			targetContinuationPoint = intersection;
+			targetArrivalPoint = intersection;
+
+			if (intersectionClusters?.HasUnClusteredIntersections == true)
+			{
+				foreach (IntersectionPoint3D otherIntersection in
+				         intersectionClusters.GetOtherIntersections(intersection))
+				{
+					if (otherIntersection.TargetPartIndex != intersection.TargetPartIndex)
+					{
+						// Different parts, no spike
+						continue;
+					}
+
+					if (intersection.Point.EqualsXY(otherIntersection.Point, double.Epsilon))
+					{
+						// Exactly equal, not un-clustered (should probably have been removed already, or boundary loop)
+						continue;
+					}
+
+					// Is it a spike that could be cracked?
+					// Determine actual non-intersecting point, do not navigate inside the cluster
+					double deltaAlongTarget =
+						SegmentIntersectionUtils.GetVirtualVertexRatioDistance(
+							intersection.VirtualTargetVertex,
+							otherIntersection.VirtualTargetVertex,
+							target.GetPart(intersection.TargetPartIndex).SegmentCount);
+
+					if (Math.Abs(deltaAlongTarget) < 2)
+					{
+						if (deltaAlongTarget > 0)
+						{
+							// other is after this intersection
+							targetContinuationPoint = otherIntersection;
+						}
+
+						if (deltaAlongTarget < 0)
+						{
+							// other is before this intersection
+							targetArrivalPoint = otherIntersection;
+						}
+					}
+				}
 			}
 		}
 

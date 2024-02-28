@@ -1120,7 +1120,8 @@ namespace ProSuite.Commons.Geom
 
 				if (false == GeomRelationUtils.AreaContainsXY(
 					    Source, Target, Tolerance,
-					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx))
+					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx,
+					    IntersectionPointNavigator.IntersectionClusters))
 				{
 					// Except if it is contained by a previously removed island:
 					bool insideRemovedIslands = removedInteriorBoundaryLoops.All(
@@ -1238,7 +1239,8 @@ namespace ProSuite.Commons.Geom
 
 				if (true == GeomRelationUtils.AreaContainsXY(
 					    Source, Target, Tolerance,
-					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx))
+					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx,
+					    IntersectionPointNavigator.IntersectionClusters))
 				{
 					yield return targetRing;
 				}
