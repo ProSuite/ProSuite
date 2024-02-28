@@ -4817,6 +4817,40 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionWithIntersectionOfVeryNarrowTouchingIsland_Top5795()
+		{
+			// This is OID BuildingBody with OID 793. The error occurs at ring 39
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"non_simple_input_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"non_simple_input_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			const double tolerance = 0.01;
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			Assert.AreEqual(13, union.PartCount);
+
+			// Roughly the same. No ring duplication!
+			Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.2);
+
+			MultiLinestring difference =
+				GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance);
+
+			double expectedAreaDifference = union.GetArea2D() - target.GetArea2D();
+			Assert.AreEqual(expectedAreaDifference, difference.GetArea2D(), 0.05);
+		}
+
+		[Test]
 		public void CanUnionUnCrackedRingAtSmallOvershootVertex()
 		{
 			// Prevent navigation within the cluster (zig-zag back to the same cluster), as in
