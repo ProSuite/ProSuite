@@ -229,14 +229,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (args.Key == _keyRestorePrevious)
 			{
-				try
-				{
-					RestorePreviousSketch();
-				}
-				catch (Exception e)
-				{
-					throw new ApplicationException("Error restoring the previous sketch", e);
-				}
+				await RestorePreviousSketchAsync();
 			}
 		}
 
@@ -468,7 +461,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		private void RestorePreviousSketch()
+		private async Task RestorePreviousSketchAsync()
 		{
 			if (! SupportRestoreLastSketch)
 			{
@@ -482,28 +475,39 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
-			if (! IsInSketchMode)
+			try
 			{
-				// If a non-rectangular sketch is set while SketchType is rectangle (or probably generally the wrong type)
-				// sketching is not possible any more and the application appears hanging
-
-				// Try start sketch mode:
-				IList<Feature> selection = GetApplicableSelectedFeatures(ActiveMapView).ToList();
-
-				if (CanUseSelection(ActiveMapView))
+				if (! IsInSketchMode)
 				{
-					AfterSelection(selection, null);
+					// If a non-rectangular sketch is set while SketchType is rectangle (or probably generally the wrong type)
+					// sketching is not possible any more and the application appears hanging
+
+					// Try start sketch mode:
+					await QueuedTask.Run(() =>
+					{
+						IList<Feature> selection =
+							GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+						if (CanUseSelection(ActiveMapView))
+						{
+							AfterSelection(selection, null);
+						}
+					});
+				}
+
+				if (IsInSketchMode)
+				{
+					await SetCurrentSketchAsync(_previousSketch);
+				}
+				else
+				{
+					_msg.Warn("Sketch cannot be restored in selection phase. " +
+					          "Please try again in the sketch phase.");
 				}
 			}
-
-			if (IsInSketchMode)
+			catch (Exception e)
 			{
-				SetCurrentSketchAsync(_previousSketch);
-			}
-			else
-			{
-				_msg.Warn("Sketch cannot be restored in selection phase. " +
-				          "Please try again in the sketch phase.");
+				throw new ApplicationException("Error restoring the previous sketch", e);
 			}
 		}
 	}
