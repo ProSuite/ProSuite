@@ -204,9 +204,12 @@ namespace ProSuite.Commons.AGP.Carto
 				return false;
 			}
 
-			if (layer.Parent is Layer parentLayer)
+			while (layer.Parent is Layer parentLayer)
 			{
-				return IsVisible(parentLayer);
+				if (! parentLayer.IsVisible)
+				{
+					return false;
+				}
 			}
 
 			return true;
