@@ -111,46 +111,57 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		/// <remarks>
+		/// A layer document (.lyrx file) can contain one or more layer definitions!
+		/// </remarks>
 		[CanBeNull]
-		public static T GetRenderer<T>([NotNull] LayerDocument template) where T : CIMRenderer
+		public static CIMRenderer GetRenderer(LayerDocument layerDocument,
+		                                      Func<CIMDefinition, bool> predicate = null)
 		{
-			CIMLayerDocument layerDocument = template.GetCIMLayerDocument();
+			if (layerDocument is null) return null;
 
-			// todo daro: implement more robust
-			CIMDefinition definition = layerDocument.LayerDefinitions[0];
-			return ((CIMFeatureLayer) definition)?.Renderer as T;
+			CIMLayerDocument cim = layerDocument.GetCIMLayerDocument();
+			var definitions = cim?.LayerDefinitions;
+			if (definitions is null || definitions.Length <= 0) return null;
+
+			var definition = predicate is null
+				                 ? definitions.First()
+				                 : definitions.First(predicate);
+
+			return definition is CIMFeatureLayer featureLayer
+				       ? featureLayer.Renderer
+				       : null;
+		}
+
+		/// <summary>
+		/// Get first renderer from <paramref name="layerDocument"/>
+		/// compatible with the given <paramref name="targetLayer"/>.
+		/// </summary>
+		[CanBeNull]
+		public static CIMRenderer GetRenderer(
+			LayerDocument layerDocument, FeatureLayer targetLayer)
+		{
+			return GetRenderer(layerDocument, IsCompatible);
+
+			bool IsCompatible(CIMDefinition cimDefinition)
+			{
+				if (targetLayer is null) return true;
+				return cimDefinition is CIMFeatureLayer cimFeatureLayer &&
+				       targetLayer.CanSetRenderer(cimFeatureLayer.Renderer);
+			}
 		}
 
 		[NotNull]
-		public static LayerDocument CreateLayerDocument([NotNull] string path)
+		public static LayerDocument OpenLayerDocument([NotNull] string filePath)
 		{
-			if (! File.Exists(path))
+			if (! File.Exists(filePath))
 			{
-				throw new ArgumentException($"{path} does not exist");
+				throw new ArgumentException($"{filePath} does not exist");
 			}
 
 			// todo daro no valid .lyrx file
 
-			return new LayerDocument(path);
-		}
-
-		[CanBeNull]
-		public static LayerDocument CreateLayerDocument([NotNull] string path,
-		                                                string layerName)
-		{
-			var layerDocument = CreateLayerDocument(path);
-
-			CIMLayerDocument cimLayerDocument = layerDocument.GetCIMLayerDocument();
-			cimLayerDocument.LayerDefinitions[0].Name = layerName;
-
-			return new LayerDocument(cimLayerDocument);
-		}
-
-		public static void ApplyRenderer([NotNull] FeatureLayer layer,
-		                                 [NotNull] LayerDocument fromTemplate)
-		{
-			var renderer = GetRenderer<CIMRenderer>(fromTemplate);
-			layer.SetRenderer(renderer);
+			return new LayerDocument(filePath);
 		}
 
 		/// <summary>
@@ -223,6 +234,7 @@ namespace ProSuite.Commons.AGP.Carto
 				return false;
 			}
 
+			// TODO should dispose table!
 			if (featureLayer.GetTable() == null)
 			{
 				return false;
