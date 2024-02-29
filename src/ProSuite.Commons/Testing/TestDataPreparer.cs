@@ -155,7 +155,7 @@ namespace ProSuite.Commons.Testing
 					       : Path.Combine(tempDataDir, testName);
 			}
 
-			protected static bool IsEmtpy(string path)
+			protected static bool IsEmpty(string path)
 			{
 				return ! Directory.EnumerateFileSystemEntries(path).Any();
 			}
@@ -293,7 +293,7 @@ namespace ProSuite.Commons.Testing
 						// does not overwrite existing
 						ZipFile.ExtractToDirectory(sourcePath, targetDir);
 					}
-					else if (IsEmtpy(targetDir))
+					else if (IsEmpty(targetDir))
 					{
 						// does not overwrite existing
 						ZipFile.ExtractToDirectory(sourcePath, targetDir);

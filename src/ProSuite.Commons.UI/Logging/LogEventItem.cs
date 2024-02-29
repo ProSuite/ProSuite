@@ -7,7 +7,7 @@ namespace ProSuite.Commons.UI.Logging
 {
 	internal class LogEventItem
 	{
-		private readonly long _logNummer;
+		private readonly long _logNumber;
 		private readonly Image _logLevelImage;
 		private readonly string _logMessage;
 		private readonly DateTime _logDateTime;
@@ -17,7 +17,7 @@ namespace ProSuite.Commons.UI.Logging
 		private readonly string _logLevel;
 		private readonly LogLevel _level;
 
-		public LogEventItem(long logNummer,
+		public LogEventItem(long logNumber,
 		                    [NotNull] Image logLevelImage,
 		                    [NotNull] LoggingEvent loggingEvent)
 		{
@@ -27,7 +27,7 @@ namespace ProSuite.Commons.UI.Logging
 
 			_indentation = message.IndexOf(trimmedMessage, StringComparison.Ordinal);
 
-			_logNummer = logNummer;
+			_logNumber = logNumber;
 			_logLevelImage = logLevelImage;
 
 			_logMessage = trimmedMessage;
@@ -46,7 +46,7 @@ namespace ProSuite.Commons.UI.Logging
 
 		public DateTime LogDateTime => _logDateTime;
 
-		public long LogNummer => _logNummer;
+		public long LogNumber => _logNumber;
 
 		[NotNull]
 		public string LogMessage => _logMessage;

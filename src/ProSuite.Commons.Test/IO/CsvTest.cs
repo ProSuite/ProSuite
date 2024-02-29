@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -178,7 +178,7 @@ namespace ProSuite.Commons.Test.IO
 
 			// Both "files" must yield the same records and fields!
 
-			Action<CsvReader> assertor =
+			Action<CsvReader> asserter =
 				reader =>
 				{
 					Assert.IsTrue(reader.ReadRecord());
@@ -194,12 +194,12 @@ namespace ProSuite.Commons.Test.IO
 
 			using (var reader = new CsvReader(new StringReader(csv1), sep))
 			{
-				assertor(reader);
+				asserter(reader);
 			}
 
 			using (var reader = new CsvReader(new StringReader(csv2), sep))
 			{
-				assertor(reader);
+				asserter(reader);
 			}
 		}
 
