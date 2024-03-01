@@ -13,7 +13,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
@@ -39,8 +38,12 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		{
 			esriMosaicMethod mosaicMethod = mosaicDataset.MosaicFunction.MosaicMethod;
 
-			Assert.AreEqual(esriMosaicMethod.esriMosaicAttribute, mosaicMethod,
-			                "Unsupported mosaic method. Currently the only mosaic method is by field order is supported.");
+			if (mosaicMethod != esriMosaicMethod.esriMosaicAttribute)
+			{
+				_msg.WarnFormat(
+					"{0} is an unsupported mosaic method. Currently the only mosaic method is by field order is supported.",
+					mosaicMethod);
+			}
 
 			FullName = ((IDataset) mosaicDataset).FullName;
 
