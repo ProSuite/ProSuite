@@ -800,5 +800,23 @@ namespace ProSuite.QA.Tests.Documentation {
                 return ResourceManager.GetString("TrZAssign_raster", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to raster mosaic with z-Values.
+        /// </summary>
+        public static string TrZAssign_rasterMosaic {
+            get {
+                return ResourceManager.GetString("TrZAssign_rasterMosaic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to whether the z-values shall be assigned to vertices within the current tile only or to all vertices (slower)..
+        /// </summary>
+        public static string TrZAssign_ZAssignOption {
+            get {
+                return ResourceManager.GetString("TrZAssign_ZAssignOption", resourceCulture);
+            }
+        }
     }
 }

@@ -1,19 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
 using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.Surface;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -37,20 +37,30 @@ namespace ProSuite.QA.Tests.Transformers
 		private readonly ArrayProvider<WKSPointZ> _wksPointArrayProvider =
 			new ArrayProvider<WKSPointZ>();
 
-
 		[DocTr(nameof(DocTrStrings.TrZAssign_0))]
 		public TrZAssign(
 			[DocTr(nameof(DocTrStrings.TrZAssign_featureClass))]
 			IReadOnlyFeatureClass featureClass,
 			[DocTr(nameof(DocTrStrings.TrZAssign_raster))]
-			RasterReference raster)
+			IRasterDataset raster)
 			: base(featureClass, featureClass.ShapeType)
 		{
-			_raster = raster;
+			_raster = new RasterDatasetReference((IRasterDataset2) raster);
+		}
+
+		[DocTr(nameof(DocTrStrings.TrZAssign_0))]
+		public TrZAssign(
+			[DocTr(nameof(DocTrStrings.TrZAssign_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[DocTr(nameof(DocTrStrings.TrZAssign_rasterMosaic))]
+			SimpleRasterMosaic rasterMosaic)
+			: base(featureClass, featureClass.ShapeType)
+		{
+			_raster = new MosaicRasterReference(rasterMosaic);
 		}
 
 		[TestParameter(_defaultZAssignOption)]
-		//		[DocTr(nameof(DocTrStrings.TrZAssign_ZAssignOption))]
+		[DocTr(nameof(DocTrStrings.TrZAssign_ZAssignOption))]
 		public AssignOption ZAssignOption { get; set; } = _defaultZAssignOption;
 
 		private IRelationalOperator SearchedDomain
@@ -68,16 +78,16 @@ namespace ProSuite.QA.Tests.Transformers
 					_domainSurface = _searchedSurface;
 				}
 
-				return (IRelationalOperator)_searchedDomain;
+				return (IRelationalOperator) _searchedDomain;
 			}
 		}
 
 		protected override IEnumerable<GdbFeature> Transform(IGeometry source, long? sourceOid)
 		{
-			AssignedFc transformedClass = (AssignedFc)GetTransformed();
+			AssignedFc transformedClass = (AssignedFc) GetTransformed();
 
 			IGeometry transformed = GeometryFactory.Clone(source);
-			((IZAware)transformed).ZAware = true;
+			((IZAware) transformed).ZAware = true;
 			if (transformed is IPoint p)
 			{
 				p.Z = double.NaN;
@@ -97,11 +107,13 @@ namespace ProSuite.QA.Tests.Transformers
 					pt.Z = double.NaN;
 					wksPointZs[i] = pt;
 				}
+
 				GeometryUtils.SetWKSPointZs(pointCollection, wksPointZs, pointCount);
 			}
 			else
 			{
-				throw new NotImplementedException($"Unhandled geometry type '{transformed.GeometryType}'");
+				throw new NotImplementedException(
+					$"Unhandled geometry type '{transformed.GeometryType}'");
 			}
 
 			GdbFeature feature = ZAssignOption == AssignOption.All && sourceOid != null
@@ -153,12 +165,12 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			public AssignedFc(IReadOnlyFeatureClass fc, TrZAssign transformer, string name)
 				: base(fc, fc.ShapeType,
-					   (t) =>
-					   {
-						   var ds = new AssigedDataset((AssignedFc)t, fc);
-						   return ds;
-					   },
-					   transformer, name)
+				       (t) =>
+				       {
+					       var ds = new AssigedDataset((AssignedFc) t, fc);
+					       return ds;
+				       },
+				       transformer, name)
 			{
 				AddStandardFields(fc);
 			}
@@ -181,12 +193,11 @@ namespace ProSuite.QA.Tests.Transformers
 			public AssigedDataset(
 				[NotNull] AssignedFc tfc,
 				[NotNull] IReadOnlyFeatureClass t0)
-				: base(tfc, t0)
-			{ }
+				: base(tfc, t0) { }
 
 			public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 			{
-				TrZAssign tr = (TrZAssign)Resulting.Transformer;
+				TrZAssign tr = (TrZAssign) Resulting.Transformer;
 
 				if (filter is IFeatureClassFilter sf)
 				{
@@ -203,9 +214,11 @@ namespace ProSuite.QA.Tests.Transformers
 
 			protected override void CompleteRawFeatures(IList<TransformedFeature> rawFeatures)
 			{
-				TrZAssign tr = (TrZAssign)Resulting.Transformer;
+				TrZAssign tr = (TrZAssign) Resulting.Transformer;
 				if (tr.ZAssignOption == AssignOption.Tile)
-				{ return; }
+				{
+					return;
+				}
 
 				Dictionary<Tile, IList<TransformedFeature>> tileFeatures =
 					new Dictionary<Tile, IList<TransformedFeature>>(new Tile.TileComparer());
@@ -213,16 +226,19 @@ namespace ProSuite.QA.Tests.Transformers
 				foreach (TransformedFeature f in rawFeatures)
 				{
 					if (tr.SearchedDomain.Contains(f.Shape))
-					{ continue; }
+					{
+						continue;
+					}
 
 					foreach (var tile in Resulting.DataContainer.EnumInvolvedTiles(f.Shape))
 					{
-						if (!tileFeatures.TryGetValue(
-								tile, out IList<TransformedFeature> features))
+						if (! tileFeatures.TryGetValue(
+							    tile, out IList<TransformedFeature> features))
 						{
 							features = new List<TransformedFeature>();
 							tileFeatures.Add(tile, features);
 						}
+
 						features.Add(f);
 					}
 				}
@@ -234,7 +250,8 @@ namespace ProSuite.QA.Tests.Transformers
 					tile.FilterEnvelope.SpatialReference =
 						((IGeometry) tr.SearchedDomain).SpatialReference;
 
-					if (GeometryUtils.InteriorIntersects(((IGeometry)tr.SearchedDomain).Envelope, tile.FilterEnvelope))
+					if (GeometryUtils.InteriorIntersects(((IGeometry) tr.SearchedDomain).Envelope,
+					                                     tile.FilterEnvelope))
 					{
 						continue;
 					}
