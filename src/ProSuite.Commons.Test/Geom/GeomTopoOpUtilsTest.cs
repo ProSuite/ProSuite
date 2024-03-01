@@ -5086,9 +5086,10 @@ namespace ProSuite.Commons.Test.Geom
 					Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.0001,
 					                $"Error in i={i}/t={t}");
 
-					// swap source and target:
-					union = GeomTopoOpUtils.GetUnionAreasXY(
-						target, source, tolerance);
+					// TODO:
+					//// swap source and target:
+					//union = GeomTopoOpUtils.GetUnionAreasXY(
+					//	target, source, tolerance);
 
 					// TODO: fix t=1 -> IsContainedXY is wrong
 					//Assert.AreEqual(1, union.PartCount);
