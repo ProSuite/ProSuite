@@ -773,5 +773,32 @@ namespace ProSuite.QA.Tests.Documentation {
                 return ResourceManager.GetString("TrTableJoinInMemory_rightTableKey", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creates a featureclass, where the height of vertices correspond to &apos;raster&apos;. Remark: the height is only assign within each processsed tile. .
+        /// </summary>
+        public static string TrZAssign_0 {
+            get {
+                return ResourceManager.GetString("TrZAssign_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to featureclass to assign the raster z-values.
+        /// </summary>
+        public static string TrZAssign_featureClass {
+            get {
+                return ResourceManager.GetString("TrZAssign_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to raster with z-Values.
+        /// </summary>
+        public static string TrZAssign_raster {
+            get {
+                return ResourceManager.GetString("TrZAssign_raster", resourceCulture);
+            }
+        }
     }
 }

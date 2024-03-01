@@ -490,6 +490,63 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanDetermineTouchesXYVerticalRingUnCracked()
+		{
+			// The vertical ring has no correspondent vertex in the adjacent ring at one of the
+			// vertical edges.
+			// Extra difficulty with not-quite-vertical line -> orientation is not null
+			var verticalRing = new Linestring(new List<Pnt3D>
+			                                  {
+				                                  new Pnt3D(0, 0, 0),
+				                                  new Pnt3D(15, 50, 0),
+				                                  new Pnt3D(15, 50.0001, 55),
+				                                  new Pnt3D(0, 0, 55),
+				                                  new Pnt3D(0, 0, 0)
+			                                  });
+
+			var adjacentRing = new Linestring(new List<Pnt3D>
+			                                  {
+				                                  new Pnt3D(0, 0, 0),
+				                                  new Pnt3D(30, 100, 0),
+				                                  new Pnt3D(30, 0, 0),
+				                                  new Pnt3D(0, 0, 0)
+			                                  });
+
+			var touchingRing = new Linestring(new List<Pnt3D>
+			                                  {
+				                                  new Pnt3D(0, 0, 0),
+				                                  new Pnt3D(100, 100, 0),
+				                                  new Pnt3D(100, 0, 0),
+				                                  new Pnt3D(0, 0, 0)
+			                                  });
+
+			const double tolerance = 0.001;
+
+			Assert.IsTrue(GeomRelationUtils.HaveLinearIntersectionsXY(
+				              adjacentRing, verticalRing, tolerance));
+
+			Assert.IsFalse(GeomRelationUtils.HaveLinearIntersectionsXY(
+				               touchingRing, verticalRing, tolerance));
+
+			bool touchXY = GeomRelationUtils.TouchesXY(adjacentRing, verticalRing, tolerance,
+			                                           out bool disjoint, true, true);
+
+			Assert.IsTrue(touchXY);
+			Assert.IsFalse(disjoint);
+
+			touchXY = GeomRelationUtils.TouchesXY(touchingRing, verticalRing, tolerance,
+			                                      out disjoint, true, true);
+
+			Assert.IsTrue(touchXY);
+			Assert.IsFalse(disjoint);
+
+			Assert.IsTrue(GeomRelationUtils.PolycurveContainsXY(
+				              adjacentRing, verticalRing, tolerance));
+			Assert.IsFalse(GeomRelationUtils.PolycurveContainsXY(
+				               touchingRing, verticalRing, tolerance));
+		}
+
+		[Test]
 		public void CanDetermineTouchesXYVerticalRingWithinTolerance()
 		{
 			var verticalRing = new Linestring(new List<Pnt3D>

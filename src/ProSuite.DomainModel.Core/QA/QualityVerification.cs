@@ -5,12 +5,15 @@ using ProSuite.Commons;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.Core.QA
 {
 	public class QualityVerification : Entity
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[UsedImplicitly] private readonly string _specificationName;
 		[UsedImplicitly] private readonly int _specificationId;
 		[UsedImplicitly] private readonly string _specificationDescription;
@@ -239,11 +242,17 @@ namespace ProSuite.DomainModel.Core.QA
 					continue;
 				}
 
+				_msg.DebugFormat("Condition is not fulfilled: {0}",
+				                 verification.QualityConditionName);
+
 				fulfilled = false;
 			}
 
 			if (_cancelled)
 			{
+				_msg.DebugFormat(
+					"Verification is not fulfilled because the verification was cancelled");
+
 				_fulfilled = false;
 			}
 			else

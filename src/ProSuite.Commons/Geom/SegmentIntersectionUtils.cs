@@ -402,6 +402,13 @@ namespace ProSuite.Commons.Geom
 					MathUtils.Modulo(segmentRatioDistance, ringSegmentCount, true);
 			}
 
+			// If the source vertex index is exactly equal, the order of the points can be random
+			// -> allow swapping
+			if (segmentRatioDistance > 2 && segmentRatioDistance < ringSegmentCount)
+			{
+				segmentRatioDistance -= ringSegmentCount;
+			}
+
 			return segmentRatioDistance;
 		}
 

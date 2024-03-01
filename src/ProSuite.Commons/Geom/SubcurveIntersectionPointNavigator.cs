@@ -327,7 +327,7 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		private IntersectionClusters IntersectionClusters
+		internal IntersectionClusters IntersectionClusters
 		{
 			get
 			{
@@ -363,12 +363,14 @@ namespace ProSuite.Commons.Geom
 					continue;
 				}
 
-				if (targetTrajectory == RelativeTrajectory.FromRight)
+				if (targetTrajectory == RelativeTrajectory.FromRight &&
+				    ! intersection.DisallowTargetForward)
 				{
 					yield return intersection;
 				}
 
-				if (targetTrajectory == RelativeTrajectory.Both)
+				if (targetTrajectory == RelativeTrajectory.Both &&
+				    ! intersection.DisallowTargetForward)
 				{
 					// Touching from inside
 					if (touchPredicate == null || touchPredicate(intersection))
