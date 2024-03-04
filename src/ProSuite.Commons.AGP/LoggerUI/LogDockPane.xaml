@@ -49,7 +49,8 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Time" Binding="{Binding Path=Time}" MinWidth="32" Width="Auto" />
+                <!-- Note: use StringFormat to only show time; add .fff for millis; initial {} is to please the XAML parser -->
+                <DataGridTextColumn Header="Time" Binding="{Binding Path=Time, StringFormat={}{0:HH:mm:ss}}" MinWidth="32" Width="Auto" />
                 <DataGridTemplateColumn Header="Message">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

@@ -34,19 +34,13 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			switch (paramName)
 			{
 				case "first":
-					if (linkMsg == "")
-						return logMsg;
-					else
-						return logMsg.Before("<");
+					return linkMsg == "" ? logMsg : logMsg.Before("<");
 
 				case "link":
 					return linkMsg;
 
 				case "last":
-					if (linkMsg != "")
-						return logMsg.After(">");
-					else
-						return "";
+					return linkMsg != "" ? logMsg.After(">") : string.Empty;
 			}
 
 			return logMsg;

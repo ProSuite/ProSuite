@@ -10,25 +10,23 @@ using ProSuite.Commons.Logging;
 namespace ProSuite.Commons.AGP.LoggerUI
 {
 	[UsedImplicitly]
-	public class LogDockPaneViewModelBase : DockPaneViewModelBase, IDisposable
+	public abstract class LogDockPaneViewModelBase : DockPaneViewModelBase, IDisposable
 	{
-		//TODO: ID from Config.daml; make abstract or similar
-		public const string ConfigId_ProSuiteLogPane = "ProSuiteTools_Logger_ProSuiteLogPane";
+		protected abstract string LogDockPaneDamlID { get; }
 
-		//TODO: ID from Config.daml; make abstract or similar
-		public const string ConfigId_ProSuiteLogPane_ShowButton = "ProSuiteTools_Logger_ProSuiteLogPane_ShowButton";
+		protected abstract string ShowLogButtonDamlID { get; }
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static RelayCommand _openLinkMessage;
 
 		//private LoggingEventsAppender _appenderDelegate = new LoggingEventsAppender();
-		private readonly List<LogType> _disabledLogTypes = new List<LogType>();
-		public readonly object _lockLogMessages = new object();
+		private readonly List<LogType> _disabledLogTypes = new();
+		private readonly object _lockLogMessages = new();
 
 		private LoggingEventItem _selectedRow;
 
-		public LogDockPaneViewModelBase() : base(new LogDockPane())
+		protected LogDockPaneViewModelBase() : base(new LogDockPane())
 		{
 			LogMessageList = new ObservableCollection<LoggingEventItem>();
 			BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
@@ -40,7 +38,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		public static Exception LoggingConfigurationException { get; set; }
 
-		public ObservableCollection<LoggingEventItem> LogMessageList { get; set; }
+		public ObservableCollection<LoggingEventItem> LogMessageList { get; }
 
 		public LoggingEventItem SelectedRow
 		{
@@ -48,7 +46,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			set
 			{
 				_selectedRow = value;
-				NotifyPropertyChanged(nameof(SelectedRow));
+				NotifyPropertyChanged();
 			}
 		}
 
@@ -56,8 +54,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		{
 			get
 			{
-				return _openLinkMessage ??
-				       (_openLinkMessage = new RelayCommand(OpenLogLinkMessage, () => true));
+				return _openLinkMessage ??= new RelayCommand(OpenLogLinkMessage, () => true);
 			}
 		}
 
@@ -66,7 +63,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
 
 			var pane =
-				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(ConfigId_ProSuiteLogPane);
+				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(LogDockPaneDamlID);
 			if (pane == null)
 			{
 				return;
@@ -83,7 +80,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		{
 			var message = (LoggingEventItem) msg;
 
-			// TODO inform UI than "Hyperlink" is clicked
+			// TODO inform UI that "Hyperlink" is clicked
 			//_msg.Info($"Hyperlink clicked {message.LinkMessage}");
 		}
 
@@ -127,9 +124,8 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private void UpdateLogBtn(bool visible)
 		{
-			IPlugInWrapper buttonWrapper =
-				FrameworkApplication.GetPlugInWrapper(ConfigId_ProSuiteLogPane_ShowButton);
-			if (buttonWrapper == null)
+			IPlugInWrapper buttonWrapper = FrameworkApplication.GetPlugInWrapper(ShowLogButtonDamlID);
+			if (buttonWrapper is null)
 			{
 				return;
 			}
@@ -217,18 +213,13 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		{
 			get
 			{
-				return _openMessage ??
-				       (_openMessage = new RelayCommand(OpenLogMessage, () => true));
+				return _openMessage ??= new RelayCommand(OpenLogMessage, () => true);
 			}
 		}
 
-		private void OpenLogMessage(object msg)
+		private static void OpenLogMessage(object msg)
 		{
-			var message = (LoggingEventItem) msg;
-			if (message == null)
-			{
-				return;
-			}
+			if (msg is not LoggingEventItem message) return;
 
 			//_msg.Info($"Open message: {message?.Time} {message?.Message}");
 			LogMessageActionEvent.Publish(

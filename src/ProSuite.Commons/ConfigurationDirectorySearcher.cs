@@ -9,7 +9,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons
 {
-	public abstract class ConfigurationDirectorySearcher
+	public abstract class ConfigurationDirectorySearcher : IConfigFileSearcher
 	{
 		[ContractAnnotation("required: true => notnull; required: false => canbenull")]
 		public string GetConfigFilePath([NotNull] string configFileName,
@@ -50,29 +50,40 @@ namespace ProSuite.Commons
 			CollectCurrentUserSearchPaths(result);
 			CollectAllUserSearchPaths(result);
 
-			return GetUniquePaths(result);
+			return GetDistinctPaths(result);
 		}
 
+		/// <remarks>
+		/// Override to something like COMPANY\PRODUCT\Config; the default is empty
+		/// </remarks>
 		[NotNull]
 		protected virtual string ApplicationDataDirectory => string.Empty;
 
 		protected virtual void CollectCurrentUserSearchPaths(
-			[NotNull] ICollection<string> paths)
+			[NotNull] ICollection<string> searchPaths)
 		{
-			foreach (Environment.SpecialFolder folder
-			         in new[]
-			            {
-				            Environment.SpecialFolder.LocalApplicationData,
-				            Environment.SpecialFolder.ApplicationData,
-				            Environment.SpecialFolder.CommonApplicationData
-			            })
-			{
-				string path = GetProfileConfigPath(folder);
+			if (searchPaths is null)
+				throw new ArgumentNullException(nameof(searchPaths));
 
-				if (path != null)
-				{
-					paths.Add(path);
-				}
+			// typically: $HOME\AppData\Local\COMPANY\PRODUCT\Config
+			var localConfig = GetProfileConfigPath(Environment.SpecialFolder.LocalApplicationData);
+			if (! string.IsNullOrEmpty(localConfig))
+			{
+				searchPaths.Add(localConfig);
+			}
+
+			// typically: $HOME\AppData\Roaming\COMPANY\PRODUCT\Config
+			var roamingConfig = GetProfileConfigPath(Environment.SpecialFolder.ApplicationData);
+			if (! string.IsNullOrEmpty(roamingConfig))
+			{
+				searchPaths.Add(roamingConfig);
+			}
+
+			// typically: C:\ProgramData\COMPANY\PRODUCT\Config (i.e., all users)
+			var commonConfig = GetProfileConfigPath(Environment.SpecialFolder.CommonApplicationData);
+			if (! string.IsNullOrEmpty(commonConfig))
+			{
+				searchPaths.Add(commonConfig);
 			}
 		}
 
@@ -90,6 +101,8 @@ namespace ProSuite.Commons
 			[NotNull] ICollection<string> paths)
 		{
 			DirectoryInfo binDir = GetBinDirectory();
+			if (binDir is null) return;
+
 			paths.Add(binDir.FullName);
 
 			DirectoryInfo up1Dir = binDir.Parent;
@@ -121,14 +134,13 @@ namespace ProSuite.Commons
 		/// the concrete type (implementing subclass).
 		/// Can be overridden by a subclass if a different directory should be considered the bin directory.
 		/// </summary>
-		/// <returns></returns>
-		[NotNull]
 		[PublicAPI]
+		[CanBeNull]
 		protected virtual DirectoryInfo GetBinDirectory()
 		{
 			Assembly assembly = GetType().Assembly;
 
-			if (assembly.Location == null)
+			if (assembly.Location is null)
 			{
 				throw new NullReferenceException("assembly location is undefined");
 			}
@@ -147,7 +159,7 @@ namespace ProSuite.Commons
 			sb.AppendLine();
 
 			sb.AppendLine();
-			sb.AppendLine("The file does not exist in any of the following directories:");
+			sb.AppendLine("The file does not exist in the following directories:");
 
 			foreach (string path in paths)
 			{
@@ -162,7 +174,7 @@ namespace ProSuite.Commons
 		}
 
 		[NotNull]
-		private static IEnumerable<string> GetUniquePaths(
+		private static IEnumerable<string> GetDistinctPaths(
 			[NotNull] IEnumerable<string> paths)
 		{
 			var pathSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

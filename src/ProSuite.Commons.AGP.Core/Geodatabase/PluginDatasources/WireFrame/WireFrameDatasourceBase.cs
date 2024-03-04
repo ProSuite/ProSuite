@@ -54,7 +54,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 		public override void Close()
 		{
-			_msg.VerboseDebug(() => "WireFrameDatasourceBase.Close()");
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.VerboseDebug($"{nameof(WireFrameDatasourceBase)}.{nameof(Close)}");
+			}
 		}
 
 		public override PluginTableTemplate OpenTable([NotNull] string name)
@@ -77,7 +80,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 				    }
 			    }, $"Error opening wire frame table {name}");
 
-			return result;
+			return result; // TODO is null ok? shouldn't we throw a GeodatabaseException or similar?
 		}
 
 		public override IReadOnlyList<string> GetTableNames()

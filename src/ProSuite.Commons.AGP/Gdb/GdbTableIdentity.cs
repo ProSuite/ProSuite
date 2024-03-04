@@ -26,6 +26,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			Name = name;
 			Id = id;
 			Workspace = workspace;
+			HasGeometry = default;
 		}
 
 		public string Name { get; }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
@@ -14,18 +15,18 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private const GeometryType _geometryType = GeometryType.Polyline;
-
 		private readonly string _mapId;
 		private readonly string _tableName;
+		private readonly IReadOnlyList<PluginField> _fields;
 
 		private IWireFrameSourceLayers _wireFrameSourceLayers;
 
-		public WireFrameTable([NotNull] string mapId,
-		                      [NotNull] string tableName)
+		public WireFrameTable([NotNull] string mapId, [NotNull] string tableName)
 		{
-			_mapId = mapId;
-			_tableName = tableName;
+			_mapId = mapId ?? throw new ArgumentNullException(nameof(mapId));
+			_tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
+
+			_fields = CreateSchema();
 		}
 
 		/// <summary>
@@ -43,14 +44,22 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 		public override IReadOnlyList<PluginField> GetFields()
 		{
-			return GetSchema();
+			return _fields;
+		}
+
+		public override GeometryType GetShapeType()
+		{
+			return GeometryType.Polyline;
 		}
 
 		public override Envelope GetExtent()
 		{
 			// Do not return an empty envelope.
 			// Pluggable Datasource cannot handle an empty envelope. Null seems fine.
+			// Note: Pro also derives SRef and HasZ/HasM from this Envelope!
 			Envelope result = null;
+
+			// TODO Wouldn't that just be mapview's current extent?
 
 			try
 			{
@@ -79,15 +88,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 			return result;
 		}
 
-		public override GeometryType GetShapeType()
-		{
-			return _geometryType;
-		}
-
 		public override PluginCursorTemplate Search(QueryFilter queryFilter)
 		{
 			PluginCursor cursor = null;
 			Stopwatch watch = _msg.DebugStartTiming();
+
+			// Note: QueryFilter.PrefixClause and QueryFilter.PostfixClause may be ignored
+			// Note: QueryFilter.WhereClause will be empty if IsQueryLanguageSupported() returns false
+			// Note: QueryFilter.ObjectIDs must be supported (and logically ANDed with WhereClause)
+			// Note: QueryFilter.OutputSpatialReference must be supported (must re-project)
 
 			try
 			{
@@ -106,6 +115,9 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 		public override PluginCursorTemplate Search(SpatialQueryFilter spatialQueryFilter)
 		{
+			// Note: SpatialQueryFilter.FilterGeometry/SpatialRelationship should be honored
+			// Note: SpatialQueryFilter.SearchOrder can be used or ignored
+
 			return Search((QueryFilter) spatialQueryFilter);
 		}
 
@@ -136,7 +148,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 					continue;
 				}
 
-				queryFilter.WhereClause = wireFrameClass.DefinitionQuery;
+				queryFilter.WhereClause = wireFrameClass.DefinitionQuery; // TODO should AND the two!
 
 				using (RowCursor cursor = wireFrameClass.Search(queryFilter))
 				{
@@ -169,7 +181,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 				// TODO: static ConcurrentDictionary<GdbObjectReference, long> _oidByObjRef;
 				//       to avoid duplicate OIDs
-				values[0] = sourceFeature.GetObjectID();
+				values[0] = sourceFeature.GetObjectID(); // TODO this can give duplicate OIDs!
 				values[1] = CreatePolyline(sourceFeature.GetShape());
 				values[2] = sourceFeature.GetObjectID();
 				values[3] = className;
@@ -207,29 +219,29 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 				$"{geometry.GeometryType} geometries are not supported");
 		}
 
-		private static PluginField[] GetSchema()
+		private static IReadOnlyList<PluginField> CreateSchema()
 		{
-			var fields = new List<PluginField>(8)
-			             {
-				             new PluginField("OBJECTID", "ObjectID", FieldType.OID),
-				             new PluginField("SHAPE", "Shape", FieldType.Geometry),
-				             new PluginField("SOURCE_FEATURE_OID", "Source Feature OID",
-				                             FieldType.Integer),
+			var array = new[]
+			            {
+							// TODO do we really *need* OIDs?
+				            new PluginField("OBJECTID", "ObjectID", FieldType.OID),
+				            new PluginField("SHAPE", "Shape", FieldType.Geometry),
+				            new PluginField("SOURCE_FEATURE_OID", "Source Feature OID",
+				                            FieldType.Integer),
 
-				             new PluginField("SOURCE_FEATURE_CLASS", "Source FeatureClass",
-				                             FieldType.String)
-				             {
-					             Length = 50
-				             },
+				            new PluginField("SOURCE_FEATURE_CLASS", "Source FeatureClass",
+				                            FieldType.String)
+				            {
+					            Length = 50
+				            },
 
-				             new PluginField("SOURCE_SHAPE_TYPE", "Source Shape Type",
-				                             FieldType.String)
-				             {
-					             Length = 15
-				             }
-			             };
-
-			return fields.ToArray();
+				            new PluginField("SOURCE_SHAPE_TYPE", "Source Shape Type",
+				                            FieldType.String)
+				            {
+					            Length = 15
+				            }
+			            };
+			return new ReadOnlyCollection<PluginField>(array);
 		}
 	}
 }

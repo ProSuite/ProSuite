@@ -14,7 +14,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 	/// The datastore can be re-opened from the name object.
 	/// Aspirationally, this could be turned into a proper serializable memento
 	/// </summary>
-	public class DatastoreName
+	public class DatastoreName : IEquatable<DatastoreName>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -94,8 +94,9 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		#region Equality members
 
-		protected bool Equals(DatastoreName other)
+		public bool Equals(DatastoreName other)
 		{
+			if (other is null) return false;
 			if (_connector.GetType() != other._connector.GetType()) return false;
 
 			switch (_connector)

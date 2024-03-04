@@ -71,7 +71,12 @@ namespace ProSuite.AGP.WorkList
 
 			//Set renderer based on symbology from template layer
 			LayerDocument templateLayer = GetWorkListSymbologyTemplateLayer();
-			LayerUtils.ApplyRenderer(worklistLayer, templateLayer);
+			var renderer = LayerUtils.GetRenderer(templateLayer, worklistLayer);
+			if (renderer != null)
+			{
+				worklistLayer.SetRenderer(renderer);
+			}
+			//else: no compatible renderer found in layer file
 		}
 
 		public string GetDefinitionFile([NotNull] string worklistDisplayName)
@@ -154,7 +159,7 @@ namespace ProSuite.AGP.WorkList
 
 			_msg.DebugFormat("Using work list symbology template layer from {0}", filePath);
 
-			return LayerUtils.CreateLayerDocument(filePath);
+			return LayerUtils.OpenLayerDocument(filePath);
 		}
 
 		#endregion
