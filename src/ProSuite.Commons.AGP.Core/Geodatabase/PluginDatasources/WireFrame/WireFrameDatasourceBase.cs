@@ -23,7 +23,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 		private readonly IReadOnlyList<string> _tableNames = new List<string>
 		                                                     {
-			                                                     "WireFrame"
+			                                                     WireFrameConstants.TableName
 		                                                     };
 
 		public override void Open([NotNull] Uri connectionPath) // "open workspace"
