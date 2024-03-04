@@ -57,9 +57,13 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 			// Do not return an empty envelope.
 			// Pluggable Datasource cannot handle an empty envelope. Null seems fine.
 			// Note: Pro also derives SRef and HasZ/HasM from this Envelope!
-			Envelope result = null;
 
-			// TODO Wouldn't that just be mapview's current extent?
+			if (SourceLayers is null)
+			{
+				return null; // not initialized, cannot compute extent
+			}
+
+			Envelope result = null;
 
 			try
 			{
@@ -136,7 +140,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 		private IEnumerable<object[]> GetRowValues(QueryFilter queryFilter)
 		{
-			if (SourceLayers == null)
+			if (SourceLayers is null)
 			{
 				yield break;
 			}
@@ -177,13 +181,18 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 		{
 			try
 			{
+				var sourceOid = sourceFeature.GetObjectID();
+				var wireFrameOid = ContriveObjectID(className, sourceOid);
+
+				// TODO Attribute Table shows "Error: Failed to retrieve a page of rows" with all but the original non-unique OIDs!
+				//      Same if OID is a constant (non-unique), or 2*sourceOid (non-unique),
+				//      or 1+sourceOid (non-unique), 9,8,7,6,5,4, (but increasing 1,2,3,4,5,6 works), ...!
+
 				var values = new object[5];
 
-				// TODO: static ConcurrentDictionary<GdbObjectReference, long> _oidByObjRef;
-				//       to avoid duplicate OIDs
-				values[0] = sourceFeature.GetObjectID(); // TODO this can give duplicate OIDs!
+				values[0] = wireFrameOid;
 				values[1] = CreatePolyline(sourceFeature.GetShape());
-				values[2] = sourceFeature.GetObjectID();
+				values[2] = sourceOid;
 				values[3] = className;
 				values[4] = shapeType;
 
@@ -196,6 +205,20 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 			}
 
 			return null;
+		}
+
+		/// <remarks>
+		/// Since we aggregate features from many layers, their original OIDs
+		/// will no longer be unique. Uniqueness is not mission-critical here,
+		/// just shift by some prime and add a hash of the class name.
+		/// </remarks>
+		private static long ContriveObjectID(string className, long oid)
+		{
+			const int prime = 1021; // positive, around 1000 should be fine for us
+			long hash = className.GetHashCode();
+			hash -= int.MinValue; // make non-negative
+			long code = hash % prime;
+			return oid * prime + code;
 		}
 
 		private static Polyline CreatePolyline(Geometry geometry)
@@ -221,9 +244,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 
 		private static IReadOnlyList<PluginField> CreateSchema()
 		{
+			// Note: OBJECTID is optional; if missing, cannot snap to wireframe!
+
 			var array = new[]
 			            {
-							// TODO do we really *need* OIDs?
 				            new PluginField("OBJECTID", "ObjectID", FieldType.OID),
 				            new PluginField("SHAPE", "Shape", FieldType.Geometry),
 				            new PluginField("SOURCE_FEATURE_OID", "Source Feature OID",
