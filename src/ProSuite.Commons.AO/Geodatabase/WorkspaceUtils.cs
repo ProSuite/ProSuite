@@ -2535,9 +2535,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public static bool IsFileGeodatabase([NotNull] IWorkspace workspace)
 		{
-			return GetWorkspacePath(workspace).EndsWith(".gdb", StringComparison.OrdinalIgnoreCase);
+			string workspacePath = GetWorkspacePath(workspace);
 
-			// Original implementation which fails for GdbWorkspace implelmentations:
+			return workspacePath != null &&
+			       workspacePath.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase);
+
+			// Original implementation which fails for GdbWorkspace implementations:
 			//const string fgdbClassId = "{71FE75F0-EA0C-4406-873E-B7D53748AE7E}";
 
 			//return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
@@ -2547,9 +2550,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public static bool IsPersonalGeodatabase([NotNull] IWorkspace workspace)
 		{
-			return GetWorkspacePath(workspace).EndsWith(".mdb", StringComparison.OrdinalIgnoreCase);
+			string workspacePath = GetWorkspacePath(workspace);
 
-			// Original implementation which fails for GdbWorkspace implelmentations:
+			return workspacePath != null &&
+			       workspacePath.EndsWith(".mdb", StringComparison.OrdinalIgnoreCase);
+
+			// Original implementation which fails for GdbWorkspace implementations:
 
 			//Assert.ArgumentNotNull(workspace, nameof(workspace));
 
