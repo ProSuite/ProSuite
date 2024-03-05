@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
@@ -142,9 +143,33 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 		{
 			if (SourceLayers is null)
 			{
-				yield break;
+				return Enumerable.Empty<object[]>();
 			}
 
+			var cache = WireFrame.Instance.GetWireCache(_mapId);
+
+			// Note: Pro retrieves Attribute Table data for the current map extent
+			// by setting the list of ObjectIDs on the QueryFilter and seems to expect
+			// the result in the same order (gives "failed to retrieve a page of rows"
+			// otherwise). We could implement that, but at a performance penalty.
+
+			if (queryFilter.ObjectIDs is { Count: > 0 })
+			{
+				// Special case: retrieval by OID, which happens when Pro renders
+				// the attribute table. Must yield results in the order of the OIDs
+				// given or Pro reports "Error: failed to retrieve a page of rows"!
+
+				return GetRowValues(cache, queryFilter.ObjectIDs);
+			}
+
+			// Normal case: retrieval by spatial filter (never an attribute filter,
+			// because this plugin datasource states IsQueryLanguageSupported false):
+
+			return GetRowValues(cache, queryFilter);
+		}
+
+		private IEnumerable<object[]> GetRowValues(WireFrame.IWireCache cache, QueryFilter queryFilter)
+		{
 			foreach (IWireFrameSourceLayer wireFrameClass in SourceLayers.Get(_mapId))
 			{
 				if (wireFrameClass == null || ! wireFrameClass.Visible)
@@ -152,7 +177,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 					continue;
 				}
 
-				queryFilter.WhereClause = wireFrameClass.DefinitionQuery; // TODO should AND the two!
+				// Query filter's WhereClause is known to be empty, because this
+				// plugin datasource declares IsQueryLanguageSupported false:
+
+				queryFilter.WhereClause = wireFrameClass.DefinitionQuery;
 
 				using (RowCursor cursor = wireFrameClass.Search(queryFilter))
 				{
@@ -168,43 +196,151 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 					while (cursor.MoveNext())
 					{
 						Feature feature = (Feature) cursor.Current;
+						var shape = feature.GetShape();
+						long oid = feature.GetObjectID();
+						long wireId = cache.GetID(className, oid);
 
-						yield return GetFieldValues(feature, className, shapeType);
+						yield return GetFieldValues(wireId, shape, oid, className, shapeType);
 					}
 				}
 			}
 		}
 
-		private static object[] GetFieldValues([NotNull] Feature sourceFeature,
-		                                       [NotNull] string className,
-		                                       [NotNull] string shapeType)
+		private IEnumerable<object[]> GetRowValues(WireFrame.IWireCache cache, IReadOnlyList<long> oids)
+		{
+			// Yield wire frame features in the order of the OIDs given.
+			// The implementation looks up ClassName and OID from the given
+			// wire feature IDs, groups by ClassName, retrieves features per
+			// ClassName, and pigeonholes them into pre-allocated slots.
+
+			var dict = new Dictionary<string, List<Pair>>();
+
+			// Arrays ("pigeonholes") for result values:
+
+			var wireIds = oids.ToArray();
+			var wireShapes = new Geometry[wireIds.Length];
+			var sourceOids = new long[wireIds.Length];
+			var sourceClasses = new string[wireIds.Length];
+			var sourceShapeTypes = new string[wireIds.Length];
+
+			// Group given OIDs by source feature class:
+
+			for (int i = 0; i < wireIds.Length; i++)
+			{
+				if (cache.GetSource(wireIds[i], out var className, out var oid))
+				{
+					sourceClasses[i] = className;
+					sourceOids[i] = oid;
+
+					if (!dict.TryGetValue(className, out var oidList))
+					{
+						oidList = new List<Pair>();
+						dict.Add(className, oidList);
+					}
+
+					oidList.Add(new Pair(i, oid));
+				}
+				// else: no such wire ID: skip (should not occur)
+			}
+
+			var filter = new QueryFilter();
+			var layers = SourceLayers.Get(_mapId)
+			                         .Where(l => l is { Visible: true })
+			                         .ToList();
+
+			// Retrieve features by OID per feature class:
+
+			foreach (var pair in dict)
+			{
+				var sourceClassName = pair.Key;
+				var sourceOidList = pair.Value;
+
+				var layer = layers.First(lyr => lyr.FeatureClassName == sourceClassName);
+
+				var shapeType = layer.GeometryType.ToString();
+
+				filter.ObjectIDs = sourceOidList.Select(p => p.OID).ToList();
+				filter.WhereClause = layer.DefinitionQuery;
+
+				using var cursor = layer.Search(filter);
+
+				int i = 0;
+				foreach (var row in Enumerate(cursor))
+				{
+					var feature = (Feature)row;
+					var oid = feature.GetObjectID();
+					while (i < sourceOidList.Count && sourceOidList[i].OID != oid)
+						++i;
+					Assert.True(i < sourceOidList.Count && sourceOidList[i].OID == oid,
+								"Retrieved feature's OID not amongst requested OIDs or not in requested order");
+					int index = sourceOidList[i].Index;
+
+					wireShapes[index] = CreatePolyline(feature.GetShape());
+					Assert.AreEqual(oid, sourceOids[index], "oops");
+					//sourceOids[index] = oid;
+					Assert.AreEqual(sourceClassName, sourceClasses[index], "oops");
+					//sourceClasses[index] = sourceClassName;
+					sourceShapeTypes[index] = shapeType;
+				}
+			}
+
+			for (int i = 0; i < wireIds.Length; i++)
+			{
+				if (wireShapes[i] is null) continue; // filtered away (by Def Query)
+				yield return GetFieldValues(wireIds[i], wireShapes[i],
+				                            sourceOids[i], sourceClasses[i], sourceShapeTypes[i]);
+			}
+		}
+
+		private static object[] GetFieldValues(long wireId, Geometry shape,
+		                                       long sourceOid, string className, string shapeType)
 		{
 			try
 			{
-				var sourceOid = sourceFeature.GetObjectID();
-				var wireFrameOid = ContriveObjectID(className, sourceOid);
-
-				// TODO Attribute Table shows "Error: Failed to retrieve a page of rows" with all but the original non-unique OIDs!
-				//      Same if OID is a constant (non-unique), or 2*sourceOid (non-unique),
-				//      or 1+sourceOid (non-unique), 9,8,7,6,5,4, (but increasing 1,2,3,4,5,6 works), ...!
-
-				var values = new object[5];
-
-				values[0] = wireFrameOid;
-				values[1] = CreatePolyline(sourceFeature.GetShape());
-				values[2] = sourceOid;
-				values[3] = className;
-				values[4] = shapeType;
-
-				return values;
+				return new object[]
+				       {
+					       wireId,
+					       CreatePolyline(shape),
+					       sourceOid,
+					       className,
+					       shapeType
+				       };
 			}
 			catch (Exception e)
 			{
 				_msg.Error($"Error getting values for feature {className} " +
-				           $"<oid> {sourceFeature.GetObjectID()}", e);
+				           $"<oid> {sourceOid}", e);
 			}
 
 			return null;
+		}
+
+		private static IReadOnlyList<PluginField> CreateSchema()
+		{
+			// Note: an OBJECTID field is optional for a plugin datasource, but
+			// if missing, cannot snap to wireframe, and attribute table is fragile
+
+			var array = new[]
+			            {
+				            new PluginField("OBJECTID", "ObjectID", FieldType.OID),
+				            new PluginField("SHAPE", "Shape", FieldType.Geometry),
+				            new PluginField("SOURCE_FEATURE_OID", "Source Feature OID",
+				                            FieldType.Integer),
+
+				            new PluginField("SOURCE_FEATURE_CLASS", "Source Feature Class",
+				                            FieldType.String)
+				            {
+					            Length = 50
+				            },
+
+				            new PluginField("SOURCE_SHAPE_TYPE", "Source Shape Type",
+				                            FieldType.String)
+				            {
+					            Length = 15
+				            }
+			            };
+
+			return new ReadOnlyCollection<PluginField>(array);
 		}
 
 		/// <remarks>
@@ -242,30 +378,25 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
 				$"{geometry.GeometryType} geometries are not supported");
 		}
 
-		private static IReadOnlyList<PluginField> CreateSchema()
+		private static IEnumerable<Row> Enumerate(RowCursor cursor)
 		{
-			// Note: OBJECTID is optional; if missing, cannot snap to wireframe!
+			if (cursor is null) yield break;
+			while (cursor.MoveNext())
+			{
+				yield return cursor.Current;
+			}
+		}
 
-			var array = new[]
-			            {
-				            new PluginField("OBJECTID", "ObjectID", FieldType.OID),
-				            new PluginField("SHAPE", "Shape", FieldType.Geometry),
-				            new PluginField("SOURCE_FEATURE_OID", "Source Feature OID",
-				                            FieldType.Integer),
+		private readonly struct Pair
+		{
+			public readonly int Index;
+			public readonly long OID;
 
-				            new PluginField("SOURCE_FEATURE_CLASS", "Source FeatureClass",
-				                            FieldType.String)
-				            {
-					            Length = 50
-				            },
-
-				            new PluginField("SOURCE_SHAPE_TYPE", "Source Shape Type",
-				                            FieldType.String)
-				            {
-					            Length = 15
-				            }
-			            };
-			return new ReadOnlyCollection<PluginField>(array);
+			public Pair(int index, long oid)
+			{
+				Index = index;
+				OID = oid;
+			}
 		}
 	}
 }
