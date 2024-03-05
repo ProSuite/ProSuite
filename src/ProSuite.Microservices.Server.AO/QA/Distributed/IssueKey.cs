@@ -47,6 +47,9 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		}
 
 		public QaError QaError => EnsureQaError();
+
+		public bool Filtered { get; set; }
+
 		private QaError _qaError;
 
 		private QaError EnsureQaError()
