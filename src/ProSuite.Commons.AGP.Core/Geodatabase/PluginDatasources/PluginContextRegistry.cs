@@ -1,4 +1,3 @@
-using ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources
 {
@@ -14,7 +13,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources
 		/// Returns the <see cref="IWireFrameSourceLayers"/> implementation that provides the visible
 		/// feature classes of the current project.
 		/// </summary>
-		public static IWireFrameSourceLayers WireFrameSourceLayers { get; set; }
+		//public static IWireFrameSourceLayers WireFrameSourceLayers { get; set; }
 
 		// Other contexts, such as transformed feature classes, work list environments, etc.
 		// could go here.

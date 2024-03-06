@@ -1,9 +1,10 @@
-using System.Collections.Generic;
+//using System;
+//using System.Collections.Generic;
 
-namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
-{
-	public interface IWireFrameSourceLayers
-	{
-		IEnumerable<IWireFrameSourceLayer> Get(string forMapUri);
-	}
-}
+//namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources.WireFrame
+//{
+//	public interface IWireFrameSourceLayers
+//	{
+//		IEnumerable<IWireFrameSourceLayer> Get(Uri forMapId);
+//	}
+//}
