@@ -34,15 +34,6 @@ namespace ProSuite.Commons.AGP.Carto
 			return mapView.Map;
 		}
 
-		[NotNull]
-		public static Uri GetMapUri(Project project, Map map)
-		{
-			Uri projectUri = new Uri(project.URI);
-			Uri mapUri = new Uri(projectUri, map.URI);
-
-			return mapUri;
-		}
-
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
 			Dictionary<MapMember, List<long>> oidsByLayer)
 		{
