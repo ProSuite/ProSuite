@@ -84,7 +84,7 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		[NotNull]
-		public IEnumerable<RasterRow> GetRasterRows([NotNull] Box box)
+		public IEnumerable<RasterRow> GetRasterRows([NotNull] IBox box)
 		{
 			if (_rastersDict.Count == 0)
 			{
@@ -143,7 +143,7 @@ namespace ProSuite.QA.Container.TestContainer
 			return (int) Math.Ceiling((max - min) / TileSize);
 		}
 
-		private void GetDataExtent([NotNull] Box tileBox,
+		private void GetDataExtent([NotNull] IBox tileBox,
 		                           out double minX, out double minY,
 		                           out double maxX, out double maxY)
 		{

@@ -54,7 +54,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		/// for the <see cref="Drape"/> and <see cref="SetShapeVerticesZ"/> methods.
 		/// This is consistent with the ArcObjects behaviour.
 		/// </summary>
-		public bool ReturnNullGeometryIfNotCompletelyCovered { get; set; } = true;
+		public UnassignedZValueHandling UnassignedZValueHandling { get; set; } = UnassignedZValueHandling.ReturnNullGeometryIfNotCompletelyCovered;
 
 		/// <summary>
 		/// The value to return in <see cref="GetZ"/> or to assign to the respective vertices
@@ -123,7 +123,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			{
 				result = DefaultValueForUnassignedZs;
 
-				return ! ReturnNullGeometryIfNotCompletelyCovered;
+				return false;
 			}
 
 			return true;
@@ -243,10 +243,21 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 				if (! TryGetZ(pt.X, pt.Y, out double resultZ))
 				{
-					return false;
+					switch (UnassignedZValueHandling)
+					{
+						case UnassignedZValueHandling.ReturnNullGeometryIfNotCompletelyCovered:
+							return false;
+						case UnassignedZValueHandling.IgnoreVertex:
+							break;
+						case UnassignedZValueHandling.SetDefaultValueForUnassignedZs:
+							pt.Z = resultZ;
+							break;
+					}
 				}
-
-				pt.Z = resultZ;
+				else
+				{
+					pt.Z = resultZ;
+				}
 
 				wksPointZs[i] = pt;
 			}
@@ -281,10 +292,22 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		{
 			if (! TryGetZ(point.X, point.Y, out double resultZ))
 			{
-				return false;
+				switch (UnassignedZValueHandling)
+				{
+					case UnassignedZValueHandling.ReturnNullGeometryIfNotCompletelyCovered:
+						return false;
+					case UnassignedZValueHandling.IgnoreVertex:
+						break;
+					case UnassignedZValueHandling.SetDefaultValueForUnassignedZs:
+						point.Z = resultZ;
+						break;
+				}
+			}
+			else
+			{
+				point.Z = resultZ;
 			}
 
-			point.Z = resultZ;
 			return true;
 		}
 

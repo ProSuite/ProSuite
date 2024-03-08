@@ -459,6 +459,35 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
+		public static bool HaveLinearIntersectionsXY([NotNull] ISegmentList segments1,
+		                                             [NotNull] ISegmentList segments2,
+		                                             double tolerance)
+		{
+			IEnumerable<SegmentIntersection> intersections =
+				SegmentIntersectionUtils.GetSegmentIntersectionsXY(
+					segments1, segments2, tolerance);
+
+			foreach (SegmentIntersection linearIntersection in intersections)
+			{
+				Line3D line = linearIntersection.TryGetIntersectionLine(segments1);
+
+				if (line == null)
+				{
+					continue;
+				}
+
+				if (line.Length2D <= tolerance)
+				{
+					// TODO: Sum length of consecutive sub-tolerance lines
+					continue;
+				}
+
+				return true;
+			}
+
+			return false;
+		}
+
 		#region AreaContains, IsContained
 
 		/// <summary>
@@ -683,8 +712,9 @@ namespace ProSuite.Commons.Geom
 				partIndexes.Select(i => rings.GetPart(i).ClockwiseOriented)
 				           .Distinct().Count() == 1;
 
-			return !allHaveSameOrientation;
+			return ! allHaveSameOrientation;
 		}
+
 		/// <summary>
 		/// Determines whether the target ring is touching the source area from the inside in one
 		/// of the provided touchPoints. TODO: Duplication with above method
@@ -980,6 +1010,10 @@ namespace ProSuite.Commons.Geom
 			                                               tolerance, intersectionPoints,
 			                                               predicate);
 
+			// TODO: This can be wrong if a short linear intersection has been filtered out as pseudo-breaks
+			//       and the respective point is selected because it is the start point -> null
+			//       Either we need to be less aggressive with pseudo-break filtering or more points
+			//       need to be tested (ideally one that has no intersection whatsoever).
 			// if there is no real intersection, the boundaries do not intersect at all or everywhere
 			if (intersectionPoints.Count == 0)
 			{
@@ -1656,7 +1690,9 @@ namespace ProSuite.Commons.Geom
 			out bool hasRightSideDeviation,
 			out bool hasLeftSideDeviation)
 		{
-			if (intersection.Type == IntersectionPointType.Crossing)
+			if (intersection.Type == IntersectionPointType.Crossing &&
+			    ! intersection.DisallowSourceForward &&
+			    ! intersection.DisallowSourceBackward)
 			{
 				hasLeftSideDeviation = true;
 				hasRightSideDeviation = true;
@@ -1668,18 +1704,20 @@ namespace ProSuite.Commons.Geom
 			bool? continuesToRightSide =
 				intersection.SourceContinuesToRightSide(source, target, tolerance);
 
-			hasLeftSideDeviation = continuesToRightSide == false;
-			hasRightSideDeviation = continuesToRightSide == true;
+			hasLeftSideDeviation =
+				continuesToRightSide == false && ! intersection.DisallowSourceForward;
+			hasRightSideDeviation =
+				continuesToRightSide == true && ! intersection.DisallowSourceForward;
 
 			bool? arrivesFromRightSide =
 				intersection.SourceArrivesFromRightSide(source, target, tolerance);
 
-			if (arrivesFromRightSide == false)
+			if (arrivesFromRightSide == false && ! intersection.DisallowSourceBackward)
 			{
 				hasLeftSideDeviation = true;
 			}
 
-			if (arrivesFromRightSide == true)
+			if (arrivesFromRightSide == true && ! intersection.DisallowSourceBackward)
 			{
 				hasRightSideDeviation = true;
 			}
@@ -1703,7 +1741,7 @@ namespace ProSuite.Commons.Geom
 				                     .ToList();
 			}
 
-			// Filter pseudo breaks of linear intersection stretches (e.g. at ring start/end)
+			//Filter pseudo breaks of linear intersection stretches(e.g.at ring start/end)
 			var unusable =
 				GeomTopoOpUtils.GetAllLinearIntersectionBreaks(source, target, intersectionPoints)
 				               .ToList();

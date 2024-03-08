@@ -216,9 +216,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			// TODO: Create a structure to check which tileParallel verifications are completed
 
-			// TODO: Consider a BlockingCollection or some other way to limit through-put
-			//       or even the consumer/producer pattern?
-
 			OverallProgressTotal = subVerifications.Count;
 
 			Stack<SubVerification> unhandledSubverifications =
@@ -236,6 +233,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			IDictionary<Task, SubVerification> started =
 				StartSubVerifications(unhandledSubverifications);
+
 			if (started.Count <= 0)
 			{
 				_msg.Debug(
@@ -467,6 +465,14 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				if (subVerifications.Count == 0)
 				{
 					_msg.Debug("No subverifications provided.");
+					return startedVerifications;
+				}
+
+				if (_tasks.Count >= _originalRequest.MaxParallelProcessing)
+				{
+					_msg.DebugFormat(
+						"{0} tasks have already been started (requested degree of parallelism: {1})",
+						_tasks.Count, _originalRequest.MaxParallelProcessing);
 					return startedVerifications;
 				}
 
@@ -778,8 +784,12 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			return fullyProcessed;
 		}
 
-		private static void StartVerification([CanBeNull] QualityVerification qualityVerification)
+		private void StartVerification([CanBeNull] QualityVerification qualityVerification)
 		{
+			_msg.InfoFormat(
+				"Starting client request with a maximum desired degree of parallelism of {0}...",
+				_originalRequest.MaxParallelProcessing);
+
 			if (qualityVerification == null)
 			{
 				return;
@@ -816,6 +826,9 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 				if (! conditionVerificationMsg.Fulfilled)
 				{
+					_msg.Debug(
+						$"The condition {conditionVerification.QualityConditionName} is not fulfilled.");
+
 					conditionVerification.Fulfilled = false;
 				}
 
@@ -860,6 +873,15 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 
 			qualityVerification.CalculateStatistics();
+
+			if (! qualityVerification.Fulfilled)
+			{
+				_msg.InfoFormat("Un-fulfilled conditions: {0}",
+				                StringUtils.Concatenate(
+					                qualityVerification.ConditionVerifications.Where(
+						                cv => ! cv.Fulfilled), cv => cv.QualityConditionName,
+					                Environment.NewLine));
+			}
 		}
 
 		private static QualityConditionVerification FindQualityConditionVerification(

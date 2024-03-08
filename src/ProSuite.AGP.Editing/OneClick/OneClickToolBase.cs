@@ -154,6 +154,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
 		{
+			_msg.VerboseDebug(() => "HandleKeyDownAsync");
+
 			if (args.Key == Key.Escape)
 			{
 				await ViewUtils.TryAsync(HandleEscapeAsync, _msg);
@@ -184,9 +186,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected override Task HandleKeyUpAsync(MapViewKeyEventArgs args)
+		protected override async Task HandleKeyUpAsync(MapViewKeyEventArgs args)
 		{
-			return HandleKeyUpCoreAsync(args);
+			_msg.VerboseDebug(() => "HandleKeyUpAsync");
+			
+			await ViewUtils.TryAsync(async () =>
+			{
+				await HandleKeyUpCoreAsync(args);
+			}, _msg);
 		}
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
