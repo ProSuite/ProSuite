@@ -300,7 +300,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			string concurrentRequestMsg =
 				CurrentLoad == null
 					? string.Empty
-					: $"Concurrent requests: {CurrentLoad.CurrentProcessCount}";
+					: $"Concurrently running requests (including this one): {CurrentLoad.CurrentProcessCount}";
 
 			_msg.InfoFormat("Starting {0} request from {1}. {2}", request.GetType().Name, peerName,
 			                concurrentRequestMsg);

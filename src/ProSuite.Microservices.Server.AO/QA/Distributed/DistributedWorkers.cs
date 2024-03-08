@@ -87,10 +87,21 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			foreach (IQualityVerificationClient client in _workerClients)
 			{
-				if (! _workingClients.Contains(client))
+				if (_workingClients.Contains(client))
 				{
-					return client;
+					continue;
 				}
+
+				if (client.TryGetRunningRequestCount(TimeSpan.FromSeconds(2),
+				                                     out int runningRequestCount) &&
+				    runningRequestCount > 0)
+				{
+					_msg.DebugFormat("Client {0} is already busy with {1} requests. It is skipped.",
+					                 client.GetAddress(), runningRequestCount);
+					continue;
+				}
+
+				return client;
 			}
 
 			return null;
@@ -196,6 +207,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			_msg.DebugStopTiming(watch, "Removed {0} unhealthy workers from worker client list.",
 			                     removedWorkers);
 
+			// TODO: If _maxDesiredParallelCount is really the limiting factor, ensure that all the
+			// _workerClients are usable (i.e. not busy by due to other requests)
 			if (_workerClients.Count >= _maxDesiredParallelCount)
 			{
 				// We have enough

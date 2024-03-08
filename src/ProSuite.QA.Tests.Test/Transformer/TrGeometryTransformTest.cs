@@ -8,8 +8,11 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
@@ -582,6 +585,14 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			throw new NotImplementedException();
 		}
 
+		public ISimpleSurface GetSimpleSurface(RasterReference rasterReference, IEnvelope envelope,
+			double? defaultValueForUnassignedZs = null,
+			UnassignedZValueHandling? unassignedZValueHandling = null)
+		{
+			return rasterReference.CreateSurface(envelope, defaultValueForUnassignedZs,
+			                                     unassignedZValueHandling);
+		}
+
 		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table,
 		                                        ITableFilter queryFilter,
 		                                        QueryFilterHelper filterHelper)
@@ -590,6 +601,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		public IUniqueIdProvider GetUniqueIdProvider(IReadOnlyTable table) => null;
+
+		public IEnumerable<Tile> EnumInvolvedTiles([NotNull] IGeometry geometry)
+		{
+			throw new NotImplementedException();
+		}
 
 		#endregion
 	}

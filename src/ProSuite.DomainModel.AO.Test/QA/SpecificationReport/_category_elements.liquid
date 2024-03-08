@@ -1,0 +1,24 @@
+﻿<tr class="categoryTitle">
+    <th colspan="3">
+        {{'&rsaquo;' | Times:category_elements.Level}}{% if category_elements.Level > 0 %}&nbsp;{% endif %}
+        {{category_elements.Name  | Default:'&lsaquo;No category&rsaquo;'}}
+    </th>
+</tr>
+{% if category_elements.HasQualitySpecificationElements %}
+<tr class="columnHeaders">
+    <th>{{text.ColumnHeaderQualityCondition}}</th>
+    <th>{{text.ColumnHeaderDescription}}</th>
+    <th>{{text.ColumnHeaderIssueType}}</th>
+</tr>
+{% for element in category_elements.QualitySpecificationElements -%}
+<tr class="element {% cycle 'qcon': 'oddRow', 'evenRow' %} ">
+    <td class="name"><a href="#{{element.QualityCondition.Name}}">{{element.QualityCondition.Name}}</a></td>
+    <td class="description">{{element.QualityCondition.Description | NewlineToBr}}</td>
+    <td class="{% if element.IsAllowable %}warning{% else %}error{% endif %}">{{element.IssueType}}</td>
+</tr>
+{% endfor -%}
+{% endif %}
+{% include 'category_elements' with category_elements.SubCategories %}
+{% if category_elements.Level == 0 %}
+<tr class="categorySeparator"><td colspan="3" /></tr>
+{% endif %}
