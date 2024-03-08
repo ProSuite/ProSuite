@@ -543,7 +543,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected void ResetDerivedGeometries()
 		{
-			_feedback.DisposeOverlays();
+			_feedback?.DisposeOverlays();
 			ChangeAlongCurves = null;
 		}
 
