@@ -483,16 +483,20 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 				// Add the standard size text information
 
 				var proj = updatedGeometry.SpatialReference as IProjectedCoordinateSystem;
-				int coordinateUnitFactoryCode = proj.CoordinateUnit.FactoryCode;
+				//TODO: return correct sizeChangeMessage when SpatialReference is not projected but geographic
+				if (proj != null)
+				{
+					int coordinateUnitFactoryCode = proj.CoordinateUnit.FactoryCode;
 
-				esriUnits linearUnits = esriUnits.esriMeters;
+					esriUnits linearUnits = esriUnits.esriMeters;
 
-				string sizeChangeMessage = reshaper.GetSizeChangeMessage(
+					string sizeChangeMessage = reshaper.GetSizeChangeMessage(
 					updatedGeometry, feature, linearUnits, linearUnits);
 
-				if (! string.IsNullOrEmpty(sizeChangeMessage))
-				{
-					yield return sizeChangeMessage;
+					if (!string.IsNullOrEmpty(sizeChangeMessage))
+					{
+						yield return sizeChangeMessage;
+					}
 				}
 			}
 		}
