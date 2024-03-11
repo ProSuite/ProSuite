@@ -716,7 +716,8 @@ namespace ProSuite.Commons.Text
 		public static string FormatNonScientific(double value,
 		                                         [NotNull] IFormatProvider formatProvider)
 		{
-			string result = string.Format(formatProvider, "{0:F99}", value).TrimEnd('0');
+			decimal decimalValue = (decimal)value;
+			string result = string.Format(formatProvider, "{0:F99}", decimalValue).TrimEnd('0');
 
 			if (result.Length == 0)
 			{
@@ -733,7 +734,8 @@ namespace ProSuite.Commons.Text
 			double value,
 			[NotNull] IFormatProvider formatProvider)
 		{
-			string result = string.Format(formatProvider, "{0:F99}", value)
+			decimal valueDecimal = (decimal)value;
+			string result = string.Format(formatProvider, "{0:F99}", valueDecimal)
 			                      .TrimEnd('0');
 
 			if (result.Length == 0)

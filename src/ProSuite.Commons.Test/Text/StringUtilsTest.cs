@@ -371,15 +371,14 @@ namespace ProSuite.Commons.Test.Text
 						                      input, CultureInfo.GetCultureInfo(culture))
 					                      : StringUtils.FormatPreservingDecimalPlaces(
 						                      input, CultureInfo.GetCultureInfo(culture));
-#if NET6_0_OR_GREATER
+
+				// Note regarding .DOT NET 6:
 				// Extra digits were added to improve 'round-trippability', i.e. parsing the formatted string
 				// returning to the same number.
 				// See https://devblogs.microsoft.com/dotnet/floating-point-parsing-and-formatting-improvements-in-net-core-3-0/
 
-				Assert.IsTrue(formatResult.StartsWith(expected));
-#else
 				Assert.AreEqual(expected, formatResult);
-#endif
+
 			}
 		}
 	}
