@@ -14,7 +14,7 @@ namespace ProSuite.Commons.Logging
 		}
 	}
 
-	public class LoggingEventsAppender : AppenderSkeleton
+	public sealed class LoggingEventsAppender : AppenderSkeleton
 	{
 		// TODO temporary static event handler - unsubscribe!!!
 		public static event EventHandler<LoggingEventArgs> OnNewLogMessage;

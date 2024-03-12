@@ -38,6 +38,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		public static Exception LoggingConfigurationException { get; set; }
 
+		// TODO Use a ring buffer! Now we accumulate forever! (user could clear manually)
 		public ObservableCollection<LoggingEventItem> LogMessageList { get; }
 
 		public LoggingEventItem SelectedRow
