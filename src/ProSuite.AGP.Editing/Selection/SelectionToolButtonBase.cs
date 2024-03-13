@@ -4,6 +4,7 @@ using ArcGIS.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Events;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -24,6 +25,8 @@ namespace ProSuite.AGP.Editing.Selection
 
 		protected override void OnClick()
 		{
+			Gateway.LogEntry(_msg);
+
 			try
 			{
 				var wrapper = FrameworkApplication.GetPlugInWrapper(SelectionToolDamlID);
@@ -40,13 +43,13 @@ namespace ProSuite.AGP.Editing.Selection
 
 				WireEvents();
 
-				IsChecked = ! IsChecked; // TODO why not just set to true?
+				IsChecked = true;
 
 				selectionToolCmd.Execute(null);
 			}
 			catch (Exception ex)
 			{
-				_msg.Error(ex.Message, ex);
+				Gateway.HandleError(ex, _msg);
 			}
 		}
 
