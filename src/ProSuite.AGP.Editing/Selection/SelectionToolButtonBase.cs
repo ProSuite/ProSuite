@@ -1,31 +1,58 @@
 using System;
 using System.Windows.Input;
+using ArcGIS.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Events;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.Selection
 {
+	/// <summary>
+	/// Activate the Selection Tool on click. Can be used
+	/// in places (e.g. context menus) where tools cannot.
+	/// </summary>
 	[UsedImplicitly]
 	public abstract class SelectionToolButtonBase : Button
 	{
-		//TODO: ID from Config.daml; make abstract or similar
-		private const string ConfigId_SelectionTool = "ProSuiteTools_Selection_SelectionTool";
+		private SubscriptionToken _activeToolChangedToken;
 
-		private void WireEvents()
-		{
-			ActiveToolChangedEvent.Subscribe(OnActiveToolChanged);
-		}
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private void UnwireEvents()
+		protected abstract string SelectionToolDamlID { get; }
+
+		protected override void OnClick()
 		{
-			ActiveToolChangedEvent.Unsubscribe(OnActiveToolChanged);
+			try
+			{
+				var wrapper = FrameworkApplication.GetPlugInWrapper(SelectionToolDamlID);
+
+				if (wrapper is not ICommand selectionToolCmd)
+				{
+					return;
+				}
+
+				if (! selectionToolCmd.CanExecute(null))
+				{
+					return;
+				}
+
+				WireEvents();
+
+				IsChecked = ! IsChecked; // TODO why not just set to true?
+
+				selectionToolCmd.Execute(null);
+			}
+			catch (Exception ex)
+			{
+				_msg.Error(ex.Message, ex);
+			}
 		}
 
 		private void OnActiveToolChanged(ToolEventArgs e)
 		{
-			if (string.Equals(ConfigId_SelectionTool, e.CurrentID,
+			if (string.Equals(SelectionToolDamlID, e.CurrentID,
 			                  StringComparison.OrdinalIgnoreCase))
 			{
 				return;
@@ -36,24 +63,21 @@ namespace ProSuite.AGP.Editing.Selection
 			IsChecked = false;
 		}
 
-		protected override void OnClick()
+		private void WireEvents()
 		{
-			if (! (FrameworkApplication.GetPlugInWrapper(
-				       ConfigId_SelectionTool) is ICommand selectionToolCmd))
+			if (_activeToolChangedToken is null)
 			{
-				return;
+				ActiveToolChangedEvent.Subscribe(OnActiveToolChanged);
 			}
+		}
 
-			if (! selectionToolCmd.CanExecute(null))
+		private void UnwireEvents()
+		{
+			if (_activeToolChangedToken != null)
 			{
-				return;
+				ActiveToolChangedEvent.Unsubscribe(_activeToolChangedToken);
+				_activeToolChangedToken = null;
 			}
-
-			WireEvents();
-
-			IsChecked = ! IsChecked;
-
-			selectionToolCmd.Execute(null);
 		}
 	}
 }
