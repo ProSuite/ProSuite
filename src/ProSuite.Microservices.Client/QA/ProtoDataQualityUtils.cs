@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
@@ -501,13 +500,10 @@ namespace ProSuite.Microservices.Client.QA
 					new DatasetMsg
 					{
 						DatasetId = dataset.Id,
-						Name = dataset.Name,
-						AliasName = dataset.AliasName,
+						Name = ProtobufGeomUtils.NullToEmpty(dataset.Name),
+						AliasName = ProtobufGeomUtils.NullToEmpty(dataset.AliasName),
 						GeometryType = geometryType
 					};
-
-				CallbackUtils.DoWithNonNull(
-					datasetMsg.AliasName, s => dataset.AliasName = s);
 
 				referencedDatasetMsgs.Add(datasetMsg);
 			}
