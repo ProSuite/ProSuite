@@ -145,7 +145,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// Gets the name of the assembly which contains the implementation.
 		/// </summary>
 		/// <value>The name of the assembly.</value>
-		public virtual string TestAssemblyName => Class?.AssemblyName;
+		public virtual string AssemblyName => Class?.AssemblyName;
 
 		public new int Id
 		{
