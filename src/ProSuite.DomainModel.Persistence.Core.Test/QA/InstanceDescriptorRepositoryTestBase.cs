@@ -83,13 +83,26 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 		[Test]
 		public void CanGetWithSameImplementation()
 		{
-			var classDesc = new ClassDescriptor("factTypeName", "factAssemblyName");
+			var trClassDesc1 = new ClassDescriptor("factTypeName", "factAssemblyName");
+			var trClassDesc2 = new ClassDescriptor("factType2Name", "factAssemblyName");
+			var ifClassDesc1 = new ClassDescriptor("ifTypeName", "factAssemblyName");
+			var ifClassDesc2 = new ClassDescriptor("ifType2Name", "factAssemblyName");
+			var qClassDesc1 = new ClassDescriptor("testTypeName", "factAssemblyName");
+			var qClassDesc2 = new ClassDescriptor("testType2Name", "factAssemblyName");
 
-			var t1 = new TransformerDescriptor("trans1", classDesc, 0);
+			var t1 = new TransformerDescriptor("trans1", trClassDesc1, 0);
+			var t2 = new TransformerDescriptor("trans2", trClassDesc1, 0, "desc");
+			var t3 = new TransformerDescriptor("transDiff", trClassDesc2, 0, "desc");
 
-			var t2 = new TransformerDescriptor("trans2", classDesc, 0, "desc");
+			var f1 = new TransformerDescriptor("filt1", ifClassDesc1, 0);
+			var f2 = new TransformerDescriptor("filt2", ifClassDesc1, 0, "desc");
+			var f3 = new TransformerDescriptor("filtDiff", ifClassDesc2, 0, "desc");
 
-			CreateSchema(t1);
+			var q1 = new TestDescriptor("test1", qClassDesc1, 1);
+			var q2 = new TestDescriptor("test2", qClassDesc1, 1);
+			var q3 = new TestDescriptor("testDiff", qClassDesc2, 1);
+
+			CreateSchema(t1, f1, q1);
 
 			UnitOfWork.NewTransaction(
 				delegate
@@ -98,8 +111,18 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 					InstanceDescriptor foundDescriptor = Repository.GetWithSameImplementation(t2);
 
 					Assert.NotNull(foundDescriptor);
-
 					Assert.AreEqual(t2.Class, foundDescriptor.Class);
+					Assert.IsNull(Repository.GetWithSameImplementation(t3));
+
+					foundDescriptor = Repository.GetWithSameImplementation(f2);
+					Assert.NotNull(foundDescriptor);
+					Assert.AreEqual(f2.Class, foundDescriptor.Class);
+					Assert.IsNull(Repository.GetWithSameImplementation(f3));
+
+					foundDescriptor = Repository.GetWithSameImplementation(q2);
+					Assert.NotNull(foundDescriptor);
+					Assert.AreEqual(q2.Class, foundDescriptor.Class);
+					Assert.IsNull(Repository.GetWithSameImplementation(q3));
 				});
 		}
 	}

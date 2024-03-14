@@ -132,7 +132,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			using (ISession session = OpenSession(true))
 			{
 				IList<int> deletedDatasetParameterIds =
-					DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
+					QualityRepositoryUtils.GetDeletedDatasetParameterIds(session);
 
 				if (deletedDatasetParameterIds.Count == 0)
 				{
@@ -179,7 +179,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			using (ISession session = OpenSession(true))
 			{
 				IList<int> deletedDatasetParameterIds =
-					DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
+					QualityRepositoryUtils.GetDeletedDatasetParameterIds(session);
 
 				if (deletedDatasetParameterIds.Count == 0)
 				{
@@ -338,7 +338,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			[NotNull] ISession session)
 		{
 			IList<int> deletedDatasetParameterIds =
-				DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
+				QualityRepositoryUtils.GetDeletedDatasetParameterIds(session);
 
 			var result = new HashSet<int>();
 
@@ -386,11 +386,11 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		private static HashSet<int> GetIdsInvolvingDeletedDatasets([NotNull] ISession session)
 		{
 			IList<int> datasetParameterIds =
-				DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
+				QualityRepositoryUtils.GetDeletedDatasetParameterIds(session);
 
 			// New implementation to be tested
 			HashSet<int> queryOverResult =
-				DatasetParameterFetchingUtils
+				QualityRepositoryUtils
 					.GetInstanceConfigurationIdsForParameterIds<QualityCondition>(
 						session, datasetParameterIds, _maxInParameterCount);
 
