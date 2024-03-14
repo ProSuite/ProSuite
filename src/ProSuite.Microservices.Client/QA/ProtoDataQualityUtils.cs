@@ -486,7 +486,7 @@ namespace ProSuite.Microservices.Client.QA
 					SpatialReference = srWkId
 				};
 
-			foreach (Dataset dataset in productionModel.Datasets)
+			foreach (Dataset dataset in productionModel.GetDatasets())
 			{
 				modelMsg.DatasetIds.Add(dataset.Id);
 
