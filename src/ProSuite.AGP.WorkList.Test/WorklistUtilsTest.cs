@@ -62,7 +62,7 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		[Test, Ignore("Learning test")]
-		public void Can_get_path_from_Fgdb()
+		public void Can_get_path_from_FileGDB()
 		{
 			string path = @"C:\temp\agp projects\Default.gdb";
 			var gdb = new Geodatabase(

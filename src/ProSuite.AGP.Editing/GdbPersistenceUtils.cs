@@ -223,9 +223,9 @@ namespace ProSuite.AGP.Editing
 		{
 			foreach (ResultFeature insert in insertResults)
 			{
-				Feature originalFeatue = insert.OriginalFeature;
+				Feature originalFeature = insert.OriginalFeature;
 
-				Feature newFeature = InsertTx(editContext, originalFeatue, insert.NewGeometry);
+				Feature newFeature = InsertTx(editContext, originalFeature, insert.NewGeometry);
 
 				yield return newFeature;
 

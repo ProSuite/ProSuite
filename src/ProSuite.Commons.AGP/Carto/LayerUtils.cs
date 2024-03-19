@@ -206,7 +206,8 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
-		/// Gets the layer's visibility state. Works as well for layers nested in group layers.
+		/// Gets the layer's visibility state.
+		/// Works as well for layers nested in group layers.
 		/// </summary>
 		public static bool IsVisible([NotNull] Layer layer)
 		{
@@ -217,9 +218,21 @@ namespace ProSuite.Commons.AGP.Carto
 
 			if (layer.Parent is Layer parentLayer)
 			{
-				// ReSharper disable once TailRecursiveCall
 				return IsVisible(parentLayer);
 			}
+
+			// Version without tail recursion:
+			//var parent = layer.Parent;
+
+			//while (parent is Layer parentLayer)
+			//{
+			//	if (! parentLayer.IsVisible)
+			//	{
+			//		return false;
+			//	}
+
+			//	parent = parentLayer.Parent;
+			//}
 
 			return true;
 		}
@@ -241,7 +254,6 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
-		// todo daro to MapUtils?
 		[NotNull]
 		public static FeatureClass GetFeatureClass(
 			[NotNull] this BasicFeatureLayer basicFeatureLayer)
@@ -261,6 +273,8 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				return Assert.NotNull(annotationLayer.GetFeatureClass());
 			}
+
+			// TODO why not: return (FeatureClass) basicFeatureLayer.GetTable();
 
 			throw new ArgumentException(
 				$"{nameof(basicFeatureLayer)} is not of type FeatureLayer nor AnnotationLayer");

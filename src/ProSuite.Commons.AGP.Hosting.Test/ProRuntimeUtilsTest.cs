@@ -14,11 +14,11 @@ namespace ProSuite.Commons.AGP.Hosting.Test
 		{
 			bool isProInstalled = ProRuntimeUtils.IsProInstalled(out Version proVersion);
 
-			RegistryKey versionSubkey =
+			RegistryKey versionSubKey =
 				Registry.LocalMachine.OpenSubKey(@"SOFTWARE\ESRI\ArcGISPro", false);
-			bool versionSubkeyExists = versionSubkey != null;
+			bool versionSubKeyExists = versionSubKey != null;
 
-			Assert.AreEqual(versionSubkeyExists, isProInstalled);
+			Assert.AreEqual(versionSubKeyExists, isProInstalled);
 
 			bool isServerInstalled = ProRuntimeUtils.IsServerInstalled(out Version serverVersion);
 
