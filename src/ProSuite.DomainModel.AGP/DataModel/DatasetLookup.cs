@@ -11,15 +11,25 @@ namespace ProSuite.DomainModel.AGP.DataModel
 	{
 		private readonly IList<BasicDataset> _objectDatasets;
 
+		private readonly IDictionary<long, BasicDataset> _datasetByTableHandle =
+			new Dictionary<long, BasicDataset>();
+
 		public DatasetLookup(IList<BasicDataset> objectDatasets)
 		{
 			_objectDatasets = objectDatasets;
 		}
 
 		[CanBeNull]
-		public BasicDataset GetDataset(Table table)
+		public BasicDataset GetDataset([NotNull] Table table)
 		{
-			// TODO: Sophisticated logic
+			// TODO: Sophisticated logic with unqualified names, etc.
+
+			var tableHandle = (long) table.Handle;
+
+			if (_datasetByTableHandle.TryGetValue(tableHandle, out var dataset))
+			{
+				return dataset;
+			}
 
 			string tableName = table.GetName();
 
@@ -27,10 +37,16 @@ namespace ProSuite.DomainModel.AGP.DataModel
 
 			string unqualifiedName = ModelElementNameUtils.GetUnqualifiedName(tableName);
 
-			return _objectDatasets.FirstOrDefault(
+			BasicDataset result = _objectDatasets.FirstOrDefault(
 				d => d.Name.Equals(tableName, StringComparison.InvariantCultureIgnoreCase) ||
-				     d.Name.Equals(unqualifiedName, StringComparison.InvariantCultureIgnoreCase)
-			);
+				     d.Name.Equals(unqualifiedName, StringComparison.InvariantCultureIgnoreCase));
+
+			if (result != null)
+			{
+				_datasetByTableHandle[tableHandle] = result;
+			}
+
+			return result;
 		}
 	}
 }

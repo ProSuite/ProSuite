@@ -167,5 +167,36 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			return tables.Distinct(new TableComparer());
 		}
+
+		/// <summary>
+		/// Returns the actual database tables from a joined table or, if the table is not a joined
+		/// table, the table itself.
+		/// </summary>
+		/// <param name="table">The potentially joined table</param>
+		/// <returns></returns>
+		public static IEnumerable<Table> GetDatabaseTables([NotNull] Table table)
+		{
+			if (! table.IsJoinedTable())
+			{
+				yield return table;
+				yield break;
+			}
+
+			Join join = table.GetJoin();
+
+			Table originTable = join.GetOriginTable();
+
+			foreach (Table sourceTable in GetDatabaseTables(originTable))
+			{
+				yield return sourceTable;
+			}
+
+			Table destinationTable = join.GetDestinationTable();
+
+			foreach (Table sourceTable in GetDatabaseTables(destinationTable))
+			{
+				yield return sourceTable;
+			}
+		}
 	}
 }

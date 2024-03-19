@@ -15,6 +15,8 @@ namespace ProSuite.DomainModel.AGP.Workflow
 	/// </summary>
 	public class ProjectWorkspace
 	{
+		private DatasetLookup _datasetLookup;
+
 		// TODO: Add project, dataset implementations to DomainModel
 		public ProjectWorkspace(int projectId,
 		                        string projectName,
@@ -52,7 +54,7 @@ namespace ProSuite.DomainModel.AGP.Workflow
 
 		public DatasetLookup GetDatasetLookup()
 		{
-			return new DatasetLookup(Datasets);
+			return _datasetLookup ??= new DatasetLookup(Datasets);
 		}
 	}
 }
