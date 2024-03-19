@@ -36,9 +36,16 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 			IEnvelope boundaryEnv = _rasterProvider.GetInterpolationDomain().Envelope;
 
+			if (boundaryEnv.IsEmpty)
+			{
+				throw new InvalidOperationException(
+					$"No surface domain of raster surface {rasterProvider}");
+			}
+
 			if (boundaryEnv.SpatialReference == null)
 			{
-				Assert.NotNull(spatialReference, "No spatial reference");
+				Assert.NotNull(spatialReference, "No spatial reference of raster surface {0}",
+				               rasterProvider);
 				boundaryEnv.SpatialReference = spatialReference;
 			}
 
@@ -54,7 +61,8 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		/// for the <see cref="Drape"/> and <see cref="SetShapeVerticesZ"/> methods.
 		/// This is consistent with the ArcObjects behaviour.
 		/// </summary>
-		public UnassignedZValueHandling UnassignedZValueHandling { get; set; } = UnassignedZValueHandling.ReturnNullGeometryIfNotCompletelyCovered;
+		public UnassignedZValueHandling UnassignedZValueHandling { get; set; } =
+			UnassignedZValueHandling.ReturnNullGeometryIfNotCompletelyCovered;
 
 		/// <summary>
 		/// The value to return in <see cref="GetZ"/> or to assign to the respective vertices
