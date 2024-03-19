@@ -53,6 +53,15 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return false;
 			}
 
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				MessageBox.Show("No active map.", "Verify Extent",
+				                MessageBoxButton.OK, MessageBoxImage.Warning);
+				return false;
+			}
+
 			IQualityVerificationEnvironment qaEnvironment =
 				Assert.NotNull(SessionContext.VerificationEnvironment);
 
@@ -66,7 +75,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return false;
 			}
 
-			if (!MapUtils.HasSelection(MapView.Active))
+			if (!MapUtils.HasSelection(mapView))
 			{
 				MessageBox.Show("No selected polygons", Caption,
 								MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -97,7 +106,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(WorkListOpener,
-				MapView.Active, selectedPolygonGeometry, spatialRef);
+				mapView, selectedPolygonGeometry, spatialRef);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
