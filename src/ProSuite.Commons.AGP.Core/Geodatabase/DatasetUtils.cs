@@ -40,7 +40,9 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static string GetName(Table table)
 		{
+			// TODO Why not just table.GetName()?
 			if (table is null) return null;
+			// TODO By documentation, Definition object must be disposed!
 			return table.GetDefinition()?.GetName();
 		}
 
