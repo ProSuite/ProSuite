@@ -155,7 +155,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return base.OnEditCompletedAsyncCore(args);
 		}
 
-		protected override void AfterSelection(IList<Feature> selectedFeatures,
+		protected override void AfterSelection(Map map, IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			StartTargetSelectionPhase();

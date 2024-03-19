@@ -254,12 +254,14 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			if (IsInSelectionPhase())
 			{
+				var map = e.Map ?? throw new AssertionException("event's Map is null");
 				var selection = SelectionUtils.GetSelection(e);
+
 				if (CanUseSelection(selection))
 				{
 					var selectedFeatures = GetApplicableSelectedFeatures(selection).ToList();
 
-					AfterSelection(selectedFeatures, progressor);
+					AfterSelection(map, selectedFeatures, progressor);
 
 					var sketch = GetCurrentSketchAsync().Result;
 

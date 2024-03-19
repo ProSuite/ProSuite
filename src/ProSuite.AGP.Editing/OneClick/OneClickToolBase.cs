@@ -683,10 +683,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			return CanSelectGeometryType(shapeType);
 		}
 
-		protected virtual void AfterSelection([NotNull] IList<Feature> selectedFeatures,
-		                                      [CanBeNull] CancelableProgressor progressor) { }
+		protected virtual void AfterSelection(
+			[NotNull] Map map, [NotNull] IList<Feature> selectedFeatures,
+		    [CanBeNull] CancelableProgressor progressor) { }
 
-		private void ProcessSelection([NotNull] MapView mapView,
+		private void ProcessSelection([NotNull] MapView mapView, // TODO or just a Map?
 		                              [CanBeNull] CancelableProgressor progressor = null)
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
@@ -704,7 +705,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				LogUsingCurrentSelection();
 
-				AfterSelection(applicableSelection, progressor);
+				AfterSelection(mapView.Map, applicableSelection, progressor);
 			}
 			else
 			{
@@ -784,7 +785,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return selectedFeatures.Any(CanSelectFeatureGeometryType);
 		}
 
-		protected bool CanUseSelection([NotNull] MapView activeMapView)
+		protected bool CanUseSelection([NotNull] MapView activeMapView) // TODO Map instead of MapView
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
 				SelectionUtils.GetSelection(activeMapView.Map);
