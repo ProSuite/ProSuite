@@ -707,6 +707,59 @@ namespace ProSuite.Commons.Text
 		}
 
 		/// <summary>
+		/// Join given values into a string. Use given separator between
+		/// values. If <paramref name="maxLength"/> is reached, stop
+		/// and add the given <paramref name="ellipsis"/> ("..." by default).
+		/// The resulting string may be longer than <paramref name="maxLength"/>
+		/// by at most the length of the <paramref name="ellipsis"/> string.
+		/// </summary>
+		public static string Join<T>(string separator, IEnumerable<T> values,
+		                             int maxLength, string ellipsis = null)
+		{
+			if (values is null) return string.Empty;
+			if (maxLength <= 0) return string.Empty;
+
+			if (separator is null) separator = string.Empty;
+			if (ellipsis is null) ellipsis = "...";
+
+			using (var enumerator = values.GetEnumerator())
+			{
+				if (! enumerator.MoveNext())
+				{
+					return string.Empty;
+				}
+
+				var sb = new StringBuilder();
+
+				if (enumerator.Current != null)
+				{
+					sb.Append(enumerator.Current);
+				}
+
+				while (enumerator.MoveNext())
+				{
+					sb.Append(separator);
+
+					int length = sb.Length;
+
+					if (enumerator.Current != null)
+					{
+						sb.Append(enumerator.Current);
+					}
+
+					if (sb.Length > maxLength)
+					{
+						sb.Length = length; // remove last item
+						sb.Append(ellipsis);
+						break;
+					}
+				}
+
+				return sb.ToString();
+			}
+		}
+
+		/// <summary>
 		/// Formats the provided value in non-scientific (no exp notation, even for very large / very small numbers)
 		/// </summary>
 		/// <param name="value">The value to format</param>

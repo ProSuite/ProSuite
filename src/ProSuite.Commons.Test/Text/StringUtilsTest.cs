@@ -240,6 +240,18 @@ namespace ProSuite.Commons.Test.Text
 		}
 
 		[Test]
+		public void CanJoinWithMaxLength()
+		{
+			var values = new[] { 1, 2, 3, 4, 5, 6 };
+			Assert.AreEqual("1,2,3,4,...", StringUtils.Join(",", values, 8));
+			Assert.AreEqual("1,2,3,4,...", StringUtils.Join(",", values, 7));
+			Assert.AreEqual("123456", StringUtils.Join(null, values, 999));
+			Assert.AreEqual("1 2 3 4 etc.", StringUtils.Join(" ", values, 8, "etc."));
+			Assert.AreEqual(string.Empty, StringUtils.Join(",", (int[]) null, 8));
+			Assert.AreEqual(string.Empty, StringUtils.Join(null, values, 0));
+		}
+
+		[Test]
 		public void CanReverse()
 		{
 			var sb = new StringBuilder();
