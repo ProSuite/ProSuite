@@ -7,6 +7,9 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.Mapping;
 using ArcGIS.Core.Events;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Editing.Attributes;
+using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Events;
@@ -141,12 +144,40 @@ public abstract class AnnotationConstructionToolBase : MapTool
 		foreach (var pair in args.Selection.ToDictionary<AnnotationLayer>())
 		{
 			AnnotationLayer layer = pair.Key;
+
+			var labelClassCollection = GetLabelClassCollection(layer).ToList();
+
 			List<long> oids = pair.Value;
 
 			foreach (AnnotationFeature annotationFeature in
 			         LayerUtils.SearchRows<AnnotationFeature>(
 				         layer, GdbQueryUtils.CreateFilter(oids)))
 			{
+				int annotationClassID = annotationFeature.GetAnnotationClassID();
+
+				CIMLabelClass label = labelClassCollection.FirstOrDefault(labelClass => labelClass.ID == annotationClassID);
+
+				if (label == null)
+				{
+					_msg.Debug($"Cannot find label class ID {annotationClassID} in label class collection of layer {layer.Name}");
+
+					continue;
+				}
+
+				EditingTemplate template = layer.GetTemplate(label.Name);
+				
+				if (template == null)
+				{
+					continue;
+				}
+
+				await template.ActivateToolAsync(ID);
+
+				Inspector inspector = template.Inspector;
+				AnnotationProperties annotationProperties = inspector.GetAnnotationProperties();
+				annotationProperties.TextString = annotationFeature["TextString"].ToString();
+				inspector.SetAnnotationProperties(annotationProperties);
+
 				if (annotationFeature.GetGraphic() is not CIMTextGraphic cimTextGraphic)
 				{
 					continue;
@@ -165,6 +196,14 @@ public abstract class AnnotationConstructionToolBase : MapTool
 		}
 
 		await base.OnSelectionChangedAsync(args);
+	}
+
+	// todo daro to utils?
+	private static IEnumerable<CIMLabelClass> GetLabelClassCollection(AnnotationLayer layer)
+	{
+		return layer.GetFeatureClass() is AnnotationFeatureClass annotationFeatureClass
+			       ? annotationFeatureClass.GetDefinition().GetLabelClassCollection()
+			       : Enumerable.Empty<CIMLabelClass>();
 	}
 
 	protected override async Task<bool> OnSketchCompleteAsync(Geometry geometry)
