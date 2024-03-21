@@ -29,7 +29,6 @@ using ProSuite.Commons.UI.Input;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
-using Cursor = System.Windows.Input.Cursor;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
@@ -543,7 +542,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected void ResetDerivedGeometries()
 		{
-			_feedback.DisposeOverlays();
+			_feedback?.DisposeOverlays();
 			ChangeAlongCurves = null;
 		}
 
