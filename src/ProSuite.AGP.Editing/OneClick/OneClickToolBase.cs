@@ -59,6 +59,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool SelectOnlyEditFeatures { get; init; } = true;
 
 		/// <summary>
+		/// Whether the required selection can only contain selectable features.
+		/// TODO: maybe refactor/rename IgnoreSelectability or merge with TargetFeatureSelection?
+		/// </summary>
+		protected bool SelectOnlySelectableFeatures { get; init; } = true;
+
+		/// <summary>
 		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
 		/// allowed. Otherwise the selection phase will continue until all selected features are
 		/// usable by the tool.
@@ -746,7 +752,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			if (! basicFeatureLayer.IsSelectable)
+			if (SelectOnlySelectableFeatures &&
+			    ! basicFeatureLayer.IsSelectable)
 			{
 				NotificationUtils.Add(notifications, $"Layer {layerName} not selectable");
 				return false;
