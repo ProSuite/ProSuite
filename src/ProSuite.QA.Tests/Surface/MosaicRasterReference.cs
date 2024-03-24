@@ -9,7 +9,7 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Surface
 {
-	public class MosaicRasterReference : RasterReference
+	public class MosaicRasterReference : RasterReference, IMosaicRasterDatasetDef
 	{
 		[NotNull] private readonly SimpleRasterMosaic _simpleRasterMosaic;
 

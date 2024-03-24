@@ -124,42 +124,42 @@ namespace ProSuite.QA.Tests
 		}
 
 		// TODO: Can we reduce the constructor count to 4? -> Always use IDbRaster which could be both a file or mosaic raster?
-		//[Doc(nameof(DocStrings.QaSurfacePipe_4))]
-		//public QaSurfacePipeDefinition(
-		//	[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
-		//	IReadOnlyFeatureClass featureClass,
-		//	[Doc(nameof(DocStrings.QaSurfacePipe_mosaic))] [NotNull]
-		//	SimpleRasterMosaic rasterMosaic,
-		//	[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
-		//	double limit)
-		//	: this(featureClass, rasterMosaic, limit,
-		//	       // ReSharper disable once IntroduceOptionalParameters.Global
-		//	       ZOffsetConstraint.WithinLimit, 0, false) { }
+		[Doc(nameof(DocStrings.QaSurfacePipe_4))]
+		public QaSurfacePipeDefinition(
+			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
+			IFeatureClassSchemaDef featureClass,
+			[Doc(nameof(DocStrings.QaSurfacePipe_mosaic))] [NotNull]
+			IMosaicRasterDatasetDef rasterMosaic,
+			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
+			double limit)
+			: this(featureClass, rasterMosaic, limit,
+				   // ReSharper disable once IntroduceOptionalParameters.Global
+				   ZOffsetConstraint.WithinLimit, 0, false)
+		{ }
 
-		//[Doc(nameof(DocStrings.QaSurfacePipe_4))]
-		//public QaSurfacePipeDefinition(
-		//	[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
-		//	IReadOnlyFeatureClass featureClass,
-		//	[Doc(nameof(DocStrings.QaSurfacePipe_mosaic))] [NotNull]
-		//	SimpleRasterMosaic rasterMosaic,
-		//	[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
-		//	double limit,
-		//	[Doc(nameof(DocStrings.QaSurfacePipe_zOffsetConstraint))]
-		//	ZOffsetConstraint zOffsetConstraint,
-		//	[Doc(nameof(DocStrings.QaSurfacePipe_startEndIgnoreLength))]
-		//	double startEndIgnoreLength,
-		//	[Doc(nameof(DocStrings.QaSurfacePipe_asRatio))]
-		//	bool asRatio)
-		//	: base(
-		//		featureClass, new MosaicRasterReference(rasterMosaic), limit,
-		//		zOffsetConstraint)
-		//{
-		//	ValidateAsRatio(startEndIgnoreLength, asRatio);
+		[Doc(nameof(DocStrings.QaSurfacePipe_4))]
+		public QaSurfacePipeDefinition(
+			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
+			IFeatureClassSchemaDef featureClass,
+			[Doc(nameof(DocStrings.QaSurfacePipe_mosaic))] [NotNull]
+			IMosaicRasterDatasetDef rasterMosaic,
+			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
+			double limit,
+			[Doc(nameof(DocStrings.QaSurfacePipe_zOffsetConstraint))]
+			ZOffsetConstraint zOffsetConstraint,
+			[Doc(nameof(DocStrings.QaSurfacePipe_startEndIgnoreLength))]
+			double startEndIgnoreLength,
+			[Doc(nameof(DocStrings.QaSurfacePipe_asRatio))]
+			bool asRatio)
+			: base(
+				featureClass, rasterMosaic, limit,
+				zOffsetConstraint)
+		{
+			ValidateAsRatio(startEndIgnoreLength, asRatio);
 
-		//	_shapeType = featureClass.ShapeType;
-		//	StartEndIgnoreLength = startEndIgnoreLength;
-		//	AsRatio = asRatio;
-		//}
+			StartEndIgnoreLength = startEndIgnoreLength;
+			AsRatio = asRatio;
+		}
 
 		#endregion
 
