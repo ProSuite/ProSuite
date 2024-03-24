@@ -13,7 +13,8 @@ namespace ProSuite.AGP.WorkList
 
 		//public IList<InvolvedTable> ParseInvolvedTables( string involvedTablesString,
 		//	  IAlternateKeyConverter alternateKeyConverter = null)
-		public static IList<InvolvedTable> ParseInvolvedTables(string involvedTablesString)
+		public static IList<InvolvedTable> ParseInvolvedTables(
+			string involvedTablesString, bool hasGeometry)
 		{
 			// can be extended with data source identifier to allow disambiguation between datasets of same name from different data sources
 
@@ -98,7 +99,7 @@ namespace ProSuite.AGP.WorkList
 									formatException);
 							}
 
-							rowReferences.Add(new OIDRowReference(oid));
+							rowReferences.Add(new OIDRowReference(oid, hasGeometry));
 						}
 						// TODO algr: is actual?
 						//else

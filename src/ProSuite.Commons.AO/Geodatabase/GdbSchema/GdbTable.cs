@@ -288,14 +288,21 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return CreateRow();
 		}
 
-		public override long RowCount(ITableFilter queryFilter)
+		public override long RowCount(ITableFilter tableFilter)
 		{
 			if (BackingDataset == null)
 			{
 				throw new NotImplementedException("No backing dataset provided for RowCount().");
 			}
 
-			return BackingDataset.GetRowCount(queryFilter);
+			return BackingDataset.GetRowCount(tableFilter);
+		}
+
+		protected override long TableRowCount(IQueryFilter queryFilter)
+		{
+			ITableFilter tableFilter = GdbQueryUtils.ToTableFilter(queryFilter);
+
+			return RowCount(tableFilter);
 		}
 
 		protected override CursorImpl SearchT(IQueryFilter queryFilter, bool recycling)
@@ -305,10 +312,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				throw new NotImplementedException("No backing dataset provided for Search().");
 			}
 
-			throw new NotImplementedException(); // TODO
-			//IEnumerable<VirtualRow> rows = BackingDataset.Search(queryFilter, recycling);
-
-			//return new CursorImpl(this, rows);
+			ITableFilter tableFilter = GdbQueryUtils.ToTableFilter(queryFilter);
+			IEnumerable<VirtualRow> rows = BackingDataset.Search(tableFilter, recycling);
+			return new CursorImpl(this, rows);
 		}
 
 		#endregion

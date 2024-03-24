@@ -20,15 +20,33 @@ namespace ProSuite.AGP.QA
 
 		public string HtmlReportName { get; set; }
 
-		public abstract Task<ServiceCallStatus> VerifyPerimeter(
-			[NotNull] IQualitySpecificationReference qualitySpecification,
-			[NotNull] Geometry perimeter,
+		[CanBeNull]
+		public ISupportedInstanceDescriptors SupportedInstanceDescriptors { get; set; }
+
+		public abstract Task<ServiceCallStatus> Verify(
+			[NotNull] IQualitySpecificationReference qualitySpecificationRef,
+			[CanBeNull] Geometry perimeter,
+			ProjectWorkspace projectWorkspace,
+			[NotNull] QualityVerificationProgressTracker progress,
+			[CanBeNull] string resultsPath);
+
+		public abstract Task<ServiceCallStatus> Verify(
+			[NotNull] QualitySpecification qualitySpecification,
+			[CanBeNull] Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
 			[NotNull] QualityVerificationProgressTracker progress,
 			[CanBeNull] string resultsPath);
 
 		public abstract Task<ServiceCallStatus> VerifySelection(
-			[NotNull] IQualitySpecificationReference qualitySpecification,
+			[NotNull] IQualitySpecificationReference qualitySpecificationRef,
+			[NotNull] IList<Row> objectsToVerify,
+			[CanBeNull] Geometry perimeter,
+			ProjectWorkspace projectWorkspace,
+			[NotNull] QualityVerificationProgressTracker progress,
+			[CanBeNull] string resultsPath);
+
+		public abstract Task<ServiceCallStatus> VerifySelection(
+			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] IList<Row> objectsToVerify,
 			[CanBeNull] Geometry perimeter,
 			ProjectWorkspace projectWorkspace,

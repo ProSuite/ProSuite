@@ -39,9 +39,9 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			polyline.SpatialReference = CreateSpatialReference();
 
 			IGeometry result = ErrorRepositoryUtils.GetGeometryToStore(polyline,
-			                                                           polyline
-				                                                           .SpatialReference,
-			                                                           _storedGeometryTypes);
+				polyline
+					.SpatialReference,
+				_storedGeometryTypes);
 
 			Console.WriteLine(GeometryUtils.ToString(result));
 
@@ -69,8 +69,8 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			GeometryUtils.ApplyConstantZ(polygon, 100);
 
 			IGeometry result = ErrorRepositoryUtils.GetGeometryToStore(polygon,
-			                                                           polygon.SpatialReference,
-			                                                           _storedGeometryTypes);
+				polygon.SpatialReference,
+				_storedGeometryTypes);
 
 			Console.WriteLine(GeometryUtils.ToString(result));
 
@@ -94,8 +94,8 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			GeometryUtils.ApplyConstantZ(polygon, 100);
 
 			IGeometry result = ErrorRepositoryUtils.GetGeometryToStore(polygon,
-			                                                           polygon.SpatialReference,
-			                                                           _storedGeometryTypes);
+				polygon.SpatialReference,
+				_storedGeometryTypes);
 
 			Console.WriteLine(GeometryUtils.ToString(result));
 
@@ -136,8 +136,8 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			GeometryUtils.ApplyConstantZ(polygon, 100);
 
 			IGeometry result = ErrorRepositoryUtils.GetGeometryToStore(polygon,
-			                                                           polygon.SpatialReference,
-			                                                           _storedGeometryTypes);
+				polygon.SpatialReference,
+				_storedGeometryTypes);
 
 			Assert.IsTrue(GeometryUtils.AreEqual(polygon, result));
 		}

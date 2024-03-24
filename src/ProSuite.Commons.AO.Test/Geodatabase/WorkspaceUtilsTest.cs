@@ -535,5 +535,34 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Assert.AreEqual("Blah = Blah ; Password =****; Bla = Bla",
 			                WorkspaceUtils.ReplacePassword(connectionString, "****"));
 		}
+
+		[Test]
+		[Category(TestCategory.x86)]
+		public void CanDetermineIsPgdb()
+		{
+			IWorkspace workspace =
+				WorkspaceUtils.OpenPgdbWorkspace(TestData.GetMdb1Path());
+
+			Assert.IsTrue(WorkspaceUtils.IsPersonalGeodatabase(workspace));
+		}
+
+		[Test]
+		public void CanDetermineSdeIsNotPgdb()
+		{
+			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
+
+			Assert.IsFalse(WorkspaceUtils.IsPersonalGeodatabase(workspace));
+			Assert.IsFalse(WorkspaceUtils.IsFileGeodatabase(workspace));
+		}
+
+		[Test]
+		public void CanDetermineIsFgdb()
+		{
+			IWorkspace workspace =
+				WorkspaceUtils.OpenFileGdbWorkspace(TestData.GetGdbTableJointUtilsPath());
+
+			Assert.IsFalse(WorkspaceUtils.IsPersonalGeodatabase(workspace));
+			Assert.IsTrue(WorkspaceUtils.IsFileGeodatabase(workspace));
+		}
 	}
 }

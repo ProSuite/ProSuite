@@ -78,6 +78,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                      bool hasZ = false,
 		                                      bool hasM = false)
 		{
+			if (geometryType == esriGeometryType.esriGeometryMultiPatch && ! hasZ)
+			{
+				throw new ArgumentException("Multipatch geometries must have Z values.");
+			}
+
 			return CreateShapeField(GetShapeFieldName(), geometryType, spatialReference,
 			                        gridSize, hasZ, hasM);
 		}
@@ -258,6 +263,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		/// <summary>
+		/// Creates a GUID field.
+		/// </summary>
+		/// <param name="fieldName">Name of the field.</param>
+		/// <param name="aliasName">Name of the alias.</param>
+		/// <returns></returns>
+		[NotNull]
+		public static IField CreateGuidField([NotNull] string fieldName,
+		                                     [CanBeNull] string aliasName = null)
+		{
+			return CreateField(fieldName, esriFieldType.esriFieldTypeGUID, aliasName);
+		}
+
+		/// <summary>
 		/// Creates a BLOB field.
 		/// </summary>
 		/// <param name="fieldName">The field name (required).</param>
@@ -367,7 +385,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		[NotNull]
 		public static esriFieldType GetFieldType(Type dataType)
 		{
 			if (dataType == typeof(int))

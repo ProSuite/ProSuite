@@ -301,10 +301,11 @@ namespace ProSuite.Microservices.Client.QA
 				}
 			}
 
-			LogProgress(responseMsg.Progress);
+			LogProgress(responseMsg.Progress, responseMsg.Issues.Count);
 		}
 
-		private static void LogProgress(VerificationProgressMsg progressMsg)
+		private static void LogProgress(VerificationProgressMsg progressMsg,
+		                                int issueCount)
 		{
 			if (progressMsg == null)
 			{
@@ -313,12 +314,15 @@ namespace ProSuite.Microservices.Client.QA
 
 			_msg.VerboseDebug(() => $"{DateTime.Now} - {progressMsg}");
 
+			string issueText =
+				issueCount > 0 ? $" (New issues received: {issueCount})" : string.Empty;
+
 			_msg.DebugFormat(
-				"Received service progress of type {0}/{1}: {2} / {3}",
+				"Received service progress of type {0}/{1}: {2} / {3}{4}: {5}",
 				(VerificationProgressType) progressMsg.ProgressType,
 				(VerificationProgressStep) progressMsg.ProgressStep,
 				progressMsg.OverallProgressCurrentStep,
-				progressMsg.OverallProgressTotalSteps);
+				progressMsg.OverallProgressTotalSteps, issueText, progressMsg.Message);
 		}
 
 		private static void UpdateServiceProgress(

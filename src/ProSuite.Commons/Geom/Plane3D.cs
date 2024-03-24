@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -13,7 +13,7 @@ namespace ProSuite.Commons.Geom
 	{
 		// NOTE: MathNet also has a good plane class. However when switching, the sign of D must be considered. 
 		// The plane equation can be stated as ax + bx + cz + d = 0 or ax + bx + cz = d
-		// Additionally, the directon of the normal is often defined differently (ccw for outer rings)
+		// Additionally, the direction of the normal is often defined differently (ccw for outer rings)
 		// Consider merging with Commons.AO.Plane
 
 		/// <summary>

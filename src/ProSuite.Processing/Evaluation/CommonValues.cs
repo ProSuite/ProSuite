@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.Evaluation
 {
@@ -20,14 +19,16 @@ namespace ProSuite.Processing.Evaluation
 
 		public CommonValues([NotNull] IRowValues row) : this()
 		{
-			Assert.ArgumentNotNull(nameof(row));
+			if (row is null)
+				throw new ArgumentNullException(nameof(row));
 
 			Add(row);
 		}
 
 		public CommonValues([NotNull] IEnumerable<IRowValues> rows) : this()
 		{
-			Assert.ArgumentNotNull(rows, nameof(rows));
+			if (rows is null)
+				throw new ArgumentNullException(nameof(rows));
 
 			foreach (var row in rows)
 			{
@@ -68,8 +69,10 @@ namespace ProSuite.Processing.Evaluation
 
 		private void ProcessFields(IRowValues row, Func<object, object, object> combine)
 		{
-			Assert.ArgumentNotNull(row, nameof(row));
-			Assert.ArgumentNotNull(combine, nameof(combine));
+			if (row is null)
+				throw new ArgumentNullException(nameof(row));
+			if (combine is null)
+				throw new ArgumentNullException(nameof(combine));
 
 			var fieldNames = row.FieldNames;
 			int fieldCount = fieldNames.Count;

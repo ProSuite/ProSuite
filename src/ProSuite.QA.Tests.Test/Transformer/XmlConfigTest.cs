@@ -6,7 +6,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
-using ProSuite.Commons.Test;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
@@ -16,6 +15,7 @@ using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
+using ProSuite.QA.Tests.Transformers;
 using ProSuite.QA.Tests.Transformers.Filters;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
@@ -389,8 +389,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			XmlClassDescriptor xmlBordTransform =
 				new XmlClassDescriptor
 				{
-					AssemblyName = typeof(BorderTransformer).Assembly.GetName().Name,
-					TypeName = typeof(BorderTransformer).FullName,
+					AssemblyName = typeof(TrLineToPolygon).Assembly.GetName().Name,
+					TypeName = typeof(TrLineToPolygon).FullName,
 					ConstructorId = 0
 				};
 
@@ -404,7 +404,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				{ Name = "bo", TransformerDescriptorName = xmlTdTrans.Name };
 			xmlTrans.ParameterValues.Add(
 				new XmlDatasetTestParameterValue
-				{ TestParameterName = "borderFc", Value = "borderFc", WorkspaceId = xmlWs.ID });
+				{ TestParameterName = "closedLineClass", Value = "borderFc", WorkspaceId = xmlWs.ID });
 
 			XmlQualityCondition xmlQc =
 				new XmlQualityCondition
@@ -460,7 +460,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			Assert.AreEqual(1, tests.Count);
 			Assert.IsTrue(
-				((QaContainsOther) tests[0]).InvolvedTables[0] is BorderTransformer.PolyFc);
+				((QaContainsOther) tests[0]).InvolvedTables[0].GetType().FullName ==
+				typeof(TrGeometryTransform).FullName + "+ShapeTransformedFc");
 		}
 
 		[Test]

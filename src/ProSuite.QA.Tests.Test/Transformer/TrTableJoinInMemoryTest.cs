@@ -578,8 +578,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				// The same with really restricted sub-fields and a non-restrictive where clause
 				// that references non-sub-fields.
 				var memoryJoinedFc = (IReadOnlyFeatureClass) tr.GetTransformed();
-				var filter = GdbQueryUtils.CreateSpatialFilter(
-					memoryJoinedFc,
+				var filter = GdbQueryUtils.CreateFeatureClassFilter(
 					GeometryFactory.CreateEnvelope(0, 0, 1000, 1000,
 					                               memoryJoinedFc.SpatialReference));
 				filter.SubFields = "OBJECTID";

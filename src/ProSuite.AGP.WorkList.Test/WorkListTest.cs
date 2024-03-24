@@ -10,9 +10,9 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Core.Test;
-using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Hosting;
 
 namespace ProSuite.AGP.WorkList.Test
@@ -41,7 +41,7 @@ namespace ProSuite.AGP.WorkList.Test
 			_issuePoints = _geodatabase.OpenDataset<Table>(_issuePointsName);
 			_issueLines = _geodatabase.OpenDataset<Table>(_issueLinesName);
 
-			var tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
+			var tablesByGeodatabase = new Dictionary<Datastore, List<Table>>
 			                          {
 				                          {
 					                          _geodatabase,
@@ -51,7 +51,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 			IRepository stateRepository =
 				new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-			_repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
+			_repository = new IssueItemRepository(new List<Table> { _issuePoints, _issueLines }, stateRepository);
 		}
 
 		[TearDown]
@@ -248,7 +248,7 @@ namespace ProSuite.AGP.WorkList.Test
 			wl.GoPrevious();
 			Assert.AreEqual(item10, wl.Current);
 
-			// Now we can go nearest again which is item7 (nearst to item10)
+			// Now we can go nearest again which is item7 (nearest to item10)
 			Assert.True(wl.CanGoNearest());
 			Assert.NotNull(wl.Current);
 			wl.GoNearest(wl.Current.Extent);
@@ -436,8 +436,8 @@ namespace ProSuite.AGP.WorkList.Test
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 
 				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
-				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
-					new Dictionary<Geodatabase, List<Table>>
+				Dictionary<Datastore, List<Table>> tablesByGeodatabase =
+					new Dictionary<Datastore, List<Table>>
 					{
 						{geodatabase, new List<Table> {table}}
 					};
@@ -445,7 +445,7 @@ namespace ProSuite.AGP.WorkList.Test
 				IRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
-					new IssueItemRepository(tablesByGeodatabase, stateRepository);
+					new IssueItemRepository(new List<Table> { table }, stateRepository);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -486,8 +486,8 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
-				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
-					new Dictionary<Geodatabase, List<Table>>
+				Dictionary<Datastore, List<Table>> tablesByGeodatabase =
+					new Dictionary<Datastore, List<Table>>
 					{
 						{geodatabase, new List<Table> {table}}
 					};
@@ -495,7 +495,7 @@ namespace ProSuite.AGP.WorkList.Test
 				IRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
-					new IssueItemRepository(tablesByGeodatabase, stateRepository);
+					new IssueItemRepository(new List<Table> { table }, stateRepository);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -545,8 +545,8 @@ namespace ProSuite.AGP.WorkList.Test
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 
 				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
-				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
-					new Dictionary<Geodatabase, List<Table>>
+				Dictionary<Datastore, List<Table>> tablesByGeodatabase =
+					new Dictionary<Datastore, List<Table>>
 					{
 						{geodatabase, new List<Table> {table}}
 					};
@@ -554,7 +554,7 @@ namespace ProSuite.AGP.WorkList.Test
 				IRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
-					new IssueItemRepository(tablesByGeodatabase, stateRepository);
+					new IssueItemRepository(new List<Table> { table }, stateRepository);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -596,8 +596,8 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
-				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
-					new Dictionary<Geodatabase, List<Table>>
+				Dictionary<Datastore, List<Table>> tablesByGeodatabase =
+					new Dictionary<Datastore, List<Table>>
 					{
 						{geodatabase, new List<Table> {table}}
 					};
@@ -605,7 +605,7 @@ namespace ProSuite.AGP.WorkList.Test
 				IRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
-					new IssueItemRepository(tablesByGeodatabase, stateRepository);
+					new IssueItemRepository(new List<Table> { table }, stateRepository);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 

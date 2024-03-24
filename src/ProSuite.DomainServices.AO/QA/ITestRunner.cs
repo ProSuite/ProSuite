@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
@@ -31,6 +32,15 @@ namespace ProSuite.DomainServices.AO.QA
 		string CancellationMessage { get; }
 
 		bool Cancelled { get; }
+
+		/// <summary>
+		/// Adds the optional progress observer that writes sub-verification progress to a file GDB.
+		/// This is only relevant for distributed test-runners.
+		/// </summary>
+		/// <param name="verificationReporter"></param>
+		/// <param name="spatialReference"></param>
+		ISubVerificationObserver AddObserver([NotNull] VerificationReporter verificationReporter,
+		                                     [CanBeNull] ISpatialReference spatialReference);
 
 		/// <summary>
 		/// Executes the specified tests in the provided area of interest.

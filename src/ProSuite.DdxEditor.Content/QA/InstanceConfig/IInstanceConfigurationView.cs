@@ -22,7 +22,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		void SetParameterDescriptions([CanBeNull] IList<TestParameter> paramList);
 
-		bool InstanceDescriptorLinkEnabled { get; set; }
+		bool GoToInstanceDescriptorEnabled { get; set; }
 
 		string ReferenceingInstancesSummary { get; set; }
 

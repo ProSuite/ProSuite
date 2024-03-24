@@ -24,7 +24,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		// TODO: Harvested or manually configure the following properties in the DDX
 		// -> No separate DTO modelling is needed for VirtualModelContext!
-		// TODO: Separate hierachies Simple vs GdbMosaic, move these properties up to interface
+		// TODO: Separate hierarchies Simple vs GdbMosaic, move these properties up to interface
 
 		//public VectorDataset CatalogDataset { get; set; }
 

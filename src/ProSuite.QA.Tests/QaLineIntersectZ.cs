@@ -122,6 +122,7 @@ namespace ProSuite.QA.Tests
 			{
 				_zDifferenceColumnValue = new Dictionary<string, object>();
 			}
+			AddCustomQueryFilterExpression(constraint);
 		}
 
 		[TestParameter]

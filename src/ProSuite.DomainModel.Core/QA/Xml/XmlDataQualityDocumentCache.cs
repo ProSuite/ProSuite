@@ -4,6 +4,7 @@ using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.QA.Core;
@@ -12,6 +13,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 {
 	public class XmlDataQualityDocumentCache
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly XmlDataQualityDocument _document;
 
 		private Dictionary<string, XmlTransformerConfiguration> _transformersByName;
@@ -211,7 +214,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		public QualityCondition CreateQualityCondition(
 			[NotNull] XmlQualityCondition xmlCondition,
 			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
-			bool ignoreForUnknownDatasets,
+			[NotNull] FactorySettings factorySettings,
 			[NotNull] out ICollection<DatasetTestParameterRecord> unknownDatasetParameters)
 		{
 			string testDescriptorName = xmlCondition.TestDescriptorName;
@@ -240,10 +243,11 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			                                           GetDataQualityCategoryFor(xmlCondition));
 
 			DatasetSettings datasetSettings =
-				new DatasetSettings(getDatasetsByName, ignoreForUnknownDatasets);
+				new DatasetSettings(getDatasetsByName, factorySettings.IgnoreConditionsForUnknownDatasets);
 
 			// The result could be set to null, if there are missing datasets.
-			condition = CompleteConfiguration(condition, xmlCondition, datasetSettings);
+			condition = CompleteConfiguration(
+				condition, xmlCondition, factorySettings, datasetSettings);
 			unknownDatasetParameters = datasetSettings.UnknownDatasetParameters;
 
 			return condition;
@@ -253,6 +257,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		private T CompleteConfiguration<T>(
 			[NotNull] T created,
 			[NotNull] XmlInstanceConfiguration xmlConfig,
+			[NotNull] FactorySettings factorySettings,
 			[NotNull] DatasetSettings datasetSettings)
 			where T : InstanceConfiguration
 		{
@@ -270,7 +275,9 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 			if (created is QualityCondition qualityCondition)
 			{
-				AddIssueFilters(qualityCondition, (XmlQualityCondition) xmlConfig, datasetSettings);
+				AddIssueFilters(
+					qualityCondition, (XmlQualityCondition) xmlConfig,
+					factorySettings, datasetSettings);
 			}
 
 			foreach (XmlTestParameterValue xmlParamValue in xmlConfig.ParameterValues)
@@ -279,11 +286,18 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				if (! testParametersByName.TryGetValue(xmlParamValue.TestParameterName,
 				                                       out testParameter))
 				{
-					throw new InvalidConfigurationException(
-						string.Format(
-							"The name '{0}' as a test parameter in quality condition '{1}' " +
-							"defined in import document does not match test descriptor.",
-							xmlParamValue.TestParameterName, xmlConfig.Name));
+					string msg = string.Format(
+						"The name '{0}' as a test parameter in quality condition '{1}' " +
+						"defined in import document does not match test descriptor.",
+						xmlParamValue.TestParameterName, xmlConfig.Name);
+
+					if (factorySettings.IgnoreUnknownParameters)
+					{
+						_msg.Warn(msg);
+						continue;
+					}
+
+					throw new InvalidConfigurationException(msg);
 				}
 
 				TestParameterValue parameterValue;
@@ -299,10 +313,11 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					}
 
 					TransformerConfiguration transformerConfig =
-						GetTransformerConfiguration(xmlTransformer, datasetSettings);
+						GetTransformerConfiguration(xmlTransformer, factorySettings,
+						                            datasetSettings);
 					CompleteConfiguration(
 						transformerConfig, xmlTransformer,
-						datasetSettings);
+						factorySettings, datasetSettings);
 
 					if (xmlParamValue is XmlDatasetTestParameterValue datasetValue)
 					{
@@ -365,6 +380,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		private void AddIssueFilters(
 			[NotNull] QualityCondition qualityCondition,
 			[NotNull] XmlQualityCondition xmlCondition,
+			[NotNull] FactorySettings factorySettings,
 			[NotNull] DatasetSettings datasetSettings)
 		{
 			if (xmlCondition.Filters != null)
@@ -379,7 +395,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					}
 
 					IssueFilterConfiguration issueFilterConfiguration =
-						GetIssueFilterConfiguration(xmlIssueFilterConfiguration, datasetSettings);
+						GetIssueFilterConfiguration(xmlIssueFilterConfiguration, factorySettings,
+						                            datasetSettings);
 					qualityCondition.AddIssueFilterConfiguration(issueFilterConfiguration);
 				}
 			}
@@ -388,7 +405,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		}
 
 		private IssueFilterConfiguration GetIssueFilterConfiguration(
-			[NotNull] XmlIssueFilterConfiguration xmlIssueFilter, DatasetSettings datasetSettings)
+			[NotNull] XmlIssueFilterConfiguration xmlIssueFilter,
+			FactorySettings factorySettings, DatasetSettings datasetSettings)
 		{
 			_issueFilterInstances =
 				_issueFilterInstances
@@ -408,7 +426,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				issueFilter = new IssueFilterConfiguration(
 					xmlIssueFilter.Name,
 					XmlDataQualityUtils.CreateIssueFilterDescriptor(xmlDesc));
-				
+
 				// Use the UUIDs from the XML for consistency (and because of downstream equality assertion)
 				if (StringUtils.IsNotEmpty(xmlIssueFilter.Uuid))
 				{
@@ -418,7 +436,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				XmlDataQualityUtils.UpdateIssueFilterConfiguration(
 					issueFilter, xmlIssueFilter, GetDataQualityCategoryFor(xmlIssueFilter));
 
-				CompleteConfiguration(issueFilter, xmlIssueFilter, datasetSettings);
+				CompleteConfiguration(issueFilter, xmlIssueFilter, factorySettings,
+				                      datasetSettings);
 
 				Assert.NotNull(_issueFilterInstances).Add(xmlIssueFilter, issueFilter);
 			}
@@ -467,6 +486,7 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 		private TransformerConfiguration GetTransformerConfiguration(
 			[NotNull] XmlTransformerConfiguration xmlTransformer,
+			[NotNull] FactorySettings factorySettings,
 			[NotNull] DatasetSettings datasetSettings)
 		{
 			_transformerInstances =
@@ -493,11 +513,12 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				{
 					transformer.Uuid = xmlTransformer.Uuid;
 				}
-				
+
 				XmlDataQualityUtils.UpdateTransformerConfiguration(transformer, xmlTransformer,
 					GetDataQualityCategoryFor(xmlTransformer));
 
-				CompleteConfiguration(transformer, xmlTransformer, datasetSettings);
+				CompleteConfiguration(transformer, xmlTransformer, factorySettings,
+				                      datasetSettings);
 				Assert.NotNull(_transformerInstances).Add(xmlTransformer, transformer);
 			}
 

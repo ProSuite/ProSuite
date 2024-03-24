@@ -13,7 +13,7 @@ namespace ProSuite.Commons.Geom
 
 		public int Compare(T a, T b)
 		{
-			// dont't use the tolerance to make sure the sorting is correct also for small distances
+			// don't use the tolerance to make sure the sorting is correct also for small distances
 			if (a.X < b.X)
 			{
 				return -1;
@@ -55,7 +55,7 @@ namespace ProSuite.Commons.Geom
 					return 0;
 				}
 
-				// NOTE: imporant to use the same z-logic as in GeometryUtils.IsSamePoint regarding NaN:
+				// NOTE: important to use the same z-logic as in GeometryUtils.IsSamePoint regarding NaN:
 				if (double.IsNaN(aPnt3D.Z) && double.IsNaN(bPnt3D.Z))
 				{
 					return 0;

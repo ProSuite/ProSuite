@@ -19,6 +19,7 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.UI;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
@@ -67,15 +68,14 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			Enabled = MicroserviceClient != null;
 
 			if (MicroserviceClient == null)
-				DisabledTooltip =
-					"Microservice not found or not started. Please make sure the latest ProSuite Extension is installed.";
+				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override bool HandleEscape()
+		protected override Task HandleEscapeAsync()
 		{
 			_cancellationTokenSource?.Cancel();
 
-			return base.HandleEscape();
+			return base.HandleEscapeAsync();
 		}
 
 		protected override void LogPromptForSelection()
@@ -142,47 +142,17 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_msg.VerboseDebug(() => "OnSketchModifiedAsync");
 
-			if (_updateFeedbackTask != null)
-			{
-				// Still working on the previous update (large poylgons!)
-				// -> Consider using latch (but ensure that the overlay must probably be scheduled properly)
-				return false;
-			}
-
-			bool nonDefaultSide =
-				_nonDefaultSideMode || PressedKeys.Contains(_keyToggleNonDefaultSide);
-
-			bool updated = false;
-			try
-			{
-				if (! PressedKeys.Contains(Key.Space))
-				{
-					// TODO: Exclude finish sketch by double clicking -> should not calculate preview
-					//       E.g. wait for SystemInformation.DoubleClickTime for the second click
-					//       and only start if it has not ocvurred
-					_updateFeedbackTask = UpdateFeedbackAsync(nonDefaultSide);
-					updated = await _updateFeedbackTask;
-				}
-			}
-			catch (Exception e)
-			{
-				_msg.Warn($"Error generating preview: {e.Message}", e);
-				return false;
-			}
-			finally
-			{
-				_updateFeedbackTask = null;
-			}
-
 			// Does it make any difference what the return value is?
-			return updated;
+			return await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
 		}
 
-		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs k)
+		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
 		{
 			try
 			{
-				if (k.Key == _keyToggleNonDefaultSide)
+				await base.HandleKeyDownAsync(args);
+
+				if (args.Key == _keyToggleNonDefaultSide)
 				{
 					_nonDefaultSideMode = ! _nonDefaultSideMode;
 
@@ -276,7 +246,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					var potentiallyAffectedFeatures =
 						GetAdjacentFeatures(selection, cancelableProgressor);
 
-					// This timout should be enough even in extreme circumstances:
+					// This timeout should be enough even in extreme circumstances:
 					int timeout = selection.Count * 10000;
 					_cancellationTokenSource = new CancellationTokenSource(timeout);
 
@@ -337,6 +307,44 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_feedback.Clear();
 			_nonDefaultSideMode = false;
+		}
+
+		private async Task<bool> TryUpdateFeedbackAsync()
+		{
+			if (_updateFeedbackTask != null)
+			{
+				// Still working on the previous update (large polygons!)
+				// -> Consider using latch (but ensure that the overlay must probably be scheduled properly)
+				return false;
+			}
+
+			bool nonDefaultSide =
+				_nonDefaultSideMode || PressedKeys.Contains(_keyToggleNonDefaultSide);
+
+			bool updated = false;
+
+			try
+			{
+				if (! PressedKeys.Contains(Key.Space))
+				{
+					// TODO: Exclude finish sketch by double clicking -> should not calculate preview
+					//       E.g. wait for SystemInformation.DoubleClickTime for the second click
+					//       and only start if it has not occurred
+					_updateFeedbackTask = UpdateFeedbackAsync(nonDefaultSide);
+					updated = await _updateFeedbackTask;
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error generating preview: {e.Message}", e);
+				return false;
+			}
+			finally
+			{
+				_updateFeedbackTask = null;
+			}
+
+			return updated;
 		}
 
 		private async Task<bool> UpdateFeedbackAsync(bool nonDefaultSide)

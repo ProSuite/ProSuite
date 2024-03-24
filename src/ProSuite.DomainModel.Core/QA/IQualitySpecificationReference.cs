@@ -9,6 +9,8 @@ namespace ProSuite.DomainModel.Core.QA
 	/// </summary>
 	public interface IQualitySpecificationReference : IEquatable<IQualitySpecificationReference>
 	{
+		int Id { get; }
+
 		string Name { get; }
 
 		string Connection { get; }

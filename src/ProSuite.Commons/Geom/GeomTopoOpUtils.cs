@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using ProSuite.Commons.Collections;
@@ -610,7 +611,10 @@ namespace ProSuite.Commons.Geom
 					IntersectionPoints = intersectionPoints
 				};
 
-			var ringOperator = new RingOperator(subcurveNavigator);
+			var ringOperator = new RingOperator(subcurveNavigator)
+			                   {
+				                   AllowPointClustering = true
+			                   };
 
 			MultiLinestring resultUnion;
 			try
@@ -687,7 +691,7 @@ namespace ProSuite.Commons.Geom
 			MultiLinestring result = null;
 
 			// TODO: Optimize and use potential spatial index (change to input polyhedron?)
-			foreach (RingGroup ringGroup in ringGroups)
+			foreach (RingGroup ringGroup in ringGroups.OrderByDescending(r => r.GetArea2D()))
 			{
 				if (result == null)
 				{
@@ -695,7 +699,17 @@ namespace ProSuite.Commons.Geom
 				}
 				else
 				{
+					var watch = Stopwatch.StartNew();
 					result = GetUnionAreasXY(result, ringGroup, tolerance);
+					watch.Stop();
+
+					const long timeout300s = 300000;
+
+					if (watch.ElapsedMilliseconds > timeout300s)
+					{
+						// Do not continue, most likely the next result will be even more time-consuming.
+						throw new AssertionException("Unexpectedly long processing time");
+					}
 				}
 			}
 
@@ -707,7 +721,7 @@ namespace ProSuite.Commons.Geom
 			double tolerance)
 		{
 			// 1. Create a spatially indexed list of all geometries and group on the polygon
-			//    level using just the envelope entersections. Often there are no actual
+			//    level using just the envelope intersections. Often there are no actual
 			//    intersections and the geometries are well dispersed.
 			//    This strategy can make a gigantic difference (TOP-5595)
 			IList<ICollection<MultiLinestring>> connectedGroups =
@@ -859,7 +873,10 @@ namespace ProSuite.Commons.Geom
 
 			var subcurveNavigator = new SubcurveNavigator(sourceRings, targetRings, tolerance);
 
-			var ringOperator = new RingOperator(subcurveNavigator);
+			var ringOperator = new RingOperator(subcurveNavigator)
+			                   {
+				                   AllowPointClustering = true
+			                   };
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
@@ -1309,7 +1326,7 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(box1.Dimension == box2.Dimension,
 			                         "Box dimensions are not equal");
 
-			// Consider separate and explicit 2D/3D imlementations...
+			// Consider separate and explicit 2D/3D implementations...
 			var min = new Vector(box1.Dimension);
 			var max = new Vector(box1.Dimension);
 			for (var i = 0; i < box1.Dimension; i++)
@@ -1335,7 +1352,7 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(box1.Dimension == box2.Dimension,
 			                         "Box dimensions are not equal");
 
-			// Consider separate and explicit 2D/3D imlementations...
+			// Consider separate and explicit 2D/3D implementations...
 			var min = new Vector(box1.Dimension);
 			var max = new Vector(box1.Dimension);
 			for (var i = 0; i < box1.Dimension; i++)
@@ -1950,8 +1967,8 @@ namespace ProSuite.Commons.Geom
 
 			if (vertexDistances.TrueForAll(d => Math.Abs(d) < tolerance))
 			{
-				// The planes are coincident and hence the intersection that respectes the tolerance is a polygon.
-				// These cases could probabyl be better supported.
+				// The planes are coincident and hence the intersection that respects the tolerance is a polygon.
+				// These cases could probably be better supported.
 				return new List<IntersectionPath3D>
 				       {
 					       new IntersectionPath3D(new Linestring(ringPoints),
@@ -2007,7 +2024,7 @@ namespace ProSuite.Commons.Geom
 				{
 					if (vertexDistances[previousIndex] * vertexDistances[nextIndex] > 0)
 					{
-						// Exclude if the adjacent segements are both on the same side (the ring just visits the intersection plane at 1 vertex)
+						// Exclude if the adjacent segments are both on the same side (the ring just visits the intersection plane at 1 vertex)
 						continue;
 					}
 
@@ -2861,7 +2878,7 @@ namespace ProSuite.Commons.Geom
 		{
 			IEnumerable<SegmentIntersection> sortedRelevantIntersections =
 				SegmentIntersectionUtils.GetFilteredIntersectionsOrderedAlongSource(
-					allIntersections, sourceSegments);
+					allIntersections, sourceSegments, targetSegments);
 
 			IList<IntersectionPoint3D> intersectionPoints =
 				SegmentIntersectionUtils.CollectIntersectionPoints(
@@ -3427,7 +3444,7 @@ namespace ProSuite.Commons.Geom
 
 			IEnumerable<SegmentIntersection> sortedRelevantIntersections =
 				SegmentIntersectionUtils.GetFilteredIntersectionsOrderedAlongSource(
-					selfIntersections, segments);
+					selfIntersections, segments, segments);
 
 			IList<IntersectionPoint3D> intersectionPoints =
 				SegmentIntersectionUtils.CollectIntersectionPoints(

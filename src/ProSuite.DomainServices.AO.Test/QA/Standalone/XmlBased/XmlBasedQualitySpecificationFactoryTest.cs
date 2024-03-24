@@ -1,15 +1,23 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Threading;
+using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Testing;
 using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Xml;
+using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
+using TestUtils = ProSuite.Commons.Test.Testing.TestUtils;
 
 namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 {
@@ -20,18 +28,19 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		private XmlTestDescriptor _xmlTestDescriptorSimpleGeometry;
 		private XmlTestDescriptor _xmlTestDescriptorMinArea;
 		private XmlTransformerDescriptor _xmlTransformerDescriptor;
+		private string _wsTestQualitySpecification;
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
-			TestUtils.InitializeLicense();
+			TestUtils.ConfigureUnitTestLogging();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TeardownFixture()
 		{
-			TestUtils.ReleaseLicense();
+			Commons.AO.Test.TestUtils.ReleaseLicense();
 		}
 
 		[SetUp]
@@ -153,12 +162,12 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 
 			var dataSource = new DataSource(_xmlWorkspace) { WorkspaceAsText = catalogPath };
 
-			const bool ignoreConditionsForUnknownDatasets = true;
-
 			QualitySpecification qualitySpecification =
-				factory.CreateQualitySpecification(xmlDocument, xmlQSpec.Name,
-				                                   new[] { dataSource },
-				                                   ignoreConditionsForUnknownDatasets);
+				factory.CreateQualitySpecification(
+					xmlDocument, xmlQSpec.Name,
+					new[] { dataSource },
+					new FactorySettings
+					{ IgnoreConditionsForUnknownDatasets = true });
 
 			Assert.AreEqual(xmlQSpec.Name, qualitySpecification.Name);
 			Assert.AreEqual(0, qualitySpecification.Elements.Count);
@@ -215,12 +224,159 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			foreach (XmlQualitySpecification spec in qualitySpecifications)
 			{
 				var qualitySpecification = factory.CreateQualitySpecification(
-					xmlDocument, spec.Name ?? string.Empty,
-					dataSources, ignoreConditionsForUnknownDatasets: true);
+					xmlDocument, spec.Name ?? string.Empty, dataSources,
+					new FactorySettings
+					{ IgnoreConditionsForUnknownDatasets = true });
 
 				Assert.NotNull(qualitySpecification);
 			}
 		}
+
+		[Test]
+		public void CanReadQualitySpecificationsCurve()
+		{
+			{
+				string wsConn = EnsureWorkspaceTestQualitySpecification();
+				ValidateConfig(CurveSpezification, wsConn);
+				ValidateConfig(CurveSpezification.Replace("TOPGIS_TLM.", ""), wsConn);
+			}
+
+			{
+				IWorkspace userWs = Commons.AO.Test.TestUtils.OpenUserWorkspaceOracle();
+				string wsConn = WorkspaceUtils.GetConnectionString(userWs);
+
+				ValidateConfig(CurveSpezification, wsConn,
+				               factoryId: userWs.WorkspaceFactory.GetClassID().Value);
+				ValidateConfig(
+					CurveSpezification.Replace("TOPGIS_TLM.", ""),
+					wsConn, factoryId: userWs.WorkspaceFactory.GetClassID().Value);
+			}
+		}
+
+		[Test]
+		public void CanCreateSpezificationWithUnknownParameter()
+		{
+			string wsConn = EnsureWorkspaceTestQualitySpecification();
+			string unknownParamConfig = CurveSpezification.Replace(
+				"<Scalar parameter=\"GroupIssuesBySegmentType\" value=\"True\" />",
+				"<Scalar parameter=\"GroupIssuesBySegmentType\" value=\"True\" /> <Scalar parameter=\"UnknownParam\" value=\"1\" />");
+
+			bool success;
+			try
+			{
+				ValidateConfig(unknownParamConfig, wsConn);
+				success = true;
+			}
+			catch
+			{
+				success = false;
+			}
+			Assert.IsFalse(success);
+
+			ValidateConfig(unknownParamConfig, wsConn,
+			               factorySettings: new FactorySettings { IgnoreUnknownParameters = true });
+
+		}
+
+		private string EnsureWorkspaceTestQualitySpecification()
+		{
+			if (string.IsNullOrEmpty(_wsTestQualitySpecification))
+			{
+				IFeatureWorkspace ws =
+					TestWorkspaceUtils.CreateTestFgdbWorkspace("TestQualitySpecification");
+				IFeatureClass localityFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
+					ws, "TLM_FLIESSGEWAESSER", esriGeometryType.esriGeometryPolyline);
+				IFeatureClass zipFc = TestWorkspaceUtils.CreateSimpleFeatureClass(
+					ws, "TLM_STEHENDES_GEWAESSER", esriGeometryType.esriGeometryPolyline);
+
+				_wsTestQualitySpecification = ((IWorkspaceName) ((IDataset) ws).FullName).PathName;
+			}
+
+			return _wsTestQualitySpecification;
+		}
+
+		private void ValidateConfig(string specification, string wsConn,
+									FactorySettings factorySettings = null,
+		                            object factoryId = null)
+		{
+			XmlDataQualityDocument xmlDocument;
+			IList<XmlQualitySpecification> qualitySpecifications;
+
+			using (Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(specification)))
+			using (StreamReader xmlReader = new StreamReader(stream))
+			{
+				xmlDocument =
+					XmlDataQualityUtils.ReadXmlDocument(xmlReader, out qualitySpecifications);
+			}
+
+			var modelFactory =
+				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
+				                         new SimpleVerifiedDatasetHarvester());
+
+			var factory = new XmlBasedQualitySpecificationFactory(modelFactory);
+
+			DataSource[] dataSources =
+			{
+				new DataSource("TOPGIS DM", "TOPGIS DM") { WorkspaceAsText = wsConn }
+			};
+
+			int nSpecs = 0;
+			foreach (XmlQualitySpecification spec in qualitySpecifications)
+			{
+				nSpecs++;
+				var qualitySpecification = factory.CreateQualitySpecification(
+					xmlDocument, spec.Name ?? string.Empty,
+					dataSources, factorySettings ?? new FactorySettings());
+
+				SimpleDatasetOpener dsOpener =
+					new SimpleDatasetOpener(new TestDatasetContext(wsConn, factoryId));
+				var tests =
+					QualityVerificationUtils.GetTestsAndDictionaries(
+						qualitySpecification, dsOpener, out _, out _, out _, null);
+
+				Assert.AreEqual(2, tests.Count);
+				Assert.NotNull(qualitySpecification);
+			}
+
+			Assert.AreEqual(1, nSpecs);
+		}
+
+		private const string CurveSpezification =
+			@"<?xml version=""1.0"" encoding=""utf-8""?>
+<DataQuality xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns=""urn:ProSuite.QA.QualitySpecifications-3.0"">
+  <QualitySpecifications>
+    <QualitySpecification name=""Curve"">
+      <Elements>
+        <Element qualityCondition=""TOPGIS_TLM.TLM_FLIESSGEWAESSER_Curve(0)"" />
+        <Element qualityCondition=""TOPGIS_TLM.TLM_STEHENDES_GEWAESSER_Curve(0)"" />
+      </Elements>
+    </QualitySpecification>
+  </QualitySpecifications>
+  <QualityConditions>
+    <QualityCondition name=""TOPGIS_TLM.TLM_FLIESSGEWAESSER_Curve(0)"" testDescriptor=""Curve(0)"">
+      <Description>Finds non-linear line and polygon segments, i.e. circular or elliptic arcs and Bezier curves.</Description>
+      <Parameters>
+        <Dataset parameter=""featureClass"" value=""TOPGIS_TLM.TLM_FLIESSGEWAESSER"" workspace=""TOPGIS DM"" />
+        <Scalar parameter=""GroupIssuesBySegmentType"" value=""True"" />
+      </Parameters>
+    </QualityCondition>
+    <QualityCondition name=""TOPGIS_TLM.TLM_STEHENDES_GEWAESSER_Curve(0)"" testDescriptor=""Curve(0)"">
+      <Description>Finds non-linear line and polygon segments, i.e. circular or elliptic arcs and Bezier curves.</Description>
+      <Parameters>
+        <Dataset parameter=""featureClass"" value=""TOPGIS_TLM.TLM_STEHENDES_GEWAESSER"" workspace=""TOPGIS DM"" />
+        <Scalar parameter=""GroupIssuesBySegmentType"" value=""True"" />
+      </Parameters>
+    </QualityCondition>
+  </QualityConditions>
+  <TestDescriptors>
+    <TestDescriptor name=""Curve(0)"" allowErrors=""true"">
+      <TestClass type=""ProSuite.QA.Tests.QaCurve"" assembly=""ProSuite.QA.Tests"" constructorIndex=""0"" />
+    </TestDescriptor>
+  </TestDescriptors>
+  <Workspaces>
+    <Workspace id=""TOPGIS DM"" modelName=""TOPGIS DM"" schemaOwner=""TOPGIS_TLM"" />
+  </Workspaces>
+</DataQuality>";
 
 		private void CanCreateQualitySpecificationCore()
 		{

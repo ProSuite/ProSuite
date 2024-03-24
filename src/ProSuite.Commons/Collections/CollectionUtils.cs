@@ -38,7 +38,7 @@ namespace ProSuite.Commons.Collections
 		}
 
 		/// <summary>
-		/// Splits the specified items into an enumeration of lists of a specified maxiumum list size.
+		/// Splits the specified items into an enumeration of lists of a specified maximum list size.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="items">The items.</param>
@@ -315,6 +315,55 @@ namespace ProSuite.Commons.Collections
 			{
 				MoveTo(list, listItem.Item, listItem.ListIndex + offset);
 			}
+		}
+
+		/// <summary>
+		/// Cycles through the full list <see cref="maximumFullCycles"/> times.
+		/// At the end of the list it will continue at the beginning.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="list"></param>
+		/// <param name="maximumFullCycles"></param>
+		/// <returns></returns>
+		public static IEnumerable<T> Cycle<T>([NotNull] IList<T> list,
+		                                      int maximumFullCycles)
+		{
+			int length = list.Count;
+			int cycleCount = -1;
+			int i = 0;
+			while (cycleCount < maximumFullCycles)
+			{
+				i %= length;
+
+				if (i == 0)
+				{
+					cycleCount++;
+
+					if (cycleCount == maximumFullCycles)
+					{
+						yield break;
+					}
+				}
+
+				yield return list[i];
+
+				i++;
+			}
+
+			//for (int i = 0; i < list.Count; i++)
+			//{
+			//	if (i == 0)
+			//	{
+			//		cycleCount++;
+
+			//		if (cycleCount == maximumFullCycles)
+			//		{
+			//			yield break;
+			//		}
+			//	}
+
+			//	yield return list[i];
+			//}
 		}
 
 		/// <summary>
@@ -680,14 +729,15 @@ namespace ProSuite.Commons.Collections
 		/// <summary>
 		/// A more efficient way to get the distinct elements compared to group by.
 		/// Author: Jon Skeet (https://stackoverflow.com/questions/489258/linqs-distinct-on-a-particular-property)
+		/// NOTE: It is included in .NET 6
 		/// </summary>
 		/// <typeparam name="TSource"></typeparam>
 		/// <typeparam name="TKey"></typeparam>
 		/// <param name="source"></param>
 		/// <param name="keySelector"></param>
 		/// <returns></returns>
-		public static IEnumerable<TSource> DistinctBy<TSource, TKey>
-			(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
+		public static IEnumerable<TSource> DistinctBy<TSource, TKey>(
+			IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
 		{
 			HashSet<TKey> seenKeys = new HashSet<TKey>();
 
@@ -880,7 +930,7 @@ namespace ProSuite.Commons.Collections
 				{
 					while (e1.MoveNext() && e2.MoveNext())
 					{
-						result.AddRange(new[] {e1.Current, e2.Current});
+						result.AddRange(new[] { e1.Current, e2.Current });
 					}
 
 					while (e1.MoveNext())
@@ -917,7 +967,7 @@ namespace ProSuite.Commons.Collections
 					{
 						while (e1.MoveNext() && e2.MoveNext() && e3.MoveNext())
 						{
-							result.AddRange(new[] {e1.Current, e2.Current, e3.Current});
+							result.AddRange(new[] { e1.Current, e2.Current, e3.Current });
 						}
 
 						while (e1.MoveNext())

@@ -1,11 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Text;
 using ProSuite.Processing.Domain;
 using ProSuite.Processing.Evaluation;
@@ -14,22 +21,28 @@ namespace ProSuite.Processing.Utils
 {
 	/// <summary>
 	/// The Carto Processing stuff that does not fit anywhere else...
-	/// My be eventually moved to other/better places...
+	/// May be eventually moved to other/better places...
 	/// </summary>
 	public static class ProcessingUtils
 	{
-		public static IList<Type> GetDerivedTypes<T>()
-		{
-			var assembly = Assembly.GetAssembly(typeof(T));
-			return GetDerivedTypes<T>(assembly);
-		}
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public static IList<Type> GetDerivedTypes<T>(Assembly assembly)
+		public static IList<Type> GetExportedDerivedTypes<T>(Assembly assembly)
 		{
 			var baseType = typeof(T);
-			return assembly.GetTypes()
-			               .Where(t => t != baseType && baseType.IsAssignableFrom(t))
-			               .ToList();
+
+			try
+			{
+				return assembly.GetExportedTypes()
+				               .Where(t => t != baseType && baseType.IsAssignableFrom(t))
+				               .ToList();
+			}
+			catch (Exception ex)
+			{
+				_msg.Error($"{nameof(GetExportedDerivedTypes)}: {ex.Message}", ex);
+
+				return Array.Empty<Type>();
+			}
 		}
 
 		public static IList<ParameterInfo> GetParameters(Type processType)
@@ -43,6 +56,15 @@ namespace ProSuite.Processing.Utils
 			                  .Select(GetParameterInfo)
 			                  .OrderBy(info => info.Order)
 			                  .ToList();
+		}
+
+		public static ParameterInfo GetParameter(Type processType, string parameterName)
+		{
+			var list = GetParameters(processType);
+			return list.FirstOrDefault(
+				       p => string.Equals(p.Name, parameterName, StringComparison.Ordinal)) ??
+			       list.FirstOrDefault(
+				       p => string.Equals(p.Name, parameterName, StringComparison.OrdinalIgnoreCase));
 		}
 
 		private static ParameterInfo GetParameterInfo(PropertyInfo property)
@@ -68,9 +90,70 @@ namespace ProSuite.Processing.Utils
 				multivalued = true;
 			}
 
-			return new ParameterInfo(name, type, required, multivalued,
-			                             attr?.Group, order, docKey);
+			object defaultValue = GetDefaultValue(property);
+
+			var owner = property.ReflectedType ?? property.DeclaringType;
+
+			return new ParameterInfo(owner, name, type, required, multivalued,
+			                         defaultValue, docKey: docKey,
+			                         group: attr?.Group, order: order);
 		}
+
+		private static object GetDefaultValue(PropertyInfo property)
+		{
+			var paramAttr = property.GetCustomAttributes<OptionalParameterAttribute>()
+			                        .FirstOrDefault();
+			if (paramAttr?.DefaultValue != null)
+			{
+				return paramAttr.DefaultValue;
+			}
+
+			var valueAttr = property.GetCustomAttributes<DefaultValueAttribute>()
+			                        .FirstOrDefault();
+			if (valueAttr?.Value != null)
+			{
+				return valueAttr.Value;
+			}
+
+			var type = property.PropertyType;
+			if (property.PropertyType.IsGenericType &&
+			    property.PropertyType.GetGenericTypeDefinition() == typeof(ImplicitValue<>))
+			{
+				// For ImplicitValue<T>, get default value of T (not null)
+				type = property.PropertyType.GenericTypeArguments.FirstOrDefault();
+			}
+
+			return type.GetDefaultValue();
+		}
+
+		/// <summary>
+		/// Replace "{DefaultValue}" in text with the default value from
+		/// the given parameter info; and replace "{AnyOtherWord}" with
+		/// the value of the constant AnyOtherWord on the carto process.
+		/// In both cases use the standard string representation of the
+		/// value found. If the requested value is not found, leave the
+		/// placeholder as is.
+		/// </summary>
+		public static string ExpandParameterDescription(this ParameterInfo parameter, string text)
+		{
+			if (parameter is null) return text;
+			if (text is null) return null;
+			var processType = parameter.Owner;
+
+			// replace "{DefaultValue}" with default value from param attr
+			// replace "{AnythingElse}" with constant AnythingElse on CP class
+			// if replacement doesn't exist, leave placeholder as is
+
+			return _placeholderRegex.Replace(text, m =>
+			{
+				var key = m.Groups.Count > 1 ? m.Groups[1].Value : null;
+				bool wantDefault = string.Equals(key, "DefaultValue", StringComparison.OrdinalIgnoreCase);
+				var value = wantDefault ? parameter.DefaultValue : processType?.GetConstantValue(key, true);
+				return value is null ? m.Value : Convert.ToString(value);
+			});
+		}
+
+		private static readonly Regex _placeholderRegex = new Regex(@"\{\s*(\w+)\s*\}");
 
 		private static bool IsProcessParameter(PropertyInfo property)
 		{
@@ -82,24 +165,61 @@ namespace ProSuite.Processing.Utils
 			       property.IsDefined(typeof(ParameterAttribute), false);
 		}
 
+		public static string GetFriendlyName(Type type)
+		{
+			if (type is null) return "null";
+			if (type == typeof(bool)) return "Boolean";
+			if (type == typeof(int)) return "Integer";
+			if (type == typeof(double)) return "Number";
+			if (type == typeof(string)) return "String";
+			if (type == typeof(ProcessDatasetName)) return "LayerName [; WhereClause]";
+			if (type == typeof(FieldSetter)) return "Field=Value assignments";
+
+			Type[] typeArgs;
+			if (type.IsGenericType &&
+			    type.GetGenericTypeDefinition() == typeof(ImplicitValue<>) &&
+			    (typeArgs = type.GetGenericArguments()).Length == 1)
+			{
+				if (typeArgs[0] == typeof(object))
+				{
+					return "Expression";
+				}
+
+				var inner = GetFriendlyName(typeArgs[0]);
+				return $"{inner} Expression";
+			}
+
+			if (type.IsEnum)
+			{
+				// return "Foo|Bar|Baz"
+				const char sep = '|';
+				const int maxLength = 120;
+				var names = type.GetEnumNames();
+				var sb = new StringBuilder();
+				foreach (var name in names)
+				{
+					if (sb.Length + name.Length > maxLength)
+					{
+						if (sb.Length > 0) sb.Append(sep);
+						sb.Append("...");
+						break;
+					}
+					if (sb.Length > 0) sb.Append(sep);
+					sb.Append(name);
+				}
+				return sb.ToString();
+			}
+
+			// all other types use their technical name:
+			return type.Name;
+		}
+
 		public static int GetLineNumber(this XObject x)
 		{
 			return x is IXmlLineInfo info && info.HasLineInfo() ? info.LineNumber : 0;
 		}
 
-		public static ImplicitValue<T> GetExpression<T>(
-			this CartoProcessConfig config, string parameterName)
-		{
-			var text = config.GetValue<string>(parameterName);
-			return ((ImplicitValue<T>) text).SetName(parameterName);
-		}
-
-		public static ImplicitValue<T> GetExpression<T>(
-			this CartoProcessConfig config, string parameterName, string defaultValue)
-		{
-			var text = config.GetValue(parameterName, defaultValue);
-			return ((ImplicitValue<T>) text)?.SetName(parameterName);
-		}
+		#region Config utils
 
 		public static ImplicitValue<double> GetExpression(
 			this CartoProcessConfig config, string parameterName, double defaultValue)
@@ -125,32 +245,24 @@ namespace ProSuite.Processing.Utils
 			return expr.SetName(parameterName);
 		}
 
-		public static FieldSetter GetFieldSetter(
-			this CartoProcessConfig config, string parameterName, string defaultValue)
-		{
-			var text = config.GetJoined(parameterName, "; ");
-			if (string.IsNullOrWhiteSpace(text))
-			{
-				text = defaultValue;
-			}
+		#endregion
 
-			return new FieldSetter(text, parameterName);
+		#region Text utils
+
+		[CanBeNull]
+		public static string Canonical([CanBeNull] this string text)
+		{
+			if (text is null) return null;
+			text = text.Trim();
+			return text.Length < 1 ? null : text;
 		}
 
-		public static FieldSetter GetFieldSetter(
-			this CartoProcessConfig config, string parameterName)
-		{
-			var text = config.GetJoined(parameterName, "; ");
-			if (string.IsNullOrWhiteSpace(text))
-			{
-				throw new CartoConfigException($"Required parameter {parameterName} is missing");
-			}
-
-			return new FieldSetter(text, parameterName);
-		}
-		
+		[NotNull]
 		public static StringBuilder AppendSRef(this StringBuilder sb, string name, int wkid = 0)
 		{
+			if (sb is null)
+				throw new ArgumentNullException(nameof(sb));
+
 			if (name != null && wkid > 0)
 			{
 				sb.AppendFormat("{0} SRID {1}", name, wkid);
@@ -173,9 +285,11 @@ namespace ProSuite.Processing.Utils
 			return sb;
 		}
 
+		[NotNull]
 		public static StringBuilder AppendScale(this StringBuilder sb, double scaleDenom, string sep = null)
 		{
-			if (sb == null) return null;
+			if (sb is null)
+				throw new ArgumentNullException(nameof(sb));
 
 			if (scaleDenom > 0)
 			{
@@ -224,6 +338,160 @@ namespace ProSuite.Processing.Utils
 			}
 
 			return sb;
+		}
+
+		[CanBeNull]
+		public static int[] ParseIntegerList([CanBeNull] string text, char separator)
+		{
+			if (text == null) return null;
+
+			text = text.Trim();
+			if (text.Length < 1) return null;
+
+			string[] parts = text.Split(separator);
+			if (parts.Length < 1) return null;
+
+			const NumberStyles numberStyle = NumberStyles.Integer;
+			CultureInfo invariant = CultureInfo.InvariantCulture;
+
+			var list = parts.Select(s => s.Canonical()).Where(s => s != null)
+			                .Select(s => int.Parse(s, numberStyle, invariant))
+			                .ToList();
+
+			return list.Count > 0 ? list.ToArray() : null;
+		}
+
+		#endregion
+
+		#region Numeric utils
+
+		/// <remarks>A number is finite if it is not NaN and not infinity</remarks>
+		public static bool IsFinite(this double number)
+		{
+			return !double.IsNaN(number) && !double.IsInfinity(number);
+		}
+
+		public static double Clamp(this double value, double min, double max, string name = null)
+		{
+			if (value < min)
+			{
+				if (!string.IsNullOrEmpty(name))
+				{
+					_msg.WarnFormat("{0} was {1}, clamped to {2}", name, value, min);
+				}
+
+				return min;
+			}
+
+			if (value > max)
+			{
+				if (!string.IsNullOrEmpty(name))
+				{
+					_msg.WarnFormat("{0} was {1}, clamped to {2}", name, value, max);
+				}
+
+				return max;
+			}
+
+			return value;
+		}
+
+		public static int Clamp(this int value, int min, int max, string name = null)
+		{
+			Debug.Assert(min < max);
+
+			if (value < min)
+			{
+				if (!string.IsNullOrEmpty(name))
+				{
+					_msg.WarnFormat("{0} was {1}, clamped to {2}", name, value, min);
+				}
+
+				return min;
+			}
+
+			if (value > max)
+			{
+				if (!string.IsNullOrEmpty(name))
+				{
+					_msg.WarnFormat("{0} was {1}, clamped to {2}", name, value, max);
+				}
+
+				return max;
+			}
+
+			return value;
+		}
+
+		/// <summary>
+		/// Normalize the given <paramref name="angle"/> (in degrees)
+		/// so that it is in the range 0 (inclusive) to 360 (exclusive).
+		/// </summary>
+		/// <param name="angle">in degrees</param>
+		/// <returns>angle, in degrees, normalized to 0..360</returns>
+		public static double ToPositiveDegrees(double angle)
+		{
+			angle %= 360;
+
+			if (angle < 0)
+			{
+				angle += 360;
+			}
+
+			return angle;
+		}
+
+		/// <summary>
+		/// Normalize the given <paramref name="angle"/> (in radians)
+		/// so that it is in the range -pi to pi (both inclusive).
+		/// </summary>
+		/// <param name="angle">in radians</param>
+		/// <returns>angle, in radians, normalized to -pi..pi</returns>
+		public static double NormalizeRadians(double angle)
+		{
+			const double twoPi = Math.PI * 2;
+
+			angle %= twoPi; // -2pi .. 2pi
+
+			if (angle > Math.PI)
+			{
+				angle -= twoPi;
+			}
+			else if (angle < -Math.PI)
+			{
+				angle += twoPi;
+			}
+
+			return angle; // -pi .. pi
+		}
+
+		#endregion
+
+		/// <summary>
+		/// Get the subtype code that would be assigned by the given field setter.
+		/// Return -1 if the subtype field would remain unassigned.
+		/// Pass the same environment that will be used for the real assignment;
+		/// of no environment is passed, the null environment is used internally.
+		/// </summary>
+		public static int GetSubtypeCode(FieldSetter attributes, string subtypeFieldName,
+		                                 IEvaluationEnvironment env = null, Stack<object> stack = null)
+		{
+			object value = attributes?.GetFieldValue(subtypeFieldName, env, stack);
+			if (value is null) return -1;
+
+			try
+			{
+				return Convert.ToInt32(value);
+			}
+			catch
+			{
+				return -1;
+			}
+
+			// Usually, the subtype assigned with FieldSetter is
+			// given as a literal value, so we could just parse:
+			//return int.TryParse(assignment.Value.Clause, out int code) ? code : -1;
+			// But only a full evaluation is guaranteed to always yield the proper result.
 		}
 	}
 }

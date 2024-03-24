@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
 using NUnit.Framework;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Core.Spatial;

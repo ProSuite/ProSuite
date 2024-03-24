@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.Com
 {
@@ -25,6 +26,8 @@ namespace ProSuite.Commons.Com
 	/// <summary>Provides a scheduler that uses STA threads.</summary>
 	public sealed class StaTaskScheduler : TaskScheduler, IDisposable
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>Stores the queued tasks to be executed by our pool of STA threads.</summary>
 		private BlockingCollection<Task> _tasks;
 
@@ -75,6 +78,8 @@ namespace ProSuite.Commons.Com
 		protected override void QueueTask(Task task)
 		{
 			// Push it into the blocking collection of tasks
+			_msg.VerboseDebug(() => $"Task queued: {task} <id> {task.Id}");
+
 			_tasks.Add(task);
 		}
 

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using ProSuite.Processing.Domain;
 using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.Test

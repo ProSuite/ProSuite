@@ -175,7 +175,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			if (correctGeometryType?.Id != objectDataset.GeometryType?.Id)
 			{
 				_msg.InfoFormat("Dataset {0} has changed geometry type. Previous: {1}, New: {2}",
-				                objectDataset.Name, objectDataset.GeometryType?.Name,
+				                objectDataset.Name, objectDataset.GeometryType?.Name ?? "<none>",
 				                correctGeometryType?.Name);
 
 				objectDataset.GeometryType = correctGeometryType;

@@ -38,6 +38,8 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			_featureWorkspace = featureWorkspace;
 			_fields = fields;
 
+			fields.CreateReferencedDomains(featureWorkspace);
+
 			_rowWriter = CreateRowWriter(IssueDatasetUtils.RowClassName, featureWorkspace,
 			                             fields, LocalizableStrings.IssuesStandaloneTableName);
 

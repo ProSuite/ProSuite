@@ -53,7 +53,8 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			List<object[]> list = _workList.GetItems(queryFilter, true)
+			const bool ignoreStatusFilter = false;
+			List<object[]> list = _workList.GetItems(queryFilter, ignoreStatusFilter)
 			                               .Select(item => GetValues(item, _workList.Current))
 			                               .ToList(); // TODO drop ToList, inline
 
@@ -68,7 +69,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return Search((QueryFilter) spatialQueryFilter);
 		}
 
-		private object[] GetValues([NotNull] IWorkItem item, IWorkItem current = null)
+		private static object[] GetValues([NotNull] IWorkItem item, IWorkItem current = null)
 		{
 			var values = new object[5];
 			values[0] = item.OID;
@@ -81,17 +82,25 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		private static PluginField[] GetSchema()
 		{
-			var fields = new List<PluginField>(8);
-			fields.Add(new PluginField("OBJECTID", "ObjectID", FieldType.OID));
-			fields.Add(new PluginField("STATUS", "Status", FieldType.Integer));
-			fields.Add(new PluginField("VISITED", "Visited", FieldType.Integer));
-			fields.Add(new PluginField("CURRENT", "Is Current", FieldType.Integer));
-			fields.Add(new PluginField("SHAPE", "Shape", FieldType.Geometry));
+			var fields = new List<PluginField>(8)
+			             {
+				             new PluginField("OBJECTID", "ObjectID", FieldType.OID),
+				             new PluginField("STATUS", "Status", FieldType.Integer),
+				             new PluginField("VISITED", "Visited", FieldType.Integer),
+				             new PluginField("CURRENT", "Is Current", FieldType.Integer),
+				             new PluginField("SHAPE", "Shape", FieldType.Geometry)
+			             };
 			return fields.ToArray();
 		}
 
-		private Polygon CreatePolygon(IWorkItem item)
+		[CanBeNull]
+		private static Polygon CreatePolygon(IWorkItem item)
 		{
+			if (item?.Extent == null)
+			{
+				return null;
+			}
+
 			Envelope extent = item.Extent;
 
 			if (UseExtent(item))
@@ -131,7 +140,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return false;
 		}
 
-		public override int GetNativeRowCount()
+		public override long GetNativeRowCount()
 		{
 			throw new NotSupportedException();
 		}

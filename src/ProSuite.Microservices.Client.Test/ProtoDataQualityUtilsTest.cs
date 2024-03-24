@@ -148,7 +148,7 @@ namespace ProSuite.Microservices.Client.Test
 				"TestIssueFilterConfig1", issueFilterDescriptor, "IF desc");
 
 			issueFilterConfiguration.AddParameterValue(
-				new DatasetTestParameterValue("featureclass", tableType)
+				new DatasetTestParameterValue("featureClass", tableType)
 				{
 					DatasetValue = dataset,
 					FilterExpression = filterExpression
@@ -182,7 +182,7 @@ namespace ProSuite.Microservices.Client.Test
 
 			ParameterMsg issueFilterMsgParameter = issueFilterConfigMsg.Parameters[0];
 			Assert.AreEqual(dataset.Name, issueFilterMsgParameter.Value);
-			Assert.AreEqual("featureclass", issueFilterMsgParameter.Name);
+			Assert.AreEqual("featureClass", issueFilterMsgParameter.Name);
 			Assert.AreEqual(filterExpression, issueFilterMsgParameter.WhereClause);
 		}
 
@@ -214,7 +214,7 @@ namespace ProSuite.Microservices.Client.Test
 				"TestTransformerConfig1", transformerDescriptor, "Transformer desc");
 
 			transformerConfig.AddParameterValue(
-				new DatasetTestParameterValue("featureclass", tableType)
+				new DatasetTestParameterValue("multipatchClass", tableType)
 				{
 					DatasetValue = dataset,
 					FilterExpression = filterExpression,
@@ -264,7 +264,7 @@ namespace ProSuite.Microservices.Client.Test
 			                transformerMsg.InstanceDescriptorName);
 			ParameterMsg transformerMsgParameter = transformerMsg.Parameters[0];
 			Assert.AreEqual(dataset.Name, transformerMsgParameter.Value);
-			Assert.AreEqual("featureclass", transformerMsgParameter.Name);
+			Assert.AreEqual("multipatchClass", transformerMsgParameter.Name);
 			Assert.AreEqual(filterExpression, transformerMsgParameter.WhereClause);
 
 			Assert.AreEqual("table", param0.Name);
@@ -331,7 +331,7 @@ namespace ProSuite.Microservices.Client.Test
 				"TestTransformerConfig1", transformerDescriptor, "Transformer desc");
 
 			transformerConfig.AddParameterValue(
-				new DatasetTestParameterValue("featureclass", tableType)
+				new DatasetTestParameterValue("featureClass", tableType)
 				{
 					DatasetValue = dataset,
 					FilterExpression = filterExpression,
@@ -394,11 +394,11 @@ namespace ProSuite.Microservices.Client.Test
 			InstanceConfigurationMsg transformerMsg = param0.Transformer;
 			Assert.AreEqual(transformerConfig.Name, transformerMsg.Name);
 			Assert.AreEqual(transformerConfig.Description, transformerMsg.Description);
-			Assert.AreEqual(trCanonicalName,
+			Assert.AreEqual("Transformer1",
 			                transformerMsg.InstanceDescriptorName);
 			ParameterMsg transformerMsgParameter0 = transformerMsg.Parameters[0];
 			Assert.AreEqual(dataset.Name, transformerMsgParameter0.Value);
-			Assert.AreEqual("featureclass", transformerMsgParameter0.Name);
+			Assert.AreEqual("featureClass", transformerMsgParameter0.Name);
 			Assert.AreEqual(filterExpression, transformerMsgParameter0.WhereClause);
 
 			ParameterMsg transformerMsgParameter1 = transformerMsg.Parameters[1];

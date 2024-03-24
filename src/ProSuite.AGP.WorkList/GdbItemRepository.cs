@@ -7,6 +7,7 @@ using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -22,22 +23,26 @@ namespace ProSuite.AGP.WorkList
 
 		private int _lastUsedOid;
 
-		protected GdbItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
-		                            IRepository workItemStateRepository)
+		protected GdbItemRepository(IEnumerable<Table> tables, IRepository workItemStateRepository)
 		{
-			RegisterDatasets(tablesByGeodatabase);
+			foreach (Table table in tables)
+			{
+				ISourceClass sourceClass =
+					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition());
+
+				SourceClasses.Add(sourceClass);
+			}
 
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
 		protected IRepository WorkItemStateRepository { get; }
 
-		public Dictionary<ISourceClass, Geodatabase> GeodatabaseBySourceClasses { get; } =
-			new Dictionary<ISourceClass, Geodatabase>();
+		public List<ISourceClass> SourceClasses { get; } = new();
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
-			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys)
+			foreach (ISourceClass sourceClass in SourceClasses)
 			{
 				int count = 0;
 
@@ -52,33 +57,8 @@ namespace ProSuite.AGP.WorkList
 				}
 
 				_msg.DebugStopTiming(
-					watch, $"{nameof(GetItems)}() {sourceClass.Name}: {count} items");
+					watch, $"GetItems() {sourceClass.Name}: {count} items");
 			}
-
-			// return GeodatabaseBySourceClasses.Keys.SelectMany(sourceClass => GetItemsCore(sourceClass, filter, recycle));
-		}
-
-		public IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter,
-		                                       bool recycle = true)
-		{
-			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys.Where(
-				         source => source.Uses(tableId)))
-			{
-				int count = 0;
-
-				Stopwatch watch = _msg.DebugStartTiming();
-
-				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
-				{
-					count += 1;
-					yield return CreateWorkItemCore(row, sourceClass);
-				}
-
-				_msg.DebugStopTiming(
-					watch, $"{nameof(GetItems)}() {sourceClass.Name}: {count} items");
-			}
-
-			// return GeodatabaseBySourceClasses.Keys.Where(source => source.Uses(table)).SelectMany(sourceClass => GetItemsCore(sourceClass, filter, recycle));
 		}
 
 		public void Refresh(IWorkItem item)
@@ -87,7 +67,7 @@ namespace ProSuite.AGP.WorkList
 
 			// todo daro: log message
 			ISourceClass source =
-				GeodatabaseBySourceClasses.Keys.FirstOrDefault(sc => sc.Uses(tableId));
+				SourceClasses.FirstOrDefault(sc => sc.Uses(tableId));
 			Assert.NotNull(source);
 
 			Row row = GetRow(source, item.Proxy.ObjectId);
@@ -101,10 +81,11 @@ namespace ProSuite.AGP.WorkList
 			RefreshCore(item, source, row);
 		}
 
+		// todo daro reorder members
 		[CanBeNull]
 		private Row GetRow([NotNull] ISourceClass sourceClass, long oid)
 		{
-			var filter = new QueryFilter {ObjectIDs = new List<long> {oid}};
+			var filter = new QueryFilter { ObjectIDs = new List<long> { oid } };
 
 			// todo daro: log message
 			return GetRowsCore(sourceClass, filter, recycle: true).FirstOrDefault();
@@ -126,7 +107,7 @@ namespace ProSuite.AGP.WorkList
 			GdbTableIdentity tableId = item.Proxy.Table;
 
 			ISourceClass source =
-				GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(tableId));
+				SourceClasses.FirstOrDefault(s => s.Uses(tableId));
 			Assert.NotNull(source);
 
 			// todo daro: read / restore item again from db? restore pattern in case of failure?
@@ -170,14 +151,6 @@ namespace ProSuite.AGP.WorkList
 			return WorkItemStateRepository.CurrentIndex ?? -1;
 		}
 
-		public void Dispose()
-		{
-			foreach (Geodatabase gdb in GeodatabaseBySourceClasses.Values)
-			{
-				gdb?.Dispose();
-			}
-		}
-
 		protected virtual void UpdateStateRepositoryCore(string path) { }
 
 		protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
@@ -189,31 +162,37 @@ namespace ProSuite.AGP.WorkList
 		protected virtual IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
 		                                               [CanBeNull] QueryFilter filter, bool recycle)
 		{
-			Table table = OpenFeatureClass(sourceClass);
+			Table table = OpenTable(sourceClass);
 
 			if (table == null)
 			{
 				yield break;
 			}
 
-			// Todo daro: check recycle
-			foreach (Feature feature in GdbQueryUtils.GetRows<Feature>(
-				         table, filter, recycle))
+			try
 			{
-				yield return feature;
+				// Todo daro: check recycle
+				foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
+				{
+					yield return row;
+				}
+			}
+			finally
+			{
+				table.Dispose();
 			}
 		}
 
 		[CanBeNull]
 		protected virtual WorkListStatusSchema CreateStatusSchemaCore(
-			[NotNull] FeatureClassDefinition definition)
+			[NotNull] TableDefinition definition)
 		{
 			return null;
 		}
 
 		[CanBeNull]
 		protected virtual IAttributeReader CreateAttributeReaderCore(
-			[NotNull] FeatureClassDefinition definition)
+			[NotNull] TableDefinition definition)
 		{
 			return null;
 		}
@@ -222,60 +201,25 @@ namespace ProSuite.AGP.WorkList
 		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row, ISourceClass source);
 
 		[NotNull]
-		protected abstract ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
-		                                                      [CanBeNull]
-		                                                      IAttributeReader attributeReader,
-		                                                      [CanBeNull]
-		                                                      WorkListStatusSchema statusSchema);
-
-		private void RegisterDatasets(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase)
-		{
-			foreach (var pair in tablesByGeodatabase)
-			{
-				Geodatabase geodatabase = pair.Key;
-				var definitions = geodatabase.GetDefinitions<FeatureClassDefinition>()
-				                             .ToLookup(d => d.GetName());
-
-				foreach (Table table in pair.Value)
-				{
-					var identity = new GdbTableIdentity(table);
-
-					FeatureClassDefinition definition = definitions[identity.Name].FirstOrDefault();
-
-					ISourceClass sourceClass = CreateSourceClass(identity, definition);
-
-					GeodatabaseBySourceClasses.Add(sourceClass, geodatabase);
-				}
-			}
-		}
+		protected abstract ISourceClass CreateSourceClassCore(
+			GdbTableIdentity identity,
+			[CanBeNull] IAttributeReader attributeReader,
+			[CanBeNull] WorkListStatusSchema statusSchema);
 
 		[CanBeNull]
-		protected Table OpenFeatureClass([NotNull] ISourceClass sourceClass)
+		protected static Table OpenTable([NotNull] ISourceClass sourceClass)
 		{
-			return GeodatabaseBySourceClasses.TryGetValue(sourceClass, out Geodatabase gdb)
-				       ? gdb.OpenDataset<Table>(sourceClass.Name)
-				       : null;
+			return sourceClass.OpenDataset<Table>();
 		}
 
-		//[CanBeNull]
-		//protected Table OpenFeatureClass2([NotNull] ISourceClass sourceClass)
-		//{
-		//	return GeodatabaseBySourceClasses.TryGetValue(sourceClass, out Geodatabase gdb)
-		//		       ? sourceClass.OpenFeatureClass(gdb)
-		//		       : null;
-		//}
-
 		private ISourceClass CreateSourceClass(GdbTableIdentity identity,
-		                                       FeatureClassDefinition definition)
+		                                       TableDefinition definition)
 		{
 			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
 
 			WorkListStatusSchema statusSchema = CreateStatusSchemaCore(definition);
 
-			ISourceClass sourceClass =
-				CreateSourceClassCore(identity, attributeReader, statusSchema);
-
-			return sourceClass;
+			return CreateSourceClassCore(identity, attributeReader, statusSchema);
 		}
 
 		#region unused
@@ -283,21 +227,6 @@ namespace ProSuite.AGP.WorkList
 		public int GetCount(QueryFilter filter = null)
 		{
 			throw new NotImplementedException();
-		}
-
-		public int Count(WorkItemVisibility visibility)
-		{
-			int count = 0;
-
-			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys)
-			{
-				//string whereClause = sourceClass.GetQuery(visibility);
-				//var filter = new QueryFilter {WhereClause = whereClause};
-
-				//count += GetRowsCore(sourceClass, filter, recycle: true).Count();
-			}
-
-			return count;
 		}
 
 		#endregion

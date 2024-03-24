@@ -28,13 +28,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		SharedAssemblyInfo.cs = SharedAssemblyInfo.cs
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.AGP", "ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj", "{89F2C583-3022-43F8-9B69-27123836625F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.AGP", "ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj", "{89F2C583-3022-43F8-9B69-27123836625F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.WorkList.Contracts", "ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj", "{47E134C6-B803-451E-8C33-7C71B158B2AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.AGP.WorkList.Contracts", "ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj", "{47E134C6-B803-451E-8C33-7C71B158B2AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.WorkList", "ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj", "{2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.AGP.WorkList", "ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj", "{2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.WorkList.Test", "ProSuite.AGP.WorkList.Test\ProSuite.AGP.WorkList.Test.csproj", "{AF816619-A110-435B-A575-53A511593422}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.AGP.WorkList.Test", "ProSuite.AGP.WorkList.Test\ProSuite.AGP.WorkList.Test.csproj", "{AF816619-A110-435B-A575-53A511593422}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{81F95786-6E18-48AA-836E-078047481BF9}"
 EndProject
@@ -48,21 +48,21 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.SpecificationPr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.ServiceProviderArcGIS", "ProSuite.QA.ServiceProviderArcGIS\ProSuite.QA.ServiceProviderArcGIS.csproj", "{B46101C1-5C42-410D-83B9-8EBE2BECBE18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.Editing", "ProSuite.AGP.Editing\ProSuite.AGP.Editing.csproj", "{EC3D575D-7B9D-467F-BC76-2E093A3126EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.AGP.Editing", "ProSuite.AGP.Editing\ProSuite.AGP.Editing.csproj", "{EC3D575D-7B9D-467F-BC76-2E093A3126EC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.AGP.Hosting", "ProSuite.Commons.AGP.Hosting\ProSuite.Commons.AGP.Hosting.csproj", "{D6540148-8790-4C77-8A65-518BD10487D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.AGP.Hosting.Test", "ProSuite.Commons.AGP.Hosting.Test\ProSuite.Commons.AGP.Hosting.Test.csproj", "{F334EF2E-5B6C-463B-8EB1-B4C35E5F6697}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.AGP.Hosting.Test", "ProSuite.Commons.AGP.Hosting.Test\ProSuite.Commons.AGP.Hosting.Test.csproj", "{F334EF2E-5B6C-463B-8EB1-B4C35E5F6697}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.Solution.Plugins", "ProSuite.AGP.Solution.Plugins\ProSuite.AGP.Solution.Plugins.csproj", "{85CE29F7-148F-4ACB-9312-742ECFC92FB7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.AGP.Solution.Plugins", "ProSuite.AGP.Solution.Plugins\ProSuite.AGP.Solution.Plugins.csproj", "{85CE29F7-148F-4ACB-9312-742ECFC92FB7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.Solution", "ProSuite.AGP.Solution\ProSuite.AGP.Solution.csproj", "{ACA43C2A-8357-4476-8660-E8BC28BDF848}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.AGP.Core", "ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj", "{B80740EC-BB68-410C-A617-E79C467F1969}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.AGP.Core", "ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj", "{B80740EC-BB68-410C-A617-E79C467F1969}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.AGP.Core.Test", "ProSuite.Commons.AGP.Core.Test\ProSuite.Commons.AGP.Core.Test.csproj", "{14D303FD-58FD-4483-A963-0A681B95ADB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Commons.AGP.Core.Test", "ProSuite.Commons.AGP.Core.Test\ProSuite.Commons.AGP.Core.Test.csproj", "{14D303FD-58FD-4483-A963-0A681B95ADB9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.Editing.Test", "ProSuite.AGP.Editing.Test\ProSuite.AGP.Editing.Test.csproj", "{A6DE7214-500C-4AD9-A9BA-28F36930862F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.AGP.Editing.Test", "ProSuite.AGP.Editing.Test\ProSuite.AGP.Editing.Test.csproj", "{A6DE7214-500C-4AD9-A9BA-28F36930862F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Processing", "ProSuite.Processing\ProSuite.Processing.csproj", "{0B72E886-B428-48ED-BA96-9CD6FCC5E171}"
 EndProject
@@ -70,21 +70,19 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.QA.Core", "ProSuit
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Microservices.Client", "ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj", "{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Client.AGP", "ProSuite.Microservices.Client.AGP\ProSuite.Microservices.Client.AGP.csproj", "{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Microservices.Client.AGP", "ProSuite.Microservices.Client.AGP\ProSuite.Microservices.Client.AGP.csproj", "{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Application.Configuration", "ProSuite.Application.Configuration\ProSuite.Application.Configuration.csproj", "{EAB868E4-D8FD-4AB4-9EDA-A9291E7CFEAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Application.Configuration", "ProSuite.Application.Configuration\ProSuite.Application.Configuration.csproj", "{EAB868E4-D8FD-4AB4-9EDA-A9291E7CFEAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.CartoTrials", "ProSuite.AGP.CartoTrials\ProSuite.AGP.CartoTrials.csproj", "{0F1D8710-E7D3-4340-AFA6-C6A30CB32854}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.DomainModel.AGP", "ProSuite.DomainModel.AGP\ProSuite.DomainModel.AGP.csproj", "{824DDBE3-EDAF-460B-B513-386A4260C1FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainModel.AGP", "ProSuite.DomainModel.AGP\ProSuite.DomainModel.AGP.csproj", "{824DDBE3-EDAF-460B-B513-386A4260C1FF}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.QA", "ProSuite.AGP.QA\ProSuite.AGP.QA.csproj", "{1745D9A7-BF58-414E-A840-6A3EE1847FE0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.AGP.QA", "ProSuite.AGP.QA\ProSuite.AGP.QA.csproj", "{1745D9A7-BF58-414E-A840-6A3EE1847FE0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.UI", "ProSuite.UI\ProSuite.UI.csproj", "{44C24B7C-FFD8-4968-95A0-9D3C7C77861B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Client.AGP.Test", "ProSuite.Microservices.Client.AGP.Test\ProSuite.Microservices.Client.AGP.Test.csproj", "{8FB162AA-3A08-4279-901E-7B2ED158ECA6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Microservices.Client.AGP.Test", "ProSuite.Microservices.Client.AGP.Test\ProSuite.Microservices.Client.AGP.Test.csproj", "{8FB162AA-3A08-4279-901E-7B2ED158ECA6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Processing.AGP.Core", "ProSuite.Processing.AGP.Core\ProSuite.Processing.AGP.Core.csproj", "{24D24089-C337-43FF-BE11-2F01AF1E6783}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Processing.AGP.Core", "ProSuite.Processing.AGP.Core\ProSuite.Processing.AGP.Core.csproj", "{24D24089-C337-43FF-BE11-2F01AF1E6783}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProSuite.Processing.Test", "ProSuite.Processing.Test\ProSuite.Processing.Test.csproj", "{12C7BA8F-E068-43B6-AC41-F02F0DE49152}"
 EndProject
@@ -216,8 +214,6 @@ Global
 		{EAB868E4-D8FD-4AB4-9EDA-A9291E7CFEAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EAB868E4-D8FD-4AB4-9EDA-A9291E7CFEAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAB868E4-D8FD-4AB4-9EDA-A9291E7CFEAB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0F1D8710-E7D3-4340-AFA6-C6A30CB32854}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0F1D8710-E7D3-4340-AFA6-C6A30CB32854}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{824DDBE3-EDAF-460B-B513-386A4260C1FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{824DDBE3-EDAF-460B-B513-386A4260C1FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{824DDBE3-EDAF-460B-B513-386A4260C1FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -254,7 +250,6 @@ Global
 		{2A9D7990-0FE8-43D0-9D2D-3E94F2C73056} = {81F95786-6E18-48AA-836E-078047481BF9}
 		{85CE29F7-148F-4ACB-9312-742ECFC92FB7} = {2A9D7990-0FE8-43D0-9D2D-3E94F2C73056}
 		{ACA43C2A-8357-4476-8660-E8BC28BDF848} = {2A9D7990-0FE8-43D0-9D2D-3E94F2C73056}
-		{0F1D8710-E7D3-4340-AFA6-C6A30CB32854} = {2A9D7990-0FE8-43D0-9D2D-3E94F2C73056}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C6B4D725-3081-4767-ABAB-959C058633C0}

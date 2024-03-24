@@ -5,6 +5,7 @@ using System.IO;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
 using Google.Protobuf;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -43,7 +44,7 @@ namespace ProSuite.Microservices.Client.AGP
 
 					return string.IsNullOrEmpty(xml)
 						       ? null
-						       : SpatialReferenceBuilder.FromXML(xml);
+						       : SpatialReferenceBuilder.FromXml(xml);
 
 				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid:
 
@@ -81,7 +82,7 @@ namespace ProSuite.Microservices.Client.AGP
 					break;
 
 				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml:
-					result.SpatialReferenceEsriXml = spatialReference.ToXML();
+					result.SpatialReferenceEsriXml = spatialReference.ToXml();
 					break;
 
 				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid:
@@ -167,9 +168,9 @@ namespace ProSuite.Microservices.Client.AGP
 			}
 
 			var result =
-				EnvelopeBuilder.CreateEnvelope(new Coordinate2D(envProto.XMin, envProto.YMin),
-				                               new Coordinate2D(envProto.XMax, envProto.YMax),
-				                               spatialReference);
+				EnvelopeBuilderEx.CreateEnvelope(new Coordinate2D(envProto.XMin, envProto.YMin),
+				                                 new Coordinate2D(envProto.XMax, envProto.YMax),
+				                                 spatialReference);
 
 			return result;
 		}
@@ -287,7 +288,7 @@ namespace ProSuite.Microservices.Client.AGP
 
 				// NOTE: The following calls are expensive:
 				// - Geometry.GetShape() (internally, the feature's spatial creation seems costly)
-				// - FeatureClassDefintion.GetSpatialReference()
+				// - FeatureClassDefinition.GetSpatialReference()
 				// In case of a large feature count, they should be avoided on a per-feature basis:
 
 				if (! classesByClassId.ContainsKey(uniqueClassId))
@@ -382,7 +383,8 @@ namespace ProSuite.Microservices.Client.AGP
 		}
 
 		[NotNull]
-		public static WorkspaceMsg ToWorkspaceRefMsg([NotNull] Datastore datastore)
+		public static WorkspaceMsg ToWorkspaceRefMsg([NotNull] Datastore datastore,
+		                                             bool includePath)
 		{
 			var result =
 				new WorkspaceMsg
@@ -395,15 +397,28 @@ namespace ProSuite.Microservices.Client.AGP
 
 			if (defaultVersion != null)
 			{
+				result.DefaultVersionName = defaultVersion.GetName();
+
 				result.DefaultVersionCreationTicks = defaultVersion.GetCreatedDate().Ticks;
+				result.DefaultVersionModificationTicks = defaultVersion.GetModifiedDate().Ticks;
+
 				// Careful: Version.GetDescription() appears to be localized/translated if run in Pro with localized UI
 				result.DefaultVersionDescription = defaultVersion.GetDescription() ?? string.Empty;
-				result.DefaultVersionName = defaultVersion.GetName();
 			}
-			else
+
+			if (includePath)
 			{
+				// NOTE: The path is most useful. It is the actual FGDB path or a temporary sde file that can be used to re-open
+				//       the data store. This shall work in every case if the service is local. If the service is remote
+				//       the path is useless (unless it is an FGDB on a UNC path that can be seen by the server)
+				// -> Use data-verification (if no unsupported tests are included)
 				result.Path = datastore.GetPath().AbsoluteUri;
 			}
+			// The connection properties are useful, but the password is encrypted. Consider using the password
+			// stored in the DDX - look it up by Instance/Database/User (or just Instance/Database) from all connection providers.
+			// However, the child databases are typically local!
+			//DatabaseConnectionProperties connectionProperties =
+			//	datastore.GetConnector() as DatabaseConnectionProperties;
 
 			return result;
 		}
@@ -508,19 +523,19 @@ namespace ProSuite.Microservices.Client.AGP
 			switch (geometryType)
 			{
 				case ProSuiteGeometryType.Point:
-					result = MapPointBuilder.FromEsriShape(byteArray, spatialReference);
+					result = MapPointBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Polyline:
-					result = PolylineBuilder.FromEsriShape(byteArray, spatialReference);
+					result = PolylineBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Polygon:
-					result = PolygonBuilder.FromEsriShape(byteArray, spatialReference);
+					result = PolygonBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Multipoint:
-					result = MultipointBuilder.FromEsriShape(byteArray, spatialReference);
+					result = MultipointBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.MultiPatch:
-					result = MultipatchBuilder.FromEsriShape(byteArray, spatialReference);
+					result = MultipatchBuilderEx.FromEsriShape(byteArray, spatialReference);
 					break;
 				case ProSuiteGeometryType.Bag:
 					result = GeometryBagBuilder.FromEsriShape(

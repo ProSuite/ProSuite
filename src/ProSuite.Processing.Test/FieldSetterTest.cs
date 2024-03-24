@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using NUnit.Framework;
+using ProSuite.Commons.Text;
 using ProSuite.Processing.Evaluation;
 using ProSuite.Processing.Test.Mocks;
 using ProSuite.Processing.Utils;
@@ -45,14 +46,18 @@ namespace ProSuite.Processing.Test
 		{
 			// Field names: 1 Letter or Underscore followed by 0..N Letters, Digits, Underscores
 
-			FieldSetter.Create("foo = 'bar'");
-			FieldSetter.Create("RuleID_1 = 5");
-			FieldSetter.Create("_a = 6");
-			FieldSetter.Create("_7_ = 7");
+			var fs1 = new FieldSetter("foo = 'bar'");
+			Assert.AreEqual("foo", fs1.Assignments.Single().FieldName);
+			var fs2 = new FieldSetter("RuleID_1 = 5");
+			Assert.AreEqual("RuleID_1", fs2.Assignments.Single().FieldName);
+			var fs3 = new FieldSetter("_a = 6");
+			Assert.AreEqual("_a", fs3.Assignments.Single().FieldName);
+			var fs4 = new FieldSetter("_7_ = 7");
+			Assert.AreEqual("_7_", fs4.Assignments.Single().FieldName);
 
-			Assert.Catch<FormatException>(() => FieldSetter.Create("123 = 'oops'"));
-			Assert.Catch<FormatException>(() => FieldSetter.Create("7X = 77"));
-			Assert.Catch<FormatException>(() => FieldSetter.Create("foo bar"));
+			Assert.Catch<FormatException>(() => _ = new FieldSetter("123 = 'oops'"));
+			Assert.Catch<FormatException>(() => _ = new FieldSetter("7X = 77"));
+			Assert.Catch<FormatException>(() => _ = new FieldSetter("foo bar"));
 		}
 
 		[Test]
@@ -60,18 +65,39 @@ namespace ProSuite.Processing.Test
 		{
 			// Make sure the empty string works!
 			var fs0 = new FieldSetter(string.Empty);
-			Assert.AreEqual(string.Empty, ToString(fs0.GetAssignments()));
+			Assert.AreEqual(string.Empty, Format(fs0.Assignments));
 
 			// Assignment op is either "=" or ":=" and trailing ";" is optional:
 			var fs1 = new FieldSetter("a=a+a; b:=a*a;");
-			Assert.AreEqual("a=a+a;b=a*a", ToString(fs1.GetAssignments()));
+			Assert.AreEqual("a=a+a;b=a*a", Format(fs1.Assignments));
 
 			// White space between tokens shall be ignored:
 			var fs2 = new FieldSetter("  a  =  'b'  ;  c  =  'd'  ;  ");
-			Assert.AreEqual("a='b';c='d'", ToString(fs2.GetAssignments()));
+			Assert.AreEqual("a='b';c='d'", Format(fs2.Assignments));
 
-			var fs3 = new FieldSetter(" \t size=RAND(5,9);angle=RAND()*360.0   ;   foo = marker.size/2  ");
-			Assert.AreEqual("size=RAND(5,9);angle=RAND()*360.0;foo=marker.size/2", ToString(fs3.GetAssignments()));
+			var fs3 = new FieldSetter(";; ;a='b' ; ; c = 'd' ;; ;");
+			Assert.AreEqual("a='b';c='d'", Format(fs3.Assignments));
+
+		var fs4 = new FieldSetter(" \t size=RAND(5,9);angle=RAND()*360.0   ;   foo = marker.size/2  ");
+		Assert.AreEqual("size=RAND(5,9);angle=RAND()*360.0;foo=marker.size/2", Format(fs4.Assignments));
+		}
+
+		[Test]
+		public void CanName()
+		{
+			// The Name is an optional property that may be useful for error messages:
+			Assert.IsNull(new FieldSetter("foo = 1").Name);
+			Assert.AreEqual("Hi", new FieldSetter("field = value; other=more", "Hi").Name);
+		}
+
+		[Test]
+		public void CanText()
+		{
+			// The Text returns the parsed and reformatted assignments:
+			Assert.IsEmpty(new FieldSetter(null).Text);
+			Assert.IsEmpty(new FieldSetter(string.Empty).Text);
+			Assert.AreEqual("foo = 'Bar'", new FieldSetter("foo = 'Bar'").Text);
+		Assert.AreEqual("A = 1; B = 4/2; C = 'c'", new FieldSetter("A=1;;B=4/2 ; C=\t'c'").Text);
 		}
 
 		[Test]
@@ -113,7 +139,7 @@ namespace ProSuite.Processing.Test
 			// A more realistic example:
 			row.SetValues(DBNull.Value, 11, 3.5, "hi");
 			env.ForgetAll().DefineFields(row, "marker").SetRandom(new Random(1234));
-			var fs3 = new FieldSetter("a=CONCAT(b+marker.c); b=10+10*RAND(4); c=TRUNC(1.5+b/2); d=null");
+		var fs3 = new FieldSetter("a=CONCAT(b+marker.c); b=10+10*RAND(4); c=TRUNC(1.5+b/2); d=null");
 			fs3.Execute(row, env);
 			row.AssertValues("14.5", 20, 7, DBNull.Value);
 
@@ -127,6 +153,16 @@ namespace ProSuite.Processing.Test
 		}
 
 		[Test]
+	public void CanCatchNoSuchField()
+	{
+		var env = new StandardEnvironment();
+		var row = new RowValuesMock("fieldA", "fieldB");
+
+		var fs = new FieldSetter("fieldA = 1; fieldB = 2; oops = 42");
+		Assert.Catch<EvaluationException>(() => fs.Execute(row, env));
+	}
+
+	[Test]
 		public void CanReferenceManualBindings()
 		{
 			var env = new StandardEnvironment();
@@ -233,20 +269,27 @@ namespace ProSuite.Processing.Test
 			Assert.Catch<EvaluationException>(() => fs1.Execute(row, env)); // no such field
 		}
 
+		[Test]
+		public void CanGetFieldValue()
+		{
+			var env = new NullEnvironment();
+			var fs = new FieldSetter("a=12; b=9+8-5;");
+
+			var a = fs.GetFieldValue("a", env);
+			Assert.AreEqual(12.0, a);
+
+			var b = fs.GetFieldValue("b", env);
+			Assert.AreEqual(12.0, b);
+
+			var c = fs.GetFieldValue("unassigned", env);
+			Assert.IsNull(c);
+		}
+
 		#region Test utilities
 
-		private static string ToString(IEnumerable<KeyValuePair<string, ExpressionEvaluator>> assignments)
+		private static string Format(IEnumerable<FieldSetter.Assignment> assignments)
 		{
-			var sb = new StringBuilder();
-			foreach (var pair in assignments)
-			{
-				if (sb.Length > 0)
-					sb.Append(";");
-				sb.Append(pair.Key);
-				sb.Append("=");
-				sb.Append(pair.Value.Clause);
-			}
-			return sb.ToString();
+			return StringUtils.Join(";", assignments.Select(a => $"{a.FieldName}={a.Evaluator.Clause}"));
 		}
 
 		#endregion

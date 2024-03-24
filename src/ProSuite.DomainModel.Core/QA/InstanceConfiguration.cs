@@ -1,10 +1,12 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.Core.QA
 {
@@ -151,6 +153,22 @@ namespace ProSuite.DomainModel.Core.QA
 		public void ClearParameterValues()
 		{
 			_parameterValues.Clear();
+		}
+
+		public IEnumerable<TestParameterValue> GetDefinedParameterValues()
+		{
+			IInstanceInfo instanceInfo =
+				Assert.NotNull(InstanceDescriptorUtils.GetInstanceInfo(InstanceDescriptor));
+
+			IList<TestParameter> parameters = instanceInfo.Parameters;
+
+			foreach (TestParameterValue parameterValue in ParameterValues)
+			{
+				if (parameters.Any(p => p.Name == parameterValue.TestParameterName))
+				{
+					yield return parameterValue;
+				}
+			}
 		}
 
 		/// <summary>

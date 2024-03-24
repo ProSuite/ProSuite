@@ -262,6 +262,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_areaClass1BorderMatchConditionSql = value;
+				AddCustomQueryFilterExpression(value);
 				_areaClass1BorderMatchCondition = null;
 			}
 		}
@@ -274,6 +275,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_areaClass1BoundingFeatureMatchConditionSql = value;
+				AddCustomQueryFilterExpression(value);
 				_areaClass1BoundingFeatureMatchCondition = null;
 			}
 		}
@@ -286,6 +288,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_areaClass2BoundingFeatureMatchConditionSql = value;
+				AddCustomQueryFilterExpression(value);
 				_areaClass2BoundingFeatureMatchCondition = null;
 			}
 		}
@@ -298,6 +301,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_areaClass2BorderMatchConditionSql = value;
+				AddCustomQueryFilterExpression(value);
 				_areaClass2BorderMatchCondition = null;
 			}
 		}
@@ -310,6 +314,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_crossingAreaMatchConditionSql = value;
+				AddCustomQueryFilterExpression(value);
 				_crossingAreaMatchCondition = null;
 			}
 		}
@@ -322,6 +327,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_crossingAreaAttributeConstraintSql = value;
+				AddCustomQueryFilterExpression(value);
 				_crossingAreaAttributeConstraint = null;
 			}
 		}
@@ -347,6 +353,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_crossingAreaEqualAttributes = value;
+				AddCustomQueryFilterExpression(value);
 				_crossingAreaEqualFieldValuesCondition = null;
 			}
 		}
@@ -359,6 +366,13 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_crossingAreaEqualAttributeOptions = value;
+				if (value != null)
+				{
+					foreach (string option in value)
+					{
+						AddCustomQueryFilterExpression(option);
+					}
+				}
 				_crossingAreaEqualFieldValuesCondition = null;
 			}
 		}

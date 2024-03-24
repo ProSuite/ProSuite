@@ -165,7 +165,8 @@ namespace ProSuite.Microservices.Client
 			return true;
 		}
 
-		public bool CanAcceptCalls(bool allowFailOver = false)
+		public bool CanAcceptCalls(bool allowFailOver = false,
+		                           bool logOnlyIfUnhealthy = false)
 		{
 			if (! TryGetHealthClient(out Health.HealthClient healthClient))
 			{
@@ -176,7 +177,10 @@ namespace ProSuite.Microservices.Client
 
 			bool result = GrpcUtils.IsServing(healthClient, serviceName, out StatusCode statusCode);
 
-			LogHealthStatus(statusCode);
+			if (! result || ! logOnlyIfUnhealthy)
+			{
+				LogHealthStatus(statusCode);
+			}
 
 			if (! result && allowFailOver)
 			{
@@ -231,6 +235,25 @@ namespace ProSuite.Microservices.Client
 			return lbResponse.ServiceLocations.Count;
 		}
 
+		public string GetAddress()
+		{
+			string address = "<none>";
+			if (Channel?.State != ChannelState.Shutdown)
+			{
+				try
+				{
+					// In shutdown state, the ResolvedTarget property throws for certain:
+					address = Channel?.ResolvedTarget;
+				}
+				catch (Exception e)
+				{
+					_msg.Debug($"Error resolving target address for {ChannelServiceName}", e);
+				}
+			}
+
+			return address;
+		}
+
 		protected void OpenChannel(bool useTls,
 		                           string clientCertificate = null)
 		{
@@ -254,11 +277,10 @@ namespace ProSuite.Microservices.Client
 
 			if (assumeLoadBalancer)
 			{
-				_msg.Debug(
-					"Checking if the specified channel is a load-balancer channel (host is not localhost)...");
-				ChannelIsLoadBalancer =
-					IsServingLoadBalancerEndpoint(channel, credentials, ServiceName,
-					                              enoughForLargeGeometries);
+				_msg.Debug("Checking if the specified channel is a load-balancer channel " +
+				           "(because the host name is not 'localhost')...");
+				ChannelIsLoadBalancer = IsLoadBalancerEndpoint(channel, credentials, ServiceName,
+				                                               enoughForLargeGeometries);
 			}
 			else
 			{
@@ -414,12 +436,17 @@ namespace ProSuite.Microservices.Client
 			                 Path.GetFileNameWithoutExtension(executable), arguments);
 		}
 
-		private bool IsServingLoadBalancerEndpoint(
+		private bool IsLoadBalancerEndpoint(
 			[NotNull] Channel channel,
 			[NotNull] ChannelCredentials credentials,
 			string serviceName,
 			int enoughForLargeGeometries)
 		{
+			// TODO: Consider renaming to DetermineEndpointType() that directly sets both the
+			// properties IsLoadBalancer and IsServingEndpoint which can be checked during the
+			// very first actual request and, if necessary re-evaluate DetermineEndpointType().
+			// Or better, a single property (enum EndpointType {LoadBalancer,Service,Unknown}).
+			// This would make the start-up sequence more robust.
 			var channelHealth = new Health.HealthClient(channel);
 
 			bool isServingEndpoint = GrpcUtils.IsServing(channelHealth, serviceName, out _);
@@ -444,20 +471,23 @@ namespace ProSuite.Microservices.Client
 				{
 					_msg.DebugFormat("Using serving load balancer at {0} to connect to {1}",
 					                 channel.ResolvedTarget, ServiceDisplayName);
-					return true;
+				}
+				else
+				{
+					// Let's hope the load balancer will pick up a few service addresses until the first request!
+					_msg.WarnFormat(
+						"The load balancer at {0} has no service locations available for {1}. " +
+						"Unless it can pick up some service locations in the mean time, all " +
+						"requests will fail!", channel.ResolvedTarget, ServiceDisplayName);
 				}
 
-				// Assumption: A load balancer is never also serving real requests -> lets not use it at all!
-				_msg.DebugFormat(
-					"The load balancer has no service locations available for {0}. It will not be used.",
-					ServiceDisplayName);
-
-				return false;
+				return true;
 			}
 
 			_msg.DebugFormat("No {0} service and no serving load balancer at {1}. Error code: {2}",
 			                 serviceName, channel.ResolvedTarget, lbStatusCode);
 
+			// We don't know yet. However, it could be working later on (see TODO above).
 			return false;
 		}
 
@@ -510,19 +540,7 @@ namespace ProSuite.Microservices.Client
 
 		private void LogHealthStatus(StatusCode statusCode)
 		{
-			// In shutdown state, the ReslovedTarget property throws for certain:
-			string address = "<none>";
-			if (Channel?.State != ChannelState.Shutdown)
-			{
-				try
-				{
-					address = Channel?.ResolvedTarget;
-				}
-				catch (Exception e)
-				{
-					_msg.Debug($"Error resolving target address for {ChannelServiceName}", e);
-				}
-			}
+			string address = GetAddress();
 
 			_msg.DebugFormat("Health status for service {0} at {1}: {2}. Channel state: {3}",
 			                 ChannelServiceName, address, statusCode, Channel?.State);

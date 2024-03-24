@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -61,7 +63,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaNonEmptyGeometry_dontFilterPolycurvesByZeroLength))]
 			bool
 				dontFilterPolycurvesByZeroLength)
-			: base(new[] {(IReadOnlyTable) featureClass})
+			: base(new[] { (IReadOnlyTable) featureClass })
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -148,6 +150,7 @@ namespace ProSuite.QA.Tests
 			// - The operation was attempted on an empty geometry (when in SDE schema/user)
 			// when an empty geometry is encountered!
 
+			HashSet<long> processedOids = new HashSet<long>();
 			try
 			{
 				foreach (IReadOnlyRow feature in
@@ -155,20 +158,32 @@ namespace ProSuite.QA.Tests
 				{
 					errorCount += TestFeature((IReadOnlyFeature) feature);
 					previousOid = feature.OID;
+					processedOids.Add(feature.OID);
 				}
 			}
-			catch (COMException e)
+			catch (Exception e)
 			{
 				_msg.Debug($"Error getting feature from {featureClass.Name}. " +
 				           $"Previous successful object id: {previousOid}", e);
 
-				if (e.ErrorCode == -2147220959)
+				Exception inner = e;
+				while (inner != null && ! (inner is COMException))
 				{
-					_msg.Debug(
-						"Error getting feature with presumably empty geometry. Using fall-back implementation (slow) to identify object id.");
+					inner = inner.InnerException;
+				}
+
+				if (inner is COMException com)
+				{
+					string msg =
+						com.ErrorCode == -2147220959 || com.ErrorCode == -2147188959
+							? "Error getting feature with presumably empty geometry. Using fall-back implementation (slow) to identify object id."
+							: "Error getting feature. Using fall-back implementation (slow) to identify object id.";
+
+					_msg.Debug(msg);
 					tryFallbackImplementation = true;
 				}
-				else
+
+				if (! tryFallbackImplementation)
 				{
 					throw;
 				}
@@ -182,19 +197,135 @@ namespace ProSuite.QA.Tests
 			// Read all features without geometry, get geometry separately for each feature:
 			filter.SubFields = featureClass.OIDFieldName;
 
+			Stack<long> unhandledOids = new Stack<long>();
 			foreach (IReadOnlyRow feature in
 			         featureClass.EnumRows(filter, recycling))
 			{
-				try
+				if (processedOids.Add(feature.OID))
 				{
-					var featureWithGeometry = (IReadOnlyFeature) featureClass.GetRow(feature.OID);
-					Marshal.ReleaseComObject(featureWithGeometry);
+					unhandledOids.Push(feature.OID);
 				}
-				catch (Exception e)
+			}
+
+			errorCount += GetExceptionErrors(featureClass, unhandledOids);
+			return errorCount;
+		}
+
+		private class ExMsg
+		{
+			public string Msg { get; set; }
+			public long Oid { get; set; }
+		}
+
+		private class ProcessOids
+		{
+			private static readonly object _lockObj = new object();
+
+			private readonly Stack<long> _oids;
+			private readonly TaskWorkspace _tws;
+			private readonly string _fcName;
+
+			public ProcessOids(Stack<long> oids, TaskWorkspace tws, string fcName)
+			{
+				_oids = oids;
+				_tws = tws;
+				_fcName = fcName;
+			}
+
+			public List<ExMsg> GetExceptionMsgs()
+			{
+				List<ExMsg> errors = new List<ExMsg>();
+
+				IFeatureWorkspace fws = (IFeatureWorkspace) _tws.GetWorkspace();
+				IFeatureClass fc = fws.OpenFeatureClass(_fcName);
+
+				IQueryFilter filter = new QueryFilterClass();
+				filter.AddField(fc.OIDFieldName);
+				filter.AddField(fc.ShapeFieldName);
+				while (true)
+				{
+					HashSet<long> oids = new HashSet<long>();
+					lock (_lockObj)
+					{
+						while (oids.Count < 1000)
+						{
+							if (_oids.Count <= 0)
+							{
+								break;
+							}
+
+							oids.Add(_oids.Pop());
+						}
+					}
+
+					if (oids.Count <= 0)
+					{
+						return errors;
+					}
+
+					try
+					{
+						foreach (var row in GdbQueryUtils.GetRowsInList(
+							         (ITable) fc, fc.OIDFieldName, oids, recycle: false, filter))
+						{
+							oids.Remove(row.OID);
+						}
+					}
+					catch
+					{
+						ReadOnlyFeatureClass ro = ReadOnlyTableFactory.Create(fc);
+						foreach (long oid in oids)
+						{
+							try
+							{
+								if (ro.GetRow(oid) is ReadOnlyFeature featureWithGeometry)
+								{
+									Marshal.ReleaseComObject(featureWithGeometry.BaseRow);
+								}
+							}
+							catch (Exception e)
+							{
+								errors.Add(new ExMsg { Msg = e.Message, Oid = oid });
+							}
+						}
+					}
+				}
+			}
+		}
+
+		private int GetExceptionErrors(
+			[NotNull] IReadOnlyFeatureClass gdbFeatureClass,
+			[NotNull] Stack<long> oids,
+			int taskCount = -1)
+		{
+			TaskWorkspace tws = new TaskWorkspace(gdbFeatureClass.Workspace);
+
+			List<ExMsg>[] exceptionMsgsArray;
+			if (taskCount > 1)
+			{
+				List<Task<List<ExMsg>>> tasks = new List<Task<List<ExMsg>>>();
+				for (int iTask = 0; iTask < taskCount; iTask++)
+				{
+					ProcessOids proc = new ProcessOids(oids, tws, gdbFeatureClass.Name);
+					tasks.Add(Task.Run(() => proc.GetExceptionMsgs()));
+				}
+
+				exceptionMsgsArray = Task.WhenAll(tasks).Result;
+			}
+			else
+			{
+				ProcessOids proc = new ProcessOids(oids, tws, gdbFeatureClass.Name);
+				exceptionMsgsArray = new[] { proc.GetExceptionMsgs() };
+			}
+
+			int errorCount = 0;
+			foreach (var errorMsgs in exceptionMsgsArray)
+			{
+				foreach (ExMsg exMsg in errorMsgs)
 				{
 					errorCount += ReportError(
-						$"Feature geometry cannot be loaded ({e.Message})",
-						InvolvedRowUtils.GetInvolvedRows(feature),
+						$"Feature geometry cannot be loaded ({exMsg.Msg})",
+						new InvolvedRows { new InvolvedRow(gdbFeatureClass.Name, exMsg.Oid) },
 						null, Codes[Code.GeometryEmpty], _shapeFieldName);
 				}
 			}
@@ -235,7 +366,7 @@ namespace ProSuite.QA.Tests
 						               _dontFilterPolycurvesByZeroLength)
 				};
 
-			var subfields = new List<string> {_shapeFieldName};
+			var subfields = new List<string> { _shapeFieldName };
 			if (featureClass.HasOID)
 			{
 				subfields.Add(featureClass.OIDFieldName);

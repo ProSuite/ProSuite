@@ -7,6 +7,7 @@ using ESRI.ArcGIS.GeoDatabaseExtensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -258,6 +259,68 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] string name)
 		{
 			return (IObjectClass) OpenTable(featureWorkspace, name);
+		}
+
+		[CanBeNull]
+		public static IObjectClass TryOpenObjectClass(
+			[NotNull] IWorkspace workspace,
+			[NotNull] string featureClassName,
+			out string message)
+		{
+			message = null;
+
+			string errorPrefix =
+				$"Cannot open feature class {featureClassName} in workspace {workspace.PathName}";
+
+			IObjectClass objectClass = null;
+
+			try
+			{
+				objectClass = OpenObjectClass((IFeatureWorkspace) workspace, featureClassName);
+			}
+			catch (COMException comException)
+			{
+				string error = Enum.GetName(typeof(fdoError), comException.ErrorCode);
+
+				message = $"{errorPrefix}: {error}";
+				_msg.Debug(message, comException);
+			}
+			catch (Exception e)
+			{
+				message = errorPrefix;
+				_msg.Debug(message, e);
+			}
+
+			return objectClass;
+		}
+
+		[CanBeNull]
+		public static IObjectClass TryOpenObjectClass([NotNull] string catalogPath,
+		                                              out string message)
+		{
+			string workspaceCatalogPath =
+				GetGdbWorkspaceCatalogPath(catalogPath, out _, out string featureClassName);
+
+			if (workspaceCatalogPath == null)
+			{
+				message =
+					$"{catalogPath} does not contain a supported workspace or is not a valid catalog path.";
+
+				return null;
+			}
+
+			IWorkspace workspace =
+				WorkspaceUtils.TryOpenWorkspace(workspaceCatalogPath, out message);
+
+			if (workspace == null)
+			{
+				message =
+					$"{catalogPath} does not contain a supported workspace or is not a valid catalog path.";
+
+				return null;
+			}
+
+			return TryOpenObjectClass(workspace, Assert.NotNull(featureClassName), out message);
 		}
 
 		[CanBeNull]
@@ -527,7 +590,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 				if (string.IsNullOrEmpty(ownerName))
 				{
 					// no owner part in search name, compare only the table name
-					if (string.Compare(GetTableName(workspace, datasetName.Name), name,
+					string tableName = GetTableName(workspace, datasetName.Name);
+
+					if (string.Compare(tableName, name,
 					                   StringComparison.OrdinalIgnoreCase) == 0)
 					{
 						return datasetName;
@@ -586,22 +651,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 					esriFeatureType.esriFTSimple,
 					shapeFieldName ?? FieldUtils.GetShapeFieldName(), configKeyWord);
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
-				try
+				LogCreateFeatureClassParameters(workspace, fclassName, fields, configKeyWord);
+
+				if (e is COMException comEx &&
+				    comEx.ErrorCode == (int) fdoError.FDO_E_TABLE_ALREADY_EXISTS)
 				{
-					_msg.DebugFormat("Error creating feature class '{0}'", fclassName);
-					_msg.DebugFormat("Workspace: {0}", WorkspaceUtils.GetConnectionString(
-						                 (IWorkspace) workspace, true));
-					_msg.DebugFormat("Config keyword: {0}", configKeyWord ?? "<null>");
-					LogFields(fields);
-				}
-				catch (Exception e)
-				{
-					_msg.Debug("Error writing to log", e);
+					throw new DataException(
+						$"Error creating feature class '{fclassName}' because it already exists.",
+						comEx);
 				}
 
-				throw new Exception($"Error creating feature class '{fclassName}'", ex);
+				throw new Exception($"Error creating feature class '{fclassName}'", e);
 			}
 		}
 
@@ -970,10 +1032,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				sqlSyntax.ParseTableName(fullTableName, out _, out _, out tableName);
 			}
-			else
+			else if (workspace.Type == esriWorkspaceType.esriRemoteDatabaseWorkspace)
 			{
 				// Virtual workspace, such as GdbWorkspace
 				tableName = ModelElementNameUtils.GetUnqualifiedName(fullTableName);
+			}
+			else
+			{
+				// TOP-5790: Shapefiles, rasters or something else. Do not un-qualify names potentially containing a dot.
+				tableName = fullTableName;
 			}
 
 			return tableName;
@@ -1225,7 +1292,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (workspace is ISQLSyntax sqlWorkspace)
 			{
-				return sqlWorkspace.QualifyColumnName(table.Name, unqualifiedFieldName);
+				string result = sqlWorkspace.QualifyColumnName(table.Name, unqualifiedFieldName);
+
+				return result;
 			}
 
 			return $"{table.Name}.{unqualifiedFieldName}";
@@ -1452,6 +1521,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(featureWorkspace, nameof(featureWorkspace));
 			Assert.ArgumentNotNull(datasetTypes, nameof(datasetTypes));
 
+			// This is very slow for workspaces with many datasets. Either it should be cached
+			// or we can replace it by only searching for the required datasets
 			IList<IDatasetName> featureDatasetNames =
 				GetFeatureDatasetNames((IWorkspace) featureWorkspace, owner).ToList();
 
@@ -1577,6 +1648,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			try
 			{
+				if (_msg.IsVerboseDebugEnabled)
+				{
+					_msg.VerboseDebug(
+						() => $"Getting dataset names of type {datasetType} in " +
+						      $"{WorkspaceUtils.GetWorkspaceDisplayText(workspace)}");
+				}
+
 				return workspace.DatasetNames[datasetType];
 			}
 			catch (Exception exception)
@@ -1643,7 +1721,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		/// <summary>
-		/// Gets the feature classes in a feature class container.
+		/// Gets the feature classes in a feature class container (e.g. feature dataset or topology)
 		/// </summary>
 		/// <param name="featureClassContainer">The feature class container.</param>
 		/// <returns></returns>
@@ -1655,21 +1733,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			IEnumFeatureClass enumFeatureClass = featureClassContainer.Classes;
 
-			return GetFeatureClasses(enumFeatureClass);
-		}
-
-		[NotNull]
-		public static IEnumerable<IFeatureClass> GetFeatureClasses(
-			[NotNull] IEnumFeatureClass enumFeatureClass)
-		{
 			enumFeatureClass.Reset();
 
-			IFeatureClass featureClass = enumFeatureClass.Next();
-			while (featureClass != null)
+			IFeatureClass featureClass;
+			while ((featureClass = enumFeatureClass.Next()) != null)
 			{
 				yield return featureClass;
-
-				featureClass = enumFeatureClass.Next();
 			}
 		}
 
@@ -1950,6 +2019,27 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return -1;
+		}
+
+		public static bool AreSameObjectClass(IEnumerable<IObjectClass> objectClasses)
+		{
+			IObjectClass first = null;
+			foreach (IObjectClass objectClass in objectClasses)
+			{
+				if (first == null)
+				{
+					first = objectClass;
+				}
+				else
+				{
+					if (! IsSameObjectClass(first, objectClass))
+					{
+						return false;
+					}
+				}
+			}
+
+			return true;
 		}
 
 		/// <summary>
@@ -4211,6 +4301,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return Directory.Exists(catalogPath);
+		}
+
+		private static void LogCreateFeatureClassParameters(IFeatureWorkspace workspace,
+		                                                    string fclassName,
+		                                                    IFields fields,
+		                                                    string configKeyWord)
+		{
+			try
+			{
+				_msg.DebugFormat("Error creating feature class '{0}'", fclassName);
+				_msg.DebugFormat("Workspace: {0}", WorkspaceUtils.GetConnectionString(
+					                 (IWorkspace) workspace, true));
+				_msg.DebugFormat("Config keyword: {0}", configKeyWord ?? "<null>");
+				LogFields(fields);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug("Error writing to log", e);
+			}
 		}
 
 		#endregion

@@ -53,7 +53,7 @@ namespace ProSuite.DdxEditor.Content.DatasetCategories
 			IItemNavigation itemNavigation)
 		{
 			var control = new DatasetCategoryControl();
-			new DatasetCategoryPresenter(control, this);
+			new DatasetCategoryPresenter(this, control);
 			return control;
 		}
 

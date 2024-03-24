@@ -23,7 +23,7 @@ namespace ProSuite.Commons.UI.WPF
 		/// Converts a boolean value to a SolidColorBrush. This can be used for example to enable
 		/// and disable text.
 		/// </summary>
-		/// <param name="value">Bolean value controlling which color should be returned.</param>
+		/// <param name="value">Boolean value controlling which color should be returned.</param>
 		/// <param name="targetType"></param>
 		/// <param name="parameter">A string in the format [ColorNameIfTrue;ColorNameIfFalse;OpacityNumber]
 		/// may be provided for customization, default is [LimeGreen;Red;1.0].</param>

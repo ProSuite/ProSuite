@@ -6,6 +6,12 @@ namespace ProSuite.DomainModel.AGP.QA
 	{
 		public static readonly IList<string> IssueFeatureClassNames =
 			new List<string>
-			{"IssuePoints", "IssueLines", "IssuePolygons", "IssueMultiPatches", "IssueRows"};
+			{
+				"IssuePoints",
+				"IssueLines",
+				"IssuePolygons",
+				"IssueMultiPatches",
+				"IssueRows"
+			};
 	}
 }

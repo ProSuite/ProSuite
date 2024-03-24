@@ -64,6 +64,7 @@ namespace ProSuite.QA.Tests
 			_validRelationConstraintSql = StringUtils.IsNotEmpty(validRelationConstraint)
 				                              ? validRelationConstraint
 				                              : null;
+			AddCustomQueryFilterExpression(validRelationConstraint);
 			_geometryComponents = new ReadOnlyList<GeometryComponent>(
 				featureClasses.Select(_ => GeometryComponent.EntireGeometry)
 				              .ToList());

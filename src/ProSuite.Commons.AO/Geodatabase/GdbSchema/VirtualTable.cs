@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.GeoDb;
 using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -14,10 +15,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		protected VirtualFeatureClass(string name) : base(name) { }
 
 #if Server11
+		long IFeatureClass.FeatureCount(IQueryFilter queryFilter) => TableRowCount(queryFilter);
 		long IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => TableRowCount(QueryFilter);
-#else
-		int IFeatureClass.FeatureCount(IQueryFilter QueryFilter) =>
-			(int) TableRowCount(QueryFilter);
+		int IFeatureClass.FeatureCount(IQueryFilter queryFilter) =>
+			(int) TableRowCount(queryFilter);
+		int IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => (int)TableRowCount(QueryFilter);
 #endif
 
 		IFeatureCursor IFeatureClass.Search(IQueryFilter filter, bool recycling) =>
@@ -263,24 +265,24 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual IRowBuffer CreateRowBuffer() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void ITable.UpdateSearchedRows(IQueryFilter QueryFilter, IRowBuffer buffer) =>
-			UpdateSearchedRows(QueryFilter, buffer);
+		void ITable.UpdateSearchedRows(IQueryFilter queryFilter, IRowBuffer buffer) =>
+			UpdateSearchedRows(queryFilter, buffer);
 
-		public virtual void UpdateSearchedRows(IQueryFilter QueryFilter, IRowBuffer buffer) =>
+		public virtual void UpdateSearchedRows(IQueryFilter queryFilter, IRowBuffer buffer) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		void ITable.DeleteSearchedRows(IQueryFilter QueryFilter) =>
 			DeleteSearchedRows(QueryFilter);
 
-		public virtual void DeleteSearchedRows(IQueryFilter QueryFilter) =>
+		public virtual void DeleteSearchedRows(IQueryFilter queryFilter) =>
 			throw new NotImplementedException("Implement in derived class");
 
 #if Server11
-		long ITable.RowCount(IQueryFilter QueryFilter) => TableRowCount(QueryFilter);
-#else
-		int ITable.RowCount(IQueryFilter QueryFilter) => (int) TableRowCount(QueryFilter);
+		long ITable.RowCount(IQueryFilter queryFilter) => TableRowCount(queryFilter);
+		int ITable.RowCount(IQueryFilter queryFilter) => (int) TableRowCount(queryFilter);
+		int ITable.RowCount(IQueryFilter QueryFilter) => (int)TableRowCount(QueryFilter);
 #endif
-		protected virtual long TableRowCount(IQueryFilter QueryFilter) =>
+		protected virtual long TableRowCount([CanBeNull] IQueryFilter queryFilter) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		public virtual long RowCount(ITableFilter filter) =>
@@ -307,34 +309,35 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return false;
 		}
 
-		ICursor ITable.Search(IQueryFilter QueryFilter, bool Recycling) =>
-			SearchT(QueryFilter, Recycling);
-
-		protected virtual IFeatureCursor FeatureClassSearch(IQueryFilter queryFilter,
+		ICursor ITable.Search([CanBeNull] IQueryFilter queryFilter, bool Recycling) =>
+			SearchT(queryFilter, Recycling);
+		protected virtual IFeatureCursor FeatureClassSearch([CanBeNull] IQueryFilter queryFilter,
 		                                                    bool recycling) =>
+		protected virtual IFeatureCursor FeatureClassSearch(IQueryFilter queryFilter, bool recycling) =>
 			SearchT(queryFilter, recycling);
 
-		protected virtual CursorImpl SearchT(IQueryFilter queryFilter, bool recycling) =>
+		protected virtual CursorImpl
+			SearchT([CanBeNull] IQueryFilter queryFilter, bool recycling) =>
 			new CursorImpl(this, EnumRows(queryFilter, recycling));
 
 		protected virtual IEnumerable<IRow>
-			EnumRows(IQueryFilter queryFilter, bool recycling) =>
+			EnumRows([CanBeNull] IQueryFilter queryFilter, bool recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IEnumerable<IReadOnlyRow> IReadOnlyTable.EnumRows(ITableFilter filter, bool recycling)
 			=> EnumReadOnlyRows(filter, recycling);
 
 		public virtual IEnumerable<IReadOnlyRow>
-			EnumReadOnlyRows(ITableFilter queryFilter, bool recycling) =>
+			EnumReadOnlyRows([CanBeNull] ITableFilter queryFilter, bool recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		ICursor ITable.Update(IQueryFilter QueryFilter, bool Recycling) =>
-			UpdateT(QueryFilter, Recycling);
+		ICursor ITable.Update(IQueryFilter queryFilter, bool Recycling) =>
+			UpdateT(queryFilter, Recycling);
 
-		public virtual IFeatureCursor Update(IQueryFilter QueryFilter, bool Recycling) =>
-			(IFeatureCursor) UpdateT(QueryFilter, Recycling);
+		public virtual IFeatureCursor Update(IQueryFilter queryFilter, bool Recycling) =>
+			(IFeatureCursor) UpdateT(queryFilter, Recycling);
 
-		public virtual ICursor UpdateT(IQueryFilter QueryFilter, bool Recycling) =>
+		public virtual ICursor UpdateT(IQueryFilter queryFilter, bool Recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ICursor ITable.Insert(bool useBuffering) => InsertT(useBuffering);
@@ -345,11 +348,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual ICursor InsertT(bool useBuffering) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		ISelectionSet ITable.Select(IQueryFilter QueryFilter, esriSelectionType selType,
+		ISelectionSet ITable.Select(IQueryFilter queryFilter, esriSelectionType selType,
 		                            esriSelectionOption selOption, IWorkspace selectionContainer) =>
-			Select(QueryFilter, selType, selOption, selectionContainer);
+			Select(queryFilter, selType, selOption, selectionContainer);
 
-		public virtual ISelectionSet Select(IQueryFilter QueryFilter,
+		public virtual ISelectionSet Select(IQueryFilter queryFilter,
 		                                    esriSelectionType selType,
 		                                    esriSelectionOption selOption,
 		                                    IWorkspace selectionContainer) =>
@@ -392,7 +395,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual int FeatureClassID =>
 			throw new NotImplementedException("Implement in derived class");
 
-		public virtual esriGeometryType ShapeType => GeometryDef.GeometryType;
+		public virtual esriGeometryType ShapeType =>
+			GeometryDef?.GeometryType ?? esriGeometryType.esriGeometryNull;
 
 		public virtual IGeometryDef GeometryDef
 		{

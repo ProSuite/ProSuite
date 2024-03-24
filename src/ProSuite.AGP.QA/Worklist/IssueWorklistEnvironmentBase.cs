@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Internal.CIM;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
@@ -12,10 +14,13 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.GP;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.QA.WorkList
 {
@@ -53,6 +58,8 @@ namespace ProSuite.AGP.QA.WorkList
 				return false;
 			}
 
+			Stopwatch watch = Stopwatch.StartNew();
+
 			using (Geodatabase geodatabase =
 			       new Geodatabase(
 				       new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)))
@@ -75,103 +82,193 @@ namespace ProSuite.AGP.QA.WorkList
 				GeoprocessingUtils.AddCodedValueToDomainAsync(
 					_path, _domainName, (int) IssueCorrectionStatus.Corrected, "Corrected"));
 
+			_msg.DebugStopTiming(watch, "Prepared schema - domain");
+
 			return true;
 		}
 
-		public override IEnumerable<BasicFeatureLayer> LoadLayers()
+		public override void LoadAssociatedLayers()
 		{
-			return GetLayersCore(GetFeatureClassesCore());
+			AddToMapCore(GetTablesCore());
 		}
 
-		protected override ILayerContainerEdit GetContainer()
+		public override void RemoveAssociatedLayers()
+		{
+			RemoveFromMapCore(GetTablesCore());
+		}
+
+		protected override T GetContainerCore<T>()
 		{
 			var groupLayerName = "QA";
 
 			GroupLayer groupLayer = MapView.Active.Map.FindLayers(groupLayerName)
 			                               .OfType<GroupLayer>().FirstOrDefault();
 
-			return groupLayer ??
-			       LayerFactory.Instance.CreateGroupLayer(MapView.Active.Map, 0, groupLayerName);
-		}
-
-		protected override IEnumerable<BasicFeatureLayer> GetLayersCore(
-			IEnumerable<FeatureClass> featureClasses)
-		{
-			ILayerContainerEdit layerContainer = GetContainer();
-
-			if (layerContainer == null)
+			if (groupLayer == null)
 			{
-				return Enumerable.Empty<BasicFeatureLayer>();
+				_msg.DebugFormat("Creating new group layer {0}", groupLayerName);
+				return
+					LayerFactory.Instance.CreateGroupLayer(
+						MapView.Active.Map, 0, groupLayerName) as T;
 			}
 
-			return featureClasses.Select(fc =>
+			return groupLayer as T;
+		}
+
+		protected override void AddToMapCore(IEnumerable<Table> tables)
+		{
+			var groupLayer = GetContainerCore<GroupLayer>();
+
+			foreach (var table in tables)
 			{
-				FeatureLayer featureLayer =
-					LayerFactory.Instance.CreateFeatureLayer(fc, layerContainer);
+				_msg.DebugFormat("Adding table {0} to map...", table.GetName());
 
-				featureLayer.SetExpanded(false);
-				featureLayer.SetVisibility(false);
-
-				// TODO: Support lyrx files as symbol layers.
-				// So far, just make the symbols red:
-				CIMSimpleRenderer renderer = featureLayer.GetRenderer() as CIMSimpleRenderer;
-
-				if (renderer != null)
+				if (table is FeatureClass fc)
 				{
-					CIMSymbolReference symbol = renderer.Symbol;
-					symbol.Symbol.SetColor(new CIMRGBColor() { R = 250 });
-					featureLayer.SetRenderer(renderer);
+					FeatureLayer featureLayer =
+						LayerFactory.Instance.CreateLayer<FeatureLayer>(
+							new FeatureLayerCreationParams(fc), groupLayer);
+
+					if (featureLayer == null)
+					{
+						_msg.DebugFormat("Created layer is null! Trying again...");
+						Thread.Sleep(500);
+						featureLayer =
+							LayerFactory.Instance.CreateLayer<FeatureLayer>(
+								new FeatureLayerCreationParams(fc), groupLayer);
+					}
+
+					// See DPS/#80: Sometimes a non-reproducible null layer results from the previous method.
+					Assert.NotNull(featureLayer,
+					               $"The feature layer for {table.GetName()} could not be created. Please try again.");
+
+					featureLayer.SetExpanded(false);
+					featureLayer.SetVisibility(false);
+
+					// TODO: Support lyrx files as symbol layers.
+					// So far, just make the symbols red:	
+					CIMSimpleRenderer renderer = featureLayer.GetRenderer() as CIMSimpleRenderer;
+
+					if (renderer != null)
+					{
+						CIMSymbolReference symbol = renderer.Symbol;
+						symbol.Symbol.SetColor(new CIMRGBColor() { R = 250 });
+						featureLayer.SetRenderer(renderer);
+					}
+
+					continue;
 				}
 
-				return featureLayer;
+				StandaloneTableFactory.Instance.CreateStandaloneTable(
+					new StandaloneTableCreationParams(table), groupLayer);
+			}
+		}
+
+		protected void RemoveFromMapCore(IEnumerable<Table> tables)
+		{
+			GroupLayer groupLayer = GetContainerCore<GroupLayer>();
+
+			var tableList = tables.ToList();
+
+			var layersToRemove = new List<MapMember>();
+			foreach (MapMember basicFeatureLayer in GetAssociatedLayers(groupLayer, tableList))
+			{
+				layersToRemove.Add(basicFeatureLayer);
+			}
+
+			QueuedTask.Run(() =>
+			{
+				Map activeMap = MapUtils.GetActiveMap();
+
+				activeMap.RemoveLayers(layersToRemove
+				                       .Where(mm => mm is Layer)
+				                       .Cast<Layer>());
+
+				activeMap.RemoveStandaloneTables(layersToRemove
+				                                 .Where(mm => mm is StandaloneTable)
+				                                 .Cast<StandaloneTable>());
 			});
 		}
 
-		protected override IEnumerable<FeatureClass> GetFeatureClassesCore()
+		private static IEnumerable<MapMember> GetAssociatedLayers(
+			[NotNull] GroupLayer groupLayer,
+			[NotNull] List<Table> associatedTables)
 		{
-			if (string.IsNullOrEmpty(_path))
+			foreach (Layer layer in groupLayer.Layers)
 			{
-				yield break;
+				if (layer is not BasicFeatureLayer featureLayer)
+				{
+					continue;
+				}
+
+				FeatureClass layerClass = featureLayer.GetFeatureClass();
+
+				foreach (Table table in associatedTables)
+				{
+					if (DatasetUtils.IsSameTable(table, layerClass))
+					{
+						yield return featureLayer;
+					}
+				}
 			}
 
-			// todo daro: ensure layers are not already in map
-			using (Geodatabase geodatabase =
-			       new Geodatabase(
-				       new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute))))
+			foreach (StandaloneTable standaloneTable in groupLayer.StandaloneTables)
 			{
-				IEnumerable<string> featureClassNames =
-					geodatabase.GetDefinitions<FeatureClassDefinition>()
-					           .Select(definition => definition.GetName())
-					           .Where(name => IssueGdbSchema.IssueFeatureClassNames.Contains(name));
+				Table table = standaloneTable.GetTable();
 
-				foreach (string featureClassName in featureClassNames)
+				if (associatedTables.Any(t => DatasetUtils.IsSameTable(t, table)))
 				{
-					var featureClass = geodatabase.OpenDataset<FeatureClass>(featureClassName);
-
-					yield return featureClass;
+					yield return standaloneTable;
 				}
 			}
 		}
 
-		protected override async Task<FeatureClass> EnsureStatusFieldCoreAsync(
-			FeatureClass featureClass)
+		// todo daro to DatasetUtils?
+		protected override IEnumerable<Table> GetTablesCore()
+		{
+			if (string.IsNullOrEmpty(_path))
+			{
+				return Enumerable.Empty<Table>();
+			}
+
+			// todo daro: ensure layers are not already in map
+			// todo daro: inline
+			using Geodatabase geodatabase =
+				new Geodatabase(
+					new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)));
+
+			return DatasetUtils.OpenTables(geodatabase, IssueGdbSchema.IssueFeatureClassNames)
+			                   .ToList();
+		}
+
+		protected override async Task<Table> EnsureStatusFieldCoreAsync(Table table)
 		{
 			const string fieldName = "STATUS";
 
-			string path = featureClass.GetPath().LocalPath;
+			Stopwatch watch = Stopwatch.StartNew();
+
+			string path = table.GetPath().LocalPath;
 
 			// the GP tool is not going to fail on adding a field with the same name
-			Task<bool> addField =
-				GeoprocessingUtils.AddFieldAsync(path, fieldName, "Status",
-				                                 esriFieldType.esriFieldTypeInteger, null, null,
-				                                 null, true, false, _domainName);
+			// But it still takes hell of a long time...
+			TableDefinition tableDefinition = table.GetDefinition();
 
-			Task<bool> assignDefaultValue =
-				GeoprocessingUtils.AssignDefaultToFieldAsync(path, fieldName, 100);
+			if (tableDefinition.FindField(fieldName) < 0)
+			{
+				Task<bool> addField =
+					GeoprocessingUtils.AddFieldAsync(path, fieldName, "Status",
+					                                 FieldType.Integer, null, null,
+					                                 null, true, false, _domainName);
 
-			await Task.WhenAll(addField, assignDefaultValue);
+				Task<bool> assignDefaultValue =
+					GeoprocessingUtils.AssignDefaultToFieldAsync(path, fieldName, 100);
 
-			return featureClass;
+				await Task.WhenAll(addField, assignDefaultValue);
+
+				_msg.DebugStopTiming(watch, "Prepared schema - status field on {0}", path);
+			}
+
+			return table;
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
@@ -189,11 +286,15 @@ namespace ProSuite.AGP.QA.WorkList
 		}
 
 		protected override IWorkItemRepository CreateItemRepositoryCore(
-			IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository)
+			IEnumerable<Table> tables, IRepository stateRepository)
 		{
-			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(featureLayers);
+			Stopwatch watch = Stopwatch.StartNew();
 
-			return new IssueItemRepository(tables, stateRepository);
+			var result = new IssueItemRepository(tables.Distinct(), stateRepository);
+
+			_msg.DebugStopTiming(watch, "Created issue work item repository");
+
+			return result;
 		}
 	}
 }

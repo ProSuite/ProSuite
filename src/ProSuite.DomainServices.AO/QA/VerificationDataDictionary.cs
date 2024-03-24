@@ -19,17 +19,18 @@ namespace ProSuite.DomainServices.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull] private readonly IDomainTransactionManager _domainTransactions;
 		[NotNull] private readonly IQualitySpecificationRepository _qualitySpecifications;
+		[NotNull] private readonly IQualityConditionRepository _qualityConditions;
 		[NotNull] private readonly IProjectRepository<TModel> _projects;
 
 		public VerificationDataDictionary(
 			[NotNull] IDomainTransactionManager domainTransactions,
 			[NotNull] IQualitySpecificationRepository qualitySpecifications,
+			[NotNull] IQualityConditionRepository qualityConditions,
 			[NotNull] IProjectRepository<TModel> projects)
 		{
-			_domainTransactions = domainTransactions;
 			_qualitySpecifications = qualitySpecifications;
+			_qualityConditions = qualityConditions;
 			_projects = projects;
 		}
 
@@ -43,15 +44,11 @@ namespace ProSuite.DomainServices.AO.QA
 
 			var allProjectWorkspaces = new List<ProjectWorkspace>();
 
-			_domainTransactions.UseTransaction(
-				() =>
-				{
-					foreach (var kvp in GetProjectContentByWorkspaceTx(
-						         classesByWorkspace))
-					{
-						allProjectWorkspaces.AddRange(kvp.Value);
-					}
-				});
+			foreach (var kvp in GetProjectContentByWorkspaceTx(
+				         classesByWorkspace))
+			{
+				allProjectWorkspaces.AddRange(kvp.Value);
+			}
 
 			foreach (ProjectWorkspace projectWorkspace in allProjectWorkspaces)
 			{
@@ -61,16 +58,32 @@ namespace ProSuite.DomainServices.AO.QA
 			return result;
 		}
 
+		public QualityCondition GetQualityCondition(string conditionName)
+		{
+			return _qualityConditions.Get(conditionName);
+		}
+
 		public IList<QualitySpecification> GetQualitySpecifications(
 			IList<int> datasetIds,
 			bool includeHidden)
 		{
-			IList<QualitySpecification> result = null;
-
-			_domainTransactions.UseTransaction(
-				() => { result = _qualitySpecifications.Get(datasetIds, ! includeHidden); });
+			IList<QualitySpecification> result =
+				_qualitySpecifications.Get(datasetIds, ! includeHidden);
 
 			return result ?? new List<QualitySpecification>(0);
+		}
+
+		public QualitySpecification GetQualitySpecification(int qualitySpecificationId)
+		{
+			QualitySpecification result = _qualitySpecifications.Get(qualitySpecificationId);
+
+			if (result != null)
+			{
+				// The parameters must be initialized!
+				InstanceConfigurationUtils.InitializeParameterValues(result);
+			}
+
+			return result;
 		}
 
 		[NotNull]

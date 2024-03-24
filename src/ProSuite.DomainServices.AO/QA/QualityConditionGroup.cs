@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 
@@ -20,5 +22,16 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		public IDictionary<QualityCondition, IList<ITest>> QualityConditions { get; }
+
+		#region Overrides of Object
+
+		public override string ToString()
+		{
+			return
+				$"{ExecType} quality condition group containing:{Environment.NewLine}" +
+				$"{StringUtils.Concatenate(QualityConditions.Keys, c => c.Name, Environment.NewLine)}";
+		}
+
+		#endregion
 	}
 }

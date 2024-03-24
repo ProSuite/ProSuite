@@ -6,10 +6,9 @@ using System.Windows.Forms;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
-using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
-using ProSuite.Commons.AGP;
+using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
@@ -22,12 +21,11 @@ using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.UI.QA.VerificationProgress;
-using Button = ArcGIS.Desktop.Framework.Contracts.Button;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
-	public abstract class VerifyLastCmdBase : Button
+	public abstract class VerifyLastCmdBase : ButtonCommandBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -46,28 +44,28 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
-		protected abstract IProSuiteFacade ProSuiteImpl { get; }
+		protected abstract IWorkListOpener WorkListOpener { get; }
 
-		protected override void OnClick()
+		protected override Task<bool> OnClickCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
 			{
 				MessageBox.Show("No quality verification environment is configured.",
 				                "Verify Last", MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				return Task.FromResult(false);
 			}
 
 			IQualityVerificationEnvironment qaEnvironment =
 				Assert.NotNull(SessionContext.VerificationEnvironment);
 
 			IQualitySpecificationReference qualitySpecification =
-				qaEnvironment.CurrentQualitySpecification;
+				qaEnvironment.CurrentQualitySpecificationReference;
 
 			if (qualitySpecification == null)
 			{
 				MessageBox.Show("No Quality Specification is selected", "Verify Last",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				return Task.FromResult(false);
 			}
 
 			Geometry perimeter = qaEnvironment.LastVerificationPerimeter;
@@ -76,14 +74,14 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				MessageBox.Show("No last verification perimeter", "Verify Last",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				return Task.FromResult(false);
 			}
 
 			if (KeyboardUtils.IsModifierPressed(Keys.Alt, exclusive: true))
 			{
 				ZoomTo(perimeter);
 
-				return;
+				return Task.FromResult(true);
 			}
 
 			var progressTracker = new QualityVerificationProgressTracker
@@ -91,13 +89,12 @@ namespace ProSuite.AGP.QA.ProPlugins
 				                      CancellationTokenSource = new CancellationTokenSource()
 			                      };
 
-			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification,
-			                                                Project.Current.HomeFolderPath);
+			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController =
-				new AgpBackgroundVerificationController(ProSuiteImpl, MapView.Active, perimeter,
+				new AgpBackgroundVerificationController(WorkListOpener, MapView.Active, perimeter,
 				                                        spatialRef);
 
 			var qaProgressViewmodel =
@@ -108,12 +105,14 @@ namespace ProSuite.AGP.QA.ProPlugins
 					ApplicationController = appController
 				};
 
-			string actionTitle = "Verify Last";
+			string actionTitle = $"{qualitySpecification.Name}: Verify Last Perimeter";
 
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
 			                               qaEnvironment.BackendDisplayName, actionTitle);
+
+			return Task.FromResult(true);
 		}
 
 		private async Task<ServiceCallStatus> Verify(
@@ -131,22 +130,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return qaEnvironment.VerifyPerimeter(
-							perimeter, progressTracker, resultsPath);
+							perimeter, progressTracker, "last extent", resultsPath);
 					},
 					BackgroundProgressor.None);
 
 			ServiceCallStatus result = await verificationTask;
-
-			if (result == ServiceCallStatus.Finished)
-			{
-				_msg.InfoFormat(
-					"Successfully finished extent verification. The results have been saved in {0}",
-					resultsPath);
-			}
-			else
-			{
-				_msg.WarnFormat("Extent verification was not finished. Status: {0}", result);
-			}
 
 			return result;
 		}

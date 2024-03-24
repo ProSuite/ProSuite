@@ -34,6 +34,9 @@ namespace ProSuite.DomainModel.AO.Workflow
 		[NotNull]
 		public IWorkspace Workspace { get; }
 
+		public bool IsModelMasterDatabase =>
+			ModelContextUtils.IsModelDefaultDatabase(Workspace, Project.ProductionModel);
+
 		[NotNull]
 		public IList<Dataset> Datasets => _datasets;
 

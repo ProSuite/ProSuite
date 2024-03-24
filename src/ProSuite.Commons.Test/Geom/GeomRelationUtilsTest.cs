@@ -293,6 +293,65 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanDetermineMultipartSourcePolygonTouchingPolygonAtInnerRingTouchPoint()
+		{
+			// A touching interior ring (no boundary loop) should not result in an incorrect
+			// determination of contains:
+			//      ___
+			//      \  | target
+			//       \ |
+			//        \|
+			//    _____*_______ 
+			//    |   /|      |
+			//    | 1/ |   0  |
+			//    | /__|      |
+			//    |___________|
+			//     source rings with interior ring 1 touching ring 0 from the inside.
+
+			var source0Points = new List<Pnt3D>
+			                    {
+				                    new Pnt3D(0, 0, 10),
+				                    new Pnt3D(0, 100, 20),
+				                    new Pnt3D(100, 100, 10),
+				                    new Pnt3D(100, 0, 10),
+				                    new Pnt3D(0, 0, 10)
+			                    };
+
+			Linestring source0 = new Linestring(source0Points);
+
+			var source1Points = new List<Pnt3D>
+			                    {
+				                    new Pnt3D(50, 100, 10),
+				                    new Pnt3D(25, 20, 20),
+				                    new Pnt3D(50, 20, 10),
+				                    new Pnt3D(50, 100, 10)
+			                    };
+			Linestring source1 = new Linestring(source1Points);
+
+			var targetPoints = new List<Pnt3D>()
+			                   {
+				                   new Pnt3D(50, 100, 10),
+				                   new Pnt3D(30, 150, 20),
+				                   new Pnt3D(50, 150, 10),
+				                   new Pnt3D(50, 100, 10),
+			                   };
+
+			Linestring target = new Linestring(targetPoints);
+
+			MultiPolycurve source = new MultiPolycurve(new[] { source0, source1 });
+
+			const double tolerance = 0.0001;
+			Assert.IsFalse(GeomRelationUtils.AreaContainsXY(source, target, tolerance));
+
+			Assert.IsFalse(GeomRelationUtils.IsContainedXY(target, source, tolerance));
+
+			// And hence the union should be equal to the sum:
+			MultiLinestring unionAreasXY =
+				GeomTopoOpUtils.GetUnionAreasXY(source, new RingGroup(target), tolerance);
+			Assert.AreEqual(source.GetArea2D() + target.GetArea2D(), unionAreasXY.GetArea2D());
+		}
+
+		[Test]
 		public void CanDetermineMultipartSourcePolygonMultitouch()
 		{
 			// The source polygon has two touching rings. The target touches the source-touch point
@@ -428,6 +487,63 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.False(GeomRelationUtils.TouchesXY(adjacentRing, containedVerticalRing, 0.0001,
 			                                         out disjoint, true, true));
+		}
+
+		[Test]
+		public void CanDetermineTouchesXYVerticalRingUnCracked()
+		{
+			// The vertical ring has no correspondent vertex in the adjacent ring at one of the
+			// vertical edges.
+			// Extra difficulty with not-quite-vertical line -> orientation is not null
+			var verticalRing = new Linestring(new List<Pnt3D>
+			                                  {
+				                                  new Pnt3D(0, 0, 0),
+				                                  new Pnt3D(15, 50, 0),
+				                                  new Pnt3D(15, 50.0001, 55),
+				                                  new Pnt3D(0, 0, 55),
+				                                  new Pnt3D(0, 0, 0)
+			                                  });
+
+			var adjacentRing = new Linestring(new List<Pnt3D>
+			                                  {
+				                                  new Pnt3D(0, 0, 0),
+				                                  new Pnt3D(30, 100, 0),
+				                                  new Pnt3D(30, 0, 0),
+				                                  new Pnt3D(0, 0, 0)
+			                                  });
+
+			var touchingRing = new Linestring(new List<Pnt3D>
+			                                  {
+				                                  new Pnt3D(0, 0, 0),
+				                                  new Pnt3D(100, 100, 0),
+				                                  new Pnt3D(100, 0, 0),
+				                                  new Pnt3D(0, 0, 0)
+			                                  });
+
+			const double tolerance = 0.001;
+
+			Assert.IsTrue(GeomRelationUtils.HaveLinearIntersectionsXY(
+				              adjacentRing, verticalRing, tolerance));
+
+			Assert.IsFalse(GeomRelationUtils.HaveLinearIntersectionsXY(
+				               touchingRing, verticalRing, tolerance));
+
+			bool touchXY = GeomRelationUtils.TouchesXY(adjacentRing, verticalRing, tolerance,
+			                                           out bool disjoint, true, true);
+
+			Assert.IsTrue(touchXY);
+			Assert.IsFalse(disjoint);
+
+			touchXY = GeomRelationUtils.TouchesXY(touchingRing, verticalRing, tolerance,
+			                                      out disjoint, true, true);
+
+			Assert.IsTrue(touchXY);
+			Assert.IsFalse(disjoint);
+
+			Assert.IsTrue(GeomRelationUtils.PolycurveContainsXY(
+				              adjacentRing, verticalRing, tolerance));
+			Assert.IsFalse(GeomRelationUtils.PolycurveContainsXY(
+				               touchingRing, verticalRing, tolerance));
 		}
 
 		[Test]

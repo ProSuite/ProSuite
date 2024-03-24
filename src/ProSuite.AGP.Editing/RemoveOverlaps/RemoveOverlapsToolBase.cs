@@ -13,6 +13,7 @@ using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -47,9 +48,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			Enabled = MicroserviceClient != null;
 
-			Tooltip = Enabled
-				          ? "Remove a part of a feature that overlaps with other polygon features"
-				          : "Microservice not found / not started. Please make sure the latest ProSuite Extension is installed.";
+			if (MicroserviceClient == null)
+				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
 		protected override void OnToolActivatingCore()
@@ -254,15 +254,16 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			if (IsInSelectionPhase())
 			{
-				if (CanUseSelection(e.Selection))
+				var selection = SelectionUtils.GetSelection(e);
+				if (CanUseSelection(selection))
 				{
-					var selectedFeatures = GetApplicableSelectedFeatures(e.Selection).ToList();
+					var selectedFeatures = GetApplicableSelectedFeatures(selection).ToList();
 
 					AfterSelection(selectedFeatures, progressor);
 
 					var sketch = GetCurrentSketchAsync().Result;
 
-					SelectAndProcessDerivedGeometry(e.Selection, sketch, progressor);
+					SelectAndProcessDerivedGeometry(selection, sketch, progressor);
 				}
 			}
 
@@ -344,7 +345,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 					if (geometries.Count > 1)
 					{
-						Geometry smallest = GetSmallestGeometry(geometries);
+						Geometry smallest = GeometryUtils.GetSmallestGeometry(geometries);
 
 						geometries.Clear();
 						geometries.Add(smallest);
@@ -353,59 +354,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			}
 
 			return result;
-		}
-
-		/// <summary>
-		/// Returns a reference to the smallest (area for IArea objects, length for ICurve objects) 
-		/// geometry of the given geometries. If several  geometries have the largest size, the first 
-		/// in the list will be returned.
-		/// </summary>
-		/// <param name="geometries">The geometries which must all be of the same geometry type.</param>
-		/// <returns></returns>
-		public static T GetSmallestGeometry<T>([NotNull] IEnumerable<T> geometries)
-			where T : Geometry
-		{
-			Geometry smallestPart = null;
-			double smallestSize = double.PositiveInfinity;
-
-			foreach (T candidate in geometries)
-			{
-				double candidateSize = GetGeometrySize(candidate);
-
-				if (candidateSize < smallestSize)
-				{
-					smallestPart = candidate;
-					smallestSize = candidateSize;
-				}
-			}
-
-			return (T) smallestPart;
-		}
-
-		/// <summary>
-		/// Returns a value that indicates the size of the specified geometry:
-		/// - Multipatch, Polygon, Ring: 2D area
-		/// - Polyline, Path, Segment: 2D length
-		/// - Multipoint: Point count
-		/// - Point: 0
-		/// </summary>
-		/// <param name="geometry"></param>
-		/// <returns></returns>
-		public static double GetGeometrySize([NotNull] Geometry geometry)
-		{
-			var multipart = geometry as Multipart;
-
-			if (multipart != null && multipart.Area > 0)
-			{
-				return Math.Abs(multipart.Area);
-			}
-
-			if (multipart != null)
-			{
-				return multipart.Length;
-			}
-
-			return 0;
 		}
 
 		private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
@@ -441,7 +389,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			[NotNull] ICollection<Feature> selectedFeatures,
 			[CanBeNull] CancelableProgressor cancellabelProgressor)
 		{
-			Dictionary<MapMember, List<long>> selection = ActiveMapView.Map.GetSelection();
+			Dictionary<MapMember, List<long>> selection =
+				SelectionUtils.GetSelection(ActiveMapView.Map);
 
 			Envelope inExtent = ActiveMapView.Extent;
 

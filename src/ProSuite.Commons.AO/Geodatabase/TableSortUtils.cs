@@ -38,6 +38,34 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		/// <summary>
+		/// Creates a table sort object for the provided table and sort field name.
+		/// </summary>
+		/// <param name="table"></param>
+		/// <param name="fieldName"></param>
+		/// <param name="queryFilter"></param>
+		/// <returns></returns>
+		[NotNull]
+		public static ITableSort CreateFilteredTableSort(
+			[NotNull] ITable table,
+			[NotNull] string fieldName,
+			[CanBeNull] IQueryFilter queryFilter = null)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
+
+			int fieldIdx = table.FindField(fieldName);
+
+			Assert.ArgumentCondition(fieldIdx >= 0, "Field {0} not found in table", fieldName);
+
+			return new TableSortClass
+			       {
+				       Table = table,
+				       Fields = fieldName,
+				       QueryFilter = queryFilter
+			       };
+		}
+
+		/// <summary>
 		/// Creates a table sort object that uses string-based guid comparison. This is the
 		/// default behaviour on oracle. This method can be used for compatibility on tables 
 		/// from File-based GDBs or other DBMS. This method is considerably slower than
@@ -48,10 +76,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="selection"></param>
 		/// <returns></returns>
 		[NotNull]
-		public static ITableSort CreateGuidFieldTableSort([NotNull] ITable table,
-		                                                  [NotNull] string guidFieldName,
-		                                                  [CanBeNull] ISelectionSet selection =
-			                                                  null)
+		public static ITableSort CreateGuidFieldTableSort(
+			[NotNull] ITable table,
+			[NotNull] string guidFieldName,
+			[CanBeNull] ISelectionSet selection)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNullOrEmpty(guidFieldName, nameof(guidFieldName));
@@ -71,12 +99,39 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return result;
 		}
 
+		/// <summary>
+		/// Creates a table sort object that uses string-based guid comparison. This is the
+		/// default behaviour on oracle. This method can be used for compatibility on tables 
+		/// from File-based GDBs or other DBMS. This method is considerably slower than
+		/// the default sort algorithm.
+		/// </summary>
+		/// <param name="table"></param>
+		/// <param name="guidFieldName"></param>
+		/// <param name="queryFilter"></param>
+		/// <returns></returns>
+		[NotNull]
+		public static ITableSort CreateGuidFieldTableSort(
+			[NotNull] ITable table,
+			[NotNull] string guidFieldName,
+			[CanBeNull] IQueryFilter queryFilter)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(guidFieldName, nameof(guidFieldName));
+
+			ITableSort result = CreateFilteredTableSort(table, guidFieldName, queryFilter);
+
+			result.Compare = new GuidFieldSortCallback();
+
+			return result;
+		}
+
 		[NotNull]
 		public static ICursor GetSortedTableCursor([NotNull] ITable table,
 		                                           [NotNull] string fieldName,
+		                                           [CanBeNull] IQueryFilter queryFilter,
 		                                           [CanBeNull] ITrackCancel trackCancel = null)
 		{
-			ITableSort tableSort = CreateTableSort(table, fieldName);
+			ITableSort tableSort = CreateFilteredTableSort(table, fieldName, queryFilter);
 
 			return GetSortedCursor(tableSort, trackCancel);
 		}
@@ -94,9 +149,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 		[NotNull]
 		public static ICursor GetGuidFieldSortedCursor([NotNull] ITable table,
 		                                               [NotNull] string guidFieldName,
+		                                               [CanBeNull] IQueryFilter queryFilter,
 		                                               [CanBeNull] ITrackCancel trackCancel = null)
 		{
-			ITableSort tableSort = CreateGuidFieldTableSort(table, guidFieldName);
+			ITableSort tableSort = CreateGuidFieldTableSort(table, guidFieldName, queryFilter);
 
 			return GetSortedCursor(tableSort, trackCancel);
 		}

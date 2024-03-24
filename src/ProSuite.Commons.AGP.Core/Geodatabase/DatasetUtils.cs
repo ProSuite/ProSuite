@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -86,16 +88,84 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return featureClass.GetDefinition()?.GetSpatialReference();
 		}
 
-		public static bool IsSameClass(Table featureClass1, Table featureClass2)
-		{
-			return featureClass1.Handle == featureClass2.Handle;
-		}
-
 		public static GeometryType GetShapeType([NotNull] FeatureClass featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
 			return featureClass.GetDefinition().GetShapeType();
+		}
+
+		public static T GetDatasetDefinition<T>(Datastore datastore, string name)
+			where T : Definition
+		{
+			if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+			{
+				return geodatabase.GetDefinition<T>(name);
+			}
+
+			if (datastore is FileSystemDatastore fsDatastore)
+			{
+				return fsDatastore.GetDefinition<T>(name);
+			}
+
+			throw new ArgumentOutOfRangeException(
+				$"Unsupported datastore type: {datastore.GetConnectionString()}.");
+		}
+
+		public static T OpenDataset<T>(Datastore datastore, string datasetName) where T : Dataset
+		{
+			if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+			{
+				return geodatabase.OpenDataset<T>(datasetName);
+			}
+
+			if (datastore is FileSystemDatastore fsDatastore)
+			{
+				return fsDatastore.OpenDataset<T>(datasetName);
+			}
+
+			throw new ArgumentOutOfRangeException(
+				$"Unsupported datastore: {datastore.GetConnectionString()}");
+		}
+
+		public static IEnumerable<Table> OpenTables(ArcGIS.Core.Data.Geodatabase geodatabase,
+		                                            ICollection<string> tableNames)
+		{
+			foreach (string name in geodatabase.GetDefinitions<TableDefinition>()
+			                                   .Select(definition => definition.GetName())
+			                                   .Where(tableNames.Contains))
+			{
+				yield return geodatabase.OpenDataset<Table>(name);
+			}
+
+			foreach (string name in geodatabase.GetDefinitions<FeatureClassDefinition>()
+			                                   .Select(definition => definition.GetName())
+			                                   .Where(tableNames.Contains))
+			{
+				yield return geodatabase.OpenDataset<Table>(name);
+			}
+		}
+
+		public static bool IsSameTable(Table fc1, Table fc2)
+		{
+			if (ReferenceEquals(fc1, fc2)) return true;
+			if (Equals(fc1.Handle, fc2.Handle)) return true;
+
+			var id1 = fc1.GetID();
+			var id2 = fc2.GetID();
+			if (id1 != id2) return false;
+			if (id1 >= 0) return true;
+
+			// table id is negative for tables not registered with the Geodatabase
+			// compare table name and workspace -- for now, give up and assume not same
+
+			return false;
+		}
+
+		public static IEnumerable<Table> Distinct(
+			IEnumerable<Table> tables)
+		{
+			return tables.Distinct(new TableComparer());
 		}
 	}
 }

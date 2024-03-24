@@ -24,6 +24,8 @@ namespace ProSuite.DomainModel.AO.QA
 	{
 		protected static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		public override Type InstanceType => GetType();
+
 		[NotNull]
 		protected T Create<T>([NotNull] InstanceConfiguration instanceConfiguration,
 		                      [NotNull] IOpenDataset datasetContext,
@@ -113,7 +115,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 					IReadOnlyTable table = tableConstraint.Table;
 
-					if (table != instance.InvolvedTables[tableIndex])
+					if (!instance.InvolvedTables[tableIndex].Equals(table))
 					{
 						throw new InvalidOperationException(
 							string.Format(
@@ -161,7 +163,7 @@ namespace ProSuite.DomainModel.AO.QA
 			               "Set method not found for property {0} on test type {1}",
 			               propertyName, testType.Name);
 
-			setMethod.Invoke(test, new[] {value});
+			setMethod.Invoke(test, new[] { value });
 		}
 
 		protected static void SetNonConstructorConstraints(

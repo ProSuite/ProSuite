@@ -15,6 +15,11 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return new Coordinate2D(point.X + dx, point.Y + dy);
 		}
 
+		public static double GetXyTolerance(Geometry geometry)
+		{
+			return geometry?.SpatialReference?.XYTolerance ?? double.NaN;
+		}
+
 		public static int GetPointCount([CanBeNull] Geometry geometry)
 		{
 			return geometry?.PointCount ?? 0;
@@ -58,7 +63,9 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			if (geometry is Polyline polyline)
 			{
-				return Engine.QueryPoint(polyline, SegmentExtension.NoExtension,
+				var segmentExtension = SegmentExtensionType.NoExtension;
+
+				return Engine.QueryPoint(polyline, segmentExtension,
 				                         0.5, AsRatioOrLength.AsRatio);
 			}
 
@@ -124,7 +131,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		public static AttributeFlags GetAttributeFlags(this Geometry geometry)
 		{
-			var flags = AttributeFlags.NoAttributes;
+			var flags = AttributeFlags.None;
 
 			if (geometry != null)
 			{
@@ -141,14 +148,35 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		public static Envelope Union([CanBeNull] Envelope a, [CanBeNull] Envelope b)
 		{
-			if (a == null) return b;
-			if (b == null) return a;
+			if (a is null || a.IsEmpty) return b;
+			if (b is null || b.IsEmpty) return a;
 			return a.Union(b);
 		}
 
-		public static Geometry Union(IEnumerable<Geometry> geometries)
+		public static Geometry Union<T>(ICollection<T> geometries) where T : Geometry
 		{
-			return geometries?.Any() ?? false ? Engine.Union(geometries) : null;
+			if (geometries is null) return null;
+			int count = geometries.Count;
+			if (count < 1) return null;
+
+			if (count == 1)
+			{
+				return geometries.Single();
+			}
+
+			if (count == 2)
+			{
+				using (var enumerator = geometries.GetEnumerator())
+				{
+					enumerator.MoveNext();
+					var one = enumerator.Current;
+					enumerator.MoveNext();
+					var two = enumerator.Current;
+					return Engine.Union(one, two);
+				}
+			}
+
+			return Engine.Union(geometries);
 		}
 
 		public static Polyline Boundary(Polygon polygon)
@@ -156,9 +184,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			if (polygon == null) return null;
 
 			var boundary = Engine.Boundary(polygon);
-			if (boundary is Polyline polyline)
-				return polyline;
-			throw new AssertionException("Result of Boundary(polygon) is not a Polyline");
+			if (boundary is Polyline polyline) return polyline;
+			throw UnexpectedResultFrom("GeometryEngine.Boundary()", typeof(Polyline), boundary);
 		}
 
 		public static Polygon Intersection(Envelope extent, Polygon perimeter)
@@ -171,8 +198,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static Geometry Intersection(
 			[CanBeNull] Geometry a, [CanBeNull] Geometry b)
 		{
-			if (a == null) return b;
-			if (b == null) return a;
+			if (a is null) return null;
+			if (b is null) return null;
 			return Engine.Intersection(a, b);
 		}
 
@@ -186,9 +213,52 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static Geometry Buffer(Geometry geometry, double distance)
 		{
 			if (geometry is null) return null;
+			if (geometry is Envelope extent)
+			{
+				// Note: GeometryEngine's Buffer() does not support Envelope
+				return extent.Expand(distance, distance, false);
+			}
+
 			var buffer = Engine.Buffer(geometry, distance);
 			// Note: buffer may NOT be a Polygon if distance is almost zero!
 			return buffer;
+		}
+
+		public static Geometry ConvexHull(Geometry geometry)
+		{
+			if (geometry is null) return null;
+			if (geometry.IsEmpty) return geometry;
+			if (geometry is Envelope) return geometry;
+			return Engine.ConvexHull(geometry);
+		}
+
+		public static T Move<T>(T geometry, double dx, double dy) where T : Geometry
+		{
+			if (geometry is null) return null;
+			var moved = Engine.Move(geometry, dx, dy);
+			if (moved is T result) return result;
+			throw UnexpectedResultFrom("GeometryEngine.Move()", typeof(T), moved);
+		}
+
+		public static T Rotate<T>(T geometry, MapPoint origin, double angleRadians)
+			where T : Geometry
+		{
+			if (geometry is null) return null;
+			if (Math.Abs(angleRadians) < double.Epsilon) return geometry;
+			if (origin is null) throw new ArgumentNullException(nameof(origin));
+			var rotated = Engine.Rotate(geometry, origin, angleRadians);
+			if (rotated is T result) return result;
+			throw UnexpectedResultFrom(nameof(Engine.Rotate), typeof(T), rotated);
+		}
+
+		public static T Scale<T>(T geometry, MapPoint origin, double sx, double sy)
+			where T : Geometry
+		{
+			if (geometry is null) return null;
+			if (origin is null) throw new ArgumentNullException(nameof(origin));
+			var scaled = Engine.Scale(geometry, origin, sx, sy);
+			if (scaled is T result) return result;
+			throw UnexpectedResultFrom(nameof(Engine.Scale), typeof(T), scaled);
 		}
 
 		public static T Generalize<T>(T geometry, double maxDeviation,
@@ -196,16 +266,20 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		                              bool preserveCurves = false)
 			where T : Geometry
 		{
+			if (geometry is null) return null;
+			if (geometry is MapPoint) return geometry;
+			if (geometry is Multipoint) return geometry;
+			if (geometry is Envelope) return geometry;
+
 			if (maxDeviation < double.Epsilon)
 			{
 				return geometry;
 			}
 
-			var generalized = Engine.Generalize(geometry, maxDeviation, removeDegenerateParts, preserveCurves);
+			var generalized =
+				Engine.Generalize(geometry, maxDeviation, removeDegenerateParts, preserveCurves);
 			if (generalized is T result) return result;
-			throw new AssertionException(
-				$"Result of Generalize({geometry.GetType().Name}, {maxDeviation}) is " +
-				$"a {generalized.GetType().Name}, not a {geometry.GetType().Name}");
+			throw UnexpectedResultFrom("GeometryEngine.Generalize()", typeof(T), generalized);
 		}
 
 		public static Polyline Simplify(Polyline polyline, SimplifyType simplifyType,
@@ -220,8 +294,9 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			where T : Geometry
 		{
 			if (geometry == null) return null;
-
-			return (T) Engine.SimplifyAsFeature(geometry, forceSimplify);
+			var simplified = Engine.SimplifyAsFeature(geometry, forceSimplify);
+			if (simplified is T result) return result;
+			throw UnexpectedResultFrom("GeometryEngine.Simplify()", typeof(T), simplified);
 		}
 
 		/// <summary>
@@ -386,8 +461,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		public static double GetDistanceAlongCurve(Multipart curve, MapPoint point)
 		{
+			const SegmentExtensionType extension = SegmentExtensionType.NoExtension;
+
 			Engine.QueryPointAndDistance(
-				curve, SegmentExtension.NoExtension, point, AsRatioOrLength.AsLength,
+				curve, extension, point, AsRatioOrLength.AsLength,
 				out double distanceAlong, out _, out _);
 			return distanceAlong;
 		}
@@ -437,25 +514,37 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (Polyline) Engine.Clip(polyline, clipExtent);
 		}
 
-		public static T EnsureSpatialReference<T>(T geometry, SpatialReference spatialReference)
+		/// <summary>
+		/// Return the given <paramref name="geometry"/> in the given
+		/// spatial reference. If <paramref name="sref"/> is null,
+		/// return <paramref name="geometry"/> as-is. If the given
+		/// <paramref name="geometry"/> has no spatial reference, assume
+		/// it's in the given spatial reference and just set it. Otherwise,
+		/// project <paramref name="geometry"/> (if it has a different
+		/// spatial reference).
+		/// </summary>
+		public static T EnsureSpatialReference<T>(T geometry, SpatialReference sref)
 			where T : Geometry
 		{
-			if (spatialReference is null)
+			if (geometry is null) return null;
+			if (sref is null) return geometry; // TODO unsure: set geom's sref to null instead?
+
+			if (geometry.SpatialReference is null)
+			{
+				return (T) GeometryBuilderEx.ReplaceSpatialReference(geometry, sref);
+			}
+
+			if (SpatialReference.AreEqual(geometry.SpatialReference, sref))
 			{
 				return geometry;
 			}
 
-			if (SpatialReference.AreEqual(geometry.SpatialReference, spatialReference))
-			{
-				return geometry;
-			}
-
-			return (T) Engine.Project(geometry, spatialReference);
+			return (T) Engine.Project(geometry, sref);
 		}
 
 		public static bool HasCurves(this Geometry geometry)
 		{
-			return geometry is Multipart multipart && multipart.HasCurves;
+			return geometry is Multipart { HasCurves: true };
 		}
 
 		public static bool Intersects(Envelope a, Envelope b)
@@ -484,10 +573,196 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return Engine.Centroid(geometry);
 		}
 
+		/// <summary>
+		/// Returns a reference to the smallest (area for IArea objects, length for ICurve objects) 
+		/// geometry of the given geometries. If several geometries have the smallest size, the first 
+		/// in the list will be returned.
+		/// </summary>
+		/// <param name="geometries">The geometries which must all be of the same geometry type.</param>
+		/// <returns></returns>
+		public static T GetSmallestGeometry<T>([NotNull] IEnumerable<T> geometries)
+			where T : Geometry
+		{
+			Geometry smallestPart = null;
+			double smallestSize = double.PositiveInfinity;
+
+			foreach (T candidate in geometries)
+			{
+				double candidateSize = GetGeometrySize(candidate);
+
+				if (candidateSize < smallestSize)
+				{
+					smallestPart = candidate;
+					smallestSize = candidateSize;
+				}
+			}
+
+			return (T) smallestPart;
+		}
+
+		/// <summary>
+		/// Returns a value that indicates the size of the specified geometry:
+		/// - Multipatch, Polygon, Ring: 2D area
+		/// - Polyline, Path, Segment: 2D length
+		/// - Multipoint: Point count
+		/// - Point: 0
+		/// </summary>
+		/// <param name="geometry"></param>
+		/// <returns></returns>
+		public static double GetGeometrySize([NotNull] Geometry geometry)
+		{
+			var multipart = geometry as Multipart;
+
+			if (multipart != null && multipart.Area > 0)
+			{
+				return Math.Abs(multipart.Area);
+			}
+
+			if (multipart != null)
+			{
+				return multipart.Length;
+			}
+
+			return 0;
+		}
+
+		public static Geometry EnsureGeometrySchema([NotNull] Geometry inputGeometry,
+		                                            bool? hasZ,
+		                                            bool? hasM = null,
+		                                            bool? hasID = null)
+		{
+			bool changeHasZ = hasZ.HasValue && inputGeometry.HasZ != hasZ;
+			bool changeHasM = hasM.HasValue && inputGeometry.HasM != hasM;
+			bool changeHasID = hasID.HasValue && inputGeometry.HasID != hasID;
+
+			if (! changeHasZ &&
+			    ! changeHasM &&
+			    ! changeHasID)
+			{
+				return inputGeometry;
+			}
+
+			var builder = inputGeometry.ToBuilder();
+
+			builder.HasZ = hasZ ?? inputGeometry.HasZ;
+			builder.HasM = hasM ?? inputGeometry.HasM;
+			builder.HasID = hasID ?? inputGeometry.HasID;
+
+			// TODO: SimplifyZ if aware, DropZs if un-aware to ensure simplify cleans up duplicate segments?
+			return builder.ToGeometry();
+		}
+
 		public static IGeometryEngine Engine
 		{
-			get => _engine ?? GeometryEngine.Instance;
+			get => _engine ??= GeometryEngine.Instance;
 			set => _engine = value;
+		}
+
+		#region Access points of a multipart geometry builder
+
+		public static int GetPointCount(this MultipartBuilderEx builder,
+		                                int partIndex)
+		{
+			return builder.GetSegmentCount(partIndex) + 1;
+		}
+
+		public static MapPoint GetPoint(this MultipartBuilderEx builder,
+		                                int partIndex,
+		                                int pointIndex)
+		{
+			if (builder is null)
+				throw new ArgumentNullException(nameof(builder));
+			if (partIndex < 0 || partIndex >= builder.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			var segmentCount = builder.GetSegmentCount(partIndex);
+			if (pointIndex < 0 || pointIndex > segmentCount)
+				throw new ArgumentOutOfRangeException(nameof(pointIndex));
+			bool isEndPoint = pointIndex == segmentCount;
+			var segmentIndex = isEndPoint ? segmentCount - 1 : pointIndex;
+			var segment = builder.GetSegment(partIndex, segmentIndex);
+			return isEndPoint ? segment.EndPoint : segment.StartPoint;
+		}
+
+		public static void SetPoint(this MultipartBuilderEx builder,
+		                            int partIndex,
+		                            int pointIndex,
+		                            MapPoint point)
+		{
+			if (builder is null)
+				throw new ArgumentNullException(nameof(builder));
+			if (partIndex < 0 || partIndex >= builder.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			var segmentCount = builder.GetSegmentCount(partIndex);
+			if (pointIndex < 0 || pointIndex > segmentCount)
+				throw new ArgumentOutOfRangeException(nameof(pointIndex));
+
+			// TODO beware of closed rings!
+			Segment pre, post;
+			switch (builder)
+			{
+				case PolylineBuilderEx:
+					// update StartPoint on segment i (if exists)
+					// update EndPoint on segment i-1 (if exists)
+					if (pointIndex < segmentCount)
+					{
+						post = builder.GetSegment(partIndex, pointIndex);
+						post = SetPoints(post, point, null);
+						builder.ReplaceSegment(partIndex, pointIndex, post);
+					}
+
+					if (pointIndex > 0)
+					{
+						pre = builder.GetSegment(partIndex, pointIndex - 1);
+						pre = SetPoints(pre, null, point);
+						builder.ReplaceSegment(partIndex, pointIndex - 1, pre);
+					}
+
+					break;
+
+				case PolygonBuilderEx:
+					// update StartPoint of segment i (mod N)
+					// update EndPoint of segment (i-1) (mod N)
+
+					int segmentIndex = pointIndex % segmentCount;
+					post = builder.GetSegment(partIndex, segmentIndex);
+					post = SetPoints(post, point, null);
+					builder.ReplaceSegment(partIndex, segmentIndex, post);
+
+					segmentIndex = pointIndex > 0 ? pointIndex - 1 : segmentCount - 1;
+					pre = builder.GetSegment(partIndex, segmentIndex);
+					pre = SetPoints(pre, null, point);
+					builder.ReplaceSegment(partIndex, segmentIndex, pre);
+					break;
+
+				default:
+					throw new InvalidOperationException(
+						"multipart builder is neither polygon nor polyline builder");
+			}
+		}
+
+		#endregion
+
+		public static T SetPoints<T>(T segment, [CanBeNull] MapPoint startPoint,
+		                             [CanBeNull] MapPoint endPoint)
+			where T : Segment
+		{
+			if (segment is null)
+				throw new ArgumentNullException(nameof(segment));
+			if (startPoint is null && endPoint is null) return segment;
+
+			var builder = SegmentBuilderEx.ConstructSegmentBuilder(segment);
+
+			if (startPoint is not null)
+			{
+				builder.StartPoint = startPoint;
+			}
+
+			if (endPoint is not null)
+			{
+				builder.EndPoint = endPoint;
+			}
+
+			return (T) builder.ToSegment();
 		}
 
 		private static IGeometryEngine _engine;
@@ -517,6 +792,16 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				default:
 					throw new ArgumentOutOfRangeException($"Cannot translate {esriGeometryType}");
 			}
+		}
+
+		private static Exception UnexpectedResultFrom(string action,
+		                                              Type expectedType,
+		                                              object actualValue)
+		{
+			return new AssertionException(
+				$"Unexpected result from {action}: " +
+				$"expected type {expectedType.Name}, " +
+				$"actual type {actualValue?.GetType().Name ?? "(null)"}");
 		}
 
 		public static int GetShapeDimension(GeometryType geometryType)

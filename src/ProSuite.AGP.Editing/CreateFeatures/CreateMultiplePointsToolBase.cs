@@ -32,12 +32,13 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			// This does not work unless loadOnClick="false" in the daml.xml:
 			// And the tags are not recognized either...
 			Tooltip =
-				"Create several point or multipoint features at once for the current feature template." + Environment.NewLine +
+				"Create several point or multipoint features at once for the current feature template." +
+				Environment.NewLine +
 				Environment.NewLine +
 				"Shortcuts:" + Environment.NewLine +
 				"ESC: Delete sketch points" + Environment.NewLine +
 				"F2:  Finish sketch";
-			
+
 			// how to set up shortcuts?
 			if (Shortcuts != null)
 			{
@@ -69,35 +70,13 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected override void LogEnteringSketchMode()
 		{
+			EditingTemplate editTemplate = EditingTemplate.Current;
+
+			string layerName = ToolUtils.CurrentTargetLayer(editTemplate)?.Name ?? string.Empty;
+
 			_msg.InfoFormat(
 				"Draw one or more points. Finish the sketch to create the individual point features in '{0}'.",
-				CurrentTemplate?.Layer?.Name);
-		}
-
-		private static FeatureClass GetCurrentTargetFeatureClass(EditingTemplate editTemplate)
-		{
-			// TODO: Notifications
-			FeatureLayer featureLayer = CurrentTargetLayer(editTemplate);
-
-			if (featureLayer == null)
-			{
-				return null;
-			}
-
-			return featureLayer.GetFeatureClass();
-		}
-
-		[CanBeNull]
-		private static FeatureLayer CurrentTargetLayer([CanBeNull] EditingTemplate editTemplate)
-		{
-			if (editTemplate == null)
-			{
-				return null;
-			}
-
-			var featureLayer = editTemplate.Layer as FeatureLayer;
-
-			return featureLayer;
+				layerName);
 		}
 
 		private static List<long> CreatePointsFeatures(
@@ -136,15 +115,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 				foreach (MapPoint point in multipoint.Points)
 				{
-					if (cancelableProgressor != null &&
-					    cancelableProgressor.CancellationToken.IsCancellationRequested)
-					{
-						return result;
-					}
-
-					// Set Z/M awareness
-					feature = featureClass.CreateRow(rowBuffer);
-
 					Geometry resultGeometry;
 					if (geometryType == GeometryType.Point)
 					{
@@ -154,6 +124,15 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 					{
 						resultGeometry = CreateSingleMultipoint(point, classHasZ, classHasM);
 					}
+
+					if (cancelableProgressor != null &&
+					    cancelableProgressor.CancellationToken.IsCancellationRequested)
+					{
+						return result;
+					}
+
+					// Set Z/M awareness
+					feature = featureClass.CreateRow(rowBuffer);
 
 					feature.SetShape(resultGeometry);
 
@@ -201,7 +180,9 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		private void UpdateEnabled()
 		{
-			esriGeometryType? geometryType = CurrentTargetLayer(CurrentTemplate)?.ShapeType;
+			EditingTemplate editTemplate = EditingTemplate.Current;
+
+			esriGeometryType? geometryType = ToolUtils.CurrentTargetLayer(editTemplate)?.ShapeType;
 
 			Enabled = geometryType == esriGeometryType.esriGeometryPoint ||
 			          geometryType == esriGeometryType.esriGeometryMultipoint;
@@ -224,7 +205,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 					List<long> newFeatureIds;
 
-					FeatureClass currentTargetClass = GetCurrentTargetFeatureClass(editTemplate);
+					FeatureClass currentTargetClass =
+						ToolUtils.GetCurrentTargetFeatureClass(editTemplate);
 
 					if (currentTargetClass == null)
 					{
@@ -246,7 +228,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 						       {
 							       newFeatureIds = CreatePointsFeatures(
 								       editContext, currentTargetClass,
-								       CurrentTemplate.Inspector, multipoint,
+								       editTemplate.Inspector, multipoint,
 								       cancelableProgressor);
 
 							       _msg.DebugFormat("Created new featrue IDs: {0}", newFeatureIds);

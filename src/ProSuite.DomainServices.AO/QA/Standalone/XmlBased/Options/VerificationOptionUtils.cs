@@ -79,6 +79,26 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 			return name;
 		}
 
+		[NotNull]
+		public static string GetProgressWorkspaceName(
+			[CanBeNull] XmlVerificationOptions options)
+		{
+			if (string.IsNullOrWhiteSpace(options?.ProgressGdbName))
+			{
+				return "progress";
+			}
+
+			string name = Assert.NotNull(options.ProgressGdbName).Trim();
+
+			if (FileSystemUtils.HasInvalidFileNameChars(name))
+			{
+				throw new InvalidConfigurationException(
+					$"Progress workspace name is not a valid file or directory name: {name}");
+			}
+
+			return name;
+		}
+
 		public static bool ExportExceptions([CanBeNull] XmlVerificationOptions options)
 		{
 			return options?.Exceptions != null && options.Exceptions.ExportExceptions;

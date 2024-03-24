@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -11,6 +13,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
@@ -59,6 +62,12 @@ namespace ProSuite.DomainServices.AO.QA
 		public TestAssembler TestAssembler { get; set; }
 
 		public QualityVerification QualityVerification { get; set; }
+
+		public ISubVerificationObserver AddObserver(VerificationReporter verificationReporter,
+		                                            ISpatialReference spatialReference)
+		{
+			return null;
+		}
 
 		public void Execute(IEnumerable<ITest> tests,
 		                    AreaOfInterest areaOfInterest,
@@ -170,9 +179,21 @@ namespace ProSuite.DomainServices.AO.QA
 				using (progressWatch.MakeTransaction(
 					       Step.DataLoading, Step.DataLoaded, tableIndex, tableCount, table))
 				{
-					rows = GetRowsByRelatedGeometry(
-						table, Assert.NotNull(relGeomTest.ObjectDataset), testsForTable[0],
-						Assert.NotNull(relGeomTest.RelClassChains));
+					try
+					{
+						rows = GetRowsByRelatedGeometry(
+							table, Assert.NotNull(relGeomTest.ObjectDataset), testsForTable[0],
+							Assert.NotNull(relGeomTest.RelClassChains));
+					}
+					catch (Exception e)
+					{
+						_msg.Debug("Error getting rows by related geometry", e);
+
+						throw new DataException(
+							$"Error getting rows of {table.Name} by related geometry: {e.Message}{Environment.NewLine}" +
+							$"Used in the following conditions: {StringUtils.Concatenate(testsForTable.Select(t => _verificationElements.GetQualityCondition(t).Name), ", ")}",
+							e);
+					}
 				}
 
 				if (rows.Count == 0)
@@ -318,6 +339,10 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 			catch (TestContainerException e)
 			{
+				_msg.Debug(
+					"TestContainerException occurred. It will be stored as qaError and the verification will be cancelled.",
+					e);
+
 				QualityCondition qualityCondition =
 					_verificationElements.GetQualityCondition(e.Test);
 
@@ -579,6 +604,7 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			// TODO: Consider checking basic relevance (inside test perimeter?) here
+			//       or better in an issue processor / filter
 
 			var eventArgs = new QaErrorEventArgs(qaError);
 			QaError?.Invoke(this, eventArgs);
@@ -591,33 +617,11 @@ namespace ProSuite.DomainServices.AO.QA
 			ITest test = qaError.Test;
 			QualityConditionVerification conditionVerification =
 				_verificationElements.GetQualityConditionVerification(test);
-			QualityCondition qualityCondition = conditionVerification.QualityCondition;
-			Assert.NotNull(qualityCondition, "no quality condition for verification");
+			QualityCondition qualityCondition =
+				Assert.NotNull(conditionVerification.QualityCondition);
 
-			StopInfo stopInfo = null;
-			if (conditionVerification.StopOnError)
-			{
-				stopInfo = new StopInfo(qualityCondition, qaError.Description);
-
-				foreach (InvolvedRow involvedRow in qaError.InvolvedRows)
-				{
-					RowsWithStopConditions.Add(involvedRow.TableName,
-					                           involvedRow.OID, stopInfo);
-				}
-			}
-
-			if (! conditionVerification.AllowErrors)
-			{
-				conditionVerification.Fulfilled = false;
-
-				if (stopInfo != null)
-				{
-					// it's a stop condition, and it is a 'hard' condition, and the error is 
-					// relevant --> consider the stop situation as sufficiently reported 
-					// (no reporting in case of stopped tests required)
-					stopInfo.Reported = true;
-				}
-			}
+			TestExecutionUtils.ReportRowWithStopCondition(qaError, qualityCondition,
+			                                              RowsWithStopConditions);
 
 			return true;
 		}

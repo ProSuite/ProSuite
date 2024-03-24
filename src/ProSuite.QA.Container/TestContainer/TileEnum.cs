@@ -7,7 +7,6 @@ using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Container.TestContainer
 {
@@ -57,6 +56,9 @@ namespace ProSuite.QA.Container.TestContainer
 		                  [CanBeNull] ISpatialReference spatialReference,
 		                  [CanBeNull] IBox firstTerrainBox)
 		{
+			Assert.ArgumentNotNull(assembledTests, nameof(assembledTests));
+			Assert.ArgumentCondition(tileSize > 0, "Tile size must be greater 0");
+
 			_testSorter = assembledTests;
 			_executeEnvelope = executeEnvelope;
 			TileSize = tileSize;
@@ -359,7 +361,7 @@ namespace ProSuite.QA.Container.TestContainer
 			int iy = 0;
 			for (int i = 0; i < totalTileCount; i++)
 			{
-				int[] tileKey = {ix, iy};
+				int[] tileKey = { ix, iy };
 				if (! _tileCache.TryGetValue(tileKey, out Tile tile))
 				{
 					tile = GetTile(tileXMin, tileYMin, totalTileCount);

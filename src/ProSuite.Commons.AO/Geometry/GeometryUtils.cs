@@ -4656,30 +4656,18 @@ namespace ProSuite.Commons.AO.Geometry
 		/// </summary>
 		/// <param name="geometry">The geometry.</param>
 		/// <param name="spatialReference">The spatial reference.</param>
-		/// <returns></returns>
-		/// <remarks>If the spatial reference is not as expected, the input geometry is
-		/// modified by reprojection to the expected spatial reference.</remarks>
-		public static bool EnsureSpatialReference([NotNull] IGeometry geometry,
-		                                          [CanBeNull] ISpatialReference
-			                                          spatialReference)
-		{
-			const bool dontComparePrecision = false;
-			return EnsureSpatialReference(geometry, spatialReference, dontComparePrecision);
-		}
-
-		/// <summary>
-		/// Ensures that a given geometry conforms to a given spatial reference.
-		/// </summary>
-		/// <param name="geometry">The geometry.</param>
-		/// <param name="spatialReference">The spatial reference.</param>
 		/// <param name="dontComparePrecision">if set to <c>true</c> sref precision is not compared.</param>
+		/// <param name="useProjectEx">
+		///   if set to <c>true</c> project with transformation if needed (IGeometry2.ProjectEx()).
+		///   if set to <c>false</c> project without transformation if needed (IGeometry.Project()).</param>
 		/// <returns></returns>
 		/// <remarks>If the spatial reference is not as expected, the input geometry is
 		/// modified by reprojection to the expected spatial reference.</remarks>
-		public static bool EnsureSpatialReference([NotNull] IGeometry geometry,
-		                                          [CanBeNull] ISpatialReference
-			                                          spatialReference,
-		                                          bool dontComparePrecision)
+		public static bool EnsureSpatialReference(
+			[NotNull] IGeometry geometry,
+			[CanBeNull] ISpatialReference spatialReference,
+			bool dontComparePrecision = false,
+			bool useProjectEx = false)
 		{
 			Assert.ArgumentNotNull(geometry, nameof(geometry));
 			// spatialReference may be null (no projection will occur)
@@ -4698,7 +4686,14 @@ namespace ProSuite.Commons.AO.Geometry
 				return false;
 			}
 
-			geometry.Project(spatialReference);
+			if (useProjectEx)
+			{
+				SpatialReferenceUtils.ProjectEx(geometry, spatialReference, noNewInstance: true);
+			}
+			else
+			{
+				geometry.Project(spatialReference);
+			}
 
 			return true;
 		}

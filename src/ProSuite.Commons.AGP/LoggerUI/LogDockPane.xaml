@@ -49,7 +49,8 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Time" Binding="{Binding Path=Time}" MinWidth="32" Width="Auto" />
+                <!-- Note: use StringFormat to only show time; add .fff for millis; initial {} is to please the XAML parser -->
+                <DataGridTextColumn Header="Time" Binding="{Binding Path=Time, StringFormat={}{0:HH:mm:ss}}" MinWidth="32" Width="Auto" />
                 <DataGridTemplateColumn Header="Message">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -101,6 +102,17 @@
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">
                     <EventSetter Event="MouseRightButtonUp" Handler="logMessagesGrid_MouseRightButtonUp" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Type}" Value="Warn">
+                            <Setter Property="Background" Value="LemonChiffon"></Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Type}" Value="Error">
+                            <Setter Property="Background" Value="LightSalmon"></Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Type}" Value="Fatal">
+                            <Setter Property="Background" Value="Coral"></Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
                 </Style>
             </DataGrid.RowStyle>
         </DataGrid>

@@ -3,13 +3,12 @@ using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
-using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.QA.VerificationProgress;
-using ProSuite.Commons.AGP;
+using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -49,7 +48,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
-		protected abstract IProSuiteFacade ProSuiteImpl { get; }
+		protected abstract IWorkListOpener WorkListOpener { get; }
 
 		protected override Task OnToolActivateAsync(bool active)
 		{
@@ -89,11 +88,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 				Assert.NotNull(SessionContext.VerificationEnvironment);
 
 			IQualitySpecificationReference qualitySpecification =
-				qaEnvironment.CurrentQualitySpecification;
+				qaEnvironment.CurrentQualitySpecificationReference;
 
 			if (qualitySpecification == null)
 			{
-				MessageBox.Show("No Quality Specification is selected", "Verify Extent",
+				MessageBox.Show("No Quality Specification is selected", "Verify Perimeter",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
 				return Task.FromResult(false);
 			}
@@ -103,13 +102,14 @@ namespace ProSuite.AGP.QA.ProPlugins
 				                      CancellationTokenSource = new CancellationTokenSource()
 			                      };
 
-			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification,
-			                                                Project.Current.HomeFolderPath);
+			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(
-				ProSuiteImpl, MapView.Active, sketchGeometry, spatialRef);
+				WorkListOpener, MapView.Active, sketchGeometry, spatialRef);
+
+			string perimeterName = "Perimeter";
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
@@ -119,19 +119,20 @@ namespace ProSuite.AGP.QA.ProPlugins
 					ApplicationController = appController
 				};
 
-			string actionTitle = "Verify Perimeter";
-
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 
+			string actionTitle = $"{qualitySpecification.Name}: Verify {perimeterName}";
+
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
-			                               qaEnvironment.BackendDisplayName, actionTitle);
+			                               Assert.NotNull(qaEnvironment.BackendDisplayName),
+			                               actionTitle);
 
 			return Task.FromResult(true);
 		}
 
-		protected override bool HandleEscape()
+		protected override Task HandleEscapeAsync()
 		{
-			return true;
+			return Task.CompletedTask;
 		}
 
 		protected override void LogUsingCurrentSelection()
@@ -161,22 +162,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return await qaEnvironment.VerifyPerimeter(
-							       perimeter, progressTracker, resultsPath);
+							       perimeter, progressTracker, "perimeter", resultsPath);
 					},
 					BackgroundProgressor.None);
 
 			ServiceCallStatus result = await verificationTask;
-
-			if (result == ServiceCallStatus.Finished)
-			{
-				_msg.InfoFormat(
-					"Successfully finished extent verification. The results have been saved in {0}",
-					resultsPath);
-			}
-			else
-			{
-				_msg.WarnFormat("Extent verification was not finished. Status: {0}", result);
-			}
 
 			return result;
 		}

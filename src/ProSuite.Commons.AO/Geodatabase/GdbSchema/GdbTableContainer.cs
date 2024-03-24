@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -76,7 +77,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public override VirtualTable OpenTable(string name)
 		{
-			return _tablesByName[name];
+			if (_tablesByName.TryGetValue(name, out GdbTable table))
+			{
+				return table;
+			}
+
+			// It could be a m:n or attributed relationship class table
+			if (_relClassesByName.TryGetValue(name, out table))
+			{
+				return table;
+			}
+
+			throw new IOException($"Table {name} does not exist in this data store.");
 		}
 
 		public override VirtualTable OpenQueryTable(string relationshipClassName)

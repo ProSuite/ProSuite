@@ -115,7 +115,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanIntersectCircles()
 		{
 			const double z1 = 200;
@@ -150,12 +149,11 @@ namespace ProSuite.QA.Tests.Test
 
 			Check(g1, g2, 2,
 			      (p, i) =>
-				      At(i == 1, Equals(90, 100, z1, p.Point)) &&
-				      At(i == 0, Equals(100, 90, z1, p.Point)));
+				      At(i == 0, Equals(100, 90, z1, p.Point)) &&
+				      At(i == 1, Equals(90, 100, z1, p.Point)));
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanIntersectCircleWithRectangle()
 		{
 			var z1 = 100.0;
@@ -427,10 +425,15 @@ namespace ProSuite.QA.Tests.Test
 
 		private static bool At(bool condition, bool check) => ! condition || check;
 
-		private static bool Equals(double? x, double? y, double? z, [NotNull] IPoint p) =>
-			(x == null || Equals(x, p.X)) &&
-			(y == null || Equals(y, p.Y)) &&
-			(z == null || Equals(z, p.Z));
+		private static bool Equals(double? x, double? y, double? z, [NotNull] IPoint p)
+		{
+			ISpatialReference sr = p.SpatialReference;
+			double t = SpatialReferenceUtils.GetXyTolerance(sr);
+			return
+				(x == null || Math.Abs(x.Value - p.X) < t) &&
+				(y == null || Math.Abs(y.Value - p.Y) < t) &&
+				(z == null || Math.Abs(z.Value - p.Z) < SpatialReferenceUtils.GetZTolerance(sr));
+		}
 
 		private static bool Equals(
 			double? x, double? y, double? z, double? otherZ,

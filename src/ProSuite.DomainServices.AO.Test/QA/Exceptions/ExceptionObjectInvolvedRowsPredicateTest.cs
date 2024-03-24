@@ -73,8 +73,8 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 			var involvedTables =
 				new List<InvolvedTable>
 				{
-					new InvolvedTable("Table2", new RowReference[] {new OIDRowReference(100)}),
-					new InvolvedTable("Table1", new RowReference[] {new OIDRowReference(1000)})
+					new InvolvedTable("Table2", new RowReference[] { new OIDRowReference(100) }),
+					new InvolvedTable("Table1", new RowReference[] { new OIDRowReference(1000) })
 				};
 
 			ITable tableMock = ExceptionObjectTestUtils.GetMockTable();

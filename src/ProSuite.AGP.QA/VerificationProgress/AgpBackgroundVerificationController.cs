@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -14,6 +14,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
@@ -28,7 +29,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly IProSuiteFacade _proSuiteFacade;
+		private readonly IWorkListOpener _workListOpener;
 		private readonly MapView _mapView;
 		[CanBeNull] private readonly Geometry _verifiedPerimeter;
 		[CanBeNull] private readonly SpatialReference _verificationSpatialReference;
@@ -36,20 +37,20 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AgpBackgroundVerificationController"/> class.
 		/// </summary>
-		/// <param name="proSuiteFacade"></param>
+		/// <param name="workListOpener"></param>
 		/// <param name="mapView"></param>
 		/// <param name="verifiedPerimeter"></param>
 		/// <param name="verificationSpatialReference"></param>
 		public AgpBackgroundVerificationController(
-			[NotNull] IProSuiteFacade proSuiteFacade,
+			[NotNull] IWorkListOpener workListOpener,
 			[NotNull] MapView mapView,
 			[CanBeNull] Geometry verifiedPerimeter,
 			[CanBeNull] SpatialReference verificationSpatialReference)
 		{
-			Assert.ArgumentNotNull(proSuiteFacade, nameof(proSuiteFacade));
+			Assert.ArgumentNotNull(workListOpener, nameof(workListOpener));
 			Assert.ArgumentNotNull(mapView, nameof(mapView));
 
-			_proSuiteFacade = proSuiteFacade;
+			_workListOpener = workListOpener;
 			_mapView = mapView;
 			_verifiedPerimeter = verifiedPerimeter;
 			_verificationSpatialReference = verificationSpatialReference;
@@ -151,10 +152,12 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			return true;
 		}
 
-		public async Task OpenWorkList(IQualityVerificationResult verificationResult)
+		public async Task OpenWorkList(IQualityVerificationResult verificationResult,
+		                               bool replaceExisting)
 		{
 			await ViewUtils.TryAsync(
-				_proSuiteFacade.OpenIssueWorkListAsync(verificationResult.IssuesGdbPath), _msg);
+				_workListOpener.OpenIssueWorkListAsync(verificationResult.IssuesGdbPath,
+				                                       replaceExisting), _msg);
 		}
 
 		public bool CanOpenWorkList(ServiceCallStatus? currentProgressStep,
@@ -208,7 +211,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return;
 			}
 
-			Process.Start(verificationResult.HtmlReportPath);
+			ProcessUtils.StartProcess(verificationResult.HtmlReportPath);
 		}
 
 		public bool CanShowReport(ServiceCallStatus? currentProgressStep,
@@ -277,9 +280,10 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 			List<Overlay> overlays = new List<Overlay>(2);
 
-			IEnumerable<Polyline> completedPolylines = tiles.Select(e =>
-				GeometryFactory.CreatePolyline(
-					e, _verificationSpatialReference));
+			var completedPolylines = tiles.Select(e =>
+				                                      GeometryFactory.CreatePolyline(
+					                                      e, _verificationSpatialReference))
+			                              .ToList();
 
 			Geometry completedLineGeometry = GeometryUtils.Union(completedPolylines);
 

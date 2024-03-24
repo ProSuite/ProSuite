@@ -10,29 +10,22 @@ using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.DomainModels;
-using ProSuite.Commons.DotLiquid;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Globalization;
-using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.Core.QA.Html;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
-using ProSuite.DomainServices.AO.QA.HtmlReports;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Issues;
-using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
-using ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options;
+using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.VerificationReports;
 using ProSuite.DomainServices.AO.QA.VerificationReports.Xml;
 using ProSuite.QA.Container;
-using Path = System.IO.Path;
 
 namespace ProSuite.DomainServices.AO.QA
 {
@@ -54,8 +47,6 @@ namespace ProSuite.DomainServices.AO.QA
 		private IQualityConditionObjectDatasetResolver _datasetResolver;
 
 		private IIssueRepository _externalIssueRepository;
-		private IssueStatisticsBuilder _statisticsBuilder;
-		private XmlVerificationReportBuilder _xmlVerificationReportBuilder;
 		private IVerificationReportBuilder _verificationReportBuilder;
 		private IVerificationContext _verificationContext;
 		private IGeometry _testPerimeter;
@@ -114,6 +105,12 @@ namespace ProSuite.DomainServices.AO.QA
 			get { return _tileSize; }
 			set { _tileSize = value; }
 		}
+
+		/// <summary>
+		/// The interface that allows sending progress information during a lengthy operation.
+		/// </summary>
+		[CanBeNull]
+		public IVerificationProgressStreamer ProgressStreamer { get; set; }
 
 		public bool ForceFullScanForNonContainerTests { get; set; }
 
@@ -478,6 +475,17 @@ namespace ProSuite.DomainServices.AO.QA
 			IList<ITest> tests = GetTests(qualitySpecification,
 			                              out QualityVerification qualityVerification);
 
+			if (tests.Count == 0)
+			{
+				// TODO: report warning via progress to client
+				_msg.Warn("The provided quality specification contains no quality conditions. " +
+				          "The specification is fulfilled but no reports will be generated.");
+
+				// Sets the fulfilled flag to true:
+				qualityVerification.CalculateStatistics();
+				return qualityVerification;
+			}
+
 			_datasetResolver = new QualityConditionObjectDatasetResolver(_verificationContext);
 
 			_objectSelection = _selection == null
@@ -553,28 +561,12 @@ namespace ProSuite.DomainServices.AO.QA
 			return qualityVerification;
 		}
 
-		[NotNull]
-		private static XmlVerificationReport WriteVerificationReport(
-			[NotNull] XmlVerificationReportBuilder reportBuilder,
-			[NotNull] string verificationReportPath,
-			[NotNull] QualitySpecification qualitySpecification,
-			[NotNull] IEnumerable<KeyValuePair<string, string>> properties)
-		{
-			XmlVerificationReport report = reportBuilder.CreateReport(
-				qualitySpecification.Name,
-				properties);
-
-			XmlUtils.Serialize(report, verificationReportPath);
-
-			_msg.InfoFormat("Verification report written to {0}", verificationReportPath);
-
-			return report;
-		}
-
 		protected void ReportPreProcessing([NotNull] string message,
 		                                   int currentStep = 0,
 		                                   int stepCount = 0)
 		{
+			_msg.VerboseDebug(() => $"Preprocessing - {message}");
+
 			var args = new VerificationProgressEventArgs(
 				           VerificationProgressType.PreProcess, currentStep, stepCount)
 			           {
@@ -632,69 +624,38 @@ namespace ProSuite.DomainServices.AO.QA
 			Assert.ArgumentNotNull(tests, nameof(tests));
 			Assert.ArgumentNotNull(qualityVerification, nameof(qualityVerification));
 
-			var reportBuilders = new List<IVerificationReportBuilder>();
-
-			InvolvedDatasetsCollector datasetsCollector = null;
-
-			if (Parameters != null)
-			{
-				if (! string.IsNullOrEmpty(Parameters.IssueFgdbPath))
+			var verificationReporter =
+				new VerificationReporter(Parameters)
 				{
-					ReportPreProcessing("Creating external issue file geodatabase");
+					ReportInvolvedTableForSchemaIssues = true,
+					ProgressStreamer = ProgressStreamer
+				};
 
-					ISpatialReference issueSpatialReference = GetSpatialReferenceForIssueDatasets();
-
-					_externalIssueRepository = ExternalIssueRepositoryUtils.GetIssueRepository(
-						Assert.NotNull(Parameters.IssueFgdbPath),
-						issueSpatialReference, IssueRepositoryType.FileGdb);
-
-					_statisticsBuilder = new IssueStatisticsBuilder();
-
-					datasetsCollector = new InvolvedDatasetsCollector();
-
-					reportBuilders.Add(_statisticsBuilder);
-					reportBuilders.Add(datasetsCollector);
-				}
-
-				if (! string.IsNullOrEmpty(Parameters.VerificationReportPath))
-				{
-					_xmlVerificationReportBuilder = new XmlVerificationReportBuilder(
-						Parameters.WriteDetailedVerificationReport
-							? IssueReportingContexts.QualityConditionWithIssues
-							: IssueReportingContexts.None,
-						VerifiedConditionContexts.Summary,
-						reportInvolvedTableForSchemaIssues: true);
-
-					reportBuilders.Add(_xmlVerificationReportBuilder);
-				}
-			}
-
-			_verificationReportBuilder = new MultiReportBuilder(reportBuilders);
-
-			// TODO indicate if polygon, perimeter name, perimeter type etc.
-			_verificationReportBuilder.BeginVerification(areaOfInterest);
-
-			foreach (QualityVerificationDataset verifiedDataset in
-			         qualityVerification.VerificationDatasets)
+			ISubVerificationObserver subVerificationObserver = null;
+			if (verificationReporter.CanCreateIssueRepository)
 			{
-				_verificationReportBuilder.AddVerifiedDataset(verifiedDataset.Dataset);
-			}
+				ISpatialReference spatialReference =
+					Parameters.IssueFgdbSpatialReference ??
+					GetSpatialReferenceForIssueDatasets();
 
-			foreach (QualityConditionVerification conditionVerification in
-			         qualityVerification.ConditionVerifications)
-			{
-				_verificationReportBuilder.AddVerifiedQualityCondition(
-					_verificationElements.GetSpecificationElement(conditionVerification));
-			}
+				_externalIssueRepository = verificationReporter.CreateIssueRepository(
+					IssueRepositoryType.FileGdb, spatialReference);
 
-			testRunner.QaError += container_QaError;
-			testRunner.Progress += TestRunner_Progress;
+				subVerificationObserver =
+					testRunner.AddObserver(verificationReporter, spatialReference);
+			}
 
 			_warningCount = 0;
 			_errorCount = 0;
 
 			try
 			{
+				_verificationReportBuilder =
+					InitializeReporting(verificationReporter, qualityVerification, areaOfInterest);
+
+				testRunner.QaError += container_QaError;
+				testRunner.Progress += TestRunner_Progress;
+
 				testRunner.Execute(tests, areaOfInterest, CancellationTokenSource);
 
 				CancellationMessage = testRunner.CancellationMessage;
@@ -709,142 +670,74 @@ namespace ProSuite.DomainServices.AO.QA
 
 				_verificationReportBuilder.EndVerification(testRunner.Cancelled);
 
-				XmlVerificationReport verificationReport;
-				if (_xmlVerificationReportBuilder != null)
-				{
-					Assert.NotNull(Parameters);
-					Assert.NotNull(Parameters.VerificationReportPath);
-
-					verificationReport = WriteVerificationReport(
-						_xmlVerificationReportBuilder,
-						Parameters.VerificationReportPath,
-						qualitySpecification,
-						Parameters.ReportProperties);
-				}
-				else
-				{
-					verificationReport = null;
-				}
-
-				IEnumerable<string> compressibleDatasetPaths;
+				XmlVerificationReport verificationReport =
+					verificationReporter.WriteReports(qualitySpecification);
 
 				if (_externalIssueRepository != null)
 				{
-					Assert.NotNull(Parameters);
-					using (_msg.IncrementIndentation("Issues written to {0}",
-					                                 Parameters.IssueFgdbPath))
+					verificationReporter.CreateIssueRepositoryIndexes(_externalIssueRepository);
+
+					string issueTableName =
+						verificationReporter.WriteIssueStatistics(_externalIssueRepository);
+
+					string aoiTableName = verificationReporter.WriteAreaOfInterest(
+						_externalIssueRepository, areaOfInterest,
+						_verificationContext.SpatialReferenceDescriptor.SpatialReference);
+
+					#region Write MXD - TO BE DEPRECATED once AO 10.x support is dropped
+
+					if (verificationReport != null &&
+					    StringUtils.IsNotEmpty(Parameters?.MxdDocumentPath))
 					{
-						const bool ignoreErrors = true;
-						_externalIssueRepository.CreateIndexes(null, ignoreErrors);
-					}
-
-					List<IObjectClass> nonEmptyIssueRepositoryClasses =
-						_externalIssueRepository.IssueDatasets
-						                        .Where(issueDataset => issueDataset.IssueCount > 0)
-						                        .Select(issueDataset => issueDataset.ObjectClass)
-						                        .ToList();
-
-					if (_statisticsBuilder != null)
-					{
-						_msg.InfoFormat("Writing issue statistics table");
-
-						IssueStatistics issueStatistics = _statisticsBuilder.IssueStatistics;
-
-						var issueStatisticsWriter =
-							new IssueStatisticsWriter(_externalIssueRepository.FeatureWorkspace);
-						IIssueStatisticsTable issueStatisticsTable =
-							issueStatisticsWriter.WriteStatistics(issueStatistics);
-
-						if (issueStatistics.IssueCount > 0)
-						{
-							nonEmptyIssueRepositoryClasses.Add(
-								(IObjectClass) issueStatisticsTable.Table);
-						}
-
-						// write AOI class
-						IFeatureClass aoiFeatureClass;
-						if (areaOfInterest != null && ! areaOfInterest.IsEmpty)
-						{
-							var aoiWriter =
-								new AreaOfInterestWriter(_externalIssueRepository.FeatureWorkspace);
-							aoiFeatureClass = aoiWriter.WriteAreaOfInterest(
-								areaOfInterest,
-								_verificationContext.SpatialReferenceDescriptor.SpatialReference);
-							nonEmptyIssueRepositoryClasses.Add(aoiFeatureClass);
-						}
-						else
-						{
-							aoiFeatureClass = null;
-						}
-
 						// gather the verified object classes
 						IList<IObjectClass> verifiedObjectClasses =
 							VerificationUtils.GetObjectClasses(
-								Assert
-									.NotNull(datasetsCollector)
-									.InvolvedDatasets,
+								Assert.NotNull(verificationReporter.DatasetsCollector)
+								      .InvolvedDatasets,
 								_verificationContext).ToList();
 
-						bool mapDocumentWritten = false;
-						if (verificationReport != null &&
-						    StringUtils.IsNotEmpty(Parameters.MxdDocumentPath))
-						{
-							mapDocumentWritten = WriteIssueMapDocument(
-								qualitySpecification, _externalIssueRepository,
-								issueStatisticsTable, verifiedObjectClasses,
-								verificationReport, aoiFeatureClass);
-						}
-
-						if (verificationReport != null &&
-						    StringUtils.IsNotEmpty(Parameters.HtmlReportPath) &&
-						    StringUtils.IsNotEmpty(Parameters.HtmlTemplatePath))
-						{
-							string outputDirectory = Assert.NotNullOrEmpty(
-								Path.GetDirectoryName(Parameters.HtmlReportPath));
-
-							WriteHtmlReport(qualitySpecification,
-							                Path.GetFileName(Parameters.HtmlReportPath),
-							                outputDirectory,
-							                Parameters.HtmlTemplatePath,
-							                issueStatistics,
-							                verificationReport,
-							                Path.GetFileName(
-								                Parameters.VerificationReportPath),
-							                Parameters.IssueFgdbPath,
-							                mapDocumentWritten
-								                ? Parameters.MxdDocumentPath
-								                : null);
-						}
+						WriteIssueMapDocument(
+							qualitySpecification, _externalIssueRepository,
+							issueTableName, verifiedObjectClasses,
+							verificationReport, aoiTableName);
 					}
 
-					// get the paths to the compressible issue datasets now, to release all references before compress
-					compressibleDatasetPaths =
-						VerificationUtils.GetCompressibleFgdbDatasetPaths(
-							nonEmptyIssueRepositoryClasses);
-
-					nonEmptyIssueRepositoryClasses.Clear();
-
-					_externalIssueRepository.Dispose();
-					_externalIssueRepository = null;
-				}
-				else
-				{
-					compressibleDatasetPaths = null;
-				}
-
-				GC.Collect();
-				GC.WaitForPendingFinalizers();
-
-				if (Parameters?.CompressIssueFgdb == true && compressibleDatasetPaths != null)
-				{
-					Compress(compressibleDatasetPaths);
+					#endregion
 				}
 			}
 			finally
 			{
 				testRunner.QaError -= container_QaError;
 				testRunner.Progress -= TestRunner_Progress;
+
+				_externalIssueRepository?.Dispose();
+				_externalIssueRepository = null;
+
+				subVerificationObserver?.Dispose();
+
+				GC.Collect();
+				GC.WaitForPendingFinalizers();
 			}
+		}
+
+		private IVerificationReportBuilder InitializeReporting(
+			[NotNull] VerificationReporter verificationReporter,
+			[NotNull] QualityVerification qualityVerification,
+			[CanBeNull] AreaOfInterest areaOfInterest)
+		{
+			IVerificationReportBuilder reportBuilder = verificationReporter.CreateReportBuilders();
+
+			// TODO indicate if polygon, perimeter name, perimeter type etc.
+			reportBuilder.BeginVerification(areaOfInterest);
+
+			verificationReporter.AddVerifiedDatasets(
+				qualityVerification.VerificationDatasets.Select(vds => vds.Dataset));
+
+			verificationReporter.AddVerifiedConditions(
+				qualityVerification.ConditionVerifications.Select(
+					cv => _verificationElements.GetSpecificationElement(cv)));
+
+			return reportBuilder;
 		}
 
 		private ISpatialReference GetSpatialReferenceForIssueDatasets()
@@ -869,10 +762,10 @@ namespace ProSuite.DomainServices.AO.QA
 		protected abstract bool WriteIssueMapDocument(
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] IIssueRepository issueRepository,
-			[NotNull] IIssueStatisticsTable issueStatisticsTable,
+			[NotNull] string issueStatisticsTableName,
 			[NotNull] IList<IObjectClass> verifiedObjectClasses,
 			[NotNull] XmlVerificationReport verificationReport,
-			IFeatureClass aoiFeatureClass);
+			string aoiFeatureClassName);
 
 		protected virtual ITestRunner CreateTestRunner(
 			[NotNull] QualityVerification qualityVerification)
@@ -890,55 +783,6 @@ namespace ProSuite.DomainServices.AO.QA
 				};
 
 			return testRunner;
-		}
-
-		private static void WriteHtmlReport(
-			[NotNull] QualitySpecification qualitySpecification,
-			[NotNull] string htmlReportFileName,
-			[NotNull] string directory,
-			[NotNull] string htmlTemplatePath,
-			[NotNull] IssueStatistics issueStatistics,
-			[NotNull] XmlVerificationReport verificationReport,
-			[NotNull] string verificationReportFileName,
-			[CanBeNull] string issueFgdbPath,
-			[CanBeNull] string mxdDocumentPath)
-		{
-			var reportDefinition =
-				new HtmlReportDefinition(
-					htmlTemplatePath, htmlReportFileName,
-					new List<HtmlDataQualityCategoryOptions>());
-
-			string reportFilePath = Path.Combine(directory, htmlReportFileName);
-
-			_msg.DebugFormat("Preparing html report model");
-			var reportModel = new HtmlReportModel(qualitySpecification,
-			                                      issueStatistics,
-			                                      verificationReport,
-			                                      directory,
-			                                      verificationReportFileName,
-			                                      issueFgdbPath,
-			                                      StringUtils.IsNotEmpty(mxdDocumentPath)
-				                                      ? new[] { mxdDocumentPath }
-				                                      : null,
-			                                      new[] { htmlReportFileName },
-			                                      null,
-			                                      reportDefinition);
-
-			_msg.DebugFormat("Rendering html report based on template {0}",
-			                 reportDefinition.TemplatePath);
-
-			LiquidUtils.RegisterSafeType<HtmlReportModel>();
-			LiquidUtils.RegisterSafeType<HtmlTexts>();
-
-			string output = LiquidUtils.Render(
-				reportDefinition.TemplatePath,
-				new KeyValuePair<string, object>("report", reportModel),
-				new KeyValuePair<string, object>("text", new HtmlTexts()));
-
-			_msg.DebugFormat("Writing html report to {0}", reportFilePath);
-			FileSystemUtils.WriteTextFile(output, reportFilePath);
-
-			_msg.InfoFormat("Html report written to {0}", reportFilePath);
 		}
 
 		private CancellationTokenSource _cancellationTokenSource;
@@ -1178,10 +1022,10 @@ namespace ProSuite.DomainServices.AO.QA
 				throw;
 			}
 
-			// Once the error filter is applied inside the test runner, this can be 
-			// moved to the test runner too:
-			conditionVerification.ErrorCount++;
+			conditionVerification.AddError();
+
 			bool isAllowable = conditionVerification.AllowErrors;
+
 			if (isAllowable)
 			{
 				_warningCount++;
@@ -1191,6 +1035,8 @@ namespace ProSuite.DomainServices.AO.QA
 				_errorCount++;
 			}
 
+			// Once the error filter is applied inside the test runner, this can be 
+			// moved to the test runner too:
 			if (qaError.Geometry == null &&
 			    StoreRelatedGeometryForTableRowErrors &&
 			    ! qualityCondition.NeverStoreRelatedGeometryForTableRowIssues)

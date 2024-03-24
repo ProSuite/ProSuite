@@ -9,14 +9,21 @@ namespace ProSuite.Commons
 
 		public static double RoundToSignificantDigits(double value, int digits)
 		{
-			if (AreEqual(value, 0.0))
-			{
-				return 0.0;
-			}
+			// Good results in more cases than the previous method;
+			// source: https://stackoverflow.com/questions/202302
+			// Still this had better be done as part of formatting,
+			// but .NET has no such format specifiers.
 
-			double scale = Math.Pow(10, Math.Floor(Math.Log10(Math.Abs(value))) + 1);
+			if (AreEqual(value, 0.0)) return 0.0;
+			double d = Math.Ceiling(Math.Log10(value < 0 ? -value : value));
+			int power = digits - (int) d;
+			double magnitude = Math.Pow(10, power);
+			long shifted = (long) Math.Round(value * magnitude);
+			return shifted / magnitude;
 
-			return scale * Math.Round(value / scale, digits);
+			//if (AreEqual(value, 0.0)) return 0.0;
+			//double scale = Math.Pow(10, Math.Floor(Math.Log10(Math.Abs(value))) + 1);
+			//return scale * Math.Round(value / scale, digits);
 		}
 
 		public static double ToDegrees(double radians)

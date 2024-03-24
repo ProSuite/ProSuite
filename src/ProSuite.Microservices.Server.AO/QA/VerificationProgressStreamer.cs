@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
 using log4net.Core;
@@ -141,12 +142,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			int messageLevel = Level.Info.Value;
 
+			_msg.Info(text);
+
 			WriteMessage(text, messageLevel);
 		}
 
 		public void Warning(string text)
 		{
 			int messageLevel = Level.Warn.Value;
+
+			_msg.Warn(text);
 
 			WriteMessage(text, messageLevel);
 		}
@@ -172,7 +177,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			T response = CreateResponseAction(callStatus, _currentProgressMsg, issuesToSend);
 
-			_msg.DebugFormat("Sending {0} errors back to client...", issuesToSend.Count);
+			if (issuesToSend.Count > 0)
+			{
+				_msg.DebugFormat("Sending {0} errors back to client...", issuesToSend.Count);
+			}
 
 			try
 			{
@@ -195,7 +203,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[CanBeNull] QualityVerification verification,
 			[CanBeNull] string qaServiceCancellationMessage,
 			IEnumerable<GdbObjRefMsg> deletableAllowedErrors,
-			[CanBeNull] IEnvelope verifiedPerimeter)
+			[CanBeNull] IEnvelope verifiedPerimeter,
+			[CanBeNull] ITrackCancel cancelTracker)
 		{
 			IList<IssueMsg> issuesToSend = DeQueuePendingIssues();
 
@@ -245,9 +254,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 			catch (InvalidOperationException ex)
 			{
-				if (finalStatus == ServiceCallStatus.Cancelled)
+				if (finalStatus == ServiceCallStatus.Cancelled ||
+				    cancelTracker?.Continue() == false)
 				{
 					// Typically: System.InvalidOperationException: Already finished.
+					_msg.Debug(
+						"The verification has been cancelled and the client is already gone.", ex);
+
 					return finalStatus;
 				}
 
@@ -557,10 +570,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			else
 			{
 				issueProto = ProtobufQaUtils.CreateIssueProto(
-					issueFoundEventArgs,
-					Assert.NotNull(KnownIssueSpatialReference,
-					               "Either background verification inputs or known spatial refereance must be specified"),
-					_standaloneIssueGeometryTypes);
+					issueFoundEventArgs, KnownIssueSpatialReference, _standaloneIssueGeometryTypes);
 			}
 
 			_pendingIssues.Add(issueProto);

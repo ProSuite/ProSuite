@@ -5,12 +5,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using Google.Protobuf.Collections;
 using Grpc.Core;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Com;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
@@ -18,6 +21,7 @@ using ProSuite.DomainModel.AO.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.AO;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 using Quaestor.LoadReporting;
@@ -29,9 +33,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		[NotNull] private readonly IDomainTransactionManager _domainTransactions;
+
 		// Technically probably not necessary because no proper AO-objects are used.
 		// But rather be safe than sorry (and experiencing locks and hangs).
 		private readonly StaTaskScheduler _staThreadScheduler = new StaTaskScheduler(5);
+
+		public QualityVerificationDdxGrpcImpl(
+			[NotNull] IDomainTransactionManager domainTransactions)
+		{
+			_domainTransactions = domainTransactions;
+		}
 
 		/// <summary>
 		/// The overall service process health. If it has been set, it will be marked as not serving
@@ -63,6 +75,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		public IVerificationDataDictionary<TModel> VerificationDdx { get; set; }
 
+		/// <summary>
+		/// The default value to use if the environment variable that indicates whether or not the
+		/// service should continue serving (or shut down) in case of an exception.
+		/// </summary>
+		public bool KeepServingOnErrorDefaultValue { get; set; }
+
+		#region Overrides of QualityVerificationDdxGrpcBase
+
 		public override async Task<GetProjectWorkspacesResponse> GetProjectWorkspaces(
 			GetProjectWorkspacesRequest request, ServerCallContext context)
 		{
@@ -70,7 +90,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			try
 			{
-				await StartRequestAsync(context.Peer, request);
+				string peer = context.Peer;
+
+				await StartRequestAsync(peer, request);
 
 				Stopwatch watch = _msg.DebugStartTiming();
 
@@ -78,7 +100,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					trackCancel => GetProjectWorkspacesCore(request);
 
 				using (_msg.IncrementIndentation("Getting project workspaces for {0}",
-				                                 context.Peer))
+				                                 peer))
 				{
 					response =
 						await GrpcServerUtils.ExecuteServiceCall(
@@ -88,7 +110,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				_msg.DebugStopTiming(
 					watch, "Gotten project workspaces for peer {0} ({1} object class(es))",
-					context.Peer, request.ObjectClasses.Count);
+					peer, request.ObjectClasses.Count);
 
 				_msg.InfoFormat("Returning {0} project workspaces",
 				                response.ProjectWorkspaces.Count);
@@ -97,7 +119,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				_msg.Error($"Error getting project workspaces {request}", e);
 
-				SetUnhealthy();
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				{
+					ServiceUtils.SetUnhealthy(Health, GetType());
+				}
 
 				throw;
 			}
@@ -109,10 +134,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
-		public override async Task<GetSpecificationsResponse> GetQualitySpecifications(
-			GetSpecificationsRequest request, ServerCallContext context)
+		public override async Task<GetSpecificationRefsResponse> GetQualitySpecificationRefs(
+			GetSpecificationRefsRequest request, ServerCallContext context)
 		{
-			GetSpecificationsResponse response;
+			GetSpecificationRefsResponse response;
 
 			try
 			{
@@ -120,8 +145,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				Stopwatch watch = _msg.DebugStartTiming();
 
-				Func<ITrackCancel, GetSpecificationsResponse> func =
-					trackCancel => GetQualitySpecificationsCore(request);
+				Func<ITrackCancel, GetSpecificationRefsResponse> func =
+					trackCancel => GetSpecificationRefsCore(request);
 
 				using (_msg.IncrementIndentation("Getting quality specifications for {0}",
 				                                 context.Peer))
@@ -129,7 +154,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					response =
 						await GrpcServerUtils.ExecuteServiceCall(
 							func, context, _staThreadScheduler, true) ??
-						new GetSpecificationsResponse();
+						new GetSpecificationRefsResponse();
 				}
 
 				_msg.DebugStopTiming(
@@ -143,7 +168,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				_msg.Error($"Error getting quality specifications {request}", e);
 
-				SetUnhealthy();
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				{
+					ServiceUtils.SetUnhealthy(Health, GetType());
+				}
 
 				throw;
 			}
@@ -154,6 +182,106 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			return response;
 		}
+
+		public override async Task<GetSpecificationResponse> GetQualitySpecification(
+			GetSpecificationRequest request, ServerCallContext context)
+		{
+			GetSpecificationResponse response;
+
+			try
+			{
+				await StartRequestAsync(context.Peer, request);
+
+				Stopwatch watch = _msg.DebugStartTiming();
+
+				Func<ITrackCancel, GetSpecificationResponse> func =
+					trackCancel => GetSpecificationCore(request);
+
+				using (_msg.IncrementIndentation("Getting quality specification for {0}",
+				                                 context.Peer))
+				{
+					response =
+						await GrpcServerUtils.ExecuteServiceCall(
+							func, context, _staThreadScheduler, true) ??
+						new GetSpecificationResponse();
+				}
+
+				_msg.DebugStopTiming(
+					watch, "Gotten quality specification for peer {0} (<id> {1})",
+					context.Peer, request.QualitySpecificationId);
+
+				_msg.InfoFormat("Returning quality specification {0} with {1} conditions",
+				                response.Specification.Name, response.Specification.Elements.Count);
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error getting quality specifications {request}", e);
+
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				{
+					ServiceUtils.SetUnhealthy(Health, GetType());
+				}
+
+				throw;
+			}
+			finally
+			{
+				EndRequest();
+			}
+
+			return response;
+		}
+
+		public override async Task<GetConditionResponse> GetQualityCondition(
+			GetConditionRequest request, ServerCallContext context)
+		{
+			GetConditionResponse response;
+
+			try
+			{
+				await StartRequestAsync(context.Peer, request);
+
+				Stopwatch watch = _msg.DebugStartTiming();
+
+				Func<ITrackCancel, GetConditionResponse> func =
+					trackCancel => GetConditionCore(request);
+
+				using (_msg.IncrementIndentation("Getting quality condition {0} for {1}",
+				                                 request.ConditionName, context.Peer))
+				{
+					response =
+						await GrpcServerUtils.ExecuteServiceCall(
+							func, context, _staThreadScheduler, true) ??
+						new GetConditionResponse();
+				}
+
+				_msg.DebugStopTiming(
+					watch, "Gotten quality condition for peer {0} ({1})",
+					context.Peer, request.ConditionName);
+
+				_msg.InfoFormat("Returning quality condition <id> {0}",
+				                response.Condition?.ConditionId);
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error getting quality specifications {request}", e);
+
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				{
+					ServiceUtils.SetUnhealthy(Health, GetType());
+				}
+
+				throw;
+			}
+			finally
+			{
+				EndRequest();
+			}
+
+			return response;
+		}
+
+		#endregion
 
 		private GetProjectWorkspacesResponse GetProjectWorkspacesCore(
 			GetProjectWorkspacesRequest request)
@@ -173,8 +301,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
-			var projectWorkspaces =
-				verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
+			IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces = null;
+
+			_domainTransactions.UseTransaction(
+				() =>
+				{
+					projectWorkspaces =
+						verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
+				});
 
 			GetProjectWorkspacesResponse response = PackProjectWorkspaceResponse(projectWorkspaces);
 
@@ -201,6 +335,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				projectWorkspaceMsg.DatasetIds.AddRange(
 					projectWorkspace.Datasets.Select(ds => ds.Id));
 
+				projectWorkspaceMsg.IsMasterDatabaseWorkspace =
+					projectWorkspace.IsModelMasterDatabase;
+
 				response.ProjectWorkspaces.Add(projectWorkspaceMsg);
 
 				projects.Add(projectWorkspace.Project);
@@ -208,11 +345,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			foreach (Project<TModel> project in projects)
 			{
+				TModel productionModel = project.ProductionModel;
+
 				var projectMsg =
 					new ProjectMsg
 					{
 						ProjectId = project.Id,
-						ModelId = project.ProductionModel.Id,
+						ModelId = productionModel.Id,
 						Name = project.Name,
 						ShortName = project.ShortName,
 						MinimumScaleDenominator = project.MinimumScaleDenominator,
@@ -225,49 +364,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				response.Projects.Add(projectMsg);
 
-				var srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
-					project.ProductionModel.SpatialReferenceDescriptor.SpatialReference,
-					SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid);
+				RepeatedField<DatasetMsg> responseDatasets = response.Datasets;
 
-				var modelMsg =
-					new ModelMsg
-					{
-						ModelId = project.ProductionModel.Id,
-						Name = project.ProductionModel.Name,
-						SpatialReference = srWkId
-					};
-
-				IWorkspace masterWorkspace =
-					project.ProductionModel.GetMasterDatabaseWorkspace();
-
-				// If necessary, return the list of referenced workspaces
-				modelMsg.MasterDbWorkspaceHandle = masterWorkspace?.GetHashCode() ?? -1;
-
-				foreach (Dataset dataset in project.ProductionModel.Datasets)
-				{
-					modelMsg.DatasetIds.Add(dataset.Id);
-
-					if (dataset is IErrorDataset)
-					{
-						modelMsg.ErrorDatasetIds.Add(dataset.Id);
-					}
-
-					int geometryType = (int) ProtobufGdbUtils.GetGeometryType(dataset);
-
-					var datasetMsg =
-						new DatasetMsg
-						{
-							DatasetId = dataset.Id,
-							Name = dataset.Name,
-							AliasName = dataset.AliasName,
-							GeometryType = geometryType
-						};
-
-					CallbackUtils.DoWithNonNull(
-						datasetMsg.AliasName, s => dataset.AliasName = s);
-
-					response.Datasets.Add(datasetMsg);
-				}
+				ModelMsg modelMsg = ToModelMsg(productionModel, responseDatasets);
 
 				response.Models.Add(modelMsg);
 			}
@@ -275,18 +374,43 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
-		private GetSpecificationsResponse GetQualitySpecificationsCore(
-			GetSpecificationsRequest request)
+		private static ModelMsg ToModelMsg(TModel productionModel,
+		                                   ICollection<DatasetMsg> referencedDatasetMsgs)
 		{
-			var response = new GetSpecificationsResponse();
+			SpatialReferenceMsg srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
+				productionModel.SpatialReferenceDescriptor.SpatialReference,
+				SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid);
+
+			ModelMsg modelMsg =
+				ProtoDataQualityUtils.ToDdxModelMsg(productionModel, srWkId, referencedDatasetMsgs);
+
+			// If necessary, return the list of referenced workspaces
+			// However, this is currently not needed anywhere and requires opening workpaces, which is slow!
+
+			//IWorkspace masterWorkspace =
+			//	productionModel.GetMasterDatabaseWorkspace();
+			//modelMsg.MasterDbWorkspaceHandle = masterWorkspace?.GetHashCode() ?? -1;
+
+			return modelMsg;
+		}
+
+		private GetSpecificationRefsResponse GetSpecificationRefsCore(
+			GetSpecificationRefsRequest request)
+		{
+			var response = new GetSpecificationRefsResponse();
 
 			IVerificationDataDictionary<TModel> verificationDataDictionary =
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
-			IList<QualitySpecification> foundSpecifications =
-				verificationDataDictionary.GetQualitySpecifications(
-					request.DatasetIds, request.IncludeHidden);
+			IList<QualitySpecification> foundSpecifications = null;
+			_domainTransactions.UseTransaction(
+				() =>
+				{
+					foundSpecifications =
+						verificationDataDictionary.GetQualitySpecifications(
+							request.DatasetIds, request.IncludeHidden);
+				});
 
 			response.QualitySpecifications.AddRange(
 				foundSpecifications.Select(qs => new QualitySpecificationRefMsg
@@ -298,9 +422,101 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
+		private GetSpecificationResponse GetSpecificationCore(
+			[NotNull] GetSpecificationRequest request)
+		{
+			var response = new GetSpecificationResponse();
+
+			IVerificationDataDictionary<TModel> verificationDataDictionary =
+				Assert.NotNull(VerificationDdx,
+				               "Data Dictionary access has not been configured or failed.");
+
+			_domainTransactions.UseTransaction(
+				() =>
+				{
+					QualitySpecification qualitySpecification =
+						verificationDataDictionary.GetQualitySpecification(
+							request.QualitySpecificationId);
+
+					if (qualitySpecification == null)
+					{
+						return;
+					}
+
+					ConditionListSpecificationMsg specificationMsg =
+						ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
+							qualitySpecification, null,
+							out IDictionary<int, DdxModel> modelsById);
+
+					response.Specification = specificationMsg;
+
+					response.ReferencedInstanceDescriptors.AddRange(
+						ProtoDataQualityUtils.GetInstanceDescriptorMsgs(qualitySpecification));
+
+					RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
+					foreach (DdxModel model in modelsById.Values)
+					{
+						ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
+						response.ReferencedModels.Add(modelMsg);
+					}
+				});
+
+			return response;
+		}
+
+		private GetConditionResponse GetConditionCore([NotNull] GetConditionRequest request)
+		{
+			var response = new GetConditionResponse();
+
+			IVerificationDataDictionary<TModel> verificationDataDictionary =
+				Assert.NotNull(VerificationDdx,
+				               "Data Dictionary access has not been configured or failed.");
+
+			_domainTransactions.UseTransaction(
+				() =>
+				{
+					QualityCondition qualityCondition =
+						verificationDataDictionary.GetQualityCondition(request.ConditionName);
+
+					if (qualityCondition == null)
+					{
+						return;
+					}
+
+					// The parameters must be initialized!
+					InstanceConfigurationUtils.InitializeParameterValues(qualityCondition);
+
+					IDictionary<int, DdxModel> modelsById = new Dictionary<int, DdxModel>();
+
+					QualityConditionMsg conditionMsg =
+						ProtoDataQualityUtils.CreateQualityConditionMsg(
+							qualityCondition, null, modelsById);
+
+					response.Condition = conditionMsg;
+					response.CategoryName = qualityCondition.Category?.Name ?? string.Empty;
+
+					response.ReferencedInstanceDescriptors.AddRange(
+						ProtoDataQualityUtils.GetInstanceDescriptorMsgs(
+							new[] { qualityCondition }));
+
+					RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
+					foreach (DdxModel model in modelsById.Values)
+					{
+						ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
+						response.ReferencedModels.Add(modelMsg);
+					}
+				});
+
+			return response;
+		}
+
 		private async Task<bool> StartRequestAsync(string peerName, object request,
 		                                           bool requiresLicense = true)
 		{
+			// The request comes in on a .NET thread-pool thread, which has no useful name
+			// when it comes to logging. Set the ID as its name.
+			ProcessUtils.TrySetThreadIdAsName();
+
 			CurrentLoad?.StartRequest();
 
 			_msg.InfoFormat("Starting {0} request from {1}", request.GetType().Name, peerName);
@@ -329,7 +545,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
-		public async Task<bool> EnsureLicenseAsync()
+		private async Task<bool> EnsureLicenseAsync()
 		{
 			if (LicenseAction == null)
 			{

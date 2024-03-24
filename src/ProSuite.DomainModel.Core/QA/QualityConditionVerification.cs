@@ -90,6 +90,21 @@ namespace ProSuite.DomainModel.Core.QA
 			_displayableCondition = null;
 		}
 
+		/// <summary>
+		/// Increases the Error count and, if not errors are allowed, sets <see cref="Fulfilled"/>
+		/// to false.
+		/// </summary>
+		/// <returns></returns>
+		public int AddError()
+		{
+			if (AllowErrors)
+			{
+				Fulfilled = false;
+			}
+
+			return ErrorCount++;
+		}
+
 		public bool AllowErrors
 		{
 			get { return _allowErrors; }
@@ -212,7 +227,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 				if (string.IsNullOrEmpty(_qualityConditionName))
 				{
-					// for backwards compatiblity
+					// for backwards compatibility
 
 					// _qualityConditionName == null --> _qualityConditionId/ -Version invalid
 					// assume that quality condition is still valid

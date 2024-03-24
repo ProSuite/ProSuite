@@ -1,4 +1,5 @@
 using ProSuite.Commons.DomainModels;
+using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
@@ -20,9 +21,10 @@ namespace ProSuite.DdxEditor.Content.Datasets
 		public Model DatasetModel => _datasetModel;
 
 		protected override void AddEntityPanels(
-			ICompositeEntityControl<T, IViewObserver> compositeControl)
+			ICompositeEntityControl<T, IViewObserver> compositeControl,
+			IItemNavigation itemNavigation)
 		{
-			base.AddEntityPanels(compositeControl);
+			base.AddEntityPanels(compositeControl, itemNavigation);
 
 			var control = new VectorDatasetControl<T>();
 			new VectorDatasetPresenter<T>(control, this);

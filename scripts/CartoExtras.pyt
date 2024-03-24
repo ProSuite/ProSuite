@@ -22,7 +22,10 @@ class ArcadeExpressionToField(object):
                            "the Unique Value Renderer with an Arcade expression, " \
                            "evaluate that expression and write the resulting value " \
                            "to a field. Optionally, update the renderer to use this " \
-                           "field instead of the Arcade expression."
+                           "field instead of the Arcade expression. Beware that if " \
+                           "multiple layers refer to the same feature class, later " \
+                           "layers will overwrite the field (if this is an issue, " \
+                           "update this script)."
         self.canRunInBackground = False
 
     def getParameterInfo(self):
@@ -106,6 +109,7 @@ def arcade_to_field(mapName, fieldName, useField):
             if (cim.renderer and cim.renderer.valueExpressionInfo and
                 cim.renderer.valueExpressionInfo.expression):
                 # if field exists, delete it, then add the new field
+                # TODO change fieldName to foo1, foo2, foo3, etc.
                 if hasField(layer, fieldName):
                     arcpy.AddMessage(f"Deleting field {fieldName} from {layer.name}")
                     arcpy.DeleteField_management(layer, [fieldName])

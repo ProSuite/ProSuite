@@ -197,6 +197,15 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The tolerance for the footprint calculation. The vertices of a multipatch geometry should not be closer than the tolerance to any other vertex or segment of the same geometry. If a value below 0 is specified, the tolerance of the multipatchClass is used..
+        /// </summary>
+        public static string TrFootprint_Tolerance {
+            get {
+                return ResourceManager.GetString("TrFootprint_Tolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transforms geometries to points. The transformed feature class has the attribute PartIndex and VertexIndex. These fields index from which polygon part the transformed polygon part was generated.
         /// </summary>
         public static string TrGeometryToPoints_0 {
@@ -229,6 +238,34 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string TrGeometryTransform_Attributes {
             get {
                 return ResourceManager.GetString("TrGeometryTransform_Attributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get unique endpoints of &apos;lineClass&apos;.
+        /// </summary>
+        public static string TrGetNodes_0 {
+            get {
+                return ResourceManager.GetString("TrGetNodes_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attributes to be transferred to transformed feature class. Must be used with alias and group expression, i.e. &apos;MAX(LAUF_NR) AS MAX_LAUF_NR&apos;.
+        ///In the resulting feature class, only attributes defined in &apos;Attributes&apos; can be used..
+        /// </summary>
+        public static string TrGetNodes_Attributes {
+            get {
+                return ResourceManager.GetString("TrGetNodes_Attributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line FeatureClass.
+        /// </summary>
+        public static string TrGetNodes_lineClass {
+            get {
+                return ResourceManager.GetString("TrGetNodes_lineClass", resourceCulture);
             }
         }
         
@@ -734,6 +771,51 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string TrTableJoinInMemory_rightTableKey {
             get {
                 return ResourceManager.GetString("TrTableJoinInMemory_rightTableKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creates a featureclass, where the height of vertices correspond to &apos;raster&apos;. Remark: the height is only assign within each processsed tile. .
+        /// </summary>
+        public static string TrZAssign_0 {
+            get {
+                return ResourceManager.GetString("TrZAssign_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to featureclass to assign the raster z-values.
+        /// </summary>
+        public static string TrZAssign_featureClass {
+            get {
+                return ResourceManager.GetString("TrZAssign_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to raster with z-Values.
+        /// </summary>
+        public static string TrZAssign_raster {
+            get {
+                return ResourceManager.GetString("TrZAssign_raster", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to raster mosaic with z-Values.
+        /// </summary>
+        public static string TrZAssign_rasterMosaic {
+            get {
+                return ResourceManager.GetString("TrZAssign_rasterMosaic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to whether the z-values shall be assigned to vertices within the current tile only or to all vertices (slower)..
+        /// </summary>
+        public static string TrZAssign_ZAssignOption {
+            get {
+                return ResourceManager.GetString("TrZAssign_ZAssignOption", resourceCulture);
             }
         }
     }

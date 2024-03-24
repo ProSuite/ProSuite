@@ -14,7 +14,8 @@
 
     <ArcGISServerVersion Condition="$(VSArcGISVersion.StartsWith('11.'))">Server11</ArcGISServerVersion>
 
-    <NoWarn>1591</NoWarn>
+    <!-- CA1416: Disable platform compatibility validation, because net6.0-windows is not enough. -->		
+    <NoWarn>1591;CA1416;</NoWarn>
 
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
 
@@ -67,7 +68,7 @@
     <PackageReference Include="GDAL.Native" Version="3.4.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
     <PackageReference Include="NUnit" Version="3.13.3" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.3.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
     <PackageReference Include="Wkx" Version="0.5.1" />
   </ItemGroup>
 </Project>

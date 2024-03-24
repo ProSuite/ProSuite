@@ -11,6 +11,8 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Ado;
+using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -23,7 +25,6 @@ using ProSuite.DomainModel.Core;
 
 namespace ProSuite.AGP.WorkList
 {
-	// todo daro: rename to WorklistUtils
 	public static class WorkListUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -45,7 +46,7 @@ namespace ProSuite.AGP.WorkList
 			//var baseUri = new Uri("worklist://localhost/");
 			string folder = GetLocalWorklistsFolder(homeFolderPath);
 
-			if (! FileSystemUtils.EnsureFolderExists(folder))
+			if (! FileSystemUtils.EnsureDirectoryExists(folder))
 			{
 				Assert.True(Directory.Exists(homeFolderPath), $"{homeFolderPath} does not exist");
 				return homeFolderPath;
@@ -65,7 +66,9 @@ namespace ProSuite.AGP.WorkList
 			{
 				var descriptor = new ClassDescriptor(definition.TypeName, definition.AssemblyName);
 
-				return descriptor.CreateInstance<IWorkList>(CreateWorkItemRepository(definition),
+				IWorkItemRepository workItemRepository = CreateWorkItemRepository(definition);
+
+				return descriptor.CreateInstance<IWorkList>(workItemRepository,
 				                                            definition.Name, displayName);
 			}
 			catch (Exception e)
@@ -84,8 +87,8 @@ namespace ProSuite.AGP.WorkList
 
 			Type type = descriptor.GetInstanceType();
 
-			Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
-				GetTablesByGeodatabase(definition.Workspaces);
+			// todo daro simplify method?
+			List<Table> tablesByGeodatabase = GetDistinctTables(definition.Workspaces);
 
 			IRepository stateRepository;
 			IWorkItemRepository repository;
@@ -100,14 +103,13 @@ namespace ProSuite.AGP.WorkList
 			else if (type == typeof(SelectionWorkList))
 			{
 				stateRepository =
-					new XmlWorkItemStateRepository(definition.Path, definition.Name, type,
-					                               definition.CurrentIndex);
+					new XmlSelectionItemStateRepository(definition.Path, definition.Name, type,
+					                                    definition.CurrentIndex);
 
 				Dictionary<long, Table> tablesById =
-					tablesByGeodatabase.Values
-					                   .SelectMany(table => table)
-					                   .ToDictionary(table => new GdbTableIdentity(table).Id,
-					                                 table => table);
+					tablesByGeodatabase.Select(table => table)
+					                 .ToDictionary(table => new GdbTableIdentity(table).Id,
+					                               table => table);
 
 				Dictionary<Table, List<long>> oidsByTable =
 					GetOidsByTable(definition.Items, tablesById);
@@ -124,47 +126,47 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[NotNull]
-		private static Dictionary<Geodatabase, List<Table>> GetTablesByGeodatabase(
+		private static List<Table> GetDistinctTables(
 			ICollection<XmlWorkListWorkspace> workspaces)
 		{
-			var result = new Dictionary<Geodatabase, List<Table>>(workspaces.Count);
+			var result = new Dictionary<Datastore, List<Table>>(workspaces.Count);
 
 			var notifications = new NotificationCollection();
 
 			foreach (XmlWorkListWorkspace workspace in workspaces)
 			{
-				var geodatabase = GetGeodatabase(workspace, notifications);
+				var datastore = GetDatastore(workspace, notifications);
 
-				if (geodatabase == null)
+				if (datastore == null)
 				{
 					continue;
 				}
 
-				if (result.ContainsKey(geodatabase))
+				if (result.ContainsKey(datastore))
 				{
 					_msg.Debug($"Duplicate workspace {workspace.ConnectionString}");
 					continue;
 				}
 
-				List<Table> tables = GetDistinctTables(workspace, geodatabase);
-				result.Add(geodatabase, tables);
+				List<Table> tables = GetDistinctTables(workspace, datastore);
+				result.Add(datastore, tables);
 			}
 
 			if (notifications.Count <= 0)
 			{
-				return result;
+				return result.SelectMany(pair => pair.Value).ToList();
 			}
 
 			_msg.Info(string.Format(
 				          "Cannot open work item workspaces from connection strings:{0}{1}",
 				          Environment.NewLine, notifications.Concatenate(Environment.NewLine)));
 
-			return result;
+			return new List<Table>(0);
 		}
 
 		[CanBeNull]
-		private static Geodatabase GetGeodatabase([NotNull] XmlWorkListWorkspace workspace,
-		                                          [NotNull] NotificationCollection notifications)
+		private static Datastore GetDatastore([NotNull] XmlWorkListWorkspace workspace,
+		                                      [NotNull] NotificationCollection notifications)
 		{
 			// DBCLIENT = oracle
 			// AUTHENTICATION_MODE = DBMS
@@ -219,13 +221,20 @@ namespace ProSuite.AGP.WorkList
 							};
 
 						return new Geodatabase(connectionProperties);
+
+					case WorkspaceFactory.Shapefile:
+						return new FileSystemDatastore(
+							new FileSystemConnectionPath(
+								new Uri(workspace.ConnectionString, UriKind.Absolute),
+								FileSystemDatastoreType.Shapefile));
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
 			}
 			catch (Exception e)
 			{
-				string message = $"Cannot open workspace from connection string {workspace.ConnectionString}";
+				string message =
+					$"Cannot open workspace from connection string {workspace.ConnectionString}";
 
 				_msg.Debug(message, e);
 
@@ -235,12 +244,13 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		private static List<Table> GetDistinctTables(XmlWorkListWorkspace workspace,
-		                                             Geodatabase geodatabase)
+		                                             Datastore datastore)
 		{
 			var distinctTables = new Dictionary<GdbTableIdentity, Table>();
 			foreach (XmlTableReference tableReference in workspace.Tables)
 			{
-				var table = geodatabase.OpenDataset<Table>(tableReference.Name);
+				var table = DatasetUtils.OpenDataset<Table>(datastore, tableReference.Name);
+
 				var id = new GdbTableIdentity(table);
 				if (! distinctTables.ContainsKey(id))
 				{
@@ -421,6 +431,28 @@ namespace ProSuite.AGP.WorkList
 			//}
 
 			return layerParams;
+		}
+
+		public static Dictionary<Datastore, List<Table>> GetDistinctTables(
+			[NotNull] IEnumerable<Table> tables)
+		{
+			var result = new Dictionary<Datastore, SimpleSet<Table>>(new DatastoreComprarer());
+
+			foreach (Table table in tables.Distinct())
+			{
+				var datastore = table.GetDatastore();
+
+				if (! result.ContainsKey(datastore))
+				{
+					result.Add(datastore, new SimpleSet<Table> { table });
+				}
+				else
+				{
+					result[datastore].TryAdd(table);
+				}
+			}
+
+			return result.ToDictionary(pair => pair.Key, pair => pair.Value.ToList());
 		}
 	}
 }

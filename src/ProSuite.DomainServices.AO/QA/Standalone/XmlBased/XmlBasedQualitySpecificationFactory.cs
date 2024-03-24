@@ -40,24 +40,23 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		/// <param name="document"></param>
 		/// <param name="qualitySpecificationName"></param>
 		/// <param name="dataSources"></param>
-		/// <param name="ignoreConditionsForUnknownDatasets"></param>
+		/// <param name="factorySettings"></param>
 		/// <returns></returns>
 		[NotNull]
 		public QualitySpecification CreateQualitySpecification(
 			[NotNull] XmlDataQualityDocument document,
 			[NotNull] string qualitySpecificationName,
 			[NotNull] IEnumerable<DataSource> dataSources,
-			bool ignoreConditionsForUnknownDatasets = false)
+			[CanBeNull] FactorySettings factorySettings = null)
 		{
 			CultureInfo origCulture = Thread.CurrentThread.CurrentCulture;
 			try
 			{
 				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
-				return CreateQualitySpecificationCore(document,
-				                                      qualitySpecificationName,
-				                                      dataSources,
-				                                      ignoreConditionsForUnknownDatasets);
+				return CreateQualitySpecificationCore(
+					document, qualitySpecificationName, dataSources,
+					factorySettings ?? new FactorySettings());
 			}
 			finally
 			{
@@ -72,13 +71,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		/// <param name="document"></param>
 		/// <param name="qualitySpecificationName"></param>
 		/// <param name="dataSources"></param>
-		/// <param name="ignoreConditionsForUnknownDatasets"></param>
+		/// <param name="factorySettings"></param>
 		/// <returns></returns>
 		private QualitySpecification CreateQualitySpecificationCore(
 			[NotNull] XmlDataQualityDocument document,
 			[NotNull] string qualitySpecificationName,
 			[NotNull] IEnumerable<DataSource> dataSources,
-			bool ignoreConditionsForUnknownDatasets)
+			[NotNull] FactorySettings factorySettings)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
 			Assert.ArgumentNotNull(dataSources, nameof(dataSources));
@@ -125,9 +124,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			documentCache.CategoryMap = categoryMap;
 
 			Dictionary<string, QualityCondition> qualityConditions =
-				CreateQualityConditions(documentCache,
-				                        modelsByWorkspaceId,
-				                        ignoreConditionsForUnknownDatasets);
+				CreateQualityConditions(
+					documentCache, modelsByWorkspaceId, factorySettings);
 
 			DataQualityCategory specificationCategory =
 				xmlSpecificationCategory != null
@@ -136,13 +134,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			return XmlDataQualityUtils.CreateQualitySpecification(
 				xmlQualitySpecification, qualityConditions, specificationCategory,
-				ignoreConditionsForUnknownDatasets);
+				factorySettings.IgnoreConditionsForUnknownDatasets);
 		}
 
 		private static Dictionary<string, QualityCondition> CreateQualityConditions(
 			XmlDataQualityDocumentCache xmlDataDocumentCache,
 			IDictionary<string, DdxModel> modelsByWorkspaceId,
-			bool ignoreConditionsForUnknownDatasets)
+			[NotNull] FactorySettings factorySettings)
 		{
 			var qualityConditions = new Dictionary<string, QualityCondition>(
 				StringComparer.OrdinalIgnoreCase);
@@ -154,13 +152,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			                                             .Select(x => x.Key))
 			{
 				QualityCondition createdCondition = xmlDataDocumentCache.CreateQualityCondition(
-					xmlCondition, getDatasetsByName, ignoreConditionsForUnknownDatasets,
+					xmlCondition, getDatasetsByName, factorySettings,
 					out ICollection<DatasetTestParameterRecord> unknownDatasetParameters);
 
 				if (createdCondition == null)
 				{
 					InstanceConfigurationUtils.HandleNoConditionCreated(
-						xmlCondition.Name, modelsByWorkspaceId, ignoreConditionsForUnknownDatasets,
+						xmlCondition.Name, modelsByWorkspaceId, factorySettings.IgnoreConditionsForUnknownDatasets,
 						unknownDatasetParameters);
 				}
 				else

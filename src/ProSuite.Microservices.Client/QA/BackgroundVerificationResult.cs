@@ -46,6 +46,14 @@ namespace ProSuite.Microservices.Client.QA
 
 		public bool HasIssues => _resultIssueCollector?.HasIssues ?? false;
 
+		public bool IsFulfilled => Assert.NotNull(VerificationMsg).Fulfilled;
+
+		public int RowCountWithStopConditions =>
+			Assert.NotNull(VerificationMsg).RowsWithStopConditions;
+
+		public int VerifiedConditionCount =>
+			Assert.NotNull(VerificationMsg).ConditionVerifications?.Count ?? 0;
+
 		public bool CanSaveIssues => _resultIssueCollector != null && VerificationMsg != null;
 
 		public int SaveIssues(ErrorDeletionInPerimeter errorDeletion)
@@ -156,7 +164,18 @@ namespace ProSuite.Microservices.Client.QA
 
 				var conditionVerification = new QualityConditionVerification(element);
 
-				conditionVerification.Fulfilled = conditionVerificationMsg.Fulfilled;
+				bool fullFilled = conditionVerificationMsg.Fulfilled;
+				conditionVerification.Fulfilled = fullFilled;
+
+				if (! fullFilled)
+				{
+					_msg.Warn($"Condition {qualityConditionId} is not fulfilled");
+				}
+				else
+				{
+					_msg.Debug($"Condition {qualityConditionId} is fulfilled");
+				}
+
 				conditionVerification.ErrorCount = conditionVerificationMsg.ErrorCount;
 
 				conditionVerification.ExecuteTime = conditionVerificationMsg.ExecuteTime;

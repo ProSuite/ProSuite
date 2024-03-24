@@ -39,7 +39,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] string dataQualityXml,
 			[NotNull] string specificationName,
 			[NotNull] IList<DataSource> dataSourceReplacements,
-			bool ignoreConditionsForUnknownDatasets = true,
+			[CanBeNull] FactorySettings factorySettings = null,
 			[CanBeNull] ICollection<int> excludededConditionIds = null)
 		{
 			IList<XmlQualitySpecification> qualitySpecifications;
@@ -65,8 +65,10 @@ namespace ProSuite.DomainServices.AO.QA
 				                          excludededConditionIds);
 			}
 
+			factorySettings = factorySettings ??
+			                  new FactorySettings { IgnoreConditionsForUnknownDatasets = true };
 			return CreateQualitySpecification(document, specificationName, dataSourceReplacements,
-			                                  ignoreConditionsForUnknownDatasets);
+			                                  factorySettings);
 		}
 
 		public static void DisableExcludedConditions(QualitySpecification fromSpecification,
@@ -236,8 +238,28 @@ namespace ProSuite.DomainServices.AO.QA
 			sb.AppendFormat("Specification {0}", specification.Name);
 			sb.AppendLine();
 
+			int elementsCount = specification.Elements.Count;
+
+			int disabledCount = elementsCount -
+			                    specification.Elements.Count(e => e.Enabled);
+
+			if (disabledCount > 0)
+			{
+				sb.AppendFormat("{0} conditions of {1} have been disabled.", disabledCount,
+				                elementsCount);
+
+				sb.AppendLine();
+			}
+
+			sb.AppendLine("Enabled conditions:");
+
 			foreach (QualitySpecificationElement element in specification.Elements)
 			{
+				if (! element.Enabled)
+				{
+					continue;
+				}
+
 				sb.AppendFormat(
 					"QualityCondition {0}: StopOnError {1}, AllowErrors {2}, TestDescriptor {3}",
 					element.QualityCondition.Name, element.StopOnError,
@@ -249,7 +271,7 @@ namespace ProSuite.DomainServices.AO.QA
 			_msg.Debug(sb.ToString());
 		}
 
-		internal static void LogQualityVerification(
+		public static void LogQualityVerification(
 			[NotNull] QualityVerification verification)
 		{
 			try
@@ -509,7 +531,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] XmlDataQualityDocument document,
 			[NotNull] string specificationName,
 			[NotNull] IEnumerable<DataSource> dataSources,
-			bool ignoreConditionsForUnknownDatasets)
+			[NotNull] FactorySettings factorySettings)
 		{
 			QualitySpecification qualitySpecification;
 			using (_msg.IncrementIndentation("Setting up quality specification"))
@@ -517,8 +539,7 @@ namespace ProSuite.DomainServices.AO.QA
 				XmlBasedQualitySpecificationFactory factory = CreateSpecificationFactory();
 
 				qualitySpecification = factory.CreateQualitySpecification(
-					document, specificationName, dataSources,
-					ignoreConditionsForUnknownDatasets);
+					document, specificationName, dataSources, factorySettings);
 			}
 
 			return qualitySpecification;

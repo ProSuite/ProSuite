@@ -6,9 +6,11 @@ using ArcGIS.Desktop.Editing;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.WorkList
 {
@@ -18,12 +20,10 @@ namespace ProSuite.AGP.WorkList
 
 		private const string _statusFieldName = "STATUS";
 
-		public IssueItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
-		                           IRepository stateRepository) : base(
-			tablesByGeodatabase, stateRepository) { }
+		public IssueItemRepository(IEnumerable<Table> tables, IRepository stateRepository) : base(
+			tables, stateRepository) { }
 
-		protected override WorkListStatusSchema CreateStatusSchemaCore(
-			FeatureClassDefinition definition)
+		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{
 			int fieldIndex;
 
@@ -47,71 +47,90 @@ namespace ProSuite.AGP.WorkList
 			                                (int) IssueCorrectionStatus.Corrected);
 		}
 
-		protected override IAttributeReader CreateAttributeReaderCore(
-			FeatureClassDefinition definition)
+		protected override IAttributeReader CreateAttributeReaderCore(TableDefinition definition)
 		{
 			return new AttributeReader(definition,
 			                           Attributes.QualityConditionName,
 			                           Attributes.IssueCodeDescription,
 			                           Attributes.InvolvedObjects,
 			                           Attributes.IssueSeverity,
-			                           Attributes.IssueCode);
+			                           Attributes.IssueCode,
+			                           Attributes.IssueDescription);
 		}
 
 		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
 		{
 			long id = GetNextOid(row);
 
-			IAttributeReader reader = ((DatabaseSourceClass) source).AttributeReader;
+			IAttributeReader reader = source.AttributeReader;
 
-			var item = new IssueItem(id, row)
-			           {
-				           Status = ((DatabaseSourceClass) source).GetStatus(row),
+			IIssueItem item = new IssueItem(id, row);
 
-				           IssueCode = reader.GetValue<string>(row, Attributes.IssueCode),
-				           IssueCodeDescription =
-					           reader.GetValue<string>(row, Attributes.IssueCodeDescription),
-				           InvolvedObjects =
-					           reader.GetValue<string>(row, Attributes.InvolvedObjects),
-				           QualityCondition =
-					           reader.GetValue<string>(row, Attributes.QualityConditionName),
-				           TestName = reader.GetValue<string>(row, Attributes.TestName),
-				           TestDescription =
-					           reader.GetValue<string>(row, Attributes.TestDescription),
-				           TestType = reader.GetValue<string>(row, Attributes.TestType),
-				           IssueSeverity = reader.GetValue<string>(row, Attributes.IssueSeverity),
-				           StopCondition = reader.GetValue<string>(row, Attributes.IsStopCondition),
-				           Category = reader.GetValue<string>(row, Attributes.Category),
-				           AffectedComponent =
-					           reader.GetValue<string>(row, Attributes.AffectedComponent),
-				           Url = reader.GetValue<string>(row, Attributes.Url),
-				           DoubleValue1 = reader.GetValue<double?>(row, Attributes.DoubleValue1),
-				           DoubleValue2 = reader.GetValue<double?>(row, Attributes.DoubleValue2),
-				           TextValue = reader.GetValue<string>(row, Attributes.TextValue),
-				           IssueAssignment =
-					           reader.GetValue<string>(row, Attributes.IssueAssignment),
-				           QualityConditionUuid =
-					           reader.GetValue<string>(row, Attributes.QualityConditionUuid),
-				           QualityConditionVersionUuid =
-					           reader.GetValue<string>(row, Attributes.QualityConditionVersionUuid),
-				           ExceptionStatus =
-					           reader.GetValue<string>(row, Attributes.ExceptionStatus),
-				           ExceptionNotes = reader.GetValue<string>(row, Attributes.ExceptionNotes),
-				           ExceptionCategory =
-					           reader.GetValue<string>(row, Attributes.ExceptionCategory),
-				           ExceptionOrigin =
-					           reader.GetValue<string>(row, Attributes.ExceptionOrigin),
-				           ExceptionDefinedDate =
-					           reader.GetValue<string>(row, Attributes.ExceptionDefinedDate),
-				           ExceptionLastRevisionDate =
-					           reader.GetValue<string>(row, Attributes.ExceptionLastRevisionDate),
-				           ExceptionRetirementDate =
-					           reader.GetValue<string>(row, Attributes.ExceptionRetirementDate),
-				           ExceptionShapeMatchCriterion =
-					           reader.GetValue<string>(row, Attributes.ExceptionShapeMatchCriterion)
-			           };
+			if (reader != null)
+			{
+				try
+				{
+					item.IssueCode = reader.GetValue<string>(row, Attributes.IssueCode);
+					item.IssueCodeDescription =
+						reader.GetValue<string>(row, Attributes.IssueCodeDescription);
+					item.IssueDescription =
+						reader.GetValue<string>(row, Attributes.IssueDescription);
+					item.InvolvedObjects = reader.GetValue<string>(row, Attributes.InvolvedObjects);
+					item.QualityCondition =
+						reader.GetValue<string>(row, Attributes.QualityConditionName);
+					item.TestName = reader.GetValue<string>(row, Attributes.TestName);
+					item.TestDescription = reader.GetValue<string>(row, Attributes.TestDescription);
+					item.TestType = reader.GetValue<string>(row, Attributes.TestType);
+					item.IssueSeverity = reader.GetValue<string>(row, Attributes.IssueSeverity);
+					item.StopCondition = reader.GetValue<string>(row, Attributes.IsStopCondition);
+					item.Category = reader.GetValue<string>(row, Attributes.Category);
+					item.AffectedComponent =
+						reader.GetValue<string>(row, Attributes.AffectedComponent);
+					item.Url = reader.GetValue<string>(row, Attributes.Url);
+					item.DoubleValue1 = reader.GetValue<double?>(row, Attributes.DoubleValue1);
+					item.DoubleValue2 = reader.GetValue<double?>(row, Attributes.DoubleValue2);
+					item.TextValue = reader.GetValue<string>(row, Attributes.TextValue);
+					item.IssueAssignment = reader.GetValue<string>(row, Attributes.IssueAssignment);
+					item.QualityConditionUuid =
+						reader.GetValue<string>(row, Attributes.QualityConditionUuid);
+					item.QualityConditionVersionUuid =
+						reader.GetValue<string>(row, Attributes.QualityConditionVersionUuid);
+					item.ExceptionStatus = reader.GetValue<string>(row, Attributes.ExceptionStatus);
+					item.ExceptionNotes = reader.GetValue<string>(row, Attributes.ExceptionNotes);
+					item.ExceptionCategory =
+						reader.GetValue<string>(row, Attributes.ExceptionCategory);
+					item.ExceptionOrigin = reader.GetValue<string>(row, Attributes.ExceptionOrigin);
+					item.ExceptionDefinedDate =
+						reader.GetValue<string>(row, Attributes.ExceptionDefinedDate);
+					item.ExceptionLastRevisionDate =
+						reader.GetValue<string>(row, Attributes.ExceptionLastRevisionDate);
+					item.ExceptionRetirementDate =
+						reader.GetValue<string>(row, Attributes.ExceptionRetirementDate);
+					item.ExceptionShapeMatchCriterion =
+						reader.GetValue<string>(row, Attributes.ExceptionShapeMatchCriterion);
+					item.Status = ((DatabaseSourceClass) source).GetStatus(row);
+				}
+				catch (Exception e)
+				{
+					_msg.Warn($"An error occurred reading issue item properties from {item}", e);
+				}
 
-			item.InIssueInvolvedTables = IssueUtils.ParseInvolvedTables(item.InvolvedObjects);
+				if (item.InvolvedObjects != null)
+				{
+					try
+					{
+						// todo daro: use source class to determine whether involved tables have geoemtry?
+						item.InvolvedTables =
+							IssueUtils.ParseInvolvedTables(item.InvolvedObjects,
+							                               source.HasGeometry);
+					}
+					catch (Exception e)
+					{
+						_msg.Warn(
+							$"An error occurred parsing involved tables from issue item {item}", e);
+					}
+				}
+			}
 
 			return RefreshState(item);
 		}
@@ -133,13 +152,13 @@ namespace ProSuite.AGP.WorkList
 		{
 			// todo daro: use AttributeReader?
 			// todo daro: really needed here? Only geometry is updated but
-			//			  the work itmes's state remains the same.
+			//			  the work item's state remains the same.
 			item.Status = ((DatabaseSourceClass) sourceClass).GetStatus(row);
 		}
 
 		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
 		{
-			Table table = OpenFeatureClass(source);
+			Table table = OpenTable(source);
 			Assert.NotNull(table);
 
 			try
@@ -150,7 +169,7 @@ namespace ProSuite.AGP.WorkList
 
 				_msg.Info($"{description}, {item.Proxy}");
 
-				var operation = new EditOperation {Name = description};
+				var operation = new EditOperation { Name = description };
 				operation.Callback(context =>
 				{
 					// ReSharper disable once AccessToDisposedClosure

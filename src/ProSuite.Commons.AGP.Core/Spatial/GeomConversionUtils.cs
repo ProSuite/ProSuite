@@ -9,6 +9,11 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 {
 	public static class GeomConversionUtils
 	{
+		public static EnvelopeXY CreateEnvelopeXY(Envelope envelope)
+		{
+			return new EnvelopeXY(envelope.XMin, envelope.YMin, envelope.XMax, envelope.YMax);
+		}
+
 		public static Polyhedron CreatePolyhedron(Multipatch multipatch)
 		{
 			var ringGroups = new List<RingGroup>();
@@ -18,7 +23,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			{
 				ReadOnlyPointCollection pointCollection = multipatch.Points;
 
-				esriPatchType patchType = multipatch.GetPatchType(i);
+				var patchType = multipatch.GetPatchType(i);
 
 				int patchPointCount = multipatch.GetPatchPointCount(i);
 
@@ -28,7 +33,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				// - whether the ring is 2D-contained and co-planar with the previous ring
 				// - if so, whether its orientation is inverted from the previous ring's orientation?
 				// -> For the moment, assume every first ring is an outer ring and every other ring is interior
-				if (patchType == esriPatchType.FirstRing)
+				if (patchType == PatchType.FirstRing)
 				{
 					if (newGroup != null)
 					{
@@ -43,7 +48,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				}
 				else
 				{
-					Assert.True(patchType == esriPatchType.Ring, "Unsupported ring type");
+					Assert.True(patchType == PatchType.Ring, "Unsupported ring type");
 
 					var ring = new Linestring(GetPoints(pointCollection, patchStartPointIndex,
 					                                    patchPointCount));
@@ -88,13 +93,13 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 					continue;
 				}
 
-				Patch firstRing = ToPatch(exteriorRing, esriPatchType.FirstRing, mpBuilder);
+				Patch firstRing = ToPatch(exteriorRing, PatchType.FirstRing, mpBuilder);
 
 				patches.Add(firstRing);
 
 				foreach (Linestring interiorRing in ringGroup.InteriorRings)
 				{
-					Patch interiorPatch = ToPatch(interiorRing, esriPatchType.Ring, mpBuilder);
+					Patch interiorPatch = ToPatch(interiorRing, PatchType.Ring, mpBuilder);
 
 					patches.Add(interiorPatch);
 				}
@@ -102,13 +107,13 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			mpBuilder.Patches = patches;
 
-			Multipatch multipatch = mpBuilder.ToGeometry() as Multipatch;
+			Multipatch multipatch = mpBuilder.ToGeometry();
 
 			return multipatch;
 		}
 
 		private static Patch ToPatch([NotNull] Linestring linestring,
-		                             esriPatchType patchType,
+		                             PatchType patchType,
 		                             MultipatchBuilderEx patchBuilder)
 		{
 			Patch result = patchBuilder.MakePatch(patchType);

@@ -539,7 +539,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			await ViewUtils.TryAsync(QueuedTask.Run(() =>
 			{
-				FileSystemUtils.EnsureFolderExists(GetLocalWorklistsFolder());
+				FileSystemUtils.EnsureDirectoryExists(GetLocalWorklistsFolder());
 
 				foreach (IWorkList workList in GetLoadedWorkLists())
 				{
@@ -779,7 +779,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 
 			// ensure folder exists before commit
-			FileSystemUtils.EnsureFolderExists(GetLocalWorklistsFolder());
+			FileSystemUtils.EnsureDirectoryExists(GetLocalWorklistsFolder());
 
 			WorkListChangedEvent.Unsubscribe(WorklistChanged);
 

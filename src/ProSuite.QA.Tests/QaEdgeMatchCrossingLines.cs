@@ -303,6 +303,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_lineClass1BorderMatchConditionSql = value;
+				AddCustomQueryFilterExpression(value);
 				_lineClass1BorderMatchCondition = null;
 			}
 		}
@@ -315,6 +316,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_lineClass2BorderMatchConditionSql = value;
+				AddCustomQueryFilterExpression(value);
 				_lineClass2BorderMatchCondition = null;
 			}
 		}
@@ -327,6 +329,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_crossingLineMatchConditionSql = value;
+				AddCustomQueryFilterExpression(value);
 				_crossingLineMatchCondition = null;
 			}
 		}
@@ -339,6 +342,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_crossingLineAttributeConstraintSql = value;
+				AddCustomQueryFilterExpression(value);
 				_crossingLineAttributeConstraint = null;
 			}
 		}
@@ -365,6 +369,7 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_crossingLineEqualAttributes = value;
+				AddCustomQueryFilterExpression(value);
 				_crossingLineEqualFieldValuesCondition = null;
 			}
 		}
@@ -377,6 +382,13 @@ namespace ProSuite.QA.Tests
 			set
 			{
 				_crossingLineEqualAttributeOptions = value;
+				if (value != null)
+				{
+					foreach (string option in value)
+					{
+						AddCustomQueryFilterExpression(option);
+					}
+				}
 				_crossingLineEqualFieldValuesCondition = null;
 			}
 		}

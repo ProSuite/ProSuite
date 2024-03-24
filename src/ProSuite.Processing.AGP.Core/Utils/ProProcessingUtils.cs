@@ -5,7 +5,6 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Processing.AGP.Core.Domain;
-using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.AGP.Core.Utils
 {
@@ -19,22 +18,38 @@ namespace ProSuite.Processing.AGP.Core.Utils
 				throw new CartoConfigException($"Type {type?.Name ?? "(null)"} is not a carto process type");
 			}
 
+			object instance;
 			if (repo != null && type.GetConstructor(new[] { typeof(CartoProcessRepo) }) != null)
 			{
-				return (ICartoProcess) Activator.CreateInstance(type, repo);
+				instance = Activator.CreateInstance(type, repo);
+			}
+			else
+			{
+				// by default, use the parameter-less constructor:
+				instance = Activator.CreateInstance(type);
 			}
 
-			// by default, use the parameterless constructor:
-			return (ICartoProcess) Activator.CreateInstance(type);
+			if (instance is null)
+			{
+				throw new AssertionException($"Activator returned null for type {type.Name}");
+			}
+
+			if (instance is not ICartoProcess process)
+			{
+				throw new AssertionException(
+					$"Activator returned a {instance.GetType().Name} instance for type {type.Name}");
+			}
+
+			return process;
 		}
 
 		/// <summary>
 		/// Create a string from the given object. Format:
 		/// &quot;OID=123 Class=AliasNameOrDatasetName&quot;
 		/// </summary>
-		public static string Format([NotNull] Feature feature)
+		public static string Format(Feature feature)
 		{
-			Assert.ArgumentNotNull(feature, nameof(feature));
+			if (feature is null) return string.Empty;
 
 			var oid = feature.GetObjectID();
 			string className;
@@ -45,44 +60,6 @@ namespace ProSuite.Processing.AGP.Core.Utils
 			}
 
 			return FormattableString.Invariant($"OID={oid} Class={className}");
-		}
-
-		/// <returns>True iff the two features are the same</returns>
-		/// <remarks>
-		/// This is a cheap test, but it assumes that both features are from
-		/// the <b>same workspace</b>.  If the two features are from different workspaces,
-		/// this method <em>may</em> return true even though the features are different!
-		/// </remarks>
-		public static bool IsSameFeature(Feature feature1, Feature feature2)
-		{
-			if (ReferenceEquals(feature1, feature2)) return true;
-			if (Equals(feature1.Handle, feature2.Handle)) return true;
-
-			var oid1 = feature1.GetObjectID();
-			var oid2 = feature2.GetObjectID();
-			if (oid1 != oid2) return false;
-
-			using (var table1 = feature1.GetTable())
-			using (var table2 = feature2.GetTable())
-			{
-				return IsSameTable(table1, table2);
-			}
-		}
-
-		public static bool IsSameTable(Table fc1, Table fc2)
-		{
-			if (ReferenceEquals(fc1, fc2)) return true;
-			if (Equals(fc1.Handle, fc2.Handle)) return true;
-
-			var id1 = fc1.GetID();
-			var id2 = fc2.GetID();
-			if (id1 != id2) return false;
-			if (id1 >= 0) return true;
-
-			// table id is negative for tables not registered with the Geodatabase
-			// compare table name and workspace -- for now, give up and assume not same
-
-			return false;
 		}
 
 		public static T GetBaseTable<T>(T table) where T : Table

@@ -6,7 +6,7 @@ using ProSuite.Commons.Testing;
 
 namespace ProSuite.Commons.Test.Geom
 {
-	internal static class GeomTestUtils
+	public static class GeomTestUtils
 	{
 		internal static List<Pnt3D> GetRotatedRing(List<Pnt3D> ringPoints, int steps)
 		{

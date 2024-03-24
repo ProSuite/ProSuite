@@ -49,14 +49,17 @@ namespace ProSuite.Commons.Geom
 			double arcAngle = GetNormedAngle(line.Angle);
 			Pnt normal = _lin.LNormal;
 			double normalDir = _lin.DirectionAngle + Math.PI / 2;
+
 			// handle left side
-			if (GetNormedAngle(normalDir - line.StartDirection) < arcAngle)
+			double leftSideAngle =  GetNormedAngle(normalDir + Math.PI - line.StartDirection);
+			if (leftSideAngle < arcAngle)
 			{
 				intersects |= CutLin(_lin.GetParallel(r * normal), line.Lin, ref tMin, ref tMax);
 			}
 
 			// handle right side
-			if (GetNormedAngle(normalDir + Math.PI - line.StartDirection) < arcAngle)
+			double rightSideAngle = GetNormedAngle(normalDir - line.StartDirection);
+			if (rightSideAngle < arcAngle)
 			{
 				intersects |= CutLin(_lin.GetParallel(-r * normal), line.Lin, ref tMin, ref tMax);
 			}

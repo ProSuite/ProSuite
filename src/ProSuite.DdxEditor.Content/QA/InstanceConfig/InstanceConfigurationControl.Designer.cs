@@ -1,5 +1,4 @@
 using ProSuite.Commons.UI.WinForms.Controls;
-using ProSuite.DomainModel.AO.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
@@ -37,7 +36,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_textBoxDescription=new System.Windows.Forms.TextBox();
 			_labelDescription=new System.Windows.Forms.Label();
 			_errorProvider=new System.Windows.Forms.ErrorProvider(components);
-			_labelInstanceDescriptor=new System.Windows.Forms.LinkLabel();
+			_labelInstanceDescriptor=new System.Windows.Forms.Label();
+			_buttonGoToInstanceDescriptor = new System.Windows.Forms.Button();
 			openFileDialogImport=new System.Windows.Forms.OpenFileDialog();
 			saveFileDialogExport=new System.Windows.Forms.SaveFileDialog();
 			_textBoxQualitySpecifications=new System.Windows.Forms.TextBox();
@@ -108,7 +108,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_textBoxName.Name="_textBoxName";
 			_textBoxName.Size=new System.Drawing.Size(256, 23);
 			_textBoxName.TabIndex=0;
-			_toolTip.SetToolTip(_textBoxName, "Press TAB to suggest a name");
+			_toolTip.SetToolTip(_textBoxName, "Press TAB to suggest a name (a feature class / table must be configured)");
 			_textBoxName.PreviewKeyDown+=_textBoxName_PreviewKeyDown;
 			// 
 			// _labelName
@@ -157,10 +157,21 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_labelInstanceDescriptor.Name="_labelInstanceDescriptor";
 			_labelInstanceDescriptor.Size=new System.Drawing.Size(95, 15);
 			_labelInstanceDescriptor.TabIndex=9;
-			_labelInstanceDescriptor.TabStop=true;
 			_labelInstanceDescriptor.Text="Implementation:";
 			_labelInstanceDescriptor.TextAlign=System.Drawing.ContentAlignment.TopRight;
-			_labelInstanceDescriptor.LinkClicked+=_labelInstanceDescriptor_LinkClicked;
+			// 
+			// _buttonGoToInstanceDescriptor
+			// 
+			_buttonGoToInstanceDescriptor.FlatAppearance.BorderSize = 0;
+			_buttonGoToInstanceDescriptor.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			_buttonGoToInstanceDescriptor.Image = global::ProSuite.DdxEditor.Framework.Properties.Resources.GoToItem;
+			_buttonGoToInstanceDescriptor.Location = new System.Drawing.Point(109, 140);
+			_buttonGoToInstanceDescriptor.Margin = new System.Windows.Forms.Padding(1);
+			_buttonGoToInstanceDescriptor.Name = "_buttonGoToInstanceDescriptor";
+			_buttonGoToInstanceDescriptor.Size = new System.Drawing.Size(18, 22);
+			_buttonGoToInstanceDescriptor.TabIndex = 40;
+			_buttonGoToInstanceDescriptor.UseVisualStyleBackColor = true;
+			_buttonGoToInstanceDescriptor.Click += _buttonGoToInstanceDescriptor_Clicked;
 			// 
 			// _textBoxQualitySpecifications
 			// 
@@ -258,11 +269,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_objectReferenceControlInstanceDescriptor.FindObjectDelegate=null;
 			_objectReferenceControlInstanceDescriptor.Font=new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
 			_objectReferenceControlInstanceDescriptor.FormatTextDelegate=null;
-			_objectReferenceControlInstanceDescriptor.Location=new System.Drawing.Point(109, 142);
+			_objectReferenceControlInstanceDescriptor.Location=new System.Drawing.Point(133, 142);
 			_objectReferenceControlInstanceDescriptor.Margin=new System.Windows.Forms.Padding(6, 5, 6, 5);
 			_objectReferenceControlInstanceDescriptor.Name="_objectReferenceControlInstanceDescriptor";
 			_objectReferenceControlInstanceDescriptor.ReadOnly=false;
-			_objectReferenceControlInstanceDescriptor.Size=new System.Drawing.Size(592, 23);
+			_objectReferenceControlInstanceDescriptor.Size=new System.Drawing.Size(568, 23);
 			_objectReferenceControlInstanceDescriptor.TabIndex=10;
 			// 
 			// dataGridViewTextBoxColumn1
@@ -627,6 +638,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			Controls.Add(_labelCategory);
 			Controls.Add(_textBoxCategory);
 			Controls.Add(_labelInstanceDescriptor);
+			Controls.Add(_buttonGoToInstanceDescriptor);
 			Controls.Add(_labelDescription);
 			Controls.Add(_labelUrl);
 			Controls.Add(_labelName);
@@ -674,7 +686,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		private ObjectReferenceControl _objectReferenceControlInstanceDescriptor;
 		private System.Windows.Forms.Label labelDescGrid;
 		private System.Windows.Forms.TextBox _textBoxDescGrid;
-		private System.Windows.Forms.LinkLabel _labelInstanceDescriptor;
+		private System.Windows.Forms.Label _labelInstanceDescriptor;
+		private System.Windows.Forms.Button _buttonGoToInstanceDescriptor;
 		private System.Windows.Forms.OpenFileDialog openFileDialogImport;
 		private System.Windows.Forms.SaveFileDialog saveFileDialogExport;
 		private global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx _splitContainer;

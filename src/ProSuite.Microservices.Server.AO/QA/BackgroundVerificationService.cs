@@ -15,6 +15,7 @@ using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.VerificationReports.Xml;
+using ProSuite.Microservices.Server.AO.QA.Distributed;
 using ProSuite.QA.Container;
 
 namespace ProSuite.Microservices.Server.AO.QA
@@ -84,10 +85,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		protected override bool WriteIssueMapDocument(QualitySpecification qualitySpecification,
 		                                              IIssueRepository issueRepository,
-		                                              IIssueStatisticsTable issueStatisticsTable,
+		                                              string issueStatisticsTableName,
 		                                              IList<IObjectClass> verifiedObjectClasses,
 		                                              XmlVerificationReport verificationReport,
-		                                              IFeatureClass aoiFeatureClass)
+		                                              string aoiFeatureClassName)
 		{
 			// No op: Writing mxds is not supported here.
 			return false;
@@ -255,12 +256,30 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public IEnumerable<AllowedError> GetInvalidatedAllowedErrors()
 		{
-			return _issueRepository.GetAllowedErrors(ae => ae.Invalidated);
+			if (_issueRepository == null)
+			{
+				yield break;
+			}
+
+			foreach (AllowedError allowedError in _issueRepository.GetAllowedErrors(
+				         ae => ae.Invalidated))
+			{
+				yield return allowedError;
+			}
 		}
 
 		public IEnumerable<AllowedError> GetUnusedAllowedErrors()
 		{
-			return _issueRepository.GetAllowedErrors(ae => ! ae.IsUsed);
+			if (_issueRepository == null)
+			{
+				yield break;
+			}
+
+			foreach (AllowedError allowedError in _issueRepository.GetAllowedErrors(
+				         ae => ! ae.IsUsed))
+			{
+				yield return allowedError;
+			}
 		}
 	}
 }

@@ -68,6 +68,8 @@ namespace ProSuite.QA.Tests
 			_relevantRelationConditionSql = StringUtils.IsNotEmpty(relevantRelationCondition)
 				                                ? relevantRelationCondition
 				                                : null;
+			AddCustomQueryFilterExpression(relevantRelationCondition);
+
 			_totalClassesCount = featureClasses.Count;
 		}
 

@@ -41,14 +41,14 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return;
 			}
 
-			foreach (var qaSpec in verificationEnvironment.QualitySpecifications.Select(
+			foreach (var qaSpec in verificationEnvironment.QualitySpecificationReferences.Select(
 				         s => s.Name))
 			{
 				Add(new ComboBoxItem(qaSpec));
 			}
 
 			IQualitySpecificationReference currentSpecification =
-				verificationEnvironment.CurrentQualitySpecification;
+				verificationEnvironment.CurrentQualitySpecificationReference;
 
 			if (currentSpecification != null)
 			{
@@ -75,8 +75,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return;
 			}
 
-			verificationEnvironment.CurrentQualitySpecification =
-				verificationEnvironment.QualitySpecifications.FirstOrDefault(
+			verificationEnvironment.CurrentQualitySpecificationReference =
+				verificationEnvironment.QualitySpecificationReferences.FirstOrDefault(
 					s => s.Name == item.Text);
 		}
 	}

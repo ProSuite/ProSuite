@@ -137,7 +137,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		public void CanDetectConflict()
 		{
 			var detector = new ExceptionUpdateDetector(
-				new[] {IssueAttribute.ExceptionCategory, IssueAttribute.ExceptionNotes});
+				new[] { IssueAttribute.ExceptionCategory, IssueAttribute.ExceptionNotes });
 
 			Guid lineage = Guid.NewGuid();
 			var dt1 = new DateTime(2018, 1, 1);

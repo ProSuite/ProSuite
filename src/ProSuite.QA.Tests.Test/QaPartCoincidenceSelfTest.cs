@@ -933,8 +933,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace("TestValidFileGdb");
 			IFeatureClass featureClass = TestWorkspaceUtils.CreateSimpleFeatureClass(
-				ws, "polygons", null, esriGeometryType.esriGeometryPolyline,
-				esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95);
+				ws, "polygons", esriGeometryType.esriGeometryPolyline);
 
 			{
 				IFeature f = featureClass.CreateFeature();

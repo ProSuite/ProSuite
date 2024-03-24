@@ -455,13 +455,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// </summary>
 		/// <param name="objects">The objects.</param>
 		/// <param name="relationshipClass">The relationship class.</param>
+		/// <param name="predicate"></param>
 		/// <returns>List of related objects.</returns>
 		[NotNull]
 		public static IList<IObject> GetRelatedObjectList(
 			[NotNull] IEnumerable<IObject> objects,
-			[NotNull] IRelationshipClass relationshipClass)
+			[NotNull] IRelationshipClass relationshipClass,
+			[CanBeNull] Predicate<IObject> predicate = null)
 		{
-			return GetRelatedObjectList<IObject>(objects, relationshipClass);
+			return GetRelatedObjectList<IObject>(objects, relationshipClass, predicate);
 		}
 
 		/// <summary>
@@ -469,13 +471,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// </summary>
 		/// <param name="objects">The objects.</param>
 		/// <param name="relationshipClass">The relationship class.</param>
+		/// <param name="predicate"></param>
 		/// <returns>List of related features.</returns>
 		[NotNull]
 		public static IList<IFeature> GetRelatedFeatureList(
 			[NotNull] IEnumerable<IObject> objects,
-			[NotNull] IRelationshipClass relationshipClass)
+			[NotNull] IRelationshipClass relationshipClass,
+			[CanBeNull] Predicate<IObject> predicate = null)
 		{
-			return GetRelatedObjectList<IFeature>(objects, relationshipClass);
+			return GetRelatedObjectList<IFeature>(objects, relationshipClass, predicate);
 		}
 
 		/// <summary>
@@ -483,11 +487,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// </summary>
 		/// <param name="objects">The objects.</param>
 		/// <param name="relationshipClass">The relationship class.</param>
+		/// <param name="predicate"></param>
 		/// <returns>List of related objects.</returns>
 		[NotNull]
 		public static IList<T> GetRelatedObjectList<T>(
 			[NotNull] IEnumerable<IObject> objects,
-			[NotNull] IRelationshipClass relationshipClass) where T : class, IObject
+			[NotNull] IRelationshipClass relationshipClass,
+			[CanBeNull] Predicate<T> predicate = null) where T : class, IObject
 		{
 			Assert.ArgumentNotNull(objects, nameof(objects));
 			Assert.ArgumentNotNull(relationshipClass, nameof(relationshipClass));
@@ -499,7 +505,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			try
 			{
-				return GdbObjectUtils.GetObjectSetAsList<T>(relatedObjectSet);
+				return GdbObjectUtils.GetObjectSetAsList(relatedObjectSet, predicate);
 			}
 			finally
 			{
@@ -712,6 +718,32 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return result;
+		}
+
+		public static bool EnsureRelationship([NotNull] IRelationshipClass relationshipClass,
+		                                      [NotNull] IObject originObject,
+		                                      [NotNull] IObject destinationObject)
+		{
+			IRelationship existingRelationship =
+				relationshipClass.GetRelationship(originObject,
+				                                  destinationObject);
+
+			if (existingRelationship != null)
+			{
+				_msg.DebugFormat("Relationship from {0} to {1} already exists.",
+				                 GdbObjectUtils.ToString(originObject),
+				                 GdbObjectUtils.ToString(destinationObject));
+
+				return false;
+			}
+
+			_msg.DebugFormat("Creating relationship from {0} to {1}",
+			                 GdbObjectUtils.ToString(originObject),
+			                 GdbObjectUtils.ToString(destinationObject));
+
+			relationshipClass.CreateRelationship(originObject, destinationObject);
+
+			return true;
 		}
 
 		[CanBeNull]

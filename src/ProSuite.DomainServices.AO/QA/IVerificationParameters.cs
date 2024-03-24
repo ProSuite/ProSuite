@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
 
@@ -20,7 +22,10 @@ namespace ProSuite.DomainServices.AO.QA
 		string HtmlReportPath { get; }
 
 		[CanBeNull]
-		string HtmlTemplatePath { get; }
+		string HtmlReportTemplatePath { get; }
+
+		[CanBeNull]
+		string HtmlSpecificationTemplatePath { get; }
 
 		[CanBeNull]
 		string MxdDocumentPath { get; }
@@ -31,6 +36,10 @@ namespace ProSuite.DomainServices.AO.QA
 		[CanBeNull]
 		string IssueFgdbPath { get; }
 
+		[CanBeNull]
+		ISpatialReference IssueFgdbSpatialReference { get; }
+
+		[Obsolete("FGDB compression must be performed by the client, if needed.")]
 		bool CompressIssueFgdb { get; }
 
 		bool UpdateIssuesInVerifiedModelContext { get; }

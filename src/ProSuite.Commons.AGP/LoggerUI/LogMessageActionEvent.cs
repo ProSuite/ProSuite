@@ -15,7 +15,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		AddLayer
 	}
 
-	public class LogMessageActionEventArgs : EventBase
+	public class LogMessageActionEventArgs : EventArgs
 	{
 		public LoggingEventItem LogMessage { get; }
 
@@ -34,31 +34,35 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		}
 	}
 
-	public class LogMessageActionEvent : CompositePresentationEvent<LogMessageActionEventArgs>
+	/// <summary>
+	/// Occurs when user clicks on a log message
+	/// </summary>
+	public sealed class LogMessageActionEvent : CompositePresentationEvent<LogMessageActionEventArgs>
 	{
 		public static SubscriptionToken Subscribe(Action<LogMessageActionEventArgs> action,
 		                                          bool keepSubscriberReferenceAlive = false)
 		{
-			return FrameworkApplication.EventAggregator.GetEvent<LogMessageActionEvent>()
-			                           .Register(action, keepSubscriberReferenceAlive);
+			return GetEvent().Register(action, keepSubscriberReferenceAlive);
 		}
 
 		public static void Unsubscribe(Action<LogMessageActionEventArgs> subscriber)
 		{
-			FrameworkApplication.EventAggregator.GetEvent<LogMessageActionEvent>()
-			                    .Unregister(subscriber);
+			GetEvent().Unregister(subscriber);
 		}
 
 		public static void Unsubscribe(SubscriptionToken token)
 		{
-			FrameworkApplication.EventAggregator.GetEvent<LogMessageActionEvent>()
-			                    .Unregister(token);
+			GetEvent().Unregister(token);
 		}
 
 		internal static void Publish(LogMessageActionEventArgs payload)
 		{
-			FrameworkApplication.EventAggregator.GetEvent<LogMessageActionEvent>()
-			                    .Broadcast(payload);
+			GetEvent().Broadcast(payload);
+		}
+
+		private static LogMessageActionEvent GetEvent()
+		{
+			return FrameworkApplication.EventAggregator.GetEvent<LogMessageActionEvent>();
 		}
 	}
 }

@@ -119,7 +119,7 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 			var result = new EntityControlWrapper<DataQualityCategory>();
 
 			var control = new DataQualityCategoryControl();
-			new DataQualityCategoryPresenter(control, this, FindModel);
+			new DataQualityCategoryPresenter(this, control, FindModel);
 
 			result.SetControl(control);
 			new WrappedEntityItemPresenter<DataQualityCategory, DataQualityCategory>(this,

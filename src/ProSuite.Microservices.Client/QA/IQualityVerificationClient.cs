@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using ProSuite.Microservices.Definitions.QA;
 
@@ -12,8 +13,13 @@ namespace ProSuite.Microservices.Client.QA
 	{
 		QualityVerificationGrpc.QualityVerificationGrpcClient QaGrpcClient { get; }
 
-		bool CanAcceptCalls(bool allowFailOver = false);
+		bool CanAcceptCalls(bool allowFailOver = false,
+		                    bool logOnlyIfUnhealthy = false);
 
 		Task<bool> CanAcceptCallsAsync(bool allowFailOver = false);
+
+		string GetAddress();
+
+		bool TryGetRunningRequestCount(TimeSpan timeOut, out int runningRequestCount);
 	}
 }

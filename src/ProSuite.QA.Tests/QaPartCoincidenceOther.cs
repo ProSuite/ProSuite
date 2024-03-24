@@ -23,6 +23,7 @@ namespace ProSuite.QA.Tests
 
 		private IgnoreRowNeighborCondition _ignoreNeighborCondition;
 		private bool _isIgnoreNeighborConditionInitialized;
+		private string _ignoreNeighborConstraint;
 
 		[Doc(nameof(DocStrings.QaPartCoincidenceOther_0))]
 		public QaPartCoincidenceOther(
@@ -117,7 +118,15 @@ namespace ProSuite.QA.Tests
 
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaPartCoincidenceOther_IgnoreNeighborCondition))]
-		public string IgnoreNeighborCondition { get; set; }
+		public string IgnoreNeighborCondition
+		{
+			get => _ignoreNeighborConstraint;
+			set
+			{
+				_ignoreNeighborConstraint = value;
+				AddCustomQueryFilterExpression(value);
+			}
+		}
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{

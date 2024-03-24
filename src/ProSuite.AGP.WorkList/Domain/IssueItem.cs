@@ -5,7 +5,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.AGP.WorkList.Domain
 {
 	// todo daro: find correct folder and namespace for this class
-	public class IssueItem : WorkItem
+
+	public class IssueItem : WorkItem, IIssueItem
 	{
 		private string _issueCodeDescription;
 
@@ -73,6 +74,16 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public IList<InvolvedTable> InIssueInvolvedTables { get; set; }
+		public string IssueDescription
+		{
+			get => _issueCodeDescription;
+			set
+			{
+				_issueCodeDescription = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public IList<InvolvedTable> InvolvedTables { get; set; }
 	}
 }

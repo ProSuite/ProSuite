@@ -837,6 +837,34 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
+		[CanBeNull]
+		public static IWorkspace TryOpenWorkspace(
+			[NotNull] string workspaceCatalogPath,
+			out string message)
+		{
+			IWorkspace workspace = null;
+			message = null;
+
+			try
+			{
+				workspace = OpenWorkspace(workspaceCatalogPath);
+			}
+			catch (COMException comException)
+			{
+				string error = Enum.GetName(typeof(fdoError), comException.ErrorCode);
+
+				message = $"Cannot open workspace {workspaceCatalogPath}: {error}";
+				_msg.Debug(message, comException);
+			}
+			catch (Exception e)
+			{
+				message = $"Cannot open workspace {workspaceCatalogPath}";
+				_msg.Debug(message, e);
+			}
+
+			return workspace;
+		}
+
 		public static IWorkspace OpenWorkspace([NotNull] string catalogPath)
 		{
 			Assert.ArgumentNotNullOrEmpty(catalogPath, nameof(catalogPath));
@@ -1107,16 +1135,30 @@ namespace ProSuite.Commons.AO.Geodatabase
 			IVersionInfo default1Info = defaultVersion1.VersionInfo;
 			IVersionInfo default2Info = defaultVersion2.VersionInfo;
 
-			string date1 = default1Info.Created.ToString();
-			string date2 = default2Info.Created.ToString();
+			string creationDate1 = default1Info.Created.ToString();
+			string creationDate2 = default2Info.Created.ToString();
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
 				_msg.DebugFormat("Compare default version creation date: {0},{1}",
-				                 date1, date2);
+				                 creationDate1, creationDate2);
 			}
 
-			return Equals(date1, date2);
+			if (! Equals(creationDate1, creationDate2))
+			{
+				return false;
+			}
+
+			string modifyDate1 = default1Info.Modified.ToString();
+			string modifyDate2 = default2Info.Modified.ToString();
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.DebugFormat("Compare default version last modified date: {0},{1}",
+				                 modifyDate1, modifyDate2);
+			}
+
+			return Equals(modifyDate1, modifyDate2);
 		}
 
 		/// <summary>
@@ -1772,6 +1814,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			string replaced = ReplacePassword(connectionString, passwordPadding);
 			Assert.NotNull(replaced, "replaced string is null");
+
 			return replaced;
 		}
 
@@ -2492,24 +2535,35 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public static bool IsFileGeodatabase([NotNull] IWorkspace workspace)
 		{
-			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			string workspacePath = GetWorkspacePath(workspace);
 
-			const string fgdbClassId = "{71FE75F0-EA0C-4406-873E-B7D53748AE7E}";
+			return workspacePath != null &&
+			       workspacePath.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase);
 
-			return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
-			       fgdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
-			                          StringComparison.OrdinalIgnoreCase);
+			// Original implementation which fails for GdbWorkspace implementations:
+			//const string fgdbClassId = "{71FE75F0-EA0C-4406-873E-B7D53748AE7E}";
+
+			//return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
+			//       fgdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
+			//                          StringComparison.OrdinalIgnoreCase);
 		}
 
 		public static bool IsPersonalGeodatabase([NotNull] IWorkspace workspace)
 		{
-			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			string workspacePath = GetWorkspacePath(workspace);
 
-			const string pgdbClassId = "{DD48C96A-D92A-11D1-AA81-00C04FA33A15}";
+			return workspacePath != null &&
+			       workspacePath.EndsWith(".mdb", StringComparison.OrdinalIgnoreCase);
 
-			return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
-			       pgdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
-			                          StringComparison.OrdinalIgnoreCase);
+			// Original implementation which fails for GdbWorkspace implementations:
+
+			//Assert.ArgumentNotNull(workspace, nameof(workspace));
+
+			//const string pgdbClassId = "{DD48C96A-D92A-11D1-AA81-00C04FA33A15}";
+
+			//return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
+			//       pgdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
+			//                          StringComparison.OrdinalIgnoreCase);
 		}
 
 		/// <summary>
@@ -2556,14 +2610,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return true;
 			}
 
-			const int workspaceTypeInMemory = 99;
-			if ((int) workspaceName.WorkspaceFactory.WorkspaceType ==
-			    workspaceTypeInMemory)
-			{
-				return true;
-			}
+			int intWorkspaceType =
+				(int) (workspaceName.WorkspaceFactory?.WorkspaceType ?? workspaceName.Type);
 
-			return false;
+			const int workspaceTypeInMemory = 99;
+
+			return intWorkspaceType == workspaceTypeInMemory;
 		}
 
 		/// <summary>
@@ -3221,6 +3273,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				throw deleter.LastException;
 			}
+		}
+
+		[CanBeNull]
+		private static string GetWorkspacePath([NotNull] IWorkspace workspace)
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+
+			if (string.IsNullOrEmpty(workspace.PathName))
+			{
+				return null;
+			}
+
+			return workspace.PathName;
 		}
 
 		#endregion

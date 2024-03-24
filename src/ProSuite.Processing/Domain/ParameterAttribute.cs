@@ -8,7 +8,7 @@ namespace ProSuite.Processing.Domain
 	[AttributeUsage(AttributeTargets.Property)]
 	public class ParameterAttribute : Attribute
 	{
-		public bool Required { get; set; }
+		public bool Required { get; }
 		public bool Multivalued { get; set; }
 		public int Order { get; set; }
 		public string Group { get; set; }
@@ -16,10 +16,8 @@ namespace ProSuite.Processing.Domain
 		public int LineNumber { get; }
 		public string FileName { get; }
 
-		public ParameterAttribute(
-			[CallerLineNumber] int lineNumber = 0,
-			[CallerFilePath] string filePath = null,
-			bool required = false)
+		protected ParameterAttribute(
+			int lineNumber = 0, string filePath = null, bool required = false)
 		{
 			LineNumber = lineNumber;
 			FileName = string.IsNullOrWhiteSpace(filePath)
@@ -39,9 +37,11 @@ namespace ProSuite.Processing.Domain
 
 	public class OptionalParameterAttribute : ParameterAttribute
 	{
+		public object DefaultValue { get; set; }
+
 		public OptionalParameterAttribute(
 				[CallerLineNumber] int lineNumber = 0,
 				[CallerFilePath] string filePath = null)
-			: base(lineNumber, filePath, false) { }
+			: base(lineNumber, filePath) { }
 	}
 }

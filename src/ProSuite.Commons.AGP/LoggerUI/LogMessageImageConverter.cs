@@ -25,8 +25,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			return "/ProSuite.Commons.AGP;component/Images/StatusInformation_12x_16x.png";
 		}
 
-		public object ConvertBack(object value, Type targetType, object parameter,
-		                          CultureInfo culture)
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
 		{
 			//Put reverse logic here
 			throw new NotImplementedException();

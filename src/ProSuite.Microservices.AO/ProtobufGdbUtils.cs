@@ -5,11 +5,10 @@ using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.Shared;
 
 namespace ProSuite.Microservices.AO
@@ -80,7 +79,7 @@ namespace ProSuite.Microservices.AO
 				// NOTE: Normal fields just return null if they have not been fetched due to sub-field restrictions.
 				//       However, the Shape property E_FAILs.
 				bool canGetShape =
-					subFields == null || subFields == "*" ||
+					string.IsNullOrEmpty(subFields) || subFields == "*" ||
 					StringUtils.Contains(subFields, ((IFeatureClass) feature.Class).ShapeFieldName,
 					                     StringComparison.InvariantCultureIgnoreCase);
 
@@ -94,8 +93,8 @@ namespace ProSuite.Microservices.AO
 							: ShapeMsg.FormatOneofCase.EsriShape;
 
 					SpatialReferenceMsg.FormatOneofCase spatialRefFormat = includeSpatialRef
-						? SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml
-						: SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid;
+							? SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml
+							: SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid;
 
 					result.Shape =
 						ProtobufGeometryUtils.ToShapeMsg(featureShape, shapeFormat,
@@ -270,7 +269,7 @@ namespace ProSuite.Microservices.AO
 		                                              bool includeFields = false,
 		                                              string aliasName = null)
 		{
-			int geometryType = (int) GetGeometryType(dataset);
+			int geometryType = (int) ProtoDataQualityUtils.GetGeometryType(dataset);
 
 			ObjectClassMsg result =
 				new ObjectClassMsg()
@@ -306,39 +305,33 @@ namespace ProSuite.Microservices.AO
 			return result;
 		}
 
-		public static ProSuiteGeometryType GetGeometryType(Dataset dataset)
+		public static ObjectClassMsg ToRelationshipClassMsg(
+			[NotNull] IRelationshipClass relationshipClass)
 		{
-			ProSuiteGeometryType geometryType;
-
-			switch (dataset)
+			ObjectClassMsg relTableMsg;
+			if (relationshipClass.IsAttributed ||
+			    relationshipClass.Cardinality == esriRelCardinality.esriRelCardinalityManyToMany)
 			{
-				case IVectorDataset vds:
-				{
-					var shapeGeometryType = Assert.NotNull((GeometryTypeShape) vds.GeometryType);
-					geometryType = shapeGeometryType.ShapeType;
-					break;
-				}
-				case ITableDataset _:
-					geometryType = ProSuiteGeometryType.Null;
-					break;
-				case ITopologyDataset _:
-					geometryType = ProSuiteGeometryType.Topology;
-					break;
-				case RasterDataset _:
-					geometryType = ProSuiteGeometryType.Raster;
-					break;
-				case IRasterMosaicDataset _:
-					geometryType = ProSuiteGeometryType.RasterMosaic;
-					break;
-				case ISimpleTerrainDataset _:
-					geometryType = ProSuiteGeometryType.Terrain;
-					break;
-				default:
-					throw new ArgumentOutOfRangeException(
-						$"Unsupported dataset type: {dataset.Name}");
+				// it's also a real table:
+				var table = (ITable) relationshipClass;
+				relTableMsg = ToObjectClassMsg(table, relationshipClass.RelationshipClassID, true);
+			}
+			else
+			{
+				// so far just the name is used
+				relTableMsg =
+					new ObjectClassMsg()
+					{
+						Name = DatasetUtils.GetName(relationshipClass),
+						ClassHandle = relationshipClass.RelationshipClassID,
+					};
 			}
 
-			return geometryType;
+			IWorkspace workspace = ((IDataset) relationshipClass).Workspace;
+
+			relTableMsg.WorkspaceHandle = workspace?.GetHashCode() ?? -1;
+
+			return relTableMsg;
 		}
 
 		private static FieldMsg ToFieldMsg(IField field)

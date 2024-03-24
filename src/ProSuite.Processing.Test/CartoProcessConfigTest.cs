@@ -60,7 +60,7 @@ namespace ProSuite.Processing.Test
 		[Test]
 		public void CanGetQuotedValue()
 		{
-			var config = CartoProcessConfig.Parse("a='foo'\nb=\"bar\"\nc = a 'b' c \"d\" e \n d = \"a  b\" \t c\t \t\n");
+		var config = CartoProcessConfig.Parse("a='foo'\nb=\"bar\"\nc = a 'b' c \"d\" e \n d = \"a  b\" \t c\t \t\n");
 
 			Assert.AreEqual("'foo'", config.GetString("a"));
 			Assert.AreEqual("\"bar\"", config.GetString("b"));
@@ -82,9 +82,33 @@ namespace ProSuite.Processing.Test
 		}
 
 		[Test]
+		public void CanParseLenient()
+		{
+			const bool lenient = true;
+			var config = CartoProcessConfig.Parse(
+				"foo=1\noops\nbar=2\nspam='unclosed\nbaz=3\n", lenient);
+
+			Assert.NotNull(config);
+			Assert.AreEqual(2, config.Count);
+			Assert.AreEqual("1", config.GetString("foo"));
+			Assert.AreEqual("2", config.GetString("bar"));
+			Assert.IsNull(config.GetString("baz", null));
+		}
+
+		[Test]
+		public void CanEnumerate()
+		{
+			var config = CartoProcessConfig.Parse("foo=1\nbar=2\nbaz=3\nfoo=duplicate");
+
+			// yield all key/value pairs, including duplicates, in the original order:
+			Assert.AreEqual("foo,bar,baz,foo", string.Join(",", config.Select(p => p.Key)));
+			Assert.AreEqual("1,2,3,duplicate", string.Join(",", config.Select(p => p.Value)));
+		}
+
+		[Test]
 		public void CanParseProcessXml()
 		{
-			const string xml = @"<Process name=""Align Buildings"" description=""to nearest road or railroad"">
+		const string xml = @"<Process name=""Align Buildings"" description=""to nearest road or railroad"">
   <ModelReference name=""ABC"" />
   <TypeReference name=""AlignMarkers"" />
   <Parameters>
@@ -109,7 +133,7 @@ namespace ProSuite.Processing.Test
 			Assert.IsNull(config.GetString("ReferenceDataset1", null));
 			Assert.Throws<CartoConfigException>(() => config.GetString("ReferenceDataset2"));
 			// MarkerAttributes is multivalued; quotes preserved:
-			Assert.AreEqual("ANGLE = NormalAngle; OPERATOR = 'Jones'", string.Join("; ", config.GetValues("MarkerAttributes")));
+		Assert.AreEqual("ANGLE = NormalAngle; OPERATOR = 'Jones'", string.Join("; ", config.GetValues("MarkerAttributes")));
 		}
 
 		[Test]
@@ -130,7 +154,7 @@ namespace ProSuite.Processing.Test
 			Assert.AreEqual("Create Markers", config.Name);
 			Assert.IsNull(config.Description);
 			Assert.AreEqual(3, config.Count);
-			Assert.AreEqual("FooBarBaz", string.Join("", config.GetValues("Process")));
+			Assert.AreEqual("FooBarBaz", string.Join("", config.GetValues("Processes")));
 		}
 	}
 }

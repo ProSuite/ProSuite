@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Keyboard;
+using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 
 namespace ProSuite.Commons.UI.Keyboard
 {

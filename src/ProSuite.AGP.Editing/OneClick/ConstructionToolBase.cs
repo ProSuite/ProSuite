@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -12,12 +12,11 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Keyboard;
-using Cursor = System.Windows.Input.Cursor;
+using ProSuite.Commons.UI;
+using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -71,8 +70,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
 			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
 
-			if (_intermittentSelectionPhase
-			   ) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
+			// This method is presumably called in the following situation only:
+			// MapTool.UseSelection is true and your MapTool does sketching (i.e. i used SketchType = SketchGeometryType.Line)
+			// After start sketching and shift is pressed to change the selection and then the selection is changed:
+			// https://community.esri.com/t5/arcgis-pro-sdk-questions/maptool-onselectionchangedasync-not-triggered/td-p/1199664
+
+			if (_intermittentSelectionPhase) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
 			{
 				return Task.FromResult(true);
 			}
@@ -111,6 +114,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			return ! IsInSketchMode;
 		}
 
+		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
+		{
+			return Task.FromResult(! IsInSketchMode);
+		}
+
 		protected override void LogUsingCurrentSelection()
 		{
 			// log is written in LogEnteringSketchMode
@@ -129,7 +137,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => "OnKeyDownCore");
 
-			if (IsShiftKey(k.Key))
+			if (KeyboardUtils.IsShiftKey(k.Key))
 			{
 				if (_intermittentSelectionPhase)
 				{
@@ -157,6 +165,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				// By backing up and re-setting the edit sketch the individual operations that made up the 
 				// sketch are lost.
+				// todo daro await
 				_editSketchBackup = GetCurrentSketchAsync().Result;
 
 				// TODO: Only clear the sketch and switch to selection phase if REALLY required
@@ -167,21 +176,27 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
+		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{
-			_msg.VerboseDebug(() => "OnKeyUpCore");
+			// todo daro more ViewUtils
+			_msg.VerboseDebug(() => $"HandleKeyUpCoreAsync ({Caption})");
 
-			if (IsShiftKey(k.Key))
+			if (KeyboardUtils.IsShiftKey(args.Key))
 			{
 				_intermittentSelectionPhase = false;
 
-				if (CanUseSelection(ActiveMapView))
+				Task<bool> task = QueuedTask.Run(() => CanUseSelection(ActiveMapView));
+
+				bool canUseSelection =
+					await ViewUtils.TryAsync(task, _msg, suppressErrorMessageBox: true);
+
+				if (canUseSelection)
 				{
 					StartSketchPhase();
 
 					if (_editSketchBackup != null)
 					{
-						ActiveMapView.SetCurrentSketchAsync(_editSketchBackup);
+						await ActiveMapView.SetCurrentSketchAsync(_editSketchBackup);
 
 						// This puts back the edit operations in the undo stack, but when clicking on the top one, the sketch 
 						// is cleared and undoing any previous operation has no effect any more.
@@ -200,16 +215,28 @@ namespace ProSuite.AGP.Editing.OneClick
 				_editSketchBackup = null;
 			}
 
-			if (k.Key == _keyRestorePrevious)
+			if (args.Key == Key.F2)
 			{
-				RestorePreviousSketch();
+				// #114: F2 has no effect unless another tool has been used before:
+				Geometry currentSketch = await GetCurrentSketchAsync();
+
+				if (CanFinishSketch(currentSketch))
+				{
+					await OnSketchCompleteAsync(currentSketch);
+					await ClearSketchAsync();
+				}
+			}
+
+			if (args.Key == _keyRestorePrevious)
+			{
+				await RestorePreviousSketchAsync();
 			}
 		}
 
-		protected override bool HandleEscape()
+		protected override async Task HandleEscapeAsync()
 		{
-			QueuedTaskUtils.Run(
-				delegate
+			Task task = QueuedTask.Run(
+				() =>
 				{
 					if (IsInSketchMode)
 					{
@@ -222,6 +249,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						}
 						else
 						{
+							// todo daro await
 							Geometry sketch = GetCurrentSketchAsync().Result;
 
 							if (sketch != null && ! sketch.IsEmpty)
@@ -231,7 +259,6 @@ namespace ProSuite.AGP.Editing.OneClick
 							else
 							{
 								SelectionUtils.ClearSelection();
-
 								StartSelectionPhase();
 							}
 						}
@@ -241,10 +268,9 @@ namespace ProSuite.AGP.Editing.OneClick
 						ClearSketchAsync();
 						SelectionUtils.ClearSelection();
 					}
-
-					return true;
 				});
-			return true;
+
+			await ViewUtils.TryAsync(task, _msg);
 		}
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
@@ -256,13 +282,13 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			// TODO: only if selection was cleared? Generally allow changing the selection through attribute selection?
-
 			if (! CanUseSelection(ActiveMapView))
 			{
 				//LogPromptForSelection();
 				StartSelectionPhase();
 			}
+
+			// TODO: virtual RefreshFeedbackCoreAsync(), override in AdvancedReshape
 
 			return true;
 		}
@@ -276,7 +302,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (IsInSketchMode)
 			{
 				// take snapshots
-				EditingTemplate currentTemplate = CurrentTemplate;
+				//Todo: In Pro3 this.CurrentTemplate is null. Investigate further...
+				EditingTemplate currentTemplate = EditingTemplate.Current;
 				MapView activeView = ActiveMapView;
 
 				RememberSketch(sketchGeometry);
@@ -344,6 +371,26 @@ namespace ProSuite.AGP.Editing.OneClick
 			LogEnteringSketchMode();
 		}
 
+		private static bool CanFinishSketch(Geometry sketch)
+		{
+			if (sketch == null || sketch.IsEmpty)
+			{
+				return false;
+			}
+
+			if (sketch.GeometryType == GeometryType.Polygon)
+			{
+				return sketch.PointCount > 2;
+			}
+
+			if (sketch.GeometryType == GeometryType.Polyline)
+			{
+				return sketch.PointCount > 1;
+			}
+
+			return true;
+		}
+
 		/// <summary>
 		/// Determines whether the provided selection can be used by this tool.
 		/// </summary>
@@ -363,7 +410,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private bool CanStartSketchPhase(IList<Feature> selectedFeatures)
 		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
+			if (KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+			    KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true))
 			{
 				return false;
 			}
@@ -413,7 +461,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		private void RestorePreviousSketch()
+		private async Task RestorePreviousSketchAsync()
 		{
 			if (! SupportRestoreLastSketch)
 			{
@@ -427,28 +475,39 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
-			if (! IsInSketchMode)
+			try
 			{
-				// If a non-rectangular sketch is set while SketchType is rectangle (or probably generally the wrong type)
-				// sketching is not possible any more and the application appears hanging
-
-				// Try start sketch mode:
-				IList<Feature> selection = GetApplicableSelectedFeatures(ActiveMapView).ToList();
-
-				if (CanUseSelection(ActiveMapView))
+				if (! IsInSketchMode)
 				{
-					AfterSelection(selection, null);
+					// If a non-rectangular sketch is set while SketchType is rectangle (or probably generally the wrong type)
+					// sketching is not possible any more and the application appears hanging
+
+					// Try start sketch mode:
+					await QueuedTask.Run(() =>
+					{
+						IList<Feature> selection =
+							GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+						if (CanUseSelection(ActiveMapView))
+						{
+							AfterSelection(selection, null);
+						}
+					});
+				}
+
+				if (IsInSketchMode)
+				{
+					await SetCurrentSketchAsync(_previousSketch);
+				}
+				else
+				{
+					_msg.Warn("Sketch cannot be restored in selection phase. " +
+					          "Please try again in the sketch phase.");
 				}
 			}
-
-			if (IsInSketchMode)
+			catch (Exception e)
 			{
-				SetCurrentSketchAsync(_previousSketch);
-			}
-			else
-			{
-				_msg.Warn("Sketch cannot be restored in selection phase. " +
-				          "Please try again in the sketch phase.");
+				throw new ApplicationException("Error restoring the previous sketch", e);
 			}
 		}
 	}

@@ -19,7 +19,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 				                      new XmlInvolvedObjectsMatchCriterionIgnoredDatasets
 				                      {
 					                      ModelName = "MODEL1",
-					                      DatasetNames = new[] {"Dataset1", "Dataset2"}.ToList()
+					                      DatasetNames = new[] { "Dataset1", "Dataset2" }.ToList()
 				                      }
 			                      };
 

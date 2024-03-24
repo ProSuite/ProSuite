@@ -280,7 +280,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_itemNavigation.GoToItem(filterConfigTableRow.InstanceConfig);
 		}
 
-		void IQualityConditionObserver.TestDescriptorLinkClicked(
+		void IQualityConditionObserver.GoToTestDescriptorClicked(
 			TestDescriptor testDescriptor)
 		{
 			if (testDescriptor == null)
@@ -551,14 +551,17 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				_view.StopOnErrorDefault = testDescriptor.StopOnError
 					                           ? "Yes"
 					                           : "No";
-				_view.TestDescriptorLinkEnabled = true;
+				_view.GoToTestDescriptorEnabled = true;
 			}
 			else
 			{
 				_view.IssueTypeDefault = string.Empty;
 				_view.StopOnErrorDefault = string.Empty;
-				_view.TestDescriptorLinkEnabled = false;
+				_view.GoToTestDescriptorEnabled = false;
 			}
+
+			string html = _item.GetWebHelp(testDescriptor, out string title);
+			_itemNavigation.UpdateItemHelp(title, html ?? string.Empty);
 		}
 	}
 }

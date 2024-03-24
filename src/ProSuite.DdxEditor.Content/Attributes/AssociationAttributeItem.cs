@@ -1,5 +1,6 @@
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.DataModel;
 
@@ -18,10 +19,11 @@ namespace ProSuite.DdxEditor.Content.Attributes
 		}
 
 		protected override void AddEntityPanels(
-			ICompositeEntityControl<AssociationAttribute, IViewObserver> compositeControl)
+			ICompositeEntityControl<AssociationAttribute, IViewObserver> compositeControl,
+			IItemNavigation itemNavigation)
 		{
 			// Attribute
-			base.AddEntityPanels(compositeControl);
+			base.AddEntityPanels(compositeControl, itemNavigation);
 
 			// AssociationAttribute
 			IEntityPanel<AssociationAttribute> control =

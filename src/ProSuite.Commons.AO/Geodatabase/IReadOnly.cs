@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Commons.AO.Geodatabase
@@ -30,11 +31,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		IReadOnlyRow GetRow(long oid);
 
-		IEnumerable<IReadOnlyRow> EnumRows(ITableFilter filter, bool recycle);
+		IEnumerable<IReadOnlyRow> EnumRows([CanBeNull] ITableFilter filter, bool recycle);
 
-		long RowCount(ITableFilter filter);
+		long RowCount([CanBeNull] ITableFilter filter);
 
-		bool Equals(IReadOnlyTable otherTable);
+		bool Equals([CanBeNull] IReadOnlyTable otherTable);
 	}
 
 	public interface IReadOnlyGeoDataset

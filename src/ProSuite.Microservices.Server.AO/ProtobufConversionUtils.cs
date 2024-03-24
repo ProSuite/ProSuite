@@ -10,6 +10,8 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Gdb;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA.Xml;
@@ -151,16 +153,20 @@ namespace ProSuite.Microservices.Server.AO
 			var container = new GdbTableContainer();
 
 			DateTime? defaultCreationDate =
-				workspaceMessage.DefaultVersionCreationTicks == 0
-					? (DateTime?) null
-					: new DateTime(workspaceMessage.DefaultVersionCreationTicks);
+				FromTicks(workspaceMessage.DefaultVersionCreationTicks);
+
+			DateTime? defaultModificationDate =
+				FromTicks(workspaceMessage.DefaultVersionModificationTicks);
+
+			string path = FileSystemUtils.FromPathUri(workspaceMessage.Path);
 
 			var gdbWorkspace = new GdbWorkspace(container, workspaceMessage.WorkspaceHandle,
 			                                    (WorkspaceDbType) workspaceMessage.WorkspaceDbType,
-			                                    EmptyToNull(workspaceMessage.Path),
+			                                    path,
 			                                    EmptyToNull(workspaceMessage.VersionName),
 			                                    EmptyToNull(workspaceMessage.DefaultVersionName),
-			                                    defaultCreationDate);
+			                                    defaultCreationDate,
+			                                    defaultModificationDate);
 
 			foreach (ObjectClassMsg objectClassMsg in objectClassMessages)
 			{
@@ -498,6 +504,15 @@ namespace ProSuite.Microservices.Server.AO
 						throw new ArgumentOutOfRangeException();
 				}
 			}
+		}
+
+		private static DateTime? FromTicks(long ticks)
+		{
+			DateTime? defaultCreationDate =
+				ticks == 0
+					? (DateTime?) null
+					: new DateTime(ticks);
+			return defaultCreationDate;
 		}
 
 		public static string EmptyToNull(string value)

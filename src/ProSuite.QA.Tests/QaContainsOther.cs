@@ -109,6 +109,23 @@ namespace ProSuite.QA.Tests
 			       isContainingCondition,
 			       reportIndividualParts) { }
 
+		protected override void ConfigureQueryFilter(int tableIndex, ITableFilter filter)
+		{
+			if (! string.IsNullOrWhiteSpace(_isContainingConditionSql))
+			{
+				var table = InvolvedTables[tableIndex];
+
+				foreach (string fieldName in
+				         ExpressionUtils.GetExpressionFieldNames(
+					         table, _isContainingConditionSql.Replace(".", " ")))
+				{
+					filter.AddField(fieldName);
+				}
+			}
+
+			base.ConfigureQueryFilter(tableIndex, filter);
+		}
+
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			// Currently, rows that are on equal layers are tested twice in the same direction,

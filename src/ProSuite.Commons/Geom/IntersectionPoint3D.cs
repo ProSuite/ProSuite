@@ -62,6 +62,14 @@ namespace ProSuite.Commons.Geom
 			set => _linearIntersectionInOppositeDirection = value;
 		}
 
+		// TODO: These properties should probably be determined on the fly by the
+		// IntersectionPointNavigator or by the IntersectionClusters class
+		public bool DisallowTargetForward { get; set; }
+		public bool DisallowTargetBackward { get; set; }
+
+		public bool DisallowSourceForward { get; set; }
+		public bool DisallowSourceBackward { get; set; }
+
 		public IntersectionPoint3D(
 			[NotNull] Pnt3D point,
 			double virtualSourceVertexIdx,
@@ -115,7 +123,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Create an intersection point originating from a point that intsersects a segment.
+		/// Create an intersection point originating from a point that intersects a segment.
 		/// </summary>
 		/// <param name="sourcePoint">The source point</param>
 		/// <param name="targetSegments">The target segment list</param>
@@ -157,7 +165,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Create an intersection point originating from a line that intsersects a point. The intersection
+		/// Create an intersection point originating from a line that intersects a point. The intersection
 		/// point properties (XYZ) are taken from the source line.
 		/// </summary>
 		/// <param name="sourceSegments">The source segment list</param>
@@ -771,7 +779,7 @@ namespace ProSuite.Commons.Geom
 		/// not intersect the source (from the local perspective of this segment intersection).
 		/// </summary>
 		/// <param name="target">The target linestring</param>
-		/// <param name="forwardAlongTarget">Whether the non-intesecting point should be found
+		/// <param name="forwardAlongTarget">Whether the non-intersecting point should be found
 		/// by going forward along the target or backward.</param>
 		/// <returns></returns>
 		[CanBeNull]

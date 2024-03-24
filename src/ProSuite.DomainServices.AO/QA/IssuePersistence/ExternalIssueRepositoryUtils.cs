@@ -50,6 +50,8 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		{
 			Assert.ArgumentNotNullOrEmpty(gdbFullPath, nameof(gdbFullPath));
 
+			var watch = _msg.DebugStartTiming("Creating issue repository {0}...", gdbFullPath);
+
 			string directoryPath = Path.GetDirectoryName(gdbFullPath);
 			Assert.NotNull(directoryPath,
 			               "Invalid full path to gdb (undefined directory): {0}",
@@ -59,8 +61,12 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			Assert.NotNull(gdbName, "Invalid full path to gdb (undefined file name): {0}",
 			               gdbFullPath);
 
-			return GetIssueRepository(directoryPath, gdbName, spatialReference,
-			                          issueRepositoryType);
+			IIssueRepository result = GetIssueRepository(directoryPath, gdbName, spatialReference,
+			                                             issueRepositoryType);
+
+			_msg.DebugStopTiming(watch, "Created issue repository");
+
+			return result;
 		}
 
 		[CanBeNull]
@@ -108,6 +114,17 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			[NotNull] string gdbName,
 			IssueRepositoryType issueRepositoryType)
 		{
+			return GetOrCreateDatabase(directoryFullPath, gdbName, issueRepositoryType,
+			                           forceNew: true);
+		}
+
+		[CanBeNull]
+		public static IFeatureWorkspace GetOrCreateDatabase(
+			[NotNull] string directoryFullPath,
+			[NotNull] string gdbName,
+			IssueRepositoryType issueRepositoryType,
+			bool forceNew = false)
+		{
 			if (issueRepositoryType != IssueRepositoryType.None &&
 			    ! Directory.Exists(directoryFullPath))
 			{
@@ -117,7 +134,8 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			IWorkspaceName workspaceName;
 			try
 			{
-				workspaceName = GetWorkspaceName(issueRepositoryType, directoryFullPath, gdbName);
+				workspaceName = GetWorkspaceName(issueRepositoryType, directoryFullPath, gdbName,
+				                                 checkExists: ! forceNew);
 			}
 			catch (COMException e)
 			{
@@ -159,8 +177,37 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		private static IWorkspaceName GetWorkspaceName(
 			IssueRepositoryType issueRepositoryType,
 			[NotNull] string directoryPath,
-			[NotNull] string gdbName)
+			[NotNull] string gdbName, bool checkExists)
 		{
+			if (checkExists)
+			{
+				string path = Path.Combine(directoryPath, gdbName);
+				IWorkspace ws = null;
+				switch (issueRepositoryType)
+				{
+					case IssueRepositoryType.None:
+						return null;
+
+					case IssueRepositoryType.FileGdb:
+						if (WorkspaceUtils.FileGdbWorkspaceExists(path))
+							ws = WorkspaceUtils.OpenFileGdbWorkspace(path);
+						break;
+
+					case IssueRepositoryType.Shapefiles:
+						if (WorkspaceUtils.ShapefileWorkspaceExists(path))
+							ws = (IWorkspace) WorkspaceUtils.OpenShapefileWorkspace(path);
+						break;
+
+					default:
+						throw new ArgumentOutOfRangeException(nameof(issueRepositoryType));
+				}
+
+				if (ws != null)
+				{
+					return (IWorkspaceName) ((IDataset) ws).FullName;
+				}
+			}
+
 			switch (issueRepositoryType)
 			{
 				case IssueRepositoryType.None:

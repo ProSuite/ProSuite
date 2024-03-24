@@ -183,28 +183,13 @@ namespace ProSuite.Microservices.AO.QA
 			IRelationshipClass relationshipClass =
 				_verificationContext.Value.OpenRelationshipClass(association);
 
-			Assert.NotNull(relationshipClass);
+			Assert.NotNull(relationshipClass,
+			               $"Cannot open relationship class for {association.Name}");
 
-			ObjectClassMsg relTableMsg;
-			if (relationshipClass.IsAttributed)
-			{
-				// it's also a real table:
-				var table = (ITable) relationshipClass;
-				relTableMsg =
-					ProtobufGdbUtils.ToObjectClassMsg(
-						table, relationshipClass.RelationshipClassID, true);
-			}
-			else
-			{
-				// so far just the name is used:
-				relTableMsg =
-					new ObjectClassMsg()
-					{
-						Name = DatasetUtils.GetName(relationshipClass),
-						ClassHandle = relationshipClass.RelationshipClassID,
-					};
-			}
+			ObjectClassMsg relTableMsg =
+				ProtobufGdbUtils.ToRelationshipClassMsg(relationshipClass);
 
+			// The currency for workspace handles in QA is the model ID.
 			relTableMsg.WorkspaceHandle = association.Model.Id;
 
 			result.RelclassDefinitions.Add(relTableMsg);

@@ -28,6 +28,8 @@ namespace ProSuite.QA.Tests
 		[NotNull] private readonly Regex _regex;
 		[CanBeNull] private List<int> _fieldIndices;
 
+		private FieldListType _fieldListType = FieldListType.RelevantFields;
+
 		#region issue codes
 
 		[CanBeNull] private static TestIssueCodes _codes;
@@ -144,13 +146,26 @@ namespace ProSuite.QA.Tests
 
 			// check if all fields exist
 			ValidateFieldNames(table, _fieldNames);
+
+			foreach (var fieldName in _fieldNames)
+			{
+				AddCustomQueryFilterExpression(fieldName);
+			}
 		}
 
 		#endregion
 
 		[Doc(nameof(DocStrings.QaRegularExpression_FieldListType))]
 		[TestParameter(FieldListType.RelevantFields)]
-		public FieldListType FieldListType { get; set; } = FieldListType.RelevantFields;
+		public FieldListType FieldListType { get => _fieldListType;
+			set
+			{
+				_fieldListType = value;
+				AddCustomQueryFilterExpression(
+					string.Concat(GetRelevantNames(_table, _fieldNames, _fieldListType)
+						              .Select(r => $"{r},")));
+			}
+		} 
 
 		public override bool IsQueriedTable(int tableIndex)
 		{

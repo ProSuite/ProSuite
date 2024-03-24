@@ -17,18 +17,30 @@ namespace ProSuite.DomainModel.AGP.QA
 		/// </summary>
 		/// <value>The current quality specification.</value>
 		[CanBeNull]
-		IQualitySpecificationReference CurrentQualitySpecification { get; set; }
+		IQualitySpecificationReference CurrentQualitySpecificationReference { get; set; }
 
 		/// <summary>
-		/// The list of applicable quality specifications for the current environment.
+		/// The list of applicable quality specification references for the current environment.
 		/// </summary>
 		[NotNull]
-		IList<IQualitySpecificationReference> QualitySpecifications { get; }
+		IList<IQualitySpecificationReference> QualitySpecificationReferences { get; }
 
 		/// <summary>
 		/// Refresh the list of quality verifications.
 		/// </summary>
-		void RefreshQualitySpecifications();
+		void RefreshQualitySpecificationReferences();
+
+		/// <summary>
+		/// Loads the full specification of the currently selected specification reference.
+		/// </summary>
+		/// <returns></returns>
+		Task<QualitySpecification> GetCurrentQualitySpecification();
+
+		/// <summary>
+		/// Sets the customized quality specification version of the current specification.
+		/// </summary>
+		/// <param name="customSpecification"></param>
+		void SetCustomSpecification(QualitySpecification customSpecification);
 
 		/// <summary>
 		/// Occurs after the list of quality specifications was refreshed.
@@ -48,9 +60,18 @@ namespace ProSuite.DomainModel.AGP.QA
 		[CanBeNull]
 		string BackendDisplayName { get; }
 
+		/// <summary>
+		/// Verifies the provided perimeter or the full extent if no perimeter is provided.
+		/// </summary>
+		/// <param name="perimeter">The perimeter. Null means 'full extent'.</param>
+		/// <param name="progress"></param>
+		/// <param name="perimeterDisplayName">The display name for the provided perimeter.</param>
+		/// <param name="resultsPath"></param>
+		/// <returns></returns>
 		Task<ServiceCallStatus> VerifyPerimeter(
-			[NotNull] Geometry perimeter,
+			[CanBeNull] Geometry perimeter,
 			[NotNull] QualityVerificationProgressTracker progress,
+			[NotNull] string perimeterDisplayName,
 			string resultsPath);
 
 		Task<ServiceCallStatus> VerifySelection(

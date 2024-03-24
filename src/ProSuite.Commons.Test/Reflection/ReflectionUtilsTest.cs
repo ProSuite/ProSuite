@@ -79,5 +79,48 @@ namespace ProSuite.Commons.Test.Reflection
 			Console.WriteLine(@"  - events: {0}", eventCount);
 			Console.WriteLine(@"  - constructors: {0}", constructorCount);
 		}
+
+		[Test]
+		public void CanGetDefaultValue()
+		{
+			Assert.AreEqual(0, typeof(int).GetDefaultValue());
+			Assert.AreEqual(0D, typeof(double).GetDefaultValue());
+			Assert.AreEqual(false, typeof(bool).GetDefaultValue());
+			Assert.AreEqual('\0', typeof(char).GetDefaultValue());
+
+			// Default value of all reference types is null:
+			Assert.IsNull(typeof(string).GetDefaultValue());
+
+			// Default value of nullable types is null (even though nullable is a value type):
+			Assert.IsNull(typeof(int?).GetDefaultValue());
+
+			// Null just doesn't make sense here, so expect an arg null exception:
+			Assert.Throws<ArgumentNullException>(() => ReflectionUtils.GetDefaultValue(null));
+		}
+
+		[Test]
+		public void CanGetConstantValue()
+		{
+			var type = typeof(TestClass);
+			Assert.AreEqual(12, type.GetConstantValue("Foo"));
+			Assert.IsNull(type.GetConstantValue("Bar")); // private constants are excluded by default
+			Assert.AreEqual(true, type.GetConstantValue("Bar", true)); // but may be included upon request
+			Assert.AreEqual(4.2, type.GetConstantValue("Baz"));
+			Assert.AreEqual("Hey", type.GetConstantValue("Quux")); // base class is included
+			Assert.IsNull(type.GetConstantValue("NoSuchField"));
+			Assert.IsNull(type.GetConstantValue(null));
+		}
+
+		private class TestClass : TestBase
+		{
+			[UsedImplicitly] public const int Foo = 12;
+			[UsedImplicitly] private const bool Bar = true;
+			[UsedImplicitly] public static double Baz = 4.2;
+		}
+
+		private class TestBase
+		{
+			[UsedImplicitly] public const string Quux = "Hey";
+		}
 	}
 }

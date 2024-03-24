@@ -35,26 +35,16 @@ namespace ProSuite.AGP.WorkList.Domain
 		public string TableName { get; }
 
 		[CanBeNull]
-		public string KeyField { get; private set; }
+		public string KeyField { get; }
 
 		[NotNull]
-		public IList<RowReference> RowReferences { get; private set; }
+		public IList<RowReference> RowReferences { get; }
 
 		public override string ToString()
 		{
-			if (KeyField == null)
-			{
-				return $"Table: {TableName}, Rows: {RowReferences.Count}";
-			}
-
-			return $"Table: {TableName}, KeyField: {KeyField}, Rows: {RowReferences.Count}";
-		}
-
-		public void ReplaceRowReferences(
-			[NotNull] IEnumerable<OIDRowReference> oidRowRefernces)
-		{
-			KeyField = null;
-			RowReferences = oidRowRefernces.Cast<RowReference>().ToList();
+			return KeyField == null
+				       ? $"Table: {TableName}, Rows: {RowReferences.Count}"
+				       : $"Table: {TableName}, KeyField: {KeyField}, Rows: {RowReferences.Count}";
 		}
 	}
 }

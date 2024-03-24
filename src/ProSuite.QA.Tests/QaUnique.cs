@@ -16,6 +16,7 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
@@ -1135,7 +1136,7 @@ namespace ProSuite.QA.Tests
 				{
 					if (oid is int)
 					{
-						geometry = TestUtils.GetShapeCopy(table.GetRow((int) oid));
+						geometry = TryGetErrorGeometry(table, (int) oid);
 					}
 				}
 
@@ -1165,7 +1166,7 @@ namespace ProSuite.QA.Tests
 
 					if (geometry == null)
 					{
-						geometry = relatedTable.GetGeometry((int) oid);
+						geometry = TryGetErrorGeometry(relatedTable.Table, (int) oid);
 					}
 				}
 			}
@@ -1238,6 +1239,29 @@ namespace ProSuite.QA.Tests
 
 			// TODO culture?
 			return value.ToString();
+		}
+
+		[CanBeNull]
+		private static IGeometry TryGetErrorGeometry([NotNull] IReadOnlyTable table, int oid)
+		{
+			if (! (table is IReadOnlyFeatureClass))
+			{
+				return null;
+			}
+
+			try
+			{
+				IReadOnlyRow row = table.GetRow(oid);
+				return TestUtils.GetShapeCopy(row);
+			}
+			catch (DataAccessException e)
+			{
+				_msg.Warn(
+					$"Error loading {table.Name} <oid> {oid}. The respective error will have no geometry.",
+					e);
+			}
+
+			return null;
 		}
 
 		private int CheckOrderedRows([NotNull] TableView tableView, int minTableIndex)

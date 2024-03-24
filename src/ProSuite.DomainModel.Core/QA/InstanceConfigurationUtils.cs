@@ -122,9 +122,17 @@ namespace ProSuite.DomainModel.Core.QA
 		public static void InitializeParameterValues(
 			[NotNull] QualitySpecification qualitySpecification)
 		{
+			IEnumerable<QualityCondition> qualityConditions =
+				qualitySpecification.Elements.Select(e => e.QualityCondition);
+
+			InitializeParameterValues(qualityConditions);
+		}
+
+		public static void InitializeParameterValues(
+			[NotNull] IEnumerable<QualityCondition> qualityConditions)
+		{
 			foreach (QualityCondition condition in
-			         qualitySpecification.Elements.Select(
-				         e => e.QualityCondition))
+			         qualityConditions)
 			{
 				InitializeParameterValues(condition);
 
@@ -165,7 +173,7 @@ namespace ProSuite.DomainModel.Core.QA
 				else
 				{
 					_msg.WarnFormat(
-						"{0} / Test parameter value {1}: No parameter found in {2}. The constructor Id might be incorrect.",
+						"{0} / Test parameter value {1}: No parameter found in {2}. The constructor Id might be incorrect or an optional parameter might have been added or deleted.",
 						instanceConfiguration, parameterValue.TestParameterName, instanceInfo);
 				}
 
@@ -305,7 +313,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 			if (distinctCategories.Count == 1)
 			{
-				return distinctCategories[0].Name;
+				return distinctCategories[0]?.Name;
 			}
 
 			return StringUtils.Concatenate(distinctCategories.OrderBy(c => c?.Name),
@@ -359,7 +367,7 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			// Consider making configurable similar to batch-create
-			return $"{descriptorName}_{datasetName}";
+			return $"{datasetName}_{descriptorName}";
 		}
 
 		public static void HandleNoConditionCreated(

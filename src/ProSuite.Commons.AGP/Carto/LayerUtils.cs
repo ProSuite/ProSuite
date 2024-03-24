@@ -14,6 +14,24 @@ namespace ProSuite.Commons.AGP.Carto
 	public static class LayerUtils
 	{
 		/// <summary>
+		/// Given a layer, find the map to which it belongs.
+		/// </summary>
+		public static Map FindMap(Layer layer)
+		{
+			var parent = layer.Parent;
+
+			while (parent != null)
+			{
+				if (parent is Map map) return map;
+				if (parent is not Layer other) break;
+
+				parent = other.Parent;
+			}
+
+			return null;
+		}
+
+		/// <summary>
 		/// Returns the Rows or features found by the layer search. Honors definition queries,
 		/// layer time, etc. defined on the layer. According to the documentation, valid rows returned
 		/// by a cursor should be disposed.
@@ -30,11 +48,12 @@ namespace ProSuite.Commons.AGP.Carto
 		                                           CancellationToken cancellationToken = default)
 			where T : Row
 		{
-			Assert.ArgumentNotNull(layer, nameof(layer));
+			if (layer is null)
+				throw new ArgumentNullException(nameof(layer));
 
 			if (predicate == null)
 			{
-				predicate = f => true;
+				predicate = _ => true;
 			}
 
 			using (RowCursor cursor = layer.Search(filter))
@@ -92,46 +111,57 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		/// <remarks>
+		/// A layer document (.lyrx file) can contain one or more layer definitions!
+		/// </remarks>
 		[CanBeNull]
-		public static T GetRenderer<T>([NotNull] LayerDocument template) where T : CIMRenderer
+		public static CIMRenderer GetRenderer(LayerDocument layerDocument,
+		                                      Func<CIMDefinition, bool> predicate = null)
 		{
-			CIMLayerDocument layerDocument = template.GetCIMLayerDocument();
+			if (layerDocument is null) return null;
 
-			// todo daro: implement more robust
-			CIMDefinition definition = layerDocument.LayerDefinitions[0];
-			return ((CIMFeatureLayer) definition)?.Renderer as T;
+			CIMLayerDocument cim = layerDocument.GetCIMLayerDocument();
+			var definitions = cim?.LayerDefinitions;
+			if (definitions is null || definitions.Length <= 0) return null;
+
+			var definition = predicate is null
+				                 ? definitions.First()
+				                 : definitions.First(predicate);
+
+			return definition is CIMFeatureLayer featureLayer
+				       ? featureLayer.Renderer
+				       : null;
+		}
+
+		/// <summary>
+		/// Get first renderer from <paramref name="layerDocument"/>
+		/// compatible with the given <paramref name="targetLayer"/>.
+		/// </summary>
+		[CanBeNull]
+		public static CIMRenderer GetRenderer(
+			LayerDocument layerDocument, FeatureLayer targetLayer)
+		{
+			return GetRenderer(layerDocument, IsCompatible);
+
+			bool IsCompatible(CIMDefinition cimDefinition)
+			{
+				if (targetLayer is null) return true;
+				return cimDefinition is CIMFeatureLayer cimFeatureLayer &&
+				       targetLayer.CanSetRenderer(cimFeatureLayer.Renderer);
+			}
 		}
 
 		[NotNull]
-		public static LayerDocument CreateLayerDocument([NotNull] string path)
+		public static LayerDocument OpenLayerDocument([NotNull] string filePath)
 		{
-			if (! File.Exists(path))
+			if (! File.Exists(filePath))
 			{
-				throw new ArgumentException($"{path} does not exist");
+				throw new ArgumentException($"{filePath} does not exist");
 			}
 
 			// todo daro no valid .lyrx file
 
-			return new LayerDocument(path);
-		}
-
-		[CanBeNull]
-		public static LayerDocument CreateLayerDocument([NotNull] string path,
-		                                                string layerName)
-		{
-			var layerDocument = CreateLayerDocument(path);
-
-			CIMLayerDocument cimLayerDocument = layerDocument.GetCIMLayerDocument();
-			cimLayerDocument.LayerDefinitions[0].Name = layerName;
-
-			return new LayerDocument(cimLayerDocument);
-		}
-
-		public static void ApplyRenderer(FeatureLayer layer, LayerDocument template)
-		{
-			// todo daro: inline
-			var renderer = GetRenderer<CIMUniqueValueRenderer>(template);
-			layer.SetRenderer(renderer);
+			return new LayerDocument(filePath);
 		}
 
 		/// <summary>
@@ -140,31 +170,26 @@ namespace ProSuite.Commons.AGP.Carto
 		/// is broken FeatureLayer.GetTable() returns null.
 		/// </summary>
 		public static IEnumerable<Table> GetTables(
-			[NotNull] this IEnumerable<BasicFeatureLayer> layers)
+			this IEnumerable<BasicFeatureLayer> layers)
 		{
-			Assert.ArgumentNotNull(layers, nameof(layers));
-
-			return layers.Select(fl => fl.GetTable()).Where(table => table != null);
+			return layers is null
+				       ? Enumerable.Empty<Table>()
+				       : layers.Select(fl => fl.GetTable()).Where(table => table != null);
 		}
 
 		/// <summary>
-		/// Gets the ObjectIDs of selected features from feature
-		/// layers with valid data source.
-		/// Even tough a layer data source is broken the BasicFeatureLayer.SelectionCount
-		/// can return a valid result.
+		/// Gets the ObjectIDs of selected features from the given <paramref name="layer"/>.
 		/// </summary>
-		/// <param name="layer"></param>
 		/// <remarks>
-		/// Altough a layer data source is broken BasicFeatureLayer.SelectionCount
+		/// Although a layer data source is broken BasicFeatureLayer.SelectionCount
 		/// can return a valid result.
 		/// </remarks>
-		public static IEnumerable<long> GetSelectionOids([NotNull] this BasicFeatureLayer layer)
+		public static IEnumerable<long> GetSelectionOids(this BasicFeatureLayer layer)
 		{
-			Assert.ArgumentNotNull(layer, nameof(layer));
-
-			ArcGIS.Core.Data.Selection selection = layer.GetSelection();
-
-			return selection == null ? Enumerable.Empty<long>() : selection.GetObjectIDs();
+			using (ArcGIS.Core.Data.Selection selection = layer?.GetSelection())
+			{
+				return selection == null ? Enumerable.Empty<long>() : selection.GetObjectIDs();
+			}
 		}
 
 		public static bool HasSelection([CanBeNull] BasicFeatureLayer layer)
@@ -183,16 +208,19 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <summary>
 		/// Gets the layer's visibility state. Works as well for layers nested in group layers.
 		/// </summary>
-		public static bool IsVisible(this Layer layer)
+		public static bool IsVisible([NotNull] Layer layer)
 		{
 			if (! layer.IsVisible)
 			{
 				return false;
 			}
 
-			if (layer.Parent is Layer parentLayer)
+			while (layer.Parent is Layer parentLayer)
 			{
-				return IsVisible(parentLayer);
+				if (! parentLayer.IsVisible)
+				{
+					return false;
+				}
 			}
 
 			return true;
@@ -206,6 +234,7 @@ namespace ProSuite.Commons.AGP.Carto
 				return false;
 			}
 
+			// TODO should dispose table!
 			if (featureLayer.GetTable() == null)
 			{
 				return false;
@@ -214,14 +243,17 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
+		// todo daro to MapUtils?
 		[NotNull]
-		public static FeatureClass GetFeatureClass([NotNull] this BasicFeatureLayer basicFeatureLayer)
+		public static FeatureClass GetFeatureClass(
+			[NotNull] this BasicFeatureLayer basicFeatureLayer)
 		{
 			Assert.ArgumentNotNull(basicFeatureLayer, nameof(basicFeatureLayer));
 			Assert.ArgumentCondition(
 				basicFeatureLayer is FeatureLayer || basicFeatureLayer is AnnotationLayer,
 				"AnnotationLayer has it's own GetFeatureClass() method. There is no base method on BasicFeatureLayer.");
 
+			// todo daro try (FeatureClass)BasicFeatureLayer.GetTable()
 			if (basicFeatureLayer is FeatureLayer featureLayer)
 			{
 				return Assert.NotNull(featureLayer.GetFeatureClass());
@@ -233,7 +265,7 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			throw new ArgumentException(
-				$"{nameof(basicFeatureLayer)} is not of type FeatureLayer or AnnotationLayer");
+				$"{nameof(basicFeatureLayer)} is not of type FeatureLayer nor AnnotationLayer");
 		}
 	}
 }

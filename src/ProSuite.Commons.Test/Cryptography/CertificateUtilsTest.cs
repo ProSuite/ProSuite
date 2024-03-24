@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using NUnit.Framework;
@@ -88,7 +89,6 @@ namespace ProSuite.Commons.Test.Cryptography
 				         StoreName.My, StoreLocation.LocalMachine, c => c.HasPrivateKey))
 			{
 				// No access (must run as admin):
-
 				bool canExport =
 					CertificateUtils.TryExportPrivateKey(certWithPrivateKey, out string _,
 					                                     out string _);
@@ -129,6 +129,107 @@ namespace ProSuite.Commons.Test.Cryptography
 			}
 		}
 
-		// For extra unit tests see 
+		[Test]
+		public void CanExportToPem()
+		{
+			var found = CertificateUtils.GetCertificates(StoreName.My).ToList();
+
+			var cert =
+				found.FirstOrDefault(c => c.SubjectName.Name.Contains("CN=Dira GeoSystems AG"));
+
+			if (cert == null)
+			{
+				return;
+			}
+
+			Assert.IsTrue(found.Count > 0);
+
+			string pem = CertificateUtils.ExportToPem(cert, true);
+
+			string tempFileName = Path.GetTempFileName();
+			File.WriteAllText(tempFileName, pem);
+
+			// TODO: Is PEM not base 64 encoded?
+			Console.WriteLine(pem);
+		}
+
+		[Test]
+		public void CanGetCertificatesInChainDiraCodeSigning()
+		{
+			var found = CertificateUtils.FindCertificates(
+				                            StoreName.My, StoreLocation.CurrentUser,
+				                            @"CN=Dira GeoSystems AG, O=Dira GeoSystems AG, S=Zürich, C=CH",
+				                            X509FindType.FindBySubjectDistinguishedName, false)
+			                            .ToList();
+
+			if (found.Count == 0)
+			{
+				// The certificate is not installed.
+				return;
+			}
+
+			X509Certificate2 diraCodeSigningCert = found[0];
+
+			int count = 0;
+			foreach (var cert in CertificateUtils.GetCertificatesInChain(diraCodeSigningCert))
+			{
+				Console.WriteLine(cert);
+				count++;
+			}
+
+			Assert.IsTrue(count > 2);
+		}
+
+		[Test]
+		[Ignore(
+			"Requires the code signing file on the local machine and in case of the pfx the password")]
+		public void CanGetCertificatesInChainFromFile()
+		{
+			// Replace with the path to your certificate file (e.g., .cer or .p7b).
+			string certificateFilePath =
+				@"C:\Users\ema\Documents\Administrative\Certificates\DiraCodeSigning.pfx";
+
+			try
+			{
+				// Load the certificate file.
+				X509Certificate2 certificate =
+					new X509Certificate2(certificateFilePath, "ThisIsNotThePassword");
+
+				// Create an X509Chain object.
+				X509Chain chain = new X509Chain();
+
+				// Set X509ChainPolicy options (optional).
+				chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+				chain.ChainPolicy.VerificationFlags = X509VerificationFlags.IgnoreNotTimeValid;
+
+				// Build the chain.
+				bool chainBuilt = chain.Build(certificate);
+
+				if (chainBuilt)
+				{
+					// Get the full certificate chain.
+					X509Certificate2Collection fullChain =
+						new X509Certificate2Collection(
+							chain.ChainElements.Cast<X509ChainElement>().Select(x => x.Certificate)
+							     .ToArray());
+
+					Assert.IsTrue(fullChain.Count > 2);
+					// Display the full certificate chain.
+					Console.WriteLine("Full Certificate Chain:");
+					foreach (X509Certificate2 cert in fullChain)
+					{
+						Console.WriteLine("Subject: " + cert.Subject);
+					}
+				}
+				else
+				{
+					Console.WriteLine("Chain building failed.");
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("Error: " + ex.Message);
+			}
+		}
 	}
 }

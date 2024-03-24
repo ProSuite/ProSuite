@@ -111,8 +111,6 @@ namespace ProSuite.DdxEditor.Framework.Items
 
 		public bool CanDelete => CanDeleteCore;
 
-		public IItemNavigation ItemNavigation { get; set; }
-
 		public void SetText([NotNull] string value)
 		{
 			_text = value;

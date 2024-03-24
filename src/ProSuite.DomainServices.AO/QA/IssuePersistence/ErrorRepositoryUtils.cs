@@ -19,18 +19,20 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		[CanBeNull]
 		public static IGeometry GetGeometryToStore(
 			[CanBeNull] IGeometry geometry,
-			[NotNull] ISpatialReference spatialReference,
+			[CanBeNull] ISpatialReference spatialReference,
 			[NotNull] ICollection<esriGeometryType> storedGeometryTypes,
 			bool forPre10Geodatabase = false,
 			bool forceSimplify = false)
 		{
-			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 			Assert.ArgumentNotNull(storedGeometryTypes, nameof(storedGeometryTypes));
 
 			if (geometry == null || geometry.IsEmpty)
 			{
 				return null;
 			}
+
+			Assert.ArgumentNotNull(spatialReference,
+			                       $"{nameof(spatialReference)} is null. Either background verification inputs or known spatial reference must be specified");
 
 			IGeometry result = CreateGeometryToStore(geometry, storedGeometryTypes);
 
@@ -45,7 +47,9 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 			try
 			{
-				GeometryUtils.EnsureSpatialReference(result, spatialReference);
+				// Revert to useProjectEx: false due to
+				// BUG: TOP-5806, TOP-5805, TOP-5804
+				GeometryUtils.EnsureSpatialReference(result, spatialReference, useProjectEx: false);
 
 				// this was previously needed for the exact coordinate comparison with allowed errors:
 				result.SnapToSpatialReference();

@@ -4,6 +4,7 @@ using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -66,6 +67,39 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 		}
 
+		public static void ReportRowWithStopCondition(
+			[NotNull] QaError qaError,
+			[NotNull] QualityCondition qualityCondition,
+			[NotNull] RowsWithStopConditions allRowsWithStopCondition)
+		{
+			Assert.ArgumentNotNull(qaError);
+			Assert.ArgumentNotNull(qualityCondition);
+			Assert.ArgumentNotNull(allRowsWithStopCondition);
+
+			StopInfo stopInfo = null;
+			if (qualityCondition.StopOnError)
+			{
+				stopInfo = new StopInfo(qualityCondition, qaError.Description);
+
+				foreach (InvolvedRow involvedRow in qaError.InvolvedRows)
+				{
+					allRowsWithStopCondition.Add(involvedRow.TableName,
+					                             involvedRow.OID, stopInfo);
+				}
+			}
+
+			if (! qualityCondition.AllowErrors)
+			{
+				if (stopInfo != null)
+				{
+					// it's a stop condition, and it is a 'hard' condition, and the error is 
+					// relevant --> consider the stop situation as sufficiently reported 
+					// (no reporting in case of stopped tests required)
+					stopInfo.Reported = true;
+				}
+			}
+		}
+
 		internal static string GetStopInfoErrorDescription([NotNull] StopInfo stopInfo)
 		{
 			var sb = new StringBuilder();
@@ -98,8 +132,18 @@ namespace ProSuite.DomainServices.AO.QA
 					.DatasetLoadTimes)
 			{
 				IReadOnlyDataset gdbDataset = pair.Key;
+				Dataset dataset;
 
-				Dataset dataset = datasetLookup.GetDataset((IDatasetName) gdbDataset.FullName);
+				try
+				{
+					dataset = datasetLookup.GetDataset((IDatasetName) gdbDataset.FullName);
+				}
+				catch (Exception e)
+				{
+					_msg.Warn($"Error getting dataset for {gdbDataset.Name}. " +
+					          "No load times will be assigned.", e);
+					continue;
+				}
 
 				if (dataset == null)
 				{

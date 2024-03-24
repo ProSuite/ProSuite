@@ -12,14 +12,11 @@ namespace ProSuite.AGP.WorkList.Domain
 {
 	public abstract class WorkItem : NotifyPropertyChangedBase, IWorkItem
 	{
-		// todo daro: see WorkListLayer.GetProjectedDraftGeometry
-		//			  Is this the right place for minimum size?
-		readonly double _minimumSize = 30;
-
+		// TODO: Make this configurable
 		private readonly double _extentExpansionFactor = 1.1;
-		private readonly double _minimumSizeDegrees = 15;
-		private readonly double _minimumSizeProjected = 0.001;
-		private bool _hasZ;
+		private readonly double _minimumSizeDegrees = 0.001;
+		private readonly double _minimumSizeProjected = 30;
+
 		private WorkItemStatus _status;
 		private bool _visited;
 
@@ -36,11 +33,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		protected WorkItem(long id, [NotNull] Row row) : this(id, new GdbRowIdentity(row))
 		{
+			Description = GetDescription(row);
+
 			var feature = row as Feature;
 
 			SetGeometryFromFeature(feature);
-
-			Description = GetDescription(feature);
 		}
 
 		protected WorkItem(long id, GdbRowIdentity identity)
@@ -79,7 +76,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public GdbRowIdentity Proxy { get; }
 
-		[CanBeNull]
 		public Envelope Extent { get; private set; }
 
 		public GeometryType? GeometryType { get; set; }
@@ -88,7 +84,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		                        out double xmax, out double ymax,
 		                        out double zmax)
 		{
-			QueryPoints(out xmin, out ymin, out xmax, out ymax, out zmax, _minimumSize);
+			QueryPoints(out xmin, out ymin, out xmax, out ymax, out zmax, 0);
 		}
 
 		public void QueryPoints(out double xmin, out double ymin,
@@ -232,7 +228,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				// use the z boundary values unchanged
 				if (extent.HasZ)
 				{
-					_hasZ = true;
 					_zmin = extent.ZMin;
 					_zmax = extent.ZMax;
 

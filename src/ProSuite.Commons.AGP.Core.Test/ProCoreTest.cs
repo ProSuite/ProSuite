@@ -1,5 +1,6 @@
 using System.Threading;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Hosting;
 

@@ -1,6 +1,6 @@
 namespace ProSuite.Commons.Geom
 {
-	internal class IntersectionRun
+	public class IntersectionRun
 	{
 		private readonly Pnt3D _includedRingStartPoint;
 

@@ -27,6 +27,8 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			return BackingData.PassesFilter(feature);
 		}
 
+		public override string Name => base.Name ?? FeatureClassToFilter.Name;
+
 		#region Overrides of TransformedFeatureClassBase<FilteredBackingDataset>
 
 		public override bool NoCaching

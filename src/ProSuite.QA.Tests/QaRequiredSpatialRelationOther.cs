@@ -49,6 +49,7 @@ namespace ProSuite.QA.Tests
 				StringUtils.IsNotEmpty(relevantRelationCondition)
 					? relevantRelationCondition
 					: null;
+			AddCustomQueryFilterExpression(relevantRelationCondition);
 
 			_firstOtherClassIndex = featureClasses.Count;
 			_totalClassesCount = featureClasses.Count + otherFeatureClasses.Count;

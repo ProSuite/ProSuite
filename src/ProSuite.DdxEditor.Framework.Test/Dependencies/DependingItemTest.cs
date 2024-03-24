@@ -1,5 +1,8 @@
 using System;
 using System.Reflection;
+#if NET6_0_OR_GREATER
+using System.Runtime.Versioning;
+#endif
 using NUnit.Framework;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -7,6 +10,9 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 
 namespace ProSuite.DdxEditor.Framework.Test.Dependencies
 {
+#if NET6_0_OR_GREATER
+	[SupportedOSPlatform("windows")]
+#endif
 	[TestFixture]
 	public class DependingItemTest
 	{
@@ -103,6 +109,9 @@ namespace ProSuite.DdxEditor.Framework.Test.Dependencies
 
 		private class TestDependingItem : DependingItem
 		{
+#if NET6_0_OR_GREATER
+			[SupportedOSPlatform("windows")]
+#endif
 			public TestDependingItem([NotNull] Entity entity, [NotNull] string name)
 				: base(entity, name) { }
 
@@ -117,6 +126,6 @@ namespace ProSuite.DdxEditor.Framework.Test.Dependencies
 			}
 		}
 
-		#endregion
+#endregion
 	}
 }

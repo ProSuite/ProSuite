@@ -9,6 +9,7 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 
 namespace ProSuite.AGP.WorkList.Selection
 {
@@ -16,55 +17,43 @@ namespace ProSuite.AGP.WorkList.Selection
 	{
 		public override string FileSuffix => ".swl";
 
-		protected override ILayerContainerEdit GetContainer()
+		protected override T GetContainerCore<T>()
 		{
-			return MapView.Active.Map;
+			return MapView.Active.Map as T;
 		}
 
-		protected override IEnumerable<BasicFeatureLayer> GetLayersCore(
-			IEnumerable<FeatureClass> featureClasses)
-		{
-			MapView mapView = MapView.Active;
+		protected override void AddToMapCore(IEnumerable<Table> tables) { }
 
-			if (mapView == null)
-			{
-				return Enumerable.Empty<BasicFeatureLayer>();
-			}
-
-			Dictionary<MapMember, List<long>> selection = mapView.Map.GetSelection();
-
-			return selection.Count >= 1
-				       ? selection.Keys.OfType<BasicFeatureLayer>()
-				       : Enumerable.Empty<BasicFeatureLayer>();
-		}
-
-		protected override IEnumerable<FeatureClass> GetFeatureClassesCore()
+		protected override IEnumerable<Table> GetTablesCore()
 		{
 			return Enumerable.Empty<FeatureClass>();
 		}
 
-		protected override async Task<FeatureClass> EnsureStatusFieldCoreAsync(
-			FeatureClass featureClass)
+		protected override async Task<Table> EnsureStatusFieldCoreAsync(Table table)
 		{
-			return await Task.FromResult(featureClass);
+			return await Task.FromResult(table);
 		}
 
 		protected override IRepository CreateStateRepositoryCore(string path, string workListName)
 		{
 			Type type = GetWorkListTypeCore<SelectionWorkList>();
 
-			return new XmlWorkItemStateRepository(path, workListName, type);
+			return new XmlSelectionItemStateRepository(path, workListName, type);
 		}
 
 		protected override IWorkItemRepository CreateItemRepositoryCore(
-			IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository)
+			IEnumerable<Table> tables, IRepository stateRepository)
 		{
-			List<BasicFeatureLayer> layers = featureLayers.ToList();
+			// todo daro inline
+			Dictionary<MapMember, List<long>> oidsByLayer =
+				MapView.Active.Map.GetSelection().ToDictionary();
 
-			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(layers);
-			Dictionary<Table, List<long>> selection = MapUtils.GetDistinctSelectionByTable(layers);
+			Dictionary<Table, List<long>> selection =
+				MapUtils.GetDistinctSelectionByTable(oidsByLayer);
 
-			return new SelectionItemRepository(tables, selection, stateRepository);
+			return new SelectionItemRepository(DatasetUtils.Distinct(selection.Keys),
+			                                   selection,
+			                                   stateRepository);
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,

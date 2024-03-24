@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
@@ -57,6 +58,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		public string IssueFgdbPath { get; set; }
 
+		public ISpatialReference IssueFgdbSpatialReference { get; set; }
+
 		// Do not compress file geodatabases (better zip them) because
 		// - it can result in file locks
 		// - it has Geoprocessor dependency
@@ -64,7 +67,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public string HtmlReportPath { get; set; }
 
-		public string HtmlTemplatePath { get; set; }
+		public string HtmlReportTemplatePath { get; set; }
+
+		public string HtmlSpecificationTemplatePath { get; set; }
 
 		public string MxdDocumentPath => null;
 

@@ -6,6 +6,7 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
@@ -36,9 +37,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		public event EventHandler<WorkListChangedEventArgs> WorkListChanged;
 
 		[NotNull] private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
-
-		[NotNull] private readonly List<GdbRowIdentity> _invalidRows =
-			new List<GdbRowIdentity>(_initialCapacity);
 
 		[NotNull] private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
 			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
@@ -73,10 +71,13 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
+			_msg.DebugFormat("Added {0} items to work list", _items.Count);
+
 			// initializes the state repository if no states for
 			// the work items are read yet
 			Repository.UpdateVolatileState(_items);
 
+			_msg.DebugFormat("Getting extents for {0} items...", _items.Count);
 			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
 			//			  look old work item implementation
 			Extent = GetExtentFromItems(_items);
@@ -148,7 +149,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			Repository.SetVisited(item);
 
-			OnWorkListChanged(null, new List<long> {item.OID});
+			OnWorkListChanged(null, new List<long> { item.OID });
 		}
 
 		public void Commit()
@@ -204,18 +205,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				return GetItems(filter, ignoreListSettings).Count();
 			}
 		}
-
-		public virtual void Dispose()
-		{
-			Repository.Dispose();
-		}
-
-		/* Navigation */
-
-		// note daro: only change the item index for navigation! the index is the only valid truth!
-
-		/* This base class provides an overly simplistic implementation */
-		/* TODO should honour Status, Visibility, and AreaOfInterest */
 
 		#region Navigation public
 
@@ -277,7 +266,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			// start after the current item
 			int startIndex = CurrentIndex + 1;
 
-			// first, try to go to an unvisted item
+			// first, try to go to an unvisited item
 			bool found = TryGoNearest(contextPerimeters, reference,
 			                          VisitedSearchOption.ExcludeVisited,
 			                          startIndex);
@@ -342,7 +331,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				return;
 			}
 
-			var filter = new QueryFilter {ObjectIDs = new[] {oid}};
+			var filter = new QueryFilter { ObjectIDs = new[] { oid } };
 			IWorkItem target = GetItems(filter, false).FirstOrDefault();
 
 			if (target != null)
@@ -459,11 +448,10 @@ namespace ProSuite.AGP.WorkList.Domain
 			return GetItems(null, startIndex, currentSearch, visitedSearch).ToList();
 		}
 
-		private IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, int startIndex = -1,
-		                                        CurrentSearchOption currentSearch =
-			                                        CurrentSearchOption.ExcludeCurrent,
-		                                        VisitedSearchOption visitedSearch =
-			                                        VisitedSearchOption.ExcludeVisited)
+		private IEnumerable<IWorkItem> GetItems(
+			QueryFilter filter = null, int startIndex = -1,
+			CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent,
+			VisitedSearchOption visitedSearch = VisitedSearchOption.ExcludeVisited)
 		{
 			IEnumerable<IWorkItem> query = GetItems(filter, false, startIndex);
 
@@ -536,7 +524,7 @@ namespace ProSuite.AGP.WorkList.Domain
 						intersection =
 							(Polygon) GeometryEngine.Instance.Intersection(
 								intersection, projectedPerimeter,
-								GeometryDimension.esriGeometry2Dimension);
+								GeometryDimensionType.EsriGeometry2Dimension);
 					}
 					catch (Exception e)
 					{
@@ -591,7 +579,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				return null;
 			}
 
-			// todo daro: old implentation
+			// todo daro: old implementation
 			// acceleration?
 			//GeometryUtils.AllowIndexing(searchReference);
 
@@ -605,21 +593,21 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				// for polygons and envelopes it does not make much sense to search from the 
 				// boundary; search from centroid instead. This also prevents
-				// the extreme response times (minues) of ReturnDistance() from
+				// the extreme response times (minutes) of ReturnDistance() from
 				// very large polygons
-				// todo daro: old implentation
+				// todo daro: old implementation
 				//referenceProximity = (IProximityOperator)((IArea)searchReference).Centroid;
 
 				referenceGeometry = GeometryEngine.Instance.Centroid(searchReference);
 			}
 			else
 			{
-				// todo daro: old implentation
+				// todo daro: old implementation
 				//referenceProximity = (IProximityOperator)searchReference;
 				referenceGeometry = searchReference;
 			}
 
-			// todo daro: old implentation
+			// todo daro: old implementation
 			//var referenceRelation = (IRelationalOperator)searchReference;
 
 			double minDistance = double.MaxValue;
@@ -637,7 +625,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				{
 					if (item.HasGeometry)
 					{
-						// todo daro: old implentation
+						// todo daro: old implementation
 						//workItem.QueryExtent(otherExtent);
 						Envelope otherExtent = item.Extent;
 
@@ -665,7 +653,7 @@ namespace ProSuite.AGP.WorkList.Domain
 									GeometryEngine.Instance.Distance(projected, otherExtent.Center);
 							}
 
-							// todo daro: old implentation
+							// todo daro: old implementation
 							//if (referenceRelation.Disjoint(otherExtent))
 							//{
 							//	distance = referenceProximity.ReturnDistance(otherExtent);
@@ -793,8 +781,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			Repository.SetVisited(nextItem);
 
 			var oids = currentItem != null
-				           ? new List<long> {nextItem.OID, currentItem.OID}
-				           : new List<long> {nextItem.OID};
+				           ? new List<long> { nextItem.OID, currentItem.OID }
+				           : new List<long> { nextItem.OID };
 
 			OnWorkListChanged(null, oids);
 		}
@@ -1039,69 +1027,31 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void Invalidate()
 		{
-			try
-			{
-				if (_invalidRows.Count == 0)
-				{
-					OnWorkListChanged();
-					return;
-				}
+			_msg.Debug("Invalidate");
 
-				var invalidItems = new List<long>(_invalidRows.Count);
-
-				foreach (IWorkItem item in _invalidRows.Where(row => _rowMap.ContainsKey(row))
-				                                       .Select(row => _rowMap[row]))
-				{
-					Refresh(item);
-
-					invalidItems.Add(item.OID);
-				}
-
-				OnWorkListChanged(null, invalidItems);
-			}
-			finally
-			{
-				_invalidRows.Clear();
-			}
+			OnWorkListChanged();
 		}
 
-		// todo daro: Is SDK type Table the right type?
 		public void ProcessChanges(Dictionary<Table, List<long>> inserts,
 		                           Dictionary<Table, List<long>> deletes,
 		                           Dictionary<Table, List<long>> updates)
 		{
-			int capacity = inserts.Values.Sum(list => list.Count) +
-			               deletes.Values.Sum(list => list.Count) +
-			               updates.Values.Sum(list => list.Count);
-
-			var invalidItems = new List<IWorkItem>(capacity);
+			_msg.Debug(
+				$"{nameof(ProcessChanges)} - inserts: {inserts.Count} deletes: {deletes.Count} updates: {updates.Count}");
 
 			foreach (var insert in inserts)
 			{
-				var tableId = new GdbTableIdentity(insert.Key);
-				List<long> oids = insert.Value;
-
-				ProcessInserts(tableId, oids, invalidItems);
+				ProcessInserts(insert.Key, insert.Value);
 			}
 
 			foreach (var delete in deletes)
 			{
-				var tableId = new GdbTableIdentity(delete.Key);
-				List<long> oids = delete.Value;
-
-				ProcessDeletes(tableId, oids, invalidItems);
+				ProcessDeletes(delete.Key, delete.Value);
 			}
 
 			foreach (var update in updates)
 			{
-				var tableId = new GdbTableIdentity(update.Key);
-				List<long> oids = update.Value;
-
-				ProcessUpdates(tableId, oids, invalidItems);
-
-				// does not work because ObjectIDs = (IReadOnlyList<long>) modify.Value (oids) are the
-				// ObjectIds of source feature not the work item OIDs.
-				//IEnumerable<IWorkItem> workItems = GetItems(filter);
+				ProcessUpdates(update.Key, update.Value);
 			}
 
 			// If a item visibility changes to Done the item is not part
@@ -1111,35 +1061,65 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged();
 		}
 
-		private void ProcessDeletes(GdbTableIdentity tableId, IEnumerable<long> oids,
-		                            ICollection<IWorkItem> invalidItems)
+		private void ProcessInserts(Table table, IReadOnlyList<long> oids)
 		{
+			_msg.Debug($"{nameof(ProcessInserts)}");
+
 			foreach (long oid in oids)
 			{
-				// todo daro: refactor, simplify
-				var rowId = new GdbRowIdentity(oid, tableId);
+				var rowId = new GdbRowIdentity(oid, new GdbTableIdentity(table));
 
-				if (HasCurrentItem && Current != null && Current.Proxy.Equals(rowId))
+				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
 				{
+					Refresh(item);
+
+					_items.Add(item);
+
+					if (! HasCurrentItem)
+					{
+						SetCurrentItem(item);
+					}
+				}
+			}
+		}
+
+		private void ProcessDeletes(Table table, IEnumerable<long> oids)
+		{
+			_msg.Debug($"{nameof(ProcessDeletes)}");
+
+			foreach (long oid in oids)
+			{
+				var rowId = new GdbRowIdentity(oid, new GdbTableIdentity(table));
+
+				if (Current != null && Current.Proxy.Equals(rowId))
+				{
+					Assert.True(HasCurrentItem, $"{nameof(HasCurrentItem)} is false");
+
 					ClearCurrentItem(Current);
 				}
 
 				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
 				{
-					RemoveWorkItem(item);
-
-					invalidItems.Add(item);
+					_items.Remove(item);
 				}
 			}
 
-			// todo daro: update work list extent?
 			Extent = GetExtentFromItems(_items);
 		}
 
-		private void RemoveWorkItem(IWorkItem item)
+		private void ProcessUpdates(Table table, IEnumerable<long> oids)
 		{
-			_items.Remove(item);
-			_rowMap.Remove(item.Proxy);
+			_msg.Debug($"{nameof(ProcessUpdates)}");
+
+			foreach (long oid in oids)
+			{
+				var rowId = new GdbRowIdentity(oid, new GdbTableIdentity(table));
+
+				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
+				{
+					Refresh(item);
+				}
+			}
 		}
 
 		private void ClearCurrentItem([NotNull] IWorkItem current)
@@ -1153,57 +1133,12 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			CurrentIndex = -1;
 
-			OnWorkListChanged(null, new List<long> {current.OID});
-		}
-
-		private void ProcessInserts(GdbTableIdentity tableId, List<long> oids,
-		                            List<IWorkItem> invalidItems)
-		{
-			var filter = new QueryFilter {ObjectIDs = oids};
-
-			foreach (IWorkItem item in Repository.GetItems(tableId, filter).ToList())
-			{
-				if (_rowMap.ContainsKey(item.Proxy))
-				{
-					// todo daro: warn
-				}
-
-				_items.Add(item);
-				_rowMap.Add(item.Proxy, item);
-
-				if (! HasCurrentItem)
-				{
-					SetCurrentItem(item);
-					// todo daro: WorkListChanged > invalidate map
-				}
-
-				UpdateExtent(item.Extent);
-
-				invalidItems.Add(item);
-			}
+			OnWorkListChanged(null, new List<long> { current.OID });
 		}
 
 		private void UpdateExtent(Envelope itemExtent)
 		{
 			Extent = Extent?.Union(itemExtent);
-		}
-
-		private void ProcessUpdates(GdbTableIdentity tableId, IEnumerable<long> oids,
-		                            List<IWorkItem> invalidItems)
-		{
-			foreach (long oid in oids)
-			{
-				var rowId = new GdbRowIdentity(oid, tableId);
-
-				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
-				{
-					Refresh(item);
-
-					_invalidRows.Add(rowId);
-
-					invalidItems.Add(item);
-				}
-			}
 		}
 
 		// todo daro: refresh or update?

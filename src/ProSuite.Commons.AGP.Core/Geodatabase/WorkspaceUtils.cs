@@ -10,6 +10,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
 	public static class WorkspaceUtils
 	{
+		public static bool IsSameDatastore(Datastore datastore1, Datastore datastore2)
+		{
+			// todo daro check ProProcessingUtils
+			if (ReferenceEquals(datastore1, datastore2)) return true;
+			if (Equals(datastore1.Handle, datastore2.Handle)) return true;
+
+			return false;
+		}
+
 		[CanBeNull]
 		public static Version GetDefaultVersion([NotNull] Datastore datastore)
 		{
@@ -62,9 +71,26 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			Assert.ArgumentNotNull(datastore, nameof(datastore));
 
-			const string nullPathText = "<undefined path>";
-
 			Connector connector = datastore.GetConnector();
+
+			return GetDatastoreDisplayText(connector);
+		}
+
+		/// <summary>
+		/// Gets a displayable text describing a given datastore connector.
+		/// </summary>
+		/// <param name="connector">The connector.</param>
+		/// <returns></returns>
+		public static string GetDatastoreDisplayText([CanBeNull] Connector connector)
+		{
+			// TODO: Add parameter bool detailed which includes the full info including user names etc.
+
+			if (connector == null)
+			{
+				return "<null>";
+			}
+
+			const string nullPathText = "<undefined path>";
 
 			switch (connector)
 			{
@@ -102,8 +128,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				default:
 					throw new ArgumentOutOfRangeException(
-						string.Format("Unsupported workspace type: {0}",
-						              connector?.GetType()));
+						$"Unsupported workspace type: {connector?.GetType()}");
 			}
 		}
 

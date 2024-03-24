@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using Google.Protobuf.Collections;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
@@ -15,6 +17,7 @@ using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 using GeometryType = ProSuite.DomainModel.Core.DataModel.GeometryType;
@@ -64,18 +67,18 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			bool includeHiddenSpecifications,
 			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
 		{
-			GetSpecificationsRequest request = new GetSpecificationsRequest()
-			                                   {
-				                                   IncludeHidden = includeHiddenSpecifications
-			                                   };
+			var request = new GetSpecificationRefsRequest()
+			              {
+				              IncludeHidden = includeHiddenSpecifications
+			              };
 
 			request.DatasetIds.AddRange(datasetIds);
 
 			_msg.DebugFormat("Getting quality specifications for {0} datasets.", datasetIds.Count);
 
-			GetSpecificationsResponse response =
+			GetSpecificationRefsResponse response =
 				await RpcCallUtils.TryAsync(async callOptions =>
-					                            await ddxClient.GetQualitySpecificationsAsync(
+					                            await ddxClient.GetQualitySpecificationRefsAsync(
 						                            request, callOptions), CancellationToken.None,
 				                            _timeoutMilliseconds);
 
@@ -99,7 +102,180 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			_msg.DebugFormat("Found {0} quality specifications for {1} datasets.", result.Count,
 			                 datasetIds.Count);
 
+			return result.OrderBy(qs => qs.Name).ToList();
+		}
+
+		public static async Task<QualitySpecification> LoadFullSpecification(
+			int specificationId,
+			[NotNull] ISupportedInstanceDescriptors supportedInstanceDescriptors,
+			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
+		{
+			var request = new GetSpecificationRequest()
+			              {
+				              QualitySpecificationId = specificationId
+			              };
+
+			_msg.DebugFormat("Getting quality specification for <id> {0} datasets.",
+			                 specificationId);
+
+			GetSpecificationResponse response =
+				await RpcCallUtils.TryAsync(async callOptions =>
+					                            await ddxClient.GetQualitySpecificationAsync(
+						                            request, callOptions), CancellationToken.None,
+				                            _timeoutMilliseconds);
+
+			if (response == null)
+			{
+				// Cancelled or timed out:
+				return null;
+			}
+
+			QualitySpecification result =
+				CreateQualitySpecification(response, supportedInstanceDescriptors);
+
+			result.SetCloneId(specificationId);
+
 			return result;
+		}
+
+		public static QualitySpecification CreateQualitySpecification(
+			[NotNull] GetSpecificationResponse getSpecificationResponse,
+			[CanBeNull] ISupportedInstanceDescriptors instanceDescriptors = null)
+		{
+			IEnumerable<InstanceDescriptorMsg> descriptorsMsg =
+				getSpecificationResponse.ReferencedInstanceDescriptors;
+
+			if (instanceDescriptors == null)
+			{
+				instanceDescriptors = new SupportedInstanceDescriptors(
+					new List<TestDescriptor>(),
+					new List<TransformerDescriptor>(),
+					new List<IssueFilterDescriptor>());
+			}
+
+			foreach (InstanceDescriptorMsg descriptorMsg in descriptorsMsg)
+			{
+				InstanceDescriptor instanceDescriptor = GetInstanceDescriptor(descriptorMsg);
+				instanceDescriptors.AddDescriptor(instanceDescriptor);
+			}
+
+			Dictionary<int, BasicDataset> datasetsById =
+				FromDatasetMsgs(getSpecificationResponse.ReferencedDatasets);
+
+			var models = new List<BasicModel>();
+
+			foreach (ModelMsg modelMsg in getSpecificationResponse.ReferencedModels)
+			{
+				BasicModel model = new BasicModel(modelMsg.ModelId, modelMsg.Name);
+
+				foreach (int datasetId in modelMsg.DatasetIds)
+				{
+					if (datasetsById.TryGetValue(datasetId, out BasicDataset dataset))
+					{
+						model.AddDataset(dataset);
+					}
+				}
+
+				models.Add(model);
+			}
+
+			IDictionary<string, DdxModel> modelsByWorkspaceId =
+				models.ToDictionary(m => m.Id.ToString(CultureInfo.InvariantCulture),
+				                    m => (DdxModel) m);
+
+			var factory = new ProtoBasedQualitySpecificationFactory(
+				modelsByWorkspaceId, instanceDescriptors);
+
+			QualitySpecification result =
+				factory.CreateQualitySpecification(getSpecificationResponse.Specification);
+
+			return result;
+		}
+
+		private static InstanceDescriptor GetInstanceDescriptor(
+			InstanceDescriptorMsg descriptorMessage)
+		{
+			{
+				InstanceType instanceType = (InstanceType) descriptorMessage.Type;
+
+				InstanceDescriptor result;
+
+				switch (instanceType)
+				{
+					case InstanceType.Test:
+						result = ProtoDataQualityUtils.FromInstanceDescriptorMsg<TestDescriptor>(
+							descriptorMessage);
+						break;
+					case InstanceType.Transformer:
+						result = ProtoDataQualityUtils
+							.FromInstanceDescriptorMsg<TransformerDescriptor>(
+								descriptorMessage);
+						break;
+					case InstanceType.IssueFilter:
+						result = ProtoDataQualityUtils
+							.FromInstanceDescriptorMsg<IssueFilterDescriptor>(
+								descriptorMessage);
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				return result;
+			}
+		}
+
+		private static IEnumerable<IssueFilterDescriptor> GetIssueFilterDescriptors(
+			IEnumerable<InstanceDescriptorMsg> descriptorMessages)
+		{
+			foreach (InstanceDescriptorMsg instanceDescriptorMsg in descriptorMessages)
+			{
+				if (instanceDescriptorMsg.Type != (int) InstanceType.IssueFilter)
+				{
+					continue;
+				}
+
+				IssueFilterDescriptor issueFilterDescriptor =
+					ProtoDataQualityUtils.FromInstanceDescriptorMsg<IssueFilterDescriptor>(
+						instanceDescriptorMsg);
+
+				yield return issueFilterDescriptor;
+			}
+		}
+
+		private static IEnumerable<TransformerDescriptor> GetTransformerDescriptors(
+			IEnumerable<InstanceDescriptorMsg> descriptorMessages)
+		{
+			foreach (InstanceDescriptorMsg instanceDescriptorMsg in descriptorMessages)
+			{
+				if (instanceDescriptorMsg.Type != (int) InstanceType.Transformer)
+				{
+					continue;
+				}
+
+				TransformerDescriptor transformerDescriptor =
+					ProtoDataQualityUtils.FromInstanceDescriptorMsg<TransformerDescriptor>(
+						instanceDescriptorMsg);
+
+				yield return transformerDescriptor;
+			}
+		}
+
+		private static IEnumerable<TestDescriptor> GetTestDescriptors(
+			IEnumerable<InstanceDescriptorMsg> descriptorMessages)
+		{
+			foreach (InstanceDescriptorMsg instanceDescriptorMsg in descriptorMessages)
+			{
+				if (instanceDescriptorMsg.Type != (int) InstanceType.Test)
+				{
+					continue;
+				}
+
+				TestDescriptor testDescriptor =
+					ProtoDataQualityUtils.FromInstanceDescriptorMsg<TestDescriptor>(
+						instanceDescriptorMsg);
+
+				yield return testDescriptor;
+			}
 		}
 
 		private static GetProjectWorkspacesRequest CreateProjectWorkspacesRequest(
@@ -111,6 +287,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (Table table in objectClasses)
 			{
+				if (table.GetDatastore() is not Geodatabase)
+				{
+					continue;
+				}
+
 				ObjectClassMsg objectClassMsg = ProtobufConversionUtils.ToObjectClassMsg(
 					table, Convert.ToInt32(table.GetID()));
 
@@ -124,7 +305,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				{
 					using (Datastore datastore = table.GetDatastore())
 					{
-						workspaceMsg = ProtobufConversionUtils.ToWorkspaceRefMsg(datastore);
+						workspaceMsg = ProtobufConversionUtils.ToWorkspaceRefMsg(datastore, true);
 
 						workspaceMessages.Add(workspaceMsg);
 					}
@@ -154,11 +335,75 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				return new List<ProjectWorkspace>(0);
 			}
 
-			var candidates = new List<ProjectWorkspace>();
+			RepeatedField<DatasetMsg> datasetMsgs = response.Datasets;
 
+			Dictionary<int, BasicDataset> datasetsById = FromDatasetMsgs(datasetMsgs);
+
+			List<ProjectWorkspace> candidates = null;
+
+			await QueuedTask.Run(() =>
+			{
+				candidates =
+					GetProjectWorkspacesQueued(response,
+					                           datastores, spatialReferencesByWkId, datasetsById);
+			});
+
+			return candidates;
+		}
+
+		/// <summary>
+		/// Must be called inside a queued task to create the datastore's display name and in case
+		/// the spatial reference is not a WKID.
+		/// </summary>
+		/// <param name="response"></param>
+		/// <param name="dataStores"></param>
+		/// <param name="spatialReferencesByWkId"></param>
+		/// <param name="datasetsById"></param>
+		/// <returns></returns>
+		private static List<ProjectWorkspace> GetProjectWorkspacesQueued(
+			[NotNull] GetProjectWorkspacesResponse response,
+			[NotNull] IReadOnlyDictionary<long, Datastore> dataStores,
+			[NotNull] IReadOnlyDictionary<long, SpatialReference> spatialReferencesByWkId,
+			[NotNull] IReadOnlyDictionary<int, BasicDataset> datasetsById)
+		{
+			List<ProjectWorkspace> result = new List<ProjectWorkspace>();
+
+			foreach (ProjectWorkspaceMsg projectWorkspaceMsg in response.ProjectWorkspaces)
+			{
+				Datastore datastore = dataStores[projectWorkspaceMsg.WorkspaceHandle];
+
+				ProjectMsg projectMsg =
+					response.Projects.First(p => p.ProjectId == projectWorkspaceMsg.ProjectId);
+
+				ModelMsg modelMsg = response.Models.First(m => m.ModelId == projectMsg.ModelId);
+
+				SpatialReference sr = GetSpatialReference(spatialReferencesByWkId, modelMsg);
+
+				List<BasicDataset> datasets = projectWorkspaceMsg.DatasetIds
+				                                                 .Select(datasetId =>
+					                                                 datasetsById[datasetId])
+				                                                 .ToList();
+
+				var projectWorkspace = new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
+				                                            projectMsg.Name,
+				                                            datasets, datastore, sr)
+				                       {
+					                       IsMasterDatabaseWorkspace =
+						                       projectWorkspaceMsg.IsMasterDatabaseWorkspace
+				                       };
+				result.Add(
+					projectWorkspace);
+			}
+
+			return result;
+		}
+
+		private static Dictionary<int, BasicDataset> FromDatasetMsgs(
+			[NotNull] IEnumerable<DatasetMsg> datasetMsgs)
+		{
 			Dictionary<int, BasicDataset> datasetsById = new Dictionary<int, BasicDataset>();
 
-			foreach (DatasetMsg datasetMsg in response.Datasets)
+			foreach (DatasetMsg datasetMsg in datasetMsgs)
 			{
 				BasicDataset dataset =
 					new BasicDataset(datasetMsg.DatasetId, datasetMsg.Name, null,
@@ -174,32 +419,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				}
 			}
 
-			foreach (ProjectWorkspaceMsg projectWorkspaceMsg in response.ProjectWorkspaces)
-			{
-				Datastore datastore = datastores[projectWorkspaceMsg.WorkspaceHandle];
-
-				ProjectMsg projectMsg =
-					response.Projects.First(p => p.ProjectId == projectWorkspaceMsg.ProjectId);
-
-				ModelMsg modelMsg = response.Models.First(m => m.ModelId == projectMsg.ModelId);
-
-				SpatialReference sr = GetSpatialReference(spatialReferencesByWkId, modelMsg);
-
-				List<BasicDataset> datasets = projectWorkspaceMsg.DatasetIds
-				                                                 .Select(datasetId =>
-					                                                 datasetsById[datasetId])
-				                                                 .ToList();
-
-				candidates.Add(
-					new ProjectWorkspace(projectWorkspaceMsg.ProjectId, projectMsg.Name,
-					                     datasets, datastore, sr));
-			}
-
-			return candidates;
+			return datasetsById;
 		}
 
 		private static SpatialReference GetSpatialReference(
-			Dictionary<long, SpatialReference> spatialReferencesByWkId,
+			IReadOnlyDictionary<long, SpatialReference> spatialReferencesByWkId,
 			ModelMsg modelMsg)
 		{
 			if (modelMsg == null || modelMsg.SpatialReference == null)
@@ -220,10 +444,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				}
 			}
 
-			QueuedTask.Run(() =>
-			{
-				result = ProtobufConversionUtils.FromSpatialReferenceMsg(srMsg);
-			});
+			result = ProtobufConversionUtils.FromSpatialReferenceMsg(srMsg);
 
 			return result;
 		}
@@ -261,10 +482,38 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		[CanBeNull]
 		private static GeometryType GetGeometryType(ProSuiteGeometryType prosuiteGeometryType)
 		{
-			// TODO: Topology? Other types?
+			if (prosuiteGeometryType == ProSuiteGeometryType.Unknown)
+			{
+				return null;
+			}
+
 			if (prosuiteGeometryType == ProSuiteGeometryType.Null)
 			{
 				return _geometryTypes.OfType<GeometryTypeNoGeometry>()
+				                     .FirstOrDefault();
+			}
+
+			if (prosuiteGeometryType == ProSuiteGeometryType.Topology)
+			{
+				return _geometryTypes.OfType<GeometryTypeTopology>()
+				                     .FirstOrDefault();
+			}
+
+			if (prosuiteGeometryType == ProSuiteGeometryType.Raster)
+			{
+				return _geometryTypes.OfType<GeometryTypeRasterDataset>()
+				                     .FirstOrDefault();
+			}
+
+			if (prosuiteGeometryType == ProSuiteGeometryType.RasterMosaic)
+			{
+				return _geometryTypes.OfType<GeometryTypeRasterMosaic>()
+				                     .FirstOrDefault();
+			}
+
+			if (prosuiteGeometryType == ProSuiteGeometryType.Terrain)
+			{
+				return _geometryTypes.OfType<GeometryTypeTerrain>()
 				                     .FirstOrDefault();
 			}
 

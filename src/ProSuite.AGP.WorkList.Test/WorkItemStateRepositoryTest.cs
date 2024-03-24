@@ -41,14 +41,14 @@ namespace ProSuite.AGP.WorkList.Test
 
 			_table0 = _geodatabase.OpenDataset<Table>(_featureClass);
 
-			var tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
+			var tablesByGeodatabase = new Dictionary<Datastore, List<Table>>
 			                          {
 				                          {_geodatabase, new List<Table> {_table0}}
 			                          };
 
 			IRepository stateRepository =
 				new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-			_repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
+			_repository = new IssueItemRepository(new List<Table> { _table0 }, stateRepository);
 		}
 
 		[OneTimeSetUp]

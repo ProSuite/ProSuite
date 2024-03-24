@@ -15,17 +15,17 @@ namespace ProSuite.AGP.WorkList
 		private readonly Dictionary<ISourceClass, List<long>> _oidsBySource =
 			new Dictionary<ISourceClass, List<long>>();
 
-		// todo daro: rafactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
-		public SelectionItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
+		// todo daro: refactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
+		public SelectionItemRepository(IEnumerable<Table> tables,
 		                               Dictionary<Table, List<long>> selection,
 		                               IRepository stateRepository) : base(
-			tablesByGeodatabase, stateRepository)
+			tables, stateRepository)
 		{
 			foreach (var pair in selection)
 			{
 				var id = new GdbTableIdentity(pair.Key);
 				ISourceClass sourceClass =
-					GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(id));
+					SourceClasses.FirstOrDefault(s => s.Uses(id));
 
 				if (sourceClass == null)
 				{
@@ -69,7 +69,7 @@ namespace ProSuite.AGP.WorkList
 
 			if (filter == null)
 			{
-				filter = new QueryFilter {ObjectIDs = oids};
+				filter = new QueryFilter { ObjectIDs = oids };
 			}
 
 			if (filter is SpatialQueryFilter spatialFilter)

@@ -79,12 +79,10 @@ namespace ProSuite.DdxEditor.Content.Models
 
 			if (Environment.Version < new Version(6, 0))
 			{
-				commands.Add(new AssignLayerFilesCommand<E>(
-					             this, applicationController));
+				commands.Add(new AssignLayerFilesCommand<E>(this, applicationController));
 			}
 
-			commands.Add(new RefreshModelContentCommand<E>(
-				             this, applicationController));
+			commands.Add(new RefreshModelContentCommand<E>(this, applicationController));
 
 			commands.Add(new CheckSpatialReferencesCommand<E>(
 				             this, applicationController, _modelBuilder));
@@ -302,12 +300,12 @@ namespace ProSuite.DdxEditor.Content.Models
 		}
 
 		protected override void AddEntityPanels(
-			ICompositeEntityControl<E, IViewObserver> compositeControl)
+			ICompositeEntityControl<E, IViewObserver> compositeControl,
+			IItemNavigation itemNavigation)
 		{
 			var view = new ModelControl<E>();
 
-			new ModelControlPresenter<E>(this, view);
-
+			new ModelControlPresenter<E>(this, view, itemNavigation);
 			compositeControl.AddPanel(view);
 		}
 
@@ -371,6 +369,9 @@ namespace ProSuite.DdxEditor.Content.Models
 			_modelBuilder.NewTransaction(
 				delegate
 				{
+					AddMissingGeometryTypes(geometryTypeRepository,
+					                        geometryTypeRepository.GetAll());
+
 					IEnumerable<ObjectAttributeType> attributeTypes =
 						model.Harvest(geometryTypeRepository.GetAll(),
 						              attributeTypeRepository.GetAll());
@@ -383,6 +384,19 @@ namespace ProSuite.DdxEditor.Content.Models
 						}
 					}
 				});
+		}
+
+		private static void AddMissingGeometryTypes(
+			[NotNull] IRepository<GeometryType> geometryTypeRepo,
+			[NotNull] IList<GeometryType> existingGeometryTypes)
+		{
+			foreach (GeometryType entity in
+			         GeometryTypeFactory.GetMissingGeometryTypes(existingGeometryTypes, true))
+			{
+				_msg.InfoFormat("Adding missing geometry type {0}", entity.Name);
+
+				geometryTypeRepo.Save(entity);
+			}
 		}
 
 		[CanBeNull]

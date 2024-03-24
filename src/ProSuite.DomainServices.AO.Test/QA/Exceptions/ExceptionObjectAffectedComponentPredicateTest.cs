@@ -82,10 +82,10 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		                            [CanBeNull] string qaErrorAffectedComponent)
 		{
 			ExceptionObject exceptionObject = CreateExceptionObject(1,
-			                                                        exceptionAffectedComponent);
+				exceptionAffectedComponent);
 			ITable table = ExceptionObjectTestUtils.GetMockTable();
 			QaError qaError = ExceptionObjectTestUtils.CreateQaError(table, null,
-			                                                         qaErrorAffectedComponent);
+				qaErrorAffectedComponent);
 
 			var predicate = new ExceptionObjectAffectedComponentPredicate();
 

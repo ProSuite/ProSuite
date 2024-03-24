@@ -1,5 +1,6 @@
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.Geodatabase;
 
@@ -15,9 +16,10 @@ namespace ProSuite.DdxEditor.Content.Connections
 			: base(modelBuilder, descriptor, repository) { }
 
 		protected override void AddEntityPanels(
-			ICompositeEntityControl<T, IViewObserver> compositeControl)
+			ICompositeEntityControl<T, IViewObserver> compositeControl,
+			IItemNavigation itemNavigation)
 		{
-			base.AddEntityPanels(compositeControl);
+			base.AddEntityPanels(compositeControl, itemNavigation);
 
 			// could attach panel-specific presenter here, if needed
 			compositeControl.AddPanel(new SdeConnProviderCtrl<T>());

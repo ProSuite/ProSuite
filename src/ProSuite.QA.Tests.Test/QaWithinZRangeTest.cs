@@ -37,11 +37,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			IFeatureClass featureClass =
 				TestWorkspaceUtils.CreateSimpleFeatureClass(
-					_testWs, "points",
-					null,
-					esriGeometryType.esriGeometryPoint,
-					esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, 0d,
-					true);
+					_testWs, "points", esriGeometryType.esriGeometryPoint, hasZ: true);
 
 			IFeature row1 = featureClass.CreateFeature();
 			row1.Shape = GeometryFactory.CreatePoint(2000001, 1000000, 0); //below
@@ -65,13 +61,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestMultipoint()
 		{
-			IFeatureClass featureClass =
-				TestWorkspaceUtils.CreateSimpleFeatureClass(
-					_testWs, "multipoints",
-					null,
-					esriGeometryType.esriGeometryMultipoint,
-					esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, 0d,
-					true);
+			IFeatureClass featureClass = TestWorkspaceUtils.CreateSimpleFeatureClass(
+				_testWs, "multipoints", esriGeometryType.esriGeometryMultipoint, hasZ: true);
 
 			var points = new List<IPoint>
 			             {
@@ -283,10 +274,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeatureClass featureClass =
 				TestWorkspaceUtils.CreateSimpleFeatureClass(
-					_testWs, featureClassName, null,
-					errorPolycurve.GeometryType,
-					esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, 0d,
-					true);
+					_testWs, featureClassName, errorPolycurve.GeometryType, hasZ: true);
 
 			IFeature row = featureClass.CreateFeature();
 			row.Shape = errorPolycurve;

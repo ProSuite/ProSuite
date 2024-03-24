@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -29,6 +30,12 @@ namespace ProSuite.AGP.Editing
 			return new Cursor(new MemoryStream(bytes));
 		}
 
+		public static string GetDisabledReasonNoGeometryMicroservice()
+		{
+			return
+				"Geometry Microservice not found or not started. Please make sure the latest ProSuite Extension is installed.";
+		}
+
 		public static bool IsSingleClickSketch([NotNull] Geometry sketchGeometry)
 		{
 			return ! (sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0);
@@ -38,8 +45,6 @@ namespace ProSuite.AGP.Editing
 		                                                  int selectionTolerancePixels)
 		{
 			MapPoint sketchPoint = CreatePointFromSketchPolygon(sketchGeometry);
-
-			_msg.VerboseDebug(() => $"Selection sketch point: {GeometryUtils.Format(sketchPoint)}");
 
 			return BufferGeometryByPixels(sketchPoint, selectionTolerancePixels);
 		}
@@ -111,13 +116,9 @@ namespace ProSuite.AGP.Editing
 		                                               int pixelBufferDistance)
 		{
 			double bufferDistance = MapUtils.ConvertScreenPixelToMapLength(pixelBufferDistance);
-			_msg.VerboseDebug(() => $"Selection tolerance on map {Math.Round(bufferDistance, 0)}");
-
+			
 			Geometry selectionGeometry =
 				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
-
-			_msg.VerboseDebug(
-				() => $"Selection sketch geometry {GeometryUtils.Format(selectionGeometry.Extent)}");
 
 			return selectionGeometry;
 		}
@@ -164,6 +165,23 @@ namespace ProSuite.AGP.Editing
 			                                     .ToHashSet();
 
 			return editableClassHandles;
+		}
+
+		public static FeatureClass GetCurrentTargetFeatureClass(
+			[CanBeNull] EditingTemplate editTemplate)
+		{
+			// TODO: Notifications
+			FeatureLayer featureLayer = CurrentTargetLayer(editTemplate);
+
+			return featureLayer?.GetFeatureClass();
+		}
+
+		[CanBeNull]
+		public static FeatureLayer CurrentTargetLayer([CanBeNull] EditingTemplate editTemplate)
+		{
+			var featureLayer = editTemplate?.Layer as FeatureLayer;
+
+			return featureLayer;
 		}
 	}
 }

@@ -182,9 +182,10 @@ namespace ProSuite.Commons.Geom
 
 		public static IEnumerable<SegmentIntersection> GetFilteredIntersectionsOrderedAlongSource(
 			[NotNull] IEnumerable<SegmentIntersection> intersections,
-			[NotNull] ISegmentList source)
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target)
 		{
-			var intersectionFilter = new SegmentIntersectionFilter(source);
+			var intersectionFilter = new SegmentIntersectionFilter(source, target);
 
 			return intersectionFilter.GetFilteredIntersectionsOrderedAlongSourceSegments(
 				intersections);
@@ -347,22 +348,10 @@ namespace ProSuite.Commons.Geom
 				if (currentLinearIntersectionStart.ReferencesSameTargetVertex(
 					    previousLinearIntersectionEnd, targetSegments))
 				{
-					// TODO: Proper count of source segments between, probably deal with short segments
-					// check if it's a real source boundary loop
-					double segmentRatioDistance =
-						currentLinearIntersectionStart.VirtualSourceVertex -
-						previousLinearIntersectionEnd.VirtualSourceVertex;
-
-					// Sometimes (see CanGetIntersectionAreaWithLinearIntersectionWithinToleranceAcuteAngleTop5502)
-					// The linear intersections starts just after the start point and ends just
-					// after the last point. This happens with acute angles and the actual start
-					// point is just outside the tolerance. For the time being, they shall be
-					// considered adjacent anyway (but not boundary loops!)
-					if (segmentRatioDistance < 0)
-					{
-						segmentRatioDistance =
-							MathUtils.Modulo(segmentRatioDistance, sourcePart.SegmentCount, true);
-					}
+					double segmentRatioDistance = GetVirtualVertexRatioDistance(
+						previousLinearIntersectionEnd.VirtualSourceVertex,
+						currentLinearIntersectionStart.VirtualSourceVertex,
+						sourcePart.SegmentCount);
 
 					// Typically it is very very small, but theoretically it could be almost the entire segments
 					// if the angle is extremely acute.
@@ -393,6 +382,34 @@ namespace ProSuite.Commons.Geom
 
 			// Connected lines must match exactly (they are typically reference-equal)
 			return previousLinearIntersectionEnd.Point.Equals(currentLinearIntersectionStart.Point);
+		}
+
+		public static double GetVirtualVertexRatioDistance(
+			double priorVirtualVertex, double subsequentVirtualVertex, int ringSegmentCount)
+		{
+			// TODO: Proper count of source segments between, probably deal with short segments
+			// check if it's a real source boundary loop
+			double segmentRatioDistance = subsequentVirtualVertex - priorVirtualVertex;
+
+			// Sometimes (see CanGetIntersectionAreaWithLinearIntersectionWithinToleranceAcuteAngleTop5502)
+			// The linear intersections starts just after the start point and ends just
+			// after the last point. This happens with acute angles and the actual start
+			// point is just outside the tolerance. For the time being, they shall be
+			// considered adjacent anyway (but not boundary loops!)
+			if (segmentRatioDistance < 0)
+			{
+				segmentRatioDistance =
+					MathUtils.Modulo(segmentRatioDistance, ringSegmentCount, true);
+			}
+
+			// If the source vertex index is exactly equal, the order of the points can be random
+			// -> allow swapping
+			if (segmentRatioDistance > 2 && segmentRatioDistance < ringSegmentCount)
+			{
+				segmentRatioDistance -= ringSegmentCount;
+			}
+
+			return segmentRatioDistance;
 		}
 
 		/// <summary>

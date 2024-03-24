@@ -4393,7 +4393,11 @@ The number of geometry components in the list must be either 0 (in which case 'E
 - $MMin (double): the minimum M value (NULL if the geometry has no M values)
 - $MMax (double): the maximum M value (NULL if the geometry has no M values)
 - $UndefinedMValueCount (integer): the number of vertices with undefined (NaN) M in the geometry
-- $ControlPointCount (integer): the number of control points (vertices with ID != 0) in the geometry
+- $ControlPointCount (integer): the number of control points (vertices with ID != 0) in the geometry (same as PointIdCount)
+- $PointIdAware(bool): indicates if geometry is pointId aware
+- $PointIdMin (integer): the minimum value of the point ids 
+- $PointIdMax (integer): the maximum value of the point ids 
+- $PointIdCount (integer): the number of control points (vertices with ID != 0) in the geometry (same as ControlPointCount)
 
 For use on entire feature geometries (i.e. perPart = False):
 
@@ -4814,5 +4818,48 @@ The sort order must correspond with 'polylineClasses'.</value>
   </data>
   <data name="QaAttributeDependency_targetFields" xml:space="preserve">
     <value>fields holding target values</value>
+  </data>
+  <data name="QaExportTables_0" xml:space="preserve">
+    <value>Export 'tables' to a newly created file geodatabase</value>
+  </data>
+  <data name="QaExportTables_tables" xml:space="preserve">
+    <value>tables to export.
+Tables can be normal tables or transformers.
+Each table will be exported to a separate table. The name of the created table corresponds to the name of the source table.
+If severale source tables have the same name, a number is added at the end of the exported table in order to have a unique name.</value>
+  </data>
+  <data name="QaExportTables_fileGdbPath" xml:space="preserve">
+    <value>Path  to the newly created file geodatabase.
+The path can contain one * as placeholder for a number to ensure that the path does not already exist.
+If the path already exists (only possible if no * in 'fgdbPath'), it will be deleted. 
+If the path is locked, i.e. because it belongs to a used file geodatabase, an error occurs. </value>
+  </data>
+  <data name="QaExportTables_ExportTileIds" xml:space="preserve">
+    <value>Add a field to each exported table, which contains the id of tile the exported row belongs to.
+Remarks: A source row may be exported several times with different tile ids.</value>
+  </data>
+  <data name="QaExportTables_ExportTiles" xml:space="preserve">
+    <value>If true: Create a feature class which contains the processed tiles</value>
+  </data>
+  <data name="QaSchemaSpatialReference_CompareXYDomainOrigin" xml:space="preserve">
+    <value>Compare the xMins and yMins of the XY-Domains</value>
+  </data>
+  <data name="QaSchemaSpatialReference_CompareZDomainOrigin" xml:space="preserve">
+    <value>Compare the zMins of the Z-Domains</value>
+  </data>
+  <data name="QaSchemaSpatialReference_CompareMDomainOrigin" xml:space="preserve">
+    <value>Compare the mMins of the M-Domains</value>
+  </data>
+  <data name="QaSchemaSpatialReference_CompareMResolution" xml:space="preserve">
+    <value>Compare the m-Resolutions of the spatial references</value>
+  </data>
+  <data name="QaSchemaSpatialReference_CompareXYResolution" xml:space="preserve">
+    <value>Compare the xy-Resolutions of the spatial references</value>
+  </data>
+  <data name="QaSchemaSpatialReference_CompareZResolution" xml:space="preserve">
+    <value>Compare the z-Resolutions of the spatial references</value>
+  </data>
+  <data name="QaSchemaSpatialReference_compareXYPrecision" xml:space="preserve">
+    <value>Compare XY-Domain and XY-Resolution of the spatial references. If any value is different, an error is reported. If you want to compare only the XY-Domain or XY-Resolution, use the optional parameters CompareXYDomainOrigin or CompareXYResolution</value>
   </data>
 </root>

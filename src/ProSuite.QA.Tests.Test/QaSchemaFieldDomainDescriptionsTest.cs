@@ -16,8 +16,6 @@ namespace ProSuite.QA.Tests.Test
 	[TestFixture]
 	public class QaSchemaFieldDomainDescriptionsTest
 	{
-		private IFeatureWorkspace _workspace;
-
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
@@ -41,12 +39,13 @@ namespace ProSuite.QA.Tests.Test
 		[SetUp]
 		public void Setup()
 		{
-			_workspace = _workspace ?? TestWorkspaceUtils.CreateTestFgdbWorkspace(GetType().Name);
 		}
 
 		[Test]
 		public void AllValid()
 		{
+			IFeatureWorkspace _workspace =
+				TestWorkspaceUtils.CreateTestFgdbWorkspace(GetType().Name + "_1");
 			IDomain domain1 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
 				                                        "DOM_FIELD1",
@@ -88,9 +87,10 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void TooLong()
 		{
+			IFeatureWorkspace _workspace =
+				TestWorkspaceUtils.CreateTestFgdbWorkspace(GetType().Name + "_2");
 			IDomain domain1 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
 				                                        "DOM_FIELD1_L",
@@ -130,9 +130,10 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void Duplicates()
 		{
+			IFeatureWorkspace _workspace =
+				TestWorkspaceUtils.CreateTestFgdbWorkspace(GetType().Name + "_3");
 			IDomain domain1 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
 				                                        "DOM_FIELD1_D",
@@ -191,6 +192,8 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void DuplicatesInOtherWorkspace()
 		{
+			IFeatureWorkspace _workspace =
+				TestWorkspaceUtils.CreateTestFgdbWorkspace(GetType().Name + "_4");
 			IDomain domain1 = DomainUtils.AddDomain(_workspace,
 			                                        DomainUtils.CreateCodedValueDomain(
 				                                        "DOM_FIELD1_O",

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
@@ -31,11 +32,12 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 
 		private readonly ILinearNetworkView _view;
 
-		public LinearNetworkPresenter(LinearNetworkItem item,
-		                              ILinearNetworkView view,
-		                              GetSnapNetworkDatasetsToAdd findDatasetsToAdd)
+		public LinearNetworkPresenter([NotNull] LinearNetworkItem item,
+		                              [NotNull] ILinearNetworkView view,
+		                              [NotNull] GetSnapNetworkDatasetsToAdd findDatasetsToAdd)
 			: base(item)
 		{
+			Assert.ArgumentNotNull(view, nameof(view));
 			Assert.ArgumentNotNull(findDatasetsToAdd, nameof(findDatasetsToAdd));
 
 			_view = view;

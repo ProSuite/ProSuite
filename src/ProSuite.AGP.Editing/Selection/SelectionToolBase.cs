@@ -10,12 +10,17 @@ using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.AGP.Editing.Selection
 {
 	public abstract class SelectionToolBase : OneClickToolBase
 	{
+		//TODO: ID from Config.daml; make abstract or similar
+		private const string ConfigId_SelectionToolButton =
+			"ProSuiteTools_Selection_SelectionToolButton";
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// todo daro refactor
@@ -33,14 +38,14 @@ namespace ProSuite.AGP.Editing.Selection
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
-			SetCheckState("ProSuiteTools_Selection_SelectionToolButton", true);
+			SetCheckState(ConfigId_SelectionToolButton, true);
 
 			await base.OnToolActivateAsync(hasMapViewChanged);
 		}
 
 		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
 		{
-			SetCheckState("ProSuiteTools_Selection_SelectionToolButton", false);
+			SetCheckState(ConfigId_SelectionToolButton, false);
 
 			await base.OnToolDeactivateAsync(hasMapViewChanged);
 		}
@@ -50,51 +55,28 @@ namespace ProSuite.AGP.Editing.Selection
 			return true;
 		}
 
+		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftIsPressed)
+		{
+			return Task.FromResult(true);
+		}
+
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			StartSelectionPhase();
 		}
 
-		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
+		protected override async Task HandleEscapeAsync()
 		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
-			{
-				SetCursor(SelectionCursorShift);
-			}
-			else
-			{
-				SetCursor(SelectionCursor);
-			}
-
-			_msg.VerboseDebug(() => $"Key {k.Key} was pressed.");
-		}
-
-		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
-		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
-			{
-				SetCursor(SelectionCursorShift);
-			}
-			else
-			{
-				SetCursor(SelectionCursor);
-			}
-		}
-
-		protected override bool HandleEscape()
-		{
-			QueuedTaskUtils.Run(
+			Task task = QueuedTask.Run(
 				() =>
 				{
 					SelectionUtils.ClearSelection();
 
 					StartSelectionPhase();
-
-					return true;
 				});
 
-			return true;
+			await ViewUtils.TryAsync(task, _msg);
 		}
 
 		protected override void LogUsingCurrentSelection()

@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
+using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Keyboard;
+using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.Picker
 {
@@ -31,14 +32,17 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 		}
 
-		public PickerMode GetPickerMode(int candidateCount, bool areaSelect = false)
+		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
+		                                bool areaSelect = false)
 		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Alt))
+			if (KeyboardUtils.IsModifierDown(Key.LeftAlt, exclusive: true) ||
+			    KeyboardUtils.IsModifierDown(Key.RightAlt, exclusive: true))
 			{
 				return PickerMode.PickAll;
 			}
 
-			if (KeyboardUtils.IsModifierPressed(Keys.Control))
+			if (KeyboardUtils.IsModifierDown(Key.LeftCtrl, exclusive: true) ||
+			    KeyboardUtils.IsModifierDown(Key.RightCtrl, exclusive: true))
 			{
 				return PickerMode.ShowPicker;
 			}
@@ -49,7 +53,7 @@ namespace ProSuite.AGP.Editing.Picker
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
 		{
 			return items.Take(_maxItems)
-			            .Select(item => SetScoreCosideringDistances(item, _selectionCentroid))
+			            .Select(item => SetScoreConsideringDistances(item, _selectionCentroid))
 			            .OfType<IPickableFeatureItem>()
 			            .Select(item => SetScoreConsideringDrawingOutline(item, _selectionCentroid))
 			            .OrderBy(item => item, new PickableItemComparer());
@@ -62,7 +66,7 @@ namespace ProSuite.AGP.Editing.Picker
 			return Order(items).FirstOrDefault() as T;
 		}
 
-		private static IPickableItem SetScoreCosideringDistances(
+		private static IPickableItem SetScoreConsideringDistances(
 			IPickableItem item,
 			Geometry selectionGeometry)
 		{
@@ -104,7 +108,7 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 			catch (Exception e)
 			{
-				_msg.Debug($"{nameof(SetScoreCosideringDistances)}", e);
+				_msg.Debug($"{nameof(SetScoreConsideringDistances)}", e);
 			}
 
 			return item;
@@ -179,9 +183,10 @@ namespace ProSuite.AGP.Editing.Picker
 
 		private static Geometry GetDrawingOutline(BasicFeatureLayer layer, long oid)
 		{
+			//todo: use UJR's ProLayerProxy?
 			Geometry drawingOutline =
 				MapView.Active.NotNullCallback(
-					mv => layer.QueryDrawingOutline(oid, mv, DrawingOutlineType.Exact));
+					mv => layer.GetDrawingOutline(oid, mv, DrawingOutlineType.Exact));
 
 			Assert.NotNull(drawingOutline);
 			Assert.False(drawingOutline.IsEmpty, "outline is empty");

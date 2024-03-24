@@ -74,8 +74,6 @@ namespace ProSuite.DomainServices.AO.QA
 			Assert.ArgumentNotNull(relClassChains, nameof(relClassChains));
 			Assert.ArgumentNotNull(testPerimeter, nameof(testPerimeter));
 
-			string whereClause = string.Empty;
-			string postfixClause = string.Empty;
 			string tableName = table.Name;
 
 			Stopwatch watch =
@@ -105,16 +103,12 @@ namespace ProSuite.DomainServices.AO.QA
 				//   catchable exception in RARE cases
 				// - if only the OID plus the Shape field of the involved feature class are in the subfields, then
 				//   in those same cases a "Shape Integrity Error" exception is thrown.
-				foreach (FieldMappingRowProxy row in
-				         GdbQueryUtils.GetRowProxys(objectClass,
-				                                    testPerimeter,
-				                                    whereClause,
-				                                    relClassChain,
-				                                    postfixClause,
-				                                    subfields: null, includeOnlyOIDFields: true,
-				                                    recycle: true))
+				foreach (var rowOid in
+				         GdbQueryUtils.GetRelatedOids(objectClass,
+				                                      testPerimeter,
+				                                      relClassChain))
 				{
-					result.Add(row.OID);
+					result.Add(rowOid);
 				}
 			}
 
@@ -491,9 +485,20 @@ namespace ProSuite.DomainServices.AO.QA
 			// TODO REFACTORMODEL revise null handling
 			Assert.NotNull(table, "Dataset not found in workspace: {0}", objectDataset.Name);
 
-			// TODO batch!
-			IObject result = GdbQueryUtils.GetObject((IObjectClass) table, involvedRow.OID);
-			return Assert.NotNull(result);
+			IObject result = null;
+			try
+			{
+				result = GdbQueryUtils.GetObject((IObjectClass) table, involvedRow.OID);
+			}
+			catch (Exception e)
+			{
+				// Most likely another instance of TOP-5786. Consider just catching E_​GEOMETRY_​NONGEOMETRY (0x80047F21).
+				_msg.Debug(
+					$"Error getting object {DatasetUtils.GetName(table)} <oid> {involvedRow.OID}, " +
+					"likely due to a corrupt geometry. A null-error geometry is returned.", e);
+			}
+
+			return result;
 		}
 	}
 }

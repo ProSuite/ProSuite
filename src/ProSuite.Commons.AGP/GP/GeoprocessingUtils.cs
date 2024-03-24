@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ArcGIS.Core.Internal.CIM;
+using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -18,7 +18,7 @@ namespace ProSuite.Commons.AGP.GP
 		public static async Task<bool> AddFieldAsync([NotNull] string table,
 		                                             [NotNull] string fieldName,
 		                                             [CanBeNull] string alias,
-		                                             esriFieldType type,
+		                                             FieldType type,
 		                                             int? precision = null,
 		                                             int? scale = null,
 		                                             int? length = null,
@@ -56,8 +56,7 @@ namespace ProSuite.Commons.AGP.GP
 		public static async Task<bool> CreateDomainAsync([NotNull] string workspace,
 		                                                 [NotNull] string domainName,
 		                                                 [CanBeNull] string description = null,
-		                                                 esriFieldType type =
-			                                                 esriFieldType.esriFieldTypeInteger,
+		                                                 FieldType type = FieldType.Integer,
 		                                                 DomainType domainType = DomainType.Coded)
 		{
 			Assert.ArgumentNotNullOrEmpty(workspace, nameof(workspace));
@@ -69,22 +68,22 @@ namespace ProSuite.Commons.AGP.GP
 
 			switch (type)
 			{
-				case esriFieldType.esriFieldTypeSmallInteger:
+				case FieldType.SmallInteger:
 					fieldType = "SHORT";
 					break;
-				case esriFieldType.esriFieldTypeInteger:
+				case FieldType.Integer:
 					fieldType = "LONG";
 					break;
-				case esriFieldType.esriFieldTypeSingle:
+				case FieldType.Single:
 					fieldType = "FLOAT";
 					break;
-				case esriFieldType.esriFieldTypeDouble:
+				case FieldType.Double:
 					fieldType = "DOUBLE";
 					break;
-				case esriFieldType.esriFieldTypeString:
+				case FieldType.String:
 					fieldType = "TEXT";
 					break;
-				case esriFieldType.esriFieldTypeDate:
+				case FieldType.Date:
 					fieldType = "DATE";
 					break;
 				default:
@@ -169,32 +168,32 @@ namespace ProSuite.Commons.AGP.GP
 			return msgs;
 		}
 
-		private static string Parse(esriFieldType type)
+		private static string Parse(FieldType type)
 		{
 			switch (type)
 			{
-				case esriFieldType.esriFieldTypeSmallInteger:
+				case FieldType.SmallInteger:
 					return "SHORT";
-				case esriFieldType.esriFieldTypeInteger:
+				case FieldType.Integer:
 					return "LONG";
-				case esriFieldType.esriFieldTypeSingle:
+				case FieldType.Single:
 					return "FLOAT";
-				case esriFieldType.esriFieldTypeDouble:
+				case FieldType.Double:
 					return "DOUBLE";
-				case esriFieldType.esriFieldTypeString:
+				case FieldType.String:
 					return "TEXT";
-				case esriFieldType.esriFieldTypeDate:
+				case FieldType.Date:
 					return "DATE";
-				case esriFieldType.esriFieldTypeBlob:
+				case FieldType.Blob:
 					return "BLOB";
-				case esriFieldType.esriFieldTypeRaster:
+				case FieldType.Raster:
 					return "RASTER";
-				case esriFieldType.esriFieldTypeGUID:
+				case FieldType.GUID:
 					return "GUID";
-				case esriFieldType.esriFieldTypeGlobalID:
-				case esriFieldType.esriFieldTypeOID:
-				case esriFieldType.esriFieldTypeGeometry:
-				case esriFieldType.esriFieldTypeXML:
+				case FieldType.GlobalID:
+				case FieldType.OID:
+				case FieldType.Geometry:
+				case FieldType.XML:
 					throw new ArgumentException($"Invalid field type '{type}'", nameof(type));
 				default:
 					throw new ArgumentOutOfRangeException(nameof(type), type, null);

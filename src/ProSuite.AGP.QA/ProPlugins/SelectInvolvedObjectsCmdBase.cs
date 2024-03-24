@@ -10,6 +10,7 @@ using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.UI;
 using ProSuite.DomainModel.AGP.QA;
 
@@ -79,7 +80,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 				string involvedString = (string) issueObject[fieldIndex];
 
-				var involvedTables = IssueUtils.ParseInvolvedTables(involvedString);
+				// todo daro see IssueWorkListViewModel.GetInvolvedMapMembersByLayer
+				// it is the same problem.
+
+				var involvedTables =
+					IssueUtils.ParseInvolvedTables(involvedString, issueObject is Feature);
 				foreach (var involved in involvedTables)
 				{
 					if (! involvedRows.ContainsKey(involved.TableName))
@@ -97,38 +102,22 @@ namespace ProSuite.AGP.QA.ProPlugins
 			//select features or rows based on involved rows
 			foreach (KeyValuePair<string, List<long>> keyValuePair in involvedRows)
 			{
-				FeatureLayer layer =
-					MapUtils.GetFeatureLayers<FeatureLayer>(
-						lyr => string.Equals(
-							lyr.GetFeatureClass().GetName(),
-							keyValuePair.Key,
-							StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+				string tableName = keyValuePair.Key;
+				List<long> objectIds = keyValuePair.Value;
 
-				if (layer != null)
+				// TODO: More robust table comparison than just the name
+				Predicate<IDisplayTable> layerPredicate =
+					l => string.Equals(l.GetTable()?.GetName(), tableName,
+					                   StringComparison.OrdinalIgnoreCase);
+
+				long selectedCount = SelectionUtils.SelectRows(mapView, layerPredicate, objectIds);
+
+				if (selectedCount == 0)
 				{
-					await QueuedTask.Run(() => layer.Select(
-						                     new QueryFilter { ObjectIDs = keyValuePair.Value },
-						                     SelectionCombinationMethod.Add));
-					continue;
+					_msg.Warn(
+						$"No object selected for {tableName}. No visible and selectable layer " +
+						$"contains the objects <oid> {StringUtils.Concatenate(objectIds, ", ")}");
 				}
-
-				StandaloneTable table =
-					MapUtils.GetStandaloneTables(
-						tbl => string.Equals(
-							tbl.GetTable().GetName(),
-							keyValuePair.Key,
-							StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-
-				if (table != null)
-				{
-					await QueuedTask.Run(() => table.Select(
-						                     new QueryFilter { ObjectIDs = keyValuePair.Value },
-						                     SelectionCombinationMethod.Add));
-					continue;
-				}
-
-				_msg.DebugFormat("No layer or standalone table for object class {0} found.",
-				                 keyValuePair.Key);
 			}
 		}
 	}

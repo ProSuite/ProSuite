@@ -29,10 +29,24 @@ namespace ProSuite.QA.Tests.Surface
 		public override bool AssumeInMemory => false;
 
 		public override DatasetType DatasetType => DatasetType.RasterMosaic;
-
-		public override ISimpleSurface CreateSurface(IEnvelope extent)
+		
+		public override ISimpleSurface CreateSurface(IEnvelope extent,
+		                                             double? defaultValueForUnassignedZs = null,
+		                                             UnassignedZValueHandling? unassignedZValueHandling = null)
 		{
-			return new SimpleRasterSurface(_simpleRasterMosaic);
+			var surface = new SimpleRasterSurface(_simpleRasterMosaic);
+
+			if (defaultValueForUnassignedZs.HasValue)
+			{
+				surface.DefaultValueForUnassignedZs = defaultValueForUnassignedZs.Value;
+			}
+
+			if (unassignedZValueHandling.HasValue)
+			{
+				surface.UnassignedZValueHandling = unassignedZValueHandling.Value;
+			}
+
+			return surface;
 		}
 
 		public override bool EqualsCore(RasterReference rasterReference)

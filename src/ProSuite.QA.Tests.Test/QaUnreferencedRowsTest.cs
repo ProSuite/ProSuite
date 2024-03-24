@@ -1,10 +1,11 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container.Test;
 using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
@@ -208,6 +209,94 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		public void TestNotReferencedFeature()
+		{
+			IFeatureWorkspace ws = _testWs;
+
+			ISpatialReference sr =
+				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
+
+			IFieldsEdit fields1 = new FieldsClass();
+			fields1.AddField(FieldUtils.CreateOIDField());
+			fields1.AddField(FieldUtils.CreateSmallIntegerField("Pk"));
+			fields1.AddField(FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPoint, sr));
+			IFeatureClass fc1 =
+				DatasetUtils.CreateSimpleFeatureClass(ws, "TestNotReferencedFeature1", fields1);
+
+			IFieldsEdit fields2 = new FieldsClass();
+			fields2.AddField(FieldUtils.CreateOIDField());
+			fields2.AddField(FieldUtils.CreateIntegerField("Fk"));
+			fields2.AddField(FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPoint, sr));
+
+			IFeatureClass fc2 =
+				DatasetUtils.CreateSimpleFeatureClass(ws, "TestNotReferencedFeature2", fields2);
+
+			IFieldsEdit fields3 = new FieldsClass();
+			fields3.AddField(FieldUtils.CreateOIDField());
+			fields3.AddField(FieldUtils.CreateIntegerField("Fk"));
+			fields3.AddField(FieldUtils.CreateShapeField(
+				                 esriGeometryType.esriGeometryMultiPatch,
+				                 sr, 0, true));
+
+			IFeatureClass fc3 =
+				DatasetUtils.CreateSimpleFeatureClass(ws, "TestNotReferencedFeature3", fields3);
+
+			// make sure the table is known by the workspace
+			((IWorkspaceEdit) ws).StartEditing(false);
+			((IWorkspaceEdit) ws).StopEditing(true);
+
+			CreateFeature(fc1, 1, GeometryFactory.CreatePoint(2600000, 1200000, sr));
+			CreateFeature(fc1, 2, GeometryFactory.CreatePoint(2600000, 1200000, sr));
+			CreateFeature(fc1, 3, GeometryFactory.CreatePoint(2600000, 1200000, sr));
+			CreateFeature(fc1, 4, GeometryFactory.CreatePoint(2600000, 1200000, sr));
+			CreateFeature(fc1, 5, GeometryFactory.CreatePoint(2600000, 1200000, sr));
+
+			// NOTE: There is an optimization for a very small number of keys (20) that
+			// uses an in list where clause. So let's add some
+			int greaterMaxInList = 50;
+			for (int i = 0; i < greaterMaxInList; i++)
+			{
+				CreateFeature(fc1, 10 + i, GeometryFactory.CreatePoint(2600000, 1200000, sr));
+			}
+
+			CreateFeature(fc2, 1, GeometryFactory.CreatePoint(2600000, 1200000, sr));
+			CreateFeature(fc2, 5, GeometryFactory.CreatePoint(2600000, 1200000, sr));
+
+			// TODO: Test empty geometry in enterprise GDB
+			IGeometry emptyMultipatch =
+				GeometryFactory.CreateEmptyGeometry(esriGeometryType.esriGeometryMultiPatch);
+
+			CreateFeature(fc3, 2, emptyMultipatch);
+			CreateFeature(fc3, 4, emptyMultipatch);
+
+			for (int i = 0; i < greaterMaxInList; i++)
+			{
+				CreateFeature(fc3, 10 + i, emptyMultipatch);
+			}
+
+			var test = new QaUnreferencedRows(
+				ReadOnlyTableFactory.Create(fc1),
+				new[] { ReadOnlyTableFactory.Create(fc2), ReadOnlyTableFactory.Create(fc3) },
+				new[] { "pk,fk", "pk,fk" });
+
+			using (var r = new QaTestRunner(test))
+			{
+				r.Execute();
+				Assert.AreEqual(1, r.Errors.Count);
+				Assert.IsFalse(r.Errors[0].Geometry?.IsEmpty);
+			}
+
+			var container = new QaContainerTestRunner(10000, test)
+			                {
+				                KeepGeometry = true
+			                };
+
+			container.Execute();
+			Assert.AreEqual(1, container.Errors.Count);
+			Assert.IsFalse(container.Errors[0].Geometry?.IsEmpty);
+		}
+
+		[Test]
 		public void TestNMRelation()
 		{
 			TestNMRelation(_testWs);
@@ -292,6 +381,18 @@ namespace ProSuite.QA.Tests.Test
 		private static IRow CreateRow(ITable tbl, params object[] values)
 		{
 			IRow row = tbl.CreateRow();
+			for (int i = 0; i < values.Length; i++)
+			{
+				row.set_Value(i + 1, values[i]);
+			}
+
+			row.Store();
+			return row;
+		}
+
+		private static IRow CreateFeature(IFeatureClass fc, params object[] values)
+		{
+			IFeature row = fc.CreateFeature();
 			for (int i = 0; i < values.Length; i++)
 			{
 				row.set_Value(i + 1, values[i]);

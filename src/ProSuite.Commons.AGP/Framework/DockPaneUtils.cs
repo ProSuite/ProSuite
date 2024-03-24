@@ -27,18 +27,16 @@ namespace ProSuite.Commons.AGP.Framework
 
 			var pane = DockPaneManager.Find(id) as T;
 
-			if (! (pane is DockPane dockPane))
+			if (pane is DockPane dockPane)
 			{
-				return;
-			}
-
-			if (dockPane.IsVisible)
-			{
-				dockPane.Hide();
-			}
-			else
-			{
-				dockPane.Activate();
+				if (dockPane.IsVisible)
+				{
+					dockPane.Hide();
+				}
+				else
+				{
+					dockPane.Activate();
+				}
 			}
 		}
 

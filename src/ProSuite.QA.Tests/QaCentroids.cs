@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -112,6 +115,29 @@ namespace ProSuite.QA.Tests
 			KeepRows = true;
 
 			_constraint = constraint;
+		}
+
+		protected override void ConfigureQueryFilter(int tableIndex, ITableFilter filter)
+		{
+			if (!string.IsNullOrWhiteSpace(_constraint))
+			{
+				_constraintHelper = _constraintHelper ?? CreateConstraintHelper(InvolvedTables[0],
+										InvolvedTables.First(
+											x => ((IReadOnlyFeatureClass)x).ShapeType ==
+												 esriGeometryType.esriGeometryPoint));
+
+				var table = InvolvedTables[tableIndex];
+				foreach (string columnName in _constraintHelper.GetInvolvedColumnNames())
+				{
+					foreach (string fieldName in
+							 ExpressionUtils.GetExpressionFieldNames(table, columnName))
+					{
+						filter.AddField(fieldName);
+					}
+				}
+			}
+
+			base.ConfigureQueryFilter(tableIndex, filter);
 		}
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Collections;
@@ -20,6 +21,9 @@ namespace ProSuite.Commons.Geom
 		                    double tolerance)
 			: this(new SubcurveNavigator(source, target, tolerance)) { }
 
+		// TODO: Test with true for all cases, consider implementation without geometry updates and remove.
+		public bool AllowPointClustering { get; set; }
+
 		/// <summary>
 		/// Returns the difference between source and target.
 		/// </summary>
@@ -30,6 +34,8 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(_subcurveNavigator.Target.IsClosed, "Target must be closed.");
 
 			// Based on Weiler–Atherton clipping algorithm, added specific logic for linear intersections and multi-parts.
+			ClusterPointsIfNecessary();
+
 			IList<Linestring> rightRings = GetRightSideRings(true, true);
 
 			// Build the result polygons from the outer rings:
@@ -64,6 +70,8 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(_subcurveNavigator.Target.IsClosed, "Target must be closed.");
 
 			// Based on Weiler–Atherton clipping algorithm, added specific logic for linear intersections and multi-parts.
+
+			ClusterPointsIfNecessary();
 
 			IList<Linestring> leftRings = GetLeftSideRings(true, true);
 
@@ -101,6 +109,8 @@ namespace ProSuite.Commons.Geom
 		{
 			Assert.ArgumentCondition(_subcurveNavigator.Source.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(_subcurveNavigator.Target.IsClosed, "Target must be closed.");
+
+			ClusterPointsIfNecessary();
 
 			IList<Linestring> processedRingsResult =
 				_subcurveNavigator.FollowSubcurvesTurningLeft();
@@ -143,7 +153,42 @@ namespace ProSuite.Commons.Geom
 				AddUnprocessedRings(unprocessedParts, resultRingGroups);
 			}
 
-			return new MultiPolycurve(resultRingGroups);
+			var result = new MultiPolycurve(resultRingGroups);
+
+			// Guard for TOP-5727:
+			if (_subcurveNavigator.IntersectionPointNavigator.PotentiallyNonSimple)
+			{
+				AssertSimple(result);
+			}
+
+			// TOP-5731: Guard for general Barrel Roof 'eternal footprint' types: Count outer rings
+			//           because inner rings can be created by combining outer rings (2 bananas)
+			int resultOuterRingCount = result.PartCount -
+			                           result.GetLinestrings()
+			                                 .Count(r => r.ClockwiseOriented == false);
+
+			int resultOuterRingMaxCountTheoreticalMax =
+				GetExteriorRingCount(_subcurveNavigator.Source) +
+				GetExteriorRingCount(_subcurveNavigator.Target) +
+				_subcurveNavigator.GetBoundaryLoopCount();
+
+			if (resultOuterRingCount > resultOuterRingMaxCountTheoreticalMax)
+			{
+				throw new AssertionException(
+					"Failure to calculate union. The input is likely non-simple");
+			}
+
+			if (result.GetLinestrings().All(l => l.ClockwiseOriented != true))
+			{
+				if (! _subcurveNavigator.Source.IsEmpty &&
+				    ! _subcurveNavigator.Target.IsEmpty)
+				{
+					throw new AssertionException(
+						"Non-simple result: No exterior ring or result has become empty.");
+				}
+			}
+
+			return result;
 		}
 
 		/// <summary>
@@ -619,6 +664,166 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return result;
+		}
+
+		private void AssertSimple(MultiLinestring result)
+		{
+			foreach (Linestring linestring in result.GetLinestrings())
+			{
+				if (GeomTopoOpUtils.GetLinearSelfIntersectionsXY(
+					    linestring, _subcurveNavigator.Tolerance).Any())
+				{
+					throw new InvalidOperationException(
+						"Result has self-intersections. The input geometries are likely " +
+						"non-simple with respect to tolerance.");
+				}
+			}
+		}
+
+		private static int GetExteriorRingCount(ISegmentList areaGeometry)
+		{
+			int result = 0;
+
+			for (int i = 0; i < areaGeometry.PartCount; i++)
+			{
+				if (areaGeometry.GetPart(i).ClockwiseOriented != false)
+
+				{
+					result++;
+				}
+			}
+
+			return result;
+		}
+
+		private void ClusterPointsIfNecessary()
+		{
+			// Desired side-effect: determine target navigability
+			bool hasUnClusteredIntersectionPoints =
+				_subcurveNavigator.IntersectionPointNavigator.HasUnClusteredIntersectionPoints;
+
+			if (AllowPointClustering && hasUnClusteredIntersectionPoints)
+			{
+				if (ClusterGeometries(out ISegmentList newSource, out ISegmentList newTarget))
+				{
+					// Recalculate intersections with updated geometries:
+					_subcurveNavigator.Invalidate(
+						newSource ?? _subcurveNavigator.Source,
+						newTarget ?? _subcurveNavigator.Target);
+				}
+			}
+		}
+
+		private bool ClusterGeometries([CanBeNull] out ISegmentList newSource,
+		                               [CanBeNull] out ISegmentList newTarget)
+		{
+			newSource = null;
+			newTarget = null;
+
+			List<IntersectionPoint3D> intersectionList =
+				(List<IntersectionPoint3D>) _subcurveNavigator.IntersectionPoints;
+
+			// Consider adapting cluster tolerance (Sqrt(2)?) -> better make configurable
+			double clusterDistance = _subcurveNavigator.Tolerance;
+			IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> clusteredIntersections =
+				GeomTopoOpUtils.Cluster(intersectionList, ip => ip.Point,
+				                        clusterDistance);
+
+			bool sourceUpdated = false;
+			bool targetUpdated = false;
+
+			// TODO: IGeom interface with Clone() and other generic methods?
+
+			ISegmentList source = Clone(_subcurveNavigator.Source);
+			ISegmentList target = Clone(_subcurveNavigator.Target);
+			foreach (KeyValuePair<IPnt, List<IntersectionPoint3D>> cluster in
+			         clusteredIntersections)
+			{
+				if (cluster.Value.Count == 1)
+				{
+					continue;
+				}
+
+				IPnt clusterPoint = cluster.Key;
+
+				foreach (IntersectionPoint3D intersection in cluster.Value)
+				{
+					if (intersection.IsSourceVertex())
+					{
+						Linestring linestring =
+							source.GetPart(intersection.SourcePartIndex);
+
+						int sourceVertexIdx = (int) intersection.VirtualSourceVertex;
+
+						double origZ = intersection.Point.Z;
+
+						linestring.UpdatePoint(sourceVertexIdx,
+						                       clusterPoint.X, clusterPoint.Y, origZ);
+						sourceUpdated = true;
+						// TODO: Make IUpdateableSegmentList interface to allow changing potential spatial index
+						linestring.SpatialIndex = null;
+					}
+
+					if (intersection.IsTargetVertex(out int targetVertexIdx))
+					{
+						Linestring linestring =
+							target.GetPart(intersection.TargetPartIndex);
+
+						double origZ = linestring.GetPoint3D(targetVertexIdx).Z;
+
+						linestring.UpdatePoint(targetVertexIdx,
+						                       clusterPoint.X, clusterPoint.Y, origZ);
+
+						targetUpdated = true;
+						// TODO: Make IUpdateableSegmentList interface to allow changing potential spatial index
+						linestring.SpatialIndex = null;
+					}
+				}
+
+				// TODO: Consider proper cracking (including segment splits) if
+				//       IntersectionPoint3d.Disallow Forward/Backward is not enough.
+			}
+
+			if (sourceUpdated)
+			{
+				// TODO: Make IUpdateableSegmentList interface to allow changing potential spatial index
+				if (source is MultiLinestring sourceMultiLinestring)
+				{
+					sourceMultiLinestring.SpatialIndex = null;
+				}
+
+				newSource = source;
+			}
+
+			if (targetUpdated)
+			{
+				if (target is MultiLinestring targetMultiLinestring)
+				{
+					targetMultiLinestring.SpatialIndex = null;
+				}
+
+				newTarget = target;
+			}
+
+			return sourceUpdated || targetUpdated;
+		}
+
+		private static ISegmentList Clone(ISegmentList source)
+		{
+			if (source is MultiLinestring multiLinestring)
+			{
+				source = multiLinestring.Clone();
+			}
+			else if (source is Linestring linestring)
+			{
+				source = linestring.Clone();
+			}
+			else
+			{
+				throw new ArgumentException("Unexpected segment list type");
+			}
+
+			return source;
 		}
 
 		#region Cookie cutting

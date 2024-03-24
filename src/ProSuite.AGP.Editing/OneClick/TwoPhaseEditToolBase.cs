@@ -9,11 +9,12 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
+using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -30,16 +31,28 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
+			_msg.VerboseDebug(() => "OnMapSelectionChangedCore");
+
 			if (args.Selection.Count == 0)
 			{
 				ResetDerivedGeometries();
 				StartSelectionPhase();
 			}
 
+			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
+			Dictionary<MapMember, List<long>> selectionByLayer = args.Selection.ToDictionary();
+
+			var applicableSelection = GetApplicableSelectedFeatures(selectionByLayer).ToList();
+
+			if (applicableSelection.Count > 0)
+			{
+				AfterSelection(applicableSelection, GetCancelableProgressor());
+			}
+
 			return true;
 		}
 
-		protected override Task OnEditCompletedCore(EditCompletedEventArgs args)
+		protected override Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
 		{
 			bool requiresRecalculate = args.CompletedType == EditCompletedType.Discard ||
 			                           args.CompletedType == EditCompletedType.Reconcile ||
@@ -69,7 +82,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					});
 			}
 
-			return base.OnEditCompletedCore(args);
+			return base.OnEditCompletedAsyncCore(args);
 		}
 
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
@@ -101,29 +114,27 @@ namespace ProSuite.AGP.Editing.OneClick
 				return true;
 			}
 
-			var task = QueuedTask.Run(
-				() =>
-				{
-					bool result;
+			var task = QueuedTask.Run(IsInSelectionPhaseQueued);
 
-					if (! CanUseSelection(ActiveMapView))
-					{
-						result = true;
-					}
-					else
-					{
-						result = ! CanUseDerivedGeometries();
-					}
-
-					return result;
-				});
-
+			// This can dead-lock! Remove everywhere, use async overload
 			return task.Result;
 		}
 
-		protected override bool HandleEscape()
+		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
-			QueuedTaskUtils.Run(
+			if (shiftDown)
+			{
+				return true;
+			}
+
+			bool result = await QueuedTask.Run(IsInSelectionPhaseQueued);
+
+			return result;
+		}
+
+		protected override async Task HandleEscapeAsync()
+		{
+			Task task = QueuedTask.Run(
 				() =>
 				{
 					SelectionUtils.ClearSelection();
@@ -131,16 +142,14 @@ namespace ProSuite.AGP.Editing.OneClick
 					ResetDerivedGeometries();
 
 					StartSelectionPhase();
-
-					return true;
 				});
 
-			return true;
+			await ViewUtils.TryAsync(task, _msg);
 		}
 
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		{
-			if (IsShiftKey(k.Key))
+			if (KeyboardUtils.IsShiftKey(k.Key))
 			{
 				Cursor = IsInSelectionPhase(true) ? SelectionCursor : SecondPhaseCursor;
 			}
@@ -189,11 +198,27 @@ namespace ProSuite.AGP.Editing.OneClick
 			LogDerivedGeometriesCalculated(progressor);
 		}
 
+		private bool IsInSelectionPhaseQueued()
+		{
+			bool result;
+
+			if (! CanUseSelection(ActiveMapView))
+			{
+				result = true;
+			}
+			else
+			{
+				result = ! CanUseDerivedGeometries();
+			}
+
+			return result;
+		}
+
 		private void StartSecondPhase()
 		{
 			Cursor = SecondPhaseCursor;
 
-			SetupRectangleSketch();
+			SetupSketch(SketchGeometryType.Rectangle);
 		}
 	}
 }

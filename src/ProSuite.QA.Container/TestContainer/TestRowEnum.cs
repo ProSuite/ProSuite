@@ -11,6 +11,7 @@ using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -175,25 +176,44 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				foreach (ContainerTest containerTest in tests)
 				{
-					if (Math.Abs(containerTest.SearchDistance) < double.Epsilon)
-					{
-						continue;
-					}
-
-					foreach (IReadOnlyTable involvedTable in containerTest.InvolvedTables)
-					{
-						if (! _cachedSet.ContainsKey(involvedTable))
-						{
-							continue;
-						}
-
-						overlappingFeatures.AdaptSearchTolerance(
-							involvedTable, containerTest.SearchDistance);
-					}
+					AdaptSearchTolerance(overlappingFeatures, containerTest.SearchDistance, containerTest.InvolvedTables);
 				}
 			}
 
 			return overlappingFeatures;
+		}
+
+		private void AdaptSearchTolerance(
+			[NotNull] OverlappingFeatures overlappingFeatures,
+			double searchDistance, IList<IReadOnlyTable> involvedTables)
+		{
+			foreach (IReadOnlyTable involvedTable in involvedTables)
+			{
+				double tableSearchDistance = searchDistance;
+
+				if (involvedTable is IDataContainerAware transformer)
+				{
+					tableSearchDistance =
+						Math.Max(tableSearchDistance,
+						         (transformer as IHasSearchDistance)?.SearchDistance ?? 0);
+					AdaptSearchTolerance(
+						overlappingFeatures, tableSearchDistance, transformer.InvolvedTables);
+				}
+
+				if (Math.Abs(tableSearchDistance) < double.Epsilon)
+				{
+					continue;
+				}
+
+				if (!_cachedSet.ContainsKey(involvedTable))
+				{
+					continue;
+				}
+
+				overlappingFeatures.AdaptSearchTolerance(
+					involvedTable, tableSearchDistance);
+
+			}
 		}
 
 		private TileCache GetTileCache()
@@ -330,6 +350,41 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 
 			return _tileCache.Search(table, queryFilter, filterHelper);
+		}
+
+		public IEnumerable<Tile> EnumInvolvedTiles(IGeometry geometry)
+		{
+			foreach (Tile tile in TileEnum.EnumTiles(geometry))
+			{
+				yield return tile;
+			}
+		}
+
+		private ISimpleSurface _currentSimpleSurface;
+		private RasterReference _currentRasterReference;
+		private IEnvelope _currentRasterBox;
+
+		public ISimpleSurface GetSimpleSurface(
+			RasterReference rasterReference, IEnvelope box,
+			double? defaultValueForUnassignedZs = null,
+			UnassignedZValueHandling? unassignedZValueHandling = null)
+		{
+			if (_currentSimpleSurface != null && rasterReference == _currentRasterReference &&
+			    (GeometryUtils.AreEqual(_currentRasterBox, box) ||
+			     ((IRelationalOperator) _currentRasterBox).Contains(box)))
+			{
+				return _currentSimpleSurface;
+			}
+
+			_currentSimpleSurface?.Dispose();
+			_currentSimpleSurface = null;
+			_currentRasterReference = rasterReference;
+			_currentRasterBox = box;
+
+			_currentSimpleSurface = rasterReference.CreateSurface(
+				box, defaultValueForUnassignedZs, unassignedZValueHandling);
+
+			return _currentSimpleSurface;
 		}
 
 		private TilesAdmin _tilesAdmin;
@@ -1105,6 +1160,9 @@ namespace ProSuite.QA.Container.TestContainer
 				yield return nonCachedRow;
 			}
 
+			_currentSimpleSurface?.Dispose();
+			_currentSimpleSurface = null;
+
 			preRowCount += nonCachedRowCount;
 
 			foreach (var rasterRow in EnumRasterRows(tile, preRowCount, tileRowCount))
@@ -1129,16 +1187,29 @@ namespace ProSuite.QA.Container.TestContainer
 			[NotNull] Tile tile,
 			[NotNull] TileCache tileCache)
 		{
+			bool ignoreOverlappingRows =
+				(table as ITransformedTable)?.IgnoreOverlappingCachedRows ?? false;
+
 			IDictionary<BaseRow, CachedRow> cachedRows =
-				_overlappingFeatures.GetOverlappingCachedRows(table, tile.Box);
+				 !ignoreOverlappingRows
+					? _overlappingFeatures.GetOverlappingCachedRows(table, tile.Box)
+					: new ConcurrentDictionary<BaseRow, CachedRow>();
+
 			int previousCachedRowCount = cachedRows.Count;
 
 			tileCache.LoadCachedTableRows(cachedRows, table, tile, this);
 			// LoadCachedTableRows(cachedRows, table, tile, tileCache);
 
 			int newlyLoadedRows = cachedRows.Count - previousCachedRowCount;
-			_msg.VerboseDebug(() => $"{table.Name}: Added additional {newlyLoadedRows} rows " +
-			                        $"to the previous {previousCachedRowCount} rows in {tile}");
+			if (!ignoreOverlappingRows)
+			{
+				_msg.VerboseDebug(() => $"{table.Name}: Added additional {newlyLoadedRows} rows " +
+				                        $"to the previous {previousCachedRowCount} rows in {tile}");
+			}
+			else
+			{
+				_msg.VerboseDebug(() => $"{table.Name}: Set {newlyLoadedRows} rows in {tile}");
+			}
 
 			if (_loadedRowCountPerTable != null)
 			{

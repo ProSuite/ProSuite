@@ -13,6 +13,7 @@ using ProSuite.Commons.UI.WinForms;
 using ProSuite.Commons.Validation;
 using ProSuite.DdxEditor.Content.Datasets;
 using ProSuite.DdxEditor.Content.QA.Categories;
+using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Content.QA.QSpec;
 using ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions;
 using ProSuite.DdxEditor.Framework;
@@ -100,29 +101,16 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				TestDescriptor descriptorWithSameName =
 					_modelBuilder.TestDescriptors.Get(entity.Name);
 
-				if (descriptorWithSameName != null &&
-				    descriptorWithSameName.Id != entity.Id)
-				{
-					notification.RegisterMessage("Name",
-					                             "A test descriptor with the same name already exists",
-					                             Severity.Error);
-				}
+				InstanceDescriptorItemUtils.ValidateDescriptorAgainstDuplicateName(
+					entity, descriptorWithSameName, notification);
 			}
 
 			// check if another test descriptor with the implementation exists
-
 			TestDescriptor descriptorWithSameImplementation =
 				_modelBuilder.TestDescriptors.GetWithSameImplementation(entity);
 
-			if (descriptorWithSameImplementation != null &&
-			    descriptorWithSameImplementation.Id != entity.Id)
-			{
-				notification.RegisterMessage(string.Format(
-					                             "Test descriptor {0} has the same implementation " +
-					                             "(factory or test class/constructor)",
-					                             descriptorWithSameImplementation.Name),
-				                             Severity.Error);
-			}
+			InstanceDescriptorItemUtils.ValidateDescriptorAgainstDuplicateImplementation(
+				entity, descriptorWithSameImplementation, notification);
 		}
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
@@ -544,7 +532,8 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 					{
 						IInstanceInfo instanceInfo = Assert.NotNull(GetInstanceInfo());
 
-						var parameters = instanceInfo.Parameters ?? Enumerable.Empty<TestParameter>();
+						var parameters =
+							instanceInfo.Parameters ?? Enumerable.Empty<TestParameter>();
 
 						foreach (TestParameter parameter in parameters)
 						{

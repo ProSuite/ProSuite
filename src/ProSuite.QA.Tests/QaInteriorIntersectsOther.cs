@@ -75,6 +75,7 @@ namespace ProSuite.QA.Tests
 			_constraint = StringUtils.IsNotEmpty(constraint)
 				              ? constraint
 				              : null;
+			AddCustomQueryFilterExpression(constraint);
 		}
 
 		#endregion

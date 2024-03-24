@@ -46,7 +46,9 @@ namespace ProSuite.QA.Tests.Surface
 			_fullRaster
 			?? (_fullRaster = _rasterDataset.CreateFullRaster());
 
-		public override ISimpleSurface CreateSurface(IEnvelope extent)
+		public override ISimpleSurface CreateSurface(IEnvelope extent,
+		                                             double? defaultValueForUnassignedZs = null,
+		                                             UnassignedZValueHandling? unassignedZValueHandling = null)
 		{
 			IDataset memoryRasterDataset;
 
@@ -64,7 +66,17 @@ namespace ProSuite.QA.Tests.Surface
 
 			ISpatialReference spatialReference = ((IGeoDataset) FullRaster).SpatialReference;
 
-			return new SimpleRasterSurface(simpleRasterDataset, spatialReference);
+			var surface = new SimpleRasterSurface(simpleRasterDataset, spatialReference);
+			if (defaultValueForUnassignedZs.HasValue)
+			{
+				surface.DefaultValueForUnassignedZs = defaultValueForUnassignedZs.Value;
+			}
+			if (unassignedZValueHandling.HasValue)
+			{
+				surface.UnassignedZValueHandling = unassignedZValueHandling.Value;
+			}
+
+			return surface;
 		}
 
 		public override bool EqualsCore(RasterReference rasterReference)

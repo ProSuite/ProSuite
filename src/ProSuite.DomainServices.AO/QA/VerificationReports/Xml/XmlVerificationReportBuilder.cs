@@ -149,7 +149,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			    (_maxExplicitIssuesPerQualityCondition <= 0 ||
 			     issueStats.IssueCount < _maxExplicitIssuesPerQualityCondition))
 			{
-				issueStats.AddIssue(CreateXmlIssue(issue, errorGeometry));
+				issueStats.AddExplicitIssue(CreateXmlIssue(issue, errorGeometry));
 			}
 		}
 
@@ -181,6 +181,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			[CanBeNull] string qualitySpecificationName,
 			[CanBeNull] IEnumerable<KeyValuePair<string, string>> properties = null)
 		{
+			Assert.NotNull(_stopWatch, "BeginVerification has not been called");
 			Assert.False(_verificationOngoing, "verification not finished");
 
 			// evaluate options
@@ -385,20 +386,20 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 		{
 			foreach (QualitySpecificationElement element in elements)
 			{
-				List<XmlIssue> issues;
+				List<XmlIssue> explicitIssues;
 				IssueStats stats;
 				if (_issuesByQualityCondition.TryGetValue(element, out stats)
-				    && stats.Issues != null)
+				    && stats.ExplicitIssues != null)
 				{
-					issues = stats.Issues;
+					explicitIssues = stats.ExplicitIssues;
 				}
 				else
 				{
-					issues = new List<XmlIssue>();
+					explicitIssues = new List<XmlIssue>();
 				}
 
 				yield return CreateVerifiedQualityCondition(
-					element, issues,
+					element, stats?.IssueCount ?? 0, explicitIssues,
 					GetQualityConditionExceptionStatistics(element),
 					reportIssues, reportParameters, reportDescription);
 			}
@@ -415,7 +416,8 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 		[NotNull]
 		private static XmlVerifiedQualityCondition CreateVerifiedQualityCondition(
 			[NotNull] QualitySpecificationElement element,
-			[NotNull] ICollection<XmlIssue> issues,
+			int issueCount,
+			[NotNull] ICollection<XmlIssue> explicitIssues,
 			[CanBeNull] IQualityConditionExceptionStatistics exceptionStatistics,
 			bool reportIssues,
 			bool reportParameters,
@@ -437,17 +439,12 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 					             Category = qualityCondition.Category
 				             };
 
-				if (issues.Count > 0)
+				if (explicitIssues.Count > 0 && reportIssues)
 				{
-					if (reportIssues)
-					{
-						result.AddIssues(issues, element.ReportIndividualErrors);
-					}
-					else
-					{
-						result.IssueCount = issues.Count;
-					}
+					result.AddIssues(explicitIssues, element.ReportIndividualErrors);
 				}
+
+				result.IssueCount = issueCount;
 
 				if (reportParameters)
 				{
@@ -529,7 +526,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			[NotNull] string tableName,
 			[NotNull] IEnumerable<ExceptionObject> exceptionObjects)
 		{
-			var result = new XmlUnknownTableName {TableName = tableName};
+			var result = new XmlUnknownTableName { TableName = tableName };
 
 			foreach (ExceptionObject exceptionObject in exceptionObjects)
 			{
@@ -796,18 +793,18 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			public int IssueCount { get; set; }
 
 			[CanBeNull]
-			public List<XmlIssue> Issues { get; private set; }
+			public List<XmlIssue> ExplicitIssues { get; private set; }
 
-			public void AddIssue([NotNull] XmlIssue issue)
+			public void AddExplicitIssue([NotNull] XmlIssue issue)
 			{
 				Assert.ArgumentNotNull(issue, nameof(issue));
 
-				if (Issues == null)
+				if (ExplicitIssues == null)
 				{
-					Issues = new List<XmlIssue>();
+					ExplicitIssues = new List<XmlIssue>();
 				}
 
-				Issues.Add(issue);
+				ExplicitIssues.Add(issue);
 			}
 		}
 	}

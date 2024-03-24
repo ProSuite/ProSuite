@@ -55,6 +55,16 @@ namespace ProSuite.Commons.Geom
 			return new Pnt2D(centerX, centerY);
 		}
 
+		public Pnt2D GetLowerLeftPoint()
+		{
+			return new Pnt2D(XMin, YMin);
+		}
+
+		public Pnt2D GetUpperRightPoint()
+		{
+			return new Pnt2D(XMax, YMax);
+		}
+
 		[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 		public bool Equals([CanBeNull] EnvelopeXY other,
 		                   double tolerance)

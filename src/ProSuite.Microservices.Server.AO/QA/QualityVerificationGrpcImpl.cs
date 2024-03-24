@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
@@ -26,9 +28,9 @@ using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.AO;
-using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Server.AO.QA.Distributed;
 using Quaestor.LoadReporting;
 
 namespace ProSuite.Microservices.Server.AO.QA
@@ -44,6 +46,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private readonly Func<VerificationRequest, IBackgroundVerificationInputs>
 			_verificationInputsFactoryMethod;
+
+		private bool _licensed;
 
 		public QualityVerificationGrpcImpl(
 			Func<VerificationRequest, IBackgroundVerificationInputs> inputsFactoryMethod,
@@ -110,8 +114,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// The client end point used for parallel processing.
 		/// </summary>
 		[CanBeNull]
-		public IList<IQualityVerificationClient> DistributedProcessingClients { get; set; }
+		public DistributedWorkers DistributedProcessingClients { get; set; }
 
+		/// <summary>
+		/// The default value to use if the environment variable that indicates whether or not the
+		/// service should continue serving (or shut down) in case of an exception.
+		/// </summary>
 		public bool KeepServingOnErrorDefaultValue { get; set; }
 
 		public override async Task VerifyQuality(
@@ -132,12 +140,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				_msg.InfoFormat("Verification {0}", result);
 			}
+			catch (TaskCanceledException canceledException)
+			{
+				HandleCancellationException(request, context, canceledException);
+			}
 			catch (Exception e)
 			{
 				_msg.Error($"Error verifying quality for request {request}", e);
 
-				SendFatalException(e, responseStream);
-				SetUnhealthy();
+				ServiceUtils.SendFatalException(e, responseStream);
+				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
 			finally
 			{
@@ -180,6 +192,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				await StartRequest(request);
 
+				// TODO: Separate data request handler class with async method
 				Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest =
 					delegate(DataVerificationResponse r)
 					{
@@ -201,12 +214,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				_msg.InfoFormat("Verification {0}", result);
 			}
+			catch (TaskCanceledException canceledException)
+			{
+				HandleCancellationException(request, context, canceledException);
+			}
 			catch (Exception e)
 			{
 				_msg.Error($"Error verifying quality for request {request}", e);
 
-				SendFatalException(e, responseStream);
-				SetUnhealthy();
+				ServiceUtils.SendFatalException(e, responseStream);
+				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
 			finally
 			{
@@ -258,8 +275,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				_msg.Error($"Error verifying quality for request {request}", e);
 
-				SendFatalException(e, responseStream);
-				SetUnhealthy();
+				ServiceUtils.SendFatalException(e, responseStream);
+				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
 			finally
 			{
@@ -274,22 +291,33 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private async Task StartRequest(string peerName, object request, bool requiresLicense)
 		{
+			// The request comes in on a .NET thread-pool thread, which has no useful name
+			// when it comes to logging. Set the ID as its name.
+			ProcessUtils.TrySetThreadIdAsName();
+
 			CurrentLoad?.StartRequest();
 
-			_msg.InfoFormat("Starting {0} request from {1}", request.GetType().Name, peerName);
+			string concurrentRequestMsg =
+				CurrentLoad == null
+					? string.Empty
+					: $"Concurrently running requests (including this one): {CurrentLoad.CurrentProcessCount}";
+
+			_msg.InfoFormat("Starting {0} request from {1}. {2}", request.GetType().Name, peerName,
+			                concurrentRequestMsg);
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
 				_msg.VerboseDebug(() => $"Request details: {request}");
 			}
 
-			if (requiresLicense)
+			if (requiresLicense && ! _licensed)
 			{
-				bool licensed = await EnsureLicenseAsync();
+				_licensed = await EnsureLicenseAsync();
 
-				if (! licensed)
+				if (! _licensed)
 				{
-					_msg.Warn("Could not check out the specified license");
+					throw new ConfigurationErrorsException(
+						"No ArcGIS License could be initialized.");
 				}
 			}
 		}
@@ -297,6 +325,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private void EndRequest()
 		{
 			CurrentLoad?.EndRequest();
+
+			if (CurrentLoad != null)
+			{
+				_msg.DebugFormat("Remaining requests that are inprogress: {0}",
+				                 CurrentLoad.CurrentProcessCount);
+			}
 		}
 
 		private async Task<bool> EnsureLicenseAsync()
@@ -353,21 +387,29 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			DataVerificationRequest resultData = null;
 
-			Task responseReaderTask = Task.Run(
-				async () =>
-				{
-					while (resultData == null)
+			try
+			{
+				Task responseReaderTask = Task.Run(
+					async () =>
 					{
-						while (await requestStream.MoveNext().ConfigureAwait(false))
+						while (resultData == null)
 						{
-							resultData = requestStream.Current;
-							break;
+							while (await requestStream.MoveNext().ConfigureAwait(false))
+							{
+								resultData = requestStream.Current;
+								break;
+							}
 						}
-					}
-				});
+					});
 
-			await responseStream.WriteAsync(r).ConfigureAwait(false);
-			await responseReaderTask.ConfigureAwait(false);
+				await responseStream.WriteAsync(r).ConfigureAwait(false);
+				await responseReaderTask.ConfigureAwait(false);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error getting more data for class id " +
+				          $"{r.DataRequest?.ClassDef?.ClassHandle}", e);
+			}
 
 			return resultData;
 		}
@@ -442,14 +484,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.Error($"Error checking quality for request {request}", e);
 				cancellationMessage = $"Server error: {e.Message}";
 
-				SetUnhealthy();
+				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
 
 			string cancelMessage = cancellationMessage ?? qaService?.CancellationMessage;
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(
 				verification, cancelMessage, deletableAllowedErrorRefs,
-				qaService?.VerifiedPerimeter);
+				qaService?.VerifiedPerimeter, trackCancel);
 
 			return result;
 		}
@@ -471,10 +513,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			string cancellationMessage = null;
 
+			DistributedTestRunner distributedTestRunner = null;
+
 			try
 			{
-				DistributedTestRunner distributedTestRunner = null;
-
 				bool useStandaloneService =
 					IsStandAloneVerification(request, null, out QualitySpecification specification);
 
@@ -509,6 +551,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (useStandaloneService)
 				{
+					if (distributedTestRunner != null)
+					{
+						// No re-harvesting in all the sub-verifications
+						// TODO: Add SchemaMsg as DataModel property to standard request.
+						// to make the intent more explicit!
+						distributedTestRunner.SendModelsWithRequest = true;
+					}
+
 					// Stand-alone: Xml or specification list (WorkContextMsg is null!)
 					verification = VerifyStandaloneXmlCore(
 						specification, request.Parameters,
@@ -530,16 +580,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.Error($"Error checking quality for request {request}", e);
 				cancellationMessage = $"Server error: {e.Message}";
 
-				if (! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR", KeepServingOnErrorDefaultValue))
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
-					SetUnhealthy();
+					distributedTestRunner?.CancelSubverifications();
+
+					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 			}
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
 				cancellationMessage ?? qaService?.CancellationMessage, deletableAllowedErrorRefs,
-				qaService?.VerifiedPerimeter);
+				qaService?.VerifiedPerimeter, trackCancel);
 
 			return result;
 		}
@@ -593,10 +644,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.DebugFormat("Error during processing of request {0}", request);
 				_msg.Error($"Error verifying quality: {e.Message}", e);
 
-				if (! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR", KeepServingOnErrorDefaultValue))
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
-					SetUnhealthy();
+					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 
 				return ServiceCallStatus.Failed;
@@ -650,7 +700,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			XmlBasedVerificationService xmlService = new XmlBasedVerificationService(
 				HtmlReportTemplatePath, QualitySpecificationTemplatePath);
 
-			// TODO: Determine if the report paths are including the files or just the dirs (probably better: dirs)
+			// NOTE: The report paths include the file names.
 			xmlService.SetupOutputPaths(parameters.IssueFileGdbPath,
 			                            parameters.VerificationReportPath,
 			                            parameters.HtmlReportPath);
@@ -684,6 +734,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				return null;
 			}
+
+			xmlService.IssueRepositorySpatialReference =
+				ProtobufGeometryUtils.FromSpatialReferenceMsg(
+					parameters.IssueRepositorySpatialReference);
 
 			xmlService.ExecuteVerification(qualitySpecification, aoi, parameters.TileSize,
 			                               trackCancel);
@@ -873,9 +927,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			var qaService = new BackgroundVerificationService(backgroundVerificationInputs)
 			                {
-				                CustomErrorFilter = backgroundVerificationInputs.CustomErrorFilter
+				                ProgressStreamer = responseStreamer
 			                };
 
+			// TODO: Consider channeling all issues/progress through the above progress streamer
 			qaService.IssueFound +=
 				(sender, args) => responseStreamer.AddPendingIssue(args);
 
@@ -934,77 +989,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
-		private static void SendFatalException(
-			[NotNull] Exception exception,
-			IServerStreamWriter<VerificationResponse> responseStream)
+		private static void HandleCancellationException(VerificationRequest request,
+		                                                ServerCallContext context,
+		                                                TaskCanceledException canceledException)
 		{
-			void Write(VerificationResponse r) => responseStream.WriteAsync(r);
-
-			SendFatalException(exception, Write);
-		}
-
-		private static void SendFatalException(
-			[NotNull] Exception exception,
-			IServerStreamWriter<DataVerificationResponse> responseStream)
-		{
-			void Write(VerificationResponse r) =>
-				responseStream.WriteAsync(new DataVerificationResponse { Response = r });
-
-			SendFatalException(exception, Write);
-		}
-
-		private static void SendFatalException(
-			[NotNull] Exception exception,
-			Action<VerificationResponse> writeAsync)
-		{
-			var response = new VerificationResponse();
-
-			response.ServiceCallStatus = (int) ServiceCallStatus.Failed;
-
-			if (! string.IsNullOrEmpty(exception.Message))
-			{
-				response.Progress = new VerificationProgressMsg
-				                    {
-					                    Message = exception.Message
-				                    };
-			}
-
-			try
-			{
-				writeAsync(response);
-			}
-			catch (InvalidOperationException ex)
-			{
-				// For example: System.InvalidOperationException: Only one write can be pending at a time
-				_msg.Warn("Error sending progress to the client", ex);
-			}
-		}
-
-		private static void SendFatalException(
-			[NotNull] Exception exception,
-			IServerStreamWriter<StandaloneVerificationResponse> responseStream)
-		{
-			MessagingUtils.SendResponse(responseStream,
-			                            new StandaloneVerificationResponse()
-			                            {
-				                            Message = new LogMsg()
-				                                      {
-					                                      Message = exception.Message,
-					                                      MessageLevel = Level.Error.Value
-				                                      },
-				                            ServiceCallStatus = (int) ServiceCallStatus.Failed
-			                            });
-		}
-
-		private void SetUnhealthy()
-		{
-			if (Health != null)
-			{
-				_msg.Warn("Setting service health to \"not serving\" due to exception " +
-				          "because the process might be compromised.");
-
-				Health?.SetStatus(GetType(), false);
-			}
+			_msg.VerboseDebug(() => $"Cancelled request: {request}");
+			_msg.Debug($"Task cancelled: {context.CancellationToken.IsCancellationRequested}",
+			           canceledException);
+			_msg.Warn("Task was cancelled, likely by the client");
 		}
 	}
 }

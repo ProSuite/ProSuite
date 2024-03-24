@@ -913,13 +913,19 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 
 					if (resultPoly.IsVertical(tolerance))
 					{
-						// NOTE: Even though the second ring is vertical, do not use
-						//       ring2CanHaveLinearSelfIntersections == true because a vertical
-						//       ring running along the other ring's boundary should be interior
-						//       intersecting and assigned.
-						interiorIntersects = GeomRelationUtils.InteriorIntersectXY(
-							cutFootprintPart.ExteriorRing, resultPoly.ExteriorRing,
-							tolerance, true);
+						// Check if it has linear intersections with the footprints -> true
+						// Otherwise, check if it is contained.
+						interiorIntersects = GeomRelationUtils.HaveLinearIntersectionsXY(
+							cutFootprintPart.ExteriorRing, resultPoly.ExteriorRing, tolerance);
+
+						if (! interiorIntersects)
+						{
+							// Check if it is completely inside (or at max touches the boundary)
+							bool contained = GeomRelationUtils.PolycurveContainsXY(
+								cutFootprintPart.ExteriorRing, resultPoly.ExteriorRing, tolerance);
+
+							interiorIntersects = contained;
+						}
 					}
 					else
 					{

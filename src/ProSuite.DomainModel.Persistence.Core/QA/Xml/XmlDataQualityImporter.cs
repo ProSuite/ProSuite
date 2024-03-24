@@ -811,7 +811,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			if (invalidConfigs.Count > 0)
 			{
 				string message =
-					$"The following {invalidConfigs.Count} instance configurations from the XML have the same name as an existing instance configuration in the DDX but their UUIDs do not match:";
+					$"The following {invalidConfigs.Count} instance configuration(s) from the XML have the same name as an existing instance configuration in the DDX but their UUIDs do not match";
 
 				throw new InvalidOperationException($"{message}:{Environment.NewLine}" +
 				                                    $"{StringUtils.Concatenate(invalidConfigs, Environment.NewLine)}");

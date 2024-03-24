@@ -1,10 +1,10 @@
-﻿using ProSuite.Processing.Utils;
 using NUnit.Framework;
+using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.Test
 {
-    public class ExtremityTypeTest
-    {
+	public class ExtremityTypeTest
+	{
 		[Test]
 		public void CanExtremityTypeInvert()
 		{
@@ -142,5 +142,5 @@ namespace ProSuite.Processing.Test
 			Assert.AreEqual(ExtremityType.JustEnd, value.Recompute(true, true, false, true));
 			Assert.AreEqual(ExtremityType.Both, value.Recompute(true, true, true, true));
 		}
-    }
+	}
 }

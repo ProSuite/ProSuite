@@ -145,14 +145,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			// No legacy implementation for instance configuration control
 		}
 
-		bool IInstanceConfigurationView.InstanceDescriptorLinkEnabled
+		bool IInstanceConfigurationView.GoToInstanceDescriptorEnabled
 		{
-			get => ! _labelInstanceDescriptor.LinkArea.IsEmpty;
-			set =>
-				_labelInstanceDescriptor.LinkArea =
-					value
-						? new LinkArea(0, _labelInstanceDescriptor.Text.Length)
-						: new LinkArea(0, 0);
+			get => _buttonGoToInstanceDescriptor.Enabled;
+			set => _buttonGoToInstanceDescriptor.Enabled = value;
 		}
 
 		void IInstanceConfigurationView.BindToInstanceConfigReferences(
@@ -307,13 +303,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			}
 		}
 
-		private void _labelInstanceDescriptor_LinkClicked(object sender,
-		                                                  LinkLabelLinkClickedEventArgs e)
+		private void _buttonGoToInstanceDescriptor_Clicked(object sender, EventArgs e)
 		{
 			var descriptor =
 				_objectReferenceControlInstanceDescriptor.DataSource as InstanceDescriptor;
 
-			Observer?.InstanceDescriptorLinkClicked(descriptor);
+			Observer?.GoToInstanceDescriptorClicked(descriptor);
 		}
 
 		private void _buttonOpenUrl_Click(object sender, EventArgs e)

@@ -72,7 +72,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 			ExceptionObject exceptionObject = CreateExceptionObject(1, exceptionObjectIssueCode);
 			ITable table = ExceptionObjectTestUtils.GetMockTable();
 			QaError qaError = ExceptionObjectTestUtils.CreateQaError(table, qaErrorIssueCode,
-			                                                         null);
+				null);
 
 			var predicate = new ExceptionObjectIssueCodePredicate();
 

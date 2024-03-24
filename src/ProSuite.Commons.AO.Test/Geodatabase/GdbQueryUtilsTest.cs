@@ -8,6 +8,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Logging;
 
@@ -243,6 +244,56 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				Assert.AreEqual(row.Table, rc.OriginClass);
 				Assert.Greater(row.OID, 0);
 			}
+		}
+
+		[Test]
+		[Category(TestCategory.Fast)]
+		[Category(TestCategory.Sde)]
+		public void CanGetProxiesSpatial_1()
+		{
+			IFeatureWorkspace ws = OpenTestWorkspace();
+			IRelationshipClass rc =
+				ws.OpenRelationshipClass("TOPGIS_TLM.TLM_STRASSENROUTE_STRASSE");
+			Assert.AreEqual(rc.Cardinality,
+			                esriRelCardinality.esriRelCardinalityManyToMany);
+
+			IPolygon area = GeometryFactory.CreatePolygon(
+				2500300, 1150100, 2700400, 1250130);
+
+			IFeatureClass fc = ws.OpenFeatureClass("TOPGIS_TLM.TLM_STRASSE");
+
+			GdbFeatureClass gdbFc = TableJoinUtils.CreateJoinedGdbFeatureClass(rc, fc, "whatever");
+			JoinedDataset joined = (JoinedDataset) gdbFc.BackingDataset;
+			IDictionary<string, IList<IReadOnlyRow>> otherRowsByFeatureKey =
+				joined.GetOtherRowsByFeatureKey(new AoFeatureClassFilter(area));
+
+			HashSet<long> oids = new HashSet<long>();
+			foreach (IList<IReadOnlyRow> otherRows in otherRowsByFeatureKey.Values)
+			{
+				foreach (IReadOnlyRow readOnlyRow in otherRows)
+				{
+					oids.Add(readOnlyRow.OID);
+				}
+			}
+		}
+
+		[Test]
+		[Category(TestCategory.Fast)]
+		[Category(TestCategory.Sde)]
+		public void CanGetProxiesSpatial_2()
+		{
+			IFeatureWorkspace ws = OpenTestWorkspace();
+			IRelationshipClass rc =
+				ws.OpenRelationshipClass("TOPGIS_TLM.TLM_STRASSENROUTE_STRASSE");
+			Assert.AreEqual(rc.Cardinality,
+			                esriRelCardinality.esriRelCardinalityManyToMany);
+
+			IPolygon area = GeometryFactory.CreatePolygon(
+				2500300, 1150100, 2700400, 1250130);
+
+			IFeatureClass fc = ws.OpenFeatureClass("TOPGIS_TLM.TLM_STRASSE");
+
+			GdbQueryUtils.GetRelatedOids(fc, area, new[] { rc, rc });
 		}
 
 		[Test]

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 
@@ -13,6 +15,8 @@ namespace ProSuite.DomainServices.AO.QA
 	/// </summary>
 	public class VerificationElements
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull]
 		private readonly IDictionary<QualityConditionVerification, QualitySpecificationElement>
 			_elementsByConditionVerification;
@@ -87,6 +91,11 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			if (! TestVerifications.TryGetValue(test, out TestVerification result))
 			{
+				_msg.Debug(
+					$"Searched test not found, which could be indicative of a threading issue: {test}. " +
+					$"Tables: {StringUtils.Concatenate(test.InvolvedTables, t => t.Name, ", ")}. " +
+					$"Hashcode: {test.GetHashCode()}");
+
 				throw new ArgumentException(
 					$@"No quality condition found for test instance of type {test.GetType()}",
 					nameof(test));
