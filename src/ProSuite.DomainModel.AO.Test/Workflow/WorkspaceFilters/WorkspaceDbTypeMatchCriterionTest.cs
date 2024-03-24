@@ -3,7 +3,7 @@ using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Test;
-using ProSuite.Commons.Gdb;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.Workflow.WorkspaceFilters;
 
 namespace ProSuite.DomainModel.AO.Test.Workflow.WorkspaceFilters

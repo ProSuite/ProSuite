@@ -11,35 +11,6 @@ namespace ProSuite.DomainModel.Core.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[CanBeNull]
-		public static IInstanceInfo GetInstanceInfo([NotNull] InstanceDescriptor descriptor)
-		{
-			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
-
-			if (descriptor.InstanceInfo != null)
-			{
-				return descriptor.InstanceInfo;
-			}
-
-			IInstanceInfo result = null;
-
-			if (descriptor is TestDescriptor testDescriptor)
-			{
-				result = GetInstanceInfo(testDescriptor);
-			}
-			else if (descriptor.Class != null)
-			{
-				result = new InstanceInfo(descriptor.Class.AssemblyName,
-				                          descriptor.Class.TypeName,
-				                          descriptor.ConstructorId);
-			}
-
-			// Cache it
-			descriptor.InstanceInfo = result;
-
-			return result;
-		}
-
 		/// <summary>
 		/// Gets the test implementation info. Requires the test class or the test factory descriptor to be defined.
 		/// </summary>
@@ -78,30 +49,47 @@ namespace ProSuite.DomainModel.Core.QA
 			return null;
 		}
 
+		/// <summary>
+		/// Gets the test implementation info. A cached <see cref="InstanceDescriptor.InstanceInfo"/>
+		/// value will be returned if available. The resulting value will be cached in the descriptor.
+		/// </summary>
+		/// <param name="descriptor"></param>
+		/// <returns></returns>
 		[CanBeNull]
 		public static IInstanceInfo GetInstanceInfo([NotNull] InstanceDescriptor descriptor)
 		{
 			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
 
-			if (descriptor is TestDescriptor testDescriptor)
+			if (descriptor.InstanceInfo != null)
 			{
-				return GetInstanceInfo(testDescriptor);
+				return descriptor.InstanceInfo;
 			}
 
-			if (descriptor.Class != null)
+			IInstanceInfo result = null;
+
+			if (descriptor is TestDescriptor testDescriptor)
+			{
+				result = GetInstanceInfo(testDescriptor);
+			}
+			else if (descriptor.Class != null)
 			{
 				if (TryGetAlgorithmDefinitionType(descriptor.Class,
 				                                  out Type definitionType))
 				{
-					return new InstanceInfo(definitionType, descriptor.ConstructorId);
+					result = new InstanceInfo(definitionType, descriptor.ConstructorId);
 				}
-
-				return new InstanceInfo(descriptor.Class.AssemblyName,
-				                        descriptor.Class.TypeName,
-				                        descriptor.ConstructorId);
+				else
+				{
+					result = new InstanceInfo(descriptor.Class.AssemblyName,
+					                          descriptor.Class.TypeName,
+					                          descriptor.ConstructorId);
+				}
 			}
 
-			return null;
+			// Cache it
+			descriptor.InstanceInfo = result;
+
+			return result;
 		}
 
 		/// <summary>

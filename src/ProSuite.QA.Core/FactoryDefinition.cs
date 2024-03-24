@@ -1,3 +1,5 @@
+using System;
+
 namespace ProSuite.QA.Core
 {
 	/// <summary>
@@ -12,5 +14,12 @@ namespace ProSuite.QA.Core
 		{
 			return $"{GetType().Name} with parameters: {InstanceUtils.GetTestSignature(this)}";
 		}
+
+		#region Overrides of InstanceInfoBase
+
+		// TODO: Document intention of this property at base class level or remove it.
+		public override Type InstanceType => null;
+
+		#endregion
 	}
 }

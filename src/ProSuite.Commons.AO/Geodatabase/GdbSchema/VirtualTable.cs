@@ -16,10 +16,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 #if Server11
 		long IFeatureClass.FeatureCount(IQueryFilter queryFilter) => TableRowCount(queryFilter);
-		long IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => TableRowCount(QueryFilter);
+#else
 		int IFeatureClass.FeatureCount(IQueryFilter queryFilter) =>
 			(int) TableRowCount(queryFilter);
-		int IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => (int)TableRowCount(QueryFilter);
 #endif
 
 		IFeatureCursor IFeatureClass.Search(IQueryFilter filter, bool recycling) =>
@@ -279,8 +278,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 #if Server11
 		long ITable.RowCount(IQueryFilter queryFilter) => TableRowCount(queryFilter);
+#else
 		int ITable.RowCount(IQueryFilter queryFilter) => (int) TableRowCount(queryFilter);
-		int ITable.RowCount(IQueryFilter QueryFilter) => (int)TableRowCount(QueryFilter);
 #endif
 		protected virtual long TableRowCount([CanBeNull] IQueryFilter queryFilter) =>
 			throw new NotImplementedException("Implement in derived class");
@@ -311,9 +310,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		ICursor ITable.Search([CanBeNull] IQueryFilter queryFilter, bool Recycling) =>
 			SearchT(queryFilter, Recycling);
+
 		protected virtual IFeatureCursor FeatureClassSearch([CanBeNull] IQueryFilter queryFilter,
 		                                                    bool recycling) =>
-		protected virtual IFeatureCursor FeatureClassSearch(IQueryFilter queryFilter, bool recycling) =>
 			SearchT(queryFilter, recycling);
 
 		protected virtual CursorImpl
