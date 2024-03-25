@@ -130,7 +130,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				PressedKeys.Add(args.Key);
 
-				if (KeyboardUtils.IsModifierDown(args.Key) || HandledKeys.Contains(args.Key))
+				if (KeyboardUtils.IsModifierKey(args.Key) || HandledKeys.Contains(args.Key))
 				{
 					args.Handled = true;
 				}
@@ -176,7 +176,14 @@ namespace ProSuite.AGP.Editing.OneClick
 					}
 
 					OnKeyUpCore(args);
-					args.Handled = true;
+
+					// NOTE: The HandleKeyUpAsync is only called for handled keys.
+					// However, they will not perform the standard functionality devised by the
+					// application! Examples: F8 (Toggle stereo fixed cursor mode), B (snap to ground, ...)
+					if (KeyboardUtils.IsModifierKey(args.Key) || HandledKeys.Contains(args.Key))
+					{
+						args.Handled = true;
+					}
 				}, _msg, suppressErrorMessageBox: true);
 			}
 			finally
