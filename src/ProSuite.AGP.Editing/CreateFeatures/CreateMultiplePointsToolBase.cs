@@ -107,7 +107,12 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 				foreach (Attribute attribute in attributes)
 				{
-					if (! attribute.IsSystemField && ! attribute.IsGeometryField)
+					if (attribute.CurrentValue == null || attribute.CurrentValue == DBNull.Value)
+					{
+						continue;
+					}
+
+					if (GdbPersistenceUtils.IsEditable(attribute) && ! attribute.IsGeometryField)
 					{
 						rowBuffer[attribute.Index] = attribute.CurrentValue;
 					}

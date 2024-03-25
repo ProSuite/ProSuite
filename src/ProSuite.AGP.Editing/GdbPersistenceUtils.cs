@@ -164,7 +164,12 @@ namespace ProSuite.AGP.Editing
 
 				foreach (Attribute attribute in attributes)
 				{
-					if (! attribute.IsSystemField && ! attribute.IsGeometryField)
+					if (attribute.CurrentValue == null || attribute.CurrentValue == DBNull.Value)
+					{
+						continue;
+					}
+
+					if (IsEditable(attribute) && ! attribute.IsGeometryField)
 					{
 						rowBuffer[attribute.Index] = attribute.CurrentValue;
 					}
@@ -276,6 +281,28 @@ namespace ProSuite.AGP.Editing
 
 				_msg.DebugFormat("Updated feature {0} is not editable!",
 				                 GdbObjectUtils.ToString(feature));
+				return false;
+			}
+
+			return true;
+		}
+
+		public static bool IsEditable([NotNull] Attribute attribute)
+		{
+			if (! attribute.IsEditable)
+			{
+				return false;
+			}
+
+			if (attribute.IsSystemField)
+			{
+				return false;
+			}
+
+			// Bug in Oracle: IsSystemField returns false for Shape fields!
+			if (attribute.FieldName == "SHAPE.AREA" ||
+			    attribute.FieldName == "SHAPE.LEN")
+			{
 				return false;
 			}
 
