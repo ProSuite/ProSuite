@@ -8,11 +8,10 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Editing.Attributes;
 using ArcGIS.Desktop.Editing.Templates;
-using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.Annotation;
@@ -45,27 +44,11 @@ public abstract class AnnotationToolBase : ToolBase
 				continue;
 			}
 
-			// Very important! If not called, the EditingTemplate.TextString is not instantly updated.
-			// Without the call it seems like the template is not completely activated or missing commit
-			// or race condition.
-			layer.AutoGenerateTemplates();
-
-			var labelById = GetLabelClassCollection(layer).ToDictionary(cls => cls.ID, cls => cls);
-
 			IEnumerable<Feature> features = pair.Value;
 
 			foreach (AnnotationFeature annotationFeature in features.Cast<AnnotationFeature>())
 			{
-				int annotationClassID = annotationFeature.GetAnnotationClassID();
-
-				if (!labelById.TryGetValue(annotationClassID, out CIMLabelClass label))
-				{
-					_msg.Debug(
-						$"Cannot find label class ID {annotationClassID} in label class collection of layer {layer.Name}");
-					continue;
-				}
-
-				EditingTemplate template = layer.GetTemplate(label.Name);
+				EditingTemplate template = await CreateTemplate(layer, annotationFeature);
 
 				if (template == null)
 				{
@@ -81,7 +64,7 @@ public abstract class AnnotationToolBase : ToolBase
 
 				Inspector inspector = template.Inspector;
 				// useless
-				await inspector.LoadAsync(layer, annotationFeature.GetObjectID());
+				//await inspector.LoadAsync(layer, annotationFeature.GetObjectID());
 
 				if (textGraphic.Shape.GeometryType == GeometryType.GeometryBag)
 				{
@@ -108,7 +91,9 @@ public abstract class AnnotationToolBase : ToolBase
 
 		return await QueuedTask.Run(async () =>
 		{
-			Dictionary<MapMember, List<long>> selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
+			SelectionSet selectionSet = ActiveMapView.Map.GetSelection();
+
+			Dictionary<MapMember, List<long>> selectionByLayer = selectionSet.ToDictionary();
 
 			if (selectionByLayer.Count < 1)
 			{
@@ -132,39 +117,42 @@ public abstract class AnnotationToolBase : ToolBase
 					}
 
 					Geometry sketchGeometry = await GetCurrentSketchAsync();
-
-					//CIMTextGraphic newGraphic = textGraphic.Clone();
-					//newGraphic.Shape = sketchGeometry;
-					//annotationFeature.SetGraphic(newGraphic);
 					
 					textGraphic.Shape = sketchGeometry;
 					annotationFeature.SetGraphic(textGraphic);
 					annotationFeature.Store();
 
-					//Inspector inspector = new Inspector();
-					//await inspector.LoadAsync(layer, annotationFeature.GetObjectID()); // LoadAsync()?
-					//AnnotationProperties annotationProperties = inspector.GetAnnotationProperties();
-					//annotationProperties.Shape = sketchGeometry;
-					//inspector.SetAnnotationProperties(annotationProperties);
+					ActiveMapView.Invalidate(selectionSet);
 				}
 			}
 
 			return true;
 		});
 	}
-
-	private async Task<EditingTemplate> CreateTemplate(MapMember layer, Row feature)
+	
+	private async Task<EditingTemplate> CreateTemplate(MapMember layer, AnnotationFeature feature)
 	{
-		var inspector = new Inspector();
-		await inspector.LoadAsync(layer, feature.GetObjectID());
+		var textGraphic = feature.GetGraphic() as CIMTextGraphic;
+		Assert.NotNull(textGraphic);
 
-		return layer.CreateTemplate("Annotation Tool", "temporarily used for Annotation Tool", inspector, ID);
+		long oid = feature.GetObjectID();
+		
+		return await CreateTemplate(layer, oid, textGraphic);
 	}
 
-	private static IReadOnlyList<CIMLabelClass> GetLabelClassCollection(AnnotationLayer layer)
+	private async Task<EditingTemplate> CreateTemplate(MapMember layer, long oid,
+	                                                   CIMTextGraphic textGraphic)
 	{
-		return layer.GetFeatureClass() is AnnotationFeatureClass annotationFeatureClass
-			       ? annotationFeatureClass.GetDefinition().GetLabelClassCollection()
-			       : new List<CIMLabelClass>();
+		var inspector = new Inspector();
+		await inspector.LoadAsync(layer, oid);
+
+		AnnotationProperties annotationProperties = inspector.GetAnnotationProperties();
+		annotationProperties.LoadFromTextGraphic(textGraphic);
+		inspector.SetAnnotationProperties(annotationProperties);
+
+		// todo daro inline
+		EditingTemplate template = layer.CreateTemplate("Annotation Tool", "temporarily used for Annotation Tool",
+		                                                       inspector, ID);
+		return template;
 	}
 }

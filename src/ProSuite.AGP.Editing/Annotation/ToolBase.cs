@@ -209,37 +209,4 @@ public abstract class ToolBase : MapTool
 	}
 
 	#endregion
-
-	#region unused
-
-	private IEnumerable<KeyValuePair<BasicFeatureLayer, IEnumerable<Feature>>>
-		GetApplicableSelectedFeatures_(
-			[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-			[CanBeNull] NotificationCollection notifications = null)
-	{
-		SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
-
-		foreach (KeyValuePair<BasicFeatureLayer, List<long>> oidsByLayer in selectionByLayer)
-		{
-			BasicFeatureLayer layer = oidsByLayer.Key;
-			List<long> oids = oidsByLayer.Value;
-
-			if (! CanSelectFromLayer(layer, notifications))
-			{
-				continue;
-			}
-
-			yield return new KeyValuePair<BasicFeatureLayer, IEnumerable<Feature>>(
-				layer, MapUtils.GetFeatures(layer, oids, false, mapSpatialReference));
-		}
-	}
-
-	protected virtual Task AfterSelection_(
-		IEnumerable<KeyValuePair<BasicFeatureLayer, IEnumerable<Feature>>> featuresByLayer,
-		[CanBeNull] CancelableProgressor progressor = null)
-	{
-		return Task.FromResult(0);
-	}
-
-	#endregion
 }
