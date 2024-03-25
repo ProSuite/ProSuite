@@ -53,6 +53,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			List<Type> refactoredTypes = new List<Type>
 			                             {
+											 typeof(Qa3dConstantZ),
 				                             typeof(QaConstraint),
 				                             typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe)
