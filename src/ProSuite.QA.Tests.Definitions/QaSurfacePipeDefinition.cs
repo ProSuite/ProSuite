@@ -1,6 +1,7 @@
 using System;
-using ProSuite.Commons.GeoDb;
+using System.Linq;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.ParameterTypes;
@@ -8,44 +9,18 @@ using ProSuite.QA.Tests.ParameterTypes;
 namespace ProSuite.QA.Tests
 {
 	/// <summary>
-	/// checks whether interpolated height values are close enough to height model
+	/// Checks whether interpolated height values are close enough to height model
 	/// </summary>
 	//Remark: Implement for "ISurfaceProvider"
 	[UsedImplicitly]
 	[ZValuesTest]
 	public class QaSurfacePipeDefinition : QaSurfaceOffsetDefinition
 	{
+		public IFeatureClassSchemaDef FeatureClass =>
+			(IFeatureClassSchemaDef) InvolvedTables.FirstOrDefault();
+
 		public double StartEndIgnoreLength { get; }
 		public bool AsRatio { get; }
-
-		//#region issue codes
-
-		//[CanBeNull] private static TestIssueCodes _codes;
-
-		//[NotNull]
-		//[UsedImplicitly]
-		//public static TestIssueCodes Codes => _codes ?? (_codes = new Code());
-
-		//private class Code : LocalTestIssueCodes
-		//{
-		//	public const string NoTerrainData = "NoTerrainData";
-
-		//	public const string ZOffset_NotEnoughAboveTerrain =
-		//		"ZOffset.NotEnoughAboveTerrain";
-
-		//	public const string ZOffset_NotEnoughBelowTerrain =
-		//		"ZOffset.NotEnoughBelowTerrain";
-
-		//	public const string ZOffset_TooCloseToTerrain =
-		//		"ZOffset.TooCloseToTerrain";
-
-		//	public const string ZOffset_TooFarFromTerrain =
-		//		"ZOffset.TooFarFromTerrain";
-
-		//	public Code() : base("GeometryToTerrainZOffset") { }
-		//}
-
-		//#endregion
 
 		#region constructors
 
@@ -81,9 +56,6 @@ namespace ProSuite.QA.Tests
 
 			StartEndIgnoreLength = startEndIgnoreLength;
 			AsRatio = asRatio;
-
-			//_interpolateTolerance =
-			//	2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
 		}
 
 		// Consider changing the signature of the test to any RasterReference and do the junction within the test
@@ -133,9 +105,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit)
 			: this(featureClass, rasterMosaic, limit,
-				   // ReSharper disable once IntroduceOptionalParameters.Global
-				   ZOffsetConstraint.WithinLimit, 0, false)
-		{ }
+			       // ReSharper disable once IntroduceOptionalParameters.Global
+			       ZOffsetConstraint.WithinLimit, 0, false) { }
 
 		[Doc(nameof(DocStrings.QaSurfacePipe_4))]
 		public QaSurfacePipeDefinition(

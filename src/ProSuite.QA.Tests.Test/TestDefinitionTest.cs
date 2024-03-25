@@ -60,24 +60,39 @@ namespace ProSuite.QA.Tests.Test
 
 			foreach (Type testType in refactoredTypes)
 			{
-				TestDescriptor descriptor = CreateTestDescriptor(testType, 0);
+				// One is used internally to create using a the definition.
+				int constructorCount = testType.GetConstructors().Length - 1;
 
-				// Use case 1: Using instance info in DDX:
-				IInstanceInfo instanceInfo = InstanceDescriptorUtils.GetInstanceInfo(descriptor);
+				bool lastConstructorIsInternallyUsed =
+					InstanceUtils.IsInternallyUsed(testType, constructorCount);
 
-				Assert.NotNull(instanceInfo);
-				Assert.NotNull(instanceInfo.TestDescription);
-				Assert.Greater(instanceInfo.TestCategories.Length, 0);
+				Assert.IsTrue(lastConstructorIsInternallyUsed,
+				              $"Last constructor not internally used in {testType.Name}");
 
-				// Use case 2: Load actual factory:
-				TestFactory testFactory = TestFactoryUtils.GetTestFactory(descriptor);
+				for (int constructorIdx = 0;
+				     constructorIdx < constructorCount;
+				     constructorIdx++)
+				{
+					TestDescriptor descriptor = CreateTestDescriptor(testType, constructorIdx);
 
-				Assert.NotNull(testFactory);
+					// Use case 1: Using instance info in DDX:
+					IInstanceInfo instanceInfo =
+						InstanceDescriptorUtils.GetInstanceInfo(descriptor);
 
-				Assert.IsTrue(Compare(instanceInfo, testFactory));
+					Assert.NotNull(instanceInfo);
+					Assert.NotNull(instanceInfo.TestDescription);
+					Assert.Greater(instanceInfo.TestCategories.Length, 0);
 
-				Assert.Greater(instanceInfo.Parameters.Count, 0);
-				Assert.Greater(testFactory.Parameters.Count, 0);
+					// Use case 2: Load actual factory:
+					TestFactory testFactory = TestFactoryUtils.GetTestFactory(descriptor);
+
+					Assert.NotNull(testFactory);
+
+					Assert.IsTrue(Compare(instanceInfo, testFactory));
+
+					Assert.Greater(instanceInfo.Parameters.Count, 0);
+					Assert.Greater(testFactory.Parameters.Count, 0);
+				}
 			}
 		}
 

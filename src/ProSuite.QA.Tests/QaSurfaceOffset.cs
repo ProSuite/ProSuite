@@ -35,9 +35,9 @@ namespace ProSuite.QA.Tests
 			InvolvedRasters = new List<RasterReference> { rasterReference };
 		}
 
-		private QaSurfaceOffset([NotNull] IReadOnlyFeatureClass featureClass,
-		                        double limit,
-		                        ZOffsetConstraint zOffsetConstraint)
+		protected QaSurfaceOffset([NotNull] IReadOnlyFeatureClass featureClass,
+		                          double limit,
+		                          ZOffsetConstraint zOffsetConstraint)
 			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));

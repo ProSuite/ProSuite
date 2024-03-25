@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -187,6 +188,30 @@ namespace ProSuite.QA.Tests
 
 			_interpolateTolerance =
 				2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
+		}
+
+		/// <summary>
+		/// Constructor using Definition. Must always be the last constructor!
+		/// </summary>
+		/// <param name="pipeDef"></param>
+		[InternallyUsedTest]
+		public QaSurfacePipe([NotNull] QaSurfacePipeDefinition pipeDef)
+			: base((IReadOnlyFeatureClass) pipeDef.FeatureClass,
+			       pipeDef.Limit,
+			       pipeDef.ZOffsetConstraint)
+		{
+			if (pipeDef.InvolvedRasters.Count > 0)
+			{
+				InvolvedRasters = pipeDef.InvolvedRasters.Cast<RasterReference>().ToList();
+			}
+			else
+			{
+				Assert.ArgumentCondition(pipeDef.InvolvedTerrains.Count > 0,
+				                         "Surface is not defined (neither raster nor terrain is provided)");
+
+				InvolvedTerrains = pipeDef.InvolvedTerrains.Cast<TerrainReference>().ToList();
+				TerrainTolerance = pipeDef.TerrainTolerance;
+			}
 		}
 
 		private static void ValidateAsRatio(double startEndIgnoreLength, bool asRatio)
