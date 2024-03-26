@@ -80,6 +80,17 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			Assert.ArgumentNotNull(dataType, nameof(dataType));
 
+			if (typeof(IFeatureClassSchemaDef) == dataType)
+				return true;
+			if (typeof(ITableSchemaDef) == dataType)
+				return true;
+			if (typeof(IMosaicRasterDatasetDef) == dataType)
+				return true;
+			if (typeof(IRasterDatasetDef) == dataType)
+				return true;
+			if (typeof(ITerrainDef) == dataType)
+				return true;
+
 			if (typeof(IReadOnlyFeatureClass) == dataType)
 				return true;
 
