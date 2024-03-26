@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -38,6 +37,9 @@ namespace ProSuite.AGP.Editing
 
 		public static bool IsSingleClickSketch([NotNull] Geometry sketchGeometry)
 		{
+			_msg.VerboseDebug(() => $"Sketch width: {sketchGeometry.Extent.Width}, " +
+			                        $"sketch height: {sketchGeometry.Extent.Height}");
+
 			return ! (sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0);
 		}
 
@@ -116,7 +118,7 @@ namespace ProSuite.AGP.Editing
 		                                               int pixelBufferDistance)
 		{
 			double bufferDistance = MapUtils.ConvertScreenPixelToMapLength(pixelBufferDistance);
-			
+
 			Geometry selectionGeometry =
 				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
 
