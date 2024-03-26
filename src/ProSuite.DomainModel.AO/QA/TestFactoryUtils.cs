@@ -55,11 +55,12 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (classDescriptor != null)
 			{
-				if (InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
-					    classDescriptor, out Type definitionType))
-				{
-					return new DefaultTestFactory(definitionType, descriptor.TestConstructorId);
-				}
+				// TODO: Implement this, once all test classes have their respective definition classes.
+				//if (InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+				//	    classDescriptor, out Type definitionType))
+				//{
+				//	return new DefaultTestFactory(definitionType, descriptor.TestConstructorId);
+				//}
 
 				return new DefaultTestFactory(classDescriptor.AssemblyName,
 				                              classDescriptor.TypeName,
@@ -70,12 +71,13 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				TestFactory result = descriptor.TestFactoryDescriptor.CreateInstance<TestFactory>();
 
-				// Implementing the QaFactoryBase class means that the parameters are defined in the ...Definition:
-				if (result is QaFactoryBase qaFactory)
-				{
-					qaFactory.FactoryDefinition =
-						InstanceDescriptorUtils.GetTestFactoryDefinition(descriptor);
-				}
+				// TODO: Implement this, once all test factories have their respective definition classes.
+				//// Implementing the QaFactoryBase class means that the parameters are defined in the ...Definition:
+				//if (result is QaFactoryBase qaFactory)
+				//{
+				//	qaFactory.FactoryDefinition =
+				//		InstanceDescriptorUtils.GetTestFactoryDefinition(descriptor);
+				//}
 
 				return result;
 			}
