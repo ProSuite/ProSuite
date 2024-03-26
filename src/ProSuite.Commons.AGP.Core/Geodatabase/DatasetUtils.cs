@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -72,6 +73,80 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				_msg.Debug("Unable to get alias. Using name", e);
 				return definition.GetName();
 			}
+		}
+
+		[CanBeNull]
+		public static int? GetDefaultSubtypeCode([NotNull] Table table)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+
+			var classDefinition = table.GetDefinition();
+
+			int? code = null;
+			try
+			{
+				code = classDefinition.GetDefaultSubtypeCode();
+			}
+			catch (NotSupportedException notSupportedException)
+			{
+				// Shapefiles throw a NotSupportedException
+				_msg.Debug("Subtypes not supported", notSupportedException);
+			}
+
+			return code;
+		}
+
+		[CanBeNull]
+		public static Subtype GetDefaultSubtype([NotNull] Table table)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+
+			int? defaultSubtypeCode = GetDefaultSubtypeCode(table);
+
+			if (! defaultSubtypeCode.HasValue)
+			{
+				return null;
+			}
+
+			Subtype subtype = null;
+			try
+			{
+				subtype = table.GetDefinition().GetSubtypes()
+				               .FirstOrDefault(st => st.GetCode() == defaultSubtypeCode.Value);
+			}
+			catch (NotSupportedException notSupportedException)
+			{
+				// Shapefiles throw a NotSupportedException
+				_msg.Debug("Subtypes not supported", notSupportedException);
+			}
+
+			return subtype;
+		}
+
+		[NotNull]
+		public static string ToString([NotNull] Subtype subtype)
+		{
+			string name;
+			try
+			{
+				name = subtype.GetName();
+			}
+			catch (Exception e)
+			{
+				name = $"[error getting Name: {e.Message}]";
+			}
+
+			string code;
+			try
+			{
+				code = subtype.GetCode().ToString(CultureInfo.InvariantCulture);
+			}
+			catch (Exception e)
+			{
+				code = $"[error getting Code: {e.Message}]";
+			}
+
+			return $"name={name} code={code}";
 		}
 
 		[CanBeNull]
