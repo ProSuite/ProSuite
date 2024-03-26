@@ -30,6 +30,14 @@ namespace ProSuite.AGP.Editing
 				       description, GetDatasetsNonEmpty(updates?.Keys, copies?.Keys));
 		}
 
+		/// <summary>
+		/// BUG: GOTOP-186: Do not use this method for the time being (3.2.2). It will result in
+		/// ghost features, a corrupt display system and edit session.
+		/// </summary>
+		/// <param name="description"></param>
+		/// <param name="updates"></param>
+		/// <param name="copies"></param>
+		/// <returns></returns>
 		public static bool SaveInOperation(
 			[NotNull] string description,
 			[CanBeNull] IDictionary<Feature, Geometry> updates,
@@ -40,6 +48,14 @@ namespace ProSuite.AGP.Editing
 				GetDatasetsNonEmpty(updates?.Keys, copies?.Keys));
 		}
 
+		/// <summary>
+		/// BUG: GOTOP-186: Do not use this method for the time being (3.2.2). It will result in
+		/// ghost features, a corrupt display system and edit session.
+		/// </summary>
+		/// <param name="function"></param>
+		/// <param name="description"></param>
+		/// <param name="datasets"></param>
+		/// <returns></returns>
 		public static bool ExecuteInTransaction(
 			Func<EditOperation.IEditContext, bool> function,
 			[NotNull] string description,

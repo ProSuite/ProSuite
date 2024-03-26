@@ -9,7 +9,6 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -166,7 +165,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract bool CanUseDerivedGeometries();
 
-		protected abstract bool SelectAndProcessDerivedGeometry(
+		protected abstract Task<bool> SelectAndProcessDerivedGeometry(
 			[NotNull] Dictionary<MapMember, List<long>> selection, [NotNull] Geometry sketch,
 			[CanBeNull] CancelableProgressor progressor);
 

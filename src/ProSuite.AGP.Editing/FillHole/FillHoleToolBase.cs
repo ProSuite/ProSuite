@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -125,7 +126,7 @@ namespace ProSuite.AGP.Editing.FillHole
 			return _holes?.Any(h => h.HasHoles()) == true;
 		}
 
-		protected override bool SelectAndProcessDerivedGeometry(
+		protected override async Task<bool> SelectAndProcessDerivedGeometry(
 			Dictionary<MapMember, List<long>> selection,
 			Geometry sketch,
 			CancelableProgressor progressor)
@@ -153,25 +154,27 @@ namespace ProSuite.AGP.Editing.FillHole
 				throw new Exception("No valid template selected");
 			}
 
-			IEnumerable<Dataset> datasets = new List<Dataset> { currentTargetClass };
+			var datasets = new List<Dataset> { currentTargetClass };
 
-			IList<Feature> newFeatures = null;
+			IList<Feature> newFeatures = new List<Feature>();
 
-			bool saved = GdbPersistenceUtils.ExecuteInTransaction(
-				editContext =>
-				{
-					_msg.DebugFormat("Inserting {0} new features...", holesToFill.Count);
+			bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
+				             editContext =>
+				             {
+					             _msg.DebugFormat("Inserting {0} new features...",
+					                              holesToFill.Count);
 
-					newFeatures = GdbPersistenceUtils.InsertTx(
-						editContext, currentTargetClass, holesToFill.Cast<Geometry>().ToList(),
-						editTemplate.Inspector);
+					             newFeatures = GdbPersistenceUtils.InsertTx(
+						             editContext, currentTargetClass,
+						             holesToFill.Cast<Geometry>().ToList(),
+						             editTemplate.Inspector);
 
-					_msg.InfoFormat("Successfully created {0} new {1} feature(s).",
-					                newFeatures.Count, editTemplate.Name);
+					             _msg.InfoFormat("Successfully created {0} new {1} feature(s).",
+					                             newFeatures.Count, editTemplate.Name);
 
-					return true;
-				},
-				"Fill hole(s)", datasets);
+					             return true;
+				             },
+				             "Fill hole(s)", datasets);
 
 			var targetLayer = (BasicFeatureLayer) editTemplate.Layer;
 			var objectIds = newFeatures.Select(f => f.GetObjectID()).ToList();
