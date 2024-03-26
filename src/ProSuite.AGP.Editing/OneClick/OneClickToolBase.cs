@@ -693,8 +693,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Map map, [NotNull] IList<Feature> selectedFeatures,
 		    [CanBeNull] CancelableProgressor progressor) { }
 
-		private void ProcessSelection([NotNull] MapView mapView, // TODO or just a Map?
-		                              [CanBeNull] CancelableProgressor progressor = null)
+		protected void ProcessSelection([NotNull] MapView mapView, // TODO or just a Map?
+		                                [CanBeNull] CancelableProgressor progressor = null)
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
 				SelectionUtils.GetSelection(mapView.Map);
