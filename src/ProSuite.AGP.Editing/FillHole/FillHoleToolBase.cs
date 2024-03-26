@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -176,7 +174,9 @@ namespace ProSuite.AGP.Editing.FillHole
 				"Fill hole(s)", datasets);
 
 			var targetLayer = (BasicFeatureLayer) editTemplate.Layer;
-			SelectionUtils.SelectRows(targetLayer, SelectionCombinationMethod.Add, newFeatures);
+			var objectIds = newFeatures.Select(f => f.GetObjectID()).ToList();
+
+			SelectionUtils.SelectRows(targetLayer, SelectionCombinationMethod.Add, objectIds);
 
 			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
 
