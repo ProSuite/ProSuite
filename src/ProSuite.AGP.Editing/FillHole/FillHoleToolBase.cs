@@ -175,7 +175,8 @@ namespace ProSuite.AGP.Editing.FillHole
 				},
 				"Fill hole(s)", datasets);
 
-			ToolUtils.SelectNewFeatures(newFeatures, activeMapView);
+			var targetLayer = (BasicFeatureLayer) editTemplate.Layer;
+			SelectionUtils.SelectRows(targetLayer, SelectionCombinationMethod.Add, newFeatures);
 
 			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
 
@@ -228,7 +229,7 @@ namespace ProSuite.AGP.Editing.FillHole
 				                holeCountMsg, clickHoleMsg);
 			}
 		}
-		
+
 		protected abstract bool CalculateHoles(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor,
 		                                       CancellationToken cancellationToken);
