@@ -60,7 +60,7 @@ namespace ProSuite.AGP.Editing.Selection
 			return Task.FromResult(true);
 		}
 
-		protected override void AfterSelection(IList<Feature> selectedFeatures,
+		protected override void AfterSelection(Map map, IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			StartSelectionPhase();

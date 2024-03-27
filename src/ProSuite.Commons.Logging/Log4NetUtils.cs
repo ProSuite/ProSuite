@@ -145,7 +145,7 @@ namespace ProSuite.Commons.Logging
 			}
 		}
 
-		internal static IEnumerable<IAppender> GetAppenders()
+		public static IEnumerable<IAppender> GetAppenders()
 		{
 			ILoggerRepository repository = GetRepository();
 

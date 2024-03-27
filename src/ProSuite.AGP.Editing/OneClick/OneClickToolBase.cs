@@ -59,6 +59,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool SelectOnlyEditFeatures { get; init; } = true;
 
 		/// <summary>
+		/// Whether the required selection can only contain selectable features.
+		/// TODO: maybe refactor/rename IgnoreSelectability or merge with TargetFeatureSelection?
+		/// </summary>
+		protected bool SelectOnlySelectableFeatures { get; init; } = true;
+
+		/// <summary>
 		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
 		/// allowed. Otherwise the selection phase will continue until all selected features are
 		/// usable by the tool.
@@ -80,7 +86,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected HashSet<Key> PressedKeys { get; } = new();
 
 		protected virtual Cursor SelectionCursor { get; init; }
-		protected Cursor SelectionCursorShift { get; init; }
+		protected virtual Cursor SelectionCursorShift { get; init; }
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
@@ -687,11 +693,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			return CanSelectGeometryType(shapeType);
 		}
 
-		protected virtual void AfterSelection([NotNull] IList<Feature> selectedFeatures,
-		                                      [CanBeNull] CancelableProgressor progressor) { }
+		protected virtual void AfterSelection(
+			[NotNull] Map map, [NotNull] IList<Feature> selectedFeatures,
+		    [CanBeNull] CancelableProgressor progressor) { }
 
-		private void ProcessSelection([NotNull] MapView mapView,
-		                              [CanBeNull] CancelableProgressor progressor = null)
+		protected void ProcessSelection([NotNull] MapView mapView, // TODO or just a Map?
+		                                [CanBeNull] CancelableProgressor progressor = null)
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
 				SelectionUtils.GetSelection(mapView.Map);
@@ -708,7 +715,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				LogUsingCurrentSelection();
 
-				AfterSelection(applicableSelection, progressor);
+				AfterSelection(mapView.Map, applicableSelection, progressor);
 			}
 			else
 			{
@@ -756,7 +763,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			if (! basicFeatureLayer.IsSelectable)
+			if (SelectOnlySelectableFeatures &&
+			    ! basicFeatureLayer.IsSelectable)
 			{
 				NotificationUtils.Add(notifications, $"Layer {layerName} not selectable");
 				return false;
@@ -795,7 +803,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return selectedFeatures.Any(CanSelectFeatureGeometryType);
 		}
 
-		protected bool CanUseSelection([NotNull] MapView activeMapView)
+		protected bool CanUseSelection([NotNull] MapView activeMapView) // TODO Map instead of MapView
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
 				SelectionUtils.GetSelection(activeMapView.Map);

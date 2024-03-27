@@ -23,7 +23,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 		}
 
 		[Test]
-		public async Task Can_use_PickerServce()
+		public async Task Can_use_PickerService()
 		{
 			Polyline longPolyline =
 				GeometryFactory.CreatePolyline(

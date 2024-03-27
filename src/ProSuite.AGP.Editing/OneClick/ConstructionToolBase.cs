@@ -128,7 +128,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			// log is written in LogEnteringSketchMode
 		}
 
-		protected override void AfterSelection(IList<Feature> selectedFeatures,
+		protected override void AfterSelection(Map map,
+		                                       IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			if (CanStartSketchPhase(selectedFeatures))
@@ -489,12 +490,14 @@ namespace ProSuite.AGP.Editing.OneClick
 					// Try start sketch mode:
 					await QueuedTask.Run(() =>
 					{
-						IList<Feature> selection =
-							GetApplicableSelectedFeatures(ActiveMapView).ToList();
+						var mapView = ActiveMapView; // TODO should be passed in from outside QTR
 
-						if (CanUseSelection(ActiveMapView))
+						IList<Feature> selection =
+							GetApplicableSelectedFeatures(mapView).ToList();
+
+						if (CanUseSelection(mapView))
 						{
-							AfterSelection(selection, null);
+							AfterSelection(mapView.Map, selection, null);
 						}
 					});
 				}
