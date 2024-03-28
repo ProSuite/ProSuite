@@ -6,9 +6,9 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Surface
@@ -33,11 +33,14 @@ namespace ProSuite.Commons.AO.Surface
 			DataSources = dataSources;
 			PointDensity = pointDensity;
 
-			Tiling = tiling ?? SuggestTiling(pointDensity);
+			Assert.ArgumentCondition(dataSources.Count > 0,
+			                         "No data sources provided for terrain {0}", name);
 
 			IFeatureClass firstClass = DataSources[0].FeatureClass;
 
 			_spatialReference = DatasetUtils.GetSpatialReference(firstClass);
+
+			Tiling = tiling ?? SuggestTiling(pointDensity);
 		}
 
 		private RectangularTilingStructure SuggestTiling(double pointDensity)
@@ -48,7 +51,19 @@ namespace ProSuite.Commons.AO.Surface
 
 			double tileWidth = Math.Sqrt(tileArea);
 
-			return new RectangularTilingStructure(Extent.XMin, Extent.YMin, tileWidth, tileWidth,
+			double xMin, yMin;
+
+			if (! Extent.IsEmpty)
+			{
+				xMin = Extent.XMin;
+				yMin = Extent.YMin;
+			}
+			else
+			{
+				SpatialReference.GetDomain(out xMin, out yMin, out _, out _);
+			}
+
+			return new RectangularTilingStructure(xMin, yMin, tileWidth, tileWidth,
 			                                      BorderPointTileAllocationPolicy.BottomLeft,
 			                                      SpatialReference);
 		}
