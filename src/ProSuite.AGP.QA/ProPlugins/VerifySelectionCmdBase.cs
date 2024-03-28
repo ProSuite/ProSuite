@@ -76,7 +76,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return false;
 			}
 
-			if (! MapUtils.HasSelection(mapView))
+			if (! MapUtils.HasSelection(mapView.Map))
 			{
 				MessageBox.Show("No selected features", "Verify Selection",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
