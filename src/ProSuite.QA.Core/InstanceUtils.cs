@@ -47,7 +47,9 @@ namespace ProSuite.QA.Core
 
 			if (definitionAssembly.EndsWith(assemblyDefinitionSuffix))
 			{
-				definitionAssembly = definitionAssembly.Remove(assemblyDefinitionSuffix.Length);
+				definitionAssembly =
+					definitionAssembly.Remove(definitionAssembly.Length -
+					                          assemblyDefinitionSuffix.Length);
 			}
 
 			return definitionAssembly;

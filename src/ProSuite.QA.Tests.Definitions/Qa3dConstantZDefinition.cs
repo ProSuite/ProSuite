@@ -13,6 +13,7 @@ namespace ProSuite.QA.Tests
 	public class Qa3dConstantZDefinition : AlgorithmDefinition
 	{
 		public IFeatureClassSchemaDef FeatureClass { get; }
+
 		public double Tolerance { get; }
 
 		[Doc(nameof(DocStrings.Qa3dConstantZ_0))]

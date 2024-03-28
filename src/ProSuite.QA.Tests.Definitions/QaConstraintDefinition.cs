@@ -36,7 +36,7 @@ namespace ProSuite.QA.Tests
 		public QaConstraintDefinition(
 				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull]
 				ITableSchemaDef table,
-				[Doc("nameof(DocStrings.QaConstraint_constraints)")] [NotNull]
+				[Doc(nameof(DocStrings.QaConstraint_constraints))] [NotNull]
 				IList<ConstraintNodeDefinition> constraints)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, constraints, 0) { }

@@ -200,7 +200,7 @@ namespace ProSuite.QA.Tests
 			       pipeDef.Limit,
 			       pipeDef.ZOffsetConstraint)
 		{
-			if (pipeDef.InvolvedRasters.Count > 0)
+			if (pipeDef.InvolvedRasters?.Count > 0)
 			{
 				InvolvedRasters = pipeDef.InvolvedRasters.Cast<RasterReference>().ToList();
 			}

@@ -15,15 +15,18 @@ namespace ProSuite.DomainModel.Core.QA
 		/// Gets the test implementation info. Requires the test class or the test factory descriptor to be defined.
 		/// </summary>
 		/// <param name="testDescriptor"></param>
+		/// <param name="tryAlgorithmDefinition">Whether to allow using the platform-independent definition type.</param>
 		/// <returns>InstanceInfo or null if neither the test class nor the test factory descriptor are defined.</returns>
 		[CanBeNull]
-		private static IInstanceInfo GetInstanceInfo([NotNull] TestDescriptor testDescriptor)
+		private static IInstanceInfo GetInstanceInfo([NotNull] TestDescriptor testDescriptor,
+		                                             bool tryAlgorithmDefinition = false)
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
 
 			if (testDescriptor.TestClass != null)
 			{
-				if (TryGetAlgorithmDefinitionType(testDescriptor.TestClass,
+				if (tryAlgorithmDefinition &&
+				    TryGetAlgorithmDefinitionType(testDescriptor.TestClass,
 				                                  out Type definitionType))
 				{
 					return new InstanceInfo(definitionType, testDescriptor.ConstructorId);
@@ -36,7 +39,8 @@ namespace ProSuite.DomainModel.Core.QA
 
 			if (testDescriptor.TestFactoryDescriptor != null)
 			{
-				if (TryGetTestFactoryDefinition(
+				if (tryAlgorithmDefinition &&
+				    TryGetTestFactoryDefinition(
 					    testDescriptor, out TestFactoryDefinition factoryDefinition))
 				{
 					return factoryDefinition;
@@ -54,9 +58,11 @@ namespace ProSuite.DomainModel.Core.QA
 		/// value will be returned if available. The resulting value will be cached in the descriptor.
 		/// </summary>
 		/// <param name="descriptor"></param>
+		/// <param name="tryAlgorithmDefinition"></param>
 		/// <returns></returns>
 		[CanBeNull]
-		public static IInstanceInfo GetInstanceInfo([NotNull] InstanceDescriptor descriptor)
+		public static IInstanceInfo GetInstanceInfo([NotNull] InstanceDescriptor descriptor,
+		                                            bool tryAlgorithmDefinition = false)
 		{
 			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
 
@@ -69,12 +75,12 @@ namespace ProSuite.DomainModel.Core.QA
 
 			if (descriptor is TestDescriptor testDescriptor)
 			{
-				result = GetInstanceInfo(testDescriptor);
+				result = GetInstanceInfo(testDescriptor, tryAlgorithmDefinition);
 			}
 			else if (descriptor.Class != null)
 			{
-				if (TryGetAlgorithmDefinitionType(descriptor.Class,
-				                                  out Type definitionType))
+				if (tryAlgorithmDefinition &&
+				    TryGetAlgorithmDefinitionType(descriptor.Class, out Type definitionType))
 				{
 					result = new InstanceInfo(definitionType, descriptor.ConstructorId);
 				}

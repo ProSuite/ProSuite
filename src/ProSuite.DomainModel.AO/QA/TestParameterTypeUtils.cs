@@ -60,7 +60,7 @@ namespace ProSuite.DomainModel.AO.QA
 			if (typeof(IFeatureClassSchemaDef).IsAssignableFrom(dataType))
 				return TestParameterType.VectorDataset;
 			if (typeof(ITableSchemaDef).IsAssignableFrom(dataType))
-				return TestParameterType.TableDataset;
+				return TestParameterType.ObjectDataset;
 			if (typeof(IMosaicRasterDatasetDef).IsAssignableFrom(dataType))
 				return TestParameterType.RasterMosaicDataset;
 			if (typeof(IRasterDatasetDef).IsAssignableFrom(dataType))

@@ -30,15 +30,21 @@ namespace ProSuite.QA.Core
 
 		public object CreateInstance(AlgorithmDefinition definition)
 		{
+			AssemblyName assemblyName = GetType().Assembly.GetName();
+
 			string assembly = GetType().Assembly.FullName;
 
-			assembly = InstanceUtils.GetImplementationAssemblyName(assembly);
+			string implementationAssemblyName =
+				InstanceUtils.GetImplementationAssemblyName(assemblyName.Name);
+
+			assemblyName.Name = implementationAssemblyName;
 
 			string typeName = Assert.NotNull(definition.GetType().FullName);
 
 			string instanceTypeName = Assert.NotNull(InstanceUtils.TryGetAlgorithmName(typeName));
 
-			Type instanceType = PrivateAssemblyUtils.LoadType(assembly, instanceTypeName);
+			Type instanceType =
+				PrivateAssemblyUtils.LoadType(assemblyName.FullName, instanceTypeName);
 
 			// Get the last constructor, which is the one that takes the definition
 			ConstructorInfo[] constructors = instanceType.GetConstructors();

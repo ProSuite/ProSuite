@@ -22,7 +22,7 @@ namespace ProSuite.QA.Tests
 		public double StartEndIgnoreLength { get; }
 		public bool AsRatio { get; }
 
-		#region constructors
+		#region Constructors
 
 		[Doc(nameof(DocStrings.Qa3dPipe_0))]
 		public QaSurfacePipeDefinition(
