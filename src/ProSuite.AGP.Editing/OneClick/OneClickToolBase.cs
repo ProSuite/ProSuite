@@ -136,7 +136,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				PressedKeys.Add(args.Key);
 
-				if (KeyboardUtils.IsModifierDown(args.Key) || HandledKeys.Contains(args.Key))
+				if (KeyboardUtils.IsModifierKey(args.Key) || HandledKeys.Contains(args.Key))
 				{
 					args.Handled = true;
 				}
@@ -182,8 +182,14 @@ namespace ProSuite.AGP.Editing.OneClick
 					}
 
 					OnKeyUpCore(args);
-					args.Handled = true;
 
+					// NOTE: The HandleKeyUpAsync is only called for handled keys.
+					// However, they will not perform the standard functionality devised by the
+					// application! Examples: F8 (Toggle stereo fixed cursor mode), B (snap to ground, ...)
+					if (KeyboardUtils.IsModifierKey(args.Key) || HandledKeys.Contains(args.Key))
+					{
+						args.Handled = true;
+					}
 				}, _msg, suppressErrorMessageBox: true);
 			}
 			finally
@@ -195,11 +201,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override async Task HandleKeyUpAsync(MapViewKeyEventArgs args)
 		{
 			_msg.VerboseDebug(() => "HandleKeyUpAsync");
-			
-			await ViewUtils.TryAsync(async () =>
-			{
-				await HandleKeyUpCoreAsync(args);
-			}, _msg);
+
+			await ViewUtils.TryAsync(async () => { await HandleKeyUpCoreAsync(args); }, _msg);
 		}
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
@@ -286,7 +289,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			SetupSketch(settings.SketchGeometryType, settings.SketchOutputMode);
 
 			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-							 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
 
 			SetCursor(shiftDown ? SelectionCursorShift : SelectionCursor);
 
@@ -336,7 +339,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private async Task OnEditCompletedAsync(EditCompletedEventArgs args)
 		{
-			await ViewUtils.TryAsync(OnEditCompletedAsyncCore(args), _msg, suppressErrorMessageBox: true);
+			await ViewUtils.TryAsync(OnEditCompletedAsyncCore(args), _msg,
+			                         suppressErrorMessageBox: true);
 		}
 
 		/// <summary>
@@ -748,6 +752,13 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (! LayerUtils.IsVisible(layer))
 			{
+				NotificationUtils.Add(notifications, $"Layer {layerName} not visible");
+				return false;
+			}
+
+			if (! layer.IsVisibleInView(MapView.Active))
+			{
+				// Takes scale range into account (and probably the parent layer too)
 				NotificationUtils.Add(notifications, $"Layer {layerName} not visible");
 				return false;
 			}

@@ -229,6 +229,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 			if (layer.Parent is Layer parentLayer)
 			{
+				// ReSharper disable once TailRecursiveCall
 				return IsVisible(parentLayer);
 			}
 

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using NHibernate;
-using NHibernate.Criterion;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Orm.NHibernate;
 using ProSuite.DomainModel.Core.QA;
@@ -34,17 +33,27 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			using (ISession session = OpenSession(true))
 			{
-				ICriteria criteria = session.CreateCriteria(typeof(InstanceDescriptor));
+				if (instanceDescriptor is TestDescriptor testDescriptor)
+				{
+					return QualityRepositoryUtils.GetDescriptorWithSameImplementation(
+						session, testDescriptor);
+				}
 
 				Assert.ArgumentNotNull(instanceDescriptor.Class,
 				                       $"Class of instance descriptor {instanceDescriptor} is null");
 
-				criteria.Add(Restrictions.And(
-					             Restrictions.Eq("Class", instanceDescriptor.Class),
-					             Restrictions.Eq("ConstructorId",
-					                             instanceDescriptor.ConstructorId)));
+				if (instanceDescriptor is TransformerDescriptor trDescriptor)
+				{
+					return QualityRepositoryUtils.GetWithSameImplementation(session, trDescriptor);
+				}
 
-				return criteria.UniqueResult<InstanceDescriptor>();
+				if (instanceDescriptor is IssueFilterDescriptor ifDescriptor)
+				{
+					return QualityRepositoryUtils.GetWithSameImplementation(session, ifDescriptor);
+				}
+
+				throw new ArgumentOutOfRangeException(
+					$"Unsupported instance descriptor type: {instanceDescriptor}.");
 			}
 		}
 

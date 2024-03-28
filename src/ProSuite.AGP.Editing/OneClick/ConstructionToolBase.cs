@@ -24,6 +24,7 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private const Key _keyFinishSketch = Key.F2;
 		private const Key _keyRestorePrevious = Key.R;
 
 		private Geometry _editSketchBackup;
@@ -43,6 +44,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			GeomIsSimpleAsFeature = false;
 
 			SketchCursor = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
+
+			HandledKeys.Add(_keyFinishSketch);
+			HandledKeys.Add(_keyRestorePrevious);
 		}
 
 		protected Cursor SketchCursor { get; set; }
@@ -216,7 +220,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				_editSketchBackup = null;
 			}
 
-			if (args.Key == Key.F2)
+			if (args.Key == _keyFinishSketch)
 			{
 				// #114: F2 has no effect unless another tool has been used before:
 				Geometry currentSketch = await GetCurrentSketchAsync();

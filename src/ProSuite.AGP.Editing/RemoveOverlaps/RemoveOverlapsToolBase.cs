@@ -8,7 +8,6 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
@@ -109,7 +108,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			return _overlaps != null && _overlaps.HasOverlaps();
 		}
 
-		protected override bool SelectAndProcessDerivedGeometry(
+		protected override async Task<bool> SelectAndProcessDerivedGeometry(
 			Dictionary<MapMember, List<long>> selection,
 			Geometry sketch,
 			CancelableProgressor progressor)
@@ -184,19 +183,21 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			var newFeatures = new List<Feature>();
 
-			bool saved = GdbPersistenceUtils.ExecuteInTransaction(
-				editContext =>
-				{
-					_msg.DebugFormat("Saving {0} updates and {1} inserts...", updates.Count,
-					                 inserts.Count);
+			bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
+				             editContext =>
+				             {
+					             _msg.DebugFormat("Saving {0} updates and {1} inserts...",
+					                              updates.Count,
+					                              inserts.Count);
 
-					GdbPersistenceUtils.UpdateTx(editContext, updates);
+					             GdbPersistenceUtils.UpdateTx(editContext, updates);
 
-					newFeatures.AddRange(GdbPersistenceUtils.InsertTx(editContext, inserts));
+					             newFeatures.AddRange(
+						             GdbPersistenceUtils.InsertTx(editContext, inserts));
 
-					return true;
-				},
-				"Remove overlaps", datasets);
+					             return true;
+				             },
+				             "Remove overlaps", datasets);
 
 			ToolUtils.SelectNewFeatures(newFeatures, activeMapView);
 
@@ -238,49 +239,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 				_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
 			}
-		}
-
-		protected override Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
-		{
-			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
-			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
-
-			//if (_shiftIsPressed) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
-			//{
-			//	return Task.FromResult(true);
-			//}
-
-			CancelableProgressor progressor = GetOverlapsCalculationProgressor();
-
-			if (IsInSelectionPhase())
-			{
-				var map = e.Map ?? throw new AssertionException("event's Map is null");
-				var selection = SelectionUtils.GetSelection(e);
-
-				if (CanUseSelection(selection))
-				{
-					var selectedFeatures = GetApplicableSelectedFeatures(selection).ToList();
-
-					AfterSelection(map, selectedFeatures, progressor);
-
-					var sketch = GetCurrentSketchAsync().Result;
-
-					SelectAndProcessDerivedGeometry(selection, sketch, progressor);
-				}
-			}
-
-			return Task.FromResult(true);
-		}
-
-		protected CancelableProgressor GetOverlapsCalculationProgressor()
-		{
-			var overlapsCalculationProgressorSource = new CancelableProgressorSource(
-				"Calculating overlaps...", "cancelled", true);
-
-			CancelableProgressor selectionProgressor =
-				overlapsCalculationProgressorSource.Progressor;
-
-			return selectionProgressor;
 		}
 
 		private Overlaps CalculateOverlaps(IList<Feature> selectedFeatures,

@@ -10,7 +10,6 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -127,7 +126,7 @@ namespace ProSuite.AGP.Editing.FillHole
 			return _holes?.Any(h => h.HasHoles()) == true;
 		}
 
-		protected override bool SelectAndProcessDerivedGeometry(
+		protected override async Task<bool> SelectAndProcessDerivedGeometry(
 			Dictionary<MapMember, List<long>> selection,
 			Geometry sketch,
 			CancelableProgressor progressor)
@@ -155,27 +154,32 @@ namespace ProSuite.AGP.Editing.FillHole
 				throw new Exception("No valid template selected");
 			}
 
-			IEnumerable<Dataset> datasets = new List<Dataset> { currentTargetClass };
+			var datasets = new List<Dataset> { currentTargetClass };
 
-			IList<Feature> newFeatures = null;
+			IList<Feature> newFeatures = new List<Feature>();
 
-			bool saved = GdbPersistenceUtils.ExecuteInTransaction(
-				editContext =>
-				{
-					_msg.DebugFormat("Inserting {0} new features...", holesToFill.Count);
+			bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
+				             editContext =>
+				             {
+					             _msg.DebugFormat("Inserting {0} new features...",
+					                              holesToFill.Count);
 
-					newFeatures = GdbPersistenceUtils.InsertTx(
-						editContext, currentTargetClass, holesToFill.Cast<Geometry>().ToList(),
-						editTemplate.Inspector);
+					             newFeatures = GdbPersistenceUtils.InsertTx(
+						             editContext, currentTargetClass,
+						             holesToFill.Cast<Geometry>().ToList(),
+						             editTemplate.Inspector);
 
-					_msg.InfoFormat("Successfully created {0} new {1} feature(s).",
-					                newFeatures.Count, editTemplate.Name);
+					             _msg.InfoFormat("Successfully created {0} new {1} feature(s).",
+					                             newFeatures.Count, editTemplate.Name);
 
-					return true;
-				},
-				"Fill hole(s)", datasets);
+					             return true;
+				             },
+				             "Fill hole(s)", datasets);
 
-			ToolUtils.SelectNewFeatures(newFeatures, activeMapView);
+			var targetLayer = (BasicFeatureLayer) editTemplate.Layer;
+			var objectIds = newFeatures.Select(f => f.GetObjectID()).ToList();
+
+			SelectionUtils.SelectRows(targetLayer, SelectionCombinationMethod.Add, objectIds);
 
 			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
 
@@ -228,7 +232,7 @@ namespace ProSuite.AGP.Editing.FillHole
 				                holeCountMsg, clickHoleMsg);
 			}
 		}
-		
+
 		protected abstract bool CalculateHoles(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor,
 		                                       CancellationToken cancellationToken);

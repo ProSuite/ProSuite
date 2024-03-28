@@ -14,8 +14,9 @@ namespace ProSuite.DomainModel.Core.QA
 
 		[UsedImplicitly] private readonly string _testParameterName;
 
-		private Type _dataType;
-		private TransformerConfiguration _valueSource;
+		[UsedImplicitly] private Type _dataType;
+
+		[UsedImplicitly] private TransformerConfiguration _valueSource;
 
 		#region Constructors
 

@@ -169,7 +169,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract bool CanUseDerivedGeometries();
 
-		protected abstract bool SelectAndProcessDerivedGeometry(
+		protected abstract Task<bool> SelectAndProcessDerivedGeometry(
 			[NotNull] Dictionary<MapMember, List<long>> selection, [NotNull] Geometry sketch,
 			[CanBeNull] CancelableProgressor progressor);
 

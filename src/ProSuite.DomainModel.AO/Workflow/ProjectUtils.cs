@@ -34,6 +34,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 
 			if (model == null)
 			{
+				_msg.DebugFormat("Project {0} has no production model", project.Name);
 				return null;
 			}
 

@@ -43,6 +43,15 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return Task.FromResult(false);
 			}
 
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				MessageBox.Show("No active map.", "Verify Extent",
+				                MessageBoxButton.OK, MessageBoxImage.Warning);
+				return Task.FromResult(false);
+			}
+
 			IQualityVerificationEnvironment qaEnvironment =
 				Assert.NotNull(SessionContext.VerificationEnvironment);
 
@@ -68,7 +77,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController =
-				new AgpBackgroundVerificationController(WorkListOpener, MapView.Active, fullExtent,
+				new AgpBackgroundVerificationController(WorkListOpener, mapView, fullExtent,
 														spatialRef);
 
 			var qaProgressViewmodel =

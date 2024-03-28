@@ -18,7 +18,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 
 		[CanBeNull]
 		public static Overlaps CalculateOverlaps(
-			RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
+			[NotNull] RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] IList<Feature> overlappingFeatures,
 			CancellationToken cancellationToken)
@@ -59,9 +59,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 
 		[CanBeNull]
 		private static CalculateOverlapsResponse CalculateOverlapsRpc(
-			RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
-			IList<Feature> selectedFeatures,
-			IList<Feature> overlappingFeatures,
+			[NotNull] RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
+			[NotNull] IList<Feature> selectedFeatures,
+			[NotNull] IList<Feature> overlappingFeatures,
 			CancellationToken cancellationToken)
 		{
 			CalculateOverlapsRequest request =
@@ -99,10 +99,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 		#region Remove Overlaps
 
 		public static RemoveOverlapsResult RemoveOverlaps(
-			RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
-			IEnumerable<Feature> selectedFeatures,
-			Overlaps overlapsToRemove,
-			IList<Feature> overlappingFeatures,
+			[NotNull] RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
+			[NotNull] IEnumerable<Feature> selectedFeatures,
+			[NotNull] Overlaps overlapsToRemove,
+			[CanBeNull] IList<Feature> overlappingFeatures,
 			CancellationToken cancellationToken)
 		{
 			List<Feature> updateFeatures;
@@ -211,8 +211,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 		}
 
 		private static RemoveOverlapsRequest CreateRemoveOverlapsRequest(
-			IEnumerable<Feature> selectedFeatures,
-			Overlaps overlapsToRemove,
+			[NotNull] IEnumerable<Feature> selectedFeatures,
+			[NotNull] Overlaps overlapsToRemove,
+			[CanBeNull]
 			IList<Feature> targetFeaturesForVertexInsertion, //RemoveOverlapsOptions options,
 			out List<Feature> updateFeatures)
 		{
