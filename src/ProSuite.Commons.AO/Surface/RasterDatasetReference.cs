@@ -4,15 +4,13 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container;
+using ProSuite.Commons.GeoDb;
 
-namespace ProSuite.QA.Tests.Surface
+namespace ProSuite.Commons.AO.Surface
 {
 	public class RasterDatasetReference : RasterReference
 	{
@@ -23,7 +21,7 @@ namespace ProSuite.QA.Tests.Surface
 		{
 			Assert.ArgumentNotNull(rasterDatasetDef, nameof(rasterDatasetDef));
 
-			_rasterDataset = (IRasterDataset2)rasterDatasetDef;
+			_rasterDataset = (IRasterDataset2) rasterDatasetDef;
 		}
 
 		public RasterDatasetReference([NotNull] IRasterDataset2 rasterDataset)
@@ -48,7 +46,8 @@ namespace ProSuite.QA.Tests.Surface
 
 		public override ISimpleSurface CreateSurface(IEnvelope extent,
 		                                             double? defaultValueForUnassignedZs = null,
-		                                             UnassignedZValueHandling? unassignedZValueHandling = null)
+		                                             UnassignedZValueHandling?
+			                                             unassignedZValueHandling = null)
 		{
 			IDataset memoryRasterDataset;
 
@@ -71,6 +70,7 @@ namespace ProSuite.QA.Tests.Surface
 			{
 				surface.DefaultValueForUnassignedZs = defaultValueForUnassignedZs.Value;
 			}
+
 			if (unassignedZValueHandling.HasValue)
 			{
 				surface.UnassignedZValueHandling = unassignedZValueHandling.Value;

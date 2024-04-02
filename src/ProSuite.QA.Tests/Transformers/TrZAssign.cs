@@ -14,7 +14,6 @@ using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
 using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.Surface;
 
 namespace ProSuite.QA.Tests.Transformers
 {

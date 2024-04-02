@@ -2,13 +2,11 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.AO.Surface.Raster;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 
-namespace ProSuite.QA.Container
+namespace ProSuite.Commons.AO.Surface
 {
 	public abstract class RasterReference : IRasterDatasetDef
 	{
