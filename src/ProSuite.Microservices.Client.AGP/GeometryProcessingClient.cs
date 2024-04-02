@@ -11,6 +11,7 @@ using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
+using ProSuite.Microservices.Client.GrpcCore;
 using ProSuite.Microservices.Definitions.Geometry;
 
 namespace ProSuite.Microservices.Client.AGP

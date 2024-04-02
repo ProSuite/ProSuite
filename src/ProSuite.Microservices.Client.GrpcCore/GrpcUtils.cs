@@ -9,7 +9,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using Quaestor.ServiceDiscovery;
 
-namespace ProSuite.Microservices.Client
+namespace ProSuite.Microservices.Client.GrpcCore
 {
 	public static class GrpcUtils
 	{

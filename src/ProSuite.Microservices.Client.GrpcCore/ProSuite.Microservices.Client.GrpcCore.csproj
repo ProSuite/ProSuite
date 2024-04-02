@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <ProjectGuid>{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}</ProjectGuid>
+    <ProjectGuid>{8CC77185-771F-47C9-BADB-FCBD418A593D}</ProjectGuid>
 
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
@@ -21,7 +21,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Microservices.Client.xml</DocumentationFile>
+    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Microservices.Client.GrpcCore.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -54,10 +54,13 @@
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.19.2" />
+    <PackageReference Include="Grpc" Version="2.44.0" />
+    <PackageReference Include="Grpc.HealthCheck" Version="2.44.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -14,7 +13,7 @@ using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.AGP.QA;
-using ProSuite.Microservices.Client.QA;
+using ProSuite.Microservices.Client.GrpcCore.QA;
 using ProSuite.Microservices.Definitions.QA;
 
 namespace ProSuite.AGP.QA
@@ -53,7 +52,7 @@ namespace ProSuite.AGP.QA
 
 			VerificationRequest request =
 				await CreateVerificationRequest(specificationRef, perimeter, projectWorkspace,
-												resultsPath);
+				                                resultsPath);
 
 			return await QAUtils.Verify(Assert.NotNull(_client.QaGrpcClient), request, progress);
 		}

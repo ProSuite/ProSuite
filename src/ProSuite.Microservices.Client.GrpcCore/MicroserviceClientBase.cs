@@ -12,9 +12,9 @@ using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using Quaestor.ServiceDiscovery;
 
-namespace ProSuite.Microservices.Client
+namespace ProSuite.Microservices.Client.GrpcCore
 {
-	public abstract class MicroserviceClientBase
+	public abstract class MicroserviceClientBase : IMicroserviceClient
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 

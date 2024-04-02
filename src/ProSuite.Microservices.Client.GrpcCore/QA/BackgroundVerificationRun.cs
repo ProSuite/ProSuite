@@ -12,10 +12,11 @@ using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 
-namespace ProSuite.Microservices.Client.QA
+namespace ProSuite.Microservices.Client.GrpcCore.QA
 {
 	/// <summary>
 	/// Encapsulates the execution, progress and result of a background verification run.

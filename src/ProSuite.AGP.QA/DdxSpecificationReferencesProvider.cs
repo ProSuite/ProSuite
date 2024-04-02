@@ -5,7 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Client.AGP.QA;
-using ProSuite.Microservices.Client.QA;
+using ProSuite.Microservices.Client.GrpcCore.QA;
 
 namespace ProSuite.AGP.QA
 {

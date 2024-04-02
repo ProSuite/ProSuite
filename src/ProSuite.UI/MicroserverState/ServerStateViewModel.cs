@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Client;
-using ProSuite.Microservices.Client.QA;
+using ProSuite.Microservices.Client.GrpcCore.QA;
 
 namespace ProSuite.UI.MicroserverState
 {
@@ -32,7 +32,7 @@ namespace ProSuite.UI.MicroserverState
 			                 });
 		}
 
-		public ServerStateViewModel([NotNull] MicroserviceClientBase serviceClient)
+		public ServerStateViewModel([NotNull] IMicroserviceClient serviceClient)
 		{
 			var serverState = new ServerState(serviceClient);
 			CurrentServerState = serverState;
@@ -40,7 +40,7 @@ namespace ProSuite.UI.MicroserverState
 			ServerStates.Add(serverState);
 		}
 
-		public ServerStateViewModel([NotNull] IEnumerable<MicroserviceClientBase> serviceClients)
+		public ServerStateViewModel([NotNull] IEnumerable<IMicroserviceClient> serviceClients)
 		{
 			_msg.Debug("Adding new service states...");
 

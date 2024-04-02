@@ -7,7 +7,7 @@ using Grpc.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.Microservices.Client
+namespace ProSuite.Microservices.Client.GrpcCore
 {
 	public static class RpcCallUtils
 	{

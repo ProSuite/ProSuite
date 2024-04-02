@@ -5,6 +5,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Microservices.Client.GrpcCore;
 using ProSuite.Microservices.Definitions.Geometry;
 
 namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole

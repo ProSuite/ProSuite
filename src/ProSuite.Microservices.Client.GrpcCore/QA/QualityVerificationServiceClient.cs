@@ -6,10 +6,11 @@ using Grpc.Core;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using Quaestor.LoadReporting;
 
-namespace ProSuite.Microservices.Client.QA
+namespace ProSuite.Microservices.Client.GrpcCore.QA
 {
 	public class QualityVerificationServiceClient : MicroserviceClientBase,
 	                                                IQualityVerificationClient

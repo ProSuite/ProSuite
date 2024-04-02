@@ -2,7 +2,7 @@ using Grpc.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.QA.Test;
 
-namespace ProSuite.Microservices.Client.QualityTestService
+namespace ProSuite.Microservices.Client.GrpcCore.QualityTestService
 {
 	public class ExternalTestClient : MicroserviceClientBase
 	{
