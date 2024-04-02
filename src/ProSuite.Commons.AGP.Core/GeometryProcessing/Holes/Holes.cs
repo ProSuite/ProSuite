@@ -3,7 +3,7 @@ using System.Linq;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing.Holes
 {
 	/// <summary>
 	/// Holds the result of an hole calculation.

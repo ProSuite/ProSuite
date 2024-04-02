@@ -5,8 +5,12 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using Grpc.Core;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole;
@@ -16,7 +20,11 @@ using ProSuite.Microservices.Definitions.Geometry;
 
 namespace ProSuite.Microservices.Client.AGP
 {
-	public class GeometryProcessingClient : MicroserviceClientBase
+	public class GeometryProcessingClient : MicroserviceClientBase,
+	                                        IAdvancedReshapeService,
+	                                        IRemoveOverlapsService,
+	                                        ICalculateHolesService,
+	                                        IChangeAlongService
 	{
 		private RemoveOverlapsGrpc.RemoveOverlapsGrpcClient RemoveOverlapsClient { get; set; }
 		private ChangeAlongGrpc.ChangeAlongGrpcClient ChangeAlongClient { get; set; }
@@ -44,8 +52,8 @@ namespace ProSuite.Microservices.Client.AGP
 
 		[CanBeNull]
 		public Overlaps CalculateOverlaps(
-			[NotNull] IList<Feature> selectedFeatures,
-			[NotNull] IList<Feature> overlappingFeatures,
+			IList<Feature> selectedFeatures,
+			IList<Feature> overlappingFeatures,
 			CancellationToken cancellationToken)
 		{
 			if (RemoveOverlapsClient == null)
@@ -70,8 +78,8 @@ namespace ProSuite.Microservices.Client.AGP
 
 		[CanBeNull]
 		public IList<Holes> CalculateHoles(
-			[NotNull] IList<Feature> selectedFeatures,
-			[NotNull] IList<Envelope> clipEnvelopes,
+			IList<Feature> selectedFeatures,
+			IList<Envelope> clipEnvelopes,
 			bool unionFeatures,
 			CancellationToken cancellationToken)
 		{
@@ -85,8 +93,8 @@ namespace ProSuite.Microservices.Client.AGP
 
 		[NotNull]
 		public ChangeAlongCurves CalculateReshapeLines(
-			[NotNull] IList<Feature> sourceFeatures,
-			[NotNull] IList<Feature> targetFeatures,
+			IList<Feature> sourceFeatures,
+			IList<Feature> targetFeatures,
 			CancellationToken cancellationToken)
 		{
 			if (ChangeAlongClient == null)
@@ -98,8 +106,8 @@ namespace ProSuite.Microservices.Client.AGP
 
 		[NotNull]
 		public ChangeAlongCurves CalculateCutLines(
-			[NotNull] IList<Feature> sourceFeatures,
-			[NotNull] IList<Feature> targetFeatures,
+			IList<Feature> sourceFeatures,
+			IList<Feature> targetFeatures,
 			CancellationToken cancellationToken)
 		{
 			if (ChangeAlongClient == null)
@@ -111,9 +119,9 @@ namespace ProSuite.Microservices.Client.AGP
 
 		[NotNull]
 		public List<ResultFeature> ApplyReshapeLines(
-			[NotNull] IList<Feature> sourceFeatures,
-			[NotNull] IList<Feature> targetFeatures,
-			[NotNull] IList<CutSubcurve> selectedReshapeLines,
+			IList<Feature> sourceFeatures,
+			IList<Feature> targetFeatures,
+			IList<CutSubcurve> selectedReshapeLines,
 			CancellationToken cancellationToken,
 			out ChangeAlongCurves newChangeAlongCurves)
 		{
@@ -132,9 +140,9 @@ namespace ProSuite.Microservices.Client.AGP
 
 		[NotNull]
 		public List<ResultFeature> ApplyCutLines(
-			[NotNull] IList<Feature> sourceFeatures,
-			[NotNull] IList<Feature> targetFeatures,
-			[NotNull] IList<CutSubcurve> selectedReshapeLines,
+			IList<Feature> sourceFeatures,
+			IList<Feature> targetFeatures,
+			IList<CutSubcurve> selectedReshapeLines,
 			CancellationToken cancellationToken,
 			out ChangeAlongCurves newChangeAlongCurves)
 		{
@@ -152,9 +160,9 @@ namespace ProSuite.Microservices.Client.AGP
 		}
 
 		public ReshapeResult TryReshape(
-			[NotNull] IList<Feature> selectedFeatures,
-			[NotNull] Polyline reshapeLine,
-			[CanBeNull] IList<Feature> adjacentFeatures,
+			IList<Feature> selectedFeatures,
+			Polyline reshapeLine,
+			IList<Feature> adjacentFeatures,
 			bool allowOpenJawReshape,
 			bool multiReshapeAsUnion,
 			bool tryReshapeNonDefault,
@@ -169,9 +177,9 @@ namespace ProSuite.Microservices.Client.AGP
 		}
 
 		public ReshapeResult Reshape(
-			[NotNull] IList<Feature> selectedFeatures,
-			[NotNull] Polyline reshapeLine,
-			[CanBeNull] IList<Feature> adjacentFeatures,
+			IList<Feature> selectedFeatures,
+			Polyline reshapeLine,
+			IList<Feature> adjacentFeatures,
 			bool allowOpenJawReshape,
 			bool multiReshapeAsUnion,
 			bool tryReshapeNonDefault,
@@ -186,8 +194,8 @@ namespace ProSuite.Microservices.Client.AGP
 		}
 
 		public async Task<MapPoint> GetOpenJawReplacementPointAsync(
-			[NotNull] Feature polylineFeature,
-			[NotNull] Polyline reshapeLine,
+			Feature polylineFeature,
+			Polyline reshapeLine,
 			bool useNonDefaultReshapeSide)
 		{
 			if (ReshapeClient == null)

@@ -1,4 +1,4 @@
-namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing
 {
 	public enum RowChangeType
 	{

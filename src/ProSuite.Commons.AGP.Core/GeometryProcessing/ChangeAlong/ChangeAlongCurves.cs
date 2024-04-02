@@ -7,7 +7,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
-namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 {
 	public class ChangeAlongCurves
 	{

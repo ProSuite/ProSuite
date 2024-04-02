@@ -1,4 +1,4 @@
-namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 {
 	public enum ReshapeAlongCurveUsability
 	{

@@ -3,7 +3,7 @@ using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Microservices.Client.AGP
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing
 {
 	/// <summary>
 	/// Represents a lightweight reference to a geodatabase object that can be

@@ -14,15 +14,14 @@ using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI;
-using ProSuite.Microservices.Client.AGP;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
@@ -61,7 +60,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			HandledKeys.Add(_keyToggleNonDefaultSide);
 		}
 
-		protected abstract GeometryProcessingClient MicroserviceClient { get; }
+		protected abstract IAdvancedReshapeService MicroserviceClient { get; }
 
 		protected override void OnUpdate()
 		{

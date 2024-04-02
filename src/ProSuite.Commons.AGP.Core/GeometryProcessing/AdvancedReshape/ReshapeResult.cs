@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape
 {
 	public class ReshapeResult
 	{

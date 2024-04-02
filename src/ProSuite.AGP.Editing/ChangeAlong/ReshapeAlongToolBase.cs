@@ -4,9 +4,9 @@ using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.Logging;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {

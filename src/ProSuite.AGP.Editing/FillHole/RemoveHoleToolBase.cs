@@ -10,12 +10,12 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Microservices.Client.AGP;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole;
 
 namespace ProSuite.AGP.Editing.FillHole
 {
@@ -40,7 +40,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected FillHoleOptions RemoveHoleOptions { get; } = new FillHoleOptions();
 
-		protected abstract GeometryProcessingClient MicroserviceClient { get; }
+		protected abstract ICalculateHolesService MicroserviceClient { get; }
 
 		protected override void OnUpdate()
 		{
@@ -231,7 +231,7 @@ namespace ProSuite.AGP.Editing.FillHole
 		                                          List<Feature> updateFeatures)
 		{
 			return updateFeatures.First(f => f.GetObjectID() == objectId &&
-			                                 ProtobufConversionUtils.GetUniqueClassId(f) ==
+			                                 GeometryProcessingUtils.GetUniqueClassId(f) ==
 			                                 classId);
 		}
 

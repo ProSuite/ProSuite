@@ -1,7 +1,7 @@
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 {
 	/// <summary>
 	///     A subcurve that is typically created by the intersection of the reshaping geometry

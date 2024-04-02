@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -207,7 +209,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 		                                          List<Feature> updateFeatures)
 		{
 			return updateFeatures.First(f => f.GetObjectID() == objectId &&
-			                                 ProtobufConversionUtils.GetUniqueClassId(f) ==
+			                                 GeometryProcessingUtils.GetUniqueClassId(f) ==
 			                                 classId);
 		}
 

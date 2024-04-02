@@ -18,6 +18,8 @@ using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
@@ -26,9 +28,6 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Input;
-using ProSuite.Microservices.Client.AGP;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
@@ -61,7 +60,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected abstract string EditOperationDescription { get; }
 
-		protected abstract GeometryProcessingClient MicroserviceClient { get; }
+		protected abstract IChangeAlongService MicroserviceClient { get; }
 
 		protected override void OnUpdate()
 		{
