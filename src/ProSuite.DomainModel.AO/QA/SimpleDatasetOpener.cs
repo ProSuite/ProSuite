@@ -166,14 +166,17 @@ namespace ProSuite.DomainModel.AO.QA
 					(IDdxRasterDataset) dataset);
 
 			if (typeof(IRasterDataset) == knownType ||
-			    typeof(IRasterDatasetDef) == knownType)
+				typeof(IRasterDatasetDef) == knownType ||
+			    typeof(RasterDatasetReference) == knownType)
 				return _datasetContext.OpenRasterDataset((IDdxRasterDataset) dataset);
 
 			if (typeof(IRasterDataset2) == knownType)
 				return (IRasterDataset2) _datasetContext.OpenRasterDataset(
 					(IDdxRasterDataset) dataset);
 
-			if (typeof(SimpleRasterMosaic) == knownType)
+			if (typeof(SimpleRasterMosaic) == knownType ||
+			    typeof(MosaicRasterReference) == knownType ||
+				typeof(IMosaicRasterDatasetDef) == knownType)
 				return _datasetContext.OpenSimpleRasterMosaic((IRasterMosaicDataset) dataset);
 
 			if (typeof(TerrainReference) == knownType ||

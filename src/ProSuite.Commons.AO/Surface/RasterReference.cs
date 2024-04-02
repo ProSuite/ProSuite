@@ -8,6 +8,12 @@ using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Surface
 {
+	/// <summary>
+	/// A raster data type hierarchy that can be used to create surfaces which implements
+	/// <see cref="IRasterDatasetDef"/>. Tests / test definitions hence can use
+	/// <see cref="IRasterDatasetDef"/> as parameter type to allow for the instantiation
+	/// of test definitions on all platforms.
+	/// </summary>
 	public abstract class RasterReference : IRasterDatasetDef
 	{
 		public abstract bool EqualsCore([NotNull] RasterReference rasterReference);

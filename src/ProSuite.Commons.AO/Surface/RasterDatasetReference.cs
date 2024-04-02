@@ -24,11 +24,11 @@ namespace ProSuite.Commons.AO.Surface
 			_rasterDataset = (IRasterDataset2) rasterDatasetDef;
 		}
 
-		public RasterDatasetReference([NotNull] IRasterDataset2 rasterDataset)
+		public RasterDatasetReference([NotNull] IRasterDataset rasterDataset)
 		{
 			Assert.ArgumentNotNull(rasterDataset, nameof(rasterDataset));
 
-			_rasterDataset = rasterDataset;
+			_rasterDataset = (IRasterDataset2) rasterDataset;
 		}
 
 		public override IReadOnlyDataset Dataset => new ReadOnlyDataset((IDataset) _rasterDataset);
