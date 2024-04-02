@@ -70,9 +70,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			Assert.ArgumentCondition(originalRequest.MaxParallelProcessing > 1,
 			                         "maxParallelDesired must be greater 1");
 
-			_distributedWorkers =
-				new DistributedWorkers(
-					workersClients.Cast<QualityVerificationServiceClient>().ToList());
+			_distributedWorkers = new DistributedWorkers(workersClients.ToList());
 
 			_originalRequest = originalRequest;
 			ParallelConfiguration = new ParallelConfiguration();

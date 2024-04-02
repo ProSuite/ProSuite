@@ -78,6 +78,7 @@
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.Microservices.Client.GrpcCore\ProSuite.Microservices.Client.GrpcCore.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
     <ProjectReference Include="..\ProSuite.QA.Tests\ProSuite.QA.Tests.csproj" />
   </ItemGroup>

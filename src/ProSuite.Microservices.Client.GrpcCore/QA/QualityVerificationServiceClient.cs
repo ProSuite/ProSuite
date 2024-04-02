@@ -135,7 +135,7 @@ namespace ProSuite.Microservices.Client.GrpcCore.QA
 			return true;
 		}
 
-		public IEnumerable<QualityVerificationServiceClient> GetWorkerClients(
+		public IEnumerable<IQualityVerificationClient> GetWorkerClients(
 			int maxCount)
 		{
 			Assert.True(ChannelIsLoadBalancer,
