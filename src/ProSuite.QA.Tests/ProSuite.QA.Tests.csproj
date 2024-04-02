@@ -82,11 +82,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>IssueCodeDescriptions.resx</DependentUpon>
     </Compile>
-    <Compile Update="Properties\LocalizableStrings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>LocalizableStrings.resx</DependentUpon>
-    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -111,11 +106,6 @@
     <EmbeddedResource Update="IssueCodes\IssueCodeDescriptions.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>IssueCodeDescriptions.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Properties\LocalizableStrings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
