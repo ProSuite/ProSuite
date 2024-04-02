@@ -11,7 +11,6 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -116,7 +115,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_raster))] [NotNull]
-			IRasterDataset2 raster,
+			RasterDatasetReference raster,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit)
 			: this(featureClass, raster, limit,
@@ -128,7 +127,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_raster))] [NotNull]
-			IRasterDataset2 raster,
+			RasterDatasetReference raster,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfacePipe_zOffsetConstraint))]
@@ -137,7 +136,7 @@ namespace ProSuite.QA.Tests
 			double startEndIgnoreLength,
 			[Doc(nameof(DocStrings.QaSurfacePipe_asRatio))]
 			bool asRatio)
-			: base(featureClass, new RasterDatasetReference(raster), limit, zOffsetConstraint)
+			: base(featureClass, raster, limit, zOffsetConstraint)
 		{
 			ValidateAsRatio(startEndIgnoreLength, asRatio);
 
@@ -154,7 +153,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_mosaic))] [NotNull]
-			SimpleRasterMosaic rasterMosaic,
+			MosaicRasterReference rasterMosaic,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit)
 			: this(featureClass, rasterMosaic, limit,
@@ -166,7 +165,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_mosaic))] [NotNull]
-			SimpleRasterMosaic rasterMosaic,
+			MosaicRasterReference rasterMosaic,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfacePipe_zOffsetConstraint))]
@@ -176,7 +175,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfacePipe_asRatio))]
 			bool asRatio)
 			: base(
-				featureClass, new MosaicRasterReference(rasterMosaic), limit,
+				featureClass, rasterMosaic, limit,
 				zOffsetConstraint)
 		{
 			ValidateAsRatio(startEndIgnoreLength, asRatio);
