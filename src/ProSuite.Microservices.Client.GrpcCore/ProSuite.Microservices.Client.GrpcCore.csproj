@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <ProjectGuid>{8CC77185-771F-47C9-BADB-FCBD418A593D}</ProjectGuid>
+    <ProjectGuid>{66A38374-D3AC-4FFB-8B18-433F208D8132}</ProjectGuid>
 
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
@@ -58,9 +58,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.19.2" />
-    <PackageReference Include="Grpc" Version="2.44.0" />
-    <PackageReference Include="Grpc.HealthCheck" Version="2.44.0" />
+    <PackageReference Include="Grpc" Version="2.46.6" />
+    <PackageReference Include="Grpc.HealthCheck" Version="2.62.0" />
   </ItemGroup>
 
   <ItemGroup>

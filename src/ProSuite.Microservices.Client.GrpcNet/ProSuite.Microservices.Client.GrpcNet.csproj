@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <ProjectGuid>{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}</ProjectGuid>
+    <ProjectGuid>{1E318F73-886F-4170-BD1A-26000ECCB862}</ProjectGuid>
 
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
@@ -13,7 +13,8 @@
 
     <NoWarn>1591</NoWarn>
 
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">net6.0-windows</TargetFrameworkVersion>
+    <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -21,27 +22,13 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Microservices.Client.xml</DocumentationFile>
+    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Microservices.Client.GrpcNet.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="ProSuite.Microservices.Definitions.QA, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
     <Reference Include="ProSuite.Microservices.Definitions.QA.Test, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.Test.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="Quaestor.LoadReporting">
-      <HintPath>..\..\lib\Quaestor\Quaestor.LoadReporting.dll</HintPath>
-    </Reference>
-    <Reference Include="Quaestor.ServiceDiscovery">
-      <HintPath>..\..\lib\Quaestor\Quaestor.ServiceDiscovery.dll</HintPath>
     </Reference>
   </ItemGroup>
 
@@ -50,15 +37,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc.Core.Api" Version="2.62.0" />
     <PackageReference Include="Grpc.HealthCheck" Version="2.62.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
   </ItemGroup>
 
   <ItemGroup>

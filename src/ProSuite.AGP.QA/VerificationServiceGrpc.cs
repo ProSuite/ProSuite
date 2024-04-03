@@ -13,7 +13,7 @@ using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.AGP.QA;
-using ProSuite.Microservices.Client.GrpcCore.QA;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 
 namespace ProSuite.AGP.QA
@@ -23,11 +23,11 @@ namespace ProSuite.AGP.QA
 	/// </summary>
 	public class VerificationServiceGrpc : VerificationServiceBase
 	{
-		[NotNull] private readonly QualityVerificationServiceClient _client;
+		[NotNull] private readonly IQualityVerificationClient _client;
 		private const string _contextTypeWorkUnit = "Work Unit";
 		private const string _contextTypePerimeter = "Perimeter";
 
-		public VerificationServiceGrpc([NotNull] QualityVerificationServiceClient client)
+		public VerificationServiceGrpc([NotNull] IQualityVerificationClient client)
 		{
 			Assert.ArgumentNotNull(client, nameof(client));
 

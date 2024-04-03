@@ -7,7 +7,6 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Microservices.Client.GrpcCore;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
 
@@ -73,9 +72,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		{
 			var request = CreateCalculateReshapeLinesRequest(selectedFeatures, targetFeatures);
 
-			int deadline = RpcCallUtils.GeometryDefaultDeadline * selectedFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
 
-			return RpcCallUtils.Try(
+			return GrpcClientUtils.Try(
 				options => rpcClient.CalculateReshapeLines(request, options),
 				cancellationToken, deadline);
 		}
@@ -88,9 +87,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		{
 			var request = CreateCalculateCutLinesRequest(selectedFeatures, targetFeatures);
 
-			int deadline = RpcCallUtils.GeometryDefaultDeadline * selectedFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
 
-			return RpcCallUtils.Try(
+			return GrpcClientUtils.Try(
 				options => rpcClient.CalculateCutLines(request, options),
 				cancellationToken, deadline);
 		}

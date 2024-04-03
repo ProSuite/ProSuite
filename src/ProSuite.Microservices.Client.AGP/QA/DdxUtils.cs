@@ -17,7 +17,6 @@ using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.Microservices.Client.GrpcCore;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
@@ -78,10 +77,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			_msg.DebugFormat("Getting quality specifications for {0} datasets.", datasetIds.Count);
 
 			GetSpecificationRefsResponse response =
-				await RpcCallUtils.TryAsync(async callOptions =>
-					                            await ddxClient.GetQualitySpecificationRefsAsync(
-						                            request, callOptions), CancellationToken.None,
-				                            _timeoutMilliseconds);
+				await GrpcClientUtils.TryAsync(async callOptions =>
+					                               await ddxClient.GetQualitySpecificationRefsAsync(
+						                               request, callOptions),
+				                               CancellationToken.None,
+				                               _timeoutMilliseconds);
 
 			if (response == null)
 			{
@@ -120,10 +120,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			                 specificationId);
 
 			GetSpecificationResponse response =
-				await RpcCallUtils.TryAsync(async callOptions =>
-					                            await ddxClient.GetQualitySpecificationAsync(
-						                            request, callOptions), CancellationToken.None,
-				                            _timeoutMilliseconds);
+				await GrpcClientUtils.TryAsync(async callOptions =>
+					                               await ddxClient.GetQualitySpecificationAsync(
+						                               request, callOptions),
+				                               CancellationToken.None,
+				                               _timeoutMilliseconds);
 
 			if (response == null)
 			{
@@ -326,10 +327,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
 		{
 			GetProjectWorkspacesResponse response =
-				await RpcCallUtils.TryAsync(async callOptions =>
-					                            await ddxClient.GetProjectWorkspacesAsync(
-						                            request, callOptions), CancellationToken.None,
-				                            _timeoutMilliseconds);
+				await GrpcClientUtils.TryAsync(async callOptions =>
+					                               await ddxClient.GetProjectWorkspacesAsync(
+						                               request, callOptions),
+				                               CancellationToken.None,
+				                               _timeoutMilliseconds);
 
 			if (response == null)
 			{

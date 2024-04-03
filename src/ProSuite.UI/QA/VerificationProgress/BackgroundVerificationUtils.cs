@@ -2,7 +2,6 @@ using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.UI.WinForms;
-using ProSuite.Microservices.Client.GrpcCore.QA;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 

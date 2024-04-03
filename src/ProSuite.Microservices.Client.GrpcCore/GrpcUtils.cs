@@ -1,13 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
 using Grpc.Core;
-using Grpc.Health.V1;
-using ProSuite.Commons.Cryptography;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using Quaestor.ServiceDiscovery;
 
 namespace ProSuite.Microservices.Client.GrpcCore
 {
@@ -38,57 +33,6 @@ namespace ProSuite.Microservices.Client.GrpcCore
 			return channelOptions;
 		}
 
-		[NotNull]
-		public static ChannelCredentials CreateChannelCredentials(
-			bool useTls,
-			[CanBeNull] string clientCertificate = null)
-		{
-			if (! useTls)
-			{
-				_msg.DebugFormat("Using insecure channel credentials");
-
-				return ChannelCredentials.Insecure;
-			}
-
-			string rootCertificatesAsPem =
-				CertificateUtils.GetUserRootCertificatesInPemFormat();
-
-			if (_msg.IsVerboseDebugEnabled)
-			{
-				_msg.DebugFormat("Trusted root credentials provided: {0}",
-				                 rootCertificatesAsPem);
-			}
-
-			KeyCertificatePair sslClientCertificate = null;
-			if (! string.IsNullOrEmpty(clientCertificate))
-			{
-				KeyPair keyPair = CertificateUtils.FindKeyCertificatePairFromStore(
-					clientCertificate, new[]
-					                   {
-						                   X509FindType.FindBySubjectDistinguishedName,
-						                   X509FindType.FindByThumbprint,
-						                   X509FindType.FindBySubjectName
-					                   }, StoreName.My, StoreLocation.CurrentUser);
-
-				if (keyPair != null)
-				{
-					_msg.Debug("Using client-side certificate");
-
-					sslClientCertificate =
-						new KeyCertificatePair(keyPair.PublicKey, keyPair.PrivateKey);
-				}
-				else
-				{
-					throw new ArgumentException(
-						$"Could not usable find client certificate {clientCertificate} in certificate store.");
-				}
-			}
-
-			var result = new SslCredentials(rootCertificatesAsPem, sslClientCertificate);
-
-			return result;
-		}
-
 		public static Channel CreateChannel(
 			[NotNull] string host, int port,
 			[CanBeNull] ChannelCredentials credentials,
@@ -105,102 +49,24 @@ namespace ProSuite.Microservices.Client.GrpcCore
 			                   CreateChannelOptions(maxMessageLength, disableProxy));
 		}
 
-		/// <summary>
-		/// Determines whether the specified endpoint is connected to the specified service
-		/// that responds with health status 'Serving' .
-		/// </summary>
-		/// <param name="healthClient"></param>
-		/// <param name="serviceName"></param>
-		/// <param name="statusCode">Status code from the RPC call</param>
-		/// <returns></returns>
-		public static bool IsServing([NotNull] Health.HealthClient healthClient,
-		                             [NotNull] string serviceName,
-		                             out StatusCode statusCode)
+		public static string GetAddress([CanBeNull] Channel channel,
+		                                string serviceName)
 		{
-			statusCode = StatusCode.Unknown;
-
-			try
+			string address = "<none>";
+			if (channel?.State != ChannelState.Shutdown)
 			{
-				// TODO: Timeout!
-				HealthCheckResponse healthResponse =
-					healthClient.Check(new HealthCheckRequest()
-					                   { Service = serviceName });
-
-				statusCode = StatusCode.OK;
-
-				return healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
-			}
-			catch (RpcException rpcException)
-			{
-				_msg.Debug($"Error checking health of service {serviceName}", rpcException);
-				statusCode = rpcException.StatusCode;
-			}
-			catch (Exception e)
-			{
-				_msg.Debug($"Error checking health of service {serviceName}", e);
-				return false;
-			}
-
-			return false;
-		}
-
-		/// <summary>
-		/// Determines whether the specified endpoint is connected to the specified service
-		/// that responds with health status 'Serving' .
-		/// </summary>
-		/// <param name="healthClient"></param>
-		/// <param name="serviceName"></param>
-		/// <returns>StatusCode.OK if the service is healthy.</returns>
-		public static async Task<StatusCode> IsServingAsync(
-			[NotNull] Health.HealthClient healthClient,
-			[NotNull] string serviceName)
-		{
-			StatusCode statusCode = StatusCode.Unknown;
-
-			try
-			{
-				HealthCheckResponse healthResponse =
-					await healthClient
-					      .CheckAsync(new HealthCheckRequest() { Service = serviceName })
-					      .ConfigureAwait(false);
-
-				statusCode =
-					healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving
-						? StatusCode.OK
-						: StatusCode.ResourceExhausted;
-			}
-			catch (RpcException rpcException)
-			{
-				_msg.Debug($"Error checking health of service {serviceName}", rpcException);
-				statusCode = rpcException.StatusCode;
-			}
-			catch (Exception e)
-			{
-				_msg.Debug($"Error checking health of service {serviceName}", e);
-				return statusCode;
-			}
-
-			return statusCode;
-		}
-
-		public static IEnumerable<ServiceLocationMsg> GetServiceLocationsFromLoadBalancer(
-			[NotNull] Channel lbChannel,
-			string serviceName, int maxCount)
-		{
-			ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient lbClient =
-				new ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient(lbChannel);
-
-			DiscoverServicesResponse lbResponse = lbClient.DiscoverTopServices(
-				new DiscoverServicesRequest
+				try
 				{
-					ServiceName = serviceName,
-					MaxCount = maxCount
-				});
-
-			foreach (ServiceLocationMsg serviceLocation in lbResponse.ServiceLocations)
-			{
-				yield return serviceLocation;
+					// In shutdown state, the ResolvedTarget property throws for certain:
+					address = channel?.Target;
+				}
+				catch (Exception e)
+				{
+					_msg.Debug($"Error resolving target address for {serviceName}", e);
+				}
 			}
+
+			return address;
 		}
 	}
 }

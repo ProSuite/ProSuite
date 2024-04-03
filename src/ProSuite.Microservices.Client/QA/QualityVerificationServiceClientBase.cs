@@ -6,38 +6,36 @@ using Grpc.Core;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using Quaestor.LoadReporting;
 
-namespace ProSuite.Microservices.Client.GrpcCore.QA
+namespace ProSuite.Microservices.Client.QA
 {
-	public class QualityVerificationServiceClient : MicroserviceClientBase,
-	                                                IQualityVerificationClient
+	public abstract class QualityVerificationServiceClientBase : MicroserviceClientBase,
+	                                                             IQualityVerificationClient
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private QualityVerificationGrpc.QualityVerificationGrpcClient _staticQaClient;
 		private QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient _staticDdxClient;
 
-		public QualityVerificationServiceClient([NotNull] IClientChannelConfig channelConfig)
+		protected QualityVerificationServiceClientBase([NotNull] IClientChannelConfig channelConfig)
 			: base(channelConfig) { }
 
-		public QualityVerificationServiceClient(
+		protected QualityVerificationServiceClientBase(
 			[NotNull] IList<IClientChannelConfig> channelConfigs)
 			: base(channelConfigs) { }
 
-		public QualityVerificationServiceClient([NotNull] string host,
-		                                        int port = 5151,
-		                                        bool useTls = false,
-		                                        string clientCertificate = null)
+		protected QualityVerificationServiceClientBase([NotNull] string host,
+		                                               int port = 5151,
+		                                               bool useTls = false,
+		                                               string clientCertificate = null)
 			: base(host, port, useTls, clientCertificate) { }
 
 		public override string ServiceName => nameof(QualityVerificationGrpc);
 
 		public override string ServiceDisplayName => "Quality Verification Service";
 
-		[CanBeNull]
 		public QualityVerificationGrpc.QualityVerificationGrpcClient QaGrpcClient
 		{
 			get
@@ -49,7 +47,7 @@ namespace ProSuite.Microservices.Client.GrpcCore.QA
 
 				if (ChannelIsLoadBalancer)
 				{
-					Channel actualChannel = GetBalancedChannel();
+					ChannelBase actualChannel = GetBalancedChannel();
 
 					return new QualityVerificationGrpc.QualityVerificationGrpcClient(actualChannel);
 				}
@@ -59,7 +57,6 @@ namespace ProSuite.Microservices.Client.GrpcCore.QA
 			}
 		}
 
-		[CanBeNull]
 		public QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient DdxClient
 		{
 			get
@@ -71,7 +68,7 @@ namespace ProSuite.Microservices.Client.GrpcCore.QA
 
 				if (ChannelIsLoadBalancer)
 				{
-					Channel actualChannel = GetBalancedChannel();
+					ChannelBase actualChannel = GetBalancedChannel();
 
 					return new QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient(
 						actualChannel);
@@ -82,7 +79,7 @@ namespace ProSuite.Microservices.Client.GrpcCore.QA
 			}
 		}
 
-		protected override void ChannelOpenedCore(Channel channel)
+		protected override void ChannelOpenedCore(ChannelBase channel)
 		{
 			// In case of fail-over from a fixed address to a load-balancer:
 			if (ChannelIsLoadBalancer)
@@ -141,24 +138,30 @@ namespace ProSuite.Microservices.Client.GrpcCore.QA
 			Assert.True(ChannelIsLoadBalancer,
 			            "The client must have a channel to a load balancer.");
 
-			Channel lbChannel = Assert.NotNull(Channel);
+			ChannelBase lbChannel = Assert.NotNull(Channel);
 
-			foreach (var serviceLocation in GrpcUtils.GetServiceLocationsFromLoadBalancer(
+			foreach (var serviceLocation in GrpcClientUtils.GetServiceLocationsFromLoadBalancer(
 				         lbChannel, ServiceName, maxCount))
 			{
-				yield return new QualityVerificationServiceClient(
+				yield return CreateClient(
 					serviceLocation.HostName, serviceLocation.Port, UseTls, ClientCertificate);
 			}
 		}
 
-		private Channel GetBalancedChannel()
+		protected abstract IQualityVerificationClient CreateClient(
+			[NotNull] string hostName,
+			int port,
+			bool useTls,
+			[CanBeNull] string clientCertificate);
+
+		private ChannelBase GetBalancedChannel()
 		{
 			ChannelCredentials credentials =
-				GrpcUtils.CreateChannelCredentials(UseTls, ClientCertificate);
+				GrpcClientUtils.CreateChannelCredentials(UseTls, ClientCertificate);
 
 			var enoughForLargeGeometries = (int) Math.Pow(1024, 3);
 
-			Channel actualChannel = TryGetChannelFromLoadBalancer(
+			ChannelBase actualChannel = TryGetChannelFromLoadBalancer(
 				Channel, credentials, ServiceName,
 				enoughForLargeGeometries);
 
@@ -182,7 +185,7 @@ namespace ProSuite.Microservices.Client.GrpcCore.QA
 
 		[NotNull]
 		private static async Task<LoadReportResponse> GetLoadReport(
-			[NotNull] Channel channel,
+			[NotNull] ChannelBase channel,
 			[NotNull] string serviceName,
 			[CanBeNull] string serviceScope,
 			TimeSpan timeout)

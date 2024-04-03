@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.QA;
 
 namespace ProSuite.Microservices.Client.QA
@@ -11,7 +12,11 @@ namespace ProSuite.Microservices.Client.QA
 	/// </summary>
 	public interface IQualityVerificationClient : IMicroserviceClient
 	{
+		[CanBeNull]
 		QualityVerificationGrpc.QualityVerificationGrpcClient QaGrpcClient { get; }
+
+		[CanBeNull]
+		QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient DdxClient { get; }
 
 		/// <summary>
 		/// Gets the number of running requests on the server / worker.

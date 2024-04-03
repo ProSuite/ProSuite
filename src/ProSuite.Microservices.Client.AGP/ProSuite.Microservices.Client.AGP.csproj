@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 
     <SignAssembly>true</SignAssembly>
@@ -59,11 +59,11 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.AGP\ProSuite.DomainModel.AGP.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
-    <ProjectReference Include="..\ProSuite.Microservices.Client.GrpcCore\ProSuite.Microservices.Client.GrpcCore.csproj" />
+    <ProjectReference Include="..\ProSuite.Microservices.Client.GrpcNet\ProSuite.Microservices.Client.GrpcNet.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.19.2" />
-    <PackageReference Include="Grpc" Version="2.44.0" />
+    <PackageReference Include="Grpc" Version="2.46.6" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
   </ItemGroup>
 </Project>

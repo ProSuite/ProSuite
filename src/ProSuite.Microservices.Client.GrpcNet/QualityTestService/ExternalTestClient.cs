@@ -1,11 +1,10 @@
 using Grpc.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Microservices.Client.GrpcCore.QA;
 using ProSuite.Microservices.Definitions.QA.Test;
 
-namespace ProSuite.Microservices.Client.GrpcCore.QualityTestService
+namespace ProSuite.Microservices.Client.GrpcNet.QualityTestService
 {
-	public class ExternalTestClient : GrpcCoreQualityVerificationServiceClient
+	public class ExternalTestClient : GrpcNetQualityVerificationServiceClient
 	{
 		private QualityTestGrpc.QualityTestGrpcClient _staticTestClient;
 

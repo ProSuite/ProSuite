@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Client;
-using ProSuite.Microservices.Client.GrpcCore.QA;
+using ProSuite.Microservices.Client.GrpcNet;
 
 namespace ProSuite.UI.MicroserverState
 {
@@ -15,17 +15,18 @@ namespace ProSuite.UI.MicroserverState
 
 		public ServerStateViewModel()
 		{
-			// For the designer:
-			ServerStates.Add(new ServerState(
-				                 new QualityVerificationServiceClient("Localhost"))
+			// For the designer (causes dependency on Microservices.Client.GrpcNet)
+			var localClient = new GrpcNetQualityVerificationServiceClient("Localhost");
+			var remoteClient = new GrpcNetQualityVerificationServiceClient("CRASSUS", 5152);
+
+			ServerStates.Add(new ServerState(localClient)
 			                 {
 				                 Text = "Healthy",
 				                 PingLatency = 23,
 				                 ServiceState = ServiceState.Serving
 			                 });
 
-			ServerStates.Add(new ServerState(
-				                 new QualityVerificationServiceClient("CRASSUS", 5152))
+			ServerStates.Add(new ServerState(remoteClient)
 			                 {
 				                 Text = "Unavailable",
 				                 ServiceState = ServiceState.Starting

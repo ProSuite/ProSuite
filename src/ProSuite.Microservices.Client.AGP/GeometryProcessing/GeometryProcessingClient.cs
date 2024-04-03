@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using Grpc.Core;
+using Grpc.Net.Client;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
@@ -15,10 +16,10 @@ using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
-using ProSuite.Microservices.Client.GrpcCore;
+using ProSuite.Microservices.Client.GrpcNet;
 using ProSuite.Microservices.Definitions.Geometry;
 
-namespace ProSuite.Microservices.Client.AGP
+namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 {
 	public class GeometryProcessingClient : MicroserviceClientBase,
 	                                        IAdvancedReshapeService,
@@ -42,13 +43,43 @@ namespace ProSuite.Microservices.Client.AGP
 
 		public override string ServiceDisplayName => "Geometry Service";
 
-		protected override void ChannelOpenedCore(Channel channel)
+		protected override void ChannelOpenedCore(ChannelBase channel)
 		{
 			RemoveOverlapsClient = new RemoveOverlapsGrpc.RemoveOverlapsGrpcClient(channel);
 			ChangeAlongClient = new ChangeAlongGrpc.ChangeAlongGrpcClient(channel);
 			ReshapeClient = new ReshapeGrpc.ReshapeGrpcClient(channel);
 			RemoveHolesClient = new FillHolesGrpc.FillHolesGrpcClient(channel);
 		}
+
+		#region Overrides of MicroserviceClientBase
+
+		protected override ChannelBase OpenChannelCore(
+			string host,
+			int port,
+			ChannelCredentials credentials,
+			int maxMessageLength)
+		{
+			ChannelBase channel = GrpcUtils.CreateChannel(
+				HostName, Port, credentials, maxMessageLength);
+
+			return channel;
+		}
+
+		public override string GetChannelState()
+		{
+			GrpcChannel channel = Channel as GrpcChannel;
+
+			return channel?.State.ToString() ?? "<unknown>";
+		}
+
+		public override string GetAddress()
+		{
+			GrpcChannel channel = (GrpcChannel) Channel;
+
+			return GrpcUtils.GetAddress(channel, ChannelServiceName);
+		}
+
+		#endregion
 
 		[CanBeNull]
 		public Overlaps CalculateOverlaps(

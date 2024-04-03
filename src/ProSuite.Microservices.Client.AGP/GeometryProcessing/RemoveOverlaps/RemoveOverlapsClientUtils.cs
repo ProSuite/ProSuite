@@ -9,7 +9,6 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Notifications;
-using ProSuite.Microservices.Client.GrpcCore;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
 
@@ -70,10 +69,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			CalculateOverlapsRequest request =
 				CreateCalculateOverlapsRequest(selectedFeatures, overlappingFeatures);
 
-			int deadline = RpcCallUtils.GeometryDefaultDeadline * selectedFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
 
 			CalculateOverlapsResponse response =
-				RpcCallUtils.Try(
+				GrpcClientUtils.Try(
 					o => rpcClient.CalculateOverlaps(request, o),
 					cancellationToken, deadline);
 
@@ -113,10 +112,11 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 				selectedFeatures, overlapsToRemove, overlappingFeatures,
 				out updateFeatures);
 
-			int deadline = RpcCallUtils.GeometryDefaultDeadline * request.SourceFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
+			               request.SourceFeatures.Count;
 
 			RemoveOverlapsResponse response =
-				RpcCallUtils.Try(
+				GrpcClientUtils.Try(
 					o => rpcClient.RemoveOverlaps(request, o),
 					cancellationToken, deadline);
 
