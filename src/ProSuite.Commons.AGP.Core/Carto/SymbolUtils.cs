@@ -741,7 +741,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		#region Retrieval
 
-		public static CIMSymbol GetSymbol(CIMRenderer renderer, INamedValues feature = null, double scaleDenom = 0)
+		public static CIMSymbolReference GetSymbol(CIMRenderer renderer, INamedValues feature = null, double scaleDenom = 0)
 		{
 			if (renderer is null)
 				throw new ArgumentNullException(nameof(renderer));
@@ -760,7 +760,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				$"{renderer.GetType().Name} is not supported, sorry");
 		}
 
-		private static CIMSymbol GetSymbol(CIMSimpleRenderer renderer, INamedValues feature, double scaleDenom)
+		private static CIMSymbolReference GetSymbol(CIMSimpleRenderer renderer, INamedValues feature, double scaleDenom)
 		{
 			// CIMSimpleRenderer:
 			// - .Symbol: CIMSymbolReference
@@ -769,10 +769,10 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			var symref = GetSymbolReference(renderer.Symbol, renderer.AlternateSymbols, scaleDenom);
 
-			return MaterializeSymbol(symref, feature, scaleDenom, renderer.VisualVariables);
+			return ApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
 		}
 
-		private static CIMSymbol GetSymbol(CIMUniqueValueRenderer renderer, INamedValues feature, double scaleDenom)
+		private static CIMSymbolReference GetSymbol(CIMUniqueValueRenderer renderer, INamedValues feature, double scaleDenom)
 		{
 			// CIMUniqueValueRenderer:
 			// - .Fields: string[]
@@ -797,7 +797,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			var symref = GetSymbolReference(primary, alternates, scaleDenom);
 
-			return MaterializeSymbol(symref, feature, scaleDenom, renderer.VisualVariables);
+			return ApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
 		}
 
 		private static CIMUniqueValueClass FindClass(CIMUniqueValueRenderer renderer, INamedValues feature)
@@ -900,6 +900,28 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return primary; // default if no alternate symbol matches
 		}
 
+		public static CIMSymbolReference ApplyOverrides(
+			CIMSymbolReference symref, INamedValues feature,
+			double scaleDenom = 0, CIMVisualVariable[] visualVariables = null)
+		{
+			if (symref is null) return null;
+
+			var symbol = MaterializeSymbol(symref, feature, scaleDenom, visualVariables);
+
+			return new CIMSymbolReference
+			       {
+				       SymbolName = symref.SymbolName,
+				       MinScale = symref.MinScale,
+				       MaxScale = symref.MaxScale,
+				       MinDistance = symref.MinDistance,
+				       MaxDistance = symref.MaxDistance,
+				       Symbol = symbol, // the now materialized symbol
+				       PrimitiveOverrides = null, // they have been applied
+				       ScaleDependentSizeVariation = null, // they have been applied
+				       StylePath = null // no longer from style
+			       };
+		}
+
 		private static CIMSymbol MaterializeSymbol(
 			CIMSymbolReference symref, INamedValues feature, double scaleDenom,
 			CIMVisualVariable[] visualVariables = null)
@@ -911,6 +933,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			// - ScaleDependentSizeVariation: [{Scale, Size}]
 
 			// Make a clone, because we may modify it!
+
 			var symbol = (CIMSymbol) CIMObject.Clone(symref.Symbol);
 
 			if (feature != null && symref.PrimitiveOverrides is { Length: > 0 })
@@ -970,7 +993,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			}
 
 			object value = Evaluate(mapping.Expression, mapping.ValueExpressionInfo, feature);
-			if (value != null)
+			if (value != null && value != DBNull.Value)
 			{
 				property.SetValue(primitive, value);
 			}
@@ -1000,7 +1023,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			if (arcade is { Expression.Length: > 0 })
 			{
 				// TODO handle the simple case: $feature.FIELDNAME
-
+				// TODO since Pro SDK 3.x there's an Arcade evaluator: use it (if dependencies are ok)
 				throw new NotImplementedException("Arcade expression evaluation is not yet implemented");
 			}
 
