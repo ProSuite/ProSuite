@@ -1,5 +1,5 @@
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.Core.DataModel
@@ -86,7 +86,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		public bool Equals(IDatasetDef otherDataset)
 		{
-			if (otherDataset is ObjectDataset otherObjectDataset)
+			if (otherDataset is Dataset otherObjectDataset)
 			{
 				return base.Equals(otherObjectDataset);
 			}
