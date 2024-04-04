@@ -68,7 +68,7 @@ namespace ProSuite.QA.Tests.Test
 			                             .ClosePolygon();
 			row.Store();
 
-			IWorkspace dtmWs = TestDataUtils.OpenTopgisTlm();
+			IWorkspace dtmWs = TestDataUtils.OpenTopgisAlti();
 
 			SimpleTerrain terrain = new SimpleTerrain(
 				"dataset.Name",
