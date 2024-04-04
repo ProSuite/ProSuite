@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
@@ -94,6 +95,146 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 					// get hidden spec also
 					qspecList = Repository.Get(dsList);
 					Assert.AreEqual(3, qspecList.Count);
+				});
+		}
+
+		[Test]
+		public void CanGetSpecificationsWithFiltersAndTransformersFromDatasets()
+		{
+			const string dsName0 = "SCHEMA.TLM_DATASET0";
+			const string dsName1 = "SCHEMA.TLM_DATASET1";
+			const string dsName2 = "SCHEMA.TLM_DATASET2";
+			const string dsName3 = "SCHEMA.TLM_DATASET3";
+			const string dsName4 = "SCHEMA.TLM_DATASET4";
+
+			DdxModel m = CreateModel();
+
+			Dataset ds0 = m.AddDataset(CreateVectorDataset(dsName0));
+			Dataset ds1 = m.AddDataset(CreateVectorDataset(dsName1));
+			Dataset ds2 = m.AddDataset(CreateVectorDataset(dsName2));
+			Dataset ds3 = m.AddDataset(CreateVectorDataset(dsName3));
+			Dataset ds4 = m.AddDataset(CreateVectorDataset(dsName4));
+
+			// spec 0
+			var spec0 = new QualitySpecification("spec0");
+
+			var qaMinLength = new TestDescriptor(
+				"name",
+				new ClassDescriptor(
+					"ProSuite.QA.Tests.QaMinLength",
+					"ProSuite.QA.Tests"), 0);
+
+			var trDissolve = new TransformerDescriptor(
+				"dissolveDs1",
+				new ClassDescriptor(
+					"ProSuite.QA.Tests.Transformers.TrDissolve",
+					"ProSuite.QA.Tests"), 0);
+
+			var ifIntersecting = new IssueFilterDescriptor(
+				"ifIntersecting",
+				new ClassDescriptor(
+					"ProSuite.QA.Tests.IssueFilters.IfIntersecting",
+					"ProSuite.QA.Tests"), 0);
+
+			var cond0 = new QualityCondition("cond0", qaMinLength);
+			InstanceConfigurationUtils.AddParameterValue(cond0, "limit", "0.5");
+			InstanceConfigurationUtils.AddParameterValue(cond0, "featureClass", ds0);
+
+			var filt0 = new IssueFilterConfiguration("filt0", ifIntersecting);
+			InstanceConfigurationUtils.AddParameterValue(filt0, "featureClass", ds2);
+			cond0.AddIssueFilterConfiguration(filt0);
+
+			var trans01 = new TransformerConfiguration("trans01", trDissolve);
+			InstanceConfigurationUtils.AddParameterValue(trans01, "featureClass", ds3);
+
+			var cond2 = new QualityCondition("cond2", qaMinLength);
+			InstanceConfigurationUtils.AddParameterValue(cond2, "limit", "0.5");
+			InstanceConfigurationUtils.AddParameterValue(cond2, "featureClass", trans01);
+
+			// With dataset used as reference data
+			var cond3 = new QualityCondition("cond3", qaMinLength);
+			InstanceConfigurationUtils.AddParameterValue(cond0, "limit", "0.5");
+			InstanceConfigurationUtils.AddParameterValue(cond0, "featureClass", ds3, null,
+			                                             usedAsReferenceData: true);
+
+			spec0.AddElement(cond0);
+			spec0.AddElement(cond2);
+			spec0.AddElement(cond3);
+
+			// spec 1
+			var spec1 = new QualitySpecification("spec1");
+
+			var cond1 = new QualityCondition("cond1", qaMinLength);
+			InstanceConfigurationUtils.AddParameterValue(cond1, "limit", "0.5");
+			InstanceConfigurationUtils.AddParameterValue(cond1, "featureClass", ds1);
+
+			spec1.AddElement(cond1);
+
+			// spec 2 (hidden)
+			QualitySpecification spec2 = spec1.CreateCopy();
+			spec2.Hidden = true;
+
+			CreateSchema(m, cond0.TestDescriptor, cond1.TestDescriptor,
+			             trans01.TransformerDescriptor, filt0.IssueFilterDescriptor,
+			             trans01, filt0,
+			             cond0, cond1, cond2, cond3,
+			             spec0, spec1, spec2);
+
+			const bool excludeHidden = true;
+
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					// reread spec
+					var datasets = Resolve<IDatasetRepository>();
+
+					var dsList = new List<Dataset>();
+
+					Dataset rDs0 = datasets.Get(ds0.Id);
+					QualitySpecification rqspec0 = Repository.Get(spec0.Id);
+
+					dsList.Add(rDs0);
+
+					AssertFindSpecification(dsList, excludeHidden, rqspec0);
+
+					Dataset rDs1 = datasets.Get(ds1.Id);
+					QualitySpecification rqspec1 = Repository.Get(spec1.Id);
+
+					dsList.Clear();
+					dsList.Add(rDs1);
+					AssertFindSpecification(dsList, excludeHidden, rqspec1);
+
+					dsList.Add(rDs0);
+					IList<QualitySpecification> qspecList = Repository.Get(dsList, excludeHidden);
+					Assert.AreEqual(2, qspecList.Count);
+
+					// get hidden spec also
+					qspecList = Repository.Get(dsList);
+					Assert.AreEqual(3, qspecList.Count);
+
+					// get spec0 by dataset 2 -> Finds nothing because a dataset used in a filter
+					// is by definition just used as a reference.
+					Dataset rDs2 = datasets.Get(ds2.Id);
+					dsList.Clear();
+					dsList.Add(rDs2);
+					AssertFindSpecification(dsList, excludeHidden, null);
+
+					// get spec0 by dataset 3
+					Dataset rDs3 = datasets.Get(ds3.Id);
+					dsList.Clear();
+					dsList.Add(rDs3);
+					AssertFindSpecification(dsList, excludeHidden, rqspec0);
+
+					// get no spec by dataset 4 (as reference data)
+					Dataset rDs4 = datasets.Get(ds4.Id);
+					dsList.Clear();
+					dsList.Add(rDs4);
+					AssertFindSpecification(dsList, excludeHidden, null);
+
+					// get spec0 by full list (filter, transformer, referenced only)
+					dsList.Add(rDs2);
+					dsList.Add(rDs3);
+					AssertFindSpecification(dsList, excludeHidden, rqspec0);
 				});
 		}
 
@@ -423,6 +564,32 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 					Assert.NotNull(originalDatasetParameterValue);
 					Assert.AreEqual(ds, originalDatasetParameterValue.DatasetValue);
 				});
+		}
+
+		private void AssertFindSpecification([NotNull] IList<Dataset> datasetList,
+		                                     bool excludeHidden,
+		                                     [CanBeNull] QualitySpecification expected)
+		{
+			int expectedCount = expected == null ? 0 : 1;
+
+			IList<QualitySpecification> specList = Repository.Get(datasetList, excludeHidden);
+			Assert.AreEqual(expectedCount, specList.Count);
+
+			if (expectedCount == 1)
+			{
+				Assert.AreEqual(expected, specList[0]);
+			}
+
+			// Now with dataset ids:
+			var idList = datasetList.Select(dataset => dataset.Id).ToList();
+
+			specList = Repository.Get(idList, excludeHidden);
+			Assert.AreEqual(expectedCount, specList.Count);
+
+			if (expectedCount == 1)
+			{
+				Assert.AreEqual(expected, specList[0]);
+			}
 		}
 	}
 }

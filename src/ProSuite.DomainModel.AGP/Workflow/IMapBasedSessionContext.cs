@@ -42,9 +42,14 @@ namespace ProSuite.DomainModel.AGP.Workflow
 
 		/// <summary>
 		/// Sets the <see cref="ProjectWorkspace"/> and triggers the
-		/// <see cref="ProjectWorkspaceChanged"/> event.
+		/// <see cref="ProjectWorkspaceChanged"/> event, unless the current project workspace
+		/// references the same project and workspace and contains all the datasets of the new
+		/// project workspace.
 		/// </summary>
-		/// <param name="newProjectWorkspace"></param>
-		void SetProjectWorkspace([CanBeNull] ProjectWorkspace newProjectWorkspace);
+		/// <param name="newProjectWorkspace">The new project workspace</param>
+		/// <param name="forceChange">Whether the new project workspace should be set as is and
+		/// the change events should be fired in every case.</param>
+		void SetProjectWorkspace([CanBeNull] ProjectWorkspace newProjectWorkspace,
+		                         bool forceChange = false);
 	}
 }

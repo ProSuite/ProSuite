@@ -3,7 +3,7 @@ using ArcGIS.Core.Data;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase;
 
-public class DatastoreComprarer : IEqualityComparer<Datastore>
+public class DatastoreComparer : IEqualityComparer<Datastore>
 {
 	public bool Equals(Datastore x, Datastore y)
 	{

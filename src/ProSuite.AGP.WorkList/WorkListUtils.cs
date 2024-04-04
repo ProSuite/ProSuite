@@ -436,7 +436,7 @@ namespace ProSuite.AGP.WorkList
 		public static Dictionary<Datastore, List<Table>> GetDistinctTables(
 			[NotNull] IEnumerable<Table> tables)
 		{
-			var result = new Dictionary<Datastore, SimpleSet<Table>>(new DatastoreComprarer());
+			var result = new Dictionary<Datastore, SimpleSet<Table>>(new DatastoreComparer());
 
 			foreach (Table table in tables.Distinct())
 			{

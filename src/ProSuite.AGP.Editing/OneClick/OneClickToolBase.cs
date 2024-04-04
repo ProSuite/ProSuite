@@ -59,6 +59,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool SelectOnlyEditFeatures { get; init; } = true;
 
 		/// <summary>
+		/// Whether the required selection can only contain selectable features.
+		/// TODO: maybe refactor/rename IgnoreSelectability or merge with TargetFeatureSelection?
+		/// </summary>
+		protected bool SelectOnlySelectableFeatures { get; init; } = true;
+
+		/// <summary>
 		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
 		/// allowed. Otherwise the selection phase will continue until all selected features are
 		/// usable by the tool.
@@ -80,7 +86,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected HashSet<Key> PressedKeys { get; } = new();
 
 		protected virtual Cursor SelectionCursor { get; init; }
-		protected Cursor SelectionCursorShift { get; init; }
+		protected virtual Cursor SelectionCursorShift { get; init; }
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
@@ -130,7 +136,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				PressedKeys.Add(args.Key);
 
-				if (KeyboardUtils.IsModifierDown(args.Key) || HandledKeys.Contains(args.Key))
+				if (KeyboardUtils.IsModifierKey(args.Key) || HandledKeys.Contains(args.Key))
 				{
 					args.Handled = true;
 				}
@@ -176,8 +182,14 @@ namespace ProSuite.AGP.Editing.OneClick
 					}
 
 					OnKeyUpCore(args);
-					args.Handled = true;
 
+					// NOTE: The HandleKeyUpAsync is only called for handled keys.
+					// However, they will not perform the standard functionality devised by the
+					// application! Examples: F8 (Toggle stereo fixed cursor mode), B (snap to ground, ...)
+					if (KeyboardUtils.IsModifierKey(args.Key) || HandledKeys.Contains(args.Key))
+					{
+						args.Handled = true;
+					}
 				}, _msg, suppressErrorMessageBox: true);
 			}
 			finally
@@ -189,11 +201,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override async Task HandleKeyUpAsync(MapViewKeyEventArgs args)
 		{
 			_msg.VerboseDebug(() => "HandleKeyUpAsync");
-			
-			await ViewUtils.TryAsync(async () =>
-			{
-				await HandleKeyUpCoreAsync(args);
-			}, _msg);
+
+			await ViewUtils.TryAsync(async () => { await HandleKeyUpCoreAsync(args); }, _msg);
 		}
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
@@ -280,7 +289,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			SetupSketch(settings.SketchGeometryType, settings.SketchOutputMode);
 
 			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-							 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
 
 			SetCursor(shiftDown ? SelectionCursorShift : SelectionCursor);
 
@@ -330,7 +339,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private async Task OnEditCompletedAsync(EditCompletedEventArgs args)
 		{
-			await ViewUtils.TryAsync(OnEditCompletedAsyncCore(args), _msg, suppressErrorMessageBox: true);
+			await ViewUtils.TryAsync(OnEditCompletedAsyncCore(args), _msg,
+			                         suppressErrorMessageBox: true);
 		}
 
 		/// <summary>
@@ -683,11 +693,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			return CanSelectGeometryType(shapeType);
 		}
 
-		protected virtual void AfterSelection([NotNull] IList<Feature> selectedFeatures,
-		                                      [CanBeNull] CancelableProgressor progressor) { }
+		protected virtual void AfterSelection(
+			[NotNull] Map map, [NotNull] IList<Feature> selectedFeatures,
+		    [CanBeNull] CancelableProgressor progressor) { }
 
-		private void ProcessSelection([NotNull] MapView mapView,
-		                              [CanBeNull] CancelableProgressor progressor = null)
+		protected void ProcessSelection([NotNull] MapView mapView, // TODO or just a Map?
+		                                [CanBeNull] CancelableProgressor progressor = null)
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
 				SelectionUtils.GetSelection(mapView.Map);
@@ -704,7 +715,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				LogUsingCurrentSelection();
 
-				AfterSelection(applicableSelection, progressor);
+				AfterSelection(mapView.Map, applicableSelection, progressor);
 			}
 			else
 			{
@@ -745,7 +756,15 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			if (! basicFeatureLayer.IsSelectable)
+			if (! layer.IsVisibleInView(MapView.Active))
+			{
+				// Takes scale range into account (and probably the parent layer too)
+				NotificationUtils.Add(notifications, $"Layer {layerName} not visible");
+				return false;
+			}
+
+			if (SelectOnlySelectableFeatures &&
+			    ! basicFeatureLayer.IsSelectable)
 			{
 				NotificationUtils.Add(notifications, $"Layer {layerName} not selectable");
 				return false;
@@ -784,7 +803,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return selectedFeatures.Any(CanSelectFeatureGeometryType);
 		}
 
-		protected bool CanUseSelection([NotNull] MapView activeMapView)
+		protected bool CanUseSelection([NotNull] MapView activeMapView) // TODO Map instead of MapView
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
 				SelectionUtils.GetSelection(activeMapView.Map);

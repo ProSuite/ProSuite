@@ -29,7 +29,6 @@ using ProSuite.Commons.UI.Input;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
-using Cursor = System.Windows.Input.Cursor;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
@@ -41,6 +40,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private ChangeAlongFeedback _feedback;
 
+		private const Key _keyPolygonDraw = Key.P;
+
 		protected ChangeGeometryAlongToolBase()
 		{
 			IsSketchTool = true;
@@ -48,6 +49,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			GeomIsSimpleAsFeature = false;
 
 			PolygonSketchCursor = ToolUtils.GetCursor(Resources.PolygonDrawerCursor);
+
+			HandledKeys.Add(_keyPolygonDraw);
 		}
 
 		protected Cursor TargetSelectionCursor { get; set; }
@@ -155,7 +158,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return base.OnEditCompletedAsyncCore(args);
 		}
 
-		protected override void AfterSelection(IList<Feature> selectedFeatures,
+		protected override void AfterSelection(Map map, IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			StartTargetSelectionPhase();
@@ -196,7 +199,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
 		{
-			if (k.Key == Key.P)
+			if (k.Key == _keyPolygonDraw)
 			{
 				SetupSketch(SketchGeometryType.Polygon);
 
@@ -206,7 +209,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		{
-			if (k.Key == Key.P)
+			if (k.Key == _keyPolygonDraw)
 			{
 				SketchType = SketchGeometryType.Rectangle;
 
@@ -543,7 +546,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected void ResetDerivedGeometries()
 		{
-			_feedback.DisposeOverlays();
+			_feedback?.DisposeOverlays();
 			ChangeAlongCurves = null;
 		}
 

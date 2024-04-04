@@ -615,19 +615,29 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				return null;
 			}
 
-			double sizeChangeMapUnits =
-				ReshapeUtils.GetAreaOrLength(updatedGeometry) -
-				_originalFeatureSize[feature];
+			var proj = updatedGeometry.SpatialReference as IProjectedCoordinateSystem;
+			//TODO: return correct sizeChangeText when SpatialReference is not projected but geographic
+			if (proj != null)
+			{
+				double sizeChangeMapUnits =
+					ReshapeUtils.GetAreaOrLength(updatedGeometry) -
+					_originalFeatureSize[feature];
 
-			string sizeChangeText = GetSizeChangeText(
-				sizeChangeMapUnits, distanceUnits,
-				mapUnits,
-				updatedGeometry);
+				string sizeChangeText = GetSizeChangeText(
+					sizeChangeMapUnits, distanceUnits,
+					mapUnits,
+					updatedGeometry);
 
-			string message = string.Format("{0} was reshaped and is now {1}",
-			                               RowFormat.Format(feature, true),
-			                               sizeChangeText);
-			return message;
+				string message = string.Format("{0} was reshaped and is now {1}",
+											   RowFormat.Format(feature, true),
+											   sizeChangeText);
+				return message;
+			}
+			else
+			{
+				string message = string.Format("{0} was reshaped", RowFormat.Format(feature, true));
+				return message;
+			}
 		}
 
 		protected void AddToRefreshArea(IEnumerable<ReshapeInfo> reshapeInfos)

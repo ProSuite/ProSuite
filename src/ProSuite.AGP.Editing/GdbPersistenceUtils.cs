@@ -30,6 +30,14 @@ namespace ProSuite.AGP.Editing
 				       description, GetDatasetsNonEmpty(updates?.Keys, copies?.Keys));
 		}
 
+		/// <summary>
+		/// BUG: GOTOP-186: Do not use this method for the time being (3.2.2). It will result in
+		/// ghost features, a corrupt display system and edit session.
+		/// </summary>
+		/// <param name="description"></param>
+		/// <param name="updates"></param>
+		/// <param name="copies"></param>
+		/// <returns></returns>
 		public static bool SaveInOperation(
 			[NotNull] string description,
 			[CanBeNull] IDictionary<Feature, Geometry> updates,
@@ -40,6 +48,14 @@ namespace ProSuite.AGP.Editing
 				GetDatasetsNonEmpty(updates?.Keys, copies?.Keys));
 		}
 
+		/// <summary>
+		/// BUG: GOTOP-186: Do not use this method for the time being (3.2.2). It will result in
+		/// ghost features, a corrupt display system and edit session.
+		/// </summary>
+		/// <param name="function"></param>
+		/// <param name="description"></param>
+		/// <param name="datasets"></param>
+		/// <returns></returns>
 		public static bool ExecuteInTransaction(
 			Func<EditOperation.IEditContext, bool> function,
 			[NotNull] string description,
@@ -164,7 +180,12 @@ namespace ProSuite.AGP.Editing
 
 				foreach (Attribute attribute in attributes)
 				{
-					if (! attribute.IsSystemField && ! attribute.IsGeometryField)
+					if (attribute.CurrentValue == null || attribute.CurrentValue == DBNull.Value)
+					{
+						continue;
+					}
+
+					if (IsEditable(attribute) && ! attribute.IsGeometryField)
 					{
 						rowBuffer[attribute.Index] = attribute.CurrentValue;
 					}
@@ -223,9 +244,9 @@ namespace ProSuite.AGP.Editing
 		{
 			foreach (ResultFeature insert in insertResults)
 			{
-				Feature originalFeatue = insert.OriginalFeature;
+				Feature originalFeature = insert.OriginalFeature;
 
-				Feature newFeature = InsertTx(editContext, originalFeatue, insert.NewGeometry);
+				Feature newFeature = InsertTx(editContext, originalFeature, insert.NewGeometry);
 
 				yield return newFeature;
 
@@ -276,6 +297,28 @@ namespace ProSuite.AGP.Editing
 
 				_msg.DebugFormat("Updated feature {0} is not editable!",
 				                 GdbObjectUtils.ToString(feature));
+				return false;
+			}
+
+			return true;
+		}
+
+		public static bool IsEditable([NotNull] Attribute attribute)
+		{
+			if (! attribute.IsEditable)
+			{
+				return false;
+			}
+
+			if (attribute.IsSystemField)
+			{
+				return false;
+			}
+
+			// Bug in Oracle: IsSystemField returns false for Shape fields!
+			if (attribute.FieldName == "SHAPE.AREA" ||
+			    attribute.FieldName == "SHAPE.LEN")
+			{
 				return false;
 			}
 

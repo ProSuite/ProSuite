@@ -68,7 +68,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 			window.Owner = ownerWindow;
 
-			if (LocationUnkown(location))
+			if (LocationUnknown(location))
 			{
 				window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 				return;
@@ -81,7 +81,7 @@ namespace ProSuite.AGP.Editing.Picker
 			window.Top = dipLocation.Y;
 		}
 
-		private static bool LocationUnkown(Point location)
+		private static bool LocationUnknown(Point location)
 		{
 			return double.IsNaN(location.X) || double.IsNaN(location.Y);
 		}

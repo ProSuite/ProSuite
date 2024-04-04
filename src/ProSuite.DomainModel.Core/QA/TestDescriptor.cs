@@ -136,12 +136,12 @@ namespace ProSuite.DomainModel.Core.QA
 		public override string TypeDisplayName => "Test Descriptor";
 
 		/// <summary>
-		/// Gets the name of the assembly which contains the test implementation.
+		/// Gets the name of the assembly which contains the implementation.
 		/// </summary>
 		/// <value>The name of the assembly.</value>
 		[CanBeNull]
-		public override string TestAssemblyName =>
-			base.TestAssemblyName ?? _testFactoryDescriptor?.AssemblyName;
+		public override string AssemblyName =>
+			Class?.AssemblyName ?? _testFactoryDescriptor?.AssemblyName;
 
 		[NotNull]
 		public static TestDescriptor CreateDisplayableTestDescriptor(

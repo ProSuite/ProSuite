@@ -13,13 +13,23 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Selection
 {
+	// Note: the Selection is a property of the map (or its layers) and has nothing to do with the MapView
+	// Therefore, pass in a Map and not a MapView
+	// Note: SelectionUtils MUST NEVER use MapView.Active
+
 	public static class SelectionUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static void ClearSelection()
 		{
-			MapView.Active?.Map.ClearSelection();
+			var map = MapView.Active?.Map;
+			map?.ClearSelection();
+		}
+
+		public static void ClearSelection(Map map)
+		{
+			map?.ClearSelection();
 		}
 
 		public static void SelectFeature(BasicFeatureLayer basicFeatureLayer,
@@ -36,11 +46,8 @@ namespace ProSuite.Commons.AGP.Selection
 		/// Selections are only performed on visible selectable layers, preferably on the first
 		/// layer or table without definition query.
 		/// </summary>
-		/// <param name="mapView"></param>
-		/// <param name="mapMemberPredicate"></param>
-		/// <param name="objectIds"></param>
 		/// <returns>The number of actually selected rows.</returns>
-		public static long SelectRows([NotNull] MapView mapView,
+		public static long SelectRows([NotNull] Map map,
 		                              [NotNull] Predicate<IDisplayTable> mapMemberPredicate,
 		                              [NotNull] IReadOnlyList<long> objectIds)
 		{
@@ -51,7 +58,7 @@ namespace ProSuite.Commons.AGP.Selection
 				     mapMemberPredicate(displayTable);
 
 			foreach (BasicFeatureLayer featureLayer in
-			         MapUtils.GetFeatureLayersForSelection(mapView, layerPredicate))
+			         MapUtils.GetFeatureLayersForSelection(map, layerPredicate))
 			{
 				totalSelected +=
 					SelectRows(featureLayer, SelectionCombinationMethod.Add, objectIds);
@@ -62,7 +69,7 @@ namespace ProSuite.Commons.AGP.Selection
 				     mapMemberPredicate(displayTable);
 
 			foreach (IDisplayTable standaloneTable in
-			         MapUtils.GetStandaloneTablesForSelection(mapView, tablePredicate))
+			         MapUtils.GetStandaloneTablesForSelection(map, tablePredicate))
 			{
 				totalSelected +=
 					SelectRows(standaloneTable, SelectionCombinationMethod.Add, objectIds);

@@ -32,9 +32,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		private static async Task OnClickCore()
 		{
-			MapView mapView = MapView.Active;
+			Map map = MapView.Active?.Map;
 
-			if (! MapUtils.HasSelection(mapView))
+			if (! MapUtils.HasSelection(map))
 			{
 				_msg.Debug("No features or rows selected");
 				return;
@@ -44,6 +44,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			List<Row> issueObjects = new List<Row>();
 
 			IEnumerable<FeatureLayer> layers = MapUtils.GetFeatureLayers<FeatureLayer>(
+				map,
 				fl => IssueGdbSchema.IssueFeatureClassNames.Contains(
 					fl.GetFeatureClass().GetName()));
 
@@ -54,6 +55,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			}
 
 			var tables = MapUtils.GetStandaloneTables(
+				map,
 				tbl => IssueGdbSchema.IssueFeatureClassNames.Contains(
 					tbl.GetTable().GetName()));
 
@@ -110,7 +112,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 					l => string.Equals(l.GetTable()?.GetName(), tableName,
 					                   StringComparison.OrdinalIgnoreCase);
 
-				long selectedCount = SelectionUtils.SelectRows(mapView, layerPredicate, objectIds);
+				long selectedCount = SelectionUtils.SelectRows(map, layerPredicate, objectIds);
 
 				if (selectedCount == 0)
 				{

@@ -123,23 +123,22 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		public IPolygon GetInterpolationDomain()
 		{
-			if (_interpolationDomain == null)
+			if (_interpolationDomain != null)
 			{
-				if (BoundaryClass != null)
-				{
-					var boundaryFeatures =
-						GdbQueryUtils.GetFeatures(BoundaryClass, false).ToList();
+				return _interpolationDomain;
+			}
 
-					_interpolationDomain = (IPolygon) GeometryUtils.UnionFeatures(boundaryFeatures);
-				}
-				else
-				{
-					_msg.Debug("Boundary feature class is null. Unioning all catalog items...");
+			if (BoundaryClass != null)
+			{
+				_interpolationDomain = UnionFeatures(BoundaryClass);
+			}
 
-					var catalogFeatures = GdbQueryUtils.GetFeatures(CatalogClass, false).ToList();
+			if (_interpolationDomain == null || _interpolationDomain.IsEmpty)
+			{
+				_msg.Debug(
+					"Boundary feature class is null or empty. Union-ing all catalog items...");
 
-					_interpolationDomain = (IPolygon) GeometryUtils.UnionFeatures(catalogFeatures);
-				}
+				_interpolationDomain = UnionFeatures(CatalogClass);
 			}
 
 			return _interpolationDomain;
@@ -314,6 +313,15 @@ namespace ProSuite.Commons.AO.Surface.Raster
 				           (CellSizeFieldName != null ? CellSizeFieldName.GetHashCode() : 0);
 				return hashCode;
 			}
+		}
+
+		#endregion
+
+		#region Overrides of Object
+
+		public override string ToString()
+		{
+			return Name;
 		}
 
 		#endregion
@@ -493,6 +501,21 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			{
 				_msg.DebugStopTiming(watch, "Determined cell size of mosaic dataset");
 			}
+		}
+
+		[NotNull]
+		private static IPolygon UnionFeatures(IFeatureClass featureClass)
+		{
+			var features =
+				GdbQueryUtils.GetFeatures(featureClass, false).ToList();
+
+			if (features.Count == 0)
+			{
+				return GeometryFactory.CreatePolygon(
+					DatasetUtils.GetSpatialReference(featureClass));
+			}
+
+			return (IPolygon) GeometryUtils.UnionFeatures(features);
 		}
 	}
 }

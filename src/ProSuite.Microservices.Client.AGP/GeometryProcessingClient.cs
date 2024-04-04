@@ -47,6 +47,9 @@ namespace ProSuite.Microservices.Client.AGP
 			[NotNull] IList<Feature> overlappingFeatures,
 			CancellationToken cancellationToken)
 		{
+			if (RemoveOverlapsClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
 			return RemoveOverlapsClientUtils.CalculateOverlaps(
 				RemoveOverlapsClient, selectedFeatures, overlappingFeatures, cancellationToken);
 		}
@@ -56,6 +59,9 @@ namespace ProSuite.Microservices.Client.AGP
 		                                           IList<Feature> overlappingFeatures,
 		                                           CancellationToken cancellationToken)
 		{
+			if (RemoveOverlapsClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
 			return RemoveOverlapsClientUtils.RemoveOverlaps(
 				RemoveOverlapsClient, selectedFeatures, overlapsToRemove, overlappingFeatures,
 				cancellationToken);
@@ -68,6 +74,9 @@ namespace ProSuite.Microservices.Client.AGP
 			bool unionFeatures,
 			CancellationToken cancellationToken)
 		{
+			if (RemoveHolesClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
 			return HoleClientUtils.CalculateHoles(
 				RemoveHolesClient, selectedFeatures, clipEnvelopes, unionFeatures,
 				cancellationToken);
@@ -79,6 +88,9 @@ namespace ProSuite.Microservices.Client.AGP
 			[NotNull] IList<Feature> targetFeatures,
 			CancellationToken cancellationToken)
 		{
+			if (ChangeAlongClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
 			return ChangeAlongClientUtils.CalculateReshapeLines(
 				ChangeAlongClient, sourceFeatures, targetFeatures, cancellationToken);
 		}
@@ -89,6 +101,9 @@ namespace ProSuite.Microservices.Client.AGP
 			[NotNull] IList<Feature> targetFeatures,
 			CancellationToken cancellationToken)
 		{
+			if (ChangeAlongClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
 			return ChangeAlongClientUtils.CalculateCutLines(
 				ChangeAlongClient, sourceFeatures, targetFeatures, cancellationToken);
 		}
@@ -105,6 +120,9 @@ namespace ProSuite.Microservices.Client.AGP
 			{
 				throw new ArgumentNullException(nameof(targetFeatures));
 			}
+
+			if (ChangeAlongClient == null)
+				throw new InvalidOperationException("No microservice available.");
 
 			return ChangeAlongClientUtils.ApplyReshapeCurves(
 				ChangeAlongClient, sourceFeatures, targetFeatures, selectedReshapeLines,
@@ -124,6 +142,9 @@ namespace ProSuite.Microservices.Client.AGP
 				throw new ArgumentNullException(nameof(targetFeatures));
 			}
 
+			if (ChangeAlongClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
 			return ChangeAlongClientUtils.ApplyCutCurves(
 				ChangeAlongClient, sourceFeatures, targetFeatures, selectedReshapeLines,
 				cancellationToken, out newChangeAlongCurves);
@@ -138,6 +159,9 @@ namespace ProSuite.Microservices.Client.AGP
 			bool tryReshapeNonDefault,
 			CancellationToken cancellationToken)
 		{
+			if (ReshapeClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
 			return AdvancedReshapeClientUtils.TryReshape(
 				ReshapeClient, selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
 				multiReshapeAsUnion, tryReshapeNonDefault, cancellationToken);
@@ -152,6 +176,9 @@ namespace ProSuite.Microservices.Client.AGP
 			bool tryReshapeNonDefault,
 			CancellationToken cancellationToken)
 		{
+			if (ReshapeClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
 			return AdvancedReshapeClientUtils.Reshape(
 				ReshapeClient, selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
 				multiReshapeAsUnion, tryReshapeNonDefault, cancellationToken);
@@ -162,6 +189,9 @@ namespace ProSuite.Microservices.Client.AGP
 			[NotNull] Polyline reshapeLine,
 			bool useNonDefaultReshapeSide)
 		{
+			if (ReshapeClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
 			return await AdvancedReshapeClientUtils.GetOpenJawReplacementPointAsync(
 				       ReshapeClient, polylineFeature, reshapeLine, useNonDefaultReshapeSide);
 		}

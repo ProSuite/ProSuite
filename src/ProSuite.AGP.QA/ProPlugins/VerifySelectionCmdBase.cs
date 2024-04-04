@@ -54,6 +54,15 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return false;
 			}
 
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				MessageBox.Show("No active map.", "Verify Extent",
+				                MessageBoxButton.OK, MessageBoxImage.Warning);
+				return false;
+			}
+
 			IQualityVerificationEnvironment qaEnvironment =
 				Assert.NotNull(SessionContext.VerificationEnvironment);
 
@@ -67,7 +76,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return false;
 			}
 
-			if (! MapUtils.HasSelection(MapView.Active))
+			if (! MapUtils.HasSelection(mapView.Map))
 			{
 				MessageBox.Show("No selected features", "Verify Selection",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -89,7 +98,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(WorkListOpener,
-				MapView.Active, currentExtent, spatialRef);
+				mapView, currentExtent, spatialRef);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel

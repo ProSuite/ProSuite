@@ -9,7 +9,6 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -33,20 +32,23 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => "OnMapSelectionChangedCore");
 
-			if (args.Selection.Count == 0)
+			var map = args.Map;
+			var selection = args.Selection;
+
+			if (selection.Count == 0)
 			{
 				ResetDerivedGeometries();
 				StartSelectionPhase();
 			}
 
 			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
-			Dictionary<MapMember, List<long>> selectionByLayer = args.Selection.ToDictionary();
+			Dictionary<MapMember, List<long>> selectionByLayer = selection.ToDictionary();
 
 			var applicableSelection = GetApplicableSelectedFeatures(selectionByLayer).ToList();
 
 			if (applicableSelection.Count > 0)
 			{
-				AfterSelection(applicableSelection, GetCancelableProgressor());
+				AfterSelection(map, applicableSelection, GetCancelableProgressor());
 			}
 
 			return true;
@@ -85,7 +87,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			return base.OnEditCompletedAsyncCore(args);
 		}
 
-		protected override void AfterSelection(IList<Feature> selectedFeatures,
+		protected override void AfterSelection(Map map,
+		                                       IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			CalculateDerivedGeometries(selectedFeatures, progressor);
@@ -166,7 +169,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract bool CanUseDerivedGeometries();
 
-		protected abstract bool SelectAndProcessDerivedGeometry(
+		protected abstract Task<bool> SelectAndProcessDerivedGeometry(
 			[NotNull] Dictionary<MapMember, List<long>> selection, [NotNull] Geometry sketch,
 			[CanBeNull] CancelableProgressor progressor);
 
