@@ -1,4 +1,5 @@
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
@@ -55,6 +56,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public override string ToString() => $"{Table.Name}; OID:{OID}";
 
 		IReadOnlyTable IReadOnlyRow.Table => Table;
+
 		public ReadOnlyTable Table { get; }
+
+		ITableData IDbRow.DbTable => Table;
+
+		object IDbRow.GetValue(int index)
+		{
+			return get_Value(index);
+		}
 	}
 }

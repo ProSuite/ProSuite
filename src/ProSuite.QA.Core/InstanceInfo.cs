@@ -10,7 +10,6 @@ namespace ProSuite.QA.Core
 	/// </summary>
 	public class InstanceInfo : InstanceInfoBase
 	{
-		private readonly Type _instanceType;
 		private readonly int _constructorId;
 
 		public InstanceInfo([NotNull] Type type, int constructorId = 0)
@@ -18,7 +17,7 @@ namespace ProSuite.QA.Core
 			Assert.ArgumentNotNull(type, nameof(type));
 			InstanceUtils.AssertConstructorExists(type, constructorId);
 
-			_instanceType = type;
+			InstanceType = type;
 			_constructorId = constructorId;
 		}
 
@@ -29,12 +28,12 @@ namespace ProSuite.QA.Core
 			Assert.ArgumentNotNull(assemblyName, nameof(assemblyName));
 			Assert.ArgumentNotNull(typeName, nameof(typeName));
 
-			_instanceType = InstanceUtils.LoadType(assemblyName, typeName, constructorId);
+			InstanceType = InstanceUtils.LoadType(assemblyName, typeName, constructorId);
 			_constructorId = constructorId;
 		}
 
 		[NotNull]
-		public override Type InstanceType => _instanceType;
+		public override Type InstanceType { get; }
 
 		public override string TestDescription =>
 			InstanceUtils.GetDescription(InstanceType, _constructorId);

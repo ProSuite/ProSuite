@@ -4,6 +4,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.AO.Test;
 using ProSuite.DomainModel.AO.QA;
@@ -17,7 +18,6 @@ using ProSuite.QA.Tests.Test.TestRunners;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
-
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
@@ -124,7 +124,7 @@ namespace ProSuite.QA.Tests.Test
 				_mosaicDatasetName);
 
 			var test = new QaSurfacePipe(
-				ReadOnlyTableFactory.Create(fc), new SimpleRasterMosaic(mosaicDataset), 4);
+				ReadOnlyTableFactory.Create(fc), new MosaicRasterReference(new SimpleRasterMosaic(mosaicDataset)), 4);
 
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute();

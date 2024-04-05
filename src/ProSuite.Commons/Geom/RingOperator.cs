@@ -178,6 +178,16 @@ namespace ProSuite.Commons.Geom
 					"Failure to calculate union. The input is likely non-simple");
 			}
 
+			if (result.GetLinestrings().All(l => l.ClockwiseOriented != true))
+			{
+				if (! _subcurveNavigator.Source.IsEmpty &&
+				    ! _subcurveNavigator.Target.IsEmpty)
+				{
+					throw new AssertionException(
+						"Non-simple result: No exterior ring or result has become empty.");
+				}
+			}
+
 			return result;
 		}
 

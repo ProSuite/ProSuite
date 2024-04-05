@@ -6,19 +6,19 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 {
 	public class FieldsMock : IFields
 	{
-		private readonly List<IField> _fields = new List<IField>();
+		internal List<IField> FieldList { get; } = new List<IField>();
 
 		public void AddFields(params IField[] fields)
 		{
 			foreach (IField field in fields)
 			{
-				_fields.Add(field);
+				FieldList.Add(field);
 			}
 		}
 
 		public int FindField(string name)
 		{
-			return _fields.FindIndex(
+			return FieldList.FindIndex(
 				field => field.Name.Equals(
 					name,
 					StringComparison.OrdinalIgnoreCase));
@@ -26,7 +26,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		public int FindFieldByAliasName(string name)
 		{
-			return _fields.FindIndex(
+			return FieldList.FindIndex(
 				field => field.AliasName.Equals(
 					name, StringComparison.OrdinalIgnoreCase));
 		}
@@ -38,11 +38,11 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		}
 #endif
 
-		public int FieldCount => _fields.Count;
+		public int FieldCount => FieldList.Count;
 
 		public IField get_Field(int index)
 		{
-			return _fields[index];
+			return FieldList[index];
 		}
 	}
 }

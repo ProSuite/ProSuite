@@ -186,6 +186,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 
 			MaintainConnectionWithOtherNetworkEdges(
 				connectedEdges, originalLocation, newLocation);
+
+			// TODO: Update coincident junctions (TOP-5858)
 		}
 
 		/// <summary>

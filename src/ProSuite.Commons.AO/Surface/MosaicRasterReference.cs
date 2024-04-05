@@ -1,14 +1,13 @@
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container;
+using ProSuite.Commons.GeoDb;
 
-namespace ProSuite.QA.Tests.Surface
+namespace ProSuite.Commons.AO.Surface
 {
-	public class MosaicRasterReference : RasterReference
+	public class MosaicRasterReference : RasterReference, IMosaicRasterDatasetDef
 	{
 		[NotNull] private readonly SimpleRasterMosaic _simpleRasterMosaic;
 
@@ -27,9 +26,12 @@ namespace ProSuite.QA.Tests.Surface
 
 		public override bool AssumeInMemory => false;
 
+		public override DatasetType DatasetType => DatasetType.RasterMosaic;
+
 		public override ISimpleSurface CreateSurface(IEnvelope extent,
 		                                             double? defaultValueForUnassignedZs = null,
-		                                             UnassignedZValueHandling? unassignedZValueHandling = null)
+		                                             UnassignedZValueHandling?
+			                                             unassignedZValueHandling = null)
 		{
 			var surface = new SimpleRasterSurface(_simpleRasterMosaic);
 

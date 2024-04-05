@@ -2,6 +2,7 @@ using System;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
@@ -46,6 +47,17 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		public bool DeleteCalled { get; private set; }
 
+		#region Implementation of IDbRow
+
+		ITableData IDbRow.DbTable => _objectClassMock;
+
+		object IDbRow.GetValue(int index)
+		{
+			return get_Value(index);
+		}
+
+		#endregion
+
 		#region IObject implementation
 
 		public void Store()
@@ -69,7 +81,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 #if Server11
 		public long OID => _oid;
 #else
-		long IReadOnlyRow.OID => _oid;
+		long IDbRow.OID => _oid;
 		public int OID => (int) _oid;
 #endif
 

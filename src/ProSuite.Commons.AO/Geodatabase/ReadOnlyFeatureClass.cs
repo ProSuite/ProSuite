@@ -1,9 +1,12 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.GeoDb;
+using ProSuite.Commons.Geom.EsriShape;
+using FieldType = ProSuite.Commons.GeoDb.FieldType;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	public class ReadOnlyFeatureClass : ReadOnlyTable, IReadOnlyFeatureClass
+	public class ReadOnlyFeatureClass : ReadOnlyTable, IReadOnlyFeatureClass, IFeatureClassData
 	{
 		protected static ReadOnlyFeatureClass CreateReadOnlyFeatureClass(IFeatureClass fc)
 		{
@@ -25,5 +28,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			return ReadOnlyFeature.Create(this, (IFeature) row);
 		}
+
+		#region Implementation of IFeatureClassSchema
+
+		ProSuiteGeometryType IFeatureClassSchemaDef.ShapeType => (ProSuiteGeometryType) ShapeType;
+
+		ITableField IFeatureClassSchemaDef.AreaField =>
+			new TableField(AreaField.Name, FieldType.Double);
+
+		ITableField IFeatureClassSchemaDef.LengthField =>
+			new TableField(LengthField.Name, FieldType.Double);
+
+		#endregion
 	}
 }

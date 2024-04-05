@@ -392,4 +392,10 @@ In the resulting feature class, only attributes defined in 'Attributes' can be u
   <data name="TrZAssign_raster" xml:space="preserve">
     <value>raster with z-Values</value>
   </data>
+  <data name="TrZAssign_rasterMosaic" xml:space="preserve">
+    <value>raster mosaic with z-Values</value>
+  </data>
+  <data name="TrZAssign_ZAssignOption" xml:space="preserve">
+    <value>whether the z-values shall be assigned to vertices within the current tile only or to all vertices (slower).</value>
+  </data>
 </root>

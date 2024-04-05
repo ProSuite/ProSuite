@@ -10,7 +10,7 @@ using ProSuite.Commons.NamedValuesExpressions;
 using ProSuite.Commons.Notifications;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.LegacyTypes;
-using FieldType = ProSuite.DomainModel.Core.DataModel.FieldType;
+using FieldType = ProSuite.Commons.GeoDb.FieldType;
 
 namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 {

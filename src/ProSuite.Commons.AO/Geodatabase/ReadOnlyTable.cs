@@ -1,15 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using FieldType = ProSuite.Commons.GeoDb.FieldType;
+using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 using ProSuite.Commons.Exceptions;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	public class ReadOnlyTable : IReadOnlyTable, ISubtypes
+	public class ReadOnlyTable : ITableData, IReadOnlyTable, ISubtypes
 	{
 		private static readonly bool _provideFailingOidInException =
 			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
@@ -226,5 +231,55 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return _oidFieldIndex;
 			}
 		}
+
+		#region Implementation of IDbDataset
+
+		private IDatasetContainer _datasetContainer;
+
+		IDatasetContainer IDatasetDef.DbContainer =>
+			_datasetContainer ??
+			(_datasetContainer = new GeoDbWorkspace(DatasetUtils.GetWorkspace(BaseTable)));
+
+		DatasetType IDatasetDef.DatasetType =>
+			((IDataset) BaseTable).Type == esriDatasetType.esriDTFeatureClass
+				? DatasetType.FeatureClass
+				: DatasetType.Table;
+
+		bool IDatasetDef.Equals(IDatasetDef otherDataset)
+		{
+			return Equals(otherDataset);
+		}
+
+		#endregion
+
+		#region Implementation of IDbTableSchema
+
+		IReadOnlyList<ITableField> ITableSchemaDef.TableFields
+		{
+			get
+			{
+				// TODO: If this is heavily used, wrap IFields in separate object.
+				return DatasetUtils.EnumFields(BaseTable.Fields)
+				                   .Select(
+					                   f => new TableField(f.Name, (FieldType) f.Type, f.Length))
+				                   .ToList();
+			}
+		}
+
+		#endregion
+
+		#region Implementation of IDbTable
+
+		IDbRow ITableData.GetRow(long oid)
+		{
+			return GetRow(oid);
+		}
+
+		IEnumerable<IDbRow> ITableData.EnumRows(ITableFilter filter, bool recycle)
+		{
+			return EnumRows(filter, recycle);
+		}
+
+		#endregion
 	}
 }

@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestContainer;
@@ -119,18 +117,18 @@ namespace ProSuite.QA.Tests
 
 		protected override void ConfigureQueryFilter(int tableIndex, ITableFilter filter)
 		{
-			if (!string.IsNullOrWhiteSpace(_constraint))
+			if (! string.IsNullOrWhiteSpace(_constraint))
 			{
 				_constraintHelper = _constraintHelper ?? CreateConstraintHelper(InvolvedTables[0],
-										InvolvedTables.First(
-											x => ((IReadOnlyFeatureClass)x).ShapeType ==
-												 esriGeometryType.esriGeometryPoint));
+					                    InvolvedTables.First(
+						                    x => ((IReadOnlyFeatureClass) x).ShapeType ==
+						                         esriGeometryType.esriGeometryPoint));
 
 				var table = InvolvedTables[tableIndex];
 				foreach (string columnName in _constraintHelper.GetInvolvedColumnNames())
 				{
 					foreach (string fieldName in
-							 ExpressionUtils.GetExpressionFieldNames(table, columnName))
+					         ExpressionUtils.GetExpressionFieldNames(table, columnName))
 					{
 						filter.AddField(fieldName);
 					}
@@ -436,8 +434,8 @@ namespace ProSuite.QA.Tests
 		                                              [NotNull] IReadOnlyTable polyTable)
 		{
 			return TableViewFactory.Create(
-				new[] {lineTable, polyTable, polyTable},
-				new[] {"B", "L", "R"},
+				new[] { lineTable, polyTable, polyTable },
+				new[] { "B", "L", "R" },
 				_constraint,
 				GetSqlCaseSensitivity(lineTable, polyTable));
 		}

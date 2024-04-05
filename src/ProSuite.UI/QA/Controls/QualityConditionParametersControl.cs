@@ -82,7 +82,7 @@ namespace ProSuite.UI.QA.Controls
 			string testAssemblyName = testDescriptor != null &&
 			                          (testDescriptor.TestClass != null ||
 			                           testDescriptor.TestFactoryDescriptor != null)
-				                          ? testDescriptor.TestAssemblyName
+				                          ? testDescriptor.AssemblyName
 				                          : null;
 
 			ITestConfigurator testConfigurator =

@@ -4,25 +4,31 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container;
+using ProSuite.Commons.GeoDb;
 
-namespace ProSuite.QA.Tests.Surface
+namespace ProSuite.Commons.AO.Surface
 {
 	public class RasterDatasetReference : RasterReference
 	{
 		[NotNull] private readonly IRasterDataset2 _rasterDataset;
 		[CanBeNull] private IRaster _fullRaster;
 
-		public RasterDatasetReference([NotNull] IRasterDataset2 rasterDataset)
+		public RasterDatasetReference([NotNull] IRasterDatasetDef rasterDatasetDef)
+		{
+			Assert.ArgumentNotNull(rasterDatasetDef, nameof(rasterDatasetDef));
+
+			_rasterDataset = (IRasterDataset2) rasterDatasetDef;
+		}
+
+		public RasterDatasetReference([NotNull] IRasterDataset rasterDataset)
 		{
 			Assert.ArgumentNotNull(rasterDataset, nameof(rasterDataset));
 
-			_rasterDataset = rasterDataset;
+			_rasterDataset = (IRasterDataset2) rasterDataset;
 		}
 
 		public override IReadOnlyDataset Dataset => new ReadOnlyDataset((IDataset) _rasterDataset);
@@ -32,13 +38,16 @@ namespace ProSuite.QA.Tests.Surface
 
 		public override double CellSize => RasterUtils.GetMeanCellSize(FullRaster);
 
+		public override DatasetType DatasetType => DatasetType.Raster;
+
 		private IRaster FullRaster =>
 			_fullRaster
 			?? (_fullRaster = _rasterDataset.CreateFullRaster());
 
 		public override ISimpleSurface CreateSurface(IEnvelope extent,
 		                                             double? defaultValueForUnassignedZs = null,
-		                                             UnassignedZValueHandling? unassignedZValueHandling = null)
+		                                             UnassignedZValueHandling?
+			                                             unassignedZValueHandling = null)
 		{
 			IDataset memoryRasterDataset;
 
@@ -61,6 +70,7 @@ namespace ProSuite.QA.Tests.Surface
 			{
 				surface.DefaultValueForUnassignedZs = defaultValueForUnassignedZs.Value;
 			}
+
 			if (unassignedZValueHandling.HasValue)
 			{
 				surface.UnassignedZValueHandling = unassignedZValueHandling.Value;
