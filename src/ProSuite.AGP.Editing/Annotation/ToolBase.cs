@@ -59,7 +59,12 @@ public abstract class ToolBase : MapTool
 
 	protected sealed override async Task<bool> OnSketchCompleteAsync(Geometry geometry)
 	{
-		return await ViewUtils.TryAsync(OnSketchCompleteCoreAsync(geometry), _msg);
+		if (MapUtils.HasSelection(ActiveMapView))
+		{
+			return await ViewUtils.TryAsync(OnConstructionSketchCompleteAsync(geometry), _msg);
+		}
+
+		return await ViewUtils.TryAsync(OnSelectionSketchCompleteAsync(geometry), _msg);
 	}
 
 	protected virtual async Task OnSelectionChangedCoreAsync(MapSelectionChangedEventArgs args)
@@ -85,7 +90,7 @@ public abstract class ToolBase : MapTool
 	/// </summary>
 	/// <param name="geometry"></param>
 	/// <returns></returns>
-	protected virtual Task<bool> OnSketchCompleteCoreAsync(Geometry geometry)
+	protected virtual Task<bool> OnSelectionSketchCompleteAsync(Geometry geometry)
 	{
 		if (geometry == null || geometry.IsEmpty)
 		{
@@ -107,6 +112,11 @@ public abstract class ToolBase : MapTool
 
 			return selectFeatures != 0;
 		});
+	}
+
+	protected virtual Task<bool> OnConstructionSketchCompleteAsync(Geometry geometry)
+	{
+		return Task.FromResult(true);
 	}
 
 	#endregion
@@ -141,10 +151,7 @@ public abstract class ToolBase : MapTool
 		return true;
 	}
 
-	protected virtual bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer basicFeatureLayer)
-	{
-		return true;
-	}
+	protected abstract bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer layer);
 
 	private bool CanSelectFromLayer([CanBeNull] BasicFeatureLayer layer,
 	                                NotificationCollection notifications = null)
@@ -208,9 +215,8 @@ public abstract class ToolBase : MapTool
 		await AfterSelectionAsync(selection, progressor);
 	}
 
-	private bool CanUseSelection(IDictionary<BasicFeatureLayer,
-		                             IList<Feature>> selectionByLayer,
-	                             NotificationCollection notifications)
+	public bool CanUseSelection(IDictionary<BasicFeatureLayer, IList<Feature>> selectionByLayer,
+	                            NotificationCollection notifications)
 	{
 		// todo daro notifications
 		int count = selectionByLayer.Values.Sum(features => features.Count);
@@ -232,33 +238,6 @@ public abstract class ToolBase : MapTool
 		IDictionary<BasicFeatureLayer, IList<Feature>> selectionByLayer)
 	{
 		return true;
-	}
-
-	private IDictionary<BasicFeatureLayer, IList<Feature>> GetApplicableSelectedFeatures(
-		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-		[CanBeNull] NotificationCollection notifications = null)
-	{
-		IDictionary<BasicFeatureLayer, IList<Feature>> result =
-			new Dictionary<BasicFeatureLayer, IList<Feature>>(selectionByLayer.Count);
-
-		SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
-
-		foreach (KeyValuePair<BasicFeatureLayer, List<long>> oidsByLayer in selectionByLayer)
-		{
-			BasicFeatureLayer layer = oidsByLayer.Key;
-			List<long> oids = oidsByLayer.Value;
-
-			if (! CanSelectFromLayer(layer, notifications))
-			{
-				continue;
-			}
-
-			var features = MapUtils.GetFeatures(layer, oids, false, mapSpatialReference).ToList();
-
-			result.Add(layer, features);
-		}
-
-		return result;
 	}
 
 	protected Task AfterSelectionAsync(
@@ -290,6 +269,59 @@ public abstract class ToolBase : MapTool
 		[CanBeNull] CancelableProgressor progressor = null) where T : BasicFeatureLayer
 	{
 		return Task.FromResult(0);
+	}
+
+	protected async Task<IDictionary<T, IList<long>>> GetApplicableSelection<T>() where T : BasicFeatureLayer
+	{
+		// todo daro move to base? with GetFeatures?
+		Dictionary<T, List<long>> selectionByLayer = await QueuedTask.Run(() => SelectionUtils.GetSelection<T>(ActiveMapView.Map));
+
+		IDictionary<T, IList<long>> result =
+			new Dictionary<T, IList<long>>(selectionByLayer.Count);
+
+		var notifications = new NotificationCollection();
+
+		foreach (KeyValuePair<T, List<long>> oidsByLayer in selectionByLayer)
+		{
+			T layer = oidsByLayer.Key;
+			List<long> oids = oidsByLayer.Value;
+
+			if (! CanSelectFromLayer(layer, notifications))
+			{
+				continue;
+			}
+
+			result.Add(layer, oids);
+		}
+
+		return result;
+	}
+
+	private IDictionary<BasicFeatureLayer, IList<Feature>> GetApplicableSelectedFeatures(
+		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+		[CanBeNull] NotificationCollection notifications = null)
+	{
+		IDictionary<BasicFeatureLayer, IList<Feature>> result =
+			new Dictionary<BasicFeatureLayer, IList<Feature>>(selectionByLayer.Count);
+
+		SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
+
+		foreach (KeyValuePair<BasicFeatureLayer, List<long>> oidsByLayer in selectionByLayer)
+		{
+			BasicFeatureLayer layer = oidsByLayer.Key;
+			List<long> oids = oidsByLayer.Value;
+
+			if (! CanSelectFromLayer(layer, notifications))
+			{
+				continue;
+			}
+
+			var features = MapUtils.GetFeatures(layer, oids, false, mapSpatialReference).ToList();
+
+			result.Add(layer, features);
+		}
+
+		return result;
 	}
 
 	#endregion
