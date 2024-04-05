@@ -409,6 +409,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (DatasetMsg datasetMsg in datasetMsgs)
 			{
+				DatasetType datasetType = (DatasetType) datasetMsg.DatasetType;
+
 				BasicDataset dataset =
 					new BasicDataset(datasetMsg.DatasetId, datasetMsg.Name, null,
 					                 datasetMsg.AliasName)
