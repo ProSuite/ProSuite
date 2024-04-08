@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
@@ -42,6 +44,30 @@ public abstract class ToolBase : MapTool
 
 	#region overrides
 
+	protected sealed override async Task OnToolActivateAsync(bool hasMapViewChanged)
+	{
+		_msg.Debug($"{Caption} activated");
+
+		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
+	}
+
+	protected sealed override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
+	{
+		_msg.Debug($"{Caption} deactivated");
+
+		await ViewUtils.TryAsync(OnToolDeactivateCoreAsync(hasMapViewChanged), _msg);
+	}
+
+	private Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
+	{
+		return Task.FromResult(0);
+	}
+
+	protected virtual Task OnToolActivateCoreAsync(bool hasMapViewChanged)
+	{
+		return Task.FromResult(0);
+	}
+
 	protected sealed override async Task OnSelectionChangedAsync(MapSelectionChangedEventArgs args)
 	{
 		await ViewUtils.TryAsync(OnSelectionChangedCoreAsync(args), _msg);
@@ -70,10 +96,6 @@ public abstract class ToolBase : MapTool
 
 			IDictionary<BasicFeatureLayer, List<long>> selection =
 				await GetApplicableSelection<BasicFeatureLayer>();
-			//IDictionary<BasicFeatureLayer, IList<Feature>> selection =
-			//	await QueuedTask.Run(() => GetApplicableSelectedFeatures(
-			//		                     SelectionUtils.GetSelection<BasicFeatureLayer>(
-			//			                     ActiveMapView.Map), notifications));
 
 			if (CanUseSelection(selection, notifications))
 			{
@@ -123,7 +145,7 @@ public abstract class ToolBase : MapTool
 	/// </summary>
 	/// <param name="geometry"></param>
 	/// <returns></returns>
-	protected virtual Task<bool> OnSelectionSketchCompleteAsync([NotNull] Geometry geometry)
+	protected virtual Task<bool> OnSelectionSketchCompleteAsync2([NotNull] Geometry geometry)
 	{
 		// Return true or false does not seem to have an effect.
 		// OnSelectionChangedAsync gets called anyway.
@@ -250,14 +272,14 @@ public abstract class ToolBase : MapTool
 		return CanUseSelectionCore(selectionByLayer, notifications);
 	}
 
-	private bool CanUseSelectionCore(
+	protected virtual bool CanUseSelectionCore(
 		IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 		NotificationCollection notifications)
 	{
 		return true;
 	}
 
-	protected Task ProcessSelectionAsync(
+	private Task ProcessSelectionAsync(
 		[NotNull] IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
 		[CanBeNull] CancelableProgressor progressor = null)
 	{
