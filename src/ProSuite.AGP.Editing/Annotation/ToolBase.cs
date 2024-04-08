@@ -66,7 +66,20 @@ public abstract class ToolBase : MapTool
 
 		if (MapUtils.HasSelection(ActiveMapView))
 		{
-			return await ViewUtils.TryAsync(OnConstructionSketchCompleteAsync(geometry), _msg);
+			var notifications = new NotificationCollection();
+
+			IDictionary<BasicFeatureLayer, List<long>> selection =
+				await GetApplicableSelection<BasicFeatureLayer>();
+			//IDictionary<BasicFeatureLayer, IList<Feature>> selection =
+			//	await QueuedTask.Run(() => GetApplicableSelectedFeatures(
+			//		                     SelectionUtils.GetSelection<BasicFeatureLayer>(
+			//			                     ActiveMapView.Map), notifications));
+
+			if (CanUseSelection(selection, notifications))
+			{
+				return await ViewUtils.TryAsync(
+					       OnConstructionSketchCompleteAsync(geometry, selection), _msg);
+			}
 		}
 
 		return await ViewUtils.TryAsync(OnSelectionSketchCompleteAsync(geometry), _msg);
@@ -78,12 +91,26 @@ public abstract class ToolBase : MapTool
 		if (! MapUtils.HasSelection(ActiveMapView.Map))
 		{
 			ResetSketchAppearance();
-
 			await ClearSketchAsync();
 			return;
 		}
 
-		await ProcessSelectionAsync(SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection));
+		Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+			SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
+
+		var notifications = new NotificationCollection();
+
+		if (! CanUseSelection(selectionByLayer, notifications))
+		{
+			ResetSketchAppearance();
+			await ClearSketchAsync();
+			return;
+		}
+
+		IDictionary<BasicFeatureLayer, List<Feature>> selection =
+			GetApplicableSelectedFeatures(selectionByLayer, notifications);
+
+		await ProcessSelectionAsync(selection);
 	}
 
 	protected virtual Task<bool> OnSketchModifiedCoreAsync()
@@ -115,7 +142,8 @@ public abstract class ToolBase : MapTool
 		});
 	}
 
-	protected virtual Task<bool> OnConstructionSketchCompleteAsync([NotNull] Geometry geometry)
+	protected virtual Task<bool> OnConstructionSketchCompleteAsync([NotNull] Geometry geometry,
+		IDictionary<BasicFeatureLayer, List<long>> selectionByLayer)
 	{
 		return Task.FromResult(true);
 	}
@@ -199,25 +227,8 @@ public abstract class ToolBase : MapTool
 
 	#region process selection
 
-	private async Task ProcessSelectionAsync(
-		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-		[CanBeNull] CancelableProgressor progressor = null)
-	{
-		var notifications = new NotificationCollection();
-
-		IDictionary<BasicFeatureLayer, IList<Feature>> selection =
-			GetApplicableSelectedFeatures(selectionByLayer, notifications);
-
-		if (! CanUseSelection(selection, notifications))
-		{
-			return;
-		}
-
-		await AfterSelectionAsync(selection, progressor);
-	}
-
 	protected bool CanUseSelection(
-		[NotNull] IDictionary<BasicFeatureLayer, IList<Feature>> selectionByLayer,
+		[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 		[NotNull] NotificationCollection notifications)
 	{
 		int count = selectionByLayer.Values.Sum(features => features.Count);
@@ -231,22 +242,23 @@ public abstract class ToolBase : MapTool
 
 		if (count > 1 && ! AllowMultiSelection)
 		{
-			_msg.Debug($"Cannot use selection: multi selection is not allowed and selection count is {count}");
+			_msg.Debug(
+				$"Cannot use selection: multi selection is not allowed and selection count is {count}");
 			return false;
 		}
 
 		return CanUseSelectionCore(selectionByLayer, notifications);
 	}
 
-	protected virtual bool CanUseSelectionCore(
-		[NotNull] IDictionary<BasicFeatureLayer, IList<Feature>> selectionByLayer,
-		[NotNull] NotificationCollection notificationCollection)
+	private bool CanUseSelectionCore(
+		IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+		NotificationCollection notifications)
 	{
 		return true;
 	}
 
-	protected Task AfterSelectionAsync(
-		[NotNull] IDictionary<BasicFeatureLayer, IList<Feature>> featuresByLayer,
+	protected Task ProcessSelectionAsync(
+		[NotNull] IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
 		[CanBeNull] CancelableProgressor progressor = null)
 	{
 		if (! AllowMultiSelection)
@@ -259,24 +271,24 @@ public abstract class ToolBase : MapTool
 			}
 		}
 
-		return AfterSelectionCoreAsync(featuresByLayer, progressor);
+		return ProcessSelectionCoreAsync(featuresByLayer, progressor);
 	}
 
-	protected virtual Task AfterSelectionCoreAsync(
-		[NotNull] IDictionary<BasicFeatureLayer, IList<Feature>> featuresByLayer,
+	protected virtual Task ProcessSelectionCoreAsync(
+		[NotNull] IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
 		[CanBeNull] CancelableProgressor progressor = null)
 	{
 		return Task.FromResult(0);
 	}
 
-	protected async Task<IDictionary<T, IList<long>>> GetApplicableSelection<T>()
+	protected async Task<IDictionary<T, List<long>>> GetApplicableSelection<T>()
 		where T : BasicFeatureLayer
 	{
 		Dictionary<T, List<long>> selectionByLayer =
 			await QueuedTask.Run(() => SelectionUtils.GetSelection<T>(ActiveMapView.Map));
 
-		IDictionary<T, IList<long>> result =
-			new Dictionary<T, IList<long>>(selectionByLayer.Count);
+		IDictionary<T, List<long>> result =
+			new Dictionary<T, List<long>>(selectionByLayer.Count);
 
 		var notifications = new NotificationCollection();
 
@@ -297,12 +309,11 @@ public abstract class ToolBase : MapTool
 	}
 
 	[NotNull]
-	private IDictionary<BasicFeatureLayer, IList<Feature>> GetApplicableSelectedFeatures(
+	private IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
 		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 		[CanBeNull] NotificationCollection notifications = null)
 	{
-		IDictionary<BasicFeatureLayer, IList<Feature>> result =
-			new Dictionary<BasicFeatureLayer, IList<Feature>>(selectionByLayer.Count);
+		var result = new Dictionary<BasicFeatureLayer, List<Feature>>(selectionByLayer.Count);
 
 		SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
 
@@ -363,7 +374,7 @@ public abstract class ToolBase : MapTool
 			default:
 				throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
 		}
-		
+
 		CIMSymbol symbol = layer.LookupSymbol(oid, ActiveMapView);
 
 		if (symbol == null)
