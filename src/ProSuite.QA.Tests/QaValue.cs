@@ -54,6 +54,11 @@ namespace ProSuite.QA.Tests
 			_fieldInfos = GetFieldInfos(table, GetFieldNames(table, fields));
 		}
 
+		[InternallyUsedTest]
+		public QaValue([NotNull] QaValueDefinition definition)
+			: this((IReadOnlyTable)definition.Table, definition.Fields)
+		{ }
+
 		[NotNull]
 		private static List<string> GetFieldNames(
 			[NotNull] IReadOnlyTable table,

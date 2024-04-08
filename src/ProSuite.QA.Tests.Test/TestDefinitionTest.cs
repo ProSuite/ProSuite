@@ -97,7 +97,8 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(Qa3dConstantZ),
 				                             typeof(QaConstraint),
 				                             typeof(QaSimpleGeometry),
-				                             typeof(QaSurfacePipe)
+				                             typeof(QaSurfacePipe),
+											 typeof(QaValue),
 			                             };
 
 			foreach (Type testType in refactoredTypes)
@@ -255,7 +256,7 @@ namespace ProSuite.QA.Tests.Test
 			switch (testParameterType)
 			{
 				case TestParameterType.String:
-					return "string";
+					return "OBJECTID";
 
 				case TestParameterType.Integer:
 					return "1";
