@@ -44,7 +44,6 @@ public abstract class ToolBase : MapTool
 
 	protected sealed override async Task OnSelectionChangedAsync(MapSelectionChangedEventArgs args)
 	{
-		// todo daro: is this the right place? _msg is of ToolBase.
 		await ViewUtils.TryAsync(OnSelectionChangedCoreAsync(args), _msg);
 	}
 
@@ -59,6 +58,12 @@ public abstract class ToolBase : MapTool
 
 	protected sealed override async Task<bool> OnSketchCompleteAsync(Geometry geometry)
 	{
+		if (geometry == null || geometry.IsEmpty)
+		{
+			_msg.Debug("Sketch is null or empty");
+			return await Task.FromResult(false);
+		}
+
 		if (MapUtils.HasSelection(ActiveMapView))
 		{
 			return await ViewUtils.TryAsync(OnConstructionSketchCompleteAsync(geometry), _msg);
@@ -67,7 +72,8 @@ public abstract class ToolBase : MapTool
 		return await ViewUtils.TryAsync(OnSelectionSketchCompleteAsync(geometry), _msg);
 	}
 
-	protected virtual async Task OnSelectionChangedCoreAsync(MapSelectionChangedEventArgs args)
+	protected virtual async Task OnSelectionChangedCoreAsync(
+		[NotNull] MapSelectionChangedEventArgs args)
 	{
 		if (! MapUtils.HasSelection(ActiveMapView.Map))
 		{
@@ -90,13 +96,8 @@ public abstract class ToolBase : MapTool
 	/// </summary>
 	/// <param name="geometry"></param>
 	/// <returns></returns>
-	protected virtual Task<bool> OnSelectionSketchCompleteAsync(Geometry geometry)
+	protected virtual Task<bool> OnSelectionSketchCompleteAsync([NotNull] Geometry geometry)
 	{
-		if (geometry == null || geometry.IsEmpty)
-		{
-			return Task.FromResult(false);
-		}
-
 		// Return true or false does not seem to have an effect.
 		// OnSelectionChangedAsync gets called anyway.
 
@@ -114,7 +115,7 @@ public abstract class ToolBase : MapTool
 		});
 	}
 
-	protected virtual Task<bool> OnConstructionSketchCompleteAsync(Geometry geometry)
+	protected virtual Task<bool> OnConstructionSketchCompleteAsync([NotNull] Geometry geometry)
 	{
 		return Task.FromResult(true);
 	}
@@ -124,7 +125,7 @@ public abstract class ToolBase : MapTool
 	#region base
 
 	private IEnumerable<FeatureSelectionBase> FindFeatureSelection(
-		Geometry geometry,
+		[NotNull] Geometry geometry,
 		SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
 	{
 		var featureFinder = new FeatureFinder(ActiveMapView)
@@ -199,7 +200,7 @@ public abstract class ToolBase : MapTool
 	#region process selection
 
 	private async Task ProcessSelectionAsync(
-		Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 		[CanBeNull] CancelableProgressor progressor = null)
 	{
 		var notifications = new NotificationCollection();
@@ -215,33 +216,37 @@ public abstract class ToolBase : MapTool
 		await AfterSelectionAsync(selection, progressor);
 	}
 
-	public bool CanUseSelection(IDictionary<BasicFeatureLayer, IList<Feature>> selectionByLayer,
-	                            NotificationCollection notifications)
+	protected bool CanUseSelection(
+		[NotNull] IDictionary<BasicFeatureLayer, IList<Feature>> selectionByLayer,
+		[NotNull] NotificationCollection notifications)
 	{
-		// todo daro notifications
 		int count = selectionByLayer.Values.Sum(features => features.Count);
 
 		if (count == 0 && ! AllowNoSelection)
 		{
+			_msg.Debug(
+				$"Cannot use selection: tool has to have a selection and selection count is {count}");
 			return false;
 		}
 
 		if (count > 1 && ! AllowMultiSelection)
 		{
+			_msg.Debug($"Cannot use selection: multi selection is not allowed and selection count is {count}");
 			return false;
 		}
 
-		return CanUseSelectionCore(selectionByLayer);
+		return CanUseSelectionCore(selectionByLayer, notifications);
 	}
 
 	protected virtual bool CanUseSelectionCore(
-		IDictionary<BasicFeatureLayer, IList<Feature>> selectionByLayer)
+		[NotNull] IDictionary<BasicFeatureLayer, IList<Feature>> selectionByLayer,
+		[NotNull] NotificationCollection notificationCollection)
 	{
 		return true;
 	}
 
 	protected Task AfterSelectionAsync(
-		IDictionary<BasicFeatureLayer, IList<Feature>> featuresByLayer,
+		[NotNull] IDictionary<BasicFeatureLayer, IList<Feature>> featuresByLayer,
 		[CanBeNull] CancelableProgressor progressor = null)
 	{
 		if (! AllowMultiSelection)
@@ -258,23 +263,17 @@ public abstract class ToolBase : MapTool
 	}
 
 	protected virtual Task AfterSelectionCoreAsync(
-		IDictionary<BasicFeatureLayer, IList<Feature>> featuresByLayer,
+		[NotNull] IDictionary<BasicFeatureLayer, IList<Feature>> featuresByLayer,
 		[CanBeNull] CancelableProgressor progressor = null)
 	{
 		return Task.FromResult(0);
 	}
 
-	protected virtual Task AfterSelectionCoreAsync<T>(
-		IDictionary<T, IEnumerable<Feature>> featuresByLayer,
-		[CanBeNull] CancelableProgressor progressor = null) where T : BasicFeatureLayer
+	protected async Task<IDictionary<T, IList<long>>> GetApplicableSelection<T>()
+		where T : BasicFeatureLayer
 	{
-		return Task.FromResult(0);
-	}
-
-	protected async Task<IDictionary<T, IList<long>>> GetApplicableSelection<T>() where T : BasicFeatureLayer
-	{
-		// todo daro move to base? with GetFeatures?
-		Dictionary<T, List<long>> selectionByLayer = await QueuedTask.Run(() => SelectionUtils.GetSelection<T>(ActiveMapView.Map));
+		Dictionary<T, List<long>> selectionByLayer =
+			await QueuedTask.Run(() => SelectionUtils.GetSelection<T>(ActiveMapView.Map));
 
 		IDictionary<T, IList<long>> result =
 			new Dictionary<T, IList<long>>(selectionByLayer.Count);
@@ -297,6 +296,7 @@ public abstract class ToolBase : MapTool
 		return result;
 	}
 
+	[NotNull]
 	private IDictionary<BasicFeatureLayer, IList<Feature>> GetApplicableSelectedFeatures(
 		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 		[CanBeNull] NotificationCollection notifications = null)
@@ -341,8 +341,8 @@ public abstract class ToolBase : MapTool
 		}
 
 		GeometryType geometryType = feature.GetShape().GeometryType;
-
 		long oid = feature.GetObjectID();
+
 		switch (geometryType)
 		{
 			case GeometryType.Point:
@@ -359,22 +359,26 @@ public abstract class ToolBase : MapTool
 			case GeometryType.Multipoint:
 			case GeometryType.Multipatch:
 			case GeometryType.GeometryBag:
-				// todo daro
-				_msg.Debug($"");
 				break;
 			default:
 				throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
 		}
-
-		// todo daro inline
+		
 		CIMSymbol symbol = layer.LookupSymbol(oid, ActiveMapView);
-		SketchSymbol = symbol.MakeSymbolReference();
+
+		if (symbol == null)
+		{
+			_msg.Debug(
+				$"Cannot set sketch symbol: no symbol found in layer {layer.Name} for oid {oid}.");
+		}
+		else
+		{
+			SketchSymbol = symbol.MakeSymbolReference();
+		}
 
 		UpdateSketchAppearanceCore(layer, feature);
 	}
 
-	protected virtual void UpdateSketchAppearanceCore(FeatureLayer layer, Feature feature)
-	{
-		
-	}
+	protected virtual void UpdateSketchAppearanceCore([NotNull] FeatureLayer layer,
+	                                                  [NotNull] Feature feature) { }
 }
