@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -116,6 +117,22 @@ namespace ProSuite.QA.Tests
 			_zComparisonMethod = zComparisonMethod;
 			_zRelationConstraint = zRelationConstraint;
 			AddCustomQueryFilterExpression(zRelationConstraint);
+		}
+
+		[InternallyUsedTest]
+		public QaZDifferenceOther([NotNull] QaZDifferenceOtherDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.RelatedClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.MinimumZDifference, definition.MaximumZDifference,
+			       definition.ZComparisonMethod, definition.ZRelationConstraint)
+		{
+			RelevantRelationCondition = definition.RelevantRelationCondition;
+			MinimumZDifferenceExpression = definition.MinimumZDifferenceExpression;
+			MaximumZDifferenceExpression = definition.MaximumZDifferenceExpression;
+			UseDistanceFromReferenceRingPlane = definition.UseDistanceFromReferenceRingPlane;
+			ReferenceRingPlaneCoplanarityTolerance =
+				definition.ReferenceRingPlaneCoplanarityTolerance;
+			IgnoreNonCoplanarReferenceRings = definition.IgnoreNonCoplanarReferenceRings;
 		}
 
 		[TestParameter]

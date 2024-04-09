@@ -15,13 +15,11 @@ namespace ProSuite.QA.Tests
 	[TopologyTest]
 	public class QaZDifferenceSelfDefinition : AlgorithmDefinition
 	{
-		public double Limit { get; }
 		public double MinimumZDifference { get; }
 		public double MaximumZDifference { get; }
 		public ZComparisonMethod ZComparisonMethod { get; }
 		public string ZRelationConstraint { get; }
-		public IFeatureClassSchemaDef FeatureClass { get; set; }
-		public IList<IFeatureClassSchemaDef> FeatureClasses { get; set; }
+		public IList<IFeatureClassSchemaDef> FeatureClasses { get; }
 
 		[Doc(nameof(DocStrings.QaZDifferenceSelf_0))]
 		public QaZDifferenceSelfDefinition(
@@ -78,8 +76,6 @@ namespace ProSuite.QA.Tests
 			string zRelationConstraint)
 			: base(featureClasses)
 		{
-			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));
-
 			FeatureClasses = featureClasses;
 			MinimumZDifference = minimumZDifference;
 			MaximumZDifference = maximumZDifference;
