@@ -7,6 +7,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 {
 	public interface IRasterProvider : IDisposable
 	{
+		[NotNull]
 		IPolygon GetInterpolationDomain();
 
 		[CanBeNull]

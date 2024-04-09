@@ -240,6 +240,18 @@ namespace ProSuite.Commons.Test.Text
 		}
 
 		[Test]
+		public void CanJoinWithMaxLength()
+		{
+			var values = new[] { 1, 2, 3, 4, 5, 6 };
+			Assert.AreEqual("1,2,3,4,...", StringUtils.Join(",", values, 8));
+			Assert.AreEqual("1,2,3,4,...", StringUtils.Join(",", values, 7));
+			Assert.AreEqual("123456", StringUtils.Join(null, values, 999));
+			Assert.AreEqual("1 2 3 4 etc.", StringUtils.Join(" ", values, 8, "etc."));
+			Assert.AreEqual(string.Empty, StringUtils.Join(",", (int[]) null, 8));
+			Assert.AreEqual(string.Empty, StringUtils.Join(null, values, 0));
+		}
+
+		[Test]
 		public void CanReverse()
 		{
 			var sb = new StringBuilder();
@@ -371,15 +383,14 @@ namespace ProSuite.Commons.Test.Text
 						                      input, CultureInfo.GetCultureInfo(culture))
 					                      : StringUtils.FormatPreservingDecimalPlaces(
 						                      input, CultureInfo.GetCultureInfo(culture));
-#if NET6_0_OR_GREATER
+
+				// Note regarding .DOT NET 6:
 				// Extra digits were added to improve 'round-trippability', i.e. parsing the formatted string
 				// returning to the same number.
 				// See https://devblogs.microsoft.com/dotnet/floating-point-parsing-and-formatting-improvements-in-net-core-3-0/
 
-				Assert.IsTrue(formatResult.StartsWith(expected));
-#else
 				Assert.AreEqual(expected, formatResult);
-#endif
+
 			}
 		}
 	}

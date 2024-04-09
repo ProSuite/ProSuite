@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -48,12 +49,30 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static string GetDisplayValue(Row row, string className)
 		{
+			string subtypeName = null;
+
+			Subtype subtype = GetSubtype(row);
+			if (subtype != null)
+			{
+				subtypeName = subtype.GetName();
+			}
+
+			return string.IsNullOrEmpty(subtypeName)
+				       ? $"{className} ID: {row.GetObjectID()}"
+				       : $"{className} ({subtypeName}) ID: {row.GetObjectID()}";
+		}
+
+		[CanBeNull]
+		public static int? GetSubtypeCode([NotNull] Row row)
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
 			var classDefinition = row.GetTable().GetDefinition();
 
-			string subtypeField = null;
+			string subtypeFieldName = null;
 			try
 			{
-				subtypeField = classDefinition.GetSubtypeField();
+				subtypeFieldName = classDefinition.GetSubtypeField();
 			}
 			catch (NotSupportedException notSupportedException)
 			{
@@ -61,22 +80,55 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				_msg.Debug("Subtypes not supported", notSupportedException);
 			}
 
-			string subtypeName = null;
-			if (! string.IsNullOrEmpty(subtypeField))
+			if (! string.IsNullOrEmpty(subtypeFieldName))
 			{
-				int? subtypeCode = row[subtypeField] as int?;
-				Subtype subtype = classDefinition.GetSubtypes()
-				                                 .FirstOrDefault(st => st.GetCode() == subtypeCode);
-
-				if (subtype != null)
-				{
-					subtypeName = subtype.GetName();
-				}
+				int subtypeFieldIndex = row.FindField(subtypeFieldName);
+				return GetSubtypeCode(row, subtypeFieldIndex);
 			}
 
-			return string.IsNullOrEmpty(subtypeName)
-				       ? $"{className} ID: {row.GetObjectID()}"
-				       : $"{className} ({subtypeName}) ID: {row.GetObjectID()}";
+			return null;
+		}
+
+		public static int? GetSubtypeCode([NotNull] Row row, int subtypeFieldIndex)
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
+			if (subtypeFieldIndex < 0)
+			{
+				return null;
+			}
+
+			object code = row[subtypeFieldIndex];
+
+			return code == null || code == DBNull.Value
+				       ? (int?) null
+				       : Convert.ToInt32(code);
+		}
+
+		[CanBeNull]
+		public static Subtype GetSubtype([NotNull] Row row)
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
+			int? subtypeCode = GetSubtypeCode(row);
+			if (! subtypeCode.HasValue)
+			{
+				return null;
+			}
+
+			Subtype subtype = null;
+			try
+			{
+				subtype = row.GetTable().GetDefinition().GetSubtypes()
+				             ?.FirstOrDefault(st => st.GetCode() == subtypeCode.Value);
+			}
+			catch (NotSupportedException notSupportedException)
+			{
+				// Shapefiles throw a NotSupportedException
+				_msg.Debug("Subtypes not supported", notSupportedException);
+			}
+
+			return subtype;
 		}
 
 		[NotNull]

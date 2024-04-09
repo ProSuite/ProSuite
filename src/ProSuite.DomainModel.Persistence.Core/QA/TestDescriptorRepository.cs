@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using NHibernate;
-using NHibernate.Criterion;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Orm.NHibernate;
@@ -52,30 +51,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			using (ISession session = OpenSession(true))
 			{
-				ICriteria criteria = session.CreateCriteria(typeof(TestDescriptor));
-
-				if (testDescriptor.TestClass != null)
-				{
-					criteria.Add(Restrictions.And(
-						             Restrictions.Eq("Class", testDescriptor.TestClass),
-						             Restrictions.Eq("ConstructorId",
-						                             testDescriptor.TestConstructorId)));
-				}
-				else if (testDescriptor.TestFactoryDescriptor != null)
-				{
-					criteria.Add(
-						Restrictions.Eq("TestFactoryDescriptor",
-						                testDescriptor.TestFactoryDescriptor));
-				}
-				else
-				{
-					// both null
-					throw new ArgumentException(
-						@"Both test class and test factory descriptor are null",
-						nameof(testDescriptor));
-				}
-
-				return criteria.UniqueResult<TestDescriptor>();
+				return QualityRepositoryUtils.GetDescriptorWithSameImplementation(
+					session, testDescriptor);
 			}
 		}
 

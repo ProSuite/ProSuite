@@ -111,6 +111,17 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		public static CIMFeatureLayer GetUniqueCIMFeatureLayer(LayerDocument layerDocument)
+		{
+			if (layerDocument is null) return null;
+
+			CIMLayerDocument cim = layerDocument.GetCIMLayerDocument();
+			var definitions = cim?.LayerDefinitions;
+			if (definitions is null || definitions.Length != 1) return null;
+
+			return definitions.First() as CIMFeatureLayer;
+		}
+
 		/// <remarks>
 		/// A layer document (.lyrx file) can contain one or more layer definitions!
 		/// </remarks>
@@ -218,6 +229,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 			if (layer.Parent is Layer parentLayer)
 			{
+				// ReSharper disable once TailRecursiveCall
 				return IsVisible(parentLayer);
 			}
 

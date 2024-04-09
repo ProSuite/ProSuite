@@ -22,6 +22,16 @@ namespace ProSuite.Commons.UI.Input
 			};
 
 		/// <summary>
+		/// Check whether the specified key is a modifier key,
+		/// </summary>
+		/// <param name="key"></param>
+		/// <returns></returns>
+		public static bool IsModifierKey(Key key)
+		{
+			return _modifierKeys.Contains(key);
+		}
+
+		/// <summary>
 		/// Check whether modifier key is down
 		/// </summary>
 		/// <param name="key">The modifier key</param>

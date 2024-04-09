@@ -13,8 +13,48 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DomainModel.Persistence.Core.QA
 {
-	internal static class DatasetParameterFetchingUtils
+	internal static class QualityRepositoryUtils
 	{
+		public static TestDescriptor GetDescriptorWithSameImplementation(
+			[NotNull] ISession session,
+			[NotNull] TestDescriptor testDescriptor)
+		{
+			ICriteria criteria = session.CreateCriteria(typeof(TestDescriptor));
+
+			if (testDescriptor.TestClass != null)
+			{
+				criteria.Add(Restrictions.And(
+					             Restrictions.Eq("TestClass", testDescriptor.TestClass),
+					             Restrictions.Eq("ConstructorId",
+					                             testDescriptor.TestConstructorId)));
+			}
+			else if (testDescriptor.TestFactoryDescriptor != null)
+			{
+				criteria.Add(
+					Restrictions.Eq("TestFactoryDescriptor",
+					                testDescriptor.TestFactoryDescriptor));
+			}
+			else
+			{
+				// both null
+				throw new ArgumentException(
+					@"Both test class and test factory descriptor are null",
+					nameof(testDescriptor));
+			}
+
+			return criteria.UniqueResult<TestDescriptor>();
+		}
+
+		public static InstanceDescriptor GetWithSameImplementation<T>(
+			[NotNull] ISession session,
+			[NotNull] T descriptor) where T : InstanceDescriptor
+		{
+			return session.QueryOver<TransformerDescriptor>()
+			              .Where(i => i.Class == descriptor.Class &&
+			                          i.ConstructorId == descriptor.ConstructorId)
+			              .SingleOrDefault();
+		}
+
 		[NotNull]
 		public static IList<int> GetDeletedDatasetParameterIds([NotNull] ISession session)
 		{
@@ -393,16 +433,15 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			// NOTE: Do not restrict to only dataset parameter type, otherwise the scalar
 			// parameters will be null in the ParameterValues list. However, the performance
 			// would increase considerably by just loading the dataset test parameter values.
-			IQueryOver<QualityCondition>
-				parametersQuery =
-					session.QueryOver(() => qualityConditionAlias)
-					       .Fetch(SelectMode.FetchLazyProperties,
-					              () => qualityConditionAlias.ParameterValues)
-					       .JoinQueryOver(qc => qc.ParameterValues, () => testParamAlias)
-					       .Fetch(SelectMode.FetchLazyProperties,
-					              () => testParamAlias.ValueSource.ParameterValues)
-					       .Where(() => qualityConditionAlias.Id.IsIn(conditionIds))
-					       .TransformUsing(Transformers.DistinctRootEntity);
+			IQueryOver<QualityCondition> parametersQuery =
+				session.QueryOver(() => qualityConditionAlias)
+				       .Fetch(SelectMode.FetchLazyProperties,
+				              () => qualityConditionAlias.ParameterValues)
+				       .JoinQueryOver(qc => qc.ParameterValues, () => testParamAlias)
+				       .Fetch(SelectMode.FetchLazyProperties,
+				              () => testParamAlias.ValueSource.ParameterValues)
+				       .Where(() => qualityConditionAlias.Id.IsIn(conditionIds))
+				       .TransformUsing(Transformers.DistinctRootEntity);
 
 			if (includeReferencesViaIssueFilters)
 			{
@@ -451,16 +490,15 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 		{
 			TransformerConfiguration transformerConfigAlias = null;
 			TestParameterValue testParamAlias = null;
-			IQueryOver<TransformerConfiguration>
-				transformersQuery =
-					session.QueryOver(() => transformerConfigAlias)
-					       .Fetch(SelectMode.FetchLazyProperties,
-					              () => transformerConfigAlias.ParameterValues)
-					       .JoinQueryOver(tc => tc.ParameterValues, () => testParamAlias)
-					       .Fetch(SelectMode.FetchLazyProperties,
-					              () => testParamAlias.ValueSource.ParameterValues)
-					       .Where(() => transformerConfigAlias.Id.IsIn(
-						              forTransformerIds.ToArray()));
+			IQueryOver<TransformerConfiguration> transformersQuery =
+				session.QueryOver(() => transformerConfigAlias)
+				       .Fetch(SelectMode.FetchLazyProperties,
+				              () => transformerConfigAlias.ParameterValues)
+				       .JoinQueryOver(tc => tc.ParameterValues, () => testParamAlias)
+				       .Fetch(SelectMode.FetchLazyProperties,
+				              () => testParamAlias.ValueSource.ParameterValues)
+				       .Where(() => transformerConfigAlias.Id.IsIn(
+					              forTransformerIds.ToArray()));
 
 			IEnumerable<InstanceConfiguration> resultList =
 				transformersQuery.List<TransformerConfiguration>();

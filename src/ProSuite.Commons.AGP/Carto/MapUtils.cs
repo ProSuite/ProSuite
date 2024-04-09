@@ -7,7 +7,6 @@ using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -19,6 +18,8 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Carto
 {
+	// Note: MapUtils MUST NEVER use MapView.Active (always pass a Map instance as (the first) argument)
+
 	public static class MapUtils
 	{
 		/// <summary>
@@ -159,29 +160,6 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		public static IEnumerable<T> GetLayers<T>([CanBeNull] Predicate<T> layerPredicate,
-		                                          [CanBeNull] MapView mapView = null)
-			where T : Layer
-		{
-			if (mapView == null)
-			{
-				// Only take the active map if no other map has been provided.
-				mapView = MapView.Active;
-			}
-
-			if (mapView == null)
-			{
-				yield break;
-			}
-
-			Map map = mapView.Map;
-
-			foreach (T resultLayer in GetLayers(map, layerPredicate))
-			{
-				yield return resultLayer;
-			}
-		}
-
 		public static IEnumerable<T> GetLayers<T>([NotNull] Map map,
 		                                          [CanBeNull] Predicate<T> layerPredicate)
 			where T : Layer
@@ -209,13 +187,8 @@ namespace ProSuite.Commons.AGP.Carto
 		/// excludes the specified OIDs. These layers ca be used for flashing or zooming to the
 		/// respective features.
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="mapView"></param>
-		/// <param name="layerPredicate"></param>
-		/// <param name="objectIds"></param>
-		/// <returns></returns>
 		public static IEnumerable<T> GetFeatureLayersContainingOids<T>(
-			[NotNull] MapView mapView,
+			[NotNull] Map map,
 			[NotNull] Predicate<T> layerPredicate,
 			IReadOnlyList<long> objectIds) where T : BasicFeatureLayer
 		{
@@ -224,7 +197,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 			var filteredLayers = new List<T>();
 
-			foreach (T featureLayer in GetFeatureLayers(layerPredicate, mapView))
+			foreach (T featureLayer in GetFeatureLayers(map, layerPredicate))
 			{
 				if (string.IsNullOrWhiteSpace(featureLayer.DefinitionQuery))
 				{
@@ -260,34 +233,29 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public static IEnumerable<IDisplayTable> GetFeatureLayersForSelection<T>(
-			[CanBeNull] FeatureClass featureClass,
-			[CanBeNull] MapView mapView = null) where T : BasicFeatureLayer
+			[NotNull] Map map,
+			[CanBeNull] FeatureClass featureClass) where T : BasicFeatureLayer
 		{
 			// TODO: WorkspaceEquality.SameVersion
 			Predicate<T> sameTablePredicate =
 				l => DatasetUtils.IsSameTable(l.GetFeatureClass(), featureClass);
 
-			mapView ??= MapView.Active;
-
-			return GetFeatureLayersForSelection(mapView, sameTablePredicate);
+			return GetFeatureLayersForSelection(map, sameTablePredicate);
 		}
 
 		/// <summary>
 		/// Gets the first visible, selectable feature layer without definition query.
 		/// If all visible, selectable layers have a definition query, all layers are yielded.
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="mapView"></param>
-		/// <param name="layerPredicate">The layer predicate</param>
-		/// <returns></returns>
 		public static IEnumerable<T> GetFeatureLayersForSelection<T>(
-			[NotNull] MapView mapView,
+			[NotNull] Map map,
 			[NotNull] Predicate<T> layerPredicate) where T : BasicFeatureLayer
 		{
 			var filteredVisibleSelectableLayers = new List<T>();
 
 			foreach (T featureLayer in GetFeatureLayers<T>(
-				         l => LayerUtils.IsVisible(l) && l.IsSelectable, mapView))
+				         map,
+				         l => LayerUtils.IsVisible(l) && l.IsSelectable))
 			{
 				if (! layerPredicate(featureLayer))
 				{
@@ -313,17 +281,14 @@ namespace ProSuite.Commons.AGP.Carto
 		/// Gets the first selectable stand-alone table without definition query.
 		/// If all selectable stand-alone tables have a definition query, all tables are yielded.
 		/// </summary>
-		/// <param name="mapView"></param>
-		/// <param name="tablePredicate"></param>
-		/// <returns></returns>
 		public static IEnumerable<IDisplayTable> GetStandaloneTablesForSelection(
-			[NotNull] MapView mapView,
+			[NotNull] Map map,
 			[NotNull] Predicate<StandaloneTable> tablePredicate)
 		{
 			var filteredSelectableLayers = new List<StandaloneTable>();
 
 			foreach (StandaloneTable standaloneTable in
-			         GetStandaloneTables(tablePredicate, mapView)
+			         GetStandaloneTables(map, tablePredicate)
 				         .Where(st => st != null))
 			{
 				if (! standaloneTable.IsSelectable)
@@ -344,8 +309,8 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public static IEnumerable<T> GetFeatureLayers<T>(
+			[NotNull] Map map,
 			[CanBeNull] Predicate<T> layerPredicate,
-			[CanBeNull] MapView mapView = null,
 			bool includeInvalid = false) where T : BasicFeatureLayer
 		{
 			Predicate<T> combinedPredicate;
@@ -362,7 +327,7 @@ namespace ProSuite.Commons.AGP.Carto
 					LayerUtils.IsLayerValid(l) && (layerPredicate == null || layerPredicate(l));
 			}
 
-			foreach (T basicFeatureLayer in GetLayers(combinedPredicate, mapView))
+			foreach (T basicFeatureLayer in GetLayers(map, combinedPredicate))
 			{
 				yield return basicFeatureLayer;
 			}
@@ -370,31 +335,22 @@ namespace ProSuite.Commons.AGP.Carto
 
 		[CanBeNull]
 		public static BasicFeatureLayer GetFeatureLayer(
-			[CanBeNull] string featureClassName,
-			[CanBeNull] MapView mapView = null)
+			[NotNull] Map map,
+			[CanBeNull] string featureClassName)
 		{
 			return GetFeatureLayers<BasicFeatureLayer>(
-				lyr => string.Equals(lyr.GetFeatureClass().GetName(),
-				                     featureClassName,
-				                     StringComparison.OrdinalIgnoreCase), mapView).FirstOrDefault();
+					map,
+					lyr => string.Equals(lyr.GetFeatureClass().GetName(),
+					                     featureClassName,
+					                     StringComparison.OrdinalIgnoreCase))
+				.FirstOrDefault();
 		}
 
 		public static IEnumerable<StandaloneTable> GetStandaloneTables(
+			[NotNull] Map map,
 			[CanBeNull] Predicate<StandaloneTable> tablePredicate,
-			[CanBeNull] MapView mapView = null,
 			bool includeInvalid = false)
 		{
-			if (mapView == null)
-			{
-				// Only take the active map if no other map has been provided.
-				mapView = MapView.Active;
-			}
-
-			if (mapView == null)
-			{
-				yield break;
-			}
-
 			Predicate<StandaloneTable> combinedPredicate;
 
 			if (includeInvalid)
@@ -410,7 +366,7 @@ namespace ProSuite.Commons.AGP.Carto
 					(tablePredicate == null || tablePredicate(t));
 			}
 
-			foreach (StandaloneTable table in mapView.Map.GetStandaloneTablesAsFlattenedList())
+			foreach (StandaloneTable table in map.GetStandaloneTablesAsFlattenedList())
 			{
 				if (combinedPredicate == null || combinedPredicate(table))
 				{
@@ -421,15 +377,23 @@ namespace ProSuite.Commons.AGP.Carto
 
 		[CanBeNull]
 		public static StandaloneTable GetStandaloneTable(
-			[CanBeNull] string tableName,
-			[CanBeNull] MapView mapView = null)
+			[NotNull] Map map,
+			[CanBeNull] string tableName)
 		{
 			return GetStandaloneTables(
+					map,
 					table => string.Equals(table.GetTable().GetName(),
 					                       tableName,
-					                       StringComparison.OrdinalIgnoreCase), mapView)
+					                       StringComparison.OrdinalIgnoreCase))
 				.FirstOrDefault();
 		}
+
+		public static bool HasSelection([CanBeNull] Map map)
+		{
+			return map?.SelectionCount > 0;
+		}
+
+		#region Not MapUtils --> move elsewhere
 
 		public static Geometry ToMapGeometry(MapView mapView,
 		                                     Polygon screenGeometry)
@@ -628,15 +592,17 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
+		#endregion
+
+		#region Generally useful? Used anywhere? Drop!
+
 		[NotNull]
 		public static IEnumerable<string> GetUri(Map map, [NotNull] string mapMemberName)
 		{
 			Assert.ArgumentNotNull(mapMemberName, nameof(mapMemberName));
 
-			MapView mapView = MapView.Active;
-
 			// todo daro What if mapMember is map itself? Can it be found with this method?
-			return mapView == null
+			return map is null
 				       ? Enumerable.Empty<string>()
 				       : map.FindLayers(mapMemberName).Select(GetUri);
 		}
@@ -669,17 +635,18 @@ namespace ProSuite.Commons.AGP.Carto
 			return mapView.Map.FindLayer(uri, recursive);
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="map"></param>
-		/// <remarks>Doesn't throw an exception if there is no map</remarks>
-		/// <returns></returns>
 		public static IEnumerable<T> GetLayers<T>([CanBeNull] this Map map) where T : Layer
 		{
 			return map == null ? Enumerable.Empty<T>() : map.GetLayersAsFlattenedList().OfType<T>();
 		}
+
+		public static IEnumerable<BasicFeatureLayer> Distinct(
+			this IEnumerable<BasicFeatureLayer> layers)
+		{
+			return layers.Distinct(new BasicFeatureLayerComparer());
+		}
+
+		#endregion
 
 		[NotNull]
 		private static Envelope GetZoomExtent([NotNull] Envelope newExtent,

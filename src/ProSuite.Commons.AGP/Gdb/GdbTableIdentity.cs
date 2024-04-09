@@ -6,7 +6,7 @@ namespace ProSuite.Commons.AGP.Gdb
 	// todo daro: rename to TableProxy?
 	public struct GdbTableIdentity : IEquatable<GdbTableIdentity>
 	{
-		public GdbTableIdentity(Table table)
+		public GdbTableIdentity(Table table) // TODO make static factory method FromTable(table) -- the ctor(table) suggests we hold on the table, which we don't
 		{
 			Name = table.GetName();
 			Id = table.GetID();

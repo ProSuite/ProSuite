@@ -305,7 +305,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				{
 					using (Datastore datastore = table.GetDatastore())
 					{
-						workspaceMsg = ProtobufConversionUtils.ToWorkspaceRefMsg(datastore, true);
+						workspaceMsg =
+							ProtobufConversionUtils.ToWorkspaceRefMsg(datastore, true);
 
 						workspaceMessages.Add(workspaceMsg);
 					}
@@ -391,8 +392,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					                       IsMasterDatabaseWorkspace =
 						                       projectWorkspaceMsg.IsMasterDatabaseWorkspace
 				                       };
-				result.Add(
-					projectWorkspace);
+
+				result.Add(projectWorkspace);
 			}
 
 			return result;

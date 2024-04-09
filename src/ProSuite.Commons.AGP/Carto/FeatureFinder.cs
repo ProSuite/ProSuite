@@ -8,7 +8,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -28,7 +27,7 @@ namespace ProSuite.Commons.AGP.Carto
 			MapView mapView,
 			TargetFeatureSelection? featureSelectionType = null)
 		{
-			_mapView = mapView;
+			_mapView = mapView ?? throw new ArgumentNullException(nameof(mapView));
 			FeatureSelectionType = featureSelectionType;
 		}
 
@@ -60,7 +59,7 @@ namespace ProSuite.Commons.AGP.Carto
 			Predicate<BasicFeatureLayer> predicate = fl => IsLayerApplicable(fl, layerPredicate);
 
 			IEnumerable<BasicFeatureLayer>
-				featureLayers = MapUtils.GetFeatureLayers(predicate, _mapView);
+				featureLayers = MapUtils.GetFeatureLayers(_mapView.Map, predicate);
 
 			return FindFeaturesByLayer(featureLayers, searchGeometry, featurePredicate,
 			                           cancelableProgressor);
@@ -131,7 +130,7 @@ namespace ProSuite.Commons.AGP.Carto
 			Predicate<BasicFeatureLayer> predicate = fl => IsLayerApplicable(fl, layerPredicate);
 
 			IEnumerable<BasicFeatureLayer>
-				featureLayers = MapUtils.GetFeatureLayers(predicate, _mapView);
+				featureLayers = MapUtils.GetFeatureLayers(_mapView.Map, predicate);
 
 			return FindFeaturesByFeatureClass(featureLayers, searchGeometry, featurePredicate,
 			                                  cancelableProgressor);
