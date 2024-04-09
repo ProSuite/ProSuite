@@ -9,7 +9,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.Picker
 {
-	internal static class PickerUtils
+	public static class PickerUtils
 	{
 		public static Uri GetImagePath(esriGeometryType? geometryType)
 		{

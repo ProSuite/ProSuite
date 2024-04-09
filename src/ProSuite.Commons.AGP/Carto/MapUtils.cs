@@ -388,11 +388,6 @@ namespace ProSuite.Commons.AGP.Carto
 				.FirstOrDefault();
 		}
 
-		public static bool HasSelection([CanBeNull] Map map)
-		{
-			return map?.SelectionCount > 0;
-		}
-
 		#region Not MapUtils --> move elsewhere
 
 		public static Geometry ToMapGeometry(MapView mapView,
@@ -497,6 +492,16 @@ namespace ProSuite.Commons.AGP.Carto
 			await mapView.ZoomToAsync(zoomExtent);
 
 			return true;
+		}
+
+		public static bool HasSelection([CanBeNull] MapView mapView)
+		{
+			return HasSelection(mapView?.Map);
+		}
+
+		public static bool HasSelection([CanBeNull] Map map)
+		{
+			return map?.SelectionCount > 0;
 		}
 
 		public static async Task<bool> FlashGeometryAsync(
