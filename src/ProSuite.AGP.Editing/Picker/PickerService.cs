@@ -21,6 +21,17 @@ namespace ProSuite.AGP.Editing.Picker
 
 	public class PickerService : IPickerService
 	{
+		public Func<Task<T>> Pick<T>(List<IPickableItem> items, Point pickerLocation,
+		                             IPickerPrecedence precedence) where T : class, IPickableItem
+		{
+			if (items.Count == 1)
+			{
+				return () => Task.FromResult(precedence.PickBest<T>(items));
+			}
+
+			return PickSingle<T>(items, pickerLocation, precedence);
+		}
+
 		public Func<Task<T>> PickSingle<T>(IEnumerable<IPickableItem> items,
 		                                   Point pickerLocation,
 		                                   IPickerPrecedence precedence)

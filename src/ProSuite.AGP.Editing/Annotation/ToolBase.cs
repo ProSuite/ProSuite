@@ -164,6 +164,58 @@ public abstract class ToolBase : MapTool
 		});
 	}
 
+	protected virtual async Task<bool> OnSelectionSketchCompleteAsync([NotNull] Geometry geometry)
+	{
+		List<IPickableItem> items =
+			await QueuedTask.Run(() =>
+			{
+				IEnumerable<FeatureSelectionBase> selection = FindFeatureSelection(geometry);
+
+				// ToList is needed otherwise thread exception!
+				return PickableItemsFactory
+				       .CreateFeatureItems(PickerUtils.OrderByGeometryDimension(selection))
+				       .ToList();
+			});
+
+		if (! items.Any())
+		{
+			_msg.Debug("selection is empty");
+			// todo daro return what?
+			return true;
+		}
+
+		var picker = new PickerService();
+
+		Func<Task<IPickableFeatureItem>> showControlOrPickBest =
+			await QueuedTask.Run(() =>
+			{
+				Point pickerLocation = MapView.Active.MapToScreen(geometry.Extent.Center);
+
+				return picker.Pick<IPickableFeatureItem>(
+					items, pickerLocation, new SelectionToolPickerPrecedence
+					                       {
+						                       SelectionGeometry = geometry
+					                       });
+			});
+
+		// show control on GUI thread
+		IPickableFeatureItem pickedItem = await showControlOrPickBest();
+
+		if (pickedItem == null)
+		{
+			return true;
+		}
+
+		await QueuedTask.Run(() =>
+		{
+			SelectionUtils.SelectFeature(pickedItem.Layer,
+			                             SelectionCombinationMethod.New,
+			                             pickedItem.Oid, true);
+		});
+
+		return true;
+	}
+
 	protected virtual Task<bool> OnConstructionSketchCompleteAsync([NotNull] Geometry geometry,
 		IDictionary<BasicFeatureLayer, List<long>> selectionByLayer)
 	{
@@ -303,6 +355,7 @@ public abstract class ToolBase : MapTool
 		return Task.FromResult(0);
 	}
 
+	// todo daro rename
 	protected async Task<IDictionary<T, List<long>>> GetApplicableSelection<T>()
 		where T : BasicFeatureLayer
 	{
