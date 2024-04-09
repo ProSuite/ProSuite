@@ -98,14 +98,17 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaConstraint),
 				                             typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
-											 typeof(QaValue),
-											 typeof(QaZDifferenceOther),
-											 typeof(QaZDifferenceSelf)
+				                             typeof(QaValue),
+				                             typeof(QaZDifferenceOther),
+				                             typeof(QaZDifferenceSelf),
 				                             typeof(QaBorderSense)
 			                             };
 
 			foreach (Type testType in refactoredTypes)
 			{
+				Assert.IsFalse(InstanceUtils.HasInternallyUsedAttribute(testType),
+				               "Internally used tests are only used by factories and do not require a TestDefinition");
+
 				// One is used internally to create using a the definition.
 				int constructorCount = testType.GetConstructors().Length - 1;
 
