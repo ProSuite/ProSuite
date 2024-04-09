@@ -179,6 +179,76 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		#endregion
 
+		#region Modification
+
+		/// <summary>
+		/// See <see cref="Blend(CIMSymbol,CIMColor,float)"/>. Modifies
+		/// the given symbol reference and returns it for convenience.
+		/// </summary>
+		public static CIMSymbolReference Blend(this CIMSymbolReference symref,
+		                                       CIMColor color, float factor = 0.5f)
+		{
+			symref?.Symbol.Blend(color, factor);
+			return symref;
+		}
+
+		/// <summary>
+		/// Blend the colors of the given symbol with the given color.
+		/// A <paramref name="factor"/> value of 0 keeps the original
+		/// colors, a value of 1 uses the given color, values in-between
+		/// blend, and other values have an undefined result.
+		/// Modifies this symbol (!) and returns it for convenience.
+		/// </summary>
+		public static CIMSymbol Blend(this CIMSymbol symbol, CIMColor color, float factor = 0.5f)
+		{
+			if (color is null) return symbol;
+
+			if (symbol is CIMMultiLayerSymbol multiLayerSymbol &&
+			    multiLayerSymbol.SymbolLayers != null)
+			{
+				foreach (var symbolLayer in multiLayerSymbol.SymbolLayers)
+				{
+					if (symbolLayer is CIMSolidFill solidFill)
+					{
+						solidFill.Color = Blend(solidFill.Color, color, factor);
+					}
+					else if (symbolLayer is CIMSolidStroke solidStroke)
+					{
+						solidStroke.Color = Blend(solidStroke.Color, color, factor);
+					}
+					else if (symbolLayer is CIMVectorMarker vectorMarker &&
+					         vectorMarker.MarkerGraphics != null)
+					{
+						foreach (var markerGraphic in vectorMarker.MarkerGraphics)
+						{
+							markerGraphic.Symbol.Blend(color, factor);
+						}
+					}
+					else if (symbolLayer is CIMCharacterMarker characterMarker)
+					{
+						characterMarker.Symbol.Blend(color, factor);
+					}
+					//else: other symbol layer types are left unmodified
+				}
+			}
+			else if (symbol is CIMTextSymbol textSymbol)
+			{
+				textSymbol.Symbol.Blend(color, factor);
+			}
+			// else: should not occur (all symbols are either MultiLayer or Text)
+
+			return symbol;
+		}
+
+		private static CIMColor Blend(CIMColor color, CIMColor other, float factor)
+		{
+			if (color is null) return null;
+			if (other is null) return color;
+			return ColorUtils.Blend(color, other, factor);
+		}
+
+		#endregion
+
 		#region Symbol Layers
 
 		public static CIMStroke CreateSolidStroke(CIMColor color, double width = -1)
