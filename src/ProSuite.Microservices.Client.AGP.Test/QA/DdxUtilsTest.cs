@@ -91,63 +91,68 @@ namespace ProSuite.Microservices.Client.AGP.Test.QA
 
 				ProtoDataQualityUtils.AddDetailsToDataset(rehydratedErrorDataset, datasetMsg);
 
-				Assert.AreEqual(errorDataset.Name, rehydratedDataset.Name);
-				Assert.AreEqual(errorDataset.Id, rehydratedErrorDataset.Id);
-				Assert.AreEqual(errorDataset.GeometryType, rehydratedErrorDataset.GeometryType);
-				Assert.AreEqual(errorDataset.Attributes.Count,
-				                rehydratedErrorDataset.Attributes.Count);
-				Assert.AreEqual(errorDataset.ObjectTypes.Count,
-				                rehydratedErrorDataset.ObjectTypes.Count);
-				Assert.AreEqual(errorDataset.TypeDescription,
-				                rehydratedErrorDataset.TypeDescription);
-				Assert.AreEqual(errorDataset.DisplayName, rehydratedErrorDataset.DisplayName);
+				AssertEqual(errorDataset, rehydratedErrorDataset);
+			}
+		}
 
-				// TODO: Add Abbreviation to DatasetMsg
-				//Assert.AreEqual(errorDataset.Abbreviation, rehydratedErrorDataset.Abbreviation);
-				Assert.AreEqual(errorDataset.AliasName, rehydratedErrorDataset.AliasName);
-				Assert.AreEqual(errorDataset.DatasetCategory,
-				                rehydratedErrorDataset.DatasetCategory);
+		private static void AssertEqual(ObjectDataset original, ObjectDataset rehydrated)
+		{
+			Assert.AreEqual(original.Name, rehydrated.Name);
+			Assert.AreEqual(original.Id, rehydrated.Id);
+			Assert.AreEqual(original.GeometryType, rehydrated.GeometryType);
+			Assert.AreEqual(original.Attributes.Count,
+			                rehydrated.Attributes.Count);
+			Assert.AreEqual(original.ObjectTypes.Count,
+			                rehydrated.ObjectTypes.Count);
+			Assert.AreEqual(original.TypeDescription,
+			                rehydrated.TypeDescription);
+			Assert.AreEqual(original.DisplayName, rehydrated.DisplayName);
 
-				foreach (ObjectAttribute a1 in errorDataset.Attributes)
+			// TODO: Add Abbreviation to DatasetMsg
+			//Assert.AreEqual(errorDataset.Abbreviation, rehydratedErrorDataset.Abbreviation);
+			Assert.AreEqual(original.AliasName, rehydrated.AliasName);
+			Assert.AreEqual(original.DatasetCategory,
+			                rehydrated.DatasetCategory);
+
+			foreach (ObjectAttribute a1 in original.Attributes)
+			{
+				ObjectAttribute a2 = rehydrated.GetAttribute(a1.Name);
+				Assert.IsNotNull(a2);
+				Assert.AreEqual(a1.Name, a2.Name);
+				Assert.AreEqual(a1.FieldType, a2.FieldType);
+				Assert.AreEqual(a1.Role, a2.Role);
+				Assert.AreEqual(a1.ReadOnly, a2.ReadOnly);
+				Assert.AreEqual(a1.IsObjectDefining, a2.IsObjectDefining);
+			}
+
+			foreach (ObjectType o1 in original.ObjectTypes)
+			{
+				ObjectType o2 = rehydrated.GetObjectType(o1.SubtypeCode);
+
+				Assert.IsNotNull(o2);
+				Assert.AreEqual(o1.Id, o2.Id);
+				Assert.AreEqual(o1.Name, o2.Name);
+				Assert.AreEqual(o1.SubtypeCode, o2.SubtypeCode);
+				Assert.AreEqual(o1.ObjectSubtypes.Count, o2.ObjectSubtypes.Count);
+
+				foreach (ObjectSubtype o1s in o1.ObjectSubtypes)
 				{
-					ObjectAttribute a2 = rehydratedErrorDataset.GetAttribute(a1.Name);
-					Assert.IsNotNull(a2);
-					Assert.AreEqual(a1.Name, a2.Name);
-					Assert.AreEqual(a1.FieldType, a2.FieldType);
-					Assert.AreEqual(a1.Role, a2.Role);
-					Assert.AreEqual(a1.ReadOnly, a2.ReadOnly);
-					Assert.AreEqual(a1.IsObjectDefining, a2.IsObjectDefining);
-				}
+					ObjectSubtype o2s = o2.ObjectSubtypes.First(
+						s => s.SubtypeCode == o1.SubtypeCode && s.Name == o1s.Name);
 
-				foreach (ObjectType o1 in errorDataset.ObjectTypes)
-				{
-					ObjectType o2 = rehydratedErrorDataset.GetObjectType(o1.SubtypeCode);
+					Assert.IsNotNull(o2s);
+					Assert.AreEqual(o1s.Name, o2s.Name);
+					Assert.AreEqual(o1s.SubtypeCode, o2s.SubtypeCode);
 
-					Assert.IsNotNull(o2);
-					Assert.AreEqual(o1.Id, o2.Id);
-					Assert.AreEqual(o1.Name, o2.Name);
-					Assert.AreEqual(o1.SubtypeCode, o2.SubtypeCode);
-					Assert.AreEqual(o1.ObjectSubtypes.Count, o2.ObjectSubtypes.Count);
-
-					foreach (ObjectSubtype o1s in o1.ObjectSubtypes)
+					foreach (ObjectSubtypeCriterion c1 in o1s.Criteria)
 					{
-						ObjectSubtype o2s = o2.ObjectSubtypes.First(
-							s => s.SubtypeCode == o1.SubtypeCode && s.Name == o1s.Name);
+						ObjectSubtypeCriterion c2 =
+							o2s.Criteria.First(c => c.Attribute.Name.Equals(c1.Attribute.Name));
 
-						Assert.IsNotNull(o2s);
-						Assert.AreEqual(o1s.Name, o2s.Name);
-						Assert.AreEqual(o1s.SubtypeCode, o2s.SubtypeCode);
-
-						foreach (ObjectSubtypeCriterion c1 in o1s.Criteria)
-						{
-							ObjectSubtypeCriterion c2 =
-								o2s.Criteria.First(c => c.Attribute.Name.Equals(c1.Attribute.Name));
-
-							Assert.IsNotNull(c2);
-							Assert.AreEqual(c1.Attribute.Name, c2.Attribute.Name);
-							Assert.AreEqual(c1.AttributeValue, c2.AttributeValue);
-							Assert.AreEqual(c1.AttributeValueType, c2.AttributeValueType);
-						}
+						Assert.IsNotNull(c2);
+						Assert.AreEqual(c1.Attribute.Name, c2.Attribute.Name);
+						Assert.AreEqual(c1.AttributeValue, c2.AttributeValue);
+						Assert.AreEqual(c1.AttributeValueType, c2.AttributeValueType);
 					}
 				}
 			}
