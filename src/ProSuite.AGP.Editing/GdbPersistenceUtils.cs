@@ -178,6 +178,8 @@ namespace ProSuite.AGP.Editing
 
 				SpatialReference spatialReference = classDefinition.GetSpatialReference();
 
+				IReadOnlyList<Field> fields = rowBuffer.GetFields();
+
 				foreach (Attribute attribute in attributes)
 				{
 					if (attribute.CurrentValue == null || attribute.CurrentValue == DBNull.Value)
@@ -185,9 +187,20 @@ namespace ProSuite.AGP.Editing
 						continue;
 					}
 
+					int fieldIndex = attribute.Index;
+
 					if (IsEditable(attribute) && ! attribute.IsGeometryField)
 					{
-						rowBuffer[attribute.Index] = attribute.CurrentValue;
+						if (attribute.Index >= fields.Count ||
+						    fields[attribute.Index].Name != attribute.FieldName)
+						{
+							// Issue #165: Some fields (presumably the SHAPE_LEN or SHAPE_AREA field) do not
+							// exist in the rowBuffer's field list. This happens rarely, with specific layers.
+							// Consider using copy index matrix in these cases.
+							fieldIndex = rowBuffer.FindField(attribute.FieldName);
+						}
+
+						rowBuffer[fieldIndex] = attribute.CurrentValue;
 					}
 				}
 
