@@ -392,15 +392,12 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		{
 			GeometryTypeShape shapeType = geometryType as GeometryTypeShape;
 
-			Assert.NotNull(shapeType);
+			ProSuiteGeometryType proSuiteGeometryType = shapeType?.ShapeType ?? ProSuiteGeometryType.Null;
 
-			ObjectDataset result = null;
-			ProSuiteGeometryType proSuiteGeometryType = shapeType.ShapeType;
-
-			result = ProtoDataQualityUtils.CreateErrorDataset(
+			ObjectDataset result = ProtoDataQualityUtils.CreateErrorDataset(
 				datasetId, name, proSuiteGeometryType);
 
-			result.GeometryType = shapeType;
+			result.GeometryType = geometryType;
 
 			foreach (ObjectAttribute attribute in attributes)
 			{

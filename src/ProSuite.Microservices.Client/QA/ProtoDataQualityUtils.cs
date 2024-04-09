@@ -547,6 +547,8 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			Dataset dataset = factoryMethod(datasetMsg.DatasetId, datasetMsg.Name);
 
+			dataset.SetCloneId(datasetMsg.DatasetId);
+
 			dataset.AliasName = datasetMsg.AliasName;
 
 			dataset.GeometryType =
