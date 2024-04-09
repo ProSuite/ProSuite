@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Google.Protobuf;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core;
@@ -19,6 +21,9 @@ namespace ProSuite.Microservices.Client.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static int _currentModelId = -100;
+
+		private static readonly IList<GeometryType> _geometryTypes =
+			GeometryTypeFactory.CreateGeometryTypes().ToList();
 
 		/// <summary>
 		/// Creates a specification message containing the the protobuf based conditions.
@@ -494,21 +499,346 @@ namespace ProSuite.Microservices.Client.QA
 					modelMsg.ErrorDatasetIds.Add(dataset.Id);
 				}
 
-				int geometryType = (int) GetGeometryType(dataset);
-
-				var datasetMsg =
-					new DatasetMsg
-					{
-						DatasetId = dataset.Id,
-						Name = ProtobufGeomUtils.NullToEmpty(dataset.Name),
-						AliasName = ProtobufGeomUtils.NullToEmpty(dataset.AliasName),
-						GeometryType = geometryType
-					};
+				DatasetMsg datasetMsg = ToDatasetMsg(dataset);
 
 				referencedDatasetMsgs.Add(datasetMsg);
 			}
 
 			return modelMsg;
+		}
+
+		public static DatasetMsg ToDatasetMsg([NotNull] Dataset dataset,
+		                                      bool includeDetails = false)
+		{
+			int geometryType = (int) GetGeometryType(dataset);
+
+			var datasetMsg =
+				new DatasetMsg
+				{
+					DatasetId = dataset.Id,
+					Name = ProtobufGeomUtils.NullToEmpty(dataset.Name),
+					AliasName = ProtobufGeomUtils.NullToEmpty(dataset.AliasName),
+					GeometryType = geometryType
+				};
+
+			if (includeDetails)
+			{
+				if (dataset is ObjectDataset objectDataset)
+				{
+					foreach (ObjectAttribute attribute in objectDataset.Attributes)
+					{
+						AttributeMsg attributeMsg = ToAttributeMsg(attribute);
+
+						datasetMsg.Attributes.Add(attributeMsg);
+					}
+
+					foreach (ObjectType objectType in objectDataset.GetObjectTypes())
+					{
+						datasetMsg.ObjectCategories.AddRange(ToObjectCategoryMsg(objectType));
+					}
+				}
+			}
+
+			return datasetMsg;
+		}
+
+		public static Dataset FromDatasetMsg(DatasetMsg datasetMsg,
+		                                     Func<int, string, Dataset> factoryMethod)
+		{
+			Dataset dataset = factoryMethod(datasetMsg.DatasetId, datasetMsg.Name);
+
+			dataset.AliasName = datasetMsg.AliasName;
+
+			dataset.GeometryType =
+				GetGeometryType((ProSuiteGeometryType) datasetMsg.GeometryType);
+
+			return dataset;
+		}
+
+		public static ObjectDataset CreateErrorDataset(int datasetId, string name,
+		                                               ProSuiteGeometryType geometryType)
+		{
+			ObjectDataset result;
+			switch (geometryType)
+			{
+				case ProSuiteGeometryType.Multipoint:
+					result = new ErrorMultipointDataset(name);
+					break;
+				case ProSuiteGeometryType.Polyline:
+					result = new ErrorLineDataset(name);
+					break;
+				case ProSuiteGeometryType.Polygon:
+					result = new ErrorPolygonDataset(name);
+					break;
+				case ProSuiteGeometryType.MultiPatch:
+					result = new ErrorMultiPatchDataset(name);
+					break;
+				case ProSuiteGeometryType.Null:
+					result = new ErrorTableDataset(name);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(
+						nameof(geometryType), $"Unsupported geometry type: {geometryType}");
+			}
+
+			result.SetCloneId(datasetId);
+
+			return result;
+		}
+
+		public static void AddDetailsToDataset(ObjectDataset dataset, DatasetMsg detailedDatasetMsg)
+		{
+			// Enrich the original dataset with the details:
+			foreach (AttributeMsg attributeMsg in detailedDatasetMsg.Attributes)
+			{
+				ObjectAttribute attribute = FromAttributeMsg(attributeMsg);
+
+				dataset.AddAttribute(attribute);
+			}
+
+			var objectTypeBySubtypeCode = new Dictionary<int, ObjectType>();
+			foreach (ObjectCategoryMsg objectTypeMsg in detailedDatasetMsg.ObjectCategories.Where(
+				         m => m.ObjectSubtypeCriterion.Count == 0))
+			{
+				ObjectType objectType =
+					dataset.AddObjectType(objectTypeMsg.SubtypeCode, objectTypeMsg.Name);
+
+				objectTypeBySubtypeCode.Add(objectType.SubtypeCode, objectType);
+			}
+
+			// ObjectSubtypes:
+			foreach (ObjectCategoryMsg subTypeMsg in detailedDatasetMsg.ObjectCategories.Where(
+				         m => m.ObjectSubtypeCriterion.Count > 0))
+			{
+				ObjectType objectType = objectTypeBySubtypeCode[subTypeMsg.SubtypeCode];
+
+				ObjectSubtype objectSubtype = objectType.AddObjectSubType(subTypeMsg.Name);
+
+				foreach (ObjectSubtypeCriterionMsg criterionMsg in
+				         subTypeMsg.ObjectSubtypeCriterion)
+				{
+					object attributeValue =
+						FromAttributeValue(criterionMsg.AttributeValue);
+					objectSubtype.AddCriterion(criterionMsg.AttributeName, attributeValue);
+				}
+			}
+		}
+
+		private static IEnumerable<ObjectCategoryMsg> ToObjectCategoryMsg(ObjectType objectType)
+		{
+			int subTypeCode = objectType.SubtypeCode;
+
+			var objTypeMsg = new ObjectCategoryMsg
+			                 {
+				                 Name = objectType.Name,
+				                 SubtypeCode = subTypeCode
+			                 };
+
+			yield return objTypeMsg;
+
+			foreach (ObjectSubtype objectSubtype in objectType.ObjectSubtypes)
+			{
+				var subTypeMsg = new ObjectCategoryMsg
+				                 {
+					                 Name = objectSubtype.Name,
+					                 SubtypeCode = subTypeCode
+				                 };
+
+				subTypeMsg.ObjectSubtypeCriterion.AddRange(
+					ToSubtypeCriteriaMessages(objectSubtype));
+
+				yield return subTypeMsg;
+			}
+		}
+
+		private static IEnumerable<ObjectSubtypeCriterionMsg> ToSubtypeCriteriaMessages(
+			ObjectSubtype objectSubtype)
+		{
+			foreach (ObjectSubtypeCriterion criterion in objectSubtype.Criteria)
+			{
+				ObjectAttribute attribute = Assert.NotNull(criterion.Attribute);
+
+				var criterionMsg = new ObjectSubtypeCriterionMsg()
+				                   {
+					                   AttributeName = attribute.Name,
+					                   AttributeValue = ToAttributeValue(
+						                   attribute.FieldType, criterion.AttributeValue)
+				                   };
+
+				yield return criterionMsg;
+			}
+		}
+
+		public static AttributeMsg ToAttributeMsg(ObjectAttribute attribute)
+		{
+			FieldType fieldType = attribute.FieldType;
+			var valueObject = attribute.NonApplicableValue;
+
+			AttributeValue attributeValue = null;
+			if (valueObject != null && valueObject != DBNull.Value)
+			{
+				attributeValue = ToAttributeValue(fieldType, valueObject);
+			}
+
+			var attributeMsg = new AttributeMsg
+			                   {
+				                   Name = attribute.Name ?? string.Empty,
+				                   Type = (int) attribute.FieldType,
+				                   IsReadonly = attribute.ReadOnly,
+				                   IsObjectDefining = attribute.IsObjectDefining,
+				                   AttributeRole = attribute.Role?.Id ?? -1,
+				                   NonApplicableValue = attributeValue
+			                   };
+			return attributeMsg;
+		}
+
+		public static ObjectAttribute FromAttributeMsg([NotNull] AttributeMsg attributeMsg)
+		{
+			ObjectAttributeType attributeType = null;
+
+			if (attributeMsg.AttributeRole > 0)
+			{
+				// Probably not worth caching, treat it as value type:
+				attributeType =
+					new ObjectAttributeType(new AttributeRole(attributeMsg.AttributeRole));
+			}
+
+			ObjectAttribute attribute = new ObjectAttribute(attributeMsg.Name,
+			                                                (FieldType) attributeMsg.Type,
+			                                                attributeType)
+			                            {
+				                            IsObjectDefining = attributeMsg.IsObjectDefining,
+				                            ReadOnly = attributeMsg.IsReadonly
+			                            };
+
+			object nonApplicableValue =
+				FromAttributeValue(attributeMsg.NonApplicableValue);
+
+			if (nonApplicableValue != null && nonApplicableValue != DBNull.Value)
+			{
+				attribute.NonApplicableValue = nonApplicableValue;
+			}
+
+			return attribute;
+		}
+
+		private static AttributeValue ToAttributeValue(FieldType fieldType,
+		                                               object valueObject)
+		{
+			var attributeValue = new AttributeValue();
+
+			if (valueObject == DBNull.Value || valueObject == null)
+			{
+				attributeValue.DbNull = true;
+			}
+			else
+			{
+				switch (fieldType)
+				{
+					case FieldType.ShortInteger:
+						attributeValue.ShortIntValue = (int) valueObject;
+						break;
+					case FieldType.LongInteger:
+						attributeValue.LongIntValue = (int) valueObject;
+						break;
+					case FieldType.Double:
+						attributeValue.DoubleValue = (double) valueObject;
+						break;
+					case FieldType.Text:
+						attributeValue.StringValue = (string) valueObject;
+						break;
+					case FieldType.Date:
+						attributeValue.DateTimeTicksValue = ((DateTime) valueObject).Ticks;
+						break;
+					case FieldType.ObjectID:
+						attributeValue.ShortIntValue = (int) valueObject;
+						break;
+					case FieldType.Geometry:
+						// Leave empty, it is sent through Shape property
+						break;
+					case FieldType.Blob:
+						// TODO: Test and make this work
+						attributeValue.BlobValue =
+							ByteString.CopyFrom((byte[]) valueObject);
+						break;
+					case FieldType.Raster: // Not supported, ignore
+						break;
+					case FieldType.Guid:
+						byte[] asBytes = new Guid((string) valueObject).ToByteArray();
+						attributeValue.UuidValue =
+							new UUID { Value = ByteString.CopyFrom(asBytes) };
+						break;
+					case FieldType.GlobalID:
+						asBytes = new Guid((string) valueObject).ToByteArray();
+						attributeValue.UuidValue =
+							new UUID { Value = ByteString.CopyFrom(asBytes) };
+						break;
+					case FieldType.Xml:
+						// Not supported, ignore
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+
+			return attributeValue;
+		}
+
+		/// <summary>
+		/// Converts an attribute value to an object (that can be stored in the database).
+		/// </summary>
+		/// <param name="attributeValue"></param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static object FromAttributeValue([CanBeNull] AttributeValue attributeValue)
+		{
+			if (attributeValue == null)
+			{
+				return null;
+			}
+
+			object result;
+
+			switch (attributeValue.ValueCase)
+			{
+				case AttributeValue.ValueOneofCase.None:
+					result = null;
+					break;
+				case AttributeValue.ValueOneofCase.DbNull:
+					result = DBNull.Value;
+					break;
+				case AttributeValue.ValueOneofCase.ShortIntValue:
+					result = attributeValue.ShortIntValue;
+					break;
+				case AttributeValue.ValueOneofCase.LongIntValue:
+					result = attributeValue.LongIntValue;
+					break;
+				case AttributeValue.ValueOneofCase.FloatValue:
+					result = attributeValue.FloatValue;
+					break;
+				case AttributeValue.ValueOneofCase.DoubleValue:
+					result = attributeValue.DoubleValue;
+					break;
+				case AttributeValue.ValueOneofCase.StringValue:
+					result = attributeValue.StringValue;
+					break;
+				case AttributeValue.ValueOneofCase.DateTimeTicksValue:
+					result = new DateTime(attributeValue.DateTimeTicksValue);
+					break;
+				case AttributeValue.ValueOneofCase.UuidValue:
+					var guid = new Guid(attributeValue.UuidValue.Value.ToByteArray());
+					result = guid;
+					break;
+				case AttributeValue.ValueOneofCase.BlobValue:
+					result = attributeValue.BlobValue;
+					break;
+
+				default:
+
+					throw new ArgumentOutOfRangeException();
+			}
+
+			return result;
 		}
 
 		public static ProSuiteGeometryType GetGeometryType(Dataset dataset)
@@ -551,6 +881,48 @@ namespace ProSuite.Microservices.Client.QA
 			}
 
 			return geometryType;
+		}
+
+		[CanBeNull]
+		private static GeometryType GetGeometryType(ProSuiteGeometryType proSuiteGeometryType)
+		{
+			if (proSuiteGeometryType == ProSuiteGeometryType.Unknown)
+			{
+				return null;
+			}
+
+			if (proSuiteGeometryType == ProSuiteGeometryType.Null)
+			{
+				return _geometryTypes.OfType<GeometryTypeNoGeometry>()
+				                     .FirstOrDefault();
+			}
+
+			if (proSuiteGeometryType == ProSuiteGeometryType.Topology)
+			{
+				return _geometryTypes.OfType<GeometryTypeTopology>()
+				                     .FirstOrDefault();
+			}
+
+			if (proSuiteGeometryType == ProSuiteGeometryType.Raster)
+			{
+				return _geometryTypes.OfType<GeometryTypeRasterDataset>()
+				                     .FirstOrDefault();
+			}
+
+			if (proSuiteGeometryType == ProSuiteGeometryType.RasterMosaic)
+			{
+				return _geometryTypes.OfType<GeometryTypeRasterMosaic>()
+				                     .FirstOrDefault();
+			}
+
+			if (proSuiteGeometryType == ProSuiteGeometryType.Terrain)
+			{
+				return _geometryTypes.OfType<GeometryTypeTerrain>()
+				                     .FirstOrDefault();
+			}
+
+			return _geometryTypes.OfType<GeometryTypeShape>()
+			                     .FirstOrDefault(gt => gt.ShapeType == proSuiteGeometryType);
 		}
 
 		#endregion

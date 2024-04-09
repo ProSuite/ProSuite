@@ -9,6 +9,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AGP.DataModel;
 using ProSuite.DomainModel.AGP.Workflow;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.QA;
@@ -161,7 +162,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					geometry = feature.GetShape();
 				}
 
-				BasicDataset objectDatset = datasetLookup.GetDataset(objToVerify.GetTable());
+				IDdxDataset objectDatset = datasetLookup.GetDataset(objToVerify.GetTable());
 
 				if (objectDatset != null)
 				{
