@@ -388,11 +388,6 @@ namespace ProSuite.Commons.AGP.Carto
 				.FirstOrDefault();
 		}
 
-		public static bool HasSelection([CanBeNull] Map map)
-		{
-			return map?.SelectionCount > 0;
-		}
-
 		#region Not MapUtils --> move elsewhere
 
 		public static Geometry ToMapGeometry(MapView mapView,
@@ -507,12 +502,6 @@ namespace ProSuite.Commons.AGP.Carto
 		public static bool HasSelection([CanBeNull] Map map)
 		{
 			return map?.SelectionCount > 0;
-		}
-
-		public static IEnumerable<BasicFeatureLayer> Distinct(
-			this IEnumerable<BasicFeatureLayer> layers)
-		{
-			return layers.Distinct(new BasicFeatureLayerComparer());
 		}
 
 		public static async Task<bool> FlashGeometryAsync(
