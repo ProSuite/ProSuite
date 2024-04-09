@@ -99,6 +99,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
 											 typeof(QaValue),
+											 typeof(QaZDifferenceOther),
 											 typeof(QaZDifferenceSelf)
 			                             };
 
