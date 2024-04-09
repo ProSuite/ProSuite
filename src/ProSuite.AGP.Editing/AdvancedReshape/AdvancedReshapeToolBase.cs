@@ -157,7 +157,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					_nonDefaultSideMode = ! _nonDefaultSideMode;
 
 					_msg.Info(_nonDefaultSideMode
-						          ? "Enabled non-default reshape mode. The next reshape to the inside of a polygon will remove the larger area. The next Y-Reshape will use the farther end-point."
+						          ? "Enabled non-default reshape mode. The next reshape to the inside of a polygon will remove the larger area. The next Y-Reshape will use the furthest end-point."
 						          : "Disabled non-default reshape mode");
 
 					if (_updateFeedbackTask != null)
