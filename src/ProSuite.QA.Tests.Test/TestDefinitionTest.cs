@@ -95,13 +95,14 @@ namespace ProSuite.QA.Tests.Test
 			List<Type> refactoredTypes = new List<Type>
 			                             {
 				                             typeof(Qa3dConstantZ),
-				                             typeof(QaConstraint),
+											 typeof(QaCoplanarRings),
+											 typeof(QaConstraint),
 				                             typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
 				                             typeof(QaValue),
 				                             typeof(QaZDifferenceOther),
 				                             typeof(QaZDifferenceSelf),
-				                             typeof(QaBorderSense)
+				                             typeof(QaBorderSense),											 
 			                             };
 
 			foreach (Type testType in refactoredTypes)
