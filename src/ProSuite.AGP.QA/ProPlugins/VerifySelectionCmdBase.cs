@@ -45,6 +45,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
 
+		protected virtual Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool>
+			SaveAction => null;
+
 		protected override async Task<bool> OnClickCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
@@ -98,7 +101,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(WorkListOpener,
-				mapView, currentExtent, spatialRef);
+				mapView, currentExtent, spatialRef, SaveAction);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel

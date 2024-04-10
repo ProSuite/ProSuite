@@ -79,5 +79,10 @@ namespace ProSuite.DomainModel.AGP.QA
 			[CanBeNull] Geometry perimeter,
 			QualityVerificationProgressTracker progress,
 			[CanBeNull] string resultsPath);
+
+		int SaveBackgroundVerificationIssues(
+			IQualityVerificationResult verificationResult,
+			ErrorDeletionInPerimeter errorDeletion,
+			bool updateLatestTestDate);
 	}
 }
