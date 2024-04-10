@@ -69,6 +69,11 @@ namespace ProSuite.QA.Tests
 			_notNullTextFieldIndices = fieldIndices;
 		}
 
+		[InternallyUsedTest]
+		public QaEmptyNotNullTextFields([NotNull] QaEmptyNotNullTextFieldsDefinition definition)
+			: this((IReadOnlyTable)definition.Table, definition.NotNullTextFields)
+		{ }
+
 		#endregion
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)

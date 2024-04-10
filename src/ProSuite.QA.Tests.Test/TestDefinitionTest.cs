@@ -100,6 +100,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaConstraint),
 											 typeof(QaCurve),
 											 typeof(QaDateFieldsWithoutTime),
+											 typeof(QaEmptyNotNullTextFields),
 											 typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
 				                             typeof(QaValue),
