@@ -101,9 +101,10 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
 				                             typeof(QaValue),
-				                             typeof(QaZDifferenceOther),
+				                             typeof(QaWithinZRange),
+											 typeof(QaZDifferenceOther),
 				                             typeof(QaZDifferenceSelf),
-				                             typeof(QaBorderSense),
+				                             typeof(QaBorderSense),											 
 			                             };
 
 			foreach (Type testType in refactoredTypes)
