@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
@@ -9,11 +11,17 @@ namespace ProSuite.Microservices.Client.AGP.QA
 {
 	public class ClientIssueMessageCollector : IClientIssueMessageCollector
 	{
-		private readonly List<IssueMsg> _issueMessages;
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public ClientIssueMessageCollector()
+		private readonly List<IssueMsg> _issueMessages = new();
+		private readonly List<GdbObjRefMsg> _obsoleteExceptionGdbRefs = new();
+		private readonly List<int> _verifiedConditionIds = new();
+
+		[CanBeNull] private readonly IIssueStore _issueStore;
+
+		public ClientIssueMessageCollector([CanBeNull] IIssueStore issueStore = null)
 		{
-			_issueMessages = new List<IssueMsg>();
+			_issueStore = issueStore;
 		}
 
 		/// <summary>

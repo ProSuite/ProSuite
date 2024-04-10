@@ -29,14 +29,19 @@ namespace ProSuite.DomainModel.AGP.Workflow
 			ProjectName = projectName;
 			Datasets = datasets;
 			Datastore = datastore;
+			DatastoreConnector = datastore.GetConnector();
+			DatastoreConnectionString = datastore.GetConnectionString();
 			ModelSpatialReference = modelSpatialReference;
-			DisplayName = $"{ProjectName} - {WorkspaceUtils.GetDatastoreDisplayText(Datastore)}";
+			DisplayName =
+				$"{ProjectName} - {WorkspaceUtils.GetDatastoreDisplayText(DatastoreConnector)}";
 		}
 
 		public int ProjectId { get; }
 		public string ProjectName { get; }
 		public IList<IDdxDataset> Datasets { get; }
 		public Datastore Datastore { get; }
+		public Connector DatastoreConnector { get; set; }
+		public string DatastoreConnectionString { get; set; }
 		public SpatialReference ModelSpatialReference { get; }
 
 		public string DisplayName { get; }
