@@ -68,9 +68,9 @@ namespace ProSuite.AGP.Editing.Selection
 
 		private void WireEvents()
 		{
-			if (_activeToolChangedToken is null)
+			if (_activeToolChangedToken == null)
 			{
-				ActiveToolChangedEvent.Subscribe(OnActiveToolChanged);
+				_activeToolChangedToken = ActiveToolChangedEvent.Subscribe(OnActiveToolChanged);
 			}
 		}
 
