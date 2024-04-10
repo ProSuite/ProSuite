@@ -275,5 +275,71 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				yield return sourceTable;
 			}
 		}
+
+		public static bool HasM(FeatureClass featureClass)
+		{
+			return featureClass.GetDefinition().HasM();
+		}
+
+		public static bool HasZ(FeatureClass featureClass)
+		{
+			return featureClass.GetDefinition().HasZ();
+		}
+
+		[CanBeNull]
+		public static string GetAreaFieldName([NotNull] FeatureClass featureClass)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			return GetAreaFieldName(featureClass.GetDefinition());
+		}
+
+		[CanBeNull]
+		public static string GetAreaFieldName(
+			[NotNull] FeatureClassDefinition featureClassDefinition)
+		{
+			Assert.ArgumentNotNull(featureClassDefinition, nameof(featureClassDefinition));
+
+			try
+			{
+				string areaFieldName = featureClassDefinition.GetAreaField();
+
+				return areaFieldName;
+			}
+			catch (NotImplementedException)
+			{
+				// TODO: Verify this
+				// property is not implemented for feature classes from non-Gdb workspaces 
+				// ("query layers")
+				return null;
+			}
+		}
+
+		[CanBeNull]
+		public static string GetLengthFieldName([NotNull] FeatureClass featureClass)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			return GetLengthFieldName(featureClass.GetDefinition());
+		}
+
+		public static string GetLengthFieldName(FeatureClassDefinition featureClassDefinition)
+		{
+			Assert.ArgumentNotNull(featureClassDefinition, nameof(featureClassDefinition));
+
+			try
+			{
+				string lengthFieldName = featureClassDefinition.GetLengthField();
+
+				return lengthFieldName;
+			}
+			catch (NotImplementedException)
+			{
+				// TODO: Verify this
+				// property is not implemented for feature classes from non-Gdb workspaces 
+				// ("query layers")
+				return null;
+			}
+		}
 	}
 }
