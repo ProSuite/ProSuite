@@ -35,9 +35,11 @@ namespace ProSuite.QA.Tests
 		{
 			FeatureClass = featureClass;
 			Limit = limit;
+			PerPart = perPart;
 		}
 
 		public IFeatureClassSchemaDef FeatureClass { get; }
 		public double Limit { get; }
+		public bool PerPart { get; }
 	}
 }

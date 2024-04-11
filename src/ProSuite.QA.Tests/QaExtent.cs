@@ -68,12 +68,8 @@ namespace ProSuite.QA.Tests
 
 		[InternallyUsedTest]
 		public QaExtent(
-		[NotNull] QaCurveDefinition definition)
-			: this((IReadOnlyFeatureClass)definition.FeatureClass)
-		{
-		}
-
-		public QaExtent(IReadOnlyTable table) : base(table)
+		[NotNull] QaExtentDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClass, definition.Limit, definition.PerPart)
 		{
 		}
 
