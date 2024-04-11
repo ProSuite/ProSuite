@@ -106,9 +106,10 @@ namespace ProSuite.QA.Tests
 		[InternallyUsedTest]
 		public QaFlowLogic(QaFlowLogicDefinition definition)
 			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>()
-				  .ToList())
-				   //definition.allowMultipleOutgoingLines,
-				   //definition.flipExpressions)
+				  .ToList(),
+				  definition.FlipExpressions,
+				  definition.AllowMultipleOutgoingLines
+				   )
 		{ }
 
 		#endregion
