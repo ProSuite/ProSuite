@@ -1,5 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
@@ -15,13 +24,36 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 		private readonly List<IssueMsg> _issueMessages = new();
 		private readonly List<GdbObjRefMsg> _obsoleteExceptionGdbRefs = new();
-		private readonly List<int> _verifiedConditionIds = new();
 
 		[CanBeNull] private readonly IIssueStore _issueStore;
+		private int _verifiedSpecificationId = -1;
+		private QualitySpecification _verifiedSpecification;
 
 		public ClientIssueMessageCollector([CanBeNull] IIssueStore issueStore = null)
 		{
 			_issueStore = issueStore;
+		}
+
+		private Geometry VerifiedPerimeter { get; set; }
+
+		private IList<GdbObjectReference> VerifiedObjects { get; set; }
+
+		public void SetVerifiedSpecificationId(int ddxId)
+		{
+			_verifiedSpecificationId = ddxId;
+		}
+
+		public void SetVerifiedSpecification(QualitySpecification qualitySpecification)
+		{
+			_verifiedSpecification = qualitySpecification;
+		}
+
+		public void SetVerifiedObjects(IEnumerable<Row> objectsToVerify)
+		{
+			VerifiedObjects =
+				objectsToVerify.Select(row => new GdbObjectReference(
+					                       row.GetTable().GetID(), row.GetObjectID()))
+				               .ToList();
 		}
 
 		/// <summary>
@@ -39,13 +71,51 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		/// </summary>
 		public int SaveIssues(IEnumerable<int> verifiedConditionIds)
 		{
-			throw new NotImplementedException();
+			throw new NotImplementedException("Call async overload on this platform.");
+		}
+
+		public async Task<int> SaveIssuesAsync(IList<int> verifiedConditionIds)
+		{
+			if (_issueStore == null)
+			{
+				throw new NotSupportedException("Unsupported operation: No issue store set up");
+			}
+
+			await PrepareIssueStore(_issueStore);
+
+			int savedIssueCount = 0;
+
+			List<Dataset> referencedIssueTables = await QueuedTask.Run(() => _issueStore
+				                                      .GetReferencedIssueTables(_issueMessages)
+				                                      .ToList());
+
+			Assert.NotNull(referencedIssueTables, "Error getting issue FeatureClasses");
+
+			EditorTransaction transaction = new EditorTransaction(new EditOperation());
+
+			bool success = await transaction.ExecuteAsync(
+				               editContext =>
+				               {
+					               savedIssueCount =
+						               UpdateIssuesTx(editContext, verifiedConditionIds);
+				               },
+				               "Update issues", referencedIssueTables);
+
+			_msg.InfoFormat("Successfully saved {0} issues", savedIssueCount);
+
+			return success ? savedIssueCount : 0;
 		}
 
 		/// <summary>
 		/// <inheritdoc cref="IClientIssueMessageCollector"/>
 		/// </summary>
-		public void SetVerifiedPerimeter(ShapeMsg perimeterMsg) { }
+		public void SetVerifiedPerimeter(ShapeMsg perimeterMsg)
+		{
+			if (perimeterMsg != null)
+			{
+				VerifiedPerimeter = ProtobufConversionUtils.FromShapeMsg(perimeterMsg);
+			}
+		}
 
 		/// <summary>
 		/// <inheritdoc cref="IClientIssueMessageCollector"/>
@@ -58,6 +128,79 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		/// <summary>
 		/// <inheritdoc cref="IClientIssueMessageCollector"/>
 		/// </summary>
-		public void AddObsoleteException(GdbObjRefMsg gdbObjRefMsg) { }
+		public void AddObsoleteException(GdbObjRefMsg gdbObjRefMsg)
+		{
+			_obsoleteExceptionGdbRefs.Add(gdbObjRefMsg);
+		}
+
+		private async Task PrepareIssueStore([NotNull] IIssueStore issueStore)
+		{
+			if (_verifiedSpecification != null)
+			{
+				issueStore.SetVerifiedSpecification(_verifiedSpecification);
+			}
+			else
+			{
+				Assert.False(_verifiedSpecificationId < 0,
+				             "The verified specification/specification id was not set.");
+
+				issueStore.SetVerifiedSpecification(_verifiedSpecificationId);
+			}
+
+			bool allConditionsRequired =
+				ErrorDeletionInPerimeter == ErrorDeletionInPerimeter.AllQualityConditions &&
+				VerifiedObjects != null;
+
+			await issueStore.PrepareVerifiedConditions(allConditionsRequired);
+		}
+
+		private int UpdateIssuesTx(
+			[NotNull] EditOperation.IEditContext editContext,
+			IList<int> verifiedConditionIds)
+		{
+			// TODO: Invalidate deleted / inserted features / issue tables
+			//editContext.Invalidate();
+
+			DeleteErrors(VerifiedObjects, verifiedConditionIds);
+
+			_msg.Info("Saving new issues in verification perimeter...");
+			int saveCount = Assert.NotNull(_issueStore)
+			                      .SaveIssues(_issueMessages, verifiedConditionIds);
+
+			int deletedAllowedErrors = DeleteInvalidAllowedErrors(_obsoleteExceptionGdbRefs);
+
+			_msg.DebugFormat("Deleted {0} invalid allowed errors.", deletedAllowedErrors);
+			return saveCount;
+		}
+
+		private int DeleteInvalidAllowedErrors(IReadOnlyCollection<GdbObjRefMsg> obsoleteExceptions)
+		{
+			if (obsoleteExceptions.Count == 0)
+			{
+				return 0;
+			}
+
+			Assert.NotNull(_issueStore, "No issue store set up");
+
+			IList<GdbObjectReference> invalidAllowedErrorReferences =
+				obsoleteExceptions.Select(
+					m => new GdbObjectReference(m.ClassHandle, m.ObjectId)).ToList();
+
+			return _issueStore.DeleteInvalidAllowedErrors(invalidAllowedErrorReferences);
+		}
+
+		private void DeleteErrors([CanBeNull] IList<GdbObjectReference> objectSelection,
+		                          IEnumerable<int> verifiedConditionIds)
+		{
+			_msg.Info("Deleting existing issues in verification perimeter...");
+
+			var deleteForConditions =
+				ErrorDeletionInPerimeter == ErrorDeletionInPerimeter.AllQualityConditions
+					? null
+					: verifiedConditionIds;
+
+			Assert.NotNull(_issueStore).DeleteErrors(
+				deleteForConditions, VerifiedPerimeter, objectSelection);
+		}
 	}
 }

@@ -58,13 +58,14 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			_mapView = mapView;
 			_verifiedPerimeter = verifiedPerimeter;
 			_verificationSpatialReference = verificationSpatialReference;
+
+			SaveAction = saveAction;
 		}
 
 		[CanBeNull]
-		public Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> SaveAction
+		private Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> SaveAction
 		{
 			get;
-			set;
 		}
 
 		public void FlashProgress(IList<EnvelopeXY> tiles,

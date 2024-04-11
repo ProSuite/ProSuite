@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 
     <SignAssembly>true</SignAssembly>
@@ -35,6 +35,12 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ArcGIS.Desktop.Editing">
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Editing\ArcGIS.Desktop.Editing.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+
     <Reference Include="ProSuite.Microservices.Definitions.Geometry, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Geometry.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>

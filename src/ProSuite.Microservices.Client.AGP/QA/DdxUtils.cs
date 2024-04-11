@@ -9,7 +9,6 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using Google.Protobuf.Collections;
 using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Logging;
@@ -194,6 +193,39 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			return result;
 		}
 
+		public static void AddDatasetsDetailsAsync(
+			IList<Dataset> datasets,
+			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
+		{
+			// Get the details
+			var request = new GetDatasetDetailsRequest();
+			request.DatasetIds.AddRange(datasets.Select(d => d.Id));
+
+			_msg.DebugFormat("Getting dataset details for {0} datasets.",
+			                 datasets.Count);
+
+			GetDatasetDetailsResponse response =
+				GrpcClientUtils.Try(
+					callOptions => ddxClient.GetDatasetDetails(request, callOptions),
+					CancellationToken.None, _timeoutMilliseconds);
+
+			if (response == null)
+			{
+				_msg.DebugFormat("The get-dataset-details request failed or timed out.");
+				return;
+			}
+
+			foreach (DatasetMsg errorDatasetMsg in response.Datasets)
+			{
+				ObjectDataset originalDataset = (ObjectDataset)
+					datasets.First(e => e.Id == errorDatasetMsg.DatasetId);
+
+				ProtoDataQualityUtils.AddDetailsToDataset(originalDataset, errorDatasetMsg);
+			}
+
+			_msg.DebugFormat("Added details to {0} datasets.", response.Datasets.Count);
+		}
+
 		private static InstanceDescriptor GetInstanceDescriptor(
 			InstanceDescriptorMsg descriptorMessage)
 		{
@@ -364,6 +396,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 							objectDataset.ObjectTypes);
 
 						datasetsById[datasetId] = (Dataset) errorDataset;
+						dataset = errorDataset;
 					}
 
 					model.AddDataset((Dataset) dataset);
@@ -392,7 +425,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		{
 			GeometryTypeShape shapeType = geometryType as GeometryTypeShape;
 
-			ProSuiteGeometryType proSuiteGeometryType = shapeType?.ShapeType ?? ProSuiteGeometryType.Null;
+			ProSuiteGeometryType proSuiteGeometryType =
+				shapeType?.ShapeType ?? ProSuiteGeometryType.Null;
 
 			ObjectDataset result = ProtoDataQualityUtils.CreateErrorDataset(
 				datasetId, name, proSuiteGeometryType);

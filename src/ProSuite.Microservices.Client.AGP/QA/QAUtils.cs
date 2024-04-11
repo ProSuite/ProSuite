@@ -1,12 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AGP.DataModel;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
@@ -207,20 +205,6 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			request.Parameters.InvalidateExceptionsIfAnyInvolvedObjectChanged =
 				invalidateExceptionsIfAnyInvolvedObjectChanged;
-		}
-
-		public static async Task<ServiceCallStatus> Verify(
-			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
-			[NotNull] VerificationRequest request,
-			[NotNull] QualityVerificationProgressTracker progress)
-		{
-			ClientIssueMessageCollector clientIssueMessageRepository =
-				new ClientIssueMessageCollector();
-
-			BackgroundVerificationRun verificationRun =
-				CreateQualityVerificationRun(request, clientIssueMessageRepository, progress);
-
-			return await verificationRun.ExecuteAndProcessMessagesAsync(qaClient);
 		}
 
 		private static WorkContextMsg CreateWorkContextMsg(
