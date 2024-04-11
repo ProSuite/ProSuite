@@ -335,11 +335,64 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 			catch (NotImplementedException)
 			{
-				// TODO: Verify this
+				// TODO: Verify this, especially the type of exception
 				// property is not implemented for feature classes from non-Gdb workspaces 
 				// ("query layers")
 				return null;
 			}
+		}
+
+		/// <summary>
+		/// Gets the name of the subtype field in a given object class.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <returns>The name of the subtype field, or null if the table has no subtype field.
+		/// </returns>
+		[CanBeNull]
+		public static string GetSubtypeFieldName([NotNull] Table table)
+		{
+			TableDefinition definition = table.GetDefinition();
+
+			return GetSubtypeFieldName(definition);
+		}
+
+		[CanBeNull]
+		public static string GetSubtypeFieldName(TableDefinition tableDefinition)
+		{
+			string subtypeFieldName = null;
+			try
+			{
+				subtypeFieldName = tableDefinition.GetSubtypeField();
+			}
+			catch (NotSupportedException notSupportedException)
+			{
+				// Shapefiles throw a NotSupportedException
+				_msg.Debug("Subtypes not supported", notSupportedException);
+			}
+
+			return subtypeFieldName;
+		}
+
+		/// <summary>
+		/// Gets the index of the subtype field in a given table.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <returns>The index of the subtype field, or -1 
+		/// if the table has no subtype field.</returns>
+		public static int GetSubtypeFieldIndex([NotNull] Table table)
+		{
+			TableDefinition definition = table.GetDefinition();
+
+			string subtypeFieldName = GetSubtypeFieldName(table);
+
+			if (string.IsNullOrEmpty(subtypeFieldName))
+			{
+				return -1;
+			}
+
+			int result = definition.FindField(subtypeFieldName);
+
+			return result;
 		}
 	}
 }
