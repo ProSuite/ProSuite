@@ -66,6 +66,17 @@ namespace ProSuite.QA.Tests
 			_perPart = perPart;
 		}
 
+		[InternallyUsedTest]
+		public QaExtent(
+		[NotNull] QaCurveDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClass)
+		{
+		}
+
+		public QaExtent(IReadOnlyTable table) : base(table)
+		{
+		}
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			return false;
