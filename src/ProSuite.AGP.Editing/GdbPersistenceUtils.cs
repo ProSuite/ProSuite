@@ -178,31 +178,7 @@ namespace ProSuite.AGP.Editing
 
 				SpatialReference spatialReference = classDefinition.GetSpatialReference();
 
-				IReadOnlyList<Field> fields = rowBuffer.GetFields();
-
-				foreach (Attribute attribute in attributes)
-				{
-					if (attribute.CurrentValue == null || attribute.CurrentValue == DBNull.Value)
-					{
-						continue;
-					}
-
-					int fieldIndex = attribute.Index;
-
-					if (IsEditable(attribute) && ! attribute.IsGeometryField)
-					{
-						if (attribute.Index >= fields.Count ||
-						    fields[attribute.Index].Name != attribute.FieldName)
-						{
-							// Issue #165: Some fields (presumably the SHAPE_LEN or SHAPE_AREA field) do not
-							// exist in the rowBuffer's field list. This happens rarely, with specific layers.
-							// Consider using copy index matrix in these cases.
-							fieldIndex = rowBuffer.FindField(attribute.FieldName);
-						}
-
-						rowBuffer[fieldIndex] = attribute.CurrentValue;
-					}
-				}
+				CopyAttributeValues(attributes, rowBuffer);
 
 				string shapeFieldName = featureClass.GetDefinition().GetShapeField();
 
@@ -235,6 +211,35 @@ namespace ProSuite.AGP.Editing
 			}
 
 			return newFeatures;
+		}
+
+		public static void CopyAttributeValues([NotNull] IEnumerable<Attribute> attributes, [NotNull] RowBuffer rowBuffer)
+		{
+			IReadOnlyList<Field> fields = rowBuffer.GetFields();
+
+			foreach (Attribute attribute in attributes)
+			{
+				if (attribute.CurrentValue == null || attribute.CurrentValue == DBNull.Value)
+				{
+					continue;
+				}
+
+				int fieldIndex = attribute.Index;
+
+				if (IsEditable(attribute) && ! attribute.IsGeometryField)
+				{
+					if (attribute.Index >= fields.Count ||
+					    fields[attribute.Index].Name != attribute.FieldName)
+					{
+						// Issue #165: Some fields (presumably the SHAPE_LEN or SHAPE_AREA field) do not
+						// exist in the rowBuffer's field list. This happens rarely, with specific layers.
+						// Consider using copy index matrix in these cases.
+						fieldIndex = rowBuffer.FindField(attribute.FieldName);
+					}
+
+					rowBuffer[fieldIndex] = attribute.CurrentValue;
+				}
+			}
 		}
 
 		public static void UpdateTx(EditOperation.IEditContext editContext,

@@ -105,18 +105,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				            geometryType == GeometryType.Multipoint,
 				            "Invalid target feature class.");
 
-				foreach (Attribute attribute in attributes)
-				{
-					if (attribute.CurrentValue == null || attribute.CurrentValue == DBNull.Value)
-					{
-						continue;
-					}
-
-					if (GdbPersistenceUtils.IsEditable(attribute) && ! attribute.IsGeometryField)
-					{
-						rowBuffer[attribute.Index] = attribute.CurrentValue;
-					}
-				}
+				GdbPersistenceUtils.CopyAttributeValues(attributes, rowBuffer);
 
 				foreach (MapPoint point in multipoint.Points)
 				{
