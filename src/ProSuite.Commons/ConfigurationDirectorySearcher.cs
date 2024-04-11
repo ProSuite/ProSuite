@@ -33,7 +33,7 @@ namespace ProSuite.Commons
 					return filePath;
 				}
 
-				misses.Add(filePath);
+				misses.Add(path);
 			}
 
 			if (! required)
@@ -168,9 +168,6 @@ namespace ProSuite.Commons
 				sb.AppendFormat("- {0}", path);
 				sb.AppendLine();
 			}
-
-			sb.AppendLine();
-			sb.AppendLine(@"See examples in the installation directory under config\examples.");
 
 			return new FileNotFoundException(sb.ToString(), configFileName);
 		}
