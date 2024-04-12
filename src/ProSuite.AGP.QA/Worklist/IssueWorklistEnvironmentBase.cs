@@ -8,6 +8,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.QA.Worklist;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -15,12 +16,9 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.DomainModel.AGP.QA;
-using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.QA.WorkList
 {
@@ -28,63 +26,48 @@ namespace ProSuite.AGP.QA.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly string _domainName = "CORRECTION_STATUS_CD";
+		private readonly IWorkListItemDatastore _workListItemDatastore;
 
-		[CanBeNull] private readonly string _path;
+		protected IssueWorkListEnvironmentBase(
+			[CanBeNull] IWorkListItemDatastore workListItemDatastore)
+		{
+			// TODO: Separate hierarchies for db-worklists vs memory-worklists
+			_workListItemDatastore = workListItemDatastore;
+
+			if (_workListItemDatastore != null &&
+			    ! _workListItemDatastore.Validate(out string message))
+			{
+				throw new ArgumentException($"Invalid issue datastore: {message}");
+			}
+		}
 
 		protected IssueWorkListEnvironmentBase([CanBeNull] string path)
 		{
-			if (path != null && path.EndsWith(".iwl", StringComparison.InvariantCultureIgnoreCase))
-			{
-				// It's the definition file
-				string gdbPath = WorkListUtils.GetIssueGeodatabasePath(path);
-
-				_path = gdbPath ?? throw new ArgumentException(
-					        $"The issue work list {path} references a geodatabase that does not exist.");
-			}
-			else
-			{
-				_path = path;
-			}
+			_workListItemDatastore = new FgdbIssueWorkListItemDatastore(path);
 		}
 
 		public override string FileSuffix => ".iwl";
 
+		protected override async Task<IList<Table>> PrepareReferencedTables()
+		{
+			IList<Table> dbTables = GetTablesCore().ToList();
+
+			if (dbTables.Count > 0 && _workListItemDatastore != null)
+			{
+				dbTables = await _workListItemDatastore.PrepareTableSchema(dbTables);
+			}
+
+			return dbTables;
+		}
+
 		protected override async Task<bool> TryPrepareSchemaCoreAsync()
 		{
-			if (_path == null)
+			if (_workListItemDatastore == null)
 			{
-				_msg.Debug($"{nameof(_path)} is null");
 				return false;
 			}
 
-			Stopwatch watch = Stopwatch.StartNew();
-
-			using (Geodatabase geodatabase =
-			       new Geodatabase(
-				       new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)))
-			      )
-			{
-				if (geodatabase.GetDomains()
-				               .Any(domain => string.Equals(_domainName, domain.GetName())))
-				{
-					_msg.Debug($"Domain {_domainName} already exists in {_path}");
-					return true;
-				}
-			}
-
-			// the GP tool is going to fail on creating a domain with the same name
-			await Task.WhenAll(
-				GeoprocessingUtils.CreateDomainAsync(_path, _domainName,
-				                                     "Correction status for work list"),
-				GeoprocessingUtils.AddCodedValueToDomainAsync(
-					_path, _domainName, (int) IssueCorrectionStatus.NotCorrected, "Not Corrected"),
-				GeoprocessingUtils.AddCodedValueToDomainAsync(
-					_path, _domainName, (int) IssueCorrectionStatus.Corrected, "Corrected"));
-
-			_msg.DebugStopTiming(watch, "Prepared schema - domain");
-
-			return true;
+			return await _workListItemDatastore.TryPrepareSchema();
 		}
 
 		public override void LoadAssociatedLayers()
@@ -115,7 +98,7 @@ namespace ProSuite.AGP.QA.WorkList
 			return groupLayer as T;
 		}
 
-		protected override void AddToMapCore(IEnumerable<Table> tables)
+		private void AddToMapCore(IEnumerable<Table> tables)
 		{
 			var groupLayer = GetContainerCore<GroupLayer>();
 
@@ -164,7 +147,7 @@ namespace ProSuite.AGP.QA.WorkList
 			}
 		}
 
-		protected void RemoveFromMapCore(IEnumerable<Table> tables)
+		private void RemoveFromMapCore(IEnumerable<Table> tables)
 		{
 			GroupLayer groupLayer = GetContainerCore<GroupLayer>();
 
@@ -223,52 +206,14 @@ namespace ProSuite.AGP.QA.WorkList
 			}
 		}
 
-		// todo daro to DatasetUtils?
-		protected override IEnumerable<Table> GetTablesCore()
+		protected virtual IEnumerable<Table> GetTablesCore()
 		{
-			if (string.IsNullOrEmpty(_path))
+			if (_workListItemDatastore == null)
 			{
 				return Enumerable.Empty<Table>();
 			}
 
-			// todo daro: ensure layers are not already in map
-			// todo daro: inline
-			using Geodatabase geodatabase =
-				new Geodatabase(
-					new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)));
-
-			return DatasetUtils.OpenTables(geodatabase, IssueGdbSchema.IssueFeatureClassNames)
-			                   .ToList();
-		}
-
-		protected override async Task<Table> EnsureStatusFieldCoreAsync(Table table)
-		{
-			const string fieldName = "STATUS";
-
-			Stopwatch watch = Stopwatch.StartNew();
-
-			string path = table.GetPath().LocalPath;
-
-			// the GP tool is not going to fail on adding a field with the same name
-			// But it still takes hell of a long time...
-			TableDefinition tableDefinition = table.GetDefinition();
-
-			if (tableDefinition.FindField(fieldName) < 0)
-			{
-				Task<bool> addField =
-					GeoprocessingUtils.AddFieldAsync(path, fieldName, "Status",
-					                                 FieldType.Integer, null, null,
-					                                 null, true, false, _domainName);
-
-				Task<bool> assignDefaultValue =
-					GeoprocessingUtils.AssignDefaultToFieldAsync(path, fieldName, 100);
-
-				await Task.WhenAll(addField, assignDefaultValue);
-
-				_msg.DebugStopTiming(watch, "Prepared schema - status field on {0}", path);
-			}
-
-			return table;
+			return _workListItemDatastore.GetTables();
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,

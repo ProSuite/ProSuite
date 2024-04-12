@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
@@ -45,9 +44,9 @@ namespace ProSuite.AGP.WorkList
 			                     definitionFilePath);
 
 			// todo daro: dispose feature classes?
-			Table[] tables = await Task.WhenAll(GetTablesCore().Select(EnsureStatusFieldCoreAsync));
+			IList<Table> tables = await PrepareReferencedTables();
 
-			AddToMapCore(tables);
+			LoadAssociatedLayers();
 
 			IWorkList result = CreateWorkListCore(
 				CreateItemRepositoryCore(tables, stateRepository),
@@ -56,6 +55,12 @@ namespace ProSuite.AGP.WorkList
 			_msg.DebugFormat("Created work list {0}", uniqueName);
 
 			return result;
+		}
+
+		protected virtual Task<IList<Table>> PrepareReferencedTables()
+		{
+			IList<Table> result = new List<Table>();
+			return Task.FromResult(result);
 		}
 
 		public void AddLayer([NotNull] IWorkList worklist, string path)
@@ -94,18 +99,12 @@ namespace ProSuite.AGP.WorkList
 
 		public virtual void RemoveAssociatedLayers() { }
 
-		protected abstract void AddToMapCore(IEnumerable<Table> tables);
-
 		protected abstract T GetContainerCore<T>() where T : class;
 
 		protected virtual async Task<bool> TryPrepareSchemaCoreAsync()
 		{
 			return await Task.FromResult(true);
 		}
-
-		protected abstract IEnumerable<Table> GetTablesCore();
-
-		protected abstract Task<Table> EnsureStatusFieldCoreAsync([NotNull] Table table);
 
 		protected abstract IWorkList CreateWorkListCore([NotNull] IWorkItemRepository repository,
 		                                                [NotNull] string uniqueName,
