@@ -1,7 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -393,6 +396,102 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			int result = definition.FindField(subtypeFieldName);
 
 			return result;
+		}
+
+		/// <summary>
+		/// Gets the name of the object id field in a given table.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <returns>The name of the subtype field, or null if the table has no subtype field.
+		/// </returns>
+		[CanBeNull]
+		public static string GetObjectIdFieldName([NotNull] Table table)
+		{
+			TableDefinition definition = table.GetDefinition();
+
+			return GetObjectIdFieldName(definition);
+		}
+
+		[CanBeNull]
+		public static string GetObjectIdFieldName(TableDefinition tableDefinition)
+		{
+			if (! tableDefinition.HasObjectID())
+			{
+				return null;
+			}
+
+			return tableDefinition.GetObjectIDField();
+		}
+
+		/// <summary>
+		/// Deletes rows in a table based on a collection of object IDs.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <param name="oids">The oids.</param>
+		public static void DeleteRows([NotNull] Table table,
+		                              [NotNull] IEnumerable oids)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNull(oids, nameof(oids));
+
+			const int maxLength = 1000;
+
+			var sb = new StringBuilder();
+
+			foreach (object oidObj in oids)
+			{
+				// Convert the (potentially boxed int) object:
+				long oid = Convert.ToInt64(oidObj);
+
+				if (sb.Length == 0)
+				{
+					sb.Append(oid);
+				}
+				else if (sb.Length < maxLength)
+				{
+					sb.AppendFormat(",{0}", oid);
+				}
+				else
+				{
+					// maximum exceeded, delete current oid list
+					DeleteRowsByOIDString(table, sb.ToString());
+
+					// clear string builder
+					sb.Remove(0, sb.Length);
+				}
+			}
+
+			if (sb.Length > 0)
+			{
+				DeleteRowsByOIDString(table, sb.ToString());
+			}
+		}
+
+		/// <summary>
+		/// Deletes rows in a table based on a string containing a comma-separated
+		/// list of object ids.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <param name="oidString">The oid string.</param>
+		private static void DeleteRowsByOIDString([NotNull] Table table,
+		                                          [NotNull] string oidString)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(oidString, nameof(oidString));
+
+			string objectIdFieldName = Assert.NotNullOrEmpty(GetObjectIdFieldName(table));
+
+			string whereClause = $"{objectIdFieldName} IN ({oidString})";
+
+			QueryFilter filter = new QueryFilter { WhereClause = whereClause };
+
+			Stopwatch watch = _msg.DebugStartTiming(
+				"Deleting rows from {0} using where clause {1}",
+				GetName(table), whereClause);
+
+			table.DeleteRows(filter);
+
+			_msg.DebugStopTiming(watch, "Rows deleted");
 		}
 	}
 }

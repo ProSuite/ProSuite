@@ -43,7 +43,7 @@ public interface IIssueStore
 	/// </summary>
 	/// <param name="invalidAllowedErrorReferences"></param>
 	/// <returns></returns>
-	int DeleteInvalidAllowedErrors(IList<GdbObjectReference> invalidAllowedErrorReferences);
+	void DeleteInvalidAllowedErrors(IList<GdbObjectReference> invalidAllowedErrorReferences);
 
 	/// <summary>
 	/// Sets the verified specification or its ID. This will be used to get the relevant conditions.

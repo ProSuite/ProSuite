@@ -26,6 +26,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private readonly List<GdbObjRefMsg> _obsoleteExceptionGdbRefs = new();
 
 		[CanBeNull] private readonly IIssueStore _issueStore;
+
 		private int _verifiedSpecificationId = -1;
 		private QualitySpecification _verifiedSpecification;
 
@@ -36,7 +37,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 		private Geometry VerifiedPerimeter { get; set; }
 
-		private IList<GdbObjectReference> VerifiedObjects { get; set; }
+		private IList<Row> VerifiedRows { get; set; }
 
 		public void SetVerifiedSpecificationId(int ddxId)
 		{
@@ -48,12 +49,9 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			_verifiedSpecification = qualitySpecification;
 		}
 
-		public void SetVerifiedObjects(IEnumerable<Row> objectsToVerify)
+		public void SetVerifiedObjects(IList<Row> objectsToVerify)
 		{
-			VerifiedObjects =
-				objectsToVerify.Select(row => new GdbObjectReference(
-					                       row.GetTable().GetID(), row.GetObjectID()))
-				               .ToList();
+			VerifiedRows = objectsToVerify;
 		}
 
 		/// <summary>
@@ -85,9 +83,21 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			int savedIssueCount = 0;
 
-			List<Dataset> referencedIssueTables = await QueuedTask.Run(() => _issueStore
-				                                      .GetReferencedIssueTables(_issueMessages)
-				                                      .ToList());
+			// Preparations that require a queued task:
+			List<GdbObjectReference> objectsToVerify = null;
+			List<Dataset> referencedIssueTables = null;
+
+			await QueuedTask.Run(() =>
+			{
+				objectsToVerify = VerifiedRows?.Select(row => new GdbObjectReference(
+					                                       row.GetTable().GetID(),
+					                                       row.GetObjectID()))
+				                              .ToList();
+
+				referencedIssueTables = _issueStore
+				                        .GetReferencedIssueTables(_issueMessages)
+				                        .ToList();
+			});
 
 			Assert.NotNull(referencedIssueTables, "Error getting issue FeatureClasses");
 
@@ -97,11 +107,10 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				               editContext =>
 				               {
 					               savedIssueCount =
-						               UpdateIssuesTx(editContext, verifiedConditionIds);
+						               UpdateIssuesTx(editContext, objectsToVerify,
+						                              verifiedConditionIds);
 				               },
 				               "Update issues", referencedIssueTables);
-
-			_msg.InfoFormat("Successfully saved {0} issues", savedIssueCount);
 
 			return success ? savedIssueCount : 0;
 		}
@@ -149,35 +158,38 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			bool allConditionsRequired =
 				ErrorDeletionInPerimeter == ErrorDeletionInPerimeter.AllQualityConditions &&
-				VerifiedObjects != null;
+				VerifiedRows != null;
 
 			await issueStore.PrepareVerifiedConditions(allConditionsRequired);
 		}
 
 		private int UpdateIssuesTx(
 			[NotNull] EditOperation.IEditContext editContext,
+			[CanBeNull] IList<GdbObjectReference> verifiedObjects,
 			IList<int> verifiedConditionIds)
 		{
 			// TODO: Invalidate deleted / inserted features / issue tables
 			//editContext.Invalidate();
 
-			DeleteErrors(VerifiedObjects, verifiedConditionIds);
+			DeleteErrors(verifiedObjects, verifiedConditionIds);
 
-			_msg.Info("Saving new issues in verification perimeter...");
+			_msg.Debug("Saving new issues in verification perimeter...");
 			int saveCount = Assert.NotNull(_issueStore)
 			                      .SaveIssues(_issueMessages, verifiedConditionIds);
 
-			int deletedAllowedErrors = DeleteInvalidAllowedErrors(_obsoleteExceptionGdbRefs);
+			DeleteInvalidAllowedErrors(_obsoleteExceptionGdbRefs);
 
-			_msg.DebugFormat("Deleted {0} invalid allowed errors.", deletedAllowedErrors);
+			_msg.Debug("Deleted invalid allowed errors.");
+
 			return saveCount;
 		}
 
-		private int DeleteInvalidAllowedErrors(IReadOnlyCollection<GdbObjRefMsg> obsoleteExceptions)
+		private void DeleteInvalidAllowedErrors(
+			IReadOnlyCollection<GdbObjRefMsg> obsoleteExceptions)
 		{
 			if (obsoleteExceptions.Count == 0)
 			{
-				return 0;
+				return;
 			}
 
 			Assert.NotNull(_issueStore, "No issue store set up");
@@ -186,13 +198,13 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				obsoleteExceptions.Select(
 					m => new GdbObjectReference(m.ClassHandle, m.ObjectId)).ToList();
 
-			return _issueStore.DeleteInvalidAllowedErrors(invalidAllowedErrorReferences);
+			_issueStore.DeleteInvalidAllowedErrors(invalidAllowedErrorReferences);
 		}
 
 		private void DeleteErrors([CanBeNull] IList<GdbObjectReference> objectSelection,
 		                          IEnumerable<int> verifiedConditionIds)
 		{
-			_msg.Info("Deleting existing issues in verification perimeter...");
+			_msg.Debug("Deleting existing issues in verification perimeter...");
 
 			var deleteForConditions =
 				ErrorDeletionInPerimeter == ErrorDeletionInPerimeter.AllQualityConditions
