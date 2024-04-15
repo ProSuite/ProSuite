@@ -1,0 +1,40 @@
+<Window x:Class="ProSuite.AGP.Display.ExportSLDLMDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ProSuite.AGP.Display"
+        xmlns:display="clr-namespace:ProSuite.AGP.Display;assembly=ProSuite.AGP.Display"
+        d:DataContext="{d:DesignInstance {x:Type display:ExportSLDLMOptions}, IsDesignTimeCreatable=False}"
+        mc:Ignorable="d"
+        Title="Export SLD/LM Configuration"
+        Width="400" MinWidth="400" SizeToContent="Height" MinHeight="310"
+        Background="{x:Static SystemColors.ControlBrush}"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+	<StackPanel Margin="12">
+		<TextBlock Padding="0,2,0,2"><Run Text="Active map: "/><Bold><Run Text="{Binding MapName,Mode=OneWay}"/></Bold></TextBlock>
+
+		<Label Padding="0,10,0,2" Target="{Binding ElementName=comboBoxLayer}">Export entire map or group layer:</Label>
+        <ComboBox Margin="2" Name="comboBoxLayer" IsEditable="False"
+                  ItemsSource="{Binding GroupLayerItems, Mode=OneWay}"
+                  SelectedItem="{Binding GroupLayerItem, Mode=TwoWay}"
+                  DisplayMemberPath="Name"/>
+
+        <Label Padding="0,10,0,2" Target="{Binding ElementName=textBoxRemark}">Remark to add to the generated file:</Label>
+        <TextBox Padding="2" Name="textBoxRemark" Text="{Binding Remark, Mode=TwoWay}" />
+
+        <Label Padding="0,10,0,2">Path to config file to create/overwrite (XML or CSV):</Label>
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Padding="5,0,5,0" Content="Browse..." Click="BrowseButtonClicked"/>
+	        <TextBox Padding="2" Text="{Binding ConfigFilePath}"/>
+        </DockPanel>
+
+		<CheckBox Margin="0,10,0,2" IsChecked="{Binding OmitMasks}">Omit layer masking info</CheckBox>
+
+		<DockPanel LastChildFill="False" Margin="0,12,0,0">
+	        <Button DockPanel.Dock="Right" Content="Cancel" Margin="6,0,0,0" Padding="10,3" MinWidth="60" IsCancel="True" TabIndex="2" />
+	        <Button DockPanel.Dock="Right" Content="Export" Margin="6,0,0,0" Padding="10,3" MinWidth="60" IsDefault="True" TabIndex="1"
+	                IsEnabled="{Binding ExportButtonEnabled}" Click="ExportButtonClicked" />
+        </DockPanel>
+	</StackPanel>
+</Window>
