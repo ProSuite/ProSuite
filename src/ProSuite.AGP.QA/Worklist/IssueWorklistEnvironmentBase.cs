@@ -235,7 +235,8 @@ namespace ProSuite.AGP.QA.WorkList
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			var result = new IssueItemRepository(tables.Distinct(), stateRepository);
+			var result = new IssueItemRepository(tables.Distinct(), stateRepository,
+				_workListItemDatastore);
 
 			_msg.DebugStopTiming(watch, "Created issue work item repository");
 

@@ -5,6 +5,7 @@ using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Internal.CIM;
 using NUnit.Framework;
+using ProSuite.AGP.QA.Worklist;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
@@ -85,7 +86,8 @@ namespace ProSuite.AGP.WorkList.Test
 			IRepository stateRepository =
 				new XmlWorkItemStateRepository(Path.Join(Path.GetDirectoryName(path), "states.xml"), null, null);
 
-			IssueItemRepository repository = new IssueItemRepository(new List<Table> { lines, issueRows }, stateRepository);
+			IssueItemRepository repository =
+				new IssueItemRepository(new List<Table> { lines, issueRows }, stateRepository);
 
 			foreach (IWorkItem item in repository.GetItems())
 			{

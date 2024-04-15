@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ProSuite.AGP.QA.Worklist;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
@@ -23,12 +24,15 @@ namespace ProSuite.AGP.WorkList
 
 		private int _lastUsedOid;
 
-		protected GdbItemRepository(IEnumerable<Table> tables, IRepository workItemStateRepository)
+		protected GdbItemRepository(IEnumerable<Table> tables,
+		                            IRepository workItemStateRepository,
+		                            [CanBeNull] IWorkListItemDatastore tableSchema = null)
 		{
 			foreach (Table table in tables)
 			{
 				ISourceClass sourceClass =
-					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition());
+					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition(),
+					                  tableSchema);
 
 				SourceClasses.Add(sourceClass);
 			}
@@ -192,7 +196,8 @@ namespace ProSuite.AGP.WorkList
 
 		[CanBeNull]
 		protected virtual IAttributeReader CreateAttributeReaderCore(
-			[NotNull] TableDefinition definition)
+			[NotNull] TableDefinition definition,
+			[CanBeNull] IWorkListItemDatastore tableSchema)
 		{
 			return null;
 		}
@@ -213,9 +218,11 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		private ISourceClass CreateSourceClass(GdbTableIdentity identity,
-		                                       TableDefinition definition)
+		                                       TableDefinition definition,
+		                                       [CanBeNull] IWorkListItemDatastore tableSchema)
 		{
-			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
+			IAttributeReader attributeReader =
+				CreateAttributeReaderCore(definition, tableSchema);
 
 			WorkListStatusSchema statusSchema = CreateStatusSchemaCore(definition);
 

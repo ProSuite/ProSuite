@@ -6,12 +6,12 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.QA.Worklist;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Ado;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
@@ -98,7 +98,12 @@ namespace ProSuite.AGP.WorkList
 				stateRepository =
 					new XmlWorkItemStateRepository(definition.Path, definition.Name, type,
 					                               definition.CurrentIndex);
-				repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
+
+				// TODO: Factory method with IWorkListItemDatastore implementation!
+				IWorkListItemDatastore workListItemDatastore = null;
+				repository =
+					new IssueItemRepository(tablesByGeodatabase, stateRepository,
+					                        workListItemDatastore);
 			}
 			else if (type == typeof(SelectionWorkList))
 			{
@@ -108,8 +113,8 @@ namespace ProSuite.AGP.WorkList
 
 				Dictionary<long, Table> tablesById =
 					tablesByGeodatabase.Select(table => table)
-					                 .ToDictionary(table => new GdbTableIdentity(table).Id,
-					                               table => table);
+					                   .ToDictionary(table => new GdbTableIdentity(table).Id,
+					                                 table => table);
 
 				Dictionary<Table, List<long>> oidsByTable =
 					GetOidsByTable(definition.Items, tablesById);

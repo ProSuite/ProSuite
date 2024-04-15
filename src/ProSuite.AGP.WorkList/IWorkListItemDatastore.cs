@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.QA.Worklist
 {
@@ -13,5 +15,8 @@ namespace ProSuite.AGP.QA.Worklist
 		Task<bool> TryPrepareSchema();
 
 		Task<IList<Table>> PrepareTableSchema(IList<Table> dbTables);
+
+		IAttributeReader CreateAttributeReader([NotNull] TableDefinition definition,
+		                                       [NotNull] params Attributes[] attributes);
 	}
 }
