@@ -102,6 +102,8 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaEmptyNotNullTextFields),
 											 typeof(QaExtent),
 											 typeof(QaFlowLogic),
+											 typeof(QaGdbRelease),
+											 typeof(QaGeometryConstraint),
 											 typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
 				                             typeof(QaValue),
@@ -236,6 +238,8 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaExtent)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaFlowLogic)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGdbRelease)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGeometryConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry)));
 
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe)));

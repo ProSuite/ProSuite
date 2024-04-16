@@ -56,12 +56,17 @@ namespace ProSuite.QA.Tests
 		{
 			Assert.ArgumentNotNullOrEmpty(geometryConstraint, nameof(geometryConstraint));
 
+			_constraint = new GeometryConstraint(geometryConstraint);
 			_shapeFieldName = featureClass.ShapeFieldName;
 			_perPart = perPart;
 			_geometryType = featureClass.ShapeType;
-
-			_constraint = new GeometryConstraint(geometryConstraint);
 		}
+
+		[InternallyUsedTest]
+		public QaGeometryConstraint(
+			[NotNull] QaGeometryConstraintDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.GeometryConstraint, definition.PerPart) { }
 
 		public override bool IsQueriedTable(int tableIndex)
 		{
@@ -182,7 +187,7 @@ namespace ProSuite.QA.Tests
 
 			return ReportError(
 				description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
-				issueCode, _shapeFieldName, values: new[] {rawValues});
+				issueCode, _shapeFieldName, values: new[] { rawValues });
 		}
 
 		[NotNull]
