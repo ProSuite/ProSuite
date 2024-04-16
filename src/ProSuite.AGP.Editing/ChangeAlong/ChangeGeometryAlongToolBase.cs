@@ -115,7 +115,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
 				Dictionary<MapMember, List<long>> selectionByLayer = args.Selection.ToDictionary();
 				IList<Feature> applicableSelection =
-					GetApplicableSelectedFeatures(selectionByLayer).ToList();
+					GetApplicableSelectedFeatures(selectionByLayer, true).ToList();
 
 				RefreshExistingChangeAlongCurves(applicableSelection, GetCancelableProgressor());
 			}

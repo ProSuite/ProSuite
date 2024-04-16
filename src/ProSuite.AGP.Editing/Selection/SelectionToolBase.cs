@@ -32,6 +32,7 @@ namespace ProSuite.AGP.Editing.Selection
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.SelectionToolNormalShift);
 
 			SelectOnlyEditFeatures = false;
+			UnJoinedSelection = false;
 
 			SetCursor(SelectionCursor);
 		}

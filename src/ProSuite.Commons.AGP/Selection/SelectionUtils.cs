@@ -177,9 +177,11 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public static IEnumerable<Feature> GetSelectedFeatures([NotNull] MapView activeView)
 		{
+			const bool withoutJoins = false;
 			SpatialReference sref = activeView.Map.SpatialReference;
 
-			foreach (Feature feature in MapUtils.GetFeatures(GetSelection(activeView.Map), sref))
+			foreach (Feature feature in MapUtils.GetFeatures(
+				         GetSelection(activeView.Map), withoutJoins, sref))
 			{
 				yield return feature;
 			}
