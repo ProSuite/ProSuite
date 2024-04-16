@@ -30,7 +30,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private const int _timeoutMilliseconds = 60000;
+		// Sometimes it takes almost two minutes!
+		private const int _timeoutMilliseconds = 180000;
 
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidatesAsync(
 			[NotNull] ICollection<Table> tables,
