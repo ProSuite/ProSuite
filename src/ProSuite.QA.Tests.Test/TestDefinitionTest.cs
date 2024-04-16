@@ -11,7 +11,6 @@ using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.TestFactories;
-using ProSuite.QA.Tests.Constraints;
 using ProSuite.QA.Tests.Test.TestData;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
@@ -167,47 +166,258 @@ namespace ProSuite.QA.Tests.Test
 
 					Assert.NotNull(testFactory);
 
-					var model = new InMemoryTestDataModel("simple model");
+					// NOTE: The instantiation of the tests and the comparisons of the values are
+					// performed in the AreParametersEqual test.
 
-					foreach (TestParameter parameter in testFactory.Parameters)
+					//var model = new InMemoryTestDataModel("simple model");
+
+					//foreach (TestParameter parameter in testFactory.Parameters)
+					//{
+					//	if (parameter.Type == typeof(ConstraintNode))
+					//	{
+					//		// TODO
+					//		continue;
+					//	}
+
+					//	object defaultVal =
+					//		CreateDefaultValue(
+					//			TestParameterTypeUtils.GetParameterType(parameter.Type), model);
+
+					//	if (defaultVal is string stringVal)
+					//	{
+					//		TestParameterValueUtils.AddParameterValue(
+					//			testCondition, parameter.Name, stringVal);
+					//		TestParameterValueUtils.AddParameterValue(
+					//			testDefCondition, parameter.Name, stringVal);
+					//	}
+					//	else if (defaultVal is Dataset datasetVal)
+					//	{
+					//		TestParameterValueUtils.AddParameterValue(
+					//			testCondition, parameter.Name, datasetVal);
+					//		TestParameterValueUtils.AddParameterValue(
+					//			testDefCondition, parameter.Name, datasetVal);
+					//	}
+					//}
+
+					//IList<ITest> testsOrig = testFactory.CreateTests(
+					//	new SimpleDatasetOpener(model));
+
+					//IList<ITest> testsNew = testDefinitionFactory.CreateTests(
+					//	new SimpleDatasetOpener(model));
+
+					//Assert.AreEqual(1, testsOrig.Count);
+					//Assert.AreEqual(1, testsNew.Count);
+
+					//ReflectionCompare.RecrusiveReflectionCompare(testsOrig[0], testsNew[0]);
+				}
+			}
+		}
+
+		private record TestDefinitionCase(
+			Type TestType,
+			int ConstructorIndex = -1,
+			object[] ConstructorValues = null,
+			Dictionary<string, object> OptionalParamValues = null);
+
+		[Test]
+		public void AreParametersEqual()
+		{
+			var model = new InMemoryTestDataModel("simple model");
+
+			var testCases = new List<TestDefinitionCase>();
+
+			// Test cases with automatic parameter value generation:
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(Qa3dConstantZ)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaBorderSense)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCoplanarRings)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
+
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDateFieldsWithoutTime)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaExtent)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaFlowLogic)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry)));
+
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaValue)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaWithinZRange)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaZDifferenceOther)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaZDifferenceSelf)));
+
+			// Manually create values for special cases, such as optional parameters:
+
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("AllowedNonLinearSegmentTypes",
+			                   new List<NonLinearSegmentType> { NonLinearSegmentType.Bezier });
+			optionalValues.Add("GroupIssuesBySegmentType", true);
+
+			var testCaseCurve =
+				new TestDefinitionCase(typeof(QaCurve), 0,
+				                       new object[] { model.GetVectorDataset() },
+				                       optionalValues);
+
+			testCases.Add(testCaseCurve);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaDateFieldsWithoutTime), 0,
+			                                     new object[]
+			                                     { model.GetVectorDataset() }));
+			testCases.Add(new TestDefinitionCase(typeof(QaDateFieldsWithoutTime), 1,
+			                                     new object[]
+			                                     { model.GetVectorDataset(), "MY_DATE_FIELD" }));
+
+			foreach (TestDefinitionCase testCase in testCases)
+			{
+				Type testType = testCase.TestType;
+				int constructorIdx = testCase.ConstructorIndex;
+
+				Console.WriteLine("Checking constructor index {0} for test {1}", constructorIdx,
+				                  testType.Name);
+
+				object[] constructorValues = testCase.ConstructorValues;
+
+				// Optional parameters Name-Value pairs, null if not specified (or no optional parameters):
+				Dictionary<string, object> optionalParamValues = testCase.OptionalParamValues;
+
+				ConstructorInfo constructorInfo = testType.GetConstructors()[constructorIdx];
+
+				Assert.AreEqual(constructorInfo.GetParameters().Length, constructorValues.Length,
+				                $"Wrong numbers of constructor parameters for constructor index {constructorIdx}");
+
+				TestDescriptor testImplDescriptor =
+					CreateTestDescriptor(testType, constructorIdx);
+
+				ClassDescriptor classDescriptor = testImplDescriptor.Class;
+				Assert.NotNull(classDescriptor);
+
+				TestFactory testDefinitionFactory =
+					TestFactoryUtils.GetTestDefinitionFactory(testImplDescriptor);
+
+				Assert.NotNull(testDefinitionFactory);
+
+				bool hasAlgorithmDefinition =
+					InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+						classDescriptor, out Type definitionType);
+
+				TestDescriptor testDefDescriptor =
+					CreateTestDescriptor(definitionType, constructorIdx);
+
+				QualityCondition testCondition =
+					new QualityCondition("qc", testImplDescriptor);
+				QualityCondition testDefCondition =
+					new QualityCondition("qc", testDefDescriptor);
+
+				testDefinitionFactory.Condition = testDefCondition;
+				InstanceConfigurationUtils.InitializeParameterValues(
+					testDefinitionFactory, testDefCondition);
+
+				// The factory of the implementations
+				TestFactory testFactory = TestFactoryUtils.CreateTestFactory(testCondition);
+
+				Assert.NotNull(testFactory);
+
+				int i = 0;
+				foreach (TestParameter parameter in testFactory.Parameters)
+				{
+					object value = constructorValues[i++];
+
+					if (value is Dataset datasetVal)
 					{
-						if (parameter.Type == typeof(ConstraintNode))
-						{
-							// TODO
-							continue;
-						}
-
-						object defaultVal =
-							CreateDefaultValue(
-								TestParameterTypeUtils.GetParameterType(parameter.Type), model);
-
-						if (defaultVal is string stringVal)
-						{
-							TestParameterValueUtils.AddParameterValue(
-								testCondition, parameter.Name, stringVal);
-							TestParameterValueUtils.AddParameterValue(
-								testDefCondition, parameter.Name, stringVal);
-						}
-						else if (defaultVal is Dataset datasetVal)
-						{
-							TestParameterValueUtils.AddParameterValue(
-								testCondition, parameter.Name, datasetVal);
-							TestParameterValueUtils.AddParameterValue(
-								testDefCondition, parameter.Name, datasetVal);
-						}
+						TestParameterValueUtils.AddParameterValue(
+							testCondition, parameter.Name, datasetVal);
+						TestParameterValueUtils.AddParameterValue(
+							testDefCondition, parameter.Name, datasetVal);
 					}
 
-					IList<ITest> testsOrig = testFactory.CreateTests(
-						new SimpleDatasetOpener(model));
-
-					IList<ITest> testsNew = testDefinitionFactory.CreateTests(
-						new SimpleDatasetOpener(model));
-
-					Assert.AreEqual(1, testsOrig.Count);
-					Assert.AreEqual(1, testsNew.Count);
-
-					ReflectionCompare.RecrusiveReflectionCompare(testsOrig[0], testsNew[0]);
+					else
+					{
+						string stringVal = Convert.ToString(value);
+						TestParameterValueUtils.AddParameterValue(
+							testCondition, parameter.Name, stringVal);
+						TestParameterValueUtils.AddParameterValue(
+							testDefCondition, parameter.Name, stringVal);
+					}
 				}
+
+				if (optionalParamValues != null)
+				{
+					foreach (KeyValuePair<string, object> optionalParam in
+					         optionalParamValues)
+					{
+						TestParameterValueUtils.AddParameterValue(
+							testCondition, optionalParam.Key, optionalParam.Value);
+						TestParameterValueUtils.AddParameterValue(
+							testDefCondition, optionalParam.Key, optionalParam.Value);
+					}
+				}
+
+				IList<ITest> testsOrig = testFactory.CreateTests(
+					new SimpleDatasetOpener(model));
+
+				IList<ITest> testsNew = testDefinitionFactory.CreateTests(
+					new SimpleDatasetOpener(model));
+
+				Assert.AreEqual(1, testsOrig.Count, "Special Case: Multiple tests created.");
+				Assert.AreEqual(1, testsNew.Count);
+
+				ReflectionCompare.RecrusiveReflectionCompare(testsOrig[0], testsNew[0]);
+			}
+		}
+
+		private static IEnumerable<TestDefinitionCase> CreateDefaultValueTestCases(Type testType)
+		{
+			// One is used internally to create using a the definition.
+			int constructorCount = testType.GetConstructors().Length - 1;
+
+			for (int constructorIdx = 0;
+			     constructorIdx < constructorCount;
+			     constructorIdx++)
+			{
+				Console.WriteLine("Checking {0}({1})", testType.Name, constructorIdx);
+
+				CompareMetadata(testType, constructorIdx);
+
+				TestDescriptor testImplDescriptor =
+					CreateTestDescriptor(testType, constructorIdx);
+
+				ClassDescriptor classDescriptor = testImplDescriptor.Class;
+				Assert.NotNull(classDescriptor);
+
+				bool hasAlgorithmDefinition =
+					InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+						classDescriptor, out Type definitionType);
+
+				Assert.IsTrue(hasAlgorithmDefinition);
+				Assert.NotNull(definitionType);
+
+				QualityCondition testCondition = new QualityCondition("qc", testImplDescriptor);
+
+				// The factory of the implementations
+				TestFactory testFactory = TestFactoryUtils.CreateTestFactory(testCondition);
+
+				Assert.NotNull(testFactory);
+
+				var model = new InMemoryTestDataModel("simple model");
+
+				var parameterList = new List<object>();
+				foreach (TestParameter parameter in testFactory.Parameters)
+				{
+					object defaultVal =
+						CreateDefaultValue(
+							TestParameterTypeUtils.GetParameterType(parameter.Type), model);
+
+					parameterList.Add(defaultVal);
+				}
+
+				TestDefinitionCase result = new TestDefinitionCase(testType,
+					constructorIdx, parameterList.ToArray());
+
+				bool hasOptionalParameters =
+					testFactory.Parameters.Any(p => ! p.IsConstructorParameter);
+
+				Assert.False(hasOptionalParameters,
+				             $"The type {testType.Name} has optional parameters. Use manual configuration!");
+
+				yield return result;
 			}
 		}
 
@@ -451,6 +661,12 @@ namespace ProSuite.QA.Tests.Test
 				if (property.Name == "Capacity")
 				{
 					// Lists have some internal capacity that is not relevant but often different
+					continue;
+				}
+
+				if (property.Name == "SyncRoot")
+				{
+					// Arrays have a SyncRoot property that results in stck overflow
 					continue;
 				}
 
