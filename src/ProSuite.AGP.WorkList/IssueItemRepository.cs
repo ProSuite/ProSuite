@@ -23,8 +23,9 @@ namespace ProSuite.AGP.WorkList
 		private const string _statusFieldName = "STATUS";
 
 		public IssueItemRepository(IEnumerable<Table> tables, IRepository stateRepository,
-		                           [CanBeNull] IWorkListItemDatastore tableSchema = null) : base(
-			tables, stateRepository, tableSchema) { }
+		                           [CanBeNull] IWorkListItemDatastore tableSchema = null,
+		                           string definitionQuery = null) : base(
+			tables, stateRepository, tableSchema, definitionQuery) { }
 
 		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{
@@ -85,15 +86,15 @@ namespace ProSuite.AGP.WorkList
 			return RefreshState(item);
 		}
 
-		protected override ISourceClass CreateSourceClassCore(
-			GdbTableIdentity identity,
-			IAttributeReader attributeReader,
-			WorkListStatusSchema statusSchema)
+		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
+		                                                      IAttributeReader attributeReader,
+		                                                      WorkListStatusSchema statusSchema,
+		                                                      string definitionQuery = null)
 		{
 			Assert.ArgumentNotNull(attributeReader, nameof(attributeReader));
 			Assert.ArgumentNotNull(statusSchema, nameof(statusSchema));
 
-			return new DatabaseSourceClass(identity, statusSchema, attributeReader);
+			return new DatabaseSourceClass(identity, statusSchema, attributeReader, definitionQuery);
 		}
 
 		protected override void RefreshCore(IWorkItem item,

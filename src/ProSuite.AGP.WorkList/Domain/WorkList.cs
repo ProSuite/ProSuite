@@ -46,7 +46,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		protected WorkList([NotNull] IWorkItemRepository repository,
 		                   [NotNull] string name,
-		                   string displayName = null)
+		                   [CanBeNull] Geometry areaOfInterest = null,
+		                   [CanBeNull] string displayName = null)
 		{
 			_displayName = displayName;
 			Name = name;
@@ -54,10 +55,10 @@ namespace ProSuite.AGP.WorkList.Domain
 			Repository = repository;
 
 			Visibility = WorkItemVisibility.Todo;
-			AreaOfInterest = null;
+			AreaOfInterest = areaOfInterest;
 			CurrentIndex = repository.GetCurrentIndex();
 
-			foreach (IWorkItem item in Repository.GetItems())
+			foreach (IWorkItem item in Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo))
 			{
 				_items.Add(item);
 
@@ -125,7 +126,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public Polygon AreaOfInterest { get; set; }
+		public Geometry AreaOfInterest { get; set; }
 
 		public virtual bool QueryLanguageSupported { get; } = false;
 
@@ -1008,7 +1009,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		private static bool WithinAreaOfInterest(Envelope extent, Polygon areaOfInterest)
+		private static bool WithinAreaOfInterest(Envelope extent, Geometry areaOfInterest)
 		{
 			if (extent == null) return false;
 			if (areaOfInterest == null) return true;

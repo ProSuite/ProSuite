@@ -114,7 +114,7 @@ namespace ProSuite.AGP.WorkList
 
 		// todo daro to IEnumerable<Table>
 		protected abstract IWorkItemRepository CreateItemRepositoryCore(
-			IEnumerable<Table> tables, IRepository stateRepository);
+			IList<Table> tables, IRepository stateRepository);
 
 		protected abstract string GetWorkListSymbologyTemplateLayerPath();
 

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.Worklist;
@@ -47,6 +48,8 @@ namespace ProSuite.AGP.QA.WorkList
 		}
 
 		public override string FileSuffix => ".iwl";
+
+		public Geometry AreaOfInterest { get; set; }
 
 		protected override async Task<IList<Table>> PrepareReferencedTables()
 		{
@@ -127,9 +130,10 @@ namespace ProSuite.AGP.QA.WorkList
 
 					featureLayer.SetExpanded(false);
 					featureLayer.SetVisibility(false);
+					featureLayer.SetDefinitionQuery(GetDefaultDefinitionQuery(table));
 
 					// TODO: Support lyrx files as symbol layers.
-					// So far, just make the symbols red:	
+					// So far, just make the symbols red:
 					CIMSimpleRenderer renderer = featureLayer.GetRenderer() as CIMSimpleRenderer;
 
 					if (renderer != null)
@@ -145,6 +149,11 @@ namespace ProSuite.AGP.QA.WorkList
 				StandaloneTableFactory.Instance.CreateStandaloneTable(
 					new StandaloneTableCreationParams(table), groupLayer);
 			}
+		}
+
+		protected virtual string GetDefaultDefinitionQuery(Table table)
+		{
+			return null;
 		}
 
 		private void RemoveFromMapCore(IEnumerable<Table> tables)
@@ -220,7 +229,7 @@ namespace ProSuite.AGP.QA.WorkList
 		                                                string uniqueName,
 		                                                string displayName)
 		{
-			return new IssueWorkList(repository, uniqueName, displayName);
+			return new IssueWorkList(repository, uniqueName, AreaOfInterest, displayName);
 		}
 
 		protected override IRepository CreateStateRepositoryCore(string path, string workListName)
@@ -231,12 +240,18 @@ namespace ProSuite.AGP.QA.WorkList
 		}
 
 		protected override IWorkItemRepository CreateItemRepositoryCore(
-			IEnumerable<Table> tables, IRepository stateRepository)
+			IList<Table> tables, IRepository stateRepository)
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
+			// TODO: Create DbSourceClass here instead inside the GdbItemRepository
+			// So that each table gets is own definition query!
+			Table firstOrDefault = tables.FirstOrDefault();
+			string defaultDefinitionQuery = GetDefaultDefinitionQuery(firstOrDefault);
+
 			var result = new IssueItemRepository(tables.Distinct(), stateRepository,
-				_workListItemDatastore);
+			                                     _workListItemDatastore,
+			                                     defaultDefinitionQuery);
 
 			_msg.DebugStopTiming(watch, "Created issue work item repository");
 

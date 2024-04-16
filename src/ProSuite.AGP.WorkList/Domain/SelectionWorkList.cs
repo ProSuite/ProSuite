@@ -4,9 +4,10 @@ namespace ProSuite.AGP.WorkList.Domain
 {
 	public class SelectionWorkList : WorkList
 	{
-		public SelectionWorkList(IWorkItemRepository repository, string uniqueName,
+		public SelectionWorkList(IWorkItemRepository repository,
+		                         string uniqueName,
 		                         string displayName) :
-			base(repository, uniqueName, displayName) { }
+			base(repository, uniqueName, null, displayName) { }
 
 		protected override string GetDisplayNameCore()
 		{

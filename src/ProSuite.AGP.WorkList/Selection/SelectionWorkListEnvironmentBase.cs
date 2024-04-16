@@ -28,7 +28,7 @@ namespace ProSuite.AGP.WorkList.Selection
 		}
 
 		protected override IWorkItemRepository CreateItemRepositoryCore(
-			IEnumerable<Table> tables, IRepository stateRepository)
+			IList<Table> tables, IRepository stateRepository)
 		{
 			// todo daro inline
 			Dictionary<MapMember, List<long>> oidsByLayer =

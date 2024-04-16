@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
 
@@ -23,6 +24,12 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
+		{
+			return _items;
+		}
+
+		public IEnumerable<IWorkItem> GetItems(Geometry areaOfInterest,
+		                                       WorkItemStatus? statusFilter, bool recycle = true)
 		{
 			return _items;
 		}

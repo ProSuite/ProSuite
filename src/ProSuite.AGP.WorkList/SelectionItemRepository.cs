@@ -53,10 +53,10 @@ namespace ProSuite.AGP.WorkList
 			return RefreshState(new SelectionItem(id, row));
 		}
 
-		protected override ISourceClass CreateSourceClassCore(
-			GdbTableIdentity identity,
-			IAttributeReader attributeReader,
-			WorkListStatusSchema statusSchema)
+		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
+		                                                      IAttributeReader attributeReader,
+		                                                      WorkListStatusSchema statusSchema,
+		                                                      string definitionQuery = null)
 		{
 			return new SelectionSourceClass(identity);
 		}

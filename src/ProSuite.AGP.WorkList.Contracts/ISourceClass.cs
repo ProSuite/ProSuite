@@ -16,5 +16,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		bool Uses(GdbTableIdentity table);
 
 		T OpenDataset<T>() where T : Table;
+
+		string CreateWhereClause(WorkItemStatus? statusFilter);
 	}
 }

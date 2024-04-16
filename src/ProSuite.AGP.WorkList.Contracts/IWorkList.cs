@@ -20,7 +20,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		WorkItemVisibility Visibility { get; set; }
 
 		[CanBeNull]
-		Polygon AreaOfInterest { get; set; }
+		Geometry AreaOfInterest { get; set; }
 
 		bool QueryLanguageSupported { get; }
 
