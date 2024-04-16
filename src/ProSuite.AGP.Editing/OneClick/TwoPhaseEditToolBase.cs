@@ -71,6 +71,13 @@ namespace ProSuite.AGP.Editing.OneClick
 							var selectedFeatures =
 								GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
+							if (selectedFeatures.Count == 0)
+							{
+								ResetDerivedGeometries();
+								StartSelectionPhase();
+								return true;
+							}
+
 							CalculateDerivedGeometries(selectedFeatures, GetCancelableProgressor());
 
 							return true;
