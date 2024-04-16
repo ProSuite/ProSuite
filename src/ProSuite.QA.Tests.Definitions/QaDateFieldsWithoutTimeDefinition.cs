@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
@@ -13,19 +13,15 @@ namespace ProSuite.QA.Tests
 	[AttributeTest]
 	public class QaDateFieldsWithoutTimeDefinition : AlgorithmDefinition
 	{
-		public string DateFieldNames { get; set; }
+		//public string DateFieldNames { get; set; }
 		public ITableSchemaDef Table { get; }
+		public IEnumerable<string> DateFieldNames { get; }
 
 		[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_0))]
 		public QaDateFieldsWithoutTimeDefinition(
 			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_table))] [NotNull]
 			ITableSchemaDef table)
 			: this(table, GetAllDateFieldNames(table)) { }
-
-		private static string GetAllDateFieldNames(ITableSchemaDef table)
-		{
-			throw new NotImplementedException();
-		}
 
 		[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_1))]
 		public QaDateFieldsWithoutTimeDefinition(
@@ -45,7 +41,16 @@ namespace ProSuite.QA.Tests
 			: base(table)
 		{
 			Assert.ArgumentNotNull(dateFieldNames, nameof(dateFieldNames));
+			Table = table;
+			DateFieldNames = dateFieldNames;
+		}
 
+		[NotNull]
+		private static IEnumerable<string> GetAllDateFieldNames([NotNull] ITableSchemaDef table)
+		{
+			return table.TableFields.Where(field => field.FieldType == FieldType.Date)
+			            .Select(field => field.Name)
+			            .ToArray();
 		}
 	}
 }

@@ -94,9 +94,10 @@ namespace ProSuite.QA.Tests
 		[InternallyUsedTest]
 		public QaDateFieldsWithoutTime(
 			[NotNull] QaDateFieldsWithoutTimeDefinition definition)
-			: this((IReadOnlyFeatureClass)definition.Table,
-				   definition.DateFieldNames)
-		{ }
+			: this((IReadOnlyTable) definition.Table,
+			       definition.DateFieldNames)
+		{
+		}
 
 		#endregion
 
