@@ -226,6 +226,19 @@ namespace ProSuite.AGP.WorkList
 							              out AuthenticationMode authMode),
 							$"Cannot parse {nameof(AuthenticationMode)} from connection string {workspace.ConnectionString}");
 
+						string instance = builder["instance"];
+
+						// Typically the instance is saved as "sde:oracle11g:TOPGIST:SDE"
+						if (databaseType == EnterpriseDatabaseType.Oracle)
+						{
+							string[] strings = instance?.Split(':');
+
+							if (strings?.Length == 4)
+							{
+								instance = strings[2];
+							}
+						}
+
 						var connectionProperties =
 							new DatabaseConnectionProperties(databaseType)
 							{
@@ -234,7 +247,7 @@ namespace ProSuite.AGP.WorkList
 								Database =
 									builder[
 										"server"], // is always null in CIMFeatureDatasetDataConnection
-								Instance = builder["instance"],
+								Instance = instance,
 								Version = builder["version"],
 								Branch = builder["branch"], // ?
 								Password = builder["encrypted_password"],
