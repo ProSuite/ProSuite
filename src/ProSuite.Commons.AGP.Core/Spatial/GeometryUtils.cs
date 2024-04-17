@@ -5,6 +5,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.EsriShape;
 
 namespace ProSuite.Commons.AGP.Core.Spatial
 {
@@ -791,6 +792,33 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 					return GeometryType.Unknown;
 				default:
 					throw new ArgumentOutOfRangeException($"Cannot translate {esriGeometryType}");
+			}
+		}
+
+		public static ProSuiteGeometryType TranslateToProSuiteGeometryType(
+			GeometryType esriGeometryType)
+		{
+			switch (esriGeometryType)
+			{
+				case GeometryType.Unknown:
+					return ProSuiteGeometryType.Unknown;
+				case GeometryType.Point:
+					return ProSuiteGeometryType.Point;
+				case GeometryType.Envelope:
+					return ProSuiteGeometryType.Envelope;
+				case GeometryType.Multipoint:
+					return ProSuiteGeometryType.Multipoint;
+				case GeometryType.Polyline:
+					return ProSuiteGeometryType.Polyline;
+				case GeometryType.Polygon:
+					return ProSuiteGeometryType.Polygon;
+				case GeometryType.Multipatch:
+					return ProSuiteGeometryType.MultiPatch;
+				case GeometryType.GeometryBag:
+					return ProSuiteGeometryType.Bag;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(esriGeometryType),
+					                                      esriGeometryType, null);
 			}
 		}
 

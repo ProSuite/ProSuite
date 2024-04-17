@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
@@ -23,13 +24,40 @@ namespace ProSuite.AGP.WorkList
 
 		private int _lastUsedOid;
 
-		protected GdbItemRepository(IEnumerable<Table> tables, IRepository workItemStateRepository)
+		protected GdbItemRepository(IEnumerable<Table> tables,
+		                            IRepository workItemStateRepository,
+		                            [CanBeNull] IWorkListItemDatastore tableSchema = null,
+		                            string definitionQuery = null)
 		{
+			WorkItemStateRepository = workItemStateRepository;
+			TableSchema = tableSchema;
+
 			foreach (Table table in tables)
 			{
 				ISourceClass sourceClass =
-					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition());
+					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition(),
+					                  tableSchema, definitionQuery);
 
+				//if (! string.IsNullOrEmpty(definitionQuery) && WorkItemStateRepository.)
+				//{
+				//	// todo daro: log message
+				//	_msg.Debug($"Definition query: {definitionQuery}");
+				//}
+
+				SourceClasses.Add(sourceClass);
+			}
+		}
+
+		// TODO: Refactor to use ISourceClass created by (virtual) method in environment!
+		// -> This allows for adaptive definition query depending on db source class
+		protected GdbItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
+		                            IRepository workItemStateRepository)
+		{
+			foreach ((Table table, string definitionQuery) in tableWithDefinitionQuery)
+			{
+				ISourceClass sourceClass =
+					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition(),
+					                  null, definitionQuery);
 				SourceClasses.Add(sourceClass);
 			}
 
@@ -38,7 +66,22 @@ namespace ProSuite.AGP.WorkList
 
 		protected IRepository WorkItemStateRepository { get; }
 
+		[CanBeNull]
+		public IWorkListItemDatastore TableSchema { get; private set; }
+
 		public List<ISourceClass> SourceClasses { get; } = new();
+
+		public void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
+		{
+			TableSchema = tableSchemaInfo;
+
+			foreach (ISourceClass sourceClass in SourceClasses)
+			{
+				Table table = sourceClass.OpenDataset<Table>();
+				sourceClass.AttributeReader = CreateAttributeReaderCore(
+					table.GetDefinition(), tableSchemaInfo);
+			}
+		}
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
@@ -47,6 +90,35 @@ namespace ProSuite.AGP.WorkList
 				int count = 0;
 
 				Stopwatch watch = _msg.DebugStartTiming();
+
+				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
+				{
+					IWorkItem item = CreateWorkItemCore(row, sourceClass);
+
+					count += 1;
+					yield return WorkItemStateRepository.Refresh(item);
+				}
+
+				_msg.DebugStopTiming(
+					watch, $"GetItems() {sourceClass.Name}: {count} items");
+			}
+		}
+
+		public IEnumerable<IWorkItem> GetItems(Geometry areaOfInterest,
+		                                       WorkItemStatus? statusFilter,
+		                                       bool recycle = true)
+		{
+			foreach (ISourceClass sourceClass in SourceClasses)
+			{
+				int count = 0;
+
+				Stopwatch watch = _msg.DebugStartTiming();
+
+				QueryFilter filter = areaOfInterest != null
+					                     ? GdbQueryUtils.CreateSpatialFilter(areaOfInterest)
+					                     : new QueryFilter();
+
+				filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
 
 				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
 				{
@@ -133,7 +205,7 @@ namespace ProSuite.AGP.WorkList
 
 		public void Commit()
 		{
-			WorkItemStateRepository.Commit();
+			WorkItemStateRepository.Commit(SourceClasses);
 		}
 
 		public void Discard()
@@ -192,7 +264,8 @@ namespace ProSuite.AGP.WorkList
 
 		[CanBeNull]
 		protected virtual IAttributeReader CreateAttributeReaderCore(
-			[NotNull] TableDefinition definition)
+			[NotNull] TableDefinition definition,
+			[CanBeNull] IWorkListItemDatastore tableSchema)
 		{
 			return null;
 		}
@@ -204,7 +277,8 @@ namespace ProSuite.AGP.WorkList
 		protected abstract ISourceClass CreateSourceClassCore(
 			GdbTableIdentity identity,
 			[CanBeNull] IAttributeReader attributeReader,
-			[CanBeNull] WorkListStatusSchema statusSchema);
+			[CanBeNull] WorkListStatusSchema statusSchema,
+			string definitionQuery = null);
 
 		[CanBeNull]
 		protected static Table OpenTable([NotNull] ISourceClass sourceClass)
@@ -213,13 +287,16 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		private ISourceClass CreateSourceClass(GdbTableIdentity identity,
-		                                       TableDefinition definition)
+		                                       TableDefinition definition,
+		                                       [CanBeNull] IWorkListItemDatastore tableSchema,
+		                                       string definitionQuery = null)
 		{
-			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
+			IAttributeReader attributeReader =
+				CreateAttributeReaderCore(definition, tableSchema);
 
 			WorkListStatusSchema statusSchema = CreateStatusSchemaCore(definition);
 
-			return CreateSourceClassCore(identity, attributeReader, statusSchema);
+			return CreateSourceClassCore(identity, attributeReader, statusSchema, definitionQuery);
 		}
 
 		#region unused

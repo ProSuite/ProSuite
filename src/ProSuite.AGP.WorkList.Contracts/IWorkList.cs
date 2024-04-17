@@ -20,7 +20,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		WorkItemVisibility Visibility { get; set; }
 
 		[CanBeNull]
-		Polygon AreaOfInterest { get; set; }
+		Geometry AreaOfInterest { get; set; }
 
 		bool QueryLanguageSupported { get; }
 
@@ -40,7 +40,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		[NotNull]
 		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null,
 		                                bool ignoreListSettings = false,
-		                                int startIndex = 0);
+		                                int startIndex = -1);
 
 		int Count([CanBeNull] QueryFilter filter = null, bool ignoreListSettings = false);
 
@@ -71,5 +71,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void Commit();
 
 		void SetStatus([NotNull] IWorkItem item, WorkItemStatus status);
+
+		void RefreshItems();
 	}
 }

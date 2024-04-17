@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using ArcGIS.Core.Data;
@@ -67,18 +68,9 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 
-			var classDefinition = row.GetTable().GetDefinition();
+			Table table = row.GetTable();
 
-			string subtypeFieldName = null;
-			try
-			{
-				subtypeFieldName = classDefinition.GetSubtypeField();
-			}
-			catch (NotSupportedException notSupportedException)
-			{
-				// Shapefiles throw a NotSupportedException
-				_msg.Debug("Subtypes not supported", notSupportedException);
-			}
+			string subtypeFieldName = DatasetUtils.GetSubtypeFieldName(table);
 
 			if (! string.IsNullOrEmpty(subtypeFieldName))
 			{
@@ -176,6 +168,82 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			using (var table2 = row2.GetTable())
 			{
 				return DatasetUtils.IsSameTable(table1, table2);
+			}
+		}
+
+		[CanBeNull]
+		public static T? ReadRowValue<T>([NotNull] Row row, int fieldIndex)
+			where T : struct
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
+			object value = row[fieldIndex];
+			return ReadRowValue<T>(value, fieldIndex,
+			                       () => row.GetObjectID(),
+			                       () => row.GetTable().GetName());
+		}
+
+		[CanBeNull]
+		private static T? ReadRowValue<T>([NotNull] object value,
+		                                  int fieldIndex,
+		                                  Func<long?> getOid,
+		                                  Func<string> getTableName)
+			where T : struct
+		{
+			// TODO: Duplication in Commons.AO.GdbObjectUtils! Refactor to common place.
+			if (value == DBNull.Value)
+			{
+				_msg.VerboseDebug(
+					() => $"ReadRowValue: Field value at <index> {fieldIndex} of row is null.");
+
+				return null;
+			}
+
+			try
+			{
+				if (typeof(T) == typeof(int))
+				{
+					if (value is short)
+					{
+						// Short Integer field type is returned as short, cannot unbox directly to int:
+						return Convert.ToInt32(value) as T?;
+					}
+
+					if (value is long)
+					{
+						// Typically for long OID type that currently still is known to be an int.
+						// But long object cannot unbox directly to int:
+						return Convert.ToInt32(value) as T?;
+					}
+				}
+
+				if (typeof(T) == typeof(Guid))
+				{
+					// Guids come back as string
+					var guidString = value as string;
+
+					if (string.IsNullOrEmpty(guidString))
+					{
+						return null;
+					}
+
+					TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
+
+					return (T) Assert.NotNull(converter.ConvertFrom(guidString));
+				}
+
+				return (T) value;
+			}
+			catch (Exception ex)
+			{
+				long? rowOid = getOid();
+
+				_msg.ErrorFormat(
+					"ReadRowValue: Error casting value {0} of type {1} into type {2} for row <oid> {3} at field index {4} in {5}: {6}",
+					value, value.GetType(), typeof(T), fieldIndex, rowOid, getTableName(),
+					ex.Message);
+
+				throw;
 			}
 		}
 	}

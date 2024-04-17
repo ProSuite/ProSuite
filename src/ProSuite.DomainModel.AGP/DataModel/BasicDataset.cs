@@ -9,8 +9,8 @@ namespace ProSuite.DomainModel.AGP.DataModel
 	{
 		public BasicDataset(int ddxId,
 		                    [NotNull] string name,
-		                    [CanBeNull] string abbreviation,
-		                    [CanBeNull] string aliasName)
+		                    [CanBeNull] string abbreviation = null,
+		                    [CanBeNull] string aliasName = null)
 			: base(name, abbreviation, aliasName)
 		{
 			Id = ddxId;

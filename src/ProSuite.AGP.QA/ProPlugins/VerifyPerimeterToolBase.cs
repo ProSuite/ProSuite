@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -49,6 +50,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
+
+		protected virtual Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool>
+			SaveAction => null;
 
 		protected override Task OnToolActivateAsync(bool active)
 		{
@@ -116,7 +120,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(
-				WorkListOpener, mapView, sketchGeometry, spatialRef);
+				WorkListOpener, mapView, sketchGeometry, spatialRef, SaveAction);
 
 			string perimeterName = "Perimeter";
 

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
@@ -9,6 +11,10 @@ namespace ProSuite.AGP.WorkList.Contracts
 		int GetCount(QueryFilter filter = null);
 
 		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true);
+
+		IEnumerable<IWorkItem> GetItems([CanBeNull] Geometry areaOfInterest,
+		                                WorkItemStatus? statusFilter,
+		                                bool recycle = true);
 
 		void Refresh(IWorkItem item);
 
@@ -32,5 +38,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void UpdateStateRepository(string path);
 
 		List<ISourceClass> SourceClasses { get; }
+
+		void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
 	}
 }

@@ -11,7 +11,6 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Ado;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
@@ -79,40 +78,67 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		public static IWorkItemRepository CreateWorkItemRepository(
-			[NotNull] XmlWorkListDefinition definition)
+			[NotNull] XmlWorkListDefinition xmlWorkListDefinition)
 		{
-			Assert.ArgumentNotNull(definition, nameof(definition));
+			Assert.ArgumentNotNull(xmlWorkListDefinition, nameof(xmlWorkListDefinition));
 
-			var descriptor = new ClassDescriptor(definition.TypeName, definition.AssemblyName);
+			var descriptor = new ClassDescriptor(xmlWorkListDefinition.TypeName,
+			                                     xmlWorkListDefinition.AssemblyName);
 
 			Type type = descriptor.GetInstanceType();
 
 			// todo daro simplify method?
-			List<Table> tablesByGeodatabase = GetDistinctTables(definition.Workspaces);
+			List<Table> tablesByGeodatabase = GetDistinctTables(xmlWorkListDefinition.Workspaces);
 
 			IRepository stateRepository;
 			IWorkItemRepository repository;
 
+			var sourceClasses = new List<Tuple<Table, string>>();
+
 			if (type == typeof(IssueWorkList))
 			{
+				// TODO: create sourceClasses above, also use for selection WL
+				foreach (XmlWorkListWorkspace xmlWorkspace in xmlWorkListDefinition.Workspaces)
+				{
+					foreach (XmlTableReference tableReference in xmlWorkspace.Tables)
+					{
+						Table table =
+							tablesByGeodatabase.FirstOrDefault(
+								t => t.GetName() == tableReference.Name);
+
+						if (table == null)
+						{
+							continue;
+						}
+
+						// TODO: Get Status Schema from XML too
+						sourceClasses.Add(
+							new Tuple<Table, string>(table, tableReference.DefinitionQuery));
+					}
+				}
+
 				stateRepository =
-					new XmlWorkItemStateRepository(definition.Path, definition.Name, type,
-					                               definition.CurrentIndex);
-				repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
+					new XmlWorkItemStateRepository(xmlWorkListDefinition.Path,
+					                               xmlWorkListDefinition.Name, type,
+					                               xmlWorkListDefinition.CurrentIndex);
+
+				repository =
+					new IssueItemRepository(sourceClasses, stateRepository);
 			}
 			else if (type == typeof(SelectionWorkList))
 			{
 				stateRepository =
-					new XmlSelectionItemStateRepository(definition.Path, definition.Name, type,
-					                                    definition.CurrentIndex);
+					new XmlSelectionItemStateRepository(xmlWorkListDefinition.Path,
+					                                    xmlWorkListDefinition.Name, type,
+					                                    xmlWorkListDefinition.CurrentIndex);
 
 				Dictionary<long, Table> tablesById =
 					tablesByGeodatabase.Select(table => table)
-					                 .ToDictionary(table => new GdbTableIdentity(table).Id,
-					                               table => table);
+					                   .ToDictionary(table => new GdbTableIdentity(table).Id,
+					                                 table => table);
 
 				Dictionary<Table, List<long>> oidsByTable =
-					GetOidsByTable(definition.Items, tablesById);
+					GetOidsByTable(xmlWorkListDefinition.Items, tablesById);
 
 				repository =
 					new SelectionItemRepository(tablesByGeodatabase, oidsByTable, stateRepository);
@@ -205,6 +231,19 @@ namespace ProSuite.AGP.WorkList
 							              out AuthenticationMode authMode),
 							$"Cannot parse {nameof(AuthenticationMode)} from connection string {workspace.ConnectionString}");
 
+						string instance = builder["instance"];
+
+						// Typically the instance is saved as "sde:oracle11g:TOPGIST:SDE"
+						if (databaseType == EnterpriseDatabaseType.Oracle)
+						{
+							string[] strings = instance?.Split(':');
+
+							if (strings?.Length == 4)
+							{
+								instance = strings[2];
+							}
+						}
+
 						var connectionProperties =
 							new DatabaseConnectionProperties(databaseType)
 							{
@@ -213,7 +252,7 @@ namespace ProSuite.AGP.WorkList
 								Database =
 									builder[
 										"server"], // is always null in CIMFeatureDatasetDataConnection
-								Instance = builder["instance"],
+								Instance = instance,
 								Version = builder["version"],
 								Branch = builder["branch"], // ?
 								Password = builder["encrypted_password"],

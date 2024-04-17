@@ -13,7 +13,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 		void UpdateVolatileState([NotNull] IEnumerable<IWorkItem> items);
 
-		void Commit();
+		void Commit(IList<ISourceClass> sourceClasses);
 
 		void Discard();
 

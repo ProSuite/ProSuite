@@ -85,7 +85,8 @@ namespace ProSuite.AGP.WorkList.Test
 			IRepository stateRepository =
 				new XmlWorkItemStateRepository(Path.Join(Path.GetDirectoryName(path), "states.xml"), null, null);
 
-			IssueItemRepository repository = new IssueItemRepository(new List<Table> { lines, issueRows }, stateRepository);
+			IssueItemRepository repository =
+				new IssueItemRepository(new List<Table> { lines, issueRows }, stateRepository);
 
 			foreach (IWorkItem item in repository.GetItems())
 			{

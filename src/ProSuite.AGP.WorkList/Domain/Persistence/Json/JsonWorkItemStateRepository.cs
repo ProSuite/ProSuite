@@ -17,6 +17,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Json
 
 		protected override JsonBasedWorkListDefinition CreateDefinition(
 			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			IList<ISourceClass> sourceClasses,
 			List<JsonWorkItemState> states)
 		{
 			throw new NotImplementedException();

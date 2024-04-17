@@ -124,7 +124,7 @@ namespace ProSuite.AGP.Editing.FillHole
 			MapView activeMapView = MapView.Active;
 
 			var selectedFeatures = MapUtils.GetFeatures(
-				selection, activeMapView.Map.SpatialReference).ToList();
+				selection, true, activeMapView.Map.SpatialReference).ToList();
 
 			var updates = new Dictionary<Feature, Geometry>();
 

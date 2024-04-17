@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -65,6 +66,23 @@ namespace ProSuite.Microservices.Client.QA
 
 			var verifiedConditions = GetVerifiedConditionIds(VerificationMsg).ToList();
 			int issueCount = _resultIssueCollector.SaveIssues(verifiedConditions);
+
+			_msg.DebugStopTiming(watch, "Updated issues in verified context");
+
+			return issueCount;
+		}
+
+		public async Task<int> SaveIssuesAsync(
+			ErrorDeletionInPerimeter errorDeletion =
+				ErrorDeletionInPerimeter.VerifiedQualityConditions)
+		{
+			Assert.NotNull(_resultIssueCollector).ErrorDeletionInPerimeter = errorDeletion;
+
+			Stopwatch watch = _msg.DebugStartTiming(
+				"Replacing existing errors with new issues, deleting obsolete allowed errors...");
+
+			var verifiedConditions = GetVerifiedConditionIds(VerificationMsg).ToList();
+			int issueCount = await _resultIssueCollector.SaveIssuesAsync(verifiedConditions);
 
 			_msg.DebugStopTiming(watch, "Updated issues in verified context");
 
