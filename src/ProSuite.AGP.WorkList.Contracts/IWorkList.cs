@@ -40,7 +40,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		[NotNull]
 		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null,
 		                                bool ignoreListSettings = false,
-		                                int startIndex = 0);
+		                                int startIndex = -1);
 
 		int Count([CanBeNull] QueryFilter filter = null, bool ignoreListSettings = false);
 

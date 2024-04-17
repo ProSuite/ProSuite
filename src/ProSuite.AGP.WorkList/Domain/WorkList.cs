@@ -191,6 +191,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			if (filter is SpatialQueryFilter sf && sf.FilterGeometry != null)
 			{
+				// TODO: Use spatial index! This is slow for a large item count.
 				// todo daro: do not use method to build Extent every time
 				query = query.Where(
 					item => Relates(sf.FilterGeometry, sf.SpatialRelationship, item.Extent));
@@ -203,6 +204,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			if (startIndex > -1 && startIndex < _items.Count)
 			{
+				// This can be ultra-slow for a large item count! Consider looping over all items exactly once!
 				query = query.Where(item => _items.IndexOf(item, startIndex) > -1);
 			}
 
