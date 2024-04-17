@@ -12,6 +12,7 @@ using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Dialogs;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
@@ -258,7 +259,17 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool CanGoFirst()
 		{
-			return GetFirstVisibleVisitedItemBeforeCurrent() != null;
+			// TODO: Use Prosuite RelayCommand to prevent crash!
+			try
+			{
+				return GetFirstVisibleVisitedItemBeforeCurrent() != null;
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError("Error in CanGoFirst", e);
+			}
+
+			return false;
 		}
 
 		public virtual void GoFirst()
@@ -278,26 +289,33 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool CanGoNearest()
 		{
-			int currentIndex = CurrentIndex;
-			var index = 0;
-			foreach (IWorkItem workItem in _items)
+			try
 			{
-				if (IsVisible(workItem) && workItem.Status == WorkItemStatus.Todo)
+				int currentIndex = CurrentIndex;
+				var index = 0;
+				foreach (IWorkItem workItem in _items)
 				{
-					if (! workItem.Visited)
+					if (IsVisible(workItem) && workItem.Status == WorkItemStatus.Todo)
 					{
-						return true;
+						if (! workItem.Visited)
+						{
+							return true;
+						}
+
+						if (index > currentIndex)
+						{
+							// allow go to nearest if there are visited 'Todo'
+							// items *after* the current one
+							return true;
+						}
 					}
 
-					if (index > currentIndex)
-					{
-						// allow go to nearest if there are visited 'Todo'
-						// items *after* the current one
-						return true;
-					}
+					index++;
 				}
-
-				index++;
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError("Error in CanGoNearest", e);
 			}
 
 			return false;
@@ -338,7 +356,16 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool CanGoNext()
 		{
-			return GetNextVisitedVisibleItem() != null;
+			try
+			{
+				return GetNextVisitedVisibleItem() != null;
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError("Error in CanGoNext", e);
+			}
+
+			return false;
 		}
 
 		public virtual void GoNext()
@@ -355,7 +382,16 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool CanGoPrevious()
 		{
-			return GetPreviousVisitedVisibleItem() != null;
+			try
+			{
+				return GetPreviousVisitedVisibleItem() != null;
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError("Error in CanGoPrevious", e);
+			}
+
+			return false;
 		}
 
 		public virtual void GoPrevious()
