@@ -80,8 +80,12 @@ namespace ProSuite.QA.Tests
 			MinimumZDifference = minimumZDifference;
 			MaximumZDifference = maximumZDifference;
 			ZComparisonMethod = zComparisonMethod;
-			ZRelationConstraint = zRelationConstraint;
+			if (zRelationConstraint != null)
+			{
+				ZRelationConstraint = zRelationConstraint;
+			}
 		}
+
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaZDifferenceOther_MinimumZDifferenceExpression))]
 		public string MinimumZDifferenceExpression { get; set; }
