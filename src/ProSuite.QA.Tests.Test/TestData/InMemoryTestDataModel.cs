@@ -124,6 +124,10 @@ namespace ProSuite.QA.Tests.Test.TestData
 			lineFields.AddField(FieldUtils.CreateOIDField());
 			lineFields.AddField(
 				FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolyline, sr));
+			lineFields.AddField(
+				FieldUtils.CreateField("MY_DATE_FIELD1", esriFieldType.esriFieldTypeDate));
+			lineFields.AddField(
+				FieldUtils.CreateField("MY_DATE_FIELD2", esriFieldType.esriFieldTypeDate));
 
 			DatasetUtils.CreateSimpleFeatureClass(workspace, _featureClassPolylines,
 			                                      lineFields);

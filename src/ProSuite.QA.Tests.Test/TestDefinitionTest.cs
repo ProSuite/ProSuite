@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -94,24 +95,24 @@ namespace ProSuite.QA.Tests.Test
 			List<Type> refactoredTypes = new List<Type>
 			                             {
 				                             typeof(Qa3dConstantZ),
-											 typeof(QaBorderSense),
-											 typeof(QaCoplanarRings),
-											 typeof(QaConstraint),
-											 typeof(QaCurve),
-											 typeof(QaDateFieldsWithoutTime),
-											 typeof(QaEmptyNotNullTextFields),
-											 typeof(QaExtent),
-											 typeof(QaFlowLogic),
-											 typeof(QaGdbRelease),
-											 typeof(QaGeometryConstraint),
-											 //typeof(QaGroupConstraints),
-											 typeof(QaHorizontalSegments),
-											 typeof(QaSimpleGeometry),
+				                             typeof(QaBorderSense),
+				                             typeof(QaCoplanarRings),
+				                             typeof(QaConstraint),
+				                             typeof(QaCurve),
+				                             typeof(QaDateFieldsWithoutTime),
+				                             typeof(QaEmptyNotNullTextFields),
+				                             typeof(QaExtent),
+				                             typeof(QaFlowLogic),
+				                             typeof(QaGdbRelease),
+				                             typeof(QaGeometryConstraint),
+				                             //typeof(QaGroupConstraints),
+				                             typeof(QaHorizontalSegments),
+				                             typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
 				                             typeof(QaValue),
 				                             typeof(QaWithinZRange),
-											 typeof(QaZDifferenceOther),
-				                             typeof(QaZDifferenceSelf),				                             											 
+				                             typeof(QaZDifferenceOther),
+				                             typeof(QaZDifferenceSelf),
 			                             };
 
 			foreach (Type testType in refactoredTypes)
@@ -172,47 +173,6 @@ namespace ProSuite.QA.Tests.Test
 
 					// NOTE: The instantiation of the tests and the comparisons of the values are
 					// performed in the AreParametersEqual test.
-
-					//var model = new InMemoryTestDataModel("simple model");
-
-					//foreach (TestParameter parameter in testFactory.Parameters)
-					//{
-					//	if (parameter.Type == typeof(ConstraintNode))
-					//	{
-					//		// TODO
-					//		continue;
-					//	}
-
-					//	object defaultVal =
-					//		CreateDefaultValue(
-					//			TestParameterTypeUtils.GetParameterType(parameter.Type), model);
-
-					//	if (defaultVal is string stringVal)
-					//	{
-					//		TestParameterValueUtils.AddParameterValue(
-					//			testCondition, parameter.Name, stringVal);
-					//		TestParameterValueUtils.AddParameterValue(
-					//			testDefCondition, parameter.Name, stringVal);
-					//	}
-					//	else if (defaultVal is Dataset datasetVal)
-					//	{
-					//		TestParameterValueUtils.AddParameterValue(
-					//			testCondition, parameter.Name, datasetVal);
-					//		TestParameterValueUtils.AddParameterValue(
-					//			testDefCondition, parameter.Name, datasetVal);
-					//	}
-					//}
-
-					//IList<ITest> testsOrig = testFactory.CreateTests(
-					//	new SimpleDatasetOpener(model));
-
-					//IList<ITest> testsNew = testDefinitionFactory.CreateTests(
-					//	new SimpleDatasetOpener(model));
-
-					//Assert.AreEqual(1, testsOrig.Count);
-					//Assert.AreEqual(1, testsNew.Count);
-
-					//ReflectionCompare.RecrusiveReflectionCompare(testsOrig[0], testsNew[0]);
 				}
 			}
 		}
@@ -230,48 +190,37 @@ namespace ProSuite.QA.Tests.Test
 
 			var testCases = new List<TestDefinitionCase>();
 
-			// Test cases with automatic parameter value generation:
+			//// Test cases with automatic parameter value generation:
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(Qa3dConstantZ)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaBorderSense)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCoplanarRings)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
 
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDateFieldsWithoutTime)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
+			// TODO: Implement Definition
+			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaExtent)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaFlowLogic)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGdbRelease)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGeometryConstraint)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGroupConstraints)));
+
+			// TODO: Add special case 
+			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGdbRelease)));
+			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGeometryConstraint)));
+			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGroupConstraints)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry)));
 
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaValue)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaWithinZRange)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaZDifferenceOther)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaZDifferenceSelf)));
+			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaZDifferenceOther)));
+			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaZDifferenceSelf)));
 
-			// Manually create values for special cases, such as optional parameters:
-
-			var optionalValues = new Dictionary<string, object>();
-			optionalValues.Add("AllowedNonLinearSegmentTypes",
-			                   new List<NonLinearSegmentType> { NonLinearSegmentType.Bezier });
-			optionalValues.Add("GroupIssuesBySegmentType", true);
-
-			var testCaseCurve =
-				new TestDefinitionCase(typeof(QaCurve), 0,
-				                       new object[] { model.GetVectorDataset() },
-				                       optionalValues);
-
-			testCases.Add(testCaseCurve);
-
-			testCases.Add(new TestDefinitionCase(typeof(QaDateFieldsWithoutTime), 0,
-			                                     new object[]
-			                                     { model.GetVectorDataset() }));
-			testCases.Add(new TestDefinitionCase(typeof(QaDateFieldsWithoutTime), 1,
-			                                     new object[]
-			                                     { model.GetVectorDataset(), "MY_DATE_FIELD" }));
+			//
+			// Special Cases
+			//
+			// Manually create values for special cases, such as optional parameters or
+			// difficult assertions:
+			AddQaCurveTestCases(model, testCases);
+			AddQaDateFieldsWithoutTimeCases(testCases, model);
 
 			foreach (TestDefinitionCase testCase in testCases)
 			{
@@ -285,11 +234,6 @@ namespace ProSuite.QA.Tests.Test
 
 				// Optional parameters Name-Value pairs, null if not specified (or no optional parameters):
 				Dictionary<string, object> optionalParamValues = testCase.OptionalParamValues;
-
-				ConstructorInfo constructorInfo = testType.GetConstructors()[constructorIdx];
-
-				Assert.AreEqual(constructorInfo.GetParameters().Length, constructorValues.Length,
-				                $"Wrong numbers of constructor parameters for constructor index {constructorIdx}");
 
 				TestDescriptor testImplDescriptor =
 					CreateTestDescriptor(testType, constructorIdx);
@@ -305,6 +249,9 @@ namespace ProSuite.QA.Tests.Test
 				bool hasAlgorithmDefinition =
 					InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
 						classDescriptor, out Type definitionType);
+
+				Assert.IsTrue(hasAlgorithmDefinition,
+				              $"{testCase.TestType.Name} has no TestDefinition class");
 
 				TestDescriptor testDefDescriptor =
 					CreateTestDescriptor(definitionType, constructorIdx);
@@ -323,27 +270,24 @@ namespace ProSuite.QA.Tests.Test
 
 				Assert.NotNull(testFactory);
 
-				int i = 0;
-				foreach (TestParameter parameter in testFactory.Parameters)
+				ConstructorInfo constructorInfo = testType.GetConstructors()[constructorIdx];
+
+				Assert.AreEqual(constructorInfo.GetParameters().Length,
+				                constructorValues.Length,
+				                $"Wrong numbers of constructor parameters for constructor index {constructorIdx}");
+
+				// Create the test parameter values:
+
+				int constructorParameterCount =
+					testFactory.Parameters.Count(p => p.IsConstructorParameter);
+				for (var i = 0; i < constructorParameterCount; i++)
 				{
-					object value = constructorValues[i++];
+					TestParameter parameter = testFactory.Parameters[i];
+					object value = constructorValues[i];
 
-					if (value is Dataset datasetVal)
-					{
-						TestParameterValueUtils.AddParameterValue(
-							testCondition, parameter.Name, datasetVal);
-						TestParameterValueUtils.AddParameterValue(
-							testDefCondition, parameter.Name, datasetVal);
-					}
+					string parameterName = parameter.Name;
 
-					else
-					{
-						string stringVal = Convert.ToString(value);
-						TestParameterValueUtils.AddParameterValue(
-							testCondition, parameter.Name, stringVal);
-						TestParameterValueUtils.AddParameterValue(
-							testDefCondition, parameter.Name, stringVal);
-					}
+					AddParameterValue(parameterName, value, testCondition, testDefCondition);
 				}
 
 				if (optionalParamValues != null)
@@ -351,10 +295,8 @@ namespace ProSuite.QA.Tests.Test
 					foreach (KeyValuePair<string, object> optionalParam in
 					         optionalParamValues)
 					{
-						TestParameterValueUtils.AddParameterValue(
-							testCondition, optionalParam.Key, optionalParam.Value);
-						TestParameterValueUtils.AddParameterValue(
-							testDefCondition, optionalParam.Key, optionalParam.Value);
+						AddParameterValue(optionalParam.Key, optionalParam.Value, testCondition,
+						                  testDefCondition);
 					}
 				}
 
@@ -368,6 +310,79 @@ namespace ProSuite.QA.Tests.Test
 				Assert.AreEqual(1, testsNew.Count);
 
 				ReflectionCompare.RecrusiveReflectionCompare(testsOrig[0], testsNew[0]);
+			}
+		}
+
+		private static void AddQaCurveTestCases(InMemoryTestDataModel model,
+		                                        List<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("AllowedNonLinearSegmentTypes",
+			                   new List<NonLinearSegmentType> { NonLinearSegmentType.Bezier });
+			optionalValues.Add("GroupIssuesBySegmentType", true);
+
+			var testCaseCurve =
+				new TestDefinitionCase(typeof(QaCurve), 0,
+				                       new object[] { model.GetVectorDataset() },
+				                       optionalValues);
+
+			testCases.Add(testCaseCurve);
+		}
+
+		private static void AddQaDateFieldsWithoutTimeCases(
+			ICollection<TestDefinitionCase> testCases, InMemoryTestDataModel model)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaDateFieldsWithoutTime), 0,
+			                                     new object[]
+			                                     { model.GetVectorDataset() }));
+			testCases.Add(new TestDefinitionCase(typeof(QaDateFieldsWithoutTime), 1,
+			                                     new object[]
+			                                     { model.GetVectorDataset(), "MY_DATE_FIELD1" }));
+			testCases.Add(new TestDefinitionCase(typeof(QaDateFieldsWithoutTime), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[] { "MY_DATE_FIELD1", "MY_DATE_FIELD2" }
+			                                     }));
+		}
+
+		private static void AddParameterValue(string parameterName, object value,
+		                                      QualityCondition testCondition,
+		                                      QualityCondition testDefCondition)
+		{
+			// NOTE: For lists, multiple TestParameterValues can be added for the same TestParameter.
+			if (value is IEnumerable enumerable and not string)
+			{
+				foreach (object singleValue in enumerable)
+				{
+					AddSingleParameterValue(parameterName, singleValue, testCondition,
+					                        testDefCondition);
+				}
+			}
+			else
+			{
+				AddSingleParameterValue(parameterName, value, testCondition, testDefCondition);
+			}
+		}
+
+		private static void AddSingleParameterValue(string parameterName, object value,
+		                                            QualityCondition testCondition,
+		                                            QualityCondition testDefCondition)
+		{
+			if (value is Dataset datasetVal)
+			{
+				TestParameterValueUtils.AddParameterValue(
+					testCondition, parameterName, datasetVal);
+				TestParameterValueUtils.AddParameterValue(
+					testDefCondition, parameterName, datasetVal);
+			}
+			else
+			{
+				string stringVal = Convert.ToString(value);
+				TestParameterValueUtils.AddParameterValue(
+					testCondition, parameterName, stringVal);
+				TestParameterValueUtils.AddParameterValue(
+					testDefCondition, parameterName, stringVal);
 			}
 		}
 
