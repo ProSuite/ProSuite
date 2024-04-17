@@ -19,6 +19,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		private List<TState> _states;
 		private List<long> _oids;
 
+		// TODO: Create unified data structure 'SourceClasses' that contains the relevant stuff (status schema, def query, etc.)
+		// Both the ItemStateRepository and the GdbItemRepository should have a reference to this data structure.
 		private readonly Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> _workspaces =
 			new Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>();
 
@@ -95,7 +97,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			}
 			else
 			{
-				_workspaces.Add(workspace, new SimpleSet<GdbTableIdentity> {table});
+				_workspaces.Add(workspace, new SimpleSet<GdbTableIdentity> { table });
 			}
 
 			state.Visited = item.Visited;
@@ -113,7 +115,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			Refresh();
 		}
 
-		public void Commit()
+		public void Commit(IList<ISourceClass> sourceClasses)
 		{
 			// could be an empty work list > don't store definition file
 			if (_workspaces.Count == 0)
@@ -122,7 +124,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 				return;
 			}
 
-			Store(CreateDefinition(_workspaces, _states));
+			Store(CreateDefinition(_workspaces, sourceClasses, _states));
 
 			Refresh();
 		}
@@ -136,6 +138,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 		protected abstract TDefinition CreateDefinition(
 			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			IList<ISourceClass> sourceClasses,
 			List<TState> states);
 
 		protected abstract TState CreateState(IWorkItem item);

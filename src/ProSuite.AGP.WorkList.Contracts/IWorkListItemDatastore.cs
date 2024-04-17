@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
-using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.QA.Worklist
+namespace ProSuite.AGP.WorkList.Contracts
 {
 	public interface IWorkListItemDatastore
 	{
@@ -16,6 +15,7 @@ namespace ProSuite.AGP.QA.Worklist
 
 		Task<IList<Table>> PrepareTableSchema(IList<Table> dbTables);
 
+		// TODO: Move this to another more dedicated interface IIssueTableSchema
 		IAttributeReader CreateAttributeReader([NotNull] TableDefinition definition,
 		                                       [NotNull] params Attributes[] attributes);
 	}

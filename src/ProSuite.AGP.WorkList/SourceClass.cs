@@ -26,6 +26,8 @@ namespace ProSuite.AGP.WorkList
 
 		public IAttributeReader AttributeReader { get; set; }
 
+		public string DefinitionQuery { get; protected set; }
+
 		public bool Uses(GdbTableIdentity table)
 		{
 			return _identity.Equals(table);

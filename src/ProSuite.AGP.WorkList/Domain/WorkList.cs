@@ -36,7 +36,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public event EventHandler<WorkListChangedEventArgs> WorkListChanged;
 
-		[NotNull] private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
+		[NotNull] private List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
 
 		[NotNull] private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
 			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
@@ -58,30 +58,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			AreaOfInterest = areaOfInterest;
 			CurrentIndex = repository.GetCurrentIndex();
 
-			foreach (IWorkItem item in Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo))
-			{
-				_items.Add(item);
-
-				if (! _rowMap.ContainsKey(item.Proxy))
-				{
-					_rowMap.Add(item.Proxy, item);
-				}
-				else
-				{
-					// todo daro: warn
-				}
-			}
-
-			_msg.DebugFormat("Added {0} items to work list", _items.Count);
-
-			// initializes the state repository if no states for
-			// the work items are read yet
-			Repository.UpdateVolatileState(_items);
-
-			_msg.DebugFormat("Getting extents for {0} items...", _items.Count);
-			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
-			//			  look old work item implementation
-			Extent = GetExtentFromItems(_items);
+			RefreshItems();
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -146,6 +123,38 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged();
 		}
 
+		public void RefreshItems()
+		{
+			List<IWorkItem> newItems = new List<IWorkItem>(_items.Count);
+
+			foreach (IWorkItem item in Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo))
+			{
+				newItems.Add(item);
+
+				if (! _rowMap.ContainsKey(item.Proxy))
+				{
+					_rowMap.Add(item.Proxy, item);
+				}
+				else
+				{
+					// todo daro: warn
+				}
+			}
+
+			_msg.DebugFormat("Added {0} items to work list", newItems.Count);
+
+			// initializes the state repository if no states for
+			// the work items are read yet
+			Repository.UpdateVolatileState(newItems);
+
+			_msg.DebugFormat("Getting extents for {0} items...", newItems.Count);
+			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
+			//			  look old work item implementation
+			Extent = GetExtentFromItems(newItems);
+
+			_items = newItems;
+		}
+
 		public void SetVisited(IWorkItem item)
 		{
 			Repository.SetVisited(item);
@@ -198,6 +207,44 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			return query;
 		}
+
+		//public IEnumerable<IWorkItem> GetItems(WorkItemStatus? filterByStatus = null,
+		//                                       int startIndex = 0)
+		//{
+		//	var query = (IEnumerable<IWorkItem>)_items;
+
+		//	if (!ignoreListSettings && Visibility != WorkItemVisibility.None)
+		//	{
+		//		query = query.Where(item => IsVisible(item, Visibility));
+		//	}
+
+		//	if (filter?.ObjectIDs != null && filter.ObjectIDs.Count > 0)
+		//	{
+		//		List<long> oids = filter.ObjectIDs.OrderBy(oid => oid).ToList();
+		//		query = query.Where(item => oids.BinarySearch(item.OID) >= 0);
+		//	}
+
+		//	// filter should never have a WhereClause since we say QueryLanguageSupported = false
+
+		//	if (filter is SpatialQueryFilter sf && sf.FilterGeometry != null)
+		//	{
+		//		// todo daro: do not use method to build Extent every time
+		//		query = query.Where(
+		//			item => Relates(sf.FilterGeometry, sf.SpatialRelationship, item.Extent));
+		//	}
+
+		//	if (!ignoreListSettings && AreaOfInterest != null)
+		//	{
+		//		query = query.Where(item => WithinAreaOfInterest(item.Extent, AreaOfInterest));
+		//	}
+
+		//	if (startIndex > -1 && startIndex < _items.Count)
+		//	{
+		//		query = query.Where(item => _items.IndexOf(item, startIndex) > -1);
+		//	}
+
+		//	return query;
+		//}
 
 		public virtual int Count(QueryFilter filter = null, bool ignoreListSettings = false)
 		{

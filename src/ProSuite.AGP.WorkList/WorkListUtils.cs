@@ -6,7 +6,6 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.QA.Worklist;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
@@ -79,37 +78,54 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		public static IWorkItemRepository CreateWorkItemRepository(
-			[NotNull] XmlWorkListDefinition definition)
+			[NotNull] XmlWorkListDefinition xmlWorkListDefinition)
 		{
-			Assert.ArgumentNotNull(definition, nameof(definition));
+			Assert.ArgumentNotNull(xmlWorkListDefinition, nameof(xmlWorkListDefinition));
 
-			var descriptor = new ClassDescriptor(definition.TypeName, definition.AssemblyName);
+			var descriptor = new ClassDescriptor(xmlWorkListDefinition.TypeName,
+			                                     xmlWorkListDefinition.AssemblyName);
 
 			Type type = descriptor.GetInstanceType();
 
 			// todo daro simplify method?
-			List<Table> tablesByGeodatabase = GetDistinctTables(definition.Workspaces);
+			List<Table> tablesByGeodatabase = GetDistinctTables(xmlWorkListDefinition.Workspaces);
 
 			IRepository stateRepository;
 			IWorkItemRepository repository;
 
+			var sourceClasses = new List<Tuple<Table, string>>();
+
 			if (type == typeof(IssueWorkList))
 			{
-				stateRepository =
-					new XmlWorkItemStateRepository(definition.Path, definition.Name, type,
-					                               definition.CurrentIndex);
+				// TODO: create sourceClasses above, also use for selection WL
+				foreach (XmlWorkListWorkspace xmlWorkspace in xmlWorkListDefinition.Workspaces)
+				{
+					foreach (XmlTableReference tableReference in xmlWorkspace.Tables)
+					{
+						Table table =
+							tablesByGeodatabase.FirstOrDefault(
+								t => t.GetName() == tableReference.Name);
 
-				// TODO: Factory method with IWorkListItemDatastore implementation!
-				IWorkListItemDatastore workListItemDatastore = null;
+						// TODO: Get Status Schema from XML too
+						sourceClasses.Add(
+							new Tuple<Table, string>(table, tableReference.DefinitionQuery));
+					}
+				}
+
+				stateRepository =
+					new XmlWorkItemStateRepository(xmlWorkListDefinition.Path,
+					                               xmlWorkListDefinition.Name, type,
+					                               xmlWorkListDefinition.CurrentIndex);
+
 				repository =
-					new IssueItemRepository(tablesByGeodatabase, stateRepository,
-					                        workListItemDatastore);
+					new IssueItemRepository(sourceClasses, stateRepository);
 			}
 			else if (type == typeof(SelectionWorkList))
 			{
 				stateRepository =
-					new XmlSelectionItemStateRepository(definition.Path, definition.Name, type,
-					                                    definition.CurrentIndex);
+					new XmlSelectionItemStateRepository(xmlWorkListDefinition.Path,
+					                                    xmlWorkListDefinition.Name, type,
+					                                    xmlWorkListDefinition.CurrentIndex);
 
 				Dictionary<long, Table> tablesById =
 					tablesByGeodatabase.Select(table => table)
@@ -117,7 +133,7 @@ namespace ProSuite.AGP.WorkList
 					                                 table => table);
 
 				Dictionary<Table, List<long>> oidsByTable =
-					GetOidsByTable(definition.Items, tablesById);
+					GetOidsByTable(xmlWorkListDefinition.Items, tablesById);
 
 				repository =
 					new SelectionItemRepository(tablesByGeodatabase, oidsByTable, stateRepository);

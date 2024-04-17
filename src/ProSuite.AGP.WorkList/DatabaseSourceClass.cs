@@ -13,7 +13,6 @@ namespace ProSuite.AGP.WorkList
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly WorkListStatusSchema _statusSchema;
-		[CanBeNull] private readonly string _definitionQuery;
 
 		public DatabaseSourceClass(GdbTableIdentity identity,
 		                           [NotNull] WorkListStatusSchema statusSchema,
@@ -25,7 +24,7 @@ namespace ProSuite.AGP.WorkList
 			Assert.ArgumentNotNull(attributeReader, nameof(attributeReader));
 
 			_statusSchema = statusSchema;
-			_definitionQuery = definitionQuery;
+			DefinitionQuery = definitionQuery;
 		}
 
 		[NotNull]
@@ -98,14 +97,14 @@ namespace ProSuite.AGP.WorkList
 				result = $"{StatusFieldName} = {GetValue(statusFilter.Value)}";
 			}
 
-			if (_definitionQuery != null)
+			if (DefinitionQuery != null)
 			{
 				if (! string.IsNullOrEmpty(result))
 				{
 					result += " AND ";
 				}
 
-				result += _definitionQuery;
+				result += DefinitionQuery;
 			}
 
 			return result;

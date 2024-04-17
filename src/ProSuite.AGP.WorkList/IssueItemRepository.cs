@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Editing;
-using ProSuite.AGP.QA.Worklist;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
@@ -26,6 +25,10 @@ namespace ProSuite.AGP.WorkList
 		                           [CanBeNull] IWorkListItemDatastore tableSchema = null,
 		                           string definitionQuery = null) : base(
 			tables, stateRepository, tableSchema, definitionQuery) { }
+
+		public IssueItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
+		                           IRepository workItemStateRepository) : base(
+			tableWithDefinitionQuery, workItemStateRepository) { }
 
 		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{
@@ -53,7 +56,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected override IAttributeReader CreateAttributeReaderCore(
 			TableDefinition definition,
-			[CanBeNull] IWorkListItemDatastore tableSchema)
+			IWorkListItemDatastore tableSchema)
 		{
 			Attributes[] attributes = new[]
 			                          {
@@ -67,7 +70,7 @@ namespace ProSuite.AGP.WorkList
 
 			return tableSchema != null
 				       ? tableSchema.CreateAttributeReader(definition, attributes)
-				       : new AttributeReader(definition, attributes);
+				       : new StatusOnlyAttributeReader(definition);
 		}
 
 		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
@@ -78,10 +81,7 @@ namespace ProSuite.AGP.WorkList
 
 			IIssueItem item = new IssueItem(id, row);
 
-			if (reader != null)
-			{
-				reader.ReadAttributes(row, item, source);
-			}
+			reader?.ReadAttributes(row, item, source);
 
 			return RefreshState(item);
 		}
@@ -94,7 +94,8 @@ namespace ProSuite.AGP.WorkList
 			Assert.ArgumentNotNull(attributeReader, nameof(attributeReader));
 			Assert.ArgumentNotNull(statusSchema, nameof(statusSchema));
 
-			return new DatabaseSourceClass(identity, statusSchema, attributeReader, definitionQuery);
+			return new DatabaseSourceClass(identity, statusSchema, attributeReader,
+			                               definitionQuery);
 		}
 
 		protected override void RefreshCore(IWorkItem item,
@@ -166,6 +167,30 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return operationDescription;
+		}
+
+		private class StatusOnlyAttributeReader : IAttributeReader
+		{
+			private readonly TableDefinition _tableDefinition;
+
+			public StatusOnlyAttributeReader(TableDefinition tableDefinition)
+			{
+				_tableDefinition = tableDefinition;
+			}
+
+			#region Implementation of IAttributeReader
+
+			public T GetValue<T>(Row row, Attributes attribute)
+			{
+				return default;
+			}
+
+			public void ReadAttributes(Row fromRow, IIssueItem forItem, ISourceClass source)
+			{
+				forItem.Status = ((DatabaseSourceClass) source).GetStatus(fromRow);
+			}
+
+			#endregion
 		}
 	}
 }

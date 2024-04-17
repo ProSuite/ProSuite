@@ -94,6 +94,11 @@ namespace ProSuite.AGP.WorkList.Test
 
 		public List<ISourceClass> SourceClasses { get; }
 
+		public void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
+		{
+			throw new NotImplementedException();
+		}
+
 		public void Dispose() { }
 	}
 }

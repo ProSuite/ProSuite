@@ -9,9 +9,11 @@ namespace ProSuite.AGP.WorkList.Contracts
 		string Name { get; }
 
 		[CanBeNull]
-		IAttributeReader AttributeReader { get; }
+		IAttributeReader AttributeReader { get; set; }
 
 		bool HasGeometry { get; }
+
+		string DefinitionQuery { get; }
 
 		bool Uses(GdbTableIdentity table);
 

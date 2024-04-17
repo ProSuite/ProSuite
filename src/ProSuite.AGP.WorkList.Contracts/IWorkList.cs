@@ -71,5 +71,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void Commit();
 
 		void SetStatus([NotNull] IWorkItem item, WorkItemStatus status);
+
+		void RefreshItems();
 	}
 }

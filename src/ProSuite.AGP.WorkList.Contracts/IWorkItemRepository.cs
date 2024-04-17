@@ -38,5 +38,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void UpdateStateRepository(string path);
 
 		List<ISourceClass> SourceClasses { get; }
+
+		void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
 	}
 }
