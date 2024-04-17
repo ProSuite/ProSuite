@@ -289,7 +289,25 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			var geometry = CreateMarkerGeometry(style);
 			var symbol = CreatePolygonSymbol(color);
 
-			var graphic = new CIMMarkerGraphic {Geometry = geometry, Symbol = symbol};
+			CIMVectorMarker marker = CreateMarker(geometry, symbol, size);
+
+			return marker;
+		}
+
+		public static CIMMarker CreateMarker(
+			MarkerStyle style, CIMPolygonSymbol symbol, double size)
+		{
+			var geometry = CreateMarkerGeometry(style);
+
+			symbol ??= CreatePolygonSymbol(ColorUtils.BlackRGB);
+
+			return CreateMarker(geometry, symbol, size);
+		}
+
+		public static CIMVectorMarker
+			CreateMarker(Geometry geometry, CIMPolygonSymbol symbol, double size)
+		{
+			var graphic = new CIMMarkerGraphic { Geometry = geometry, Symbol = symbol };
 
 			var marker = new CIMVectorMarker();
 			marker.ColorLocked = false;
@@ -300,11 +318,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			marker.DominantSizeAxis3D = DominantSizeAxis.Y;
 			marker.ScaleSymbolsProportionally = true;
 			marker.RespectFrame = true;
-			marker.MarkerGraphics = new[] {graphic};
-			marker.Frame = style == MarkerStyle.Circle
-				               ? GeometryFactory.CreateEnvelope(-5, -5, 5, 5)
-				               : graphic.Geometry.Extent;
-
+			marker.MarkerGraphics = new[] { graphic };
+			marker.Frame = graphic.Geometry.Extent;
 			return marker;
 		}
 
