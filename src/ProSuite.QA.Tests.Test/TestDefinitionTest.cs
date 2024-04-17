@@ -104,6 +104,8 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaFlowLogic),
 											 typeof(QaGdbRelease),
 											 typeof(QaGeometryConstraint),
+											 //typeof(QaGroupConstraints),
+											 typeof(QaHorizontalSegments),
 											 typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
 				                             typeof(QaValue),
@@ -240,6 +242,8 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaFlowLogic)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGdbRelease)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGeometryConstraint)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGroupConstraints)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry)));
 
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe)));
