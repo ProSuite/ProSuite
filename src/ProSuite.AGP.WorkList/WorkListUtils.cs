@@ -106,6 +106,11 @@ namespace ProSuite.AGP.WorkList
 							tablesByGeodatabase.FirstOrDefault(
 								t => t.GetName() == tableReference.Name);
 
+						if (table == null)
+						{
+							continue;
+						}
+
 						// TODO: Get Status Schema from XML too
 						sourceClasses.Add(
 							new Tuple<Table, string>(table, tableReference.DefinitionQuery));
