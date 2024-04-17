@@ -35,6 +35,10 @@ public static class Gateway
 		}
 	}
 
+	/// <summary>
+	/// Show a message box, running it (synchronously) on the proper thread.
+	/// </summary>
+	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
 	public static MessageBoxResult ShowMessage(
 		string message, string caption,
 		MessageBoxButton button = MessageBoxButton.OK,
@@ -58,6 +62,38 @@ public static class Gateway
 		{
 			_msg.Error(ex.Message);
 			return MessageBoxResult.None;
+		}
+	}
+
+	/// <summary>
+	/// Shows the Window <typeparamref name="TWindow"/> as a modal dialog,
+	/// creating and running it (synchronously) on the proper thread.
+	/// </summary>
+	/// <returns>The DialogResult property before the dialog closes</returns>
+	public static bool? ShowDialog<TWindow>(params object[] args) where TWindow : Window
+	{
+		args ??= Array.Empty<object>();
+
+		try
+		{
+			var dispatcher = Application.Current.Dispatcher;
+
+			return dispatcher.Invoke(() =>
+			{
+				var owner = GetMainWindow();
+				if (owner is null) return null;
+				var dialog = (Window) Activator.CreateInstance(typeof(TWindow), args, null);
+				if (dialog is null) return null;
+				dialog.Owner = owner;
+				_msg.Debug($"Showing dialog: {dialog.Title}");
+				var result = dialog.ShowDialog();
+				return result;
+			});
+		}
+		catch (Exception ex)
+		{
+			_msg.Error($"{nameof(ShowDialog)}: {ex.Message}", ex);
+			return null;
 		}
 	}
 
