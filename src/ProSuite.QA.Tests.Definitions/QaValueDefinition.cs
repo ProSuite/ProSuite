@@ -1,11 +1,10 @@
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Linq;
 
 namespace ProSuite.QA.Tests
 {
@@ -25,7 +24,10 @@ namespace ProSuite.QA.Tests
 			: base(table)
 		{
 			Table = table;
-			Fields = fields;
+			if (fields != null)
+			{
+				Fields = fields.ToList();
+			}
 		}
 
 		
