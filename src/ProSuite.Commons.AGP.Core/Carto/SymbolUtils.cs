@@ -182,6 +182,64 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		#region Modification
 
 		/// <summary>
+		/// Set the alpha value of all colors in a symbol.
+		/// </summary>
+		/// <remarks>Modifies the given symbol!</remarks>
+		/// <param name="symbol">The symbol reference to modify</param>
+		/// <param name="alpha">New alpha value, between 0 (transparent) and 100 (opaque)</param>
+		/// <returns>The given <paramref name="symbol"/></returns>
+		public static CIMSymbolReference SetAlpha(this CIMSymbolReference symbol, float alpha)
+		{
+			symbol?.Symbol.SetAlpha(alpha);
+			return symbol;
+		}
+
+		/// <summary>
+		/// Set the alpha value of all colors in a symbol.
+		/// </summary>
+		/// <remarks>Modifies the given symbol!</remarks>
+		/// <param name="symbol">The symbol reference to modify</param>
+		/// <param name="alpha">New alpha value, between 0 (transparent) and 100 (opaque)</param>
+		/// <returns>The given <paramref name="symbol"/></returns>
+		public static CIMSymbol SetAlpha(this CIMSymbol symbol, float alpha)
+		{
+			if (symbol is CIMMultiLayerSymbol multiLayerSymbol &&
+			    multiLayerSymbol.SymbolLayers != null)
+			{
+				foreach (var symbolLayer in multiLayerSymbol.SymbolLayers)
+				{
+					if (symbolLayer is CIMSolidFill soldFill)
+					{
+						soldFill.Color.SetAlpha(alpha);
+					}
+					else if (symbolLayer is CIMSolidStroke solidStroke)
+					{
+						solidStroke.Color.SetAlpha(alpha);
+					}
+					else if (symbolLayer is CIMVectorMarker vectorMarker &&
+					         vectorMarker.MarkerGraphics != null)
+					{
+						foreach (var markerGraphic in vectorMarker.MarkerGraphics)
+						{
+							markerGraphic.Symbol.SetAlpha(alpha);
+						}
+					}
+					else if (symbolLayer is CIMCharacterMarker characterMarker)
+					{
+						characterMarker.Symbol.SetAlpha(alpha);
+					}
+				}
+			}
+			else if (symbol is CIMTextSymbol textSymbol)
+			{
+				textSymbol.Symbol.SetAlpha(alpha);
+			}
+			// else: should not occur (all symbols are either MultiLayer or Text)
+
+			return symbol;
+		}
+
+		/// <summary>
 		/// See <see cref="Blend(CIMSymbol,CIMColor,float)"/>. Modifies
 		/// the given symbol reference and returns it for convenience.
 		/// </summary>

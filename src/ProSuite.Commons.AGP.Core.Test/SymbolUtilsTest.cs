@@ -140,5 +140,18 @@ namespace ProSuite.Commons.AGP.Core.Test
 			Assert.AreEqual(51.0, pointColor.Values[1]); // green
 			Assert.AreEqual(255.0, pointColor.Values[2]); // blue
 		}
+
+		[Test]
+		public void CanSetAlpha()
+		{
+			CIMSymbol nullSymbol = null;
+			Assert.IsNull(nullSymbol.SetAlpha(50f));
+
+			CIMSymbol pointSymbol = SymbolUtils.CreatePointSymbol(ColorUtils.BlueRGB);
+			Assert.AreSame(pointSymbol, pointSymbol.SetAlpha(50f));
+
+			var symref = pointSymbol.CreateReference();
+			Assert.AreSame(symref, symref.SetAlpha(67f));
+		}
 	}
 }

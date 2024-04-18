@@ -71,6 +71,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return new CIMHSVColor {H = hue, S = saturation, V = value, Alpha = alpha};
 		}
 
+		/// <param name="color">the color whose alpha is to be modified</param>
+		/// <param name="alpha">between 0 (transparent) and 100 (opaque)</param>
 		public static T SetAlpha<T>(this T color, float alpha) where T : CIMColor
 		{
 			if (color != null)
