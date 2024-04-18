@@ -118,7 +118,11 @@ namespace ProSuite.AGP.WorkList
 					                     ? GdbQueryUtils.CreateSpatialFilter(areaOfInterest)
 					                     : new QueryFilter();
 
+				// Source classes can set the respective filters / definition queries
 				filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
+
+				// Selection Item ObjectIDs to filter out, or change of SearchOrder:
+				AdaptSourceFilter(filter, sourceClass);
 
 				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
 				{
@@ -223,6 +227,9 @@ namespace ProSuite.AGP.WorkList
 			return WorkItemStateRepository.CurrentIndex ?? -1;
 		}
 
+		protected abstract void AdaptSourceFilter([NotNull] QueryFilter filter,
+		                                          [NotNull] ISourceClass sourceClass);
+
 		protected virtual void UpdateStateRepositoryCore(string path) { }
 
 		protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
@@ -231,10 +238,20 @@ namespace ProSuite.AGP.WorkList
 			return Task.FromResult(0);
 		}
 
-		protected virtual IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
-		                                               [CanBeNull] QueryFilter filter, bool recycle)
+		private static IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
+		                                            [CanBeNull] QueryFilter filter,
+		                                            bool recycle)
 		{
-			Table table = OpenTable(sourceClass);
+			Table table = null;
+			try
+			{
+				table = OpenTable(sourceClass);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error opening source table {sourceClass.Name}: {e.Message}. " +
+				          $"Some or all items might be missing.", e);
+			}
 
 			if (table == null)
 			{

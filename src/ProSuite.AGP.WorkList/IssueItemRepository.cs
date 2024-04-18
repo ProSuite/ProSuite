@@ -98,6 +98,12 @@ namespace ProSuite.AGP.WorkList
 			                               definitionQuery);
 		}
 
+		protected override void AdaptSourceFilter(QueryFilter filter, ISourceClass sourceClass)
+		{
+			// So far no manipulation of the filter is needed. The where clause is set in the caller by using
+			// sourceClass.CreateWhereClause(statusFilter).
+		}
+
 		protected override void RefreshCore(IWorkItem item,
 		                                    ISourceClass sourceClass,
 		                                    Row row)
