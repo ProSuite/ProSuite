@@ -111,7 +111,8 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
 				                             typeof(QaValue),
-				                             typeof(QaWithinZRange),
+				                             typeof(QaWithinBox),
+											 typeof(QaWithinZRange),
 				                             typeof(QaZDifferenceOther),
 				                             typeof(QaZDifferenceSelf),
 			                             };
@@ -219,6 +220,7 @@ namespace ProSuite.QA.Tests.Test
 			// difficult assertions:
 			AddQaCurveTestCases(model, testCases); //example optional parameters
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values		
+			AddQaWithinBox(model, testCases);
 			AddQaZDifferenceOther(model, testCases);
 			AddQaZDifferenceSelf(model, testCases);
 
@@ -415,6 +417,25 @@ namespace ProSuite.QA.Tests.Test
 				                                     "U.EdgeLevel > L.EdgeLevel"
 			                                     },
 			                                     optionalValues));
+		}
+
+		private static void AddQaWithinBox(InMemoryTestDataModel model,
+		                                   ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaWithinBox), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     2600000, 1200000, 2610000, 1210000
+			                                     }));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaWithinBox), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     2600000, 1200000, 2610000, 1210000,
+				                                     true
+			                                     }));
 		}
 
 		private static void AddQaZDifferenceSelf(InMemoryTestDataModel model,

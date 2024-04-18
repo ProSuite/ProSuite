@@ -89,6 +89,12 @@ namespace ProSuite.QA.Tests
 			_shapeFieldName = featureClass.ShapeFieldName;
 		}
 
+		[InternallyUsedTest]
+		public QaWithinBox([NotNull] QaWithinBoxDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClass, definition.XMin,
+			       definition.YMin, definition.XMax, definition.YMax, definition.ReportOnlyOutsideParts)
+		{ }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			return false;
