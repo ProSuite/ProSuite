@@ -12,6 +12,7 @@ using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.TestFactories;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.TestData;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
@@ -207,20 +208,19 @@ namespace ProSuite.QA.Tests.Test
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGroupConstraints)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry)));
-
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaValue)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaWithinZRange)));
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaZDifferenceOther)));
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaZDifferenceSelf)));
 
 			//
 			// Special Cases
 			//
 			// Manually create values for special cases, such as optional parameters or
 			// difficult assertions:
-			AddQaCurveTestCases(model, testCases);
-			AddQaDateFieldsWithoutTimeCases(testCases, model);
+			AddQaCurveTestCases(model, testCases); //example optional parameters
+			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values		
+			AddQaZDifferenceOther(model, testCases);
+			AddQaZDifferenceSelf(model, testCases);
 
 			foreach (TestDefinitionCase testCase in testCases)
 			{
@@ -314,23 +314,21 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		private static void AddQaCurveTestCases(InMemoryTestDataModel model,
-		                                        List<TestDefinitionCase> testCases)
+		                                        ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("AllowedNonLinearSegmentTypes",
 			                   new List<NonLinearSegmentType> { NonLinearSegmentType.Bezier });
 			optionalValues.Add("GroupIssuesBySegmentType", true);
 
-			var testCaseCurve =
-				new TestDefinitionCase(typeof(QaCurve), 0,
-				                       new object[] { model.GetVectorDataset() },
-				                       optionalValues);
-
-			testCases.Add(testCaseCurve);
+			testCases.Add(new TestDefinitionCase(typeof(QaCurve), 0,
+			                                     new object[]
+			                                     { model.GetVectorDataset() },
+			                                     optionalValues));
 		}
 
 		private static void AddQaDateFieldsWithoutTimeCases(
-			ICollection<TestDefinitionCase> testCases, InMemoryTestDataModel model)
+			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaDateFieldsWithoutTime), 0,
 			                                     new object[]
@@ -344,6 +342,137 @@ namespace ProSuite.QA.Tests.Test
 				                                     model.GetVectorDataset(),
 				                                     new[] { "MY_DATE_FIELD1", "MY_DATE_FIELD2" }
 			                                     }));
+		}
+
+		private static void AddQaZDifferenceOther(InMemoryTestDataModel model,
+		                                          ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("RelevantRelationCondition", "U.EdgeLevel > L.EdgeLevel");
+			optionalValues.Add("MinimumZDifferenceExpression", "U.EdgeLevel > L.EdgeLevel");
+			optionalValues.Add("MaximumZDifferenceExpression", "U.EdgeLevel > L.EdgeLevel");
+			optionalValues.Add("UseDistanceFromReferenceRingPlane", true);
+			optionalValues.Add("ReferenceRingPlaneCoplanarityTolerance", 1);
+			optionalValues.Add("IgnoreNonCoplanarReferenceRings", true);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaZDifferenceOther), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+				                                     1, ZComparisonMethod.IntersectionPoints,
+				                                     "U.EdgeLevel > L.EdgeLevel"
+			                                     },
+			                                     optionalValues));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaZDifferenceOther), 1,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     1,
+				                                     ZComparisonMethod.IntersectionPoints,
+				                                     "U.EdgeLevel > L.EdgeLevel"
+			                                     },
+			                                     optionalValues));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaZDifferenceOther), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+				                                     1,
+				                                     2,
+				                                     ZComparisonMethod.IntersectionPoints,
+				                                     "U.EdgeLevel > L.EdgeLevel"
+			                                     },
+			                                     optionalValues));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaZDifferenceOther), 3,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     1,
+				                                     2,
+				                                     ZComparisonMethod.IntersectionPoints,
+				                                     "U.EdgeLevel > L.EdgeLevel"
+			                                     },
+			                                     optionalValues));
+		}
+
+		private static void AddQaZDifferenceSelf(InMemoryTestDataModel model,
+		                                         ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("MinimumZDifferenceExpression", "U.EdgeLevel > L.EdgeLevel");
+			optionalValues.Add("MaximumZDifferenceExpression", "U.EdgeLevel > L.EdgeLevel");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaZDifferenceSelf), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     1,
+				                                     ZComparisonMethod.IntersectionPoints,
+				                                     "U.EdgeLevel > L.EdgeLevel"
+			                                     },
+			                                     optionalValues));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaZDifferenceSelf), 1,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     1,
+				                                     ZComparisonMethod.IntersectionPoints,
+				                                     "U.EdgeLevel > L.EdgeLevel"
+			                                     },
+			                                     optionalValues));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaZDifferenceSelf), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     1,
+				                                     2,
+				                                     ZComparisonMethod.IntersectionPoints,
+				                                     "U.EdgeLevel > L.EdgeLevel"
+			                                     },
+			                                     optionalValues));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaZDifferenceSelf), 3,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     1,
+				                                     2,
+				                                     ZComparisonMethod.IntersectionPoints,
+				                                     "U.EdgeLevel > L.EdgeLevel"
+			                                     },
+			                                     optionalValues));
 		}
 
 		private static void AddParameterValue(string parameterName, object value,
