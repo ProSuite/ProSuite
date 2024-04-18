@@ -117,7 +117,7 @@ namespace ProSuite.AGP.WorkList
 		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
 		{
 			Table table = OpenTable(source);
-			Assert.NotNull(table);
+			Assert.NotNull(table, $"Cannot set status for missing table {source.Name}");
 
 			try
 			{

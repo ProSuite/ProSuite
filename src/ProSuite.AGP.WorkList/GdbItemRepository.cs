@@ -77,9 +77,18 @@ namespace ProSuite.AGP.WorkList
 
 			foreach (ISourceClass sourceClass in SourceClasses)
 			{
-				Table table = sourceClass.OpenDataset<Table>();
-				sourceClass.AttributeReader = CreateAttributeReaderCore(
-					table.GetDefinition(), tableSchemaInfo);
+				Table table = OpenTable(sourceClass);
+
+				if (table != null)
+				{
+					sourceClass.AttributeReader = CreateAttributeReaderCore(
+						table.GetDefinition(), tableSchemaInfo);
+				}
+				else
+				{
+					_msg.Warn(
+						$"Cannot prepare table schema due to missing source table {sourceClass.Name}");
+				}
 			}
 		}
 
@@ -242,19 +251,11 @@ namespace ProSuite.AGP.WorkList
 		                                            [CanBeNull] QueryFilter filter,
 		                                            bool recycle)
 		{
-			Table table = null;
-			try
-			{
-				table = OpenTable(sourceClass);
-			}
-			catch (Exception e)
-			{
-				_msg.Warn($"Error opening source table {sourceClass.Name}: {e.Message}. " +
-				          $"Some or all items might be missing.", e);
-			}
+			Table table = OpenTable(sourceClass);
 
 			if (table == null)
 			{
+				_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
 				yield break;
 			}
 
@@ -300,7 +301,17 @@ namespace ProSuite.AGP.WorkList
 		[CanBeNull]
 		protected static Table OpenTable([NotNull] ISourceClass sourceClass)
 		{
-			return sourceClass.OpenDataset<Table>();
+			Table table = null;
+			try
+			{
+				table = sourceClass.OpenDataset<Table>();
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error opening source table {sourceClass.Name}: {e.Message}.", e);
+			}
+
+			return table;
 		}
 
 		private ISourceClass CreateSourceClass(GdbTableIdentity identity,
