@@ -221,6 +221,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaCurveTestCases(model, testCases); //example optional parameters
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values		
 			AddQaVertexCoincidence(model, testCases);
+			AddQaVertexCoincidenceOther(model, testCases);
 			AddQaVertexCoincidenceSelf(model, testCases);
 			AddQaWithinBox(model, testCases);
 			AddQaZDifferenceOther(model, testCases);
@@ -365,6 +366,62 @@ namespace ProSuite.QA.Tests.Test
 			                                     new object[]
 			                                     {
 				                                     model.GetVectorDataset(),
+			                                     },
+			                                     optionalValues));
+		}
+
+		private static void AddQaVertexCoincidenceOther(InMemoryTestDataModel model,
+		                                                ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("PointTolerance", -1);
+			optionalValues.Add("EdgeTolerance", -1);
+			optionalValues.Add("RequireVertexOnNearbyEdge", true);
+			optionalValues.Add("CoincidenceTolerance", 0);
+			optionalValues.Add("ZTolerance", 0);
+			optionalValues.Add("ZCoincidenceTolerance", 0);
+			optionalValues.Add("Is3D", false);
+			optionalValues.Add("Bidirectional", true);
+			optionalValues.Add("ReportCoordinates", true);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaVertexCoincidenceOther), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+			                                     },
+			                                     optionalValues));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaVertexCoincidenceOther), 1,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+			                                     },
+			                                     optionalValues));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaVertexCoincidenceOther), 2,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     "G1.CountryCode <> G2.CountryCode"
 			                                     },
 			                                     optionalValues));
 		}
