@@ -220,7 +220,8 @@ namespace ProSuite.QA.Tests.Test
 			// difficult assertions:
 			AddQaCurveTestCases(model, testCases); //example optional parameters
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values		
-			AddQaVertexCoincidenceSelf(model, testCases);												   //			
+			AddQaVertexCoincidence(model, testCases);
+			AddQaVertexCoincidenceSelf(model, testCases);
 			AddQaWithinBox(model, testCases);
 			AddQaZDifferenceOther(model, testCases);
 			AddQaZDifferenceSelf(model, testCases);
@@ -345,6 +346,27 @@ namespace ProSuite.QA.Tests.Test
 				                                     model.GetVectorDataset(),
 				                                     new[] { "MY_DATE_FIELD1", "MY_DATE_FIELD2" }
 			                                     }));
+		}
+
+		private static void AddQaVertexCoincidence(InMemoryTestDataModel model,
+		                                           ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("PointTolerance", -1);
+			optionalValues.Add("EdgeTolerance", -1);
+			optionalValues.Add("RequireVertexOnNearbyEdge", true);
+			optionalValues.Add("CoincidenceTolerance", 0);
+			optionalValues.Add("Is3D", false);
+			optionalValues.Add("ZTolerance", 0);
+			optionalValues.Add("ZCoincidenceTolerance", 0);
+			optionalValues.Add("ReportCoordinates", true);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaVertexCoincidence), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+			                                     },
+			                                     optionalValues));
 		}
 
 		private static void AddQaVertexCoincidenceSelf(InMemoryTestDataModel model,
