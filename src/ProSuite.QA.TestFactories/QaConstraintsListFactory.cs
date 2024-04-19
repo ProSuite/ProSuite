@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -17,44 +17,11 @@ namespace ProSuite.QA.TestFactories
 {
 	[UsedImplicitly]
 	[AttributeTest]
-	public class QaConstraintsListFactory : TestFactory
+	public class QaConstraintsListFactory : QaFactoryBase
 	{
-		private const string _tableAttribute = "table";
-		private const string _constraintsTableAttribute = "constraintsTable";
-		private const string _expressionField = "expressionField";
-		private const string _expressionIsError = "expressionIsError";
-		private const string _descriptionField = "descriptionField";
-
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaConstraint.Codes;
-
-		public override string TestDescription => DocStrings.QaConstraintsListFactory;
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			var list =
-				new List<TestParameter>
-				{
-					new TestParameter(_tableAttribute, typeof(IReadOnlyTable),
-					                  DocStrings.QaConstraintsListFactory_table),
-					new TestParameter(_constraintsTableAttribute, typeof(IReadOnlyTable),
-					                  DocStrings.QaConstraintsListFactory_constraintsTable),
-					new TestParameter(_expressionField, typeof(string),
-					                  DocStrings.QaConstraintsListFactory_expressionField),
-					new TestParameter(_expressionIsError, typeof(bool),
-					                  DocStrings.QaConstraintsListFactory_expressionIsError),
-					new TestParameter(_descriptionField, typeof(string),
-					                  DocStrings.QaConstraintsListFactory_descriptionField),
-				};
-
-			return list.AsReadOnly();
-		}
-
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaConstraint).Name;
-		}
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
@@ -140,7 +107,7 @@ namespace ProSuite.QA.TestFactories
 			[NotNull] string constraint,
 			[CanBeNull] string constraintDescription, bool invertCondition)
 		{
-			var functionReplacements = new Dictionary<string, string> {{"LENGTH", "LEN"}};
+			var functionReplacements = new Dictionary<string, string> { { "LENGTH", "LEN" } };
 
 			string translated = TranslateConstraint(constraint, functionReplacements);
 
@@ -204,7 +171,7 @@ namespace ProSuite.QA.TestFactories
 				                      SubFields = constraintField
 			                      };
 
-			var subfields = new List<string> {constraintField};
+			var subfields = new List<string> { constraintField };
 			if (StringUtils.IsNotEmpty(constraintDescriptionField))
 			{
 				subfields.Add(constraintDescriptionField);

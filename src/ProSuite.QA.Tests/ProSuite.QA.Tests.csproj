@@ -82,11 +82,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>IssueCodeDescriptions.resx</DependentUpon>
     </Compile>
-    <Compile Update="Properties\LocalizableStrings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>LocalizableStrings.resx</DependentUpon>
-    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -113,11 +108,6 @@
       <LastGenOutput>IssueCodeDescriptions.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Update="Properties\LocalizableStrings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
@@ -127,5 +117,6 @@
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Tests.Definitions\ProSuite.QA.Tests.Definitions.csproj" />
   </ItemGroup>
 </Project>

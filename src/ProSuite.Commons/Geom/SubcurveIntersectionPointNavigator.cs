@@ -424,13 +424,16 @@ namespace ProSuite.Commons.Geom
 
 		public IntersectionPoint3D GetNextIntersection(
 			[NotNull] IntersectionPoint3D previousIntersection,
-			bool continueOnSource, bool continueForward)
+			bool continueOnSource, bool continueForward,
+			out IList<IntersectionPoint3D> skipped)
 		{
 			IntersectionPoint3D nextIntersection;
 			IntersectionPoint3D subcurveStart = previousIntersection;
 
 			HashSet<IntersectionPoint3D> previousCluster =
 				IntersectionClusters.GetOtherIntersections(previousIntersection);
+
+			skipped = new List<IntersectionPoint3D>();
 
 			int circuitBreaker = 0;
 			do
@@ -457,7 +460,7 @@ namespace ProSuite.Commons.Geom
 
 				// Skip pseudo-breaks to avoid going astray due to minimal angle-differences:
 				// Example: GeomTopoOpUtilsTest.CanGetIntersectionAreaXYWithLinearBoundaryIntersection()
-			} while (SkipIntersection(subcurveStart, nextIntersection, previousCluster));
+			} while (SkipIntersection(subcurveStart, nextIntersection, previousCluster, skipped));
 
 			// Boundary loops that turned into interior rings could be detected here, if desired.
 			VisitedIntersections.Add(nextIntersection);
@@ -1067,7 +1070,8 @@ namespace ProSuite.Commons.Geom
 
 		private bool SkipIntersection([NotNull] IntersectionPoint3D subcurveStartIntersection,
 		                              [NotNull] IntersectionPoint3D nextIntersection,
-		                              HashSet<IntersectionPoint3D> previousCluster)
+		                              HashSet<IntersectionPoint3D> previousCluster,
+		                              IList<IntersectionPoint3D> skippedIntersections)
 		{
 			// Instead of all of this it would be better to try the Martinez-2009
 			// approach but by intersection-run instead by segment!
@@ -1075,6 +1079,7 @@ namespace ProSuite.Commons.Geom
 			// the composition of the result polygons...
 			if (IntersectionsNotUsedForNavigation.Contains(nextIntersection))
 			{
+				skippedIntersections.Add(nextIntersection);
 				return true;
 			}
 
@@ -1098,6 +1103,7 @@ namespace ProSuite.Commons.Geom
 			    Source.GetPart(nextIntersection.SourcePartIndex).ClockwiseOriented &&
 			    ! IsUnclosedTargetEnd(nextIntersection))
 			{
+				skippedIntersections.Add(nextIntersection);
 				return true;
 			}
 
@@ -1105,6 +1111,7 @@ namespace ProSuite.Commons.Geom
 			{
 				// Make sure to leave the intersection cluster containing the previous intersection
 				// and do not run in circles or emit 0-length subcurves:
+				skippedIntersections.Add(nextIntersection);
 				return true;
 			}
 
@@ -1112,6 +1119,7 @@ namespace ProSuite.Commons.Geom
 			    HasDuplicateBeenVisited(nextIntersection))
 			{
 				// Skip it
+				skippedIntersections.Add(nextIntersection);
 				return true;
 			}
 

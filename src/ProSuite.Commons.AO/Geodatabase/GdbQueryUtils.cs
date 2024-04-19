@@ -10,6 +10,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Drawing;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;

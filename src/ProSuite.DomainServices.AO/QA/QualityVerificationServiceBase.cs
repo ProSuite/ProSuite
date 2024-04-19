@@ -1022,10 +1022,10 @@ namespace ProSuite.DomainServices.AO.QA
 				throw;
 			}
 
-			// Once the error filter is applied inside the test runner, this can be 
-			// moved to the test runner too:
-			conditionVerification.ErrorCount++;
+			conditionVerification.AddError();
+
 			bool isAllowable = conditionVerification.AllowErrors;
+
 			if (isAllowable)
 			{
 				_warningCount++;
@@ -1035,6 +1035,8 @@ namespace ProSuite.DomainServices.AO.QA
 				_errorCount++;
 			}
 
+			// Once the error filter is applied inside the test runner, this can be 
+			// moved to the test runner too:
 			if (qaError.Geometry == null &&
 			    StoreRelatedGeometryForTableRowErrors &&
 			    ! qualityCondition.NeverStoreRelatedGeometryForTableRowIssues)

@@ -46,7 +46,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return PrimaryWorkspaceContext.OpenTopology(dataset);
 		}
 
-		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
+		public RasterDatasetReference OpenRasterDataset(IDdxRasterDataset dataset)
 		{
 			return PrimaryWorkspaceContext.OpenRasterDataset(dataset);
 		}
@@ -56,7 +56,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return PrimaryWorkspaceContext.OpenTerrainReference(dataset);
 		}
 
-		public SimpleRasterMosaic OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
+		public MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			return PrimaryWorkspaceContext.OpenSimpleRasterMosaic(dataset);
 		}

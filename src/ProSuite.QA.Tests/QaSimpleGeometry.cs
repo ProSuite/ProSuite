@@ -138,6 +138,12 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
+		[InternallyUsedTest]
+		public QaSimpleGeometry(QaSimpleGeometryDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClass,
+			       definition.AllowNonPlanarLines, definition.ToleranceFactor)
+		{ }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			return false;

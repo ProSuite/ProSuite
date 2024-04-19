@@ -1,3 +1,4 @@
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel

@@ -1,12 +1,20 @@
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.AO.Surface.Raster;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
+using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 
-namespace ProSuite.QA.Container
+namespace ProSuite.Commons.AO.Surface
 {
-	public abstract class RasterReference
+	/// <summary>
+	/// A raster data type hierarchy that can be used to create surfaces which implements
+	/// <see cref="IRasterDatasetDef"/>. Tests / test definitions hence can use
+	/// <see cref="IRasterDatasetDef"/> as parameter type to allow for the instantiation
+	/// of test definitions on all platforms.
+	/// </summary>
+	public abstract class RasterReference : IRasterDatasetDef
 	{
 		public abstract bool EqualsCore([NotNull] RasterReference rasterReference);
 
@@ -32,6 +40,33 @@ namespace ProSuite.QA.Container
 		/// requires a sub-tiling to avoid out-of-memory situations.
 		/// </summary>
 		public virtual bool AssumeInMemory => true;
+
+		#region Implementation of IDbDataset
+
+		public string Name => Dataset.Name;
+
+		public IDatasetContainer DbContainer
+		{
+			get
+			{
+				IWorkspace workspace = Dataset.Workspace;
+				return new GeoDbWorkspace(workspace);
+			}
+		}
+
+		public abstract DatasetType DatasetType { get; }
+
+		public bool Equals(IDatasetDef otherDataset)
+		{
+			if (otherDataset is RasterReference rasterDataset)
+			{
+				return EqualsCore(rasterDataset);
+			}
+
+			return false;
+		}
+
+		#endregion
 
 		public double DefaultValueForUnassignedZs { get; set; } = double.NaN;
 		public bool ReturnNullGeometryIfNotCompletelyCovered { get; set; } = true;

@@ -9,7 +9,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Gdb;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
