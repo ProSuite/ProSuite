@@ -1,4 +1,5 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AGP.DataModel
@@ -18,5 +19,11 @@ namespace ProSuite.DomainModel.AGP.DataModel
 		public new int Id { get; }
 
 		public override bool HasGeometry { get; }
+
+		#region Overrides of Dataset
+
+		public override DatasetType DatasetType { get; }
+
+		#endregion
 	}
 }
