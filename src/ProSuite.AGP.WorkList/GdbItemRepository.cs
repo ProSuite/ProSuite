@@ -25,7 +25,7 @@ namespace ProSuite.AGP.WorkList
 		private int _lastUsedOid;
 
 		protected GdbItemRepository(IEnumerable<Table> tables,
-		                            IRepository workItemStateRepository,
+		                            IWorkItemStateRepository workItemStateRepository,
 		                            [CanBeNull] IWorkListItemDatastore tableSchema = null,
 		                            string definitionQuery = null)
 		{
@@ -51,7 +51,7 @@ namespace ProSuite.AGP.WorkList
 		// TODO: Refactor to use ISourceClass created by (virtual) method in environment!
 		// -> This allows for adaptive definition query depending on db source class
 		protected GdbItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
-		                            IRepository workItemStateRepository)
+		                            IWorkItemStateRepository workItemStateRepository)
 		{
 			foreach ((Table table, string definitionQuery) in tableWithDefinitionQuery)
 			{
@@ -64,7 +64,7 @@ namespace ProSuite.AGP.WorkList
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
-		protected IRepository WorkItemStateRepository { get; }
+		protected IWorkItemStateRepository WorkItemStateRepository { get; }
 
 		[CanBeNull]
 		public IWorkListItemDatastore TableSchema { get; private set; }

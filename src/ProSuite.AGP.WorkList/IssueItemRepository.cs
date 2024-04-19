@@ -21,13 +21,14 @@ namespace ProSuite.AGP.WorkList
 
 		private const string _statusFieldName = "STATUS";
 
-		public IssueItemRepository(IEnumerable<Table> tables, IRepository stateRepository,
+		public IssueItemRepository(IEnumerable<Table> tables,
+		                           IWorkItemStateRepository stateRepository,
 		                           [CanBeNull] IWorkListItemDatastore tableSchema = null,
 		                           string definitionQuery = null) : base(
 			tables, stateRepository, tableSchema, definitionQuery) { }
 
 		public IssueItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
-		                           IRepository workItemStateRepository) : base(
+		                           IWorkItemStateRepository workItemStateRepository) : base(
 			tableWithDefinitionQuery, workItemStateRepository) { }
 
 		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)

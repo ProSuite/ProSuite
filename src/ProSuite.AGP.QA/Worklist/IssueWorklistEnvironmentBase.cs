@@ -232,7 +232,8 @@ namespace ProSuite.AGP.QA.WorkList
 			return new IssueWorkList(repository, uniqueName, AreaOfInterest, displayName);
 		}
 
-		protected override IRepository CreateStateRepositoryCore(string path, string workListName)
+		protected override IWorkItemStateRepository CreateStateRepositoryCore(
+			string path, string workListName)
 		{
 			Type type = GetWorkListTypeCore<IssueWorkList>();
 
@@ -240,7 +241,7 @@ namespace ProSuite.AGP.QA.WorkList
 		}
 
 		protected override IWorkItemRepository CreateItemRepositoryCore(
-			IList<Table> tables, IRepository stateRepository)
+			IList<Table> tables, IWorkItemStateRepository stateRepository)
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 

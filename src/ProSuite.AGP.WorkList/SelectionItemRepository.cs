@@ -12,13 +12,13 @@ namespace ProSuite.AGP.WorkList
 {
 	public class SelectionItemRepository : GdbItemRepository
 	{
-		private readonly Dictionary<ISourceClass, List<long>> _oidsBySource =
+		private readonly IDictionary<ISourceClass, List<long>> _oidsBySource =
 			new Dictionary<ISourceClass, List<long>>();
 
 		// todo daro: refactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
 		public SelectionItemRepository(IEnumerable<Table> tables,
 		                               Dictionary<Table, List<long>> selection,
-		                               IRepository stateRepository) : base(
+		                               IWorkItemStateRepository stateRepository) : base(
 			tables, stateRepository)
 		{
 			foreach (var pair in selection)

@@ -87,7 +87,8 @@ namespace ProSuite.AGP.WorkList
 
 			Type type = descriptor.GetInstanceType();
 
-			IRepository stateRepository = CreateItemStateRepository(xmlWorkListDefinition, type);
+			IWorkItemStateRepository stateRepository =
+				CreateItemStateRepository(xmlWorkListDefinition, type);
 
 			List<Table> tables = GetDistinctTables(
 				xmlWorkListDefinition.Workspaces, xmlWorkListDefinition.Name,
@@ -147,7 +148,7 @@ namespace ProSuite.AGP.WorkList
 			return repository;
 		}
 
-		private static IRepository CreateItemStateRepository(
+		private static IWorkItemStateRepository CreateItemStateRepository(
 			[NotNull] XmlWorkListDefinition xmlWorkListDefinition,
 			[NotNull] Type type)
 		{
@@ -169,7 +170,7 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		private static IWorkItemRepository EmptyWorkItemRepository([NotNull] Type type,
-			[NotNull] IRepository itemStateRepository)
+			[NotNull] IWorkItemStateRepository itemStateRepository)
 		{
 			if (type == typeof(IssueWorkList))
 			{

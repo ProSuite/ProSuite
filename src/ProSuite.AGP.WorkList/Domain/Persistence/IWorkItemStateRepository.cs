@@ -4,8 +4,12 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence
 {
-	// todo daro rename
-	public interface IRepository
+	/// <summary>
+	/// Repository interface that encapsulates the persistence of the (volatile) state of work items.
+	/// It is used by the <see cref="IWorkItemRepository"/> implementations that manage all aspects
+	/// of work item persistence, including the access to the source classes in the geodatabase.
+	/// </summary>
+	public interface IWorkItemStateRepository
 	{
 		IWorkItem Refresh(IWorkItem item);
 

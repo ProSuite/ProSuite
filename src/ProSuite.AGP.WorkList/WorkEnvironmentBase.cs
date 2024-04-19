@@ -38,7 +38,8 @@ namespace ProSuite.AGP.WorkList
 
 			string definitionFilePath = GetDefinitionFile(fileName);
 
-			IRepository stateRepository = CreateStateRepositoryCore(definitionFilePath, uniqueName);
+			IWorkItemStateRepository stateRepository =
+				CreateStateRepositoryCore(definitionFilePath, uniqueName);
 
 			_msg.DebugStopTiming(watch, "Created work list state repository in {0}",
 			                     definitionFilePath);
@@ -110,11 +111,12 @@ namespace ProSuite.AGP.WorkList
 		                                                [NotNull] string uniqueName,
 		                                                [CanBeNull] string displayName);
 
-		protected abstract IRepository CreateStateRepositoryCore(string path, string workListName);
+		protected abstract IWorkItemStateRepository CreateStateRepositoryCore(
+			string path, string workListName);
 
 		// todo daro to IEnumerable<Table>
 		protected abstract IWorkItemRepository CreateItemRepositoryCore(
-			IList<Table> tables, IRepository stateRepository);
+			IList<Table> tables, IWorkItemStateRepository stateRepository);
 
 		protected abstract string GetWorkListSymbologyTemplateLayerPath();
 

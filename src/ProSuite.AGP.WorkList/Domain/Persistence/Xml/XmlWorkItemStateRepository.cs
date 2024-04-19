@@ -9,9 +9,8 @@ using ProSuite.Commons.Xml;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 {
-	public class
-		XmlWorkItemStateRepository : WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition
-		>
+	public class XmlWorkItemStateRepository
+		: WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition>
 	{
 		private string _filePath;
 
@@ -44,7 +43,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		}
 
 		protected override XmlWorkListDefinition CreateDefinition(
-			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
 			IList<ISourceClass> sourceClasses,
 			List<XmlWorkItemState> states)
 		{
@@ -105,7 +104,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		}
 
 		private static void Populate(
-			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
 			ICollection<XmlWorkListWorkspace> list, IList<ISourceClass> sourceClasses)
 		{
 			foreach (KeyValuePair<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> pair in
