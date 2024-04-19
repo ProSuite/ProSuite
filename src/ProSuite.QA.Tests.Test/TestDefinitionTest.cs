@@ -111,6 +111,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
 				                             typeof(QaUnreferencedRows),
+											 typeof(QaValidCoordinateFields),
 											 typeof(QaValidNonLinearSegments),
 											 typeof(QaValidUrls),
 											 typeof(QaValue),
@@ -225,6 +226,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaCurveTestCases(model, testCases); //example optional parameters
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values		
 			AddQaGdbReleaseCases(model, testCases);
+			AddQaValidCoordinateFields(model, testCases);
 			AddQaValidUrls(model, testCases);
 			AddQaVertexCoincidence(model, testCases);
 			AddQaVertexCoincidenceOther(model, testCases);
@@ -367,6 +369,23 @@ namespace ProSuite.QA.Tests.Test
 				                                     model.GetVectorDataset(),
 				                                      "10.1", "10.2" 
 			                                     }));
+		}
+
+		private static void AddQaValidCoordinateFields(InMemoryTestDataModel model,
+		                                               ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("AllowXYFieldValuesForUndefinedShape", false);
+			optionalValues.Add("AllowZFieldValueForUndefinedShape", false);
+			optionalValues.Add("AllowMissingZFieldValueForDefinedShape", false);
+			optionalValues.Add("AllowMissingXYFieldValueForDefinedShape", false);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaValidCoordinateFields), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetPointDataset(),
+													 "XCoordinate", "YCoordinate", "ZCoordinate", 1, 1, "de-CH"
+			                                     }, optionalValues));
 		}
 
 		private static void AddQaValidUrls(InMemoryTestDataModel model,

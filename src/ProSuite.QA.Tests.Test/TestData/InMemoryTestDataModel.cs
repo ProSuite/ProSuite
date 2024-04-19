@@ -22,6 +22,7 @@ namespace ProSuite.QA.Tests.Test.TestData
 
 		private const string _featureClassFootprints = "footprints";
 		private const string _featureClassMasspoints = "masspoints";
+		private const string _featureClassPoints = "points";
 		private const string _featureClassPolylines = "lines";
 		private const string _table = "table";
 		private const string _rasterName = "raster";
@@ -36,6 +37,7 @@ namespace ProSuite.QA.Tests.Test.TestData
 
 			_model.AddDataset(new ModelVectorDataset(_featureClassMasspoints));
 			_model.AddDataset(new ModelTableDataset(_table));
+			_model.AddDataset(new ModelVectorDataset(_featureClassPoints));
 			_model.AddDataset(new ModelVectorDataset(_featureClassPolylines));
 			_model.AddDataset(new ModelVectorDataset(_featureClassFootprints));
 			_model.AddDataset(new VerifiedRasterDataset(_rasterName));
@@ -64,6 +66,11 @@ namespace ProSuite.QA.Tests.Test.TestData
 		}
 
 		#endregion
+
+		public VectorDataset GetPointDataset()
+		{
+			return (VectorDataset)_model.GetDatasetByModelName(_featureClassPoints);
+		}
 
 		public VectorDataset GetVectorDataset()
 		{
@@ -119,6 +126,19 @@ namespace ProSuite.QA.Tests.Test.TestData
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95,
 				WellKnownVerticalCS.LHN95);
+
+			IFieldsEdit pointFields = new FieldsClass();
+			pointFields.AddField(FieldUtils.CreateOIDField());
+			pointFields.AddField(
+				FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPoint, sr, 0D, true));
+			pointFields.AddField(
+				FieldUtils.CreateField("XCoordinate", esriFieldType.esriFieldTypeDouble));
+			pointFields.AddField(
+				FieldUtils.CreateField("YCoordinate", esriFieldType.esriFieldTypeDouble));
+			pointFields.AddField(
+				FieldUtils.CreateField("ZCoordinate", esriFieldType.esriFieldTypeDouble));
+
+			DatasetUtils.CreateSimpleFeatureClass(workspace, _featureClassPoints, pointFields);
 
 			IFieldsEdit lineFields = new FieldsClass();
 			lineFields.AddField(FieldUtils.CreateOIDField());
