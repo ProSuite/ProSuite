@@ -4,8 +4,8 @@ using System.Linq;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence
 {
@@ -13,6 +13,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		where TState : IWorkItemState
 		where TDefinition : IWorkListDefinition<TState>
 	{
+		private readonly IMsg _msg = Msg.ForCurrentClass();
+
 		protected string Name { get; }
 		protected Type Type { get; }
 
@@ -120,7 +122,15 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			// could be an empty work list > don't store definition file
 			if (_workspaces.Count == 0)
 			{
-				Assert.True(_states.Count == 0, "work item states but no workspaces");
+				if (_states.Count == 0)
+				{
+					_msg.Debug("No workspaces and no work item states");
+				}
+				else
+				{
+					_msg.Warn($"{Name}: Invalid work list will not be stored.");
+				}
+
 				return;
 			}
 

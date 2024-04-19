@@ -87,24 +87,30 @@ namespace ProSuite.AGP.WorkList
 
 			Type type = descriptor.GetInstanceType();
 
-			// todo daro simplify method?
-			List<Table> tablesByGeodatabase = GetDistinctTables(xmlWorkListDefinition.Workspaces);
+			IRepository stateRepository = CreateItemStateRepository(xmlWorkListDefinition, type);
 
-			IRepository stateRepository;
+			List<Table> tables = GetDistinctTables(
+				xmlWorkListDefinition.Workspaces, xmlWorkListDefinition.Name,
+				xmlWorkListDefinition.Path, out NotificationCollection notifications);
+
+			if (tables.Count == 0)
+			{
+				return EmptyWorkItemRepository(type, stateRepository);
+			}
+
 			IWorkItemRepository repository;
 
 			var sourceClasses = new List<Tuple<Table, string>>();
 
 			if (type == typeof(IssueWorkList))
 			{
-				// TODO: create sourceClasses above, also use for selection WL
+				// Issue source classes: table/definition query pairs
 				foreach (XmlWorkListWorkspace xmlWorkspace in xmlWorkListDefinition.Workspaces)
 				{
 					foreach (XmlTableReference tableReference in xmlWorkspace.Tables)
 					{
 						Table table =
-							tablesByGeodatabase.FirstOrDefault(
-								t => t.GetName() == tableReference.Name);
+							tables.FirstOrDefault(t => t.GetName() == tableReference.Name);
 
 						if (table == null)
 						{
@@ -117,51 +123,84 @@ namespace ProSuite.AGP.WorkList
 					}
 				}
 
-				stateRepository =
-					new XmlWorkItemStateRepository(xmlWorkListDefinition.Path,
-					                               xmlWorkListDefinition.Name, type,
-					                               xmlWorkListDefinition.CurrentIndex);
-
 				repository =
 					new IssueItemRepository(sourceClasses, stateRepository);
 			}
 			else if (type == typeof(SelectionWorkList))
 			{
-				stateRepository =
-					new XmlSelectionItemStateRepository(xmlWorkListDefinition.Path,
-					                                    xmlWorkListDefinition.Name, type,
-					                                    xmlWorkListDefinition.CurrentIndex);
-
+				// Selection source classes: tables/oids pairs
 				Dictionary<long, Table> tablesById =
-					tablesByGeodatabase.Select(table => table)
-					                   .ToDictionary(table => new GdbTableIdentity(table).Id,
-					                                 table => table);
+					tables.ToDictionary(table => new GdbTableIdentity(table).Id,
+					                    table => table);
 
 				Dictionary<Table, List<long>> oidsByTable =
 					GetOidsByTable(xmlWorkListDefinition.Items, tablesById);
 
 				repository =
-					new SelectionItemRepository(tablesByGeodatabase, oidsByTable, stateRepository);
+					new SelectionItemRepository(tables, oidsByTable, stateRepository);
 			}
 			else
 			{
-				throw new ArgumentException("Unkown work list type");
+				throw new ArgumentException("Unknown work list type");
 			}
 
 			return repository;
 		}
 
+		private static IRepository CreateItemStateRepository(
+			[NotNull] XmlWorkListDefinition xmlWorkListDefinition,
+			[NotNull] Type type)
+		{
+			string name = xmlWorkListDefinition.Name;
+			string filePath = xmlWorkListDefinition.Path;
+			int currentIndex = xmlWorkListDefinition.CurrentIndex;
+
+			if (type == typeof(IssueWorkList))
+			{
+				return new XmlWorkItemStateRepository(filePath, name, type, currentIndex);
+			}
+
+			if (type == typeof(SelectionWorkList))
+			{
+				return new XmlSelectionItemStateRepository(filePath, name, type, currentIndex);
+			}
+
+			throw new ArgumentException($"Unknown work list type: {type.Name}");
+		}
+
+		private static IWorkItemRepository EmptyWorkItemRepository([NotNull] Type type,
+			[NotNull] IRepository itemStateRepository)
+		{
+			if (type == typeof(IssueWorkList))
+			{
+				return new IssueItemRepository(new List<Tuple<Table, string>>(0),
+				                               itemStateRepository);
+			}
+
+			if (type == typeof(SelectionWorkList))
+			{
+				return new SelectionItemRepository(new List<Table>(),
+				                                   new Dictionary<Table, List<long>>(),
+				                                   itemStateRepository);
+			}
+
+			throw new ArgumentException($"Unknown work list type: {type.Name}");
+		}
+
 		[NotNull]
 		private static List<Table> GetDistinctTables(
-			ICollection<XmlWorkListWorkspace> workspaces)
+			ICollection<XmlWorkListWorkspace> workspaces,
+			string worklistName, string workListPath,
+			out NotificationCollection dataStoreNotifications)
 		{
 			var result = new Dictionary<Datastore, List<Table>>(workspaces.Count);
 
-			var notifications = new NotificationCollection();
+			dataStoreNotifications = new NotificationCollection();
+			var tableNotifications = new NotificationCollection();
 
 			foreach (XmlWorkListWorkspace workspace in workspaces)
 			{
-				var datastore = GetDatastore(workspace, notifications);
+				var datastore = GetDatastore(workspace, dataStoreNotifications);
 
 				if (datastore == null)
 				{
@@ -174,18 +213,36 @@ namespace ProSuite.AGP.WorkList
 					continue;
 				}
 
-				List<Table> tables = GetDistinctTables(workspace, datastore);
+				// TODO: Same behaviour as for GetDatastore if a table cannot be opened
+				List<Table> tables = GetDistinctTables(workspace, datastore, tableNotifications);
 				result.Add(datastore, tables);
 			}
 
-			if (notifications.Count <= 0)
+			if (dataStoreNotifications.Count == 0 && tableNotifications.Count == 0)
 			{
 				return result.SelectMany(pair => pair.Value).ToList();
 			}
 
-			_msg.Info(string.Format(
-				          "Cannot open work item workspaces from connection strings:{0}{1}",
-				          Environment.NewLine, notifications.Concatenate(Environment.NewLine)));
+			// Something went wrong, make the work list unusable
+
+			if (dataStoreNotifications.Count > 0)
+			{
+				_msg.Warn(
+					$"{worklistName}: Cannot open work item workspace(s) from connection strings specified in work list file:" +
+					Environment.NewLine + workListPath +
+					Environment.NewLine + "No items will be loaded." +
+					Environment.NewLine +
+					$"{dataStoreNotifications.Concatenate(Environment.NewLine)}");
+			}
+
+			if (tableNotifications.Count > 0)
+			{
+				_msg.Warn(
+					$"{worklistName}: Cannot open work item table(s) specified in work list file:" +
+					Environment.NewLine + workListPath +
+					Environment.NewLine + "No items will be loaded." +
+					Environment.NewLine + $"{tableNotifications.Concatenate(Environment.NewLine)}");
+			}
 
 			return new List<Table>(0);
 		}
@@ -194,6 +251,8 @@ namespace ProSuite.AGP.WorkList
 		private static Datastore GetDatastore([NotNull] XmlWorkListWorkspace workspace,
 		                                      [NotNull] NotificationCollection notifications)
 		{
+			// TODO: In case of FGDB/Shapefile, support relative path to worklist file
+
 			// DBCLIENT = oracle
 			// AUTHENTICATION_MODE = DBMS
 			// PROJECT_INSTANCE = sde
@@ -259,6 +318,9 @@ namespace ProSuite.AGP.WorkList
 								User = builder["user"]
 							};
 
+						_msg.Debug(
+							$"Opening workspace from connection string {workspace.ConnectionString} converted to {connectionProperties}");
+
 						return new Geodatabase(connectionProperties);
 
 					case WorkspaceFactory.Shapefile:
@@ -273,7 +335,7 @@ namespace ProSuite.AGP.WorkList
 			catch (Exception e)
 			{
 				string message =
-					$"Cannot open workspace from connection string {workspace.ConnectionString}";
+					$"Cannot open {workspace.WorkspaceFactory} workspace from connection string {workspace.ConnectionString} ({e.Message})";
 
 				_msg.Debug(message, e);
 
@@ -282,22 +344,34 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		private static List<Table> GetDistinctTables(XmlWorkListWorkspace workspace,
-		                                             Datastore datastore)
+		private static List<Table> GetDistinctTables([NotNull] XmlWorkListWorkspace workspace,
+		                                             [NotNull] Datastore datastore,
+		                                             [NotNull] NotificationCollection notifications)
 		{
 			var distinctTables = new Dictionary<GdbTableIdentity, Table>();
+
 			foreach (XmlTableReference tableReference in workspace.Tables)
 			{
-				var table = DatasetUtils.OpenDataset<Table>(datastore, tableReference.Name);
-
-				var id = new GdbTableIdentity(table);
-				if (! distinctTables.ContainsKey(id))
+				try
 				{
-					distinctTables.Add(id, table);
+					Table table = DatasetUtils.OpenDataset<Table>(datastore, tableReference.Name);
+
+					var id = new GdbTableIdentity(table);
+
+					distinctTables.TryAdd(id, table);
+				}
+				catch (Exception e)
+				{
+					string message =
+						$"{tableReference.Name}: {e.Message} (Workspace {workspace.ConnectionString})";
+
+					_msg.Debug(message, e);
+
+					NotificationUtils.Add(notifications, message);
 				}
 			}
 
-			return distinctTables.Values.ToList();
+			return notifications.Count > 0 ? new List<Table>(0) : distinctTables.Values.ToList();
 		}
 
 		private static Dictionary<Table, List<long>> GetOidsByTable(
