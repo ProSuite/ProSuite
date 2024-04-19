@@ -245,14 +245,16 @@ namespace ProSuite.AGP.QA.WorkList
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			// TODO: Create DbSourceClass here instead inside the GdbItemRepository
-			// So that each table gets is own definition query!
-			Table firstOrDefault = tables.FirstOrDefault();
-			string defaultDefinitionQuery = GetDefaultDefinitionQuery(firstOrDefault);
+			var sourceClasses = new List<Tuple<Table, string>>();
 
-			var result = new IssueItemRepository(tables.Distinct(), stateRepository,
-			                                     _workListItemDatastore,
-			                                     defaultDefinitionQuery);
+			foreach (Table table in tables)
+			{
+				string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
+
+				sourceClasses.Add(Tuple.Create(table, defaultDefinitionQuery));
+			}
+
+			var result = new IssueItemRepository(sourceClasses, stateRepository);
 
 			_msg.DebugStopTiming(watch, "Created issue work item repository");
 

@@ -9,7 +9,6 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 
@@ -22,10 +21,8 @@ namespace ProSuite.AGP.WorkList
 		private const string _statusFieldName = "STATUS";
 
 		public IssueItemRepository(IEnumerable<Table> tables,
-		                           IWorkItemStateRepository stateRepository,
-		                           [CanBeNull] IWorkListItemDatastore tableSchema = null,
-		                           string definitionQuery = null) : base(
-			tables, stateRepository, tableSchema, definitionQuery) { }
+		                           IWorkItemStateRepository stateRepository) : base(
+			tables, stateRepository) { }
 
 		public IssueItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
 		                           IWorkItemStateRepository workItemStateRepository) : base(

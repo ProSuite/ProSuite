@@ -25,31 +25,21 @@ namespace ProSuite.AGP.WorkList
 		private int _lastUsedOid;
 
 		protected GdbItemRepository(IEnumerable<Table> tables,
-		                            IWorkItemStateRepository workItemStateRepository,
-		                            [CanBeNull] IWorkListItemDatastore tableSchema = null,
-		                            string definitionQuery = null)
+		                            IWorkItemStateRepository workItemStateRepository)
 		{
 			WorkItemStateRepository = workItemStateRepository;
-			TableSchema = tableSchema;
 
 			foreach (Table table in tables)
 			{
 				ISourceClass sourceClass =
 					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition(),
-					                  tableSchema, definitionQuery);
-
-				//if (! string.IsNullOrEmpty(definitionQuery) && WorkItemStateRepository.)
-				//{
-				//	// todo daro: log message
-				//	_msg.Debug($"Definition query: {definitionQuery}");
-				//}
+					                  null);
 
 				SourceClasses.Add(sourceClass);
 			}
 		}
 
-		// TODO: Refactor to use ISourceClass created by (virtual) method in environment!
-		// -> This allows for adaptive definition query depending on db source class
+		// TODO: Create basic record for each source class: Table, DefinitionQuery, StatusSchema
 		protected GdbItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
 		                            IWorkItemStateRepository workItemStateRepository)
 		{

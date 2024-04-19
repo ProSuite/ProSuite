@@ -6,6 +6,11 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
+	/// <summary>
+	/// Interface that encapsulates the persistence of work items, including the access to the
+	/// source classes in the geodatabase and the volatile state in the work list definition
+	/// files.
+	/// </summary>
 	public interface IWorkItemRepository
 	{
 		int GetCount(QueryFilter filter = null);
@@ -39,6 +44,12 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		List<ISourceClass> SourceClasses { get; }
 
+		/// <summary>
+		/// Update the table schema once the domain information is available. This only necessary
+		/// if the field values of the source classes depend on the DDX attribute roles instead of
+		/// being hard-coded.
+		/// </summary>
+		/// <param name="tableSchemaInfo"></param>
 		void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
 	}
 }

@@ -148,6 +148,176 @@ namespace ProSuite.AGP.WorkList
 			return repository;
 		}
 
+		[NotNull]
+		public static string GetName([CanBeNull] string path)
+		{
+			if (string.IsNullOrEmpty(path))
+			{
+				return string.Empty;
+			}
+
+			int index = path.LastIndexOf('/');
+			if (index >= 0)
+				path = path.Substring(index + 1);
+			index = path.LastIndexOf('\\');
+			if (index >= 0)
+				path = path.Substring(index + 1);
+
+			// scheme://Host:Port/AbsolutePath?Query#Fragment
+			// worklist://localhost/workListName?unused&for#now
+
+			// work list file => WORKLISTNAME.xml.wl
+			string temp = Path.GetFileNameWithoutExtension(path);
+			return Path.GetFileNameWithoutExtension(temp);
+		}
+
+		// todo daro rename GetNameFromUri?
+		public static string ParseName(string layerUri)
+		{
+			int index = layerUri.LastIndexOf('/');
+			if (index < 0)
+			{
+				throw new ArgumentException($"{layerUri} is not a valid layer URI");
+			}
+
+			string name = layerUri.Substring(index + 1);
+			return Path.GetFileNameWithoutExtension(name);
+		}
+
+		[CanBeNull]
+		public static string GetIssueGeodatabasePath([NotNull] string worklistDefinitionFile)
+		{
+			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
+
+			if (! File.Exists(worklistDefinitionFile))
+			{
+				_msg.Debug($"{worklistDefinitionFile} does not exist");
+				return null;
+			}
+
+			string extension = Path.GetExtension(worklistDefinitionFile);
+
+			if (! string.Equals(extension, ".iwl"))
+			{
+				_msg.Debug($"{worklistDefinitionFile} is no issue work list");
+				return null;
+			}
+
+			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
+
+			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
+			List<XmlWorkListWorkspace> workspaces = definition.Workspaces;
+
+			Assert.True(workspaces.Count > 0, $"no workspaces in {worklistDefinitionFile}");
+
+			string result = workspaces[0].ConnectionString;
+
+			if (workspaces.Count > 0)
+			{
+				_msg.Info(
+					$"There are many issue geodatabases in {worklistDefinitionFile} but only one is expected. Taking the first one {result}");
+			}
+			else
+			{
+				_msg.Debug($"Found issue geodatabase {result} in {worklistDefinitionFile}");
+			}
+
+			return result;
+		}
+
+		[CanBeNull]
+		public static string GetWorklistName([NotNull] string worklistDefinitionFile)
+		{
+			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
+
+			if (! File.Exists(worklistDefinitionFile))
+			{
+				_msg.Debug($"{worklistDefinitionFile} does not exist");
+				return null;
+			}
+
+			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
+			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
+			return definition.Name;
+		}
+
+		public static void MoveTo([NotNull] List<IWorkItem> items,
+		                          [NotNull] IWorkItem movingItem,
+		                          int insertIndex)
+		{
+			Assert.ArgumentNotNull(items, nameof(items));
+			Assert.ArgumentNotNull(movingItem, nameof(movingItem));
+			Assert.ArgumentCondition(insertIndex >= 0 && insertIndex < items.Count,
+			                         "insert index out of range: {0}", insertIndex);
+
+			CollectionUtils.MoveTo(items, movingItem, insertIndex);
+		}
+
+		public static PluginDatastore GetPluginDatastore([NotNull] Uri dataSource)
+		{
+			Assert.ArgumentNotNull(dataSource, nameof(dataSource));
+
+			return new PluginDatastore(
+				new PluginDatasourceConnectionPath(PluginIdentifier, dataSource));
+		}
+
+		[NotNull]
+		public static FeatureLayerCreationParams CreateLayerParams(
+			[NotNull] FeatureClass featureClass, string alias = null)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			if (string.IsNullOrEmpty(alias))
+			{
+				alias = featureClass.GetName();
+			}
+
+			var layerParams = new FeatureLayerCreationParams(featureClass)
+			                  {
+				                  IsVisible = true,
+				                  Name = alias
+			                  };
+
+			// todo daro: apply renderer here from template
+
+			// LayerDocument is null!
+			//LayerDocument template
+			//CIMDefinition layerDefinition = layerParams.LayerDocument.LayerDefinitions[0];
+
+			//var uniqueValueRenderer = GetRenderer<CIMUniqueValueRenderer>(template);
+
+			//if (uniqueValueRenderer != null)
+			//{
+			//	((CIMFeatureLayer) layerDefinition).Renderer = uniqueValueRenderer;
+			//}
+
+			return layerParams;
+		}
+
+		public static Dictionary<Datastore, List<Table>> GetDistinctTables(
+			[NotNull] IEnumerable<Table> tables)
+		{
+			var result = new Dictionary<Datastore, SimpleSet<Table>>(new DatastoreComparer());
+
+			foreach (Table table in tables.Distinct())
+			{
+				var datastore = table.GetDatastore();
+
+				if (! result.ContainsKey(datastore))
+				{
+					result.Add(datastore, new SimpleSet<Table> { table });
+				}
+				else
+				{
+					result[datastore].TryAdd(table);
+				}
+			}
+
+			return result.ToDictionary(pair => pair.Key, pair => pair.Value.ToList());
+		}
+
+		#region Repository creation
+
 		private static IWorkItemStateRepository CreateItemStateRepository(
 			[NotNull] XmlWorkListDefinition xmlWorkListDefinition,
 			[NotNull] Type type)
@@ -418,172 +588,6 @@ namespace ProSuite.AGP.WorkList
 			return result;
 		}
 
-		[NotNull]
-		public static string GetName([CanBeNull] string path)
-		{
-			if (string.IsNullOrEmpty(path))
-			{
-				return string.Empty;
-			}
-
-			int index = path.LastIndexOf('/');
-			if (index >= 0)
-				path = path.Substring(index + 1);
-			index = path.LastIndexOf('\\');
-			if (index >= 0)
-				path = path.Substring(index + 1);
-
-			// scheme://Host:Port/AbsolutePath?Query#Fragment
-			// worklist://localhost/workListName?unused&for#now
-
-			// work list file => WORKLISTNAME.xml.wl
-			string temp = Path.GetFileNameWithoutExtension(path);
-			return Path.GetFileNameWithoutExtension(temp);
-		}
-
-		// todo daro rename GetNameFromUri?
-		public static string ParseName(string layerUri)
-		{
-			int index = layerUri.LastIndexOf('/');
-			if (index < 0)
-			{
-				throw new ArgumentException($"{layerUri} is not a valid layer URI");
-			}
-
-			string name = layerUri.Substring(index + 1);
-			return Path.GetFileNameWithoutExtension(name);
-		}
-
-		[CanBeNull]
-		public static string GetIssueGeodatabasePath([NotNull] string worklistDefinitionFile)
-		{
-			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
-
-			if (! File.Exists(worklistDefinitionFile))
-			{
-				_msg.Debug($"{worklistDefinitionFile} does not exist");
-				return null;
-			}
-
-			string extension = Path.GetExtension(worklistDefinitionFile);
-
-			if (! string.Equals(extension, ".iwl"))
-			{
-				_msg.Debug($"{worklistDefinitionFile} is no issue work list");
-				return null;
-			}
-
-			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-
-			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
-			List<XmlWorkListWorkspace> workspaces = definition.Workspaces;
-
-			Assert.True(workspaces.Count > 0, $"no workspaces in {worklistDefinitionFile}");
-
-			string result = workspaces[0].ConnectionString;
-
-			if (workspaces.Count > 0)
-			{
-				_msg.Info(
-					$"There are many issue geodatabases in {worklistDefinitionFile} but only one is expected. Taking the first one {result}");
-			}
-			else
-			{
-				_msg.Debug($"Found issue geodatabase {result} in {worklistDefinitionFile}");
-			}
-
-			return result;
-		}
-
-		[CanBeNull]
-		public static string GetWorklistName([NotNull] string worklistDefinitionFile)
-		{
-			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
-
-			if (! File.Exists(worklistDefinitionFile))
-			{
-				_msg.Debug($"{worklistDefinitionFile} does not exist");
-				return null;
-			}
-
-			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
-			return definition.Name;
-		}
-
-		public static void MoveTo([NotNull] List<IWorkItem> items,
-		                          [NotNull] IWorkItem movingItem,
-		                          int insertIndex)
-		{
-			Assert.ArgumentNotNull(items, nameof(items));
-			Assert.ArgumentNotNull(movingItem, nameof(movingItem));
-			Assert.ArgumentCondition(insertIndex >= 0 && insertIndex < items.Count,
-			                         "insert index out of range: {0}", insertIndex);
-
-			CollectionUtils.MoveTo(items, movingItem, insertIndex);
-		}
-
-		public static PluginDatastore GetPluginDatastore([NotNull] Uri dataSource)
-		{
-			Assert.ArgumentNotNull(dataSource, nameof(dataSource));
-
-			return new PluginDatastore(
-				new PluginDatasourceConnectionPath(PluginIdentifier, dataSource));
-		}
-
-		[NotNull]
-		public static FeatureLayerCreationParams CreateLayerParams(
-			[NotNull] FeatureClass featureClass, string alias = null)
-		{
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
-
-			if (string.IsNullOrEmpty(alias))
-			{
-				alias = featureClass.GetName();
-			}
-
-			var layerParams = new FeatureLayerCreationParams(featureClass)
-			                  {
-				                  IsVisible = true,
-				                  Name = alias
-			                  };
-
-			// todo daro: apply renderer here from template
-
-			// LayerDocument is null!
-			//LayerDocument template
-			//CIMDefinition layerDefinition = layerParams.LayerDocument.LayerDefinitions[0];
-
-			//var uniqueValueRenderer = GetRenderer<CIMUniqueValueRenderer>(template);
-
-			//if (uniqueValueRenderer != null)
-			//{
-			//	((CIMFeatureLayer) layerDefinition).Renderer = uniqueValueRenderer;
-			//}
-
-			return layerParams;
-		}
-
-		public static Dictionary<Datastore, List<Table>> GetDistinctTables(
-			[NotNull] IEnumerable<Table> tables)
-		{
-			var result = new Dictionary<Datastore, SimpleSet<Table>>(new DatastoreComparer());
-
-			foreach (Table table in tables.Distinct())
-			{
-				var datastore = table.GetDatastore();
-
-				if (! result.ContainsKey(datastore))
-				{
-					result.Add(datastore, new SimpleSet<Table> { table });
-				}
-				else
-				{
-					result[datastore].TryAdd(table);
-				}
-			}
-
-			return result.ToDictionary(pair => pair.Key, pair => pair.Value.ToList());
-		}
+		#endregion
 	}
 }
