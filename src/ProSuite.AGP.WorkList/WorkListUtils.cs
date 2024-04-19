@@ -295,11 +295,28 @@ namespace ProSuite.AGP.WorkList
 						// Typically the instance is saved as "sde:oracle11g:TOPGIST:SDE"
 						if (databaseType == EnterpriseDatabaseType.Oracle)
 						{
+							// Real-world examples:
+							// - "sde:oracle11g:TOPGIST:SDE"
+							// - "sde:oracle$sde:oracle11g:gdzh"
+
+							// NOTE: Sometimes the DB_CONNECTION_PROPERTIES contains the single instance name,
+							//       but it can also contain the colon-separated components.
+
 							string[] strings = instance?.Split(':');
 
-							if (strings?.Length == 4)
+							if (strings?.Length > 1)
 							{
-								instance = strings[2];
+								string lastItem = strings[^1];
+
+								if (lastItem.Equals("SDE", StringComparison.OrdinalIgnoreCase))
+								{
+									// Take the second last item
+									instance = strings[^2];
+								}
+								else
+								{
+									instance = lastItem;
+								}
 							}
 						}
 
