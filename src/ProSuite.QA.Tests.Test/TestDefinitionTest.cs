@@ -204,7 +204,6 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaFlowLogic)));
 
 			// TODO: Add special case 
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGdbRelease)));
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGeometryConstraint)));
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGroupConstraints)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
@@ -220,6 +219,7 @@ namespace ProSuite.QA.Tests.Test
 			// difficult assertions:
 			AddQaCurveTestCases(model, testCases); //example optional parameters
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values		
+			AddQaGdbReleaseCases(model, testCases);
 			AddQaVertexCoincidence(model, testCases);
 			AddQaVertexCoincidenceOther(model, testCases);
 			AddQaVertexCoincidenceSelf(model, testCases);
@@ -346,6 +346,20 @@ namespace ProSuite.QA.Tests.Test
 			                                     {
 				                                     model.GetVectorDataset(),
 				                                     new[] { "MY_DATE_FIELD1", "MY_DATE_FIELD2" }
+			                                     }));
+		}
+
+		private static void AddQaGdbReleaseCases(
+			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaGdbRelease), 0,
+			                                     new object[]
+			                                     { model.GetVectorDataset(), "10.2" }));
+			testCases.Add(new TestDefinitionCase(typeof(QaGdbRelease), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                      "10.1", "10.2" 
 			                                     }));
 		}
 
