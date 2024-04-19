@@ -112,6 +112,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaSurfacePipe),
 				                             typeof(QaUnreferencedRows),
 											 typeof(QaValidNonLinearSegments),
+											 typeof(QaValidUrls),
 											 typeof(QaValue),
 				                             typeof(QaWithinBox),
 											 typeof(QaWithinZRange),
@@ -224,6 +225,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaCurveTestCases(model, testCases); //example optional parameters
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values		
 			AddQaGdbReleaseCases(model, testCases);
+			AddQaValidUrls(model, testCases);
 			AddQaVertexCoincidence(model, testCases);
 			AddQaVertexCoincidenceOther(model, testCases);
 			AddQaVertexCoincidenceSelf(model, testCases);
@@ -365,6 +367,20 @@ namespace ProSuite.QA.Tests.Test
 				                                     model.GetVectorDataset(),
 				                                      "10.1", "10.2" 
 			                                     }));
+		}
+
+		private static void AddQaValidUrls(InMemoryTestDataModel model,
+		                                   ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("MaximumParallelTasks", 1);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaValidUrls), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "urlExpression"
+			                                     }, optionalValues));
 		}
 
 		private static void AddQaVertexCoincidence(InMemoryTestDataModel model,

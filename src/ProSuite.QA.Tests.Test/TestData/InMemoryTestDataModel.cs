@@ -128,6 +128,8 @@ namespace ProSuite.QA.Tests.Test.TestData
 				FieldUtils.CreateField("MY_DATE_FIELD1", esriFieldType.esriFieldTypeDate));
 			lineFields.AddField(
 				FieldUtils.CreateField("MY_DATE_FIELD2", esriFieldType.esriFieldTypeDate));
+			lineFields.AddField(
+				FieldUtils.CreateField("urlExpression", esriFieldType.esriFieldTypeString));
 
 			DatasetUtils.CreateSimpleFeatureClass(workspace, _featureClassPolylines,
 			                                      lineFields);
