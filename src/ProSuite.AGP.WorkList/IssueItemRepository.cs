@@ -9,6 +9,7 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 
@@ -21,12 +22,23 @@ namespace ProSuite.AGP.WorkList
 		private const string _statusFieldName = "STATUS";
 
 		public IssueItemRepository(IEnumerable<Table> tables,
-		                           IWorkItemStateRepository stateRepository) : base(
-			tables, stateRepository) { }
+		                           IWorkItemStateRepository stateRepository,
+		                           [CanBeNull] IWorkListItemDatastore tableSchema = null) : base(
+			tables, stateRepository, tableSchema) { }
 
+		/// <summary>
+		/// Creates a new instance of the <see cref="IssueItemRepository"/> class.
+		/// </summary>
+		/// <param name="tableWithDefinitionQuery">The source tables with their definition queries</param>
+		/// <param name="workItemStateRepository">The item state repository</param>
+		/// <param name="tableSchema">The known table schema. If null, a minimal, hard-coded schema will be
+		/// used that contains only the status and the geometry which is good enough for layer display but
+		/// not for the navigator! The table schema can be updated later (before the navigator is shown)
+		/// using <see cref="IWorkItemRepository.UpdateStateRepository"/></param>.
 		public IssueItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
-		                           IWorkItemStateRepository workItemStateRepository) : base(
-			tableWithDefinitionQuery, workItemStateRepository) { }
+		                           IWorkItemStateRepository workItemStateRepository,
+		                           [CanBeNull] IWorkListItemDatastore tableSchema = null)
+			: base(tableWithDefinitionQuery, workItemStateRepository, tableSchema) { }
 
 		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{

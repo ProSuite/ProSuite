@@ -25,7 +25,8 @@ namespace ProSuite.AGP.WorkList
 		private int _lastUsedOid;
 
 		protected GdbItemRepository(IEnumerable<Table> tables,
-		                            IWorkItemStateRepository workItemStateRepository)
+		                            IWorkItemStateRepository workItemStateRepository,
+		                            [CanBeNull] IWorkListItemDatastore tableSchema = null)
 		{
 			WorkItemStateRepository = workItemStateRepository;
 
@@ -41,13 +42,14 @@ namespace ProSuite.AGP.WorkList
 
 		// TODO: Create basic record for each source class: Table, DefinitionQuery, StatusSchema
 		protected GdbItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
-		                            IWorkItemStateRepository workItemStateRepository)
+		                            IWorkItemStateRepository workItemStateRepository,
+		                            [CanBeNull] IWorkListItemDatastore tableSchema = null)
 		{
 			foreach ((Table table, string definitionQuery) in tableWithDefinitionQuery)
 			{
 				ISourceClass sourceClass =
 					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition(),
-					                  null, definitionQuery);
+					                  tableSchema, definitionQuery);
 				SourceClasses.Add(sourceClass);
 			}
 
@@ -118,6 +120,9 @@ namespace ProSuite.AGP.WorkList
 					                     : new QueryFilter();
 
 				// Source classes can set the respective filters / definition queries
+				// TODO: Consider getting only the right status, but that means
+				// extra round trips:
+				statusFilter = null;
 				filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
 
 				// Selection Item ObjectIDs to filter out, or change of SearchOrder:

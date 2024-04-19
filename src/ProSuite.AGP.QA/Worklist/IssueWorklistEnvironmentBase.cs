@@ -254,7 +254,8 @@ namespace ProSuite.AGP.QA.WorkList
 				sourceClasses.Add(Tuple.Create(table, defaultDefinitionQuery));
 			}
 
-			var result = new IssueItemRepository(sourceClasses, stateRepository);
+			var result =
+				new IssueItemRepository(sourceClasses, stateRepository, _workListItemDatastore);
 
 			_msg.DebugStopTiming(watch, "Created issue work item repository");
 
