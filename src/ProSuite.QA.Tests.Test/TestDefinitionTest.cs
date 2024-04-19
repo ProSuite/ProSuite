@@ -110,7 +110,8 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaHorizontalSegments),
 				                             typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
-				                             typeof(QaValidNonLinearSegments),
+				                             typeof(QaUnreferencedRows),
+											 typeof(QaValidNonLinearSegments),
 											 typeof(QaValue),
 				                             typeof(QaWithinBox),
 											 typeof(QaWithinZRange),
@@ -210,6 +211,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaUnreferencedRows)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaValidNonLinearSegments)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaValue)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaWithinZRange)));
