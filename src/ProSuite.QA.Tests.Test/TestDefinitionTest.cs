@@ -115,6 +115,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaValidNonLinearSegments),
 											 typeof(QaValidUrls),
 											 typeof(QaValue),
+											 typeof(QaValidDateValues),
 				                             typeof(QaWithinBox),
 											 typeof(QaWithinZRange),
 				                             typeof(QaZDifferenceOther),
@@ -226,6 +227,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaCurveTestCases(model, testCases); //example optional parameters
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values		
 			AddQaGdbReleaseCases(model, testCases);
+			AddQaValidDateValues(model, testCases);
 			AddQaValidCoordinateFields(model, testCases);
 			AddQaValidUrls(model, testCases);
 			AddQaVertexCoincidence(model, testCases);
@@ -368,6 +370,60 @@ namespace ProSuite.QA.Tests.Test
 			                                     {
 				                                     model.GetVectorDataset(),
 				                                      "10.1", "10.2" 
+			                                     }));
+		}
+
+		private static void AddQaValidDateValues(InMemoryTestDataModel model,
+		                                         ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "06.02.2006", "27.08.2007"
+			                                     }));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "06.02.2006", "27.08.2007",
+				                                     new[] { "MY_DATE_FIELD1", "MY_DATE_FIELD2" }
+			                                     }));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "06.02.2006", "27.08.2007",
+				                                     "MY_DATE_FIELD1, MY_DATE_FIELD2"
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "28.04.2013", 0
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 4,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "06.02.2006", 0,
+				                                     "MY_DATE_FIELD1, MY_DATE_FIELD2"
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 5,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     0, "27.08.2007",
+				                                     "MY_DATE_FIELD1, MY_DATE_FIELD2"
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 6,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     0, 0,
+				                                     "MY_DATE_FIELD1, MY_DATE_FIELD2"
 			                                     }));
 		}
 
