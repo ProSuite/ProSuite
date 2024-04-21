@@ -14,9 +14,8 @@ namespace ProSuite.QA.Tests
 	public class QaDangleCountDefinition : AlgorithmDefinition
 	{
 		public double Tolerance { get; set; }
-		public string DangleCountExpressions { get; set; }
-		public object PolylineClass { get; set; }
-		public object PolylineClasses { get; set; }
+		public IList<string> DangleCountExpressions { get; set; }
+		public IList<IFeatureClassSchemaDef> PolylineClasses { get; set; }
 
 		[Doc(nameof(DocStrings.QaDangleCount_0))]
 		public QaDangleCountDefinition(
@@ -48,6 +47,9 @@ namespace ProSuite.QA.Tests
 				dangleCountExpressions.Count == polylineClasses.Count,
 				"The number of dangle count expressions must be either 1 or equal to the number of polyline classes");
 			Assert.ArgumentCondition(tolerance >= 0, "Invalid tolerance: {0}", tolerance);
+			PolylineClasses = polylineClasses;
+			DangleCountExpressions = dangleCountExpressions;
+			Tolerance = tolerance;
 		}
 	}
 }

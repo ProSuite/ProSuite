@@ -100,6 +100,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaCoplanarRings),
 				                             typeof(QaConstraint),
 				                             typeof(QaCurve),
+											 typeof(QaDangleCount),
 				                             typeof(QaDateFieldsWithoutTime),
 				                             typeof(QaEmptyNotNullTextFields),
 				                             typeof(QaExtent),
@@ -202,6 +203,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaBorderSense)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCoplanarRings)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
@@ -225,7 +227,8 @@ namespace ProSuite.QA.Tests.Test
 			// Manually create values for special cases, such as optional parameters or
 			// difficult assertions:
 			AddQaCurveTestCases(model, testCases); //example optional parameters
-			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values		
+			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values
+			//AddQaDangleCountCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
 			AddQaValidDateValues(model, testCases);
 			AddQaValidCoordinateFields(model, testCases);
