@@ -90,6 +90,36 @@ namespace ProSuite.QA.Tests
 			_dangleCountExpressionsSql = dangleCountExpressions.ToList();
 		}
 
+		[InternallyUsedTest]
+		public QaDangleCount(QaDangleCountDefinition definition)
+			: this((IReadOnlyFeatureClass)ConvertToFeatureClasses((IList<IReadOnlyFeatureClass>)definition.PolylineClasses),
+			       definition.DangleCountExpressions,
+			       definition.Tolerance)
+		{ }
+
+		private static IList<IReadOnlyFeatureClass> ConvertToFeatureClasses(
+			IList<IReadOnlyFeatureClass> featureClassSchemaDefs)
+		{
+			return featureClassSchemaDefs.Cast<IReadOnlyFeatureClass>().ToList();
+		}
+		//[InternallyUsedTest]
+		//public QaDangleCount(QaDangleCountDefinition definition)
+		//	: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>()
+		//	                 .ToList(),
+		//	       definition.DangleCountExpressions,
+		//	       definition.Tolerance
+		//	)
+		//{ }
+
+		//[InternallyUsedTest]
+		//public QaDangleCount(QaDangleCountDefinition definition)
+		//	: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>()
+		//	                 .ToList(),
+		//	       definition.DangleCountExpressions,
+		//	       definition.Tolerance
+		//	)
+		//{ }
+
 		[NotNull]
 		private List<TableView> GetDangleCountExpressions(
 			[NotNull] IEnumerable<IReadOnlyFeatureClass> polylineClasses,
