@@ -102,6 +102,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaCurve),
 											 typeof(QaDangleCount),
 				                             typeof(QaDateFieldsWithoutTime),
+											 typeof(QaDuplicateGeometrySelf),
 				                             typeof(QaEmptyNotNullTextFields),
 				                             typeof(QaExtent),
 				                             typeof(QaFlowLogic),
@@ -204,6 +205,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCoplanarRings)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
