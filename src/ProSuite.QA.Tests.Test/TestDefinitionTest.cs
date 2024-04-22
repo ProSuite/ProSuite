@@ -112,6 +112,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaHorizontalSegments),
 				                             typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
+											 typeof(QaTouchesSelf),
 				                             typeof(QaTrimmedTextFields),
 				                             typeof(QaUnreferencedRows),
 											 typeof(QaValidCoordinateFields),
@@ -233,6 +234,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values
 			//AddQaDangleCountCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
+			AddQaTouchesSelf(model, testCases);
 			AddQaTrimmedTextFields(model, testCases);
 			AddQaValidDateValues(model, testCases);
 			AddQaValidCoordinateFields(model, testCases);
@@ -378,6 +380,44 @@ namespace ProSuite.QA.Tests.Test
 				                                     model.GetVectorDataset(),
 				                                      "10.1", "10.2" 
 			                                     }));
+		}
+
+		private static void AddQaTouchesSelf(InMemoryTestDataModel model,
+		                                     ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ValidTouchGeometryConstraint", "$Length>10");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesSelf), 0,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesSelf), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesSelf), 2,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     "G1.Level <> G2.Level"
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesSelf), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "G1.Level <> G2.Level"
+			                                     }, optionalValues));
 		}
 
 		private static void AddQaTrimmedTextFields(InMemoryTestDataModel model,
