@@ -113,6 +113,8 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaHorizontalSegments),
 				                             typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
+											 typeof(QaTouchesSelf),
+				                             typeof(QaTrimmedTextFields),
 				                             typeof(QaUnreferencedRows),
 											 typeof(QaValidCoordinateFields),
 											 typeof(QaValidNonLinearSegments),
@@ -234,6 +236,8 @@ namespace ProSuite.QA.Tests.Test
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values
 			AddQaEdgeMatchBorderingLinesCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
+			AddQaTouchesSelf(model, testCases);
+			AddQaTrimmedTextFields(model, testCases);
 			AddQaValidDateValues(model, testCases);
 			AddQaValidCoordinateFields(model, testCases);
 			AddQaValidUrls(model, testCases);
@@ -430,6 +434,104 @@ private static void AddQaGdbReleaseCases(
 			                                     }));
 		}
 
+		private static void AddQaTouchesSelf(InMemoryTestDataModel model,
+		                                     ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ValidTouchGeometryConstraint", "$Length>10");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesSelf), 0,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesSelf), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesSelf), 2,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     "G1.Level <> G2.Level"
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesSelf), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "G1.Level <> G2.Level"
+			                                     }, optionalValues));
+		}
+
+		private static void AddQaTrimmedTextFields(InMemoryTestDataModel model,
+		                                           ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset()
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     9
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "MY_STRING_FIELD1"
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     9,
+				                                     "MY_STRING_FIELD1"
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 4,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     9,
+				                                     new[]
+				                                     {
+					                                     "MY_STRING_FIELD1",
+					                                     "MY_STRING_FIELD2"
+				                                     }
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 5,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     9,
+				                                     "MY_STRING_FIELD1",
+				                                     0
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 6,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     9,
+				                                     new[]
+				                                     {
+					                                     "MY_STRING_FIELD1",
+					                                     "MY_STRING_FIELD2"
+				                                     },
+				                                     1
+			                                     }));
+		}
+
 		private static void AddQaValidDateValues(InMemoryTestDataModel model,
 		                                         ICollection<TestDefinitionCase> testCases)
 		{
@@ -511,7 +613,7 @@ private static void AddQaGdbReleaseCases(
 			                                     new object[]
 			                                     {
 				                                     model.GetVectorDataset(),
-				                                     "urlExpression"
+													 "MY_STRING_FIELD1"
 			                                     }, optionalValues));
 		}
 
