@@ -164,18 +164,19 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			{
 				return geometries.Single();
 			}
-
-			if (count == 2)
-			{
-				using (var enumerator = geometries.GetEnumerator())
-				{
-					enumerator.MoveNext();
-					var one = enumerator.Current;
-					enumerator.MoveNext();
-					var two = enumerator.Current;
-					return Engine.Union(one, two);
-				}
-			}
+			//Failes in ArcGIS 3.0 when merging a polygon that is congruent with the island of the first polygon. See issue #168
+			//The list overload: Engine.Union(geometries) works
+			//if (count == 2)
+			//{
+			//	using (var enumerator = geometries.GetEnumerator())
+			//	{
+			//		enumerator.MoveNext();
+			//		var one = enumerator.Current;
+			//		enumerator.MoveNext();
+			//		var two = enumerator.Current;
+			//		return Engine.Union(one, two);
+			//	}
+			//}
 
 			return Engine.Union(geometries);
 		}
