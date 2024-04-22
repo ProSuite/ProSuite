@@ -131,6 +131,11 @@ namespace ProSuite.QA.Tests
 				GetFieldIndices(table, textFieldNames, fieldListType));
 		}
 
+		[InternallyUsedTest]
+		public QaTrimmedTextFields([NotNull] QaTrimmedTextFieldsDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.AllowedWhiteSpaceOnlyCount,
+			       definition.TextFieldNames) { }
+
 		[NotNull]
 		private static IEnumerable<int> GetFieldIndices(
 			[NotNull] IReadOnlyTable table,

@@ -112,6 +112,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaHorizontalSegments),
 				                             typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
+				                             typeof(QaTrimmedTextFields),
 				                             typeof(QaUnreferencedRows),
 											 typeof(QaValidCoordinateFields),
 											 typeof(QaValidNonLinearSegments),
@@ -232,6 +233,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values
 			//AddQaDangleCountCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
+			AddQaTrimmedTextFields(model, testCases);
 			AddQaValidDateValues(model, testCases);
 			AddQaValidCoordinateFields(model, testCases);
 			AddQaValidUrls(model, testCases);
@@ -378,6 +380,66 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
+		private static void AddQaTrimmedTextFields(InMemoryTestDataModel model,
+		                                           ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset()
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     9
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "MY_STRING_FIELD1"
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     9,
+				                                     "MY_STRING_FIELD1"
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 4,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     9,
+				                                     new[]
+				                                     {
+					                                     "MY_STRING_FIELD1",
+					                                     "MY_STRING_FIELD2"
+				                                     }
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 5,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     9,
+				                                     "MY_STRING_FIELD1",
+				                                     0
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 6,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     9,
+				                                     new[]
+				                                     {
+					                                     "MY_STRING_FIELD1",
+					                                     "MY_STRING_FIELD2"
+				                                     },
+				                                     1
+			                                     }));
+		}
+
 		private static void AddQaValidDateValues(InMemoryTestDataModel model,
 		                                         ICollection<TestDefinitionCase> testCases)
 		{
@@ -459,7 +521,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     new object[]
 			                                     {
 				                                     model.GetVectorDataset(),
-				                                     "urlExpression"
+													 "MY_STRING_FIELD1"
 			                                     }, optionalValues));
 		}
 
