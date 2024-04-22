@@ -103,6 +103,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaDangleCount),
 				                             typeof(QaDateFieldsWithoutTime),
 											 typeof(QaDuplicateGeometrySelf),
+											 typeof(QaEdgeMatchBorderingLines),
 				                             typeof(QaEmptyNotNullTextFields),
 				                             typeof(QaExtent),
 				                             typeof(QaFlowLogic),
@@ -206,6 +207,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
+			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEdgeMatchBorderingLines)));
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
@@ -230,7 +232,7 @@ namespace ProSuite.QA.Tests.Test
 			// difficult assertions:
 			AddQaCurveTestCases(model, testCases); //example optional parameters
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values
-			//AddQaDangleCountCases(model, testCases);
+			AddQaEdgeMatchBorderingLinesCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
 			AddQaValidDateValues(model, testCases);
 			AddQaValidCoordinateFields(model, testCases);
@@ -364,7 +366,57 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaGdbReleaseCases(
+		private static void AddQaEdgeMatchBorderingLinesCases(InMemoryTestDataModel model,
+		                                                      ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("LineClass1BorderMatchCondition", "LINE.STATE_ID = BORDER.STATE_ID");
+			optionalValues.Add("LineClass2BorderMatchCondition", "LINE.STATE_ID = BORDER.STATE_ID");
+			optionalValues.Add("BorderingLineMatchCondition", "LINE1.STATE_ID <> LINE2.STATE_ID");
+			optionalValues.Add("BorderingLineAttributeConstraint", "LINE1.TYPE =LINE2.TYPE");
+			optionalValues.Add("BorderingLineEqualAttributes", "FIELD1,FIELD2:#,FIELD3");
+			optionalValues.Add("BorderingLineEqualAttributeOptions",
+			                   new[] { "FIELD_NAME:OPTION1", "FIELD_NAME:OPTION2" });
+			optionalValues.Add("ReportIndividualAttributeConstraintViolations", false);
+			optionalValues.Add("IsBorderingLineAttributeConstraintSymmetric", false);
+			optionalValues.Add("AllowDisjointCandidateFeatureIfBordersAreNotCoincident", false);
+			optionalValues.Add("AllowNoFeatureWithinSearchDistance", false);
+			optionalValues.Add("AllowNonCoincidentEndPointsOnBorder", false);
+			optionalValues.Add("AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled", false);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaEdgeMatchBorderingLines), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+													 2
+												 },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaEdgeMatchBorderingLines), 1,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+			                                         },
+													
+														 model.GetVectorDataset(),
+													 new[]
+													 {
+														model.GetVectorDataset(),
+														model.GetVectorDataset()
+													 },
+														 model.GetVectorDataset(),
+													 
+													 2
+												 },
+			                                     optionalValues));
+		}
+
+private static void AddQaGdbReleaseCases(
 			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaGdbRelease), 0,

@@ -135,8 +135,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_searchDistance))]
 			double
 				searchDistance)
-			: this(new[] {lineClass1}, borderClass1,
-			       new[] {lineClass2}, borderClass2, searchDistance) { }
+			: this(new[] { lineClass1 }, borderClass1,
+			       new[] { lineClass2 }, borderClass2, searchDistance) { }
 
 		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_1))]
 		public QaEdgeMatchBorderingLines(
@@ -155,8 +155,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_searchDistance))]
 			double
 				searchDistance)
-			: base(CastToTables(lineClasses1, new[] {borderClass1},
-			                    lineClasses2, new[] {borderClass2}))
+			: base(CastToTables(lineClasses1, new[] { borderClass1 },
+			                    lineClasses2, new[] { borderClass2 }))
 		{
 			Assert.ArgumentNotNull(lineClasses1, nameof(lineClasses1));
 			Assert.ArgumentNotNull(borderClass1, nameof(borderClass1));
@@ -174,7 +174,7 @@ namespace ProSuite.QA.Tests
 					              lineClass.Name));
 			}
 
-			foreach (IReadOnlyFeatureClass borderClass in new[] {borderClass1, borderClass2})
+			foreach (IReadOnlyFeatureClass borderClass in new[] { borderClass1, borderClass2 })
 			{
 				Assert.ArgumentCondition(
 					borderClass.ShapeType == esriGeometryType.esriGeometryPolyline ||
@@ -215,6 +215,33 @@ namespace ProSuite.QA.Tests
 				_defaultAllowNonCoincidentEndPointsOnBorder;
 			AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled =
 				_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled;
+		}
+
+		[InternallyUsedTest]
+		public QaEdgeMatchBorderingLines(
+			[NotNull] QaEdgeMatchBorderingLinesDefinition definition)
+			: this(definition.LineClasses1.Cast<IReadOnlyFeatureClass>().ToList(),
+			       (IReadOnlyFeatureClass) definition.BorderClass1,
+			       definition.LineClasses2.Cast<IReadOnlyFeatureClass>().ToList(),
+			       (IReadOnlyFeatureClass) definition.BorderClass2,
+			       definition.SearchDistance)
+		{
+			LineClass1BorderMatchCondition = definition.LineClass1BorderMatchCondition;
+			LineClass2BorderMatchCondition = definition.LineClass2BorderMatchCondition;
+			BorderingLineMatchCondition = definition.BorderingLineMatchCondition;
+			BorderingLineAttributeConstraint = definition.BorderingLineAttributeConstraint;
+			BorderingLineEqualAttributes = definition.BorderingLineEqualAttributes;
+			BorderingLineEqualAttributeOptions = definition.BorderingLineEqualAttributeOptions;
+			ReportIndividualAttributeConstraintViolations =
+				definition.ReportIndividualAttributeConstraintViolations;
+			IsBorderingLineAttributeConstraintSymmetric =
+				definition.IsBorderingLineAttributeConstraintSymmetric;
+			AllowDisjointCandidateFeatureIfBordersAreNotCoincident =
+				definition.AllowDisjointCandidateFeatureIfBordersAreNotCoincident;
+			AllowNoFeatureWithinSearchDistance = definition.AllowNoFeatureWithinSearchDistance;
+			AllowNonCoincidentEndPointsOnBorder = definition.AllowNonCoincidentEndPointsOnBorder;
+			AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled = definition
+				.AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled;
 		}
 
 		[TestParameter]
@@ -507,7 +534,7 @@ namespace ProSuite.QA.Tests
 			return ReportError(
 				description, InvolvedRowUtils.GetInvolvedRows(lineFeature, neighborFeature),
 				GeometryFactory.Clone(errorGeometry),
-				first.IssueCode, first.AffectedComponents, values: new[] {first.TextValue});
+				first.IssueCode, first.AffectedComponents, values: new[] { first.TextValue });
 		}
 
 		private int CompareBorderConnectionList(
@@ -775,7 +802,7 @@ namespace ProSuite.QA.Tests
 				return GeometryFactory.Clone(gapErrorLine);
 			}
 
-			return EdgeMatchUtils.Union(new[] {gapErrorLine, gapNeighborLine},
+			return EdgeMatchUtils.Union(new[] { gapErrorLine, gapNeighborLine },
 			                            _highResolutionSpatialReference);
 		}
 
@@ -961,7 +988,7 @@ namespace ProSuite.QA.Tests
 				{
 					var line = (IPolyline) borderConnection.Feature.Shape;
 
-					foreach (IPoint endPoint in new[] {line.FromPoint, line.ToPoint})
+					foreach (IPoint endPoint in new[] { line.FromPoint, line.ToPoint })
 					{
 						if (((IRelationalOperator) commonBorder).Disjoint(endPoint))
 						{
