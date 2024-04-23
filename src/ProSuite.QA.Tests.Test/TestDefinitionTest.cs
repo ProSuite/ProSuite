@@ -111,7 +111,8 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaGeometryConstraint),
 				                             //typeof(QaGroupConstraints),
 				                             typeof(QaHorizontalSegments),
-				                             typeof(QaSimpleGeometry),
+				                             typeof(QaInteriorIntersectsOther),
+											 typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
 											 typeof(QaTouchesSelf),
 				                             typeof(QaTrimmedTextFields),
@@ -209,7 +210,6 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEdgeMatchBorderingLines)));
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
@@ -236,6 +236,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values
 			AddQaEdgeMatchBorderingLinesCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
+			AddQaInteriorIntersectsOtherCases(model, testCases);
 			AddQaTouchesSelf(model, testCases);
 			AddQaTrimmedTextFields(model, testCases);
 			AddQaValidDateValues(model, testCases);
@@ -432,6 +433,61 @@ private static void AddQaGdbReleaseCases(
 				                                     model.GetVectorDataset(),
 				                                      "10.1", "10.2" 
 			                                     }));
+		}
+
+		private static void AddQaInteriorIntersectsOtherCases(InMemoryTestDataModel model,
+		                                        ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ValidIntersectionGeometryConstraint", "$SliverRatio < 50");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaInteriorIntersectsOther), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+													 model.GetVectorDataset()
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaInteriorIntersectsOther), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+													 "G1.Level <> G2.Level"
+												 },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaInteriorIntersectsOther), 2,
+			                                     new object[]
+			                                     {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 new[]
+													 {
+														model.GetVectorDataset(),
+														model.GetVectorDataset()
+													 }
+
+												 },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaInteriorIntersectsOther), 3,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+													 "G1.Level <> G2.Level"
+												 },
+			                                     optionalValues));
 		}
 
 		private static void AddQaTouchesSelf(InMemoryTestDataModel model,
