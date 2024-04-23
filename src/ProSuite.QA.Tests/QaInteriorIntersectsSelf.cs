@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -47,7 +48,7 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_constraint))]
 			string constraint)
-			: this(new[] {featureClass}, constraint) { }
+			: this(new[] { featureClass }, constraint) { }
 
 		[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_2))]
 		public QaInteriorIntersectsSelf(
@@ -83,6 +84,16 @@ namespace ProSuite.QA.Tests
 				              : null;
 			AddCustomQueryFilterExpression(constraint);
 			_reportIntersectionsAsMultipart = reportIntersectionsAsMultipart;
+		}
+
+		[InternallyUsedTest]
+		public QaInteriorIntersectsSelf(QaInteriorIntersectsSelfDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.Constraint, definition.ReportIntersectionsAsMultipart
+			)
+		{
+			ValidIntersectionGeometryConstraint = definition.ValidIntersectionGeometryConstraint;
 		}
 
 		[TestParameter]
