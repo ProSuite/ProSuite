@@ -97,7 +97,8 @@ namespace ProSuite.QA.Tests.Test
 			                             {
 				                             typeof(Qa3dConstantZ),
 				                             typeof(QaBorderSense),
-				                             typeof(QaCoplanarRings),
+				                             typeof(QaCentroids),
+											 typeof(QaCoplanarRings),
 				                             typeof(QaConstraint),
 				                             typeof(QaCurve),
 											 typeof(QaDangleCount),
@@ -115,6 +116,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaInteriorIntersectsSelf),
 				                             //typeof(QaInteriorRings),
 				                             typeof(QaIntersectionMatrixOther),
+											 typeof(QaIntersectionMatrixSelf),
 											 typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
 											 typeof(QaTouchesSelf),
@@ -209,11 +211,11 @@ namespace ProSuite.QA.Tests.Test
 			//// Test cases with automatic parameter value generation:
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(Qa3dConstantZ)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaBorderSense)));
+			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCentroids)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCoplanarRings)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaIntersectionMatrixOther)));
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
@@ -237,13 +239,15 @@ namespace ProSuite.QA.Tests.Test
 			// Manually create values for special cases, such as optional parameters or
 			// difficult assertions:
 			AddQaCurveTestCases(model, testCases); //example optional parameters
+			//AddQaCentroidsCases(model, testCases);
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values
 			AddQaEdgeMatchBorderingLinesCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
 			AddQaInteriorIntersectsOtherCases(model, testCases);
 			AddQaInteriorIntersectsSelfCases(model, testCases);
 			//AddQaInteriorRingsCases(model, testCases);
-			AddQaIntersectionMatrixOtherCases(model, testCases); 
+			AddQaIntersectionMatrixOtherCases(model, testCases);
+			AddQaIntersectionMatrixSelfCases(model, testCases);
 			AddQaTouchesSelf(model, testCases);
 			AddQaTrimmedTextFields(model, testCases);
 			AddQaValidDateValues(model, testCases);
@@ -359,6 +363,53 @@ namespace ProSuite.QA.Tests.Test
 			                                     new object[]
 			                                     { model.GetVectorDataset() },
 			                                     optionalValues));
+		}
+
+		private static void AddQaCentroidsCases(InMemoryTestDataModel model,
+		                                        ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset()
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+													 "B.ObjektArt = x AND L.ObjektArt = R.ObjektArt"
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 2,
+			                                     new object[]
+			                                     {
+													 new[]
+													 {
+													 model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+													 },
+													 new[]
+													 {
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+													 }
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 3,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset(),
+				                                     },
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset(),
+				                                     },
+													 "B.ObjektArt = x AND L.ObjektArt = R.ObjektArt"
+												 }));
 		}
 
 		private static void AddQaDateFieldsWithoutTimeCases(
@@ -633,6 +684,58 @@ private static void AddQaGdbReleaseCases(
 				                                     },
 				                                     "FFFTFFFTF",
 				                                     "G1.Level <> G2.Level",
+													 "0: point intersections"
+												 }));
+		}
+
+		private static void AddQaIntersectionMatrixSelfCases(InMemoryTestDataModel model,
+															 ICollection<TestDefinitionCase> testCases)
+		{
+
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectionMatrixSelf), 0,
+												 new object[]
+												 {
+													 new[]
+													 {
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset()
+													 },
+													 "TFFFTFTFF"
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectionMatrixSelf), 1,
+												 new object[]
+												 {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 "FFFTFFFTF",
+													 "G1.Level <> G2.Level"
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectionMatrixSelf), 2,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 "FFFTFFFTF"
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectionMatrixSelf), 3,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 "FFFTFFFTF",
+													 "G1.Level <> G2.Level"
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectionMatrixSelf), 4,
+												 new object[]
+												 {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 "FFFTFFFTF",
+													 "G1.Level <> G2.Level",
 													 "0: point intersections"
 												 }));
 		}
