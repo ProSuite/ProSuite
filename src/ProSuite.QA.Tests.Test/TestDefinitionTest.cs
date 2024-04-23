@@ -113,6 +113,8 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaHorizontalSegments),
 				                             typeof(QaInteriorIntersectsOther),
 				                             typeof(QaInteriorIntersectsSelf),
+				                             //typeof(QaInteriorRings),
+				                             typeof(QaIntersectionMatrixOther),
 											 typeof(QaSimpleGeometry),
 				                             typeof(QaSurfacePipe),
 											 typeof(QaTouchesSelf),
@@ -211,6 +213,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
+			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaIntersectionMatrixOther)));
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
@@ -239,6 +242,8 @@ namespace ProSuite.QA.Tests.Test
 			AddQaGdbReleaseCases(model, testCases);
 			AddQaInteriorIntersectsOtherCases(model, testCases);
 			AddQaInteriorIntersectsSelfCases(model, testCases);
+			//AddQaInteriorRingsCases(model, testCases);
+			AddQaIntersectionMatrixOtherCases(model, testCases); 
 			AddQaTouchesSelf(model, testCases);
 			AddQaTrimmedTextFields(model, testCases);
 			AddQaValidDateValues(model, testCases);
@@ -546,6 +551,91 @@ private static void AddQaGdbReleaseCases(
 			                                     optionalValues));
 		}
 
+		//private static void AddQaInteriorRingsCases(InMemoryTestDataModel model,
+		//                                                     ICollection<TestDefinitionCase> testCases)
+		//{
+		//	var optionalValues = new Dictionary<string, object>();
+		//	optionalValues.Add("IgnoreInnerRingsLargerThan", 1);
+		//	optionalValues.Add("ReportIndividualRings", false);
+		//	optionalValues.Add("ReportOnlySmallestRingsExceedingMaximumCount", false);
+
+		//	testCases.Add(new TestDefinitionCase(typeof(QaInteriorRings), 0,
+		//	                                     new object[]
+		//	                                     {
+		//		                                     model.GetVectorDataset(),
+		//											 1
+		//	                                     },
+		//	                                     optionalValues));
+		//}
+
+		private static void AddQaIntersectionMatrixOtherCases(InMemoryTestDataModel model,
+		                                                     ICollection<TestDefinitionCase> testCases)
+		{
+
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectionMatrixOther), 0,
+			                                     new object[]
+			                                     {
+													 new[]
+													 {
+				                                     model.GetVectorDataset(),
+													 model.GetVectorDataset()
+													 },
+													 new[]
+													 {
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset()
+													 },
+													 "TFFFTFTFF"
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectionMatrixOther), 1,
+												 new object[]
+												 {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 "FFFTFFFTF",
+													 "G1.Level <> G2.Level"
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectionMatrixOther), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+					                                 model.GetVectorDataset(),
+													 "FFFTFFFTF"
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectionMatrixOther), 3,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+													 "FFFTFFFTF",
+													 "G1.Level <> G2.Level"
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectionMatrixOther), 4,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     "FFFTFFFTF",
+				                                     "G1.Level <> G2.Level",
+													 "0: point intersections"
+												 }));
+		}
 
 		private static void AddQaTouchesSelf(InMemoryTestDataModel model,
 		                                     ICollection<TestDefinitionCase> testCases)
