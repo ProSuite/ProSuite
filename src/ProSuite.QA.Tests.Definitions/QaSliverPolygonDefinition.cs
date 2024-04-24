@@ -35,15 +35,15 @@ namespace ProSuite.QA.Tests
 			double maxArea)
 			: base(polygonClass)
 		{
-			PolygonClass = polygonClass;
-			Limit = limit;
-			MaxArea = maxArea;
-
 			Assert.ArgumentNotNull(polygonClass, nameof(polygonClass));
 			Assert.ArgumentCondition(
 				polygonClass.ShapeType == ProSuiteGeometryType.Polygon ||
 				polygonClass.ShapeType == ProSuiteGeometryType.MultiPatch,
 				"Not a polygon or Multipatch feature class");
+
+			PolygonClass = polygonClass;
+			Limit = limit;
+			MaxArea = maxArea;
 		}
 	}
 }
