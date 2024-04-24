@@ -77,6 +77,11 @@ namespace ProSuite.QA.Tests.Test.TestData
 			return (VectorDataset) _model.GetDatasetByModelName(_featureClassPolylines);
 		}
 
+		public VectorDataset GetPolygonDataset()
+		{
+			return (VectorDataset) _model.GetDatasetByModelName(_featureClassFootprints);
+		}
+
 		public TableDataset GetObjectDataset()
 		{
 			return (TableDataset) _model.GetDatasetByModelName(_table);

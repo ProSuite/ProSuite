@@ -97,6 +97,11 @@ namespace ProSuite.QA.Tests
 			_useFields = _areaFieldIndex >= 0 && _lengthFieldIndex >= 0;
 		}
 
+		[InternallyUsedTest]
+		public QaSliverPolygon([NotNull] QaSliverPolygonDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.PolygonClass, definition.Limit,
+			       definition.MaxArea) { }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			return false;

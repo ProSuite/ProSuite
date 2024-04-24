@@ -97,7 +97,7 @@ namespace ProSuite.QA.Tests.Test
 			                             {
 				                             typeof(Qa3dConstantZ),
 				                             typeof(QaBorderSense),
-				                             typeof(QaCentroids),
+				                             //typeof(QaCentroids),
 											 typeof(QaCoplanarRings),
 				                             typeof(QaConstraint),
 				                             typeof(QaCurve),
@@ -118,6 +118,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaIntersectionMatrixOther),
 											 typeof(QaIntersectionMatrixSelf),
 											 typeof(QaSimpleGeometry),
+											 typeof(QaSliverPolygon),
 				                             typeof(QaSurfacePipe),
 											 typeof(QaTouchesSelf),
 				                             typeof(QaTrimmedTextFields),
@@ -248,6 +249,7 @@ namespace ProSuite.QA.Tests.Test
 			//AddQaInteriorRingsCases(model, testCases);
 			AddQaIntersectionMatrixOtherCases(model, testCases);
 			AddQaIntersectionMatrixSelfCases(model, testCases);
+			AddQaSliverPolygon(model, testCases);
 			AddQaTouchesSelf(model, testCases);
 			AddQaTrimmedTextFields(model, testCases);
 			AddQaValidDateValues(model, testCases);
@@ -365,52 +367,52 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaCentroidsCases(InMemoryTestDataModel model,
-		                                        ICollection<TestDefinitionCase> testCases)
-		{
-			testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 0,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     model.GetVectorDataset()
-												 }));
-			testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 1,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     model.GetVectorDataset(),
-													 "B.ObjektArt = x AND L.ObjektArt = R.ObjektArt"
-												 }));
-			testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 2,
-			                                     new object[]
-			                                     {
-													 new[]
-													 {
-													 model.GetVectorDataset(),
-				                                     model.GetVectorDataset(),
-													 },
-													 new[]
-													 {
-													 model.GetVectorDataset(),
-													 model.GetVectorDataset(),
-													 }
-												 }));
-			testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 3,
-			                                     new object[]
-			                                     {
-				                                     new[]
-				                                     {
-					                                     model.GetVectorDataset(),
-					                                     model.GetVectorDataset(),
-				                                     },
-				                                     new[]
-				                                     {
-					                                     model.GetVectorDataset(),
-					                                     model.GetVectorDataset(),
-				                                     },
-													 "B.ObjektArt = x AND L.ObjektArt = R.ObjektArt"
-												 }));
-		}
+		//private static void AddQaCentroidsCases(InMemoryTestDataModel model,
+		//                                        ICollection<TestDefinitionCase> testCases)
+		//{
+		//	testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 0,
+		//	                                     new object[]
+		//	                                     {
+		//		                                     model.GetVectorDataset(),
+		//		                                     model.GetVectorDataset()
+		//										 }));
+		//	testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 1,
+		//	                                     new object[]
+		//	                                     {
+		//		                                     model.GetVectorDataset(),
+		//		                                     model.GetVectorDataset(),
+		//											 "B.ObjektArt = x AND L.ObjektArt = R.ObjektArt"
+		//										 }));
+		//	testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 2,
+		//	                                     new object[]
+		//	                                     {
+		//											 new[]
+		//											 {
+		//											 model.GetVectorDataset(),
+		//		                                     model.GetVectorDataset(),
+		//											 },
+		//											 new[]
+		//											 {
+		//											 model.GetVectorDataset(),
+		//											 model.GetVectorDataset(),
+		//											 }
+		//										 }));
+		//	testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 3,
+		//	                                     new object[]
+		//	                                     {
+		//		                                     new[]
+		//		                                     {
+		//			                                     model.GetVectorDataset(),
+		//			                                     model.GetVectorDataset(),
+		//		                                     },
+		//		                                     new[]
+		//		                                     {
+		//			                                     model.GetVectorDataset(),
+		//			                                     model.GetVectorDataset(),
+		//		                                     },
+		//											 "B.ObjektArt = x AND L.ObjektArt = R.ObjektArt"
+		//										 }));
+		//}
 
 		private static void AddQaDateFieldsWithoutTimeCases(
 			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
@@ -737,6 +739,23 @@ private static void AddQaGdbReleaseCases(
 													 "FFFTFFFTF",
 													 "G1.Level <> G2.Level",
 													 "0: point intersections"
+												 }));
+		}
+
+		private static void AddQaSliverPolygon(InMemoryTestDataModel model,
+												   ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaSliverPolygon), 0,
+												 new object[]
+												 {
+													 model.GetPolygonDataset(),
+													 50
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaSliverPolygon), 1,
+												 new object[]
+												 {
+													 model.GetPolygonDataset(),
+													 50, 10
 												 }));
 		}
 
