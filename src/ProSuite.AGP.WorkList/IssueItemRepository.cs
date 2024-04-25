@@ -21,14 +21,24 @@ namespace ProSuite.AGP.WorkList
 
 		private const string _statusFieldName = "STATUS";
 
-		public IssueItemRepository(IEnumerable<Table> tables, IRepository stateRepository,
-		                           [CanBeNull] IWorkListItemDatastore tableSchema = null,
-		                           string definitionQuery = null) : base(
-			tables, stateRepository, tableSchema, definitionQuery) { }
+		public IssueItemRepository(IEnumerable<Table> tables,
+		                           IWorkItemStateRepository stateRepository,
+		                           [CanBeNull] IWorkListItemDatastore tableSchema = null) : base(
+			tables, stateRepository, tableSchema) { }
 
+		/// <summary>
+		/// Creates a new instance of the <see cref="IssueItemRepository"/> class.
+		/// </summary>
+		/// <param name="tableWithDefinitionQuery">The source tables with their definition queries</param>
+		/// <param name="workItemStateRepository">The item state repository</param>
+		/// <param name="tableSchema">The known table schema. If null, a minimal, hard-coded schema will be
+		/// used that contains only the status and the geometry which is good enough for layer display but
+		/// not for the navigator! The table schema can be updated later (before the navigator is shown)
+		/// using <see cref="IWorkItemRepository.UpdateStateRepository"/></param>.
 		public IssueItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
-		                           IRepository workItemStateRepository) : base(
-			tableWithDefinitionQuery, workItemStateRepository) { }
+		                           IWorkItemStateRepository workItemStateRepository,
+		                           [CanBeNull] IWorkListItemDatastore tableSchema = null)
+			: base(tableWithDefinitionQuery, workItemStateRepository, tableSchema) { }
 
 		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{
@@ -98,6 +108,12 @@ namespace ProSuite.AGP.WorkList
 			                               definitionQuery);
 		}
 
+		protected override void AdaptSourceFilter(QueryFilter filter, ISourceClass sourceClass)
+		{
+			// So far no manipulation of the filter is needed. The where clause is set in the caller by using
+			// sourceClass.CreateWhereClause(statusFilter).
+		}
+
 		protected override void RefreshCore(IWorkItem item,
 		                                    ISourceClass sourceClass,
 		                                    Row row)
@@ -111,7 +127,7 @@ namespace ProSuite.AGP.WorkList
 		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
 		{
 			Table table = OpenTable(source);
-			Assert.NotNull(table);
+			Assert.NotNull(table, $"Cannot set status for missing table {source.Name}");
 
 			try
 			{

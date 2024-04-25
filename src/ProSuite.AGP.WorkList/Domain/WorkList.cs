@@ -156,6 +156,18 @@ namespace ProSuite.AGP.WorkList.Domain
 			_items = newItems;
 		}
 
+		public bool IsValid(out string message)
+		{
+			if (Repository.SourceClasses.Count == 0)
+			{
+				message = "None of the referenced tables could be loaded";
+				return false;
+			}
+
+			message = null;
+			return true;
+		}
+
 		public void SetVisited(IWorkItem item)
 		{
 			Repository.SetVisited(item);

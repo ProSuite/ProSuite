@@ -9,7 +9,6 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.QA.Worklist;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -232,7 +231,8 @@ namespace ProSuite.AGP.QA.WorkList
 			return new IssueWorkList(repository, uniqueName, AreaOfInterest, displayName);
 		}
 
-		protected override IRepository CreateStateRepositoryCore(string path, string workListName)
+		protected override IWorkItemStateRepository CreateStateRepositoryCore(
+			string path, string workListName)
 		{
 			Type type = GetWorkListTypeCore<IssueWorkList>();
 
@@ -240,18 +240,21 @@ namespace ProSuite.AGP.QA.WorkList
 		}
 
 		protected override IWorkItemRepository CreateItemRepositoryCore(
-			IList<Table> tables, IRepository stateRepository)
+			IList<Table> tables, IWorkItemStateRepository stateRepository)
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			// TODO: Create DbSourceClass here instead inside the GdbItemRepository
-			// So that each table gets is own definition query!
-			Table firstOrDefault = tables.FirstOrDefault();
-			string defaultDefinitionQuery = GetDefaultDefinitionQuery(firstOrDefault);
+			var sourceClasses = new List<Tuple<Table, string>>();
 
-			var result = new IssueItemRepository(tables.Distinct(), stateRepository,
-			                                     _workListItemDatastore,
-			                                     defaultDefinitionQuery);
+			foreach (Table table in tables)
+			{
+				string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
+
+				sourceClasses.Add(Tuple.Create(table, defaultDefinitionQuery));
+			}
+
+			var result =
+				new IssueItemRepository(sourceClasses, stateRepository, _workListItemDatastore);
 
 			_msg.DebugStopTiming(watch, "Created issue work item repository");
 

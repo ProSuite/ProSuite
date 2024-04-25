@@ -25,46 +25,38 @@ namespace ProSuite.AGP.WorkList
 		private int _lastUsedOid;
 
 		protected GdbItemRepository(IEnumerable<Table> tables,
-		                            IRepository workItemStateRepository,
-		                            [CanBeNull] IWorkListItemDatastore tableSchema = null,
-		                            string definitionQuery = null)
+		                            IWorkItemStateRepository workItemStateRepository,
+		                            [CanBeNull] IWorkListItemDatastore tableSchema = null)
 		{
 			WorkItemStateRepository = workItemStateRepository;
-			TableSchema = tableSchema;
 
 			foreach (Table table in tables)
 			{
 				ISourceClass sourceClass =
 					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition(),
-					                  tableSchema, definitionQuery);
-
-				//if (! string.IsNullOrEmpty(definitionQuery) && WorkItemStateRepository.)
-				//{
-				//	// todo daro: log message
-				//	_msg.Debug($"Definition query: {definitionQuery}");
-				//}
+					                  null);
 
 				SourceClasses.Add(sourceClass);
 			}
 		}
 
-		// TODO: Refactor to use ISourceClass created by (virtual) method in environment!
-		// -> This allows for adaptive definition query depending on db source class
+		// TODO: Create basic record for each source class: Table, DefinitionQuery, StatusSchema
 		protected GdbItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
-		                            IRepository workItemStateRepository)
+		                            IWorkItemStateRepository workItemStateRepository,
+		                            [CanBeNull] IWorkListItemDatastore tableSchema = null)
 		{
 			foreach ((Table table, string definitionQuery) in tableWithDefinitionQuery)
 			{
 				ISourceClass sourceClass =
 					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition(),
-					                  null, definitionQuery);
+					                  tableSchema, definitionQuery);
 				SourceClasses.Add(sourceClass);
 			}
 
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
-		protected IRepository WorkItemStateRepository { get; }
+		protected IWorkItemStateRepository WorkItemStateRepository { get; }
 
 		[CanBeNull]
 		public IWorkListItemDatastore TableSchema { get; private set; }
@@ -77,9 +69,18 @@ namespace ProSuite.AGP.WorkList
 
 			foreach (ISourceClass sourceClass in SourceClasses)
 			{
-				Table table = sourceClass.OpenDataset<Table>();
-				sourceClass.AttributeReader = CreateAttributeReaderCore(
-					table.GetDefinition(), tableSchemaInfo);
+				Table table = OpenTable(sourceClass);
+
+				if (table != null)
+				{
+					sourceClass.AttributeReader = CreateAttributeReaderCore(
+						table.GetDefinition(), tableSchemaInfo);
+				}
+				else
+				{
+					_msg.Warn(
+						$"Cannot prepare table schema due to missing source table {sourceClass.Name}");
+				}
 			}
 		}
 
@@ -118,7 +119,14 @@ namespace ProSuite.AGP.WorkList
 					                     ? GdbQueryUtils.CreateSpatialFilter(areaOfInterest)
 					                     : new QueryFilter();
 
+				// Source classes can set the respective filters / definition queries
+				// TODO: Consider getting only the right status, but that means
+				// extra round trips:
+				statusFilter = null;
 				filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
+
+				// Selection Item ObjectIDs to filter out, or change of SearchOrder:
+				AdaptSourceFilter(filter, sourceClass);
 
 				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
 				{
@@ -223,6 +231,9 @@ namespace ProSuite.AGP.WorkList
 			return WorkItemStateRepository.CurrentIndex ?? -1;
 		}
 
+		protected abstract void AdaptSourceFilter([NotNull] QueryFilter filter,
+		                                          [NotNull] ISourceClass sourceClass);
+
 		protected virtual void UpdateStateRepositoryCore(string path) { }
 
 		protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
@@ -231,13 +242,15 @@ namespace ProSuite.AGP.WorkList
 			return Task.FromResult(0);
 		}
 
-		protected virtual IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
-		                                               [CanBeNull] QueryFilter filter, bool recycle)
+		private static IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
+		                                            [CanBeNull] QueryFilter filter,
+		                                            bool recycle)
 		{
 			Table table = OpenTable(sourceClass);
 
 			if (table == null)
 			{
+				_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
 				yield break;
 			}
 
@@ -283,7 +296,17 @@ namespace ProSuite.AGP.WorkList
 		[CanBeNull]
 		protected static Table OpenTable([NotNull] ISourceClass sourceClass)
 		{
-			return sourceClass.OpenDataset<Table>();
+			Table table = null;
+			try
+			{
+				table = sourceClass.OpenDataset<Table>();
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error opening source table {sourceClass.Name}: {e.Message}.", e);
+			}
+
+			return table;
 		}
 
 		private ISourceClass CreateSourceClass(GdbTableIdentity identity,

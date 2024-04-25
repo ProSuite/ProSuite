@@ -15,6 +15,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geometry;
 using Path = System.IO.Path;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
@@ -3017,8 +3018,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				IsFromPointCloser(pathToReshape, toDanglingReshapePathEnd);
 
 			distanceMessage = GetEndPointMovingMessage(
-				pathToReshape, toDanglingReshapePathEnd,
-				fromPointIsCloser);
+				pathToReshape, toDanglingReshapePathEnd, fromPointIsCloser);
 
 			return fromPointIsCloser;
 		}
@@ -3031,26 +3031,50 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			const int significantDigits = 3;
 
+			string lineTextFormat;
+
+			IPoint pathToReshapePoint;
+
+			//TODO: return correct mapUnit when esriUnit isn't esriMeters
+			esriUnits linearUnits = esriUnits.esriMeters;
+
+			//TODO: return correct sizeChangeMessage when SpatialReference is not projected but geographic
+			var proj = pathToReshape.SpatialReference as IProjectedCoordinateSystem;
+
 			if (replaceFromPoint)
 			{
-				double fromPointDistance = GeometryUtils.GetPointDistance(
-					pathToReshape.FromPoint, toDanglingReshapePathEnd);
+				pathToReshapePoint = pathToReshape.FromPoint;
 
 				// source from point is closer
-				distanceMessage =
-					string.Format("The line's start point is moved by {0} <map units>",
-					              MathUtils.RoundToSignificantDigits(fromPointDistance,
-						              significantDigits));
+				lineTextFormat = proj != null
+					                 ? "The line's start point is moved by {0} {1}"
+					                 : "The line's start point is moved";
 			}
 			else
 			{
-				double toPointDistance = GeometryUtils.GetPointDistance(
-					pathToReshape.ToPoint, toDanglingReshapePathEnd);
+				pathToReshapePoint = pathToReshape.ToPoint;
+
+				lineTextFormat = proj != null
+					                 ? "The line's end point is moved by {0} {1}"
+					                 : "The line's end point is moved";
+			}
+
+			if (proj != null)
+			{
+				double pointDistance = GeometryUtils.GetPointDistance(
+					pathToReshapePoint, toDanglingReshapePathEnd);
+
+				double moveChange =
+					MathUtils.RoundToSignificantDigits(pointDistance, significantDigits);
+
+				string linearUnitsAbbreviation = SpatialReferenceUtils.GetAbbreviation(linearUnits);
 
 				distanceMessage =
-					string.Format("The line's end point is moved by {0} <map units>",
-					              MathUtils.RoundToSignificantDigits(toPointDistance,
-						              significantDigits));
+					string.Format(lineTextFormat, moveChange, linearUnitsAbbreviation);
+			}
+			else
+			{
+				distanceMessage = string.Format(lineTextFormat);
 			}
 
 			return distanceMessage;
