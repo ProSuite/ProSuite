@@ -8,7 +8,14 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AGP.DataModel
 {
-	public class DatasetLookup
+	public interface IDatasetLookup
+	{
+		IDdxDataset GetDataset([NotNull] Table table);
+
+		T GetDataset<T>(Table table) where T : IDdxDataset;
+	}
+
+	public class DatasetLookup : IDatasetLookup
 	{
 		private readonly IList<IDdxDataset> _objectDatasets;
 
@@ -20,8 +27,40 @@ namespace ProSuite.DomainModel.AGP.DataModel
 			_objectDatasets = objectDatasets;
 		}
 
+		public T GetDataset<T>(Table table) where T : IDdxDataset
+		{
+			// TODO: Sophisticated logic with unqualified names, etc.
+
+			var tableHandle = (long) table.Handle;
+
+			if (_datasetByTableHandle.TryGetValue(tableHandle, out var dataset))
+			{
+				if (dataset is T value)
+				{
+					return value;
+				}
+			}
+
+			string tableName = table.GetName();
+
+			// TODO: If model has unqualified name, etc. see GlobalDatasetLookup
+
+			string unqualifiedName = ModelElementNameUtils.GetUnqualifiedName(tableName);
+
+			T result = _objectDatasets.OfType<T>().FirstOrDefault(
+				d => d.Name.Equals(tableName, StringComparison.InvariantCultureIgnoreCase) ||
+				     d.Name.Equals(unqualifiedName, StringComparison.InvariantCultureIgnoreCase));
+
+			if (result != null)
+			{
+				_datasetByTableHandle[tableHandle] = result;
+			}
+
+			return result;
+		}
+
 		[CanBeNull]
-		public IDdxDataset GetDataset([NotNull] Table table)
+		public IDdxDataset GetDataset(Table table)
 		{
 			// TODO: Sophisticated logic with unqualified names, etc.
 
