@@ -13,7 +13,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.Core.QA;
 
-namespace ProSuite.AGP.QA.Worklist;
+namespace ProSuite.AGP.QA.WorkList;
 
 public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 {
