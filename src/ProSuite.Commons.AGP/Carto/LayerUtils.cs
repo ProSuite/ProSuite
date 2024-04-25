@@ -85,6 +85,9 @@ namespace ProSuite.Commons.AGP.Carto
 			[CanBeNull] Predicate<Feature> predicate = null,
 			CancellationToken cancellationToken = default)
 		{
+			// TODO Should dispose table and definition!
+			// TODO What if GetObjectIDField returns empty? --> no OIDs!
+
 			if (filter == null)
 			{
 				filter = new QueryFilter
@@ -96,6 +99,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				filter.SubFields = layer.GetTable().GetDefinition()?.GetObjectIDField();
 			}
+			// TODO else: ensure OID field is in SubFields!
 
 			foreach (Feature row in SearchRows(layer, filter, predicate))
 			{
@@ -111,15 +115,18 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		public static CIMFeatureLayer GetUniqueCIMFeatureLayer(LayerDocument layerDocument)
+		/// <summary>
+		/// Get the single layer definition of type <typeparamref name="T"/>
+		/// from the given <paramref name="layerDocument"/>; return null if
+		/// there is no single such layer definition in the document.
+		/// </summary>
+		public static T GetSingleLayerCIM<T>(LayerDocument layerDocument) where T : CIMBaseLayer
 		{
 			if (layerDocument is null) return null;
-
-			CIMLayerDocument cim = layerDocument.GetCIMLayerDocument();
+			var cim = layerDocument.GetCIMLayerDocument();
 			var definitions = cim?.LayerDefinitions;
-			if (definitions is null || definitions.Length != 1) return null;
-
-			return definitions.First() as CIMFeatureLayer;
+			var matches = definitions?.OfType<T>().ToArray();
+			return matches?.Length != 1 ? null : matches.Single();
 		}
 
 		/// <remarks>

@@ -80,9 +80,9 @@ public abstract class ToggleLayerMaskingButtonBase : Button
 			name = $"Turn LM {(turnOn ? "on" : "off")}";
 		}
 
-		var action = () => { DisplayUtils.ToggleLayerMasking(map, turnOn); };
-
-		undoStack.CreateCompositeOperation(action, name);
+		Gateway.CompositeOperation(
+			undoStack, name,
+			() => DisplayUtils.ToggleLayerMasking(map, turnOn));
 	}
 
 	private static bool GetToggledState(bool? state, bool firstState)

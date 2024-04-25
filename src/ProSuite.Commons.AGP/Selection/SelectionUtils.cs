@@ -212,10 +212,23 @@ namespace ProSuite.Commons.AGP.Selection
 			return GetSelection(selectionSet);
 		}
 
+		public static Dictionary<T, List<long>> GetSelection<T>(Map map) where T : MapMember
+		{
+			SelectionSet selectionSet = map.GetSelection();
+
+			return GetSelection<T>(selectionSet);
+		}
+
 		public static Dictionary<MapMember, List<long>> GetSelection(
 			SelectionSet selectionSet)
 		{
 			return selectionSet.ToDictionary();
+		}
+
+		public static Dictionary<T, List<long>> GetSelection<T>(
+			SelectionSet selectionSet) where T : MapMember
+		{
+			return selectionSet.ToDictionary<T>();
 		}
 
 		public static Dictionary<MapMember, List<long>> GetSelection(

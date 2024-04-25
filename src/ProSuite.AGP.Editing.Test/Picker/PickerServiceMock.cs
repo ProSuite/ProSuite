@@ -9,6 +9,11 @@ namespace ProSuite.AGP.Editing.Test.Picker
 {
 	public class PickerServiceMock : IPickerService
 	{
+		public Func<Task<T>> Pick<T>(List<IPickableItem> items, Point pickerLocation, IPickerPrecedence precedence) where T : class, IPickableItem
+		{
+			throw new NotImplementedException();
+		}
+
 		public Func<Task<T>> PickSingle<T>(IEnumerable<IPickableItem> items,
 		                                   Point pickerLocation,
 		                                   IPickerPrecedence precedence)

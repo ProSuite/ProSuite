@@ -104,6 +104,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (RequiresSelection)
 				{
+					//TODO progressor
 					ProcessSelection(ActiveMapView);
 				}
 
@@ -449,7 +450,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                      PickerPrecedence,
 				                                      selectionMethod);
 
-			await QueuedTask.Run(() => ProcessSelection(MapView.Active, progressor));
+			await QueuedTask.Run(() => ProcessSelection(MapView.Active, progressor), progressor);
 
 			return result;
 		}
