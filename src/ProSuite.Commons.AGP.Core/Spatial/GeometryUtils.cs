@@ -5,6 +5,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.EsriShape;
 
 namespace ProSuite.Commons.AGP.Core.Spatial
 {
@@ -179,18 +180,19 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			{
 				return geometries.Single();
 			}
-
-			if (count == 2)
-			{
-				using (var enumerator = geometries.GetEnumerator())
-				{
-					enumerator.MoveNext();
-					var one = enumerator.Current;
-					enumerator.MoveNext();
-					var two = enumerator.Current;
-					return Engine.Union(one, two);
-				}
-			}
+			//Failes in ArcGIS 3.0 when merging a polygon that is congruent with the island of the first polygon. See issue #168
+			//The list overload: Engine.Union(geometries) works
+			//if (count == 2)
+			//{
+			//	using (var enumerator = geometries.GetEnumerator())
+			//	{
+			//		enumerator.MoveNext();
+			//		var one = enumerator.Current;
+			//		enumerator.MoveNext();
+			//		var two = enumerator.Current;
+			//		return Engine.Union(one, two);
+			//	}
+			//}
 
 			return Engine.Union(geometries);
 		}
@@ -807,6 +809,33 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 					return GeometryType.Unknown;
 				default:
 					throw new ArgumentOutOfRangeException($"Cannot translate {esriGeometryType}");
+			}
+		}
+
+		public static ProSuiteGeometryType TranslateToProSuiteGeometryType(
+			GeometryType esriGeometryType)
+		{
+			switch (esriGeometryType)
+			{
+				case GeometryType.Unknown:
+					return ProSuiteGeometryType.Unknown;
+				case GeometryType.Point:
+					return ProSuiteGeometryType.Point;
+				case GeometryType.Envelope:
+					return ProSuiteGeometryType.Envelope;
+				case GeometryType.Multipoint:
+					return ProSuiteGeometryType.Multipoint;
+				case GeometryType.Polyline:
+					return ProSuiteGeometryType.Polyline;
+				case GeometryType.Polygon:
+					return ProSuiteGeometryType.Polygon;
+				case GeometryType.Multipatch:
+					return ProSuiteGeometryType.MultiPatch;
+				case GeometryType.GeometryBag:
+					return ProSuiteGeometryType.Bag;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(esriGeometryType),
+					                                      esriGeometryType, null);
 			}
 		}
 

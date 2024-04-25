@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.Geometry;
@@ -42,7 +44,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 			const int deadlineMilliseconds = 800;
 
 			// Not in a queued task (but it is still called multiple times because...)
-			ShapeMsg pointMsg = RpcCallUtils.Try(
+			ShapeMsg pointMsg = GrpcClientUtils.Try(
 				o => rpcClient.GetOpenJawReshapeLineReplaceEndPoint(request, o),
 				CancellationToken.None, deadlineMilliseconds);
 
@@ -77,7 +79,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 			// -> It is vital to use a request deadline to avoid hanging the entire application
 			int deadline = 2000 * selectedFeatures.Count;
 
-			AdvancedReshapeResponse reshapeResultMsg = RpcCallUtils.Try(
+			AdvancedReshapeResponse reshapeResultMsg = GrpcClientUtils.Try(
 				o => rpcClient.AdvancedReshape(request, o),
 				cancellationToken, deadline, true);
 
@@ -141,9 +143,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 		{
 			request.AllowOpenJawReshape = true;
 
-			int deadline = RpcCallUtils.GeometryDefaultDeadline * request.Features.Count;
+			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * request.Features.Count;
 
-			AdvancedReshapeResponse reshapeResultMsg = RpcCallUtils.Try(
+			AdvancedReshapeResponse reshapeResultMsg = GrpcClientUtils.Try(
 				o => rpcClient.AdvancedReshape(request, o),
 				cancellationToken, deadline);
 

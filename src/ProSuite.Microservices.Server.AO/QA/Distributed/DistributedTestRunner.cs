@@ -70,9 +70,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			Assert.ArgumentCondition(originalRequest.MaxParallelProcessing > 1,
 			                         "maxParallelDesired must be greater 1");
 
-			_distributedWorkers =
-				new DistributedWorkers(
-					workersClients.Cast<QualityVerificationServiceClient>().ToList());
+			_distributedWorkers = new DistributedWorkers(workersClients.ToList());
 
 			_originalRequest = originalRequest;
 			ParallelConfiguration = new ParallelConfiguration();
@@ -317,8 +315,11 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					}
 					else
 					{
-						_msg.InfoFormat("Finished verification: {0} at {1}", completed,
-						                finishedClient.GetAddress());
+						_msg.InfoFormat(
+							"Finished verification: {0} at {1} with {2} issues of which {3} were filtered out",
+							completed, finishedClient.GetAddress(), completed.IssueCount,
+							completed.FilteredIssueCount);
+
 						successCount++;
 						CompleteSubverification(completed);
 						SubVerificationObserver?.Finished(completed.Id, ServiceCallStatus.Finished);
@@ -621,6 +622,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					$"Failure in worker {client.GetAddress()}: {subResponse.CancellationMessage}";
 			}
 
+			DrainIssues(subVerification);
+
 			QualityVerificationMsg verificationMsg = subResponse.VerificationMsg;
 
 			if (verificationMsg != null)
@@ -628,8 +631,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				// Failures in tests that get reported as issues (typically a configuration error):
 				AddVerification(verificationMsg, QualityVerification);
 			}
-
-			DrainIssues(subVerification);
 
 			return resultMessage;
 		}
@@ -682,7 +683,15 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					QualityCondition qualityCondition =
 						verification.GetQualityCondition(issueMsg.ConditionId);
 
-					ProcessQaError(error, qualityCondition);
+					bool processed = ProcessQaError(error, qualityCondition);
+
+					verification.IssueCount++;
+
+					if (! processed)
+					{
+						verification.FilteredIssueCount++;
+						key.Filtered = true;
+					}
 				}
 
 				drained = true;
@@ -799,8 +808,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			qualityVerification.StartDate = DateTime.Now;
 		}
 
-		private static void AddVerification([NotNull] QualityVerificationMsg verificationMsg,
-		                                    [CanBeNull] QualityVerification toOverallVerification)
+		private void AddVerification([NotNull] QualityVerificationMsg verificationMsg,
+		                             [CanBeNull] QualityVerification toOverallVerification)
 		{
 			if (toOverallVerification == null)
 			{
@@ -826,10 +835,22 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 				if (! conditionVerificationMsg.Fulfilled)
 				{
-					_msg.Debug(
-						$"The condition {conditionVerification.QualityConditionName} is not fulfilled.");
+					bool hasErrors =
+						KnownIssues.Keys.Any(i => i.ConditionId == conditionId && ! i.Filtered);
 
-					conditionVerification.Fulfilled = false;
+					string message =
+						$"The condition {conditionVerification.QualityConditionName} is not fulfilled according to the worker.";
+
+					if (! hasErrors)
+					{
+						message += " However, all errors have been filtered by the verification.";
+					}
+
+					// According to the client (could be un-fulfilled due to previous worker or verification service):
+					message += $" The condition is fulfilled: {conditionVerification.Fulfilled}";
+
+					// The condition verification should already have been set to false!
+					_msg.Debug(message);
 				}
 
 				if (conditionVerificationMsg.StopConditionId >= 0)
@@ -1441,16 +1462,17 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				return;
 			}
 
-			// Log every 10 seconds or if there are many errors every 10th error or if verbose:
+			// Log every 10 seconds and the first 10 errors or if there are many errors every 10th error or if verbose:
 
 			const int minimumLogInterval = 10;
 			bool itsTimeToLog = subResponse.LastProgressLog <
 			                    DateTime.Now.AddSeconds(-minimumLogInterval);
 
 			int issueCount = subResponse.Issues.Count;
+			bool isFinalResult = responseMsg.ServiceCallStatus != (int) ServiceCallStatus.Running;
 
-			if (_msg.IsVerboseDebugEnabled || itsTimeToLog ||
-			    (issueCount > 100 && issueCount % 10 == 0))
+			if (_msg.IsVerboseDebugEnabled || itsTimeToLog || isFinalResult || (issueCount <= 10) ||
+			    issueCount % 10 == 0)
 			{
 				string issueText = issueCount > 0 ? $" (Issue count: {issueCount})" : string.Empty;
 
@@ -1480,6 +1502,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				_msg.VerboseDebug(() => $"Issue drained from sub-verification queue: {qaError}");
 			}
 
+			// Standard error processing (filtering, updating condition verification, etc.)
 			var eventArgs = new QaErrorEventArgs(qaError);
 			QaError?.Invoke(this, eventArgs);
 
@@ -1488,30 +1511,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				return false;
 			}
 
-			Assert.NotNull(qualityCondition, "no quality condition for verification");
-
-			StopInfo stopInfo = null;
-			if (qualityCondition.StopOnError)
-			{
-				stopInfo = new StopInfo(qualityCondition, qaError.Description);
-
-				foreach (InvolvedRow involvedRow in qaError.InvolvedRows)
-				{
-					RowsWithStopConditions.Add(involvedRow.TableName,
-					                           involvedRow.OID, stopInfo);
-				}
-			}
-
-			if (! qualityCondition.AllowErrors)
-			{
-				if (stopInfo != null)
-				{
-					// it's a stop condition, and it is a 'hard' condition, and the error is 
-					// relevant --> consider the stop situation as sufficiently reported 
-					// (no reporting in case of stopped tests required)
-					stopInfo.Reported = true;
-				}
-			}
+			TestExecutionUtils.ReportRowWithStopCondition(qaError, qualityCondition,
+			                                              RowsWithStopConditions);
 
 			return true;
 		}

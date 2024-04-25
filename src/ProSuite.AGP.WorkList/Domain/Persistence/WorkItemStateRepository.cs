@@ -4,23 +4,25 @@ using System.Linq;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence
 {
-	public abstract class WorkItemStateRepository<TState, TDefinition> : IRepository
+	public abstract class WorkItemStateRepository<TState, TDefinition> : IWorkItemStateRepository
 		where TState : IWorkItemState
 		where TDefinition : IWorkListDefinition<TState>
 	{
+		private readonly IMsg _msg = Msg.ForCurrentClass();
+
 		protected string Name { get; }
 		protected Type Type { get; }
 
 		private List<TState> _states;
 		private List<long> _oids;
 
-		private readonly Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> _workspaces =
-			new Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>();
+		private readonly IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>
+			_workspaces = new Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>();
 
 		protected WorkItemStateRepository(string name, Type type, int? currentItemIndex)
 		{
@@ -95,7 +97,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			}
 			else
 			{
-				_workspaces.Add(workspace, new SimpleSet<GdbTableIdentity> {table});
+				_workspaces.Add(workspace, new SimpleSet<GdbTableIdentity> { table });
 			}
 
 			state.Visited = item.Visited;
@@ -113,16 +115,24 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			Refresh();
 		}
 
-		public void Commit()
+		public void Commit(IList<ISourceClass> sourceClasses)
 		{
 			// could be an empty work list > don't store definition file
 			if (_workspaces.Count == 0)
 			{
-				Assert.True(_states.Count == 0, "work item states but no workspaces");
+				if (_states.Count == 0)
+				{
+					_msg.Debug("No workspaces and no work item states");
+				}
+				else
+				{
+					_msg.Warn($"{Name}: Invalid work list will not be stored.");
+				}
+
 				return;
 			}
 
-			Store(CreateDefinition(_workspaces, _states));
+			Store(CreateDefinition(_workspaces, sourceClasses, _states));
 
 			Refresh();
 		}
@@ -135,7 +145,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		protected abstract void Store(TDefinition definition);
 
 		protected abstract TDefinition CreateDefinition(
-			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			IList<ISourceClass> sourceClasses,
 			List<TState> states);
 
 		protected abstract TState CreateState(IWorkItem item);

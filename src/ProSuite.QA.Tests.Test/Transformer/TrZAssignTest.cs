@@ -1,11 +1,16 @@
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.AO.Test;
-using ProSuite.QA.Tests.Surface;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
@@ -15,11 +20,16 @@ namespace ProSuite.QA.Tests.Test.Transformer
 	public class TrZAssignTest
 	{
 		private string _simpleGdbPath;
+		private const string _dhm200BernRasterName = "DHM200_Bern";
 
+		// NOTE: If these tests fail due to missing raster, you might have to delete the
+		// cached gdb in C:\Temp\UnitTestData\ProSuite.Commons.AO.Test\GetGdb1Path
+		// because overwrite is false!
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
 			TestUtils.InitializeLicense(activateAdvancedLicense: true);
+
 			_simpleGdbPath = Commons.AO.Test.TestData.GetGdb1Path();
 		}
 
@@ -50,13 +60,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-			IFeatureWorkspace rws = WorkspaceUtils.OpenFeatureWorkspace(_simpleGdbPath);
-			IRasterDataset rds = ((IRasterWorkspace2) rws).OpenRasterDataset("DHM200_Bern");
-
-			RasterDatasetReference rasterRef = new RasterDatasetReference((IRasterDataset2) rds);
+			IRasterDataset rds = OpenDhm200GdbRasterDataset();
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
-			TrZAssign tr = new TrZAssign(roFc, rasterRef);
+			TrZAssign tr = new TrZAssign(roFc, (IRasterDataset2) rds);
 			Qa3dConstantZ test =
 				new Qa3dConstantZ(tr.GetTransformed(), 0);
 
@@ -70,7 +77,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[Test]
 		public void CanUseTrZAssignPoint()
 		{
-			int idLv95 = (int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95;
+			int idLv95 = (int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95;
 			ISpatialReference srLv95 = SpatialReferenceUtils.CreateSpatialReference(idLv95, true);
 
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("ws");
@@ -98,15 +105,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-			IFeatureWorkspace rws = WorkspaceUtils.OpenFeatureWorkspace(_simpleGdbPath);
-			IRasterDataset rds = ((IRasterWorkspace2)rws).OpenRasterDataset("DHM200_Bern");
-
-			RasterDatasetReference rasterRef = new RasterDatasetReference((IRasterDataset2)rds);
+			IRasterDataset rds = OpenDhm200GdbRasterDataset();
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
-			TrZAssign tr = new TrZAssign(roFc, rasterRef);
+			TrZAssign tr = new TrZAssign(roFc, (IRasterDataset2) rds);
 			QaZDifferenceSelf test =
-				new QaZDifferenceSelf(tr.GetTransformed(), 1, 2, ZComparisonMethod.BoundingBox, null);
+				new QaZDifferenceSelf(tr.GetTransformed(), 1, 2, ZComparisonMethod.BoundingBox,
+				                      null);
 
 			{
 				var runner = new QaContainerTestRunner(2000, test);
@@ -115,11 +120,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
-
 		[Test]
 		public void CanUseTrZAssignMultipointPoint()
 		{
-			int idLv95 = (int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95;
+			int idLv95 = (int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95;
 			ISpatialReference srLv95 = SpatialReferenceUtils.CreateSpatialReference(idLv95, true);
 
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("ws");
@@ -133,7 +137,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				IFeature f = fc.CreateFeature();
 				f.Shape = GeometryFactory.CreateMultipoint(
-					new []
+					new[]
 					{
 						new WKSPointZ { X = 2598000, Y = 1198000 },
 						new WKSPointZ { X = 2600001, Y = 1200001 },
@@ -151,20 +155,18 @@ namespace ProSuite.QA.Tests.Test.Transformer
 						new WKSPointZ { X = 2600031, Y = 1200041 },
 						new WKSPointZ { X = 2601000, Y = 1201000 }
 					},
-					(IGeometryDef)null);
+					(IGeometryDef) null);
 				f.Store();
 			}
 
-			IFeatureWorkspace rws = WorkspaceUtils.OpenFeatureWorkspace(_simpleGdbPath);
-			IRasterDataset rds = ((IRasterWorkspace2)rws).OpenRasterDataset("DHM200_Bern");
-
-			RasterDatasetReference rasterRef = new RasterDatasetReference((IRasterDataset2)rds);
+			IRasterDataset rds = OpenDhm200GdbRasterDataset();
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
-			TrZAssign tr = new TrZAssign(roFc, rasterRef)
+			TrZAssign tr = new TrZAssign(roFc, (IRasterDataset2) rds)
 			               { ZAssignOption = TrZAssign.AssignOption.All };
 			QaZDifferenceSelf test =
-				new QaZDifferenceSelf(tr.GetTransformed(), 1, 2, ZComparisonMethod.BoundingBox, null);
+				new QaZDifferenceSelf(tr.GetTransformed(), 1, 2, ZComparisonMethod.BoundingBox,
+				                      null);
 
 			{
 				var runner = new QaContainerTestRunner(2000, test);
@@ -176,7 +178,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[Test]
 		public void CanUseTrZAssignMultitile()
 		{
-			int idLv95 = (int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95;
+			int idLv95 = (int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95;
 			ISpatialReference srLv95 = SpatialReferenceUtils.CreateSpatialReference(idLv95, true);
 
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("ws");
@@ -195,13 +197,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-			IFeatureWorkspace rws = WorkspaceUtils.OpenFeatureWorkspace(_simpleGdbPath);
-			IRasterDataset rds = ((IRasterWorkspace2)rws).OpenRasterDataset("DHM200_Bern");
-
-			RasterDatasetReference rasterRef = new RasterDatasetReference((IRasterDataset2)rds);
+			IRasterDataset rds = OpenDhm200GdbRasterDataset();
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
-			TrZAssign tr = new TrZAssign(roFc, rasterRef);
+			TrZAssign tr = new TrZAssign(roFc, (IRasterDataset2) rds);
 			Qa3dConstantZ test =
 				new Qa3dConstantZ(tr.GetTransformed(), 0);
 
@@ -222,7 +221,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[Test]
 		public void CanUseTrZAssignMosaic()
 		{
-			int idLv95 = (int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95;
+			int idLv95 = (int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95;
 			ISpatialReference srLv95 = SpatialReferenceUtils.CreateSpatialReference(idLv95, true);
 
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("ws");
@@ -241,13 +240,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-			IFeatureWorkspace rws = WorkspaceUtils.OpenFeatureWorkspace(_simpleGdbPath);
-			IRasterDataset rds = ((IRasterWorkspace2)rws).OpenRasterDataset("DHM200_Mosaic");
+			IWorkspace rws = WorkspaceUtils.OpenWorkspace(_simpleGdbPath);
 
-			RasterDatasetReference rasterRef = new RasterDatasetReference((IRasterDataset2)rds);
+			IMosaicDataset mosaic = DatasetUtils.OpenMosaicDataset(rws, "DHM200_Mosaic");
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
-			TrZAssign tr = new TrZAssign(roFc, rasterRef);
+			TrZAssign tr = new TrZAssign(roFc, new SimpleRasterMosaic(mosaic));
+
 			Qa3dConstantZ test =
 				new Qa3dConstantZ(tr.GetTransformed(), 0);
 
@@ -265,11 +264,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
-
 		[Test]
 		public void CanMultiUseTrZAssign()
 		{
-			int idLv95 = (int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95;
+			int idLv95 = (int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95;
 			ISpatialReference srLv95 = SpatialReferenceUtils.CreateSpatialReference(idLv95, true);
 
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("ws");
@@ -287,17 +285,14 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-			IFeatureWorkspace rws = WorkspaceUtils.OpenFeatureWorkspace(_simpleGdbPath);
-			IRasterDataset rds = ((IRasterWorkspace2)rws).OpenRasterDataset("DHM200_Bern");
-
-			RasterDatasetReference rasterRef = new RasterDatasetReference((IRasterDataset2)rds);
+			IRasterDataset rds = OpenDhm200GdbRasterDataset();
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
-			TrZAssign tr0 = new TrZAssign(roFc, rasterRef);
+			TrZAssign tr0 = new TrZAssign(roFc, (IRasterDataset2) rds);
 			Qa3dConstantZ testConstZ =
 				new Qa3dConstantZ(tr0.GetTransformed(), 0);
 
-			TrZAssign tr1 = new TrZAssign(roFc, rasterRef);
+			TrZAssign tr1 = new TrZAssign(roFc, (IRasterDataset2) rds);
 			QaLineIntersectZ testIntersect =
 				new QaLineIntersectZ(tr1.GetTransformed(), 0);
 
@@ -308,5 +303,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
+		private IRasterDataset OpenDhm200GdbRasterDataset()
+		{
+			IWorkspace rasterWorkspace = WorkspaceUtils.OpenWorkspace(_simpleGdbPath);
+			IRasterDataset rds =
+				DatasetUtils.OpenRasterDataset(rasterWorkspace, _dhm200BernRasterName);
+			return rds;
+		}
 	}
 }

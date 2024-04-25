@@ -281,6 +281,56 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
+		public override async Task<GetDatasetDetailsResponse> GetDatasetDetails(
+			GetDatasetDetailsRequest request,
+			ServerCallContext context)
+		{
+			GetDatasetDetailsResponse response;
+
+			try
+			{
+				await StartRequestAsync(context.Peer, request);
+
+				Stopwatch watch = _msg.DebugStartTiming();
+
+				Func<ITrackCancel, GetDatasetDetailsResponse> func =
+					trackCancel => GetDatasetsCore(request);
+
+				using (_msg.IncrementIndentation("Getting {0} dataset details for {1}",
+				                                 request.DatasetIds.Count, context.Peer))
+				{
+					response =
+						await GrpcServerUtils.ExecuteServiceCall(
+							func, context, _staThreadScheduler, true) ??
+						new GetDatasetDetailsResponse();
+				}
+
+				_msg.DebugStopTiming(
+					watch, "Gotten {0} dataset details for peer {1}",
+					request.DatasetIds.Count, context.Peer);
+
+				_msg.InfoFormat("Returning dataset details for {0} datasets.",
+				                response.Datasets.Count);
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error getting quality specifications {request}", e);
+
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				{
+					ServiceUtils.SetUnhealthy(Health, GetType());
+				}
+
+				throw;
+			}
+			finally
+			{
+				EndRequest();
+			}
+
+			return response;
+		}
+
 		#endregion
 
 		private GetProjectWorkspacesResponse GetProjectWorkspacesCore(
@@ -504,6 +554,33 @@ namespace ProSuite.Microservices.Server.AO.QA
 					{
 						ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
 						response.ReferencedModels.Add(modelMsg);
+					}
+				});
+
+			return response;
+		}
+
+		private GetDatasetDetailsResponse GetDatasetsCore(GetDatasetDetailsRequest request)
+		{
+			var response = new GetDatasetDetailsResponse();
+
+			IVerificationDataDictionary<TModel> verificationDataDictionary =
+				Assert.NotNull(VerificationDdx,
+				               "Data Dictionary access has not been configured or failed.");
+
+			_domainTransactions.UseTransaction(
+				() =>
+				{
+					IList<Dataset> datasets =
+						verificationDataDictionary.GetDatasets(request.DatasetIds);
+
+					// TODO: Review batch size of lazy collections in mappings.
+
+					foreach (Dataset dataset in datasets)
+					{
+						DatasetMsg datasetMsg = ProtoDataQualityUtils.ToDatasetMsg(dataset, true);
+
+						response.Datasets.Add(datasetMsg);
 					}
 				});
 

@@ -11,6 +11,7 @@ using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
@@ -79,6 +80,17 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			Assert.ArgumentNotNull(dataType, nameof(dataType));
 
+			if (typeof(IFeatureClassSchemaDef) == dataType)
+				return true;
+			if (typeof(ITableSchemaDef) == dataType)
+				return true;
+			if (typeof(IMosaicRasterDatasetDef) == dataType)
+				return true;
+			if (typeof(IRasterDatasetDef) == dataType)
+				return true;
+			if (typeof(ITerrainDef) == dataType)
+				return true;
+
 			if (typeof(IReadOnlyFeatureClass) == dataType)
 				return true;
 
@@ -128,7 +140,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (typeof(IFeatureClass) == knownType)
 				return _datasetContext.OpenFeatureClass((IVectorDataset) dataset);
-			if (typeof(IReadOnlyFeatureClass) == knownType)
+
+			if (typeof(IReadOnlyFeatureClass) == knownType ||
+			    typeof(IFeatureClassSchemaDef) == knownType)
 			{
 				IFeatureClass fc = _datasetContext.OpenFeatureClass((IVectorDataset) dataset);
 				return fc != null ? ReadOnlyTableFactory.Create(fc) : null;
@@ -136,7 +150,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (typeof(ITable) == knownType)
 				return _datasetContext.OpenTable((IObjectDataset) dataset);
-			if (typeof(IReadOnlyTable) == knownType)
+
+			if (typeof(IReadOnlyTable) == knownType ||
+			    typeof(ITableSchemaDef) == knownType)
 			{
 				ITable tbl = _datasetContext.OpenTable((IObjectDataset) dataset);
 				return tbl != null ? ReadOnlyTableFactory.Create(tbl) : null;
@@ -149,17 +165,22 @@ namespace ProSuite.DomainModel.AO.QA
 				return (IMosaicDataset) _datasetContext.OpenRasterDataset(
 					(IDdxRasterDataset) dataset);
 
-			if (typeof(IRasterDataset) == knownType)
+			if (typeof(IRasterDataset) == knownType ||
+				typeof(IRasterDatasetDef) == knownType ||
+			    typeof(RasterDatasetReference) == knownType)
 				return _datasetContext.OpenRasterDataset((IDdxRasterDataset) dataset);
 
 			if (typeof(IRasterDataset2) == knownType)
 				return (IRasterDataset2) _datasetContext.OpenRasterDataset(
 					(IDdxRasterDataset) dataset);
 
-			if (typeof(SimpleRasterMosaic) == knownType)
+			if (typeof(SimpleRasterMosaic) == knownType ||
+			    typeof(MosaicRasterReference) == knownType ||
+				typeof(IMosaicRasterDatasetDef) == knownType)
 				return _datasetContext.OpenSimpleRasterMosaic((IRasterMosaicDataset) dataset);
 
-			if (typeof(TerrainReference) == knownType)
+			if (typeof(TerrainReference) == knownType ||
+			    typeof(ITerrainDef) == knownType)
 				return _datasetContext.OpenTerrainReference((ISimpleTerrainDataset) dataset);
 
 			throw new ArgumentException($"Unsupported data type {knownType}");

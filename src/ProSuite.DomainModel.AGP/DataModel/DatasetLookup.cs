@@ -4,23 +4,24 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AGP.DataModel
 {
 	public class DatasetLookup
 	{
-		private readonly IList<BasicDataset> _objectDatasets;
+		private readonly IList<IDdxDataset> _objectDatasets;
 
-		private readonly IDictionary<long, BasicDataset> _datasetByTableHandle =
-			new Dictionary<long, BasicDataset>();
+		private readonly IDictionary<long, IDdxDataset> _datasetByTableHandle =
+			new Dictionary<long, IDdxDataset>();
 
-		public DatasetLookup(IList<BasicDataset> objectDatasets)
+		public DatasetLookup(IList<IDdxDataset> objectDatasets)
 		{
 			_objectDatasets = objectDatasets;
 		}
 
 		[CanBeNull]
-		public BasicDataset GetDataset([NotNull] Table table)
+		public IDdxDataset GetDataset([NotNull] Table table)
 		{
 			// TODO: Sophisticated logic with unqualified names, etc.
 
@@ -37,7 +38,7 @@ namespace ProSuite.DomainModel.AGP.DataModel
 
 			string unqualifiedName = ModelElementNameUtils.GetUnqualifiedName(tableName);
 
-			BasicDataset result = _objectDatasets.FirstOrDefault(
+			IDdxDataset result = _objectDatasets.FirstOrDefault(
 				d => d.Name.Equals(tableName, StringComparison.InvariantCultureIgnoreCase) ||
 				     d.Name.Equals(unqualifiedName, StringComparison.InvariantCultureIgnoreCase));
 

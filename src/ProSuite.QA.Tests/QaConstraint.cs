@@ -7,6 +7,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Globalization;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
@@ -56,6 +57,12 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		#region Constructors
+
+		// TEST: Static factory method. But its probably better to directly call the last constructor
+		public static QaConstraint Create(QaConstraintDefinition def)
+		{
+			return new QaConstraint(def);
+		}
 
 		[Doc(nameof(DocStrings.QaConstraint_0))]
 		public QaConstraint(
@@ -109,6 +116,26 @@ namespace ProSuite.QA.Tests
 			_constraintNodes = constraints;
 			_usesSimpleConstraint = false;
 			_errorDescriptionVersion = errorDescriptionVersion;
+		}
+
+		/// <summary>
+		/// Constructor using Definition. Must be the last constructor!
+		/// </summary>
+		/// <param name="constraintDef"></param>
+		[InternallyUsedTest]
+		public QaConstraint([NotNull] QaConstraintDefinition constraintDef)
+			: base(constraintDef.InvolvedTables.Cast<IReadOnlyTable>())
+		{
+			_table = (IReadOnlyTable) constraintDef.Table;
+			_constraint = constraintDef.Constraint;
+
+			if (constraintDef.ConstraintNodes != null)
+			{
+				_constraintNodes = constraintDef.ConstraintNodes.Select(c => new ConstraintNode(c))
+				                                .ToList();
+
+				_usesSimpleConstraint = false;
+			}
 		}
 
 		#endregion
@@ -286,7 +313,7 @@ namespace ProSuite.QA.Tests
 					IssueCode issueCode = constraintNode.IssueCode ??
 					                      Codes[Code.ConstraintNotFulfilled];
 
-					object[] values = {GetFieldValues(row, constraintNode.Helper, parentHelpers)};
+					object[] values = { GetFieldValues(row, constraintNode.Helper, parentHelpers) };
 
 					errorCount += ReportError(
 						description, InvolvedRowUtils.GetInvolvedRows(row),

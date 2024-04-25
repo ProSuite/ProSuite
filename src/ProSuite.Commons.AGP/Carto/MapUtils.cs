@@ -90,11 +90,12 @@ namespace ProSuite.Commons.AGP.Carto
 			[NotNull] SelectionSet selectionSet,
 			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
-			return GetFeatures(selectionSet.ToDictionary(), outputSpatialReference);
+			return GetFeatures(selectionSet.ToDictionary(), false, outputSpatialReference);
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] IEnumerable<KeyValuePair<MapMember, List<long>>> oidsByMapMembers,
+			bool withoutJoins = false,
 			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
 			foreach (var oidsByMapMember in oidsByMapMembers)
@@ -104,16 +105,28 @@ namespace ProSuite.Commons.AGP.Carto
 				if (featureLayer == null) continue;
 
 				foreach (Feature feature in GetFeatures(featureLayer, oidsByMapMember.Value,
-				                                        false, outputSpatialReference))
+				                                        withoutJoins, recycling: false,
+				                                        outputSpatialReference))
 				{
 					yield return feature;
 				}
 			}
 		}
 
+		/// <summary>
+		/// Loads the features for the specified object ids from the mapMember's feature class.
+		/// </summary>
+		/// <param name="mapMember">The layer</param>
+		/// <param name="oidList"></param>
+		/// <param name="withoutJoins">Whether the features shall be retrieved from the un-joined
+		/// feature class even if the layer has a join.</param>
+		/// <param name="recycling"></param>
+		/// <param name="outputSpatialReference"></param>
+		/// <returns></returns>
 		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] MapMember mapMember,
 			[NotNull] List<long> oidList,
+			bool withoutJoins,
 			bool recycling = false,
 			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
@@ -124,7 +137,8 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			foreach (Feature feature in GetFeatures(basicFeatureLayer, oidList, recycling,
+			foreach (Feature feature in GetFeatures(basicFeatureLayer, oidList, withoutJoins,
+			                                        recycling,
 			                                        outputSpatialReference))
 			{
 				yield return feature;
@@ -134,7 +148,8 @@ namespace ProSuite.Commons.AGP.Carto
 		private static IEnumerable<Feature> GetFeatures(
 			[CanBeNull] BasicFeatureLayer layer,
 			[NotNull] List<long> oids,
-			bool recycling = false,
+			bool forUpdating,
+			bool recycling,
 			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
 			if (layer == null)
@@ -144,6 +159,12 @@ namespace ProSuite.Commons.AGP.Carto
 
 			// TODO: Use layer search (there might have been an issue with recycling?!)
 			var featureClass = layer.GetTable();
+
+			if (featureClass.IsJoinedTable() && forUpdating)
+			{
+				// Get the features only based on the feature class, otherwise storing results in NotImplementedExceptions
+				featureClass = GetUnJoinedFeatureClass(featureClass as FeatureClass);
+			}
 
 			var filter = new QueryFilter
 			             {
@@ -636,6 +657,35 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		#endregion
+
+		private static FeatureClass GetUnJoinedFeatureClass(FeatureClass featureClass)
+		{
+			// Get the shape's table name
+			string shapeField = featureClass.GetDefinition().GetShapeField();
+
+			List<string> tokens = shapeField.Split('.').ToList();
+
+			if (tokens.Count < 2)
+			{
+				return featureClass;
+			}
+
+			tokens.RemoveAt(tokens.Count - 1);
+
+			string tableName = StringUtils.Concatenate(tokens, ".");
+
+			foreach (Table databaseTable in DatasetUtils.GetDatabaseTables(featureClass))
+			{
+				if (databaseTable is FeatureClass dbFeatureClass &&
+				    dbFeatureClass.GetName()
+				                  .Equals(tableName, StringComparison.InvariantCultureIgnoreCase))
+				{
+					return dbFeatureClass;
+				}
+			}
+
+			return featureClass;
+		}
 
 		[NotNull]
 		private static Envelope GetZoomExtent([NotNull] Envelope newExtent,

@@ -24,6 +24,10 @@ namespace ProSuite.AGP.WorkList.Test
 		{
 			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
 
+			// Without adding the install dir to the PATH variable a weird exception occurs on startup:
+			//System.DllNotFoundException : Unable to load DLL 'CoreInterop.dll' or one of its dependencies:
+			//The specified module could not be found. (0x8007007E)
+			ProRuntimeUtils.AddBinDirectoryToPath(ProRuntimeUtils.GetProInstallDir());
 			CoreHostProxy.Initialize();
 		}
 

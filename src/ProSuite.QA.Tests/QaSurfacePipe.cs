@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -10,7 +11,6 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -19,7 +19,7 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.Surface;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests
 {
@@ -115,7 +115,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_raster))] [NotNull]
-			IRasterDataset2 raster,
+			RasterDatasetReference raster,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit)
 			: this(featureClass, raster, limit,
@@ -127,7 +127,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_raster))] [NotNull]
-			IRasterDataset2 raster,
+			RasterDatasetReference raster,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfacePipe_zOffsetConstraint))]
@@ -136,7 +136,7 @@ namespace ProSuite.QA.Tests
 			double startEndIgnoreLength,
 			[Doc(nameof(DocStrings.QaSurfacePipe_asRatio))]
 			bool asRatio)
-			: base(featureClass, new RasterDatasetReference(raster), limit, zOffsetConstraint)
+			: base(featureClass, raster, limit, zOffsetConstraint)
 		{
 			ValidateAsRatio(startEndIgnoreLength, asRatio);
 
@@ -153,7 +153,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_mosaic))] [NotNull]
-			SimpleRasterMosaic rasterMosaic,
+			MosaicRasterReference rasterMosaic,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit)
 			: this(featureClass, rasterMosaic, limit,
@@ -165,7 +165,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfacePipe_mosaic))] [NotNull]
-			SimpleRasterMosaic rasterMosaic,
+			MosaicRasterReference rasterMosaic,
 			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfacePipe_zOffsetConstraint))]
@@ -175,7 +175,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfacePipe_asRatio))]
 			bool asRatio)
 			: base(
-				featureClass, new MosaicRasterReference(rasterMosaic), limit,
+				featureClass, rasterMosaic, limit,
 				zOffsetConstraint)
 		{
 			ValidateAsRatio(startEndIgnoreLength, asRatio);
@@ -186,6 +186,30 @@ namespace ProSuite.QA.Tests
 
 			_interpolateTolerance =
 				2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
+		}
+
+		/// <summary>
+		/// Constructor using Definition. Must always be the last constructor!
+		/// </summary>
+		/// <param name="pipeDef"></param>
+		[InternallyUsedTest]
+		public QaSurfacePipe([NotNull] QaSurfacePipeDefinition pipeDef)
+			: base((IReadOnlyFeatureClass) pipeDef.FeatureClass,
+			       pipeDef.Limit,
+			       pipeDef.ZOffsetConstraint)
+		{
+			if (pipeDef.InvolvedRasters?.Count > 0)
+			{
+				InvolvedRasters = pipeDef.InvolvedRasters.Cast<RasterReference>().ToList();
+			}
+			else
+			{
+				Assert.ArgumentCondition(pipeDef.InvolvedTerrains.Count > 0,
+				                         "Surface is not defined (neither raster nor terrain is provided)");
+
+				InvolvedTerrains = pipeDef.InvolvedTerrains.Cast<TerrainReference>().ToList();
+				TerrainTolerance = pipeDef.TerrainTolerance;
+			}
 		}
 
 		private static void ValidateAsRatio(double startEndIgnoreLength, bool asRatio)

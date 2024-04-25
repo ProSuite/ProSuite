@@ -59,6 +59,12 @@ namespace ProSuite.QA.Tests
 			_tolerance = tolerance;
 		}
 
+		[InternallyUsedTest]
+		public Qa3dConstantZ(
+			[NotNull] Qa3dConstantZDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.Tolerance) { }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			return false;

@@ -1,7 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -274,6 +277,221 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			{
 				yield return sourceTable;
 			}
+		}
+
+		public static bool HasM(FeatureClass featureClass)
+		{
+			return featureClass.GetDefinition().HasM();
+		}
+
+		public static bool HasZ(FeatureClass featureClass)
+		{
+			return featureClass.GetDefinition().HasZ();
+		}
+
+		[CanBeNull]
+		public static string GetAreaFieldName([NotNull] FeatureClass featureClass)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			return GetAreaFieldName(featureClass.GetDefinition());
+		}
+
+		[CanBeNull]
+		public static string GetAreaFieldName(
+			[NotNull] FeatureClassDefinition featureClassDefinition)
+		{
+			Assert.ArgumentNotNull(featureClassDefinition, nameof(featureClassDefinition));
+
+			try
+			{
+				string areaFieldName = featureClassDefinition.GetAreaField();
+
+				return areaFieldName;
+			}
+			catch (NotImplementedException)
+			{
+				// TODO: Verify this
+				// property is not implemented for feature classes from non-Gdb workspaces 
+				// ("query layers")
+				return null;
+			}
+		}
+
+		[CanBeNull]
+		public static string GetLengthFieldName([NotNull] FeatureClass featureClass)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			return GetLengthFieldName(featureClass.GetDefinition());
+		}
+
+		public static string GetLengthFieldName(FeatureClassDefinition featureClassDefinition)
+		{
+			Assert.ArgumentNotNull(featureClassDefinition, nameof(featureClassDefinition));
+
+			try
+			{
+				string lengthFieldName = featureClassDefinition.GetLengthField();
+
+				return lengthFieldName;
+			}
+			catch (NotImplementedException)
+			{
+				// TODO: Verify this, especially the type of exception
+				// property is not implemented for feature classes from non-Gdb workspaces 
+				// ("query layers")
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Gets the name of the subtype field in a given object class.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <returns>The name of the subtype field, or null if the table has no subtype field.
+		/// </returns>
+		[CanBeNull]
+		public static string GetSubtypeFieldName([NotNull] Table table)
+		{
+			TableDefinition definition = table.GetDefinition();
+
+			return GetSubtypeFieldName(definition);
+		}
+
+		[CanBeNull]
+		public static string GetSubtypeFieldName(TableDefinition tableDefinition)
+		{
+			string subtypeFieldName = null;
+			try
+			{
+				subtypeFieldName = tableDefinition.GetSubtypeField();
+			}
+			catch (NotSupportedException notSupportedException)
+			{
+				// Shapefiles throw a NotSupportedException
+				_msg.Debug("Subtypes not supported", notSupportedException);
+			}
+
+			return subtypeFieldName;
+		}
+
+		/// <summary>
+		/// Gets the index of the subtype field in a given table.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <returns>The index of the subtype field, or -1 
+		/// if the table has no subtype field.</returns>
+		public static int GetSubtypeFieldIndex([NotNull] Table table)
+		{
+			TableDefinition definition = table.GetDefinition();
+
+			string subtypeFieldName = GetSubtypeFieldName(table);
+
+			if (string.IsNullOrEmpty(subtypeFieldName))
+			{
+				return -1;
+			}
+
+			int result = definition.FindField(subtypeFieldName);
+
+			return result;
+		}
+
+		/// <summary>
+		/// Gets the name of the object id field in a given table.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <returns>The name of the subtype field, or null if the table has no subtype field.
+		/// </returns>
+		[CanBeNull]
+		public static string GetObjectIdFieldName([NotNull] Table table)
+		{
+			TableDefinition definition = table.GetDefinition();
+
+			return GetObjectIdFieldName(definition);
+		}
+
+		[CanBeNull]
+		public static string GetObjectIdFieldName(TableDefinition tableDefinition)
+		{
+			if (! tableDefinition.HasObjectID())
+			{
+				return null;
+			}
+
+			return tableDefinition.GetObjectIDField();
+		}
+
+		/// <summary>
+		/// Deletes rows in a table based on a collection of object IDs.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <param name="oids">The oids.</param>
+		public static void DeleteRows([NotNull] Table table,
+		                              [NotNull] IEnumerable oids)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNull(oids, nameof(oids));
+
+			const int maxLength = 1000;
+
+			var sb = new StringBuilder();
+
+			foreach (object oidObj in oids)
+			{
+				// Convert the (potentially boxed int) object:
+				long oid = Convert.ToInt64(oidObj);
+
+				if (sb.Length == 0)
+				{
+					sb.Append(oid);
+				}
+				else if (sb.Length < maxLength)
+				{
+					sb.AppendFormat(",{0}", oid);
+				}
+				else
+				{
+					// maximum exceeded, delete current oid list
+					DeleteRowsByOIDString(table, sb.ToString());
+
+					// clear string builder
+					sb.Remove(0, sb.Length);
+				}
+			}
+
+			if (sb.Length > 0)
+			{
+				DeleteRowsByOIDString(table, sb.ToString());
+			}
+		}
+
+		/// <summary>
+		/// Deletes rows in a table based on a string containing a comma-separated
+		/// list of object ids.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <param name="oidString">The oid string.</param>
+		private static void DeleteRowsByOIDString([NotNull] Table table,
+		                                          [NotNull] string oidString)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(oidString, nameof(oidString));
+
+			string objectIdFieldName = Assert.NotNullOrEmpty(GetObjectIdFieldName(table));
+
+			string whereClause = $"{objectIdFieldName} IN ({oidString})";
+
+			QueryFilter filter = new QueryFilter { WhereClause = whereClause };
+
+			Stopwatch watch = _msg.DebugStartTiming(
+				"Deleting rows from {0} using where clause {1}",
+				GetName(table), whereClause);
+
+			table.DeleteRows(filter);
+
+			_msg.DebugStopTiming(watch, "Rows deleted");
 		}
 	}
 }

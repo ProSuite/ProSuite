@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
@@ -65,7 +65,7 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass contains,
 			[Doc(nameof(DocStrings.QaContainsOther_isWithin_1))] [NotNull]
 			IReadOnlyFeatureClass isWithin)
-			: this(new[] {contains}, new[] {isWithin}, null, false) { }
+			: this(new[] { contains }, new[] { isWithin }, null, false) { }
 
 		[Doc(nameof(DocStrings.QaContainsOther_2))]
 		public QaContainsOther(
@@ -104,8 +104,8 @@ namespace ProSuite.QA.Tests
 				isContainingCondition,
 			[Doc(nameof(DocStrings.QaContainsOther_reportIndividualParts))]
 			bool reportIndividualParts)
-			: this(new[] {contains},
-			       new[] {isWithin},
+			: this(new[] { contains },
+			       new[] { isWithin },
 			       isContainingCondition,
 			       reportIndividualParts) { }
 
@@ -324,8 +324,9 @@ namespace ProSuite.QA.Tests
 						? esriSpatialRelEnum.esriSpatialRelWithin
 						: esriSpatialRelEnum.esriSpatialRelContains;
 
-				_intersectsFilter[i] = (IFeatureClassFilter)pFilters[i].Clone();
-				_intersectsFilter[i].SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
+				_intersectsFilter[i] = (IFeatureClassFilter) pFilters[i].Clone();
+				_intersectsFilter[i].SpatialRelationship =
+					esriSpatialRelEnum.esriSpatialRelIntersects;
 			}
 		}
 

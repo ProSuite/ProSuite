@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -22,13 +21,13 @@ namespace ProSuite.AGP.QA
 	/// <summary>
 	/// gRPC microservice based implementation for quality verifications.
 	/// </summary>
-	public class VerificationServiceGrpc : VerificationServiceBase
+	public abstract class VerificationServiceGrpc : VerificationServiceBase
 	{
-		[NotNull] private readonly QualityVerificationServiceClient _client;
+		[NotNull] private readonly IQualityVerificationClient _client;
 		private const string _contextTypeWorkUnit = "Work Unit";
 		private const string _contextTypePerimeter = "Perimeter";
 
-		public VerificationServiceGrpc([NotNull] QualityVerificationServiceClient client)
+		protected VerificationServiceGrpc([NotNull] IQualityVerificationClient client)
 		{
 			Assert.ArgumentNotNull(client, nameof(client));
 
@@ -53,9 +52,13 @@ namespace ProSuite.AGP.QA
 
 			VerificationRequest request =
 				await CreateVerificationRequest(specificationRef, perimeter, projectWorkspace,
-												resultsPath);
+				                                resultsPath);
 
-			return await QAUtils.Verify(Assert.NotNull(_client.QaGrpcClient), request, progress);
+			ClientIssueMessageCollector messageCollector = CreateIssueMessageCollector();
+			messageCollector.SetVerifiedSpecificationId(qualitySpecificationRef.Id);
+
+			return await Verify(Assert.NotNull(_client.QaGrpcClient), request,
+			                    messageCollector, progress);
 		}
 
 		public override async Task<ServiceCallStatus> Verify(
@@ -73,7 +76,11 @@ namespace ProSuite.AGP.QA
 				await CreateVerificationRequest(qualitySpecification, perimeter, projectWorkspace,
 				                                resultsPath);
 
-			return await QAUtils.Verify(Assert.NotNull(_client.QaGrpcClient), request, progress);
+			ClientIssueMessageCollector messageCollector = CreateIssueMessageCollector();
+			messageCollector.SetVerifiedSpecification(qualitySpecification);
+
+			return await Verify(Assert.NotNull(_client.QaGrpcClient), request,
+			                    messageCollector, progress);
 		}
 
 		public override async Task<ServiceCallStatus> VerifySelection(
@@ -93,7 +100,13 @@ namespace ProSuite.AGP.QA
 				await CreateVerificationRequest(specification, perimeter, projectWorkspace,
 				                                resultsPath, objectsToVerify);
 
-			return await QAUtils.Verify(Assert.NotNull(_client.QaGrpcClient), request, progress);
+			ClientIssueMessageCollector messageCollector = CreateIssueMessageCollector();
+
+			messageCollector.SetVerifiedObjects(objectsToVerify);
+			messageCollector.SetVerifiedSpecificationId(qualitySpecificationRef.Id);
+
+			return await Verify(Assert.NotNull(_client.QaGrpcClient), request, messageCollector,
+			                    progress);
 		}
 
 		public override async Task<ServiceCallStatus> VerifySelection(
@@ -112,7 +125,30 @@ namespace ProSuite.AGP.QA
 				await CreateVerificationRequest(qualitySpecification, perimeter, projectWorkspace,
 				                                resultsPath, objectsToVerify);
 
-			return await QAUtils.Verify(Assert.NotNull(_client.QaGrpcClient), request, progress);
+			ClientIssueMessageCollector messageCollector = CreateIssueMessageCollector();
+
+			messageCollector.SetVerifiedObjects(objectsToVerify);
+			messageCollector.SetVerifiedSpecification(qualitySpecification);
+
+			return await Verify(Assert.NotNull(_client.QaGrpcClient), request, messageCollector,
+			                    progress);
+		}
+
+		private async Task<ServiceCallStatus> Verify(
+			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
+			[NotNull] VerificationRequest request,
+			[NotNull] ClientIssueMessageCollector messageCollector,
+			[NotNull] QualityVerificationProgressTracker progress)
+		{
+			BackgroundVerificationRun verificationRun =
+				QAUtils.CreateQualityVerificationRun(request, messageCollector, progress);
+
+			return await verificationRun.ExecuteAndProcessMessagesAsync(qaClient);
+		}
+
+		protected virtual ClientIssueMessageCollector CreateIssueMessageCollector()
+		{
+			return new ClientIssueMessageCollector();
 		}
 
 		private async Task<VerificationRequest> CreateVerificationRequest(

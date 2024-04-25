@@ -3,6 +3,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
@@ -51,12 +52,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		IField LengthField { get; }
 	}
 
-	public interface IReadOnlyRow
+	public interface IReadOnlyRow : IDbRow
 	{
-		bool HasOID { get; }
-
-		long OID { get; }
-
 		object get_Value(int Index);
 
 		IReadOnlyTable Table { get; }

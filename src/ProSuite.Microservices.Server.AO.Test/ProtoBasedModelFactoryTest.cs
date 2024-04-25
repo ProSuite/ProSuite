@@ -37,7 +37,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 			int modelId = 23;
 			DdxModel model = CreateModel(gdbPath, modelId);
 
-			Assert.AreEqual(3, model.Datasets.Count);
+			Assert.AreEqual(4, model.Datasets.Count);
 
 			Dataset pointDataset = model.Datasets.Single(
 				d => d.GeometryType is GeometryTypeShape shapeType &&

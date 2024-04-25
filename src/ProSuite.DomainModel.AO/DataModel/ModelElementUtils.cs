@@ -5,7 +5,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -95,11 +94,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		[CanBeNull]
-		public static IRasterDataset TryOpenFromMasterDatabase(IDdxRasterDataset dataset,
-		                                                       bool allowAlways = false)
+		public static RasterDatasetReference TryOpenFromMasterDatabase(
+			IDdxRasterDataset dataset,
+			bool allowAlways = false)
 		{
 			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
 				allowAlways);
+
 			return context?.OpenRasterDataset(dataset);
 		}
 
@@ -114,7 +115,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		[CanBeNull]
-		public static SimpleRasterMosaic TryOpenFromMasterDatabase(
+		public static MosaicRasterReference TryOpenFromMasterDatabase(
 			IRasterMosaicDataset dataset, bool allowAlways = false)
 		{
 			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,

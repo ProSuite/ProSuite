@@ -12,13 +12,13 @@ namespace ProSuite.AGP.WorkList
 {
 	public class SelectionItemRepository : GdbItemRepository
 	{
-		private readonly Dictionary<ISourceClass, List<long>> _oidsBySource =
+		private readonly IDictionary<ISourceClass, List<long>> _oidsBySource =
 			new Dictionary<ISourceClass, List<long>>();
 
 		// todo daro: refactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
 		public SelectionItemRepository(IEnumerable<Table> tables,
 		                               Dictionary<Table, List<long>> selection,
-		                               IRepository stateRepository) : base(
+		                               IWorkItemStateRepository stateRepository) : base(
 			tables, stateRepository)
 		{
 			foreach (var pair in selection)
@@ -53,36 +53,32 @@ namespace ProSuite.AGP.WorkList
 			return RefreshState(new SelectionItem(id, row));
 		}
 
-		protected override ISourceClass CreateSourceClassCore(
-			GdbTableIdentity identity,
-			IAttributeReader attributeReader,
-			WorkListStatusSchema statusSchema)
+		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
+		                                                      IAttributeReader attributeReader,
+		                                                      WorkListStatusSchema statusSchema,
+		                                                      string definitionQuery = null)
 		{
 			return new SelectionSourceClass(identity);
-		}
-
-		protected override IEnumerable<Row> GetRowsCore(ISourceClass sourceClass,
-		                                                QueryFilter filter, bool recycle)
-		{
-			Assert.True(_oidsBySource.TryGetValue(sourceClass, out List<long> oids),
-			            "unexpected source class");
-
-			if (filter == null)
-			{
-				filter = new QueryFilter { ObjectIDs = oids };
-			}
-
-			if (filter is SpatialQueryFilter spatialFilter)
-			{
-				spatialFilter.SearchOrder = SearchOrder.Attribute;
-			}
-
-			return base.GetRowsCore(sourceClass, filter, recycle);
 		}
 
 		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
 		{
 			await Task.Run(() => WorkItemStateRepository.Update(item));
+		}
+
+		protected override void AdaptSourceFilter(QueryFilter filter,
+		                                          ISourceClass sourceClass)
+		{
+			Assert.True(_oidsBySource.TryGetValue(sourceClass, out List<long> oids),
+			            "unexpected source class");
+
+			filter.ObjectIDs = oids;
+
+			if (filter is SpatialQueryFilter spatialFilter)
+			{
+				// Probably depends on the count of OIDs vs. the spatial filter's selectivity:
+				spatialFilter.SearchOrder = SearchOrder.Attribute;
+			}
 		}
 
 		protected override void UpdateStateRepositoryCore(string path)

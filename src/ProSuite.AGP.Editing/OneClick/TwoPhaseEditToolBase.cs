@@ -44,7 +44,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
 			Dictionary<MapMember, List<long>> selectionByLayer = selection.ToDictionary();
 
-			var applicableSelection = GetApplicableSelectedFeatures(selectionByLayer).ToList();
+			var applicableSelection =
+				GetApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection).ToList();
 
 			if (applicableSelection.Count > 0)
 			{
@@ -70,6 +71,13 @@ namespace ProSuite.AGP.Editing.OneClick
 						{
 							var selectedFeatures =
 								GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+							if (selectedFeatures.Count == 0)
+							{
+								ResetDerivedGeometries();
+								StartSelectionPhase();
+								return true;
+							}
 
 							CalculateDerivedGeometries(selectedFeatures, GetCancelableProgressor());
 

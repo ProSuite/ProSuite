@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.Geometry;
@@ -74,10 +76,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole
 
 			request.UnionFeatures = unionFeatures;
 
-			int deadline = RpcCallUtils.GeometryDefaultDeadline * selectedFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
 
 			CalculateHolesResponse response =
-				RpcCallUtils.Try(
+				GrpcClientUtils.Try(
 					o => rpcClient.CalculateHoles(request, o),
 					cancellationToken, deadline);
 

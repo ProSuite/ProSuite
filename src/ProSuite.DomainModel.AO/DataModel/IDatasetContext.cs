@@ -23,13 +23,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 		ITopology OpenTopology([NotNull] ITopologyDataset dataset);
 
 		[CanBeNull]
-		IRasterDataset OpenRasterDataset([NotNull] IDdxRasterDataset dataset);
+		RasterDatasetReference OpenRasterDataset([NotNull] IDdxRasterDataset dataset);
 
 		[CanBeNull]
 		TerrainReference OpenTerrainReference([NotNull] ISimpleTerrainDataset dataset);
 
 		[CanBeNull]
-		SimpleRasterMosaic OpenSimpleRasterMosaic([NotNull] IRasterMosaicDataset dataset);
+		MosaicRasterReference OpenSimpleRasterMosaic([NotNull] IRasterMosaicDataset dataset);
 
 		[CanBeNull]
 		IRelationshipClass OpenRelationshipClass([NotNull] Association association);

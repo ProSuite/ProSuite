@@ -1,18 +1,19 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <inheritdoc cref="GdbRow" />
-	public abstract class GdbFeature : GdbRow, IFeature, IFeatureBuffer, IFeatureChanges, IReadOnlyFeature
+	public abstract class GdbFeature : GdbRow, IFeature, IFeatureBuffer, IFeatureChanges,
+	                                   IReadOnlyFeature, IDbFeature
 	{
 		private class PolycurveFeature : GdbFeature, IIndexedPolycurveFeature
 		{
@@ -25,7 +26,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			IIndexedSegments IIndexedSegmentsFeature.IndexedSegments
 				=> _indexedPolycurve ??
-				   (_indexedPolycurve = new IndexedPolycurve((IPointCollection4)Shape));
+				   (_indexedPolycurve = new IndexedPolycurve((IPointCollection4) Shape));
 		}
 
 		private class MultiPatchFeature : GdbFeature, IIndexedMultiPatchFeature
@@ -41,7 +42,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			public IIndexedMultiPatch IndexedMultiPatch
 				=> _indexedMultiPatch ??
-				   (_indexedMultiPatch = new IndexedMultiPatch((IMultiPatch)Shape));
+				   (_indexedMultiPatch = new IndexedMultiPatch((IMultiPatch) Shape));
 		}
 
 		private class AnyFeature : GdbFeature
@@ -76,7 +77,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return result;
 		}
 
-
 		private readonly int _shapeFieldIndex;
 
 		[NotNull] private readonly IFeatureClass _featureClass;
@@ -100,12 +100,14 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 #if Server11
 		long IFeature.OID => OID;
 #else
-		int IFeature.OID => (int)OID;
+		int IFeature.OID => (int) OID;
 #endif
 
 		public override IGeometry ShapeCopy => Shape != null ? GeometryFactory.Clone(Shape) : null;
 		ITable IFeature.Table => Table;
-		IReadOnlyFeatureClass IReadOnlyFeature.FeatureClass => (IReadOnlyFeatureClass) ReadOnlyTable;
+
+		IReadOnlyFeatureClass IReadOnlyFeature.FeatureClass =>
+			(IReadOnlyFeatureClass) ReadOnlyTable;
 
 		public override IGeometry Shape
 		{
@@ -147,6 +149,16 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		}
 
 		public override esriFeatureType FeatureType => _featureClass.FeatureType;
+
+		#endregion
+
+		#region Implementation of IDbFeature
+
+		object IDbFeature.Shape => Shape;
+
+		IBoundedXY IDbFeature.Extent => GeometryConversionUtils.CreateEnvelopeXY(base.Extent);
+
+		public IFeatureClassData FeatureClass => (IFeatureClassData) DbTable;
 
 		#endregion
 
