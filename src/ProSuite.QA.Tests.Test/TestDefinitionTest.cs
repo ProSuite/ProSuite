@@ -106,6 +106,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaDuplicateGeometrySelf),
 											 typeof(QaEdgeMatchBorderingLines),
 				                             typeof(QaEmptyNotNullTextFields),
+											 //typeof(QaExportTables),
 				                             typeof(QaExtent),
 				                             typeof(QaFlowLogic),
 				                             typeof(QaGdbRelease),
@@ -117,6 +118,7 @@ namespace ProSuite.QA.Tests.Test
 				                             //typeof(QaInteriorRings),
 				                             typeof(QaIntersectionMatrixOther),
 											 typeof(QaIntersectionMatrixSelf),
+											 typeof(QaLineGroupConstraints),
 											 typeof(QaSchemaFieldDomainNameRegex),
 											 typeof(QaSchemaFieldDomains),
 											 typeof(QaSchemaFieldNameRegex),
@@ -249,12 +251,14 @@ namespace ProSuite.QA.Tests.Test
 			//AddQaCentroidsCases(model, testCases);
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values
 			AddQaEdgeMatchBorderingLinesCases(model, testCases);
+			//AddQaExportTablesCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
 			AddQaInteriorIntersectsOtherCases(model, testCases);
 			AddQaInteriorIntersectsSelfCases(model, testCases);
 			//AddQaInteriorRingsCases(model, testCases);
 			AddQaIntersectionMatrixOtherCases(model, testCases);
 			AddQaIntersectionMatrixSelfCases(model, testCases);
+			AddQaLineGroupConstraintsCases(model, testCases);
 			AddQaSliverPolygon(model, testCases);
 			AddQaTouchesSelf(model, testCases);
 			AddQaTrimmedTextFields(model, testCases);
@@ -487,7 +491,27 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-private static void AddQaGdbReleaseCases(
+		private static void AddQaExportTablesCases(
+			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ExportTileIds", false);
+			optionalValues.Add("ExportTiles", false);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaExportTables), 0,
+			                                     new object[]
+												 {
+													 new[]
+													 {
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+
+													 },
+													 "string"
+												 }, optionalValues));
+		}
+
+		private static void AddQaGdbReleaseCases(
 			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaGdbRelease), 0,
@@ -746,6 +770,42 @@ private static void AddQaGdbReleaseCases(
 													 "G1.Level <> G2.Level",
 													 "0: point intersections"
 												 }));
+		}
+
+		private static void AddQaLineGroupConstraintsCases(InMemoryTestDataModel model,
+		                                                     ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ValueSeparator", "E100#E200");
+			optionalValues.Add("GroupConditions", "GroupConditions");
+			optionalValues.Add("MinGapToOtherGroupType", 0);
+			optionalValues.Add("MinDangleLengthContinued", 0);
+			optionalValues.Add("MinDangleLengthAtForkContinued", 0);
+			optionalValues.Add("MinDangleLengthAtFork", 0);
+			optionalValues.Add("MinGapToSameGroupTypeCovered", 0);
+			optionalValues.Add("MinGapToSameGroupTypeAtFork", 0);
+			optionalValues.Add("MinGapToSameGroupTypeAtForkCovered", 0);
+			optionalValues.Add("MinGapToOtherGroupTypeAtFork", 0);
+			optionalValues.Add("MinGapToSameGroup", 0);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaLineGroupConstraints), 0,
+			                                     new object[]
+			                                     {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 0,
+													 0,
+													 0,
+													 new[]
+													 {
+														 "String1",
+														 "String2"
+													 }
+												 },
+			                                     optionalValues));
 		}
 
 		private static void AddQaSliverPolygon(InMemoryTestDataModel model,
