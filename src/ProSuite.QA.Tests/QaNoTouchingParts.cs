@@ -51,6 +51,10 @@ namespace ProSuite.QA.Tests
 			_shapeFieldName = featureClass.ShapeFieldName;
 		}
 
+		[InternallyUsedTest]
+		public QaNoTouchingParts([NotNull] QaNoTouchingPartsDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass) { }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			return false;
