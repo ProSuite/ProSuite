@@ -302,7 +302,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// Gets the first selectable stand-alone table without definition query.
 		/// If all selectable stand-alone tables have a definition query, all tables are yielded.
 		/// </summary>
-		public static IEnumerable<IDisplayTable> GetStandaloneTablesForSelection(
+		public static IEnumerable<StandaloneTable> GetStandaloneTablesForSelection(
 			[NotNull] Map map,
 			[NotNull] Predicate<StandaloneTable> tablePredicate)
 		{

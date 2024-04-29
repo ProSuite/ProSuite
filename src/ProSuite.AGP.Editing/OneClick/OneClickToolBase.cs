@@ -66,7 +66,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		/// <summary>
 		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
-		/// allowed. Otherwise the selection phase will continue until all selected features are
+		/// allowed. Otherwise, the selection phase will continue until all selected features are
 		/// usable by the tool.
 		/// </summary>
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
@@ -574,7 +574,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					foreach (OidSelection featureClassSelection in
 					         pickedItem.Layers.Select(layer => new OidSelection(
-						                                  pickedItem.Oids.ToList(), layer,
+														  layer, pickedItem.Oids.ToList(),
 						                                  MapView.Active.Map.SpatialReference)))
 					{
 						SelectionUtils.SelectFeatures(
