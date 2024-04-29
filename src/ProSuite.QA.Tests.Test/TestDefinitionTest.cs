@@ -118,6 +118,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaNoTouchingParts),
 				                             typeof(QaIntersectionMatrixOther),
 											 typeof(QaIntersectionMatrixSelf),
+											 typeof(QaRouteMeasuresContinuous),
 											 typeof(QaRouteMeasuresUnique),
 											 typeof(QaSchemaFieldDomainNameRegex),
 											 typeof(QaSchemaFieldDomains),
@@ -233,6 +234,7 @@ namespace ProSuite.QA.Tests.Test
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGroupConstraints)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNoTouchingParts)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRouteMeasuresContinuous)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRouteMeasuresUnique)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainNameRegex)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomains)));
