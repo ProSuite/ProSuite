@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
@@ -320,6 +321,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 		internal IEnumerable<Tile> EnumTiles(IGeometry geometry)
 		{
+			if (!SpatialReferenceUtils.AreEqual(SpatialReference, geometry.SpatialReference))
+			{
+				throw new InvalidOperationException(
+					"Spatial reference of geometry <> Tile Enum SpatialReference");
+			}
 			IEnvelope geomEnv = geometry.Envelope;
 			geomEnv.QueryWKSCoords(out WKSEnvelope wksEnv);
 			int ixMin = (int) Math.Floor(GetXIndex(wksEnv.XMin));

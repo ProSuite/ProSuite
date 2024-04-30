@@ -32,6 +32,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="ArcGIS.Core">
+      <HintPath>..\..\..\EsriDE.Commons\lib\ESRI\ProSDK\2.9\bin\ArcGIS.Core.dll</HintPath>
+    </Reference>
     <Reference Include="ESRI.ArcGIS.Geodatabase, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geodatabase.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
