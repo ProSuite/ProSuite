@@ -452,13 +452,13 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		/// the spatial reference is not a WKID.
 		/// </summary>
 		/// <param name="response"></param>
-		/// <param name="dataStores"></param>
+		/// <param name="datastores"></param>
 		/// <param name="spatialReferencesByWkId"></param>
 		/// <param name="datasetsById"></param>
 		/// <returns></returns>
 		private static List<ProjectWorkspace> GetProjectWorkspacesQueued(
 			[NotNull] GetProjectWorkspacesResponse response,
-			[NotNull] IReadOnlyDictionary<long, Datastore> dataStores,
+			[NotNull] IReadOnlyDictionary<long, Datastore> datastores,
 			[NotNull] IReadOnlyDictionary<long, SpatialReference> spatialReferencesByWkId,
 			[NotNull] IReadOnlyDictionary<int, IDdxDataset> datasetsById)
 		{
@@ -466,7 +466,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (ProjectWorkspaceMsg projectWorkspaceMsg in response.ProjectWorkspaces)
 			{
-				Datastore datastore = dataStores[projectWorkspaceMsg.WorkspaceHandle];
+				Datastore datastore = datastores[projectWorkspaceMsg.WorkspaceHandle];
 
 				ProjectMsg projectMsg =
 					response.Projects.First(p => p.ProjectId == projectWorkspaceMsg.ProjectId);

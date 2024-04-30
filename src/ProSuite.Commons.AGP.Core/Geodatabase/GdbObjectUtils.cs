@@ -93,7 +93,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			object code = row[subtypeFieldIndex];
 
 			return code == null || code == DBNull.Value
-				       ? (int?) null
+				       ? null
 				       : Convert.ToInt32(code);
 		}
 
