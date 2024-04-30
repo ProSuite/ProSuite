@@ -86,6 +86,38 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			UpdateFeature(reshapedFeature, oldPolyline, newGeometry);
 		}
 
+		public void UpdateNodeFeature(
+			[NotNull] IFeature junctionFeature,
+			[NotNull] IPoint newPoint)
+		{
+			var oldPoint = (IPoint) junctionFeature.Shape;
+
+			StoreSingleFeatureShape(junctionFeature, newPoint);
+
+			// Drag along existing edges:
+			JunctionUpdated(junctionFeature, oldPoint, (IPoint) junctionFeature.Shape);
+
+			// Split existing edges at the new junction:
+			foreach (IFeature edgeFeature in NetworkFeatureFinder.FindEdgeFeaturesAt(newPoint))
+			{
+				IPolyline edge = (IPolyline) edgeFeature.ShapeCopy;
+
+				if (! GeometryUtils.InteriorIntersects(edge, newPoint))
+				{
+					continue;
+				}
+
+				var newEdges =
+					LinearNetworkEditUtils.SplitAtJunctions(
+						edgeFeature, new[] { junctionFeature });
+
+				foreach (IFeature newEdge in newEdges)
+				{
+					NetworkFeatureFinder.TargetFeatureCandidates?.Add(newEdge);
+				}
+			}
+		}
+
 		protected virtual void UpdateFeature(
 			[NotNull] IFeature reshapedFeature,
 			[NotNull] IPolyline originalPolyline,
