@@ -26,7 +26,6 @@ using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
-	// todo daro log more, especially in subclasses
 	public abstract class OneClickToolBase : MapTool
 	{
 		private const Key _keyShowOptionsPane = Key.O;
@@ -72,7 +71,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
 		protected virtual IPickerPrecedence PickerPrecedence =>
-			_pickerPrecedence ?? (_pickerPrecedence = new StandardPickerPrecedence());
+			_pickerPrecedence ??= new StandardPickerPrecedence();
 
 		/// <summary>
 		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
@@ -98,20 +97,27 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			PressedKeys.Clear();
 
-			Task<bool> task = QueuedTask.Run(() =>
+			try
 			{
-				OnToolActivatingCore();
+				using var source = GetProgressorSource();
+				var progressor = source.Progressor;
 
-				if (RequiresSelection)
+				await QueuedTaskUtils.Run(() =>
 				{
-					//TODO progressor
-					ProcessSelection(ActiveMapView);
-				}
+					OnToolActivatingCore();
 
-				return OnToolActivatedCore(hasMapViewChanged);
-			});
+					if (RequiresSelection)
+					{
+						ProcessSelection(ActiveMapView, progressor);
+					}
 
-			await ViewUtils.TryAsync(task, _msg);
+					return OnToolActivatedCore(hasMapViewChanged);
+				}, progressor);
+			}
+			catch (Exception ex)
+			{
+				ErrorHandler.HandleError(ex, _msg);
+			}
 		}
 
 		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
@@ -244,27 +250,24 @@ namespace ProSuite.AGP.Editing.OneClick
 					}
 				}, _msg);
 
-				Task<bool> task;
+				using var source = GetProgressorSource();
+				var progressor = source.Progressor;
 
 				if (RequiresSelection && await IsInSelectionPhaseAsync())
 				{
-					task = OnSelectionSketchCompleteAsync(sketchGeometry,
-					                                      GetCancelableProgressor());
-					return await ViewUtils.TryAsync(task, _msg);
+					return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
 				}
 
-				task = OnSketchCompleteCoreAsync(sketchGeometry, GetCancelableProgressor());
-				return await ViewUtils.TryAsync(task, _msg);
+				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
 			}
 			catch (Exception e)
 			{
-				// NOTE: Throwing here results in a process crash (Exception while waiting for a Task to complete)
-				// Consider Task.FromException?
+				// Consider Task.FromException? --> no, as it throws once awaited!
 				ErrorHandler.HandleError(
 					$"{Caption}: Error completing sketch ({e.Message})", e, _msg);
-			}
 
-			return await Task.FromResult(true);
+				return await Task.FromResult(true);
+			}
 		}
 
 		protected virtual void ShiftPressedCore()
@@ -313,8 +316,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SketchOutputMode = sketchOutputMode;
 
-			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
-			// otherwise it has no effect!
+			// Note: set CompleteSketchOnMouseUp before SketchType, or it has no effect
 			CompleteSketchOnMouseUp = completeSketchOnMouseUp;
 
 			SketchType = sketchType;
@@ -329,13 +331,10 @@ namespace ProSuite.AGP.Editing.OneClick
 		private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
 		{
 			// TODO: Use async overload added at 3.0
-			// NOTE: If the exception of this event is not caught here, the application crashes!
-			// TODO daro: isn't it the responsibility of the calling code to wrap a QueuedTask around it?
+			// Note: app crashes on uncaught exceptions here
 			Task<bool> task = QueuedTask.Run(() => OnMapSelectionChangedCore(args));
 
 			await ViewUtils.TryAsync(task, _msg, suppressErrorMessageBox: true);
-
-			//await ViewUtils.TryAsync(OnMapSelectionChangedCoreAsync(args), _msg, suppressErrorMessageBox: true);
 		}
 
 		private async Task OnEditCompletedAsync(EditCompletedEventArgs args)
@@ -352,7 +351,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// thread throwing:
 		/// A Task's exception(s) were not observed either by Waiting on the Task or accessing its
 		/// Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.
-		/// Therefore any exception must be caught inside the Task execution!
+		/// Therefore, any exception must be caught inside the Task execution!
 		/// </summary>
 		/// <param name="args"></param>
 		/// <returns></returns>
@@ -375,10 +374,17 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		[CanBeNull]
+		[CanBeNull, Obsolete("Use GetProgressorSource()")]
 		protected virtual CancelableProgressor GetCancelableProgressor()
 		{
 			return new CancelableProgressorSource().Progressor;
+		}
+
+		protected virtual CancelableProgressorSource GetProgressorSource()
+		{
+			var message = Caption ?? string.Empty;
+			const bool delayedShow = true;
+			return new CancelableProgressorSource(message, "Cancelling", delayedShow);
 		}
 
 		protected virtual Task<bool> OnSketchCompleteCoreAsync(
@@ -409,6 +415,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			Geometry selectionGeometry = null;
 			var pickerLocation = new Point(0, 0);
+
+			// TODO Can't we pack all this into *one* QTR?
 
 			bool singlePick = false;
 			List<FeatureSelectionBase> candidatesOfManyLayers =
@@ -450,12 +458,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                      PickerPrecedence,
 				                                      selectionMethod);
 
-			await QueuedTask.Run(() => ProcessSelection(MapView.Active, progressor), progressor);
+			await QueuedTaskUtils.Run(() => ProcessSelection(ActiveMapView, progressor), progressor);
 
 			return result;
 		}
 
-		// todo daro when return false?
 		private static async Task<bool> SingleSelectAsync(
 			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
@@ -694,15 +701,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			return CanSelectGeometryType(shapeType);
 		}
 
+		/// <remarks>Will be called on MCT</remarks>>
 		protected virtual void AfterSelection(
 			[NotNull] Map map, [NotNull] IList<Feature> selectedFeatures,
 			[CanBeNull] CancelableProgressor progressor) { }
 
+		/// <remarks>Must be called on MCT</remarks>
 		protected void ProcessSelection([NotNull] MapView mapView, // TODO or just a Map?
 		                                [CanBeNull] CancelableProgressor progressor = null)
 		{
-			Dictionary<MapMember, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection(mapView.Map);
+			var selectionByLayer = SelectionUtils.GetSelection(mapView.Map);
 
 			var notifications = new NotificationCollection();
 			List<Feature> applicableSelection =
