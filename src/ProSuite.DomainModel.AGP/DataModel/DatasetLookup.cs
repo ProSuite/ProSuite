@@ -8,13 +8,6 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AGP.DataModel
 {
-	public interface IDatasetLookup
-	{
-		IDdxDataset GetDataset([NotNull] Table table);
-
-		T GetDataset<T>(Table table) where T : IDdxDataset;
-	}
-
 	public class DatasetLookup : IDatasetLookup
 	{
 		private readonly IList<IDdxDataset> _objectDatasets;
@@ -51,10 +44,15 @@ namespace ProSuite.DomainModel.AGP.DataModel
 				d => d.Name.Equals(tableName, StringComparison.InvariantCultureIgnoreCase) ||
 				     d.Name.Equals(unqualifiedName, StringComparison.InvariantCultureIgnoreCase));
 
-			if (result != null)
+			// Todo daro: Hack GoTop-138 for tables from FGDB.
+			if (result == null)
 			{
-				_datasetByTableHandle[tableHandle] = result;
+				result = _objectDatasets.OfType<T>().FirstOrDefault(
+					d => ModelElementNameUtils.GetUnqualifiedName(d.Name).Equals(tableName, StringComparison.InvariantCultureIgnoreCase) ||
+					     ModelElementNameUtils.GetUnqualifiedName(d.Name).Equals(unqualifiedName, StringComparison.InvariantCultureIgnoreCase));
 			}
+
+			_datasetByTableHandle[tableHandle] = result;
 
 			return result;
 		}
@@ -62,31 +60,7 @@ namespace ProSuite.DomainModel.AGP.DataModel
 		[CanBeNull]
 		public IDdxDataset GetDataset(Table table)
 		{
-			// TODO: Sophisticated logic with unqualified names, etc.
-
-			var tableHandle = (long) table.Handle;
-
-			if (_datasetByTableHandle.TryGetValue(tableHandle, out var dataset))
-			{
-				return dataset;
-			}
-
-			string tableName = table.GetName();
-
-			// TODO: If model has unqualified name, etc. see GlobalDatasetLookup
-
-			string unqualifiedName = ModelElementNameUtils.GetUnqualifiedName(tableName);
-
-			IDdxDataset result = _objectDatasets.FirstOrDefault(
-				d => d.Name.Equals(tableName, StringComparison.InvariantCultureIgnoreCase) ||
-				     d.Name.Equals(unqualifiedName, StringComparison.InvariantCultureIgnoreCase));
-
-			if (result != null)
-			{
-				_datasetByTableHandle[tableHandle] = result;
-			}
-
-			return result;
+			return GetDataset<IDdxDataset>(table);
 		}
 	}
 }
