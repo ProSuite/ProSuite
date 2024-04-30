@@ -35,12 +35,26 @@ namespace ProSuite.AGP.Editing
 				"Geometry Microservice not found or not started. Please make sure the latest ProSuite Extension is installed.";
 		}
 
-		public static bool IsSingleClickSketch([NotNull] Geometry sketchGeometry)
+		/// <summary>
+		/// Determines whether the sketch geometry is a single click.
+		/// </summary>
+		/// <param name="sketchGeometry">The sketch geometry</param>
+		/// <param name="selectionTolerancePixels">The selection tolerance. If the provided sketch
+		/// geometry (envelope) is smaller than this value, it is assumed to be a single click.
+		/// NOTE: Newer laptops have probably such a high pixel density, that the selection settings
+		/// should not be a fixed pixel count but specified in mm and then calculated.</param>
+		/// <returns></returns>
+		public static bool IsSingleClickSketch([NotNull] Geometry sketchGeometry,
+		                                       int selectionTolerancePixels)
 		{
 			_msg.VerboseDebug(() => $"Sketch width: {sketchGeometry.Extent.Width}, " +
 			                        $"sketch height: {sketchGeometry.Extent.Height}");
 
-			return ! (sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0);
+			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
+				selectionTolerancePixels);
+
+			return sketchGeometry.Extent.Width <= selectionToleranceMapUnits &&
+			       sketchGeometry.Extent.Height <= selectionToleranceMapUnits;
 		}
 
 		public static Geometry GetSinglePickSelectionArea([NotNull] Geometry sketchGeometry,
@@ -55,7 +69,7 @@ namespace ProSuite.AGP.Editing
 		                                              int selectionTolerancePixels,
 		                                              out bool singleClick)
 		{
-			singleClick = IsSingleClickSketch(sketch);
+			singleClick = IsSingleClickSketch(sketch, selectionTolerancePixels);
 
 			if (singleClick)
 			{
