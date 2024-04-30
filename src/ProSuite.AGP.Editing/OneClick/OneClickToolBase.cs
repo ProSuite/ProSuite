@@ -440,7 +440,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					return false;
 				}
 
-				await QueuedTask.Run(SelectionUtils.ClearSelection);
+				await QueuedTask.Run(ClearSelection);
 
 				return false;
 			}
@@ -703,7 +703,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		/// <remarks>Will be called on MCT</remarks>>
 		protected virtual void AfterSelection(
-			[NotNull] Map map, [NotNull] IList<Feature> selectedFeatures,
+			[NotNull] IList<Feature> selectedFeatures,
 			[CanBeNull] CancelableProgressor progressor) { }
 
 		/// <remarks>Must be called on MCT</remarks>
@@ -725,7 +725,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				LogUsingCurrentSelection();
 
-				AfterSelection(mapView.Map, applicableSelection, progressor);
+				AfterSelection(applicableSelection, progressor);
 			}
 			else
 			{
@@ -894,6 +894,14 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer basicFeatureLayer)
 		{
 			return true;
+		}
+
+		/// <summary>Clear the selection on the active map</summary>
+		/// <remarks>Must call on MCT</remarks>
+		protected void ClearSelection()
+		{
+			var map = ActiveMapView?.Map;
+			map?.ClearSelection();
 		}
 	}
 }
