@@ -88,7 +88,18 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<Table> GetTables(IEnumerable<MapMember> mapMembers)
 		{
-			return mapMembers.Select(GetTable);
+			foreach (MapMember mapMember in mapMembers)
+			{
+				if (mapMember is BasicFeatureLayer basicFeatureLayer)
+				{
+					yield return Assert.NotNull(basicFeatureLayer.GetTable());
+				}
+
+				if (mapMember is StandaloneTable standaloneTable)
+				{
+					yield return Assert.NotNull(standaloneTable.GetTable());
+				}
+			}
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
