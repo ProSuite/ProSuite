@@ -698,7 +698,23 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			ObjectAttributeType attributeType = null;
 
-			if (attributeMsg.AttributeRole > 0)
+			if (string.Equals("SHAPE", attributeMsg.Name, StringComparison.OrdinalIgnoreCase))
+			{
+				attributeType =
+					new ObjectAttributeType(new AttributeRole(30));
+			}
+			else if (string.Equals("SHAPE.LEN", attributeMsg.Name, StringComparison.OrdinalIgnoreCase))
+			{
+				attributeType =
+					new ObjectAttributeType(new AttributeRole(31));
+			}
+			// TODO daro correct name?
+			else if (string.Equals("SHAPE.AREA", attributeMsg.Name, StringComparison.OrdinalIgnoreCase))
+			{
+				attributeType =
+					new ObjectAttributeType(new AttributeRole(32));
+			}
+			else if (attributeMsg.AttributeRole > 0)
 			{
 				// Probably not worth caching, treat it as value type:
 				attributeType =
