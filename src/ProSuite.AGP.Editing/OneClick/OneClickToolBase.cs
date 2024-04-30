@@ -108,7 +108,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					if (RequiresSelection)
 					{
-						ProcessSelection(ActiveMapView, progressor);
+						ProcessSelection(progressor);
 					}
 
 					return OnToolActivatedCore(hasMapViewChanged);
@@ -458,7 +458,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                      PickerPrecedence,
 				                                      selectionMethod);
 
-			await QueuedTaskUtils.Run(() => ProcessSelection(ActiveMapView, progressor), progressor);
+			await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
 
 			return result;
 		}
@@ -707,10 +707,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			[CanBeNull] CancelableProgressor progressor) { }
 
 		/// <remarks>Must be called on MCT</remarks>
-		protected void ProcessSelection([NotNull] MapView mapView, // TODO or just a Map?
-		                                [CanBeNull] CancelableProgressor progressor = null)
+		protected void ProcessSelection([CanBeNull] CancelableProgressor progressor = null)
 		{
-			var selectionByLayer = SelectionUtils.GetSelection(mapView.Map);
+			var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
 
 			var notifications = new NotificationCollection();
 			List<Feature> applicableSelection =
