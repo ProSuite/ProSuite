@@ -20,7 +20,8 @@ namespace ProSuite.AGP.WorkList.Selection
 			return MapView.Active.Map as T;
 		}
 
-		protected override IRepository CreateStateRepositoryCore(string path, string workListName)
+		protected override IWorkItemStateRepository CreateStateRepositoryCore(
+			string path, string workListName)
 		{
 			Type type = GetWorkListTypeCore<SelectionWorkList>();
 
@@ -28,7 +29,7 @@ namespace ProSuite.AGP.WorkList.Selection
 		}
 
 		protected override IWorkItemRepository CreateItemRepositoryCore(
-			IEnumerable<Table> tables, IRepository stateRepository)
+			IList<Table> tables, IWorkItemStateRepository stateRepository)
 		{
 			// todo daro inline
 			Dictionary<MapMember, List<long>> oidsByLayer =

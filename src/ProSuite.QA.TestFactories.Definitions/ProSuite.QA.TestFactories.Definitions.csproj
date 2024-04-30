@@ -1,6 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-
   <PropertyGroup>
 
     <SignAssembly>true</SignAssembly>
@@ -21,18 +19,15 @@
 
   </PropertyGroup>
 
-
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
-
 
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
     <ProjectReference Include="..\ProSuite.QA.Tests.Definitions\ProSuite.QA.Tests.Definitions.csproj" />
   </ItemGroup>
-
 
   <ItemGroup>
     <Compile Update="DocStrings.Designer.cs">
@@ -41,7 +36,6 @@
       <AutoGen>True</AutoGen>
     </Compile>
   </ItemGroup>
-
 
   <ItemGroup>
     <EmbeddedResource Update="DocStrings.resx">

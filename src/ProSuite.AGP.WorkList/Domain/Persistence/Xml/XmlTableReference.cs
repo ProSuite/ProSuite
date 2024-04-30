@@ -18,5 +18,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 		[XmlAttribute("name")]
 		public string Name { get; set; }
+
+		[XmlAttribute("definitionQuery")]
+		public string DefinitionQuery { get; set; }
 	}
 }

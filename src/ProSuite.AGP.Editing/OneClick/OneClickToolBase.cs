@@ -104,6 +104,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (RequiresSelection)
 				{
+					//TODO progressor
 					ProcessSelection(ActiveMapView);
 				}
 
@@ -449,7 +450,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                      PickerPrecedence,
 				                                      selectionMethod);
 
-			await QueuedTask.Run(() => ProcessSelection(MapView.Active, progressor));
+			await QueuedTask.Run(() => ProcessSelection(MapView.Active, progressor), progressor);
 
 			return result;
 		}
@@ -695,7 +696,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void AfterSelection(
 			[NotNull] Map map, [NotNull] IList<Feature> selectedFeatures,
-		    [CanBeNull] CancelableProgressor progressor) { }
+			[CanBeNull] CancelableProgressor progressor) { }
 
 		protected void ProcessSelection([NotNull] MapView mapView, // TODO or just a Map?
 		                                [CanBeNull] CancelableProgressor progressor = null)
@@ -705,7 +706,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			var notifications = new NotificationCollection();
 			List<Feature> applicableSelection =
-				GetApplicableSelectedFeatures(selectionByLayer, notifications).ToList();
+				GetApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection, notifications)
+					.ToList();
 
 			int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
 
@@ -728,6 +730,13 @@ namespace ProSuite.AGP.Editing.OneClick
 				StartSelectionPhase();
 			}
 		}
+
+		/// <summary>
+		/// Whether the selection shall be retrieved without the join even if the layer is joined.
+		/// This is important for updating features. Features based on a joined table throw an
+		/// exception when setting the shape (GOTOP-190)!
+		/// </summary>
+		protected bool UnJoinedSelection { get; set; } = true;
 
 		protected void SetCursor([CanBeNull] Cursor cursor)
 		{
@@ -803,7 +812,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			return selectedFeatures.Any(CanSelectFeatureGeometryType);
 		}
 
-		protected bool CanUseSelection([NotNull] MapView activeMapView) // TODO Map instead of MapView
+		// TODO Map instead of MapView
+		protected bool CanUseSelection([NotNull] MapView activeMapView)
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
 				SelectionUtils.GetSelection(activeMapView.Map);
@@ -820,6 +830,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected IEnumerable<Feature> GetApplicableSelectedFeatures(
 			[NotNull] Dictionary<MapMember, List<long>> selectionByLayer,
+			bool unJoinedFeaturesForEditing = false,
 			[CanBeNull] NotificationCollection notifications = null)
 		{
 			var filteredCount = 0;
@@ -836,7 +847,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 
 				foreach (Feature feature in MapUtils.GetFeatures(
-					         oidsByLayer.Key, oidsByLayer.Value, false, mapSpatialReference))
+					         oidsByLayer.Key, oidsByLayer.Value, unJoinedFeaturesForEditing, false,
+					         mapSpatialReference))
 				{
 					yield return feature;
 					selectionCount++;
@@ -863,7 +875,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			Dictionary<MapMember, List<long>> selectionByLayer =
 				SelectionUtils.GetSelection(activeView.Map);
 
-			return GetApplicableSelectedFeatures(selectionByLayer);
+			return GetApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection);
 		}
 
 		protected virtual bool CanSelectGeometryType(GeometryType geometryType)

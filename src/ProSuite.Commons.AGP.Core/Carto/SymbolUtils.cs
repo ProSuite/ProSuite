@@ -179,6 +179,134 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		#endregion
 
+		#region Modification
+
+		/// <summary>
+		/// Set the alpha value of all colors in a symbol.
+		/// </summary>
+		/// <remarks>Modifies the given symbol!</remarks>
+		/// <param name="symbol">The symbol reference to modify</param>
+		/// <param name="alpha">New alpha value, between 0 (transparent) and 100 (opaque)</param>
+		/// <returns>The given <paramref name="symbol"/></returns>
+		public static CIMSymbolReference SetAlpha(this CIMSymbolReference symbol, float alpha)
+		{
+			symbol?.Symbol.SetAlpha(alpha);
+			return symbol;
+		}
+
+		/// <summary>
+		/// Set the alpha value of all colors in a symbol.
+		/// </summary>
+		/// <remarks>Modifies the given symbol!</remarks>
+		/// <param name="symbol">The symbol reference to modify</param>
+		/// <param name="alpha">New alpha value, between 0 (transparent) and 100 (opaque)</param>
+		/// <returns>The given <paramref name="symbol"/></returns>
+		public static CIMSymbol SetAlpha(this CIMSymbol symbol, float alpha)
+		{
+			if (symbol is CIMMultiLayerSymbol multiLayerSymbol &&
+			    multiLayerSymbol.SymbolLayers != null)
+			{
+				foreach (var symbolLayer in multiLayerSymbol.SymbolLayers)
+				{
+					if (symbolLayer is CIMSolidFill soldFill)
+					{
+						soldFill.Color.SetAlpha(alpha);
+					}
+					else if (symbolLayer is CIMSolidStroke solidStroke)
+					{
+						solidStroke.Color.SetAlpha(alpha);
+					}
+					else if (symbolLayer is CIMVectorMarker vectorMarker &&
+					         vectorMarker.MarkerGraphics != null)
+					{
+						foreach (var markerGraphic in vectorMarker.MarkerGraphics)
+						{
+							markerGraphic.Symbol.SetAlpha(alpha);
+						}
+					}
+					else if (symbolLayer is CIMCharacterMarker characterMarker)
+					{
+						characterMarker.Symbol.SetAlpha(alpha);
+					}
+				}
+			}
+			else if (symbol is CIMTextSymbol textSymbol)
+			{
+				textSymbol.Symbol.SetAlpha(alpha);
+			}
+			// else: should not occur (all symbols are either MultiLayer or Text)
+
+			return symbol;
+		}
+
+		/// <summary>
+		/// See <see cref="Blend(CIMSymbol,CIMColor,float)"/>. Modifies
+		/// the given symbol reference and returns it for convenience.
+		/// </summary>
+		public static CIMSymbolReference Blend(this CIMSymbolReference symref,
+		                                       CIMColor color, float factor = 0.5f)
+		{
+			symref?.Symbol.Blend(color, factor);
+			return symref;
+		}
+
+		/// <summary>
+		/// Blend the colors of the given symbol with the given color.
+		/// A <paramref name="factor"/> value of 0 keeps the original
+		/// colors, a value of 1 uses the given color, values in-between
+		/// blend, and other values have an undefined result.
+		/// Modifies this symbol (!) and returns it for convenience.
+		/// </summary>
+		public static CIMSymbol Blend(this CIMSymbol symbol, CIMColor color, float factor = 0.5f)
+		{
+			if (color is null) return symbol;
+
+			if (symbol is CIMMultiLayerSymbol multiLayerSymbol &&
+			    multiLayerSymbol.SymbolLayers != null)
+			{
+				foreach (var symbolLayer in multiLayerSymbol.SymbolLayers)
+				{
+					if (symbolLayer is CIMSolidFill solidFill)
+					{
+						solidFill.Color = Blend(solidFill.Color, color, factor);
+					}
+					else if (symbolLayer is CIMSolidStroke solidStroke)
+					{
+						solidStroke.Color = Blend(solidStroke.Color, color, factor);
+					}
+					else if (symbolLayer is CIMVectorMarker vectorMarker &&
+					         vectorMarker.MarkerGraphics != null)
+					{
+						foreach (var markerGraphic in vectorMarker.MarkerGraphics)
+						{
+							markerGraphic.Symbol.Blend(color, factor);
+						}
+					}
+					else if (symbolLayer is CIMCharacterMarker characterMarker)
+					{
+						characterMarker.Symbol.Blend(color, factor);
+					}
+					//else: other symbol layer types are left unmodified
+				}
+			}
+			else if (symbol is CIMTextSymbol textSymbol)
+			{
+				textSymbol.Symbol.Blend(color, factor);
+			}
+			// else: should not occur (all symbols are either MultiLayer or Text)
+
+			return symbol;
+		}
+
+		private static CIMColor Blend(CIMColor color, CIMColor other, float factor)
+		{
+			if (color is null) return null;
+			if (other is null) return color;
+			return ColorUtils.Blend(color, other, factor);
+		}
+
+		#endregion
+
 		#region Symbol Layers
 
 		public static CIMStroke CreateSolidStroke(CIMColor color, double width = -1)
@@ -219,7 +347,25 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			var geometry = CreateMarkerGeometry(style);
 			var symbol = CreatePolygonSymbol(color);
 
-			var graphic = new CIMMarkerGraphic {Geometry = geometry, Symbol = symbol};
+			CIMVectorMarker marker = CreateMarker(geometry, symbol, size);
+
+			return marker;
+		}
+
+		public static CIMMarker CreateMarker(
+			MarkerStyle style, CIMPolygonSymbol symbol, double size)
+		{
+			var geometry = CreateMarkerGeometry(style);
+
+			symbol ??= CreatePolygonSymbol(ColorUtils.BlackRGB);
+
+			return CreateMarker(geometry, symbol, size);
+		}
+
+		public static CIMVectorMarker
+			CreateMarker(Geometry geometry, CIMPolygonSymbol symbol, double size)
+		{
+			var graphic = new CIMMarkerGraphic { Geometry = geometry, Symbol = symbol };
 
 			var marker = new CIMVectorMarker();
 			marker.ColorLocked = false;
@@ -230,11 +376,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			marker.DominantSizeAxis3D = DominantSizeAxis.Y;
 			marker.ScaleSymbolsProportionally = true;
 			marker.RespectFrame = true;
-			marker.MarkerGraphics = new[] {graphic};
-			marker.Frame = style == MarkerStyle.Circle
-				               ? GeometryFactory.CreateEnvelope(-5, -5, 5, 5)
-				               : graphic.Geometry.Extent;
-
+			marker.MarkerGraphics = new[] { graphic };
+			marker.Frame = graphic.Geometry.Extent;
 			return marker;
 		}
 
@@ -741,7 +884,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		#region Retrieval
 
-		public static CIMSymbol GetSymbol(CIMRenderer renderer, INamedValues feature = null, double scaleDenom = 0)
+		public static CIMSymbolReference GetSymbol(CIMRenderer renderer, INamedValues feature = null, double scaleDenom = 0)
 		{
 			if (renderer is null)
 				throw new ArgumentNullException(nameof(renderer));
@@ -760,7 +903,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				$"{renderer.GetType().Name} is not supported, sorry");
 		}
 
-		private static CIMSymbol GetSymbol(CIMSimpleRenderer renderer, INamedValues feature, double scaleDenom)
+		private static CIMSymbolReference GetSymbol(CIMSimpleRenderer renderer, INamedValues feature, double scaleDenom)
 		{
 			// CIMSimpleRenderer:
 			// - .Symbol: CIMSymbolReference
@@ -769,10 +912,10 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			var symref = GetSymbolReference(renderer.Symbol, renderer.AlternateSymbols, scaleDenom);
 
-			return MaterializeSymbol(symref, feature, scaleDenom, renderer.VisualVariables);
+			return ApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
 		}
 
-		private static CIMSymbol GetSymbol(CIMUniqueValueRenderer renderer, INamedValues feature, double scaleDenom)
+		private static CIMSymbolReference GetSymbol(CIMUniqueValueRenderer renderer, INamedValues feature, double scaleDenom)
 		{
 			// CIMUniqueValueRenderer:
 			// - .Fields: string[]
@@ -797,7 +940,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			var symref = GetSymbolReference(primary, alternates, scaleDenom);
 
-			return MaterializeSymbol(symref, feature, scaleDenom, renderer.VisualVariables);
+			return ApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
 		}
 
 		private static CIMUniqueValueClass FindClass(CIMUniqueValueRenderer renderer, INamedValues feature)
@@ -900,6 +1043,28 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return primary; // default if no alternate symbol matches
 		}
 
+		public static CIMSymbolReference ApplyOverrides(
+			CIMSymbolReference symref, INamedValues feature,
+			double scaleDenom = 0, CIMVisualVariable[] visualVariables = null)
+		{
+			if (symref is null) return null;
+
+			var symbol = MaterializeSymbol(symref, feature, scaleDenom, visualVariables);
+
+			return new CIMSymbolReference
+			       {
+				       SymbolName = symref.SymbolName,
+				       MinScale = symref.MinScale,
+				       MaxScale = symref.MaxScale,
+				       MinDistance = symref.MinDistance,
+				       MaxDistance = symref.MaxDistance,
+				       Symbol = symbol, // the now materialized symbol
+				       PrimitiveOverrides = null, // they have been applied
+				       ScaleDependentSizeVariation = null, // they have been applied
+				       StylePath = null // no longer from style
+			       };
+		}
+
 		private static CIMSymbol MaterializeSymbol(
 			CIMSymbolReference symref, INamedValues feature, double scaleDenom,
 			CIMVisualVariable[] visualVariables = null)
@@ -911,6 +1076,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			// - ScaleDependentSizeVariation: [{Scale, Size}]
 
 			// Make a clone, because we may modify it!
+
 			var symbol = (CIMSymbol) CIMObject.Clone(symref.Symbol);
 
 			if (feature != null && symref.PrimitiveOverrides is { Length: > 0 })
@@ -970,7 +1136,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			}
 
 			object value = Evaluate(mapping.Expression, mapping.ValueExpressionInfo, feature);
-			if (value != null)
+			if (value != null && value != DBNull.Value)
 			{
 				property.SetValue(primitive, value);
 			}
@@ -1000,7 +1166,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			if (arcade is { Expression.Length: > 0 })
 			{
 				// TODO handle the simple case: $feature.FIELDNAME
-
+				// TODO since Pro SDK 3.x there's an Arcade evaluator: use it (if dependencies are ok)
 				throw new NotImplementedException("Arcade expression evaluation is not yet implemented");
 			}
 

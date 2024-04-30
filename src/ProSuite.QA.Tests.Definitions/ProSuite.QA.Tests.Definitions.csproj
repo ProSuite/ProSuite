@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
 
     <SignAssembly>true</SignAssembly>
@@ -25,7 +24,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Commons.xml</DocumentationFile>
+    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.QA.Tests.Definitions.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

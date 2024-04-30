@@ -156,7 +156,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					_nonDefaultSideMode = ! _nonDefaultSideMode;
 
 					_msg.Info(_nonDefaultSideMode
-						          ? "Enabled non-default reshape mode. The next reshape to the inside of a polygon will remove the larger area. The next Y-Reshape will use the farther end-point."
+						          ? "Enabled non-default reshape mode. The next reshape to the inside of a polygon will remove the larger area. The next Y-Reshape will use the furthest end-point."
 						          : "Disabled non-default reshape mode");
 
 					if (_updateFeedbackTask != null)
@@ -412,7 +412,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
+					selection, true, layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
 					inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&

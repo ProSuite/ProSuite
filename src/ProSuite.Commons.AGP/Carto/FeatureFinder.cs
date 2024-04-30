@@ -214,6 +214,8 @@ namespace ProSuite.Commons.AGP.Carto
 		/// type SameClass these features are used to determine whether a potential target feature comes
 		/// from the same class as one of them.
 		/// </param>
+		/// <param name="withoutJoins">Whether the result features shall be based on the original,
+		/// potentially joined table, or not.</param>
 		/// <param name="layerPredicate">An additional layer predicate to be tested.</param>
 		/// <param name="extent">The area of interest to which the search can be limited</param>
 		/// <param name="cancelableProgressor">The progress/cancel tracker.</param>
@@ -225,6 +227,7 @@ namespace ProSuite.Commons.AGP.Carto
 		[NotNull]
 		public IEnumerable<FeatureSelectionBase> FindIntersectingFeaturesByFeatureClass(
 			[NotNull] Dictionary<MapMember, List<long>> intersectingSelectedFeatures,
+			bool withoutJoins = false,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Envelope extent = null,
 			[CanBeNull] CancelableProgressor cancelableProgressor = null)
@@ -235,8 +238,9 @@ namespace ProSuite.Commons.AGP.Carto
 				"Unsupported target selection type");
 
 			SpatialReference spatialReference = _mapView.Map.SpatialReference;
-			SelectedFeatures = MapUtils.GetFeatures(intersectingSelectedFeatures, spatialReference)
-			                           .ToList();
+			SelectedFeatures =
+				MapUtils.GetFeatures(intersectingSelectedFeatures, withoutJoins, spatialReference)
+				        .ToList();
 
 			Geometry searchGeometry = GetSearchGeometry(SelectedFeatures, extent);
 

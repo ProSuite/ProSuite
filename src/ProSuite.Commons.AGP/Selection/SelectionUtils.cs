@@ -177,9 +177,11 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public static IEnumerable<Feature> GetSelectedFeatures([NotNull] MapView activeView)
 		{
+			const bool withoutJoins = false;
 			SpatialReference sref = activeView.Map.SpatialReference;
 
-			foreach (Feature feature in MapUtils.GetFeatures(GetSelection(activeView.Map), sref))
+			foreach (Feature feature in MapUtils.GetFeatures(
+				         GetSelection(activeView.Map), withoutJoins, sref))
 			{
 				yield return feature;
 			}
@@ -210,10 +212,23 @@ namespace ProSuite.Commons.AGP.Selection
 			return GetSelection(selectionSet);
 		}
 
+		public static Dictionary<T, List<long>> GetSelection<T>(Map map) where T : MapMember
+		{
+			SelectionSet selectionSet = map.GetSelection();
+
+			return GetSelection<T>(selectionSet);
+		}
+
 		public static Dictionary<MapMember, List<long>> GetSelection(
 			SelectionSet selectionSet)
 		{
 			return selectionSet.ToDictionary();
+		}
+
+		public static Dictionary<T, List<long>> GetSelection<T>(
+			SelectionSet selectionSet) where T : MapMember
+		{
+			return selectionSet.ToDictionary<T>();
 		}
 
 		public static Dictionary<MapMember, List<long>> GetSelection(

@@ -5,13 +5,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList;
+using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.Core.QA;
 
-namespace ProSuite.AGP.QA.Worklist;
+namespace ProSuite.AGP.QA.WorkList;
 
 public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 {
@@ -106,6 +108,12 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 	public async Task<IList<Table>> PrepareTableSchema(IList<Table> dbTables)
 	{
 		return await Task.WhenAll(dbTables.Select(EnsureStatusFieldCoreAsync));
+	}
+
+	public IAttributeReader CreateAttributeReader(TableDefinition definition,
+	                                              params Attributes[] attributes)
+	{
+		return new AttributeReader(definition, attributes);
 	}
 
 	#endregion

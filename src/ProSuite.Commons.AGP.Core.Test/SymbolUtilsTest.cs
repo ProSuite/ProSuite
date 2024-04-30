@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading;
 using ArcGIS.Core.CIM;
 using NUnit.Framework;
@@ -120,6 +121,37 @@ namespace ProSuite.Commons.AGP.Core.Test
 
 			var json = reference.ToJson();
 			Assert.True(json.Length > 0);
+		}
+
+		[Test]
+		public void CanBlend()
+		{
+			CIMSymbol nullSymbol = null;
+			Assert.IsNull(nullSymbol.Blend(null, 0.2f)); // no-op on null symbol
+			Assert.IsNull(nullSymbol.Blend(ColorUtils.WhiteRGB, 0.2f));
+
+			var pointSymbol = SymbolUtils.CreatePointSymbol(ColorUtils.BlueRGB);
+			Assert.AreSame(pointSymbol, pointSymbol.Blend(ColorUtils.WhiteRGB, 0.2f));
+			var graphicSymbol = pointSymbol.SymbolLayers.OfType<CIMVectorMarker>().Single()
+			                            .MarkerGraphics.Single().Symbol;
+			var pointColor = ((CIMMultiLayerSymbol) graphicSymbol).SymbolLayers
+				.OfType<CIMSolidFill>().Single().Color;
+			Assert.AreEqual(51.0, pointColor.Values[0]); // red
+			Assert.AreEqual(51.0, pointColor.Values[1]); // green
+			Assert.AreEqual(255.0, pointColor.Values[2]); // blue
+		}
+
+		[Test]
+		public void CanSetAlpha()
+		{
+			CIMSymbol nullSymbol = null;
+			Assert.IsNull(nullSymbol.SetAlpha(50f));
+
+			CIMSymbol pointSymbol = SymbolUtils.CreatePointSymbol(ColorUtils.BlueRGB);
+			Assert.AreSame(pointSymbol, pointSymbol.SetAlpha(50f));
+
+			var symref = pointSymbol.CreateReference();
+			Assert.AreSame(symref, symref.SetAlpha(67f));
 		}
 	}
 }

@@ -6,9 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.QA.Worklist;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -47,6 +47,8 @@ namespace ProSuite.AGP.QA.WorkList
 		}
 
 		public override string FileSuffix => ".iwl";
+
+		public Geometry AreaOfInterest { get; set; }
 
 		protected override async Task<IList<Table>> PrepareReferencedTables()
 		{
@@ -127,9 +129,10 @@ namespace ProSuite.AGP.QA.WorkList
 
 					featureLayer.SetExpanded(false);
 					featureLayer.SetVisibility(false);
+					featureLayer.SetDefinitionQuery(GetDefaultDefinitionQuery(table));
 
 					// TODO: Support lyrx files as symbol layers.
-					// So far, just make the symbols red:	
+					// So far, just make the symbols red:
 					CIMSimpleRenderer renderer = featureLayer.GetRenderer() as CIMSimpleRenderer;
 
 					if (renderer != null)
@@ -145,6 +148,11 @@ namespace ProSuite.AGP.QA.WorkList
 				StandaloneTableFactory.Instance.CreateStandaloneTable(
 					new StandaloneTableCreationParams(table), groupLayer);
 			}
+		}
+
+		protected virtual string GetDefaultDefinitionQuery(Table table)
+		{
+			return null;
 		}
 
 		private void RemoveFromMapCore(IEnumerable<Table> tables)
@@ -220,10 +228,11 @@ namespace ProSuite.AGP.QA.WorkList
 		                                                string uniqueName,
 		                                                string displayName)
 		{
-			return new IssueWorkList(repository, uniqueName, displayName);
+			return new IssueWorkList(repository, uniqueName, AreaOfInterest, displayName);
 		}
 
-		protected override IRepository CreateStateRepositoryCore(string path, string workListName)
+		protected override IWorkItemStateRepository CreateStateRepositoryCore(
+			string path, string workListName)
 		{
 			Type type = GetWorkListTypeCore<IssueWorkList>();
 
@@ -231,11 +240,21 @@ namespace ProSuite.AGP.QA.WorkList
 		}
 
 		protected override IWorkItemRepository CreateItemRepositoryCore(
-			IEnumerable<Table> tables, IRepository stateRepository)
+			IList<Table> tables, IWorkItemStateRepository stateRepository)
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			var result = new IssueItemRepository(tables.Distinct(), stateRepository);
+			var sourceClasses = new List<Tuple<Table, string>>();
+
+			foreach (Table table in tables)
+			{
+				string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
+
+				sourceClasses.Add(Tuple.Create(table, defaultDefinitionQuery));
+			}
+
+			var result =
+				new IssueItemRepository(sourceClasses, stateRepository, _workListItemDatastore);
 
 			_msg.DebugStopTiming(watch, "Created issue work item repository");
 

@@ -124,7 +124,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			MapView activeMapView = MapView.Active;
 
 			IEnumerable<Feature> selectedFeatures = MapUtils.GetFeatures(
-				selection, activeMapView.Map.SpatialReference);
+				selection, true, activeMapView.Map.SpatialReference);
 
 			RemoveOverlapsResult result =
 				MicroserviceClient.RemoveOverlaps(
@@ -361,7 +361,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
+					selection, true, CanOverlapLayer, inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&
 			    cancellabelProgressor.CancellationToken.IsCancellationRequested)

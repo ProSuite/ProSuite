@@ -131,10 +131,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		public static Polygon CreateBezierCircle(double radius = 1, MapPoint center = null)
 		{
-			// Approximate a full circle with Bezier curves. (We could use
+			// Approximate a full circle with Bézier curves. (We could use
 			// EllipticArc segments, of course, but in the context of markers,
-			// Bezier curves are more appropriate.) It is customary to use four
-			// cubic Bezier curves, one for each quadrant. The control points must
+			// Bézier curves are more appropriate.) It is customary to use four
+			// cubic Bézier curves, one for each quadrant. The control points must
 			// be on tangential lines to ensure continuity, their distance from
 			// the axes is chosen for minimal deviation from a true circle.
 			// See: https://spencermortensen.com/articles/bezier-circle/

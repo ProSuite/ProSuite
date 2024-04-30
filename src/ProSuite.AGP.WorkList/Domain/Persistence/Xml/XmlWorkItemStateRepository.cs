@@ -9,9 +9,8 @@ using ProSuite.Commons.Xml;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 {
-	public class
-		XmlWorkItemStateRepository : WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition
-		>
+	public class XmlWorkItemStateRepository
+		: WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition>
 	{
 		private string _filePath;
 
@@ -44,7 +43,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		}
 
 		protected override XmlWorkListDefinition CreateDefinition(
-			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			IList<ISourceClass> sourceClasses,
 			List<XmlWorkItemState> states)
 		{
 			int index = -1;
@@ -64,7 +64,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 			var xmlWorkspaces = new List<XmlWorkListWorkspace>(tablesByWorkspace.Count);
 
-			Populate(tablesByWorkspace, xmlWorkspaces);
+			Populate(tablesByWorkspace, xmlWorkspaces, sourceClasses);
 
 			definition.Workspaces = xmlWorkspaces;
 
@@ -104,8 +104,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		}
 
 		private static void Populate(
-			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
-			ICollection<XmlWorkListWorkspace> list)
+			IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			ICollection<XmlWorkListWorkspace> list, IList<ISourceClass> sourceClasses)
 		{
 			foreach (KeyValuePair<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> pair in
 			         tablesByWorkspace)
@@ -116,9 +116,21 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 				var xmlWorkspace = new XmlWorkListWorkspace();
 				xmlWorkspace.ConnectionString = workspace.ConnectionString;
 				xmlWorkspace.WorkspaceFactory = workspace.WorkspaceFactory.ToString();
+
 				xmlWorkspace.Tables = tables
 				                      .Select(table => new XmlTableReference(table.Id, table.Name))
 				                      .ToList();
+
+				foreach (XmlTableReference xmlTableReference in xmlWorkspace.Tables)
+				{
+					ISourceClass sourceClass =
+						sourceClasses.FirstOrDefault(s => s.Name == xmlTableReference.Name);
+
+					if (sourceClass != null)
+					{
+						xmlTableReference.DefinitionQuery = sourceClass.DefinitionQuery;
+					}
+				}
 
 				list.Add(xmlWorkspace);
 			}

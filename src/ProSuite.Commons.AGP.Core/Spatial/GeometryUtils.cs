@@ -43,12 +43,28 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return count > 0 ? points[0] : null;
 		}
 
+		public static MapPoint GetStartPoint(ReadOnlySegmentCollection segments)
+		{
+			if (segments is null) return null;
+			if (segments.Count < 1) return null;
+			var first = segments[0];
+			return first.StartPoint;
+		}
+
 		public static MapPoint GetEndPoint([CanBeNull] Multipart multipart)
 		{
 			var points = multipart?.Points;
 			if (points is null) return null;
 			int count = points.Count;
 			return count > 0 ? points[count - 1] : null;
+		}
+
+		public static MapPoint GetEndPoint(ReadOnlySegmentCollection segments)
+		{
+			if (segments is null) return null;
+			if (segments.Count < 1) return null;
+			var last = segments[segments.Count - 1];
+			return last.EndPoint;
 		}
 
 		public static MapPoint GetLabelPoint([CanBeNull] Geometry geometry)
@@ -164,18 +180,19 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			{
 				return geometries.Single();
 			}
-
-			if (count == 2)
-			{
-				using (var enumerator = geometries.GetEnumerator())
-				{
-					enumerator.MoveNext();
-					var one = enumerator.Current;
-					enumerator.MoveNext();
-					var two = enumerator.Current;
-					return Engine.Union(one, two);
-				}
-			}
+			//Failes in ArcGIS 3.0 when merging a polygon that is congruent with the island of the first polygon. See issue #168
+			//The list overload: Engine.Union(geometries) works
+			//if (count == 2)
+			//{
+			//	using (var enumerator = geometries.GetEnumerator())
+			//	{
+			//		enumerator.MoveNext();
+			//		var one = enumerator.Current;
+			//		enumerator.MoveNext();
+			//		var two = enumerator.Current;
+			//		return Engine.Union(one, two);
+			//	}
+			//}
 
 			return Engine.Union(geometries);
 		}
