@@ -95,7 +95,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			StoreSingleFeatureShape(junctionFeature, newPoint);
 
 			// Drag along existing edges:
-			JunctionUpdated(junctionFeature, oldPoint, (IPoint) junctionFeature.Shape);
+			JunctionUpdated(oldPoint, (IPoint) junctionFeature.Shape);
 
 			// Split existing edges at the new junction:
 			foreach (IFeature edgeFeature in NetworkFeatureFinder.FindEdgeFeaturesAt(newPoint))
@@ -204,11 +204,10 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			return fromPointSnapped || toPointSnapped;
 		}
 
-		public void JunctionUpdated([NotNull] IFeature updatedJunctionFeature,
-		                            [NotNull] IPoint originalLocation,
+		public void JunctionUpdated([NotNull] IPoint originalLocation,
 		                            [NotNull] IPoint newLocation)
 		{
-			// TODO: Delete found junction (subsumption) at the newPoint
+			// TODO: Delete found junction (subsumption) at the newPoint (e.g. if same subtype)
 			// TODO: Something useful if junction was moved along an edge
 
 			IList<IFeature> connectedEdges =
@@ -219,7 +218,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			MaintainConnectionWithOtherNetworkEdges(
 				connectedEdges, originalLocation, newLocation);
 
-			// TODO: Update coincident junctions (TOP-5858)
+			MoveJunctionFeatures(originalLocation, newLocation);
 		}
 
 		/// <summary>
@@ -764,6 +763,12 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 				                          ? originalPolyline.FromPoint
 				                          : originalPolyline.ToPoint;
 
+			MoveJunctionFeatures(previousEndpoint, newEndPoint);
+		}
+
+		private void MoveJunctionFeatures([NotNull] IPoint previousEndpoint,
+		                                  [NotNull] IPoint newEndPoint)
+		{
 			IList<IFeature> junctionFeatures =
 				NetworkFeatureFinder.FindJunctionFeaturesAt(previousEndpoint);
 
@@ -772,22 +777,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 				return;
 			}
 
-			IFeature oldJunction = junctionFeatures[0];
-
-			// No junction moving if there is already another junction at the new end:
-			IList<IFeature> otherJunctionsAtNewEndPoint =
-				NetworkFeatureFinder.FindJunctionFeaturesAt(newEndPoint).Where(
-					                    j => oldJunction == null ||
-					                         ! GdbObjectUtils.IsSameObject(
-						                         j, oldJunction,
-						                         ObjectClassEquality.SameTableSameVersion))
-				                    .ToList();
-
-			if (otherJunctionsAtNewEndPoint.Count > 0)
-			{
-				return;
-			}
-
+			// TOP-5858: Move all coincident junctions. There can be more than one at the same
+			// location even in the same network. Hence we should not check if there is one already.
 			foreach (IFeature junctionFeature in junctionFeatures)
 			{
 				StoreSingleFeatureShape(junctionFeature, newEndPoint);
