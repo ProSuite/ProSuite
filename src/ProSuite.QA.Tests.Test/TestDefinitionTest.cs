@@ -107,6 +107,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaEdgeMatchBorderingLines),
 											 typeof(QaEdgeMatchBorderingPoints),
 											 typeof(QaEdgeMatchCrossingAreas),
+											 typeof(QaEdgeMatchCrossingLines),
 											 typeof(QaEmptyNotNullTextFields),
 											 //typeof(QaExportTables),
 				                             typeof(QaExtent),
@@ -255,6 +256,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaEdgeMatchBorderingLinesCases(model, testCases);
 			AddQaEdgeMatchBorderingPointsCases(model, testCases);
 			AddQaEdgeMatchCrossingAreasCases(model, testCases);
+			AddQaEdgeMatchCrossingLinesCases(model, testCases);
 			//AddQaExportTablesCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
 			AddQaInteriorIntersectsOtherCases(model, testCases);
@@ -611,6 +613,62 @@ namespace ProSuite.QA.Tests.Test
 														 model.GetPolygonDataset(),
 														 model.GetPolygonDataset()
 													 },
+												 },
+												 optionalValues));
+		}
+
+		private static void AddQaEdgeMatchCrossingLinesCases(InMemoryTestDataModel model,
+															  ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("MinimumErrorConnectionLineLength", 0);
+			optionalValues.Add("MaximumEndPointConnectionDistance", 0);
+			optionalValues.Add("LineClass1BorderMatchCondition", "LINE.STATE_ID = BORDER.STATE_ID");
+			optionalValues.Add("LineClass2BorderMatchCondition", "LINE.STATE_ID = BORDER.STATE_ID");
+			optionalValues.Add("CrossingLineMatchCondition", "LINE1.STATE_ID <> LINE2.STATE_ID");
+			optionalValues.Add("CrossingLineAttributeConstraint", "LINE1.WIDTH_CLASS = LINE2.WIDTH_CLASS");
+			optionalValues.Add("IsCrossingLineAttributeConstraintSymmetric", false);
+			optionalValues.Add("CrossingLineEqualAttributes", "FIELD1,FIELD2:#,FIELD3");
+			optionalValues.Add("CrossingLineEqualAttributeOptions",
+				new[] { "FIELD_NAME:OPTION1", "FIELD_NAME:OPTION2" });
+			optionalValues.Add("ReportIndividualAttributeConstraintViolations", false);
+			optionalValues.Add("CoincidenceTolerance", 0);
+			optionalValues.Add("AllowNoFeatureWithinSearchDistance", false);
+			optionalValues.Add("IgnoreAttributeConstraintsIfThreeOrMoreConnected", false);
+			optionalValues.Add("AllowNoFeatureWithinSearchDistanceIfConnectedOnSameSide", false);
+			optionalValues.Add("AllowDisjointCandidateFeatureIfBordersAreNotCoincident", false);
+			optionalValues.Add("IgnoreNeighborLinesWithBorderConnectionOutsideSearchDistance", false);
+			optionalValues.Add("AllowEndPointsConnectingToInteriorOfValidNeighborLine", false);
+			optionalValues.Add("IgnoreEndPointsOfBorderingLines", false);
+			optionalValues.Add("AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled", false);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaEdgeMatchCrossingLines), 0,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+													 1
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaEdgeMatchCrossingLines), 1,
+												 new object[]
+												 {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+
+														 model.GetVectorDataset(),
+													 new[]
+													 {
+														model.GetVectorDataset(),
+														model.GetVectorDataset()
+													 },
+														model.GetVectorDataset(),
+													 1
 												 },
 												 optionalValues));
 		}

@@ -175,8 +175,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_searchDistance))]
 			double
 				searchDistance)
-			: this(new[] {lineClass1}, borderClass1,
-			       new[] {lineClass2}, borderClass2,
+			: this(new[] { lineClass1 }, borderClass1,
+			       new[] { lineClass2 }, borderClass2,
 			       searchDistance) { }
 
 		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_1))]
@@ -196,8 +196,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_searchDistance))]
 			double
 				searchDistance)
-			: base(CastToTables(lineClasses1, new[] {borderClass1},
-			                    lineClasses2, new[] {borderClass2}))
+			: base(CastToTables(lineClasses1, new[] { borderClass1 },
+			                    lineClasses2, new[] { borderClass2 }))
 		{
 			Assert.ArgumentNotNull(lineClasses1, nameof(lineClasses1));
 			Assert.ArgumentNotNull(borderClass1, nameof(borderClass1));
@@ -214,7 +214,7 @@ namespace ProSuite.QA.Tests
 					              lineClass.Name));
 			}
 
-			foreach (IReadOnlyFeatureClass borderClass in new[] {borderClass1, borderClass2})
+			foreach (IReadOnlyFeatureClass borderClass in new[] { borderClass1, borderClass2 })
 			{
 				Assert.ArgumentCondition(
 					borderClass.ShapeType == esriGeometryType.esriGeometryPolyline ||
@@ -267,6 +267,44 @@ namespace ProSuite.QA.Tests
 			IgnoreEndPointsOfBorderingLines = _defaultIgnoreEndPointsOfBorderingLines;
 			AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled =
 				_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled;
+		}
+
+		[InternallyUsedTest]
+		public QaEdgeMatchCrossingLines(
+			[NotNull] QaEdgeMatchCrossingLinesDefinition definition)
+			: this(definition.LineClasses1.Cast<IReadOnlyFeatureClass>().ToList(),
+			       (IReadOnlyFeatureClass) definition.BorderClass1,
+			       definition.LineClasses2.Cast<IReadOnlyFeatureClass>().ToList(),
+			       (IReadOnlyFeatureClass) definition.BorderClass2,
+			       definition.SearchDistance)
+		{
+			MinimumErrorConnectionLineLength = definition.MinimumErrorConnectionLineLength;
+			MaximumEndPointConnectionDistance = definition.MaximumEndPointConnectionDistance;
+			LineClass1BorderMatchCondition = definition.LineClass1BorderMatchCondition;
+			LineClass2BorderMatchCondition = definition.LineClass2BorderMatchCondition;
+			CrossingLineMatchCondition = definition.CrossingLineMatchCondition;
+			CrossingLineAttributeConstraint = definition.CrossingLineAttributeConstraint;
+			IsCrossingLineAttributeConstraintSymmetric =
+				definition.IsCrossingLineAttributeConstraintSymmetric;
+			CrossingLineEqualAttributes = definition.CrossingLineEqualAttributes;
+			CrossingLineEqualAttributeOptions = definition.CrossingLineEqualAttributeOptions;
+			ReportIndividualAttributeConstraintViolations =
+				definition.ReportIndividualAttributeConstraintViolations;
+			CoincidenceTolerance = definition.CoincidenceTolerance;
+			AllowNoFeatureWithinSearchDistance = definition.AllowNoFeatureWithinSearchDistance;
+			IgnoreAttributeConstraintsIfThreeOrMoreConnected =
+				definition.IgnoreAttributeConstraintsIfThreeOrMoreConnected;
+			AllowNoFeatureWithinSearchDistanceIfConnectedOnSameSide =
+				definition.AllowNoFeatureWithinSearchDistanceIfConnectedOnSameSide;
+			AllowDisjointCandidateFeatureIfBordersAreNotCoincident =
+				definition.AllowDisjointCandidateFeatureIfBordersAreNotCoincident;
+			IgnoreNeighborLinesWithBorderConnectionOutsideSearchDistance = definition
+				.IgnoreNeighborLinesWithBorderConnectionOutsideSearchDistance;
+			AllowEndPointsConnectingToInteriorOfValidNeighborLine =
+				definition.AllowEndPointsConnectingToInteriorOfValidNeighborLine;
+			IgnoreEndPointsOfBorderingLines = definition.IgnoreEndPointsOfBorderingLines;
+			AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled = definition
+				.AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled;
 		}
 
 		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_MinimumErrorConnectionLineLength))]
@@ -389,6 +427,7 @@ namespace ProSuite.QA.Tests
 						AddCustomQueryFilterExpression(option);
 					}
 				}
+
 				_crossingLineEqualFieldValuesCondition = null;
 			}
 		}
@@ -776,7 +815,7 @@ namespace ProSuite.QA.Tests
 						GeometryFactory.Clone(borderConnection.Point),
 						Codes[Code.Match_ConstraintsNotFulfilled],
 						constraintViolation.AffectedComponents,
-						values: new[] {constraintViolation.TextValue});
+						values: new[] { constraintViolation.TextValue });
 				}
 			}
 
@@ -798,7 +837,7 @@ namespace ProSuite.QA.Tests
 						GeometryFactory.Clone(borderConnection.Point),
 						Codes[Code.Match_ConstraintsNotFulfilled],
 						constraintViolation.AffectedComponents,
-						values: new[] {constraintViolation.TextValue});
+						values: new[] { constraintViolation.TextValue });
 				}
 			}
 
@@ -913,7 +952,7 @@ namespace ProSuite.QA.Tests
 							InvolvedRowUtils.GetInvolvedRows(
 								feature, neighborBorderConnection.Feature),
 							errorGeometry, issueCode, constraintViolation.AffectedComponents,
-							values: new[] {constraintViolation.TextValue});
+							values: new[] { constraintViolation.TextValue });
 					}
 				}
 			}
@@ -1738,7 +1777,7 @@ namespace ProSuite.QA.Tests
 				}
 
 				// no free point found
-				var newPooledPoint = new PooledPoint {InUse = true};
+				var newPooledPoint = new PooledPoint { InUse = true };
 
 				_pooledPoints.Add(newPooledPoint);
 
