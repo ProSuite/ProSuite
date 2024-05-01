@@ -99,13 +99,14 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaBorderSense),
 				                             //typeof(QaCentroids),
 											 typeof(QaCoplanarRings),
-				                             typeof(QaConstraint),
+											 typeof(QaConstraint),
 				                             typeof(QaCurve),
 											 typeof(QaDangleCount),
 				                             typeof(QaDateFieldsWithoutTime),
 											 typeof(QaDuplicateGeometrySelf),
 											 typeof(QaEdgeMatchBorderingLines),
-				                             typeof(QaEmptyNotNullTextFields),
+											 typeof(QaEdgeMatchBorderingPoints),
+											 typeof(QaEmptyNotNullTextFields),
 											 //typeof(QaExportTables),
 				                             typeof(QaExtent),
 				                             typeof(QaFlowLogic),
@@ -251,6 +252,7 @@ namespace ProSuite.QA.Tests.Test
 			//AddQaCentroidsCases(model, testCases);
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values
 			AddQaEdgeMatchBorderingLinesCases(model, testCases);
+			AddQaEdgeMatchBorderingPointsCases(model, testCases);
 			//AddQaExportTablesCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
 			AddQaInteriorIntersectsOtherCases(model, testCases);
@@ -491,6 +493,56 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
+		private static void AddQaEdgeMatchBorderingPointsCases(InMemoryTestDataModel model,
+															  ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("PointClass1BorderMatchCondition", "POINT.STATE_ID = BORDER.STATE_ID");
+			optionalValues.Add("PointClass2BorderMatchCondition", "POINT.STATE_ID = BORDER.STATE_ID");
+			optionalValues.Add("BorderingPointMatchCondition", "POINT1.STATE_ID <> POINT2.STATE_ID");
+			optionalValues.Add("BorderingPointAttributeConstraint", "POINT1.TYPE = POINT2.TYPE");
+			optionalValues.Add("IsBorderingPointAttributeConstraintSymmetric", false);
+			optionalValues.Add("BorderingPointEqualAttributes", "FIELD1,FIELD2:#,FIELD3");
+			optionalValues.Add("BorderingPointEqualAttributeOptions",
+							   new[] { "FIELD_NAME:OPTION1", "FIELD_NAME:OPTION2" });
+			optionalValues.Add("ReportIndividualAttributeConstraintViolations", false);
+			optionalValues.Add("CoincidenceTolerance", 1);
+			optionalValues.Add("AllowDisjointCandidateFeatureIfBordersAreNotCoincident", false);
+			optionalValues.Add("AllowNoFeatureWithinSearchDistance", false);
+			optionalValues.Add("AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled", false);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaEdgeMatchBorderingPoints), 0,
+												 new object[]
+												 {
+													 model.GetPointDataset(),
+													 model.GetVectorDataset(),
+													 model.GetPointDataset(),
+													 model.GetVectorDataset(),
+													 1
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaEdgeMatchBorderingPoints), 1,
+												 new object[]
+												 {
+													 new[]
+													 {
+														 model.GetPointDataset(),
+														 model.GetPointDataset()
+													 },
+
+														 model.GetVectorDataset(),
+													 new[]
+													 {
+														model.GetPointDataset(),
+														model.GetPointDataset()
+													 },
+														model.GetVectorDataset(),
+
+													 1
+												 },
+												 optionalValues));
+		}
+
 		private static void AddQaExportTablesCases(
 			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
 		{
@@ -507,7 +559,7 @@ namespace ProSuite.QA.Tests.Test
 													 model.GetVectorDataset(),
 
 													 },
-													 "string"
+													 "Path"
 												 }, optionalValues));
 		}
 
