@@ -155,6 +155,14 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
+		[InternallyUsedTest]
+		public QaRegularExpression([NotNull] QaRegularExpressionDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.Pattern,
+			       definition.FieldNames, definition.MatchIsError, definition.PatternDescription)
+		{
+			FieldListType = definition.FieldListType;
+		}
+
 		[Doc(nameof(DocStrings.QaRegularExpression_FieldListType))]
 		[TestParameter(FieldListType.RelevantFields)]
 		public FieldListType FieldListType { get => _fieldListType;

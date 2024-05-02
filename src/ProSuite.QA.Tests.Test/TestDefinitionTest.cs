@@ -124,6 +124,10 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaIntersectionMatrixOther),
 											 typeof(QaIntersectionMatrixSelf),
 											 typeof(QaLineGroupConstraints),
+											 typeof(QaMustTouchSelf),
+											 typeof(QaOverlapsSelf),
+											 typeof(QaRegularExpression),
+											 typeof(QaRequiredFields),
 											 typeof(QaSchemaFieldDomainNameRegex),
 											 typeof(QaSchemaFieldDomains),
 											 typeof(QaSchemaFieldNameRegex),
@@ -239,6 +243,9 @@ namespace ProSuite.QA.Tests.Test
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGeometryConstraint)));
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGroupConstraints)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustTouchSelf)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsSelf)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRequiredFields)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainNameRegex)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomains)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldNameRegex)));
@@ -270,6 +277,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaIntersectionMatrixOtherCases(model, testCases);
 			AddQaIntersectionMatrixSelfCases(model, testCases);
 			AddQaLineGroupConstraintsCases(model, testCases);
+			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygon(model, testCases);
 			AddQaTouchesSelf(model, testCases);
 			AddQaTrimmedTextFields(model, testCases);
@@ -1079,6 +1087,67 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
+		private static void AddQaRegularExpressionCases(InMemoryTestDataModel model,
+		                                                ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("FieldListType", 1);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaRegularExpression), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "PATTERN_STRING", "MY_STRING_FIELD1"
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaRegularExpression), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "Pattern_String",
+				                                     new[]
+				                                     {
+					                                     "MY_STRING_FIELD1",
+					                                     "MY_STRING_FIELD2"
+				                                     }
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaRegularExpression), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "PATTERN_STRING", "MY_STRING_FIELD1", false
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaRegularExpression), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "PATTERN_STRING",
+				                                     new[]
+				                                     {
+					                                     "MY_STRING_FIELD1",
+					                                     "MY_STRING_FIELD2"
+				                                     },
+				                                     false
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaRegularExpression), 4,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "PATTERN_STRING", "MY_STRING_FIELD1", false,
+				                                     "PATTERN_DESC_STRING"
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaRegularExpression), 5,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "PATTERN_STRING",
+				                                     new[]
+				                                     {
+					                                     "MY_STRING_FIELD1",
+					                                     "MY_STRING_FIELD2"
+				                                     },
+				                                     false, "PATTERN_DESC_STRING"
+			                                     }, optionalValues));
+		}
 		private static void AddQaSliverPolygon(InMemoryTestDataModel model,
 												   ICollection<TestDefinitionCase> testCases)
 		{

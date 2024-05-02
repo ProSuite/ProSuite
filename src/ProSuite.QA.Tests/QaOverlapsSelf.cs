@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -68,6 +69,11 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaOverlapsSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {featureClass}, validRelationConstraint) { }
+
+		[InternallyUsedTest]
+		public QaOverlapsSelf([NotNull] QaOverlapsSelfDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.ValidRelationConstraint) { }
 
 		#region Overrides of QaSpatialRelationSelfBase
 
