@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -53,6 +54,25 @@ namespace ProSuite.QA.Core
 			ConstructorInfo constructor = constructors[constructorIndex];
 
 			return constructor.Invoke(new object[] { definition });
+		}
+		protected static IList<ITableSchemaDef> CastToTables(
+			params IList<IFeatureClassSchemaDef>[] featureClasses)
+		{
+			int totalCount = featureClasses.Sum(list => list.Count);
+
+			var union = new List<ITableSchemaDef>(totalCount);
+
+			foreach (IList<IFeatureClassSchemaDef> list in featureClasses)
+			{
+				foreach (IFeatureClassSchemaDef featureClass in list)
+				{
+					Assert.NotNull(featureClass, "list entry is null");
+
+					union.Add(featureClass);
+				}
+			}
+
+			return union;
 		}
 	}
 }
