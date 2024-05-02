@@ -65,8 +65,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaRequiredFields_table))] [NotNull]
 			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaRequiredFields_requiredFieldNames))] [NotNull]
-			IEnumerable<string>
-				requiredFieldNames,
+			IEnumerable<string> requiredFieldNames,
 			[Doc(nameof(DocStrings.QaRequiredFields_allowEmptyStrings))]
 			bool allowEmptyStrings,
 			[Doc(nameof(DocStrings.QaRequiredFields_allowMissingFields))]
@@ -120,6 +119,13 @@ namespace ProSuite.QA.Tests
 			bool allowEmptyStrings)
 			: this(table, GetAllEditableFieldNames(table),
 			       allowEmptyStrings, false) { }
+
+		[InternallyUsedTest]
+		public QaRequiredFields([NotNull] QaRequiredFieldsDefinition definition)
+			: this((IReadOnlyTable) definition.Table,
+			       definition.RequiredFieldNames ??
+			       GetAllEditableFieldNames((IReadOnlyTable) definition.Table),
+			       definition.AllowEmptyString, definition.AllowMissingFields) { }
 
 		public override bool IsQueriedTable(int tableIndex)
 		{
