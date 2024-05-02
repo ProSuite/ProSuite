@@ -989,15 +989,18 @@ namespace ProSuite.AGP.WorkList.Domain
 				return null;
 			}
 
-			if (CurrentIndex > 0)
+			if (CurrentIndex > _items.Count)
 			{
-				for (int i = CurrentIndex - 1; i >= 0; i--)
+				// Items have been removed or could not be loaded at all
+				return null;
+			}
+
+			for (int i = CurrentIndex - 1; i >= 0; i--)
+			{
+				IWorkItem item = _items[i];
+				if (item.Visited && IsVisible(item))
 				{
-					IWorkItem item = _items[i];
-					if (item.Visited && IsVisible(item))
-					{
-						return item;
-					}
+					return item;
 				}
 			}
 
