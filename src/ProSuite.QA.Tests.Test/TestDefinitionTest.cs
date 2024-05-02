@@ -113,6 +113,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaExtent),
 				                             typeof(QaFlowLogic),
 				                             typeof(QaForeignKey),
+				                             typeof(QaFullCoincidence),
 											 typeof(QaGdbRelease),
 				                             typeof(QaGeometryConstraint),
 				                             //typeof(QaGroupConstraints),
@@ -261,6 +262,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaEdgeMatchCrossingAreasCases(model, testCases);
 			AddQaEdgeMatchCrossingLinesCases(model, testCases);
 			//AddQaExportTablesCases(model, testCases);
+			AddQaFullCoincidenceCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
 			AddQaInteriorIntersectsOtherCases(model, testCases);
 			AddQaInteriorIntersectsSelfCases(model, testCases);
@@ -694,6 +696,90 @@ namespace ProSuite.QA.Tests.Test
 													 },
 													 "Path"
 												 }, optionalValues));
+		}
+
+		private static void AddQaFullCoincidenceCases(InMemoryTestDataModel model,
+												ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("IgnoreNeighborConditions", "FIELD_NAME:OPTION1");
+			
+
+			testCases.Add(new TestDefinitionCase(typeof(QaFullCoincidence), 0,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+													 0,
+													 false
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaFullCoincidence), 1,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+													 0,
+													 false,
+													 0
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaFullCoincidence), 2,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 
+													 new[]
+													 {
+														model.GetVectorDataset(),
+														model.GetVectorDataset()
+													 },
+													 0,
+													 false
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaFullCoincidence), 3,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 0,
+													 false,
+													 0,
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaFullCoincidence), 4,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     0
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaFullCoincidence), 5,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     0,
+													 0
+			                                     },
+			                                     optionalValues));
 		}
 
 		private static void AddQaGdbReleaseCases(
