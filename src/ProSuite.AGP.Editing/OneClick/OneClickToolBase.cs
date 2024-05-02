@@ -374,12 +374,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		[CanBeNull, Obsolete("Use GetProgressorSource()")]
-		protected virtual CancelableProgressor GetCancelableProgressor()
-		{
-			return new CancelableProgressorSource().Progressor;
-		}
-
 		protected virtual CancelableProgressorSource GetProgressorSource()
 		{
 			var message = Caption ?? string.Empty;

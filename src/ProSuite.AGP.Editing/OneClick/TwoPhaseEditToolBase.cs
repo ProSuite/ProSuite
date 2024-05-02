@@ -48,7 +48,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (applicableSelection.Count > 0)
 			{
-				AfterSelection(applicableSelection, GetCancelableProgressor());
+				using var source = GetProgressorSource();
+				var progressor = source.Progressor;
+				AfterSelection(applicableSelection, progressor);
 			}
 
 			return true;
@@ -78,7 +80,10 @@ namespace ProSuite.AGP.Editing.OneClick
 								return true;
 							}
 
-							CalculateDerivedGeometries(selectedFeatures, GetCancelableProgressor());
+							using var source = GetProgressorSource();
+							var progressor = source.Progressor;
+
+							CalculateDerivedGeometries(selectedFeatures, progressor);
 
 							return true;
 						}

@@ -117,7 +117,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				IList<Feature> applicableSelection =
 					GetApplicableSelectedFeatures(selectionByLayer, true).ToList();
 
-				RefreshExistingChangeAlongCurves(applicableSelection, GetCancelableProgressor());
+				using var source = GetProgressorSource();
+				var progressor = source.Progressor;
+				RefreshExistingChangeAlongCurves(applicableSelection, progressor);
 			}
 
 			return true;
@@ -140,8 +142,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 							var selectedFeatures =
 								GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
-							RefreshExistingChangeAlongCurves(selectedFeatures,
-							                                 GetCancelableProgressor());
+							using var source = GetProgressorSource();
+							var progressor = source.Progressor;
+
+							RefreshExistingChangeAlongCurves(selectedFeatures, progressor);
 
 							return true;
 						}
@@ -564,6 +568,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
+				// TODO Why not CancellationToken.None?
 				var cancellationTokenSource = new CancellationTokenSource();
 				cancellationToken = cancellationTokenSource.Token;
 			}
