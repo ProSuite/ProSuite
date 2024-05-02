@@ -12,7 +12,6 @@ using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Dialogs;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
@@ -280,7 +279,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError("Error in CanGoFirst", e);
+				_msg.Error("Error in CanGoFirst", e);
 			}
 
 			return false;
@@ -329,7 +328,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError("Error in CanGoNearest", e);
+				_msg.Error("Error in CanGoNearest", e);
 			}
 
 			return false;
@@ -376,7 +375,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError("Error in CanGoNext", e);
+				_msg.Error("Error in CanGoNext", e);
 			}
 
 			return false;
@@ -402,7 +401,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError("Error in CanGoPrevious", e);
+				_msg.Error("Error in CanGoPrevious", e);
 			}
 
 			return false;
