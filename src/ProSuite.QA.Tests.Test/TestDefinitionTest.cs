@@ -112,7 +112,8 @@ namespace ProSuite.QA.Tests.Test
 											 //typeof(QaExportTables),
 				                             typeof(QaExtent),
 				                             typeof(QaFlowLogic),
-				                             typeof(QaGdbRelease),
+				                             typeof(QaForeignKey),
+											 typeof(QaGdbRelease),
 				                             typeof(QaGeometryConstraint),
 				                             //typeof(QaGroupConstraints),
 				                             typeof(QaHorizontalSegments),
@@ -225,6 +226,8 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey)));
+
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
