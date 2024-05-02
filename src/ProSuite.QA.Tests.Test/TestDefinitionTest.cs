@@ -100,6 +100,7 @@ namespace ProSuite.QA.Tests.Test
 				                             //typeof(QaCentroids),
 											 typeof(QaCoplanarRings),
 											 typeof(QaConstraint),
+											 typeof(QaCrossesSelf),
 				                             typeof(QaCurve),
 											 typeof(QaDangleCount),
 				                             typeof(QaDateFieldsWithoutTime),
@@ -229,6 +230,7 @@ namespace ProSuite.QA.Tests.Test
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCentroids)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCoplanarRings)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCrossesSelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey)));
