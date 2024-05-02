@@ -99,17 +99,21 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaBorderSense),
 				                             //typeof(QaCentroids),
 											 typeof(QaCoplanarRings),
-				                             typeof(QaConstraint),
+											 typeof(QaConstraint),
 				                             typeof(QaCurve),
 											 typeof(QaDangleCount),
 				                             typeof(QaDateFieldsWithoutTime),
 											 typeof(QaDuplicateGeometrySelf),
 											 typeof(QaEdgeMatchBorderingLines),
-				                             typeof(QaEmptyNotNullTextFields),
+											 typeof(QaEdgeMatchBorderingPoints),
+											 typeof(QaEdgeMatchCrossingAreas),
+											 typeof(QaEdgeMatchCrossingLines),
+											 typeof(QaEmptyNotNullTextFields),
 											 //typeof(QaExportTables),
 				                             typeof(QaExtent),
 				                             typeof(QaFlowLogic),
-				                             typeof(QaGdbRelease),
+				                             typeof(QaForeignKey),
+											 typeof(QaGdbRelease),
 				                             typeof(QaGeometryConstraint),
 				                             //typeof(QaGroupConstraints),
 				                             typeof(QaHorizontalSegments),
@@ -223,6 +227,8 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey)));
+
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
@@ -253,6 +259,9 @@ namespace ProSuite.QA.Tests.Test
 			//AddQaCentroidsCases(model, testCases);
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values
 			AddQaEdgeMatchBorderingLinesCases(model, testCases);
+			AddQaEdgeMatchBorderingPointsCases(model, testCases);
+			AddQaEdgeMatchCrossingAreasCases(model, testCases);
+			AddQaEdgeMatchCrossingLinesCases(model, testCases);
 			//AddQaExportTablesCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
 			AddQaInteriorIntersectsOtherCases(model, testCases);
@@ -493,6 +502,182 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
+		private static void AddQaEdgeMatchBorderingPointsCases(InMemoryTestDataModel model,
+															  ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("PointClass1BorderMatchCondition", "POINT.STATE_ID = BORDER.STATE_ID");
+			optionalValues.Add("PointClass2BorderMatchCondition", "POINT.STATE_ID = BORDER.STATE_ID");
+			optionalValues.Add("BorderingPointMatchCondition", "POINT1.STATE_ID <> POINT2.STATE_ID");
+			optionalValues.Add("BorderingPointAttributeConstraint", "POINT1.TYPE = POINT2.TYPE");
+			optionalValues.Add("IsBorderingPointAttributeConstraintSymmetric", false);
+			optionalValues.Add("BorderingPointEqualAttributes", "FIELD1,FIELD2:#,FIELD3");
+			optionalValues.Add("BorderingPointEqualAttributeOptions",
+							   new[] { "FIELD_NAME:OPTION1", "FIELD_NAME:OPTION2" });
+			optionalValues.Add("ReportIndividualAttributeConstraintViolations", false);
+			optionalValues.Add("CoincidenceTolerance", 1);
+			optionalValues.Add("AllowDisjointCandidateFeatureIfBordersAreNotCoincident", false);
+			optionalValues.Add("AllowNoFeatureWithinSearchDistance", false);
+			optionalValues.Add("AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled", false);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaEdgeMatchBorderingPoints), 0,
+												 new object[]
+												 {
+													 model.GetPointDataset(),
+													 model.GetVectorDataset(),
+													 model.GetPointDataset(),
+													 model.GetVectorDataset(),
+													 1
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaEdgeMatchBorderingPoints), 1,
+												 new object[]
+												 {
+													 new[]
+													 {
+														 model.GetPointDataset(),
+														 model.GetPointDataset()
+													 },
+
+														 model.GetVectorDataset(),
+													 new[]
+													 {
+														model.GetPointDataset(),
+														model.GetPointDataset()
+													 },
+														model.GetVectorDataset(),
+
+													 1
+												 },
+												 optionalValues));
+		}
+
+		private static void AddQaEdgeMatchCrossingAreasCases(InMemoryTestDataModel model,
+															  ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("AreaClass1BorderMatchCondition", "AREA.STATE_ID = BORDER.STATE_ID");
+			optionalValues.Add("AreaClass1BoundingFeatureMatchCondition", "AREA.STATE_ID = BOUNDINGFEATURE.STATE_ID");
+			optionalValues.Add("AreaClass2BoundingFeatureMatchCondition", "AREA.STATE_ID = BOUNDINGFEATURE.STATE_ID");
+			optionalValues.Add("AreaClass2BorderMatchCondition", "AREA.STATE_ID = BORDER.STATE_ID");
+			optionalValues.Add("CrossingAreaMatchCondition", "AREA1.STATE_ID<> AREA2.STATE_ID");
+			optionalValues.Add("CrossingAreaAttributeConstraint", "AREA1.TYPE =AREA2.TYPE");
+			optionalValues.Add("IsCrossingAreaAttributeConstraintSymmetric", false);
+			optionalValues.Add("CrossingAreaEqualAttributes", "FIELD1,FIELD2:#,FIELD3");
+			optionalValues.Add("CrossingAreaEqualAttributeOptions",
+				new[] { "FIELD_NAME:OPTION1", "FIELD_NAME:OPTION2" });
+			optionalValues.Add("ReportIndividualAttributeConstraintViolations", false);
+			optionalValues.Add("AllowNoFeatureWithinSearchDistance", false);
+			optionalValues.Add("AllowDisjointCandidateFeatureIfBordersAreNotCoincident", false);
+			optionalValues.Add("AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled", false);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaEdgeMatchCrossingAreas), 0,
+												 new object[]
+												 {
+													 model.GetPolygonDataset(),
+													 model.GetVectorDataset(),
+													 model.GetPolygonDataset(),
+													 model.GetVectorDataset(),
+													 1,
+													 new[]
+													 {
+														 model.GetPolygonDataset(),
+														 model.GetPolygonDataset()
+													 },
+													 new[]
+													 {
+														 model.GetPolygonDataset(),
+														 model.GetPolygonDataset()
+													 }
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaEdgeMatchCrossingAreas), 1,
+												 new object[]
+												 {
+													 new[]
+													 {
+														 model.GetPolygonDataset(),
+														 model.GetPolygonDataset()
+													 },
+
+														 model.GetVectorDataset(),
+													 new[]
+													 {
+														model.GetPolygonDataset(),
+														model.GetPolygonDataset()
+													 },
+														model.GetVectorDataset(),
+													 1,
+													 new[]
+													 {
+														 model.GetPolygonDataset(),
+														 model.GetPolygonDataset()
+													 },
+													 new[]
+													 {
+														 model.GetPolygonDataset(),
+														 model.GetPolygonDataset()
+													 },
+												 },
+												 optionalValues));
+		}
+
+		private static void AddQaEdgeMatchCrossingLinesCases(InMemoryTestDataModel model,
+															  ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("MinimumErrorConnectionLineLength", 0);
+			optionalValues.Add("MaximumEndPointConnectionDistance", 0);
+			optionalValues.Add("LineClass1BorderMatchCondition", "LINE.STATE_ID = BORDER.STATE_ID");
+			optionalValues.Add("LineClass2BorderMatchCondition", "LINE.STATE_ID = BORDER.STATE_ID");
+			optionalValues.Add("CrossingLineMatchCondition", "LINE1.STATE_ID <> LINE2.STATE_ID");
+			optionalValues.Add("CrossingLineAttributeConstraint", "LINE1.WIDTH_CLASS = LINE2.WIDTH_CLASS");
+			optionalValues.Add("IsCrossingLineAttributeConstraintSymmetric", false);
+			optionalValues.Add("CrossingLineEqualAttributes", "FIELD1,FIELD2:#,FIELD3");
+			optionalValues.Add("CrossingLineEqualAttributeOptions",
+				new[] { "FIELD_NAME:OPTION1", "FIELD_NAME:OPTION2" });
+			optionalValues.Add("ReportIndividualAttributeConstraintViolations", false);
+			optionalValues.Add("CoincidenceTolerance", 0);
+			optionalValues.Add("AllowNoFeatureWithinSearchDistance", false);
+			optionalValues.Add("IgnoreAttributeConstraintsIfThreeOrMoreConnected", false);
+			optionalValues.Add("AllowNoFeatureWithinSearchDistanceIfConnectedOnSameSide", false);
+			optionalValues.Add("AllowDisjointCandidateFeatureIfBordersAreNotCoincident", false);
+			optionalValues.Add("IgnoreNeighborLinesWithBorderConnectionOutsideSearchDistance", false);
+			optionalValues.Add("AllowEndPointsConnectingToInteriorOfValidNeighborLine", false);
+			optionalValues.Add("IgnoreEndPointsOfBorderingLines", false);
+			optionalValues.Add("AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled", false);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaEdgeMatchCrossingLines), 0,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+													 1
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaEdgeMatchCrossingLines), 1,
+												 new object[]
+												 {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+
+														 model.GetVectorDataset(),
+													 new[]
+													 {
+														model.GetVectorDataset(),
+														model.GetVectorDataset()
+													 },
+														model.GetVectorDataset(),
+													 1
+												 },
+												 optionalValues));
+		}
+
 		private static void AddQaExportTablesCases(
 			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
 		{
@@ -509,7 +694,7 @@ namespace ProSuite.QA.Tests.Test
 													 model.GetVectorDataset(),
 
 													 },
-													 "string"
+													 "Path"
 												 }, optionalValues));
 		}
 
