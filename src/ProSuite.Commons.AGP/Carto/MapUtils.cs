@@ -354,7 +354,7 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		[CanBeNull]
+		[CanBeNull] // TODO Rename GetFeatureLayerBySourceClassName
 		public static BasicFeatureLayer GetFeatureLayer(
 			[NotNull] Map map,
 			[CanBeNull] string featureClassName)
