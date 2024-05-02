@@ -108,6 +108,7 @@ namespace ProSuite.AGP.Editing.FillHole
 			}
 			else
 			{
+				// TODO Why not CancellationToken.None?
 				var cancellationTokenSource = new CancellationTokenSource();
 				cancellationToken = cancellationTokenSource.Token;
 			}

@@ -301,7 +301,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		/// <summary>
-		/// Sets up the tool for a sketch that is typically used to select things (features, graphics, etc.)
+		/// Sets up the tool for a sketch that is typically used
+		/// to select things (features, graphics, etc.)
 		/// </summary>
 		protected void SetupRectangleSketch()
 		{
@@ -332,6 +333,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			// TODO: Use async overload added at 3.0
 			// Note: app crashes on uncaught exceptions here
+
 			Task<bool> task = QueuedTask.Run(() => OnMapSelectionChangedCore(args));
 
 			await ViewUtils.TryAsync(task, _msg, suppressErrorMessageBox: true);
@@ -360,8 +362,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.CompletedTask;
 		}
 
+		/// <remarks>Will be called on MCT</remarks>
 		protected virtual void OnToolActivatingCore() { }
 
+		/// <remarks>Will be called on MCT</remarks>
 		protected virtual bool OnToolActivatedCore(bool hasMapViewChanged)
 		{
 			return true;
@@ -369,6 +373,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
 
+		/// <remarks>Will be called on MCT</remarks>
 		protected virtual bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
 			return true;
@@ -620,9 +625,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Geometry searchGeometry,
 			SpatialRelationship spatialRelationship)
 		{
-			MapView mapView = MapView.Active;
+			var mapView = ActiveMapView;
 
-			if (mapView == null)
+			if (mapView is null)
 			{
 				return Enumerable.Empty<FeatureSelectionBase>();
 			}
@@ -690,7 +695,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
 		{
-			GeometryType shapeType = DatasetUtils.GetShapeType(feature.GetTable());
+			using var featureClass = feature.GetTable();
+			GeometryType shapeType = featureClass.GetShapeType();
 
 			return CanSelectGeometryType(shapeType);
 		}
@@ -750,11 +756,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		private bool CanSelectFromLayer([CanBeNull] Layer layer,
 		                                NotificationCollection notifications = null)
 		{
-			var basicFeatureLayer = layer as BasicFeatureLayer;
-
-			if (basicFeatureLayer == null)
+			if (layer is not BasicFeatureLayer featureLayer)
 			{
-				NotificationUtils.Add(notifications, "No feature layer");
+				NotificationUtils.Add(notifications, "Not a feature layer");
 				return false;
 			}
 
@@ -762,67 +766,59 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (! LayerUtils.IsVisible(layer))
 			{
-				NotificationUtils.Add(notifications, $"Layer {layerName} not visible");
+				NotificationUtils.Add(notifications, $"Layer is not visible: {layerName}");
 				return false;
 			}
 
-			if (! layer.IsVisibleInView(MapView.Active))
+			if (! layer.IsVisibleInView(ActiveMapView))
 			{
 				// Takes scale range into account (and probably the parent layer too)
-				NotificationUtils.Add(notifications, $"Layer {layerName} not visible");
+				NotificationUtils.Add(notifications, $"Layer is not visible on map: {layerName}");
 				return false;
 			}
 
-			if (SelectOnlySelectableFeatures &&
-			    ! basicFeatureLayer.IsSelectable)
+			if (SelectOnlySelectableFeatures && ! featureLayer.IsSelectable)
 			{
-				NotificationUtils.Add(notifications, $"Layer {layerName} not selectable");
+				NotificationUtils.Add(notifications, $"Layer is not selectable: {layerName}");
 				return false;
 			}
 
-			if (SelectOnlyEditFeatures &&
-			    ! basicFeatureLayer.IsEditable)
+			if (SelectOnlyEditFeatures && ! featureLayer.IsEditable)
 			{
-				NotificationUtils.Add(notifications, $"Layer {layerName} not editable");
+				NotificationUtils.Add(notifications, $"Layer is not editable: {layerName}");
 				return false;
 			}
 
-			if (! CanSelectGeometryType(
-				    GeometryUtils.TranslateEsriGeometryType(basicFeatureLayer.ShapeType)))
+			var geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
+			if (! CanSelectGeometryType(geometryType))
 			{
 				NotificationUtils.Add(notifications,
-				                      $"Layer {layerName}: Cannot use geometry type {basicFeatureLayer.ShapeType}");
+				                      $"Cannot use geometry type {featureLayer.ShapeType} of layer {layerName}");
 				return false;
 			}
 
-			if (basicFeatureLayer is FeatureLayer featureLayer)
+			using var featureClass = featureLayer.GetFeatureClass();
+			if (featureClass is null)
 			{
-				if (featureLayer.GetFeatureClass() == null)
-				{
-					NotificationUtils.Add(notifications, $"Layer {layerName} is invalid");
-					return false;
-				}
+				NotificationUtils.Add(notifications, $"Layer has no valid data source: {layerName}");
+				return false;
 			}
 
-			return CanSelectFromLayerCore(basicFeatureLayer);
+			return CanSelectFromLayerCore(featureLayer);
 		}
 
-		[Obsolete]
-		protected virtual bool CanUseSelection([NotNull] IEnumerable<Feature> selectedFeatures)
+		protected bool CanUseSelection([NotNull] MapView mapView)
 		{
-			return selectedFeatures.Any(CanSelectFeatureGeometryType);
-		}
+			if (mapView is null)
+				throw new ArgumentNullException(nameof(mapView));
 
-		// TODO Map instead of MapView
-		protected bool CanUseSelection([NotNull] MapView activeMapView)
-		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection(activeMapView.Map);
+				SelectionUtils.GetSelection(mapView.Map);
 
 			return CanUseSelection(selectionByLayer);
 		}
 
-		protected bool CanUseSelection([NotNull] Dictionary<MapMember, List<long>> selectionByLayer)
+		private bool CanUseSelection([NotNull] Dictionary<MapMember, List<long>> selectionByLayer)
 		{
 			return AllowNotApplicableFeaturesInSelection
 				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key as Layer))
@@ -837,7 +833,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			var filteredCount = 0;
 			var selectionCount = 0;
 
-			SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
+			SpatialReference mapSpatialReference = ActiveMapView.Map.SpatialReference;
 
 			foreach (KeyValuePair<MapMember, List<long>> oidsByLayer in selectionByLayer)
 			{
@@ -871,10 +867,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView activeView)
+		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView mapView)
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection(activeView.Map);
+				SelectionUtils.GetSelection(mapView.Map);
 
 			return GetApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection);
 		}
