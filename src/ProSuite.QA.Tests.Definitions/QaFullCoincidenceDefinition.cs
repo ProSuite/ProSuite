@@ -14,13 +14,12 @@ namespace ProSuite.QA.Tests
 	{
 		// TODO should be dependent at least on sref
 		private const double _defaultTileSize = 1000.0;
-		private readonly IList<IFeatureClassSchemaDef> _referenceList;
 
 		public IFeatureClassSchemaDef FeatureClass { get; }
 		public IList<IFeatureClassSchemaDef> References { get; }
-		public double Near { get; set; }
+		public double Near { get;}
 		public bool Is3D { get; }
-		public double TileSize { get; set; }
+		public double TileSize { get;}
 
 		[Doc(nameof(DocStrings.QaFullCoincidence_0))]
 		public QaFullCoincidenceDefinition(

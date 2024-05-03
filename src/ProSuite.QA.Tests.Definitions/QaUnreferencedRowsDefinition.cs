@@ -7,7 +7,6 @@ using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
-
 namespace ProSuite.QA.Tests
 {
 	[UsedImplicitly]
@@ -23,12 +22,10 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaUnreferencedRows_referencedTable))] [NotNull]
 			ITableSchemaDef referencedTable,
 			[Doc(nameof(DocStrings.QaUnreferencedRows_referencingTables))] [NotNull]
-			IList<ITableSchemaDef>
-				referencingTables,
+			IList<ITableSchemaDef> referencingTables,
 			[Doc(nameof(DocStrings.QaUnreferencedRows_relations))] [NotNull]
 			IList<string> relations)
 			: base(referencingTables.Append(referencedTable))
-
 		{
 			Assert.ArgumentNotNull(referencedTable, nameof(referencedTable));
 			Assert.ArgumentNotNull(referencingTables, nameof(referencingTables));
@@ -40,7 +37,6 @@ namespace ProSuite.QA.Tests
 			ReferencedTable = referencedTable;
 			ReferencingTables = referencingTables;
 			Relations = relations;
-
 		}
 	}
 }

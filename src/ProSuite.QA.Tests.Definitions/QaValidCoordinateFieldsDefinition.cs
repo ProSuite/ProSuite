@@ -13,7 +13,6 @@ namespace ProSuite.QA.Tests
 	public class QaValidCoordinateFieldsDefinition : AlgorithmDefinition
 	{
 		public IFeatureClassSchemaDef FeatureClass { get; set; }
-
 		public string XCoordinateFieldName { get; }
 		public string YCoordinateFieldName { get; }
 		public string ZCoordinateFieldName { get; }

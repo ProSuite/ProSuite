@@ -14,18 +14,8 @@ namespace ProSuite.QA.Tests
 	[AttributeTest]
 	public class QaEmptyNotNullTextFieldsDefinition : AlgorithmDefinition
 	{
-		private readonly IList<int> _notNullTextFieldIndices;
-
-		#region issue codes
-
-		[CanBeNull] private static TestIssueCodes _codes;
-
 		public ITableSchemaDef Table { get; }
 		public string[] NotNullTextFields { get; }
-
-		#endregion
-
-		#region Constructors
 
 		[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_0))]
 		public QaEmptyNotNullTextFieldsDefinition(
@@ -54,4 +44,3 @@ namespace ProSuite.QA.Tests
 		}
 	}
 }
-#endregion
