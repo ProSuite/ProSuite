@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
@@ -13,9 +14,9 @@ namespace ProSuite.QA.Tests
 	public class QaForeignKeyDefinition : AlgorithmDefinition
 	{
 		public ITableSchemaDef Table { get; }
-		public IEnumerable<string> ForeignKeyFields { get; }
+		public IList<string> ForeignKeyFields { get; }
 		public ITableSchemaDef ReferencedTable { get; }
-		public IEnumerable<string> ReferencedKeyFields { get; }
+		public IList<string> ReferencedKeyFields { get; }
 		public bool ReferenceIsError { get; }
 
 		[Doc(nameof(DocStrings.QaForeignKey_0))]
@@ -36,13 +37,11 @@ namespace ProSuite.QA.Tests
 				[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull]
 				ITableSchemaDef table,
 				[Doc(nameof(DocStrings.QaForeignKey_foreignKeyFields))] [NotNull]
-				IEnumerable<string>
-					foreignKeyFields,
+				IEnumerable<string> foreignKeyFields,
 				[Doc(nameof(DocStrings.QaForeignKey_referencedTable))] [NotNull]
 				ITableSchemaDef referencedTable,
 				[Doc(nameof(DocStrings.QaForeignKey_referencedKeyFields))] [NotNull]
-				IEnumerable<string>
-					referencedKeyFields)
+				IEnumerable<string> referencedKeyFields)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, foreignKeyFields, referencedTable, referencedKeyFields, false) { }
 
@@ -51,13 +50,11 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull]
 			ITableSchemaDef table,
 			[Doc(nameof(DocStrings.QaForeignKey_foreignKeyFields))] [NotNull]
-			IEnumerable<string>
-				foreignKeyFields,
+			IEnumerable<string> foreignKeyFields,
 			[Doc(nameof(DocStrings.QaForeignKey_referencedTable))] [NotNull]
 			ITableSchemaDef referencedTable,
 			[Doc(nameof(DocStrings.QaForeignKey_referencedKeyFields))] [NotNull]
-			IEnumerable<string>
-				referencedKeyFields,
+			IEnumerable<string> referencedKeyFields,
 			[Doc(nameof(DocStrings.QaForeignKey_referenceIsError))]
 			bool referenceIsError)
 			: base(new[] { table, referencedTable })
@@ -67,16 +64,18 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(referencedTable, nameof(referencedTable));
 			Assert.ArgumentNotNull(referencedKeyFields, nameof(referencedKeyFields));
 
-			//Assert.ArgumentCondition(_foreignKeyFields.Count > 0,
-			//                         "There must be at least one foreign key field");
-			//Assert.ArgumentCondition(_foreignKeyFields.Count == _referencedKeyFields.Count,
-			//                         "The number of foreign key fields must be equal to " +
-			//                         "the number of referenced key fields");
 			Table = table;
-			ForeignKeyFields = foreignKeyFields;
+			ForeignKeyFields = foreignKeyFields.ToList();
+			ReferencedKeyFields = referencedKeyFields.ToList();
 			ReferencedTable = referencedTable;
-			ReferencedKeyFields = referencedKeyFields;
 			ReferenceIsError = referenceIsError;
+
+			// Validation:
+			Assert.ArgumentCondition(ForeignKeyFields.Count > 0,
+			                         "There must be at least one foreign key field");
+			Assert.ArgumentCondition(ForeignKeyFields.Count == ReferencedKeyFields.Count,
+			                         "The number of foreign key fields must be equal to " +
+			                         "the number of referenced key fields");
 		}
 	}
 }
