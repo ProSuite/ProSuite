@@ -1,4 +1,4 @@
-namespace ProSuite.QA.Tests.Definitions
+namespace ProSuite.QA.Tests.ParameterTypes
 {
 	/// <summary>
 	/// Defines geometry components that can be addressed in tests
