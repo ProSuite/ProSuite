@@ -20,6 +20,7 @@ using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Coincidence;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.ParameterTypes;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
 using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
