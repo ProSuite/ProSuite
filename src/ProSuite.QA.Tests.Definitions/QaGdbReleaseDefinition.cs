@@ -13,7 +13,7 @@ namespace ProSuite.QA.Tests
 	public class QaGdbReleaseDefinition : AlgorithmDefinition
 	{
 		public ITableSchemaDef Table { get; }
-		public string ExpectedVersion { get; }
+		// public string ExpectedVersion { get; }
 		public string MinimumVersion { get; }
 		public string MaximumVersion { get; }
 
@@ -23,8 +23,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaGdbRelease_table))] [NotNull]
 			ITableSchemaDef table,
 			[Doc(nameof(DocStrings.QaGdbRelease_expectedVersion))] [CanBeNull]
-			string
-				expectedVersion)
+			string expectedVersion)
 			: this(table, expectedVersion, expectedVersion) { }
 
 		[UsedImplicitly]
@@ -33,11 +32,9 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaGdbRelease_table))] [NotNull]
 			ITableSchemaDef table,
 			[Doc(nameof(DocStrings.QaGdbRelease_minimumVersion))] [CanBeNull]
-			string
-				minimumVersion,
+			string minimumVersion,
 			[Doc(nameof(DocStrings.QaGdbRelease_maximumVersion))] [CanBeNull]
-			string
-				maximumVersion)
+			string maximumVersion)
 			: base(table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));

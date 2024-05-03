@@ -19,21 +19,17 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_0))]
 		public QaIntersectionMatrixSelfDefinition(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_featureClasses))] [NotNull]
-			IList<IFeatureClassSchemaDef>
-				featureClasses,
+			IList<IFeatureClassSchemaDef> featureClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix)
+			string intersectionMatrix)
 			: this(featureClasses, intersectionMatrix, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_1))]
 		public QaIntersectionMatrixSelfDefinition(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_featureClasses))] [NotNull]
-			IList<IFeatureClassSchemaDef>
-				featureClasses,
+			IList<IFeatureClassSchemaDef> featureClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix,
+			string intersectionMatrix,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_constraint))]
 			string constraint)
 			: base(featureClasses)
@@ -48,8 +44,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_featureClass))] [NotNull]
 			IFeatureClassSchemaDef featureClass,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix)
+			string intersectionMatrix)
 			: this(featureClass, intersectionMatrix, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_3))]
@@ -57,8 +52,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_featureClass))] [NotNull]
 			IFeatureClassSchemaDef featureClass,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix,
+			string intersectionMatrix,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_constraint))]
 			string constraint)
 			: this(new[] { featureClass }, intersectionMatrix, constraint) { }
@@ -66,17 +60,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_4))]
 		public QaIntersectionMatrixSelfDefinition(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_featureClasses))] [NotNull]
-			IList<IFeatureClassSchemaDef>
-				featureClasses,
+			IList<IFeatureClassSchemaDef> featureClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix,
+			string intersectionMatrix,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_constraint))]
 			string constraint,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_validIntersectionDimensions))]
 			[CanBeNull]
-			string
-				validIntersectionDimensions)
+			string validIntersectionDimensions)
 			: base(featureClasses)
 		{
 			FeatureClasses = featureClasses;

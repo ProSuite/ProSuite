@@ -14,10 +14,40 @@ namespace ProSuite.QA.Tests
 	public class QaLineGroupConstraintsDefinition : AlgorithmDefinition
 	{
 		public IList<IFeatureClassSchemaDef> NetworkFeatureClasses { get; }
-		public double MinGap { get; set; }
-		public double MinGroupLength { get; set; }
-		public double MinDangleLength { get; set; }
+		public double MinGap { get;}
+		public double MinGroupLength { get;}
+		public double MinDangleLength { get;}
 		public IList<string> GroupBy { get; }
+
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_0))]
+		public QaLineGroupConstraintsDefinition(
+			[Doc(nameof(DocStrings.QaLineGroupConstraints_networkFeatureClasses))] [NotNull]
+			IList<IFeatureClassSchemaDef> networkFeatureClasses,
+			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGap))]
+			double minGap,
+			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGroupLength))]
+			double minGroupLength,
+			[Doc(nameof(DocStrings.QaLineGroupConstraints_minDangleLength))]
+			double minDangleLength,
+			[Doc(nameof(DocStrings.QaLineGroupConstraints_groupBy))] [NotNull]
+			IList<string> groupBy)
+			: base(networkFeatureClasses)
+
+		{
+			Assert.ArgumentCondition(minGap >= 0, "Invalid minGap value: {0}", minGap);
+			Assert.ArgumentCondition(minGroupLength >= 0, "Invalid minGroupLength value: {0}",
+			                         minGroupLength);
+			Assert.ArgumentCondition(minDangleLength >= 0,
+			                         "Invalid minDangleLength value: {0}",
+			                         minDangleLength);
+			Assert.ArgumentNotNull(groupBy, nameof(groupBy));
+
+			NetworkFeatureClasses = networkFeatureClasses;
+			MinGap = minGap;
+			MinGroupLength = minGroupLength;
+			MinDangleLength = minDangleLength;
+			GroupBy = groupBy;
+		}
 
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaLineGroupConstraints_ValueSeparator))]
@@ -62,36 +92,5 @@ namespace ProSuite.QA.Tests
 		[TestParameter(0)]
 		[Doc(nameof(DocStrings.QaLineGroupConstraints_MinGapToSameGroup))]
 		public double MinGapToSameGroup { get; set; }
-
-		[Doc(nameof(DocStrings.QaLineGroupConstraints_0))]
-		public QaLineGroupConstraintsDefinition(
-			[Doc(nameof(DocStrings.QaLineGroupConstraints_networkFeatureClasses))] [NotNull]
-			IList<IFeatureClassSchemaDef> networkFeatureClasses,
-			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGap))]
-			double minGap,
-			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGroupLength))]
-			double minGroupLength,
-			[Doc(nameof(DocStrings.QaLineGroupConstraints_minDangleLength))]
-			double minDangleLength,
-			[Doc(nameof(DocStrings.QaLineGroupConstraints_groupBy))] [NotNull]
-			IList<string> groupBy)
-			: base(networkFeatureClasses)
-
-
-		{
-			Assert.ArgumentCondition(minGap >= 0, "Invalid minGap value: {0}", minGap);
-			Assert.ArgumentCondition(minGroupLength >= 0, "Invalid minGroupLength value: {0}",
-			                         minGroupLength);
-			Assert.ArgumentCondition(minDangleLength >= 0,
-			                         "Invalid minDangleLength value: {0}",
-			                         minDangleLength);
-			Assert.ArgumentNotNull(groupBy, nameof(groupBy));
-			NetworkFeatureClasses = networkFeatureClasses;
-			MinGap = minGap;
-			MinGroupLength = minGroupLength;
-			MinDangleLength = minDangleLength;
-			GroupBy = groupBy;
-		}
-
 	}
 }

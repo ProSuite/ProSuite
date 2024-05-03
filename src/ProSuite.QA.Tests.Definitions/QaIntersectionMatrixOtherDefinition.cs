@@ -20,27 +20,21 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_0))]
 		public QaIntersectionMatrixOtherDefinition(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClasses))] [NotNull]
-			IList<IFeatureClassSchemaDef>
-				featureClasses,
+			IList<IFeatureClassSchemaDef> featureClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClasses))] [NotNull]
-			IList<IFeatureClassSchemaDef>
-				relatedClasses,
+			IList<IFeatureClassSchemaDef> relatedClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix)
+			string intersectionMatrix)
 			: this(featureClasses, relatedClasses, intersectionMatrix, string.Empty, null) { }
 
 		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_1))]
 		public QaIntersectionMatrixOtherDefinition(
 				[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClasses))] [NotNull]
-				IList<IFeatureClassSchemaDef>
-					featureClasses,
+				IList<IFeatureClassSchemaDef> featureClasses,
 				[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClasses))] [NotNull]
-				IList<IFeatureClassSchemaDef>
-					relatedClasses,
+				IList<IFeatureClassSchemaDef> relatedClasses,
 				[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
-				string
-					intersectionMatrix,
+				string intersectionMatrix,
 				[Doc(nameof(DocStrings.QaIntersectionMatrixOther_constraint))] [CanBeNull]
 				string constraint)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -49,27 +43,21 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_2))]
 		public QaIntersectionMatrixOtherDefinition(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClass))] [NotNull]
-			IFeatureClassSchemaDef
-				featureClass,
+			IFeatureClassSchemaDef featureClass,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClass))] [NotNull]
-			IFeatureClassSchemaDef
-				relatedClass,
+			IFeatureClassSchemaDef relatedClass,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix)
+			string intersectionMatrix)
 			: this(featureClass, relatedClass, intersectionMatrix, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_3))]
 		public QaIntersectionMatrixOtherDefinition(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClass))] [NotNull]
-			IFeatureClassSchemaDef
-				featureClass,
+			IFeatureClassSchemaDef featureClass,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClass))] [NotNull]
-			IFeatureClassSchemaDef
-				relatedClass,
+			IFeatureClassSchemaDef relatedClass,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix,
+			string intersectionMatrix,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_constraint))] [CanBeNull]
 			string constraint)
 			: this(new[] { featureClass }, new[] { relatedClass }, intersectionMatrix,
@@ -78,20 +66,16 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_4))]
 		public QaIntersectionMatrixOtherDefinition(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClasses))] [NotNull]
-			IList<IFeatureClassSchemaDef>
-				featureClasses,
+			IList<IFeatureClassSchemaDef> featureClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClasses))] [NotNull]
-			IList<IFeatureClassSchemaDef>
-				relatedClasses,
+			IList<IFeatureClassSchemaDef> relatedClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix,
+			string intersectionMatrix,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_constraint))] [CanBeNull]
 			string constraint,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_validIntersectionDimensions))]
 			[CanBeNull]
-			string
-				validIntersectionDimensions)
+			string validIntersectionDimensions)
 			//: base(featureClasses, relatedClasses, intersectionMatrix)
 			: base(featureClasses)
 		{

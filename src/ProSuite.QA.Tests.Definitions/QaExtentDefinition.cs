@@ -13,6 +13,9 @@ namespace ProSuite.QA.Tests
 	[GeometryTest]
 	public class QaExtentDefinition : AlgorithmDefinition
 	{
+		public IFeatureClassSchemaDef FeatureClass { get; }
+		public double Limit { get; }
+		public bool PerPart { get; }
 
 		[Doc(nameof(DocStrings.QaExtent_0))]
 		public QaExtentDefinition(
@@ -37,9 +40,5 @@ namespace ProSuite.QA.Tests
 			Limit = limit;
 			PerPart = perPart;
 		}
-
-		public IFeatureClassSchemaDef FeatureClass { get; }
-		public double Limit { get; }
-		public bool PerPart { get; }
 	}
 }

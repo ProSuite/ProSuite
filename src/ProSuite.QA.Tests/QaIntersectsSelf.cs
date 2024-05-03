@@ -87,7 +87,7 @@ namespace ProSuite.QA.Tests
 		{
 			ReportIntersectionsAsMultipart = definition.ReportIntersectionsAsMultipart;
 			ValidIntersectionGeometryConstraint = definition.ValidIntersectionGeometryConstraint;
-			GeometryComponents = (IList<GeometryComponent>) definition.GeometryComponents;
+			GeometryComponents = definition.GeometryComponents;
 		}
 
 		#region Overrides of QaSpatialRelationSelfBase

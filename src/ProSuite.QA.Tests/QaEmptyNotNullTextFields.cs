@@ -71,8 +71,7 @@ namespace ProSuite.QA.Tests
 
 		[InternallyUsedTest]
 		public QaEmptyNotNullTextFields([NotNull] QaEmptyNotNullTextFieldsDefinition definition)
-			: this((IReadOnlyTable)definition.Table, definition.NotNullTextFields)
-		{ }
+			: this((IReadOnlyTable)definition.Table, definition.NotNullTextFields) { }
 
 		#endregion
 

@@ -15,11 +15,8 @@ namespace ProSuite.QA.Tests
 	public class QaIntersectsSelfDefinition : AlgorithmDefinition
 	{
 		public IList<IFeatureClassSchemaDef> FeatureClasses { get; }
+		public string ValidRelationConstraint { get; }
 
-		[CanBeNull] private readonly string _validRelationConstraintSql;
-
-		//[CanBeNull] private IValidRelationConstraint _validRelationConstraint;
-		//[CanBeNull] private GeometryConstraint _validIntersectionGeometryConstraint;
 		private const bool _defaultReportIntersectionsAsMultipart = true;
 
 		[Doc(nameof(DocStrings.QaIntersectsSelf_0))]
@@ -46,9 +43,6 @@ namespace ProSuite.QA.Tests
 		{
 			Assert.ArgumentCondition(featureClasses.Count > 0, "empty featureClasses");
 
-			_validRelationConstraintSql = StringUtils.IsNotEmpty(validRelationConstraint)
-				                              ? validRelationConstraint
-				                              : null;
 			FeatureClasses = featureClasses;
 			ValidRelationConstraint = validRelationConstraint;
 		}
@@ -73,7 +67,5 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectsSelf_GeometryComponents))]
 		[TestParameter]
 		public IList<GeometryComponent> GeometryComponents { get; set; }
-
-		public string ValidRelationConstraint { get; set; }
 	}
 }

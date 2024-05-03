@@ -55,8 +55,6 @@ namespace ProSuite.QA.Tests
 			Near = near;
 			Is3D = is3D;
 			TileSize = tileSize;
-
-			//_referenceList = new[] { reference };
 		}
 
 		[Doc(nameof(DocStrings.QaFullCoincidence_2))]
@@ -93,7 +91,6 @@ namespace ProSuite.QA.Tests
 			Near = near;
 			Is3D = is3D;
 			TileSize = tileSize;
-			_referenceList = references;
 		}
 
 		[Doc(nameof(DocStrings.QaFullCoincidence_2))]
@@ -118,8 +115,6 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))]
 			double tileSize)
 			: this(featureClass, references, near, false, tileSize) { }
-
-		//protected override bool IsDirected => true;
 
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaFullCoincidence_IgnoreNeighborConditions))]

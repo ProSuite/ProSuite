@@ -46,8 +46,7 @@ namespace ProSuite.QA.Tests
 			IList<IFeatureClassSchemaDef> intersectingClasses,
 			[Doc(nameof(DocStrings.QaIntersectsOther_validRelationConstraint))]
 			string validRelationConstraint)
-			: base(
-				intersectedClasses)
+			: base(intersectedClasses)
 		{
 			IntersectedClasses = intersectedClasses;
 			IntersectingClasses = intersectingClasses;

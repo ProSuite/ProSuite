@@ -13,9 +13,9 @@ namespace ProSuite.QA.Tests
 	[UsedImplicitly]
 	public class QaDangleCountDefinition : AlgorithmDefinition
 	{
-		public double Tolerance { get; set; }
-		public IList<string> DangleCountExpressions { get; set; }
-		public IList<IFeatureClassSchemaDef> PolylineClasses { get; set; }
+		public double Tolerance { get;}
+		public IList<string> DangleCountExpressions { get;}
+		public IList<IFeatureClassSchemaDef> PolylineClasses { get;}
 
 		[Doc(nameof(DocStrings.QaDangleCount_0))]
 		public QaDangleCountDefinition(

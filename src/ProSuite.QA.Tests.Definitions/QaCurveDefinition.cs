@@ -18,6 +18,7 @@ namespace ProSuite.QA.Tests
 	[GeometryTest]
 	public class QaCurveDefinition : AlgorithmDefinition
 	{
+		public IFeatureClassSchemaDef FeatureClass { get; }
 
 		[Doc(nameof(DocStrings.QaCurve_0))]
 		public QaCurveDefinition(
@@ -26,7 +27,6 @@ namespace ProSuite.QA.Tests
 			: base(featureClass)
 		{
 			FeatureClass = featureClass;
-			//	_shapeFieldName = featureClass.ShapeFieldName;
 		}
 
 		[TestParameter]
@@ -36,7 +36,5 @@ namespace ProSuite.QA.Tests
 		[TestParameter(false)]
 		[Doc(nameof(DocStrings.QaCurve_GroupIssuesBySegmentType))]
 		public bool GroupIssuesBySegmentType { get; set; }
-		public IFeatureClassSchemaDef FeatureClass { get; private set; }
-	//	public object AllowedNonLinearSegmentTypes { get; set; }
 	}
 }

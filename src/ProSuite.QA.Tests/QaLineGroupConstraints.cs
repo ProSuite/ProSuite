@@ -198,7 +198,7 @@ namespace ProSuite.QA.Tests
 			: this(definition.NetworkFeatureClasses.Cast<IReadOnlyFeatureClass>()
 			                 .ToList(),
 			       definition.MinGap,
-			       definition.MinGroupLength, definition.MinDangleLength, (IList<string>)definition.GroupBy)
+			       definition.MinGroupLength, definition.MinDangleLength,definition.GroupBy)
 		{
 			ValueSeparator = definition.ValueSeparator;
 			GroupConditions = definition.GroupConditions;

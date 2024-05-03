@@ -43,21 +43,10 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_table))] [NotNull]
 			ITableSchemaDef table,
 			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_notNullTextFields))] [NotNull]
-			string[]
-				notNullTextFields)
+			string[] notNullTextFields)
 			: base(table)
 		{
 			Assert.ArgumentNotNull(notNullTextFields, nameof(notNullTextFields));
-
-			var fieldIndices = new List<int>(notNullTextFields.Length);
-			foreach (string notNullTextField in notNullTextFields)
-			{
-				int fieldIndex = table.FindField(notNullTextField);
-				Assert.True(fieldIndex >= 0, "field '{0}' not found in table '{1}'",
-							notNullTextField, table.Name);
-
-				fieldIndices.Add(fieldIndex);
-			}
 
 			Table = table;
 			NotNullTextFields = notNullTextFields;
