@@ -23,9 +23,9 @@ namespace ProSuite.AGP.WorkList
 		{
 			foreach (var pair in selection)
 			{
-				var id = new GdbTableIdentity(pair.Key);
+				var gdbTableIdentity = new GdbTableIdentity(pair.Key);
 				ISourceClass sourceClass =
-					SourceClasses.FirstOrDefault(s => s.Uses(id));
+					SourceClasses.FirstOrDefault(s => s.Uses(gdbTableIdentity));
 
 				if (sourceClass == null)
 				{
@@ -48,9 +48,11 @@ namespace ProSuite.AGP.WorkList
 
 		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
 		{
-			long id = GetNextOid(row);
+			long rowId = GetNextOid(row);
 
-			return RefreshState(new SelectionItem(id, row));
+			long tableId = source.GetUniqueTableId();
+
+			return RefreshState(new SelectionItem(rowId, tableId, row));
 		}
 
 		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
