@@ -75,6 +75,13 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
+		[InternallyUsedTest]
+		public QaSchemaFieldDomainNames(
+			[NotNull] QaSchemaFieldDomainNamesDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.ExpectedPrefix,
+			       definition.MaximumLength, definition.MustContainFieldName,
+			       definition.ExpectedCase) { }
+
 		public override int Execute()
 		{
 			int errorCount = 0;
