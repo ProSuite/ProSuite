@@ -1,4 +1,4 @@
-namespace ProSuite.QA.Tests
+namespace ProSuite.QA.Tests.ParameterTypes
 {
 	public enum ExpectedCase
 	{
