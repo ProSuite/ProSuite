@@ -87,8 +87,11 @@ namespace ProSuite.QA.Tests
 			                 .ToList(),
 			       definition.IntersectingClasses.Cast<IReadOnlyFeatureClass>()
 			                 .ToList(),
-			       definition.ValidRelationConstraint
-			) { }
+			       definition.ValidRelationConstraint)
+		{
+			ReportIntersectionsAsMultipart = definition.ReportIntersectionsAsMultipart;
+			ValidIntersectionGeometryConstraint = definition.ValidIntersectionGeometryConstraint;
+		}
 
 		#region Overrides of QaSpatialRelationOtherBase
 

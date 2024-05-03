@@ -49,7 +49,7 @@ namespace ProSuite.QA.Tests
 			: base(
 				intersectedClasses)
 		{
-			IntersectedClasses = intersectingClasses;
+			IntersectedClasses = intersectedClasses;
 			IntersectingClasses = intersectingClasses;
 			ValidRelationConstraint = validRelationConstraint;
 
