@@ -136,6 +136,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaSchemaFieldDomainNames),
 											 typeof(QaSchemaFieldDomains),
 											 typeof(QaSchemaFieldNameRegex),
+											 typeof(QaSchemaFieldProperties),
 											 typeof(QaSimpleGeometry),
 											 typeof(QaSliverPolygon),
 				                             typeof(QaSurfacePipe),
@@ -257,6 +258,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainNames)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomains)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldNameRegex)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldProperties)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaUnreferencedRows)));
