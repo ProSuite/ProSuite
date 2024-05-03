@@ -36,11 +36,7 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(table, nameof(table));
 
 			Table = table;
-			if (expectedPrefix != null)
-			{
-				ExpectedPrefix = expectedPrefix;
-			}
-
+			ExpectedPrefix = expectedPrefix;
 			MaximumLength = maximumLength;
 			MustContainFieldName = mustContainFieldName;
 			ExpectedCase = expectedCase;

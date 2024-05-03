@@ -106,10 +106,7 @@ namespace ProSuite.QA.Tests
 			Pattern = pattern;
 			FieldNames = fieldNames.ToList();
 			MatchIsError = matchIsError;
-			if (patternDescription != null)
-			{
-				PatternDescription = patternDescription;
-			}
+			PatternDescription = patternDescription;
 		}
 
 		[Doc(nameof(DocStrings.QaRegularExpression_FieldListType))]

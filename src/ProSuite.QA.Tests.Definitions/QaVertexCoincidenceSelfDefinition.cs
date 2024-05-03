@@ -46,10 +46,7 @@ namespace ProSuite.QA.Tests
 			: base(featureClasses)
 		{
 			FeatureClasses = featureClasses;
-			if (allowedNonCoincidenceCondition != null)
-			{
-				AllowedNonCoincidenceCondition = allowedNonCoincidenceCondition;
-			}
+			AllowedNonCoincidenceCondition = allowedNonCoincidenceCondition;
 		}
 
 		[Doc(nameof(DocStrings.QaVertexCoincidenceSelf_PointTolerance))]

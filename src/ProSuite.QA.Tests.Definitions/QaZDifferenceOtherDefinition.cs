@@ -95,10 +95,7 @@ namespace ProSuite.QA.Tests
 			MinimumZDifference = minimumZDifference;
 			MaximumZDifference = maximumZDifference;
 			ZComparisonMethod = zComparisonMethod;
-			if (zRelationConstraint != null)
-			{
-				ZRelationConstraint = zRelationConstraint;
-			}
+			ZRelationConstraint = zRelationConstraint;
 		}
 
 		[TestParameter]

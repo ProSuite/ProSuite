@@ -45,27 +45,12 @@ namespace ProSuite.QA.Tests
 				$"{featureClass.ShapeType}, only point feature classes are supported");
 
 			FeatureClass = featureClass;
-			if (xCoordinateFieldName != null)
-			{
-				XCoordinateFieldName = xCoordinateFieldName;
-			}
-
-			if (yCoordinateFieldName != null)
-			{
-				YCoordinateFieldName = yCoordinateFieldName;
-			}
-
-			if (zCoordinateFieldName != null)
-			{
-				ZCoordinateFieldName = zCoordinateFieldName;
-			}
-
+			XCoordinateFieldName = xCoordinateFieldName;
+			YCoordinateFieldName = yCoordinateFieldName;
+			ZCoordinateFieldName = zCoordinateFieldName;
 			XyTolerance = xyTolerance;
 			ZTolerance = zTolerance;
-			if (culture != null)
-			{
-				Culture = culture;
-			}
+			Culture = culture;
 		}
 
 		[TestParameter(false)]

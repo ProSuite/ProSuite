@@ -35,10 +35,7 @@ namespace ProSuite.QA.Tests
 			Table = table;
 			Pattern = pattern;
 			MatchIsError = matchIsError;
-			if (patternDescription != null)
-			{
-				PatternDescription = patternDescription;
-			}
+			PatternDescription = patternDescription;
 		}
 	}
 }

@@ -40,16 +40,8 @@ namespace ProSuite.QA.Tests
 			FieldName = fieldName;
 			ExpectedFieldType = expectedFieldType;
 			ExpectedFieldLength = expectedFieldLength;
-			if (expectedAliasName != null)
-			{
-				ExpectedAliasName = expectedAliasName;
-			}
-
-			if (expectedDomainName != null)
-			{
-				ExpectedDomainName = expectedDomainName;
-			}
-
+			ExpectedAliasName = expectedAliasName;
+			ExpectedDomainName = expectedDomainName;
 			FieldIsOptional = fieldIsOptional;
 		}
 	}
