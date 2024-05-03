@@ -124,6 +124,7 @@ namespace ProSuite.QA.Tests.Test
 				                             //typeof(QaInteriorRings),
 				                             typeof(QaIntersectionMatrixOther),
 											 typeof(QaIntersectionMatrixSelf),
+											 typeof(QaIntersectsOther),
 											 typeof(QaLineGroupConstraints),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaOverlapsSelf),
@@ -278,6 +279,7 @@ namespace ProSuite.QA.Tests.Test
 			//AddQaInteriorRingsCases(model, testCases);
 			AddQaIntersectionMatrixOtherCases(model, testCases);
 			AddQaIntersectionMatrixSelfCases(model, testCases);
+			AddQaIntersectsOtherCases(model, testCases);
 			AddQaLineGroupConstraintsCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygon(model, testCases);
@@ -704,7 +706,7 @@ namespace ProSuite.QA.Tests.Test
 													 model.GetVectorDataset(),
 
 													 },
-													 "Path"
+													 "C:\\git\\Swisstopo.GoTop"
 												 }, optionalValues));
 		}
 
@@ -1051,6 +1053,61 @@ namespace ProSuite.QA.Tests.Test
 													 "G1.Level <> G2.Level",
 													 "0: point intersections"
 												 }));
+		}
+
+		private static void AddQaIntersectsOtherCases(InMemoryTestDataModel model,
+		                                                     ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ReportIntersectionsAsMultipart", false);
+			optionalValues.Add("ValidIntersectionGeometryConstraint", "$SliverRatio < 50");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectsOther), 0,
+			                                     new object[]
+			                                     {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 }
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectsOther), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+													 model.GetVectorDataset()
+},
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectsOther), 2,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 "G1.Level <> G2.Level"
+												 },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaIntersectsOther), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+				                                     "G1.Level <> G2.Level"
+			                                     },
+			                                     optionalValues));
 		}
 
 		private static void AddQaLineGroupConstraintsCases(InMemoryTestDataModel model,
