@@ -145,25 +145,5 @@ namespace ProSuite.QA.Tests
 		[TestParameter(
 			_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled)]
 		public bool AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled { get; set; }
-
-		protected static IList<ITableSchemaDef> CastToTables(
-			params IList<IFeatureClassSchemaDef>[] featureClasses)
-		{
-			int totalCount = featureClasses.Sum(list => list.Count);
-
-			var union = new List<ITableSchemaDef>(totalCount);
-
-			foreach (IList<IFeatureClassSchemaDef> list in featureClasses)
-			{
-				foreach (IFeatureClassSchemaDef featureClass in list)
-				{
-					Assert.NotNull(featureClass, "list entry is null");
-
-					union.Add(featureClass);
-				}
-			}
-
-			return union;
-		}
 	}
 }
