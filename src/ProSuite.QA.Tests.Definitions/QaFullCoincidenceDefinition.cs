@@ -124,37 +124,5 @@ namespace ProSuite.QA.Tests
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaFullCoincidence_IgnoreNeighborConditions))]
 		public IList<string> IgnoreNeighborConditions { get; set; }
-		//{
-		//	get { return _ignoreNeighborConditionsSql; }
-		//	set
-		//	{
-		//		Assert.ArgumentCondition(value == null ||
-		//		                         value.Count == 0 ||
-		//		                         value.Count == 1 ||
-		//		                         value.Count == _referenceList.Count,
-		//		                         "unexpected number of IgnoredNeighborConditionsSql conditions " +
-		//		                         "(must be 0, 1, or # of references tables)");
-
-		//		_ignoreNeighborConditionsSql = value;
-		//		_ignoreNeighborConditions = null;
-		//	}
-		//}
-
-		[NotNull]
-		protected static IList<IFeatureClassSchemaDef> Union(
-			[NotNull] IList<IFeatureClassSchemaDef> featureClasses0,
-			[NotNull] IList<IFeatureClassSchemaDef> featureClasses1)
-		{
-			Assert.ArgumentNotNull(featureClasses0, nameof(featureClasses0));
-			Assert.ArgumentNotNull(featureClasses1, nameof(featureClasses1));
-
-			var union =
-				new List<IFeatureClassSchemaDef>(featureClasses0.Count + featureClasses1.Count);
-
-			union.AddRange(featureClasses0);
-			union.AddRange(featureClasses1);
-
-			return union;
-		}
 	}
 }

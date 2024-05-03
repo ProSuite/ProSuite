@@ -74,5 +74,21 @@ namespace ProSuite.QA.Core
 
 			return union;
 		}
+		[NotNull]
+		protected static IList<IFeatureClassSchemaDef> Union(
+			[NotNull] IList<IFeatureClassSchemaDef> featureClasses0,
+			[NotNull] IList<IFeatureClassSchemaDef> featureClasses1)
+		{
+			Assert.ArgumentNotNull(featureClasses0, nameof(featureClasses0));
+			Assert.ArgumentNotNull(featureClasses1, nameof(featureClasses1));
+
+			var union =
+				new List<IFeatureClassSchemaDef>(featureClasses0.Count + featureClasses1.Count);
+
+			union.AddRange(featureClasses0);
+			union.AddRange(featureClasses1);
+
+			return union;
+		}
 	}
 }
