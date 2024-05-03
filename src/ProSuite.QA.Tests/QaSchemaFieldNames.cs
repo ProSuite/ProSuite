@@ -68,6 +68,11 @@ namespace ProSuite.QA.Tests
 			_uniqueSubstringLength = uniqueSubstringLength;
 		}
 
+		[InternallyUsedTest]
+		public QaSchemaFieldNames([NotNull] QaSchemaFieldNamesDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.MaximumLength,
+			       definition.ExpectedCase, definition.UniqueSubstringLength) { }
+
 		#region Overrides of QaSchemaTestBase
 
 		public override int Execute()
