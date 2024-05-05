@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
@@ -76,8 +77,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_validIntersectionDimensions))]
 			[CanBeNull]
 			string validIntersectionDimensions)
-			//: base(featureClasses, relatedClasses, intersectionMatrix)
-			: base(featureClasses)
+			: base(featureClasses.Union(relatedClasses))
 		{
 			FeatureClasses = featureClasses;
 			RelatedClasses = relatedClasses;

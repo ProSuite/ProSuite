@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
@@ -46,7 +47,7 @@ namespace ProSuite.QA.Tests
 			IList<IFeatureClassSchemaDef> intersectingClasses,
 			[Doc(nameof(DocStrings.QaIntersectsOther_validRelationConstraint))]
 			string validRelationConstraint)
-			: base(intersectedClasses)
+			: base(intersectedClasses.Union(intersectingClasses))
 		{
 			IntersectedClasses = intersectedClasses;
 			IntersectingClasses = intersectingClasses;
