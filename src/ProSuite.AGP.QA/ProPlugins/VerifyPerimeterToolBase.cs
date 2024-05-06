@@ -88,7 +88,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return Task.FromResult(false);
 			}
 
-			if (ToolUtils.IsSingleClickSketch(sketchGeometry))
+			if (ToolUtils.IsSingleClickSketch(sketchGeometry, GetSelectionTolerancePixels()))
 			{
 				MessageBox.Show(
 					"Invalid perimeter. Please draw a box to define the extent to be verified",
