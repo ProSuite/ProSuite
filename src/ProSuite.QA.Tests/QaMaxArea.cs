@@ -52,6 +52,13 @@ namespace ProSuite.QA.Tests
 			bool perPart)
 			: base(polygonClass, limit, perPart) { }
 
+		[InternallyUsedTest]
+		public QaMaxArea(
+			[NotNull] QaMaxAreaDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.PolygonClass,
+			       definition.Limit, definition.Perpart)
+		{ }
+
 		protected override int CheckArea(double area, IGeometry shape, IReadOnlyRow row)
 		{
 			return Math.Abs(area) <= Limit

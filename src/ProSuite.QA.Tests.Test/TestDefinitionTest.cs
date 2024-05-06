@@ -127,6 +127,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaIntersectsOther),
 											 typeof(QaIntersectsSelf),
 											 typeof(QaLineGroupConstraints),
+											 typeof(QaMaxArea),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
@@ -243,6 +244,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxArea)));
 
 
 			// TODO: Implement Definition
