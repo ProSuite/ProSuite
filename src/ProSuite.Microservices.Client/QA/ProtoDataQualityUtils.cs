@@ -698,7 +698,24 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			ObjectAttributeType attributeType = null;
 
-			if (attributeMsg.AttributeRole > 0)
+			// TODO: Remove hard coded field names
+			if (string.Equals("SHAPE", attributeMsg.Name, StringComparison.OrdinalIgnoreCase))
+			{
+				attributeType =
+					new ObjectAttributeType(AttributeRole.Shape);
+			}
+			else if (string.Equals("SHAPE.LEN", attributeMsg.Name, StringComparison.OrdinalIgnoreCase))
+			{
+				attributeType =
+					new ObjectAttributeType(AttributeRole.ShapeLength);
+			}
+			// TODO daro correct name?
+			else if (string.Equals("SHAPE.AREA", attributeMsg.Name, StringComparison.OrdinalIgnoreCase))
+			{
+				attributeType =
+					new ObjectAttributeType(AttributeRole.ShapeArea);
+			}
+			else if (attributeMsg.AttributeRole > 0)
 			{
 				// Probably not worth caching, treat it as value type:
 				attributeType =

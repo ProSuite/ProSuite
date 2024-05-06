@@ -68,7 +68,7 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		public static Table GetTable<T>([NotNull] T mapMember) where T : MapMember
+		public static Table GetTable([NotNull] MapMember mapMember)
 		{
 			Assert.ArgumentNotNull(mapMember, nameof(mapMember));
 
@@ -84,6 +84,22 @@ namespace ProSuite.Commons.AGP.Carto
 
 			throw new ArgumentException(
 				$"{nameof(mapMember)} is not of type BasicFeatureLayer nor StandaloneTable");
+		}
+
+		public static IEnumerable<Table> GetTables(IEnumerable<MapMember> mapMembers)
+		{
+			foreach (MapMember mapMember in mapMembers)
+			{
+				if (mapMember is BasicFeatureLayer basicFeatureLayer)
+				{
+					yield return Assert.NotNull(basicFeatureLayer.GetTable());
+				}
+
+				if (mapMember is StandaloneTable standaloneTable)
+				{
+					yield return Assert.NotNull(standaloneTable.GetTable());
+				}
+			}
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
