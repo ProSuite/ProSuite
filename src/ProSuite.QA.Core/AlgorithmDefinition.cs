@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Reflection;
+using ProSuite.QA.Core.ParameterTypes;
 
 namespace ProSuite.QA.Core
 {
@@ -17,6 +18,8 @@ namespace ProSuite.QA.Core
 	/// </summary>
 	public abstract class AlgorithmDefinition
 	{
+		protected const AngleUnit DefaultAngleUnit = AngleUnit.Radiant;
+
 		public IList<ITableSchemaDef> InvolvedTables { get; }
 
 		protected AlgorithmDefinition([NotNull] ITableSchemaDef involvedTable) : this(

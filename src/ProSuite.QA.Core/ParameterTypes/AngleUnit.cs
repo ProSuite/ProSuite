@@ -1,4 +1,4 @@
-namespace ProSuite.QA.Container.Geometry
+namespace ProSuite.QA.Core.ParameterTypes
 {
 	public enum AngleUnit
 	{
