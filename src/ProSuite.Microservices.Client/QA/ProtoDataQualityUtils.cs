@@ -698,21 +698,22 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			ObjectAttributeType attributeType = null;
 
+			// TODO: Remove hard coded field names
 			if (string.Equals("SHAPE", attributeMsg.Name, StringComparison.OrdinalIgnoreCase))
 			{
 				attributeType =
-					new ObjectAttributeType(new AttributeRole(30));
+					new ObjectAttributeType(AttributeRole.Shape);
 			}
 			else if (string.Equals("SHAPE.LEN", attributeMsg.Name, StringComparison.OrdinalIgnoreCase))
 			{
 				attributeType =
-					new ObjectAttributeType(new AttributeRole(31));
+					new ObjectAttributeType(AttributeRole.ShapeLength);
 			}
 			// TODO daro correct name?
 			else if (string.Equals("SHAPE.AREA", attributeMsg.Name, StringComparison.OrdinalIgnoreCase))
 			{
 				attributeType =
-					new ObjectAttributeType(new AttributeRole(32));
+					new ObjectAttributeType(AttributeRole.ShapeArea);
 			}
 			else if (attributeMsg.AttributeRole > 0)
 			{
