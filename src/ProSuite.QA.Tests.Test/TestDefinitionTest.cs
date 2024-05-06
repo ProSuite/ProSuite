@@ -130,6 +130,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMaxArea),
 											 typeof(QaMaxLength),
 											 typeof(QaMaxVertexCount),
+											 typeof(QaMeasures),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
@@ -249,6 +250,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxArea)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxLength)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxVertexCount)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMeasures)));
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
