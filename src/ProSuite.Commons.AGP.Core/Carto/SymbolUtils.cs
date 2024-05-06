@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using ArcGIS.Core.CIM;
@@ -1174,6 +1175,83 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		}
 
 		private static readonly Regex _fieldExpressionRegex = new(@"^\s*\[\s*([ _\w]+)\s*\]\s*$");
+
+		#endregion
+
+		#region Line width
+
+		/// <summary>
+		/// Get the width of a line to the left and right of the shape.
+		/// Only line strokes are considered, markers along a line are
+		/// ignored. Any offset effects are taken into account, and may
+		/// be the cause for <paramref name="leftPoints"/> differing
+		/// from <paramref name="rightPoints"/> (asymmetric line symbol).
+		/// </summary>
+		/// <param name="symbol">The line symbol whose width to find</param>
+		/// <param name="leftPoints">Line width to the left of the shape in points</param>
+		/// <param name="rightPoints">Line width to the right of the shape in points</param>
+		/// <returns>True if there's at least one stroke layer, and thus
+		/// a line width could be derived; false otherwise.</returns>
+		/// <remarks>Consider using <see cref="ApplyOverrides"/> on the
+		/// <paramref name="symbol"/> passed in!
+		/// Add <paramref name="leftPoints"/> and <paramref name="rightPoints"/>
+		/// to get the overall line width.</remarks>
+		public static bool GetLineWidth(CIMLineSymbol symbol,
+		                                out double leftPoints, out double rightPoints)
+		{
+			leftPoints = rightPoints = double.NaN;
+			if (symbol is null) return false;
+
+			var symbolLayers = symbol.SymbolLayers;
+			if (symbolLayers is null) return false;
+
+			bool hasStroke = false;
+			double left = double.MaxValue;
+			double right = double.MinValue;
+
+			double globalOffset = GetOffset(symbol.Effects);
+
+			foreach (var layer in symbolLayers)
+			{
+				if (layer is CIMStroke stroke)
+				{
+					hasStroke = true;
+
+					double localOffset = GetOffset(stroke.Effects);
+					double width = stroke.Width;
+
+					double halfWidth = width / 2;
+					left = Math.Min(left, globalOffset + localOffset - halfWidth);
+					right = Math.Max(right, globalOffset + localOffset + halfWidth);
+				}
+				// else: skip this symbol layer; we look at line (stroke) width only
+			}
+
+			leftPoints = -left; // negate!
+			rightPoints = right; // don't!
+
+			return hasStroke;
+		}
+
+		/// <returns>cumulative offset over all offset effects
+		/// amongst those given; left is negative (for consistency
+		/// with <see cref="IGeometryEngine.Offset"/></returns>
+		private static double GetOffset(IEnumerable<CIMGeometricEffect> effects)
+		{
+			if (effects is null) return 0;
+
+			double offset = 0;
+
+			foreach (var effect in effects.OfType<CIMGeometricEffectOffset>())
+			{
+				offset += effect.Offset;
+			}
+
+			// invert: positive is left on the geometric effect,
+			// but we prefer negative for left for consistency
+			// with IGeometryEngine.Offset():
+			return -offset;
+		}
 
 		#endregion
 
