@@ -15,6 +15,9 @@ namespace ProSuite.Commons.AGP.Gdb
 		public GdbWorkspaceIdentity([NotNull] Datastore datastore) :
 			this(datastore.GetConnector(), datastore.GetConnectionString()) { }
 
+		// TODO: Once we can re-create a valid connector from the connectionString, add overload just using connection string.
+		//       Missing functionality: Creating DatabaseConnectionProperties from connection string containing
+		//       an encrypted password (GOTOP-224).
 		public GdbWorkspaceIdentity([NotNull] Connector connector, string connectionString)
 		{
 			Assert.ArgumentNotNull(connector, nameof(connector));
