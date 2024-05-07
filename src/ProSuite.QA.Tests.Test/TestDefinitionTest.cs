@@ -127,10 +127,12 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaIntersectsOther),
 											 typeof(QaIntersectsSelf),
 											 typeof(QaLineGroupConstraints),
+											 //typeof(QaLineIntersectAngle),
 											 typeof(QaMaxArea),
 											 typeof(QaMaxLength),
 											 typeof(QaMaxVertexCount),
 											 typeof(QaMeasures),
+											 typeof(QaMinArea),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
@@ -251,6 +253,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxLength)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxVertexCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMeasures)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinArea)));
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
@@ -304,6 +307,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaIntersectsOtherCases(model, testCases);
 			AddQaIntersectsSelfCases(model, testCases);
 			AddQaLineGroupConstraintsCases(model, testCases);
+			//AddQaLineIntersectAngleCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygon(model, testCases);
 			AddQaTouchesSelf(model, testCases);
@@ -1211,6 +1215,45 @@ namespace ProSuite.QA.Tests.Test
 													 }
 												 },
 			                                     optionalValues));
+		}
+
+		private static void AddQaLineIntersectAngleCases(InMemoryTestDataModel model,
+		                                                   ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("AngularUnit", "radian");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 0,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     3,
+				                                     false
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 0,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     3
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     3
+			                                     },
+			                                     optionalValues));
+
 		}
 
 		private static void AddQaRegularExpressionCases(InMemoryTestDataModel model,
