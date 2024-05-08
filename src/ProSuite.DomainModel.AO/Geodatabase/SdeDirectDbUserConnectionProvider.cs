@@ -93,6 +93,8 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		[UsedImplicitly]
 		private EncryptedString EncryptedPassword => _encryptedPassword;
 
+		public string EncryptedPasswordValue => EncryptedPassword.EncryptedValue;
+
 		protected override IFeatureWorkspace OpenWorkspaceCore(string versionName = null,
 		                                                       int hWnd = 0)
 		{

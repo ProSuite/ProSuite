@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ProSuite.Commons.Cryptography;
 
 namespace ProSuite.Commons.DomainModels
@@ -6,8 +6,6 @@ namespace ProSuite.Commons.DomainModels
 	public abstract class EncryptedStringBase : IEquatable<EncryptedStringBase>
 	{
 		private string _encryptedValue;
-		private bool _plainTextKnown;
-		private string _plainTextValue = string.Empty;
 
 		protected abstract IStringEncryptor Encryptor { get; }
 
@@ -15,32 +13,25 @@ namespace ProSuite.Commons.DomainModels
 		{
 			get
 			{
-				if (! _plainTextKnown)
+				string result;
+				if (_encryptedValue == null)
 				{
-					if (_encryptedValue == null)
-					{
-						_plainTextValue = null;
-					}
-					else
-					{
-						_plainTextValue = _encryptedValue == string.Empty
-							                  ? string.Empty
-							                  : Encryptor.Decrypt(_encryptedValue);
-					}
-
-					_plainTextKnown = true;
+					result = null;
+				}
+				else
+				{
+					result = _encryptedValue == string.Empty
+						         ? string.Empty
+						         : Encryptor.Decrypt(_encryptedValue);
 				}
 
-				return _plainTextValue;
+				return result;
 			}
 			set
 			{
-				_plainTextValue = value;
-				_encryptedValue = _plainTextValue == null
+				_encryptedValue = value == null
 					                  ? null
 					                  : Encryptor.Encrypt(value);
-
-				_plainTextKnown = true;
 			}
 		}
 
@@ -50,7 +41,6 @@ namespace ProSuite.Commons.DomainModels
 			set
 			{
 				_encryptedValue = value;
-				_plainTextKnown = false;
 			}
 		}
 
