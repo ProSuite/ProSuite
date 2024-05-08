@@ -4,7 +4,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 
-namespace ProSuite.DomainModel.AO.Geodatabase
+namespace ProSuite.DomainModel.AO.Geodatabase.Legacy
 {
 	[Obsolete(
 		"Not supported in ArcGIS 11 (or at least not programmatically) but must be retained due to legacy DDX compatibility.")]
