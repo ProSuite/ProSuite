@@ -12,7 +12,8 @@ using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Ddx;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Client.QA
 {
@@ -504,6 +505,15 @@ namespace ProSuite.Microservices.Client.QA
 				referencedDatasetMsgs.Add(datasetMsg);
 			}
 
+			modelMsg.SqlCaseSensitivity = (int) productionModel.SqlCaseSensitivity;
+
+			modelMsg.ElementNamesAreQualified = productionModel.ElementNamesAreQualified;
+
+			modelMsg.DefaultDatabaseName =
+				ProtobufGeomUtils.NullToEmpty(productionModel.DefaultDatabaseName);
+			modelMsg.DefaultDatabaseSchemaOwner =
+				ProtobufGeomUtils.NullToEmpty(productionModel.DefaultDatabaseSchemaOwner);
+
 			return modelMsg;
 		}
 
@@ -518,7 +528,8 @@ namespace ProSuite.Microservices.Client.QA
 					DatasetId = dataset.Id,
 					Name = ProtobufGeomUtils.NullToEmpty(dataset.Name),
 					AliasName = ProtobufGeomUtils.NullToEmpty(dataset.AliasName),
-					GeometryType = geometryType
+					GeometryType = geometryType,
+					DatasetType = (int) dataset.DatasetType
 				};
 
 			if (includeDetails)
@@ -704,13 +715,15 @@ namespace ProSuite.Microservices.Client.QA
 				attributeType =
 					new ObjectAttributeType(AttributeRole.Shape);
 			}
-			else if (string.Equals("SHAPE.LEN", attributeMsg.Name, StringComparison.OrdinalIgnoreCase))
+			else if (string.Equals("SHAPE.LEN", attributeMsg.Name,
+			                       StringComparison.OrdinalIgnoreCase))
 			{
 				attributeType =
 					new ObjectAttributeType(AttributeRole.ShapeLength);
 			}
 			// TODO daro correct name?
-			else if (string.Equals("SHAPE.AREA", attributeMsg.Name, StringComparison.OrdinalIgnoreCase))
+			else if (string.Equals("SHAPE.AREA", attributeMsg.Name,
+			                       StringComparison.OrdinalIgnoreCase))
 			{
 				attributeType =
 					new ObjectAttributeType(AttributeRole.ShapeArea);

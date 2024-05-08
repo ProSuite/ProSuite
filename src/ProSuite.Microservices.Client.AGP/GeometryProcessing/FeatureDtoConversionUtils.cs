@@ -5,7 +5,7 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 {
