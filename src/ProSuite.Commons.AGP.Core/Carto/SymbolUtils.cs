@@ -9,6 +9,7 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Core.Carto
 {
@@ -37,6 +38,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		public static CIMColor DefaultStrokeColor => ColorUtils.BlackRGB;
 		public const double DefaultStrokeWidth = 1.0;
 		public const double DefaultMarkerSize = 10.0;
+
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Conversion
 
@@ -913,7 +916,9 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			var symref = GetSymbolReference(renderer.Symbol, renderer.AlternateSymbols, scaleDenom);
 
-			return ApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
+			symref = TryApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
+
+			return symref;
 		}
 
 		private static CIMSymbolReference GetSymbol(CIMUniqueValueRenderer renderer, INamedValues feature, double scaleDenom)
@@ -941,7 +946,25 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			var symref = GetSymbolReference(primary, alternates, scaleDenom);
 
-			return ApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
+			symref = TryApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
+
+			return symref;
+		}
+
+		private static CIMSymbolReference TryApplyOverrides(
+			CIMSymbolReference symref, INamedValues feature,
+			double scaleDenom, CIMVisualVariable[] visualVariables)
+		{
+			try
+			{
+				symref = ApplyOverrides(symref, feature, scaleDenom, visualVariables);
+			}
+			catch (Exception ex)
+			{
+				_msg.Warn($"Could not apply (all) overrides: {ex.Message}", ex);
+			}
+
+			return symref;
 		}
 
 		private static CIMUniqueValueClass FindClass(CIMUniqueValueRenderer renderer, INamedValues feature)
@@ -1086,7 +1109,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				{
 					// - evaluate mapping.Expression (or Arcade: mapping.ValueExpressionInfo) against given feature
 					// - find primitive by mapping.PrimitiveName (see SymbolUtils on how to traverse a CIMSymbol)
-					// - replace primitive's mapping.PropertyName by expression value
+					// - set expression value on primitive's property named mapping.PropertyName
 
 					try
 					{
@@ -1132,8 +1155,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			var property = primitive.GetType().GetProperty(mapping.PropertyName);
 			if (property is null)
 			{
-				throw new Exception(
-					$"Property '{mapping.PropertyName}' not found on {primitive.GetType().Name}");
+				throw new Exception($"Property '{mapping.PropertyName}' not found on {primitive.GetType().Name}");
 			}
 
 			object value = Evaluate(mapping.Expression, mapping.ValueExpressionInfo, feature);
@@ -1187,15 +1209,14 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		/// be the cause for <paramref name="leftPoints"/> differing
 		/// from <paramref name="rightPoints"/> (asymmetric line symbol).
 		/// </summary>
-		/// <param name="symbol">The line symbol whose width to find</param>
+		/// <param name="symbol">The line symbol whose width to find
+		/// (you probably want this to be a symbol with overrides applied)</param>
 		/// <param name="leftPoints">Line width to the left of the shape in points</param>
 		/// <param name="rightPoints">Line width to the right of the shape in points</param>
 		/// <returns>True if there's at least one stroke layer, and thus
 		/// a line width could be derived; false otherwise.</returns>
-		/// <remarks>Consider using <see cref="ApplyOverrides"/> on the
-		/// <paramref name="symbol"/> passed in!
-		/// Add <paramref name="leftPoints"/> and <paramref name="rightPoints"/>
-		/// to get the overall line width.</remarks>
+		/// <remarks>To get overall line width, add <paramref name="leftPoints"/>
+		/// and <paramref name="rightPoints"/> together.</remarks>
 		public static bool GetLineWidth(CIMLineSymbol symbol,
 		                                out double leftPoints, out double rightPoints)
 		{
