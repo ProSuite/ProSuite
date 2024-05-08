@@ -92,12 +92,21 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				if (mapMember is BasicFeatureLayer basicFeatureLayer)
 				{
-					yield return Assert.NotNull(basicFeatureLayer.GetTable());
+					//Note: Invalid layers have null tables
+					Table table = basicFeatureLayer.GetTable();
+					if (table != null)
+					{
+						yield return table;
+					}
 				}
 
 				if (mapMember is StandaloneTable standaloneTable)
 				{
-					yield return Assert.NotNull(standaloneTable.GetTable());
+					Table table = standaloneTable.GetTable();
+					if (table != null)
+					{
+						yield return table;
+					}
 				}
 			}
 		}
