@@ -127,6 +127,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaIntersectsOther),
 											 typeof(QaIntersectsSelf),
 											 typeof(QaLineGroupConstraints),
+											 typeof(QaLineIntersect),
 											 //typeof(QaLineIntersectAngle),
 											 typeof(QaMaxArea),
 											 typeof(QaMaxLength),
@@ -307,6 +308,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaIntersectsOtherCases(model, testCases);
 			AddQaIntersectsSelfCases(model, testCases);
 			AddQaLineGroupConstraintsCases(model, testCases);
+			AddQaLineIntersectCases(model, testCases);
 			//AddQaLineIntersectAngleCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygon(model, testCases);
@@ -1215,6 +1217,62 @@ namespace ProSuite.QA.Tests.Test
 													 }
 												 },
 			                                     optionalValues));
+		}
+
+		private static void AddQaLineIntersectCases(InMemoryTestDataModel model,
+		                                                 ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("AllowedInteriorIntersections", "None");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersect), 0,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     }
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersect), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset()
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersect), 2,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+													 "G1.Level <> G2.Level"
+												 },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersect), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "G1.Level <> G2.Level"
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersect), 4,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     "G1.Level <> G2.Level",
+													 "None",
+													 false
+			                                     },
+			                                     optionalValues));
+
 		}
 
 		private static void AddQaLineIntersectAngleCases(InMemoryTestDataModel model,
