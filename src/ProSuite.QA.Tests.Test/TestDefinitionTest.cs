@@ -126,6 +126,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaIntersectionMatrixSelf),
 											 typeof(QaIntersectsOther),
 											 typeof(QaIntersectsSelf),
+											 typeof(QaLineConnectionFieldValues),
 											 typeof(QaLineGroupConstraints),
 											 typeof(QaLineIntersect),
 											 //typeof(QaLineIntersectAngle),
@@ -250,6 +251,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaLineConnectionFieldValues)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxArea)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxLength)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxVertexCount)));
