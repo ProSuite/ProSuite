@@ -5,8 +5,6 @@ namespace ProSuite.Commons.DomainModels
 {
 	public abstract class EncryptedStringBase : IEquatable<EncryptedStringBase>
 	{
-		private string _encryptedValue;
-
 		protected abstract IStringEncryptor Encryptor { get; }
 
 		public string PlainTextValue
@@ -14,35 +12,28 @@ namespace ProSuite.Commons.DomainModels
 			get
 			{
 				string result;
-				if (_encryptedValue == null)
+				if (EncryptedValue == null)
 				{
 					result = null;
 				}
 				else
 				{
-					result = _encryptedValue == string.Empty
+					result = EncryptedValue == string.Empty
 						         ? string.Empty
-						         : Encryptor.Decrypt(_encryptedValue);
+						         : Encryptor.Decrypt(EncryptedValue);
 				}
 
 				return result;
 			}
 			set
 			{
-				_encryptedValue = value == null
-					                  ? null
-					                  : Encryptor.Encrypt(value);
+				EncryptedValue = value == null
+					                 ? null
+					                 : Encryptor.Encrypt(value);
 			}
 		}
 
-		public string EncryptedValue
-		{
-			get { return _encryptedValue; }
-			set
-			{
-				_encryptedValue = value;
-			}
-		}
+		public string EncryptedValue { get; set; }
 
 		public bool Equals(EncryptedStringBase encryptedString)
 		{
@@ -51,7 +42,7 @@ namespace ProSuite.Commons.DomainModels
 				return false;
 			}
 
-			return Equals(_encryptedValue, encryptedString._encryptedValue);
+			return Equals(EncryptedValue, encryptedString.EncryptedValue);
 		}
 
 		public override bool Equals(object obj)
@@ -66,8 +57,8 @@ namespace ProSuite.Commons.DomainModels
 
 		public override int GetHashCode()
 		{
-			return _encryptedValue != null
-				       ? _encryptedValue.GetHashCode()
+			return EncryptedValue != null
+				       ? EncryptedValue.GetHashCode()
 				       : 0;
 		}
 	}

@@ -165,11 +165,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			Dictionary<int, IDdxDataset> datasetsById =
 				FromDatasetMsgs(getSpecificationResponse.ReferencedDatasets);
 
-			var models = new List<BasicModel>();
+			var models = new List<DdxModel>();
 
 			foreach (ModelMsg modelMsg in getSpecificationResponse.ReferencedModels)
 			{
-				BasicModel model = new BasicModel(modelMsg.ModelId, modelMsg.Name);
+				DdxModel model = CreateDdxModel(modelMsg, (id, name) => new BasicModel(id, name));
 
 				foreach (int datasetId in modelMsg.DatasetIds)
 				{
@@ -193,6 +193,19 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				factory.CreateQualitySpecification(getSpecificationResponse.Specification);
 
 			return result;
+		}
+
+		public static DdxModel CreateDdxModel(ModelMsg modelMsg,
+		                                      Func<int, string, DdxModel> modelFactory)
+		{
+			DdxModel model = modelFactory(modelMsg.ModelId, modelMsg.Name);
+
+			model.SqlCaseSensitivity = (SqlCaseSensitivity) modelMsg.SqlCaseSensitivity;
+			model.DefaultDatabaseName = modelMsg.DefaultDatabaseName;
+			model.DefaultDatabaseSchemaOwner = modelMsg.DefaultDatabaseSchemaOwner;
+			model.ElementNamesAreQualified = modelMsg.ElementNamesAreQualified;
+
+			return model;
 		}
 
 		public static void AddDatasetsDetailsAsync(
