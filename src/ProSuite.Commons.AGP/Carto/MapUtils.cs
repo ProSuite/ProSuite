@@ -502,6 +502,36 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
+		/// Gets the pixel size for the specified map view in the map space without
+		/// using the ScreenToMap method (which is incorrect in stereo maps at 3.3)
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <returns></returns>
+		public static double GetPixelSizeInMapUnits(MapView mapView)
+		{
+			Envelope mapExtent = mapView.Map.GetDefaultExtent();
+			SpatialReference sr = mapExtent.SpatialReference;
+			
+			MapPoint mapLowerLeft = GeometryFactory.CreatePoint(mapExtent.XMin, mapExtent.YMin, sr);
+			MapPoint mapUpperRight = GeometryFactory.CreatePoint(mapExtent.XMax, mapExtent.YMax, sr);
+
+			Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
+			Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
+
+			// Client window coordinates (probably makes no difference for this calculation but it is correct)
+			Point clientLowerLeft = mapView.ScreenToClient(screenLowerLeft);
+			Point clientUpperRight = mapView.ScreenToClient(screenUpperRight);
+
+			double widthPixels = clientUpperRight.X - clientLowerLeft.X;
+			double heightPixels = clientUpperRight.Y - clientLowerLeft.Y;
+
+			double pixelSizeX = mapExtent.Width / widthPixels;
+			double pixelSizeY = mapExtent.Height / heightPixels;
+
+			return pixelSizeX + pixelSizeY / 2;
+		}
+
+		/// <summary>
 		/// Zooms a map to a given envelope, applying an expansion factor and making sure the resulting
 		/// scale denominator is not larger than a given minimum denominator.
 		/// </summary>

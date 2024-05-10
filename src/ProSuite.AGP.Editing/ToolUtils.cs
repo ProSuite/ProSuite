@@ -50,8 +50,10 @@ namespace ProSuite.AGP.Editing
 			_msg.VerboseDebug(() => $"Sketch width: {sketchGeometry.Extent.Width}, " +
 			                        $"sketch height: {sketchGeometry.Extent.Height}");
 
-			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
-				selectionTolerancePixels);
+			double selectionToleranceMapUnits =
+				MapUtils.GetPixelSizeInMapUnits(MapView.Active) * selectionTolerancePixels;
+
+			_msg.VerboseDebug(() => $"Selection tolerance in map units: {selectionToleranceMapUnits}");
 
 			return sketchGeometry.Extent.Width <= selectionToleranceMapUnits &&
 			       sketchGeometry.Extent.Height <= selectionToleranceMapUnits;
@@ -122,8 +124,9 @@ namespace ProSuite.AGP.Editing
 
 		private static MapPoint CreatePointFromSketchPolygon(Geometry sketchGeometry)
 		{
-			var clickCoord =
-				new Coordinate2D(sketchGeometry.Extent.XMin, sketchGeometry.Extent.YMin);
+			MapPoint sketchCenter = sketchGeometry.Extent.Center;
+
+			var clickCoord = new Coordinate2D(sketchCenter.X, sketchCenter.Y);
 
 			return MapPointBuilderEx.CreateMapPoint(clickCoord, sketchGeometry.SpatialReference);
 		}
@@ -131,7 +134,8 @@ namespace ProSuite.AGP.Editing
 		private static Geometry BufferGeometryByPixels(Geometry sketchGeometry,
 		                                               int pixelBufferDistance)
 		{
-			double bufferDistance = MapUtils.ConvertScreenPixelToMapLength(pixelBufferDistance);
+			double bufferDistance =
+				MapUtils.GetPixelSizeInMapUnits(MapView.Active) * pixelBufferDistance;
 
 			Geometry selectionGeometry =
 				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
