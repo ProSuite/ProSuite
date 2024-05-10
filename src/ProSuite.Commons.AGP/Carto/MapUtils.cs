@@ -488,32 +488,54 @@ namespace ProSuite.Commons.AGP.Carto
 			return MapPointBuilderEx.CreateMapPoint(new Coordinate2D(clientPoint.X, clientPoint.Y));
 		}
 
-		public static double ConvertScreenPixelToMapLength(int pixels)
+		/// <summary>
+		/// Gets the pixel size for the specified map view in the map space at the specified point.
+		/// Note that the point must have the correct Z value in order to return correct results
+		/// in a stereo map in floating cursor mode.
+		/// BUG: In fixed cursor mode this method always returns 0 because ScreenToMap seems not to
+		/// work correctly.
+		/// </summary>
+		/// <param name="pixels"></param>
+		/// <param name="atPoint"></param>
+		/// <returns></returns>
+		public static double ConvertScreenPixelToMapLength(
+			MapView mapView,
+			int pixels,
+			[NotNull] MapPoint atPoint)
 		{
-			var mapExtent = MapView.Active.Map.GetDefaultExtent();
-			var mapPoint = mapExtent.Center;
-			//Map center as screen point
-			var screenPoint = MapView.Active.MapToScreen(mapPoint);
+			if (mapView.ViewingMode == MapViewingMode.MapStereo)
+			{
+				return GetPixelSizeInMapUnits(mapView, atPoint) * pixels;
+			}
+
+			// The point as screen point
+			var screenPoint = mapView.MapToScreen(atPoint);
+
 			//Add tolerance pixels to get a "radius".
-			var radiusScreenPoint =
-				new Point(screenPoint.X + pixels, screenPoint.Y);
-			var radiusMapPoint = MapView.Active.ScreenToMap(radiusScreenPoint);
-			return GeometryEngine.Instance.Distance(mapPoint, radiusMapPoint);
+			var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
+			var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
+
+			return GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
 		}
 
 		/// <summary>
 		/// Gets the pixel size for the specified map view in the map space without
-		/// using the ScreenToMap method (which is incorrect in stereo maps at 3.3)
+		/// using the ScreenToMap method (which is incorrect in stereo maps at 3.3).
+		/// This method is not particularly robust against rotated maps!
 		/// </summary>
 		/// <param name="mapView"></param>
 		/// <returns></returns>
-		public static double GetPixelSizeInMapUnits(MapView mapView)
+		public static double GetPixelSizeInMapUnits(MapView mapView, [NotNull] MapPoint atPoint)
 		{
 			Envelope mapExtent = mapView.Map.GetDefaultExtent();
 			SpatialReference sr = mapExtent.SpatialReference;
-			
-			MapPoint mapLowerLeft = GeometryFactory.CreatePoint(mapExtent.XMin, mapExtent.YMin, sr);
-			MapPoint mapUpperRight = GeometryFactory.CreatePoint(mapExtent.XMax, mapExtent.YMax, sr);
+
+			double z = atPoint.Z;
+
+			MapPoint mapLowerLeft = GeometryFactory.CreatePoint(
+				mapExtent.XMin, mapExtent.YMin, z, sr);
+			MapPoint mapUpperRight = GeometryFactory.CreatePoint(
+				mapExtent.XMax, mapExtent.YMax, z, sr);
 
 			Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
 			Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
@@ -522,8 +544,8 @@ namespace ProSuite.Commons.AGP.Carto
 			Point clientLowerLeft = mapView.ScreenToClient(screenLowerLeft);
 			Point clientUpperRight = mapView.ScreenToClient(screenUpperRight);
 
-			double widthPixels = clientUpperRight.X - clientLowerLeft.X;
-			double heightPixels = clientUpperRight.Y - clientLowerLeft.Y;
+			double widthPixels = Math.Abs(clientUpperRight.X - clientLowerLeft.X);
+			double heightPixels = Math.Abs(clientUpperRight.Y - clientLowerLeft.Y);
 
 			double pixelSizeX = mapExtent.Width / widthPixels;
 			double pixelSizeY = mapExtent.Height / heightPixels;

@@ -52,6 +52,11 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return MapPointBuilderEx.CreateMapPoint(x, y, sref);
 		}
 
+		public static MapPoint CreatePoint(double x, double y, double z, SpatialReference sref = null)
+		{
+			return MapPointBuilderEx.CreateMapPoint(x, y, z, sref);
+		}
+
 		public static Envelope CreateEnvelope(
 			double x0, double y0, double x1, double y1,
 			SpatialReference sref = null)
