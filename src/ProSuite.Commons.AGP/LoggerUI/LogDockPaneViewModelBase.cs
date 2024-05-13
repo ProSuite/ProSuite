@@ -2,15 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
+using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Persistence.WPF;
 
 namespace ProSuite.Commons.AGP.LoggerUI
 {
 	[UsedImplicitly]
-	public abstract class LogDockPaneViewModelBase : DockPaneViewModelBase, IDisposable
+	public abstract class LogDockPaneViewModelBase : DockPaneViewModelBase, IDisposable, IFormStateAware<LogDockPaneViewModelBase.LogPaneFormState>
 	{
 		protected abstract string LogDockPaneDamlID { get; }
 
@@ -21,7 +23,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		//private LoggingEventsAppender _appenderDelegate = new LoggingEventsAppender();
 		private readonly List<LogType> _disabledLogTypes = new();
 		private readonly object _lockLogMessages = new();
-
+		private readonly UserStateManager<LogPaneFormState> _formStateManager;
 		private LoggingEventItem _selectedRow;
 
 		protected LogDockPaneViewModelBase() : base(new LogDockPane())
@@ -32,11 +34,16 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			FilterLogs(null);
 
 			LoggingEventsAppender.OnNewLogMessage += Logger_OnNewLogMessage;
+
+			_formStateManager = new UserStateManager<LogPaneFormState>(this, LogDockPaneDamlID);
+			_formStateManager.RestoreState();
+			ProjectClosedEvent.Subscribe(OnProjectClosed);
 		}
 
 		public void Dispose()
 		{
 			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
+			ProjectClosedEvent.Unsubscribe(OnProjectClosed);
 
 			var pane =
 				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(LogDockPaneDamlID);
@@ -51,6 +58,47 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			}
 		}
 
+		#region Form state persistance
+
+		void IFormStateAware<LogPaneFormState>.SaveState(LogPaneFormState formState)
+		{
+			if (formState is null)
+				throw new ArgumentNullException(nameof(formState));
+
+			formState.IsShowDebugEvents = DebugLogsAreVisible;
+			formState.IsVerboseDebugEnabled = VerboseLogsAreVisible;
+		}
+
+		void IFormStateAware<LogPaneFormState>.RestoreState(LogPaneFormState formState)
+		{
+			if (formState is null)
+				throw new ArgumentNullException(nameof(formState));
+
+			DebugLogsAreVisible = formState.IsShowDebugEvents;
+			VerboseLogsAreVisible = formState.IsVerboseDebugEnabled;
+		}
+
+		private void OnProjectClosed(ProjectEventArgs obj)
+		{
+			// We don't get any Dock Pane hidden/closed event, so save on project closed:
+			try
+			{
+				_formStateManager.SaveState();
+			}
+			catch (Exception ex)
+			{
+				_msg.Warn("Error saving form state", ex);
+			}
+		}
+
+		[UsedImplicitly]
+		public class LogPaneFormState : FormState
+		{
+			public bool IsShowDebugEvents { get; set; }
+			public bool IsVerboseDebugEnabled { get; set; }
+		}
+
+		#endregion
 		public static Exception LoggingConfigurationException { get; set; }
 
 		// TODO Use a ring buffer! Now we accumulate forever! (user could clear manually)
