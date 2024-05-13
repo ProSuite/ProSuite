@@ -2,7 +2,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.UI.Persistence.WPF;
 
-public interface IFormStateAware<T> where T : IFormState
+public interface IFormStateAware<in T> where T : IFormState
 {
 	void SaveState([NotNull] T formState);
 

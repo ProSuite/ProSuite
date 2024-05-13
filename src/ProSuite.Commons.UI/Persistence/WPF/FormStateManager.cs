@@ -100,7 +100,7 @@ public class FormStateManager<T> where T : FormState
 		{
 			ApplyFormState(formState, option);
 		}
-		catch (Exception e)
+		catch (Exception ex)
 		{
 			// roll back and ignore the exception
 			try
@@ -109,11 +109,11 @@ public class FormStateManager<T> where T : FormState
 			}
 			catch
 			{
-				_msg.Warn("Unable to roll back form state", e);
+				_msg.Warn("Unable to roll back form state", ex);
 			}
 			finally
 			{
-				_msg.Warn("Error applying stored form state", e);
+				_msg.Warn("Error applying stored form state", ex);
 			}
 
 			return false;
@@ -162,7 +162,7 @@ public class FormStateManager<T> where T : FormState
 	{
 		if (_msg.IsVerboseDebugEnabled)
 		{
-			_msg.VerboseDebug($"Applying form state for {Form.Name}");
+			_msg.Debug($"Applying form state for {Form.Name}");
 		}
 
 		using (_msg.IncrementIndentation())
