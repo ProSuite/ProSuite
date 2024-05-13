@@ -18,8 +18,6 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private static RelayCommand _openLinkMessage;
-
 		//private LoggingEventsAppender _appenderDelegate = new LoggingEventsAppender();
 		private readonly List<LogType> _disabledLogTypes = new();
 		private readonly object _lockLogMessages = new();
@@ -34,6 +32,23 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			FilterLogs(null);
 
 			LoggingEventsAppender.OnNewLogMessage += Logger_OnNewLogMessage;
+		}
+
+		public void Dispose()
+		{
+			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
+
+			var pane =
+				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(LogDockPaneDamlID);
+			if (pane == null)
+			{
+				return;
+			}
+
+			if (pane.IsVisible)
+			{
+				pane.Hide();
+			}
 		}
 
 		public static Exception LoggingConfigurationException { get; set; }
@@ -51,31 +66,9 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			}
 		}
 
-		public static RelayCommand OpenLinkMessage
-		{
-			get
-			{
-				return _openLinkMessage ??= new RelayCommand(OpenLogLinkMessage, () => true);
-			}
-		}
-
-		public void Dispose()
-		{
-			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
-
-			var pane =
-				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(LogDockPaneDamlID);
-			if (pane == null)
-			{
-				return;
-			}
-
-			if (pane.IsVisible)
-				//this.Visible = Visibility.Collapsed;
-			{
-				pane.Hide();
-			}
-		}
+		private static RelayCommand _openLinkMessage;
+		public static RelayCommand OpenLinkMessage =>
+			_openLinkMessage ??= new RelayCommand(OpenLogLinkMessage, () => true);
 
 		private static void OpenLogLinkMessage(object msg)
 		{
@@ -95,27 +88,24 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			}
 		}
 
-		private void Logger_OnNewLogMessage(object sender, LoggingEventArgs e)
+		private void Logger_OnNewLogMessage(object sender, LoggingEventArgs args)
 		{
-			if (e == null)
-			{
-				return;
-			}
+			var logItem = args?.LogItem;
+			if (logItem is null) return;
 
-			lock (_lockLogMessages)
+			if (IsLogLevelEnabled(args.LogItem.Type))
 			{
-				// TODO save messages to buffer(?)
-
-				if (! IsLogLevelDisabled(e.LogItem))
+				lock (_lockLogMessages)
 				{
-					LogMessageList.Add(e.LogItem);
+					// TODO If list has > N entries, remove first K entries (0 < K <= N, say K about 20% of N and N about 1000)
+					LogMessageList.Add(args.LogItem);
 				}
 			}
 		}
 
-		private bool IsLogLevelDisabled(LoggingEventItem logItem)
+		private bool IsLogLevelEnabled(LogType level)
 		{
-			return _disabledLogTypes.Contains(logItem.Type);
+			return ! _disabledLogTypes.Contains(level);
 		}
 
 		protected override void OnShow(bool isVisible)
@@ -149,22 +139,22 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		#region Clear messages
 
 		private RelayCommand _clearLogEntries;
-
 		public RelayCommand ClearLogEntries =>
-			_clearLogEntries ?? (_clearLogEntries = new RelayCommand(
-				                     ClearAllLogEntries, CanClearAllLogEntries));
+			_clearLogEntries ??= new RelayCommand(ClearAllLogEntries, CanClearAllLogEntries);
 
-		public bool CanClearAllLogEntries => LogMessageList.Count > 0;
+		private bool CanClearAllLogEntries => LogMessageList.Count > 0;
 
-		public Action ClearAllLogEntries => LogMessageList.Clear;
+		private Action ClearAllLogEntries => LogMessageList.Clear;
 
 		#endregion
 
 		#region Filter messages
 
-		public RelayCommand FilterLogEntries => new RelayCommand(FilterLogs, CanFilterLogs);
+		private RelayCommand _filterLogEntries;
+		public RelayCommand FilterLogEntries =>
+			_filterLogEntries ??= new RelayCommand(FilterLogs, _ => true);
 
-		public void FilterLogs(object parameter)
+		private void FilterLogs(object parameter)
 		{
 			//var type = (string)parameter;
 
@@ -190,12 +180,6 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			}
 		}
 
-		// todo daro inline
-		public bool CanFilterLogs(object parameter)
-		{
-			return true;
-		}
-
 		public bool DebugLogsAreVisible { set; get; }
 
 		public bool VerboseLogsAreVisible
@@ -209,14 +193,8 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		#region Open message
 
 		private RelayCommand _openMessage;
-
-		public RelayCommand OpenMessage
-		{
-			get
-			{
-				return _openMessage ??= new RelayCommand(OpenLogMessage, () => true);
-			}
-		}
+		public RelayCommand OpenMessage =>
+			_openMessage ??= new RelayCommand(OpenLogMessage, () => true);
 
 		private static void OpenLogMessage(object msg)
 		{
