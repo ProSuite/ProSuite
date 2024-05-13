@@ -176,9 +176,24 @@ namespace ProSuite.Commons.Text
 			return sb;
 		}
 
+		public static StringBuilder Trim(this StringBuilder sb)
+		{
+			if (sb is null) return null;
+
+			int i = 0;
+			while (i < sb.Length && char.IsWhiteSpace(sb[i])) i += 1;
+			if (i > 0) sb.Remove(0, i);
+
+			i = sb.Length;
+			while (i > 0 && char.IsWhiteSpace(sb[i - 1])) i -= 1;
+			if (i < sb.Length) sb.Remove(i, sb.Length - i);
+
+			return sb;
+		}
+
 		public static StringBuilder TrimEnd(this StringBuilder sb)
 		{
-			if (sb == null) return null;
+			if (sb is null) return null;
 
 			int index = sb.Length;
 

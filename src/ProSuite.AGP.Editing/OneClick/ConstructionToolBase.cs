@@ -128,8 +128,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			// log is written in LogEnteringSketchMode
 		}
 
-		protected override void AfterSelection(Map map,
-		                                       IList<Feature> selectedFeatures,
+		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			if (CanStartSketchPhase(selectedFeatures))
@@ -263,7 +262,7 @@ namespace ProSuite.AGP.Editing.OneClick
 							}
 							else
 							{
-								SelectionUtils.ClearSelection();
+								ClearSelection();
 								StartSelectionPhase();
 							}
 						}
@@ -271,7 +270,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					else
 					{
 						ClearSketchAsync();
-						SelectionUtils.ClearSelection();
+						ClearSelection();
 					}
 				});
 
@@ -497,7 +496,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 						if (CanUseSelection(mapView))
 						{
-							AfterSelection(mapView.Map, selection, null);
+							AfterSelection(selection, null);
 						}
 					});
 				}

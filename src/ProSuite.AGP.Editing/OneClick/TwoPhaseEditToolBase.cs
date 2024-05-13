@@ -32,7 +32,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => "OnMapSelectionChangedCore");
 
-			var map = args.Map;
 			var selection = args.Selection;
 
 			if (selection.Count == 0)
@@ -49,7 +48,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (applicableSelection.Count > 0)
 			{
-				AfterSelection(map, applicableSelection, GetCancelableProgressor());
+				using var source = GetProgressorSource();
+				var progressor = source.Progressor;
+				AfterSelection(applicableSelection, progressor);
 			}
 
 			return true;
@@ -79,7 +80,10 @@ namespace ProSuite.AGP.Editing.OneClick
 								return true;
 							}
 
-							CalculateDerivedGeometries(selectedFeatures, GetCancelableProgressor());
+							using var source = GetProgressorSource();
+							var progressor = source.Progressor;
+
+							CalculateDerivedGeometries(selectedFeatures, progressor);
 
 							return true;
 						}
@@ -95,8 +99,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return base.OnEditCompletedAsyncCore(args);
 		}
 
-		protected override void AfterSelection(Map map,
-		                                       IList<Feature> selectedFeatures,
+		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			CalculateDerivedGeometries(selectedFeatures, progressor);
@@ -148,7 +151,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			Task task = QueuedTask.Run(
 				() =>
 				{
-					SelectionUtils.ClearSelection();
+					ClearSelection();
 
 					ResetDerivedGeometries();
 
