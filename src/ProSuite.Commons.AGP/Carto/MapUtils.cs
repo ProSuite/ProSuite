@@ -138,6 +138,24 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		public static IEnumerable<Feature> GetFeatures(
+			[NotNull] IEnumerable<KeyValuePair<FeatureClass, List<long>>> oidsByTable,
+			bool withoutJoins = false,
+			[CanBeNull] SpatialReference outputSpatialReference = null)
+		{
+			foreach ((FeatureClass featureClass, List<long> oids) in oidsByTable)
+			{
+				if (featureClass == null) continue;
+
+				foreach (Feature feature in GetFeatures(featureClass, oids,
+				                                        withoutJoins, recycling: false,
+				                                        outputSpatialReference))
+				{
+					yield return feature;
+				}
+			}
+		}
+
 		/// <summary>
 		/// Loads the features for the specified object ids from the mapMember's feature class.
 		/// </summary>
@@ -162,7 +180,9 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			foreach (Feature feature in GetFeatures(basicFeatureLayer, oidList, withoutJoins,
+			FeatureClass featureClass = basicFeatureLayer.GetFeatureClass();
+
+			foreach (Feature feature in GetFeatures(featureClass, oidList, withoutJoins,
 			                                        recycling,
 			                                        outputSpatialReference))
 			{
@@ -171,19 +191,16 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		private static IEnumerable<Feature> GetFeatures(
-			[CanBeNull] BasicFeatureLayer layer,
+			[CanBeNull] FeatureClass featureClass,
 			[NotNull] List<long> oids,
 			bool forUpdating,
 			bool recycling,
 			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
-			if (layer == null)
+			if (featureClass == null)
 			{
 				yield break;
 			}
-
-			// TODO: Use layer search (there might have been an issue with recycling?!)
-			var featureClass = layer.GetTable();
 
 			if (featureClass.IsJoinedTable() && forUpdating)
 			{
@@ -198,7 +215,8 @@ namespace ProSuite.Commons.AGP.Carto
 			             };
 
 			// NOTE: The spatial reference of the layer is the same as the feature class rather than the map.
-			filter.OutputSpatialReference = outputSpatialReference ?? layer.GetSpatialReference();
+			filter.OutputSpatialReference =
+				outputSpatialReference ?? featureClass.GetSpatialReference();
 
 			foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filter, recycling))
 			{

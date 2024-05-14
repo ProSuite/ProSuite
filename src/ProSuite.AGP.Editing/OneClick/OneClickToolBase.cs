@@ -706,7 +706,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			var notifications = new NotificationCollection();
 			List<Feature> applicableSelection =
-				GetApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection, notifications)
+				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection,
+				                                      notifications)
 					.ToList();
 
 			int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
@@ -826,6 +827,25 @@ namespace ProSuite.AGP.Editing.OneClick
 			return AllowNotApplicableFeaturesInSelection
 				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key as Layer))
 				       : selectionByLayer.All(l => CanSelectFromLayer(l.Key as Layer));
+		}
+
+		protected IEnumerable<Feature> GetDistinctApplicableSelectedFeatures(
+			[NotNull] Dictionary<MapMember, List<long>> selectionByLayer,
+			bool unJoinedFeaturesForEditing = false,
+			[CanBeNull] NotificationCollection notifications = null)
+		{
+			HashSet<GdbObjectReference> usedRows = new HashSet<GdbObjectReference>();
+
+			foreach (Feature feature in GetApplicableSelectedFeatures(selectionByLayer,
+				         unJoinedFeaturesForEditing, notifications))
+			{
+				var objectReference = new GdbObjectReference(feature);
+
+				if (usedRows.Add(objectReference))
+				{
+					yield return feature;
+				}
+			}
 		}
 
 		protected IEnumerable<Feature> GetApplicableSelectedFeatures(
