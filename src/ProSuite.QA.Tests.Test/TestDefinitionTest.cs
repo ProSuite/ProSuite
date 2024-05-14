@@ -139,6 +139,7 @@ namespace ProSuite.QA.Tests.Test
 											 //typeof(QaMeasuresAtPoints),
 											 typeof(QaMinArea),
 											 typeof(QaMinIntersect),
+											 typeof(QaMinLength),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
@@ -263,6 +264,7 @@ namespace ProSuite.QA.Tests.Test
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMeasuresAtPoints)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinArea)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinIntersect)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinLength)));
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
