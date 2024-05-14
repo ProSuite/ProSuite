@@ -3,7 +3,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using ProSuite.Commons.AGP.WPF;
+using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Display;
 
@@ -14,6 +15,7 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 {
 	private string _heading;
 	private string _filePath;
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	public ExportDoneDialog()
 	{
@@ -56,7 +58,7 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 		}
 		catch (Exception ex)
 		{
-			ErrorHandler.HandleError($"Error opening {FilePath}", ex);
+			Gateway.HandleError(ex, _msg);
 		}
 	}
 
@@ -68,7 +70,7 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 		}
 		catch (Exception ex)
 		{
-			ErrorHandler.HandleError($"Error opening {FilePath}", ex);
+			Gateway.HandleError(ex, _msg);
 		}
 	}
 
@@ -81,7 +83,7 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 		}
 		catch (Exception ex)
 		{
-			ErrorHandler.HandleError($"Error copying text to clipboard: {ex.Message}", ex);
+			Gateway.HandleError(ex, _msg);
 		}
 	}
 
