@@ -69,8 +69,11 @@ namespace ProSuite.AGP.Editing.OneClick
 					{
 						try
 						{
+							Dictionary<MapMember, List<long>> selectionByLayer =
+								SelectionUtils.GetSelection(ActiveMapView.Map);
+
 							var selectedFeatures =
-								GetApplicableSelectedFeatures(ActiveMapView).ToList();
+								GetDistinctApplicableSelectedFeatures(selectionByLayer).ToList();
 
 							if (selectedFeatures.Count == 0)
 							{
