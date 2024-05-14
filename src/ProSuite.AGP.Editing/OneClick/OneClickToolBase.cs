@@ -497,11 +497,14 @@ namespace ProSuite.AGP.Editing.OneClick
 						//since SelectionCombinationMethod.New is only applied to
 						//the current layer but selections of other layers remain,
 						//we manually need to clear all selections first.
+						if (selectionMethod == SelectionCombinationMethod.New)
+						{
+							SelectionUtils.ClearSelection(MapView.Active.Map);
+						}
 
 						SelectionUtils.SelectFeature(
 							pickedItem.Layer, selectionMethod,
-							pickedItem.Oid,
-							selectionMethod == SelectionCombinationMethod.New);
+							pickedItem.Oid);
 					});
 
 				return true;
@@ -528,11 +531,14 @@ namespace ProSuite.AGP.Editing.OneClick
 					//since SelectionCombinationMethod.New is only applied to
 					//the current layer but selections of other layers remain,
 					//we manually need to clear all selections first.
+					if (selectionMethod == SelectionCombinationMethod.New)
+					{
+						SelectionUtils.ClearSelection(MapView.Active.Map);
+					}
 
 					SelectionUtils.SelectFeature(
 						pickedItem.Layer, selectionMethod,
-						pickedItem.Oid,
-						selectionMethod == SelectionCombinationMethod.New);
+						pickedItem.Oid);
 				});
 
 				return true;
@@ -572,15 +578,19 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await QueuedTask.Run(() =>
 				{
+					// Clear the selection on the map level, NOT on the layer level
+					if (selectionMethod == SelectionCombinationMethod.New)
+					{
+						SelectionUtils.ClearSelection(MapView.Active.Map);
+					}
+
 					foreach (OidSelection featureClassSelection in
 					         pickedItem.Layers.Select(layer => new OidSelection(
 						                                  pickedItem.Oids.ToList(), layer,
 						                                  MapView.Active.Map.SpatialReference)))
 					{
 						SelectionUtils.SelectFeatures(
-							featureClassSelection,
-							selectionMethod,
-							selectionMethod == SelectionCombinationMethod.New);
+							featureClassSelection, selectionMethod);
 					}
 				});
 			}
