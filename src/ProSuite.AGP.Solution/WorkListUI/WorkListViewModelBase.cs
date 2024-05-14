@@ -16,10 +16,10 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
-using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
@@ -148,7 +148,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					long oid = CurrentWorkList.Current.Proxy.ObjectId;
 
 					SelectionUtils.ClearSelection();
-					
+
 					layer.Select(new QueryFilter {ObjectIDs = new List<long> {oid}},
 					             SelectionCombinationMethod.Add);
 				});
@@ -164,7 +164,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					IWorkItem item = Assert.NotNull(CurrentWorkList.Current);
 
 					string tableName = item.Proxy.Table.Name;
-					
+
 					// todo daro can featureClassName be null, e.g. if data source is broken?
 					FeatureLayer layer =
 						MapUtils.GetLayers<FeatureLayer>(
@@ -208,7 +208,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		}
 
 		#region Navigation
-		
+
 		private string GetCount()
 		{
 			int all = 0;
@@ -223,7 +223,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 				all += 1;
 			}
-			
+
 			return $"{CurrentWorkList.CurrentIndex + 1} of {all} ({toDo} todo, {all} total)";
 		}
 
@@ -520,7 +520,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 						FrameworkApplication.GetPlugInWrapper(
 							DAML.Button.esri_mapping_fixedZoomOutButton);
 				}
-				
+
 				return (ICommand) _zoomOutWrapper;
 			}
 		}
@@ -530,7 +530,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public string PreviousExtentTooltipHeading => _previousExtentWrapper.TooltipHeading;
 		public string PreviousExtentTooltip => _previousExtentWrapper.Tooltip;
-		
+
 		public string NextExtentTooltipHeading => _nextExtentWrapper.TooltipHeading;
 		public string NextExtentTooltip => _nextExtentWrapper.Tooltip;
 
