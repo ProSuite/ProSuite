@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Display;
 
@@ -22,6 +23,20 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 		InitializeComponent();
 
 		DataContext = this; // quick'n'dirty
+
+		Loaded += HandleWindowLoaded;
+	}
+
+	private void HandleWindowLoaded(object sender, RoutedEventArgs e)
+	{
+		// freeze window height (it was SizeToContent)
+		var ht = ActualHeight;
+		MinHeight = Math.Max(MinHeight, ht);
+		MaxHeight = Math.Min(MaxHeight, ht);
+
+		// Cannot do this in constructor (would have no effect), so do it here:
+		this.ShowMinimizeButton(false);
+		this.ShowMaximizeButton(false);
 	}
 
 	public string FilePath
@@ -66,6 +81,7 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 	{
 		try
 		{
+			DialogResult = true; // closes the window
 			ShowInExplorer(FilePath);
 		}
 		catch (Exception ex)
@@ -78,6 +94,7 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 	{
 		try
 		{
+			DialogResult = true; // closes the window
 			if (string.IsNullOrEmpty(FilePath)) return;
 			Clipboard.SetText(FilePath);
 		}
