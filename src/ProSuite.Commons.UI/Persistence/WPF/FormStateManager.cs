@@ -25,14 +25,15 @@ public class FormStateManager<T> where T : FormState
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	private readonly string _formID;
 	private readonly string _fileName;
 
 	public FormStateManager([NotNull] Window form, string callingContextID = null)
 	{
 		Form = form ?? throw new ArgumentNullException(nameof(form));
 
-		var formID = form.GetType().Name;
-		_fileName = FormStatePersistence.GetFileName(formID, callingContextID);
+		_formID = form.GetType().Name;
+		_fileName = FormStatePersistence.GetFileName(_formID, callingContextID);
 	}
 
 	/// <summary>
@@ -162,7 +163,7 @@ public class FormStateManager<T> where T : FormState
 	{
 		if (_msg.IsVerboseDebugEnabled)
 		{
-			_msg.Debug($"Applying form state for {Form.Name}");
+			_msg.Debug($"Applying form state for {_formID}");
 		}
 
 		using (_msg.IncrementIndentation())
@@ -265,7 +266,10 @@ public class FormStateManager<T> where T : FormState
 		double width = Math.Min(formState.Width, maxWidth);
 		double height = Math.Min(formState.Height, maxHeight);
 
-		_msg.VerboseDebug(() => $"Restore size: {width} {height}");
+		if (_msg.IsVerboseDebugEnabled)
+		{
+			_msg.Debug($"Restore size: {width} {height}");
+		}
 
 		Form.Width = width;
 		Form.Height = height;

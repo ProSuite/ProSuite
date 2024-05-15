@@ -3,12 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ProSuite.AGP.Display"
-        xmlns:display="clr-namespace:ProSuite.AGP.Display;assembly=ProSuite.AGP.Display"
-        d:DataContext="{d:DesignInstance {x:Type display:ImportSLDLMOptions}, IsDesignTimeCreatable=False}"
+        xmlns:local="clr-namespace:ProSuite.AGP.Display;assembly=ProSuite.AGP.Display"
+        d:DataContext="{d:DesignInstance {x:Type local:ImportSLDLMOptions}, IsDesignTimeCreatable=False}"
         mc:Ignorable="d"
         Title="Import SLD/LM Configuration"
-        Width="400" MinWidth="400" SizeToContent="Height" MinHeight="212"
+		ResizeMode="CanResizeWithGrip"
+        SizeToContent="WidthAndHeight" MinWidth="400"
         Background="{x:Static SystemColors.ControlBrush}"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
 	<StackPanel Margin="12">
@@ -23,7 +23,7 @@
 		<Label Padding="0,10,0,2">Path to config file to import (XML or CSV):</Label>
 		<DockPanel>
 			<Button DockPanel.Dock="Right" Padding="5,0,5,0" Content="Browse..." Click="BrowseButtonClicked"/>
-			<TextBox Padding="2" Text="{Binding ConfigFilePath, UpdateSourceTrigger=PropertyChanged}"/>
+			<TextBox Padding="2" Margin="0,0,2,0" Text="{Binding ConfigFilePath, UpdateSourceTrigger=PropertyChanged}"/>
 		</DockPanel>
 
 		<DockPanel LastChildFill="False" Margin="0,18,0,0">

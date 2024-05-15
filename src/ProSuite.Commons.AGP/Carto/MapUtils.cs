@@ -8,6 +8,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
@@ -15,6 +16,7 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using UnitType = ArcGIS.Core.Geometry.UnitType;
 
 namespace ProSuite.Commons.AGP.Carto
 {
@@ -34,6 +36,60 @@ namespace ProSuite.Commons.AGP.Carto
 
 			return mapView.Map;
 		}
+
+		#region Conversions
+
+		public static double GetMapUnitsPerPoint(this Map map)
+		{
+			if (map is null)
+				throw new ArgumentNullException(nameof(map));
+
+			double referenceScale = map.ReferenceScale;
+			if (! (referenceScale > 0))
+				throw new InvalidOperationException(
+					"Map has no ReferenceScale; cannot convert between points and map units");
+			// TODO or use MapView's current scale instead?
+
+			var unit = GetMapUnit(map, UnitType.Linear);
+			return unit.GetUnitsPerPoint(referenceScale);
+		}
+
+		public static double GetPointsPerMapUnit(this Map map)
+		{
+			if (map is null)
+				throw new ArgumentNullException(nameof(map));
+
+			double referenceScale = map.ReferenceScale;
+			if (!(referenceScale > 0))
+				throw new InvalidOperationException(
+					"Map has no ReferenceScale; cannot convert between points and map units");
+			// TODO use MapView's current scale instead?
+
+			var unit = GetMapUnit(map, UnitType.Linear);
+			return unit.GetPointsPerUnit(referenceScale);
+		}
+
+		private static Unit GetMapUnit(Map map, UnitType? requiredType = null)
+		{
+			if (map is null)
+				throw new ArgumentNullException(nameof(map));
+
+			var sref = map.SpatialReference ??
+			           throw new InvalidOperationException("Map has no spatial reference");
+
+			var unit = sref.Unit ??
+			           throw new InvalidOperationException("Map's spatial reference has no unit");
+
+			if (requiredType.HasValue && unit.UnitType != requiredType)
+			{
+				throw new InvalidOperationException(
+					$"Map's spatial reference units ({unit.Name}) are not of type {requiredType}");
+			}
+
+			return unit;
+		}
+
+		#endregion
 
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
 			Dictionary<MapMember, List<long>> oidsByLayer)

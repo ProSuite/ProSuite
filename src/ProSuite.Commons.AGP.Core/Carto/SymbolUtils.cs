@@ -10,6 +10,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using UnitType = ArcGIS.Core.Geometry.UnitType;
 
 namespace ProSuite.Commons.AGP.Core.Carto
 {
@@ -49,6 +50,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		/// seems to be established practice in desktop publishing. We adopt it.
 		/// </remarks>
 		private const double PointsPerMillimeter = 2.83465;
+		private const double PointsPerMeter = 2834.65;
+		private const double MetersPerPoint = 1.0 / PointsPerMeter;
 
 		public static double PointsToMillimeters(double points)
 		{
@@ -58,6 +61,42 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		public static double MillimetersToPoints(double millimeters)
 		{
 			return millimeters * PointsPerMillimeter;
+		}
+
+		public static double GetUnitsPerPoint(this Unit unit, double referenceScale = 0)
+		{
+			if (unit is null)
+				throw new ArgumentNullException(nameof(unit));
+			if (unit.UnitType != UnitType.Linear)
+				throw new ArgumentException("Not a linear unit", nameof(unit));
+
+			double distancePoints = 1.0;
+
+			if (referenceScale > 0)
+			{
+				distancePoints *= referenceScale;
+			}
+
+			double meters = distancePoints * MetersPerPoint;
+			return meters / unit.ConversionFactor; // linear unit's ConversionFactor is meters/unit
+		}
+
+		public static double GetPointsPerUnit(this Unit unit, double referenceScale = 0)
+		{
+			if (unit is null)
+				throw new ArgumentNullException(nameof(unit));
+			if (unit.UnitType != UnitType.Linear)
+				throw new ArgumentException("Not a linear unit", nameof(unit));
+
+			double distanceMapUnits = 1.0;
+
+			if (referenceScale > 0)
+			{
+				distanceMapUnits /= referenceScale;
+			}
+
+			double meters = distanceMapUnits * unit.ConversionFactor; // ConversionFactor is meters/unit (for a linear unit)
+			return meters * PointsPerMeter;
 		}
 
 		#endregion
