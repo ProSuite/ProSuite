@@ -190,10 +190,10 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		private static IEnumerable<Feature> GetFeatures(
+		public static IEnumerable<Feature> GetFeatures(
 			[CanBeNull] FeatureClass featureClass,
 			[NotNull] List<long> oids,
-			bool forUpdating,
+			bool withoutJoin,
 			bool recycling,
 			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
@@ -202,7 +202,7 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			if (featureClass.IsJoinedTable() && forUpdating)
+			if (featureClass.IsJoinedTable() && withoutJoin)
 			{
 				// Get the features only based on the feature class, otherwise storing results in NotImplementedExceptions
 				featureClass = GetUnJoinedFeatureClass(featureClass as FeatureClass);
