@@ -55,6 +55,12 @@ namespace ProSuite.QA.Tests
 			_includeInnerRings = includeInnerRings;
 		}
 
+		[InternallyUsedTest]
+		public QaMpConstantPointIdsPerRing(
+			[NotNull] QaMpConstantPointIdsPerRingDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.MultiPatchClass,
+			       definition.IncludeInnerRings) { }
+
 		private static IPoint QueryPoint => _queryPoint ?? (_queryPoint = new PointClass());
 
 		public override bool IsQueriedTable(int tableIndex)
@@ -329,7 +335,7 @@ namespace ProSuite.QA.Tests
 			public Rings([NotNull] IRing ring, int patchIndex)
 			{
 				_firstPatchIndex = patchIndex;
-				_rings = new List<IRing> {ring};
+				_rings = new List<IRing> { ring };
 			}
 
 			public Rings([NotNull] List<IRing> rings, int firstPatchIndex)
@@ -550,7 +556,7 @@ namespace ProSuite.QA.Tests
 							firstPatchIndex = _currentIndex;
 							int followingRingCount = multiPatch.get_FollowingRingCount(ring);
 
-							rings = new List<IRing>(followingRingCount + 1) {ring};
+							rings = new List<IRing>(followingRingCount + 1) { ring };
 
 							if (followingRingCount > 0)
 							{

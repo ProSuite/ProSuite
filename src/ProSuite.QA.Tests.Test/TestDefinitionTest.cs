@@ -146,6 +146,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMonotonicMeasures),
 											 typeof(QaMonotonicZ),
 											 typeof(QaMpAllowedPartTypes),
+											 typeof(QaMpConstantPointIdsPerRing),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
@@ -274,6 +275,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinMeanSegmentLength)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMonotonicMeasures)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpAllowedPartTypes)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpConstantPointIdsPerRing)));
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
