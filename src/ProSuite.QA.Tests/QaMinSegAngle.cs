@@ -9,7 +9,6 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
@@ -74,6 +73,16 @@ namespace ProSuite.QA.Tests
 				double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, limit, false) { }
+
+		[InternallyUsedTest]
+		public QaMinSegAngle(
+			[NotNull] QaMinSegAngleDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.Limit, definition.Is3D)
+		{
+			UseTangents = definition.UseTangents;
+			AngularUnit = definition.AngularUnit;
+		}
 
 		[TestParameter(_defaultUseTangents)]
 		[Doc(nameof(DocStrings.QaMinSegAngle_UseTangents))]
@@ -216,7 +225,7 @@ namespace ProSuite.QA.Tests
 						description, InvolvedRowUtils.GetInvolvedRows(row),
 						CreateErrorPoint(angleInfo), Codes[Code.SegmentAngleTooSmall],
 						_shapeFieldName,
-						values: new object[] {MathUtils.ToDegrees(angleRadians)});
+						values: new object[] { MathUtils.ToDegrees(angleRadians) });
 				}
 			}
 
