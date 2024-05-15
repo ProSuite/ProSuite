@@ -144,6 +144,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMinMeanSegmentLength),
 											 typeof(QaMinSegAngle),
 											 typeof(QaMonotonicMeasures),
+											 typeof(QaMonotonicZ),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
@@ -330,6 +331,7 @@ namespace ProSuite.QA.Tests.Test
 			//AddQaMeasuresAtPointsCases(model, testCases);
 			//AddQaMinAngleCases(model, testCases);
 			AddQaMinSegAngleCases(model, testCases);
+			AddQaMonotonicZCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygon(model, testCases);
 			AddQaTouchesSelf(model, testCases);
@@ -1449,6 +1451,22 @@ namespace ProSuite.QA.Tests.Test
 			                                     {
 				                                     model.GetVectorDataset(),
 				                                     1
+			                                     },
+			                                     optionalValues));
+		}
+
+		private static void AddQaMonotonicZCases(InMemoryTestDataModel model,
+		                                          ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("AllowConstantValues", false);
+			optionalValues.Add("ExpectedMonotonicity", MonotonicityDirection.Any);
+			optionalValues.Add("FlipExpression", "String");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaMonotonicZ), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
 			                                     },
 			                                     optionalValues));
 		}
