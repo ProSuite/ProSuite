@@ -8,7 +8,7 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AGP.DataModel
 {
-	public class DatasetLookup
+	public class DatasetLookup : IDatasetLookup
 	{
 		private readonly IList<IDdxDataset> _objectDatasets;
 
@@ -20,8 +20,7 @@ namespace ProSuite.DomainModel.AGP.DataModel
 			_objectDatasets = objectDatasets;
 		}
 
-		[CanBeNull]
-		public IDdxDataset GetDataset([NotNull] Table table)
+		public T GetDataset<T>(Table table) where T : IDdxDataset
 		{
 			// TODO: Sophisticated logic with unqualified names, etc.
 
@@ -29,7 +28,10 @@ namespace ProSuite.DomainModel.AGP.DataModel
 
 			if (_datasetByTableHandle.TryGetValue(tableHandle, out var dataset))
 			{
-				return dataset;
+				if (dataset is T value)
+				{
+					return value;
+				}
 			}
 
 			string tableName = table.GetName();
@@ -38,16 +40,27 @@ namespace ProSuite.DomainModel.AGP.DataModel
 
 			string unqualifiedName = ModelElementNameUtils.GetUnqualifiedName(tableName);
 
-			IDdxDataset result = _objectDatasets.FirstOrDefault(
+			T result = _objectDatasets.OfType<T>().FirstOrDefault(
 				d => d.Name.Equals(tableName, StringComparison.InvariantCultureIgnoreCase) ||
 				     d.Name.Equals(unqualifiedName, StringComparison.InvariantCultureIgnoreCase));
 
-			if (result != null)
+			// Todo daro: Hack GoTop-138 for tables from FGDB.
+			if (result == null)
 			{
-				_datasetByTableHandle[tableHandle] = result;
+				result = _objectDatasets.OfType<T>().FirstOrDefault(
+					d => ModelElementNameUtils.GetUnqualifiedName(d.Name).Equals(tableName, StringComparison.InvariantCultureIgnoreCase) ||
+					     ModelElementNameUtils.GetUnqualifiedName(d.Name).Equals(unqualifiedName, StringComparison.InvariantCultureIgnoreCase));
 			}
 
+			_datasetByTableHandle[tableHandle] = result;
+
 			return result;
+		}
+
+		[CanBeNull]
+		public IDdxDataset GetDataset(Table table)
+		{
+			return GetDataset<IDdxDataset>(table);
 		}
 	}
 }

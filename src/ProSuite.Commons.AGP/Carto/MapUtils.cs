@@ -68,7 +68,7 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		public static Table GetTable<T>([NotNull] T mapMember) where T : MapMember
+		public static Table GetTable([NotNull] MapMember mapMember)
 		{
 			Assert.ArgumentNotNull(mapMember, nameof(mapMember));
 
@@ -84,6 +84,31 @@ namespace ProSuite.Commons.AGP.Carto
 
 			throw new ArgumentException(
 				$"{nameof(mapMember)} is not of type BasicFeatureLayer nor StandaloneTable");
+		}
+
+		public static IEnumerable<Table> GetTables(IEnumerable<MapMember> mapMembers)
+		{
+			foreach (MapMember mapMember in mapMembers)
+			{
+				if (mapMember is BasicFeatureLayer basicFeatureLayer)
+				{
+					//Note: Invalid layers have null tables
+					Table table = basicFeatureLayer.GetTable();
+					if (table != null)
+					{
+						yield return table;
+					}
+				}
+
+				if (mapMember is StandaloneTable standaloneTable)
+				{
+					Table table = standaloneTable.GetTable();
+					if (table != null)
+					{
+						yield return table;
+					}
+				}
+			}
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
@@ -105,6 +130,24 @@ namespace ProSuite.Commons.AGP.Carto
 				if (featureLayer == null) continue;
 
 				foreach (Feature feature in GetFeatures(featureLayer, oidsByMapMember.Value,
+				                                        withoutJoins, recycling: false,
+				                                        outputSpatialReference))
+				{
+					yield return feature;
+				}
+			}
+		}
+
+		public static IEnumerable<Feature> GetFeatures(
+			[NotNull] IEnumerable<KeyValuePair<FeatureClass, List<long>>> oidsByTable,
+			bool withoutJoins = false,
+			[CanBeNull] SpatialReference outputSpatialReference = null)
+		{
+			foreach ((FeatureClass featureClass, List<long> oids) in oidsByTable)
+			{
+				if (featureClass == null) continue;
+
+				foreach (Feature feature in GetFeatures(featureClass, oids,
 				                                        withoutJoins, recycling: false,
 				                                        outputSpatialReference))
 				{
@@ -137,7 +180,9 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			foreach (Feature feature in GetFeatures(basicFeatureLayer, oidList, withoutJoins,
+			FeatureClass featureClass = basicFeatureLayer.GetFeatureClass();
+
+			foreach (Feature feature in GetFeatures(featureClass, oidList, withoutJoins,
 			                                        recycling,
 			                                        outputSpatialReference))
 			{
@@ -145,22 +190,19 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		private static IEnumerable<Feature> GetFeatures(
-			[CanBeNull] BasicFeatureLayer layer,
+		public static IEnumerable<Feature> GetFeatures(
+			[CanBeNull] FeatureClass featureClass,
 			[NotNull] List<long> oids,
-			bool forUpdating,
+			bool withoutJoin,
 			bool recycling,
 			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
-			if (layer == null)
+			if (featureClass == null)
 			{
 				yield break;
 			}
 
-			// TODO: Use layer search (there might have been an issue with recycling?!)
-			var featureClass = layer.GetTable();
-
-			if (featureClass.IsJoinedTable() && forUpdating)
+			if (featureClass.IsJoinedTable() && withoutJoin)
 			{
 				// Get the features only based on the feature class, otherwise storing results in NotImplementedExceptions
 				featureClass = GetUnJoinedFeatureClass(featureClass as FeatureClass);
@@ -173,7 +215,8 @@ namespace ProSuite.Commons.AGP.Carto
 			             };
 
 			// NOTE: The spatial reference of the layer is the same as the feature class rather than the map.
-			filter.OutputSpatialReference = outputSpatialReference ?? layer.GetSpatialReference();
+			filter.OutputSpatialReference =
+				outputSpatialReference ?? featureClass.GetSpatialReference();
 
 			foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filter, recycling))
 			{
@@ -463,17 +506,69 @@ namespace ProSuite.Commons.AGP.Carto
 			return MapPointBuilderEx.CreateMapPoint(new Coordinate2D(clientPoint.X, clientPoint.Y));
 		}
 
-		public static double ConvertScreenPixelToMapLength(int pixels)
+		/// <summary>
+		/// Gets the pixel size for the specified map view in the map space at the specified point.
+		/// Note that the point must have the correct Z value in order to return correct results
+		/// in a stereo map in floating cursor mode.
+		/// BUG: In fixed cursor mode this method always returns 0 because ScreenToMap seems not to
+		/// work correctly.
+		/// </summary>
+		/// <param name="pixels"></param>
+		/// <param name="atPoint"></param>
+		/// <returns></returns>
+		public static double ConvertScreenPixelToMapLength(
+			MapView mapView,
+			int pixels,
+			[NotNull] MapPoint atPoint)
 		{
-			var mapExtent = MapView.Active.Map.GetDefaultExtent();
-			var mapPoint = mapExtent.Center;
-			//Map center as screen point
-			var screenPoint = MapView.Active.MapToScreen(mapPoint);
+			if (mapView.ViewingMode == MapViewingMode.MapStereo)
+			{
+				return GetPixelSizeInMapUnits(mapView, atPoint) * pixels;
+			}
+
+			// The point as screen point
+			var screenPoint = mapView.MapToScreen(atPoint);
+
 			//Add tolerance pixels to get a "radius".
-			var radiusScreenPoint =
-				new Point(screenPoint.X + pixels, screenPoint.Y);
-			var radiusMapPoint = MapView.Active.ScreenToMap(radiusScreenPoint);
-			return GeometryEngine.Instance.Distance(mapPoint, radiusMapPoint);
+			var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
+			var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
+
+			return GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
+		}
+
+		/// <summary>
+		/// Gets the pixel size for the specified map view in the map space without
+		/// using the ScreenToMap method (which is incorrect in stereo maps at 3.3).
+		/// This method is not particularly robust against rotated maps!
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <returns></returns>
+		public static double GetPixelSizeInMapUnits(MapView mapView, [NotNull] MapPoint atPoint)
+		{
+			Envelope mapExtent = mapView.Map.GetDefaultExtent();
+			SpatialReference sr = mapExtent.SpatialReference;
+
+			double z = atPoint.Z;
+
+			MapPoint mapLowerLeft = GeometryFactory.CreatePoint(
+				mapExtent.XMin, mapExtent.YMin, z, sr);
+			MapPoint mapUpperRight = GeometryFactory.CreatePoint(
+				mapExtent.XMax, mapExtent.YMax, z, sr);
+
+			Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
+			Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
+
+			// Client window coordinates (probably makes no difference for this calculation but it is correct)
+			Point clientLowerLeft = mapView.ScreenToClient(screenLowerLeft);
+			Point clientUpperRight = mapView.ScreenToClient(screenUpperRight);
+
+			double widthPixels = Math.Abs(clientUpperRight.X - clientLowerLeft.X);
+			double heightPixels = Math.Abs(clientUpperRight.Y - clientLowerLeft.Y);
+
+			double pixelSizeX = mapExtent.Width / widthPixels;
+			double pixelSizeY = mapExtent.Height / heightPixels;
+
+			return pixelSizeX + pixelSizeY / 2;
 		}
 
 		/// <summary>

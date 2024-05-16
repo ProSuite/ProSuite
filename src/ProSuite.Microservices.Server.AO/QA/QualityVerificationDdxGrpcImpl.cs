@@ -23,7 +23,8 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Ddx;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using Quaestor.LoadReporting;
 
 namespace ProSuite.Microservices.Server.AO.QA

@@ -15,7 +15,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.AO.Geometry;
 using Path = System.IO.Path;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
@@ -487,7 +486,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		private static WKSPointZ GetWksPointZ(IPoint point)
 		{
-			var wksPointZ = new WKSPointZ {X = point.X, Y = point.Y, Z = point.Z};
+			var wksPointZ = new WKSPointZ { X = point.X, Y = point.Y, Z = point.Z };
 
 			return wksPointZ;
 		}
@@ -664,6 +663,12 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			foreach (IFeature targetFeature in features)
 			{
+				if (result.ContainsKey(targetFeature))
+				{
+					// Duplicate target feature - should be filtered by caller
+					continue;
+				}
+
 				IGeometry targetShape = targetFeature.Shape;
 
 				// NOTE: Intersection points with multipatches are not found
@@ -814,7 +819,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			}
 
 			// single part reshape:
-			singlePartReshapeInfos = new List<ReshapeInfo> {reshapeInfo};
+			singlePartReshapeInfos = new List<ReshapeInfo> { reshapeInfo };
 
 			return ReshapeGeometryPart(geometryToReshape, reshapeInfo);
 		}
@@ -1297,7 +1302,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		public static void ExecuteWithMinimumTolerance([NotNull] Action procedure,
 		                                               [NotNull] IGeometry geometry)
 		{
-			ExecuteWithMinimumTolerance(procedure, new[] {geometry});
+			ExecuteWithMinimumTolerance(procedure, new[] { geometry });
 		}
 
 		/// <summary>
@@ -1843,7 +1848,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			((IPointCollection) geometry).UpdatePoint(globalVertexIdx, newPoint);
 
 			var notification = new NotificationCollection
-			                   {"Updated Z value in adjacent geometry."};
+			                   { "Updated Z value in adjacent geometry." };
 
 			updatedGeometries.Add(geometry, notification);
 		}
@@ -2882,7 +2887,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			// TOP-5072: Avoid phantom points between the normal reshape line and the dangle (consider getting it right when trimming by using GetSubCurve())
 			IMultipoint potentialPhantomPoint =
 				GeometryFactory.CreateMultipoint(new List<IPoint>
-				                                 {danglingReshapePathIntersection});
+				                                 { danglingReshapePathIntersection });
 
 			SegmentReplacementUtils.RemovePhantomPointInserts(
 				result, (IPointCollection) potentialPhantomPoint, pathToReshape);
@@ -3355,8 +3360,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				double part0Length = ((IPath) splitResult.Geometry[0]).Length;
 				double part1Length = ((IPath) splitResult.Geometry[1]).Length;
 				List<int> removePart = part0Length < part1Length
-					                       ? new List<int> {0}
-					                       : new List<int> {1};
+					                       ? new List<int> { 0 }
+					                       : new List<int> { 1 };
 
 				GeometryUtils.RemoveParts(splitResult, removePart);
 				splitResult.GeometriesChanged();

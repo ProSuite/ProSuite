@@ -88,6 +88,14 @@ namespace ProSuite.AGP.WorkList
 
 		#region Overrides of SourceClass
 
+		public override long GetUniqueTableId()
+		{
+			// NOTE: Currently DatabaseSourceClasses are supposed to all reside in the same
+			//       workspace (which is certainly the case for Issue Worklists).
+			//       Therefore, we can use the table ID as a unique identifier.
+			return ArcGISTableId;
+		}
+
 		protected override string CreateWhereClauseCore(WorkItemStatus? statusFilter)
 		{
 			string result = string.Empty;

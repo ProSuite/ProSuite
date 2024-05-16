@@ -17,9 +17,11 @@ namespace ProSuite.AGP.WorkList
 			AttributeReader = attributeReader;
 		}
 
+		protected GdbTableIdentity Identity => _identity;
+
 		public bool HasGeometry => _identity.HasGeometry;
 
-		public long Id => _identity.Id;
+		public long ArcGISTableId => _identity.Id;
 
 		[NotNull]
 		public string Name => _identity.Name;
@@ -58,6 +60,8 @@ namespace ProSuite.AGP.WorkList
 		{
 			return CreateWhereClauseCore(statusFilter);
 		}
+
+		public abstract long GetUniqueTableId();
 
 		protected virtual string CreateWhereClauseCore(WorkItemStatus? statusFilter)
 		{

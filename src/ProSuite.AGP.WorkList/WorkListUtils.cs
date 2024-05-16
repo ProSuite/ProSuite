@@ -19,6 +19,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.Core;
 
@@ -130,12 +131,25 @@ namespace ProSuite.AGP.WorkList
 			else if (type == typeof(SelectionWorkList))
 			{
 				// Selection source classes: tables/oids pairs
-				Dictionary<long, Table> tablesById =
-					tables.ToDictionary(table => new GdbTableIdentity(table).Id,
-					                    table => table);
+				Dictionary<long, Table> tablesById = new Dictionary<long, Table>();
+				foreach (Table table in tables)
+				{
+					var gdbTableIdentity = new GdbTableIdentity(table);
+
+					long uniqueTableId = GetUniqueTableIdAcrossWorkspaces(gdbTableIdentity);
+
+					tablesById.Add(uniqueTableId, table);
+				}
 
 				Dictionary<Table, List<long>> oidsByTable =
 					GetOidsByTable(xmlWorkListDefinition.Items, tablesById);
+
+				if (oidsByTable.Count == 0)
+				{
+					_msg.Warn(
+						"No items in selection work list or they could not be associated with an existing table.");
+					return EmptyWorkItemRepository(type, stateRepository);
+				}
 
 				repository =
 					new SelectionItemRepository(tables, oidsByTable, stateRepository);
@@ -314,6 +328,38 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return result.ToDictionary(pair => pair.Key, pair => pair.Value.ToList());
+		}
+
+		public static long GetUniqueTableIdAcrossWorkspaces(GdbTableIdentity tableIdentity)
+		{
+			// NOTE: Do not use string.GetHashCode() because it is not guaranteed to be stable!
+
+			if (tableIdentity.Id < 0)
+			{
+				// Un-registered table: Use hash of the table name (without the workspace name to support changed relative paths)
+				// Uniqueness will be checked by the repository
+				return HashString(tableIdentity.Name);
+			}
+
+			// Registered table: Use hash of the table name combined with the table ID
+			long result = HashString(tableIdentity.Name);
+			result = result * 31 + tableIdentity.Id;
+
+			return result;
+		}
+
+		private static long HashString([NotNull] string text)
+		{
+			unchecked
+			{
+				long hash = 23;
+				foreach (char c in text)
+				{
+					hash = hash * 31 + c;
+				}
+
+				return hash;
+			}
 		}
 
 		#region Repository creation
@@ -571,6 +617,9 @@ namespace ProSuite.AGP.WorkList
 			{
 				if (! tablesById.TryGetValue(item.Row.TableId, out Table table))
 				{
+					_msg.Warn(
+						$"Table {item.Row.TableName} (UniqueID={item.Row.TableId}) not found in the " +
+						$"list of available tables ({StringUtils.Concatenate(tablesById.Values, t => t.GetName(), ", ")}).");
 					continue;
 				}
 

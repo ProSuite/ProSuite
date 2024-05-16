@@ -34,11 +34,9 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public static void SelectFeature(BasicFeatureLayer basicFeatureLayer,
 		                                 SelectionCombinationMethod selectionMethod,
-		                                 long objectId,
-		                                 bool clearExistingSelection = false)
+		                                 long objectId)
 		{
-			SelectRows(basicFeatureLayer, selectionMethod, new[] { objectId },
-			           clearExistingSelection);
+			SelectRows(basicFeatureLayer, selectionMethod, new[] { objectId });
 		}
 
 		/// <summary>
@@ -86,21 +84,14 @@ namespace ProSuite.Commons.AGP.Selection
 		/// <param name="tableBasedMapMember"></param>
 		/// <param name="combinationMethod"></param>
 		/// <param name="objectIds"></param>
-		/// <param name="clearExistingSelection"></param>
 		/// <returns>The number of actually selected rows.</returns>
 		public static long SelectRows([NotNull] IDisplayTable tableBasedMapMember,
 		                              SelectionCombinationMethod combinationMethod,
-		                              [NotNull] IReadOnlyList<long> objectIds,
-		                              bool clearExistingSelection = false)
+		                              [NotNull] IReadOnlyList<long> objectIds)
 		{
 			if (objectIds.Count == 0)
 			{
 				return 0;
-			}
-
-			if (clearExistingSelection)
-			{
-				ClearSelection();
 			}
 
 			var queryFilter = new QueryFilter
@@ -140,15 +131,13 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		public static long SelectFeatures([NotNull] FeatureSelectionBase featuresPerLayer,
-		                                  SelectionCombinationMethod selectionCombinationMethod,
-		                                  bool clearExistingSelection = false)
+		                                  SelectionCombinationMethod selectionCombinationMethod)
 		{
 			Assert.ArgumentNotNull(featuresPerLayer, nameof(featuresPerLayer));
 
 			return SelectRows(featuresPerLayer.BasicFeatureLayer,
 			                  selectionCombinationMethod,
-			                  featuresPerLayer.GetOids().ToList(),
-			                  clearExistingSelection);
+			                  featuresPerLayer.GetOids().ToList());
 		}
 
 		public static long SelectFeatures(

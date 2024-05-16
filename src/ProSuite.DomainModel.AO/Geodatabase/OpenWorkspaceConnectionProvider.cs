@@ -1,6 +1,7 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
 {
@@ -27,6 +28,8 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		}
 
 		#region Overrides of ConnectionProvider
+
+		public override DbConnectionType ConnectionType => DbConnectionType.Other;
 
 		public override IFeatureWorkspace OpenWorkspace(int hWnd = 0)
 		{
