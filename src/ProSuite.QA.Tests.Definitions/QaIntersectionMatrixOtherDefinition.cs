@@ -62,7 +62,8 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_constraint))] [CanBeNull]
 			string constraint)
 			: this(new[] { featureClass }, new[] { relatedClass }, intersectionMatrix,
-			       constraint) { }
+				   constraint)
+		{ }
 
 		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_4))]
 		public QaIntersectionMatrixOtherDefinition(

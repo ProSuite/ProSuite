@@ -7,10 +7,10 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.ParameterTypes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -73,7 +73,7 @@ namespace ProSuite.QA.Tests
 			"Incorrect parameter name will be renamed in a future release, use other constructor"
 		)]
 		public QaLineIntersectAngle([NotNull] IReadOnlyFeatureClass table, double limit, bool is3d)
-			: this(new[] {table}, limit, is3d) { }
+			: this(new[] { table }, limit, is3d) { }
 
 		[Doc(nameof(DocStrings.QaLineIntersectAngle_0))]
 		public QaLineIntersectAngle(
@@ -91,7 +91,7 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))]
 			double limit)
-			: this(new[] {polylineClass}, limit) { }
+			: this(new[] { polylineClass }, limit) { }
 
 		#endregion
 
@@ -108,7 +108,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
-		                                  IReadOnlyRow row2, int tableIndex2)
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (_limitRad <= 0)
 			{
@@ -120,10 +120,10 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var polyline1 = (IPolyline) ((IReadOnlyFeature) row1).Shape;
-			var polyline2 = (IPolyline) ((IReadOnlyFeature) row2).Shape;
+			var polyline1 = (IPolyline)((IReadOnlyFeature)row1).Shape;
+			var polyline2 = (IPolyline)((IReadOnlyFeature)row2).Shape;
 
-			if (((IRelationalOperator) polyline1).Disjoint(polyline2))
+			if (((IRelationalOperator)polyline1).Disjoint(polyline2))
 			{
 				return NoError;
 			}
@@ -135,13 +135,13 @@ namespace ProSuite.QA.Tests
 				LineIntersectionUtils.GetIntersections(polyline1, polyline2, _is3D))
 			{
 				if (Math.Abs(intersection.DistanceAlongA) < double.Epsilon ||
-				    Math.Abs(intersection.DistanceAlongA - 1.0) < double.Epsilon)
+					Math.Abs(intersection.DistanceAlongA - 1.0) < double.Epsilon)
 				{
 					continue;
 				}
 
 				if (Math.Abs(intersection.DistanceAlongB) < double.Epsilon ||
-				    Math.Abs(intersection.DistanceAlongB - 1.0) < double.Epsilon)
+					Math.Abs(intersection.DistanceAlongB - 1.0) < double.Epsilon)
 				{
 					continue;
 				}
@@ -156,15 +156,15 @@ namespace ProSuite.QA.Tests
 
 				// The angle is smaller than limit. Report error
 				string description = string.Format("Intersect angle {0} < {1}",
-				                                   FormatAngle(angleRadians, "N2"),
-				                                   FormatAngle(_limitRad, "N2"));
+												   FormatAngle(angleRadians, "N2"),
+												   FormatAngle(_limitRad, "N2"));
 
 				errorCount += ReportError(
 					description, InvolvedRowUtils.GetInvolvedRows(row1, row2),
 					GeometryFactory.Clone(intersection.At),
 					Codes[Code.IntersectionAngleSmallerThanLimit],
 					TestUtils.GetShapeFieldName(row1),
-					values: new object[] {MathUtils.ToDegrees(angleRadians)});
+					values: new object[] { MathUtils.ToDegrees(angleRadians) });
 			}
 
 			return errorCount;
