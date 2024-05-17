@@ -248,7 +248,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<Feature> GetFeatures(
 			[CanBeNull] FeatureClass featureClass,
-			[NotNull] List<long> oids,
+			[NotNull] IEnumerable<long> oids,
 			bool withoutJoin,
 			bool recycling,
 			[CanBeNull] SpatialReference outputSpatialReference = null)
@@ -261,7 +261,7 @@ namespace ProSuite.Commons.AGP.Carto
 			if (featureClass.IsJoinedTable() && withoutJoin)
 			{
 				// Get the features only based on the feature class, otherwise storing results in NotImplementedExceptions
-				featureClass = GetUnJoinedFeatureClass(featureClass as FeatureClass);
+				featureClass = GetUnJoinedFeatureClass(featureClass);
 			}
 
 			var filter = new QueryFilter
@@ -569,6 +569,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// BUG: In fixed cursor mode this method always returns 0 because ScreenToMap seems not to
 		/// work correctly.
 		/// </summary>
+		/// <param name="mapView"></param>
 		/// <param name="pixels"></param>
 		/// <param name="atPoint"></param>
 		/// <returns></returns>
@@ -598,8 +599,10 @@ namespace ProSuite.Commons.AGP.Carto
 		/// This method is not particularly robust against rotated maps!
 		/// </summary>
 		/// <param name="mapView"></param>
+		/// <param name="atPoint"></param>
 		/// <returns></returns>
-		public static double GetPixelSizeInMapUnits(MapView mapView, [NotNull] MapPoint atPoint)
+		private static double GetPixelSizeInMapUnits(MapView mapView,
+		                                             [NotNull] MapPoint atPoint)
 		{
 			Envelope mapExtent = mapView.Map.GetDefaultExtent();
 			SpatialReference sr = mapExtent.SpatialReference;

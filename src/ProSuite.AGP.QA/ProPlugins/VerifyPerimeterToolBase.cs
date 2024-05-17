@@ -66,7 +66,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			return base.OnToolActivatedCore(hasMapViewChanged);
 		}
 
-		protected override Task<bool> OnSketchCompleteCoreAsync(
+		protected override async Task<bool> OnSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
@@ -76,7 +76,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				MessageBox.Show("No quality verification environment is configured.",
 				                "Verify Extent", MessageBoxButton.OK, MessageBoxImage.Warning);
-				return Task.FromResult(false);
+				return false;
 			}
 
 			MapView mapView = MapView.Active;
@@ -85,16 +85,23 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				MessageBox.Show("No active map.", "Verify Extent",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return Task.FromResult(false);
+				return false;
 			}
 
-			if (ToolUtils.IsSingleClickSketch(sketchGeometry, GetSelectionTolerancePixels()))
+			bool isSingleClickSketch = false;
+			await QueuedTask.Run(() =>
+			{
+				isSingleClickSketch =
+					ToolUtils.IsSingleClickSketch(sketchGeometry, GetSelectionTolerancePixels());
+			});
+
+			if (isSingleClickSketch)
 			{
 				MessageBox.Show(
 					"Invalid perimeter. Please draw a box to define the extent to be verified",
 					"Verify Extent",
 					MessageBoxButton.OK, MessageBoxImage.Warning);
-				return Task.FromResult(false);
+				return false;
 			}
 
 			IQualityVerificationEnvironment qaEnvironment =
@@ -107,7 +114,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				MessageBox.Show("No Quality Specification is selected", "Verify Perimeter",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return Task.FromResult(false);
+				return false;
 			}
 
 			var progressTracker = new QualityVerificationProgressTracker
@@ -140,7 +147,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			                               Assert.NotNull(qaEnvironment.BackendDisplayName),
 			                               actionTitle);
 
-			return Task.FromResult(true);
+			return true;
 		}
 
 		protected override Task HandleEscapeAsync()
