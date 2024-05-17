@@ -8,9 +8,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
     <!-- Consider using net48 or 6 after dependencies are migrated to netstandard2.0s: -->
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">net48</TargetFrameworkVersion>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
-
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
   </PropertyGroup>

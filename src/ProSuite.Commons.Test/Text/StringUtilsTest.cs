@@ -266,6 +266,25 @@ namespace ProSuite.Commons.Test.Text
 		}
 
 		[Test]
+		public void CanTrim()
+		{
+			var sb = new StringBuilder(" \n\t foo\r\nbar \t\n\r\n ");
+			var o = sb.Trim();
+
+			Assert.AreEqual("foo\r\nbar", sb.ToString());
+			Assert.AreSame(sb, o);
+
+			sb = new StringBuilder(Environment.NewLine);
+			o = sb.Trim();
+			Assert.AreEqual(string.Empty, sb.ToString());
+			Assert.AreSame(sb, o);
+
+			sb = new StringBuilder("full");
+			sb.Trim();
+			Assert.AreEqual("full", sb.ToString());
+		}
+
+		[Test]
 		public void CanTrimEnd()
 		{
 			var sb = new StringBuilder("\tfoo \t\n ");

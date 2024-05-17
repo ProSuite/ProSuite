@@ -101,8 +101,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 					if (objectIds.Count > 0)
 					{
-						yield return new OidSelection(objectIds, basicFeatureLayer,
-						                              outputSpatialReference);
+						yield return new OidSelection(basicFeatureLayer, objectIds,
+													  outputSpatialReference);
 					}
 				}
 				else
@@ -114,7 +114,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 					if (features.Count > 0)
 					{
-						yield return new FeatureSelection(features, basicFeatureLayer);
+						yield return new FeatureSelection(basicFeatureLayer, features);
 					}
 				}
 			}
@@ -220,8 +220,8 @@ namespace ProSuite.Commons.AGP.Carto
 				if (featureClass != null && features.Count > 0)
 				{
 					yield return new FeatureSelection(
-						features.DistinctBy(f => f.GetObjectID()).ToList(),
-						basicFeatureLayer);
+						basicFeatureLayer,
+						features.DistinctBy(f => f.GetObjectID()).ToList());
 				}
 			}
 		}
@@ -342,7 +342,7 @@ namespace ProSuite.Commons.AGP.Carto
 				}
 			}
 
-			// AnnotationLayer has it's own GetFeatureClass() method. There is no base
+			// AnnotationLayer has its own GetFeatureClass() method. There is no base
 			// method on BasicFeatureLayer.
 			if (basicFeatureLayer is AnnotationLayer annoLayer)
 			{

@@ -23,7 +23,6 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
@@ -54,7 +53,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 					              "ProSuite_WorkList_Module"));
 
 		public IWorkList ActiveWorkListlayer { get; internal set; }
-		
+
 		public event EventHandler<WorkItemPickArgs> WorkItemPicked;
 
 		public async Task ShowViewAsync()
@@ -87,7 +86,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				}
 			}
 		}
-		
+
 		public void ShowView([NotNull] IWorkList worklist)
 		{
 			Assert.ArgumentCondition(_registry.Exists(worklist.Name),
@@ -97,7 +96,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			{
 				return;
 			}
-			
+
 			view.Show(worklist.DisplayName);
 		}
 
@@ -109,7 +108,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			string name = WorkListUtils.GetWorklistName(path)?.ToLower();
 			Assert.NotNullOrEmpty(name);
-			
+
 			IWorkList worklist = _registry.Get(name);
 
 			// show a work list that is not a project item and thus unknown
@@ -128,8 +127,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				_msg.Debug(message);
 
-				ErrorHandler.Show(message, "Unknown work list file", MessageBoxButton.OK,
-				                  MessageBoxImage.Exclamation);
+				Gateway.ShowMessage(message, "Unknown work list file",
+				                    MessageBoxButton.OK, MessageBoxImage.Exclamation);
 				return null;
 			}
 
@@ -143,8 +142,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 				                                 worklist.DisplayName, worklistLayer.Name);
 					_msg.Info(message);
 
-					ErrorHandler.Show(message, "Work List Layer", MessageBoxButton.OK,
-					                  MessageBoxImage.Information);
+					Gateway.ShowMessage(message, "Work List Layer", MessageBoxButton.OK,
+					                    MessageBoxImage.Information);
 				}
 			}
 			else
@@ -188,7 +187,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// wiring work list events, etc. is done in OnDrawComplete
 			// register work list before creating the layer
 			_registry.TryAdd(worklist);
-			
+
 			string fileName = string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
 
 			string path = environment.GetDefinitionFile(fileName);
@@ -248,7 +247,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			return base.OnReadSettingsAsync(settings);
 		}
-		
+
 		// NOTE daro Method is only called when project is dirty.
 		// NOTE daro OnWriteSettingsAsync is called twice on creating a project.
 		// ReSharper disable once RedundantOverriddenMember
@@ -515,7 +514,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				// or
 				// Open a project, open another project, re-open the first project > the work list factory
 				// has already been added. Assert.True(_registry.TryAdd(factory)) would fail.
-				// => don't us an assertion here, just try to add 
+				// => don't us an assertion here, just try to add
 				foreach (var item in ProjectItemUtils.Get<WorklistItem>())
 				{
 					if (File.Exists(item.Path))
@@ -697,7 +696,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			ViewUtils.RunOnUIThread(() => { view.View.Title = mapMember.Name; });
 		}
-		
+
 		// todo daro to WorkListUtils
 		/// <summary>
 		/// Finds all work list layers in the active map.
@@ -710,7 +709,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return GetActiveWorklistLayers(worklistLayers, MapUtils.GetActiveMap());
 		}
 
-		
+
 		/// <summary>
 		/// Finds all work list layers in the layer container.
 		/// </summary>
@@ -738,7 +737,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				                     StringComparison.OrdinalIgnoreCase);
 			});
 		}
-		
+
 		[NotNull]
 		private IEnumerable<IWorkList> GetWorklists([NotNull] IEnumerable<Layer> layers)
 		{

@@ -318,12 +318,8 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 		/// <summary>
 		/// Returns all the IDs of transformers that directly or indirectly reference one of the
-		/// datasets identified by the provided <see cref="datasetIds"/>.
+		/// datasets identified by the provided <paramref name="datasetIds"/>.
 		/// </summary>
-		/// <param name="session"></param>
-		/// <param name="datasetIds"></param>
-		/// <param name="excludeReferenceData"></param>
-		/// <returns></returns>
 		public static IEnumerable<int> GetAllTransformerIdsForDatasets(
 			[NotNull] ISession session,
 			IEnumerable<int> datasetIds,

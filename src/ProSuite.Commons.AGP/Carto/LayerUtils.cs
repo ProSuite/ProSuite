@@ -6,7 +6,6 @@ using System.Threading;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Carto
@@ -76,8 +75,8 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
-		/// Returns the Object IDs of features found by the layer search. Honors definition queries,
-		/// layer time, etc. defined on the layer. 
+		/// Returns the Object IDs of features found by the layer search.
+		/// Honors definition queries, layer time, etc. defined on the layer.
 		/// </summary>
 		public static IEnumerable<long> SearchObjectIds(
 			[NotNull] BasicFeatureLayer layer,
@@ -85,21 +84,32 @@ namespace ProSuite.Commons.AGP.Carto
 			[CanBeNull] Predicate<Feature> predicate = null,
 			CancellationToken cancellationToken = default)
 		{
-			// TODO Should dispose table and definition!
-			// TODO What if GetObjectIDField returns empty? --> no OIDs!
+			using var table = layer.GetTable();
+			using var definition = table?.GetDefinition();
+			var oidField = definition?.GetObjectIDField();
+
+			if (string.IsNullOrEmpty(oidField))
+			{
+				yield break; // no OIDs
+			}
 
 			if (filter == null)
 			{
-				filter = new QueryFilter
-				         {
-					         SubFields = layer.GetTable().GetDefinition()?.GetObjectIDField()
-				         };
+				filter = new QueryFilter { SubFields = oidField };
 			}
 			else if (string.IsNullOrEmpty(filter.SubFields))
 			{
-				filter.SubFields = layer.GetTable().GetDefinition()?.GetObjectIDField();
+				filter.SubFields = oidField;
 			}
-			// TODO else: ensure OID field is in SubFields!
+			else
+			{
+				// ensure OID field is in SubFields:
+				if (! filter.SubFields.Split(',').Select(fn => fn.Trim())
+				            .Contains(oidField, StringComparer.OrdinalIgnoreCase))
+				{
+					filter.SubFields = string.Concat(filter.SubFields, ",", oidField);
+				}
+			}
 
 			foreach (Feature row in SearchRows(layer, filter, predicate))
 			{
@@ -227,8 +237,10 @@ namespace ProSuite.Commons.AGP.Carto
 		/// Gets the layer's visibility state.
 		/// Works as well for layers nested in group layers.
 		/// </summary>
-		public static bool IsVisible([NotNull] Layer layer)
+		public static bool IsVisible(Layer layer)
 		{
+			if (layer is null) return false;
+
 			if (! layer.IsVisible)
 			{
 				return false;
@@ -256,47 +268,37 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
+		/// <remarks>A layer is considered valid if it has a non-null data table</remarks>
 		public static bool IsLayerValid([CanBeNull] BasicFeatureLayer featureLayer)
 		{
-			// ReSharper disable once UseNullPropagation
-			if (featureLayer == null)
-			{
-				return false;
-			}
-
-			// TODO should dispose table!
-			if (featureLayer.GetTable() == null)
-			{
-				return false;
-			}
-
-			return true;
+			using var table = featureLayer?.GetTable();
+			return table != null;
 		}
 
-		[NotNull]
-		public static FeatureClass GetFeatureClass(
-			[NotNull] this BasicFeatureLayer basicFeatureLayer)
+		[CanBeNull]
+		public static FeatureClass GetFeatureClass(this Layer layer)
 		{
-			Assert.ArgumentNotNull(basicFeatureLayer, nameof(basicFeatureLayer));
-			Assert.ArgumentCondition(
-				basicFeatureLayer is FeatureLayer || basicFeatureLayer is AnnotationLayer,
-				"AnnotationLayer has it's own GetFeatureClass() method. There is no base method on BasicFeatureLayer.");
+			// BasicFeatureLayer is the abstract base class for:
+			// FeatureLayer, AnnotationLayer, DimensionLayer;
+			// they all have a feature class as their data source, but,
+			// sadly, BasicFeatureLayer has no GetFeatureClass() method.
 
-			// todo daro try (FeatureClass)BasicFeatureLayer.GetTable()
-			if (basicFeatureLayer is FeatureLayer featureLayer)
+			if (layer is FeatureLayer featureLayer)
 			{
-				return Assert.NotNull(featureLayer.GetFeatureClass());
+				return featureLayer.GetFeatureClass();
 			}
 
-			if (basicFeatureLayer is AnnotationLayer annotationLayer)
+			if (layer is AnnotationLayer annotationLayer)
 			{
-				return Assert.NotNull(annotationLayer.GetFeatureClass());
+				return annotationLayer.GetFeatureClass();
 			}
 
-			// TODO why not: return (FeatureClass) basicFeatureLayer.GetTable();
+			if (layer is BasicFeatureLayer basicFeatureLayer)
+			{
+				return basicFeatureLayer.GetTable() as FeatureClass;
+			}
 
-			throw new ArgumentException(
-				$"{nameof(basicFeatureLayer)} is not of type FeatureLayer nor AnnotationLayer");
+			return null;
 		}
 	}
 }

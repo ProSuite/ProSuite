@@ -27,7 +27,6 @@ using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
-	// todo daro log more, especially in subclasses
 	public abstract class OneClickToolBase : MapTool
 	{
 		private const Key _keyShowOptionsPane = Key.O;
@@ -67,13 +66,13 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		/// <summary>
 		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
-		/// allowed. Otherwise the selection phase will continue until all selected features are
+		/// allowed. Otherwise, the selection phase will continue until all selected features are
 		/// usable by the tool.
 		/// </summary>
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
 		protected virtual IPickerPrecedence PickerPrecedence =>
-			_pickerPrecedence ?? (_pickerPrecedence = new StandardPickerPrecedence());
+			_pickerPrecedence ??= new StandardPickerPrecedence();
 
 		/// <summary>
 		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
@@ -99,20 +98,27 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			PressedKeys.Clear();
 
-			Task<bool> task = QueuedTask.Run(() =>
+			try
 			{
-				OnToolActivatingCore();
+				using var source = GetProgressorSource();
+				var progressor = source.Progressor;
 
-				if (RequiresSelection)
+				await QueuedTaskUtils.Run(() =>
 				{
-					//TODO progressor
-					ProcessSelection(ActiveMapView);
-				}
+					OnToolActivatingCore();
 
-				return OnToolActivatedCore(hasMapViewChanged);
-			});
+					if (RequiresSelection)
+					{
+						ProcessSelection(progressor);
+					}
 
-			await ViewUtils.TryAsync(task, _msg);
+					return OnToolActivatedCore(hasMapViewChanged);
+				}, progressor);
+			}
+			catch (Exception ex)
+			{
+				ErrorHandler.HandleError(ex, _msg);
+			}
 		}
 
 		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
@@ -245,27 +251,24 @@ namespace ProSuite.AGP.Editing.OneClick
 					}
 				}, _msg);
 
-				Task<bool> task;
+				using var source = GetProgressorSource();
+				var progressor = source.Progressor;
 
 				if (RequiresSelection && await IsInSelectionPhaseAsync())
 				{
-					task = OnSelectionSketchCompleteAsync(sketchGeometry,
-					                                      GetCancelableProgressor());
-					return await ViewUtils.TryAsync(task, _msg);
+					return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
 				}
 
-				task = OnSketchCompleteCoreAsync(sketchGeometry, GetCancelableProgressor());
-				return await ViewUtils.TryAsync(task, _msg);
+				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
 			}
 			catch (Exception e)
 			{
-				// NOTE: Throwing here results in a process crash (Exception while waiting for a Task to complete)
-				// Consider Task.FromException?
+				// Consider Task.FromException? --> no, as it throws once awaited!
 				ErrorHandler.HandleError(
 					$"{Caption}: Error completing sketch ({e.Message})", e, _msg);
-			}
 
-			return await Task.FromResult(true);
+				return await Task.FromResult(true);
+			}
 		}
 
 		protected virtual void ShiftPressedCore()
@@ -299,7 +302,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		/// <summary>
-		/// Sets up the tool for a sketch that is typically used to select things (features, graphics, etc.)
+		/// Sets up the tool for a sketch that is typically used
+		/// to select things (features, graphics, etc.)
 		/// </summary>
 		protected void SetupRectangleSketch()
 		{
@@ -314,8 +318,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SketchOutputMode = sketchOutputMode;
 
-			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
-			// otherwise it has no effect!
+			// Note: set CompleteSketchOnMouseUp before SketchType, or it has no effect
 			CompleteSketchOnMouseUp = completeSketchOnMouseUp;
 
 			SketchType = sketchType;
@@ -330,13 +333,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
 		{
 			// TODO: Use async overload added at 3.0
-			// NOTE: If the exception of this event is not caught here, the application crashes!
-			// TODO daro: isn't it the responsibility of the calling code to wrap a QueuedTask around it?
+			// Note: app crashes on uncaught exceptions here
+
 			Task<bool> task = QueuedTask.Run(() => OnMapSelectionChangedCore(args));
 
 			await ViewUtils.TryAsync(task, _msg, suppressErrorMessageBox: true);
-
-			//await ViewUtils.TryAsync(OnMapSelectionChangedCoreAsync(args), _msg, suppressErrorMessageBox: true);
 		}
 
 		private async Task OnEditCompletedAsync(EditCompletedEventArgs args)
@@ -353,7 +354,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// thread throwing:
 		/// A Task's exception(s) were not observed either by Waiting on the Task or accessing its
 		/// Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.
-		/// Therefore any exception must be caught inside the Task execution!
+		/// Therefore, any exception must be caught inside the Task execution!
 		/// </summary>
 		/// <param name="args"></param>
 		/// <returns></returns>
@@ -362,8 +363,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.CompletedTask;
 		}
 
+		/// <remarks>Will be called on MCT</remarks>
 		protected virtual void OnToolActivatingCore() { }
 
+		/// <remarks>Will be called on MCT</remarks>
 		protected virtual bool OnToolActivatedCore(bool hasMapViewChanged)
 		{
 			return true;
@@ -371,15 +374,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
 
+		/// <remarks>Will be called on MCT</remarks>
 		protected virtual bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
 			return true;
 		}
 
-		[CanBeNull]
-		protected virtual CancelableProgressor GetCancelableProgressor()
+		protected virtual CancelableProgressorSource GetProgressorSource()
 		{
-			return new CancelableProgressorSource().Progressor;
+			var message = Caption ?? string.Empty;
+			const bool delayedShow = true;
+			return new CancelableProgressorSource(message, "Cancelling", delayedShow);
 		}
 
 		protected virtual Task<bool> OnSketchCompleteCoreAsync(
@@ -411,6 +416,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			Geometry selectionGeometry = null;
 			var pickerLocation = new Point(0, 0);
 
+			// TODO Can't we pack all this into *one* QTR?
+
 			bool singlePick = false;
 			List<FeatureSelectionBase> candidatesOfManyLayers =
 				await QueuedTaskUtils.Run(() =>
@@ -433,7 +440,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					return false;
 				}
 
-				await QueuedTask.Run(SelectionUtils.ClearSelection);
+				await QueuedTask.Run(ClearSelection);
 
 				return false;
 			}
@@ -451,12 +458,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                      PickerPrecedence,
 				                                      selectionMethod);
 
-			await QueuedTask.Run(() => ProcessSelection(MapView.Active, progressor), progressor);
+			await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
 
 			return result;
 		}
 
-		// todo daro when return false?
 		private static async Task<bool> SingleSelectAsync(
 			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
@@ -587,7 +593,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					foreach (OidSelection featureClassSelection in
 					         pickedItem.Layers.Select(layer => new OidSelection(
-						                                  pickedItem.Oids.ToList(), layer,
+														  layer, pickedItem.Oids.ToList(),
 						                                  MapView.Active.Map.SpatialReference)))
 					{
 						SelectionUtils.SelectFeatures(
@@ -630,9 +636,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Geometry searchGeometry,
 			SpatialRelationship spatialRelationship)
 		{
-			MapView mapView = MapView.Active;
+			var mapView = ActiveMapView;
 
-			if (mapView == null)
+			if (mapView is null)
 			{
 				return Enumerable.Empty<FeatureSelectionBase>();
 			}
@@ -700,20 +706,21 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
 		{
-			GeometryType shapeType = DatasetUtils.GetShapeType(feature.GetTable());
+			using var featureClass = feature.GetTable();
+			GeometryType shapeType = featureClass.GetShapeType();
 
 			return CanSelectGeometryType(shapeType);
 		}
 
+		/// <remarks>Will be called on MCT</remarks>>
 		protected virtual void AfterSelection(
-			[NotNull] Map map, [NotNull] IList<Feature> selectedFeatures,
+			[NotNull] IList<Feature> selectedFeatures,
 			[CanBeNull] CancelableProgressor progressor) { }
 
-		protected void ProcessSelection([NotNull] MapView mapView, // TODO or just a Map?
-		                                [CanBeNull] CancelableProgressor progressor = null)
+		/// <remarks>Must be called on MCT</remarks>
+		protected void ProcessSelection([CanBeNull] CancelableProgressor progressor = null)
 		{
-			Dictionary<MapMember, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection(mapView.Map);
+			var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
 
 			var notifications = new NotificationCollection();
 			List<Feature> applicableSelection =
@@ -729,7 +736,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				LogUsingCurrentSelection();
 
-				AfterSelection(mapView.Map, applicableSelection, progressor);
+				AfterSelection(applicableSelection, progressor);
 			}
 			else
 			{
@@ -761,11 +768,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		private bool CanSelectFromLayer([CanBeNull] Layer layer,
 		                                NotificationCollection notifications = null)
 		{
-			var basicFeatureLayer = layer as BasicFeatureLayer;
-
-			if (basicFeatureLayer == null)
+			if (layer is not BasicFeatureLayer featureLayer)
 			{
-				NotificationUtils.Add(notifications, "No feature layer");
+				NotificationUtils.Add(notifications, "Not a feature layer");
 				return false;
 			}
 
@@ -773,67 +778,59 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (! LayerUtils.IsVisible(layer))
 			{
-				NotificationUtils.Add(notifications, $"Layer {layerName} not visible");
+				NotificationUtils.Add(notifications, $"Layer is not visible: {layerName}");
 				return false;
 			}
 
-			if (! layer.IsVisibleInView(MapView.Active))
+			if (! layer.IsVisibleInView(ActiveMapView))
 			{
 				// Takes scale range into account (and probably the parent layer too)
-				NotificationUtils.Add(notifications, $"Layer {layerName} not visible");
+				NotificationUtils.Add(notifications, $"Layer is not visible on map: {layerName}");
 				return false;
 			}
 
-			if (SelectOnlySelectableFeatures &&
-			    ! basicFeatureLayer.IsSelectable)
+			if (SelectOnlySelectableFeatures && ! featureLayer.IsSelectable)
 			{
-				NotificationUtils.Add(notifications, $"Layer {layerName} not selectable");
+				NotificationUtils.Add(notifications, $"Layer is not selectable: {layerName}");
 				return false;
 			}
 
-			if (SelectOnlyEditFeatures &&
-			    ! basicFeatureLayer.IsEditable)
+			if (SelectOnlyEditFeatures && ! featureLayer.IsEditable)
 			{
-				NotificationUtils.Add(notifications, $"Layer {layerName} not editable");
+				NotificationUtils.Add(notifications, $"Layer is not editable: {layerName}");
 				return false;
 			}
 
-			if (! CanSelectGeometryType(
-				    GeometryUtils.TranslateEsriGeometryType(basicFeatureLayer.ShapeType)))
+			var geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
+			if (! CanSelectGeometryType(geometryType))
 			{
 				NotificationUtils.Add(notifications,
-				                      $"Layer {layerName}: Cannot use geometry type {basicFeatureLayer.ShapeType}");
+				                      $"Cannot use geometry type {featureLayer.ShapeType} of layer {layerName}");
 				return false;
 			}
 
-			if (basicFeatureLayer is FeatureLayer featureLayer)
+			using var featureClass = featureLayer.GetFeatureClass();
+			if (featureClass is null)
 			{
-				if (featureLayer.GetFeatureClass() == null)
-				{
-					NotificationUtils.Add(notifications, $"Layer {layerName} is invalid");
-					return false;
-				}
+				NotificationUtils.Add(notifications, $"Layer has no valid data source: {layerName}");
+				return false;
 			}
 
-			return CanSelectFromLayerCore(basicFeatureLayer);
+			return CanSelectFromLayerCore(featureLayer);
 		}
 
-		[Obsolete]
-		protected virtual bool CanUseSelection([NotNull] IEnumerable<Feature> selectedFeatures)
+		protected bool CanUseSelection([NotNull] MapView mapView)
 		{
-			return selectedFeatures.Any(CanSelectFeatureGeometryType);
-		}
+			if (mapView is null)
+				throw new ArgumentNullException(nameof(mapView));
 
-		// TODO Map instead of MapView
-		protected bool CanUseSelection([NotNull] MapView activeMapView)
-		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection(activeMapView.Map);
+				SelectionUtils.GetSelection(mapView.Map);
 
 			return CanUseSelection(selectionByLayer);
 		}
 
-		protected bool CanUseSelection([NotNull] Dictionary<MapMember, List<long>> selectionByLayer)
+		private bool CanUseSelection([NotNull] Dictionary<MapMember, List<long>> selectionByLayer)
 		{
 			return AllowNotApplicableFeaturesInSelection
 				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key as Layer))
@@ -867,7 +864,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			var filteredCount = 0;
 			var selectionCount = 0;
 
-			SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
+			SpatialReference mapSpatialReference = ActiveMapView.Map.SpatialReference;
 
 			foreach (KeyValuePair<MapMember, List<long>> oidsByLayer in selectionByLayer)
 			{
@@ -901,10 +898,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView activeView)
+		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView mapView)
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection(activeView.Map);
+				SelectionUtils.GetSelection(mapView.Map);
 
 			return GetApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection);
 		}
@@ -917,6 +914,14 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer basicFeatureLayer)
 		{
 			return true;
+		}
+
+		/// <summary>Clear the selection on the active map</summary>
+		/// <remarks>Must call on MCT</remarks>
+		protected void ClearSelection()
+		{
+			var map = ActiveMapView?.Map;
+			map?.ClearSelection();
 		}
 	}
 }

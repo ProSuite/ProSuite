@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using Microsoft.Win32;
+using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Display;
 
@@ -17,6 +18,19 @@ public partial class ImportSLDLMDialog : Window
 		DataContext = options;
 
 		InitializeComponent();
+
+		Loaded += HandleWindowLoaded;
+	}
+
+	private void HandleWindowLoaded(object sender, RoutedEventArgs e)
+	{
+		// freeze window height (it was SizeToContent)
+		var ht = ActualHeight;
+		MinHeight = MaxHeight = ht;
+
+		// Cannot do this in constructor (would have no effect), so do it here:
+		this.ShowMinimizeButton(false);
+		this.ShowMaximizeButton(false);
 	}
 
 	private void BrowseButtonClicked(object sender, RoutedEventArgs e)

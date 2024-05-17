@@ -41,7 +41,7 @@ namespace ProSuite.QA.Core.Reports
 
 			WriteConditionImports(sb);
 
-			CreatePythonConditionFactoryClass(includedTests, sb);
+			CreatePythonConditionClass(includedTests, sb);
 
 			TextWriter.Write(sb.ToString());
 		}
@@ -50,7 +50,7 @@ namespace ProSuite.QA.Core.Reports
 
 		protected virtual void WriteConditionImports(StringBuilder sb) { }
 
-		private void CreatePythonConditionFactoryClass(
+		private void CreatePythonConditionClass(
 			[NotNull] IEnumerable<IncludedInstanceBase> includedTests,
 			[NotNull] StringBuilder sb)
 		{
@@ -65,8 +65,8 @@ namespace ProSuite.QA.Core.Reports
 						continue;
 					}
 
-					foreach (IncludedInstanceConstructor constructor in includedTestClass
-						         .InstanceConstructors)
+					foreach (IncludedInstanceConstructor constructor in
+					         includedTestClass.InstanceConstructors)
 					{
 						if (HasUnsupportedParameters(constructor))
 						{
@@ -174,17 +174,15 @@ namespace ProSuite.QA.Core.Reports
 			string conditionConstructorSignature = $"\"{includedTestFactory.InstanceType.Name}\"";
 
 			AppendConditionMethod(methodName, methodSignature, factory,
-			                      conditionConstructorSignature,
-			                      sb);
+			                      conditionConstructorSignature, sb);
 		}
 
 		private static string ToUnderscoreCase(string str)
 		{
-			return string
-			       .Concat(str.Select(
-				               (x, i) => i > 0 && char.IsUpper(x)
-					                         ? "_" + x.ToString()
-					                         : x.ToString())).ToLower();
+			return string.Concat(str.Select(
+				                     (x, i) => i > 0 && char.IsUpper(x)
+					                               ? "_" + x.ToString()
+					                               : x.ToString())).ToLower();
 		}
 
 		[NotNull]

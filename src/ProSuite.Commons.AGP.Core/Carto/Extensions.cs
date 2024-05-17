@@ -1,7 +1,7 @@
-using ArcGIS.Core.Geometry;
 using System;
 using System.IO;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.CIM;
 using ProSuite.Commons.Geom;
 

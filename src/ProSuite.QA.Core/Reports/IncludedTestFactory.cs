@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Reflection;
 using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.QA.Core.Reports
@@ -14,7 +16,7 @@ namespace ProSuite.QA.Core.Reports
 		public IncludedTestFactory([NotNull] Type testFactoryType)
 			: base(GetTitle(testFactoryType),
 			       testFactoryType.Assembly,
-			       GetTestFactory(testFactoryType),
+			       GetInstanceInfo(testFactoryType),
 			       InstanceUtils.IsObsolete(testFactoryType),
 			       InstanceUtils.IsInternallyUsed(testFactoryType))
 		{
@@ -26,11 +28,36 @@ namespace ProSuite.QA.Core.Reports
 			return testFactoryType.Name;
 		}
 
-		private static IInstanceInfo GetTestFactory(Type testFactoryType)
+		private static IInstanceInfo GetInstanceInfo(Type testFactoryType)
 		{
+			Type factoryDefinitionType = GetTestFactoryDefinitionType(testFactoryType);
+
+			if (factoryDefinitionType != null)
+			{
+				return (TestFactoryDefinition)Activator.CreateInstance(factoryDefinitionType);
+			}
+
 			ConstructorInfo ctor = testFactoryType.GetConstructors()[0];
 
 			return (IInstanceInfo) ctor.Invoke(new object[] { });
+		}
+
+		[CanBeNull]
+		private static Type GetTestFactoryDefinitionType(Type testFactoryType)
+		{
+			Assembly testFactoryAssembly = testFactoryType.Assembly;
+
+			string fullPath = Path.Combine(
+				ReflectionUtils.GetAssemblyDirectory(testFactoryAssembly),
+				$"{InstanceUtils.GetDefinitionsAssemblyName(testFactoryAssembly.GetName().Name)}.dll");
+
+			Assembly definitionsAssembly = Assembly.LoadFrom(fullPath);
+
+			string definitionName =
+				InstanceUtils.GetAlgorithmDefinitionName(testFactoryType.FullName);
+			Type factoryDefType = definitionsAssembly.GetType(definitionName);
+
+			return factoryDefType;
 		}
 
 		#region Overrides of IncludedInstanceBase
