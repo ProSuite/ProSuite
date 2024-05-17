@@ -152,6 +152,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMpHorizontalPerpendicular),
 											 typeof(QaMpNonIntersectingRingFootprints),
 											 typeof(QaMpSinglePartFootprint),
+											 typeof(QaMpVertexNotNearFace),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
@@ -346,6 +347,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaMonotonicZCases(model, testCases);
 			AddQaMpNonIntersectingRingFootprintsCases(model, testCases);
 			AddQaMpSinglePartFootprintCases(model, testCases);
+			AddQaMpVertexNotNearFaceCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygon(model, testCases);
 			AddQaTouchesSelf(model, testCases);
@@ -1511,6 +1513,34 @@ namespace ProSuite.QA.Tests.Test
 			                                     {
 				                                     model.GetVectorDataset()
 			                                     },
+			                                     optionalValues));
+		}
+
+		private static void AddQaMpVertexNotNearFaceCases(InMemoryTestDataModel model,
+		                                                    ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("CoplanarityTolerance", 1);
+			optionalValues.Add("ReportNonCoplanarity", false);
+			optionalValues.Add("IgnoreNonCoplanarFaces", false);
+			optionalValues.Add("VerifyWithinFeature", false);
+			optionalValues.Add("PointCoincidence", 1);
+			optionalValues.Add("EdgeCoincidence", 1);
+			optionalValues.Add("PlaneCoincidence", 1);
+			optionalValues.Add("MinimumSlopeDegrees", 1);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaMpVertexNotNearFace), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[]
+														{
+															model.GetVectorDataset(),
+															model.GetVectorDataset()
+														},
+													 1,
+													 1
+												 },
 			                                     optionalValues));
 		}
 
