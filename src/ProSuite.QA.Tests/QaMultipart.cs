@@ -54,6 +54,13 @@ namespace ProSuite.QA.Tests
 			_shapeFieldName = featureClass.ShapeFieldName;
 		}
 
+		[InternallyUsedTest]
+		public QaMultipart(
+			[NotNull] QaMultipartDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClass,
+			       definition.SingleRing)
+		{ }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			AssertValidInvolvedTableIndex(tableIndex);
