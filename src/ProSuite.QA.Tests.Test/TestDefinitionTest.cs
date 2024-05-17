@@ -150,6 +150,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMpHorizontalAzimuths),
 											 typeof(QaMpHorizontalHeights),
 											 typeof(QaMpHorizontalPerpendicular),
+											 typeof(QaMpNonIntersectingRingFootprints),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
@@ -342,6 +343,7 @@ namespace ProSuite.QA.Tests.Test
 			//AddQaMinAngleCases(model, testCases);
 			AddQaMinSegAngleCases(model, testCases);
 			AddQaMonotonicZCases(model, testCases);
+			AddQaMpNonIntersectingRingFootprintsCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygon(model, testCases);
 			AddQaTouchesSelf(model, testCases);
@@ -1477,6 +1479,21 @@ namespace ProSuite.QA.Tests.Test
 			                                     new object[]
 			                                     {
 				                                     model.GetVectorDataset(),
+			                                     },
+			                                     optionalValues));
+		}
+
+		private static void AddQaMpNonIntersectingRingFootprintsCases(InMemoryTestDataModel model,
+		                                         ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ResolutionFactor", 1);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaMpNonIntersectingRingFootprints), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+													 false
 			                                     },
 			                                     optionalValues));
 		}
