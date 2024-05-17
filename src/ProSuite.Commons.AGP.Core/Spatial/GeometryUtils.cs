@@ -180,7 +180,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			{
 				return geometries.Single();
 			}
-			//Failes in ArcGIS 3.0 when merging a polygon that is congruent with the island of the first polygon. See issue #168
+			//Fails in ArcGIS 3.0 when merging a polygon that is congruent with the island of the first polygon. See issue #168
 			//The list overload: Engine.Union(geometries) works
 			//if (count == 2)
 			//{
@@ -224,7 +224,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static Geometry Difference(Geometry minuend, Geometry subtrahend)
 		{
 			Geometry difference = Engine.Difference(minuend, subtrahend);
-			// Note: difference may has another geometry type than minuend
+			// Note: difference may have another geometry type than minuend
 			return difference;
 		}
 
@@ -466,6 +466,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// </summary>
 		public static T Accelerate<T>(T geometry) where T : Geometry
 		{
+			if (geometry is null) return null;
 			return (T) Engine.AccelerateForRelationalOperations(geometry);
 		}
 
@@ -804,10 +805,9 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				case esriGeometryType.esriGeometryBag:
 					return GeometryType.GeometryBag;
 				case esriGeometryType.esriGeometryAny:
-					return GeometryType.Unknown;
 				case esriGeometryType.esriGeometryNull:
 					return GeometryType.Unknown;
-				default:
+				default: // TODO Why not translate the remaining ones to Unknown as well?
 					throw new ArgumentOutOfRangeException($"Cannot translate {esriGeometryType}");
 			}
 		}

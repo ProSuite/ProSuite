@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using ArcGIS.Core.CIM;
@@ -8,6 +9,8 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using UnitType = ArcGIS.Core.Geometry.UnitType;
 
 namespace ProSuite.Commons.AGP.Core.Carto
 {
@@ -37,6 +40,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		public const double DefaultStrokeWidth = 1.0;
 		public const double DefaultMarkerSize = 10.0;
 
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		#region Conversion
 
 		/// <remarks>
@@ -45,6 +50,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		/// seems to be established practice in desktop publishing. We adopt it.
 		/// </remarks>
 		private const double PointsPerMillimeter = 2.83465;
+		private const double PointsPerMeter = 2834.65;
+		private const double MetersPerPoint = 1.0 / PointsPerMeter;
 
 		public static double PointsToMillimeters(double points)
 		{
@@ -54,6 +61,42 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		public static double MillimetersToPoints(double millimeters)
 		{
 			return millimeters * PointsPerMillimeter;
+		}
+
+		public static double GetUnitsPerPoint(this Unit unit, double referenceScale = 0)
+		{
+			if (unit is null)
+				throw new ArgumentNullException(nameof(unit));
+			if (unit.UnitType != UnitType.Linear)
+				throw new ArgumentException("Not a linear unit", nameof(unit));
+
+			double distancePoints = 1.0;
+
+			if (referenceScale > 0)
+			{
+				distancePoints *= referenceScale;
+			}
+
+			double meters = distancePoints * MetersPerPoint;
+			return meters / unit.ConversionFactor; // linear unit's ConversionFactor is meters/unit
+		}
+
+		public static double GetPointsPerUnit(this Unit unit, double referenceScale = 0)
+		{
+			if (unit is null)
+				throw new ArgumentNullException(nameof(unit));
+			if (unit.UnitType != UnitType.Linear)
+				throw new ArgumentException("Not a linear unit", nameof(unit));
+
+			double distanceMapUnits = 1.0;
+
+			if (referenceScale > 0)
+			{
+				distanceMapUnits /= referenceScale;
+			}
+
+			double meters = distanceMapUnits * unit.ConversionFactor; // ConversionFactor is meters/unit (for a linear unit)
+			return meters * PointsPerMeter;
 		}
 
 		#endregion
@@ -912,7 +955,9 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			var symref = GetSymbolReference(renderer.Symbol, renderer.AlternateSymbols, scaleDenom);
 
-			return ApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
+			symref = TryApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
+
+			return symref;
 		}
 
 		private static CIMSymbolReference GetSymbol(CIMUniqueValueRenderer renderer, INamedValues feature, double scaleDenom)
@@ -940,7 +985,25 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			var symref = GetSymbolReference(primary, alternates, scaleDenom);
 
-			return ApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
+			symref = TryApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
+
+			return symref;
+		}
+
+		private static CIMSymbolReference TryApplyOverrides(
+			CIMSymbolReference symref, INamedValues feature,
+			double scaleDenom, CIMVisualVariable[] visualVariables)
+		{
+			try
+			{
+				symref = ApplyOverrides(symref, feature, scaleDenom, visualVariables);
+			}
+			catch (Exception ex)
+			{
+				_msg.Warn($"Could not apply (all) overrides: {ex.Message}", ex);
+			}
+
+			return symref;
 		}
 
 		private static CIMUniqueValueClass FindClass(CIMUniqueValueRenderer renderer, INamedValues feature)
@@ -1085,7 +1148,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				{
 					// - evaluate mapping.Expression (or Arcade: mapping.ValueExpressionInfo) against given feature
 					// - find primitive by mapping.PrimitiveName (see SymbolUtils on how to traverse a CIMSymbol)
-					// - replace primitive's mapping.PropertyName by expression value
+					// - set expression value on primitive's property named mapping.PropertyName
 
 					try
 					{
@@ -1131,8 +1194,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			var property = primitive.GetType().GetProperty(mapping.PropertyName);
 			if (property is null)
 			{
-				throw new Exception(
-					$"Property '{mapping.PropertyName}' not found on {primitive.GetType().Name}");
+				throw new Exception($"Property '{mapping.PropertyName}' not found on {primitive.GetType().Name}");
 			}
 
 			object value = Evaluate(mapping.Expression, mapping.ValueExpressionInfo, feature);
@@ -1174,6 +1236,82 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		}
 
 		private static readonly Regex _fieldExpressionRegex = new(@"^\s*\[\s*([ _\w]+)\s*\]\s*$");
+
+		#endregion
+
+		#region Line width
+
+		/// <summary>
+		/// Get the width of a line to the left and right of the shape.
+		/// Only line strokes are considered, markers along a line are
+		/// ignored. Any offset effects are taken into account, and may
+		/// be the cause for <paramref name="leftPoints"/> differing
+		/// from <paramref name="rightPoints"/> (asymmetric line symbol).
+		/// </summary>
+		/// <param name="symbol">The line symbol whose width to find
+		/// (you probably want this to be a symbol with overrides applied)</param>
+		/// <param name="leftPoints">Line width to the left of the shape in points</param>
+		/// <param name="rightPoints">Line width to the right of the shape in points</param>
+		/// <returns>True if there's at least one stroke layer, and thus
+		/// a line width could be derived; false otherwise.</returns>
+		/// <remarks>To get overall line width, add <paramref name="leftPoints"/>
+		/// and <paramref name="rightPoints"/> together.</remarks>
+		public static bool GetLineWidth(CIMLineSymbol symbol,
+		                                out double leftPoints, out double rightPoints)
+		{
+			leftPoints = rightPoints = double.NaN;
+			if (symbol is null) return false;
+
+			var symbolLayers = symbol.SymbolLayers;
+			if (symbolLayers is null) return false;
+
+			bool hasStroke = false;
+			double left = double.MaxValue;
+			double right = double.MinValue;
+
+			double globalOffset = GetOffset(symbol.Effects);
+
+			foreach (var layer in symbolLayers)
+			{
+				if (layer is CIMStroke stroke)
+				{
+					hasStroke = true;
+
+					double localOffset = GetOffset(stroke.Effects);
+					double width = stroke.Width;
+
+					double halfWidth = width / 2;
+					left = Math.Min(left, globalOffset + localOffset - halfWidth);
+					right = Math.Max(right, globalOffset + localOffset + halfWidth);
+				}
+				// else: skip this symbol layer; we look at line (stroke) width only
+			}
+
+			leftPoints = -left; // negate!
+			rightPoints = right; // don't!
+
+			return hasStroke;
+		}
+
+		/// <returns>cumulative offset over all offset effects
+		/// amongst those given; left is negative (for consistency
+		/// with <see cref="IGeometryEngine.Offset"/></returns>
+		private static double GetOffset(IEnumerable<CIMGeometricEffect> effects)
+		{
+			if (effects is null) return 0;
+
+			double offset = 0;
+
+			foreach (var effect in effects.OfType<CIMGeometricEffectOffset>())
+			{
+				offset += effect.Offset;
+			}
+
+			// invert: positive is left on the geometric effect,
+			// but we prefer negative for left for consistency
+			// with IGeometryEngine.Offset():
+			return -offset;
+		}
 
 		#endregion
 

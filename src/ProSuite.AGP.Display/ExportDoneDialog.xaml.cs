@@ -3,7 +3,9 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using ProSuite.Commons.AGP.WPF;
+using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Display;
 
@@ -14,12 +16,27 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 {
 	private string _heading;
 	private string _filePath;
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	public ExportDoneDialog()
 	{
 		InitializeComponent();
 
 		DataContext = this; // quick'n'dirty
+
+		Loaded += HandleWindowLoaded;
+	}
+
+	private void HandleWindowLoaded(object sender, RoutedEventArgs e)
+	{
+		// freeze window height (it was SizeToContent)
+		var ht = ActualHeight;
+		MinHeight = Math.Max(MinHeight, ht);
+		MaxHeight = Math.Min(MaxHeight, ht);
+
+		// Cannot do this in constructor (would have no effect), so do it here:
+		this.ShowMinimizeButton(false);
+		this.ShowMaximizeButton(false);
 	}
 
 	public string FilePath
@@ -56,7 +73,7 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 		}
 		catch (Exception ex)
 		{
-			ErrorHandler.HandleError($"Error opening {FilePath}", ex);
+			Gateway.HandleError(ex, _msg);
 		}
 	}
 
@@ -64,11 +81,12 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 	{
 		try
 		{
+			DialogResult = true; // closes the window
 			ShowInExplorer(FilePath);
 		}
 		catch (Exception ex)
 		{
-			ErrorHandler.HandleError($"Error opening {FilePath}", ex);
+			Gateway.HandleError(ex, _msg);
 		}
 	}
 
@@ -76,12 +94,13 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 	{
 		try
 		{
+			DialogResult = true; // closes the window
 			if (string.IsNullOrEmpty(FilePath)) return;
 			Clipboard.SetText(FilePath);
 		}
 		catch (Exception ex)
 		{
-			ErrorHandler.HandleError($"Error copying text to clipboard: {ex.Message}", ex);
+			Gateway.HandleError(ex, _msg);
 		}
 	}
 

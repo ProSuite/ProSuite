@@ -21,12 +21,6 @@ namespace ProSuite.Commons.AGP.Selection
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public static void ClearSelection()
-		{
-			var map = MapView.Active?.Map;
-			map?.ClearSelection();
-		}
-
 		public static void ClearSelection(Map map)
 		{
 			map?.ClearSelection();
@@ -66,7 +60,7 @@ namespace ProSuite.Commons.AGP.Selection
 				t => t is IDisplayTable displayTable &&
 				     mapMemberPredicate(displayTable);
 
-			foreach (IDisplayTable standaloneTable in
+			foreach (StandaloneTable standaloneTable in
 			         MapUtils.GetStandaloneTablesForSelection(map, tablePredicate))
 			{
 				totalSelected +=
@@ -94,20 +88,14 @@ namespace ProSuite.Commons.AGP.Selection
 				return 0;
 			}
 
-			var queryFilter = new QueryFilter
-			                  {
-				                  ObjectIDs = objectIds
-			                  };
+			var queryFilter = new QueryFilter { ObjectIDs = objectIds };
 
-			long actualSelectionCount;
+			using var selection =
+				tableBasedMapMember.Select(queryFilter, combinationMethod);
 
-			using (ArcGIS.Core.Data.Selection selection =
-			       tableBasedMapMember.Select(queryFilter, combinationMethod))
-			{
-				actualSelectionCount = selection.GetCount();
+			long actualSelectionCount = selection.GetCount();
 
-				LogFeatureSelection(tableBasedMapMember, selection, actualSelectionCount);
-			}
+			LogFeatureSelection(tableBasedMapMember, selection, actualSelectionCount);
 
 			return actualSelectionCount;
 		}
@@ -141,16 +129,10 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		public static long SelectFeatures(
-			[NotNull] IEnumerable<FeatureSelectionBase> featuresPerLayers,
-			SelectionCombinationMethod selectionCombinationMethod,
-			bool clearExistingSelection = false)
+			[NotNull] ICollection<FeatureSelectionBase> featuresPerLayers,
+			SelectionCombinationMethod selectionCombinationMethod)
 		{
 			Assert.ArgumentNotNull(featuresPerLayers, nameof(featuresPerLayers));
-
-			if (clearExistingSelection)
-			{
-				ClearSelection();
-			}
 
 			long result = 0;
 

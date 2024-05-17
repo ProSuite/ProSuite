@@ -10,7 +10,6 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
@@ -21,22 +20,24 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		[NotNull]
 		public static string GetTableDisplayName([NotNull] Table table)
 		{
-			TableDefinition definition = table.GetDefinition();
+			using var definition = table.GetDefinition();
 			string name = definition.GetName();
 			string alias = GetAliasName(definition);
 
+			if (string.IsNullOrEmpty(alias))
+			{
+				alias = name;
+			}
+
 			if (string.Equals(name, alias, StringComparison.CurrentCultureIgnoreCase))
 			{
-				// the alias name is equal to the name (but may have different case)
-				// un-qualify the alias name to preserve it's case.
-				using (var datastore = table.GetDatastore())
-				{
-					var sqlSyntax = datastore.GetSQLSyntax();
-					// TODO why using alias here and not name?
-					if (sqlSyntax == null) return alias;
-					var parts = sqlSyntax.ParseTableName(alias);
-					return parts.Item3;
-				}
+				// Alias name equals table name (but may have different case);
+				// un-qualify the alias name to preserve its case:
+				using var datastore = table.GetDatastore();
+				var sqlSyntax = datastore.GetSQLSyntax();
+				if (sqlSyntax is null) return alias;
+				var parts = sqlSyntax.ParseTableName(alias);
+				return parts.Item3; // table name
 			}
 
 			return alias;
@@ -44,86 +45,64 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static string GetName(Table table)
 		{
-			// TODO Why not just table.GetName()?
-			if (table is null) return null;
-			// TODO By documentation, Definition object must be disposed!
-			return table.GetDefinition()?.GetName();
+			return table?.GetName();
 		}
 
-		public static string GetAliasName([NotNull] Table table)
+		public static string GetAliasName(Table table)
 		{
-			Assert.ArgumentNotNull(table, nameof(table));
-
-			return GetAliasName(table.GetDefinition());
-		}
-
-		[NotNull]
-		public static string GetAliasName([NotNull] TableDefinition definition)
-		{
-			Assert.ArgumentNotNull(definition, nameof(definition));
-
-			try
-			{
-				string aliasName = definition.GetAliasName();
-
-				return StringUtils.IsNotEmpty(aliasName)
-					       ? aliasName
-					       : definition.GetName();
-			}
-			catch (NotSupportedException e)
-			{
-				// Shapefiles throw a NotSupportedException
-				_msg.Debug("Unable to get alias. Using name", e);
-				return definition.GetName();
-			}
+			using var definition = table?.GetDefinition();
+			return GetAliasName(definition);
 		}
 
 		[CanBeNull]
-		public static int? GetDefaultSubtypeCode([NotNull] Table table)
+		private static string GetAliasName(TableDefinition definition)
 		{
-			Assert.ArgumentNotNull(table, nameof(table));
-
-			var classDefinition = table.GetDefinition();
-
-			int? code = null;
 			try
 			{
-				code = classDefinition.GetDefaultSubtypeCode();
+				return definition?.GetAliasName();
 			}
-			catch (NotSupportedException notSupportedException)
+			catch (NotSupportedException)
 			{
-				// Shapefiles throw a NotSupportedException
-				_msg.Debug("Subtypes not supported", notSupportedException);
-			}
-
-			return code;
-		}
-
-		[CanBeNull]
-		public static Subtype GetDefaultSubtype([NotNull] Table table)
-		{
-			Assert.ArgumentNotNull(table, nameof(table));
-
-			int? defaultSubtypeCode = GetDefaultSubtypeCode(table);
-
-			if (! defaultSubtypeCode.HasValue)
-			{
+				// Shapefiles have no alias and throw NotSupportedException
 				return null;
 			}
+		}
 
-			Subtype subtype = null;
+		public static int? GetDefaultSubtypeCode(Table table)
+		{
+			if (table is null) return null;
+
+			using var definition = table.GetDefinition();
+
 			try
 			{
-				subtype = table.GetDefinition().GetSubtypes()
-				               .FirstOrDefault(st => st.GetCode() == defaultSubtypeCode.Value);
+				return definition.GetDefaultSubtypeCode();
 			}
-			catch (NotSupportedException notSupportedException)
+			catch (NotSupportedException)
 			{
-				// Shapefiles throw a NotSupportedException
-				_msg.Debug("Subtypes not supported", notSupportedException);
+				// Shapefiles have no subtypes and throw NotSupportedException
+				return null;
 			}
+		}
 
-			return subtype;
+		[CanBeNull]
+		public static Subtype GetDefaultSubtype(Table table)
+		{
+			if (table is null) return null;
+
+			using var definition = table.GetDefinition();
+
+			try
+			{
+				var defaultCode = definition.GetDefaultSubtypeCode();
+				var subtypes = definition.GetSubtypes();
+				return subtypes.FirstOrDefault(st => st.GetCode() == defaultCode);
+			}
+			catch (NotSupportedException)
+			{
+				// Shapefiles have no subtypes and throw NotSupportedException
+				return null;
+			}
 		}
 
 		[NotNull]
@@ -153,26 +132,23 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		[CanBeNull]
-		public static SpatialReference GetSpatialReference([NotNull] Feature feature)
+		public static SpatialReference GetSpatialReference(Feature feature)
 		{
-			Assert.ArgumentNotNull(feature, nameof(feature));
-
-			return GetSpatialReference(feature.GetTable());
+			using var featureClass = feature?.GetTable();
+			return GetSpatialReference(featureClass);
 		}
 
 		[CanBeNull]
-		public static SpatialReference GetSpatialReference([NotNull] this FeatureClass featureClass)
+		public static SpatialReference GetSpatialReference(this FeatureClass featureClass)
 		{
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
-
-			return featureClass.GetDefinition()?.GetSpatialReference();
+			using var definition = featureClass?.GetDefinition();
+			return definition?.GetSpatialReference();
 		}
 
-		public static GeometryType GetShapeType([NotNull] FeatureClass featureClass)
+		public static GeometryType GetShapeType(this FeatureClass featureClass)
 		{
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
-
-			return featureClass.GetDefinition().GetShapeType();
+			using var definition = featureClass?.GetDefinition();
+			return definition?.GetShapeType() ?? GeometryType.Unknown;
 		}
 
 		public static T GetDatasetDefinition<T>(Datastore datastore, string name)
@@ -281,20 +257,24 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static bool HasM(FeatureClass featureClass)
 		{
-			return featureClass.GetDefinition().HasM();
+			using var definition = featureClass.GetDefinition();
+			return definition.HasM();
 		}
 
 		public static bool HasZ(FeatureClass featureClass)
 		{
-			return featureClass.GetDefinition().HasZ();
+			using var definition = featureClass.GetDefinition();
+			return definition.HasZ();
 		}
 
 		[CanBeNull]
-		public static string GetAreaFieldName([NotNull] FeatureClass featureClass)
+		public static string GetAreaFieldName(FeatureClass featureClass)
 		{
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+			if (featureClass is null) return null;
 
-			return GetAreaFieldName(featureClass.GetDefinition());
+			using var definition = featureClass.GetDefinition();
+
+			return GetAreaFieldName(definition);
 		}
 
 		[CanBeNull]
@@ -319,11 +299,13 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		[CanBeNull]
-		public static string GetLengthFieldName([NotNull] FeatureClass featureClass)
+		public static string GetLengthFieldName(FeatureClass featureClass)
 		{
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+			if (featureClass is null) return null;
 
-			return GetLengthFieldName(featureClass.GetDefinition());
+			using var definition = featureClass.GetDefinition();
+
+			return GetLengthFieldName(definition);
 		}
 
 		public static string GetLengthFieldName(FeatureClassDefinition featureClassDefinition)
@@ -354,7 +336,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		[CanBeNull]
 		public static string GetSubtypeFieldName([NotNull] Table table)
 		{
-			TableDefinition definition = table.GetDefinition();
+			using var definition = table.GetDefinition();
 
 			return GetSubtypeFieldName(definition);
 		}
@@ -365,7 +347,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			string subtypeFieldName = null;
 			try
 			{
-				subtypeFieldName = tableDefinition.GetSubtypeField();
+				return tableDefinition.GetSubtypeField();
 			}
 			catch (NotSupportedException notSupportedException)
 			{
@@ -384,7 +366,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// if the table has no subtype field.</returns>
 		public static int GetSubtypeFieldIndex([NotNull] Table table)
 		{
-			TableDefinition definition = table.GetDefinition();
+			using var definition = table.GetDefinition();
 
 			string subtypeFieldName = GetSubtypeFieldName(table);
 
@@ -407,7 +389,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		[CanBeNull]
 		public static string GetObjectIdFieldName([NotNull] Table table)
 		{
-			TableDefinition definition = table.GetDefinition();
+			using var definition = table.GetDefinition();
 
 			return GetObjectIdFieldName(definition);
 		}
