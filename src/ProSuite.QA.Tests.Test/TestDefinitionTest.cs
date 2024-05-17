@@ -149,6 +149,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMpConstantPointIdsPerRing),
 											 typeof(QaMpHorizontalAzimuths),
 											 typeof(QaMpHorizontalHeights),
+											 typeof(QaMpHorizontalPerpendicular),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
@@ -280,6 +281,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpConstantPointIdsPerRing)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpHorizontalAzimuths)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpHorizontalHeights)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpHorizontalPerpendicular)));
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
