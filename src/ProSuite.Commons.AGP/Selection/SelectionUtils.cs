@@ -21,13 +21,6 @@ namespace ProSuite.Commons.AGP.Selection
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[Obsolete("Use the ClearSelection(Map) overload")]
-		public static void ClearSelection()
-		{
-			var map = MapView.Active?.Map;
-			map?.ClearSelection();
-		}
-
 		public static void ClearSelection(Map map)
 		{
 			map?.ClearSelection();
@@ -137,21 +130,9 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public static long SelectFeatures(
 			[NotNull] ICollection<FeatureSelectionBase> featuresPerLayers,
-			SelectionCombinationMethod selectionCombinationMethod,
-			bool clearExistingSelection = false)
+			SelectionCombinationMethod selectionCombinationMethod)
 		{
 			Assert.ArgumentNotNull(featuresPerLayers, nameof(featuresPerLayers));
-
-			if (clearExistingSelection)
-			{
-				var maps = featuresPerLayers.Select(fl => fl.BasicFeatureLayer.Map)
-				                            .DistinctBy(m => m.URI);
-
-				foreach (var map in maps)
-				{
-					ClearSelection(map);
-				}
-			}
 
 			long result = 0;
 

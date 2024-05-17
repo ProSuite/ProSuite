@@ -479,9 +479,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				await QueuedTask.Run(() =>
 				{
+					// Clear the selection on the map level, NOT on the layer level
+					if (selectionMethod == SelectionCombinationMethod.New)
+					{
+						SelectionUtils.ClearSelection(MapView.Active.Map);
+					}
+
 					SelectionUtils.SelectFeatures(
-						orderedSelection, selectionMethod,
-						selectionMethod == SelectionCombinationMethod.New);
+						orderedSelection, selectionMethod);
 				});
 
 				return true;
@@ -606,10 +611,14 @@ namespace ProSuite.AGP.Editing.OneClick
 				//no modifier pressed: select all in envelope
 				await QueuedTask.Run(() =>
 				{
+					// Clear the selection on the map level, NOT on the layer level
+					if (selectionMethod == SelectionCombinationMethod.New)
+					{
+						SelectionUtils.ClearSelection(MapView.Active.Map);
+					}
+
 					SelectionUtils.SelectFeatures(
-						candidatesOfLayers,
-						selectionMethod,
-						selectionMethod == SelectionCombinationMethod.New);
+						candidatesOfLayers, selectionMethod);
 				});
 			}
 
