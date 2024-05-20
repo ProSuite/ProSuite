@@ -14,15 +14,14 @@ using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI;
-using ProSuite.Microservices.Client.AGP;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
@@ -61,7 +60,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			HandledKeys.Add(_keyToggleNonDefaultSide);
 		}
 
-		protected abstract GeometryProcessingClient MicroserviceClient { get; }
+		protected abstract IAdvancedReshapeService MicroserviceClient { get; }
 
 		protected override void OnUpdate()
 		{
@@ -157,7 +156,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					_nonDefaultSideMode = ! _nonDefaultSideMode;
 
 					_msg.Info(_nonDefaultSideMode
-						          ? "Enabled non-default reshape mode. The next reshape to the inside of a polygon will remove the larger area. The next Y-Reshape will use the farther end-point."
+						          ? "Enabled non-default reshape mode. The next reshape to the inside of a polygon will remove the larger area. The next Y-Reshape will use the furthest end-point."
 						          : "Disabled non-default reshape mode");
 
 					if (_updateFeedbackTask != null)
@@ -413,7 +412,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
+					selection, true, layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
 					inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&

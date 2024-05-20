@@ -37,5 +37,8 @@ namespace ProSuite.DomainModel.Core.DataModel.Repositories
 
 		[NotNull]
 		IList<Dataset> Get([NotNull] DatasetCategory datasetCategory);
+
+		[NotNull]
+		IList<Dataset> Get([NotNull] IList<int> idList);
 	}
 }

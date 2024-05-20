@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
+using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.Logging;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
@@ -11,7 +12,6 @@ namespace ProSuite.Commons.AGP.Framework;
 
 /// <summary>
 /// Utils at the gateway between Pro SDK and our own code.
-/// Methods here must not throw exceptions!
 /// </summary>
 public static class Gateway
 {
@@ -21,7 +21,8 @@ public static class Gateway
 	/// Log entry into a method called directly from the Pro SDK framework,
 	/// typically at the beginning of a Button's OnClick() method.
 	/// </summary>
-	/// <remarks> Do NOT call in performance sensitive areas!</remarks>
+	/// <remarks> Do NOT call in performance sensitive areas!
+	/// This method SHALL NOT throw exceptions.</remarks>
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void LogEntry(IMsg logger)
 	{
@@ -30,10 +31,14 @@ public static class Gateway
 		if (logger.IsVerboseDebugEnabled)
 		{
 			var callerName = GetCallerName();
-			logger.VerboseDebug($"Enter {callerName}");
+			logger.Debug($"Enter {callerName}");
 		}
 	}
 
+	/// <summary>
+	/// Show a message box, running it (synchronously) on the proper thread.
+	/// </summary>
+	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
 	public static MessageBoxResult ShowMessage(
 		string message, string caption,
 		MessageBoxButton button = MessageBoxButton.OK,
@@ -61,10 +66,43 @@ public static class Gateway
 	}
 
 	/// <summary>
+	/// Shows the Window <typeparamref name="TWindow"/> as a modal dialog,
+	/// creating and running it (synchronously) on the proper thread.
+	/// </summary>
+	/// <returns>The DialogResult property before the dialog closes</returns>
+	public static bool? ShowDialog<TWindow>(params object[] args) where TWindow : Window
+	{
+		args ??= Array.Empty<object>();
+
+		try
+		{
+			var dispatcher = Application.Current.Dispatcher;
+
+			return dispatcher.Invoke(() =>
+			{
+				var owner = GetMainWindow();
+				if (owner is null) return null;
+				var dialog = (Window) Activator.CreateInstance(typeof(TWindow), args, null);
+				if (dialog is null) return null;
+				dialog.Owner = owner;
+				_msg.Debug($"Showing dialog: {dialog.Title}");
+				var result = dialog.ShowDialog();
+				return result;
+			});
+		}
+		catch (Exception ex)
+		{
+			_msg.Error($"{nameof(ShowDialog)}: {ex.Message}", ex);
+			return null;
+		}
+	}
+
+	/// <summary>
 	/// Report the given error (exception): (1) write it to
 	/// the given logger and (2) show it in a modal message box.
 	/// The <paramref name="caption"/> defaults to the caller's name.
 	/// </summary>
+	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void HandleError(Exception ex, IMsg logger, string caption = null)
 	{
@@ -89,6 +127,7 @@ public static class Gateway
 	/// the given logger, and (2) show it in a modal message box.
 	/// The <paramref name="caption"/> defaults to the caller's name.
 	/// </summary>
+	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void HandleError(string message, IMsg logger, string caption = null)
 	{
@@ -104,6 +143,96 @@ public static class Gateway
 		logger.Error(message);
 
 		ShowMessage(message, caption, MessageBoxButton.OK, MessageBoxImage.Error);
+	}
+
+	/// <summary>
+	/// Execute <pararef name="action"/> creating a single composite
+	/// operation on the undo stack (or as few operations as possible,
+	/// see the OperationManager.CreateCompositeOperation documentation
+	/// in the Pro SDK).
+	/// </summary>
+	public static void CompositeOperation(OperationManager manager, string name, Action action)
+	{
+		if (action is null)
+		{
+			return; // no-op
+		}
+
+		if (manager is null)
+		{
+			action(); // non-composite
+			return;
+		}
+
+		// If we have manager and action, a name is required:
+		if (string.IsNullOrEmpty(name))
+			throw new ArgumentNullException(nameof(name));
+
+		Exception exception = null;
+		manager.CreateCompositeOperation(() =>
+		{
+			// Note: action in CreateCompositeOperation MUST NOT fail or Undo Stack is broken FOREVER (empirical)
+			try
+			{
+				action();
+			}
+			catch (Exception ex)
+			{
+				exception = ex;
+				_msg.Error($"Operation {name} failed: {ex.Message}", ex);
+			}
+		}, name);
+
+		if (exception != null)
+		{
+			throw exception;
+		}
+	}
+
+	/// <summary>
+	/// Execute <paramref name="func"/> creating a single composite
+	/// operation on the undo stack (or as few operations as possible,
+	/// see the OperationManager.CreateCompositeOperation documentation
+	/// in the Pro SDK). Return the result of running <paramref name="func"/>
+	/// </summary>
+	public static T CompositeOperation<T>(OperationManager manager, string name, Func<T> func)
+	{
+		if (func is null)
+		{
+			return default; // no-op
+		}
+
+		if (manager is null)
+		{
+			return func(); // non-composite
+		}
+
+		// If we have manager and action, a name is required:
+		if (string.IsNullOrEmpty(name))
+			throw new ArgumentNullException(nameof(name));
+
+		T result = default;
+		Exception exception = null;
+		manager.CreateCompositeOperation(() =>
+		{
+			// Note: action in CreateCompositeOperation MUST NOT fail or Undo Stack is broken FOREVER (empirical)
+			try
+			{
+				result = func();
+			}
+			catch (Exception ex)
+			{
+				exception = ex;
+				_msg.Error($"Operation {name} failed: {ex.Message}", ex);
+			}
+		}, name);
+
+		if (exception != null)
+		{
+			throw exception;
+		}
+
+		return result;
 	}
 
 	private static Window GetMainWindow()
@@ -124,12 +253,30 @@ public static class Gateway
 	{
 		try
 		{
-			const int framesToSkip = 2;
-			var frame = new StackFrame(framesToSkip, false);
-			var method = frame.GetMethod();
-			if (method is null) return null;
-			var type = method.DeclaringType;
-			return type is null ? method.Name : $"{type.Name}.{method.Name}";
+			const int framesToSkip = 2; // GetCallerName() and LogEntry()
+			var frame = new StackFrame(framesToSkip);
+			//var method = frame.GetMethod();
+			//if (method is null) return null;
+			//var type = method.DeclaringType;
+			//return type is null ? method.Name : $"{type.Name}.{method.Name}";
+			var trace = new StackTrace(frame);
+			var s = trace.ToString().Trim();
+			if (s.StartsWith("at ")) s = s.Substring(3);
+			return s;
+
+			// The detour through a single-frame stack trace is to cope with
+			// compiler-generated code (yielding and async methods): ToString()
+			// on StackTrace resolves these additional methods on the call stack
+			// to the one the programmer actually wrote.
+			//
+			// For example, if LogEntry() is called from an async method, the
+			// method is reported to be "MoveNext", which is part of the state
+			// machine generated by the compiler from the async method. Or, if
+			// LogEntry() is called from within an iterator method "Foo", the
+			// declaring type would be the compiler-generated "<Foo>__d". 
+			// For details decompile StackTrace.ToString() and read
+			// https://devblogs.microsoft.com/dotnet/how-async-await-really-works/
+			// (copy at https://dev.to/dotnet/how-asyncawait-really-works-in-c-4ia1)
 		}
 		catch
 		{

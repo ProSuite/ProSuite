@@ -21,6 +21,17 @@ namespace ProSuite.AGP.Editing.Picker
 
 	public class PickerService : IPickerService
 	{
+		public Func<Task<T>> Pick<T>(List<IPickableItem> items, Point pickerLocation,
+		                             IPickerPrecedence precedence) where T : class, IPickableItem
+		{
+			if (items.Count == 1)
+			{
+				return () => Task.FromResult(precedence.PickBest<T>(items));
+			}
+
+			return PickSingle<T>(items, pickerLocation, precedence);
+		}
+
 		public Func<Task<T>> PickSingle<T>(IEnumerable<IPickableItem> items,
 		                                   Point pickerLocation,
 		                                   IPickerPrecedence precedence)
@@ -50,8 +61,12 @@ namespace ProSuite.AGP.Editing.Picker
 		private static async Task<T> ShowPickerControlAsync<T>(PickerViewModel vm, Point location)
 			where T : class, IPickableItem
 		{
-			using (var window = new PickerWindow(vm))
+			var dispatcher = Application.Current.Dispatcher;
+
+			return await dispatcher.Invoke(async () =>
 			{
+				using var window = new PickerWindow(vm);
+
 				SetWindowLocation(window, location);
 
 				window.Show();
@@ -59,10 +74,11 @@ namespace ProSuite.AGP.Editing.Picker
 				IPickableItem pickable = await window.Task;
 
 				return (T) pickable;
-			}
+			});
 		}
 
-		private static void SetWindowLocation(PickerWindow window, Point location)
+		/// <remarks>Must call on main (UI) thread</remarks>
+		private static void SetWindowLocation(Window window, Point location)
 		{
 			Window ownerWindow = Assert.NotNull(Application.Current.MainWindow);
 

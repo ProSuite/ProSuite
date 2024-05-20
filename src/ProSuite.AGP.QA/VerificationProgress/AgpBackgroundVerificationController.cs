@@ -7,7 +7,6 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
-using ProSuite.Commons.AGP;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -34,6 +33,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		[CanBeNull] private readonly Geometry _verifiedPerimeter;
 		[CanBeNull] private readonly SpatialReference _verificationSpatialReference;
 
+		private bool _issuesSaved;
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AgpBackgroundVerificationController"/> class.
 		/// </summary>
@@ -41,11 +42,14 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		/// <param name="mapView"></param>
 		/// <param name="verifiedPerimeter"></param>
 		/// <param name="verificationSpatialReference"></param>
+		/// <param name="saveAction"></param>
 		public AgpBackgroundVerificationController(
 			[NotNull] IWorkListOpener workListOpener,
 			[NotNull] MapView mapView,
 			[CanBeNull] Geometry verifiedPerimeter,
-			[CanBeNull] SpatialReference verificationSpatialReference)
+			[CanBeNull] SpatialReference verificationSpatialReference,
+			[CanBeNull]
+			Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> saveAction = null)
 		{
 			Assert.ArgumentNotNull(workListOpener, nameof(workListOpener));
 			Assert.ArgumentNotNull(mapView, nameof(mapView));
@@ -54,6 +58,14 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			_mapView = mapView;
 			_verifiedPerimeter = verifiedPerimeter;
 			_verificationSpatialReference = verificationSpatialReference;
+
+			SaveAction = saveAction;
+		}
+
+		[CanBeNull]
+		private Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> SaveAction
+		{
+			get;
 		}
 
 		public void FlashProgress(IList<EnvelopeXY> tiles,
@@ -164,6 +176,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		                            IQualityVerificationResult verificationResult,
 		                            out string reason)
 		{
+			// TODO: Access to error datasets in model context
+
 			if (verificationResult == null)
 			{
 				reason = "Dialog has not been fully initialized";
@@ -257,13 +271,38 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		                       ErrorDeletionInPerimeter errorDeletion,
 		                       bool updateLatestTestDate)
 		{
-			throw new NotImplementedException();
+			SaveAction?.Invoke(verificationResult, errorDeletion,
+			                   updateLatestTestDate);
+
+			_issuesSaved = true;
 		}
 
 		public bool CanSaveIssues(IQualityVerificationResult verificationResult, out string reason)
 		{
-			reason = "Saving issues in production model error datasets is not yet supported";
-			return false;
+			if (verificationResult == null)
+			{
+				reason = "Dialog has not been fully initialized";
+
+				return false;
+			}
+
+			if (SaveAction == null)
+			{
+				reason = "Saving is not supported";
+				return false;
+			}
+
+			if (_issuesSaved)
+			{
+				reason = "Issues have already been saved";
+				return false;
+			}
+
+			bool result = verificationResult.CanSaveIssues;
+
+			reason = result ? null : "No issues have been collected";
+
+			return result;
 		}
 
 		private async Task<bool> FlashProgressAsync([NotNull] IList<EnvelopeXY> tiles,

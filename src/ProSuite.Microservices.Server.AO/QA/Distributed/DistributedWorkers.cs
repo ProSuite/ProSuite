@@ -18,7 +18,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull] private readonly IList<QualityVerificationServiceClient> _configuredClients;
+		[NotNull] private readonly IList<IQualityVerificationClient> _configuredClients;
 		private readonly int _maxDesiredParallelCount;
 		private readonly Predicate<IQualityVerificationClient> _clientPredicate;
 
@@ -44,7 +44,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		/// <param name="clientPredicate">A predicate that restricts the number of clients
 		/// from the list of <see cref="configuredClients"/>.</param>
 		public DistributedWorkers(
-			[NotNull] IList<QualityVerificationServiceClient> configuredClients,
+			[NotNull] IList<IQualityVerificationClient> configuredClients,
 			int maxDesiredParallelCount = int.MaxValue,
 			[CanBeNull] Predicate<IQualityVerificationClient> clientPredicate = null)
 		{
@@ -290,7 +290,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 		private IEnumerable<IQualityVerificationClient> GetNewWorkerClients(
 			int desiredNewWorkerCount)
 		{
-			QualityVerificationServiceClient client =
+			IQualityVerificationClient client =
 				_configuredClients.FirstOrDefault(c => c.CanAcceptCalls());
 
 			if (client == null)
@@ -310,7 +310,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 				_maxAvailableClientCount = availableClients.Count;
 
-				foreach (QualityVerificationServiceClient workerClient in availableClients)
+				foreach (IQualityVerificationClient workerClient in availableClients)
 				{
 					yield return workerClient;
 				}

@@ -14,7 +14,7 @@ using Quaestor.ServiceDiscovery;
 
 namespace ProSuite.Microservices.Client
 {
-	public abstract class MicroserviceClientBase
+	public abstract class MicroserviceClientBase : IMicroserviceClient
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -71,7 +71,7 @@ namespace ProSuite.Microservices.Client
 		protected string ClientCertificate { get; private set; }
 
 		[CanBeNull]
-		protected Channel Channel { get; private set; }
+		protected ChannelBase Channel { get; private set; }
 
 		public bool ChannelIsLoadBalancer { get; private set; }
 
@@ -82,7 +82,7 @@ namespace ProSuite.Microservices.Client
 		public abstract string ServiceDisplayName { get; }
 
 		[NotNull]
-		private string ChannelServiceName =>
+		protected string ChannelServiceName =>
 			ChannelIsLoadBalancer ? nameof(ServiceDiscoveryGrpc) : ServiceName;
 
 		public bool CanFailOver => _allChannelConfigs?.Count > 1;
@@ -107,8 +107,8 @@ namespace ProSuite.Microservices.Client
 		}
 
 		public async Task<bool> AllowStartingLocalServerAsync(
-			[NotNull] string executable,
-			[CanBeNull] string extraArguments = null)
+			string executable,
+			string extraArguments = null)
 		{
 			// Remember in case we need to switch to different channel or re-start later on
 			_executable = executable;
@@ -131,8 +131,8 @@ namespace ProSuite.Microservices.Client
 			return true;
 		}
 
-		public bool AllowStartingLocalServer([NotNull] string executable,
-		                                     [CanBeNull] string extraArguments = null)
+		public bool AllowStartingLocalServer(string executable,
+		                                     string extraArguments = null)
 		{
 			// Remember in case we need to switch to different channel or re-start later on
 			_executable = executable;
@@ -175,7 +175,8 @@ namespace ProSuite.Microservices.Client
 
 			string serviceName = ChannelServiceName;
 
-			bool result = GrpcUtils.IsServing(healthClient, serviceName, out StatusCode statusCode);
+			bool result =
+				GrpcClientUtils.IsServing(healthClient, serviceName, out StatusCode statusCode);
 
 			if (! result || ! logOnlyIfUnhealthy)
 			{
@@ -199,8 +200,8 @@ namespace ProSuite.Microservices.Client
 
 			string serviceName = ChannelServiceName;
 
-			StatusCode statusCode = await GrpcUtils.IsServingAsync(healthClient, serviceName)
-			                                       .ConfigureAwait(false);
+			StatusCode statusCode = await GrpcClientUtils.IsServingAsync(healthClient, serviceName)
+			                                             .ConfigureAwait(false);
 
 			LogHealthStatus(statusCode);
 
@@ -235,24 +236,9 @@ namespace ProSuite.Microservices.Client
 			return lbResponse.ServiceLocations.Count;
 		}
 
-		public string GetAddress()
-		{
-			string address = "<none>";
-			if (Channel?.State != ChannelState.Shutdown)
-			{
-				try
-				{
-					// In shutdown state, the ResolvedTarget property throws for certain:
-					address = Channel?.ResolvedTarget;
-				}
-				catch (Exception e)
-				{
-					_msg.Debug($"Error resolving target address for {ChannelServiceName}", e);
-				}
-			}
+		public abstract string GetAddress();
 
-			return address;
-		}
+		public abstract string GetChannelState();
 
 		protected void OpenChannel(bool useTls,
 		                           string clientCertificate = null)
@@ -265,12 +251,12 @@ namespace ProSuite.Microservices.Client
 			}
 
 			ChannelCredentials credentials =
-				GrpcUtils.CreateChannelCredentials(useTls, clientCertificate);
+				GrpcClientUtils.CreateChannelCredentials(useTls, clientCertificate);
 
 			var enoughForLargeGeometries = (int) Math.Pow(1024, 3);
 
-			Channel channel = GrpcUtils.CreateChannel(
-				HostName, Port, credentials, enoughForLargeGeometries);
+			ChannelBase channel =
+				OpenChannelCore(HostName, Port, credentials, enoughForLargeGeometries);
 
 			bool assumeLoadBalancer =
 				! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase);
@@ -298,6 +284,12 @@ namespace ProSuite.Microservices.Client
 			ChannelOpenedCore(Channel);
 		}
 
+		protected abstract ChannelBase OpenChannelCore(
+			[NotNull] string host,
+			int port,
+			[NotNull] ChannelCredentials credentials,
+			int maxMessageLength);
+
 		protected bool TryOpenOtherChannel()
 		{
 			if (_allChannelConfigs == null)
@@ -311,23 +303,23 @@ namespace ProSuite.Microservices.Client
 			string currentHost = HostName;
 			int currentPort = Port;
 
-			foreach (IClientChannelConfig otherChannel in _allChannelConfigs)
+			foreach (IClientChannelConfig otherChannelConfig in _allChannelConfigs)
 			{
-				if (otherChannel.HostName == currentHost &&
-				    otherChannel.Port == currentPort)
+				if (otherChannelConfig.HostName == currentHost &&
+				    otherChannelConfig.Port == currentPort)
 				{
 					// This is the one currently being used. We want to check the others only.
 					continue;
 				}
 
-				_msg.DebugFormat("Trying alternate channel {0}...", otherChannel);
+				_msg.DebugFormat("Trying alternate channel {0}...", otherChannelConfig);
 
-				HostName = otherChannel.HostName;
-				Port = otherChannel.Port;
-				UseTls = otherChannel.UseTls;
-				ClientCertificate = otherChannel.ClientCertificate;
+				HostName = otherChannelConfig.HostName;
+				Port = otherChannelConfig.Port;
+				UseTls = otherChannelConfig.UseTls;
+				ClientCertificate = otherChannelConfig.ClientCertificate;
 
-				OpenChannel(otherChannel.UseTls, otherChannel.ClientCertificate);
+				OpenChannel(otherChannelConfig.UseTls, otherChannelConfig.ClientCertificate);
 
 				// In case of localhost and known server exe:
 				if (! string.IsNullOrEmpty(_executable) &&
@@ -345,12 +337,12 @@ namespace ProSuite.Microservices.Client
 			return false;
 		}
 
-		protected abstract void ChannelOpenedCore(Channel channel);
+		protected abstract void ChannelOpenedCore(ChannelBase channel);
 
-		protected Channel TryGetChannelFromLoadBalancer(Channel lbChannel,
-		                                                ChannelCredentials credentials,
-		                                                string serviceName,
-		                                                int maxMessageLength)
+		protected ChannelBase TryGetChannelFromLoadBalancer(ChannelBase lbChannel,
+		                                                    ChannelCredentials credentials,
+		                                                    string serviceName,
+		                                                    int maxMessageLength)
 		{
 			ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient lbClient =
 				new ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient(lbChannel);
@@ -366,12 +358,11 @@ namespace ProSuite.Microservices.Client
 			{
 				ServiceLocationMsg serviceLocation = lbResponse.ServiceLocations[0];
 
-				Channel result = GrpcUtils.CreateChannel(serviceLocation.HostName,
-				                                         serviceLocation.Port, credentials,
-				                                         maxMessageLength);
+				ChannelBase result = OpenChannelCore(serviceLocation.HostName, serviceLocation.Port,
+				                                     credentials, maxMessageLength);
 
 				_msg.DebugFormat("The load balancer is suggesting {0} for the {1}",
-				                 result.ResolvedTarget, ServiceDisplayName);
+				                 result.Target, ServiceDisplayName);
 
 				return result;
 			}
@@ -437,7 +428,7 @@ namespace ProSuite.Microservices.Client
 		}
 
 		private bool IsLoadBalancerEndpoint(
-			[NotNull] Channel channel,
+			[NotNull] ChannelBase channel,
 			[NotNull] ChannelCredentials credentials,
 			string serviceName,
 			int enoughForLargeGeometries)
@@ -449,28 +440,29 @@ namespace ProSuite.Microservices.Client
 			// This would make the start-up sequence more robust.
 			var channelHealth = new Health.HealthClient(channel);
 
-			bool isServingEndpoint = GrpcUtils.IsServing(channelHealth, serviceName, out _);
+			bool isServingEndpoint = GrpcClientUtils.IsServing(channelHealth, serviceName, out _);
 
 			if (isServingEndpoint)
 			{
 				return false;
 			}
 
-			bool isLoadBalancer = GrpcUtils.IsServing(channelHealth, nameof(ServiceDiscoveryGrpc),
-			                                          out StatusCode lbStatusCode);
+			bool isLoadBalancer = GrpcClientUtils.IsServing(
+				channelHealth, nameof(ServiceDiscoveryGrpc),
+				out StatusCode lbStatusCode);
 
 			if (isLoadBalancer)
 			{
-				_msg.DebugFormat("{0} is a load balancer address.", channel.ResolvedTarget);
+				_msg.DebugFormat("{0} is a load balancer address.", channel.Target);
 
-				Channel suggestedLocation =
+				ChannelBase suggestedLocation =
 					TryGetChannelFromLoadBalancer(channel, credentials, serviceName,
 					                              enoughForLargeGeometries);
 
 				if (suggestedLocation != null)
 				{
 					_msg.DebugFormat("Using serving load balancer at {0} to connect to {1}",
-					                 channel.ResolvedTarget, ServiceDisplayName);
+					                 channel.Target, ServiceDisplayName);
 				}
 				else
 				{
@@ -478,14 +470,14 @@ namespace ProSuite.Microservices.Client
 					_msg.WarnFormat(
 						"The load balancer at {0} has no service locations available for {1}. " +
 						"Unless it can pick up some service locations in the mean time, all " +
-						"requests will fail!", channel.ResolvedTarget, ServiceDisplayName);
+						"requests will fail!", channel.Target, ServiceDisplayName);
 				}
 
 				return true;
 			}
 
 			_msg.DebugFormat("No {0} service and no serving load balancer at {1}. Error code: {2}",
-			                 serviceName, channel.ResolvedTarget, lbStatusCode);
+			                 serviceName, channel.Target, lbStatusCode);
 
 			// We don't know yet. However, it could be working later on (see TODO above).
 			return false;
@@ -543,7 +535,7 @@ namespace ProSuite.Microservices.Client
 			string address = GetAddress();
 
 			_msg.DebugFormat("Health status for service {0} at {1}: {2}. Channel state: {3}",
-			                 ChannelServiceName, address, statusCode, Channel?.State);
+			                 ChannelServiceName, address, statusCode, GetChannelState());
 		}
 
 		private int GetFreeTcpPort()

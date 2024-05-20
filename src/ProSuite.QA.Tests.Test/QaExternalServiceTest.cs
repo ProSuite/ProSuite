@@ -14,7 +14,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Progress;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA.Test;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.Microservices.Server.AO;
 using ProSuite.Microservices.Server.AO.QualityTestService;
 using ProSuite.QA.Container;

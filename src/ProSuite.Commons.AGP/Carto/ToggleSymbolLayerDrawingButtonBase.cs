@@ -35,7 +35,7 @@ public abstract class ToggleSymbolLayerDrawingButtonBase : Button
 				"Toggle Symbol Layer Drawing (SLD): current state is {0}, desired state is {1}",
 				Format(_toggleState), Format(desiredState));
 
-			await QueuedTask.Run(() => { ToggleSymbolLayerDrawing(map, desiredState); });
+			await QueuedTask.Run(() => ToggleSymbolLayerDrawing(map, desiredState));
 
 			_toggleState = desiredState;
 		}
@@ -80,9 +80,9 @@ public abstract class ToggleSymbolLayerDrawingButtonBase : Button
 			name = $"Turn SLD {(turnOn ? "on" : "off")}";
 		}
 
-		var action = () => { DisplayUtils.ToggleSymbolLayerDrawing(map, turnOn); };
-
-		undoStack.CreateCompositeOperation(action, name);
+		Gateway.CompositeOperation(
+			undoStack, name,
+			() => DisplayUtils.ToggleSymbolLayerDrawing(map, turnOn));
 	}
 
 	private static bool GetToggledState(bool? state, bool firstState)

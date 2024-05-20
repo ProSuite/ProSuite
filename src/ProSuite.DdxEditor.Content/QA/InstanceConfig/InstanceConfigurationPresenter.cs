@@ -234,7 +234,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			_view.BindToParameterValues(_paramValues);
 
-#if NET6_0
+#if NET6_0_OR_GREATER
 			_view.TableViewControl.BindTo(instanceConfig);
 #endif
 		}

@@ -206,7 +206,7 @@ namespace ProSuite.Commons.Ado
 			Assert.ArgumentNotNull(connection, nameof(connection));
 			Assert.ArgumentNotNull(command, nameof(command));
 
-			return ExecuteNonQueryInTransaction(connection, new List<IDbCommand> {command},
+			return ExecuteNonQueryInTransaction(connection, new List<IDbCommand> { command },
 			                                    isolationLevel);
 		}
 

@@ -31,7 +31,7 @@ using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
@@ -70,9 +70,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			Assert.ArgumentCondition(originalRequest.MaxParallelProcessing > 1,
 			                         "maxParallelDesired must be greater 1");
 
-			_distributedWorkers =
-				new DistributedWorkers(
-					workersClients.Cast<QualityVerificationServiceClient>().ToList());
+			_distributedWorkers = new DistributedWorkers(workersClients.ToList());
 
 			_originalRequest = originalRequest;
 			ParallelConfiguration = new ParallelConfiguration();
