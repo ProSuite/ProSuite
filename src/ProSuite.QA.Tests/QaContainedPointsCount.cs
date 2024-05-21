@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -190,6 +191,18 @@ namespace ProSuite.QA.Tests
 		}
 
 		#endregion
+
+		[InternallyUsedTest]
+		public QaContainedPointsCount(QaContainedPointsCountDefinition definition)
+			: this(definition.PolygonClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.PointClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.MinimumPointCount,
+			       definition.MaximumPointCount,
+			       definition.RelevantPointCondition,
+			       definition.CountPointOnPolygonBorder)
+		{
+			PolylineUsage = definition.PolylineUsage;
+		}
 
 		[TestParameter(_defaultPolylineUsage)]
 		[Doc(nameof(DocStrings.QaContainedPointsCount_PolylineUsage))]

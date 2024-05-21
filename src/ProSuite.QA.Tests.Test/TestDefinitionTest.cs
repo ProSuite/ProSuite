@@ -101,6 +101,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaCentroids),
 											 typeof(QaCoplanarRings),
 											 typeof(QaConstraint),
+											 typeof(QaContainedPointsCount),
 											 typeof(QaCrossesSelf),
 				                             typeof(QaCurve),
 											 typeof(QaDangleCount),
@@ -324,8 +325,8 @@ namespace ProSuite.QA.Tests.Test
 			//
 			// Manually create values for special cases, such as optional parameters or
 			// difficult assertions:
+			AddQaContainedPointsCountCases(model, testCases);
 			AddQaCurveTestCases(model, testCases); //example optional parameters
-			//AddQaCentroidsCases(model, testCases);
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values
 			AddQaEdgeMatchBorderingLinesCases(model, testCases);
 			AddQaEdgeMatchBorderingPointsCases(model, testCases);
@@ -455,6 +456,80 @@ namespace ProSuite.QA.Tests.Test
 
 				ReflectionCompare.RecrusiveReflectionCompare(testsOrig[0], testsNew[0]);
 			}
+		}
+
+		private static void AddQaContainedPointsCountCases(InMemoryTestDataModel model,
+		                                        ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("PolylineUsage", "asIs");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaContainedPointsCount), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetPointDataset(),
+													 1,
+													 "POLYGON.FACILITY_ID = POINT.FACILITY_ID"
+												 },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaContainedPointsCount), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetPointDataset(),
+				                                     1,
+													 2,
+				                                     "POLYGON.FACILITY_ID = POINT.FACILITY_ID"
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaContainedPointsCount), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetPointDataset(),
+				                                     1,
+				                                     2,
+				                                     "POLYGON.FACILITY_ID = POINT.FACILITY_ID",
+													 false
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaContainedPointsCount), 3,
+			                                     new object[]
+			                                     {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetPointDataset()
+													 },
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetPointDataset()
+													 },
+													 1,
+				                                     "POLYGON.FACILITY_ID = POINT.FACILITY_ID"
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaContainedPointsCount), 4,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetPointDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetPointDataset()
+				                                     },
+				                                     1,
+													 2,
+				                                     "POLYGON.FACILITY_ID = POINT.FACILITY_ID",
+													 false
+			                                     },
+			                                     optionalValues));
 		}
 
 		private static void AddQaCurveTestCases(InMemoryTestDataModel model,
