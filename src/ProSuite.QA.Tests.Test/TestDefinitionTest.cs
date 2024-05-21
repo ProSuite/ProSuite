@@ -98,7 +98,7 @@ namespace ProSuite.QA.Tests.Test
 			                             {
 				                             typeof(Qa3dConstantZ),
 				                             typeof(QaBorderSense),
-				                             //typeof(QaCentroids),
+				                             typeof(QaCentroids),
 											 typeof(QaCoplanarRings),
 											 typeof(QaConstraint),
 											 typeof(QaCrossesSelf),
@@ -264,7 +264,7 @@ namespace ProSuite.QA.Tests.Test
 			//// Test cases with automatic parameter value generation:
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(Qa3dConstantZ)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaBorderSense)));
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCentroids)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCentroids)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCoplanarRings)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCrossesSelf)));
