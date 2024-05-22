@@ -360,20 +360,20 @@ namespace ProSuite.QA.Tests.Test
 			AddQaMpSinglePartFootprintCases(model, testCases);
 			AddQaMpVertexNotNearFaceCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
-			AddQaSliverPolygon(model, testCases);
+			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
-			AddQaTouchesSelf(model, testCases);
-			AddQaTouchesOther(model, testCases);
-			AddQaTrimmedTextFields(model, testCases);
-			AddQaValidDateValues(model, testCases);
-			AddQaValidCoordinateFields(model, testCases);
-			AddQaValidUrls(model, testCases);
-			AddQaVertexCoincidence(model, testCases);
-			AddQaVertexCoincidenceOther(model, testCases);
-			AddQaVertexCoincidenceSelf(model, testCases);
-			AddQaWithinBox(model, testCases);
-			AddQaZDifferenceOther(model, testCases);
-			AddQaZDifferenceSelf(model, testCases);
+			AddQaTouchesSelfCases(model, testCases);
+			AddQaTouchesOtherCases(model, testCases);
+			AddQaTrimmedTextFieldsCases(model, testCases);
+			AddQaValidDateValuesCases(model, testCases);
+			AddQaValidCoordinateFieldsCases(model, testCases);
+			AddQaValidUrlsCases(model, testCases);
+			AddQaVertexCoincidenceCases(model, testCases);
+			AddQaVertexCoincidenceOtherCases(model, testCases);
+			AddQaVertexCoincidenceSelfCases(model, testCases);
+			AddQaWithinBoxCases(model, testCases);
+			AddQaZDifferenceOtherCases(model, testCases);
+			AddQaZDifferenceSelfCases(model, testCases);
 
 			foreach (TestDefinitionCase testCase in testCases)
 			{
@@ -972,56 +972,6 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaTouchesOther(InMemoryTestDataModel model,
-		                                      ICollection<TestDefinitionCase> testCases)
-		{
-			var optionalValues = new Dictionary<string, object>();
-			optionalValues.Add("ValidTouchGeometryConstraint", "$Length>10");
-
-			testCases.Add(new TestDefinitionCase(typeof(QaTouchesOther), 0,
-			                                     new object[]
-			                                     {
-				                                     new[]
-				                                     {
-					                                     model.GetVectorDataset(),
-					                                     model.GetVectorDataset()
-				                                     },
-				                                     new[]
-				                                     {
-					                                     model.GetVectorDataset(),
-					                                     model.GetVectorDataset()
-				                                     },
-			                                     }, optionalValues));
-			testCases.Add(new TestDefinitionCase(typeof(QaTouchesOther), 1,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     model.GetVectorDataset(),
-			                                     }, optionalValues));
-			testCases.Add(new TestDefinitionCase(typeof(QaTouchesOther), 2,
-			                                     new object[]
-			                                     {
-				                                     new[]
-				                                     {
-					                                     model.GetVectorDataset(),
-					                                     model.GetVectorDataset()
-				                                     },
-				                                     new[]
-				                                     {
-					                                     model.GetVectorDataset(),
-					                                     model.GetVectorDataset()
-				                                     },
-				                                     "G1.Level <> G2.Level"
-			                                     }, optionalValues));
-			testCases.Add(new TestDefinitionCase(typeof(QaTouchesOther), 3,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     model.GetVectorDataset(),
-				                                     "G1.Level <> G2.Level"
-			                                     }, optionalValues));
-		}
-
 		private static void AddQaInteriorIntersectsOtherCases(InMemoryTestDataModel model,
 		                                        ICollection<TestDefinitionCase> testCases)
 		{
@@ -1296,7 +1246,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     {
 				                                     model.GetVectorDataset(),
 													 model.GetVectorDataset()
-},
+			                                     },
 			                                     optionalValues));
 			testCases.Add(new TestDefinitionCase(typeof(QaIntersectsOther), 2,
 			                                     new object[]
@@ -1592,8 +1542,6 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		
-
 		private static void AddQaMinSegAngleCases(InMemoryTestDataModel model,
 		                                       ICollection<TestDefinitionCase> testCases)
 		{
@@ -1752,8 +1700,9 @@ namespace ProSuite.QA.Tests.Test
 				                                     false, "PATTERN_DESC_STRING"
 			                                     }, optionalValues));
 		}
-		private static void AddQaSliverPolygon(InMemoryTestDataModel model,
-												   ICollection<TestDefinitionCase> testCases)
+
+		private static void AddQaSliverPolygonCases(InMemoryTestDataModel model,
+		                                            ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaSliverPolygon), 0,
 												 new object[]
@@ -1784,8 +1733,58 @@ namespace ProSuite.QA.Tests.Test
 
 		}
 
-		private static void AddQaTouchesSelf(InMemoryTestDataModel model,
-		                                     ICollection<TestDefinitionCase> testCases)
+		private static void AddQaTouchesOtherCases(InMemoryTestDataModel model,
+												   ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ValidTouchGeometryConstraint", "$Length>10");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesOther), 0,
+												 new object[]
+												 {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesOther), 1,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesOther), 2,
+												 new object[]
+												 {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 "G1.Level <> G2.Level"
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesOther), 3,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetVectorDataset(),
+													 "G1.Level <> G2.Level"
+												 }, optionalValues));
+		}
+
+		private static void AddQaTouchesSelfCases(InMemoryTestDataModel model,
+		                                          ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("ValidTouchGeometryConstraint", "$Length>10");
@@ -1822,8 +1821,8 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaTrimmedTextFields(InMemoryTestDataModel model,
-		                                           ICollection<TestDefinitionCase> testCases)
+		private static void AddQaTrimmedTextFieldsCases(InMemoryTestDataModel model,
+		                                                ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 0,
 			                                     new object[]
@@ -1882,8 +1881,8 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaValidDateValues(InMemoryTestDataModel model,
-		                                         ICollection<TestDefinitionCase> testCases)
+		private static void AddQaValidDateValuesCases(InMemoryTestDataModel model,
+		                                              ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 0,
 			                                     new object[]
@@ -1936,8 +1935,8 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaValidCoordinateFields(InMemoryTestDataModel model,
-		                                               ICollection<TestDefinitionCase> testCases)
+		private static void AddQaValidCoordinateFieldsCases(InMemoryTestDataModel model,
+		                                                    ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("AllowXYFieldValuesForUndefinedShape", false);
@@ -1953,8 +1952,8 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaValidUrls(InMemoryTestDataModel model,
-		                                   ICollection<TestDefinitionCase> testCases)
+		private static void AddQaValidUrlsCases(InMemoryTestDataModel model,
+		                                        ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("MaximumParallelTasks", 1);
@@ -1967,8 +1966,8 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaVertexCoincidence(InMemoryTestDataModel model,
-		                                           ICollection<TestDefinitionCase> testCases)
+		private static void AddQaVertexCoincidenceCases(InMemoryTestDataModel model,
+		                                                ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("PointTolerance", -1);
@@ -1988,8 +1987,8 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaVertexCoincidenceOther(InMemoryTestDataModel model,
-		                                                ICollection<TestDefinitionCase> testCases)
+		private static void AddQaVertexCoincidenceOtherCases(InMemoryTestDataModel model,
+		                                                     ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("PointTolerance", -1);
@@ -2044,8 +2043,8 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaVertexCoincidenceSelf(InMemoryTestDataModel model,
-		                                               ICollection<TestDefinitionCase> testCases)
+		private static void AddQaVertexCoincidenceSelfCases(InMemoryTestDataModel model,
+		                                                    ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("PointTolerance", -1);
@@ -2089,8 +2088,8 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaZDifferenceOther(InMemoryTestDataModel model,
-		                                          ICollection<TestDefinitionCase> testCases)
+		private static void AddQaZDifferenceOtherCases(InMemoryTestDataModel model,
+		                                               ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("RelevantRelationCondition", "U.EdgeLevel > L.EdgeLevel");
@@ -2162,8 +2161,8 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaWithinBox(InMemoryTestDataModel model,
-		                                   ICollection<TestDefinitionCase> testCases)
+		private static void AddQaWithinBoxCases(InMemoryTestDataModel model,
+		                                        ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaWithinBox), 0,
 			                                     new object[]
@@ -2181,8 +2180,8 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaZDifferenceSelf(InMemoryTestDataModel model,
-		                                         ICollection<TestDefinitionCase> testCases)
+		private static void AddQaZDifferenceSelfCases(InMemoryTestDataModel model,
+		                                              ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("MinimumZDifferenceExpression", "U.EdgeLevel > L.EdgeLevel");
