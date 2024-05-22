@@ -456,7 +456,17 @@ namespace ProSuite.QA.Tests.Test
 				Assert.AreEqual(1, testsOrig.Count, "Special Case: Multiple tests created.");
 				Assert.AreEqual(1, testsNew.Count);
 
-				ReflectionCompare.RecrusiveReflectionCompare(testsOrig[0], testsNew[0]);
+				List<KeyValuePair<Type, MemberInfo>> differences =
+					ReflectionCompare.RecursiveReflectionCompare(testsOrig[0], testsNew[0]);
+
+				foreach (KeyValuePair<Type, MemberInfo> difference in differences)
+				{
+					Console.WriteLine("Difference: {0} {1}", difference.Key.Name,
+					                  difference.Value.Name);
+				}
+
+				Assert.AreEqual(0, differences.Count,
+				                $"Differences found for {testType.Name} constructor index {constructorIdx}:");
 			}
 		}
 
@@ -2470,19 +2480,19 @@ namespace ProSuite.QA.Tests.Test
 			return differences;
 		}
 
-		public static List<KeyValuePair<Type, PropertyInfo>> RecrusiveReflectionCompare<T>(
+		public static List<KeyValuePair<Type, MemberInfo>> RecursiveReflectionCompare<T>(
 			T first, T second)
 			where T : class
 		{
-			var differences = new List<KeyValuePair<Type, PropertyInfo>>();
+			var differences = new List<KeyValuePair<Type, MemberInfo>>();
 
 			var parentType = first.GetType();
 
-			void CompareObject(object obj1, object obj2, PropertyInfo info)
+			void CompareObject(object obj1, object obj2, MemberInfo info)
 			{
 				if (! obj1.Equals(obj2))
 				{
-					differences.Add(new KeyValuePair<Type, PropertyInfo>(parentType, info));
+					differences.Add(new KeyValuePair<Type, MemberInfo>(parentType, info));
 				}
 			}
 
@@ -2527,8 +2537,32 @@ namespace ProSuite.QA.Tests.Test
 						continue;
 					}
 
-					differences.Concat(RecrusiveReflectionCompare(value1, value2));
+					differences.Concat(RecursiveReflectionCompare(value1, value2));
 				}
+			}
+
+			// Additionally, compare private fields with primitive types:
+			foreach (FieldInfo fieldInfo in parentType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance))
+			{
+				object value1 = fieldInfo.GetValue(first);
+				object value2 = fieldInfo.GetValue(second);
+
+				if (fieldInfo.FieldType == typeof(string))
+				{
+					if (string.IsNullOrEmpty(value1 as string) !=
+					    string.IsNullOrEmpty(value2 as string))
+					{
+						CompareObject(value1, value2, fieldInfo);
+					}
+				}
+				else if (fieldInfo.FieldType.IsPrimitive)
+				{
+					CompareObject(value1, value2, fieldInfo);
+				}
+
+				// TODO: Consider checking also non-primitive fields
+
+				//CompareObject(value1, value2, fieldInfo);
 			}
 
 			return differences;
