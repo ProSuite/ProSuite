@@ -133,6 +133,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaLineGroupConstraints),
 											 typeof(QaLineIntersect),
 											 //typeof(QaLineIntersectAngle),
+											 typeof(QaLineIntersectZ),
 											 typeof(QaMaxArea),
 											 typeof(QaMaxLength),
 											 typeof(QaMaxSlope),
@@ -347,6 +348,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaLineGroupConstraintsCases(model, testCases);
 			AddQaLineIntersectCases(model, testCases);
 			//AddQaLineIntersectAngleCases(model, testCases);
+			AddQaLineIntersectZCases(model, testCases);
 			AddQaMaxSlopeCases(model, testCases);
 			//AddQaMeasuresAtPointsCases(model, testCases);
 			//AddQaMinAngleCases(model, testCases);
@@ -1413,6 +1415,14 @@ namespace ProSuite.QA.Tests.Test
 			                                     },
 			                                     optionalValues));
 			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 2,
+		private static void AddQaLineIntersectZCases(InMemoryTestDataModel model,
+		                                                 ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("MinimumZDifferenceExpression", "U.ZDiff + L.ZDiff");
+			optionalValues.Add("MaximumZDifferenceExpression", "U.ZDiff + L.ZDiff");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectZ), 0,
 			                                     new object[]
 			                                     {
 				                                     new[]
@@ -1420,14 +1430,47 @@ namespace ProSuite.QA.Tests.Test
 					                                     model.GetVectorDataset(),
 					                                     model.GetVectorDataset()
 				                                     },
-				                                     0
+				                                     1
 			                                     },
 			                                     optionalValues));
-			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 3,
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectZ), 1,
 			                                     new object[]
 			                                     {
 				                                     model.GetVectorDataset(),
-				                                     0
+				                                     1
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectZ), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     1,
+													 "U.EdgeLevel > L.EdgeLevel"
+												 },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectZ), 3,
+			                                     new object[]
+			                                     {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+				                                     1,
+													 "U.EdgeLevel > L.EdgeLevel"
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectZ), 4,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     1,
+													 2,
+				                                     "U.EdgeLevel > L.EdgeLevel"
 			                                     },
 			                                     optionalValues));
 
