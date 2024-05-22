@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -146,6 +147,13 @@ namespace ProSuite.QA.Tests
 			}
 
 			_maxRows = _defaultMaxRows;
+		}
+
+		[InternallyUsedTest]
+		public QaUnique([NotNull] QaUniqueDefinition definition)
+			: this(definition.Tables.Cast<IReadOnlyTable>().ToList(), definition.Uniques)
+		{
+			_maxRows = definition.MaxRows;
 		}
 
 		/// <summary>

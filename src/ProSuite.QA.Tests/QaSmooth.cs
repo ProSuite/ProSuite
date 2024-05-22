@@ -63,6 +63,13 @@ namespace ProSuite.QA.Tests
 			_limitCstr = limit;
 		}
 
+		[InternallyUsedTest]
+		public QaSmooth([NotNull] QaSmoothDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass, definition.Limit)
+		{
+			AngularUnit = definition.AngularUnit;
+		}
+
 		[TestParameter(_defaultAngularUnit)]
 		[Doc(nameof(DocStrings.QaSmooth_AngularUnit))]
 		public AngleUnit AngularUnit

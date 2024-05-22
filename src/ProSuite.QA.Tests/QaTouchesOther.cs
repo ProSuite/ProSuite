@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -75,6 +76,16 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaTouchesOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {touching}, new[] {touched}, validRelationConstraint) { }
+
+
+		[InternallyUsedTest]
+		public QaTouchesOther([NotNull] QaTouchesOtherDefinition definition)
+			: this(definition.Touching.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.Touched.Cast<IReadOnlyFeatureClass>().ToList(),
+				   definition.ValidRelationConstraint)
+		{
+			ValidTouchGeometryConstraint = definition.ValidTouchGeometryConstraint;
+		}
 
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaTouchesOther_ValidTouchGeometryConstraint))]

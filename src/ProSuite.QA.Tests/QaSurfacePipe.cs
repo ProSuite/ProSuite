@@ -210,6 +210,12 @@ namespace ProSuite.QA.Tests
 				InvolvedTerrains = pipeDef.InvolvedTerrains.Cast<TerrainReference>().ToList();
 				TerrainTolerance = pipeDef.TerrainTolerance;
 			}
+
+			_startEndIgnoreLength = pipeDef.StartEndIgnoreLength;
+			_asRatio = pipeDef.AsRatio;
+			IReadOnlyFeatureClass featureClass = (IReadOnlyFeatureClass) pipeDef.FeatureClass;
+			_interpolateTolerance =
+				2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
 		}
 
 		private static void ValidateAsRatio(double startEndIgnoreLength, bool asRatio)
