@@ -173,6 +173,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaSchemaReservedFieldNameProperties),
 											 typeof(QaSimpleGeometry),
 											 typeof(QaSliverPolygon),
+											 typeof(QaSmooth),
 				                             typeof(QaSurfacePipe),
 				                             typeof(QaTouchesOther),
 											 typeof(QaTouchesSelf),
@@ -360,6 +361,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaMpVertexNotNearFaceCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygon(model, testCases);
+			AddQaSmoothCases(model, testCases);
 			AddQaTouchesSelf(model, testCases);
 			AddQaTouchesOther(model, testCases);
 			AddQaTrimmedTextFields(model, testCases);
@@ -1765,6 +1767,21 @@ namespace ProSuite.QA.Tests.Test
 													 model.GetPolygonDataset(),
 													 50, 10
 												 }));
+		}
+
+		private static void AddQaSmoothCases(InMemoryTestDataModel model,
+		                                     ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("AngularUnit", AngleUnit.Radiant);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaSmooth), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     0.5
+			                                     }, optionalValues));
+
 		}
 
 		private static void AddQaTouchesSelf(InMemoryTestDataModel model,
