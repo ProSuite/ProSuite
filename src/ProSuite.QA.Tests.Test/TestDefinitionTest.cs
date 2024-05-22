@@ -174,6 +174,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaSimpleGeometry),
 											 typeof(QaSliverPolygon),
 				                             typeof(QaSurfacePipe),
+				                             typeof(QaTouchesOther),
 											 typeof(QaTouchesSelf),
 				                             typeof(QaTrimmedTextFields),
 											 typeof(QaUnique),
@@ -360,6 +361,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygon(model, testCases);
 			AddQaTouchesSelf(model, testCases);
+			AddQaTouchesOther(model, testCases);
 			AddQaTrimmedTextFields(model, testCases);
 			AddQaValidDateValues(model, testCases);
 			AddQaValidCoordinateFields(model, testCases);
@@ -966,6 +968,56 @@ namespace ProSuite.QA.Tests.Test
 				                                     model.GetVectorDataset(),
 				                                      "10.1", "10.2" 
 			                                     }));
+		}
+
+		private static void AddQaTouchesOther(InMemoryTestDataModel model,
+		                                      ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ValidTouchGeometryConstraint", "$Length>10");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesOther), 0,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesOther), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesOther), 2,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     "G1.Level <> G2.Level"
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTouchesOther), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+				                                     "G1.Level <> G2.Level"
+			                                     }, optionalValues));
 		}
 
 		private static void AddQaInteriorIntersectsOtherCases(InMemoryTestDataModel model,
