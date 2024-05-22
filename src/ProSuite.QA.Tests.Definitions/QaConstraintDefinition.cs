@@ -19,6 +19,7 @@ namespace ProSuite.QA.Tests
 		// Internally used by factories:
 		public int ErrorDescriptionVersion { get; }
 		public IList<ConstraintNodeDefinition> ConstraintNodes { get; }
+		public bool UsesSimpleConstraint { get; }
 
 		[Doc(nameof(DocStrings.QaConstraint_0))]
 		public QaConstraintDefinition(
@@ -53,6 +54,8 @@ namespace ProSuite.QA.Tests
 		{
 			Table = table;
 			Constraint = constraint;
+			UsesSimpleConstraint = true;
+			ErrorDescriptionVersion = errorDescriptionVersion;
 		}
 
 		[Doc(nameof(DocStrings.QaConstraint_1))]
@@ -70,6 +73,7 @@ namespace ProSuite.QA.Tests
 
 			Table = table;
 			ConstraintNodes = constraints;
+			UsesSimpleConstraint = false;
 			ErrorDescriptionVersion = errorDescriptionVersion;
 		}
 	}
