@@ -1,10 +1,13 @@
 using System;
 using ProSuite.Commons.Cryptography;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.DomainModels
 {
 	public abstract class EncryptedStringBase : IEquatable<EncryptedStringBase>
 	{
+		[UsedImplicitly] private string _encryptedValue;
+
 		protected abstract IStringEncryptor Encryptor { get; }
 
 		public string PlainTextValue
@@ -33,7 +36,11 @@ namespace ProSuite.Commons.DomainModels
 			}
 		}
 
-		public string EncryptedValue { get; set; }
+		public string EncryptedValue
+		{
+			get => _encryptedValue;
+			set => _encryptedValue = value;
+		}
 
 		public bool Equals(EncryptedStringBase encryptedString)
 		{
