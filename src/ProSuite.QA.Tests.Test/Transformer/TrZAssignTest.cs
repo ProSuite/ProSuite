@@ -9,6 +9,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Tests.Test.Construction;
@@ -60,10 +61,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-			IRasterDataset rds = OpenDhm200GdbRasterDataset();
+			var rds = new RasterDatasetReference(OpenDhm200GdbRasterDataset());
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
-			TrZAssign tr = new TrZAssign(roFc, (IRasterDataset2) rds);
+			TrZAssign tr = new TrZAssign(roFc, rds);
 			Qa3dConstantZ test =
 				new Qa3dConstantZ(tr.GetTransformed(), 0);
 
@@ -105,10 +106,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-			IRasterDataset rds = OpenDhm200GdbRasterDataset();
+			var rds = new RasterDatasetReference(OpenDhm200GdbRasterDataset());
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
-			TrZAssign tr = new TrZAssign(roFc, (IRasterDataset2) rds);
+			TrZAssign tr = new TrZAssign(roFc, rds);
 			QaZDifferenceSelf test =
 				new QaZDifferenceSelf(tr.GetTransformed(), 1, 2, ZComparisonMethod.BoundingBox,
 				                      null);
@@ -159,10 +160,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-			IRasterDataset rds = OpenDhm200GdbRasterDataset();
+			var rds = new RasterDatasetReference(OpenDhm200GdbRasterDataset());
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
-			TrZAssign tr = new TrZAssign(roFc, (IRasterDataset2) rds)
+			TrZAssign tr = new TrZAssign(roFc, rds)
 			               { ZAssignOption = TrZAssign.AssignOption.All };
 			QaZDifferenceSelf test =
 				new QaZDifferenceSelf(tr.GetTransformed(), 1, 2, ZComparisonMethod.BoundingBox,
@@ -197,10 +198,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-			IRasterDataset rds = OpenDhm200GdbRasterDataset();
+			var rds = new RasterDatasetReference(OpenDhm200GdbRasterDataset());
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
-			TrZAssign tr = new TrZAssign(roFc, (IRasterDataset2) rds);
+			TrZAssign tr = new TrZAssign(roFc, rds);
 			Qa3dConstantZ test =
 				new Qa3dConstantZ(tr.GetTransformed(), 0);
 
@@ -243,9 +244,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			IWorkspace rws = WorkspaceUtils.OpenWorkspace(_simpleGdbPath);
 
 			IMosaicDataset mosaic = DatasetUtils.OpenMosaicDataset(rws, "DHM200_Mosaic");
+			var simpleRasterMosaic = new SimpleRasterMosaic(mosaic);
+			var mosaicReference = new MosaicRasterReference(simpleRasterMosaic);
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
-			TrZAssign tr = new TrZAssign(roFc, new SimpleRasterMosaic(mosaic));
+
+			TrZAssign tr = new TrZAssign(roFc, mosaicReference);
 
 			Qa3dConstantZ test =
 				new Qa3dConstantZ(tr.GetTransformed(), 0);
@@ -285,14 +289,14 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-			IRasterDataset rds = OpenDhm200GdbRasterDataset();
+			var rds = new RasterDatasetReference(OpenDhm200GdbRasterDataset());
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
-			TrZAssign tr0 = new TrZAssign(roFc, (IRasterDataset2) rds);
+			TrZAssign tr0 = new TrZAssign(roFc, rds);
 			Qa3dConstantZ testConstZ =
 				new Qa3dConstantZ(tr0.GetTransformed(), 0);
 
-			TrZAssign tr1 = new TrZAssign(roFc, (IRasterDataset2) rds);
+			TrZAssign tr1 = new TrZAssign(roFc, rds);
 			QaLineIntersectZ testIntersect =
 				new QaLineIntersectZ(tr1.GetTransformed(), 0);
 
