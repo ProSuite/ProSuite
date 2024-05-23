@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
@@ -24,7 +26,7 @@ namespace ProSuite.QA.Tests
 			ITableSchemaDef fieldSpecificationsTable,
 			[Doc(nameof(DocStrings.QaSchemaFieldPropertiesFromTable_matchAliasName))]
 			bool matchAliasName)
-			: base(table)
+			: base(new [] {table, fieldSpecificationsTable })
 		{
 			Assert.ArgumentNotNull(fieldSpecificationsTable, nameof(fieldSpecificationsTable));
 

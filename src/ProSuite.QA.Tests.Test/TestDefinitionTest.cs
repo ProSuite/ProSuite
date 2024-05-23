@@ -164,8 +164,11 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
 											 typeof(QaOverlapsOther),
+											 typeof(QaPointOnLine),
 											 typeof(QaRegularExpression),
 											 typeof(QaRequiredFields),
+											 typeof(QaSchemaFieldAliases),
+											 typeof(QaSchemaFieldDomainCodedValues),
 											 typeof(QaSchemaFieldDomainNameRegex),
 											 typeof(QaSchemaFieldDomainNames),
 											 typeof(QaSchemaFieldDomains),
@@ -174,10 +177,13 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaSchemaFieldProperties),
 											 typeof(QaSchemaFieldPropertiesFromTable),
 											 typeof(QaSchemaReservedFieldNameProperties),
+											 typeof(QaSegmentLength),
 											 typeof(QaSimpleGeometry),
 											 typeof(QaSliverPolygon),
 											 typeof(QaSmooth),
 				                             typeof(QaSurfacePipe),
+											 typeof(QaSurfaceSpikes),
+											 typeof(QaSurfaceVertex),
 				                             typeof(QaTouchesOther),
 											 typeof(QaTouchesSelf),
 				                             typeof(QaTrimmedTextFields),
@@ -312,7 +318,10 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNonEmptyGeometry)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsSelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsOther)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaPointOnLine)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRequiredFields)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldAliases)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainCodedValues)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainNameRegex)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainNames)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomains)));
@@ -321,8 +330,11 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldProperties)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldPropertiesFromTable)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaReservedFieldNameProperties)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSegmentLength)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfaceSpikes)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfaceVertex)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaUnique)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaUnreferencedRows)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaValidNonLinearSegments)));
