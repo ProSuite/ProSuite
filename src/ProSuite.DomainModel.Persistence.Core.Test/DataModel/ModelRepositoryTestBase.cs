@@ -22,6 +22,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 				delegate
 				{
 					model = Repository.Get("model");
+					Assert.IsNotNull(model);
 
 					Assert.IsFalse(UnitOfWork.IsInitialized(model.Datasets));
 
@@ -36,11 +37,13 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 					UnitOfWork.Reattach(model);
 
 					model = Repository.Get("model");
+					Assert.IsNotNull(model);
 
 					Assert.IsTrue(UnitOfWork.IsInitialized(model.Datasets));
 
 					// will be satisfied from the dictionary:
 					ds1 = model.GetDatasetByModelName("ds1");
+					Assert.IsNotNull(ds1);
 
 					Assert.IsTrue(UnitOfWork.IsInitialized(model.Datasets));
 
@@ -61,6 +64,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 				delegate
 				{
 					model = Repository.Get("model");
+					Assert.IsNotNull(model);
 
 					Assert.IsFalse(UnitOfWork.IsInitialized(model.Datasets));
 
@@ -81,6 +85,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 
 					// will be satisfied from the dictionary:
 					ds1 = model.GetDatasetByModelName("ds1");
+					Assert.IsNotNull(ds1);
 
 					// the persistent collection is still not initialized
 					Assert.IsFalse(UnitOfWork.IsInitialized(model.Datasets));
@@ -88,6 +93,56 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 					AreDatasetsConsistent(model);
 
 					Assert.AreEqual(1, ((ObjectDataset) ds1).Attributes.Count);
+				});
+		}
+
+		[Test]
+		public void CanGetDatasetsWithDeletedDuplicate()
+		{
+			// Repro for DPS#185
+
+			InitializeModel();
+
+			Dataset ds1 = null;
+			Model model = null;
+
+			VectorDataset duplicate = null;
+
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					model = Repository.Get("model");
+					Assert.IsNotNull(model);
+
+					Assert.IsFalse(UnitOfWork.IsInitialized(model.Datasets));
+
+					ds1 = model.GetDatasetByModelName("ds1");
+					Assert.NotNull(ds1);
+
+					// Trick the system into a duplicate dataset name...
+					duplicate = model.AddDataset(CreateVectorDataset("duplicate"));
+
+					// ... by renaming the original dataset (It is not clear how this happens in the
+					// real world).
+					ds1.RegisterDeleted();
+					ds1.Name = "duplicate";
+				});
+
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					UnitOfWork.Reattach(model);
+
+					Repository.Refresh(model);
+
+					// after a refresh, persistent collections are again not initialized
+					Assert.IsFalse(UnitOfWork.IsInitialized(model.Datasets));
+
+					// will be satisfied from the dictionary:
+					var duplicateDataset = model.GetDatasetByModelName("duplicate");
+					Assert.IsNotNull(duplicateDataset);
+					Assert.AreNotEqual(ds1.Id, duplicateDataset.Id);
+					Assert.AreEqual(duplicate.Id, duplicateDataset.Id);
 				});
 		}
 
