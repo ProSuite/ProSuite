@@ -118,6 +118,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaFlowLogic),
 				                             typeof(QaForeignKey),
 				                             typeof(QaFullCoincidence),
+				                             typeof(QaGdbConstraint),
 											 typeof(QaGdbRelease),
 				                             typeof(QaGeometryConstraint),
 				                             //typeof(QaGroupConstraints),
@@ -278,6 +279,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGdbConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaLineConnectionFieldValues)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxArea)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxLength)));
