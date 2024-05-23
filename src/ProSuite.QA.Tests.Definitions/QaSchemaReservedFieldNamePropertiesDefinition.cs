@@ -31,7 +31,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_validNameFieldName))] [CanBeNull]
 			string validNameFieldName,
 			[CanBeNull] ITableSchemaDef fieldSpecificationsTable)
-			: base(table)
+			: base(new[]{table,reservedNamesTable})
 		{
 			Table = table;
 			ReservedNamesTable = reservedNamesTable;
