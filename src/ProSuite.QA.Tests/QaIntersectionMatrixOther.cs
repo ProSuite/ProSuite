@@ -121,12 +121,13 @@ namespace ProSuite.QA.Tests
 
 		[InternallyUsedTest]
 		public QaIntersectionMatrixOther(QaIntersectionMatrixOtherDefinition definition)
+
 			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>()
-			                 .ToList(),
-			       definition.RelatedClasses.Cast<IReadOnlyFeatureClass>()
-			                 .ToList(),
+							 .ToList(),
+				   definition.RelatedClasses.Cast<IReadOnlyFeatureClass>()
+							 .ToList(),
 				   definition.IntersectionMatrix,
-			       definition.Constraint, definition.ValidIntersectionDimensions)
+				   definition.Constraint, definition.ValidIntersectionDimensions)
 		{ }
 
 		#endregion
