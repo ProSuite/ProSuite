@@ -12,9 +12,8 @@ namespace ProSuite.DomainModel.AGP.DataModel
 	{
 		[NotNull] private readonly Dictionary<Table, FieldIndexes> _fieldIndexesByTable =
 			new Dictionary<Table, FieldIndexes>();
-
-
-		public int GetFieldIndex(Table table, string fieldName, AttributeRole role)
+		
+		public int GetFieldIndex(Table table, string fieldName, AttributeRole role = null)
 		{
 			FieldIndexes fieldIndexes;
 			if (! _fieldIndexesByTable.TryGetValue(table, out fieldIndexes))

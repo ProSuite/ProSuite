@@ -14,7 +14,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Client.AGP.QA
 {

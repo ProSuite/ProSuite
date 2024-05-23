@@ -17,7 +17,7 @@ using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Geom.Wkb;
 using ProSuite.Commons.Logging;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.Microservices.Client.AGP

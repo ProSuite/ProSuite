@@ -24,7 +24,7 @@ namespace ProSuite.AGP.WorkList
 		public IssueItemRepository(IEnumerable<Table> tables,
 		                           IWorkItemStateRepository stateRepository,
 		                           [CanBeNull] IWorkListItemDatastore tableSchema = null) : base(
-			tables, stateRepository, tableSchema) { }
+			tables, stateRepository) { }
 
 		/// <summary>
 		/// Creates a new instance of the <see cref="IssueItemRepository"/> class.
@@ -89,7 +89,7 @@ namespace ProSuite.AGP.WorkList
 
 			IAttributeReader reader = source.AttributeReader;
 
-			IIssueItem item = new IssueItem(id, row);
+			IIssueItem item = new IssueItem(id, source.GetUniqueTableId(), row);
 
 			reader?.ReadAttributes(row, item, source);
 

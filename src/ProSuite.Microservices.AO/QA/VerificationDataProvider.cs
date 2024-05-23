@@ -15,7 +15,7 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.AO.QA
 {

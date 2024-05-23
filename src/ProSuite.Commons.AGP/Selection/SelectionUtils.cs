@@ -21,13 +21,6 @@ namespace ProSuite.Commons.AGP.Selection
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[Obsolete("Use the ClearSelection(Map) overload")]
-		public static void ClearSelection()
-		{
-			var map = MapView.Active?.Map;
-			map?.ClearSelection();
-		}
-
 		public static void ClearSelection(Map map)
 		{
 			map?.ClearSelection();
@@ -35,11 +28,9 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public static void SelectFeature(BasicFeatureLayer basicFeatureLayer,
 		                                 SelectionCombinationMethod selectionMethod,
-		                                 long objectId,
-		                                 bool clearExistingSelection = false)
+		                                 long objectId)
 		{
-			SelectRows(basicFeatureLayer, selectionMethod, new[] { objectId },
-			           clearExistingSelection);
+			SelectRows(basicFeatureLayer, selectionMethod, new[] { objectId });
 		}
 
 		/// <summary>
@@ -87,23 +78,14 @@ namespace ProSuite.Commons.AGP.Selection
 		/// <param name="tableBasedMapMember"></param>
 		/// <param name="combinationMethod"></param>
 		/// <param name="objectIds"></param>
-		/// <param name="clearExistingSelection"></param>
 		/// <returns>The number of actually selected rows.</returns>
 		public static long SelectRows([NotNull] IDisplayTable tableBasedMapMember,
 		                              SelectionCombinationMethod combinationMethod,
-		                              [NotNull] IReadOnlyList<long> objectIds,
-		                              bool clearExistingSelection = false)
+		                              [NotNull] IReadOnlyList<long> objectIds)
 		{
 			if (objectIds.Count == 0)
 			{
 				return 0;
-			}
-
-			if (clearExistingSelection)
-			{
-				var map = tableBasedMapMember is MapMember mapMember ? mapMember.Map : null;
-
-				ClearSelection(map);
 			}
 
 			var queryFilter = new QueryFilter { ObjectIDs = objectIds };
@@ -137,34 +119,20 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		public static long SelectFeatures([NotNull] FeatureSelectionBase featuresPerLayer,
-		                                  SelectionCombinationMethod selectionCombinationMethod,
-		                                  bool clearExistingSelection = false)
+		                                  SelectionCombinationMethod selectionCombinationMethod)
 		{
 			Assert.ArgumentNotNull(featuresPerLayer, nameof(featuresPerLayer));
 
 			return SelectRows(featuresPerLayer.BasicFeatureLayer,
 			                  selectionCombinationMethod,
-			                  featuresPerLayer.GetOids().ToList(),
-			                  clearExistingSelection);
+			                  featuresPerLayer.GetOids().ToList());
 		}
 
 		public static long SelectFeatures(
 			[NotNull] ICollection<FeatureSelectionBase> featuresPerLayers,
-			SelectionCombinationMethod selectionCombinationMethod,
-			bool clearExistingSelection = false)
+			SelectionCombinationMethod selectionCombinationMethod)
 		{
 			Assert.ArgumentNotNull(featuresPerLayers, nameof(featuresPerLayers));
-
-			if (clearExistingSelection)
-			{
-				var maps = featuresPerLayers.Select(fl => fl.BasicFeatureLayer.Map)
-				                            .DistinctBy(m => m.URI);
-
-				foreach (var map in maps)
-				{
-					ClearSelection(map);
-				}
-			}
 
 			long result = 0;
 

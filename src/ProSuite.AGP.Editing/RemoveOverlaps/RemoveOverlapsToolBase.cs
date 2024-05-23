@@ -123,8 +123,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			MapView activeMapView = MapView.Active;
 
+			var distinctSelectionByFeatureClass =
+				MapUtils.GetDistinctSelectionByTable(selection)
+				        .ToDictionary(kvp => (FeatureClass) kvp.Key,
+				                      kvp => kvp.Value);
+
 			IEnumerable<Feature> selectedFeatures = MapUtils.GetFeatures(
-				selection, true, activeMapView.Map.SpatialReference);
+				distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference);
 
 			RemoveOverlapsResult result =
 				MicroserviceClient.RemoveOverlaps(

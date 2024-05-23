@@ -91,7 +91,7 @@ namespace ProSuite.AGP.WorkList.Test
 				TestUtils.InsertRows(_emptyIssuesGdb, _featureClass0, _poly0, 1);
 				Row row = TestUtils.GetRow(_emptyIssuesGdb, _featureClass0, 1);
 
-				var item = new SelectionItem(42, row);
+				var item = new SelectionItem(42, 44, row);
 				Assert.NotNull(item.Description);
 
 				string description = item.GetDescription();
