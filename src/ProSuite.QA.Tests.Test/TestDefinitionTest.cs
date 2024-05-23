@@ -121,7 +121,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaGdbConstraint),
 											 typeof(QaGdbRelease),
 				                             typeof(QaGeometryConstraint),
-				                             //typeof(QaGroupConstraints),
+				                             typeof(QaGroupConstraints),
 				                             typeof(QaHorizontalSegments),
 				                             typeof(QaInteriorIntersectsOther),
 				                             typeof(QaInteriorIntersectsSelf),
@@ -306,7 +306,6 @@ namespace ProSuite.QA.Tests.Test
 
 			// TODO: Add special case 
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGeometryConstraint)));
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGroupConstraints)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustTouchSelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNonEmptyGeometry)));
@@ -344,6 +343,7 @@ namespace ProSuite.QA.Tests.Test
 			//AddQaExportTablesCases(model, testCases);
 			AddQaFullCoincidenceCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
+			AddQaGroupConstraintsCases(model, testCases);
 			AddQaInteriorIntersectsOtherCases(model, testCases);
 			AddQaInteriorIntersectsSelfCases(model, testCases);
 			//AddQaInteriorRingsCases(model, testCases);
@@ -974,6 +974,65 @@ namespace ProSuite.QA.Tests.Test
 				                                     model.GetVectorDataset(),
 				                                      "10.1", "10.2" 
 			                                     }));
+		}
+
+		private static void AddQaGroupConstraintsCases(
+			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ExistsRowGroupFilters", new[] { "String1" });
+
+			testCases.Add(new TestDefinitionCase(typeof(QaGroupConstraints), 0,
+			                                     new object[]
+			                                     { model.GetObjectDataset(),
+													 "FIELD1 + '#' +FIELD2",
+													 "FIELD1 + '#' +FIELD2",
+													 1,
+													 false},
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaGroupConstraints), 1,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetObjectDataset(),
+					                                     model.GetObjectDataset()
+				                                     },
+				                                     new[]
+				                                     {
+														 "FIELD1 + '#' +FIELD2",
+														 "FIELD1 + '#' +FIELD2"
+				                                     },
+				                                     new[]
+				                                     {
+														 "FIELD1 + '#' +FIELD2",
+														 "FIELD1 + '#' +FIELD2"
+				                                     },
+													 1,
+													 false},
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaGroupConstraints), 2,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetObjectDataset(),
+					                                     model.GetObjectDataset()
+				                                     },
+				                                     new[]
+				                                     {
+														 "FIELD1 + '#' +FIELD2",
+														 "FIELD1 + '#' +FIELD2"
+				                                     },
+				                                     new[]
+				                                     {
+														 "FIELD1 + '#' +FIELD2",
+														 "FIELD1 + '#' +FIELD2"
+				                                     },
+				                                     1,
+													 2,
+				                                     false},
+			                                     optionalValues));
 		}
 
 		private static void AddQaInteriorIntersectsOtherCases(InMemoryTestDataModel model,
