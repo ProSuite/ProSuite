@@ -59,13 +59,11 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_maximumNameLength))]
 			int maximumNameLength,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_uniqueNamesConstraint))]
-			UniqueStringsConstraint
-				uniqueNamesConstraint,
+			UniqueStringsConstraint uniqueNamesConstraint,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_minimumValueCount))]
 			int minimumValueCount,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_minimumNonEqualNameValueCount))]
-			int
-				minimumNonEqualNameValueCount,
+			int minimumNonEqualNameValueCount,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_allowEmptyName))]
 			bool allowEmptyName)
 			: base(table)
@@ -79,6 +77,13 @@ namespace ProSuite.QA.Tests
 			_minimumNonEqualNameValueCount = minimumNonEqualNameValueCount;
 			_allowEmptyName = allowEmptyName;
 		}
+
+		[InternallyUsedTest]
+		public QaSchemaFieldDomainCodedValues(
+			[NotNull] QaSchemaFieldDomainCodedValuesDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.MaximumNameLength,
+			       definition.UniqueNamesConstraint, definition.MinimumValueCount,
+			       definition.MinimumNonEqualNameValueCount, definition.AllowEmptyName) { }
 
 		public override int Execute()
 		{
