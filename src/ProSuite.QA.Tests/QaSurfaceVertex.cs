@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
@@ -65,11 +67,9 @@ namespace ProSuite.QA.Tests
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_mustBeLarger))]
 			bool mustBeLarger)
-			:
-			this(featureClass, terrain, limit,
-			     mustBeLarger
-				     ? ZOffsetConstraint.AboveLimit
-				     : ZOffsetConstraint.WithinLimit) { }
+			: this(featureClass, terrain, limit, mustBeLarger
+				                                     ? ZOffsetConstraint.AboveLimit
+				                                     : ZOffsetConstraint.WithinLimit) { }
 
 		[Doc(nameof(DocStrings.Qa3dSmoothing_0))]
 		public QaSurfaceVertex(
@@ -91,28 +91,26 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_raster))] [NotNull]
-			IRasterDataset2 raster,
+			RasterDatasetReference raster,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_mustBeLarger))]
 			bool mustBeLarger)
-			:
-			this(featureClass, raster, limit,
-			     mustBeLarger
-				     ? ZOffsetConstraint.AboveLimit
-				     : ZOffsetConstraint.WithinLimit) { }
+			: this(featureClass, raster, limit, mustBeLarger
+				                                    ? ZOffsetConstraint.AboveLimit
+				                                    : ZOffsetConstraint.WithinLimit) { }
 
 		[Doc(nameof(DocStrings.QaSurfaceVertex_2))]
 		public QaSurfaceVertex(
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_raster))] [NotNull]
-			IRasterDataset2 raster,
+			RasterDatasetReference raster,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_zOffsetConstraint))]
 			ZOffsetConstraint zOffsetConstraint)
-			: base(featureClass, new RasterDatasetReference(raster), limit, zOffsetConstraint)
+			: base(featureClass, raster, limit, zOffsetConstraint)
 		{
 			_shapeType = featureClass.ShapeType;
 		}
@@ -122,31 +120,52 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_mosaic))] [NotNull]
-			SimpleRasterMosaic rasterMosaic,
+			MosaicRasterReference rasterMosaic,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_mustBeLarger))]
 			bool mustBeLarger)
-			:
-			this(featureClass, rasterMosaic, limit,
-			     mustBeLarger
-				     ? ZOffsetConstraint.AboveLimit
-				     : ZOffsetConstraint.WithinLimit) { }
+			: this(featureClass, rasterMosaic, limit, mustBeLarger
+				                                          ? ZOffsetConstraint.AboveLimit
+				                                          : ZOffsetConstraint.WithinLimit) { }
 
 		[Doc(nameof(DocStrings.QaSurfaceVertex_4))]
 		public QaSurfaceVertex(
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_mosaic))] [NotNull]
-			SimpleRasterMosaic rasterMosaic,
+			MosaicRasterReference rasterMosaic,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_zOffsetConstraint))]
 			ZOffsetConstraint zOffsetConstraint)
-			: base(featureClass, new MosaicRasterReference(rasterMosaic),
-			       limit, zOffsetConstraint)
+			: base(featureClass, rasterMosaic, limit, zOffsetConstraint)
 		{
 			_shapeType = featureClass.ShapeType;
+		}
+
+		/// <summary>
+		/// Constructor using Definition. Must always be the last constructor!
+		/// </summary>
+		/// <param name="vertexDef"></param>
+		[InternallyUsedTest]
+		public QaSurfaceVertex([NotNull] QaSurfaceVertexDefinition vertexDef)
+			: base((IReadOnlyFeatureClass) vertexDef.FeatureClass,
+			       vertexDef.Limit,
+			       vertexDef.ZOffsetConstraint)
+		{
+			if (vertexDef.InvolvedRasters?.Count > 0)
+			{
+				InvolvedRasters = vertexDef.InvolvedRasters.Cast<RasterReference>().ToList();
+			}
+			else
+			{
+				Assert.ArgumentCondition(vertexDef.InvolvedTerrains.Count > 0,
+				                         "Surface is not defined (neither raster nor terrain is provided)");
+
+				InvolvedTerrains = vertexDef.InvolvedTerrains.Cast<TerrainReference>().ToList();
+				TerrainTolerance = vertexDef.TerrainTolerance;
+			}
 		}
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)

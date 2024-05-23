@@ -177,6 +177,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaSliverPolygon),
 											 typeof(QaSmooth),
 				                             typeof(QaSurfacePipe),
+											 typeof(QaSurfaceVertex),
 				                             typeof(QaTouchesOther),
 											 typeof(QaTouchesSelf),
 				                             typeof(QaTrimmedTextFields),
@@ -322,6 +323,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaReservedFieldNameProperties)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfaceVertex)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaUnique)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaUnreferencedRows)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaValidNonLinearSegments)));
