@@ -163,6 +163,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
 											 typeof(QaOverlapsOther),
+											 typeof(QaPointOnLine),
 											 typeof(QaRegularExpression),
 											 typeof(QaRequiredFields),
 											 typeof(QaSchemaFieldAliases),
@@ -316,6 +317,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNonEmptyGeometry)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsSelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsOther)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaPointOnLine)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRequiredFields)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldAliases)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainCodedValues)));
