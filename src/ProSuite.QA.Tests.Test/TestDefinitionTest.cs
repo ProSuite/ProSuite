@@ -130,6 +130,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaIntersectionMatrixSelf),
 											 typeof(QaIntersectsOther),
 											 typeof(QaIntersectsSelf),
+											 typeof(QaIsCoveredByOther),
 											 typeof(QaLineConnectionFieldValues),
 											 typeof(QaLineGroupConstraints),
 											 typeof(QaLineIntersect),
@@ -351,6 +352,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaIntersectionMatrixSelfCases(model, testCases);
 			AddQaIntersectsOtherCases(model, testCases);
 			AddQaIntersectsSelfCases(model, testCases);
+			AddQaIsCoveredByOtherCases(model, testCases);
 			AddQaLineGroupConstraintsCases(model, testCases);
 			AddQaLineIntersectCases(model, testCases);
 			//AddQaLineIntersectAngleCases(model, testCases);
@@ -1381,6 +1383,94 @@ namespace ProSuite.QA.Tests.Test
 												 optionalValues));
 		}
 
+		private static void AddQaIsCoveredByOtherCases(InMemoryTestDataModel model,
+											   ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>
+		{
+			{ "CoveringClassTolerances", new[] { 1 } },
+			{ "ValidUncoveredGeometryConstraint", "$Area < 5 AND $VertexCount < 10" }
+		};
+
+			var polygonDataset1 = model.GetPolygonDataset();
+			var polygonDataset2 = model.GetPolygonDataset();
+
+			testCases.Add(new TestDefinitionCase(typeof(QaIsCoveredByOther), 0,
+												 new object[]
+												 {
+													new[] { polygonDataset1, polygonDataset2 }, // Covering
+													new[] { polygonDataset1, polygonDataset2 } // Covered
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaIsCoveredByOther), 1,
+												 new object[]
+												 {
+													polygonDataset1, // Covering
+													polygonDataset2 // Covered
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaIsCoveredByOther), 2,
+												 new object[]
+												 {
+													new[] { polygonDataset1, polygonDataset2 }, // Covering
+													new[] { polygonDataset1, polygonDataset2 }, // Covered
+													"G1" // isCoveringCondition
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaIsCoveredByOther), 3,
+												 new object[]
+												 {
+													polygonDataset1, // Covering
+													polygonDataset2, // Covered
+													"G1" // isCoveringCondition
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaIsCoveredByOther), 4,
+												 new object[]
+												 {
+													new[] { polygonDataset1, polygonDataset2 }, // Covering
+													new GeometryComponent[] { GeometryComponent.EntireGeometry }, // CoveringGeometryComponents
+													new[] { polygonDataset1, polygonDataset2 }, // Covered
+													new GeometryComponent[] { GeometryComponent.EntireGeometry }, // CoveredGeometryComponents
+													"G1" // Single isCoveringCondition
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaIsCoveredByOther), 5,
+												 new object[]
+												 {
+													new[] { polygonDataset1, polygonDataset2 }, // Covering
+													new GeometryComponent[] { GeometryComponent.EntireGeometry }, // CoveringGeometryComponents
+													new[] { polygonDataset1, polygonDataset2 }, // Covered
+													new GeometryComponent[] { GeometryComponent.EntireGeometry }, // CoveredGeometryComponents
+													"G1",  // isCoveringCondition
+													10.0 // AllowedUncoveredPercentage
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaIsCoveredByOther), 6,
+												 new object[]
+												 {
+													new[] { polygonDataset1, polygonDataset2 }, // Covering
+													new GeometryComponent[] { GeometryComponent.EntireGeometry }, // CoveringGeometryComponents
+													new[] { polygonDataset1, polygonDataset2 }, // Covered
+													new GeometryComponent[] { GeometryComponent.EntireGeometry }, // CoveredGeometryComponents
+													new[] { "G1" }, // isCoveringCondition
+													0.45 // AllowedUncoveredPercentage
+												 },
+												 optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaIsCoveredByOther), 7,
+												 new object[]
+												 {
+													new[] { polygonDataset1, polygonDataset2 }, // Covering
+													new GeometryComponent[] { GeometryComponent.EntireGeometry }, // CoveringGeometryComponents
+													new[] { polygonDataset1, polygonDataset2 }, // Covered
+													new GeometryComponent[] { GeometryComponent.EntireGeometry }, // CoveredGeometryComponents
+													new[] { "G1" }, // isCoveringCondition
+													0.45, // AllowedUncoveredPercentage
+													new[] { polygonDataset1, polygonDataset2 } // AreaOfInterestClasses
+												 },
+												 optionalValues));
+		}
+
 		private static void AddQaLineGroupConstraintsCases(InMemoryTestDataModel model,
 		                                                     ICollection<TestDefinitionCase> testCases)
 		{
@@ -1491,7 +1581,7 @@ namespace ProSuite.QA.Tests.Test
 				                                     false
 			                                     },
 			                                     optionalValues));
-			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 2,
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 0,
 												 new object[]
 												 {
 													 new[]
@@ -1502,7 +1592,7 @@ namespace ProSuite.QA.Tests.Test
 													 1
 												 },
 												 optionalValues));
-			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 3,
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 0,
 												 new object[]
 												 {
 													 model.GetVectorDataset(),
