@@ -1,6 +1,5 @@
 using System;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.Knowledge;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
 using ProSuite.Commons.Essentials.Assertions;
@@ -47,8 +46,9 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					case FileSystemConnectionPath fileSystemConnection:
 						return new FileSystemDatastore(fileSystemConnection);
 
-					case KnowledgeGraphConnectionProperties knowledgeGraphConnection:
-						return new KnowledgeGraph(knowledgeGraphConnection);
+					// Only supported starting with Pro 3.2
+					//case KnowledgeGraphConnectionProperties knowledgeGraphConnection:
+					//	return new KnowledgeGraph(knowledgeGraphConnection);
 
 					case MemoryConnectionProperties memoryConnectionProperties:
 						return new ArcGIS.Core.Data.Geodatabase(memoryConnectionProperties);

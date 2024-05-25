@@ -7,26 +7,26 @@
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "Quaestor.LoadReporting/0.8.1": {
+      "Quaestor.LoadReporting/0.9.2": {
         "dependencies": {
-          "Google.Protobuf": "3.19.2",
+          "Google.Protobuf": "3.24.0",
           "Grpc": "2.44.0",
-          "Grpc.Tools": "2.44.0",
+          "Grpc.Tools": "2.62.0",
           "NETStandard.Library": "2.0.3"
         },
         "runtime": {
           "Quaestor.LoadReporting.dll": {}
         }
       },
-      "Google.Protobuf/3.19.2": {
+      "Google.Protobuf/3.24.0": {
         "dependencies": {
           "System.Memory": "4.5.3",
           "System.Runtime.CompilerServices.Unsafe": "4.5.2"
         },
         "runtime": {
           "lib/netstandard2.0/Google.Protobuf.dll": {
-            "assemblyVersion": "3.19.2.0",
-            "fileVersion": "3.19.2.0"
+            "assemblyVersion": "3.24.0.0",
+            "fileVersion": "3.24.0.0"
           }
         }
       },
@@ -58,7 +58,7 @@
           }
         }
       },
-      "Grpc.Tools/2.44.0": {},
+      "Grpc.Tools/2.62.0": {},
       "Microsoft.NETCore.Platforms/1.1.0": {},
       "NETStandard.Library/2.0.3": {
         "dependencies": {
@@ -105,17 +105,17 @@
     }
   },
   "libraries": {
-    "Quaestor.LoadReporting/0.8.1": {
+    "Quaestor.LoadReporting/0.9.2": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "Google.Protobuf/3.19.2": {
+    "Google.Protobuf/3.24.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-CE84qxu0ksNP/CLXOMFgZKGNcRFg4F2Cs8hmWIAjgQZoegCvFPlArg9NbHOjGt8T0f6s9ZHjEc9+pdxjK2q6Sw==",
-      "path": "google.protobuf/3.19.2",
-      "hashPath": "google.protobuf.3.19.2.nupkg.sha512"
+      "sha512": "sha512-5j/OBUVWPTeRYlG3Dm4PSupyU6nJmbnnhPeqjePzCqtzrh5vErx8dToStuhTnG1ZYZ+dawGziC7DN1I6FEQH0g==",
+      "path": "google.protobuf/3.24.0",
+      "hashPath": "google.protobuf.3.24.0.nupkg.sha512"
     },
     "Grpc/2.44.0": {
       "type": "package",
@@ -138,12 +138,12 @@
       "path": "grpc.core.api/2.44.0",
       "hashPath": "grpc.core.api.2.44.0.nupkg.sha512"
     },
-    "Grpc.Tools/2.44.0": {
+    "Grpc.Tools/2.62.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-HEqnCJqHcpr1rgrfluvPAsaR4Y1qSFicg8Z24u6kmw0EIk9RnRszz2OVjAkyvqcGU18fWAtsmk8NApfzbVHucw==",
-      "path": "grpc.tools/2.44.0",
-      "hashPath": "grpc.tools.2.44.0.nupkg.sha512"
+      "sha512": "sha512-tVU0hseOI3tYI9Z62++01EAUBNsKMQfZfeuZyW9Qa3z1D7IqtQKoU2u+3426uIPCTzVVi8qBgsszThyKam9NQA==",
+      "path": "grpc.tools/2.62.0",
+      "hashPath": "grpc.tools.2.62.0.nupkg.sha512"
     },
     "Microsoft.NETCore.Platforms/1.1.0": {
       "type": "package",

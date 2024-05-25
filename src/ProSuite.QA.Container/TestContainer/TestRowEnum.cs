@@ -28,7 +28,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private readonly bool _nothingToDo;
 
 		private readonly int _cachedTableCount;
-		private readonly IDictionary<IReadOnlyTable, double> _cachedSet;
+		private readonly IDictionary<IReadOnlyTable, CachedTableProps> _cachedSet;
 		private readonly IList<TableFields> _nonCachedTables;
 
 		private readonly ITestContainer _container;
@@ -99,7 +99,7 @@ namespace ProSuite.QA.Container.TestContainer
 				new RastersRowEnumerable(_testSorter.TestsPerRaster.Keys, _container, tileSize);
 
 			ClassifyTables(_testSorter.TestsPerTable,
-			               out Dictionary<IReadOnlyTable, double> cachedSet,
+			               out Dictionary<IReadOnlyTable, CachedTableProps> cachedSet,
 			               out IList<TableFields> nonCachedTables);
 			AddProcessorTables(_container.ContainerTests, cachedSet);
 			_nonCachedTables =
@@ -167,9 +167,9 @@ namespace ProSuite.QA.Container.TestContainer
 			OverlappingFeatures overlappingFeatures =
 				new OverlappingFeatures(_container.MaxCachedPointCount);
 
-			foreach (KeyValuePair<IReadOnlyTable, double> pair in _cachedSet)
+			foreach (KeyValuePair<IReadOnlyTable, CachedTableProps> pair in _cachedSet)
 			{
-				overlappingFeatures.AdaptSearchTolerance(pair.Key, pair.Value);
+				overlappingFeatures.AdaptSearchTolerance(pair.Key, pair.Value.SearchDistance);
 			}
 
 			foreach (IList<ContainerTest> tests in _testSorter.TestsPerTable.Values)
@@ -219,7 +219,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private TileCache GetTileCache()
 		{
 			TileCache tileCache = new TileCache(
-				new List<IReadOnlyTable>(_cachedSet.Keys), _tileEnum.TestRunBox, _container,
+				_cachedSet, _tileEnum.TestRunBox, _container,
 				_testSorter.TestsPerTable);
 
 			return tileCache;
@@ -329,7 +329,7 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			// if the table was not passed to the container, return null
 			// to trigger a search in the database
-			if (! _cachedSet.ContainsKey(table))
+			if (! _cachedSet.TryGetValue(table, out CachedTableProps tableProps))
 			{
 				return null;
 			}
@@ -340,11 +340,35 @@ namespace ProSuite.QA.Container.TestContainer
 				if (queryFilter is IFeatureClassFilter sf)
 				{
 					IEnvelope loaded = _tileCache.GetLoadedExtent(table);
-					if (sf.FilterGeometry != null &&
-					    ! ((IRelationalOperator) loaded).Contains(sf.FilterGeometry))
+
+					IGeometry filterGeometry = sf.FilterGeometry;
+                    if (filterGeometry != null &&
+                        !SpatialReferenceUtils.AreEqual(
+                            filterGeometry.SpatialReference,
+                            loaded.SpatialReference))
+                    {
+	                    if (tableProps.HasGeotransformation is IHasGeotransformation hasGeotrans)
+	                    {
+		                    filterGeometry = hasGeotrans.ProjectEx(filterGeometry);
+	                    }
+	                    else
+	                    {
+		                    filterGeometry = GeometryFactory.Clone(filterGeometry);
+		                    filterGeometry.Project(loaded.SpatialReference);
+						}
+					}
+
+					if (filterGeometry != null &&
+					    ! ((IRelationalOperator) loaded).Contains(filterGeometry))
 					{
 						_tilesAdmin = _tilesAdmin ?? new TilesAdmin(this, _tileCache);
-						return _tilesAdmin.Search(table, sf, filterHelper);
+						return _tilesAdmin.Search(tableProps, sf, filterHelper);
+					}
+
+					if (filterGeometry != sf.FilterGeometry)
+					{
+						queryFilter = queryFilter.Clone();
+						((IFeatureClassFilter) queryFilter).FilterGeometry = filterGeometry;
 					}
 				}
 			}
@@ -816,12 +840,12 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private static void ClassifyTables(
 			[NotNull] IDictionary<IReadOnlyTable, IList<ContainerTest>> testsPerTable,
-			[NotNull] out Dictionary<IReadOnlyTable, double> cachedTables,
+			[NotNull] out Dictionary<IReadOnlyTable, CachedTableProps> cachedTables,
 			[NotNull] out IList<TableFields> nonCachedTables)
 		{
 			Assert.ArgumentNotNull(testsPerTable, nameof(testsPerTable));
 
-			cachedTables = new Dictionary<IReadOnlyTable, double>();
+			cachedTables = new Dictionary<IReadOnlyTable, CachedTableProps>();
 			nonCachedTables = new List<TableFields>();
 
 			foreach (KeyValuePair<IReadOnlyTable, IList<ContainerTest>> pair in testsPerTable)
@@ -835,12 +859,13 @@ namespace ProSuite.QA.Container.TestContainer
 
 				if (queried)
 				{
-					if (! cachedTables.TryGetValue(table, out double searchDist))
+					if (! cachedTables.TryGetValue(table, out CachedTableProps props))
 					{
-						searchDist = 0;
+						props = new CachedTableProps(table);
+						cachedTables.Add(table, props);
 					}
 
-					cachedTables[table] = Math.Max(searchDist, 0); // TODO
+					props.SearchDistance = Math.Max(props.SearchDistance, 0); // TODO
 				}
 				else
 				{
@@ -862,15 +887,16 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 			}
 		}
-
+		
 		private static void AddRecursive(IReadOnlyTable table,
-		                                 Dictionary<IReadOnlyTable, double> cachedTables)
+		                                 Dictionary<IReadOnlyTable, CachedTableProps> cachedTables)
 		{
 			if (! (table is IDataContainerAware transformed))
 			{
 				return;
 			}
 
+			IHasGeotransformation hasGeotrans = transformed as IHasGeotransformation;
 			foreach (var baseTable in transformed.InvolvedTables)
 			{
 				AddRecursive(baseTable, cachedTables);
@@ -884,18 +910,20 @@ namespace ProSuite.QA.Container.TestContainer
 					continue;
 				}
 
-				if (! cachedTables.TryGetValue(baseTable, out double searchDist))
+				if (! cachedTables.TryGetValue(baseTable, out CachedTableProps props))
 				{
-					searchDist = 0;
+					props = new CachedTableProps(baseTable, hasGeotrans);
+					cachedTables.Add(baseTable, props);
 				}
 
 				double search = transformed is IHasSearchDistance has ? has.SearchDistance : 0;
-				cachedTables[baseTable] = Math.Max(searchDist, search);
+				props.SearchDistance = Math.Max(props.SearchDistance, search);
+				props.Verify(hasGeotrans);
 			}
 		}
 
 		private void AddProcessorTables(IEnumerable<ContainerTest> tests,
-		                                Dictionary<IReadOnlyTable, double> cachedSet)
+		                                Dictionary<IReadOnlyTable, CachedTableProps> cachedSet)
 		{
 			foreach (var test in tests)
 			{
@@ -906,14 +934,15 @@ namespace ProSuite.QA.Container.TestContainer
 						foreach (IReadOnlyTable table in filter.InvolvedTables)
 						{
 							AddRecursive(table, cachedSet);
-							if (! cachedSet.TryGetValue(table, out double searchDist))
+							if (! cachedSet.TryGetValue(table, out CachedTableProps props))
 							{
-								searchDist = 0;
+								props = new CachedTableProps(table);
+								cachedSet.Add(table, props);
 							}
 
 							double filterSearch =
 								filter is IHasSearchDistance has ? has.SearchDistance : 0;
-							cachedSet[table] = Math.Max(searchDist, filterSearch);
+							props.SearchDistance = Math.Max(props.SearchDistance, filterSearch);
 						}
 
 						if (filter is IssueFilter f)
@@ -930,14 +959,15 @@ namespace ProSuite.QA.Container.TestContainer
 						foreach (IReadOnlyTable table in filter.InvolvedTables)
 						{
 							AddRecursive(table, cachedSet);
-							if (! cachedSet.TryGetValue(table, out double searchDist))
+							if (! cachedSet.TryGetValue(table, out CachedTableProps props))
 							{
-								searchDist = 0;
+								props = new CachedTableProps(table);
+								cachedSet.Add(table, props);
 							}
 
 							double filterSearch =
 								filter is IHasSearchDistance has ? has.SearchDistance : 0;
-							cachedSet[table] = Math.Max(searchDist, filterSearch);
+							props.SearchDistance = Math.Max(props.SearchDistance, filterSearch);
 						}
 
 						if (filter is RowFilter f)
@@ -1065,8 +1095,9 @@ namespace ProSuite.QA.Container.TestContainer
 
 			int cachedTableIndex = 0;
 			tileCache.LoadingTileBox = tile.Box;
-			foreach (IReadOnlyTable cachedTable in _cachedSet.Keys)
+			foreach (var tableProps in _cachedSet.Values)
 			{
+				IReadOnlyTable cachedTable = tableProps.Table;
 				using (_container.UseProgressWatch(
 					       Step.DataLoading, Step.DataLoaded, cachedTableIndex, _cachedTableCount,
 					       cachedTable))
@@ -1082,7 +1113,7 @@ namespace ProSuite.QA.Container.TestContainer
 						cachedRows = preloadedCache.TransferCachedRows(tileCache, cachedTable);
 					}
 
-					cachedRows = cachedRows ?? LoadCachedTableRows(cachedTable, tile, tileCache);
+					cachedRows = cachedRows ?? LoadCachedTableRows(tableProps, tile, tileCache);
 
 					PreprocessCache(cachedTable, tile, tileCache, cachedRows);
 				}
@@ -1183,10 +1214,11 @@ namespace ProSuite.QA.Container.TestContainer
 		#region loading the cache
 
 		private ICollection<CachedRow> LoadCachedTableRows(
-			[NotNull] IReadOnlyTable table,
+			[NotNull] CachedTableProps tableProps,
 			[NotNull] Tile tile,
 			[NotNull] TileCache tileCache)
 		{
+			IReadOnlyTable table = tableProps.Table;
 			bool ignoreOverlappingRows =
 				(table as ITransformedTable)?.IgnoreOverlappingCachedRows ?? false;
 
@@ -1197,7 +1229,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			int previousCachedRowCount = cachedRows.Count;
 
-			tileCache.LoadCachedTableRows(cachedRows, table, tile, this);
+			tileCache.LoadCachedTableRows(cachedRows, tableProps, tile, this);
 			// LoadCachedTableRows(cachedRows, table, tile, tileCache);
 
 			int newlyLoadedRows = cachedRows.Count - previousCachedRowCount;
