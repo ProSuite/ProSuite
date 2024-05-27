@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using Geometry = ArcGIS.Core.Geometry.Geometry;
+using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.Picker
 {
@@ -55,40 +58,45 @@ namespace ProSuite.AGP.Editing.Picker
 			       .OrderBy(group => group.Key).SelectMany(fcs => fcs);
 		}
 
-		public static async Task Show(IPickerPrecedence precedence,
-		                              CancelableProgressor progressor,
-		                              Func<Geometry, IEnumerable<FeatureSelectionBase>>
-			                              findFeatureSelection)
+		public static Task Show(
+			[NotNull] IPickerPrecedence precedence,
+			[NotNull] Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection,
+			[CanBeNull] CancelableProgressor progressor = null)
 		{
-			switch (precedence.Mode)
+			return GetPickerMode() switch
 			{
-				case PickerMode.ShowPicker:
-
-					await ShowPicker(precedence, findFeatureSelection);
-
-					break;
-				case PickerMode.PickAll:
-
-					await SelectAll(precedence, progressor, findFeatureSelection);
-					break;
-				case PickerMode.PickBest:
-
-					await PickBest(precedence, progressor, findFeatureSelection);
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
+				PickerMode.ShowPicker => ShowPicker(precedence, getSelection),
+				PickerMode.PickAll => SelectAll(precedence, progressor, getSelection),
+				PickerMode.PickBest => PickBest(precedence, progressor, getSelection),
+				_ => throw new ArgumentOutOfRangeException()
+			};
 		}
 
-		private static async Task PickBest(IPickerPrecedence precedence,
-		                                   CancelableProgressor progressor,
-		                                   Func<Geometry, IEnumerable<FeatureSelectionBase>>
-			                                   findFeatureSelection)
+		public static PickerMode GetPickerMode()
 		{
-			await QueuedTask.Run(
+			if (KeyboardUtils.IsModifierDown(Key.LeftAlt, exclusive: true) ||
+			    KeyboardUtils.IsModifierDown(Key.RightAlt, exclusive: true))
+			{
+				return PickerMode.PickAll;
+			}
+
+			if (KeyboardUtils.IsModifierDown(Key.LeftCtrl, exclusive: true) ||
+			    KeyboardUtils.IsModifierDown(Key.RightCtrl, exclusive: true))
+			{
+				return PickerMode.ShowPicker;
+			}
+
+			return PickerMode.PickBest;
+		}
+
+		private static Task PickBest(IPickerPrecedence precedence,
+		                             Progressor progressor,
+		                             Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection)
+		{
+			return QueuedTaskUtils.Run(
 				() =>
 				{
-					var selection = findFeatureSelection(precedence.SelectionGeometry).ToList();
+					var selection = getSelection(precedence.SelectionGeometry).ToList();
 
 					if (! selection.Any())
 					{
@@ -112,14 +120,14 @@ namespace ProSuite.AGP.Editing.Picker
 				}, progressor);
 		}
 
-		private static async Task SelectAll(IPickerPrecedence precedence,
-		                                    CancelableProgressor progressor,
-		                                    Func<Geometry, IEnumerable<FeatureSelectionBase>>
-			                                    findFeatureSelection)
+		private static Task SelectAll(
+			IPickerPrecedence precedence,
+			Progressor progressor,
+			Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection)
 		{
-			await QueuedTask.Run(() =>
+			return QueuedTaskUtils.Run(() =>
 			{
-				var selection = findFeatureSelection(precedence.SelectionGeometry).ToList();
+				var selection = getSelection(precedence.SelectionGeometry).ToList();
 
 				SelectionUtils.SelectFeatures(selection,
 				                              SelectionCombinationMethod.New,
@@ -127,29 +135,32 @@ namespace ProSuite.AGP.Editing.Picker
 			}, progressor);
 		}
 
-		private static async Task ShowPicker(IPickerPrecedence precedence, Func<Geometry, IEnumerable<FeatureSelectionBase>> findFeatureSelection)
+		private static async Task ShowPicker(
+			IPickerPrecedence precedence,
+			Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection)
 		{
 			Geometry geometry = precedence.SelectionGeometry;
 
 			var picker = new PickerService();
 
-			Func<Task<IPickableFeatureItem>> showControlOrPickBest =
+			Func<Task<IPickableFeatureItem>> showPicker =
 				await QueuedTask.Run(() =>
 				{
 					IEnumerable<FeatureSelectionBase> selection =
-						findFeatureSelection(precedence.SelectionGeometry);
+						getSelection(precedence.SelectionGeometry);
 
-					var items = PickableItemsFactory.CreateFeatureItems(OrderByGeometryDimension(selection))
-					                                .ToList();
+					// todo daro reformat
+					var items = PickableItemsFactory
+					            .CreateFeatureItems(selection)
+					            .ToList();
 
 					Point pickerLocation = MapView.Active.MapToScreen(geometry.Extent.Center);
 
-					return picker.Pick<IPickableFeatureItem>(
-						items, pickerLocation, precedence);
+					return picker.Pick<IPickableFeatureItem>(items, pickerLocation, precedence);
 				});
 
 			// show control on GUI thread
-			IPickableFeatureItem pickedItem = await showControlOrPickBest();
+			IPickableFeatureItem pickedItem = await showPicker();
 
 			if (pickedItem == null)
 			{
@@ -162,50 +173,6 @@ namespace ProSuite.AGP.Editing.Picker
 				                             SelectionCombinationMethod.New,
 				                             pickedItem.Oid, true);
 			});
-		}
-
-		public static async Task Show(IPickerPrecedence precedence, List<IPickableItem> items, Func<IEnumerable<FeatureSelectionBase>> getSelection)
-		{
-			switch (precedence.Mode)
-			{
-				case PickerMode.ShowPicker:
-
-					Geometry geometry = precedence.SelectionGeometry;
-
-					var picker = new PickerService();
-
-					Func<Task<IPickableFeatureItem>> showControlOrPickBest =
-						await QueuedTask.Run(() =>
-						{
-							Point pickerLocation = MapView.Active.MapToScreen(geometry.Extent.Center);
-
-							return picker.Pick<IPickableFeatureItem>(
-								items, pickerLocation, precedence);
-						});
-
-					// show control on GUI thread
-					IPickableFeatureItem pickedItem = await showControlOrPickBest();
-
-					if (pickedItem == null)
-					{
-						return;
-					}
-
-					await QueuedTask.Run(() =>
-					{
-						SelectionUtils.SelectFeature(pickedItem.Layer,
-						                             SelectionCombinationMethod.New,
-						                             pickedItem.Oid, true);
-					});
-
-					break;
-				case PickerMode.PickAll:
-					break;
-				case PickerMode.PickBest:
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
 		}
 	}
 }
