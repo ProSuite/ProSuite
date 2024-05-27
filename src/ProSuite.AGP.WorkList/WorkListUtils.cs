@@ -10,7 +10,6 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
-using ProSuite.Commons.Ado;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
@@ -562,14 +561,26 @@ namespace ProSuite.AGP.WorkList
 		{
 			var result = new Dictionary<Table, List<long>>();
 
+			// TODO: Delete backward compatibility at ca. 1.5
+			bool backwardCompatibleLoading = false;
 			foreach (XmlWorkItemState item in xmlItems)
 			{
 				if (! tablesById.TryGetValue(item.Row.TableId, out Table table))
 				{
-					_msg.Warn(
-						$"Table {item.Row.TableName} (UniqueID={item.Row.TableId}) not found in the " +
-						$"list of available tables ({StringUtils.Concatenate(tablesById.Values, t => t.GetName(), ", ")}).");
-					continue;
+					// Not found by table ID. For backward compatibility, try Id:
+					table =
+						tablesById.Values.FirstOrDefault(t => t.GetID() == item.Row.TableId);
+
+					if (table == null)
+					{
+						_msg.Warn(
+							$"Table {item.Row.TableName} (UniqueID={item.Row.TableId}) not found in the " +
+							$"list of available tables ({StringUtils.Concatenate(tablesById.Values, t => t.GetName(), ", ")}).");
+						continue;
+					}
+
+					// Found by legacy (version 1.2.x) table ID
+					backwardCompatibleLoading = true;
 				}
 
 				if (! result.ContainsKey(table))
@@ -579,7 +590,12 @@ namespace ProSuite.AGP.WorkList
 				else
 				{
 					List<long> oids = result[table];
-					oids.Add(item.Row.OID);
+
+					// Prevent duplicates (duplicates would happen on upgrading)
+					if (! backwardCompatibleLoading || ! oids.Contains(item.Row.OID))
+					{
+						oids.Add(item.Row.OID);
+					}
 				}
 			}
 
