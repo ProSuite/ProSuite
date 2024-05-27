@@ -480,6 +480,8 @@ namespace ProSuite.AGP.WorkList
 			// DB_CONNECTION_PROPERTIES = topgist
 			// USER = topgis_tlm
 
+			string connectionString = workspace.ConnectionString;
+
 			try
 			{
 				Assert.True(
@@ -492,70 +494,14 @@ namespace ProSuite.AGP.WorkList
 					case WorkspaceFactory.FileGDB:
 						return new Geodatabase(
 							new FileGeodatabaseConnectionPath(
-								new Uri(workspace.ConnectionString, UriKind.Absolute)));
+								new Uri(connectionString, UriKind.Absolute)));
 
 					case WorkspaceFactory.SDE:
-						var builder = new ConnectionStringBuilder(workspace.ConnectionString);
-
-						Assert.True(
-							Enum.TryParse(builder["dbclient"], ignoreCase: true,
-							              out EnterpriseDatabaseType databaseType),
-							$"Cannot parse {nameof(EnterpriseDatabaseType)} from connection string {workspace.ConnectionString}");
-
-						Assert.True(
-							Enum.TryParse(builder["authentication_mode"], ignoreCase: true,
-							              out AuthenticationMode authMode),
-							$"Cannot parse {nameof(AuthenticationMode)} from connection string {workspace.ConnectionString}");
-
-						string instance = builder["instance"];
-
-						// Real-world examples for instance:
-						// Oracle:
-						// - "sde:oracle11g:TOPGIST:SDE"
-						// - "sde:oracle$sde:oracle11g:gdzh"
-
-						// PostgreSQL:
-						// sde:postgresql:localhost
-
-						// NOTE: Sometimes the DB_CONNECTION_PROPERTIES contains the single instance name,
-						//       but it can also contain the colon-separated components.
-
-						string database = string.IsNullOrEmpty(builder["server"])
-							                  ? builder["database"]
-							                  : builder["server"];
-
-						string[] strings = instance?.Split(':');
-
-						if (strings?.Length > 1)
-						{
-							string lastItem = strings[^1];
-
-							if (lastItem.Equals("SDE", StringComparison.OrdinalIgnoreCase))
-							{
-								// Take the second last item
-								instance = strings[^2];
-							}
-							else
-							{
-								instance = lastItem;
-							}
-						}
-
-						var connectionProperties =
-							new DatabaseConnectionProperties(databaseType)
-							{
-								AuthenticationMode = authMode,
-								ProjectInstance = builder["project_instance"],
-								Database = builder["server"],
-								Instance = instance,
-								Version = builder["version"],
-								Branch = builder["branch"],
-								Password = builder["encrypted_password"],
-								User = builder["user"]
-							};
+						DatabaseConnectionProperties connectionProperties =
+							WorkspaceUtils.GetConnectionProperties(connectionString);
 
 						_msg.Debug(
-							$"Opening workspace from connection string {workspace.ConnectionString} " +
+							$"Opening workspace from connection string {connectionString} " +
 							$"converted to {WorkspaceUtils.ConnectionPropertiesToString(connectionProperties)}");
 
 						return new Geodatabase(connectionProperties);
@@ -563,7 +509,7 @@ namespace ProSuite.AGP.WorkList
 					case WorkspaceFactory.Shapefile:
 						return new FileSystemDatastore(
 							new FileSystemConnectionPath(
-								new Uri(workspace.ConnectionString, UriKind.Absolute),
+								new Uri(connectionString, UriKind.Absolute),
 								FileSystemDatastoreType.Shapefile));
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -572,11 +518,11 @@ namespace ProSuite.AGP.WorkList
 			catch (Exception e)
 			{
 				string message =
-					$"Cannot open {workspace.WorkspaceFactory} workspace from connection string {workspace.ConnectionString} ({e.Message})";
+					$"Cannot open {workspace.WorkspaceFactory} workspace from connection string {connectionString} ({e.Message})";
 
 				_msg.Debug(message, e);
 
-				NotificationUtils.Add(notifications, $"{workspace.ConnectionString}");
+				NotificationUtils.Add(notifications, $"{connectionString}");
 				return null;
 			}
 		}
