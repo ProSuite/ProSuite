@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
@@ -214,9 +215,26 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			string instance = dbConnectionProps.Instance;
 
 			return string.IsNullOrEmpty(databaseName)
-				       ? string.Format("{0} - {1}", instance, versionName)
-				       : string.Format("{0} ({1}) - {2}", databaseName,
-				                       instance, versionName);
+				       ? $"{instance} - {versionName}"
+				       : $"{databaseName} ({instance}) - {versionName}";
+		}
+
+		public static string ConnectionPropertiesToString(
+			[NotNull] DatabaseConnectionProperties dbConnectionProps)
+		{
+			var sb = new StringBuilder();
+
+			sb.Append("DBMS: ").AppendLine(dbConnectionProps.DBMS.ToString());
+			sb.Append("Database: ").AppendLine(dbConnectionProps.Database);
+			sb.Append("Instance: ").AppendLine(dbConnectionProps.Instance);
+			sb.Append("Authentication Mode: ")
+			  .AppendLine(dbConnectionProps.AuthenticationMode.ToString());
+			sb.Append("User: ").AppendLine(dbConnectionProps.User);
+			sb.Append("Version: ").AppendLine(dbConnectionProps.Version);
+			sb.Append("Branch: ").AppendLine(dbConnectionProps.Branch);
+			sb.Append("Project Instance: ").Append(dbConnectionProps.ProjectInstance);
+
+			return sb.ToString();
 		}
 	}
 }

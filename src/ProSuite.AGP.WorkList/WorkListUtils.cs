@@ -509,31 +509,35 @@ namespace ProSuite.AGP.WorkList
 
 						string instance = builder["instance"];
 
-						// Typically the instance is saved as "sde:oracle11g:TOPGIST:SDE"
-						if (databaseType == EnterpriseDatabaseType.Oracle)
+						// Real-world examples for instance:
+						// Oracle:
+						// - "sde:oracle11g:TOPGIST:SDE"
+						// - "sde:oracle$sde:oracle11g:gdzh"
+
+						// PostgreSQL:
+						// sde:postgresql:localhost
+
+						// NOTE: Sometimes the DB_CONNECTION_PROPERTIES contains the single instance name,
+						//       but it can also contain the colon-separated components.
+
+						string database = string.IsNullOrEmpty(builder["server"])
+							                  ? builder["database"]
+							                  : builder["server"];
+
+						string[] strings = instance?.Split(':');
+
+						if (strings?.Length > 1)
 						{
-							// Real-world examples:
-							// - "sde:oracle11g:TOPGIST:SDE"
-							// - "sde:oracle$sde:oracle11g:gdzh"
+							string lastItem = strings[^1];
 
-							// NOTE: Sometimes the DB_CONNECTION_PROPERTIES contains the single instance name,
-							//       but it can also contain the colon-separated components.
-
-							string[] strings = instance?.Split(':');
-
-							if (strings?.Length > 1)
+							if (lastItem.Equals("SDE", StringComparison.OrdinalIgnoreCase))
 							{
-								string lastItem = strings[^1];
-
-								if (lastItem.Equals("SDE", StringComparison.OrdinalIgnoreCase))
-								{
-									// Take the second last item
-									instance = strings[^2];
-								}
-								else
-								{
-									instance = lastItem;
-								}
+								// Take the second last item
+								instance = strings[^2];
+							}
+							else
+							{
+								instance = lastItem;
 							}
 						}
 
@@ -542,18 +546,17 @@ namespace ProSuite.AGP.WorkList
 							{
 								AuthenticationMode = authMode,
 								ProjectInstance = builder["project_instance"],
-								Database =
-									builder[
-										"server"], // is always null in CIMFeatureDatasetDataConnection
+								Database = builder["server"],
 								Instance = instance,
 								Version = builder["version"],
-								Branch = builder["branch"], // ?
+								Branch = builder["branch"],
 								Password = builder["encrypted_password"],
 								User = builder["user"]
 							};
 
 						_msg.Debug(
-							$"Opening workspace from connection string {workspace.ConnectionString} converted to {connectionProperties}");
+							$"Opening workspace from connection string {workspace.ConnectionString} " +
+							$"converted to {WorkspaceUtils.ConnectionPropertiesToString(connectionProperties)}");
 
 						return new Geodatabase(connectionProperties);
 
