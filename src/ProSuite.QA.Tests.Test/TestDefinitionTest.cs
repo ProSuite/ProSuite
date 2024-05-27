@@ -160,6 +160,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMpVertexNotNearFace),
 											 typeof(QaMpVerticalFaces),
 											 typeof(QaMultipart),
+											 typeof(QaMustBeNearOther),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
@@ -377,6 +378,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaMpNonIntersectingRingFootprintsCases(model, testCases);
 			AddQaMpSinglePartFootprintCases(model, testCases);
 			AddQaMpVertexNotNearFaceCases(model, testCases);
+			AddQaMustBeNearOtherCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
@@ -1865,6 +1867,26 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
+		private static void AddQaMustBeNearOtherCases(InMemoryTestDataModel model,
+		                                                  ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ErrorDistanceFormat", "{0:N2} m");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaMustBeNearOther), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     1,
+				                                     "G1"
+			                                     },
+			                                     optionalValues));
+		}
 		private static void AddQaRegularExpressionCases(InMemoryTestDataModel model,
 		                                                ICollection<TestDefinitionCase> testCases)
 		{
