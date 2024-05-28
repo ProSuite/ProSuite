@@ -356,6 +356,8 @@ namespace ProSuite.Microservices.AO.QA
 		                                         [CanBeNull] string whereClause,
 		                                         [CanBeNull] ShapeMsg searchGeometryMsg)
 		{
+			subFields = EnsureOIDFieldName(subFields, objectClass);
+
 			IFeatureClass featureClass = objectClass as IFeatureClass;
 
 			if (featureClass == null)
@@ -376,6 +378,26 @@ namespace ProSuite.Microservices.AO.QA
 			SetSubfieldsAndWhereClause(result, subFields, whereClause);
 
 			return result;
+		}
+
+		private static string EnsureOIDFieldName(string subFields, IObjectClass objectClass)
+		{
+			if (string.IsNullOrEmpty(subFields))
+			{
+				return subFields;
+			}
+
+			if (subFields.Contains("*"))
+			{
+				return subFields;
+			}
+
+			if (objectClass.HasOID && ! subFields.Contains(objectClass.OIDFieldName))
+			{
+				return objectClass.OIDFieldName + "," + subFields;
+			}
+
+			return subFields;
 		}
 
 		private static IQueryFilter CreateFilter([CanBeNull] string subFields,
