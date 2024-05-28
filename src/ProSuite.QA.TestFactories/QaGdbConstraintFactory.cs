@@ -84,6 +84,11 @@ namespace ProSuite.QA.TestFactories
 					? new HashSet<string>(fieldsToCheck, StringComparer.InvariantCultureIgnoreCase)
 					: null;
 
+			if (! DatasetUtils.IsRegisteredAsObjectClass(table))
+			{
+				_msg.Warn("QaGdbConstraintFactory is limited to OID check for unregistered tables");
+			}
+
 			IList<ConstraintNode> nodes = GdbConstraintUtils.GetGdbConstraints(
 				table, allowNullValuesForCodedValueDomains,
 				allowNullValuesForRangeDomains, fieldsToCheckDict);

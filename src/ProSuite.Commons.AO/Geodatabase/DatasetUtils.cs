@@ -16,6 +16,7 @@ using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -930,6 +931,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			ITable table = ro.BaseTable;
 			if (table == null)
+			{
+				return false;
+			}
+
+			if (table is VirtualTable)
 			{
 				return false;
 			}
