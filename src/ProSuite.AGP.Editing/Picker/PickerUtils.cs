@@ -116,7 +116,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 					SelectionUtils.SelectFeature(
 						bestPick.Layer, SelectionCombinationMethod.New,
-						bestPick.Oid, clearExistingSelection: true);
+						bestPick.Oid);
 				}, progressor);
 		}
 
@@ -130,8 +130,7 @@ namespace ProSuite.AGP.Editing.Picker
 				var selection = getSelection(precedence.SelectionGeometry).ToList();
 
 				SelectionUtils.SelectFeatures(selection,
-				                              SelectionCombinationMethod.New,
-				                              clearExistingSelection: true);
+				                              SelectionCombinationMethod.New);
 			}, progressor);
 		}
 
@@ -171,7 +170,7 @@ namespace ProSuite.AGP.Editing.Picker
 			{
 				SelectionUtils.SelectFeature(pickedItem.Layer,
 				                             SelectionCombinationMethod.New,
-				                             pickedItem.Oid, true);
+				                             pickedItem.Oid);
 			});
 		}
 	}
