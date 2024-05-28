@@ -161,6 +161,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMpVerticalFaces),
 											 typeof(QaMultipart),
 											 typeof(QaMustBeNearOther),
+											 typeof(QaMustIntersectMatrixOther),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOverlapsSelf),
@@ -379,6 +380,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaMpSinglePartFootprintCases(model, testCases);
 			AddQaMpVertexNotNearFaceCases(model, testCases);
 			AddQaMustBeNearOtherCases(model, testCases);
+			AddQaMustIntersectMatrixOtherCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
@@ -1886,6 +1888,64 @@ namespace ProSuite.QA.Tests.Test
 				                                     "G1"
 			                                     },
 			                                     optionalValues));
+		}
+
+		private static void AddQaMustIntersectMatrixOtherCases(InMemoryTestDataModel model,
+		                                              ICollection<TestDefinitionCase> testCases)
+		{
+
+			testCases.Add(new TestDefinitionCase(typeof(QaMustIntersectMatrixOther), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+													 "****T****",
+													 "G1"
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaMustIntersectMatrixOther), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+				                                     "****T****",
+				                                     "G1",
+													 "1",
+													 "1"
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaMustIntersectMatrixOther), 2,
+			                                     new object[]
+			                                     {
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 "****T****",
+				                                     "G1"
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaMustIntersectMatrixOther), 3,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     "****T****",
+				                                     "G1",
+													 "1",
+													 "1"
+			                                     }));
 		}
 		private static void AddQaRegularExpressionCases(InMemoryTestDataModel model,
 		                                                ICollection<TestDefinitionCase> testCases)
