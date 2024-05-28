@@ -433,7 +433,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			FeatureFinder featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
 			                              {
 				                              SelectedFeatures = selectedFeatures,
-				                              SpatialRelationship = spatialRel
+				                              SpatialRelationship = spatialRel,
+				                              ReturnUnJoinedFeatures = true
 			                              };
 
 			var selectionByClass =

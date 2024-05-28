@@ -366,7 +366,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, true, CanOverlapLayer, inExtent, cancellabelProgressor);
+					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&
 			    cancellabelProgressor.CancellationToken.IsCancellationRequested)

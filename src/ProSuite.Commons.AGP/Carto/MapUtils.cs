@@ -60,7 +60,7 @@ namespace ProSuite.Commons.AGP.Carto
 				throw new ArgumentNullException(nameof(map));
 
 			double referenceScale = map.ReferenceScale;
-			if (!(referenceScale > 0))
+			if (! (referenceScale > 0))
 				throw new InvalidOperationException(
 					"Map has no ReferenceScale; cannot convert between points and map units");
 			// TODO use MapView's current scale instead?
@@ -264,6 +264,7 @@ namespace ProSuite.Commons.AGP.Carto
 				featureClass = GetUnJoinedFeatureClass(featureClass);
 			}
 
+			// TODO: Split by 1000 OIDs to avoid too large queries
 			var filter = new QueryFilter
 			             {
 				             WhereClause =
@@ -757,7 +758,7 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		#endregion
-		
+
 		private static FeatureClass GetUnJoinedFeatureClass(FeatureClass featureClass)
 		{
 			// Get the shape's table name
