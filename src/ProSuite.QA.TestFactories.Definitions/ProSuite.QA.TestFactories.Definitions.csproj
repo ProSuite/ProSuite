@@ -41,7 +41,7 @@
     <EmbeddedResource Update="DocStrings.resx">
       <SubType>Designer</SubType>
       <LastGenOutput>DocStrings.Designer.cs</LastGenOutput>
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
     </EmbeddedResource>
   </ItemGroup>
 

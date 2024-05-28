@@ -188,11 +188,33 @@ namespace ProSuite.Commons.AGP.Carto
 
 					filter.OutputSpatialReference = outputSpatialReference;
 
-					IEnumerable<Feature> foundFeatures =
-						GdbQueryUtils.GetFeatures(featureClass, filter, false, cancellationToken)
-						             .Where(f => featurePredicate == null || featurePredicate(f));
+					bool isJoinedTable = featureClass.IsJoinedTable();
 
-					features.AddRange(foundFeatures);
+					if (isJoinedTable)
+					{
+						filter.SubFields = featureClass.GetDefinition().GetObjectIDField();
+
+						IEnumerable<Feature> foundJoined =
+							GdbQueryUtils
+								.GetFeatures(featureClass, filter, false, cancellationToken)
+								.Where(f => featurePredicate == null || featurePredicate(f));
+
+						List<long> oids = foundJoined.Select(f => f.GetObjectID()).ToList();
+
+						filter.SubFields = string.Empty;
+						features.AddRange(
+							MapUtils.GetFeatures(featureClass, oids, true, false,
+							                     outputSpatialReference));
+					}
+					else
+					{
+						IEnumerable<Feature> foundFeatures =
+							GdbQueryUtils.GetFeatures(featureClass, filter, false, cancellationToken)
+							             .Where(f => featurePredicate == null || featurePredicate(f));
+
+						features.AddRange(foundFeatures);
+					}
+
 				}
 
 				if (featureClass != null && features.Count > 0)

@@ -68,6 +68,11 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			return SketchGeometryType.Multipoint;
 		}
 
+		protected override EditingTemplate GetSketchTemplate()
+		{
+			return EditingTemplate.Current;
+		}
+
 		protected override void LogEnteringSketchMode()
 		{
 			EditingTemplate editTemplate = EditingTemplate.Current;

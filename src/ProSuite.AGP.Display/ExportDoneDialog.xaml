@@ -7,22 +7,23 @@
         d:DataContext="{d:DesignInstance {x:Type display:ExportDoneDialog}, IsDesignTimeCreatable=False}"
         mc:Ignorable="d"
         Title="Export Successful"
-        Width="400" MinWidth="320" SizeToContent="Height" MinHeight="100"
+        ResizeMode="CanResizeWithGrip"
+        SizeToContent="WidthAndHeight" MinWidth="400" MinHeight="140"
         Background="{x:Static SystemColors.ControlBrush}"
-        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
-    <StackPanel Margin="12">
-        <Label Margin="0,2,0,0" Content="{Binding Heading, Mode=OneWay}" />
-        <Border Margin="0,0,0,12" BorderThickness="1" Padding="2">
-	        <TextBlock Margin="2">
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" d:DesignHeight="136" d:DesignWidth="400">
+	<DockPanel Margin="12">
+		<Label DockPanel.Dock="Top" Margin="0,2,0,0" Content="{Binding Heading, Mode=OneWay}" />
+		<DockPanel DockPanel.Dock="Bottom"  LastChildFill="False">
+			<Button DockPanel.Dock="Right" Margin="4,0,0,0" MinWidth="64" Content="OK" IsDefault="True" IsCancel="True" TabIndex="1" Click="OkButtonClicked" />
+			<Button DockPanel.Dock="Left" Margin="0,0,4,0" Padding="5,2,5,2" Content="Open Folder" TabIndex="2" Click="OpenFolderClicked" />
+			<Button DockPanel.Dock="Left" Margin="4,0,4,0" Padding="5,2,5,2" Content="Copy Path" TabIndex="3" Click="CopyPathClicked" />
+		</DockPanel>
+		<Border Margin="0,0,0,12" BorderThickness="1" Padding="2" MinHeight="50">
+			<TextBlock Margin="2" MinWidth="360" MinHeight="30">
 		        <Hyperlink Click="FilePathClicked">
 			        <Run Text="{Binding FilePath, Mode=OneWay}" />
 		        </Hyperlink>
-	        </TextBlock>
-        </Border>
-        <DockPanel LastChildFill="False">
-            <Button DockPanel.Dock="Right" Margin="4,0,0,0" MinWidth="64" Content="OK" IsDefault="True" IsCancel="True" TabIndex="1" Click="OkButtonClicked" />
-			<Button DockPanel.Dock="Left" Margin="0,0,4,0" Padding="5,2,5,2" Content="Open Folder" TabIndex="2" Click="OpenFolderClicked" />
-			<Button DockPanel.Dock="Left" Margin="4,0,4,0" Padding="5,2,5,2" Content="Copy Path" TabIndex="3" Click="CopyPathClicked" />
-        </DockPanel>
-    </StackPanel>
+			</TextBlock>
+		</Border>
+	</DockPanel>
 </Window>

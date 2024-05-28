@@ -7,7 +7,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 	public interface IWorkItem
 	{
 		/// <summary>
-		/// work item id
+		/// The work item id
 		/// </summary>
 		long OID { get; }
 
@@ -28,6 +28,13 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// Object ID of the work item's source row
 		/// </summary>
 		long ObjectID { get; }
+
+		/// <summary>
+		/// The (potentially synthetic) table id of the work item's source row. This is not
+		/// necessarily the same as the Table.GetID() value of the source row. It is unique
+		/// and stable across sessions and corresponds to ISourceClass.GetUniqueTableId().
+		/// </summary>
+		long UniqueTableId { get; }
 
 		void QueryPoints(out double xmin, out double ymin,
 		                 out double xmax, out double ymax,

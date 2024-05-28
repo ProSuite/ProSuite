@@ -9,6 +9,7 @@ using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.Geodatabase;
+using ProSuite.DomainModel.AO.Geodatabase.Legacy;
 
 namespace ProSuite.DdxEditor.Content.Connections
 {
@@ -91,11 +92,6 @@ namespace ProSuite.DdxEditor.Content.Connections
 					             this, applicationController,
 					             "Add ArcSDE Connection File Connection Provider",
 					             "Add ArcSDE (.sde) Provider"));
-			commands.Add(new AddConnectionProviderCommand
-				             <OleDbConnectionFileConnectionProvider>(
-					             this, applicationController,
-					             "Add OLE DB Connection File Connection Provider",
-					             "Add OLE DB (.odc) Provider"));
 		}
 
 		public void AddConnectionProvider<E>() where E : ConnectionProvider, new()

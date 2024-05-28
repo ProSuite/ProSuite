@@ -153,5 +153,27 @@ namespace ProSuite.Commons.AGP.Core.Test
 			var symref = pointSymbol.CreateReference();
 			Assert.AreSame(symref, symref.SetAlpha(67f));
 		}
+
+		[Test]
+		public void CanGetLineWidth()
+		{
+			var symbol1 = SymbolUtils.CreateLineSymbol(ColorUtils.RedRGB, 2.0);
+			Assert.True(SymbolUtils.GetLineWidth(symbol1, out var left1, out var right1));
+			Assert.AreEqual(2.0, left1 + right1);
+
+			var symbol2 = SymbolUtils.CreateLineSymbol(ColorUtils.RedRGB, 2.0);
+			symbol2.AddGlobalEffect(SymbolUtils.CreateEffectOffset(0.5)); // shift left
+			Assert.True(SymbolUtils.GetLineWidth(symbol2, out var left2, out var right2));
+			Assert.AreEqual(1.5, left2);
+			Assert.AreEqual(0.5, right2);
+
+			var symbol3 = SymbolUtils.CreateLineSymbol(ColorUtils.RedRGB, 2.0);
+			symbol3.AddGlobalEffect(SymbolUtils.CreateEffectOffset(-1.5)); // shift right
+			Assert.True(SymbolUtils.GetLineWidth(symbol3, out var left3, out var right3));
+			Assert.AreEqual(-0.5, left3);
+			Assert.AreEqual(2.5, right3);
+
+			// TODO More tests: local effects and multiple stroke layers!
+		}
 	}
 }

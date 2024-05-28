@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -18,8 +18,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		protected string Name { get; }
 		protected Type Type { get; }
 
-		private List<TState> _states;
-		private List<long> _oids;
+		private IDictionary<GdbObjectReference, TState> _statesByRow;
 
 		private readonly IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>
 			_workspaces = new Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>();
@@ -31,33 +30,9 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			CurrentIndex = currentItemIndex;
 		}
 
-		private IEnumerable<TState> States
+		private IDictionary<GdbObjectReference, TState> StatesByRow
 		{
-			get
-			{
-				if (_states == null)
-				{
-					_states = ReadStates();
-				}
-
-				return _states;
-			}
-		}
-
-		private List<long> Oids
-		{
-			get
-			{
-				if (_oids == null)
-				{
-					// todo daro: only store changed (visited, done) states for lookup?
-					//_oids = States.Where(item => item.Visited).Select(item => item.OID).OrderBy(oid => oid).ToList();
-					//_oids = States.Select(item => item.OID).OrderBy(oid => oid).ToList();
-					Refresh();
-				}
-
-				return _oids;
-			}
+			get { return _statesByRow ??= ReadStatesByRow(); }
 		}
 
 		public int? CurrentIndex { get; set; }
@@ -85,7 +60,11 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 				// todo daro: revise
 				// create new state if it doesn't exist
 				state = CreateState(item);
-				_states.Add(state);
+
+				var gdbObjectReference =
+					new GdbObjectReference(item.UniqueTableId, item.Proxy.ObjectId);
+
+				StatesByRow.Add(gdbObjectReference, state);
 			}
 
 			GdbTableIdentity table = item.Proxy.Table;
@@ -111,16 +90,21 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			{
 				Update(item);
 			}
-
-			Refresh();
 		}
 
 		public void Commit(IList<ISourceClass> sourceClasses)
 		{
 			// could be an empty work list > don't store definition file
+			if (_statesByRow == null)
+			{
+				_msg.Debug(
+					"Work item states have never been read, failed to read or have already been discarded.");
+				return;
+			}
+
 			if (_workspaces.Count == 0)
 			{
-				if (_states.Count == 0)
+				if (_statesByRow.Count == 0)
 				{
 					_msg.Debug("No workspaces and no work item states");
 				}
@@ -132,9 +116,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 				return;
 			}
 
-			Store(CreateDefinition(_workspaces, sourceClasses, _states));
-
-			Refresh();
+			Store(CreateDefinition(_workspaces, sourceClasses, _statesByRow.Values));
 		}
 
 		public void Discard()
@@ -147,11 +129,11 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		protected abstract TDefinition CreateDefinition(
 			IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
 			IList<ISourceClass> sourceClasses,
-			List<TState> states);
+			IEnumerable<TState> states);
 
 		protected abstract TState CreateState(IWorkItem item);
 
-		protected abstract List<TState> ReadStates();
+		protected abstract IDictionary<GdbObjectReference, TState> ReadStatesByRow();
 
 		protected virtual IWorkItem RefreshCore([NotNull] IWorkItem item, [NotNull] TState state)
 		{
@@ -163,31 +145,23 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		[CanBeNull]
 		private TState Lookup([NotNull] IWorkItem item)
 		{
-			if (Oids == null)
+			// NOTE: The look-up by Index (the OID is just a incrementing number) is incorrect if the
+			// rows change the order or some are deleted or if the items are re-read in the same session.
+			// -> Look-up must be by GdbObjectReference rather than by Item Id.
+
+			var objectReference = new GdbObjectReference(item.UniqueTableId, item.ObjectID);
+
+			if (! StatesByRow.TryGetValue(objectReference, out TState volatileState))
 			{
 				return default;
 			}
 
-			int index = Oids.BinarySearch(item.OID);
-			if (index < 0)
-			{
-				return default;
-			}
-
-			// todo daro: inline
-			TState result = _states[index];
-			return result;
-		}
-
-		private void Refresh()
-		{
-			_oids = States.Select(item => item.OID).OrderBy(oid => oid).ToList();
+			return volatileState;
 		}
 
 		private void Invalidate()
 		{
-			_states = null;
-			_oids = null;
+			_statesByRow = null;
 		}
 	}
 }

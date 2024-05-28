@@ -19,7 +19,8 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Ddx;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using Dataset = ProSuite.DomainModel.Core.DataModel.Dataset;
 using DatasetType = ProSuite.Commons.GeoDb.DatasetType;
 using GeometryType = ProSuite.DomainModel.Core.DataModel.GeometryType;
@@ -164,11 +165,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			Dictionary<int, IDdxDataset> datasetsById =
 				FromDatasetMsgs(getSpecificationResponse.ReferencedDatasets);
 
-			var models = new List<BasicModel>();
+			var models = new List<DdxModel>();
 
 			foreach (ModelMsg modelMsg in getSpecificationResponse.ReferencedModels)
 			{
-				BasicModel model = new BasicModel(modelMsg.ModelId, modelMsg.Name);
+				DdxModel model = CreateDdxModel(modelMsg, (id, name) => new BasicModel(id, name));
 
 				foreach (int datasetId in modelMsg.DatasetIds)
 				{
@@ -192,6 +193,19 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				factory.CreateQualitySpecification(getSpecificationResponse.Specification);
 
 			return result;
+		}
+
+		public static DdxModel CreateDdxModel(ModelMsg modelMsg,
+		                                      Func<int, string, DdxModel> modelFactory)
+		{
+			DdxModel model = modelFactory(modelMsg.ModelId, modelMsg.Name);
+
+			model.SqlCaseSensitivity = (SqlCaseSensitivity) modelMsg.SqlCaseSensitivity;
+			model.DefaultDatabaseName = modelMsg.DefaultDatabaseName;
+			model.DefaultDatabaseSchemaOwner = modelMsg.DefaultDatabaseSchemaOwner;
+			model.ElementNamesAreQualified = modelMsg.ElementNamesAreQualified;
+
+			return model;
 		}
 
 		public static void AddDatasetsDetailsAsync(
@@ -453,13 +467,13 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		/// the spatial reference is not a WKID.
 		/// </summary>
 		/// <param name="response"></param>
-		/// <param name="dataStores"></param>
+		/// <param name="datastores"></param>
 		/// <param name="spatialReferencesByWkId"></param>
 		/// <param name="datasetsById"></param>
 		/// <returns></returns>
 		private static List<ProjectWorkspace> GetProjectWorkspacesQueued(
 			[NotNull] GetProjectWorkspacesResponse response,
-			[NotNull] IReadOnlyDictionary<long, Datastore> dataStores,
+			[NotNull] IReadOnlyDictionary<long, Datastore> datastores,
 			[NotNull] IReadOnlyDictionary<long, SpatialReference> spatialReferencesByWkId,
 			[NotNull] IReadOnlyDictionary<int, IDdxDataset> datasetsById)
 		{
@@ -467,7 +481,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (ProjectWorkspaceMsg projectWorkspaceMsg in response.ProjectWorkspaces)
 			{
-				Datastore datastore = dataStores[projectWorkspaceMsg.WorkspaceHandle];
+				Datastore datastore = datastores[projectWorkspaceMsg.WorkspaceHandle];
 
 				ProjectMsg projectMsg =
 					response.Projects.First(p => p.ProjectId == projectWorkspaceMsg.ProjectId);

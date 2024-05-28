@@ -14,6 +14,7 @@ using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
@@ -425,7 +426,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						GetSelectionTolerancePixels(), out singlePick);
 
 					pickerLocation =
-						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
+						ActiveMapView.MapToScreen(selectionGeometry.Extent.Center);
 
 					return FindFeaturesOfAllLayers(selectionGeometry, spatialRelationship).ToList();
 				});
@@ -462,7 +463,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return result;
 		}
 
-		private static async Task<bool> SingleSelectAsync(
+		private async Task<bool> SingleSelectAsync(
 			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
 			IPickerPrecedence pickerPrecedence,
@@ -478,9 +479,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				await QueuedTask.Run(() =>
 				{
-					SelectionUtils.SelectFeatures(
-						orderedSelection, selectionMethod,
-						selectionMethod == SelectionCombinationMethod.New);
+					// Clear the selection on the map level, NOT on the layer level
+					if (selectionMethod == SelectionCombinationMethod.New)
+					{
+						ClearSelection();
+					}
+
+					SelectionUtils.SelectFeatures(orderedSelection, selectionMethod);
 				});
 
 				return true;
@@ -503,11 +508,13 @@ namespace ProSuite.AGP.Editing.OneClick
 						//since SelectionCombinationMethod.New is only applied to
 						//the current layer but selections of other layers remain,
 						//we manually need to clear all selections first.
+						if (selectionMethod == SelectionCombinationMethod.New)
+						{
+							ClearSelection();
+						}
 
 						SelectionUtils.SelectFeature(
-							pickedItem.Layer, selectionMethod,
-							pickedItem.Oid,
-							selectionMethod == SelectionCombinationMethod.New);
+							pickedItem.Layer, selectionMethod, pickedItem.Oid);
 					});
 
 				return true;
@@ -534,11 +541,13 @@ namespace ProSuite.AGP.Editing.OneClick
 					//since SelectionCombinationMethod.New is only applied to
 					//the current layer but selections of other layers remain,
 					//we manually need to clear all selections first.
+					if (selectionMethod == SelectionCombinationMethod.New)
+					{
+						ClearSelection();
+					}
 
 					SelectionUtils.SelectFeature(
-						pickedItem.Layer, selectionMethod,
-						pickedItem.Oid,
-						selectionMethod == SelectionCombinationMethod.New);
+						pickedItem.Layer, selectionMethod, pickedItem.Oid);
 				});
 
 				return true;
@@ -547,7 +556,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return false;
 		}
 
-		private static async Task<bool> AreaSelectAsync(
+		private async Task<bool> AreaSelectAsync(
 			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
 			IPickerPrecedence pickerPrecedence,
@@ -578,15 +587,18 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await QueuedTask.Run(() =>
 				{
+					// Clear the selection on the map level, NOT on the layer level
+					if (selectionMethod == SelectionCombinationMethod.New)
+					{
+						ClearSelection();
+					}
+
 					foreach (OidSelection featureClassSelection in
 					         pickedItem.Layers.Select(layer => new OidSelection(
-														  layer, pickedItem.Oids.ToList(),
+						                                  layer, pickedItem.Oids.ToList(),
 						                                  MapView.Active.Map.SpatialReference)))
 					{
-						SelectionUtils.SelectFeatures(
-							featureClassSelection,
-							selectionMethod,
-							selectionMethod == SelectionCombinationMethod.New);
+						SelectionUtils.SelectFeatures(featureClassSelection, selectionMethod);
 					}
 				});
 			}
@@ -595,10 +607,13 @@ namespace ProSuite.AGP.Editing.OneClick
 				//no modifier pressed: select all in envelope
 				await QueuedTask.Run(() =>
 				{
-					SelectionUtils.SelectFeatures(
-						candidatesOfLayers,
-						selectionMethod,
-						selectionMethod == SelectionCombinationMethod.New);
+					// Clear the selection on the map level, NOT on the layer level
+					if (selectionMethod == SelectionCombinationMethod.New)
+					{
+						ClearSelection();
+					}
+
+					SelectionUtils.SelectFeatures(candidatesOfLayers, selectionMethod);
 				});
 			}
 
@@ -615,8 +630,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			Func<Task<T>> showPickerControl =
 				await QueuedTaskUtils.Run(() => picker.PickSingle<T>(
-					                          items, pickerLocation,
-					                          pickerPrecedence));
+					                          items, pickerLocation, pickerPrecedence));
 
 			return await ViewUtils.TryAsync(showPickerControl(), _msg);
 		}
@@ -639,8 +653,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			                    };
 
 			return featureFinder.FindFeaturesByLayer(
-				searchGeometry,
-				fl => CanSelectFromLayer(fl));
+				searchGeometry, fl => CanSelectFromLayer(fl));
 		}
 
 		// TODO: Make obsolete, always use Async overload?
@@ -670,16 +683,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.FromResult(false);
 		}
 
-		protected virtual void OnKeyDownCore(MapViewKeyEventArgs k) { }
+		protected virtual void OnKeyDownCore(MapViewKeyEventArgs args) { }
 
-		protected virtual void OnKeyUpCore(MapViewKeyEventArgs mapViewKeyEventArgs) { }
+		protected virtual void OnKeyUpCore(MapViewKeyEventArgs args) { }
 
 		protected virtual Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{
 			return Task.CompletedTask;
 		}
 
-		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs e) { }
+		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs args) { }
 
 		protected virtual void ShowOptionsPane() { }
 
@@ -713,7 +726,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			var notifications = new NotificationCollection();
 			List<Feature> applicableSelection =
-				GetApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection, notifications)
+				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection,
+				                                      notifications)
 					.ToList();
 
 			int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
@@ -800,7 +814,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			using var featureClass = featureLayer.GetFeatureClass();
 			if (featureClass is null)
 			{
-				NotificationUtils.Add(notifications, $"Layer has no valid data source: {layerName}");
+				NotificationUtils.Add(notifications,
+				                      $"Layer has no valid data source: {layerName}");
 				return false;
 			}
 
@@ -823,6 +838,25 @@ namespace ProSuite.AGP.Editing.OneClick
 			return AllowNotApplicableFeaturesInSelection
 				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key as Layer))
 				       : selectionByLayer.All(l => CanSelectFromLayer(l.Key as Layer));
+		}
+
+		protected IEnumerable<Feature> GetDistinctApplicableSelectedFeatures(
+			[NotNull] Dictionary<MapMember, List<long>> selectionByLayer,
+			bool unJoinedFeaturesForEditing = false,
+			[CanBeNull] NotificationCollection notifications = null)
+		{
+			HashSet<GdbObjectReference> usedRows = new HashSet<GdbObjectReference>();
+
+			foreach (Feature feature in GetApplicableSelectedFeatures(selectionByLayer,
+				         unJoinedFeaturesForEditing, notifications))
+			{
+				var objectReference = new GdbObjectReference(feature);
+
+				if (usedRows.Add(objectReference))
+				{
+					yield return feature;
+				}
+			}
 		}
 
 		protected IEnumerable<Feature> GetApplicableSelectedFeatures(

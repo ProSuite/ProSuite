@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Client;
-using ProSuite.Microservices.Client.GrpcNet;
+using ProSuite.Microservices.Definitions.QA;
 
 namespace ProSuite.UI.MicroserverState
 {
@@ -15,9 +15,10 @@ namespace ProSuite.UI.MicroserverState
 
 		public ServerStateViewModel()
 		{
-			// For the designer (causes dependency on Microservices.Client.GrpcNet)
-			var localClient = new GrpcNetQualityVerificationServiceClient("Localhost");
-			var remoteClient = new GrpcNetQualityVerificationServiceClient("CRASSUS", 5152);
+			// For the designer
+#if DEBUG
+			var localClient = new MockClient("Localhost");
+			var remoteClient = new MockClient("CRASSUS", 5152);
 
 			ServerStates.Add(new ServerState(localClient)
 			                 {
@@ -31,6 +32,7 @@ namespace ProSuite.UI.MicroserverState
 				                 Text = "Unavailable",
 				                 ServiceState = ServiceState.Starting
 			                 });
+#endif
 		}
 
 		public ServerStateViewModel([NotNull] IMicroserviceClient serviceClient)
@@ -116,5 +118,72 @@ namespace ProSuite.UI.MicroserverState
 		/// The action that closes the host window.
 		/// </summary>
 		public Action CloseAction { get; set; }
+
+		private class MockClient : IMicroserviceClient
+		{
+			public MockClient(string hostName, int port = 5151)
+			{
+				HostName = hostName;
+				Port = port;
+			}
+
+			#region Implementation of IMicroserviceClient
+
+			public string HostName { get; set; }
+			public int Port { get; set; }
+			public bool UseTls { get; set; }
+
+			public string ServiceName => nameof(QualityVerificationGrpc);
+			public string ServiceDisplayName => "Quality Verification Service";
+
+			public bool ChannelIsLoadBalancer { get; set; }
+			public bool CanFailOver { get; set; }
+			public bool ProcessStarted { get; set; }
+
+			public void Disconnect()
+			{
+				throw new NotImplementedException();
+			}
+
+			public bool CanAcceptCalls(bool allowFailOver = false, bool logOnlyIfUnhealthy = false)
+			{
+				return true;
+			}
+
+			public Task<bool> CanAcceptCallsAsync(bool allowFailOver = false)
+			{
+				return Task.FromResult(true);
+			}
+
+			public Task<bool> AllowStartingLocalServerAsync(
+				string executable, string extraArguments = null)
+			{
+				return Task.FromResult(false);
+			}
+
+			public bool AllowStartingLocalServer(string executable, string extraArguments = null)
+			{
+				return false;
+			}
+
+			public bool TryRestart()
+			{
+				throw new NotImplementedException();
+			}
+
+			public string GetAddress()
+			{
+				string scheme = UseTls ? "https" : "http";
+
+				return $"{scheme}://{HostName}:{Port}";
+			}
+
+			public Task<int> GetWorkerServiceCountAsync()
+			{
+				return Task.FromResult(12);
+			}
+
+			#endregion
+		}
 	}
 }

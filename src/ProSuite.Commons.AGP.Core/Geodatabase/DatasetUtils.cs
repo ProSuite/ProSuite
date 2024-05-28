@@ -366,7 +366,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// if the table has no subtype field.</returns>
 		public static int GetSubtypeFieldIndex([NotNull] Table table)
 		{
-			TableDefinition definition = table.GetDefinition();
+			using var definition = table.GetDefinition();
 
 			string subtypeFieldName = GetSubtypeFieldName(table);
 

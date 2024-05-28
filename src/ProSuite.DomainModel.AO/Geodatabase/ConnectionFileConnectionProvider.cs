@@ -1,9 +1,11 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
 {
+	[UsedImplicitly]
 	public class ConnectionFileConnectionProvider : FilePathConnectionProviderBase,
 	                                                IOpenSdeWorkspace
 	{
@@ -28,7 +30,13 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 			return (IFeatureWorkspace) WorkspaceUtils.OpenSDEWorkspace(Path, versionName, hWnd);
 		}
 
+		#region Overrides of ConnectionProvider
+
+		public override DbConnectionType ConnectionType => DbConnectionType.DatabaseConnectionFile;
+
 		public override string TypeDescription => "SDE Connection File";
+
+		#endregion
 
 		public override string FileDefaultExtension => ".sde";
 

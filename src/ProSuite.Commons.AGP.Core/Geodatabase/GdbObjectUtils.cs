@@ -93,7 +93,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			object code = row[subtypeFieldIndex];
 
 			return code == null || code == DBNull.Value
-				       ? (int?) null
+				       ? null
 				       : Convert.ToInt32(code);
 		}
 
@@ -245,6 +245,34 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				throw;
 			}
+		}
+
+		public static bool IsNullOrEmpty(Row row, int fieldIndex)
+		{
+			object value = row[fieldIndex];
+
+			if (value == null)
+			{
+				return true;
+			}
+
+			if (value is DBNull)
+			{
+				return true;
+			}
+
+			if (value is string textValue)
+			{
+				if (Guid.TryParseExact(textValue.ToUpper(), "B", out Guid uuid) &&
+				    uuid.Equals(Guid.Empty))
+				{
+					return true;
+				}
+
+				return string.IsNullOrEmpty(value.ToString());
+			}
+
+			return false;
 		}
 	}
 }

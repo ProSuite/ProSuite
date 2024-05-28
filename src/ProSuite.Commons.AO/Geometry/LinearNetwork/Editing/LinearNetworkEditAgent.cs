@@ -366,8 +366,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			{
 				var originalPoint = (IPoint) _updatedInOperation[junctionFeature];
 
-				nodeUpdater.JunctionUpdated(junctionFeature, originalPoint,
-				                            (IPoint) junctionFeature.Shape);
+				nodeUpdater.JunctionUpdated(originalPoint, (IPoint) junctionFeature.Shape);
 			}
 		}
 
