@@ -600,6 +600,16 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 				catch (DataAccessException dataAccessException)
 				{
+					if (dataAccessException.RowId < 0 ||
+					    string.IsNullOrEmpty(dataAccessException.TableName))
+					{
+						_msg.Debug(
+							$"Non-container test execution failed: {dataAccessException.Message}",
+							dataAccessException);
+
+						throw;
+					}
+
 					// Add it to the error list, it could be useful for repairing
 					var involvedRow =
 						new InvolvedRow(dataAccessException.TableName, dataAccessException.RowId);
