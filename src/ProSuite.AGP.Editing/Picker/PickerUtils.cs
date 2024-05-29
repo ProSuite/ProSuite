@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.Picker
 {
@@ -58,97 +57,136 @@ namespace ProSuite.AGP.Editing.Picker
 			       .OrderBy(group => group.Key).SelectMany(fcs => fcs);
 		}
 
-		public static Task Show(
+		private static bool SingleClick(Geometry geometry, int tolerancePixels)
+		{
+			Envelope extent = geometry.Extent;
+
+			double toleranceMapUnits =
+				MapUtils.ConvertScreenPixelToMapLength(MapView.Active, tolerancePixels,
+				                                       extent.Center);
+
+			return IsSingleClick(extent);
+			//return extent.Width <= toleranceMapUnits && extent.Height <= toleranceMapUnits;
+		}
+
+		private static Geometry EnsureNonEmpty([NotNull] Geometry sketch, int tolerancePixel)
+		{
+			return IsSingleClick(sketch) ? CreateSinglePickGeometry(sketch, tolerancePixel) : sketch;
+		}
+
+		private static Geometry CreateSinglePickGeometry([NotNull] Geometry sketch, int tolerancePixel)
+		{
+			return Buffer(CreateMapPoint(sketch), tolerancePixel);
+		}
+
+		private static MapPoint CreateMapPoint([NotNull] Geometry sketch)
+		{
+			return MapPointBuilderEx.CreateMapPoint(
+				new Coordinate2D(sketch.Extent.XMin, sketch.Extent.YMin),
+				sketch.SpatialReference);
+		}
+
+		private static Geometry Buffer(Geometry sketchGeometry, int selectionTolerancePixels)
+		{
+			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
+				MapView.Active, selectionTolerancePixels, sketchGeometry.Extent.Center);
+
+			return GeometryEngine.Instance.Buffer(sketchGeometry, selectionToleranceMapUnits);
+		}
+
+		private static bool IsSingleClick(Geometry sketch)
+		{
+			return ! (sketch.Extent.Width > 0 || sketch.Extent.Height > 0);
+		}
+
+		public static async Task Show(
 			[NotNull] IPickerPrecedence precedence,
 			[NotNull] Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection,
 			[CanBeNull] CancelableProgressor progressor = null)
 		{
-			return GetPickerMode() switch
-			{
-				PickerMode.ShowPicker => ShowPicker(precedence, getSelection),
-				PickerMode.PickAll => SelectAll(precedence, progressor, getSelection),
-				PickerMode.PickBest => PickBest(precedence, progressor, getSelection),
-				_ => throw new ArgumentOutOfRangeException()
-			};
-		}
+			bool areaSelect = false;
 
-		public static PickerMode GetPickerMode()
-		{
-			if (KeyboardUtils.IsModifierDown(Key.LeftAlt, exclusive: true) ||
-			    KeyboardUtils.IsModifierDown(Key.RightAlt, exclusive: true))
-			{
-				return PickerMode.PickAll;
-			}
-
-			if (KeyboardUtils.IsModifierDown(Key.LeftCtrl, exclusive: true) ||
-			    KeyboardUtils.IsModifierDown(Key.RightCtrl, exclusive: true))
-			{
-				return PickerMode.ShowPicker;
-			}
-
-			return PickerMode.PickBest;
-		}
-
-		private static Task PickBest(IPickerPrecedence precedence,
-		                             Progressor progressor,
-		                             Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection)
-		{
-			return QueuedTaskUtils.Run(
-				() =>
+			List<FeatureSelectionBase> selection =
+				await QueuedTaskUtils.Run(() =>
 				{
-					var selection = getSelection(precedence.SelectionGeometry).ToList();
+					// todo daro Implement this in IPickerPrecedence once it's tested.
+					// todo daro compare with OneClickToolBase implementation
+					areaSelect = ! SingleClick(precedence.SelectionGeometry, precedence.SelectionTolerance);
 
-					if (! selection.Any())
-					{
-						return;
-					}
+					Geometry geometry = EnsureNonEmpty(precedence.SelectionGeometry, precedence.SelectionTolerance);
 
-					// all this code has to be in QueuedTask because
-					// IEnumerables are enumerated later
-					IEnumerable<IPickableItem> items =
-						PickableItemsFactory.CreateFeatureItems(selection);
-
-					var bestPick = precedence.PickBest<IPickableFeatureItem>(items);
-
-					//since SelectionCombinationMethod.New is only applied to
-					//the current layer but selections of other layers remain,
-					//we manually need to clear all selections first.
-
-					SelectionUtils.SelectFeature(
-						bestPick.Layer, SelectionCombinationMethod.New,
-						bestPick.Oid);
+					return getSelection(geometry).ToList();
 				}, progressor);
-		}
 
-		private static Task SelectAll(
-			IPickerPrecedence precedence,
-			Progressor progressor,
-			Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection)
-		{
-			return QueuedTaskUtils.Run(() =>
+			if (selection.Count == 0)
 			{
-				var selection = getSelection(precedence.SelectionGeometry).ToList();
+				return;
+			}
 
-				SelectionUtils.SelectFeatures(selection,
-				                              SelectionCombinationMethod.New);
-			}, progressor);
+			// IPickerPrecedence.GetPickerMode has to be on GUI thread to capture key down events, etc.
+			PickerMode mode = precedence.GetPickerMode(OrderByGeometryDimension(selection), areaSelect);
+
+			switch (mode)
+			{
+				case PickerMode.ShowPicker:
+					await ShowPicker(precedence, selection);
+					break;
+				case PickerMode.PickAll:
+					await SelectAll(selection, progressor);
+					break;
+				case PickerMode.PickBest:
+					await PickBest(precedence, selection, progressor);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
 		}
 
-		private static async Task ShowPicker(
-			IPickerPrecedence precedence,
-			Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection)
+		public static async Task Show(
+			[NotNull] IPickerPrecedence precedence,
+			[NotNull] Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection,
+			PickerMode mode = PickerMode.ShowPicker,
+			[CanBeNull] CancelableProgressor progressor = null)
+		{
+			List<FeatureSelectionBase> selection =
+				await QueuedTaskUtils.Run(() =>
+				{
+					Geometry geometry = EnsureNonEmpty(precedence.SelectionGeometry, precedence.SelectionTolerance);
+
+					return getSelection(geometry).ToList();
+
+				}, progressor);
+
+			if (selection.Count == 0)
+			{
+				return;
+			}
+
+			switch (mode)
+			{
+				case PickerMode.ShowPicker:
+					await ShowPicker(precedence, selection);
+					break;
+				case PickerMode.PickAll:
+					await SelectAll(selection, progressor);
+					break;
+				case PickerMode.PickBest:
+					await PickBest(precedence, selection, progressor);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+
+		private static async Task ShowPicker(IPickerPrecedence precedence,
+		                                     List<FeatureSelectionBase> selection)
 		{
 			Geometry geometry = precedence.SelectionGeometry;
-
 			var picker = new PickerService();
 
 			Func<Task<IPickableFeatureItem>> showPicker =
 				await QueuedTask.Run(() =>
 				{
-					IEnumerable<FeatureSelectionBase> selection =
-						getSelection(precedence.SelectionGeometry);
-
-					// todo daro reformat
 					var items = PickableItemsFactory
 					            .CreateFeatureItems(selection)
 					            .ToList();
@@ -172,6 +210,42 @@ namespace ProSuite.AGP.Editing.Picker
 				                             SelectionCombinationMethod.New,
 				                             pickedItem.Oid);
 			});
+		}
+
+		private static async Task SelectAll(ICollection<FeatureSelectionBase> selection,
+		                                    Progressor progressor)
+		{
+			await QueuedTaskUtils.Run(
+				() => { SelectionUtils.SelectFeatures(selection, SelectionCombinationMethod.New); },
+				progressor);
+		}
+
+		private static async Task PickBest(IPickerPrecedence precedence,
+		                                   IReadOnlyCollection<FeatureSelectionBase> selection,
+		                                   Progressor progressor)
+		{
+			if (! selection.Any())
+			{
+				return;
+			}
+
+			await QueuedTaskUtils.Run(
+				() =>
+				{
+					// all this code has to be in QueuedTask because
+					// IEnumerables are enumerated later
+					var bestPick =
+						precedence.PickBest<IPickableFeatureItem>(
+							PickableItemsFactory.CreateFeatureItems(selection));
+
+					//since SelectionCombinationMethod.New is only applied to
+					//the current layer but selections of other layers remain,
+					//we manually need to clear all selections first.
+
+					SelectionUtils.SelectFeature(
+						bestPick.Layer, SelectionCombinationMethod.New,
+						bestPick.Oid);
+				}, progressor);
 		}
 	}
 }

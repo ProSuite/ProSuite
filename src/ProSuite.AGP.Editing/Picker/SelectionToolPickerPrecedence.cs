@@ -32,6 +32,8 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 		}
 
+		public int SelectionTolerance { get; set; }
+
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                bool areaSelect = false)
 		{
