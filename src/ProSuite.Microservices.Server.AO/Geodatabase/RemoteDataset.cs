@@ -8,6 +8,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
@@ -104,11 +105,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 			DataVerificationRequest moreData = GetData(response);
 
-			if (moreData == null)
-			{
-				throw new IOException(
-					$"No data provided by the client for data request {response.DataRequest}");
-			}
+			GdbData gdbData = ConfirmDataReceived(moreData, dataRequest);
 
 			// TODO: Remove conversion at Server11
 			return Convert.ToInt32(moreData.Data.GdbObjectCount);
@@ -126,13 +123,9 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 			DataVerificationRequest moreData = GetData(response);
 
-			if (moreData == null)
-			{
-				throw new IOException(
-					$"No data provided by the client for data request {response.DataRequest}");
-			}
+			GdbData gdbData = ConfirmDataReceived(moreData, dataRequest);
 
-			RepeatedField<GdbObjectMsg> foundGdbObjects = moreData.Data?.GdbObjects;
+			RepeatedField<GdbObjectMsg> foundGdbObjects = gdbData.GdbObjects;
 
 			if (foundGdbObjects == null || foundGdbObjects.Count == 0)
 			{
@@ -170,6 +163,31 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			}
 
 			return dataRequest;
+		}
+
+		[NotNull]
+		private static GdbData ConfirmDataReceived(DataVerificationRequest moreData,
+		                                           [NotNull] DataRequest forRequest)
+		{
+			if (moreData == null)
+			{
+				// Very serious error:
+				throw new IOException(
+					$"The client failed to provide more data upon request {forRequest}");
+			}
+
+			GdbData gdbData = moreData.Data;
+
+			if (gdbData != null)
+			{
+				return gdbData;
+			}
+
+			string errorMessage = moreData.ErrorMessage;
+
+			throw new DataAccessException(
+				$"Error reading data for request: {errorMessage}. {Environment.NewLine}" +
+				$"Request:{Environment.NewLine}{forRequest}");
 		}
 
 		private IEnvelope GetExtent()
