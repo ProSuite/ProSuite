@@ -711,9 +711,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			{
 				foreach (long objectId in involvedTable.ObjectIds)
 				{
-					// TODO: Remove int conversion after Server11 merge
 					var involvedRow =
-						new InvolvedRow(involvedTable.TableName, Convert.ToInt32(objectId));
+						new InvolvedRow(involvedTable.TableName, objectId);
 
 					involvedRows.Add(involvedRow);
 				}

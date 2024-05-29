@@ -107,8 +107,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 			GdbData gdbData = ConfirmDataReceived(moreData, dataRequest);
 
-			// TODO: Remove conversion at Server11
-			return Convert.ToInt32(moreData.Data.GdbObjectCount);
+			return gdbData.GdbObjectCount;
 		}
 
 		public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
