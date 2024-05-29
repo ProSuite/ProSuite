@@ -10,10 +10,10 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
@@ -1555,6 +1555,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                      };
 
 			return Count(objectClass, filter);
+		}
+
+		public static long Count([NotNull] ITable table,
+		                         [NotNull] IQueryFilter filter)
+		{
+			if (table is IFeatureClass featureClass)
+			{
+				return featureClass.FeatureCount(filter);
+			}
+
+			return table.RowCount(filter);
 		}
 
 		public static long Count([NotNull] IObjectClass objectClass,
