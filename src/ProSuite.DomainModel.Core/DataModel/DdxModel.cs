@@ -656,7 +656,11 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 			foreach (Dataset dataset in _datasets)
 			{
-				_datasetIndex.Add(dataset.Name, dataset);
+				// DPS #185: Ignore deleted datasets to avoid duplicate keys
+				if (! dataset.Deleted)
+				{
+					_datasetIndex.Add(dataset.Name, dataset);
+				}
 			}
 		}
 
