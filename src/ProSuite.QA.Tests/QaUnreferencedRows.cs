@@ -597,13 +597,15 @@ namespace ProSuite.QA.Tests
 					bridgeTable as IReadOnlyTable ??
 					ReadOnlyTableFactory.Create(bridgeTable);
 
+				// NOTE: The inner join is symmetric. Use the relationTable as the left table which
+				//       might contain fewer rows than the referencingTable.
 				AssociationDescription associationDescription =
 					new ForeignKeyAssociationDescription(
 						referencingTable, referencingTablePK,
 						relationTableReadOnly, relationToReferencingTableFK);
 
 				GdbTable joinedTable = TableJoinUtils.CreateJoinedGdbTable(
-					associationDescription, referencingTable, resultTableName, false);
+					associationDescription, relationTableReadOnly, resultTableName, false);
 
 				return joinedTable;
 			}
