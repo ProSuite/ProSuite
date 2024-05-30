@@ -889,7 +889,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (filteredCount == 1)
 			{
 				notifications?.Insert(
-					0, new Notification("The selected feature cannot be used by the tool:"));
+					0, new Notification("The selected feature cannot be used by the tool."));
 			}
 
 			if (filteredCount > 1)
@@ -897,7 +897,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				notifications?.Insert(
 					0,
 					new Notification(
-						$"{filteredCount} of {selectionCount + filteredCount} selected features cannot be used by the tool:"));
+						$"{filteredCount} of {selectionCount + filteredCount} selected features cannot be used by the tool."));
 			}
 		}
 
