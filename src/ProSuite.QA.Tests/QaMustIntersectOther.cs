@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -32,7 +33,8 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass otherFeatureClass,
 			[Doc(nameof(DocStrings.QaMustIntersectOther_relevantRelationCondition))] [CanBeNull]
 			string relevantRelationCondition)
-			: base(featureClass, otherFeatureClass, relevantRelationCondition) { }
+			: this(new[] { featureClass }, new[] { otherFeatureClass },
+			       relevantRelationCondition) { }
 
 		[Doc(nameof(DocStrings.QaMustIntersectOther_1))]
 		public QaMustIntersectOther(
@@ -43,6 +45,13 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMustIntersectOther_relevantRelationCondition))] [CanBeNull]
 			string relevantRelationCondition)
 			: base(featureClasses, otherFeatureClasses, relevantRelationCondition) { }
+
+		[InternallyUsedTest]
+		public QaMustIntersectOther(QaMustIntersectOtherDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.OtherFeatureClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.RelevantRelationCondition)
+		{ }
 
 		protected override CrossTileFeatureState<PendingFeature>
 			CreateCrossTileFeatureState()

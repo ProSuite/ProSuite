@@ -162,6 +162,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMultipart),
 											 typeof(QaMustBeNearOther),
 											 typeof(QaMustIntersectMatrixOther),
+											 typeof(QaMustIntersectOther),
 											 typeof(QaMustTouchOther),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
@@ -308,6 +309,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpHorizontalPerpendicular)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpVerticalFaces)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMultipart)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustIntersectOther)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustTouchOther)));
 
 			// TODO: Implement Definition
