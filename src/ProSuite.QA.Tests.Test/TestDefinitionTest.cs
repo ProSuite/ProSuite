@@ -125,7 +125,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaHorizontalSegments),
 				                             typeof(QaInteriorIntersectsOther),
 				                             typeof(QaInteriorIntersectsSelf),
-				                             //typeof(QaInteriorRings),
+				                             typeof(QaInteriorRings),
 				                             typeof(QaIntersectionMatrixOther),
 											 typeof(QaIntersectionMatrixSelf),
 											 typeof(QaIntersectsOther),
@@ -365,7 +365,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaGroupConstraintsCases(model, testCases);
 			AddQaInteriorIntersectsOtherCases(model, testCases);
 			AddQaInteriorIntersectsSelfCases(model, testCases);
-			//AddQaInteriorRingsCases(model, testCases);
+			AddQaInteriorRingsCases(model, testCases);
 			AddQaIntersectionMatrixOtherCases(model, testCases);
 			AddQaIntersectionMatrixSelfCases(model, testCases);
 			AddQaIntersectsOtherCases(model, testCases);
@@ -1166,22 +1166,21 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		//private static void AddQaInteriorRingsCases(InMemoryTestDataModel model,
-		//                                                     ICollection<TestDefinitionCase> testCases)
-		//{
-		//	var optionalValues = new Dictionary<string, object>();
-		//	optionalValues.Add("IgnoreInnerRingsLargerThan", 1);
-		//	optionalValues.Add("ReportIndividualRings", false);
-		//	optionalValues.Add("ReportOnlySmallestRingsExceedingMaximumCount", false);
+		private static void AddQaInteriorRingsCases(InMemoryTestDataModel model,
+															 ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("IgnoreInnerRingsLargerThan", 1);
+			optionalValues.Add("ReportIndividualRings", false);
+			optionalValues.Add("ReportOnlySmallestRingsExceedingMaximumCount", false);
 
-		//	testCases.Add(new TestDefinitionCase(typeof(QaInteriorRings), 0,
-		//	                                     new object[]
-		//	                                     {
-		//		                                     model.GetVectorDataset(),
-		//											 1
-		//	                                     },
-		//	                                     optionalValues));
-		//}
+			testCases.Add(new TestDefinitionCase(typeof(QaInteriorRings), 0,
+												 new object[]
+												 {
+													 model.GetPolygonDataset(),
+													 1
+												 },
+												 optionalValues));
 
 		private static void AddQaIntersectionMatrixOtherCases(InMemoryTestDataModel model,
 		                                                     ICollection<TestDefinitionCase> testCases)
