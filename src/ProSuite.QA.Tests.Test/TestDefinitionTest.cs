@@ -103,6 +103,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaConstraint),
 											 typeof(QaContainedPointsCount),
 											 typeof(QaContainsOther),
+											 typeof(QaCrossesOther),
 											 typeof(QaCrossesSelf),
 				                             typeof(QaCurve),
 											 typeof(QaDangleCount),
@@ -286,6 +287,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCoplanarRings)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaContainsOther)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCrossesOther)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCrossesSelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
