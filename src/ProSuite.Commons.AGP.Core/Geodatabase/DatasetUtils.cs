@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Mapping;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -50,6 +51,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static string GetAliasName(Table table)
 		{
+			// NOTE: Bug! Returns empty string if it's an AnnotationFeatureClass
+			if (table is AnnotationFeatureClass annoClass)
+			{
+				return annoClass.GetName();
+			}
+
 			using var definition = table?.GetDefinition();
 			return GetAliasName(definition);
 		}
