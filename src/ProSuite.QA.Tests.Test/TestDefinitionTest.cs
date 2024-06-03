@@ -1183,6 +1183,7 @@ namespace ProSuite.QA.Tests.Test
 													 1
 												 },
 												 optionalValues));
+		}
 
 		private static void AddQaIntersectionMatrixOtherCases(InMemoryTestDataModel model,
 		                                                     ICollection<TestDefinitionCase> testCases)
