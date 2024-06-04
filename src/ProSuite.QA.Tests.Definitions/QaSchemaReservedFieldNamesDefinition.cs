@@ -1,50 +1,65 @@
 using System.Collections.Generic;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
+using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.Schema;
 
 namespace ProSuite.QA.Tests
 {
 	[UsedImplicitly]
 	[SchemaTest]
-	public class QaSchemaReservedFieldNames : QaSchemaReservedFieldNamesBase
+	public class QaSchemaReservedFieldNamesDefinition : AlgorithmDefinition
 	{
+		public ITableSchemaDef Table { get; }
+		public ITableSchemaDef ReservedNamesTable { get; }
+		public IEnumerable<string> ReservedNames { get; }
+		public string ReservedNameFieldName { get; }
+		public string ReservedReasonFieldName { get; }
+		public string ValidNameFieldName { get; }
+
 		[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_0))]
-		public QaSchemaReservedFieldNames(
+		public QaSchemaReservedFieldNamesDefinition(
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_table))] [NotNull]
-			IReadOnlyTable table,
+			ITableSchemaDef table,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNames))] [NotNull]
 			IEnumerable<string> reservedNames)
-			: base(table, reservedNames) { }
+			: base(table)
+		{
+			Table = table;
+			ReservedNames = reservedNames;
+		}
 
 		[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_1))]
-		public QaSchemaReservedFieldNames(
+		public QaSchemaReservedFieldNamesDefinition(
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_table))] [NotNull]
-			IReadOnlyTable table,
+			ITableSchemaDef table,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNamesString))] [NotNull]
 			string reservedNamesString)
-			: base(table, reservedNamesString) { }
+			: this(table, TestDefinitionUtils.GetTokens(reservedNamesString))
+		{
+			Table = table;
+		}
 
 		[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_2))]
-		public QaSchemaReservedFieldNames(
+		public QaSchemaReservedFieldNamesDefinition(
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_table))] [NotNull]
-			IReadOnlyTable table,
+			ITableSchemaDef table,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNamesTable))] [NotNull]
-			IReadOnlyTable reservedNamesTable,
+			ITableSchemaDef reservedNamesTable,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNameFieldName))] [NotNull]
 			string reservedNameFieldName,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedReasonFieldName))] [CanBeNull]
 			string reservedReasonFieldName,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_validNameFieldName))] [CanBeNull]
 			string validNameFieldName)
-			: base(table, reservedNamesTable, reservedNameFieldName, reservedReasonFieldName,
-			       validNameFieldName) { }
-
-		[InternallyUsedTest]
-		public QaSchemaReservedFieldNames(
-			[NotNull] QaSchemaReservedFieldNamesDefinition definition)
-			: base(definition) { }
+			: base(new[] { table, reservedNamesTable })
+		{
+			Table = table;
+			ReservedNamesTable = reservedNamesTable;
+			ReservedNameFieldName = reservedNameFieldName;
+			ReservedReasonFieldName = reservedReasonFieldName;
+			ValidNameFieldName = validNameFieldName;
+		}
 	}
 }
