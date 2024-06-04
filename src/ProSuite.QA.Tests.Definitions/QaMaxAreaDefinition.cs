@@ -1,4 +1,3 @@
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
@@ -14,14 +13,14 @@ namespace ProSuite.QA.Tests
 	[GeometryTest]
 	public class QaMaxAreaDefinition : AlgorithmDefinition
 	{
-		public IReadOnlyFeatureClass PolygonClass { get; set; }
+		public IFeatureClassSchemaDef PolygonClass { get; set; }
 		public double Limit { get; set; }
-		public bool Perpart { get; set; }
+		public bool PerPart { get; set; }
 
 		[Doc(nameof(DocStrings.QaMaxArea_0))]
 		public QaMaxAreaDefinition(
 				[Doc(nameof(DocStrings.QaMaxArea_polygonClass))]
-				IReadOnlyFeatureClass polygonClass,
+				IFeatureClassSchemaDef polygonClass,
 				[Doc(nameof(DocStrings.QaMaxArea_limit))]
 				double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -30,16 +29,16 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMaxArea_1))]
 		public QaMaxAreaDefinition(
 			[Doc(nameof(DocStrings.QaMaxArea_polygonClass))]
-			IReadOnlyFeatureClass polygonClass,
+			IFeatureClassSchemaDef polygonClass,
 			[Doc(nameof(DocStrings.QaMaxArea_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaMaxArea_perPart))]
 			bool perPart)
-			: base((ITableSchemaDef) polygonClass)
+			: base(polygonClass)
 		{
 			PolygonClass = polygonClass;
 			Limit = limit;
-			Perpart = perPart;
+			PerPart = perPart;
 		}
 	}
 }

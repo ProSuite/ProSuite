@@ -74,7 +74,7 @@ namespace ProSuite.QA.Tests
 		[InternallyUsedTest]
 		public QaMeasures(
 			[NotNull] QaMeasuresDefinition definition)
-			: this(definition.FeatureClass,
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
 			       definition.InvalidValue) { }
 
 		#region Overrides of ContainerTest

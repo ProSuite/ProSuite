@@ -33,7 +33,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
-    <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
     <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
   </ItemGroup>
 

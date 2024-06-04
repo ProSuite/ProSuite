@@ -1,4 +1,3 @@
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
@@ -21,7 +20,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMinArea_0))]
 		public QaMinAreaDefinition(
 				[Doc(nameof(DocStrings.QaMinArea_polygonClass))]
-				IReadOnlyFeatureClass polygonClass,
+				IFeatureClassSchemaDef polygonClass,
 				[Doc(nameof(DocStrings.QaMinArea_limit))]
 				double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -30,14 +29,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMinArea_1))]
 		public QaMinAreaDefinition(
 			[Doc(nameof(DocStrings.QaMinArea_polygonClass))]
-			IReadOnlyFeatureClass polygonClass,
+			IFeatureClassSchemaDef polygonClass,
 			[Doc(nameof(DocStrings.QaMinArea_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaMinArea_perPart))]
 			bool perPart)
-			: base((ITableSchemaDef)polygonClass)
+			: base(polygonClass)
 		{
-			PolygonClass = (IFeatureClassSchemaDef) polygonClass;
+			PolygonClass = polygonClass;
 			Limit = limit;
 			PerPart = perPart;
 		}

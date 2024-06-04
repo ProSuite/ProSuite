@@ -56,7 +56,7 @@ namespace ProSuite.QA.Tests
 		public QaMaxArea(
 			[NotNull] QaMaxAreaDefinition definition)
 			: this((IReadOnlyFeatureClass)definition.PolygonClass,
-			       definition.Limit, definition.Perpart)
+			       definition.Limit, definition.PerPart)
 		{ }
 
 		protected override int CheckArea(double area, IGeometry shape, IReadOnlyRow row)

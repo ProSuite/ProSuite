@@ -1,4 +1,3 @@
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
@@ -13,7 +12,7 @@ namespace ProSuite.QA.Tests
 	[MValuesTest]
 	public class QaMeasuresDefinition : AlgorithmDefinition
 	{
-		public IReadOnlyFeatureClass FeatureClass { get; }
+		public IFeatureClassSchemaDef FeatureClass { get; }
 		public double InvalidValue { get; }
 
 		[Doc(nameof(DocStrings.QaMeasures_0))]
@@ -32,7 +31,7 @@ namespace ProSuite.QA.Tests
 			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
-			FeatureClass = (IReadOnlyFeatureClass) featureClass;
+			FeatureClass = featureClass;
 			InvalidValue = invalidValue;
 		}
 	}

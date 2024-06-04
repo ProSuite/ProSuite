@@ -1,4 +1,3 @@
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
@@ -14,7 +13,7 @@ namespace ProSuite.QA.Tests
 	[GeometryTest]
 	public class QaMaxLengthDefinition : AlgorithmDefinition
 	{
-		public IReadOnlyFeatureClass FeatureClass { get; }
+		public IFeatureClassSchemaDef FeatureClass { get; }
 		public double Limit { get; }
 		public bool Is3D { get; }
 		public bool PerPart { get; }
@@ -22,12 +21,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMaxLength_0))]
 		public QaMaxLengthDefinition(
 			[Doc(nameof(DocStrings.QaMaxLength_featureClass))]
-			IReadOnlyFeatureClass featureClass,
+			IFeatureClassSchemaDef featureClass,
 			[Doc(nameof(DocStrings.QaMaxLength_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaMaxLength_is3D))]
 			bool is3D)
-			: base((ITableSchemaDef) featureClass)
+			: base(featureClass)
 		{
 			FeatureClass = featureClass;
 			Limit = limit;
@@ -37,10 +36,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMaxLength_0))]
 		public QaMaxLengthDefinition(
 			[Doc(nameof(DocStrings.QaMaxLength_featureClass))]
-			IReadOnlyFeatureClass featureClass,
+			IFeatureClassSchemaDef featureClass,
 			[Doc(nameof(DocStrings.QaMaxLength_limit))]
 			double limit)
-			: base((ITableSchemaDef) featureClass)
+			: base(featureClass)
 		{
 			FeatureClass = featureClass;
 			Limit = limit;
@@ -49,14 +48,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMaxLength_0))]
 		public QaMaxLengthDefinition(
 			[Doc(nameof(DocStrings.QaMaxLength_featureClass))]
-			IReadOnlyFeatureClass featureClass,
+			IFeatureClassSchemaDef featureClass,
 			[Doc(nameof(DocStrings.QaMaxLength_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaMaxLength_is3D))]
 			bool is3D,
 			[Doc(nameof(DocStrings.QaMaxLength_perPart))]
 			bool perPart)
-			: base((ITableSchemaDef) featureClass)
+			: base(featureClass)
 		{
 			FeatureClass = featureClass;
 			Limit = limit;

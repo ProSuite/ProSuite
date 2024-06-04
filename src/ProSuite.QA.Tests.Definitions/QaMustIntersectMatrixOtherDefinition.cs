@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
@@ -14,13 +13,6 @@ namespace ProSuite.QA.Tests
 	[TopologyTest]
 	public class QaMustIntersectMatrixOtherDefinition : AlgorithmDefinition
 	{
-		private readonly string _relationString;
-
-		private readonly List<IntersectionMatrix> _intersectionMatrices;
-		private const string _relationInteriorIntersects = "RELATE (G1, G2, 'T********')";
-
-		public IFeatureClassSchemaDef FeatureClass { get; }
-		public IFeatureClassSchemaDef OtherFeatureClass { get; }
 		public ICollection<IFeatureClassSchemaDef> FeatureClasses { get; }
 		public ICollection<IFeatureClassSchemaDef> OtherFeatureClasses { get; }
 		public string IntersectionMatrix { get; }

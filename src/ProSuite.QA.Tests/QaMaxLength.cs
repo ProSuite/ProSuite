@@ -65,7 +65,7 @@ namespace ProSuite.QA.Tests
 		[InternallyUsedTest]
 		public QaMaxLength(
 			[NotNull] QaMaxLengthDefinition definition)
-			: this(definition.FeatureClass,
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
 			       definition.Limit,
 			       definition.Is3D,
 			       definition.PerPart) { }
