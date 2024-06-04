@@ -1,9 +1,7 @@
 using System.Collections.Generic;
-using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
-using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -20,23 +18,6 @@ namespace ProSuite.QA.Tests
 		public int MinDistinctCount { get; }
 		public int MaxDistinctCount { get; }
 		public bool LimitToTestedRows { get; }
-
-		private const string _groupByColumn = "__GroupBy";
-
-		private const string _distinctColumn = "__Distinct";
-
-		private readonly IList<ITableSchemaDef> _tables;
-		private readonly IList<string> _tableNames;
-		private readonly IList<string> _groupByExpressions;
-		private readonly bool _limitToTestedRows;
-
-		private readonly IList<string> _distinctExpressions;
-		private readonly int? _maxDistinctCount;
-		private readonly int _minDistinctCount;
-		private IList<TableView> _helpers;
-
-		private RelatedTables _relatedTables;
-		private Dictionary<RelatedTable, int> _relatedOidFields;
 
 		[Doc(nameof(DocStrings.QaGroupConstraints_0))]
 		public QaGroupConstraintsDefinition(
@@ -100,23 +81,6 @@ namespace ProSuite.QA.Tests
 			MinDistinctCount = minDistinctCount;
 			MaxDistinctCount = maxDistinctCount;
 			LimitToTestedRows = limitToTestedRows;
-
-			_tables = tables;
-			_groupByExpressions = groupByExpressions.ToList();
-
-			_limitToTestedRows = limitToTestedRows;
-
-			_distinctExpressions = distinctExpressions;
-			_maxDistinctCount = maxDistinctCount >= 0
-				                    ? (int?) maxDistinctCount
-				                    : null;
-			_minDistinctCount = minDistinctCount;
-
-			_tableNames = new List<string>(tables.Count);
-			foreach (ITableSchemaDef table in tables)
-			{
-				_tableNames.Add(table.Name);
-			}
 		}
 
 		[TestParameter]
