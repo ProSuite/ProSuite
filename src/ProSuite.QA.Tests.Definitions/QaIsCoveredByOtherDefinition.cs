@@ -3,8 +3,6 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
-using ProSuite.Commons.Text;
-using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -24,12 +22,7 @@ namespace ProSuite.QA.Tests
 		public double AllowedUncoveredPercentage { get; }
 		public IList<IFeatureClassSchemaDef> AreaOfInterestClasses { get; }
 
-		private readonly int _coveringClassesCount; // # of covering feature classes
-
-		[CanBeNull] private GeometryConstraint _validUncoveredGeometryConstraint;
-
-		////TODO find reasonable maximum point count
-		//private const int _maximumBufferCachePointCount = 1000000;
+		[CanBeNull] private string _validUncoveredGeometryConstraint;
 
 		private readonly IList<double> _coveringClassTolerances =
 			new ReadOnlyList<double>(new List<double>());
@@ -190,7 +183,7 @@ namespace ProSuite.QA.Tests
 			{
 				Assert.ArgumentCondition(value == null ||
 				                         value.Count == 0 || value.Count == 1 ||
-				                         value.Count == _coveringClassesCount,
+				                         value.Count == Covering.Count,
 				                         "unexpected number of covering class tolerance values " +
 				                         "(must be 0, 1, or equal to the number of covering classes");
 			}
@@ -200,13 +193,8 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_ValidUncoveredGeometryConstraint))]
 		public string ValidUncoveredGeometryConstraint
 		{
-			get { return _validUncoveredGeometryConstraint?.Constraint; }
-			set
-			{
-				_validUncoveredGeometryConstraint = StringUtils.IsNullOrEmptyOrBlank(value)
-					                                    ? null
-					                                    : new GeometryConstraint(value);
-			}
+			get => _validUncoveredGeometryConstraint;
+			set => _validUncoveredGeometryConstraint = value;
 		}
 	}
 }
