@@ -181,6 +181,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaSchemaFieldNames),
 											 typeof(QaSchemaFieldProperties),
 											 typeof(QaSchemaFieldPropertiesFromTable),
+											 typeof(QaSchemaReservedFieldNames),
 											 typeof(QaSchemaReservedFieldNameProperties),
 											 typeof(QaSegmentLength),
 											 typeof(QaSimpleGeometry),
@@ -337,6 +338,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldNames)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldProperties)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldPropertiesFromTable)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaReservedFieldNames)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaReservedFieldNameProperties)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSegmentLength)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry)));
