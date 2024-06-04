@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
-using ProSuite.QA.Container.PolygonGrower;
-using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -21,19 +18,9 @@ namespace ProSuite.QA.Tests
 	[PolygonNetworkTest]
 	public class QaCentroidsDefinition : AlgorithmDefinition
 	{
-		public IList<IFeatureClassSchemaDef> PolylineClasses { get; set; }
-		public IList<IFeatureClassSchemaDef> PointClasses { get; set; }
+		public IList<IFeatureClassSchemaDef> PolylineClasses { get; }
+		public IList<IFeatureClassSchemaDef> PointClasses { get; }
 		public string Constraint { get; }
-		public IFeatureClassSchemaDef PolylineClass { get; }
-		public IFeatureClassSchemaDef PointClass { get; }
-
-		private List<IReadOnlyRow> _centroids;
-
-		private string _constraint;
-		private MultiTableView _constraintHelper;
-		private RingGrower<DirectedRow> _grower;
-		private List<LineList<DirectedRow>> _innerRings;
-		private List<LineList<DirectedRow>> _outerRings;
 
 		[Doc(nameof(DocStrings.QaCentroids_0))]
 		public QaCentroidsDefinition(
@@ -51,15 +38,9 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaCentroids_pointClass))]
 			IFeatureClassSchemaDef pointClass,
 			[Doc(nameof(DocStrings.QaCentroids_constraint))]
-			string constraint = null)
-			: base(polylineClass)
-		{
-			PolylineClass = polylineClass;
-			PointClass = pointClass;
-			Constraint = constraint;
-			PolylineClasses = new List<IFeatureClassSchemaDef> { polylineClass };
-			PointClasses = new List<IFeatureClassSchemaDef> { pointClass };
-		}
+			string constraint)
+			: this(new List<IFeatureClassSchemaDef> { polylineClass },
+			       new List<IFeatureClassSchemaDef> { pointClass }, constraint) { }
 
 		[Doc(nameof(DocStrings.QaCentroids_2))]
 		public QaCentroidsDefinition(
@@ -77,7 +58,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaCentroids_pointClasses))]
 			IList<IFeatureClassSchemaDef> pointClasses,
 			[Doc(nameof(DocStrings.QaCentroids_constraint))]
-			string constraint = null)
+			string constraint)
 			: base(polylineClasses.Union(pointClasses))
 		{
 			PolylineClasses = polylineClasses;
