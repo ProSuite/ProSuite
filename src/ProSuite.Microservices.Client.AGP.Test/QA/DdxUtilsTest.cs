@@ -13,7 +13,6 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Client.AGP.QA;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 
@@ -80,13 +79,13 @@ namespace ProSuite.Microservices.Client.AGP.Test.QA
 				DatasetMsg datasetMsg = ProtoDataQualityUtils.ToDatasetMsg(errorDataset, true);
 
 				Dataset rehydratedDataset = ProtoDataQualityUtils.FromDatasetMsg(datasetMsg,
-					(id, name) => new BasicDataset(datasetMsg.DatasetId, datasetMsg.Name));
+					(msg) => new BasicDataset(msg.DatasetId, msg.Name));
 
 				ProSuiteGeometryType shapeType = (ProSuiteGeometryType) datasetMsg.GeometryType;
 
 				// Different approach: Create error dataset
-				Func<int, string, Dataset> errorDatasetFactory = (id, name) =>
-					ProtoDataQualityUtils.CreateErrorDataset(id, name, shapeType);
+				Func<DatasetMsg, Dataset> errorDatasetFactory = (msg) =>
+					ProtoDataQualityUtils.CreateErrorDataset(msg.DatasetId, msg.Name, shapeType);
 
 				ObjectDataset rehydratedErrorDataset = (ObjectDataset)
 					ProtoDataQualityUtils.FromDatasetMsg(datasetMsg, errorDatasetFactory);

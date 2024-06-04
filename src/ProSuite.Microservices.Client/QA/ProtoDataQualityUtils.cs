@@ -554,9 +554,9 @@ namespace ProSuite.Microservices.Client.QA
 		}
 
 		public static Dataset FromDatasetMsg(DatasetMsg datasetMsg,
-		                                     Func<int, string, Dataset> factoryMethod)
+		                                     Func<DatasetMsg, Dataset> factoryMethod)
 		{
-			Dataset dataset = factoryMethod(datasetMsg.DatasetId, datasetMsg.Name);
+			Dataset dataset = factoryMethod(datasetMsg);
 
 			dataset.SetCloneId(datasetMsg.DatasetId);
 
