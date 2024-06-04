@@ -85,8 +85,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected HashSet<Key> PressedKeys { get; } = new();
 
-		protected virtual Cursor SelectionCursor { get; init; }
-		protected virtual Cursor SelectionCursorShift { get; init; }
+		protected virtual Cursor SelectionCursor { get; set; }
+		protected virtual Cursor SelectionCursorShift { get; set; }
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
