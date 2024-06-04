@@ -5,6 +5,7 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.Commons.AGP.LoggerUI
 {
@@ -56,9 +57,9 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private static void CloseWindow(object parameter)
 		{
-			if (parameter is ICloseable window)
+			if (parameter is ICloseableWindow window)
 			{
-				window.CloseWindow(null);
+				window.CloseWindow();
 			}
 		}
 
