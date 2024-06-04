@@ -4,7 +4,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 {
 	public interface ICloseable
 	{
-		void CloseWindow(bool returnValue);
+		void CloseWindow(bool? dialogResult);
 	}
 
 	public partial class LogMessageDetailsDialog : ICloseable
@@ -15,9 +15,9 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			InitializeComponent();
 		}
 
-		public void CloseWindow(bool returnValue)
+		public void CloseWindow(bool? dialogResult)
 		{
-			DialogResult = returnValue;
+			DialogResult = dialogResult;
 			Close();
 		}
 	}
