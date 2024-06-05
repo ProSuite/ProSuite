@@ -11,6 +11,7 @@ using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests
 {
@@ -81,6 +82,12 @@ namespace ProSuite.QA.Tests
 		{
 			_errorType = errorType;
 		}
+
+		[InternallyUsedTest]
+		public QaOrphanNode([NotNull] QaOrphanNodeDefinition definition)
+			: this(definition.PointClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.PolylineClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.ErrorType) { }
 
 		protected override int CompleteTileCore(TileInfo args)
 		{

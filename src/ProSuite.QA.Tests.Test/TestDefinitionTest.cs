@@ -167,6 +167,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMustTouchOther),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNonEmptyGeometry),
+											 typeof(QaOrphanNode),
 											 typeof(QaOverlapsSelf),
 											 typeof(QaOverlapsOther),
 											 typeof(QaPointOnLine),
@@ -325,6 +326,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustTouchSelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNonEmptyGeometry)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOrphanNode)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsSelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsOther)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaPointOnLine)));
