@@ -166,6 +166,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMustIntersectOther),
 											 typeof(QaMustTouchOther),
 											 typeof(QaMustTouchSelf),
+											 typeof(QaNoBoundaryLoops),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOrphanNode),
 											 typeof(QaOverlapsSelf),
@@ -391,6 +392,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaMpVertexNotNearFaceCases(model, testCases);
 			AddQaMustBeNearOtherCases(model, testCases);
 			AddQaMustIntersectMatrixOtherCases(model, testCases);
+			AddQaNoBoundaryLoopsCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
@@ -1903,7 +1905,6 @@ namespace ProSuite.QA.Tests.Test
 		private static void AddQaMustIntersectMatrixOtherCases(InMemoryTestDataModel model,
 		                                              ICollection<TestDefinitionCase> testCases)
 		{
-
 			testCases.Add(new TestDefinitionCase(typeof(QaMustIntersectMatrixOther), 0,
 			                                     new object[]
 			                                     {
@@ -1957,6 +1958,29 @@ namespace ProSuite.QA.Tests.Test
 													 "1"
 			                                     }));
 		}
+
+		private static void AddQaNoBoundaryLoopsCases(InMemoryTestDataModel model,
+		                                              ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaNoBoundaryLoops), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNoBoundaryLoops), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+				                                     0
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNoBoundaryLoops), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+				                                     0, 0, 8.3
+			                                     }));
+		}
+
 		private static void AddQaRegularExpressionCases(InMemoryTestDataModel model,
 		                                                ICollection<TestDefinitionCase> testCases)
 		{

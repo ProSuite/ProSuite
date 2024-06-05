@@ -102,6 +102,11 @@ namespace ProSuite.QA.Tests
 			_xyTolerance = xyTolerance;
 		}
 
+		[InternallyUsedTest]
+		public QaNoBoundaryLoops([NotNull] QaNoBoundaryLoopsDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.PolygonClass, definition.ErrorGeometry,
+			       definition.AreaRelation, definition.AreaLimit) { }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			return false;
