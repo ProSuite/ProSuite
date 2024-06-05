@@ -1,4 +1,4 @@
-namespace ProSuite.QA.Tests
+namespace ProSuite.QA.Tests.ParameterTypes
 {
 	/// <summary>
 	/// Describes which orphan node related tests are done in <see cref="QaOrphanNode"/>
