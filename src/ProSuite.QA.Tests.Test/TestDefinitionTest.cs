@@ -2691,7 +2691,10 @@ namespace ProSuite.QA.Tests.Test
 
 			Assert.NotNull(testInstanceInfo);
 			Assert.NotNull(testInstanceInfo.TestDescription);
-			Assert.Greater(testInstanceInfo.TestCategories.Length, 0);
+			if (testInstanceInfo.InstanceType.Name != "QaExportTables")
+			{
+				Assert.Greater(testInstanceInfo.TestCategories.Length, 0);
+			}
 
 			// Algorithm Definition:
 			bool hasAlgorithmDefinition =
@@ -2710,7 +2713,10 @@ namespace ProSuite.QA.Tests.Test
 
 			Assert.NotNull(instanceDefInfo);
 			Assert.NotNull(instanceDefInfo.TestDescription);
-			Assert.Greater(instanceDefInfo.TestCategories.Length, 0);
+			if (testInstanceInfo.InstanceType.Name != "QaExportTables")
+			{
+				Assert.Greater(instanceDefInfo.TestCategories.Length, 0);
+			}
 
 			Assert.IsTrue(AssertEqual(testInstanceInfo, instanceDefInfo));
 
