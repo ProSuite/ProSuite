@@ -168,6 +168,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNoBoundaryLoops),
 											 typeof(QaNoClosedPaths),
+											 typeof(QaNodeLineCoincidence),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOrphanNode),
 											 typeof(QaOverlapsSelf),
@@ -395,6 +396,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaMustBeNearOtherCases(model, testCases);
 			AddQaMustIntersectMatrixOtherCases(model, testCases);
 			AddQaNoBoundaryLoopsCases(model, testCases);
+			AddQaNodeLineCoincidenceCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
@@ -1981,6 +1983,67 @@ namespace ProSuite.QA.Tests.Test
 				                                     model.GetPolygonDataset(),
 				                                     0, 0, 8.3
 			                                     }));
+		}
+
+		private static void AddQaNodeLineCoincidenceCases(InMemoryTestDataModel model,
+														ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("CoincidenceTolerance", 1);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaNodeLineCoincidence), 0,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 new[]
+													 {
+														 model.GetVectorDataset(),
+														 model.GetVectorDataset()
+													 },
+													 1
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaNodeLineCoincidence), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     1,
+													 false
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaNodeLineCoincidence), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     1,
+				                                     false,
+													 false
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaNodeLineCoincidence), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+														 1,1
+				                                     },
+													 1,
+				                                     false,
+				                                     false
+			                                     }, optionalValues));
 		}
 
 		private static void AddQaRegularExpressionCases(InMemoryTestDataModel model,
