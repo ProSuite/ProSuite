@@ -167,6 +167,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMustTouchOther),
 											 typeof(QaMustTouchSelf),
 											 typeof(QaNoBoundaryLoops),
+											 typeof(QaNoClosedPaths),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOrphanNode),
 											 typeof(QaOverlapsSelf),
@@ -316,6 +317,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMultipart)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustIntersectOther)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustTouchOther)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNoClosedPaths)));
 
 			// TODO: Implement Definition
 			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
