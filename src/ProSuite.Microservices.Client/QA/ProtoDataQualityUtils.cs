@@ -616,6 +616,8 @@ namespace ProSuite.Microservices.Client.QA
 				ObjectType objectType =
 					dataset.AddObjectType(objectTypeMsg.SubtypeCode, objectTypeMsg.Name);
 
+				objectType.SetCloneId(objectTypeMsg.ObjectCategoryId);
+
 				objectTypeBySubtypeCode.Add(objectType.SubtypeCode, objectType);
 			}
 
@@ -643,6 +645,7 @@ namespace ProSuite.Microservices.Client.QA
 
 			var objTypeMsg = new ObjectCategoryMsg
 			                 {
+				                 ObjectCategoryId = objectType.Id,
 				                 Name = objectType.Name,
 				                 SubtypeCode = subTypeCode
 			                 };
@@ -653,6 +656,7 @@ namespace ProSuite.Microservices.Client.QA
 			{
 				var subTypeMsg = new ObjectCategoryMsg
 				                 {
+					                 ObjectCategoryId = objectSubtype.Id,
 					                 Name = objectSubtype.Name,
 					                 SubtypeCode = subTypeCode
 				                 };
@@ -695,6 +699,7 @@ namespace ProSuite.Microservices.Client.QA
 
 			var attributeMsg = new AttributeMsg
 			                   {
+				                   AttributeId = attribute.Id,
 				                   Name = attribute.Name ?? string.Empty,
 				                   Type = (int) attribute.FieldType,
 				                   IsReadonly = attribute.ReadOnly,
@@ -742,6 +747,8 @@ namespace ProSuite.Microservices.Client.QA
 				                            IsObjectDefining = attributeMsg.IsObjectDefining,
 				                            ReadOnly = attributeMsg.IsReadonly
 			                            };
+
+			attribute.SetCloneId(attributeMsg.AttributeId);
 
 			object nonApplicableValue =
 				FromAttributeValue(attributeMsg.NonApplicableValue);
