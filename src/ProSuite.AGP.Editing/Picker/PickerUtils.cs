@@ -123,13 +123,15 @@ namespace ProSuite.AGP.Editing.Picker
 				return;
 			}
 
+			var orderedSelection = OrderByGeometryDimension(selection).ToList();
+
 			// IPickerPrecedence.GetPickerMode has to be on GUI thread to capture key down events, etc.
-			PickerMode mode = precedence.GetPickerMode(selection, areaSelect);
+			PickerMode mode = precedence.GetPickerMode(orderedSelection, areaSelect);
 
 			switch (mode)
 			{
 				case PickerMode.ShowPicker:
-					await ShowPicker(precedence, OrderByGeometryDimension(selection).ToList());
+					await ShowPicker(precedence, orderedSelection);
 					break;
 				case PickerMode.PickAll:
 					await SelectAll(selection, progressor);
