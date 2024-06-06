@@ -175,7 +175,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 				foreach (int datasetId in modelMsg.DatasetIds)
 				{
-					if (datasetsById.TryGetValue(datasetId, out IDdxDataset dataset))
+					if (datasetsById.TryGetValue(datasetId, out IDdxDataset dataset) &&
+					    ! model.Contains(dataset))
 					{
 						model.AddDataset((Dataset) dataset);
 					}
@@ -417,7 +418,10 @@ namespace ProSuite.Microservices.Client.AGP.QA
 						dataset = errorDataset;
 					}
 
-					model.AddDataset((Dataset) dataset);
+					if (! model.Contains(dataset) && model.Datasets.All(ds => ds.Id != datasetId))
+					{
+						model.AddDataset((Dataset) dataset);
+					}
 				}
 			}
 
