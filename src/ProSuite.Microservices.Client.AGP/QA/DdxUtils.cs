@@ -235,8 +235,17 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (DatasetMsg errorDatasetMsg in response.Datasets)
 			{
+				_msg.DebugFormat("Adding dataset details to {0}", errorDatasetMsg.Name);
+
 				ObjectDataset originalDataset = (ObjectDataset)
 					datasets.First(e => e.Id == errorDatasetMsg.DatasetId);
+
+				if (originalDataset.Attributes.Count > 0)
+				{
+					_msg.DebugFormat("Dataset details already loaded for {0}",
+					                 originalDataset.Name);
+					continue;
+				}
 
 				ProtoDataQualityUtils.AddDetailsToDataset(originalDataset, errorDatasetMsg);
 			}
