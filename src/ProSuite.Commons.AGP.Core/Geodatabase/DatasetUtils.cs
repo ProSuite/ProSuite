@@ -112,6 +112,25 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
+		[CanBeNull]
+		public static Subtype GetSubtype(Table table, int subTypeCode)
+		{
+			if (table is null) return null;
+
+			using var definition = table.GetDefinition();
+
+			try
+			{
+				var subtypes = definition.GetSubtypes();
+				return subtypes.FirstOrDefault(st => st.GetCode() == subTypeCode);
+			}
+			catch (NotSupportedException)
+			{
+				// Shapefiles have no subtypes and throw NotSupportedException
+				return null;
+			}
+		}
+
 		[NotNull]
 		public static string ToString([NotNull] Subtype subtype)
 		{
