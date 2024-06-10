@@ -9,9 +9,18 @@ namespace ProSuite.AGP.Editing.Picker
 {
 	public class StandardPickerPrecedence : IPickerPrecedence
 	{
+		public StandardPickerPrecedence() { }
+
+		[UsedImplicitly]
+		public StandardPickerPrecedence(Geometry selectionGeometry, int selectionTolerance)
+		{
+			SelectionGeometry = selectionGeometry;
+			SelectionTolerance = selectionTolerance;
+		}
+
 		public Geometry SelectionGeometry { get; set; }
 
-		public int SelectionTolerance { get; set; }
+		public int SelectionTolerance { get; }
 
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                bool areaSelect = false)

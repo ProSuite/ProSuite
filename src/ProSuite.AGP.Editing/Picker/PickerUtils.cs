@@ -100,6 +100,103 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		public static async Task Show(
+			[NotNull] Geometry selectionGeometry,
+			int selectionTolerance,
+			[NotNull] Type precedenceType,
+			[NotNull] Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection,
+			[CanBeNull] CancelableProgressor progressor = null)
+		{
+			bool areaSelect = false;
+			IPickerPrecedence precedence = null;
+
+			List<FeatureSelectionBase> selection =
+				await QueuedTaskUtils.Run(() =>
+				{
+					// todo daro Implement this in IPickerPrecedence once it's tested.
+					// todo daro compare with OneClickToolBase implementation
+					areaSelect = ! SingleClick(selectionGeometry, selectionTolerance);
+
+					Geometry geometry = EnsureNonEmpty(selectionGeometry, selectionTolerance);
+
+					precedence = (IPickerPrecedence) Activator.CreateInstance(precedenceType, geometry, selectionTolerance);
+
+					return getSelection(geometry).ToList();
+				}, progressor);
+
+			if (selection.Count == 0)
+			{
+				return;
+			}
+
+			var orderedSelection = OrderByGeometryDimension(selection).ToList();
+
+			// IPickerPrecedence.GetPickerMode has to be on GUI thread to capture key down events, etc.
+			Assert.NotNull(precedence);
+			PickerMode mode = precedence.GetPickerMode(orderedSelection, areaSelect);
+
+			switch (mode)
+			{
+				case PickerMode.ShowPicker:
+					await ShowPicker(precedence, orderedSelection);
+					break;
+				case PickerMode.PickAll:
+					await SelectAll(selection, progressor);
+					break;
+				case PickerMode.PickBest:
+					await PickBest(precedence, selection, progressor);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+
+		public static async Task Show(
+			[NotNull] Geometry selectionGeometry,
+			int selectionTolerance,
+			[NotNull] Type precedenceType,
+			[NotNull] Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection,
+			PickerMode mode = PickerMode.ShowPicker,
+			[CanBeNull] CancelableProgressor progressor = null)
+		{
+			IPickerPrecedence precedence = null;
+
+			List<FeatureSelectionBase> selection =
+				await QueuedTaskUtils.Run(() =>
+				{
+					Geometry geometry = EnsureNonEmpty(selectionGeometry, selectionTolerance);
+
+					precedence = (IPickerPrecedence)Activator.CreateInstance(precedenceType, geometry, selectionTolerance);
+
+					return getSelection(geometry).ToList();
+				}, progressor);
+
+			if (selection.Count == 0)
+			{
+				return;
+			}
+
+			var orderedSelection = OrderByGeometryDimension(selection).ToList();
+
+			// IPickerPrecedence.GetPickerMode has to be on GUI thread to capture key down events, etc.
+			Assert.NotNull(precedence);
+
+			switch (mode)
+			{
+				case PickerMode.ShowPicker:
+					await ShowPicker(precedence, orderedSelection);
+					break;
+				case PickerMode.PickAll:
+					await SelectAll(selection, progressor);
+					break;
+				case PickerMode.PickBest:
+					await PickBest(precedence, selection, progressor);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+
+		public static async Task Show(
 			[NotNull] IPickerPrecedence precedence,
 			[NotNull] Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection,
 			[CanBeNull] CancelableProgressor progressor = null)

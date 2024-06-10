@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ArcGIS.Core.Data;
@@ -63,9 +64,8 @@ namespace ProSuite.AGP.Editing.Picker
 		public override string ToString()
 		{
 			// TODO: Alternatively allow using layer.QueryDisplayExpressions. But typically this is just the OID which is not very useful -> Requires configuration
-			// string[] displayExpressions = layer.QueryDisplayExpressions(new[] { feature.GetObjectID() });
 
-			return $"{_displayValue}";
+			return Score >= double.Epsilon ? $"{_displayValue} - {Score}" : $"{_displayValue}";
 		}
 	}
 }
