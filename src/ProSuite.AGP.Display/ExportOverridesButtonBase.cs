@@ -49,7 +49,7 @@ public abstract class ExportOverridesButtonBase : ButtonCommandBase
 
 		if (string.IsNullOrWhiteSpace(_options.ConfigFilePath))
 		{
-			Gateway.HandleError("Must specify an export file path", _msg);
+			Gateway.ShowError("Must specify an export file path", _msg);
 			return false;
 		}
 

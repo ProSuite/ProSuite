@@ -104,7 +104,7 @@ public static class Gateway
 	/// </summary>
 	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
 	[MethodImpl(MethodImplOptions.NoInlining)]
-	public static void HandleError(Exception ex, IMsg logger, string caption = null)
+	public static void ShowError(Exception ex, IMsg logger, string caption = null)
 	{
 		if (ex is null) return;
 
@@ -117,7 +117,7 @@ public static class Gateway
 		var message = FormatMessage(ex);
 
 		logger ??= _msg; // default to our own logger
-		logger.Error(message, ex);
+		logger.Error($"{caption}: {message}", ex);
 
 		ShowMessage(message, caption, MessageBoxButton.OK, MessageBoxImage.Error);
 	}
@@ -129,7 +129,7 @@ public static class Gateway
 	/// </summary>
 	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
 	[MethodImpl(MethodImplOptions.NoInlining)]
-	public static void HandleError(string message, IMsg logger, string caption = null)
+	public static void ShowError(string message, IMsg logger, string caption = null)
 	{
 		if (message is null) return;
 
