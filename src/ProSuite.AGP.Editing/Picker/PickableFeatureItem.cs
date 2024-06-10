@@ -24,7 +24,14 @@ namespace ProSuite.AGP.Editing.Picker
 			Layer = layer;
 			Oid = feature.GetObjectID();
 			Geometry = feature.GetShape();
-			_displayValue = $"{GdbObjectUtils.GetDisplayValue(Feature, Layer.Name)}";
+
+			string expression = layer.GetDisplayExpressions(new[] { Oid }).FirstOrDefault();
+
+			_displayValue = ! string.IsNullOrEmpty(expression)
+				                ? expression
+				                : GdbObjectUtils.GetDisplayValue(feature, layer.Name);
+			// todo daro Try to find out whether display expression is configurated. Typically this is just the OID which is not very useful.
+			// SDK gives no way to determine whether display expression is simple or configurated. Let the user decide and implement a project setting?
 		}
 
 		[NotNull]
