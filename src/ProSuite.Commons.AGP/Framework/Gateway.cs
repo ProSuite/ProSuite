@@ -123,6 +123,31 @@ public static class Gateway
 	}
 
 	/// <summary>
+	/// Report the given error (exception) without interrupting the
+	/// user (i.e., no modal dialog box): write it to the given logger
+	/// (and maybe to other feedback channels, e.g. toast notifications).
+	/// </summary>
+	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	public static void ReportError(Exception ex, IMsg logger, string caption = null)
+	{
+		if (ex is null) return;
+
+		if (caption is null)
+		{
+			string callerName = GetCallerName();
+			caption = $"Error in {callerName}";
+		}
+
+		var message = FormatMessage(ex);
+
+		logger ??= _msg; // default to our own logger
+		logger.Error($"{caption}: {message}", ex);
+
+		// Here we COULD consider a toast notification
+	}
+
+	/// <summary>
 	/// Report the given error message: (1) write it to
 	/// the given logger, and (2) show it in a modal message box.
 	/// The <paramref name="caption"/> defaults to the caller's name.
@@ -133,16 +158,42 @@ public static class Gateway
 	{
 		if (message is null) return;
 
+		logger ??= _msg; // default to our own logger
+
 		if (caption is null)
 		{
-			string callerName = GetCallerName();
-			caption = $"Error in {callerName}";
+			logger.Error(message);
+		}
+		else
+		{
+			logger.Error($"{caption}: {message}");
 		}
 
-		logger ??= _msg; // default to our own logger
-		logger.Error(message);
-
 		ShowMessage(message, caption, MessageBoxButton.OK, MessageBoxImage.Error);
+	}
+
+	/// <summary>
+	/// Report the given error message without interrupting the
+	/// user (i.e., no modal dialog box): write it to the given logger
+	/// (and maybe to other feedback channels, e.g., toast notifications).
+	/// </summary>
+	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
+	public static void ReportError(string message, IMsg logger, string caption = null)
+	{
+		if (message is null) return;
+
+		logger ??= _msg; // default to our own logger
+
+		if (string.IsNullOrEmpty(caption))
+		{
+			logger.Error(message);
+		}
+		else
+		{
+			logger.Error($"{caption}: {message}");
+		}
+
+		// Here we COULD consider a toast notification
 	}
 
 	/// <summary>

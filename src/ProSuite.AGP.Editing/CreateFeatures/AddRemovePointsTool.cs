@@ -233,7 +233,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.ShowError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 
 		return Task.FromResult(0);
@@ -285,7 +285,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.ShowError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 	}
 
@@ -335,7 +335,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.ShowError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 	}
 
@@ -348,7 +348,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.ShowError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 		return null;
 	}
@@ -362,7 +362,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.ShowError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 			return Task.FromResult(true);
 		}
 	}
@@ -386,7 +386,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.ShowError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 
 		return true;
