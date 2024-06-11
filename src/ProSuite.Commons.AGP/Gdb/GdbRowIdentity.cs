@@ -9,7 +9,7 @@ namespace ProSuite.Commons.AGP.Gdb
 	/// <summary>
 	///     Represents a lightweight reference to a geodatabase object.
 	/// </summary>
-	public struct GdbRowIdentity : IEquatable<GdbRowIdentity>
+	public struct GdbRowIdentity : IEquatable<GdbRowIdentity>, IComparable<GdbRowIdentity>
 	{
 		public GdbRowIdentity([NotNull] Row row)
 		{
@@ -106,5 +106,14 @@ namespace ProSuite.Commons.AGP.Gdb
 		}
 
 		#endregion
+
+		public int CompareTo(GdbRowIdentity other)
+		{
+			int oidComparison = ObjectId.CompareTo(other.ObjectId);
+			if (oidComparison != 0)
+				return oidComparison;
+
+			return Table.CompareTo(other.Table);
+		}
 	}
 }

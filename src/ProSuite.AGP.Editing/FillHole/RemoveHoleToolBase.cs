@@ -21,7 +21,7 @@ namespace ProSuite.AGP.Editing.FillHole
 {
 	public abstract class RemoveHoleToolBase : TwoPhaseEditToolBase
 	{
-		protected static readonly IMsg _msg = Msg.ForCurrentClass();
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected IList<Holes> _holes;
 
@@ -63,8 +63,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected override void LogPromptForSelection()
 		{
-			_msg.Info(
-				"Select one or more polygon features which contain the hole(s) to be removed.");
+			_msg.Info(LocalizableStrings.RemoveHoleTool_LogPromptForSelection);
 		}
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)

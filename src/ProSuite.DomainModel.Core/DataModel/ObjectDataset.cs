@@ -288,7 +288,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 			_attributes.Add(attribute);
 
-			_msg.DebugFormat("Added attribute {0}", attribute.Name);
+			_msg.VerboseDebug(() => $"Added attribute {attribute.Name}");
 
 			return attribute;
 		}
