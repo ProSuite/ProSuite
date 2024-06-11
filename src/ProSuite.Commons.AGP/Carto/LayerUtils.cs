@@ -6,6 +6,7 @@ using System.Threading;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Carto
@@ -273,6 +274,35 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			using var table = featureLayer?.GetTable();
 			return table != null;
+		}
+
+		public static bool LayersUseSameFeatureClass([NotNull] FeatureLayer layer1,
+		                                             [NotNull] FeatureLayer layer2)
+		{
+			FeatureClass featureClass1 = layer1.GetFeatureClass();
+			FeatureClass featureClass2 = layer2.GetFeatureClass();
+
+			if (ReferenceEquals(featureClass1, featureClass2))
+			{
+				return true;
+			}
+
+			if (featureClass1 == null || featureClass2 == null)
+			{
+				return false;
+			}
+
+			if (featureClass1.IsJoinedTable())
+			{
+				featureClass1 = DatasetUtils.GetDatabaseFeatureClass(featureClass1);
+			}
+
+			if (featureClass2.IsJoinedTable())
+			{
+				featureClass2 = DatasetUtils.GetDatabaseFeatureClass(featureClass2);
+			}
+
+			return DatasetUtils.IsSameTable(featureClass1, featureClass2);
 		}
 
 		[CanBeNull]
