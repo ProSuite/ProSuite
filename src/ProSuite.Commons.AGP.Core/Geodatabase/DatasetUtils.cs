@@ -10,6 +10,7 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
@@ -222,6 +223,44 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			IEnumerable<Table> tables)
 		{
 			return tables.Distinct(new TableComparer());
+		}
+
+		public static FeatureClass GetDatabaseFeatureClass(
+			[NotNull] FeatureClass featureClassWithJoin)
+		{
+			if (! featureClassWithJoin.IsJoinedTable())
+			{
+				return featureClassWithJoin;
+			}
+
+			// Extract the shape's table name from the (fully qualified) shape field name:
+			string shapeField = featureClassWithJoin.GetDefinition().GetShapeField();
+
+			List<string> tokens = shapeField.Split('.').ToList();
+
+			if (tokens.Count < 2)
+			{
+				throw new InvalidOperationException(
+					$"The shape field name is not fully qualified for joined table {featureClassWithJoin.GetName()}.");
+			}
+
+			tokens.RemoveAt(tokens.Count - 1);
+
+			string tableName = StringUtils.Concatenate(tokens, ".");
+
+			foreach (Table databaseTable in GetDatabaseTables(featureClassWithJoin))
+			{
+				if (databaseTable is FeatureClass dbFeatureClass &&
+				    dbFeatureClass.GetName()
+				                  .Equals(tableName, StringComparison.InvariantCultureIgnoreCase))
+				{
+					return dbFeatureClass;
+				}
+			}
+
+			throw new InvalidOperationException(
+				$"No database feature class found for joined feature class " +
+				$"{featureClassWithJoin.GetName()} and shape field {shapeField}");
 		}
 
 		/// <summary>

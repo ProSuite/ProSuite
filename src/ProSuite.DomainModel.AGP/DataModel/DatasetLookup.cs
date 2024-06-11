@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -22,8 +23,6 @@ namespace ProSuite.DomainModel.AGP.DataModel
 
 		public T GetDataset<T>(Table table) where T : IDdxDataset
 		{
-			// TODO: Sophisticated logic with unqualified names, etc.
-
 			var tableHandle = (long) table.Handle;
 
 			if (_datasetByTableHandle.TryGetValue(tableHandle, out var dataset))
@@ -34,9 +33,17 @@ namespace ProSuite.DomainModel.AGP.DataModel
 				}
 			}
 
-			string tableName = table.GetName();
+			// 1. Extract actual feature class from joined table:
+			// Assumption: When providing a joined feature class the caller wants the dataset containing the shape field.
+			// TODO: Deal with joined table (standalone table) by using OID field to determine the desired dataset.
+			if (table is FeatureClass featureClass && table.IsJoinedTable())
+			{
+				table = DatasetUtils.GetDatabaseFeatureClass(featureClass);
+			}
 
-			// TODO: If model has unqualified name, etc. see GlobalDatasetLookup
+			// 2. TODO: Sophisticated logic with unqualified names, etc. (see GlobalDatasetLookup)
+
+			string tableName = table.GetName();
 
 			string unqualifiedName = ModelElementNameUtils.GetUnqualifiedName(tableName);
 
@@ -48,8 +55,8 @@ namespace ProSuite.DomainModel.AGP.DataModel
 			if (result == null)
 			{
 				result = _objectDatasets.OfType<T>().FirstOrDefault(
-					d => ModelElementNameUtils.GetUnqualifiedName(d.Name).Equals(tableName, StringComparison.InvariantCultureIgnoreCase) ||
-					     ModelElementNameUtils.GetUnqualifiedName(d.Name).Equals(unqualifiedName, StringComparison.InvariantCultureIgnoreCase));
+					d => UnqualifiedDatasetNameEquals(d, tableName) ||
+					     DatasetNameEquals(d, unqualifiedName));
 			}
 
 			_datasetByTableHandle[tableHandle] = result;
@@ -61,6 +68,21 @@ namespace ProSuite.DomainModel.AGP.DataModel
 		public IDdxDataset GetDataset(Table table)
 		{
 			return GetDataset<IDdxDataset>(table);
+		}
+
+		private static bool DatasetNameEquals<T>(T dataset, string name) where T : IDdxDataset
+		{
+			string datasetName = dataset.Name;
+
+			return datasetName.Equals(name, StringComparison.InvariantCultureIgnoreCase);
+		}
+
+		private static bool UnqualifiedDatasetNameEquals<T>(T dataset, string name)
+			where T : IDdxDataset
+		{
+			string unqualifiedName = ModelElementNameUtils.GetUnqualifiedName(dataset.Name);
+
+			return unqualifiedName.Equals(name, StringComparison.InvariantCultureIgnoreCase);
 		}
 	}
 }
