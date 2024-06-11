@@ -11,14 +11,14 @@ namespace ProSuite.DomainModel.AGP.DataModel
 {
 	public class DatasetLookup : IDatasetLookup
 	{
-		private readonly IList<IDdxDataset> _objectDatasets;
+		protected IList<IDdxDataset> ObjectDatasets { get; }
 
 		private readonly IDictionary<long, IDdxDataset> _datasetByTableHandle =
 			new Dictionary<long, IDdxDataset>();
 
 		public DatasetLookup(IList<IDdxDataset> objectDatasets)
 		{
-			_objectDatasets = objectDatasets;
+			ObjectDatasets = objectDatasets;
 		}
 
 		public T GetDataset<T>(Table table) where T : IDdxDataset
@@ -47,14 +47,14 @@ namespace ProSuite.DomainModel.AGP.DataModel
 
 			string unqualifiedName = ModelElementNameUtils.GetUnqualifiedName(tableName);
 
-			T result = _objectDatasets.OfType<T>().FirstOrDefault(
+			T result = ObjectDatasets.OfType<T>().FirstOrDefault(
 				d => d.Name.Equals(tableName, StringComparison.InvariantCultureIgnoreCase) ||
 				     d.Name.Equals(unqualifiedName, StringComparison.InvariantCultureIgnoreCase));
 
 			// Todo daro: Hack GoTop-138 for tables from FGDB.
 			if (result == null)
 			{
-				result = _objectDatasets.OfType<T>().FirstOrDefault(
+				result = ObjectDatasets.OfType<T>().FirstOrDefault(
 					d => UnqualifiedDatasetNameEquals(d, tableName) ||
 					     DatasetNameEquals(d, unqualifiedName));
 			}
