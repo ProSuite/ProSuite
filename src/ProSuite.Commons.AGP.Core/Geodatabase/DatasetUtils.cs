@@ -75,20 +75,28 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
-		public static int? GetDefaultSubtypeCode(Table table)
+		public static int GetDefaultSubtypeCode(Table table)
 		{
-			if (table is null) return null;
+			if (table is null) return -1;
 
 			using var definition = table.GetDefinition();
 
+			return GetDefaultSubtypeCode(definition);
+		}
+
+		public static int GetDefaultSubtypeCode(TableDefinition definition)
+		{
+			if (definition is null) return -1;
+
 			try
 			{
+				// GetDefaultSubtypeCode() returns -1 if no subtypes
 				return definition.GetDefaultSubtypeCode();
 			}
 			catch (NotSupportedException)
 			{
 				// Shapefiles have no subtypes and throw NotSupportedException
-				return null;
+				return -1;
 			}
 		}
 
@@ -99,11 +107,37 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 			using var definition = table.GetDefinition();
 
+			return GetDefaultSubtype(definition);
+		}
+
+		[CanBeNull]
+		public static Subtype GetDefaultSubtype(TableDefinition tableDefinition)
+		{
+			var defaultCode = GetDefaultSubtypeCode(tableDefinition);
+
+			return GetSubtype(tableDefinition, defaultCode);
+		}
+
+		[CanBeNull]
+		public static Subtype GetSubtype(Table table, int subTypeCode)
+		{
+			if (table is null) return null;
+
+			using var definition = table.GetDefinition();
+
+			return GetSubtype(definition, subTypeCode);
+		}
+
+		[CanBeNull]
+		public static Subtype GetSubtype(TableDefinition definition, int subTypeCode)
+		{
+			if (definition is null) return null;
+
 			try
 			{
-				var defaultCode = definition.GetDefaultSubtypeCode();
+				// GetSubtypes() returns an empty list if no subtypes
 				var subtypes = definition.GetSubtypes();
-				return subtypes.FirstOrDefault(st => st.GetCode() == defaultCode);
+				return subtypes.FirstOrDefault(st => st.GetCode() == subTypeCode);
 			}
 			catch (NotSupportedException)
 			{
@@ -335,11 +369,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		/// <summary>
-		/// Gets the name of the subtype field in a given object class.
+		/// Gets the name of the subtype field in a given table.
 		/// </summary>
 		/// <param name="table">The table.</param>
-		/// <returns>The name of the subtype field, or null if the table has no subtype field.
-		/// </returns>
+		/// <returns>The name of the subtype field, or null
+		/// if the table has no subtype field.</returns>
 		[CanBeNull]
 		public static string GetSubtypeFieldName([NotNull] Table table)
 		{
@@ -349,20 +383,24 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		[CanBeNull]
-		public static string GetSubtypeFieldName(TableDefinition tableDefinition)
+		public static string GetSubtypeFieldName(TableDefinition definition)
 		{
-			string subtypeFieldName = null;
 			try
 			{
-				return tableDefinition.GetSubtypeField();
+				// GetSubtypeField() returns an empty string if no subtypes
+				string fieldName = definition.GetSubtypeField();
+
+				return string.IsNullOrEmpty(fieldName)
+					       ? null
+					       : fieldName;
 			}
 			catch (NotSupportedException notSupportedException)
 			{
 				// Shapefiles throw a NotSupportedException
 				_msg.Debug("Subtypes not supported", notSupportedException);
-			}
 
-			return subtypeFieldName;
+				return null;
+			}
 		}
 
 		/// <summary>
@@ -375,24 +413,24 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			using var definition = table.GetDefinition();
 
-			string subtypeFieldName = GetSubtypeFieldName(table);
+			return GetSubtypeFieldIndex(definition);
+		}
 
-			if (string.IsNullOrEmpty(subtypeFieldName))
-			{
-				return -1;
-			}
+		public static int GetSubtypeFieldIndex(TableDefinition definition)
+		{
+			string subtypeFieldName = GetSubtypeFieldName(definition);
 
-			int result = definition.FindField(subtypeFieldName);
-
-			return result;
+			return string.IsNullOrEmpty(subtypeFieldName)
+				       ? -1
+				       : definition.FindField(subtypeFieldName);
 		}
 
 		/// <summary>
 		/// Gets the name of the object id field in a given table.
 		/// </summary>
 		/// <param name="table">The table.</param>
-		/// <returns>The name of the subtype field, or null if the table has no subtype field.
-		/// </returns>
+		/// <returns>The name of the objectId field, or null
+		/// if the table has no objectId field.</returns>
 		[CanBeNull]
 		public static string GetObjectIdFieldName([NotNull] Table table)
 		{
@@ -402,14 +440,14 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		[CanBeNull]
-		public static string GetObjectIdFieldName(TableDefinition tableDefinition)
+		public static string GetObjectIdFieldName(TableDefinition definition)
 		{
-			if (! tableDefinition.HasObjectID())
+			if (! definition.HasObjectID())
 			{
 				return null;
 			}
 
-			return tableDefinition.GetObjectIDField();
+			return definition.GetObjectIDField();
 		}
 
 		/// <summary>

@@ -13,6 +13,8 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.Selection;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Collections;
@@ -139,6 +141,11 @@ public class AddRemovePointsTool : MapTool
 
 	protected virtual bool DoubleClickCommits => true;
 
+	protected virtual SelectionSettings GetSelectionSettings()
+	{
+		return new SelectionSettings();
+	}
+
 	/// <remarks>Will be called on the MCT</remarks>
 	protected virtual void Activate()
 	{
@@ -219,7 +226,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ShowError(ex, _msg);
 		}
 	}
 
@@ -233,7 +240,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 
 		return Task.FromResult(0);
@@ -262,7 +269,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ShowError(ex, _msg);
 		}
 	}
 
@@ -285,7 +292,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 	}
 
@@ -335,7 +342,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 	}
 
@@ -348,7 +355,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 		return null;
 	}
@@ -362,7 +369,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 			return Task.FromResult(true);
 		}
 	}
@@ -386,7 +393,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 
 		return true;
@@ -435,7 +442,9 @@ public class AddRemovePointsTool : MapTool
 		//   - if within eps of existing point feature: of type Remove
 		//   - otherwise: of type Add
 
-		const double delta = 10.0; // TODO pixels, convert to map units, see ActiveMapView.ScreenToMap()
+		var settings = GetSelectionSettings();
+		var tolerancePixels = settings.SelectionTolerancePixels;
+		var delta = MapUtils.ConvertScreenPixelToMapLength(ActiveMapView, tolerancePixels, point);
 
 		var element = FindElement(_elements, point, delta);
 
