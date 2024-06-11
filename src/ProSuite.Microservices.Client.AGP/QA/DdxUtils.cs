@@ -211,6 +211,55 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			return model;
 		}
 
+		/// <summary>
+		/// Creates the ID/datasets dictionary. The datasets have their models assigned but
+		/// do not contain any details, such as Attributes or ObjectCategories.
+		/// </summary>
+		/// <param name="datasetMsgs"></param>
+		/// <param name="modelMsgs"></param>
+		/// <param name="modelFactory"></param>
+		/// <returns></returns>
+		public static Dictionary<int, IDdxDataset> CreateDatasets(
+			[NotNull] IEnumerable<DatasetMsg> datasetMsgs,
+			[NotNull] IEnumerable<ModelMsg> modelMsgs,
+			[CanBeNull] IModelFactory modelFactory)
+		{
+			Dictionary<int, IDdxDataset> datasetsById = FromDatasetMsgs(datasetMsgs, modelFactory);
+
+			foreach (ModelMsg modelMsg in modelMsgs)
+			{
+				DdxModel model = modelFactory == null
+					                 ? new BasicModel(modelMsg.ModelId, modelMsg.Name)
+					                 : modelFactory.CreateModel(modelMsg);
+
+				foreach (int datasetId in modelMsg.DatasetIds)
+				{
+					if (! datasetsById.TryGetValue(datasetId, out IDdxDataset dataset))
+					{
+						continue;
+					}
+
+					if (modelMsg.ErrorDatasetIds.Contains(datasetId))
+					{
+						ObjectDataset objectDataset = (ObjectDataset) dataset;
+						IErrorDataset errorDataset = CreateErrorDataset(
+							datasetId, dataset.GeometryType, dataset.Name, objectDataset.Attributes,
+							objectDataset.ObjectTypes);
+
+						datasetsById[datasetId] = (Dataset) errorDataset;
+						dataset = errorDataset;
+					}
+
+					if (! model.Contains(dataset) && model.Datasets.All(ds => ds.Id != datasetId))
+					{
+						model.AddDataset((Dataset) dataset);
+					}
+				}
+			}
+
+			return datasetsById;
+		}
+
 		public static void AddDatasetsDetailsAsync(
 			IList<Dataset> datasets,
 			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
@@ -400,39 +449,10 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			}
 
 			RepeatedField<DatasetMsg> datasetMsgs = response.Datasets;
+			RepeatedField<ModelMsg> modelMsgs = response.Models;
 
-			Dictionary<int, IDdxDataset> datasetsById = FromDatasetMsgs(datasetMsgs, modelFactory);
-
-			foreach (ModelMsg modelMsg in response.Models)
-			{
-				DdxModel model = modelFactory == null
-					                 ? new BasicModel(modelMsg.ModelId, modelMsg.Name)
-					                 : modelFactory.CreateModel(modelMsg);
-
-				foreach (int datasetId in modelMsg.DatasetIds)
-				{
-					if (! datasetsById.TryGetValue(datasetId, out IDdxDataset dataset))
-					{
-						continue;
-					}
-
-					if (modelMsg.ErrorDatasetIds.Contains(datasetId))
-					{
-						ObjectDataset objectDataset = (ObjectDataset) dataset;
-						IErrorDataset errorDataset = CreateErrorDataset(
-							datasetId, dataset.GeometryType, dataset.Name, objectDataset.Attributes,
-							objectDataset.ObjectTypes);
-
-						datasetsById[datasetId] = (Dataset) errorDataset;
-						dataset = errorDataset;
-					}
-
-					if (! model.Contains(dataset) && model.Datasets.All(ds => ds.Id != datasetId))
-					{
-						model.AddDataset((Dataset) dataset);
-					}
-				}
-			}
+			Dictionary<int, IDdxDataset> datasetsById =
+				CreateDatasets(datasetMsgs, modelMsgs, modelFactory);
 
 			List<ProjectWorkspace> candidates = null;
 
