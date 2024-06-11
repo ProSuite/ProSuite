@@ -291,7 +291,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SelectionSettings settings = GetSelectionSettings();
 
-			SetupSketch(settings.SketchGeometryType, settings.SketchOutputMode);
+			SetupSketch(GetSketchGeometryType(), settings.SketchOutputMode);
 
 			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
 			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
@@ -326,6 +326,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			UseSnapping = useSnapping;
 
 			GeomIsSimpleAsFeature = enforceSimpleSketch;
+		}
+
+		protected virtual SketchGeometryType GetSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
 		}
 
 		protected virtual void OnSelectionPhaseStarted() { }
