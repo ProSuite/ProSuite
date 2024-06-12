@@ -694,7 +694,16 @@ namespace ProSuite.Microservices.Client.QA
 			AttributeValue attributeValue = null;
 			if (valueObject != null && valueObject != DBNull.Value)
 			{
-				attributeValue = ToAttributeValue(fieldType, valueObject);
+				try
+				{
+					attributeValue = ToAttributeValue(fieldType, valueObject);
+				}
+				catch (Exception e)
+				{
+					_msg.Debug($"Error encoding value {valueObject} for field type {fieldType} " +
+					           $"for attribute {attribute.Name} of {attribute.Dataset?.Name}", e);
+					throw;
+				}
 			}
 
 			var attributeMsg = new AttributeMsg
