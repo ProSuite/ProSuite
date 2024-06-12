@@ -25,6 +25,9 @@ namespace ProSuite.AGP.Editing
 			[CanBeNull] IDictionary<Feature, Geometry> updates,
 			[CanBeNull] IDictionary<Feature, IList<Geometry>> copies = null)
 		{
+			Assert.ArgumentCondition(updates?.Count > 0 || copies?.Count > 0,
+				"Neither updates nor inserts have been provided.");
+
 			return await ExecuteInTransactionAsync(
 				       editContext => StoreTx(editContext, updates, copies),
 				       description, GetDatasetsNonEmpty(updates?.Keys, copies?.Keys));
