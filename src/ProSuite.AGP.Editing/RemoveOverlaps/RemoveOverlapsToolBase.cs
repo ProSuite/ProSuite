@@ -364,6 +364,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
 
+			// They might be stored (insert target vertices):
+			featureFinder.ReturnUnJoinedFeatures = true;
+
 			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
 					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
