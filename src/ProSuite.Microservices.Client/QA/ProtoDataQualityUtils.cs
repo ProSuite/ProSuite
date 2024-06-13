@@ -536,7 +536,7 @@ namespace ProSuite.Microservices.Client.QA
 			{
 				if (dataset is ObjectDataset objectDataset)
 				{
-					foreach (ObjectAttribute attribute in objectDataset.Attributes)
+					foreach (ObjectAttribute attribute in objectDataset.GetAttributes())
 					{
 						AttributeMsg attributeMsg = ToAttributeMsg(attribute);
 

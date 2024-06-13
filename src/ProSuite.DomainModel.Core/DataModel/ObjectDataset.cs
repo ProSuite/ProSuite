@@ -444,7 +444,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		#region Implementation of IDbTableSchema
 
-		public IReadOnlyList<ITableField> TableFields => (IReadOnlyList<ITableField>) Attributes;
+		public IReadOnlyList<ITableField> TableFields
+			=> (IReadOnlyList<ITableField>) GetAttributes();
 
 		public bool HasOID => _attributes.Any(a => a.FieldType == FieldType.ObjectID);
 
