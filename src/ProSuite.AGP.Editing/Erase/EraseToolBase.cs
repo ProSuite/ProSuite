@@ -108,7 +108,7 @@ namespace ProSuite.AGP.Editing.Erase
 		private IDictionary<Feature, Geometry> CalculateResultFeatures(
 			MapView activeView, Polygon sketchPolygon)
 		{
-			SelectionSet selectedFeatures = activeView.Map.GetSelection();
+			IEnumerable<Feature> selectedFeatures = GetApplicableSelectedFeatures(activeView);
 
 			var resultFeatures = CalculateResultFeatures(selectedFeatures, sketchPolygon);
 
@@ -116,14 +116,12 @@ namespace ProSuite.AGP.Editing.Erase
 		}
 
 		private static IDictionary<Feature, Geometry> CalculateResultFeatures(
-			SelectionSet selection,
+			IEnumerable<Feature> selectedFeatures,
 			Polygon cutPolygon)
 		{
 			var result = new Dictionary<Feature, Geometry>();
 
-			SpatialReference spatialReference = MapView.Active.Map.SpatialReference;
-
-			foreach (var feature in MapUtils.GetFeatures(selection, spatialReference))
+			foreach (var feature in selectedFeatures)
 			{
 				Geometry featureGeometry = feature.GetShape();
 				featureGeometry = GeometryEngine.Instance.SimplifyAsFeature(featureGeometry, true);
