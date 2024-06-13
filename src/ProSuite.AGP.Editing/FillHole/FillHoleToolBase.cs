@@ -149,6 +149,9 @@ namespace ProSuite.AGP.Editing.FillHole
 
 			FeatureClass currentTargetClass = ToolUtils.GetCurrentTargetFeatureClass(editTemplate);
 
+			// Un-wrap potential joins:
+			currentTargetClass = DatasetUtils.GetDatabaseFeatureClass(currentTargetClass);
+
 			if (currentTargetClass == null)
 			{
 				throw new Exception("No valid template selected");
