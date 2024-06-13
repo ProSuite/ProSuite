@@ -8,6 +8,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
@@ -57,46 +58,148 @@ namespace ProSuite.AGP.Editing.Picker
 			       .OrderBy(group => group.Key).SelectMany(fcs => fcs);
 		}
 
-		private static bool SingleClick(Geometry geometry, int tolerancePixels)
-		{
-			Envelope extent = geometry.Extent;
-
-			double toleranceMapUnits =
-				MapUtils.ConvertScreenPixelToMapLength(MapView.Active, tolerancePixels,
-				                                       extent.Center);
-
-			return IsSingleClick(extent);
-			//return extent.Width <= toleranceMapUnits && extent.Height <= toleranceMapUnits;
-		}
-
 		private static Geometry EnsureNonEmpty([NotNull] Geometry sketch, int tolerancePixel)
 		{
 			return IsSingleClick(sketch) ? CreateSinglePickGeometry(sketch, tolerancePixel) : sketch;
 		}
 
-		private static Geometry CreateSinglePickGeometry([NotNull] Geometry sketch, int tolerancePixel)
+		private static Geometry CreateSinglePickGeometry([NotNull] Geometry sketch,
+		                                                 int tolerancePixel)
 		{
-			return Buffer(CreateMapPoint(sketch), tolerancePixel);
+			MapPoint mapPoint =
+				GeometryFactory.CreatePoint(sketch.Extent.XMin,
+				                            sketch.Extent.YMin,
+				                            sketch.SpatialReference);
+
+			return ExpandGeometryByPixels(mapPoint, tolerancePixel);
 		}
 
-		private static MapPoint CreateMapPoint([NotNull] Geometry sketch)
-		{
-			return MapPointBuilderEx.CreateMapPoint(
-				new Coordinate2D(sketch.Extent.XMin, sketch.Extent.YMin),
-				sketch.SpatialReference);
-		}
-
-		private static Geometry Buffer(Geometry sketchGeometry, int selectionTolerancePixels)
+		private static Geometry ExpandGeometryByPixels(Geometry sketchGeometry, int selectionTolerancePixels)
 		{
 			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
 				MapView.Active, selectionTolerancePixels, sketchGeometry.Extent.Center);
 
-			return GeometryEngine.Instance.Buffer(sketchGeometry, selectionToleranceMapUnits);
+			double envelopeExpansion = selectionToleranceMapUnits * 2;
+
+			Envelope envelope = sketchGeometry.Extent;
+
+			// NOTE: MapToScreen in stereo map is sensitive to Z value (Picker location!)
+
+			// Rather than creating a non-Z-aware polygon with elliptic arcs by using buffer...
+			//Geometry selectionGeometry =
+			//	GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
+
+			// Just expand the envelope
+			// .. but PickerViewModel needs a polygon to display selection geometry (press space).
+
+			// HasZ, HasM and HasID are inherited from input geometry. Thereßss no need
+			// for GeometryUtils.EnsureGeometrySchema()
+
+			return GeometryFactory.CreatePolygon(
+				envelope.Expand(envelopeExpansion, envelopeExpansion, false),
+				envelope.SpatialReference);
 		}
 
 		private static bool IsSingleClick(Geometry sketch)
 		{
 			return ! (sketch.Extent.Width > 0 || sketch.Extent.Height > 0);
+		}
+
+		public static async Task Show(
+			[NotNull] Geometry selectionGeometry,
+			int selectionTolerance,
+			[NotNull] Type precedenceType,
+			[NotNull] Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection,
+			[CanBeNull] CancelableProgressor progressor = null)
+		{
+			bool areaSelect = false;
+			IPickerPrecedence precedence = null;
+
+			List<FeatureSelectionBase> selection =
+				await QueuedTaskUtils.Run(() =>
+				{
+					// todo daro Implement this in IPickerPrecedence once it's tested.
+					// todo daro compare with OneClickToolBase implementation
+					areaSelect = ! IsSingleClick(selectionGeometry);
+
+					Geometry geometry = EnsureNonEmpty(selectionGeometry, selectionTolerance);
+
+					precedence = (IPickerPrecedence) Activator.CreateInstance(precedenceType, geometry, selectionTolerance);
+
+					return getSelection(geometry).ToList();
+				}, progressor);
+
+			if (selection.Count == 0)
+			{
+				return;
+			}
+
+			var orderedSelection = OrderByGeometryDimension(selection).ToList();
+
+			// IPickerPrecedence.GetPickerMode has to be on GUI thread to capture key down events, etc.
+			Assert.NotNull(precedence);
+			PickerMode mode = precedence.GetPickerMode(orderedSelection, areaSelect);
+
+			switch (mode)
+			{
+				case PickerMode.ShowPicker:
+					await ShowPicker(precedence, orderedSelection);
+					break;
+				case PickerMode.PickAll:
+					await SelectAll(selection, progressor);
+					break;
+				case PickerMode.PickBest:
+					await PickBest(precedence, selection, progressor);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+
+		public static async Task Show(
+			[NotNull] Geometry selectionGeometry,
+			int selectionTolerance,
+			[NotNull] Type precedenceType,
+			[NotNull] Func<Geometry, IEnumerable<FeatureSelectionBase>> getSelection,
+			PickerMode mode = PickerMode.ShowPicker,
+			[CanBeNull] CancelableProgressor progressor = null)
+		{
+			IPickerPrecedence precedence = null;
+
+			List<FeatureSelectionBase> selection =
+				await QueuedTaskUtils.Run(() =>
+				{
+					Geometry geometry = EnsureNonEmpty(selectionGeometry, selectionTolerance);
+
+					precedence = (IPickerPrecedence)Activator.CreateInstance(precedenceType, geometry, selectionTolerance);
+
+					return getSelection(geometry).ToList();
+				}, progressor);
+
+			if (selection.Count == 0)
+			{
+				return;
+			}
+
+			var orderedSelection = OrderByGeometryDimension(selection).ToList();
+
+			// IPickerPrecedence.GetPickerMode has to be on GUI thread to capture key down events, etc.
+			Assert.NotNull(precedence);
+
+			switch (mode)
+			{
+				case PickerMode.ShowPicker:
+					await ShowPicker(precedence, orderedSelection);
+					break;
+				case PickerMode.PickAll:
+					await SelectAll(selection, progressor);
+					break;
+				case PickerMode.PickBest:
+					await PickBest(precedence, selection, progressor);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
 		}
 
 		public static async Task Show(
@@ -111,7 +214,7 @@ namespace ProSuite.AGP.Editing.Picker
 				{
 					// todo daro Implement this in IPickerPrecedence once it's tested.
 					// todo daro compare with OneClickToolBase implementation
-					areaSelect = ! SingleClick(precedence.SelectionGeometry, precedence.SelectionTolerance);
+					areaSelect = ! IsSingleClick(precedence.SelectionGeometry);
 
 					Geometry geometry = EnsureNonEmpty(precedence.SelectionGeometry, precedence.SelectionTolerance);
 

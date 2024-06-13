@@ -140,7 +140,14 @@ namespace ProSuite.AGP.Editing
 			//	GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
 
 			// Just expand the envelope
-			return envelope.Expand(envelopeExpansion, envelopeExpansion, false);
+			// .. but PickerViewModel needs a polygon to display selection geometry (press space).
+
+			// HasZ, HasM and HasID are inherited from input geometry. Thereßss no need
+			// for GeometryUtils.EnsureGeometrySchema()
+
+			return GeometryFactory.CreatePolygon(
+				envelope.Expand(envelopeExpansion, envelopeExpansion, false),
+				envelope.SpatialReference);
 		}
 
 		public static async Task<bool> FlashResultPolygonsAsync(

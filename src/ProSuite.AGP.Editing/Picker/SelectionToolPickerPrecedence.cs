@@ -18,21 +18,27 @@ namespace ProSuite.AGP.Editing.Picker
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private static readonly int _maxItems = 25;
-		private static MapPoint _selectionCentroid;
-
+		private MapPoint _selectionCentroid;
 		private Geometry _selectionGeometry;
 
-		public Geometry SelectionGeometry
+		[UsedImplicitly]
+		public SelectionToolPickerPrecedence() { }
+
+		[UsedImplicitly]
+		public SelectionToolPickerPrecedence(Geometry selectionGeometry, int selectionTolerance)
 		{
-			get => _selectionGeometry;
-			set
-			{
-				_selectionGeometry = value;
-				_selectionCentroid = GeometryUtils.Centroid(value);
-			}
+			_selectionGeometry = selectionGeometry;
+			SelectionTolerance = selectionTolerance;
 		}
 
-		public int SelectionTolerance { get; set; }
+		[NotNull]
+		public Geometry SelectionGeometry
+		{
+			get => Assert.NotNull(_selectionGeometry);
+			set => _selectionGeometry = value;
+		}
+
+		public int SelectionTolerance { get; }
 
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                bool areaSelect = false)
@@ -55,9 +61,9 @@ namespace ProSuite.AGP.Editing.Picker
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
 		{
 			return items.Take(_maxItems)
-			            .Select(item => SetScoreConsideringDistances(item, _selectionCentroid))
+			            .Select(item => SetScoreConsideringDistances(item, SelectionCentroid))
 			            .OfType<IPickableFeatureItem>()
-			            .Select(item => SetScoreConsideringDrawingOutline(item, _selectionCentroid))
+			            .Select(item => SetScoreConsideringDrawingOutline(item, SelectionCentroid))
 			            .OrderBy(item => item, new PickableItemComparer());
 		}
 
@@ -67,6 +73,10 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			return Order(items).FirstOrDefault() as T;
 		}
+
+		[NotNull]
+		private MapPoint SelectionCentroid =>
+			_selectionCentroid ??= GeometryUtils.Centroid(SelectionGeometry);
 
 		private static IPickableItem SetScoreConsideringDistances(
 			IPickableItem item,
@@ -86,11 +96,13 @@ namespace ProSuite.AGP.Editing.Picker
 				{
 					case GeometryType.Point:
 						score = GeometryUtils.Engine
-						                     .NearestPoint(selectionGeometry, (MapPoint) item.Geometry)
+						                     .NearestPoint(selectionGeometry,
+						                                   (MapPoint) item.Geometry)
 						                     .Distance;
 						break;
 					case GeometryType.Polyline:
-						score = SumDistancesStartEndPoint(selectionGeometry, (Multipart) item.Geometry);
+						score = SumDistancesStartEndPoint(selectionGeometry,
+						                                  (Multipart) item.Geometry);
 						break;
 					case GeometryType.Polygon:
 						// negative
@@ -105,7 +117,7 @@ namespace ProSuite.AGP.Editing.Picker
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
-			
+
 				SetScore(item, score);
 			}
 			catch (Exception e)
@@ -193,7 +205,8 @@ namespace ProSuite.AGP.Editing.Picker
 			Assert.NotNull(drawingOutline);
 			Assert.False(drawingOutline.IsEmpty, "outline is empty");
 			Assert.False(drawingOutline.GeometryType == GeometryType.Point, "outline is a point");
-			Assert.False(drawingOutline.GeometryType == GeometryType.Polyline, "outline is a polyline");
+			Assert.False(drawingOutline.GeometryType == GeometryType.Polyline,
+			             "outline is a polyline");
 
 			return drawingOutline;
 		}
