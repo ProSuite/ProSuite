@@ -1,10 +1,8 @@
-using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
@@ -19,20 +17,14 @@ namespace ProSuite.AGP.Editing.Picker
 		/// <summary>
 		/// Has to be called on MCT
 		/// </summary>
-		public PickableFeatureItem(BasicFeatureLayer layer, Feature feature)
+		public PickableFeatureItem(BasicFeatureLayer layer, Feature feature,
+		                           Geometry geometry, long oid, string displayValue)
 		{
-			Feature = feature;
 			Layer = layer;
-			Oid = feature.GetObjectID();
-			Geometry = feature.GetShape();
-
-			string expression = layer.GetDisplayExpressions(new[] { Oid }).FirstOrDefault();
-
-			_displayValue = ! string.IsNullOrEmpty(expression)
-				                ? expression
-				                : GdbObjectUtils.GetDisplayValue(feature, layer.Name);
-			// todo daro Try to find out whether display expression is configurated. Typically this is just the OID which is not very useful.
-			// SDK gives no way to determine whether display expression is simple or configurated. Let the user decide and implement a project setting?
+			Feature = feature;
+			Geometry = geometry;
+			Oid = oid;
+			_displayValue = displayValue;
 		}
 
 		[NotNull]
