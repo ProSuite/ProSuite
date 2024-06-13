@@ -141,6 +141,8 @@ public class AddRemovePointsTool : MapTool
 
 	protected virtual bool DoubleClickCommits => true;
 
+	protected virtual bool SelectNewFeatures => true;
+
 	protected virtual SelectionSettings GetSelectionSettings()
 	{
 		return new SelectionSettings();
@@ -594,7 +596,7 @@ public class AddRemovePointsTool : MapTool
 
 		var operation = new EditOperation();
 		operation.Name = $"Update {targetLayer.Name} (+{adds.Count} -{drops.Count})";
-		operation.SelectNewFeatures = true;
+		operation.SelectNewFeatures = SelectNewFeatures;
 
 		foreach (var element in adds)
 		{
