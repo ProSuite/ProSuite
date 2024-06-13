@@ -675,7 +675,11 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 	{
 		var result = new XElement("Renderer");
 
-		if (renderer is CIMUniqueValueRenderer unique)
+		if (renderer is null)
+		{
+			result.Add(new XAttribute("type", "null"));
+		}
+		else if (renderer is CIMUniqueValueRenderer unique)
 		{
 			result.Add(new XAttribute("type", "unique"));
 
@@ -698,7 +702,7 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		}
 		else
 		{
-			var type = renderer?.GetType().Name ?? "(null)";
+			var type = renderer.GetType().Name;
 			result.Add(new XAttribute("type", type));
 		}
 
