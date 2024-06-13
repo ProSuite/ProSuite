@@ -655,16 +655,16 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) smallestPart;
 		}
 
-		public static T GetLargestSegment<T>([NotNull] IEnumerable<T> segments,
-		                                     Envelope areaOfInterest = null)
-			where T : Segment
+		[CanBeNull]
+		public static Segment GetLargestSegment([NotNull] IEnumerable<Segment> segments,
+		                                        Envelope areaOfInterest = null)
 		{
 			Segment shortesSegment = null;
 			double longestLength = double.Epsilon;
 
 			bool considerAreaOfInterest = areaOfInterest != null && ! areaOfInterest.IsEmpty;
 
-			foreach (T candidate in segments)
+			foreach (Segment candidate in segments)
 			{
 				if (considerAreaOfInterest)
 				{
@@ -688,7 +688,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				}
 			}
 
-			return (T) shortesSegment;
+			return shortesSegment;
 		}
 
 		/// <summary>
