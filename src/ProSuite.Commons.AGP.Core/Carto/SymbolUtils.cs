@@ -664,7 +664,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		// not on the Symbol. They refer to properties of geometric
 		// effects, symbol layers, and marker placements by means
 		// of a PrimitiveName and the PropertyName. The PrimitiveName
-		// is set to a GUID on both the primitive and the override.
+		// is set to a GUID on both the primitive and the override,
+		// but any string will work.
 		//
 		// Overrides are "typically set by renderers at draw time".
 		//
@@ -756,40 +757,70 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return primitive;
 		}
 
-		public static T FindPrimitiveByName<T>(CIMSymbol symbol, string label) where T : CIMObject
+		public static T FindPrimitiveByName<T>(CIMSymbol symbol, string name) where T : CIMObject
+		{
+			return FindPrimitiveByName<T>(symbol, name, out _);
+		}
+
+		/// <summary>
+		/// Find a symbol primitive by name (and of the given type).
+		/// If found, return the primitive and the path where it is
+		/// located within the symbol. Otherwise, return null and set
+		/// <paramref name="path"/> to null.
+		/// </summary>
+		public static T FindPrimitiveByName<T>(CIMSymbol symbol, string name, out string path) where T : CIMObject
 		{
 			// TextSymbol has no PrimitiveName; all other symbols derive from MultiLayerSymbol
-			if (! (symbol is CIMMultiLayerSymbol multiLayerSymbol)) return null;
-
-			string primitiveName = label;
+			if (! (symbol is CIMMultiLayerSymbol multiLayerSymbol))
+			{
+				path = null;
+				return null;
+			}
 
 			if (multiLayerSymbol.Effects != null)
 			{
-				foreach (var effect in multiLayerSymbol.Effects)
+				for (var i = 0; i < multiLayerSymbol.Effects.Length; i++)
 				{
-					if (string.Equals(effect.PrimitiveName, primitiveName))
+					CIMGeometricEffect effect = multiLayerSymbol.Effects[i];
+
+					if (string.Equals(effect.PrimitiveName, name))
 					{
-						if (effect is T found) return found;
+						if (effect is T found)
+						{
+							path = $"effect {i}";
+							return found;
+						}
 					}
 				}
 			}
 
 			if (multiLayerSymbol.SymbolLayers != null)
 			{
-				foreach (var layer in multiLayerSymbol.SymbolLayers)
+				int layerCount = multiLayerSymbol.SymbolLayers.Length;
+				for (var i = 0; i < layerCount; i++)
 				{
-					if (string.Equals(layer.PrimitiveName, primitiveName))
+					CIMSymbolLayer layer = multiLayerSymbol.SymbolLayers[i];
+
+					if (string.Equals(layer.PrimitiveName, name))
 					{
-						if (layer is T found) return found;
+						if (layer is T found)
+						{
+							path = $"layer {layerCount - 1 - i}";
+							return found;
+						}
 					}
 
 					if (layer is CIMMarker marker)
 					{
 						var placement = marker.MarkerPlacement;
 						if (placement != null &&
-						    string.Equals(placement.PrimitiveName, primitiveName))
+						    string.Equals(placement.PrimitiveName, name))
 						{
-							if (placement is T found) return found;
+							if (placement is T found)
+							{
+								path = $"layer {layerCount - 1 - i} placement";
+								return found;
+							}
 						}
 
 						if (layer is CIMVectorMarker vectorMarker)
@@ -797,11 +828,16 @@ namespace ProSuite.Commons.AGP.Core.Carto
 							var graphics = vectorMarker.MarkerGraphics;
 							if (graphics != null)
 							{
-								foreach (var graphic in graphics)
+								for (var j = 0; j < graphics.Length; j++)
 								{
-									if (string.Equals(graphic.PrimitiveName, primitiveName))
+									CIMMarkerGraphic graphic = graphics[j];
+									if (string.Equals(graphic.PrimitiveName, name))
 									{
-										if (graphic is T found) return found;
+										if (graphic is T found)
+										{
+											path = $"layer {layerCount - 1 - i} graphic {j}";
+											return found;
+										}
 									}
 								}
 							}
@@ -810,17 +846,23 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 					if (layer.Effects != null)
 					{
-						foreach (var effect in layer.Effects)
+						for (var j = 0; j < layer.Effects.Length; j++)
 						{
-							if (string.Equals(effect.PrimitiveName, primitiveName))
+							CIMGeometricEffect effect = layer.Effects[j];
+							if (string.Equals(effect.PrimitiveName, name))
 							{
-								if (effect is T found) return found;
+								if (effect is T found)
+								{
+									path = $"layer {layerCount - 1 - i} effect {j}";
+									return found;
+								}
 							}
 						}
 					}
 				}
 			}
 
+			path = null;
 			return null; // not found
 		}
 
@@ -835,11 +877,16 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		/// <item>layer N graphic M</item>
 		/// <item>layer N effect M</item>
 		/// </list>
-		/// where N and M are non-negative integers.
+		/// where N and M are non-negative integers. N addresses symbol layers
+		/// in the order drawn ("layer 0" is the symbol layer drawn first) and
+		/// M addresses effects in the order applied ("effect 0" is applied first).
 		/// </summary>
 		/// <typeparam name="T">Typically one of CIMGeometricEffect or CIMSymbolLayer
 		/// or CIMMarkerPlacement or a subtype of these.</typeparam>
 		/// <returns>The primitive found, or <c>null</c> if not found</returns>
+		/// <remarks>ArcGIS Pro draws symbol layers in the reverse order stored in
+		/// the SymbolLayers array (stupid), whereas effects (both local and global)
+		/// are applied in the same order as stored in the Effects array (good).</remarks>
 		public static T FindPrimitiveByPath<T>(CIMSymbol symbol, string spec) where T : CIMObject
 		{
 			if (string.IsNullOrEmpty(spec)) return null;
@@ -877,8 +924,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			if (string.Equals(root, "layer", StringComparison.OrdinalIgnoreCase))
 			{
-				var layers = multiLayerSymbol.SymbolLayers;
-				var layer = layers != null && index < layers.Length ? layers[index] : null;
+				var layer = GetSymbolLayer(multiLayerSymbol.SymbolLayers, index);
 				if (string.IsNullOrEmpty(suffix)) return layer as T;
 
 				if (string.Equals(suffix, "placement", StringComparison.OrdinalIgnoreCase))
@@ -888,10 +934,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 				if (string.Equals(suffix, "effect", StringComparison.OrdinalIgnoreCase))
 				{
-					var effects = layer?.Effects;
-					var effect = effects != null && localIndex < effects.Length
-						             ? effects[localIndex]
-						             : null;
+					var effect = GetGeometricEffect(layer?.Effects, localIndex);
 					return effect as T;
 				}
 
@@ -910,6 +953,26 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			}
 
 			throw InvalidPrimitiveSpec(spec);
+		}
+
+		private static CIMSymbolLayer GetSymbolLayer(CIMSymbolLayer[] layers, int index)
+		{
+			if (layers is null) return null;
+			if (index < 0) return null;
+			// ArcGIS Pro draws SymbolLayers[N-1] first and SymbolLayers[0] last.
+			// But we want the path "layer 0" to be symbol layer that draws first, so reverse:
+			index = layers.Length - 1 - index;
+			if (index < 0) return null;
+			return layers[index];
+		}
+
+		private static CIMGeometricEffect GetGeometricEffect(CIMGeometricEffect[] effects, int index)
+		{
+			if (effects is null) return null;
+			if (index < 0) return null;
+			if (index >= effects.Length) return null;
+			// Unlike symbol layers, with geom effects we don't reverse:
+			return effects[index];
 		}
 
 		private static ArgumentException InvalidPrimitiveSpec(string spec)
