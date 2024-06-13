@@ -149,7 +149,7 @@ public static class DrawingOutline
 			// seem to be ignored!
 
 			// As of Pro 3.0 none of those ScaleX properties is exposed
-			// in the UI and so it's probably save to ignore it here.
+			// in the UI and so it's probably safe to ignore it here.
 		}
 
 		var outline = RenderLayers(shape, symbol.SymbolLayers, options);
@@ -261,13 +261,19 @@ public static class DrawingOutline
 
 		if (layer is CIMFill)
 		{
-			// Specific subtype (Solid, Gradient, etc) is irrelevant here:
+			// Specific subtype (Solid, Gradient, etc.) is irrelevant here:
 			// outline is always the input polygon shape
 			return shape as Polygon;
 		}
 
 		if (layer is CIMStroke stroke)
 		{
+			// Stroking a polygon draws along its boundary:
+			if (shape is Polygon polygon)
+			{
+				shape = GeometryUtils.Boundary(polygon);
+			}
+
 			// Specific subtype (Solid, Gradient, Picture) is irrelevant here
 			// Buffer all paths (if any) of the given shape:
 			double distance = stroke.Width * scaleFactor / 2;
@@ -685,6 +691,9 @@ public static class DrawingOutline
 			case CIMMarkerPlacementAroundPolygon aroundPolygon:
 				return MarkerPlacements.AroundPolygon(
 					marker, reference, GetOptions(aroundPolygon, scaleFactor));
+			case CIMMarkerPlacementInsidePolygon insidePolygon:
+				return MarkerPlacements.InsidePolygon(
+					marker, reference, GetOptions(insidePolygon, scaleFactor));
 
 			// Stroke marker placements:
 
@@ -720,7 +729,7 @@ public static class DrawingOutline
 				MarkerPlacements.PolygonCenterType.Centroid,
 			PlacementPolygonCenterMethod.OnPolygon =>
 				MarkerPlacements.PolygonCenterType.LabelPoint,
-			_ => throw new ArgumentOutOfRangeException(nameof(cim.Method), cim.Method, "Unknown value")
+			_ => throw new ArgumentOutOfRangeException($"Unknown {nameof(PlacementPolygonCenterMethod)} {cim.Method}")
 		};
 
 		return new MarkerPlacements.PolygonCenterOptions
@@ -762,6 +771,41 @@ public static class DrawingOutline
 		       {
 			       Position = position,
 			       Offset = cim.Offset * scaleFactor
+		       };
+	}
+
+	private static MarkerPlacements.InsidePolygonOptions GetOptions(
+		CIMMarkerPlacementInsidePolygon cim, double scaleFactor = 1.0)
+	{
+		if (cim.GridType != PlacementGridType.Fixed)
+		{
+			throw new NotSupportedException("Randomized placement is not supported");
+		}
+
+		var clipping = cim.Clipping switch
+		{
+			PlacementClip.ClipAtBoundary =>
+				MarkerPlacements.PolygonMarkerClipping.ClipAtBoundary,
+			PlacementClip.RemoveIfCenterOutsideBoundary =>
+				MarkerPlacements.PolygonMarkerClipping.CenterInsideBoundary,
+			PlacementClip.DoNotTouchBoundary =>
+				MarkerPlacements.PolygonMarkerClipping.FullyInsideBoundary,
+			PlacementClip.DoNotClip =>
+				MarkerPlacements.PolygonMarkerClipping.DoNotClip,
+			_ => throw new ArgumentOutOfRangeException($"Unknown {nameof(PlacementClip)} {cim.Clipping}")
+		};
+
+		return new MarkerPlacements.InsidePolygonOptions
+		       {
+			       PlacePerPart = cim.PlacePerPart,
+
+			       StepX = cim.StepX * scaleFactor,
+			       StepY = cim.StepY * scaleFactor,
+			       GridAngle = cim.GridAngle,
+			       ShiftOddRows = cim.ShiftOddRows,
+			       OffsetX = cim.OffsetX * scaleFactor,
+			       OffsetY = cim.OffsetY * scaleFactor,
+				   Clipping = clipping
 		       };
 	}
 
