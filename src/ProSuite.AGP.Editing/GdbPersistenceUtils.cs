@@ -159,7 +159,7 @@ namespace ProSuite.AGP.Editing
 			[NotNull] EditOperation.IEditContext editContext,
 			[NotNull] FeatureClass featureClass,
 			[NotNull] IList<Geometry> geometries,
-			IEnumerable<Attribute> attributes)
+			[CanBeNull] IEnumerable<Attribute> attributes)
 		{
 			Assert.ArgumentNotNull(editContext, nameof(editContext));
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
@@ -181,7 +181,10 @@ namespace ProSuite.AGP.Editing
 
 				SpatialReference spatialReference = classDefinition.GetSpatialReference();
 
-				CopyAttributeValues(attributes, rowBuffer);
+				if (attributes != null)
+				{
+					CopyAttributeValues(attributes, rowBuffer);
+				}
 
 				string shapeFieldName = featureClass.GetDefinition().GetShapeField();
 
@@ -216,7 +219,8 @@ namespace ProSuite.AGP.Editing
 			return newFeatures;
 		}
 
-		public static void CopyAttributeValues([NotNull] IEnumerable<Attribute> attributes, [NotNull] RowBuffer rowBuffer)
+		public static void CopyAttributeValues([NotNull] IEnumerable<Attribute> attributes,
+		                                       [NotNull] RowBuffer rowBuffer)
 		{
 			IReadOnlyList<Field> fields = rowBuffer.GetFields();
 
