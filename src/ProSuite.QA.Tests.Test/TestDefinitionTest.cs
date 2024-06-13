@@ -142,7 +142,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMaxSlope),
 											 typeof(QaMaxVertexCount),
 											 typeof(QaMeasures),
-											 //typeof(QaMeasuresAtPoints),
+											 typeof(QaMeasuresAtPoints),
 											 //typeof(QaMinAngle),
 											 typeof(QaMinArea),
 											 typeof(QaMinIntersect),
@@ -306,7 +306,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxLength)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxVertexCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMeasures)));
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMeasuresAtPoints)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMeasuresAtPoints)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinArea)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinIntersect)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinLength)));
