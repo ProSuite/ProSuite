@@ -1616,7 +1616,7 @@ namespace ProSuite.QA.Tests.Test
 				                                     false
 			                                     },
 			                                     optionalValues));
-			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 0,
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 2,
 												 new object[]
 												 {
 													 new[]
@@ -1627,7 +1627,7 @@ namespace ProSuite.QA.Tests.Test
 													 1
 												 },
 												 optionalValues));
-			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 0,
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 3,
 												 new object[]
 												 {
 													 model.GetVectorDataset(),
