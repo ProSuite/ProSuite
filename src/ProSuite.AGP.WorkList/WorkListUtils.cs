@@ -468,6 +468,16 @@ namespace ProSuite.AGP.WorkList
 		private static Datastore GetDatastore([NotNull] XmlWorkListWorkspace workspace,
 		                                      [NotNull] NotificationCollection notifications)
 		{
+			// TODO: Find a solution for SDE files. The original SDE files are not provided by the
+			// workspace! The geodatabase path is always a local temp file, such as
+			// ...AppData\\Local\\Temp\\ArcGISProTemp55352\\84864a323a7c4bd2802815271f9afaa3.sde
+			// We would need to go through the Project Items, find the connection files and compare
+			// the connection properties of each SDE file with the current connection!
+			// This behaviour should probably be an option only if we find no better way of re-opening
+			// the connection using the encrypted password.
+			// Other work-around (to be tested!): Delay the opening of the referenced tables and hope the workspace
+			// becomes valid if any of the other layers in the map reference the exact same workspace.
+
 			// TODO: In case of FGDB/Shapefile, support relative path to worklist file
 
 			// DBCLIENT = oracle
