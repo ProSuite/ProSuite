@@ -20,9 +20,9 @@ public interface IShapeSelection
 	ShapeSelectionState GetPartSelectionState(int partIndex);
 	bool IsVertexSelected(int partIndex, int vertexIndex);
 
-	bool Combine(int part, int vertex, SetCombineMethod method);
-	bool Combine(int part, SetCombineMethod method);
-	bool Combine(SetCombineMethod method);
+	bool CombineVertex(int part, int vertex, SetCombineMethod method);
+	bool CombinePart(int part, SetCombineMethod method);
+	bool CombineShape(SetCombineMethod method);
 	bool SetEmpty();
 
 	IEnumerable<MapPoint> GetSelectedVertices(Geometry shape);
@@ -65,11 +65,11 @@ public class ShapeSelection : IShapeSelection
 	{
 		if (_items is not null)
 		{
-			foreach (var item in _items)
+			foreach (var item in OrderedItems)
 			{
 				if (item.PartIndex == partIndex)
 				{
-					return item.VertexIndex < 0
+					return item.IsFullPart
 						? ShapeSelectionState.Entirely
 						: ShapeSelectionState.Partially;
 				}
@@ -85,7 +85,7 @@ public class ShapeSelection : IShapeSelection
 		return _items.Any(item => item.PartIndex == partIndex && item.VertexIndex == vertexIndex);
 	}
 
-	public bool Combine(SetCombineMethod method)
+	public bool CombineShape(SetCombineMethod method)
 	{
 		bool changed;
 
@@ -124,7 +124,7 @@ public class ShapeSelection : IShapeSelection
 		return changed;
 	}
 
-	public bool Combine(int partIndex, SetCombineMethod method)
+	public bool CombinePart(int partIndex, SetCombineMethod method)
 	{
 		// Add: _items.Add(part,-1) unless exists; remove all items (part,>=0)
 		// Remove: _items.Remove(part,*)
@@ -134,7 +134,7 @@ public class ShapeSelection : IShapeSelection
 		throw new NotImplementedException();
 	}
 
-	public bool Combine(int partIndex, int vertexIndex, SetCombineMethod method)
+	public bool CombineVertex(int partIndex, int vertexIndex, SetCombineMethod method)
 	{
 		bool changed = false;
 
@@ -147,10 +147,14 @@ public class ShapeSelection : IShapeSelection
 			method = SetCombineMethod.Add;
 		}
 
+		// TODO this method is wrong if full shape or full part selected (low prio as presently user cannot create such selections)
+
 		var candidate = new Index(partIndex, vertexIndex);
-		int index = _itemsOrdered
-						? _items.BinarySearch(candidate)
-						: _items.IndexOf(candidate);
+		int index;
+		if (_itemsOrdered)
+			index = _items.BinarySearch(candidate, IndexComparer.Singleton);
+		else
+			index = _items.IndexOf(candidate);
 
 		switch (method)
 		{
@@ -179,7 +183,8 @@ public class ShapeSelection : IShapeSelection
 				// remove all but the given vertex:
 				changed = _items.Count != 1 || !Equals(_items[0], candidate);
 				_items.Clear();
-				_items.Add(candidate);
+				if (index >= 0) // was contained
+					_items.Add(candidate); // add again
 				_itemsOrdered = true;
 				break;
 
@@ -243,7 +248,7 @@ public class ShapeSelection : IShapeSelection
 		{
 			foreach (var item in OrderedItems)
 			{
-				if (item.VertexIndex < 0)
+				if (item.IsFullPart)
 				{
 					foreach (var point in GetVertices(multipart, item.PartIndex))
 					{
@@ -289,22 +294,13 @@ public class ShapeSelection : IShapeSelection
 		{
 			if (!_itemsOrdered)
 			{
-				_items.Sort(Compare);
+				_items.Sort(IndexComparer.Singleton);
 				_itemsOrdered = true;
 				RemoveRedundantIndices(_items);
 			}
 
 			return _items;
 		}
-	}
-
-	private static int Compare(Index a, Index b)
-	{
-		if (a.PartIndex < b.PartIndex) return -1;
-		if (a.PartIndex > b.PartIndex) return +1;
-		if (a.VertexIndex < b.VertexIndex) return -1;
-		if (a.VertexIndex > b.VertexIndex) return +1;
-		return 0;
 	}
 
 	private static void RemoveRedundantIndices(List<Index> list)
@@ -316,7 +312,7 @@ public class ShapeSelection : IShapeSelection
 
 		if (list.Count < 1) return; // nothing to do
 
-		if (list[0].PartIndex < 0)
+		if (list[0].IsFullShape)
 		{
 			list.RemoveRange(1, list.Count - 1);
 			return;
@@ -328,7 +324,7 @@ public class ShapeSelection : IShapeSelection
 		{
 			list[j++] = list[i];
 
-			if (list[i].VertexIndex < 0)
+			if (list[i].IsFullPart)
 			{
 				int curPart = list[i].PartIndex;
 				i += 1; // skip the neg vertex
@@ -430,11 +426,26 @@ public class ShapeSelection : IShapeSelection
 		throw new NotSupportedException($"Shape of type {shape.GetType().Name} is not supported");
 	}
 
+	private class IndexComparer : IComparer<Index>
+	{
+		public int Compare(Index a, Index b)
+		{
+			if (a.PartIndex < b.PartIndex) return -1;
+			if (a.PartIndex > b.PartIndex) return +1;
+			if (a.VertexIndex < b.VertexIndex) return -1;
+			if (a.VertexIndex > b.VertexIndex) return +1;
+			return 0;
+		}
+
+		public static IndexComparer Singleton { get; } = new();
+	}
+
 	/// <summary>Address of a vertex in a geometry</summary>
 	private readonly struct Index
 	{
 		public readonly int PartIndex;
 		public readonly int VertexIndex;
+		// TODO store -VertexCount in VertexIndex if full part (allows CombineVertex to work correctly)
 
 		public Index()
 		{
@@ -447,6 +458,9 @@ public class ShapeSelection : IShapeSelection
 			PartIndex = part;
 			VertexIndex = vertex;
 		}
+
+		public bool IsFullShape => PartIndex < 0;
+		public bool IsFullPart => VertexIndex < 0;
 
 		public override string ToString()
 		{

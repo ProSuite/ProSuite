@@ -68,7 +68,7 @@ public class WhiteSelection : IWhiteSelection
 			_shapes.Add(oid, selection);
 		}
 
-		if (selection.Combine(part, vertex, method))
+		if (selection.CombineVertex(part, vertex, method))
 		{
 			changed = true;
 		}
