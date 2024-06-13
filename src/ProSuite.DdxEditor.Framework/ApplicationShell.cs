@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -34,12 +35,13 @@ namespace ProSuite.DdxEditor.Framework
 		public static ApplicationShell Create(
 			[NotNull] Control logWindowControl,
 			[NotNull] string title,
+			[NotNull] Icon icon,
 			[NotNull] IItemModelBuilder modelBuilder,
 			[NotNull] IUnitOfWork unitOfWork,
 			[CanBeNull] IHelpProvider helpProvider = null,
 			[CanBeNull] IOptionsManager optionsManager = null)
 		{
-			return Create(logWindowControl, title, modelBuilder, unitOfWork,
+			return Create(logWindowControl, title, icon, modelBuilder, unitOfWork,
 			              helpProvider == null
 				              ? null
 				              : new[] { helpProvider },
@@ -49,6 +51,7 @@ namespace ProSuite.DdxEditor.Framework
 		public static ApplicationShell Create(
 			[NotNull] Control logWindowControl,
 			[NotNull] string title,
+			[NotNull] Icon icon,
 			[NotNull] IItemModelBuilder modelBuilder,
 			[NotNull] IUnitOfWork unitOfWork,
 			[CanBeNull] IEnumerable<IHelpProvider> helpProviders = null,
@@ -68,7 +71,10 @@ namespace ProSuite.DdxEditor.Framework
 			var shell = new ApplicationShell(navigationControl,
 			                                 contentControl,
 			                                 logWindowControl)
-			            { Text = title };
+			            {
+				            Text = title,
+				            Icon = icon
+			            };
 
 			var applicationController =
 				new ApplicationController(shell, unitOfWork,

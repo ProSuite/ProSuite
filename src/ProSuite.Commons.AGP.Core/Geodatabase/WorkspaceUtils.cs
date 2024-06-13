@@ -1,15 +1,87 @@
 using System;
+using System.Text;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
+using ProSuite.Commons.Ado;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
 	public static class WorkspaceUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		/// <summary>
+		/// Opens a file geodatabase. This method must be run on the MCT. Use QueuedTask.Run.
+		/// </summary>
+		/// <returns></returns>
+		public static ArcGIS.Core.Data.Geodatabase OpenFileGeodatabase([NotNull] string path)
+		{
+			var connectionPath = new FileGeodatabaseConnectionPath(new Uri(path));
+
+			return (ArcGIS.Core.Data.Geodatabase) OpenDatastore(connectionPath);
+		}
+
+		/// <summary>
+		/// Opens a file geodatabase. This method must be run on the MCT. Use QueuedTask.Run.
+		/// </summary>
+		/// <returns></returns>
+		public static Datastore OpenDatastore([NotNull] Connector connector)
+		{
+			try
+			{
+				switch (connector)
+				{
+					case DatabaseConnectionFile dbConnection:
+						return new ArcGIS.Core.Data.Geodatabase(dbConnection);
+
+					case DatabaseConnectionProperties dbConnectionProps:
+						return new ArcGIS.Core.Data.Geodatabase(dbConnectionProps);
+
+					case FileGeodatabaseConnectionPath fileGdbConnection:
+						return new ArcGIS.Core.Data.Geodatabase(fileGdbConnection);
+
+					case FileSystemConnectionPath fileSystemConnection:
+						return new FileSystemDatastore(fileSystemConnection);
+
+					// Only supported starting with Pro 3.2
+					//case KnowledgeGraphConnectionProperties knowledgeGraphConnection:
+					//	return new KnowledgeGraph(knowledgeGraphConnection);
+
+					case MemoryConnectionProperties memoryConnectionProperties:
+						return new ArcGIS.Core.Data.Geodatabase(memoryConnectionProperties);
+
+					case MobileGeodatabaseConnectionPath mobileConnectionProperties:
+						return new ArcGIS.Core.Data.Geodatabase(mobileConnectionProperties);
+
+					case PluginDatasourceConnectionPath pluginConnectionPath:
+						return new PluginDatastore(pluginConnectionPath);
+
+					case RealtimeServiceConnectionProperties realtimeServiceConnection:
+						return new RealtimeDatastore(realtimeServiceConnection);
+
+					case ServiceConnectionProperties serviceConnection:
+						return new ArcGIS.Core.Data.Geodatabase(serviceConnection);
+
+					case SQLiteConnectionPath sqLiteConnection:
+						return new Database(sqLiteConnection);
+
+					default:
+						throw new ArgumentOutOfRangeException(
+							$"Unsupported workspace type: {connector?.GetType()}");
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Failed to open Datastore {GetDatastoreDisplayText(connector)}", e);
+				throw;
+			}
+		}
+
 		public static bool IsSameDatastore(Datastore datastore1, Datastore datastore2)
 		{
 			// todo daro check ProProcessingUtils
@@ -59,6 +131,73 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			return null;
+		}
+
+		public static DatabaseConnectionProperties GetConnectionProperties(
+			[NotNull] string connectionString)
+		{
+			Assert.ArgumentNotNullOrEmpty(connectionString, nameof(connectionString));
+
+			var builder = new ConnectionStringBuilder(connectionString);
+
+			Assert.True(
+				Enum.TryParse(builder["dbclient"], ignoreCase: true,
+				              out EnterpriseDatabaseType databaseType),
+				$"Cannot parse {nameof(EnterpriseDatabaseType)} from connection string {connectionString}");
+
+			Assert.True(
+				Enum.TryParse(builder["authentication_mode"], ignoreCase: true,
+				              out AuthenticationMode authMode),
+				$"Cannot parse {nameof(AuthenticationMode)} from connection string {connectionString}");
+
+			string instance = builder["instance"];
+
+			// Real-world examples for instance:
+			// Oracle:
+			// - "sde:oracle11g:TOPGIST:SDE"
+			// - "sde:oracle$sde:oracle11g:gdzh"
+
+			// PostgreSQL:
+			// sde:postgresql:localhost
+
+			// NOTE: Sometimes the DB_CONNECTION_PROPERTIES contains the single instance name,
+			//       but it can also contain the colon-separated components.
+
+			string database = string.IsNullOrEmpty(builder["server"])
+				                  ? builder["database"]
+				                  : builder["server"];
+
+			string[] strings = instance?.Split(':');
+
+			if (strings?.Length > 1)
+			{
+				string lastItem = strings[^1];
+
+				if (lastItem.Equals("SDE", StringComparison.OrdinalIgnoreCase))
+				{
+					// Take the second last item
+					instance = strings[^2];
+				}
+				else
+				{
+					instance = lastItem;
+				}
+			}
+
+			var connectionProperties =
+				new DatabaseConnectionProperties(databaseType)
+				{
+					AuthenticationMode = authMode,
+					ProjectInstance = builder["project_instance"],
+					Database = database,
+					Instance = instance,
+					Version = builder["version"],
+					Branch = builder["branch"],
+					Password = builder["encrypted_password"],
+					User = builder["user"]
+				};
+
+			return connectionProperties;
 		}
 
 		/// <summary>
@@ -144,9 +283,26 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			string instance = dbConnectionProps.Instance;
 
 			return string.IsNullOrEmpty(databaseName)
-				       ? string.Format("{0} - {1}", instance, versionName)
-				       : string.Format("{0} ({1}) - {2}", databaseName,
-				                       instance, versionName);
+				       ? $"{instance} - {versionName}"
+				       : $"{databaseName} ({instance}) - {versionName}";
+		}
+
+		public static string ConnectionPropertiesToString(
+			[NotNull] DatabaseConnectionProperties dbConnectionProps)
+		{
+			var sb = new StringBuilder();
+
+			sb.Append("DBMS: ").AppendLine(dbConnectionProps.DBMS.ToString());
+			sb.Append("Database: ").AppendLine(dbConnectionProps.Database);
+			sb.Append("Instance: ").AppendLine(dbConnectionProps.Instance);
+			sb.Append("Authentication Mode: ")
+			  .AppendLine(dbConnectionProps.AuthenticationMode.ToString());
+			sb.Append("User: ").AppendLine(dbConnectionProps.User);
+			sb.Append("Version: ").AppendLine(dbConnectionProps.Version);
+			sb.Append("Branch: ").AppendLine(dbConnectionProps.Branch);
+			sb.Append("Project Instance: ").Append(dbConnectionProps.ProjectInstance);
+
+			return sb.ToString();
 		}
 	}
 }

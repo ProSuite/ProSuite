@@ -10,7 +10,6 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
-using ProSuite.Commons.Ado;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
@@ -19,6 +18,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.Core;
 
@@ -130,12 +130,25 @@ namespace ProSuite.AGP.WorkList
 			else if (type == typeof(SelectionWorkList))
 			{
 				// Selection source classes: tables/oids pairs
-				Dictionary<long, Table> tablesById =
-					tables.ToDictionary(table => new GdbTableIdentity(table).Id,
-					                    table => table);
+				Dictionary<long, Table> tablesById = new Dictionary<long, Table>();
+				foreach (Table table in tables)
+				{
+					var gdbTableIdentity = new GdbTableIdentity(table);
+
+					long uniqueTableId = GetUniqueTableIdAcrossWorkspaces(gdbTableIdentity);
+
+					tablesById.Add(uniqueTableId, table);
+				}
 
 				Dictionary<Table, List<long>> oidsByTable =
 					GetOidsByTable(xmlWorkListDefinition.Items, tablesById);
+
+				if (oidsByTable.Count == 0)
+				{
+					_msg.Warn(
+						"No items in selection work list or they could not be associated with an existing table.");
+					return EmptyWorkItemRepository(type, stateRepository);
+				}
 
 				repository =
 					new SelectionItemRepository(tables, oidsByTable, stateRepository);
@@ -316,6 +329,38 @@ namespace ProSuite.AGP.WorkList
 			return result.ToDictionary(pair => pair.Key, pair => pair.Value.ToList());
 		}
 
+		public static long GetUniqueTableIdAcrossWorkspaces(GdbTableIdentity tableIdentity)
+		{
+			// NOTE: Do not use string.GetHashCode() because it is not guaranteed to be stable!
+
+			if (tableIdentity.Id < 0)
+			{
+				// Un-registered table: Use hash of the table name (without the workspace name to support changed relative paths)
+				// Uniqueness will be checked by the repository
+				return HashString(tableIdentity.Name);
+			}
+
+			// Registered table: Use hash of the table name combined with the table ID
+			long result = HashString(tableIdentity.Name);
+			result = result * 31 + tableIdentity.Id;
+
+			return result;
+		}
+
+		private static long HashString([NotNull] string text)
+		{
+			unchecked
+			{
+				long hash = 23;
+				foreach (char c in text)
+				{
+					hash = hash * 31 + c;
+				}
+
+				return hash;
+			}
+		}
+
 		#region Repository creation
 
 		private static IWorkItemStateRepository CreateItemStateRepository(
@@ -434,6 +479,8 @@ namespace ProSuite.AGP.WorkList
 			// DB_CONNECTION_PROPERTIES = topgist
 			// USER = topgis_tlm
 
+			string connectionString = workspace.ConnectionString;
+
 			try
 			{
 				Assert.True(
@@ -446,75 +493,22 @@ namespace ProSuite.AGP.WorkList
 					case WorkspaceFactory.FileGDB:
 						return new Geodatabase(
 							new FileGeodatabaseConnectionPath(
-								new Uri(workspace.ConnectionString, UriKind.Absolute)));
+								new Uri(connectionString, UriKind.Absolute)));
 
 					case WorkspaceFactory.SDE:
-						var builder = new ConnectionStringBuilder(workspace.ConnectionString);
-
-						Assert.True(
-							Enum.TryParse(builder["dbclient"], ignoreCase: true,
-							              out EnterpriseDatabaseType databaseType),
-							$"Cannot parse {nameof(EnterpriseDatabaseType)} from connection string {workspace.ConnectionString}");
-
-						Assert.True(
-							Enum.TryParse(builder["authentication_mode"], ignoreCase: true,
-							              out AuthenticationMode authMode),
-							$"Cannot parse {nameof(AuthenticationMode)} from connection string {workspace.ConnectionString}");
-
-						string instance = builder["instance"];
-
-						// Typically the instance is saved as "sde:oracle11g:TOPGIST:SDE"
-						if (databaseType == EnterpriseDatabaseType.Oracle)
-						{
-							// Real-world examples:
-							// - "sde:oracle11g:TOPGIST:SDE"
-							// - "sde:oracle$sde:oracle11g:gdzh"
-
-							// NOTE: Sometimes the DB_CONNECTION_PROPERTIES contains the single instance name,
-							//       but it can also contain the colon-separated components.
-
-							string[] strings = instance?.Split(':');
-
-							if (strings?.Length > 1)
-							{
-								string lastItem = strings[^1];
-
-								if (lastItem.Equals("SDE", StringComparison.OrdinalIgnoreCase))
-								{
-									// Take the second last item
-									instance = strings[^2];
-								}
-								else
-								{
-									instance = lastItem;
-								}
-							}
-						}
-
-						var connectionProperties =
-							new DatabaseConnectionProperties(databaseType)
-							{
-								AuthenticationMode = authMode,
-								ProjectInstance = builder["project_instance"],
-								Database =
-									builder[
-										"server"], // is always null in CIMFeatureDatasetDataConnection
-								Instance = instance,
-								Version = builder["version"],
-								Branch = builder["branch"], // ?
-								Password = builder["encrypted_password"],
-								User = builder["user"]
-							};
+						DatabaseConnectionProperties connectionProperties =
+							WorkspaceUtils.GetConnectionProperties(connectionString);
 
 						_msg.Debug(
-							$"Opening workspace from connection string {workspace.ConnectionString} converted to {connectionProperties}");
+							$"Opening workspace from connection string {connectionString} " +
+							$"converted to {WorkspaceUtils.ConnectionPropertiesToString(connectionProperties)}");
 
 						return new Geodatabase(connectionProperties);
 
 					case WorkspaceFactory.Shapefile:
 						return new FileSystemDatastore(
 							new FileSystemConnectionPath(
-								new Uri(workspace.ConnectionString, UriKind.Absolute),
+								new Uri(connectionString, UriKind.Absolute),
 								FileSystemDatastoreType.Shapefile));
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -523,11 +517,11 @@ namespace ProSuite.AGP.WorkList
 			catch (Exception e)
 			{
 				string message =
-					$"Cannot open {workspace.WorkspaceFactory} workspace from connection string {workspace.ConnectionString} ({e.Message})";
+					$"Cannot open {workspace.WorkspaceFactory} workspace from connection string {connectionString} ({e.Message})";
 
 				_msg.Debug(message, e);
 
-				NotificationUtils.Add(notifications, $"{workspace.ConnectionString}");
+				NotificationUtils.Add(notifications, $"{connectionString}");
 				return null;
 			}
 		}
@@ -567,11 +561,26 @@ namespace ProSuite.AGP.WorkList
 		{
 			var result = new Dictionary<Table, List<long>>();
 
+			// TODO: Delete backward compatibility at ca. 1.5
+			bool backwardCompatibleLoading = false;
 			foreach (XmlWorkItemState item in xmlItems)
 			{
 				if (! tablesById.TryGetValue(item.Row.TableId, out Table table))
 				{
-					continue;
+					// Not found by table ID. For backward compatibility, try Id:
+					table =
+						tablesById.Values.FirstOrDefault(t => t.GetID() == item.Row.TableId);
+
+					if (table == null)
+					{
+						_msg.Warn(
+							$"Table {item.Row.TableName} (UniqueID={item.Row.TableId}) not found in the " +
+							$"list of available tables ({StringUtils.Concatenate(tablesById.Values, t => t.GetName(), ", ")}).");
+						continue;
+					}
+
+					// Found by legacy (version 1.2.x) table ID
+					backwardCompatibleLoading = true;
 				}
 
 				if (! result.ContainsKey(table))
@@ -581,7 +590,12 @@ namespace ProSuite.AGP.WorkList
 				else
 				{
 					List<long> oids = result[table];
-					oids.Add(item.Row.OID);
+
+					// Prevent duplicates (duplicates would happen on upgrading)
+					if (! backwardCompatibleLoading || ! oids.Contains(item.Row.OID))
+					{
+						oids.Add(item.Row.OID);
+					}
 				}
 			}
 

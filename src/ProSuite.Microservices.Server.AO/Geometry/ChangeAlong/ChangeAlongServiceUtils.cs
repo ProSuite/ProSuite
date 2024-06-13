@@ -18,7 +18,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 {
@@ -491,9 +491,9 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 					esriUnits linearUnits = esriUnits.esriMeters;
 
 					string sizeChangeMessage = reshaper.GetSizeChangeMessage(
-					updatedGeometry, feature, linearUnits, linearUnits);
+						updatedGeometry, feature, linearUnits, linearUnits);
 
-					if (!string.IsNullOrEmpty(sizeChangeMessage))
+					if (! string.IsNullOrEmpty(sizeChangeMessage))
 					{
 						yield return sizeChangeMessage;
 					}

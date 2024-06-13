@@ -5,7 +5,6 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -91,28 +90,27 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_raster))] [NotNull]
-			IRasterDataset2 raster,
+			RasterDatasetReference raster,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_mustBeLarger))]
 			bool mustBeLarger)
-			:
-			this(featureClass, raster, limit,
-			     mustBeLarger
-				     ? ZOffsetConstraint.AboveLimit
-				     : ZOffsetConstraint.WithinLimit) { }
+			: this(featureClass, raster, limit,
+			       mustBeLarger
+				       ? ZOffsetConstraint.AboveLimit
+				       : ZOffsetConstraint.WithinLimit) { }
 
 		[Doc(nameof(DocStrings.QaSurfaceVertex_2))]
 		public QaSurfaceVertex(
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_raster))] [NotNull]
-			IRasterDataset2 raster,
+			RasterDatasetReference raster,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_zOffsetConstraint))]
 			ZOffsetConstraint zOffsetConstraint)
-			: base(featureClass, new RasterDatasetReference(raster), limit, zOffsetConstraint)
+			: base(featureClass, raster, limit, zOffsetConstraint)
 		{
 			_shapeType = featureClass.ShapeType;
 		}
@@ -122,29 +120,27 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_mosaic))] [NotNull]
-			SimpleRasterMosaic rasterMosaic,
+			MosaicRasterReference rasterMosaic,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_mustBeLarger))]
 			bool mustBeLarger)
-			:
-			this(featureClass, rasterMosaic, limit,
-			     mustBeLarger
-				     ? ZOffsetConstraint.AboveLimit
-				     : ZOffsetConstraint.WithinLimit) { }
+			: this(featureClass, rasterMosaic, limit,
+			       mustBeLarger
+				       ? ZOffsetConstraint.AboveLimit
+				       : ZOffsetConstraint.WithinLimit) { }
 
 		[Doc(nameof(DocStrings.QaSurfaceVertex_4))]
 		public QaSurfaceVertex(
 			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_mosaic))] [NotNull]
-			SimpleRasterMosaic rasterMosaic,
+			MosaicRasterReference rasterMosaic,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.QaSurfaceVertex_zOffsetConstraint))]
 			ZOffsetConstraint zOffsetConstraint)
-			: base(featureClass, new MosaicRasterReference(rasterMosaic),
-			       limit, zOffsetConstraint)
+			: base(featureClass, rasterMosaic, limit, zOffsetConstraint)
 		{
 			_shapeType = featureClass.ShapeType;
 		}

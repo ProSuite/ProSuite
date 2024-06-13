@@ -16,7 +16,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 {

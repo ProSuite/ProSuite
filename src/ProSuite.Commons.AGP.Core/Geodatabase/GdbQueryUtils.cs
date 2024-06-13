@@ -166,7 +166,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// <param name="maxRowCount"></param>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
-		private static IEnumerable<T> GetRowsByObjectIdsBatched<T>(
+		public static IEnumerable<T> GetRowsByObjectIdsBatched<T>(
 			[NotNull] Table table,
 			[NotNull] IEnumerable<long> objectIds,
 			SpatialReference outputSpatialReference,

@@ -8,13 +8,16 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Commons.AGP.Gdb
 {
 	// todo daro: check correct handle / instantiation of Uri
-	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>
+	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>, IComparable<GdbWorkspaceIdentity>
 	{
 		[NotNull] private readonly DatastoreName _datastoreName;
 
 		public GdbWorkspaceIdentity([NotNull] Datastore datastore) :
 			this(datastore.GetConnector(), datastore.GetConnectionString()) { }
 
+		// TODO: Once we can re-create a valid connector from the connectionString, add overload just using connection string.
+		//       Missing functionality: Creating DatabaseConnectionProperties from connection string containing
+		//       an encrypted password (GOTOP-224).
 		public GdbWorkspaceIdentity([NotNull] Connector connector, string connectionString)
 		{
 			Assert.ArgumentNotNull(connector, nameof(connector));
@@ -92,6 +95,16 @@ namespace ProSuite.Commons.AGP.Gdb
 			{
 				return _datastoreName.GetHashCode();
 			}
+		}
+
+		#endregion
+
+		#region IComparable<GdbWorkspaceIdentity> implementation
+
+		public int CompareTo(GdbWorkspaceIdentity other)
+		{
+			return string.Compare(ConnectionString, other.ConnectionString,
+			                      StringComparison.OrdinalIgnoreCase);
 		}
 
 		#endregion

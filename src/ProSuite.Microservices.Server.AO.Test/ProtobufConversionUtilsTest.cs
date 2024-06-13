@@ -14,7 +14,8 @@ using ProSuite.Commons.AO.Test;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
+using TestCategory = ProSuite.Commons.Test.TestCategory;
 
 namespace ProSuite.Microservices.Server.AO.Test
 {
@@ -87,7 +88,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.Performance)]
+		[Category(TestCategory.Performance)]
 		public void CanConvertPolygonToFromShapeMsgFastEnough()
 		{
 			string xmlFile = TestData.GetHugeLockergesteinPolygonPath();

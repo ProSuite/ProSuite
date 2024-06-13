@@ -20,5 +20,11 @@ namespace ProSuite.AGP.WorkList.Contracts
 		T OpenDataset<T>() where T : Table;
 
 		string CreateWhereClause(WorkItemStatus? statusFilter);
+
+		/// <summary>
+		/// A table Id that is unique within the work list and that remains stable across sessions.
+		/// </summary>
+		/// <returns></returns>
+		long GetUniqueTableId();
 	}
 }

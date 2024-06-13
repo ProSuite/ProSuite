@@ -93,7 +93,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			object code = row[subtypeFieldIndex];
 
 			return code == null || code == DBNull.Value
-				       ? (int?) null
+				       ? null
 				       : Convert.ToInt32(code);
 		}
 
@@ -184,14 +184,14 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		[CanBeNull]
-		private static T? ReadRowValue<T>([NotNull] object value,
+		private static T? ReadRowValue<T>(object value,
 		                                  int fieldIndex,
 		                                  Func<long?> getOid,
 		                                  Func<string> getTableName)
 			where T : struct
 		{
 			// TODO: Duplication in Commons.AO.GdbObjectUtils! Refactor to common place.
-			if (value == DBNull.Value)
+			if (value == DBNull.Value || value == null)
 			{
 				_msg.VerboseDebug(
 					() => $"ReadRowValue: Field value at <index> {fieldIndex} of row is null.");
@@ -245,6 +245,34 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				throw;
 			}
+		}
+
+		public static bool IsNullOrEmpty(Row row, int fieldIndex)
+		{
+			object value = row[fieldIndex];
+
+			if (value == null)
+			{
+				return true;
+			}
+
+			if (value is DBNull)
+			{
+				return true;
+			}
+
+			if (value is string textValue)
+			{
+				if (Guid.TryParseExact(textValue.ToUpper(), "B", out Guid uuid) &&
+				    uuid.Equals(Guid.Empty))
+				{
+					return true;
+				}
+
+				return string.IsNullOrEmpty(value.ToString());
+			}
+
+			return false;
 		}
 	}
 }

@@ -26,6 +26,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected GdbItemRepository(IEnumerable<Table> tables,
 		                            IWorkItemStateRepository workItemStateRepository,
+		                            // ReSharper disable once UnusedParameter.Local because it is required by dynamic instantiation
 		                            [CanBeNull] IWorkListItemDatastore tableSchema = null)
 		{
 			WorkItemStateRepository = workItemStateRepository;
@@ -37,6 +38,16 @@ namespace ProSuite.AGP.WorkList
 					                  null);
 
 				SourceClasses.Add(sourceClass);
+			}
+
+			int distinctIds =
+				SourceClasses.Select(sc => sc.GetUniqueTableId()).Distinct().Count();
+
+			if (distinctIds != SourceClasses.Count)
+			{
+				// TODO: Extract problematic tables
+				_msg.Warn("Some source classes have duplicate table ids. " +
+				          "Please ensure they have unique table names if they are not registered");
 			}
 		}
 
