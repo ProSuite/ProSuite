@@ -135,7 +135,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaLineConnectionFieldValues),
 											 typeof(QaLineGroupConstraints),
 											 typeof(QaLineIntersect),
-											 //typeof(QaLineIntersectAngle),
+											 typeof(QaLineIntersectAngle),
 											 typeof(QaLineIntersectZ),
 											 typeof(QaMaxArea),
 											 typeof(QaMaxLength),
@@ -230,7 +230,10 @@ namespace ProSuite.QA.Tests.Test
 				{
 					Console.WriteLine("Checking {0}({1})", testType.Name, constructorIdx);
 
-					CompareMetadata(testType, constructorIdx);
+					if (! InstanceUtils.IsObsolete(testType, constructorIdx))
+					{
+						CompareMetadata(testType, constructorIdx);
+					}
 
 					TestDescriptor testImplDescriptor =
 						CreateTestDescriptor(testType, constructorIdx);
@@ -383,7 +386,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaIsCoveredByOtherCases(model, testCases);
 			AddQaLineGroupConstraintsCases(model, testCases);
 			AddQaLineIntersectCases(model, testCases);
-			//AddQaLineIntersectAngleCases(model, testCases);
+			AddQaLineIntersectAngleCases(model, testCases);
 			AddQaLineIntersectZCases(model, testCases);
 			AddQaMaxSlopeCases(model, testCases);
 			//AddQaMeasuresAtPointsCases(model, testCases);
