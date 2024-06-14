@@ -246,6 +246,45 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return cursor;
 		}
 
+		/// <summary>
+		/// Ensures that with the specified sub-fields string the required field will be fetched in a
+		/// SQL query. Otherwise it will be added to the result string and the method will return true.
+		/// </summary>
+		/// <param name="currentSubFields"></param>
+		/// <param name="fieldNameToEnsure"></param>
+		/// <param name="result"></param>
+		/// <returns></returns>
+		public static bool EnsureSubField(string currentSubFields, string fieldNameToEnsure,
+		                                  out string result)
+		{
+			result = null;
+
+			if (string.IsNullOrEmpty(currentSubFields))
+			{
+				result = fieldNameToEnsure;
+				return true;
+			}
+
+			if (currentSubFields.Trim().Equals("*"))
+			{
+				return false;
+			}
+
+			// ensure OID field is in SubFields:
+			var existingFields =
+				new HashSet<string>(StringUtils.SplitAndTrim(currentSubFields, ','),
+				                    StringComparer.OrdinalIgnoreCase);
+
+			if (existingFields.Contains(fieldNameToEnsure))
+			{
+				return false;
+			}
+
+			result = string.Concat(currentSubFields, ",", fieldNameToEnsure);
+
+			return true;
+		}
+
 		public static string FilterPropertiesToString([CanBeNull] QueryFilter filter)
 		{
 			if (filter == null)

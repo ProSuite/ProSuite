@@ -334,7 +334,9 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				var queryFilter = new QueryFilter
 				                  {
-					                  ObjectIDs = objectIds
+					                  ObjectIDs = objectIds,
+					                  // OID will be ensured in SearchObjectIds:
+					                  SubFields = string.Empty
 				                  };
 
 				int foundCount = LayerUtils.SearchObjectIds(restrictedLayer, queryFilter).Count();

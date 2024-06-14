@@ -105,18 +105,10 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				filter = new QueryFilter { SubFields = oidField };
 			}
-			else if (string.IsNullOrEmpty(filter.SubFields))
+			else if (GdbQueryUtils.EnsureSubField(filter.SubFields, oidField,
+			                                      out string newSubFields))
 			{
-				filter.SubFields = oidField;
-			}
-			else
-			{
-				// ensure OID field is in SubFields:
-				if (! filter.SubFields.Split(',').Select(fn => fn.Trim())
-				            .Contains(oidField, StringComparer.OrdinalIgnoreCase))
-				{
-					filter.SubFields = string.Concat(filter.SubFields, ",", oidField);
-				}
+				filter.SubFields = newSubFields;
 			}
 
 			foreach (Feature row in SearchRows(layer, filter, predicate))
