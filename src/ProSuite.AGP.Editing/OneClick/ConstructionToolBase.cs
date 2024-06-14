@@ -321,6 +321,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		#endregion
 
+		protected abstract SketchGeometryType GetSketchGeometryType();
+
 		/// <summary>
 		/// The template that can optionally be used to set up the sketch properties, such as
 		/// z/m-awareness. If the tool uses a template create a feature this method should return
