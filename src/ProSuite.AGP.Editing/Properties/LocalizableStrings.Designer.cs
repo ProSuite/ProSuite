@@ -127,6 +127,24 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select a polygon that contains a hole or several polygons with a gap in between..
+        /// </summary>
+        internal static string FillHoleTool_LogPromptForSelection {
+            get {
+                return ResourceManager.GetString("FillHoleTool_LogPromptForSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select one or more polygon features which contain the hole(s) to be removed..
+        /// </summary>
+        internal static string RemoveHoleTool_LogPromptForSelection {
+            get {
+                return ResourceManager.GetString("RemoveHoleTool_LogPromptForSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}&lt;br&gt;Press [ESC] to select one or more different features..
         /// </summary>
         internal static string RemoveOverlapsTool_AfterSelection {
@@ -172,7 +190,7 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select the target line or polygon features to align with. &lt;br&gt;-Press [ESC] to select a different feature..
+        ///   Looks up a localized string similar to Select the target line or polygon features to align with. &lt;br&gt;- Press [ESC] to select a different feature..
         /// </summary>
         internal static string ReshapeAlongTool_LogUsingCurrentSelection {
             get {
@@ -181,7 +199,10 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select one or more features by clicking or dragging a box. Options: &lt;br&gt;-Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;-Press CTRL and drag a box to show a list of selectable feature classes.&lt;br&gt;-Press ALT and click to select all features at the click point..
+        ///   Looks up a localized string similar to Select one or more features by clicking or dragging a box:
+        ///- Press and hold SHIFT to add or remove features from the existing selection.
+        ///- Press CTRL and drag a box to show a list of selectable feature classes.
+        ///- Press ALT and click to select all features at the click point..
         /// </summary>
         internal static string SelectionTool_LogPromptForSelection {
             get {

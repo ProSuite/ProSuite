@@ -619,6 +619,42 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) smallestPart;
 		}
 
+		public static T GetLargestSegment<T>([NotNull] IEnumerable<T> segments,
+		                                     Envelope areaOfInterest = null)
+			where T : Segment
+		{
+			Segment shortesSegment = null;
+			double longestLength = double.Epsilon;
+
+			bool considerAreaOfInterest = areaOfInterest != null && ! areaOfInterest.IsEmpty;
+
+			foreach (T candidate in segments)
+			{
+				if (considerAreaOfInterest)
+				{
+					Polyline lineSegment =
+						GeometryFactory.CreatePolyline(candidate.StartPoint,
+						                               candidate.EndPoint,
+						                               candidate.SpatialReference);
+
+					if (Disjoint(areaOfInterest, lineSegment))
+					{
+						continue;
+					}
+				}
+
+				double length = candidate.Length;
+
+				if (length > longestLength)
+				{
+					shortesSegment = candidate;
+					longestLength = length;
+				}
+			}
+
+			return (T) shortesSegment;
+		}
+
 		/// <summary>
 		/// Returns a value that indicates the size of the specified geometry:
 		/// - Multipatch, Polygon, Ring: 2D area

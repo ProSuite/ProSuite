@@ -83,7 +83,7 @@ public abstract class ExportOverridesButtonBase : ButtonCommandBase
 
 	public static XElement CollectConfig(Map map, ILayerContainer container = null)
 	{
-		var overrides = GetOverrides(container ?? map);
+		var overrides = GetLayers(container ?? map);
 
 		var mapAttr = new XAttribute("map", map.Name ?? string.Empty);
 		var groupLayerAttr = container is Layer group
@@ -93,7 +93,7 @@ public abstract class ExportOverridesButtonBase : ButtonCommandBase
 		return new XElement("Overrides", mapAttr, groupLayerAttr, overrides);
 	}
 
-	private static IEnumerable<XElement> GetOverrides(ILayerContainer container)
+	private static IEnumerable<XElement> GetLayers(ILayerContainer container)
 	{
 		var sortedList = container.GetLayersAsFlattenedList().ToList();
 		sortedList.Sort((a, b) => string.Compare(a.Name, b.Name,
@@ -109,9 +109,7 @@ public abstract class ExportOverridesButtonBase : ButtonCommandBase
 					var layerXml = MakeLayer(layer, "Layer");
 
 					layerXml.Add(MakeRendererInfo(gfl.Renderer));
-
-					var symbols = GetRendererSymbols(gfl.Renderer);
-					layerXml.Add(symbols);
+					layerXml.Add(GetSymbols(gfl.Renderer));
 
 					yield return layerXml;
 				}
@@ -119,7 +117,7 @@ public abstract class ExportOverridesButtonBase : ButtonCommandBase
 		}
 	}
 
-	private static IEnumerable<XElement> GetRendererSymbols(CIMRenderer renderer)
+	private static IEnumerable<XElement> GetSymbols(CIMRenderer renderer)
 	{
 		if (renderer is null)
 		{
@@ -133,57 +131,17 @@ public abstract class ExportOverridesButtonBase : ButtonCommandBase
 			// per class symbols
 			foreach (var clazz in Utils.GetUniqueValueClasses(unique))
 			{
-				var symbol = clazz.Symbol;
 				var discriminator = Utils.FormatDiscriminatorValue(clazz.Values);
-				var xml = MakeSymbol(discriminator, clazz.Label, symbol);
+				var symbolXml = GetSymbol(discriminator, clazz.Label, clazz.Symbol);
 
-				if (symbol?.PrimitiveOverrides != null)
-				{
-					IList<SymbolPrimitive> primitives = GetPrimitivesFromSymbol(symbol.Symbol);
-
-					foreach (var mapping in symbol.PrimitiveOverrides)
-					{
-						SymbolPrimitive primitive = GetMatch(mapping, primitives);
-						if (primitive != null)
-						{
-							xml.Add(MakePrimitiveOverride(primitive, mapping));
-						}
-						else
-						{
-							_msg.Warn(
-								$"Graphic primitive '{mapping.PrimitiveName}' not found in symbol '{clazz.Label}'");
-						}
-					}
-				}
-
-				yield return xml;
+				yield return symbolXml;
 			}
 		}
 		else if (renderer is CIMSimpleRenderer simple)
 		{
-			var symbol = simple.Symbol;
-			var xml = MakeSymbol("*", simple.Label, symbol);
+			var symbolXml = GetSymbol("*", simple.Label, simple.Symbol);
 
-			if (symbol?.PrimitiveOverrides != null)
-			{
-				IList<SymbolPrimitive> primitives = GetPrimitivesFromSymbol(symbol.Symbol);
-
-				foreach (var mapping in symbol.PrimitiveOverrides)
-				{
-					SymbolPrimitive primitive = GetMatch(mapping, primitives);
-					if (primitive != null)
-					{
-						xml.Add(MakePrimitiveOverride(primitive, mapping));
-					}
-					else
-					{
-						_msg.Warn(
-							$"Graphic primitive '{mapping.PrimitiveName}' not found in symbol '{simple.Label}'");
-					}
-				}
-			}
-
-			yield return xml;
+			yield return symbolXml;
 		}
 		else
 		{
@@ -192,91 +150,44 @@ public abstract class ExportOverridesButtonBase : ButtonCommandBase
 		}
 	}
 
-	private static SymbolPrimitive GetMatch(CIMPrimitiveOverride mapping,
-	                                        IEnumerable<SymbolPrimitive> primitives)
+	private static XElement GetSymbol(string discriminator, string label, CIMSymbolReference symbol)
 	{
-		return primitives.FirstOrDefault(p => string.Equals(p.Name, mapping.PrimitiveName));
-	}
+		var xml = MakeSymbol(discriminator, label, symbol);
 
-	private static IList<SymbolPrimitive> GetPrimitivesFromSymbol(CIMSymbol symbol)
-	{
-		var result = new List<SymbolPrimitive>();
-
-		if (symbol is CIMMultiLayerSymbol multiLayerSymbol)
+		if (symbol?.PrimitiveOverrides != null)
 		{
-			if (multiLayerSymbol.Effects != null) //Global Effects
+			//cache the symbol structure
+			IList<SymbolPrimitive> primitives = GetPrimitivesFromSymbol(symbol.Symbol);
+
+			List<XElement> primitiveOverrides = new List<XElement>();
+			foreach (var mapping in symbol.PrimitiveOverrides)
 			{
-				for (int i = 0; i < multiLayerSymbol.Effects.Length; i++)
+				SymbolPrimitive primitive =
+					primitives.FirstOrDefault(p => string.Equals(p.Name, mapping.PrimitiveName));
+
+				if (primitive != null)
 				{
-					var effect = multiLayerSymbol.Effects[i];
-					if (! string.IsNullOrEmpty(effect.PrimitiveName))
-					{
-						result.Add(new SymbolPrimitive($"effect {i}", effect.PrimitiveName,
-						                               Utils.GetPrettyTypeName(effect)));
-					}
+					primitiveOverrides.Add(MakePrimitiveOverride(primitive, mapping));
+				}
+				else
+				{
+					_msg.Warn(
+						$"Graphic primitive '{mapping.PrimitiveName}' not found in symbol '{label}'");
 				}
 			}
 
-			if (multiLayerSymbol.SymbolLayers != null)
+			//sort by path
+			primitiveOverrides.Sort((a, b) => string.Compare(a.Attribute("path")?.Value,
+			                                                 b.Attribute("path")?.Value,
+			                                                 StringComparison.OrdinalIgnoreCase));
+
+			foreach (XElement element in primitiveOverrides)
 			{
-				for (int i = 0; i < multiLayerSymbol.SymbolLayers.Length; i++)
-				{
-					var symbolLayer = multiLayerSymbol.SymbolLayers[i];
-					var slid = i + 1;
-					if (! string.IsNullOrEmpty(symbolLayer.PrimitiveName))
-					{
-						result.Add(new SymbolPrimitive($"layer {slid}", symbolLayer.PrimitiveName,
-						                               Utils.GetPrettyTypeName(symbolLayer)));
-					}
-
-					if (symbolLayer is CIMMarker marker)
-					{
-						var placement = marker.MarkerPlacement;
-						if (placement != null &&
-						    ! string.IsNullOrEmpty(placement.PrimitiveName))
-						{
-							result.Add(new SymbolPrimitive(
-								           $"layer {slid} placement", placement.PrimitiveName,
-								           Utils.GetPrettyTypeName(placement)));
-						}
-
-						if (symbolLayer is CIMVectorMarker vectorMarker)
-						{
-							if (vectorMarker.MarkerGraphics != null)
-							{
-								for (int j = 0; j < vectorMarker.MarkerGraphics.Length; j++)
-								{
-									var graphic = vectorMarker.MarkerGraphics[j];
-									if (! string.IsNullOrEmpty(graphic.PrimitiveName))
-									{
-										result.Add(new SymbolPrimitive(
-											           $"layer {slid} graphic {j}",
-											           graphic.PrimitiveName,
-											           Utils.GetPrettyTypeName(graphic)));
-									}
-								}
-							}
-						}
-					}
-
-					if (symbolLayer.Effects != null)
-					{
-						for (int j = 0; j < symbolLayer.Effects.Length; j++)
-						{
-							var effect = symbolLayer.Effects[j];
-							if (! string.IsNullOrEmpty(effect.PrimitiveName))
-							{
-								result.Add(new SymbolPrimitive(
-									           $"layer {slid} effect {j}", effect.PrimitiveName,
-									           Utils.GetPrettyTypeName(effect)));
-							}
-						}
-					}
-				}
+				xml.Add(element);
 			}
 		}
 
-		return result;
+		return xml;
 	}
 
 	private static XElement MakeLayer(Layer layer, string elementName)
@@ -369,6 +280,89 @@ public abstract class ExportOverridesButtonBase : ButtonCommandBase
 		if (! string.IsNullOrEmpty(primitive.Type))
 		{
 			result.Add(new XAttribute("type", primitive.Type));
+		}
+
+		return result;
+	}
+
+	//TODO: refactor/move to SymbolUtils
+	//TODO consolidate path with SymbolUtils.FindPrimitiveByPath
+	private static IList<SymbolPrimitive> GetPrimitivesFromSymbol(CIMSymbol symbol)
+	{
+		var result = new List<SymbolPrimitive>();
+
+		if (symbol is CIMMultiLayerSymbol multiLayerSymbol)
+		{
+			if (multiLayerSymbol.Effects != null) //Global Effects
+			{
+				for (int i = 0; i < multiLayerSymbol.Effects.Length; i++)
+				{
+					var effect = multiLayerSymbol.Effects[i];
+					if (! string.IsNullOrEmpty(effect.PrimitiveName))
+					{
+						result.Add(new SymbolPrimitive($"effect {i}", effect.PrimitiveName,
+						                               Utils.GetPrettyTypeName(effect)));
+					}
+				}
+			}
+
+			if (multiLayerSymbol.SymbolLayers != null)
+			{
+				for (int i = 0; i < multiLayerSymbol.SymbolLayers.Length; i++)
+				{
+					var symbolLayer = multiLayerSymbol.SymbolLayers[i];
+					var slid = i + 1;
+					if (! string.IsNullOrEmpty(symbolLayer.PrimitiveName))
+					{
+						result.Add(new SymbolPrimitive($"layer {slid}", symbolLayer.PrimitiveName,
+						                               Utils.GetPrettyTypeName(symbolLayer)));
+					}
+
+					if (symbolLayer is CIMMarker marker)
+					{
+						var placement = marker.MarkerPlacement;
+						if (placement != null &&
+						    ! string.IsNullOrEmpty(placement.PrimitiveName))
+						{
+							result.Add(new SymbolPrimitive(
+								           $"layer {slid} placement", placement.PrimitiveName,
+								           Utils.GetPrettyTypeName(placement)));
+						}
+
+						if (symbolLayer is CIMVectorMarker vectorMarker)
+						{
+							if (vectorMarker.MarkerGraphics != null)
+							{
+								for (int j = 0; j < vectorMarker.MarkerGraphics.Length; j++)
+								{
+									var graphic = vectorMarker.MarkerGraphics[j];
+									if (! string.IsNullOrEmpty(graphic.PrimitiveName))
+									{
+										result.Add(new SymbolPrimitive(
+											           $"layer {slid} graphic {j}",
+											           graphic.PrimitiveName,
+											           Utils.GetPrettyTypeName(graphic)));
+									}
+								}
+							}
+						}
+					}
+
+					if (symbolLayer.Effects != null)
+					{
+						for (int j = 0; j < symbolLayer.Effects.Length; j++)
+						{
+							var effect = symbolLayer.Effects[j];
+							if (! string.IsNullOrEmpty(effect.PrimitiveName))
+							{
+								result.Add(new SymbolPrimitive(
+									           $"layer {slid} effect {j}", effect.PrimitiveName,
+									           Utils.GetPrettyTypeName(effect)));
+							}
+						}
+					}
+				}
+			}
 		}
 
 		return result;
