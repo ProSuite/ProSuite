@@ -21,7 +21,7 @@ namespace ProSuite.AGP.Editing.FillHole
 {
 	public abstract class RemoveHoleToolBase : TwoPhaseEditToolBase
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		protected static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected IList<Holes> _holes;
 

@@ -27,7 +27,7 @@ namespace ProSuite.AGP.Editing.FillHole
 	// TODO: Try understand duplicate execution (but only sometimes) of queued tasks
 	public abstract class FillHoleToolBase : TwoPhaseEditToolBase
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		protected static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected IList<Holes> _holes;
 
