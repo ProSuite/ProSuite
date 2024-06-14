@@ -224,7 +224,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		                                   [CanBeNull] QueryFilter filter,
 		                                   bool recycle)
 		{
-			// NOTE: An invalid where clause can in some cases crash the application.
+			// NOTE: An invalid filter (e.g. subfields "*,OBJECTID") can crash the application.
 			_msg.VerboseDebug(() => $"Querying table {table.GetName()} using filter: " +
 			                        $"{FilterPropertiesToString(filter)}");
 

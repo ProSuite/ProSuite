@@ -8,11 +8,14 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto
 {
 	public static class LayerUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// Given a layer, find the map to which it belongs.
 		/// </summary>
@@ -55,6 +58,10 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				predicate = _ => true;
 			}
+
+			// NOTE: An invalid filter (e.g. subfields "*,OBJECTID") can crash the application.
+			_msg.VerboseDebug(() => $"Querying layer {layer.Name} using filter: " +
+			                        $"{GdbQueryUtils.FilterPropertiesToString(filter)}");
 
 			using (RowCursor cursor = layer.Search(filter))
 			{
