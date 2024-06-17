@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using ProSuite.Commons.AttributeDependencies;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;

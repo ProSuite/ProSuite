@@ -1,38 +1,61 @@
 using System.Threading.Tasks;
-using ArcGIS.Desktop.Framework.Contracts;
+using System.Windows.Forms;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
+using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.AGP.WorkList
 {
-	public abstract class OpenWorkListButtonBase : Button
+	public abstract class OpenWorkListButtonBase : ButtonCommandBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected override async void OnClick()
+		// TODO: Separate base tools with helper methods where necessary
+		protected override async Task<bool> OnClickCore()
 		{
 			string path = null;
 			WorkEnvironmentBase environment = null;
 
-			ViewUtils.Try(() =>
+			if (CanUseProductionModelIssueSchema() &&
+			    ! KeyboardUtils.IsModifierPressed(Keys.Control, true))
 			{
-				path = GetWorklistPathCore();
+				environment = await ViewUtils.TryAsync(CreateProductionModelIssueList(), _msg);
+			}
+			else
+			{
+				ViewUtils.Try(() =>
+				{
+					path = GetWorklistPathCore();
 
-				// has to be outside QueuedTask because of OpenItemDialog
-				// AND outside of Task.Run because OpenItemDialog has to be
-				// in UI thread.
-				environment = CreateEnvironment(path);
-			}, _msg);
+					// has to be outside QueuedTask because of OpenItemDialog
+					// AND outside of Task.Run because OpenItemDialog has to be
+					// in UI thread.
+					environment = CreateEnvironment(path);
+				}, _msg);
+			}
 
 			if (environment == null)
 			{
 				_msg.Debug("Cannot open work list: environment is null");
 
-				return;
+				return false;
 			}
 
-			await ViewUtils.TryAsync(OnClickCore(environment, path), _msg);
+			await ViewUtils.TryAsync(OpenWorklist(environment, path), _msg);
+
+			return true;
+		}
+
+		protected virtual Task<WorkEnvironmentBase> CreateProductionModelIssueList()
+		{
+			return null;
+		}
+
+		protected virtual bool CanUseProductionModelIssueSchema()
+		{
+			return false;
 		}
 
 		[CanBeNull]
@@ -41,8 +64,8 @@ namespace ProSuite.AGP.WorkList
 			return null;
 		}
 
-		protected abstract Task OnClickCore([NotNull] WorkEnvironmentBase environment,
-		                                    string path = null);
+		protected abstract Task OpenWorklist([NotNull] WorkEnvironmentBase environment,
+		                                     string path = null);
 
 		[CanBeNull]
 		protected abstract WorkEnvironmentBase CreateEnvironment(string path = null);

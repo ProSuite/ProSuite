@@ -64,11 +64,12 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return _workspaceProxy.OpenTopology(GetGdbElementName(dataset));
 		}
 
-		public override IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
+		public override RasterDatasetReference OpenRasterDataset(IDdxRasterDataset dataset)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
-			return _workspaceProxy.OpenRasterDataset(GetGdbElementName(dataset));
+			return new RasterDatasetReference(
+				_workspaceProxy.OpenRasterDataset(GetGdbElementName(dataset)));
 		}
 
 		public override TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
@@ -81,12 +82,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
 		}
 
-		public override SimpleRasterMosaic OpenSimpleRasterMosaic(
-			IRasterMosaicDataset dataset)
+		public override MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			IMosaicDataset mosaic = _workspaceProxy.OpenMosaicDataset(dataset.Name);
 
-			return new SimpleRasterMosaic(mosaic);
+			var simpleRasterMosaic = new SimpleRasterMosaic(mosaic);
+
+			return new MosaicRasterReference(simpleRasterMosaic);
 		}
 
 		public override IRelationshipClass OpenRelationshipClass(Association association)

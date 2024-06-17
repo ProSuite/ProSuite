@@ -1,3 +1,4 @@
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel
@@ -26,5 +27,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		#endregion
 
 		public override bool HasGeometry => false;
+
+		public override DatasetType DatasetType => DatasetType.Table;
 	}
 }

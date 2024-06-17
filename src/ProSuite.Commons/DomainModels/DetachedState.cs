@@ -9,7 +9,7 @@ namespace ProSuite.Commons.DomainModels
 
 		public DetachedState(Entity entity)
 		{
-			_entities = new[] {entity};
+			_entities = new[] { entity };
 		}
 
 		public DetachedState(IEnumerable<Entity> entities)

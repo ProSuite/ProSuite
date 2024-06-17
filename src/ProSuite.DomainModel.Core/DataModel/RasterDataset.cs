@@ -1,3 +1,4 @@
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel
@@ -18,5 +19,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 			: base(name, abbreviation, aliasName) { }
 
 		public override string TypeDescription => "Raster Dataset";
+
+		public override DatasetType DatasetType => DatasetType.Raster;
 	}
 }

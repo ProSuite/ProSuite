@@ -1,16 +1,17 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
+using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Persistence.WPF;
 
 namespace ProSuite.Commons.AGP.LoggerUI
 {
 	[UsedImplicitly]
-	public abstract class LogDockPaneViewModelBase : DockPaneViewModelBase, IDisposable
+	public abstract class LogDockPaneViewModelBase : DockPaneViewModelBase, IDisposable, IFormStateAware<LogDockPaneViewModelBase.LogPaneFormState>
 	{
 		protected abstract string LogDockPaneDamlID { get; }
 
@@ -18,12 +19,9 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private static RelayCommand _openLinkMessage;
-
 		//private LoggingEventsAppender _appenderDelegate = new LoggingEventsAppender();
-		private readonly List<LogType> _disabledLogTypes = new();
 		private readonly object _lockLogMessages = new();
-
+		private readonly UserStateManager<LogPaneFormState> _formStateManager;
 		private LoggingEventItem _selectedRow;
 
 		protected LogDockPaneViewModelBase() : base(new LogDockPane())
@@ -34,7 +32,66 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			FilterLogs(null);
 
 			LoggingEventsAppender.OnNewLogMessage += Logger_OnNewLogMessage;
+
+			_formStateManager = new UserStateManager<LogPaneFormState>(this, LogDockPaneDamlID);
+			_formStateManager.RestoreState();
+			ProjectClosedEvent.Subscribe(OnProjectClosed);
 		}
+
+		public void Dispose()
+		{
+			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
+			ProjectClosedEvent.Unsubscribe(OnProjectClosed);
+
+			var pane = FrameworkApplication.DockPaneManager.Find(LogDockPaneDamlID);
+
+			if (pane != null && pane.IsVisible)
+			{
+				pane.Hide();
+			}
+		}
+
+		#region Form state persistance
+
+		void IFormStateAware<LogPaneFormState>.SaveState(LogPaneFormState formState)
+		{
+			if (formState is null)
+				throw new ArgumentNullException(nameof(formState));
+
+			formState.IsShowDebugEvents = DebugLogsAreVisible;
+			formState.IsVerboseDebugEnabled = VerboseLogsAreVisible;
+		}
+
+		void IFormStateAware<LogPaneFormState>.RestoreState(LogPaneFormState formState)
+		{
+			if (formState is null)
+				throw new ArgumentNullException(nameof(formState));
+
+			DebugLogsAreVisible = formState.IsShowDebugEvents;
+			VerboseLogsAreVisible = formState.IsVerboseDebugEnabled;
+		}
+
+		private void OnProjectClosed(ProjectEventArgs obj)
+		{
+			// We don't get any Dock Pane hidden/closed event, so save on project closed:
+			try
+			{
+				_formStateManager.SaveState();
+			}
+			catch (Exception ex)
+			{
+				_msg.Warn("Error saving form state", ex);
+			}
+		}
+
+		[UsedImplicitly]
+		public class LogPaneFormState : FormState
+		{
+			public bool IsShowDebugEvents { get; set; }
+			public bool IsVerboseDebugEnabled { get; set; }
+		}
+
+		#endregion
 
 		public static Exception LoggingConfigurationException { get; set; }
 
@@ -50,35 +107,13 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			}
 		}
 
-		public static RelayCommand OpenLinkMessage
-		{
-			get
-			{
-				return _openLinkMessage ??= new RelayCommand(OpenLogLinkMessage, () => true);
-			}
-		}
-
-		public void Dispose()
-		{
-			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
-
-			var pane =
-				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(LogDockPaneDamlID);
-			if (pane == null)
-			{
-				return;
-			}
-
-			if (pane.IsVisible)
-				//this.Visible = Visibility.Collapsed;
-			{
-				pane.Hide();
-			}
-		}
+		private static RelayCommand _openLinkMessage;
+		public static RelayCommand OpenLinkMessage =>
+			_openLinkMessage ??= new RelayCommand(OpenLogLinkMessage, () => true);
 
 		private static void OpenLogLinkMessage(object msg)
 		{
-			var message = (LoggingEventItem) msg;
+			//var message = (LoggingEventItem) msg;
 
 			// TODO inform UI that "Hyperlink" is clicked
 			//_msg.Info($"Hyperlink clicked {message.LinkMessage}");
@@ -94,27 +129,37 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			}
 		}
 
-		private void Logger_OnNewLogMessage(object sender, LoggingEventArgs e)
+		private void Logger_OnNewLogMessage(object sender, LoggingEventArgs args)
 		{
-			if (e == null)
-			{
-				return;
-			}
+			var logItem = args?.LogItem;
+			if (logItem is null) return;
 
-			lock (_lockLogMessages)
+			if (IsLogLevelEnabled(args.LogItem.Type))
 			{
-				// TODO save messages to buffer(?)
-
-				if (! IsLogLevelDisabled(e.LogItem))
+				lock (_lockLogMessages)
 				{
-					LogMessageList.Add(e.LogItem);
+					// TODO If list has > N entries, remove first K entries (0 < K <= N, say K about 20% of N and N about 1000)
+					LogMessageList.Add(args.LogItem);
 				}
 			}
 		}
 
-		private bool IsLogLevelDisabled(LoggingEventItem logItem)
+		private bool IsLogLevelEnabled(LogType level)
 		{
-			return _disabledLogTypes.Contains(logItem.Type);
+			switch (level)
+			{
+				case LogType.Verbose:
+					return VerboseLogsAreVisible;
+				case LogType.Debug:
+					return DebugLogsAreVisible;
+				case LogType.Info:
+				case LogType.Warn:
+				case LogType.Error:
+				case LogType.Other:
+					return true;
+			}
+
+			return true;
 		}
 
 		protected override void OnShow(bool isVisible)
@@ -148,59 +193,40 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		#region Clear messages
 
 		private RelayCommand _clearLogEntries;
-
 		public RelayCommand ClearLogEntries =>
-			_clearLogEntries ?? (_clearLogEntries = new RelayCommand(
-				                     ClearAllLogEntries, CanClearAllLogEntries));
+			_clearLogEntries ??= new RelayCommand(ClearAllLogEntries, CanClearAllLogEntries);
 
-		public bool CanClearAllLogEntries => LogMessageList.Count > 0;
+		private bool CanClearAllLogEntries => LogMessageList.Count > 0;
 
-		public Action ClearAllLogEntries => LogMessageList.Clear;
+		private Action ClearAllLogEntries => LogMessageList.Clear;
 
 		#endregion
 
 		#region Filter messages
 
-		public RelayCommand FilterLogEntries => new RelayCommand(FilterLogs, CanFilterLogs);
+		private RelayCommand _filterLogEntries;
+		public RelayCommand FilterLogEntries =>
+			_filterLogEntries ??= new RelayCommand(FilterLogs, _ => true);
 
-		public void FilterLogs(object parameter)
+		private void FilterLogs(object parameter)
 		{
-			//var type = (string)parameter;
-
-			// TODO filter log list or log4net has built in option?
-			//filteredMessagedList = LogMessageList.Where(t => t.Type == LogType.Debug)
-
-			if (DebugLogsAreVisible)
-			{
-				_disabledLogTypes.Remove(LogType.Debug);
-			}
-			else
-			{
-				_disabledLogTypes.Add(LogType.Debug);
-			}
-
-			if (VerboseLogsAreVisible)
-			{
-				_disabledLogTypes.Remove(LogType.Verbose);
-			}
-			else
-			{
-				_disabledLogTypes.Add(LogType.Verbose);
-			}
+			// Called from Context Menu commands.
+			// Nothing to do after the last fixing/refactoring,
+			// but keep it ready should we want further changes,
+			// such as actually filtering the already logged events.
 		}
 
-		// todo daro inline
-		public bool CanFilterLogs(object parameter)
+		private bool _debugLogsAreVisible;
+		public bool DebugLogsAreVisible
 		{
-			return true;
+			get => _debugLogsAreVisible;
+			set => SetProperty(ref _debugLogsAreVisible, value);
 		}
-
-		public bool DebugLogsAreVisible { set; get; }
 
 		public bool VerboseLogsAreVisible
 		{
-			set => _msg.IsVerboseDebugEnabled = value;
 			get => _msg.IsVerboseDebugEnabled;
+			set => _msg.IsVerboseDebugEnabled = value;
 		}
 
 		#endregion
@@ -208,14 +234,8 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		#region Open message
 
 		private RelayCommand _openMessage;
-
-		public RelayCommand OpenMessage
-		{
-			get
-			{
-				return _openMessage ??= new RelayCommand(OpenLogMessage, () => true);
-			}
-		}
+		public RelayCommand OpenMessage =>
+			_openMessage ??= new RelayCommand(OpenLogMessage, () => true);
 
 		private static void OpenLogMessage(object msg)
 		{

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Gdb;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema

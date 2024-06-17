@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -44,12 +44,25 @@ namespace ProSuite.AGP.QA.ProPlugins
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
+
+		protected virtual Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool>
+			SaveAction => null;
+
 		protected override async Task<bool> OnClickCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
 			{
 				MessageBox.Show("No quality verification environment is configured.",
-								Caption, MessageBoxButton.OK, MessageBoxImage.Warning);
+				                Caption, MessageBoxButton.OK, MessageBoxImage.Warning);
+				return false;
+			}
+
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				MessageBox.Show("No active map.", "Verify Extent",
+				                MessageBoxButton.OK, MessageBoxImage.Warning);
 				return false;
 			}
 
@@ -62,14 +75,14 @@ namespace ProSuite.AGP.QA.ProPlugins
 			if (qualitySpecification == null)
 			{
 				MessageBox.Show("No quality specification is selected", Caption,
-								MessageBoxButton.OK, MessageBoxImage.Warning);
+				                MessageBoxButton.OK, MessageBoxImage.Warning);
 				return false;
 			}
 
-			if (!MapUtils.HasSelection(MapView.Active))
+			if (! MapUtils.HasSelection(mapView.Map))
 			{
 				MessageBox.Show("No selected polygons", Caption,
-								MessageBoxButton.OK, MessageBoxImage.Warning);
+				                MessageBoxButton.OK, MessageBoxImage.Warning);
 				return false;
 			}
 
@@ -78,32 +91,33 @@ namespace ProSuite.AGP.QA.ProPlugins
 			if (selectedPolygons.Count == 1)
 			{
 				selectedPolygonGeometry = selectedPolygons[0];
-			} 
+			}
 			else
 			{
 				_msg.InfoFormat("Calculating union of {0} polygons", selectedPolygons.Count);
 
 				await QueuedTask.Run(() => selectedPolygonGeometry =
-											   (Polygon)GeometryUtils.Union(selectedPolygons));
+					                           (Polygon) GeometryUtils.Union(selectedPolygons));
 			}
 
 			var progressTracker = new QualityVerificationProgressTracker
-			{
-				CancellationTokenSource = new CancellationTokenSource()
-			};
+			                      {
+				                      CancellationTokenSource = new CancellationTokenSource()
+			                      };
 
 			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(WorkListOpener,
-				MapView.Active, selectedPolygonGeometry, spatialRef);
+				mapView, selectedPolygonGeometry, spatialRef, SaveAction);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(selectedPolygonGeometry, progressTracker, resultsPath),
+					VerificationAction = () =>
+						Verify(selectedPolygonGeometry, progressTracker, resultsPath),
 					ApplicationController = appController
 				};
 
@@ -114,7 +128,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			string backendDisplayName = Assert.NotNullOrEmpty(qaEnvironment.BackendDisplayName);
 
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
-										   backendDisplayName, actionTitle);
+			                               backendDisplayName, actionTitle);
 
 			return true;
 		}
@@ -154,7 +168,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 				Polygon selectedPolygon = selectedFeature.GetShape() as Polygon;
 
-				if ( selectedPolygon != null)
+				if (selectedPolygon != null)
 				{
 					result.Add(selectedPolygon);
 				}
@@ -168,7 +182,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 						"The selection does not contain a polygon feature. Please select at least one polygon feature.");
 				}
 
-				throw new InvalidOperationException("No feature is selected. Please select at least one polygon feature.");
+				throw new InvalidOperationException(
+					"No feature is selected. Please select at least one polygon feature.");
 			}
 
 			return Task.FromResult<IList<Polygon>>(result);

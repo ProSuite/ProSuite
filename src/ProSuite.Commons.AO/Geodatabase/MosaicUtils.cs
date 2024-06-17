@@ -496,6 +496,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			IMosaicWorkspaceExtension
 				mosaicExt = mosaicExtHelper.FindExtension(workspace);
 
+			Assert.NotNull(mosaicExt,
+			               "Mosaic workspace extension is null. This type of workspace might not support mosaic datasets.");
+
 			IMosaicDataset mosaicDataset = mosaicExt.CreateMosaicDataset(
 				name, spatialReference,
 				creationParams,

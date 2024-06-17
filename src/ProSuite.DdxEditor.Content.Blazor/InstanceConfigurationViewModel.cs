@@ -116,8 +116,11 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	private void DisposeCore(
 		[NotNull] IInstanceConfigurationViewModel instanceConfigurationViewModel)
 	{
-		Assert.NotNull(Values);
-
+		if (Values == null)
+		{
+			return;
+		}
+		
 		foreach (ViewModelBase vm in Values)
 		{
 			_msg.VerboseDebug(() => $"OnRowPropertyChanged unregister: {this}");

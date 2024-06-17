@@ -39,6 +39,9 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 		public int FailureCount { get; set; }
 
+		public int IssueCount { get; set; }
+		public int FilteredIssueCount { get; set; }
+
 		private Dictionary<int, QualityCondition> _idConditions;
 
 		private Dictionary<int, QualityCondition> GetIdConditions()

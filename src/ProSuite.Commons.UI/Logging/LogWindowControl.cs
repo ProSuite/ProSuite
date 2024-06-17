@@ -78,7 +78,7 @@ namespace ProSuite.Commons.UI.Logging
 			{
 				// Control.Invoke may hang, use BeginInvoke 
 				// (executes as soon as foreground thread is idle again)
-				BeginInvoke((AddLogginEventCallback) AddLoggingEventCore,
+				BeginInvoke((AddLoggingEventCallback) AddLoggingEventCore,
 				            new object[] {loggingEvent});
 			}
 			else
@@ -171,7 +171,7 @@ namespace ProSuite.Commons.UI.Logging
 
 			int rowIndex = _dataGridView.Rows.Add(
 				logEventItem.LogLevelImage,
-				logEventItem.LogNummer,
+				logEventItem.LogNumber,
 				logEventItem.LogDateTime,
 				logEventItem.LogMessage);
 
@@ -475,7 +475,7 @@ namespace ProSuite.Commons.UI.Logging
 
 		#region Nested type: AddLogginEventCallback
 
-		private delegate void AddLogginEventCallback(LoggingEvent logEvent);
+		private delegate void AddLoggingEventCallback(LoggingEvent logEvent);
 
 		#endregion
 	}

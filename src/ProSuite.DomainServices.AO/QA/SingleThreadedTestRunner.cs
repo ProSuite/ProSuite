@@ -604,6 +604,7 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			// TODO: Consider checking basic relevance (inside test perimeter?) here
+			//       or better in an issue processor / filter
 
 			var eventArgs = new QaErrorEventArgs(qaError);
 			QaError?.Invoke(this, eventArgs);
@@ -616,33 +617,11 @@ namespace ProSuite.DomainServices.AO.QA
 			ITest test = qaError.Test;
 			QualityConditionVerification conditionVerification =
 				_verificationElements.GetQualityConditionVerification(test);
-			QualityCondition qualityCondition = conditionVerification.QualityCondition;
-			Assert.NotNull(qualityCondition, "no quality condition for verification");
+			QualityCondition qualityCondition =
+				Assert.NotNull(conditionVerification.QualityCondition);
 
-			StopInfo stopInfo = null;
-			if (conditionVerification.StopOnError)
-			{
-				stopInfo = new StopInfo(qualityCondition, qaError.Description);
-
-				foreach (InvolvedRow involvedRow in qaError.InvolvedRows)
-				{
-					RowsWithStopConditions.Add(involvedRow.TableName,
-					                           involvedRow.OID, stopInfo);
-				}
-			}
-
-			if (! conditionVerification.AllowErrors)
-			{
-				conditionVerification.Fulfilled = false;
-
-				if (stopInfo != null)
-				{
-					// it's a stop condition, and it is a 'hard' condition, and the error is 
-					// relevant --> consider the stop situation as sufficiently reported 
-					// (no reporting in case of stopped tests required)
-					stopInfo.Reported = true;
-				}
-			}
+			TestExecutionUtils.ReportRowWithStopCondition(qaError, qualityCondition,
+			                                              RowsWithStopConditions);
 
 			return true;
 		}

@@ -134,7 +134,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				}
 
 				result = DefaultTestConfiguratorFactory.Create(
-					factory, testDescriptor.TestAssemblyName, readOnly: false);
+					factory, testDescriptor.AssemblyName, readOnly: false);
 			}
 
 			result.DatasetProvider = _modelBuilder.GetTestParameterDatasetProvider();

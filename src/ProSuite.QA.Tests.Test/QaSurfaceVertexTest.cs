@@ -7,6 +7,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Test;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -67,7 +68,7 @@ namespace ProSuite.QA.Tests.Test
 			                             .ClosePolygon();
 			row.Store();
 
-			IWorkspace dtmWs = TestDataUtils.OpenTopgisTlm();
+			IWorkspace dtmWs = TestDataUtils.OpenTopgisAlti();
 
 			SimpleTerrain terrain = new SimpleTerrain(
 				"dataset.Name",

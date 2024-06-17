@@ -3,10 +3,10 @@ using ArcGIS.Desktop.Framework.Controls;
 using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {

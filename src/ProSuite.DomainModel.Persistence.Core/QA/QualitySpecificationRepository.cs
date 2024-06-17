@@ -68,7 +68,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 				{
 					// Only if it is properly supported by the DDX schema:
 					transformerIds =
-						DatasetParameterFetchingUtils.GetAllTransformerIdsForDatasets(
+						QualityRepositoryUtils.GetAllTransformerIdsForDatasets(
 							session, datasetIds, excludeReferenceData: true).ToArray();
 				}
 

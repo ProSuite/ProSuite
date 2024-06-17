@@ -27,7 +27,7 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				return null;
 			}
-			
+
 			TestFactory factory = GetTestFactory(descriptor);
 
 			if (factory != null)
@@ -47,7 +47,7 @@ namespace ProSuite.DomainModel.AO.QA
 		/// <param name="descriptor"></param>
 		/// <returns>TestFactory or null if neither the test class nor the test factory descriptor are defined.</returns>
 		[CanBeNull]
-		private static TestFactory GetTestFactory([NotNull] TestDescriptor descriptor)
+		public static TestFactory GetTestFactory([NotNull] TestDescriptor descriptor)
 		{
 			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
 
@@ -55,6 +55,13 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (classDescriptor != null)
 			{
+				// TODO: Implement this, once all test classes have their respective definition classes.
+				//if (InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+				//	    classDescriptor, out Type definitionType))
+				//{
+				//	return new DefaultTestFactory(definitionType, descriptor.TestConstructorId);
+				//}
+
 				return new DefaultTestFactory(classDescriptor.AssemblyName,
 				                              classDescriptor.TypeName,
 				                              descriptor.ConstructorId);
@@ -62,7 +69,59 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (descriptor.TestFactoryDescriptor != null)
 			{
-				return descriptor.TestFactoryDescriptor.CreateInstance<TestFactory>();
+				TestFactory result = descriptor.TestFactoryDescriptor.CreateInstance<TestFactory>();
+
+				// TODO: Implement this, once all test factories have their respective definition classes.
+				//// Implementing the QaFactoryBase class means that the parameters are defined in the ...Definition:
+				//if (result is QaFactoryBase qaFactory)
+				//{
+				//	qaFactory.FactoryDefinition =
+				//		InstanceDescriptorUtils.GetTestFactoryDefinition(descriptor);
+				//}
+
+				return result;
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Gets the test factory based on the TestDefinition. Requires the test class or the test
+		/// factory descriptor to be defined.
+		/// </summary>
+		/// <param name="descriptor"></param>
+		/// <returns>TestFactory or null if neither the test class nor the test factory descriptor are defined.</returns>
+		[CanBeNull]
+		public static TestFactory GetTestDefinitionFactory([NotNull] TestDescriptor descriptor)
+		{
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			ClassDescriptor classDescriptor = descriptor.Class;
+
+			if (classDescriptor != null)
+			{
+				bool hasDefinitionClass = InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+					classDescriptor, out Type definitionType);
+
+				Assert.True(hasDefinitionClass, "Test {0} has no definition class.", descriptor);
+
+				return new DefaultTestFactory(definitionType, descriptor.TestConstructorId);
+			}
+
+			if (descriptor.TestFactoryDescriptor != null)
+			{
+				TestFactory result = descriptor.TestFactoryDescriptor.CreateInstance<TestFactory>();
+
+				// Implementing the QaFactoryBase class means that the parameters are defined in the ...Definition:
+
+				QaFactoryBase qaFactory = result as QaFactoryBase;
+
+				Assert.NotNull(qaFactory, "Test factory {0} has no definition class", descriptor);
+
+				qaFactory.FactoryDefinition =
+					InstanceDescriptorUtils.GetTestFactoryDefinition(descriptor);
+
+				return result;
 			}
 
 			return null;

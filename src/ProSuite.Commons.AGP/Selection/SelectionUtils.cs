@@ -13,22 +13,24 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Selection
 {
+	// Note: the Selection is a property of the map (or its layers) and has nothing to do with the MapView
+	// Therefore, pass in a Map and not a MapView
+	// Note: SelectionUtils MUST NEVER use MapView.Active
+
 	public static class SelectionUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public static void ClearSelection()
+		public static void ClearSelection(Map map)
 		{
-			MapView.Active?.Map.ClearSelection();
+			map?.ClearSelection();
 		}
 
 		public static void SelectFeature(BasicFeatureLayer basicFeatureLayer,
 		                                 SelectionCombinationMethod selectionMethod,
-		                                 long objectId,
-		                                 bool clearExistingSelection = false)
+		                                 long objectId)
 		{
-			SelectRows(basicFeatureLayer, selectionMethod, new[] { objectId },
-			           clearExistingSelection);
+			SelectRows(basicFeatureLayer, selectionMethod, new[] { objectId });
 		}
 
 		/// <summary>
@@ -36,11 +38,8 @@ namespace ProSuite.Commons.AGP.Selection
 		/// Selections are only performed on visible selectable layers, preferably on the first
 		/// layer or table without definition query.
 		/// </summary>
-		/// <param name="mapView"></param>
-		/// <param name="mapMemberPredicate"></param>
-		/// <param name="objectIds"></param>
 		/// <returns>The number of actually selected rows.</returns>
-		public static long SelectRows([NotNull] MapView mapView,
+		public static long SelectRows([NotNull] Map map,
 		                              [NotNull] Predicate<IDisplayTable> mapMemberPredicate,
 		                              [NotNull] IReadOnlyList<long> objectIds)
 		{
@@ -51,7 +50,7 @@ namespace ProSuite.Commons.AGP.Selection
 				     mapMemberPredicate(displayTable);
 
 			foreach (BasicFeatureLayer featureLayer in
-			         MapUtils.GetFeatureLayersForSelection(mapView, layerPredicate))
+			         MapUtils.GetFeatureLayersForSelection(map, layerPredicate))
 			{
 				totalSelected +=
 					SelectRows(featureLayer, SelectionCombinationMethod.Add, objectIds);
@@ -61,8 +60,8 @@ namespace ProSuite.Commons.AGP.Selection
 				t => t is IDisplayTable displayTable &&
 				     mapMemberPredicate(displayTable);
 
-			foreach (IDisplayTable standaloneTable in
-			         MapUtils.GetStandaloneTablesForSelection(mapView, tablePredicate))
+			foreach (StandaloneTable standaloneTable in
+			         MapUtils.GetStandaloneTablesForSelection(map, tablePredicate))
 			{
 				totalSelected +=
 					SelectRows(standaloneTable, SelectionCombinationMethod.Add, objectIds);
@@ -79,37 +78,24 @@ namespace ProSuite.Commons.AGP.Selection
 		/// <param name="tableBasedMapMember"></param>
 		/// <param name="combinationMethod"></param>
 		/// <param name="objectIds"></param>
-		/// <param name="clearExistingSelection"></param>
 		/// <returns>The number of actually selected rows.</returns>
 		public static long SelectRows([NotNull] IDisplayTable tableBasedMapMember,
 		                              SelectionCombinationMethod combinationMethod,
-		                              [NotNull] IReadOnlyList<long> objectIds,
-		                              bool clearExistingSelection = false)
+		                              [NotNull] IReadOnlyList<long> objectIds)
 		{
 			if (objectIds.Count == 0)
 			{
 				return 0;
 			}
 
-			if (clearExistingSelection)
-			{
-				ClearSelection();
-			}
+			var queryFilter = new QueryFilter { ObjectIDs = objectIds };
 
-			var queryFilter = new QueryFilter
-			                  {
-				                  ObjectIDs = objectIds
-			                  };
+			using var selection =
+				tableBasedMapMember.Select(queryFilter, combinationMethod);
 
-			long actualSelectionCount;
+			long actualSelectionCount = selection.GetCount();
 
-			using (ArcGIS.Core.Data.Selection selection =
-			       tableBasedMapMember.Select(queryFilter, combinationMethod))
-			{
-				actualSelectionCount = selection.GetCount();
-
-				LogFeatureSelection(tableBasedMapMember, selection, actualSelectionCount);
-			}
+			LogFeatureSelection(tableBasedMapMember, selection, actualSelectionCount);
 
 			return actualSelectionCount;
 		}
@@ -133,28 +119,20 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		public static long SelectFeatures([NotNull] FeatureSelectionBase featuresPerLayer,
-		                                  SelectionCombinationMethod selectionCombinationMethod,
-		                                  bool clearExistingSelection = false)
+		                                  SelectionCombinationMethod selectionCombinationMethod)
 		{
 			Assert.ArgumentNotNull(featuresPerLayer, nameof(featuresPerLayer));
 
 			return SelectRows(featuresPerLayer.BasicFeatureLayer,
 			                  selectionCombinationMethod,
-			                  featuresPerLayer.GetOids().ToList(),
-			                  clearExistingSelection);
+			                  featuresPerLayer.GetOids().ToList());
 		}
 
 		public static long SelectFeatures(
-			[NotNull] IEnumerable<FeatureSelectionBase> featuresPerLayers,
-			SelectionCombinationMethod selectionCombinationMethod,
-			bool clearExistingSelection = false)
+			[NotNull] ICollection<FeatureSelectionBase> featuresPerLayers,
+			SelectionCombinationMethod selectionCombinationMethod)
 		{
 			Assert.ArgumentNotNull(featuresPerLayers, nameof(featuresPerLayers));
-
-			if (clearExistingSelection)
-			{
-				ClearSelection();
-			}
 
 			long result = 0;
 
@@ -170,9 +148,11 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public static IEnumerable<Feature> GetSelectedFeatures([NotNull] MapView activeView)
 		{
+			const bool withoutJoins = false;
 			SpatialReference sref = activeView.Map.SpatialReference;
 
-			foreach (Feature feature in MapUtils.GetFeatures(GetSelection(activeView.Map), sref))
+			foreach (Feature feature in MapUtils.GetFeatures(
+				         GetSelection(activeView.Map), withoutJoins, sref))
 			{
 				yield return feature;
 			}
@@ -203,10 +183,23 @@ namespace ProSuite.Commons.AGP.Selection
 			return GetSelection(selectionSet);
 		}
 
+		public static Dictionary<T, List<long>> GetSelection<T>(Map map) where T : MapMember
+		{
+			SelectionSet selectionSet = map.GetSelection();
+
+			return GetSelection<T>(selectionSet);
+		}
+
 		public static Dictionary<MapMember, List<long>> GetSelection(
 			SelectionSet selectionSet)
 		{
 			return selectionSet.ToDictionary();
+		}
+
+		public static Dictionary<T, List<long>> GetSelection<T>(
+			SelectionSet selectionSet) where T : MapMember
+		{
+			return selectionSet.ToDictionary<T>();
 		}
 
 		public static Dictionary<MapMember, List<long>> GetSelection(

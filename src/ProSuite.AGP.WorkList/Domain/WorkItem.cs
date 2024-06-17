@@ -31,7 +31,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region constructors
 
-		protected WorkItem(long id, [NotNull] Row row) : this(id, new GdbRowIdentity(row))
+		protected WorkItem(long itemId, long uniqueTableId, [NotNull] Row row)
+			: this(itemId, uniqueTableId, new GdbRowIdentity(row))
 		{
 			Description = GetDescription(row);
 
@@ -40,16 +41,12 @@ namespace ProSuite.AGP.WorkList.Domain
 			SetGeometryFromFeature(feature);
 		}
 
-		protected WorkItem(long id, GdbRowIdentity identity)
+		protected WorkItem(long itemId, long uniqueTableId, GdbRowIdentity identity)
 		{
-			OID = id;
+			OID = itemId;
+			UniqueTableId = uniqueTableId;
 			Proxy = identity;
 			Status = WorkItemStatus.Todo;
-		}
-
-		protected WorkItem(long id, Geometry geometry) : this(id, default(GdbRowIdentity))
-		{
-			SetGeometry(geometry);
 		}
 
 		#endregion
@@ -59,6 +56,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		#region IWorkItem
 
 		public long OID { get; set; }
+
+		public long UniqueTableId { get; }
 
 		public long ObjectID => Proxy.ObjectId;
 

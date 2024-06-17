@@ -1,17 +1,12 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
-using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.AGP.Editing.Selection
 {
@@ -32,6 +27,7 @@ namespace ProSuite.AGP.Editing.Selection
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.SelectionToolNormalShift);
 
 			SelectOnlyEditFeatures = false;
+			UnJoinedSelection = false;
 
 			SetCursor(SelectionCursor);
 		}
@@ -71,7 +67,7 @@ namespace ProSuite.AGP.Editing.Selection
 			Task task = QueuedTask.Run(
 				() =>
 				{
-					SelectionUtils.ClearSelection();
+					ClearSelection();
 
 					StartSelectionPhase();
 				});

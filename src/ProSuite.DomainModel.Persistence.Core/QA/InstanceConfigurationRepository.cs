@@ -46,7 +46,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			// load via list, then collect the next round of transformer ids
 			using (ISession session = OpenSession(true))
 			{
-				foreach (Dataset dataset in DatasetParameterFetchingUtils.GetAllReferencedDatasets(
+				foreach (Dataset dataset in QualityRepositoryUtils.GetAllReferencedDatasets(
 					         session, qualityConditions, includeReferenceViaIssueFilters,
 					         testParameterPredicate))
 				{
@@ -122,7 +122,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			using (ISession session = OpenSession(true))
 			{
-				foreach (var kvp in DatasetParameterFetchingUtils
+				foreach (var kvp in QualityRepositoryUtils
 					         .GetDatasetParameterValuesByConfiguration<T>(category, session))
 				{
 					result.Add(kvp.Key, kvp.Value);
@@ -163,7 +163,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 					parameterValueAlias.ValueSource == transformer;
 
 				var result =
-					DatasetParameterFetchingUtils.GetParentConfiguration<InstanceConfiguration>(
+					QualityRepositoryUtils.GetParentConfiguration<InstanceConfiguration>(
 						session, parameterExpression);
 
 				return result;
@@ -191,9 +191,9 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			where T : InstanceConfiguration
 		{
 			IList<int> datasetParameterIds =
-				DatasetParameterFetchingUtils.GetDeletedDatasetParameterIds(session);
+				QualityRepositoryUtils.GetDeletedDatasetParameterIds(session);
 
-			return DatasetParameterFetchingUtils.GetInstanceConfigurationIdsForParameterIds<T>(
+			return QualityRepositoryUtils.GetInstanceConfigurationIdsForParameterIds<T>(
 				session,
 				datasetParameterIds,
 				_maxInParameterCount);

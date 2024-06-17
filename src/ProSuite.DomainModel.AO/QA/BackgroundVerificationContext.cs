@@ -129,7 +129,7 @@ namespace ProSuite.DomainModel.AO.QA
 			return InnerModelContext.OpenTerrainReference(dataset);
 		}
 
-		public SimpleRasterMosaic OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
+		public MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			return InnerModelContext.OpenSimpleRasterMosaic(dataset);
 		}
@@ -156,7 +156,7 @@ namespace ProSuite.DomainModel.AO.QA
 		//	return modelContextEx.OpenGeometricNetwork(dataset);
 		//}
 
-		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
+		public RasterDatasetReference OpenRasterDataset(IDdxRasterDataset dataset)
 		{
 			return InnerModelContext.OpenRasterDataset(dataset);
 		}

@@ -3,6 +3,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
@@ -52,6 +53,27 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		{
 			get { return _databaseName; }
 			set { _databaseName = value; }
+		}
+
+		public override DbConnectionType ConnectionType =>
+			DbConnectionType.DatabaseConnectionProperties;
+
+		public string DbmsTypeName
+		{
+			get
+			{
+				switch (DatabaseType)
+				{
+					case DatabaseType.Oracle:
+					case DatabaseType.Oracle9:
+					case DatabaseType.Oracle10:
+					case DatabaseType.Oracle11:
+						return DatabaseType.Oracle.ToString();
+
+					default:
+						return DatabaseType.ToString();
+				}
+			}
 		}
 
 		public sealed override IFeatureWorkspace OpenWorkspace(int hWnd = 0)

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -48,12 +50,69 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static string GetDisplayValue(Row row, string className)
 		{
-			var classDefinition = row.GetTable().GetDefinition();
+			string subtypeName = null;
 
-			string subtypeField = null;
+			Subtype subtype = GetSubtype(row);
+			if (subtype != null)
+			{
+				subtypeName = subtype.GetName();
+			}
+
+			return string.IsNullOrEmpty(subtypeName)
+				       ? $"{className} ID: {row.GetObjectID()}"
+				       : $"{className} ({subtypeName}) ID: {row.GetObjectID()}";
+		}
+
+		[CanBeNull]
+		public static int? GetSubtypeCode([NotNull] Row row)
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
+			Table table = row.GetTable();
+
+			string subtypeFieldName = DatasetUtils.GetSubtypeFieldName(table);
+
+			if (! string.IsNullOrEmpty(subtypeFieldName))
+			{
+				int subtypeFieldIndex = row.FindField(subtypeFieldName);
+				return GetSubtypeCode(row, subtypeFieldIndex);
+			}
+
+			return null;
+		}
+
+		public static int? GetSubtypeCode([NotNull] Row row, int subtypeFieldIndex)
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
+			if (subtypeFieldIndex < 0)
+			{
+				return null;
+			}
+
+			object code = row[subtypeFieldIndex];
+
+			return code == null || code == DBNull.Value
+				       ? null
+				       : Convert.ToInt32(code);
+		}
+
+		[CanBeNull]
+		public static Subtype GetSubtype([NotNull] Row row)
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
+			int? subtypeCode = GetSubtypeCode(row);
+			if (! subtypeCode.HasValue)
+			{
+				return null;
+			}
+
+			Subtype subtype = null;
 			try
 			{
-				subtypeField = classDefinition.GetSubtypeField();
+				subtype = row.GetTable().GetDefinition().GetSubtypes()
+				             ?.FirstOrDefault(st => st.GetCode() == subtypeCode.Value);
 			}
 			catch (NotSupportedException notSupportedException)
 			{
@@ -61,22 +120,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				_msg.Debug("Subtypes not supported", notSupportedException);
 			}
 
-			string subtypeName = null;
-			if (! string.IsNullOrEmpty(subtypeField))
-			{
-				int? subtypeCode = row[subtypeField] as int?;
-				Subtype subtype = classDefinition.GetSubtypes()
-				                                 .FirstOrDefault(st => st.GetCode() == subtypeCode);
-
-				if (subtype != null)
-				{
-					subtypeName = subtype.GetName();
-				}
-			}
-
-			return string.IsNullOrEmpty(subtypeName)
-				       ? $"{className} ID: {row.GetObjectID()}"
-				       : $"{className} ({subtypeName}) ID: {row.GetObjectID()}";
+			return subtype;
 		}
 
 		[NotNull]
@@ -125,6 +169,110 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			{
 				return DatasetUtils.IsSameTable(table1, table2);
 			}
+		}
+
+		[CanBeNull]
+		public static T? ReadRowValue<T>([NotNull] Row row, int fieldIndex)
+			where T : struct
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
+			object value = row[fieldIndex];
+			return ReadRowValue<T>(value, fieldIndex,
+			                       () => row.GetObjectID(),
+			                       () => row.GetTable().GetName());
+		}
+
+		[CanBeNull]
+		private static T? ReadRowValue<T>(object value,
+		                                  int fieldIndex,
+		                                  Func<long?> getOid,
+		                                  Func<string> getTableName)
+			where T : struct
+		{
+			// TODO: Duplication in Commons.AO.GdbObjectUtils! Refactor to common place.
+			if (value == DBNull.Value || value == null)
+			{
+				_msg.VerboseDebug(
+					() => $"ReadRowValue: Field value at <index> {fieldIndex} of row is null.");
+
+				return null;
+			}
+
+			try
+			{
+				if (typeof(T) == typeof(int))
+				{
+					if (value is short)
+					{
+						// Short Integer field type is returned as short, cannot unbox directly to int:
+						return Convert.ToInt32(value) as T?;
+					}
+
+					if (value is long)
+					{
+						// Typically for long OID type that currently still is known to be an int.
+						// But long object cannot unbox directly to int:
+						return Convert.ToInt32(value) as T?;
+					}
+				}
+
+				if (typeof(T) == typeof(Guid))
+				{
+					// Guids come back as string
+					var guidString = value as string;
+
+					if (string.IsNullOrEmpty(guidString))
+					{
+						return null;
+					}
+
+					TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
+
+					return (T) Assert.NotNull(converter.ConvertFrom(guidString));
+				}
+
+				return (T) value;
+			}
+			catch (Exception ex)
+			{
+				long? rowOid = getOid();
+
+				_msg.ErrorFormat(
+					"ReadRowValue: Error casting value {0} of type {1} into type {2} for row <oid> {3} at field index {4} in {5}: {6}",
+					value, value.GetType(), typeof(T), fieldIndex, rowOid, getTableName(),
+					ex.Message);
+
+				throw;
+			}
+		}
+
+		public static bool IsNullOrEmpty(Row row, int fieldIndex)
+		{
+			object value = row[fieldIndex];
+
+			if (value == null)
+			{
+				return true;
+			}
+
+			if (value is DBNull)
+			{
+				return true;
+			}
+
+			if (value is string textValue)
+			{
+				if (Guid.TryParseExact(textValue.ToUpper(), "B", out Guid uuid) &&
+				    uuid.Equals(Guid.Empty))
+				{
+					return true;
+				}
+
+				return string.IsNullOrEmpty(value.ToString());
+			}
+
+			return false;
 		}
 	}
 }

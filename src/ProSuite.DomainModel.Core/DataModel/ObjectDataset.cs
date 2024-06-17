@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -8,7 +9,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
-	public abstract class ObjectDataset : Dataset, IObjectDataset, IAttributes
+	public abstract class ObjectDataset : Dataset, IObjectDataset, IAttributes, ITableSchemaDef
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -287,7 +288,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 			_attributes.Add(attribute);
 
-			_msg.DebugFormat("Added attribute {0}", attribute.Name);
+			_msg.VerboseDebug(() => $"Added attribute {attribute.Name}");
 
 			return attribute;
 		}
@@ -437,6 +438,32 @@ namespace ProSuite.DomainModel.Core.DataModel
 		internal void AttributeChanged([NotNull] ObjectAttribute attribute)
 		{
 			ClearAttributeMaps();
+		}
+
+		#endregion
+
+		#region Implementation of IDbTableSchema
+
+		public IReadOnlyList<ITableField> TableFields => (IReadOnlyList<ITableField>) Attributes;
+
+		public bool HasOID => _attributes.Any(a => a.FieldType == FieldType.ObjectID);
+
+		public string OIDFieldName =>
+			_attributes.FirstOrDefault(a => a.FieldType == FieldType.ObjectID)?.Name;
+
+		public int FindField(string fieldName)
+		{
+			for (int i = 0; i < _attributes.Count; i++)
+			{
+				ObjectAttribute field = _attributes[i];
+
+				if (field.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
+				{
+					return i;
+				}
+			}
+
+			return -1;
 		}
 
 		#endregion

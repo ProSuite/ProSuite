@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
@@ -23,22 +24,76 @@ namespace ProSuite.AGP.WorkList
 
 		private int _lastUsedOid;
 
-		protected GdbItemRepository(IEnumerable<Table> tables, IRepository workItemStateRepository)
+		protected GdbItemRepository(IEnumerable<Table> tables,
+		                            IWorkItemStateRepository workItemStateRepository,
+		                            // ReSharper disable once UnusedParameter.Local because it is required by dynamic instantiation
+		                            [CanBeNull] IWorkListItemDatastore tableSchema = null)
 		{
+			WorkItemStateRepository = workItemStateRepository;
+
 			foreach (Table table in tables)
 			{
 				ISourceClass sourceClass =
-					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition());
+					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition(),
+					                  null);
 
+				SourceClasses.Add(sourceClass);
+			}
+
+			int distinctIds =
+				SourceClasses.Select(sc => sc.GetUniqueTableId()).Distinct().Count();
+
+			if (distinctIds != SourceClasses.Count)
+			{
+				// TODO: Extract problematic tables
+				_msg.Warn("Some source classes have duplicate table ids. " +
+				          "Please ensure they have unique table names if they are not registered");
+			}
+		}
+
+		// TODO: Create basic record for each source class: Table, DefinitionQuery, StatusSchema
+		protected GdbItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
+		                            IWorkItemStateRepository workItemStateRepository,
+		                            [CanBeNull] IWorkListItemDatastore tableSchema = null)
+		{
+			foreach ((Table table, string definitionQuery) in tableWithDefinitionQuery)
+			{
+				ISourceClass sourceClass =
+					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition(),
+					                  tableSchema, definitionQuery);
 				SourceClasses.Add(sourceClass);
 			}
 
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
-		protected IRepository WorkItemStateRepository { get; }
+		protected IWorkItemStateRepository WorkItemStateRepository { get; }
+
+		[CanBeNull]
+		public IWorkListItemDatastore TableSchema { get; private set; }
 
 		public List<ISourceClass> SourceClasses { get; } = new();
+
+		public void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
+		{
+			TableSchema = tableSchemaInfo;
+
+			foreach (ISourceClass sourceClass in SourceClasses)
+			{
+				Table table = OpenTable(sourceClass);
+
+				if (table != null)
+				{
+					sourceClass.AttributeReader = CreateAttributeReaderCore(
+						table.GetDefinition(), tableSchemaInfo);
+				}
+				else
+				{
+					_msg.Warn(
+						$"Cannot prepare table schema due to missing source table {sourceClass.Name}");
+				}
+			}
+		}
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
@@ -47,6 +102,42 @@ namespace ProSuite.AGP.WorkList
 				int count = 0;
 
 				Stopwatch watch = _msg.DebugStartTiming();
+
+				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
+				{
+					IWorkItem item = CreateWorkItemCore(row, sourceClass);
+
+					count += 1;
+					yield return WorkItemStateRepository.Refresh(item);
+				}
+
+				_msg.DebugStopTiming(
+					watch, $"GetItems() {sourceClass.Name}: {count} items");
+			}
+		}
+
+		public IEnumerable<IWorkItem> GetItems(Geometry areaOfInterest,
+		                                       WorkItemStatus? statusFilter,
+		                                       bool recycle = true)
+		{
+			foreach (ISourceClass sourceClass in SourceClasses)
+			{
+				int count = 0;
+
+				Stopwatch watch = _msg.DebugStartTiming();
+
+				QueryFilter filter = areaOfInterest != null
+					                     ? GdbQueryUtils.CreateSpatialFilter(areaOfInterest)
+					                     : new QueryFilter();
+
+				// Source classes can set the respective filters / definition queries
+				// TODO: Consider getting only the right status, but that means
+				// extra round trips:
+				statusFilter = null;
+				filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
+
+				// Selection Item ObjectIDs to filter out, or change of SearchOrder:
+				AdaptSourceFilter(filter, sourceClass);
 
 				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
 				{
@@ -133,7 +224,7 @@ namespace ProSuite.AGP.WorkList
 
 		public void Commit()
 		{
-			WorkItemStateRepository.Commit();
+			WorkItemStateRepository.Commit(SourceClasses);
 		}
 
 		public void Discard()
@@ -151,6 +242,9 @@ namespace ProSuite.AGP.WorkList
 			return WorkItemStateRepository.CurrentIndex ?? -1;
 		}
 
+		protected abstract void AdaptSourceFilter([NotNull] QueryFilter filter,
+		                                          [NotNull] ISourceClass sourceClass);
+
 		protected virtual void UpdateStateRepositoryCore(string path) { }
 
 		protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
@@ -159,13 +253,15 @@ namespace ProSuite.AGP.WorkList
 			return Task.FromResult(0);
 		}
 
-		protected virtual IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
-		                                               [CanBeNull] QueryFilter filter, bool recycle)
+		private static IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
+		                                            [CanBeNull] QueryFilter filter,
+		                                            bool recycle)
 		{
 			Table table = OpenTable(sourceClass);
 
 			if (table == null)
 			{
+				_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
 				yield break;
 			}
 
@@ -192,7 +288,8 @@ namespace ProSuite.AGP.WorkList
 
 		[CanBeNull]
 		protected virtual IAttributeReader CreateAttributeReaderCore(
-			[NotNull] TableDefinition definition)
+			[NotNull] TableDefinition definition,
+			[CanBeNull] IWorkListItemDatastore tableSchema)
 		{
 			return null;
 		}
@@ -204,22 +301,36 @@ namespace ProSuite.AGP.WorkList
 		protected abstract ISourceClass CreateSourceClassCore(
 			GdbTableIdentity identity,
 			[CanBeNull] IAttributeReader attributeReader,
-			[CanBeNull] WorkListStatusSchema statusSchema);
+			[CanBeNull] WorkListStatusSchema statusSchema,
+			string definitionQuery = null);
 
 		[CanBeNull]
 		protected static Table OpenTable([NotNull] ISourceClass sourceClass)
 		{
-			return sourceClass.OpenDataset<Table>();
+			Table table = null;
+			try
+			{
+				table = sourceClass.OpenDataset<Table>();
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error opening source table {sourceClass.Name}: {e.Message}.", e);
+			}
+
+			return table;
 		}
 
 		private ISourceClass CreateSourceClass(GdbTableIdentity identity,
-		                                       TableDefinition definition)
+		                                       TableDefinition definition,
+		                                       [CanBeNull] IWorkListItemDatastore tableSchema,
+		                                       string definitionQuery = null)
 		{
-			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
+			IAttributeReader attributeReader =
+				CreateAttributeReaderCore(definition, tableSchema);
 
 			WorkListStatusSchema statusSchema = CreateStatusSchemaCore(definition);
 
-			return CreateSourceClassCore(identity, attributeReader, statusSchema);
+			return CreateSourceClassCore(identity, attributeReader, statusSchema, definitionQuery);
 		}
 
 		#region unused

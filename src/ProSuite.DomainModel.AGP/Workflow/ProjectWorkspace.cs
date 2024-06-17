@@ -4,6 +4,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.DomainModel.AGP.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AGP.Workflow
 {
@@ -15,10 +16,12 @@ namespace ProSuite.DomainModel.AGP.Workflow
 	/// </summary>
 	public class ProjectWorkspace
 	{
+		private DatasetLookup _datasetLookup;
+
 		// TODO: Add project, dataset implementations to DomainModel
 		public ProjectWorkspace(int projectId,
 		                        string projectName,
-		                        IList<BasicDataset> datasets,
+		                        IList<IDdxDataset> datasets,
 		                        Datastore datastore,
 		                        SpatialReference modelSpatialReference)
 		{
@@ -26,14 +29,19 @@ namespace ProSuite.DomainModel.AGP.Workflow
 			ProjectName = projectName;
 			Datasets = datasets;
 			Datastore = datastore;
+			DatastoreConnector = datastore.GetConnector();
+			DatastoreConnectionString = datastore.GetConnectionString();
 			ModelSpatialReference = modelSpatialReference;
-			DisplayName = $"{ProjectName} - {WorkspaceUtils.GetDatastoreDisplayText(Datastore)}";
+			DisplayName =
+				$"{ProjectName} - {WorkspaceUtils.GetDatastoreDisplayText(DatastoreConnector)}";
 		}
 
 		public int ProjectId { get; }
 		public string ProjectName { get; }
-		public IList<BasicDataset> Datasets { get; }
+		public IList<IDdxDataset> Datasets { get; }
 		public Datastore Datastore { get; }
+		public Connector DatastoreConnector { get; set; }
+		public string DatastoreConnectionString { get; set; }
 		public SpatialReference ModelSpatialReference { get; }
 
 		public string DisplayName { get; }
@@ -52,7 +60,7 @@ namespace ProSuite.DomainModel.AGP.Workflow
 
 		public DatasetLookup GetDatasetLookup()
 		{
-			return new DatasetLookup(Datasets);
+			return _datasetLookup ??= new DatasetLookup(Datasets);
 		}
 	}
 }

@@ -10,20 +10,25 @@ namespace ProSuite.AGP.WorkList
 	{
 		private GdbTableIdentity _identity;
 
-		protected SourceClass(GdbTableIdentity identity, IAttributeReader attributeReader)
+		protected SourceClass(GdbTableIdentity identity,
+		                      IAttributeReader attributeReader)
 		{
 			_identity = identity;
 			AttributeReader = attributeReader;
 		}
 
+		protected GdbTableIdentity Identity => _identity;
+
 		public bool HasGeometry => _identity.HasGeometry;
 
-		public long Id => _identity.Id;
+		public long ArcGISTableId => _identity.Id;
 
 		[NotNull]
 		public string Name => _identity.Name;
 
 		public IAttributeReader AttributeReader { get; set; }
+
+		public string DefinitionQuery { get; protected set; }
 
 		public bool Uses(GdbTableIdentity table)
 		{
@@ -49,6 +54,18 @@ namespace ProSuite.AGP.WorkList
 				throw new NotSupportedException(
 					$"Datastore type is not supported ({workspaceIdentity})");
 			}
+		}
+
+		public string CreateWhereClause(WorkItemStatus? statusFilter)
+		{
+			return CreateWhereClauseCore(statusFilter);
+		}
+
+		public abstract long GetUniqueTableId();
+
+		protected virtual string CreateWhereClauseCore(WorkItemStatus? statusFilter)
+		{
+			return null;
 		}
 	}
 }

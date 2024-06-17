@@ -16,17 +16,20 @@ namespace ProSuite.AGP.WorkList
 
 		public DatabaseSourceClass(GdbTableIdentity identity,
 		                           [NotNull] WorkListStatusSchema statusSchema,
-		                           [NotNull] IAttributeReader attributeReader) : base(identity, attributeReader)
+		                           [NotNull] IAttributeReader attributeReader,
+		                           [CanBeNull] string definitionQuery)
+			: base(identity, attributeReader)
 		{
 			Assert.ArgumentNotNull(statusSchema, nameof(statusSchema));
 			Assert.ArgumentNotNull(attributeReader, nameof(attributeReader));
 
 			_statusSchema = statusSchema;
+			DefinitionQuery = definitionQuery;
 		}
 
 		[NotNull]
 		public string StatusFieldName => _statusSchema.FieldName;
-		
+
 		public WorkItemStatus GetStatus([NotNull] Row row)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
@@ -82,5 +85,39 @@ namespace ProSuite.AGP.WorkList
 						$@"Illegal status value: {status}", nameof(status));
 			}
 		}
+
+		#region Overrides of SourceClass
+
+		public override long GetUniqueTableId()
+		{
+			// NOTE: Currently DatabaseSourceClasses are supposed to all reside in the same
+			//       workspace (which is certainly the case for Issue Worklists).
+			//       Therefore, we can use the table ID as a unique identifier.
+			return ArcGISTableId;
+		}
+
+		protected override string CreateWhereClauseCore(WorkItemStatus? statusFilter)
+		{
+			string result = string.Empty;
+
+			if (statusFilter != null)
+			{
+				result = $"{StatusFieldName} = {GetValue(statusFilter.Value)}";
+			}
+
+			if (DefinitionQuery != null)
+			{
+				if (! string.IsNullOrEmpty(result))
+				{
+					result += " AND ";
+				}
+
+				result += DefinitionQuery;
+			}
+
+			return result;
+		}
+
+		#endregion
 	}
 }

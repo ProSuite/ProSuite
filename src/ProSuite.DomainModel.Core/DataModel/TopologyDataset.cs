@@ -1,3 +1,4 @@
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel
@@ -25,6 +26,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 		#endregion
 
 		public override string TypeDescription => "Topology";
+
+		public override DatasetType DatasetType => DatasetType.Topology;
 
 		#region ISpatialDataset
 

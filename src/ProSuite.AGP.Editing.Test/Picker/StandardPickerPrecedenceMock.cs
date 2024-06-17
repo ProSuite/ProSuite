@@ -26,6 +26,8 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			}
 		}
 
+		public int SelectionTolerance { get; set; }
+
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                bool areaSelect = false)
 		{
@@ -35,7 +37,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
 		{
 			return items.Take(_maxItems)
-			            .Select(item => SetScoreCosideringDistances(item, _selectionCentroid))
+			            .Select(item => SetScoreConsideringDistances(item, _selectionCentroid))
 			            .OrderBy(item => item, new PickableItemComparer());
 		}
 
@@ -45,7 +47,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			return Order(items).FirstOrDefault() as T;
 		}
 
-		private static IPickableItem SetScoreCosideringDistances(
+		private static IPickableItem SetScoreConsideringDistances(
 			IPickableItem item,
 			Geometry selectionGeometry)
 		{

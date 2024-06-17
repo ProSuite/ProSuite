@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -12,8 +13,11 @@ namespace ProSuite.Commons.AGP.Selection
 	{
 		protected FeatureSelectionBase([NotNull] BasicFeatureLayer basicFeatureLayer)
 		{
-			FeatureClass = basicFeatureLayer.GetFeatureClass();
-			BasicFeatureLayer = basicFeatureLayer;
+			BasicFeatureLayer = basicFeatureLayer ??
+			                    throw new ArgumentNullException(nameof(basicFeatureLayer));
+
+			FeatureClass featureClass = basicFeatureLayer.GetFeatureClass();
+			FeatureClass = featureClass ?? throw new ArgumentNullException(nameof(featureClass));
 		}
 
 		[NotNull]

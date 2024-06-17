@@ -75,9 +75,11 @@
                     <MenuItem Header="Show Message Details" Command="{Binding OpenMessage}"
                               CommandParameter="{Binding Path=SelectedRow}" />
                     <Separator />
-                    <MenuItem Header="Debug Messages" Command="{Binding FilterLogEntries}" CommandParameter="Debug"
+                    <MenuItem Header="Debug Messages"
+                              Command="{Binding FilterLogEntries}" CommandParameter="Debug"
                               IsCheckable="true" IsChecked="{Binding DebugLogsAreVisible}" />
-                    <MenuItem Header="Verbose Messages" Command="{Binding FilterLogEntries}" CommandParameter="Verbose"
+                    <MenuItem Header="Verbose Messages" IsEnabled="{Binding DebugLogsAreVisible}"
+                              Command="{Binding FilterLogEntries}" CommandParameter="Verbose"
                               IsCheckable="true" IsChecked="{Binding VerboseLogsAreVisible}" />
                 </ContextMenu>
             </DataGrid.ContextMenu>

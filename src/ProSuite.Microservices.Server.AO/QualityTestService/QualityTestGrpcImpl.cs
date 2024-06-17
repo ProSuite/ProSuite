@@ -11,11 +11,11 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
-using ProSuite.Commons.Gdb;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Microservices.Definitions.QA.Test;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Server.AO.QualityTestService
 {

@@ -4,9 +4,9 @@ using ArcGIS.Core.Data;
 namespace ProSuite.Commons.AGP.Gdb
 {
 	// todo daro: rename to TableProxy?
-	public struct GdbTableIdentity : IEquatable<GdbTableIdentity>
+	public struct GdbTableIdentity : IEquatable<GdbTableIdentity>, IComparable<GdbTableIdentity>
 	{
-		public GdbTableIdentity(Table table)
+		public GdbTableIdentity(Table table) // TODO make static factory method FromTable(table) -- the ctor(table) suggests we hold on the table, which we don't
 		{
 			Name = table.GetName();
 			Id = table.GetID();
@@ -65,5 +65,23 @@ namespace ProSuite.Commons.AGP.Gdb
 		}
 
 		#endregion
+
+		public int CompareTo(GdbTableIdentity other)
+		{
+			int workspaceComparison = Workspace.CompareTo(other.Workspace);
+
+			if (workspaceComparison != 0)
+			{
+				return workspaceComparison;
+			}
+
+			int nameComparison = string.Compare(Name, other.Name, StringComparison.OrdinalIgnoreCase);
+			if (nameComparison != 0)
+			{
+				return nameComparison;
+			}
+
+			return Id.CompareTo(other.Id);
+		}
 	}
 }

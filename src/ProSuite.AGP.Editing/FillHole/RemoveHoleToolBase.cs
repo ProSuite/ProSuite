@@ -7,17 +7,15 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Microservices.Client.AGP;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole;
 
 namespace ProSuite.AGP.Editing.FillHole
 {
@@ -42,7 +40,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected FillHoleOptions RemoveHoleOptions { get; } = new FillHoleOptions();
 
-		protected abstract GeometryProcessingClient MicroserviceClient { get; }
+		protected abstract ICalculateHolesService MicroserviceClient { get; }
 
 		protected override void OnUpdate()
 		{
@@ -65,8 +63,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected override void LogPromptForSelection()
 		{
-			_msg.Info(
-				"Select one or more polygon features which contain the hole(s) to be removed.");
+			_msg.Info(LocalizableStrings.RemoveHoleTool_LogPromptForSelection);
 		}
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
@@ -106,7 +103,7 @@ namespace ProSuite.AGP.Editing.FillHole
 			return _holes?.Any(h => h.HasHoles()) == true;
 		}
 
-		protected override bool SelectAndProcessDerivedGeometry(
+		protected override async Task<bool> SelectAndProcessDerivedGeometry(
 			Dictionary<MapMember, List<long>> selection,
 			Geometry sketch,
 			CancelableProgressor progressor)
@@ -126,7 +123,7 @@ namespace ProSuite.AGP.Editing.FillHole
 			MapView activeMapView = MapView.Active;
 
 			var selectedFeatures = MapUtils.GetFeatures(
-				selection, activeMapView.Map.SpatialReference).ToList();
+				selection, true, activeMapView.Map.SpatialReference).ToList();
 
 			var updates = new Dictionary<Feature, Geometry>();
 
@@ -152,16 +149,16 @@ namespace ProSuite.AGP.Editing.FillHole
 			IEnumerable<Dataset> datasets =
 				GdbPersistenceUtils.GetDatasetsNonEmpty(updates.Keys);
 
-			bool saved = GdbPersistenceUtils.ExecuteInTransaction(
-				editContext =>
-				{
-					_msg.DebugFormat("Saving {0} updates...", updates.Count);
+			bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
+				             editContext =>
+				             {
+					             _msg.DebugFormat("Saving {0} updates...", updates.Count);
 
-					GdbPersistenceUtils.UpdateTx(editContext, updates);
+					             GdbPersistenceUtils.UpdateTx(editContext, updates);
 
-					return true;
-				},
-				"Remove hole(s)", datasets);
+					             return true;
+				             },
+				             "Remove hole(s)", datasets);
 
 			if (progressor == null || ! progressor.CancellationToken.IsCancellationRequested)
 			{
@@ -215,7 +212,7 @@ namespace ProSuite.AGP.Editing.FillHole
 		}
 
 		#region Code duplicates
-		
+
 		// TODO: Consider upgrading ObjectClassId to long in microservice
 		//       and potentially add it to IReadOnly
 		//       and somehow add support for Shapefiles (OID service? Hash of full path?)
@@ -233,7 +230,7 @@ namespace ProSuite.AGP.Editing.FillHole
 		                                          List<Feature> updateFeatures)
 		{
 			return updateFeatures.First(f => f.GetObjectID() == objectId &&
-			                                 ProtobufConversionUtils.GetUniqueClassId(f) ==
+			                                 GeometryProcessingUtils.GetUniqueClassId(f) ==
 			                                 classId);
 		}
 

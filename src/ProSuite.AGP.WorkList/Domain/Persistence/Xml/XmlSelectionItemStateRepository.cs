@@ -1,5 +1,5 @@
-using ProSuite.AGP.WorkList.Contracts;
 using System;
+using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 {

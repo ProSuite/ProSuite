@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading;
 using ArcGIS.Core.CIM;
 using NUnit.Framework;
@@ -120,6 +121,59 @@ namespace ProSuite.Commons.AGP.Core.Test
 
 			var json = reference.ToJson();
 			Assert.True(json.Length > 0);
+		}
+
+		[Test]
+		public void CanBlend()
+		{
+			CIMSymbol nullSymbol = null;
+			Assert.IsNull(nullSymbol.Blend(null, 0.2f)); // no-op on null symbol
+			Assert.IsNull(nullSymbol.Blend(ColorUtils.WhiteRGB, 0.2f));
+
+			var pointSymbol = SymbolUtils.CreatePointSymbol(ColorUtils.BlueRGB);
+			Assert.AreSame(pointSymbol, pointSymbol.Blend(ColorUtils.WhiteRGB, 0.2f));
+			var graphicSymbol = pointSymbol.SymbolLayers.OfType<CIMVectorMarker>().Single()
+			                            .MarkerGraphics.Single().Symbol;
+			var pointColor = ((CIMMultiLayerSymbol) graphicSymbol).SymbolLayers
+				.OfType<CIMSolidFill>().Single().Color;
+			Assert.AreEqual(51.0, pointColor.Values[0]); // red
+			Assert.AreEqual(51.0, pointColor.Values[1]); // green
+			Assert.AreEqual(255.0, pointColor.Values[2]); // blue
+		}
+
+		[Test]
+		public void CanSetAlpha()
+		{
+			CIMSymbol nullSymbol = null;
+			Assert.IsNull(nullSymbol.SetAlpha(50f));
+
+			CIMSymbol pointSymbol = SymbolUtils.CreatePointSymbol(ColorUtils.BlueRGB);
+			Assert.AreSame(pointSymbol, pointSymbol.SetAlpha(50f));
+
+			var symref = pointSymbol.CreateReference();
+			Assert.AreSame(symref, symref.SetAlpha(67f));
+		}
+
+		[Test]
+		public void CanGetLineWidth()
+		{
+			var symbol1 = SymbolUtils.CreateLineSymbol(ColorUtils.RedRGB, 2.0);
+			Assert.True(SymbolUtils.GetLineWidth(symbol1, out var left1, out var right1));
+			Assert.AreEqual(2.0, left1 + right1);
+
+			var symbol2 = SymbolUtils.CreateLineSymbol(ColorUtils.RedRGB, 2.0);
+			symbol2.AddGlobalEffect(SymbolUtils.CreateEffectOffset(0.5)); // shift left
+			Assert.True(SymbolUtils.GetLineWidth(symbol2, out var left2, out var right2));
+			Assert.AreEqual(1.5, left2);
+			Assert.AreEqual(0.5, right2);
+
+			var symbol3 = SymbolUtils.CreateLineSymbol(ColorUtils.RedRGB, 2.0);
+			symbol3.AddGlobalEffect(SymbolUtils.CreateEffectOffset(-1.5)); // shift right
+			Assert.True(SymbolUtils.GetLineWidth(symbol3, out var left3, out var right3));
+			Assert.AreEqual(-0.5, left3);
+			Assert.AreEqual(2.5, right3);
+
+			// TODO More tests: local effects and multiple stroke layers!
 		}
 	}
 }

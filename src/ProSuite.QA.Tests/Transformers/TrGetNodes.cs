@@ -1,11 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
-using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
@@ -13,9 +16,6 @@ using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.Network;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -63,7 +63,7 @@ namespace ProSuite.QA.Tests.Transformers
 			return dissolvedFc;
 		}
 
-		private class TransformedFc : TransformedFeatureClass, 
+		private class TransformedFc : TransformedFeatureClass,
 		                              IDataContainerAware
 		{
 			public TransformedFc(IReadOnlyFeatureClass dissolve, string name = null)
@@ -107,8 +107,10 @@ namespace ProSuite.QA.Tests.Transformers
 					{
 						minRow = directedRow;
 					}
+
 					_baseOids.Add(directedRow.Row.Row.OID);
 				}
+
 				Assert.True(_baseOids.Count > 0, "empty List");
 				_baseOids.Sort();
 				Assert.NotNull(minRow);
@@ -227,11 +229,12 @@ namespace ProSuite.QA.Tests.Transformers
 			private IEnumerable<IReadOnlyFeature> DissolveSearchedLineFeatures(
 				ITableFilter filter, bool recycling)
 			{
-				if (!(filter is IFeatureClassFilter fcFilter) ||
+				if (! (filter is IFeatureClassFilter fcFilter) ||
 				    fcFilter.FilterGeometry == null)
 				{
 					yield break;
 				}
+
 				// TODO: implement GroupBy
 				_builder = _builder ?? new NetworkBuilder(includeBorderNodes: true);
 				_builder.ClearAll();
@@ -241,7 +244,6 @@ namespace ProSuite.QA.Tests.Transformers
 					_builder.AddNetElements(baseRow, 0);
 				}
 
-
 				fcFilter.FilterGeometry.Envelope.QueryWKSCoords(out WKSEnvelope fullWks);
 
 				_builder.BuildNet(fullWks, fullWks, 0);
@@ -249,7 +251,6 @@ namespace ProSuite.QA.Tests.Transformers
 				{
 					yield break;
 				}
-
 
 				foreach (List<DirectedRow> connectedLines in _builder.ConnectedLinesList)
 				{
@@ -282,7 +283,8 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				Assert.True(directedRows.Count > 0, "No rows");
 
-				IList<IReadOnlyRow> rows = directedRows.Select(directedRow => directedRow.Row.Row).ToList();
+				IList<IReadOnlyRow> rows = directedRows.Select(directedRow => directedRow.Row.Row)
+				                                       .ToList();
 
 				var joinedValueList = new MultiListValues();
 				{
@@ -290,7 +292,6 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 
 				var calculatedValues = TableFields.GetCalculatedValues(rows).ToList();
-
 
 				//// Consider using the one with the smallest OID?
 				//IReadOnlyRow mainRow = minRow.Row.Row;

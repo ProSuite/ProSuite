@@ -46,12 +46,24 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
 
+		protected virtual Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool>
+			SaveAction => null;
+
 		protected override Task<bool> OnClickCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
 			{
 				MessageBox.Show("No quality verification environment is configured.",
 				                "Verify Last", MessageBoxButton.OK, MessageBoxImage.Warning);
+				return Task.FromResult(false);
+			}
+
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				MessageBox.Show("No active map.", "Verify Extent",
+				                MessageBoxButton.OK, MessageBoxImage.Warning);
 				return Task.FromResult(false);
 			}
 
@@ -94,8 +106,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController =
-				new AgpBackgroundVerificationController(WorkListOpener, MapView.Active, perimeter,
-				                                        spatialRef);
+				new AgpBackgroundVerificationController(WorkListOpener, mapView, perimeter,
+				                                        spatialRef, SaveAction);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel

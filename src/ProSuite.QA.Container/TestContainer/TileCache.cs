@@ -9,6 +9,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -27,6 +28,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private readonly IDictionary<IReadOnlyTable, double> _xyToleranceByTable;
 		private readonly ITestContainer _container;
 		private readonly IDictionary<IReadOnlyTable, IList<ContainerTest>> _testsPerTable;
+		private readonly IDictionary<IReadOnlyTable, CachedTableProps> _cachedTableProps;
 
 		private IDictionary<IReadOnlyTable, RowBoxTree> _rowBoxTrees;
 		private IDictionary<IReadOnlyTable, IEnvelope> _loadedExtents;
@@ -42,11 +44,13 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public TileCache([NotNull] IList<IReadOnlyTable> cachedTables, [NotNull] IBox testRunBox,
+		public TileCache([NotNull] IDictionary<IReadOnlyTable, CachedTableProps> cachedTableProps,
+		                 [NotNull] IBox testRunBox,
 		                 [NotNull] ITestContainer container,
 		                 [NotNull] IDictionary<IReadOnlyTable, IList<ContainerTest>> testsPerTable)
 		{
-			_cachedTables = cachedTables;
+			_cachedTables = new List<IReadOnlyTable>(cachedTableProps.Keys);
+			_cachedTableProps = cachedTableProps;
 			_testRunBox = testRunBox;
 			_container = container;
 			_testsPerTable = testsPerTable;
@@ -98,7 +102,14 @@ namespace ProSuite.QA.Container.TestContainer
 				return false;
 			}
 
-			if (! ((IRelationalOperator) tile.FilterEnvelope).Within(_loadedExtents[table]))
+			IEnvelope tileEnv = tile.FilterEnvelope;
+			CachedTableProps props = _cachedTableProps[table];
+			if (props.HasGeotransformation != null)
+			{
+				tileEnv = props.HasGeotransformation.ProjectEx(tileEnv);
+			}
+
+			if (! ((IRelationalOperator) tileEnv).Within(_loadedExtents[table]))
 			{
 				return false;
 			}
@@ -502,12 +513,13 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public void LoadCachedTableRows(
 			[NotNull] IDictionary<BaseRow, CachedRow> cachedRows,
-			[NotNull] IReadOnlyTable table,
+			[NotNull] CachedTableProps tableProps,
 			[NotNull] Tile tile,
 			[NotNull] ITileEnumContext context)
 		{
 			IBox allBox = null;
 
+			IReadOnlyTable table = tableProps.Table;
 			// avoid rereading overlapping large features (with a max extent > tile size)
 			// TODO: use more detailed info ignore / improve notInExpression
 			bool isQueryTable = table.FullName is IQueryName2;
@@ -517,25 +529,27 @@ namespace ProSuite.QA.Container.TestContainer
 					: GetFilterOldLargeRows(cachedRows.Values, context.TileSize, ref allBox);
 
 			IFeatureClassFilter loadSpatialFilter =
-				GetLoadSpatialFilter(table, tile.SpatialFilter, context, notInExpression);
+				GetLoadSpatialFilter(tableProps, tile.SpatialFilter, context, notInExpression);
 
 			IEnvelope loadExtent =
 				GeometryFactory.Clone((IEnvelope) loadSpatialFilter.FilterGeometry);
 
-			AddRowsToCache(cachedRows, table, loadSpatialFilter, context, ref allBox);
+			AddRowsToCache(cachedRows, tableProps, loadSpatialFilter, context, ref allBox);
 
 			CreateBoxTree(table, cachedRows.Values, allBox, loadExtent);
 		}
 
 		[NotNull]
 		private IFeatureClassFilter GetLoadSpatialFilter(
-			[NotNull] IReadOnlyTable table,
+			[NotNull] CachedTableProps tableProps,
 			[NotNull] IFeatureClassFilter tileSpatialFilter,
 			[NotNull] ITileEnumContext context,
 			[CanBeNull] string notInExpression)
 		{
-			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNull(tableProps, nameof(tableProps));
 			Assert.ArgumentNotNull(tileSpatialFilter, nameof(tileSpatialFilter));
+
+			IReadOnlyTable table = tableProps.Table;
 
 			string whereClause = _container.FilterExpressionsUseDbSyntax
 				                     ? context.GetCommonFilterExpression(table)
@@ -549,6 +563,23 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 
 			IEnvelope filterGeometry = (IEnvelope) ((IClone) tileSpatialFilter.FilterGeometry).Clone();
+			esriSpatialRelEnum spatialRelationship = tileSpatialFilter.SpatialRelationship;
+
+			IWorkspace workspace = table.Workspace;
+
+			// Workaround : Shapefile-Tables may return wrong feature when querying with esriSpatialRelEnvelopeIntersects
+			if (spatialRelationship == esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects &&
+			    workspace.Type == esriWorkspaceType.esriFileSystemWorkspace)
+			{
+				spatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
+			}
+
+			if (tableProps.HasGeotransformation != null)
+			{
+				filterGeometry =
+					tableProps.HasGeotransformation.ProjectEx(filterGeometry);
+			}
+
 
 			double searchTolerance = context.OverlappingFeatures.GetSearchTolerance(table);
 			if (searchTolerance > 0)
@@ -556,7 +587,7 @@ namespace ProSuite.QA.Container.TestContainer
 				filterGeometry.Expand(searchTolerance, searchTolerance, false);
 			}
 
-			var result = new AoFeatureClassFilter(filterGeometry, tileSpatialFilter.SpatialRelationship)
+			var result = new AoFeatureClassFilter(filterGeometry, spatialRelationship)
 			             {
 				             SubFields = tileSpatialFilter.SubFields,
 				             WhereClause = whereClause,
@@ -567,7 +598,7 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		private void AddRowsToCache([NotNull] IDictionary<BaseRow, CachedRow> cachedRows,
-		                            [NotNull] IReadOnlyTable table,
+		                            [NotNull] CachedTableProps tableProps,
 		                            [NotNull] ITableFilter filter,
 		                            [NotNull] ITileEnumContext context,
 		                            [CanBeNull] ref IBox allBox)
@@ -583,13 +614,16 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 			}
 
-			IUniqueIdProvider uniqueIdProvider_ = context.GetUniqueIdProvider(table);
+			IReadOnlyTable table = tableProps.Table;
+			IUniqueIdProvider uniqueIdProvider = context.GetUniqueIdProvider(table);
 			// get data from database
 			try
 			{
+				IFeatureClassFilter spatialFilter = (IFeatureClassFilter) filter;
+				ISpatialReference filterSr = spatialFilter.FilterGeometry.SpatialReference;
 				(table as ITransformedTable)?.SetKnownTransformedRows(
 					cachedRows.Values.Select(x => x.Feature as IReadOnlyRow));
-				foreach (IReadOnlyRow row in GetRows(table, (IFeatureClassFilter)filter))
+				foreach (IReadOnlyRow row in table.EnumRows(filter, recycle: false))
 				{
 					var feature = (IReadOnlyFeature) row;
 					IGeometry shape = feature.Shape;
@@ -603,15 +637,15 @@ namespace ProSuite.QA.Container.TestContainer
 						continue;
 					}
 
-					var keyRow = new CachedRow(feature, uniqueIdProvider_);
+					var keyRow = new CachedRow(feature, uniqueIdProvider);
 					CachedRow cachedRow;
 					if (cachedRows.TryGetValue(keyRow, out cachedRow))
 					{
-						cachedRow.UpdateFeature(feature, uniqueIdProvider_);
+						cachedRow.UpdateFeature(feature, uniqueIdProvider);
 					}
 					else
 					{
-						cachedRow = new CachedRow(feature, uniqueIdProvider_);
+						cachedRow = new CachedRow(feature, uniqueIdProvider);
 						// cachedRow must always be added to cachedRows, even if disjoint !
 						// otherwise it may be processed several times
 						cachedRows.Add(keyRow, cachedRow);
@@ -619,9 +653,13 @@ namespace ProSuite.QA.Container.TestContainer
 
 					IBox cachedRowExtent = cachedRow.Extent;
 
-					bool disjoint = context.IsDisjointFromExecuteArea(feature.Shape);
+					// Do not optimize for execute area when differing spatial references
+					if (tableProps.HasGeotransformation == null)
+					{
+						bool disjoint = context.IsDisjointFromExecuteArea(feature.Shape);
 
-					cachedRow.DisjointFromExecuteArea = disjoint;
+						cachedRow.DisjointFromExecuteArea = disjoint;
+					}
 
 					if (allBox == null)
 					{
@@ -645,41 +683,6 @@ namespace ProSuite.QA.Container.TestContainer
 					// the missing feature was not restored during the load
 					// this would probably be some edge case related to snapped/non-snapped coordinates
 					cachedRows.Remove(cachedRow);
-				}
-			}
-		}
-
-		/// <summary>
-		/// Workaround : Shapefile-Tables may return wrong feature is querying with esriSpatialRelEnvelopeIntersects
-		/// </summary>
-		[NotNull]
-		private static IEnumerable<IReadOnlyRow> GetRows([NotNull] IReadOnlyTable table,
-		                                                 [NotNull] IFeatureClassFilter filter)
-		{
-			Assert.ArgumentNotNull(table, nameof(table));
-			Assert.ArgumentNotNull(filter, nameof(filter));
-
-			IWorkspace workspace = table.Workspace;
-			esriSpatialRelEnum origRel = filter.SpatialRelationship;
-
-			var changedSpatialRel = false;
-
-			try
-			{
-				if (origRel == esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects &&
-				    workspace.Type == esriWorkspaceType.esriFileSystemWorkspace)
-				{
-					filter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelIntersects;
-					changedSpatialRel = true;
-				}
-
-				return table.EnumRows(filter, recycle: false);
-			}
-			finally
-			{
-				if (changedSpatialRel)
-				{
-					filter.SpatialRelationship = origRel;
 				}
 			}
 		}

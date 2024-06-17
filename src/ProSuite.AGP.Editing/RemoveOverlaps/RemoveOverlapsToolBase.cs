@@ -8,11 +8,11 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
@@ -20,8 +20,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using ProSuite.Microservices.Client.AGP;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 
 namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
@@ -42,7 +40,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			SecondPhaseCursor = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursorProcess);
 		}
 
-		protected abstract GeometryProcessingClient MicroserviceClient { get; }
+		protected abstract IRemoveOverlapsService MicroserviceClient { get; }
 
 		protected override void OnUpdate()
 		{
@@ -109,7 +107,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			return _overlaps != null && _overlaps.HasOverlaps();
 		}
 
-		protected override bool SelectAndProcessDerivedGeometry(
+		protected override async Task<bool> SelectAndProcessDerivedGeometry(
 			Dictionary<MapMember, List<long>> selection,
 			Geometry sketch,
 			CancelableProgressor progressor)
@@ -125,8 +123,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			MapView activeMapView = MapView.Active;
 
+			var distinctSelectionByFeatureClass =
+				MapUtils.GetDistinctSelectionByTable(selection)
+				        .ToDictionary(kvp => (FeatureClass) kvp.Key,
+				                      kvp => kvp.Value);
+
 			IEnumerable<Feature> selectedFeatures = MapUtils.GetFeatures(
-				selection, activeMapView.Map.SpatialReference);
+				distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference);
 
 			RemoveOverlapsResult result =
 				MicroserviceClient.RemoveOverlaps(
@@ -184,19 +187,21 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			var newFeatures = new List<Feature>();
 
-			bool saved = GdbPersistenceUtils.ExecuteInTransaction(
-				editContext =>
-				{
-					_msg.DebugFormat("Saving {0} updates and {1} inserts...", updates.Count,
-					                 inserts.Count);
+			bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
+				             editContext =>
+				             {
+					             _msg.DebugFormat("Saving {0} updates and {1} inserts...",
+					                              updates.Count,
+					                              inserts.Count);
 
-					GdbPersistenceUtils.UpdateTx(editContext, updates);
+					             GdbPersistenceUtils.UpdateTx(editContext, updates);
 
-					newFeatures.AddRange(GdbPersistenceUtils.InsertTx(editContext, inserts));
+					             newFeatures.AddRange(
+						             GdbPersistenceUtils.InsertTx(editContext, inserts));
 
-					return true;
-				},
-				"Remove overlaps", datasets);
+					             return true;
+				             },
+				             "Remove overlaps", datasets);
 
 			ToolUtils.SelectNewFeatures(newFeatures, activeMapView);
 
@@ -238,47 +243,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 				_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
 			}
-		}
-
-		protected override Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
-		{
-			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
-			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
-
-			//if (_shiftIsPressed) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
-			//{
-			//	return Task.FromResult(true);
-			//}
-
-			CancelableProgressor progressor = GetOverlapsCalculationProgressor();
-
-			if (IsInSelectionPhase())
-			{
-				var selection = SelectionUtils.GetSelection(e);
-				if (CanUseSelection(selection))
-				{
-					var selectedFeatures = GetApplicableSelectedFeatures(selection).ToList();
-
-					AfterSelection(selectedFeatures, progressor);
-
-					var sketch = GetCurrentSketchAsync().Result;
-
-					SelectAndProcessDerivedGeometry(selection, sketch, progressor);
-				}
-			}
-
-			return Task.FromResult(true);
-		}
-
-		protected CancelableProgressor GetOverlapsCalculationProgressor()
-		{
-			var overlapsCalculationProgressorSource = new CancelableProgressorSource(
-				"Calculating overlaps...", "cancelled", true);
-
-			CancelableProgressor selectionProgressor =
-				overlapsCalculationProgressorSource.Progressor;
-
-			return selectionProgressor;
 		}
 
 		private Overlaps CalculateOverlaps(IList<Feature> selectedFeatures,
@@ -402,7 +366,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
+					selection, true, CanOverlapLayer, inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&
 			    cancellabelProgressor.CancellationToken.IsCancellationRequested)

@@ -8,7 +8,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -28,7 +27,7 @@ namespace ProSuite.Commons.AGP.Carto
 			MapView mapView,
 			TargetFeatureSelection? featureSelectionType = null)
 		{
-			_mapView = mapView;
+			_mapView = mapView ?? throw new ArgumentNullException(nameof(mapView));
 			FeatureSelectionType = featureSelectionType;
 		}
 
@@ -60,7 +59,7 @@ namespace ProSuite.Commons.AGP.Carto
 			Predicate<BasicFeatureLayer> predicate = fl => IsLayerApplicable(fl, layerPredicate);
 
 			IEnumerable<BasicFeatureLayer>
-				featureLayers = MapUtils.GetFeatureLayers(predicate, _mapView);
+				featureLayers = MapUtils.GetFeatureLayers(_mapView.Map, predicate);
 
 			return FindFeaturesByLayer(featureLayers, searchGeometry, featurePredicate,
 			                           cancelableProgressor);
@@ -102,8 +101,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 					if (objectIds.Count > 0)
 					{
-						yield return new OidSelection(objectIds, basicFeatureLayer,
-						                              outputSpatialReference);
+						yield return new OidSelection(basicFeatureLayer, objectIds,
+													  outputSpatialReference);
 					}
 				}
 				else
@@ -115,7 +114,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 					if (features.Count > 0)
 					{
-						yield return new FeatureSelection(features, basicFeatureLayer);
+						yield return new FeatureSelection(basicFeatureLayer, features);
 					}
 				}
 			}
@@ -131,7 +130,7 @@ namespace ProSuite.Commons.AGP.Carto
 			Predicate<BasicFeatureLayer> predicate = fl => IsLayerApplicable(fl, layerPredicate);
 
 			IEnumerable<BasicFeatureLayer>
-				featureLayers = MapUtils.GetFeatureLayers(predicate, _mapView);
+				featureLayers = MapUtils.GetFeatureLayers(_mapView.Map, predicate);
 
 			return FindFeaturesByFeatureClass(featureLayers, searchGeometry, featurePredicate,
 			                                  cancelableProgressor);
@@ -189,18 +188,40 @@ namespace ProSuite.Commons.AGP.Carto
 
 					filter.OutputSpatialReference = outputSpatialReference;
 
-					IEnumerable<Feature> foundFeatures =
-						GdbQueryUtils.GetFeatures(featureClass, filter, false, cancellationToken)
-						             .Where(f => featurePredicate == null || featurePredicate(f));
+					bool isJoinedTable = featureClass.IsJoinedTable();
 
-					features.AddRange(foundFeatures);
+					if (isJoinedTable)
+					{
+						filter.SubFields = featureClass.GetDefinition().GetObjectIDField();
+
+						IEnumerable<Feature> foundJoined =
+							GdbQueryUtils
+								.GetFeatures(featureClass, filter, false, cancellationToken)
+								.Where(f => featurePredicate == null || featurePredicate(f));
+
+						List<long> oids = foundJoined.Select(f => f.GetObjectID()).ToList();
+
+						filter.SubFields = string.Empty;
+						features.AddRange(
+							MapUtils.GetFeatures(featureClass, oids, true, false,
+							                     outputSpatialReference));
+					}
+					else
+					{
+						IEnumerable<Feature> foundFeatures =
+							GdbQueryUtils.GetFeatures(featureClass, filter, false, cancellationToken)
+							             .Where(f => featurePredicate == null || featurePredicate(f));
+
+						features.AddRange(foundFeatures);
+					}
+
 				}
 
 				if (featureClass != null && features.Count > 0)
 				{
 					yield return new FeatureSelection(
-						features.DistinctBy(f => f.GetObjectID()).ToList(),
-						basicFeatureLayer);
+						basicFeatureLayer,
+						features.DistinctBy(f => f.GetObjectID()).ToList());
 				}
 			}
 		}
@@ -215,6 +236,8 @@ namespace ProSuite.Commons.AGP.Carto
 		/// type SameClass these features are used to determine whether a potential target feature comes
 		/// from the same class as one of them.
 		/// </param>
+		/// <param name="withoutJoins">Whether the result features shall be based on the original,
+		/// potentially joined table, or not.</param>
 		/// <param name="layerPredicate">An additional layer predicate to be tested.</param>
 		/// <param name="extent">The area of interest to which the search can be limited</param>
 		/// <param name="cancelableProgressor">The progress/cancel tracker.</param>
@@ -226,6 +249,7 @@ namespace ProSuite.Commons.AGP.Carto
 		[NotNull]
 		public IEnumerable<FeatureSelectionBase> FindIntersectingFeaturesByFeatureClass(
 			[NotNull] Dictionary<MapMember, List<long>> intersectingSelectedFeatures,
+			bool withoutJoins = false,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Envelope extent = null,
 			[CanBeNull] CancelableProgressor cancelableProgressor = null)
@@ -236,8 +260,9 @@ namespace ProSuite.Commons.AGP.Carto
 				"Unsupported target selection type");
 
 			SpatialReference spatialReference = _mapView.Map.SpatialReference;
-			SelectedFeatures = MapUtils.GetFeatures(intersectingSelectedFeatures, spatialReference)
-			                           .ToList();
+			SelectedFeatures =
+				MapUtils.GetFeatures(intersectingSelectedFeatures, withoutJoins, spatialReference)
+				        .ToList();
 
 			Geometry searchGeometry = GetSearchGeometry(SelectedFeatures, extent);
 
@@ -317,7 +342,7 @@ namespace ProSuite.Commons.AGP.Carto
 				}
 			}
 
-			// AnnotationLayer has it's own GetFeatureClass() method. There is no base
+			// AnnotationLayer has its own GetFeatureClass() method. There is no base
 			// method on BasicFeatureLayer.
 			if (basicFeatureLayer is AnnotationLayer annoLayer)
 			{

@@ -84,7 +84,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 			foreach (Feature feature in GdbQueryUtils.GetRows<Feature>(_issuePoints))
 			{
-				var item = new IssueItem(0, feature);
+				var item = new IssueItem(0, 42, feature);
 				break;
 			}
 		}

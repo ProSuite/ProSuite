@@ -41,12 +41,13 @@ public class QualityConditionBlazor : BlazorWebView, IInstanceConfigurationTable
 
 	private static IServiceProvider CreateIoCContainer()
 	{
-#if NET6_0
+#if NET6_0_OR_GREATER 
 		IServiceCollection serviceCollection = new ServiceCollection();
 		serviceCollection.AddWindowsFormsBlazorWebView();
 		serviceCollection.AddSingleton<IEventAggregator>(_ => new EventAggregator());
 		serviceCollection.AddScoped<TooltipService>();
 #if DEBUG
+		// Allows opening browser developer tools (keyboard shortcut: CTRL + SHIFT + I)
 		serviceCollection.AddBlazorWebViewDeveloperTools();
 #endif
 		return serviceCollection.BuildServiceProvider();

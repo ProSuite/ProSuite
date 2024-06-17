@@ -1120,7 +1120,8 @@ namespace ProSuite.Commons.Geom
 
 				if (false == GeomRelationUtils.AreaContainsXY(
 					    Source, Target, Tolerance,
-					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx))
+					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx,
+					    IntersectionPointNavigator.IntersectionClusters))
 				{
 					// Except if it is contained by a previously removed island:
 					bool insideRemovedIslands = removedInteriorBoundaryLoops.All(
@@ -1238,7 +1239,8 @@ namespace ProSuite.Commons.Geom
 
 				if (true == GeomRelationUtils.AreaContainsXY(
 					    Source, Target, Tolerance,
-					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx))
+					    IntersectionPointNavigator.IntersectionsAlongTarget, unCutTargetIdx,
+					    IntersectionPointNavigator.IntersectionClusters))
 				{
 					yield return targetRing;
 				}
@@ -1333,7 +1335,8 @@ namespace ProSuite.Commons.Geom
 				                 ref currentIntersection, ref continueOnSource, ref forward);
 
 				nextIntersection = FollowUntilNextIntersection(
-					currentIntersection, continueOnSource, forward, out Linestring subcurve);
+					currentIntersection, continueOnSource, forward, startIntersections,
+					out Linestring subcurve);
 
 				Pnt3D containedSourceStart =
 					GetSourceStartBetween(currentIntersection, nextIntersection, continueOnSource,
@@ -1341,11 +1344,6 @@ namespace ProSuite.Commons.Geom
 
 				bool isBoundaryLoopIntersection =
 					IntersectionPointNavigator.IsBoundaryLoopIntersectionAtStart(nextIntersection);
-
-				if (continueOnSource)
-				{
-					IntersectionContinuedOnSource(currentIntersection, startIntersections);
-				}
 
 				if (isBoundaryLoopIntersection)
 				{
@@ -1816,20 +1814,46 @@ namespace ProSuite.Commons.Geom
 				initialSourcePartToReturnTo);
 		}
 
+		/// <summary>
+		/// Follows the indicated geometry along the indicated direction starting at 
+		/// <paramref name="previousIntersection"/> to the next relevant intersection.
+		/// The visited intersections along the source will be removed from the provided
+		/// <paramref name="startIntersections"/>.
+		/// </summary>
+		/// <param name="previousIntersection">The start of the new subcurve</param>
+		/// <param name="continueOnSource">Whether the source should be followed or, if false, the
+		/// target.</param>
+		/// <param name="continueForward">Whether the target should be followed in the forward 
+		/// direction or, if false, in the backward direction. The source can never be followed
+		/// backward.</param>
+		/// <param name="startIntersections">The list of start intersections from which the visited
+		/// intersections will be removed, if the visit is along the source.</param>
+		/// <param name="subcurve">The resulting subcurve</param>
+		/// <returns></returns>
 		[NotNull]
 		private IntersectionPoint3D FollowUntilNextIntersection(
 			IntersectionPoint3D previousIntersection,
 			bool continueOnSource,
 			bool continueForward,
+			ICollection<IntersectionPoint3D> startIntersections,
 			out Linestring subcurve)
 		{
 			IntersectionPoint3D nextIntersection =
 				IntersectionPointNavigator.GetNextIntersection(
-					previousIntersection, continueOnSource, continueForward);
+					previousIntersection, continueOnSource, continueForward,
+					out IList<IntersectionPoint3D> skippedIntersections);
 
 			if (continueOnSource)
 			{
 				subcurve = GetSourceSubcurve(previousIntersection, nextIntersection);
+
+				// Remove visited intersections from start intersections:
+				IntersectionContinuedOnSource(previousIntersection, startIntersections);
+
+				foreach (IntersectionPoint3D skippedIntersection in skippedIntersections)
+				{
+					IntersectionContinuedOnSource(skippedIntersection, startIntersections);
+				}
 			}
 			else
 			{
@@ -2094,7 +2118,7 @@ namespace ProSuite.Commons.Geom
 
 				previous = current;
 			} while ((current = IntersectionPointNavigator.GetNextIntersection(
-				          previous, true, true)) != null);
+				          previous, true, true, out _)) != null);
 
 			IntersectionPoint3D lastIntersection = previous;
 
