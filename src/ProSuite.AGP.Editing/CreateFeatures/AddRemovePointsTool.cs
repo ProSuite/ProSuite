@@ -291,6 +291,10 @@ public class AddRemovePointsTool : MapTool
 			{
 				args.Handled = true; // subclass stuff
 			}
+			else if (args.Key is Key.Z && IsCtrlDown)
+			{
+				args.Handled = _elements.Count > 0; // anything to undo?
+			}
 		}
 		catch (Exception ex)
 		{
@@ -341,12 +345,23 @@ public class AddRemovePointsTool : MapTool
 					await QueuedTask.Run(UpdateSketch);
 				}
 			}
+			else if (args.Key == Key.Z && IsCtrlDown)
+			{
+				if (_elements.Count > 0)
+				{
+					var element = _elements[_elements.Count - 1];
+					element.Overlay.Dispose();
+					_elements.RemoveAt(_elements.Count - 1);
+				}
+			}
 		}
 		catch (Exception ex)
 		{
 			Gateway.ReportError(ex, _msg);
 		}
 	}
+
+	private static bool IsCtrlDown => Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
 
 	protected override bool? OnActivePaneChanged(Pane pane)
 	{
