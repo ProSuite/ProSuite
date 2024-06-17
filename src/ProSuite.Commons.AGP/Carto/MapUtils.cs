@@ -100,7 +100,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 			foreach (KeyValuePair<MapMember, List<long>> pair in oidsByLayer)
 			{
-				Table table = GetTable(pair.Key);
+				Table table = DatasetUtils.GetDatabaseTable(GetTable(pair.Key));
 
 				var tableId = new GdbTableIdentity(table);
 
@@ -129,14 +129,9 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			Assert.ArgumentNotNull(mapMember, nameof(mapMember));
 
-			if (mapMember is BasicFeatureLayer basicFeatureLayer)
+			if (mapMember is IDisplayTable displayTable)
 			{
-				return Assert.NotNull(basicFeatureLayer.GetTable());
-			}
-
-			if (mapMember is StandaloneTable standaloneTable)
-			{
-				return Assert.NotNull(standaloneTable.GetTable());
+				return Assert.NotNull(displayTable.GetTable());
 			}
 
 			throw new ArgumentException(
