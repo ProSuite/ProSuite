@@ -7,6 +7,7 @@ using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core.UnitFormats;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -511,7 +512,36 @@ namespace ProSuite.Commons.AGP.Carto
 				.FirstOrDefault();
 		}
 
+		public static string GetLocationUnitAbbreviation([NotNull] Map map)
+		{
+			DisplayUnitFormat locationUnitFormat = map.GetLocationUnitFormat();
+
+			string locationUnitAbbreviation = locationUnitFormat?.Abbreviation;
+
+			return locationUnitAbbreviation;
+		}
+
+		public static string GetElevationUnitAbbreviation(Map map)
+		{
+			DisplayUnitFormat elevationUnitFormat = map.GetElevationUnitFormat();
+
+			string elevationUnitAbbreviation = elevationUnitFormat?.Abbreviation;
+
+			return elevationUnitAbbreviation;
+		}
+
 		#region Not MapUtils --> move elsewhere
+
+		/// <summary>
+		/// Converts a screen point to a map point.
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <param name="screenPoint">The global screen coordinates.</param>
+		/// <returns></returns>
+		public static MapPoint ToMapPoint(MapView mapView, Point screenPoint)
+		{
+			return mapView.ScreenToMap(screenPoint);
+		}
 
 		public static Geometry ToMapGeometry(MapView mapView,
 		                                     Polygon screenGeometry)
