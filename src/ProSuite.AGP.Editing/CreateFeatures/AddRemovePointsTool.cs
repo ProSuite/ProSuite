@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Events;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -59,6 +61,7 @@ public class AddRemovePointsTool : MapTool
 	private readonly IList<Element> _elements;
 	private CIMSymbolReference _addSymbol;
 	private CIMSymbolReference _removeSymbol;
+	private SubscriptionToken _editCompletedToken;
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -225,6 +228,15 @@ public class AddRemovePointsTool : MapTool
 
 			_activated = true;
 			_firstMove = true;
+
+			// Subscribe to EditCompleted (but at most once) to get Undo/Redo events:
+			if (_editCompletedToken is not null)
+			{
+				EditCompletedEvent.Unsubscribe(_editCompletedToken);
+				_editCompletedToken = null;
+			}
+
+			_editCompletedToken = EditCompletedEvent.Subscribe(OnEditCompleted);
 		}
 		catch (Exception ex)
 		{
@@ -239,6 +251,12 @@ public class AddRemovePointsTool : MapTool
 			_activated = false;
 
 			ClearElements();
+
+			if (_editCompletedToken is not null)
+			{
+				EditCompletedEvent.Unsubscribe(_editCompletedToken);
+				_editCompletedToken = null;
+			}
 		}
 		catch (Exception ex)
 		{
@@ -440,6 +458,30 @@ public class AddRemovePointsTool : MapTool
 	}
 
 	#endregion
+
+	private Task OnEditCompleted(EditCompletedEventArgs args)
+	{
+		try
+		{
+			if (args.CompletedType == EditCompletedType.Undo ||
+			    args.CompletedType == EditCompletedType.Redo)
+			{
+				if (_elements.Count > 0)
+				{
+					ClearElements();
+					_msg.Warn($"{Caption}: sketch discarded because an {args.CompletedType} " +
+					          $"operation occurred; please sketch again");
+					// TODO could analyze args.Creates/Deletes/Modifies and update _elements accordingly
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			Gateway.ReportError(ex, _msg);
+		}
+
+		return Task.CompletedTask;
+	}
 
 	/// <summary>Update sketch symbol and tip based on current values</summary>
 	/// <remarks>Must call on MCT</remarks>
