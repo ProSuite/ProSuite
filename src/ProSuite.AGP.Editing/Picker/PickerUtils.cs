@@ -289,8 +289,8 @@ namespace ProSuite.AGP.Editing.Picker
 			Geometry geometry = precedence.SelectionGeometry;
 			var picker = new PickerService();
 
-			Func<Task<IPickableFeatureItem>> showPicker =
-				await QueuedTask.Run(() =>
+			Task<IPickableFeatureItem> showPicker =
+				QueuedTask.Run(() =>
 				{
 					var items = PickableItemsFactory
 					            .CreateFeatureItems(selection)
@@ -302,7 +302,7 @@ namespace ProSuite.AGP.Editing.Picker
 				});
 
 			// show control on GUI thread
-			IPickableFeatureItem pickedItem = await showPicker();
+			IPickableFeatureItem pickedItem = await showPicker;
 
 			if (pickedItem == null)
 			{

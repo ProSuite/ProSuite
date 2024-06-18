@@ -630,11 +630,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			var picker = new PickerService();
 
-			Func<Task<T>> showPickerControl =
-				await QueuedTaskUtils.Run(() => picker.PickSingle<T>(
-					                          items, pickerLocation, pickerPrecedence));
+			Task<T> showPickerControl =
+				QueuedTaskUtils.Run(
+					() => picker.PickSingle<T>(items, pickerLocation, pickerPrecedence));
 
-			return await ViewUtils.TryAsync(showPickerControl(), _msg);
+			return await ViewUtils.TryAsync(showPickerControl, _msg);
 		}
 
 		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(
