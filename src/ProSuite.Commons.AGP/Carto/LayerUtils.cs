@@ -35,9 +35,9 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
-		/// Returns the Rows or features found by the layer search. Honors definition queries,
-		/// layer time, etc. defined on the layer. According to the documentation, valid rows returned
-		/// by a cursor should be disposed.
+		/// Returns the Rows or features found by the layer/standalone table search. Honors
+		/// definition queries, layer time, etc. defined on the layer. According to the
+		/// documentation, valid rows returned by a cursor should be disposed.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="layer"></param>
@@ -45,7 +45,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="predicate"></param>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
-		public static IEnumerable<T> SearchRows<T>([NotNull] BasicFeatureLayer layer,
+		public static IEnumerable<T> SearchRows<T>([NotNull] IDisplayTable layer,
 		                                           [CanBeNull] QueryFilter filter = null,
 		                                           [CanBeNull] Predicate<T> predicate = null,
 		                                           CancellationToken cancellationToken = default)
@@ -60,7 +60,7 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			// NOTE: An invalid filter (e.g. subfields "*,OBJECTID") can crash the application.
-			_msg.VerboseDebug(() => $"Querying layer {layer.Name} using filter: " +
+			_msg.VerboseDebug(() => $"Querying layer {((MapMember) layer).Name} using filter: " +
 			                        $"{GdbQueryUtils.FilterPropertiesToString(filter)}");
 
 			using (RowCursor cursor = layer.Search(filter))
@@ -83,11 +83,11 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
-		/// Returns the Object IDs of features found by the layer search.
+		/// Returns the Object IDs of features found by the layer / standalone table search.
 		/// Honors definition queries, layer time, etc. defined on the layer.
 		/// </summary>
 		public static IEnumerable<long> SearchObjectIds(
-			[NotNull] BasicFeatureLayer layer,
+			[NotNull] IDisplayTable layer,
 			[CanBeNull] QueryFilter filter = null,
 			[CanBeNull] Predicate<Feature> predicate = null,
 			CancellationToken cancellationToken = default)
@@ -275,12 +275,46 @@ namespace ProSuite.Commons.AGP.Carto
 			return table != null;
 		}
 
+		/// <summary>
+		/// Determines whether the specified layer uses the specified feature class.
+		/// </summary>
+		/// <param name="layer"></param>
+		/// <param name="featureClass"></param>
+		/// <returns></returns>
+		public static bool LayerUsesFeatureClass([NotNull] FeatureLayer layer,
+		                                         [NotNull] FeatureClass featureClass)
+		{
+			FeatureClass layerFeatureClass = layer.GetFeatureClass();
+
+			return ReferencesSameGdbFeatureClass(layerFeatureClass, featureClass);
+		}
+
+		/// <summary>
+		/// Determines if the specified layers use the same feature class. One or both layers might
+		/// have joins. The actual geodatabase feature classes are compared. 
+		/// </summary>
+		/// <param name="layer1"></param>
+		/// <param name="layer2"></param>
+		/// <returns></returns>
 		public static bool LayersUseSameFeatureClass([NotNull] FeatureLayer layer1,
 		                                             [NotNull] FeatureLayer layer2)
 		{
 			FeatureClass featureClass1 = layer1.GetFeatureClass();
 			FeatureClass featureClass2 = layer2.GetFeatureClass();
 
+			return ReferencesSameGdbFeatureClass(featureClass1, featureClass2);
+		}
+
+		/// <summary>
+		/// Determines if the specified feature classes are the same or, in case one or both
+		/// feature classes are joined, the actual geodatabase feature classes are compared. 
+		/// </summary>
+		/// <param name="featureClass1"></param>
+		/// <param name="featureClass2"></param>
+		/// <returns></returns>
+		private static bool ReferencesSameGdbFeatureClass(FeatureClass featureClass1,
+		                                                  FeatureClass featureClass2)
+		{
 			if (ReferenceEquals(featureClass1, featureClass2))
 			{
 				return true;

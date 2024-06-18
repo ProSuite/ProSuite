@@ -299,30 +299,40 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
-		/// Returns feature layers that contain a set of specified OIDs. This method can be used
-		/// to filter out layers that have a restrictive definition query which potentially
-		/// excludes the specified OIDs. These layers ca be used for flashing or zooming to the
-		/// respective features.
+		/// Returns feature layers and stand-alone tables that contain a set of specified OIDs.
+		/// This method can be used to filter layers that have a restrictive definition query
+		/// which potentially excludes the specified OIDs. These layers ca be used for flashing
+		/// or zooming to the respective features or selecting the respective rows.
 		/// </summary>
-		public static IEnumerable<T> GetFeatureLayersContainingOids<T>(
-			[NotNull] Map map,
-			[NotNull] Predicate<T> layerPredicate,
-			IReadOnlyList<long> objectIds) where T : BasicFeatureLayer
+		public static IEnumerable<T> GetDisplayTablesContainingOids<T>(
+			[NotNull] IEnumerable<MapMember> mapMembers,
+			[NotNull] Predicate<T> predicate,
+			IReadOnlyList<long> objectIds) where T : class, IDisplayTable
 		{
 			// NOTE: Flashing works fine on invisible layers, but not if there is a definition
 			//       query that excludes the feature.
 
 			var filteredLayers = new List<T>();
 
-			foreach (T featureLayer in GetFeatureLayers(map, layerPredicate))
+			foreach (T displayTable in GetDisplayTables(mapMembers, predicate))
 			{
-				if (string.IsNullOrWhiteSpace(featureLayer.DefinitionQuery))
+				string definitionQuery = null;
+				if (displayTable is BasicFeatureLayer featureLayer)
 				{
-					// Return the first layer without definition query:
-					return new[] { featureLayer };
+					definitionQuery = featureLayer.DefinitionQuery;
+				}
+				else if (displayTable is StandaloneTable standaloneTable)
+				{
+					definitionQuery = standaloneTable.DefinitionQuery;
 				}
 
-				filteredLayers.Add(featureLayer);
+				if (string.IsNullOrWhiteSpace(definitionQuery))
+				{
+					// Return the first layer without definition query:
+					return new[] { displayTable };
+				}
+
+				filteredLayers.Add(displayTable);
 			}
 
 			var layersWithSomeOids = new List<T>();
@@ -425,6 +435,38 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			return filteredSelectableLayers;
+		}
+
+		public static IEnumerable<T> GetDisplayTables<T>(
+			[NotNull] IEnumerable<MapMember> mapMembers,
+			[CanBeNull] Predicate<T> predicate,
+			bool includeInvalid = false) where T : class, IDisplayTable
+		{
+			// TODO: Redirect GetLayers, GetStandaloneTables to this method to avoid code duplication
+			Predicate<T> displayTablePredicate;
+
+			if (includeInvalid)
+			{
+				displayTablePredicate = predicate;
+			}
+			else
+			{
+				// Check for validity first because in most cases the specified layerPredicate
+				// uses the FeatureClass name etc. which results in null-pointers if evaluated first.
+				displayTablePredicate = l => l.GetTable() != null &&
+				                             (predicate == null || predicate(l));
+			}
+
+			Predicate<MapMember> mapMemberPredicate = mm =>
+				mm is T t && (displayTablePredicate == null || displayTablePredicate(t));
+
+			foreach (MapMember mapMember in mapMembers)
+			{
+				if (mapMemberPredicate(mapMember))
+				{
+					yield return (T) (IDisplayTable) mapMember;
+				}
+			}
 		}
 
 		public static IEnumerable<T> GetFeatureLayers<T>(
