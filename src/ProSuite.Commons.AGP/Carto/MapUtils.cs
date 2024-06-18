@@ -494,19 +494,6 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		[CanBeNull] // TODO Rename GetFeatureLayerBySourceClassName
-		public static BasicFeatureLayer GetFeatureLayer(
-			[NotNull] Map map,
-			[CanBeNull] string featureClassName)
-		{
-			return GetFeatureLayers<BasicFeatureLayer>(
-					map,
-					lyr => string.Equals(lyr.GetFeatureClass().GetName(),
-					                     featureClassName,
-					                     StringComparison.OrdinalIgnoreCase))
-				.FirstOrDefault();
-		}
-
 		public static IEnumerable<StandaloneTable> GetStandaloneTables(
 			[NotNull] Map map,
 			[CanBeNull] Predicate<StandaloneTable> tablePredicate,
