@@ -1089,8 +1089,12 @@ namespace ProSuite.Commons.AGP.Core.Carto
 					featureValues[i] = Convert.ToString(value, invariant);
 				}
 
+				if (renderer.Groups is null) return null;
+
 				foreach (var group in renderer.Groups)
 				{
+					if (group.Classes is null) continue;
+
 					foreach (var clazz in group.Classes)
 					{
 						foreach (var combo in clazz.Values)
