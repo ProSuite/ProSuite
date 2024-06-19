@@ -425,7 +425,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// <remarks>
 		/// Time is O(N**2) where N is the number of rings; any better ideas around?
 		/// </remarks>
-		public static ICollection<Polygon> ConnectedComponents(Polygon polygon)
+		public static IList<Polygon> ConnectedComponents(Polygon polygon)
 		{
 			if (polygon is null || polygon.IsEmpty)
 			{
