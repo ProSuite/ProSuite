@@ -992,24 +992,29 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		public static CIMSymbolReference GetSymbol(CIMRenderer renderer, INamedValues feature = null, double scaleDenom = 0)
 		{
+			return GetSymbol(renderer, feature, scaleDenom, out _);
+		}
+
+		public static CIMSymbolReference GetSymbol(CIMRenderer renderer, INamedValues feature, double scaleDenom, out CIMPrimitiveOverride[] overrides)
+		{
 			if (renderer is null)
 				throw new ArgumentNullException(nameof(renderer));
 
 			if (renderer is CIMSimpleRenderer simpleRenderer)
 			{
-				return GetSymbol(simpleRenderer, feature, scaleDenom);
+				return GetSymbol(simpleRenderer, feature, scaleDenom, out overrides);
 			}
 
 			if (renderer is CIMUniqueValueRenderer uvRenderer)
 			{
-				return GetSymbol(uvRenderer, feature, scaleDenom);
+				return GetSymbol(uvRenderer, feature, scaleDenom, out overrides);
 			}
 
 			throw new NotSupportedException(
 				$"{renderer.GetType().Name} is not supported, sorry");
 		}
 
-		private static CIMSymbolReference GetSymbol(CIMSimpleRenderer renderer, INamedValues feature, double scaleDenom)
+		private static CIMSymbolReference GetSymbol(CIMSimpleRenderer renderer, INamedValues feature, double scaleDenom, out CIMPrimitiveOverride[] overrides)
 		{
 			// CIMSimpleRenderer:
 			// - .Symbol: CIMSymbolReference
@@ -1018,12 +1023,15 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			var symref = GetSymbolReference(renderer.Symbol, renderer.AlternateSymbols, scaleDenom);
 
+			// remember overrides before we apply (and remove) them:
+			overrides = symref.PrimitiveOverrides;
+
 			symref = TryApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
 
 			return symref;
 		}
 
-		private static CIMSymbolReference GetSymbol(CIMUniqueValueRenderer renderer, INamedValues feature, double scaleDenom)
+		private static CIMSymbolReference GetSymbol(CIMUniqueValueRenderer renderer, INamedValues feature, double scaleDenom, out CIMPrimitiveOverride[] overrides)
 		{
 			// CIMUniqueValueRenderer:
 			// - .Fields: string[]
@@ -1047,6 +1055,9 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			}
 
 			var symref = GetSymbolReference(primary, alternates, scaleDenom);
+
+			// remember overrides before we apply (and remove) them:
+			overrides = symref.PrimitiveOverrides;
 
 			symref = TryApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
 
@@ -1272,6 +1283,30 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			// else: use symbol's default value
 		}
 
+		/// <summary>
+		/// Override the named property of the named primitive in the given symbol
+		/// with the given value. Evidently, this modifies the given symbol!
+		/// Caller's responsibility to ensure the given value is compatible
+		/// with the named property.
+		/// </summary>
+		public static void ApplyOverride(CIMSymbol symbol, string primitiveName,
+		                                 string propertyName, object value)
+		{
+			var primitive = FindPrimitiveByName<CIMObject>(symbol, primitiveName);
+			if (primitive is null)
+			{
+				throw new Exception($"Graphic primitive '{primitiveName}' not found in symbol");
+			}
+
+			var property = primitive.GetType().GetProperty(propertyName);
+			if (property is null)
+			{
+				throw new Exception($"Property '{propertyName}' not found on {primitive.GetType().Name}");
+			}
+
+			property.SetValue(primitive, value);
+		}
+
 		private static object Evaluate(
 			string expression, CIMExpressionInfo arcade, INamedValues feature)
 		{
@@ -1303,6 +1338,37 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		}
 
 		private static readonly Regex _fieldExpressionRegex = new(@"^\s*\[\s*([ _\w]+)\s*\]\s*$");
+		private static readonly Regex _fieldArcadeRegex = new(@"^\s*\$feature\s*\.\s*([_\w]+)\s*$");
+
+		public static string GetOverrideField(CIMPrimitiveOverride po)
+		{
+			if (po is null) return null;
+			var expression = po.Expression;
+			if (! string.IsNullOrWhiteSpace(expression))
+			{
+				var match = _fieldExpressionRegex.Match(expression);
+				if (match.Success)
+				{
+					string fieldName = match.Result("$1");
+					return fieldName;
+				}
+
+				return expression.Trim(); // assume expr is a field name TODO
+			}
+
+			var info = po.ValueExpressionInfo;
+			if (info is { Expression.Length: > 0 })
+			{
+				var match = _fieldArcadeRegex.Match(info.Expression);
+				if (match.Success)
+				{
+					string fieldName = match.Result("$1");
+					return fieldName;
+				}
+			}
+
+			return null; // not just a field name
+		}
 
 		#endregion
 
