@@ -1340,6 +1340,12 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		private static readonly Regex _fieldExpressionRegex = new(@"^\s*\[\s*([ _\w]+)\s*\]\s*$");
 		private static readonly Regex _fieldArcadeRegex = new(@"^\s*\$feature\s*\.\s*([_\w]+)\s*$");
 
+		/// <summary>
+		/// Get the name of the field that the given primitive override
+		/// refers to, or null if the override does not immediately refer
+		/// to a field (an expression is considered not referring to a field).
+		/// </summary>
+		/// <returns>Field name or <c>null</c></returns>
 		public static string GetOverrideField(CIMPrimitiveOverride po)
 		{
 			if (po is null) return null;
