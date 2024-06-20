@@ -19,6 +19,7 @@ public interface IWhiteSelection
 	bool IsEmpty { get; }
 
 	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
+	bool Remove(long oid); // also removes oid's geom from cache
 	bool SetEmpty();
 
 	bool HitTestVertex(MapPoint hitPoint, double tolerance);
@@ -74,6 +75,12 @@ public class WhiteSelection : IWhiteSelection
 		}
 
 		return changed;
+	}
+
+	public bool Remove(long oid)
+	{
+		_geometryCache.Remove(oid);
+		return _shapes.Remove(oid);
 	}
 
 	public bool SetEmpty()

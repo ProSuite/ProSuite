@@ -59,6 +59,31 @@ public class MapWhiteSelection : IDisposable
 		return result;
 	}
 
+	public bool Remove(FeatureLayer layer, IEnumerable<long> oids)
+	{
+		if (! _layerSelections.TryGetValue(layer.URI, out var ws))
+		{
+			return false; // layer has no white selection
+		}
+
+		bool changed = false;
+
+		foreach (var oid in oids)
+		{
+			if (ws.Remove(oid))
+			{
+				changed = true;
+			}
+		}
+
+		if (ws.IsEmpty)
+		{
+			_layerSelections.Remove(layer.URI);
+		}
+
+		return changed;
+	}
+
 	/// <returns>true iff the selection changed</returns>
 	public bool Combine(MapPoint clickPoint, double tolerance, SetCombineMethod method)
 	{
