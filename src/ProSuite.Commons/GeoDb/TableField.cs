@@ -6,7 +6,8 @@ namespace ProSuite.Commons.GeoDb
 	{
 		public TableField([NotNull] string name,
 		                  FieldType fieldType,
-		                  int fieldLength = -1)
+		                  int fieldLength = -1,
+		                  string aliasName = null)
 		{
 			Name = name;
 			FieldType = fieldType;
@@ -14,6 +15,8 @@ namespace ProSuite.Commons.GeoDb
 		}
 
 		public string Name { get; }
+
+		public string AliasName { get; set; }
 
 		public FieldType FieldType { get; }
 
