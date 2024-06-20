@@ -4,6 +4,7 @@ using System.Linq;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Carto;
@@ -96,6 +97,14 @@ public class MapWhiteSelection : IDisposable
 					var vertexIndex = proximity.PointIndex ??
 					                  throw new InvalidOperationException(
 						                  "NearestVertex() must return non-null PointIndex");
+
+					if (shape is Multipoint)
+					{
+						// by convention, a multipoint's ith point is both part i and vertex i
+						Assert.AreEqual(proximity.PartIndex, proximity.PointIndex,
+						                "Expect partIndex == vertexIndex for multipoint");
+					}
+
 					if (selection.Combine(oid, proximity.PartIndex, vertexIndex, method))
 					{
 						changed = true;
@@ -153,7 +162,8 @@ public class MapWhiteSelection : IDisposable
 					{
 						if (GeometryEngine.Instance.Contains(extent, multipoint.Points[i]))
 						{
-							if (selection.Combine(oid, 0, i, method))
+							// by convention, a multipoint's ith point is both part i and vertex i
+							if (selection.Combine(oid, i, i, method))
 							{
 								changed = true;
 							}

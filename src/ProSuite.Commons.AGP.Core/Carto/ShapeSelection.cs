@@ -2,6 +2,7 @@ using ArcGIS.Core.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.Commons.AGP.Core.Carto;
 
@@ -20,6 +21,7 @@ public interface IShapeSelection
 	ShapeSelectionState GetPartSelectionState(int partIndex);
 	bool IsVertexSelected(int partIndex, int vertexIndex);
 
+	/// <remarks>For multipoints, set part = vertex = point's index!</remarks>
 	bool CombineVertex(int part, int vertex, SetCombineMethod method);
 	bool CombinePart(int part, SetCombineMethod method);
 	bool CombineShape(SetCombineMethod method);
@@ -238,10 +240,12 @@ public class ShapeSelection : IShapeSelection
 		}
 		else if (shape is Multipoint multipoint)
 		{
-			var parts = OrderedItems.Select(i => i.PartIndex).Distinct();
-			foreach (var j in parts)
+			// by convention, a multipoint's ith point is both part i and vertex i
+			foreach (var item in OrderedItems)
 			{
-				yield return multipoint.Points[j];
+				Assert.AreEqual(item.PartIndex, item.VertexIndex,
+				                "Expect partIndex==vertexIndex for multipoint");
+				yield return multipoint.Points[item.VertexIndex];
 			}
 		}
 		else if (shape is Multipart multipart)
