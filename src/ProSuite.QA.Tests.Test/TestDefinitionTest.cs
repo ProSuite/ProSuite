@@ -169,6 +169,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaNoBoundaryLoops),
 											 typeof(QaNoClosedPaths),
 											 typeof(QaNodeLineCoincidence),
+											 typeof(QaNoGaps),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaOrphanNode),
 											 typeof(QaOverlapsSelf),
@@ -400,6 +401,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaMustIntersectMatrixOtherCases(model, testCases);
 			AddQaNoBoundaryLoopsCases(model, testCases);
 			AddQaNodeLineCoincidenceCases(model, testCases);
+			AddQaNoGapsCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
@@ -2047,6 +2049,88 @@ namespace ProSuite.QA.Tests.Test
 				                                     false,
 				                                     false
 			                                     }, optionalValues));
+		}
+
+		private static void AddQaNoGapsCases(InMemoryTestDataModel model,
+														ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("CoincidenceTolerance", 1);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaNoGaps), 0,
+												 new object[]
+												 {
+													 model.GetPolygonDataset(),
+													 1,
+													 1
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNoGaps), 1,
+												 new object[]
+												 {
+													 new[]
+													 {
+														 model.GetPolygonDataset(),
+														 model.GetPolygonDataset()
+													 },
+													 1,
+													 1
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNoGaps), 2,
+												 new object[]
+												 {
+													 model.GetPolygonDataset(),
+													 1,
+													 1,
+													 1,
+													 false
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNoGaps), 3,
+												 new object[]
+												 {
+													 new[]
+													 {
+														 model.GetPolygonDataset(),
+														 model.GetPolygonDataset()
+													 },
+													 1,
+													 1,
+													 1,
+													 false
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNoGaps), 4,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetPolygonDataset(),
+					                                     model.GetPolygonDataset()
+				                                     },
+				                                     1,
+				                                     1,
+													  new[]
+													 {
+														 model.GetPolygonDataset(),
+														 model.GetPolygonDataset()
+													 },
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNoGaps), 5,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetPolygonDataset(),
+					                                     model.GetPolygonDataset()
+				                                     },
+				                                     1,
+				                                     1,
+													 1,
+													 false,
+				                                     new[]
+				                                     {
+					                                     model.GetPolygonDataset(),
+					                                     model.GetPolygonDataset()
+				                                     },
+			                                     }));
 		}
 
 		private static void AddQaRegularExpressionCases(InMemoryTestDataModel model,
