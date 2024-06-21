@@ -143,7 +143,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMaxVertexCount),
 											 typeof(QaMeasures),
 											 typeof(QaMeasuresAtPoints),
-											 //typeof(QaMinAngle),
+											 typeof(QaMinAngle),
 											 typeof(QaMinArea),
 											 typeof(QaMinIntersect),
 											 typeof(QaMinLength),
@@ -390,7 +390,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaLineIntersectZCases(model, testCases);
 			AddQaMaxSlopeCases(model, testCases);
 			//AddQaMeasuresAtPointsCases(model, testCases);
-			//AddQaMinAngleCases(model, testCases);
+			AddQaMinAngleCases(model, testCases);
 			AddQaMinSegAngleCases(model, testCases);
 			AddQaMonotonicZCases(model, testCases);
 			AddQaMpNonIntersectingRingFootprintsCases(model, testCases);
