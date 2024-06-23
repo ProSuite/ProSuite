@@ -148,7 +148,7 @@ namespace ProSuite.QA.Tests.Test.TestData
 			IFieldsEdit lineFields = new FieldsClass();
 			lineFields.AddField(FieldUtils.CreateOIDField());
 			lineFields.AddField(
-				FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolyline, sr));
+				FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolyline, sr, 0D, true, true));
 			lineFields.AddField(
 				FieldUtils.CreateField("MY_DATE_FIELD1", esriFieldType.esriFieldTypeDate));
 			lineFields.AddField(
