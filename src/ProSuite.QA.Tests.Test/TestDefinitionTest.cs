@@ -174,6 +174,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaOrphanNode),
 											 typeof(QaOverlapsSelf),
 											 typeof(QaOverlapsOther),
+											 typeof(QaPartCoincidenceOther) ,
 											 typeof(QaPointOnLine),
 											 typeof(QaRegularExpression),
 											 typeof(QaRequiredFields),
@@ -402,6 +403,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaNoBoundaryLoopsCases(model, testCases);
 			AddQaNodeLineCoincidenceCases(model, testCases);
 			AddQaNoGapsCases(model, testCases);
+			AddQaPartCoincidenceOtherCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
@@ -2132,7 +2134,48 @@ namespace ProSuite.QA.Tests.Test
 				                                     },
 			                                     }));
 		}
+		private static void AddQaPartCoincidenceOtherCases(InMemoryTestDataModel model,
+		                                              ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("IgnoreNeighborCondition", "G1.CountryCode <> G2.CountryCode");
 
+			testCases.Add(new TestDefinitionCase(typeof(QaPartCoincidenceOther), 0,
+												 new object[]
+												 {
+													 model.GetPolygonDataset(),
+													 model.GetVectorDataset(),
+													 1.1, 2.2,true
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaPartCoincidenceOther), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+				                                     model.GetVectorDataset(),
+				                                     1.1, 2.2,true,200000.0
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaPartCoincidenceOther), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+				                                     model.GetVectorDataset(),
+				                                     1.1, 2.2
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaPartCoincidenceOther), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+				                                     model.GetVectorDataset(),
+				                                     1.1, 2.2, 200000.0
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaPartCoincidenceOther), 4,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+				                                     model.GetVectorDataset(),
+				                                     1.1, 2.2,3.3,true, 200000.0,0
+			                                     }, optionalValues));
+		}
 		private static void AddQaRegularExpressionCases(InMemoryTestDataModel model,
 		                                                ICollection<TestDefinitionCase> testCases)
 		{
