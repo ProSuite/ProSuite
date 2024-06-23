@@ -391,7 +391,6 @@ namespace ProSuite.QA.Tests.Test
 			AddQaLineIntersectAngleCases(model, testCases);
 			AddQaLineIntersectZCases(model, testCases);
 			AddQaMaxSlopeCases(model, testCases);
-			//AddQaMeasuresAtPointsCases(model, testCases);
 			AddQaMinAngleCases(model, testCases);
 			AddQaMinSegAngleCases(model, testCases);
 			AddQaMonotonicZCases(model, testCases);
@@ -1717,44 +1716,6 @@ namespace ProSuite.QA.Tests.Test
 												 optionalValues));
 		}
 
-		private static void AddQaMeasuresAtPointsCases(InMemoryTestDataModel model,
-														 ICollection<TestDefinitionCase> testCases)
-		{
-
-			testCases.Add(new TestDefinitionCase(typeof(QaMeasuresAtPoints), 0,
-												 new object[]
-												 {
-													 model.GetPointDataset(),
-													 "OBJECTID",
-													 new[]
-													 {
-														 model.GetVectorDataset(),
-														 model.GetVectorDataset()
-													 },
-													 0.4,
-													 0.4,
-													 0,
-													 false
-												 }));
-			testCases.Add(new TestDefinitionCase(typeof(QaMeasuresAtPoints), 1,
-												 new object[]
-												 {
-													 model.GetPointDataset(),
-													 "OBJECTID",
-													 new[]
-													 {
-														 model.GetVectorDataset(),
-														 model.GetVectorDataset()
-													 },
-													 0.4,
-													 0.4,
-													 0,
-													 false,
-													 false,
-													 "P.ROUTEID = L.ROUTEID"
-												 }));
-
-		}
 
 		private static void AddQaMinAngleCases(InMemoryTestDataModel model,
 		                                       ICollection<TestDefinitionCase> testCases)
