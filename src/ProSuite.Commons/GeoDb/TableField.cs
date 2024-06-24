@@ -12,6 +12,7 @@ namespace ProSuite.Commons.GeoDb
 			Name = name;
 			FieldType = fieldType;
 			FieldLength = fieldLength;
+			AliasName = aliasName;
 		}
 
 		public string Name { get; }
