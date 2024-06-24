@@ -55,11 +55,11 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			var pickerPrecedence = new StandardPickerPrecedenceMock();
 			pickerPrecedence.SelectionGeometry = referenceGeometry;
 
-			Func<Task<IPickableItem>> pickSingle =
+			Task<IPickableItem> pickSingle =
 				picker.PickSingle<IPickableItem>(items, new Point(42, 99),
 				                                 pickerPrecedence);
 
-			IPickableItem pickedItem = await pickSingle();
+			IPickableItem pickedItem = await pickSingle;
 
 			Assert.AreEqual(shortPolyline, pickedItem.Geometry);
 		}

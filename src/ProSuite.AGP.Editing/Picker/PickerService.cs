@@ -21,20 +21,20 @@ namespace ProSuite.AGP.Editing.Picker
 
 	public class PickerService : IPickerService
 	{
-		public Func<Task<T>> Pick<T>(List<IPickableItem> items, Point pickerLocation,
-		                             IPickerPrecedence precedence) where T : class, IPickableItem
+		public Task<T> Pick<T>(List<IPickableItem> items, Point pickerLocation,
+		                       IPickerPrecedence precedence) where T : class, IPickableItem
 		{
 			if (items.Count == 1)
 			{
-				return () => Task.FromResult(precedence.PickBest<T>(items));
+				return Task.FromResult(precedence.PickBest<T>(items));
 			}
 
 			return PickSingle<T>(items, pickerLocation, precedence);
 		}
 
-		public Func<Task<T>> PickSingle<T>(IEnumerable<IPickableItem> items,
-		                                   Point pickerLocation,
-		                                   IPickerPrecedence precedence)
+		public Task<T> PickSingle<T>(IEnumerable<IPickableItem> items,
+		                             Point pickerLocation,
+		                             IPickerPrecedence precedence)
 			where T : class, IPickableItem
 		{
 			// todo daro refactor. maybe add new dedicated method
@@ -55,7 +55,7 @@ namespace ProSuite.AGP.Editing.Picker
 				throw new ArgumentOutOfRangeException();
 			}
 
-			return async () => await ShowPickerControlAsync<T>(viewModel, pickerLocation);
+			return ShowPickerControlAsync<T>(viewModel, pickerLocation);
 		}
 
 		private static async Task<T> ShowPickerControlAsync<T>(PickerViewModel vm, Point location)

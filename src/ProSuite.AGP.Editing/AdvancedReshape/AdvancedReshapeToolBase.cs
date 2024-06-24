@@ -137,6 +137,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return SketchGeometryType.Line;
 		}
 
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
+		}
+
 		protected override async Task<bool> OnSketchModifiedAsync()
 		{
 			_msg.VerboseDebug(() => "OnSketchModifiedAsync");

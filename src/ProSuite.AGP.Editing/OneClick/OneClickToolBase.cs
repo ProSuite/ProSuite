@@ -291,7 +291,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SelectionSettings settings = GetSelectionSettings();
 
-			SetupSketch(settings.SketchGeometryType, settings.SketchOutputMode);
+			SetupSketch(GetSelectionSketchGeometryType(), settings.SketchOutputMode);
 
 			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
 			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
@@ -327,6 +327,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			GeomIsSimpleAsFeature = enforceSimpleSketch;
 		}
+
+		protected abstract SketchGeometryType GetSelectionSketchGeometryType();
 
 		protected virtual void OnSelectionPhaseStarted() { }
 
@@ -628,11 +630,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			var picker = new PickerService();
 
-			Func<Task<T>> showPickerControl =
-				await QueuedTaskUtils.Run(() => picker.PickSingle<T>(
-					                          items, pickerLocation, pickerPrecedence));
+			Task<T> showPickerControl =
+				QueuedTaskUtils.Run(
+					() => picker.PickSingle<T>(items, pickerLocation, pickerPrecedence));
 
-			return await ViewUtils.TryAsync(showPickerControl(), _msg);
+			return await ViewUtils.TryAsync(showPickerControl, _msg);
 		}
 
 		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(

@@ -177,6 +177,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			// using method LogDerivedGeometriesCalculated() for feedback
 		}
 
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
+		}
+
 		protected abstract void CalculateDerivedGeometries(
 			[NotNull] IList<Feature> selectedFeatures,
 			[CanBeNull] CancelableProgressor cancelableProgressor);

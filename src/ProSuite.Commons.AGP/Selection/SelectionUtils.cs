@@ -209,6 +209,22 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		public static int GetFeatureCount(
+			[NotNull] IDictionary<BasicFeatureLayer, List<long>> selection)
+		{
+			Assert.ArgumentNotNull(selection, nameof(selection));
+
+			return selection.Values.Sum(set => set.Count());
+		}
+
+		public static int GetFeatureCount(
+			[NotNull] IDictionary<BasicFeatureLayer, List<Feature>> selection)
+		{
+			Assert.ArgumentNotNull(selection, nameof(selection));
+
+			return selection.Values.Sum(set => set.Count());
+		}
+
+		public static int GetFeatureCount(
 			[NotNull] IEnumerable<FeatureSelectionBase> selection)
 		{
 			Assert.ArgumentNotNull(selection, nameof(selection));

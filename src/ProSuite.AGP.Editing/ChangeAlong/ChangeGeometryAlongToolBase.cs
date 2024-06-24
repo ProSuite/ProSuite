@@ -61,6 +61,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected abstract string EditOperationDescription { get; }
 
 		protected abstract IChangeAlongService MicroserviceClient { get; }
+		
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
+		}
 
 		protected override void OnUpdate()
 		{
