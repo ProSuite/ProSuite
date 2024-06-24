@@ -81,6 +81,16 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] CreateFeatureInPickedClassCursor {
+            get {
+                object obj = ResourceManager.GetObject("CreateFeatureInPickedClassCursor", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap CutPolygonAlongTool {
@@ -116,6 +126,16 @@ namespace ProSuite.AGP.Editing.Properties {
         internal static byte[] CutPolygonAlongToolCursorShift {
             get {
                 object obj = ResourceManager.GetObject("CutPolygonAlongToolCursorShift", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] DestroyAndRebuildToolCursor {
+            get {
+                object obj = ResourceManager.GetObject("DestroyAndRebuildToolCursor", resourceCulture);
                 return ((byte[])(obj));
             }
         }
