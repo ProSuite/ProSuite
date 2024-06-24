@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -513,7 +515,7 @@ namespace ProSuite.QA.Tests.Test
 				Assert.AreEqual(1, testsNew.Count);
 
 				List<KeyValuePair<Type, MemberInfo>> differences =
-					ReflectionCompare.RecursiveReflectionCompare(testsOrig[0], testsNew[0]);
+					ReflectionCompare.RecursiveReflectionCompare(testsOrig[0], testsNew[0], true);
 
 				foreach (KeyValuePair<Type, MemberInfo> difference in differences)
 				{
@@ -3257,22 +3259,22 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		public static List<KeyValuePair<Type, MemberInfo>> RecursiveReflectionCompare<T>(
-			T first, T second)
+			T first, T second, bool includeNonPublicMembers = false)
 			where T : class
 		{
 			var differences = new List<KeyValuePair<Type, MemberInfo>>();
 
 			var parentType = first.GetType();
 
-			void CompareObject(object obj1, object obj2, MemberInfo info)
-			{
-				if (! obj1.Equals(obj2))
-				{
-					differences.Add(new KeyValuePair<Type, MemberInfo>(parentType, info));
-				}
-			}
+			BindingFlags bindingFlags = includeNonPublicMembers
+				                            ? BindingFlags.NonPublic | BindingFlags.Instance |
+				                              BindingFlags.Static
+				                            : BindingFlags.Public | BindingFlags.Instance |
+				                              BindingFlags.Static;
 
-			foreach (PropertyInfo property in parentType.GetProperties())
+			//bindingFlags = BindingFlags.Public | BindingFlags.Instance |
+			//               BindingFlags.Static;
+			foreach (PropertyInfo property in parentType.GetProperties(bindingFlags))
 			{
 				if (property.GetIndexParameters().Length != 0)
 				{
@@ -3294,17 +3296,23 @@ namespace ProSuite.QA.Tests.Test
 				object value1 = property.GetValue(first, null);
 				object value2 = property.GetValue(second, null);
 
+				if (value1 is IGeometry geom1 && value2 is IGeometry geom2)
+				{
+					Assert.IsTrue(GeometryUtils.AreEqual(geom1, geom2));
+					continue;
+				}
+
 				if (property.PropertyType == typeof(string))
 				{
 					if (string.IsNullOrEmpty(value1 as string) !=
 					    string.IsNullOrEmpty(value2 as string))
 					{
-						CompareObject(value1, value2, property);
+						CompareObject(value1, value2, property, differences, parentType);
 					}
 				}
 				else if (property.PropertyType.IsPrimitive)
 				{
-					CompareObject(value1, value2, property);
+					CompareObject(value1, value2, property, differences, parentType);
 				}
 				else
 				{
@@ -3313,12 +3321,24 @@ namespace ProSuite.QA.Tests.Test
 						continue;
 					}
 
-					differences.Concat(RecursiveReflectionCompare(value1, value2));
+					List<KeyValuePair<Type, MemberInfo>> subDifferences = RecursiveReflectionCompare(value1, value2);
+
+					if (subDifferences.Count > 0)
+					{
+						Console.WriteLine($"Found differences in {property.Name}:");
+						foreach (KeyValuePair<Type, MemberInfo> difference in subDifferences)
+						{
+							Console.WriteLine("Difference: {0} {1}", difference.Key.Name,
+							                  difference.Value.Name);
+						}
+
+						differences.AddRange(subDifferences);
+					}
 				}
 			}
 
 			// Additionally, compare private fields with primitive types:
-			foreach (FieldInfo fieldInfo in parentType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance))
+			foreach (FieldInfo fieldInfo in parentType.GetFields(bindingFlags))
 			{
 				object value1 = fieldInfo.GetValue(first);
 				object value2 = fieldInfo.GetValue(second);
@@ -3328,12 +3348,12 @@ namespace ProSuite.QA.Tests.Test
 					if (string.IsNullOrEmpty(value1 as string) !=
 					    string.IsNullOrEmpty(value2 as string))
 					{
-						CompareObject(value1, value2, fieldInfo);
+						CompareObject(value1, value2, fieldInfo, differences, parentType);
 					}
 				}
 				else if (fieldInfo.FieldType.IsPrimitive)
 				{
-					CompareObject(value1, value2, fieldInfo);
+					CompareObject(value1, value2, fieldInfo, differences, parentType);
 				}
 
 				// TODO: Consider checking also non-primitive fields
@@ -3342,6 +3362,17 @@ namespace ProSuite.QA.Tests.Test
 			}
 
 			return differences;
+		}
+
+		private static void CompareObject(object obj1, object obj2,
+		                                  MemberInfo info,
+		                                  List<KeyValuePair<Type, MemberInfo>> differences,
+		                                  Type parentType)
+		{
+			if (! obj1.Equals(obj2))
+			{
+				differences.Add(new KeyValuePair<Type, MemberInfo>(parentType, info));
+			}
 		}
 	}
 }
