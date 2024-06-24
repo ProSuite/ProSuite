@@ -63,13 +63,13 @@ namespace ProSuite.QA.Tests
 		private IList<IFeatureClassFilter> _filter;
 		private IList<QueryFilterHelper> _helper;
 
-		private readonly IPoint _nearPoint;
-		private readonly int _tableCount;
+		private IPoint _nearPoint;
+		private int _tableCount;
 		private IPoint _pointTemplate;
 
-		[NotNull] private readonly string _shapeFieldName;
-		[NotNull] private readonly ISpatialReference _spatialReference;
-		private readonly int _referenceClassCount;
+		[NotNull] private string _shapeFieldName;
+		[NotNull] private ISpatialReference _spatialReference;
+		private int _referenceClassCount;
 		[CanBeNull] private IList<GeometryComponent> _geometryComponents;
 
 		[NotNull] private IList<string> _validRelationConstraints =
@@ -90,10 +90,11 @@ namespace ProSuite.QA.Tests
 		private const double _defaultMinimumErrorLineLength = -1;
 		private const int _firstReferenceClassIndex = 1;
 		private readonly bool _useDistanceExpressions;
-		[NotNull] private readonly IDictionary<int, double> _xyToleranceByTableIndex;
-		private readonly double _pointClassXyTolerance;
+		[NotNull] private IDictionary<int, double> _xyToleranceByTableIndex;
+		private double _pointClassXyTolerance;
 
 		[Doc(nameof(DocStrings.QaPointNotNear_0))]
+		// ReSharper disable once NotNullMemberIsNotInitialized
 		public QaPointNotNear(
 			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_pointClass))]
 			IReadOnlyFeatureClass pointClass,
@@ -104,6 +105,7 @@ namespace ProSuite.QA.Tests
 			: this(pointClass, new[] {referenceClass}, limit) { }
 
 		[Doc(nameof(DocStrings.QaPointNotNear_1))]
+		// ReSharper disable once NotNullMemberIsNotInitialized
 		public QaPointNotNear(
 			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_pointClass))]
 			IReadOnlyFeatureClass pointClass,
@@ -117,12 +119,21 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(pointClass, nameof(pointClass));
 			Assert.ArgumentNotNull(referenceClasses, nameof(referenceClasses));
 
+			InitializeFields(pointClass, limit);
+		}
+
+		private void InitializeFields(IReadOnlyFeatureClass pointClass,
+		                              double searchDistance)
+		{
 			_shapeFieldName = pointClass.ShapeFieldName;
 			_spatialReference = pointClass.SpatialReference;
-			SearchDistance = limit;
+
+			SearchDistance = searchDistance;
+
 			_filter = null;
 			_tableCount = InvolvedTables.Count;
 			_referenceClassCount = _tableCount - 1;
+
 			_nearPoint = new PointClass();
 
 			_xyToleranceByTableIndex =
@@ -131,6 +142,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[Doc(nameof(DocStrings.QaPointNotNear_2))]
+		// ReSharper disable once NotNullMemberIsNotInitialized
 		public QaPointNotNear(
 				[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_pointClass))]
 				IReadOnlyFeatureClass pointClass,
@@ -152,6 +164,7 @@ namespace ProSuite.QA.Tests
 			       referenceFlipExpressions: null) { }
 
 		[Doc(nameof(DocStrings.QaPointNotNear_3))]
+		// ReSharper disable once NotNullMemberIsNotInitialized
 		public QaPointNotNear(
 			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_pointClass))]
 			IReadOnlyFeatureClass pointClass,
@@ -187,23 +200,27 @@ namespace ProSuite.QA.Tests
 			                         referenceRightSideDistances.Count == 0 ||
 			                         referenceRightSideDistances.Count == 1 ||
 			                         referenceRightSideDistances.Count ==
-			                         _referenceClassCount,
+			                         referenceClasses.Count,
 			                         "unexpected number of reference right side distances " +
 			                         "(must be 0, 1, or equal to the number of reference classes");
 			Assert.ArgumentCondition(referenceFlipExpressions == null ||
 			                         referenceFlipExpressions.Count == 0 ||
 			                         referenceFlipExpressions.Count == 1 ||
 			                         referenceFlipExpressions.Count ==
-			                         _referenceClassCount,
-			                         "unexpected number of reference flip expressions " +
+									 referenceClasses.Count,
+									 "unexpected number of reference flip expressions " +
 			                         "(must be 0, 1, or equal to the number of reference classes");
 
-			_shapeFieldName = pointClass.ShapeFieldName;
-			_spatialReference = pointClass.SpatialReference;
-			SearchDistance = searchDistance;
+			InitializeFields(pointClass, searchDistance);
+
 			_pointDistanceExpressionSql = pointDistanceExpression;
 			_referenceDistanceExpressionsSql = referenceDistanceExpressions;
-			_useDistanceExpressions = true;
+
+			if (! string.IsNullOrEmpty(pointDistanceExpression))
+			{
+				_useDistanceExpressions = true;
+			}
+
 			_referenceRightSideDistanceSqls =
 				referenceRightSideDistances?.ToList() ?? new List<string>();
 			_referenceFlipExpressions =
@@ -222,15 +239,21 @@ namespace ProSuite.QA.Tests
 			{
 				AddCustomQueryFilterExpression(sql);
 			}
+		}
 
-			_filter = null;
-			_tableCount = InvolvedTables.Count;
-			_referenceClassCount = referenceClasses.Count;
-			_nearPoint = new PointClass();
-
-			_xyToleranceByTableIndex =
-				TestUtils.GetXyToleranceByTableIndex(InvolvedTables);
-			_pointClassXyTolerance = _xyToleranceByTableIndex[0];
+		[InternallyUsedTest]
+		// ReSharper disable once NotNullMemberIsNotInitialized
+		public QaPointNotNear([NotNull] QaPointNotNearDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.PointClass,
+			       definition.ReferenceClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.SearchDistance, definition.PointDistanceExpression,
+			       definition.ReferenceDistanceExpressions, definition.ReferenceRightSideDistances,
+			       definition.ReferenceFlipExpressions)
+		{
+			AllowCoincidentPoints = definition.AllowCoincidentPoints;
+			GeometryComponents = definition.GeometryComponents;
+			ValidRelationConstraints = definition.ValidRelationConstraints;
+			MinimumErrorLineLength = definition.MinimumErrorLineLength;
 		}
 
 		[TestParameter]

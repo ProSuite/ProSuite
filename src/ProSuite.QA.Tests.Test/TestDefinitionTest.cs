@@ -176,6 +176,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaOverlapsOther),
 											 typeof(QaPartCoincidenceOther),
 											 typeof(QaPartCoincidenceSelf),
+											 typeof(QaPointNotNear),
 											 typeof(QaPointOnLine),
 											 typeof(QaRegularExpression),
 											 typeof(QaRequiredFields),
@@ -405,6 +406,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaNoGapsCases(model, testCases);
 			AddQaPartCoincidenceOtherCases(model, testCases);
 			AddQaPartCoincidenceSelfCases(model, testCases);
+			AddQaPointNotNearCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
@@ -2209,6 +2211,77 @@ namespace ProSuite.QA.Tests.Test
 				                                     },
 				                                     1.1, 2.2, 3.3, true, 200000.0, 0
 			                                     }, optionalValues));
+		}
+
+		private static void AddQaPointNotNearCases(InMemoryTestDataModel model,
+		                                           ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("AllowCoincidentPoints", true);
+			optionalValues.Add("GeometryComponents", 0);
+			optionalValues.Add("ValidRelationConstraints", "G1.Level<> G2.Level");
+			optionalValues.Add("MinimumErrorLineLength", 1.1);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaPointNotNear), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+				                                     1.1
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaPointNotNear), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     1.1
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaPointNotNear), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     1.1, "pDE_SQL_Expression",
+				                                     new[]
+				                                     {
+					                                     "rDE_SQL_Expression_1",
+					                                     "rDE_SQL_Expression_2"
+				                                     }
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaPointNotNear), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetPolygonDataset()
+				                                     },
+				                                     1.1, "pDE_SQL_Expression",
+													 new[]
+				                                     {
+					                                     "rDE_SQL_Expression_1",
+					                                     "rDE_SQL_Expression_2"
+				                                     },
+				                                     new[]
+				                                     {
+					                                     "rRSD_SQL_Expression_1",
+					                                     "rRSD_SQL_Expression_2"
+				                                     },
+													 new[]
+													 {
+														 "rFE_SQL_Expression_1",
+														 "rFE_SQL_Expression_2"
+													 },
+												 }, optionalValues));
 		}
 
 		private static void AddQaRegularExpressionCases(InMemoryTestDataModel model,
