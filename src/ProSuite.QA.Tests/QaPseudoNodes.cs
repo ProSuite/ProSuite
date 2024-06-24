@@ -128,6 +128,39 @@ namespace ProSuite.QA.Tests
 				validPseudoNodes)
 			: this(polylineClasses, ParseFieldLists(ignoreFieldLists), validPseudoNodes) { }
 
+		[InternallyUsedTest]
+		public QaPseudoNodes([NotNull] QaPseudoNodesDefinition definition)
+			: base(CreateTableList(definition),
+			       false, GetNonNetworkClassIndexList(definition))
+		{
+			IgnoreLoopEndpoints = definition.IgnoreLoopEndpoints;
+		}
+
+		private static List<IReadOnlyFeatureClass> CreateTableList(
+			QaPseudoNodesDefinition definition)
+		{
+			var result = definition.PolylineClasses.Cast<IReadOnlyFeatureClass>().ToList();
+
+			if (definition.ValidPseudoNodes != null)
+			{
+				result.AddRange(definition.ValidPseudoNodes.Cast<IReadOnlyFeatureClass>().ToList());
+			}
+
+			return result;
+		}
+
+		private static IList<int> GetNonNetworkClassIndexList(QaPseudoNodesDefinition definition)
+		{
+			if (definition.ValidPseudoNodes != null)
+			{
+				return GetPolycurveClassIndices(
+					definition.PolylineClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+					definition.ValidPseudoNodes.Cast<IReadOnlyFeatureClass>().ToList());
+			}
+
+			return null;
+		}
+		
 		private static List<IList<string>> ParseFieldLists(IList<string> fieldLists)
 		{
 			List<IList<string>> fields = new List<IList<string>>();

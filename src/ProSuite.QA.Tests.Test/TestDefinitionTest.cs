@@ -178,6 +178,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaPartCoincidenceSelf),
 											 typeof(QaPointNotNear),
 											 typeof(QaPointOnLine),
+											 typeof(QaPseudoNodes),
 											 typeof(QaRegularExpression),
 											 typeof(QaRequiredFields),
 											 typeof(QaSchemaFieldAliases),
@@ -407,6 +408,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaPartCoincidenceOtherCases(model, testCases);
 			AddQaPartCoincidenceSelfCases(model, testCases);
 			AddQaPointNotNearCases(model, testCases);
+			AddQaPseudoNodesCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
@@ -2263,7 +2265,7 @@ namespace ProSuite.QA.Tests.Test
 				                                     new[]
 				                                     {
 					                                     model.GetVectorDataset(),
-					                                     model.GetPolygonDataset()
+					                                     model.GetVectorDataset()
 				                                     },
 				                                     1.1, "pDE_SQL_Expression",
 													 new[]
@@ -2282,6 +2284,59 @@ namespace ProSuite.QA.Tests.Test
 														 "rFE_SQL_Expression_2"
 													 },
 												 }, optionalValues));
+		}
+
+		private static void AddQaPseudoNodesCases(InMemoryTestDataModel model,
+		                                          ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("IgnoreLoopEndpoints", true);
+
+			//NOTE: Constructor 0 is internally used and can not be configured properly.
+
+			testCases.Add(new TestDefinitionCase(typeof(QaPseudoNodes), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[]
+				                                     {
+					                                     "Ignore_Fields_String_1",
+					                                     "Ignore_Fields_String_2"
+				                                     },
+				                                     model.GetVectorDataset()
+			                                     }, optionalValues));
+
+			//NOTE: Constructor 2 is internally used and can not be configured properly.
+
+			testCases.Add(new TestDefinitionCase(typeof(QaPseudoNodes), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[]
+				                                     {
+					                                     "Ignore_Fields_String_1",
+					                                     "Ignore_Fields_String_2"
+				                                     }
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaPseudoNodes), 4,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     "Ignore_Fields_String_1",
+					                                     "Ignore_Fields_String_2"
+				                                     },
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     }
+			                                     }, optionalValues));
 		}
 
 		private static void AddQaRegularExpressionCases(InMemoryTestDataModel model,
