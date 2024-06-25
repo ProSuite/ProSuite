@@ -19,6 +19,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -363,8 +364,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			const TargetFeatureSelection targetFeatureSelection =
 				TargetFeatureSelection.VisibleSelectableFeatures;
 
-			// todo daro ViewUtils?
-			Task task = QueuedTask.Run(async () =>
+			Task<IEnumerable<Feature>> task = QueuedTaskUtils.Run(async () =>
 			{
 				using var pickerPrecedence =
 					new PickerPrecedence(sketchGeometry,
@@ -381,10 +381,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 				{
 					_msg.Warn("Calculation of reshape lines was cancelled.");
-					return;
+					return Enumerable.Empty<Feature>();
 				}
 
-				// ReSharper disable once AccessToDisposedClosure
 				if (pickerPrecedence.IsSingleClick && candidates.Count > 1)
 				{
 					var orderedCandidates =
@@ -394,18 +393,17 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 						await PickerUtils.ShowAsync<IPickableFeatureItem>(
 							pickerPrecedence, orderedCandidates);
 
-					RefreshChangeAlongCurves(selectedFeatures,
-					                         new List<Feature> { pickedItem.Feature }, progressor);
+					return new List<Feature> { pickedItem.Feature };
 				}
-				else
-				{
-					RefreshChangeAlongCurves(selectedFeatures,
-					                         candidates.SelectMany(c => c.GetFeatures()),
-					                         progressor);
-				}
-			});
 
-			await ViewUtils.TryAsync(task, _msg);
+				return candidates.SelectMany(c => c.GetFeatures());
+			}, progressor);
+
+			IEnumerable<Feature> targetFeatures = await ViewUtils.TryAsync(task, _msg);
+
+			ChangeAlongCurves =
+				await QueuedTaskUtils.Run(
+					() => RefreshChangeAlongCurves(selectedFeatures, targetFeatures, progressor));
 
 			return true;
 		}
