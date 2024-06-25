@@ -156,6 +156,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMonotonicZ),
 											 typeof(QaMpAllowedPartTypes),
 											 typeof(QaMpConstantPointIdsPerRing),
+											 typeof(QaMpFootprintHoles),
 											 typeof(QaMpHorizontalAzimuths),
 											 typeof(QaMpHorizontalHeights),
 											 typeof(QaMpHorizontalPerpendicular),
@@ -401,6 +402,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaMinAngleCases(model, testCases);
 			AddQaMinSegAngleCases(model, testCases);
 			AddQaMonotonicZCases(model, testCases);
+			AddQaMpFootprintHolesCases(model, testCases);
 			AddQaMpNonIntersectingRingFootprintsCases(model, testCases);
 			AddQaMpSinglePartFootprintCases(model, testCases);
 			AddQaMpVertexNotNearFaceCases(model, testCases);
@@ -1802,6 +1804,24 @@ namespace ProSuite.QA.Tests.Test
 			                                     new object[]
 			                                     {
 				                                     model.GetVectorDataset(),
+			                                     },
+			                                     optionalValues));
+		}
+
+		private static void AddQaMpFootprintHolesCases(InMemoryTestDataModel model,
+		                                         ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("HorizontalZTolerance", 1);
+			optionalValues.Add("ResolutionFactor", 1.1);
+			optionalValues.Add("MinimumArea", 123);
+			optionalValues.Add("ReportVerticalPatchesNotCompletelyWithinFootprint", false);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaMpFootprintHoles), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetMultipatchDataset(),
+													 InnerRingHandling.None
 			                                     },
 			                                     optionalValues));
 		}
