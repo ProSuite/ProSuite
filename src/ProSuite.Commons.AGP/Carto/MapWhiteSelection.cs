@@ -42,6 +42,26 @@ public class MapWhiteSelection : IDisposable
 		return _layerSelections.Values;
 	}
 
+	/// <summary>
+	/// Just a convenience to enumerate all features in the white selection
+	/// </summary>
+	public IEnumerable<ValueTuple<FeatureLayer, long, Geometry, IShapeSelection>> Enumerate()
+	{
+		foreach (var ws in GetLayerSelections())
+		{
+			var featureLayer = ws.Layer;
+			if (!featureLayer.IsEditable) continue;
+
+			foreach (var oid in ws.GetSelectedOIDs())
+			{
+				var originalShape = ws.GetGeometry(oid);
+				var shapeSelection = ws.GetShapeSelection(oid);
+
+				yield return (featureLayer, oid, originalShape, shapeSelection);
+			}
+		}
+	}
+
 	[NotNull]
 	public IWhiteSelection GetLayerSelection([NotNull] FeatureLayer layer)
 	{
