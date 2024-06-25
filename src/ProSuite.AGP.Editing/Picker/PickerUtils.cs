@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -64,7 +63,9 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public static Geometry EnsureNonEmpty([NotNull] Geometry sketch, int tolerancePixel)
 		{
-			return IsSingleClick(sketch) ? CreateSinglePickGeometry(sketch, tolerancePixel) : sketch;
+			return IsSingleClick(sketch)
+				       ? CreateSinglePickGeometry(sketch, tolerancePixel)
+				       : sketch;
 		}
 
 		private static Geometry CreateSinglePickGeometry([NotNull] Geometry sketch,
@@ -78,7 +79,8 @@ namespace ProSuite.AGP.Editing.Picker
 			return ExpandGeometryByPixels(mapPoint, tolerancePixel);
 		}
 
-		private static Geometry ExpandGeometryByPixels(Geometry sketchGeometry, int selectionTolerancePixels)
+		private static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
+		                                               int selectionTolerancePixels)
 		{
 			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
 				MapView.Active, selectionTolerancePixels, sketchGeometry.Extent.Center);
@@ -122,7 +124,7 @@ namespace ProSuite.AGP.Editing.Picker
 				KeyboardUtils.IsShiftDown()
 					? SelectionCombinationMethod.XOR
 					: SelectionCombinationMethod.New;
-			
+
 			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
 			SpatialRelationship spatialRelationship =
 				ToolUtils.GetSketchGeometryType() == SketchGeometryType.Polygon
@@ -132,8 +134,9 @@ namespace ProSuite.AGP.Editing.Picker
 			await QueuedTaskUtils.Run(async () =>
 			{
 				precedence.EnsureGeometryNonEmpty();
-				
-				List<FeatureSelectionBase> featureSelection = getCandidates(precedence.SelectionGeometry, spatialRelationship).ToList();
+
+				List<FeatureSelectionBase> featureSelection =
+					getCandidates(precedence.SelectionGeometry, spatialRelationship).ToList();
 
 				// todo daro use progressor!
 				await SelectCandidates(precedence, featureSelection, selectionMethod);
@@ -161,7 +164,8 @@ namespace ProSuite.AGP.Editing.Picker
 			{
 				precedence.EnsureGeometryNonEmpty();
 
-				List<FeatureSelectionBase> featureSelection = getCandidates(precedence.SelectionGeometry, spatialRelationship).ToList();
+				List<FeatureSelectionBase> featureSelection =
+					getCandidates(precedence.SelectionGeometry, spatialRelationship).ToList();
 
 				await SelectCandidates(precedence, featureSelection, selectionMethod, pickerMode);
 			}, progressor);
@@ -199,7 +203,6 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 		}
 
-
 		/// <summary>
 		/// Shows the picker.
 		/// </summary>
@@ -220,7 +223,6 @@ namespace ProSuite.AGP.Editing.Picker
 
 		#endregion
 
-		// todo daro drop?
 		private static async Task SelectCandidates(IPickerPrecedence precedence,
 		                                           List<FeatureSelectionBase> featureSelection,
 		                                           SelectionCombinationMethod selectionMethod)
@@ -263,6 +265,7 @@ namespace ProSuite.AGP.Editing.Picker
 						throw new ArgumentOutOfRangeException(
 							$"Unkown pickable item type {pickedItem.GetType()}");
 					}
+
 					return;
 
 				case PickerMode.PickAll:
@@ -281,7 +284,7 @@ namespace ProSuite.AGP.Editing.Picker
 		                                           SelectionCombinationMethod selectionMethod,
 		                                           PickerMode pickerMode)
 		{
-			if (!featureSelection.Any())
+			if (! featureSelection.Any())
 			{
 				if (selectionMethod == SelectionCombinationMethod.XOR)
 				{
@@ -293,7 +296,7 @@ namespace ProSuite.AGP.Editing.Picker
 				ClearSelection();
 				return;
 			}
-			
+
 			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
 
 			switch (pickerMode)
@@ -319,6 +322,7 @@ namespace ProSuite.AGP.Editing.Picker
 						throw new ArgumentOutOfRangeException(
 							$"Unkown pickable item type {pickedItem.GetType()}");
 					}
+
 					return;
 
 				case PickerMode.PickAll:

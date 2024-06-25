@@ -9,9 +9,7 @@ using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Editing.Picker
 {
-	// todo daro
 	// TODOs:
-	// - Improve item text (subtype, expression)
 	// - Consider tool tip for pickable items with all attributes
 	// - Check performance, consider not just clipping but also weeding
 	// - Configurable selection tolerance (consider using snapping?)

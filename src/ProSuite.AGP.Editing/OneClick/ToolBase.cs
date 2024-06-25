@@ -262,7 +262,8 @@ public abstract class ToolBase : MapTool
 		Task picker =
 			AllowMultiSelection(out _)
 				? PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection, progressor)
-				: PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection, PickerMode.ShowPicker, progressor);
+				: PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection,
+				                        PickerMode.ShowPicker, progressor);
 
 		await ViewUtils.TryAsync(picker, _msg);
 
