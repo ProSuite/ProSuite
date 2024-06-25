@@ -8,6 +8,7 @@ using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
@@ -28,6 +29,7 @@ namespace ProSuite.QA.Tests.Test.TestData
 		private const string _rasterName = "raster";
 		private const string _terrainName = "terrain";
 		private const string _mosaicName = "mosaic";
+		private const string _featureClassMultipatch = "multipatch";
 
 		public InMemoryTestDataModel(string name)
 		{
@@ -42,6 +44,7 @@ namespace ProSuite.QA.Tests.Test.TestData
 			_model.AddDataset(new ModelVectorDataset(_featureClassFootprints));
 			_model.AddDataset(new VerifiedRasterDataset(_rasterName));
 			_model.AddDataset(new VerifiedRasterMosaicDataset(_mosaicName));
+			_model.AddDataset(new ModelVectorDataset(_featureClassMultipatch));
 			_model.AddDataset(CreateTerrainDataset());
 		}
 
@@ -100,6 +103,11 @@ namespace ProSuite.QA.Tests.Test.TestData
 		public RasterMosaicDataset GetMosaicDataset()
 		{
 			return (RasterMosaicDataset) _model.GetDatasetByModelName(_mosaicName);
+		}
+
+		public VectorDataset GetMultipatchDataset()
+		{
+			return (VectorDataset)_model.GetDatasetByModelName(_featureClassMultipatch);
 		}
 
 		private SimpleTerrainDataset CreateTerrainDataset()
@@ -170,6 +178,11 @@ namespace ProSuite.QA.Tests.Test.TestData
 				workspace, _featureClassMasspoints, null,
 				FieldUtils.CreateOIDField(),
 				FieldUtils.CreateShapeField(esriGeometryType.esriGeometryMultipoint, sr));
+
+			DatasetUtils.CreateSimpleFeatureClass(
+				workspace, _featureClassMultipatch, null,
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateShapeField(esriGeometryType.esriGeometryMultiPatch, sr, 0, true));
 
 			IFieldsEdit tableFields = new FieldsClass();
 			tableFields.AddField(FieldUtils.CreateOIDField());
