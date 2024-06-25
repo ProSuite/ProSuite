@@ -150,6 +150,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMinIntersect),
 											 typeof(QaMinLength),
 											 typeof(QaMinMeanSegmentLength),
+											 typeof(QaMinNodeDistance),
 											 typeof(QaMinSegAngle),
 											 typeof(QaMonotonicMeasures),
 											 typeof(QaMonotonicZ),
@@ -318,6 +319,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinIntersect)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinLength)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinMeanSegmentLength)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinNodeDistance)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMonotonicMeasures)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpAllowedPartTypes)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpConstantPointIdsPerRing)));
