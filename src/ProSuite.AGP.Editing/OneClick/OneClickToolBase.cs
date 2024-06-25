@@ -71,10 +71,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// usable by the tool.
 		/// </summary>
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
-
-		protected virtual IPickerPrecedence PickerPrecedence =>
-			_pickerPrecedence ??= new StandardPickerPrecedence();
-
+		
 		/// <summary>
 		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
 		/// will be called (and potentially in the future also MapTool.HandleKeyUpAsync)

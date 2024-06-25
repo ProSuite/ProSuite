@@ -10,48 +10,29 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.Picker
 {
-	public class SelectionToolPickerPrecedence : IPickerPrecedence
+	public class SelectionToolPickerPrecedence : PickerPrecedenceBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private static readonly int _maxItems = 25;
+
 		private MapPoint _selectionCentroid;
-		private Geometry _selectionGeometry;
 
 		[UsedImplicitly]
-		public SelectionToolPickerPrecedence() { }
+		public SelectionToolPickerPrecedence(Geometry selectionGeometry, int selectionTolerance) :
+			base(selectionGeometry, selectionTolerance) { }
 
-		[UsedImplicitly]
-		public SelectionToolPickerPrecedence(Geometry selectionGeometry, int selectionTolerance)
+		public override PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
+		                                         bool areaSelect = false)
 		{
-			_selectionGeometry = selectionGeometry;
-			SelectionTolerance = selectionTolerance;
-		}
-
-		[NotNull]
-		public Geometry SelectionGeometry
-		{
-			get => Assert.NotNull(_selectionGeometry);
-			set => _selectionGeometry = value;
-		}
-
-		public int SelectionTolerance { get; }
-		public bool IsSingleClick { get; }
-
-		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
-		                                bool areaSelect = false)
-		{
-			if (KeyboardUtils.IsModifierDown(Key.LeftAlt, exclusive: true) ||
-			    KeyboardUtils.IsModifierDown(Key.RightAlt, exclusive: true))
+			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.RightAlt))
 			{
 				return PickerMode.PickAll;
 			}
 
-			if (KeyboardUtils.IsModifierDown(Key.LeftCtrl, exclusive: true) ||
-			    KeyboardUtils.IsModifierDown(Key.RightCtrl, exclusive: true))
+			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
 			{
 				return PickerMode.ShowPicker;
 			}
@@ -59,12 +40,7 @@ namespace ProSuite.AGP.Editing.Picker
 			return PickerMode.PickBest;
 		}
 
-		public void EnsureGeometryNonEmpty()
-		{
-			throw new NotImplementedException();
-		}
-
-		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
+		public override IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
 		{
 			return items.Take(_maxItems)
 			            .Select(item => SetScoreConsideringDistances(item, SelectionCentroid))
@@ -73,9 +49,7 @@ namespace ProSuite.AGP.Editing.Picker
 			            .OrderBy(item => item, new PickableItemComparer());
 		}
 
-		// todo daro move to subclass?
-		[CanBeNull]
-		public T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem
+		public override T PickBest<T>(IEnumerable<IPickableItem> items)
 		{
 			return Order(items).FirstOrDefault() as T;
 		}

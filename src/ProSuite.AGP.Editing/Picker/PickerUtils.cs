@@ -136,22 +136,14 @@ namespace ProSuite.AGP.Editing.Picker
 				List<FeatureSelectionBase> featureSelection = getCandidates(precedence.SelectionGeometry, spatialRelationship).ToList();
 
 				// todo daro use progressor!
-
-				PickerMode GetPickerMode()
-				{
-					var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
-
-					return precedence.GetPickerMode(orderedSelection);
-				}
-
-				await SelectCandidates(precedence, featureSelection, selectionMethod, GetPickerMode);
+				await SelectCandidates(precedence, featureSelection, selectionMethod);
 			}, progressor);
 		}
 
 		public static async Task ShowAsync(
 			[NotNull] IPickerPrecedence precedence,
 			[NotNull] Func<Geometry, SpatialRelationship, IEnumerable<FeatureSelectionBase>> getCandidates,
-			Func<PickerMode> getPickerMode,
+			PickerMode pickerMode,
 			[CanBeNull] CancelableProgressor progressor = null)
 		{
 			SelectionCombinationMethod selectionMethod =
@@ -171,7 +163,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 				List<FeatureSelectionBase> featureSelection = getCandidates(precedence.SelectionGeometry, spatialRelationship).ToList();
 
-				await SelectCandidates(precedence, featureSelection, selectionMethod, getPickerMode);
+				await SelectCandidates(precedence, featureSelection, selectionMethod, pickerMode);
 			}, progressor);
 		}
 
@@ -224,14 +216,10 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			if (precedence.IsSingleClick)
 			{
-				await ShowAsync<IPickableFeatureItem>(precedence, orderedSelection);
-			}
-			else
-			{
-				await ShowAsync<IPickableFeatureClassItem>(precedence, orderedSelection);
+				return await ShowAsync<IPickableFeatureItem>(precedence, orderedSelection);
 			}
 
-			return await Task.FromResult(default(IPickableItem));
+			return await ShowAsync<IPickableFeatureClassItem>(precedence, orderedSelection);
 		}
 
 		#endregion
@@ -249,11 +237,11 @@ namespace ProSuite.AGP.Editing.Picker
 					return;
 				}
 
+				// No candidate (user clicked into empty space):
 				ClearSelection();
 				return;
 			}
 
-			// No candidate (user clicked into empty space):
 			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
 
 			switch (precedence.GetPickerMode(orderedSelection))
@@ -291,7 +279,7 @@ namespace ProSuite.AGP.Editing.Picker
 		private static async Task SelectCandidates(IPickerPrecedence precedence,
 		                                           List<FeatureSelectionBase> featureSelection,
 		                                           SelectionCombinationMethod selectionMethod,
-		                                           Func<PickerMode> getPickerMode)
+		                                           PickerMode pickerMode)
 		{
 			if (!featureSelection.Any())
 			{
@@ -301,14 +289,14 @@ namespace ProSuite.AGP.Editing.Picker
 					return;
 				}
 
+				// No candidate (user clicked into empty space):
 				ClearSelection();
 				return;
 			}
-
-			// No candidate (user clicked into empty space):
+			
 			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
 
-			switch (getPickerMode())
+			switch (pickerMode)
 			{
 				case PickerMode.ShowPicker:
 

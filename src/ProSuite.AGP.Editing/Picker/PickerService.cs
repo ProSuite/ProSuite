@@ -9,6 +9,7 @@ using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Editing.Picker
 {
+	// todo daro
 	// TODOs:
 	// - Improve item text (subtype, expression)
 	// - Consider tool tip for pickable items with all attributes
@@ -32,6 +33,7 @@ namespace ProSuite.AGP.Editing.Picker
 			return PickSingle<T>(items, pickerLocation, precedence);
 		}
 
+		// todo daro rename?
 		public Task<T> PickSingle<T>(IEnumerable<IPickableItem> items,
 		                             Point pickerLocation,
 		                             IPickerPrecedence precedence)
