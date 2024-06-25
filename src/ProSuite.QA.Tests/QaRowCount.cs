@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -9,6 +10,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 
@@ -85,6 +87,31 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentCondition(
 				_minimumValueOffset != null || _maximumValueOffset != null,
 				"At least one offset must be specified");
+		}
+
+		/// <summary>
+		/// Constructor using Definition. Must always be the last constructor!
+		/// </summary>
+		/// <param name="rowCountDef"></param>
+		[InternallyUsedTest]
+		public QaRowCount([NotNull] QaRowCountDefinition rowCountDef)
+			: base(rowCountDef.InvolvedTables.Cast<IReadOnlyTable>().ToList())
+		{
+			_table = (IReadOnlyTable) rowCountDef.Table;
+
+			bool hasReferenceTables = rowCountDef.ReferenceTables?.Count > 0;
+
+			if (hasReferenceTables)
+			{
+				_referenceTables = rowCountDef.ReferenceTables.Cast<IReadOnlyTable>().ToList();
+				_minimumValueOffset = rowCountDef.MinimumValueOffset;
+				_maximumValueOffset = rowCountDef.MaximumValueOffset;
+			}
+			else
+			{
+				_minimumRowCount = rowCountDef.MinimumRowCount;
+				_maximumRowCount = rowCountDef.MaximumRowCount;
+			}
 		}
 
 		public override int Execute()

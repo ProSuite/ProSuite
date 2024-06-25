@@ -183,6 +183,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaPseudoNodes),
 											 typeof(QaRegularExpression),
 											 typeof(QaRequiredFields),
+											 typeof(QaRowCount),
 											 typeof(QaSchemaFieldAliases),
 											 typeof(QaSchemaFieldDomainCodedValues),
 											 typeof(QaSchemaFieldDomainNameRegex),
@@ -412,6 +413,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaPointNotNearCases(model, testCases);
 			AddQaPseudoNodesCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
+			AddQaRowCountCases(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
 			AddQaTouchesSelfCases(model, testCases);
@@ -2403,6 +2405,28 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
+		private static void AddQaRowCountCases(InMemoryTestDataModel model,
+		                                       ICollection<TestDefinitionCase>
+			                                       testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaRowCount), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(), 10, 1000
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaRowCount), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[]
+				                                     {
+					                                     model.GetPointDataset(),
+					                                     model.GetPolygonDataset()
+				                                     },
+				                                     "200", "-100"
+			                                     }));
+		}
+
 		private static void AddQaSliverPolygonCases(InMemoryTestDataModel model,
 		                                            ICollection<TestDefinitionCase> testCases)
 		{
@@ -3051,7 +3075,7 @@ namespace ProSuite.QA.Tests.Test
 
 			Assert.NotNull(testInstanceInfo);
 			Assert.NotNull(testInstanceInfo.TestDescription);
-			if (testInstanceInfo.InstanceType.Name != "QaExportTables")
+			if (testInstanceInfo.InstanceType.Name != "QaExportTables" && testInstanceInfo.InstanceType.Name != "QaRowCount")
 			{
 				Assert.Greater(testInstanceInfo.TestCategories.Length, 0);
 			}
@@ -3073,7 +3097,7 @@ namespace ProSuite.QA.Tests.Test
 
 			Assert.NotNull(instanceDefInfo);
 			Assert.NotNull(instanceDefInfo.TestDescription);
-			if (testInstanceInfo.InstanceType.Name != "QaExportTables")
+			if (testInstanceInfo.InstanceType.Name != "QaExportTables" && testInstanceInfo.InstanceType.Name != "QaRowCount")
 			{
 				Assert.Greater(instanceDefInfo.TestCategories.Length, 0);
 			}
