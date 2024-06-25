@@ -34,11 +34,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		private readonly TimeSpan _sketchBlockingPeriod = TimeSpan.FromSeconds(1);
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-		private IPickerPrecedence _pickerPrecedence;
 
 		private Geometry _lastSketch;
 		private DateTime _lastSketchFinishedTime;
-		private Point _currentClientPoint;
+
+		protected Point CurrentMousePosition;
 
 		protected OneClickToolBase()
 		{
@@ -213,8 +213,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolMouseMove(MapViewMouseEventArgs args)
 		{
-			_currentClientPoint = args.ClientPoint;
-			args.Handled = true;
+			CurrentMousePosition = args.ClientPoint;
+
 			base.OnToolMouseMove(args);
 		}
 
@@ -410,16 +410,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Geometry sketchGeometry,
 			[CanBeNull] CancelableProgressor progressor)
 		{
-			// TODO daro what thread? main/GUI thread
-
-			await QueuedTask.Run(() =>
-			{
-				Point clientToScreen = ActiveMapView.ClientToScreen(_currentClientPoint);
-				MapPoint clientToMap = ActiveMapView.ClientToMap(_currentClientPoint);
-			});
-			
 			using var pickerPrecedence =
-				new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels());
+				new PickerPrecedence(sketchGeometry,
+				                     GetSelectionTolerancePixels(),
+				                     ActiveMapView.ClientToScreen(CurrentMousePosition));
 
 			await ViewUtils.TryAsync(
 				PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers, progressor), _msg);
@@ -427,6 +421,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
+		// todo daro drop!
 		private async Task<bool> SingleSelectAsync(
 			[NotNull] IList<FeatureSelectionBase> candidatesOfLayers,
 			Point pickerLocation,
@@ -594,7 +589,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			Task<T> showPickerControl =
 				QueuedTaskUtils.Run(
-					() => picker.PickSingle<T>(items, pickerLocation, pickerPrecedence));
+					() => picker.PickSingle<T>(items, pickerPrecedence));
 
 			return await ViewUtils.TryAsync(showPickerControl, _msg);
 		}

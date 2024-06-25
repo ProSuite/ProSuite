@@ -369,7 +369,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			Task task = QueuedTask.Run(async () =>
 			{
 				using var pickerPrecedence =
-					new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels());
+					new PickerPrecedence(sketchGeometry,
+					                     GetSelectionTolerancePixels(),
+					                     ActiveMapView.ClientToScreen(CurrentMousePosition));
 
 				pickerPrecedence.EnsureGeometryNonEmpty();
 

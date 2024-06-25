@@ -179,10 +179,6 @@ namespace ProSuite.AGP.Editing.Picker
 			IEnumerable<FeatureSelectionBase> orderedSelection)
 			where T : class, IPickableItem
 		{
-			Point pickerLocation =
-				MapView.Active.MapToScreen(
-					precedence.SelectionGeometry.Extent.Center);
-
 			var picker = new PickerService();
 
 			if (precedence.IsSingleClick)
@@ -191,7 +187,7 @@ namespace ProSuite.AGP.Editing.Picker
 				            .CreateFeatureItems(orderedSelection)
 				            .ToList();
 
-				return (T) await picker.Pick<IPickableFeatureItem>(items, pickerLocation, precedence);
+				return (T) await picker.Pick<IPickableFeatureItem>(items, precedence);
 			}
 			else
 			{
@@ -199,7 +195,7 @@ namespace ProSuite.AGP.Editing.Picker
 				            .CreateFeatureClassItems(orderedSelection)
 				            .ToList();
 
-				return (T) await picker.Pick<IPickableFeatureClassItem>(items, pickerLocation, precedence);
+				return (T) await picker.Pick<IPickableFeatureClassItem>(items, precedence);
 			}
 		}
 
@@ -387,7 +383,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 					Point pickerLocation = MapView.Active.MapToScreen(geometry.Extent.Center);
 
-					return picker.Pick<IPickableFeatureItem>(items, pickerLocation, precedence);
+					return picker.Pick<IPickableFeatureItem>(items, precedence);
 				});
 
 			// show control on GUI thread

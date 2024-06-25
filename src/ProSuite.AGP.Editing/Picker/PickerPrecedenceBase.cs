@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Selection;
@@ -14,10 +15,13 @@ namespace ProSuite.AGP.Editing.Picker
 		protected List<Key> PressedKeys { get; } = new();
 
 		[UsedImplicitly]
-		protected PickerPrecedenceBase(Geometry selectionGeometry, int selectionTolerance)
+		protected PickerPrecedenceBase(Geometry selectionGeometry,
+		                               int selectionTolerance,
+		                               Point pickerLocation)
 		{
 			SelectionGeometry = selectionGeometry;
 			SelectionTolerance = selectionTolerance;
+			PickerLocation = pickerLocation;
 
 			IsSingleClick = PickerUtils.IsSingleClick(SelectionGeometry);
 
@@ -29,6 +33,8 @@ namespace ProSuite.AGP.Editing.Picker
 		public int SelectionTolerance { get; }
 
 		public bool IsSingleClick { get; }
+
+		public Point PickerLocation { get; set; }
 
 		public void AreModifierKeysPressed()
 		{
@@ -64,7 +70,7 @@ namespace ProSuite.AGP.Editing.Picker
 				return PickerMode.PickAll;
 			}
 
-			if(PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
+			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
 			{
 				return PickerMode.ShowPicker;
 			}
@@ -89,7 +95,8 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		[CanBeNull]
-		public virtual T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem
+		public virtual T PickBest<T>(IEnumerable<IPickableItem> items)
+			where T : class, IPickableItem
 		{
 			return items.FirstOrDefault() as T;
 		}

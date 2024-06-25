@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -47,6 +48,8 @@ public abstract class ToolBase : MapTool
 	}
 
 	private List<Key> HandledKeys { get; } = new() { Key.Escape, Key.F2 };
+	
+	protected Point CurrentMousePosition;
 
 	protected virtual Cursor SelectionCursorCore { get; }
 
@@ -150,6 +153,13 @@ public abstract class ToolBase : MapTool
 		await ViewUtils.TryAsync(HandleKeyDownCoreAsync(args), _msg);
 	}
 
+	protected override void OnToolMouseMove(MapViewMouseEventArgs args)
+	{
+		CurrentMousePosition = args.ClientPoint;
+
+		base.OnToolMouseMove(args);
+	}
+
 	#endregion
 
 	#region tool
@@ -242,9 +252,12 @@ public abstract class ToolBase : MapTool
 		using var source = GetProgressorSource();
 		var progressor = source?.Progressor;
 
+		// todo daro drop?
 		Type precedenceType = PickerPrecedenceType;
 
-		using var pickerPrecedence = new PickerPrecedence(geometry, tolerance);
+		using var pickerPrecedence =
+			new PickerPrecedence(geometry, tolerance,
+			                     ActiveMapView.ClientToScreen(CurrentMousePosition));
 
 		Task picker =
 			AllowMultiSelection(out _)

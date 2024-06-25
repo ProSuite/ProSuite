@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
@@ -21,8 +22,10 @@ namespace ProSuite.AGP.Editing.Picker
 		private MapPoint _selectionCentroid;
 
 		[UsedImplicitly]
-		public SelectionToolPickerPrecedence(Geometry selectionGeometry, int selectionTolerance) :
-			base(selectionGeometry, selectionTolerance) { }
+		public SelectionToolPickerPrecedence(Geometry selectionGeometry,
+		                                     int selectionTolerance,
+		                                     Point pickerLocation) :
+			base(selectionGeometry, selectionTolerance, pickerLocation) { }
 
 		public override PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                         bool areaSelect = false)
