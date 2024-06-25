@@ -254,6 +254,10 @@ namespace ProSuite.AGP.Editing.Picker
 					{
 						SelectFeatures(featureClassItem, selectionMethod);
 					}
+					else if (pickedItem == null)
+					{
+						return;
+					}
 					else
 					{
 						throw new ArgumentOutOfRangeException(
