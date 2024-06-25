@@ -9,6 +9,8 @@ namespace ProSuite.AGP.Editing.Picker
 {
 	public class StandardPickerPrecedence : IPickerPrecedence
 	{
+		private bool _singleClick;
+
 		public StandardPickerPrecedence() { }
 
 		[UsedImplicitly]
@@ -21,6 +23,7 @@ namespace ProSuite.AGP.Editing.Picker
 		public Geometry SelectionGeometry { get; set; }
 
 		public int SelectionTolerance { get; }
+		public bool IsSingleClick { get; }
 
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                bool areaSelect = false)
@@ -35,6 +38,9 @@ namespace ProSuite.AGP.Editing.Picker
 				return PickerMode.ShowPicker;
 			}
 
+			_singleClick = PickerUtils.IsSingleClick(SelectionGeometry);
+			areaSelect = ! _singleClick;
+
 			if (areaSelect)
 			{
 				return PickerMode.PickAll;
@@ -46,6 +52,11 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 
 			return PickerMode.PickBest;
+		}
+
+		public void EnsureGeometryNonEmpty()
+		{
+			throw new System.NotImplementedException();
 		}
 
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)

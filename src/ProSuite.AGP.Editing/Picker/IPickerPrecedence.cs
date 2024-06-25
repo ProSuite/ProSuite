@@ -12,8 +12,11 @@ namespace ProSuite.AGP.Editing.Picker
 
 		Geometry SelectionGeometry { get; set; }
 		int SelectionTolerance { get; }
+		bool IsSingleClick { get; }
 
 		PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                         bool areaSelect = false);
+
+		void EnsureGeometryNonEmpty();
 	}
 }

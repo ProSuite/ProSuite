@@ -27,11 +27,17 @@ namespace ProSuite.AGP.Editing.Test.Picker
 		}
 
 		public int SelectionTolerance { get; set; }
+		public bool IsSingleClick { get; }
 
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                bool areaSelect = false)
 		{
 			return PickerMode.PickBest;
+		}
+
+		public void EnsureGeometryNonEmpty()
+		{
+			throw new NotImplementedException();
 		}
 
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)

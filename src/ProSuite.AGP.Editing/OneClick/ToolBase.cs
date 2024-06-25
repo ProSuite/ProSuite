@@ -244,16 +244,13 @@ public abstract class ToolBase : MapTool
 
 		Type precedenceType = PickerPrecedenceType;
 
+		using var pickerPrecedence = new PickerPrecedence(geometry, tolerance);
+
 		Task picker =
 			AllowMultiSelection(out _)
-				? PickerUtils.Show(
-					geometry, tolerance, precedenceType,
-					sketchGeom => FindFeatureSelection(sketchGeom),
-					progressor)
-				: PickerUtils.Show(
-					geometry, tolerance, precedenceType,
-					sketchGeom => FindFeatureSelection(sketchGeom),
-					PickerMode.ShowPicker, progressor);
+				? PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection, progressor)
+				: PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection,
+				                        () => PickerMode.ShowPicker, progressor);
 
 		await ViewUtils.TryAsync(picker, _msg);
 

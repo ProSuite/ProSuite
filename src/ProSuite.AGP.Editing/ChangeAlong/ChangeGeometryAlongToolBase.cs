@@ -359,64 +359,53 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private async Task<bool> SelectTargetsAsync(
 			[NotNull] List<Feature> selectedFeatures,
-			[NotNull] Geometry sketch,
+			[NotNull] Geometry sketchGeometry,
 			[CanBeNull] CancelableProgressor progressor)
 		{
 			const TargetFeatureSelection targetFeatureSelection =
 				TargetFeatureSelection.VisibleSelectableFeatures;
 
-			bool isSingleClick = false;
-			Point pickerLocation = new Point();
-			List<FeatureSelectionBase> selectionByClass =
-				await QueuedTaskUtils.Run(() =>
-				{
-					sketch = ToolUtils.SketchToSearchGeometry(
-						sketch, GetSelectionTolerancePixels(), out isSingleClick);
-
-					pickerLocation = MapView.Active.MapToScreen(sketch.Extent.Center);
-
-					return FindTargetFeatureCandidates(sketch, targetFeatureSelection,
-					                                   selectedFeatures,
-					                                   progressor);
-				});
-
-			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
+			// todo daro ViewUtils?
+			Task task = QueuedTask.Run(async () =>
 			{
-				_msg.Warn("Calculation of reshape lines was cancelled.");
-				return false;
-			}
+				using var pickerPrecedence =
+					new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels());
 
-			IEnumerable<Feature> targetFeatures;
+				pickerPrecedence.EnsureGeometryNonEmpty();
 
-			if (isSingleClick &&
-			    SelectionUtils.GetFeatureCount(selectionByClass) > 1)
-			{
-				IEnumerable<IPickableItem> items =
-					await QueuedTask.Run(
-						() => PickableItemsFactory.CreateFeatureItems(
-							PickerUtils.OrderByGeometryDimension(selectionByClass)));
+				List<FeatureSelectionBase> candidates =
+					FindTargetFeatureCandidates(pickerPrecedence.SelectionGeometry,
+					                            targetFeatureSelection, selectedFeatures,
+					                            progressor);
 
-				PickerPrecedence.SelectionGeometry = sketch;
-
-				IPickableFeatureItem pickedItem =
-					await ShowPickerAsync<IPickableFeatureItem>(
-						items, PickerPrecedence, pickerLocation);
-
-				if (pickedItem == null)
+				if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 				{
-					return false;
+					_msg.Warn("Calculation of reshape lines was cancelled.");
+					return;
 				}
 
-				targetFeatures = new[] { pickedItem.Feature };
-			}
-			else
-			{
-				targetFeatures = selectionByClass.SelectMany(fcs => fcs.GetFeatures());
-			}
+				// ReSharper disable once AccessToDisposedClosure
+				if (pickerPrecedence.IsSingleClick && candidates.Count > 1)
+				{
+					var orderedCandidates =
+						PickerUtils.OrderByGeometryDimension(candidates).ToList();
 
-			ChangeAlongCurves =
-				await QueuedTaskUtils.Run(
-					() => RefreshChangeAlongCurves(selectedFeatures, targetFeatures, progressor));
+					var pickedItem =
+						await PickerUtils.ShowAsync<IPickableFeatureItem>(
+							pickerPrecedence, orderedCandidates);
+
+					RefreshChangeAlongCurves(selectedFeatures,
+					                         new List<Feature> { pickedItem.Feature }, progressor);
+				}
+				else
+				{
+					RefreshChangeAlongCurves(selectedFeatures,
+					                         candidates.SelectMany(c => c.GetFeatures()),
+					                         progressor);
+				}
+			});
+
+			await ViewUtils.TryAsync(task, _msg);
 
 			return true;
 		}

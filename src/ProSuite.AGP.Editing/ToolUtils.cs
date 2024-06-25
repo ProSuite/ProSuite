@@ -245,5 +245,10 @@ namespace ProSuite.AGP.Editing
 
 			return featureLayer;
 		}
+
+		public static SketchGeometryType GetSketchGeometryType()
+		{
+			return MapView.Active?.GetSketchType() ?? SketchGeometryType.None;
+		}
 	}
 }

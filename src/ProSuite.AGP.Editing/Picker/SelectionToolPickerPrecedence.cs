@@ -39,6 +39,7 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		public int SelectionTolerance { get; }
+		public bool IsSingleClick { get; }
 
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                bool areaSelect = false)
@@ -56,6 +57,11 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 
 			return PickerMode.PickBest;
+		}
+
+		public void EnsureGeometryNonEmpty()
+		{
+			throw new NotImplementedException();
 		}
 
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)

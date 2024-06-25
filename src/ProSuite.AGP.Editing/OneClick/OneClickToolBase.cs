@@ -38,6 +38,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private Geometry _lastSketch;
 		private DateTime _lastSketchFinishedTime;
+		private Point _currentClientPoint;
 
 		protected OneClickToolBase()
 		{
@@ -211,6 +212,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			_msg.VerboseDebug(() => "HandleKeyUpAsync");
 
 			await ViewUtils.TryAsync(async () => { await HandleKeyUpCoreAsync(args); }, _msg);
+		}
+
+		protected override void OnToolMouseMove(MapViewMouseEventArgs args)
+		{
+			_currentClientPoint = args.ClientPoint;
+			args.Handled = true;
+			base.OnToolMouseMove(args);
 		}
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
@@ -405,64 +413,21 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Geometry sketchGeometry,
 			[CanBeNull] CancelableProgressor progressor)
 		{
-			SelectionCombinationMethod selectionMethod =
-				KeyboardUtils.IsShiftDown()
-					? SelectionCombinationMethod.XOR
-					: SelectionCombinationMethod.New;
+			// TODO daro what thread? main/GUI thread
 
-			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
-			SpatialRelationship spatialRelationship = SketchType == SketchGeometryType.Polygon
-				                                          ? SpatialRelationship.Contains
-				                                          : SpatialRelationship.Intersects;
-
-			Geometry selectionGeometry = null;
-			var pickerLocation = new Point(0, 0);
-
-			// TODO Can't we pack all this into *one* QTR?
-
-			bool singlePick = false;
-			List<FeatureSelectionBase> candidatesOfManyLayers =
-				await QueuedTaskUtils.Run(() =>
-				{
-					selectionGeometry = ToolUtils.SketchToSearchGeometry(sketchGeometry,
-						GetSelectionTolerancePixels(), out singlePick);
-
-					pickerLocation =
-						ActiveMapView.MapToScreen(selectionGeometry.Extent.Center);
-
-					return FindFeaturesOfAllLayers(selectionGeometry, spatialRelationship).ToList();
-				});
-
-			if (! candidatesOfManyLayers.Any())
+			await QueuedTask.Run(() =>
 			{
-				// No candidate (user clicked into empty space):
-				if (selectionMethod == SelectionCombinationMethod.XOR)
-				{
-					// No addition to, and no removal from selection
-					return false;
-				}
+				Point clientToScreen = ActiveMapView.ClientToScreen(_currentClientPoint);
+				MapPoint clientToMap = ActiveMapView.ClientToMap(_currentClientPoint);
+			});
+			
+			using var pickerPrecedence =
+				new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels());
 
-				await QueuedTask.Run(ClearSelection);
+			await ViewUtils.TryAsync(
+				PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers, progressor), _msg);
 
-				return false;
-			}
-
-			PickerPrecedence.SelectionGeometry = selectionGeometry;
-
-			// todo daro refactor
-			bool result = singlePick
-				              ? await SingleSelectAsync(candidatesOfManyLayers,
-				                                        pickerLocation,
-				                                        PickerPrecedence,
-				                                        selectionMethod)
-				              : await AreaSelectAsync(candidatesOfManyLayers,
-				                                      pickerLocation,
-				                                      PickerPrecedence,
-				                                      selectionMethod);
-
-			await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
-
-			return result;
+			return true;
 		}
 
 		private async Task<bool> SingleSelectAsync(
