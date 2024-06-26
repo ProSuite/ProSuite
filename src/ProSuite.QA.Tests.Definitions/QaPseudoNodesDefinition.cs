@@ -90,7 +90,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPseudoNodes_2))]
 		public QaPseudoNodesDefinition(
 			[Doc(nameof(DocStrings.QaPseudoNodes_polylineClasses))] [NotNull]
-			IList<IReadOnlyFeatureClass> polylineClasses,
+			IList<IFeatureClassSchemaDef> polylineClasses,
 			[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFieldLists))] [NotNull]
 			IList<string> ignoreFieldLists)
 			: this(polylineClasses, ParseFieldLists(ignoreFieldLists)) { }
