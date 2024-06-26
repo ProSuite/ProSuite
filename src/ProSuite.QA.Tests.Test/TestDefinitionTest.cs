@@ -2365,6 +2365,20 @@ namespace ProSuite.QA.Tests.Test
 					                                     model.GetVectorDataset()
 				                                     }
 			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaPseudoNodes), 5,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     "Ignore_Fields_String_1",
+					                                     "Ignore_Fields_String_2"
+				                                     }
+			                                     }, optionalValues));
 		}
 
 		private static void AddQaRegularExpressionCases(InMemoryTestDataModel model,

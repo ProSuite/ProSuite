@@ -11,13 +11,8 @@ namespace ProSuite.AGP.Editing.Picker
 		T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem;
 
 		Geometry SelectionGeometry { get; set; }
+		int SelectionTolerance { get; set; }
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="orderedSelection">Has to be ordered!</param>
-		/// <param name="areaSelect">Select by area.</param>
-		/// <returns></returns>
 		PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                         bool areaSelect = false);
 	}

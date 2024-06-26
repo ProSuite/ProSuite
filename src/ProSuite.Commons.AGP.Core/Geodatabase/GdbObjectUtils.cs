@@ -184,14 +184,14 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		[CanBeNull]
-		private static T? ReadRowValue<T>([NotNull] object value,
+		private static T? ReadRowValue<T>(object value,
 		                                  int fieldIndex,
 		                                  Func<long?> getOid,
 		                                  Func<string> getTableName)
 			where T : struct
 		{
 			// TODO: Duplication in Commons.AO.GdbObjectUtils! Refactor to common place.
-			if (value == DBNull.Value)
+			if (value == DBNull.Value || value == null)
 			{
 				_msg.VerboseDebug(
 					() => $"ReadRowValue: Field value at <index> {fieldIndex} of row is null.");

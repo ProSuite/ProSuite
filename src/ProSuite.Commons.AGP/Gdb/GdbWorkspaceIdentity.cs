@@ -8,7 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Commons.AGP.Gdb
 {
 	// todo daro: check correct handle / instantiation of Uri
-	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>
+	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>, IComparable<GdbWorkspaceIdentity>
 	{
 		[NotNull] private readonly DatastoreName _datastoreName;
 
@@ -95,6 +95,16 @@ namespace ProSuite.Commons.AGP.Gdb
 			{
 				return _datastoreName.GetHashCode();
 			}
+		}
+
+		#endregion
+
+		#region IComparable<GdbWorkspaceIdentity> implementation
+
+		public int CompareTo(GdbWorkspaceIdentity other)
+		{
+			return string.Compare(ConnectionString, other.ConnectionString,
+			                      StringComparison.OrdinalIgnoreCase);
 		}
 
 		#endregion

@@ -128,6 +128,15 @@ namespace ProSuite.QA.Tests
 				validPseudoNodes)
 			: this(polylineClasses, ParseFieldLists(ignoreFieldLists), validPseudoNodes) { }
 
+		[Doc(nameof(DocStrings.QaPseudoNodes_2))]
+		public QaPseudoNodes(
+			[Doc(nameof(DocStrings.QaPseudoNodes_polylineClasses))] [NotNull]
+			IList<IReadOnlyFeatureClass>
+				polylineClasses,
+			[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFieldLists))] [NotNull]
+			IList<string> ignoreFieldLists)
+			: this(polylineClasses, ParseFieldLists(ignoreFieldLists)) { }
+
 		[InternallyUsedTest]
 		public QaPseudoNodes([NotNull] QaPseudoNodesDefinition definition)
 			: base(CreateTableList(definition),

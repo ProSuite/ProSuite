@@ -63,8 +63,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected override void LogPromptForSelection()
 		{
-			_msg.Info(
-				"Select one or more polygon features which contain the hole(s) to be removed.");
+			_msg.Info(LocalizableStrings.RemoveHoleTool_LogPromptForSelection);
 		}
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)

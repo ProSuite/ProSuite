@@ -433,7 +433,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			FeatureFinder featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
 			                              {
 				                              SelectedFeatures = selectedFeatures,
-				                              SpatialRelationship = spatialRel
+				                              SpatialRelationship = spatialRel,
+				                              ReturnUnJoinedFeatures = true
 			                              };
 
 			var selectionByClass =
@@ -657,6 +658,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			              .Where(
 				              f => IsStoreRequired(f, editableClassHandles, RowChangeType.Insert))
 			              .ToList();
+
+			if (resultFeatures.Count == 0 && inserts.Count == 0)
+			{
+				_msg.Warn("No feature to store probably because nothing has changed not editable.");
+				return false;
+			}
 
 			List<Feature> newFeatures = new List<Feature>();
 

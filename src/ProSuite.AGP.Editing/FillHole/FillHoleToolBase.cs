@@ -84,8 +84,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected override void LogPromptForSelection()
 		{
-			_msg.Info(
-				"Select a polygon that contains a hole or several polygons with a gap in between.");
+			_msg.Info(LocalizableStrings.FillHoleTool_LogPromptForSelection);
 		}
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
@@ -149,6 +148,9 @@ namespace ProSuite.AGP.Editing.FillHole
 
 			FeatureClass currentTargetClass = ToolUtils.GetCurrentTargetFeatureClass(editTemplate);
 
+			// Un-wrap potential joins:
+			currentTargetClass = DatasetUtils.GetDatabaseFeatureClass(currentTargetClass);
+
 			if (currentTargetClass == null)
 			{
 				throw new Exception("No valid template selected");
@@ -201,7 +203,7 @@ namespace ProSuite.AGP.Editing.FillHole
 			if (holeCount == 0)
 			{
 				_msg.InfoFormat(
-					"Select a polygon that contains a hole or several polygons with a gap in between.");
+					"The current selection does not contain a hole or gap. Select one or more different features.");
 			}
 			else
 			{

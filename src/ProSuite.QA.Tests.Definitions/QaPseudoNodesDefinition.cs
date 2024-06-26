@@ -87,6 +87,14 @@ namespace ProSuite.QA.Tests
 			IList<IFeatureClassSchemaDef> validPseudoNodes)
 			: this(polylineClasses, ParseFieldLists(ignoreFieldLists), validPseudoNodes) { }
 
+		[Doc(nameof(DocStrings.QaPseudoNodes_2))]
+		public QaPseudoNodesDefinition(
+			[Doc(nameof(DocStrings.QaPseudoNodes_polylineClasses))] [NotNull]
+			IList<IReadOnlyFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFieldLists))] [NotNull]
+			IList<string> ignoreFieldLists)
+			: this(polylineClasses, ParseFieldLists(ignoreFieldLists)) { }
+
 		private static List<IList<string>> ParseFieldLists(IList<string> fieldLists)
 		{
 			List<IList<string>> fields = new List<IList<string>>();
