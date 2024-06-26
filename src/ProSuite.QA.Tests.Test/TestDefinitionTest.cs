@@ -421,7 +421,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaPseudoNodesCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaRowCountCases(model, testCases);
-			AddQaSchemaFieldDomainDescriptions(model, testCases);
+			AddQaSchemaFieldDomainDescriptionsCases(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
 			AddQaTouchesSelfCases(model, testCases);
@@ -2525,7 +2525,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaSchemaFieldDomainDescriptions(InMemoryTestDataModel model,
+		private static void AddQaSchemaFieldDomainDescriptionsCases(InMemoryTestDataModel model,
 		                                                       ICollection<TestDefinitionCase>
 			                                                       testCases)
 		{
