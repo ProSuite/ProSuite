@@ -188,6 +188,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaRowCount),
 											 typeof(QaSchemaFieldAliases),
 											 typeof(QaSchemaFieldDomainCodedValues),
+											 typeof(QaSchemaFieldDomainDescriptions),
 											 typeof(QaSchemaFieldDomainNameRegex),
 											 typeof(QaSchemaFieldDomainNames),
 											 typeof(QaSchemaFieldDomains),
@@ -225,7 +226,7 @@ namespace ProSuite.QA.Tests.Test
 				Assert.IsFalse(InstanceUtils.HasInternallyUsedAttribute(testType),
 				               "Internally used tests are only used by factories and do not require a TestDefinition");
 
-				// One is used internally to create using a the definition.
+				// One is used internally to create using the definition.
 				int constructorCount = testType.GetConstructors().Length - 1;
 
 				bool lastConstructorIsInternallyUsed =
@@ -418,6 +419,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaPseudoNodesCases(model, testCases);
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaRowCountCases(model, testCases);
+			AddQaSchemaFieldDomainDescriptions(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
 			AddQaTouchesSelfCases(model, testCases);
@@ -2446,6 +2448,23 @@ namespace ProSuite.QA.Tests.Test
 					                                     model.GetPolygonDataset()
 				                                     },
 				                                     "200", "-100"
+			                                     }));
+		}
+
+		private static void AddQaSchemaFieldDomainDescriptions(InMemoryTestDataModel model,
+		                                                       ICollection<TestDefinitionCase>
+			                                                       testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaSchemaFieldDomainDescriptions), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(), 1, false,
+													 model.GetPolygonDataset()
+}));
+			testCases.Add(new TestDefinitionCase(typeof(QaSchemaFieldDomainDescriptions), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(), 1, true
 			                                     }));
 		}
 
