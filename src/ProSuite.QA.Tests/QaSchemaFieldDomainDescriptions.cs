@@ -53,10 +53,8 @@ namespace ProSuite.QA.Tests
 			bool
 				requireUniqueDescriptions,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_targetWorkspaceTable))]
-			[CanBeNull]
-			IReadOnlyTable
-				targetWorkspaceTable)
-			: base(table)
+			[CanBeNull] IReadOnlyTable targetWorkspaceTable)
+			: base(table,targetWorkspaceTable)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
