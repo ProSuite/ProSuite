@@ -2053,9 +2053,6 @@ namespace ProSuite.QA.Tests.Test
 		private static void AddQaNoGapsCases(InMemoryTestDataModel model,
 														ICollection<TestDefinitionCase> testCases)
 		{
-			var optionalValues = new Dictionary<string, object>();
-			optionalValues.Add("CoincidenceTolerance", 1);
-
 			testCases.Add(new TestDefinitionCase(typeof(QaNoGaps), 0,
 												 new object[]
 												 {
