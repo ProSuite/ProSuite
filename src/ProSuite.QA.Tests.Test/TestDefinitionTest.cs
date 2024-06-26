@@ -175,6 +175,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaNodeLineCoincidence),
 											 typeof(QaNoGaps),
 											 typeof(QaNonEmptyGeometry),
+											 typeof(QaNotNear),
 											 typeof(QaOrphanNode),
 											 typeof(QaOverlapsSelf),
 											 typeof(QaOverlapsOther),
@@ -413,6 +414,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaNoBoundaryLoopsCases(model, testCases);
 			AddQaNodeLineCoincidenceCases(model, testCases);
 			AddQaNoGapsCases(model, testCases);
+			AddQaNotNearCases(model, testCases);
 			AddQaPartCoincidenceOtherCases(model, testCases);
 			AddQaPartCoincidenceSelfCases(model, testCases);
 			AddQaPointNotNearCases(model, testCases);
@@ -2129,6 +2131,67 @@ namespace ProSuite.QA.Tests.Test
 				                                     },
 			                                     }));
 		}
+
+		private static void AddQaNotNearCases(InMemoryTestDataModel model,
+														ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("IgnoreNeighborCondition", "G1.CountryCode <> G2.CountryCode");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaNotNear), 0,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 1.1, 2.2, true
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaNotNear), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     1.1, 2.2, true, 3.3
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaNotNear), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+													 1.1, 2.2, true,
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaNotNear), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+				                                     1.1, 2.2, true, 3.3
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaNotNear), 4,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     1.1, 2.2
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaNotNear), 5,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     1.1, 2.2, 3.3
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaNotNear), 6,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+													 1.1, 2.2
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaNotNear), 7,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+				                                     1.1, 2.2, 3.3
+			                                     }, optionalValues));
+		}
+
 		private static void AddQaPartCoincidenceOtherCases(InMemoryTestDataModel model,
 		                                              ICollection<TestDefinitionCase> testCases)
 		{

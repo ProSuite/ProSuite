@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -148,6 +149,31 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaNotNear_tileSize))]
 			double tileSize)
 			: this(featureClass, reference, near, minLength, is3D: false) { }
+
+		/// <summary>
+		/// Constructor using Definition. Must always be the last constructor!
+		/// </summary>
+		/// <param name="notNearDef"></param>
+		[InternallyUsedTest]
+		public QaNotNear([NotNull] QaNotNearDefinition notNearDef)
+			: base(notNearDef.InvolvedTables.Cast<IReadOnlyFeatureClass>(),
+			       notNearDef.Near, new ConstantFeatureDistanceProvider(notNearDef.Near / 2),
+			       new ConstantPairDistanceProvider(notNearDef.MinLength),
+			       new ConstantPairDistanceProvider(notNearDef.MinLength), notNearDef.Is3D, 0)
+		{
+			bool hasReference = notNearDef.Reference != null;
+
+			if (hasReference)
+			{
+				_reference = (IReadOnlyFeatureClass) notNearDef.Reference;
+				_self = false;
+			}
+			else
+			{
+				_reference = (IReadOnlyFeatureClass) notNearDef.FeatureClass;
+				_self = true;
+			}
+		}
 
 		protected override bool IsDirected => ! _self.Value;
 
