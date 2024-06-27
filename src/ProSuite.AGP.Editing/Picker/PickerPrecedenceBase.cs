@@ -10,6 +10,7 @@ using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.Picker
 {
+	// todo daro IDisposable not necessary?
 	public abstract class PickerPrecedenceBase : IPickerPrecedence, IDisposable
 	{
 		protected List<Key> PressedKeys { get; } = new();

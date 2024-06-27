@@ -58,13 +58,10 @@ public abstract class ToolBase : MapTool
 	protected virtual bool AllowNoSelection => false;
 
 	#region abstract
-
-	// todo daro revise/refactor!
+	
 	protected abstract void LogPromptForSelection();
 
 	protected abstract SelectionSettings GetSelectionSettings();
-
-	protected abstract Type PickerPrecedenceType { get; }
 
 	protected abstract Task HandleEscapeAsync();
 
@@ -251,9 +248,6 @@ public abstract class ToolBase : MapTool
 
 		using var source = GetProgressorSource();
 		var progressor = source?.Progressor;
-
-		// todo daro drop?
-		Type precedenceType = PickerPrecedenceType;
 
 		using var pickerPrecedence =
 			new PickerPrecedence(geometry, tolerance,
