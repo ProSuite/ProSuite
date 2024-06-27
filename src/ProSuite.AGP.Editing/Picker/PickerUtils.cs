@@ -13,12 +13,15 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.Picker
 {
 	public static class PickerUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		#region move, refactor
 
 		public static Uri GetImagePath(esriGeometryType? geometryType)
@@ -117,7 +120,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public static async Task ShowAsync(
 			[NotNull] IPickerPrecedence precedence,
-			[NotNull] Func<Geometry, SpatialRelationship, IEnumerable<FeatureSelectionBase>> getCandidates,
+			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor, IEnumerable<FeatureSelectionBase>> getCandidates,
 			[CanBeNull] CancelableProgressor progressor = null)
 		{
 			SelectionCombinationMethod selectionMethod =
@@ -135,17 +138,22 @@ namespace ProSuite.AGP.Editing.Picker
 			{
 				precedence.EnsureGeometryNonEmpty();
 
-				List<FeatureSelectionBase> featureSelection =
-					getCandidates(precedence.SelectionGeometry, spatialRelationship).ToList();
+				var featureSelection = getCandidates(precedence.SelectionGeometry,
+				                                     spatialRelationship,
+				                                     progressor).ToList();
 
-				// todo daro use progressor!
-				await SelectCandidates(precedence, featureSelection, selectionMethod);
+				if (progressor is { CancellationToken.IsCancellationRequested: true })
+				{
+					_msg.Debug("Picker canceled");
+				}
+				
+				await SelectCandidates(precedence, featureSelection, selectionMethod, progressor);
 			}, progressor);
 		}
 
 		public static async Task ShowAsync(
 			[NotNull] IPickerPrecedence precedence,
-			[NotNull] Func<Geometry, SpatialRelationship, IEnumerable<FeatureSelectionBase>> getCandidates,
+			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor, IEnumerable<FeatureSelectionBase>> getCandidates,
 			PickerMode pickerMode,
 			[CanBeNull] CancelableProgressor progressor = null)
 		{
@@ -164,8 +172,14 @@ namespace ProSuite.AGP.Editing.Picker
 			{
 				precedence.EnsureGeometryNonEmpty();
 
-				List<FeatureSelectionBase> featureSelection =
-					getCandidates(precedence.SelectionGeometry, spatialRelationship).ToList();
+				var featureSelection = getCandidates(precedence.SelectionGeometry,
+				                                     spatialRelationship,
+				                                     progressor).ToList();
+
+				if (progressor is { CancellationToken.IsCancellationRequested: true })
+				{
+					_msg.Debug("Picker canceled");
+				}
 
 				await SelectCandidates(precedence, featureSelection, selectionMethod, pickerMode);
 			}, progressor);
@@ -225,7 +239,8 @@ namespace ProSuite.AGP.Editing.Picker
 
 		private static async Task SelectCandidates(IPickerPrecedence precedence,
 		                                           List<FeatureSelectionBase> featureSelection,
-		                                           SelectionCombinationMethod selectionMethod)
+		                                           SelectionCombinationMethod selectionMethod,
+		                                           [CanBeNull] CancelableProgressor progressor = null)
 		{
 			if (! featureSelection.Any())
 			{
@@ -269,7 +284,7 @@ namespace ProSuite.AGP.Editing.Picker
 					return;
 
 				case PickerMode.PickAll:
-					SelectionUtils.SelectFeatures(orderedSelection, selectionMethod);
+					SelectionUtils.SelectFeatures(orderedSelection, selectionMethod, progressor);
 					return;
 				case PickerMode.PickBest:
 					SelectBestPick(precedence, orderedSelection, selectionMethod);
@@ -282,7 +297,8 @@ namespace ProSuite.AGP.Editing.Picker
 		private static async Task SelectCandidates(IPickerPrecedence precedence,
 		                                           List<FeatureSelectionBase> featureSelection,
 		                                           SelectionCombinationMethod selectionMethod,
-		                                           PickerMode pickerMode)
+		                                           PickerMode pickerMode,
+		                                           [CanBeNull] CancelableProgressor progressor = null)
 		{
 			if (! featureSelection.Any())
 			{
@@ -311,7 +327,7 @@ namespace ProSuite.AGP.Editing.Picker
 					}
 					else if (pickedItem is IPickableFeatureClassItem featureClassItem)
 					{
-						SelectFeatures(featureClassItem, selectionMethod);
+						SelectFeatures(featureClassItem, selectionMethod, progressor);
 					}
 					else if (pickedItem == null)
 					{
@@ -326,7 +342,7 @@ namespace ProSuite.AGP.Editing.Picker
 					return;
 
 				case PickerMode.PickAll:
-					SelectionUtils.SelectFeatures(orderedSelection, selectionMethod);
+					SelectionUtils.SelectFeatures(orderedSelection, selectionMethod, progressor);
 					return;
 				case PickerMode.PickBest:
 					SelectBestPick(precedence, orderedSelection, selectionMethod);
@@ -356,7 +372,8 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		private static void SelectFeatures(IPickableFeatureClassItem pickedItem,
-		                                   SelectionCombinationMethod selectionMethod)
+		                                   SelectionCombinationMethod selectionMethod,
+		                                   CancelableProgressor progressor = null)
 		{
 			// Clear the selection on the map level, NOT on the layer level
 			if (selectionMethod == SelectionCombinationMethod.New)
@@ -373,7 +390,7 @@ namespace ProSuite.AGP.Editing.Picker
 				          .Cast<FeatureSelectionBase>()
 				          .ToList();
 
-			SelectionUtils.SelectFeatures(featureClassSelections, selectionMethod);
+			SelectionUtils.SelectFeatures(featureClassSelections, selectionMethod, progressor);
 		}
 
 		private static void ClearSelection()

@@ -423,7 +423,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(
 			[NotNull] Geometry searchGeometry,
-			SpatialRelationship spatialRelationship)
+			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects,
+			[CanBeNull] CancelableProgressor progressor = null)
 		{
 			var mapView = ActiveMapView;
 
@@ -438,8 +439,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				                    DelayFeatureFetching = true
 			                    };
 
-			return featureFinder.FindFeaturesByLayer(
-				searchGeometry, fl => CanSelectFromLayer(fl));
+			const Predicate<Feature> featurePredicate = null;
+			return featureFinder.FindFeaturesByLayer(searchGeometry, fl => CanSelectFromLayer(fl),
+			                                         featurePredicate, progressor);
 		}
 
 		// TODO: Make obsolete, always use Async overload?

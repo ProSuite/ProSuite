@@ -261,7 +261,8 @@ public abstract class ToolBase : MapTool
 
 		Task picker =
 			AllowMultiSelection(out _)
-				? PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection, progressor)
+				? PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection,
+				                        progressor)
 				: PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection,
 				                        PickerMode.ShowPicker, progressor);
 
@@ -432,7 +433,8 @@ public abstract class ToolBase : MapTool
 
 	private IEnumerable<FeatureSelectionBase> FindFeatureSelection(
 		[NotNull] Geometry geometry,
-		SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
+		SpatialRelationship spatialRelationship = SpatialRelationship.Intersects,
+		[CanBeNull] CancelableProgressor progressor = null)
 	{
 		var featureFinder = new FeatureFinder(ActiveMapView)
 		                    {
@@ -440,7 +442,9 @@ public abstract class ToolBase : MapTool
 			                    DelayFeatureFetching = true
 		                    };
 
-		return featureFinder.FindFeaturesByLayer(geometry, fl => CanSelectFromLayer(fl));
+		const Predicate<Feature> featurePredicate = null;
+		return featureFinder.FindFeaturesByLayer(geometry, fl => CanSelectFromLayer(fl),
+		                                         featurePredicate, progressor);
 	}
 
 	private async Task<IDictionary<T, List<long>>> GetApplicableSelection<T>()
