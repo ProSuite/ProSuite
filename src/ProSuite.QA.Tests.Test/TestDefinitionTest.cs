@@ -116,7 +116,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaEdgeMatchCrossingAreas),
 											 typeof(QaEdgeMatchCrossingLines),
 											 typeof(QaEmptyNotNullTextFields),
-											 //typeof(QaExportTables),
+											 typeof(QaExportTables),
 				                             typeof(QaExtent),
 				                             typeof(QaFlowLogic),
 				                             typeof(QaForeignKey),
@@ -385,7 +385,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaEdgeMatchBorderingPointsCases(model, testCases);
 			AddQaEdgeMatchCrossingAreasCases(model, testCases);
 			AddQaEdgeMatchCrossingLinesCases(model, testCases);
-			//AddQaExportTablesCases(model, testCases);
+			AddQaExportTablesCases(model, testCases);
 			AddQaFullCoincidenceCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
 			AddQaGroupConstraintsCases(model, testCases);
@@ -925,15 +925,14 @@ namespace ProSuite.QA.Tests.Test
 
 			testCases.Add(new TestDefinitionCase(typeof(QaExportTables), 0,
 			                                     new object[]
-												 {
-													 new[]
-													 {
-													 model.GetVectorDataset(),
-													 model.GetVectorDataset(),
-
-													 },
-													 "C:\\git\\Swisstopo.GoTop"
-												 }, optionalValues));
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset(),
+				                                     },
+				                                     "C:\\git\\Swisstopo.GoTop"
+			                                     }, optionalValues));
 		}
 
 		private static void AddQaFullCoincidenceCases(InMemoryTestDataModel model,
