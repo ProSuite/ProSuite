@@ -170,6 +170,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaMustIntersectOther),
 											 typeof(QaMustTouchOther),
 											 typeof(QaMustTouchSelf),
+											 typeof(QaNeighbourAreas),
 											 typeof(QaNoBoundaryLoops),
 											 typeof(QaNoClosedPaths),
 											 typeof(QaNodeLineCoincidence),
@@ -412,6 +413,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaMpVertexNotNearFaceCases(model, testCases);
 			AddQaMustBeNearOtherCases(model, testCases);
 			AddQaMustIntersectMatrixOtherCases(model, testCases);
+			AddQaNeighbourAreasCases(model, testCases);
 			AddQaNoBoundaryLoopsCases(model, testCases);
 			AddQaNodeLineCoincidenceCases(model, testCases);
 			AddQaNoGapsCases(model, testCases);
@@ -1990,6 +1992,47 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
+		private static void AddQaNeighbourAreasCases(InMemoryTestDataModel model,
+		                                             ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaNeighbourAreas), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+				                                     "L.ObjektArt <> R.ObjektArt"
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNeighbourAreas), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+				                                     "L.ObjektArt <> R.ObjektArt", true
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNeighbourAreas), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+				                                     true
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNeighbourAreas), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     true, "MY_STRING_FIELD1, MY_STRING_FIELD2", 1
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNeighbourAreas), 4,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+				                                     true,
+				                                     new[]
+				                                     {
+					                                     "MY_STRING_FIELD1",
+					                                     "MY_STRING_FIELD2"
+				                                     },
+				                                     0
+			                                     }));
+		}
+		
 		private static void AddQaNodeLineCoincidenceCases(InMemoryTestDataModel model,
 														ICollection<TestDefinitionCase> testCases)
 		{
