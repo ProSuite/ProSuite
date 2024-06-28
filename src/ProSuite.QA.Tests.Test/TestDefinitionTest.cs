@@ -199,6 +199,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaSchemaFieldPropertiesFromTable),
 											 typeof(QaSchemaReservedFieldNames),
 											 typeof(QaSchemaReservedFieldNameProperties),
+											 typeof(QaSchemaSpatialReference),
 											 typeof(QaSegmentLength),
 											 typeof(QaSimpleGeometry),
 											 typeof(QaSliverPolygon),
@@ -422,6 +423,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaRegularExpressionCases(model, testCases);
 			AddQaRowCountCases(model, testCases);
 			AddQaSchemaFieldDomainDescriptionsCases(model, testCases);
+			AddQaSchemaSpatialReferenceCases(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
 			AddQaTouchesSelfCases(model, testCases);
@@ -2539,6 +2541,47 @@ namespace ProSuite.QA.Tests.Test
 			                                     {
 				                                     model.GetVectorDataset(), 1, true
 			                                     }));
+		}
+
+		private static void AddQaSchemaSpatialReferenceCases(InMemoryTestDataModel model,
+		                                                ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("CompareXYDomainOrigin", false);
+			optionalValues.Add("CompareZDomainOrigin", true);
+			optionalValues.Add("CompareMDomainOrigin", false);
+			optionalValues.Add("CompareXYResolution", true);
+			optionalValues.Add("CompareZResolution", false);
+			optionalValues.Add("CompareMResolution", true);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaSchemaSpatialReference), 0,
+				                                      new object[]
+				                                      {
+					                                      model.GetVectorDataset(),
+					                                      model.GetVectorDataset(),
+					                                      true,false,true,false,true
+				                                      }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaSchemaSpatialReference), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     "<ProjectedCoordinateSystem xsi:type='typens:ProjectedCoordinateSystem' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns:typens='http://www.esri.com/schemas/ArcGIS/10.8'><WKT>PROJCS[&quot;CH1903+_LV95&quot;,GEOGCS[&quot;GCS_CH1903+&quot;,DATUM[&quot;D_CH1903+&quot;,SPHEROID[&quot;Bessel_1841&quot;,6377397.155,299.1528128]],PRIMEM[&quot;Greenwich&quot;,0.0],UNIT[&quot;Degree&quot;,0.0174532925199433]],PROJECTION[&quot;Hotine_Oblique_Mercator_Azimuth_Center&quot;],PARAMETER[&quot;False_Easting&quot;,2600000.0],PARAMETER[&quot;False_Northing&quot;,1200000.0],PARAMETER[&quot;Scale_Factor&quot;,1.0],PARAMETER[&quot;Azimuth&quot;,90.0],PARAMETER[&quot;Longitude_Of_Center&quot;,7.439583333333333],PARAMETER[&quot;Latitude_Of_Center&quot;,46.95240555555556],UNIT[&quot;Meter&quot;,1.0],AUTHORITY[&quot;EPSG&quot;,2056]]</WKT><XOrigin>-27386400</XOrigin><YOrigin>-32067900</YOrigin><XYScale>10000</XYScale><ZOrigin>-100000</ZOrigin><ZScale>10000</ZScale><MOrigin>-100000</MOrigin><MScale>10000</MScale><XYTolerance>0.001</XYTolerance><ZTolerance>0.001</ZTolerance><MTolerance>0.001</MTolerance><HighPrecision>true</HighPrecision><WKID>2056</WKID><LatestWKID>2056</LatestWKID></ProjectedCoordinateSystem>\r\n",
+				                                     false,true,false,true, false
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaSchemaSpatialReference), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     model.GetVectorDataset(),
+				                                     true,false,false
+			                                     }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaSchemaSpatialReference), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+													 "<ProjectedCoordinateSystem xsi:type='typens:ProjectedCoordinateSystem' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns:typens='http://www.esri.com/schemas/ArcGIS/10.8'><WKT>PROJCS[&quot;CH1903+_LV95&quot;,GEOGCS[&quot;GCS_CH1903+&quot;,DATUM[&quot;D_CH1903+&quot;,SPHEROID[&quot;Bessel_1841&quot;,6377397.155,299.1528128]],PRIMEM[&quot;Greenwich&quot;,0.0],UNIT[&quot;Degree&quot;,0.0174532925199433]],PROJECTION[&quot;Hotine_Oblique_Mercator_Azimuth_Center&quot;],PARAMETER[&quot;False_Easting&quot;,2600000.0],PARAMETER[&quot;False_Northing&quot;,1200000.0],PARAMETER[&quot;Scale_Factor&quot;,1.0],PARAMETER[&quot;Azimuth&quot;,90.0],PARAMETER[&quot;Longitude_Of_Center&quot;,7.439583333333333],PARAMETER[&quot;Latitude_Of_Center&quot;,46.95240555555556],UNIT[&quot;Meter&quot;,1.0],AUTHORITY[&quot;EPSG&quot;,2056]]</WKT><XOrigin>-27386400</XOrigin><YOrigin>-32067900</YOrigin><XYScale>10000</XYScale><ZOrigin>-100000</ZOrigin><ZScale>10000</ZScale><MOrigin>-100000</MOrigin><MScale>10000</MScale><XYTolerance>0.001</XYTolerance><ZTolerance>0.001</ZTolerance><MTolerance>0.001</MTolerance><HighPrecision>true</HighPrecision><WKID>2056</WKID><LatestWKID>2056</LatestWKID></ProjectedCoordinateSystem>\r\n",
+													 false,true,true
+			                                     }, optionalValues));
 		}
 
 		private static void AddQaSliverPolygonCases(InMemoryTestDataModel model,
