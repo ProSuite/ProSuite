@@ -135,8 +135,6 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaIntersectsOther),
 											 typeof(QaIntersectsSelf),
 											 typeof(QaIsCoveredByOther),
-											 //ToDo
-											 //typeof(QaLineConnection),
 											 typeof(QaLineConnectionFieldValues),
 											 typeof(QaLineGroupConstraints),
 											 typeof(QaLineIntersect),
@@ -328,8 +326,6 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGdbConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
-			//ToDo here or as special case?
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaLineConnection)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaLineConnectionFieldValues)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxArea)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxLength)));
