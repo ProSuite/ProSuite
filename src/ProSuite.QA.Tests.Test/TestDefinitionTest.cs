@@ -318,8 +318,6 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaFlowLogic)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGdbConstraint)));
-			// TODO: Add special case 
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGeometryConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaLineConnectionFieldValues)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxArea)));
@@ -387,6 +385,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaExportTablesCases(model, testCases);
 			AddQaFullCoincidenceCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
+			AddQaGeometryConstraintCases(model, testCases);
 			AddQaGroupConstraintsCases(model, testCases);
 			AddQaInteriorIntersectsOtherCases(model, testCases);
 			AddQaInteriorIntersectsSelfCases(model, testCases);
@@ -986,6 +985,25 @@ namespace ProSuite.QA.Tests.Test
 				                                      "10.1", "10.2" 
 			                                     }));
 		}
+
+		private static void AddQaGeometryConstraintCases(
+			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaGeometryConstraint), 0,
+		                                       new object[]
+		                                       {
+			                                       model.GetVectorDataset(),
+												   "$SliverRatio < 50 OR $Area > 10", false
+											   }));
+		}
+
+		private static void AddQaGroupConnectedCases(
+			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ReportIndividualGaps", true);
+			optionalValues.Add("IgnoreGapsLongerThan", 1.1);
+			optionalValues.Add("CompleteGroupsOutsideTestArea", false);
 
 		private static void AddQaGroupConstraintsCases(
 			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
