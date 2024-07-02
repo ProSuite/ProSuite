@@ -1,9 +1,6 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
 namespace ESRI.ArcGIS.Geodatabase
 {
-	public interface IRelationshipClass
+	public interface IRelationshipClass : IDataset
 	{
 		string OriginPrimaryKey { get; }
 
