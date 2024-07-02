@@ -135,6 +135,8 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaIntersectsOther),
 											 typeof(QaIntersectsSelf),
 											 typeof(QaIsCoveredByOther),
+											 //ToDo
+											 //typeof(QaLineConnection),
 											 typeof(QaLineConnectionFieldValues),
 											 typeof(QaLineGroupConstraints),
 											 typeof(QaLineIntersect),
@@ -178,6 +180,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaNoGaps),
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaNotNear),
+											 typeof(QaNoTouchingParts),
 											 typeof(QaOrphanNode),
 											 typeof(QaOverlapsOther),
 											 typeof(QaOverlapsSelf),
@@ -188,6 +191,8 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaPseudoNodes),
 											 typeof(QaRegularExpression),
 											 typeof(QaRequiredFields),
+											 typeof(QaRouteMeasuresContinuous),
+											 typeof(QaRouteMeasuresUnique),
 											 typeof(QaRowCount),
 											 typeof(QaSchemaFieldAliases),
 											 typeof(QaSchemaFieldDomainCodedValues),
@@ -219,17 +224,20 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaValidNonLinearSegments),
 											 typeof(QaValidUrls),
 											 typeof(QaValue),
+											 typeof(QaVertexCoincidence),
+											 typeof(QaVertexCoincidenceOther),
+											 typeof(QaVertexCoincidenceSelf),
 											 typeof(QaWithinBox),
 											 typeof(QaWithinZRange),
 				                             typeof(QaZDifferenceOther),
-				                             typeof(QaZDifferenceSelf),
+				                             typeof(QaZDifferenceSelf)
 			                             };
 
 			foreach (Type testType in refactoredTypes)
 			{
 				Assert.IsFalse(InstanceUtils.HasInternallyUsedAttribute(testType),
 				               "Internally used tests are only used by factories and do not require a TestDefinition");
-
+				
 				// One is used internally to create using the definition.
 				int constructorCount = testType.GetConstructors().Length - 1;
 
@@ -320,6 +328,8 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGdbConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
+			//ToDo here or as special case?
+			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaLineConnection)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaLineConnectionFieldValues)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxArea)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxLength)));
@@ -349,6 +359,8 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsOther)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaPointOnLine)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRequiredFields)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRouteMeasuresContinuous)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRouteMeasuresUnique)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldAliases)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainCodedValues)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainNameRegex)));
@@ -365,6 +377,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfaceSpikes)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfaceVertex)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNoTouchingParts)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaUnique)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaUnreferencedRows)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaValidNonLinearSegments)));
@@ -377,7 +390,7 @@ namespace ProSuite.QA.Tests.Test
 			// Manually create values for special cases, such as optional parameters or
 			// difficult assertions:
 			AddQaContainedPointsCountCases(model, testCases);
-			AddQaCurveTestCases(model, testCases); //example optional parameters
+			AddQaCurveCases(model, testCases); //example optional parameters
 			AddQaDateFieldsWithoutTimeCases(model, testCases); //example for assertions requiring special parameter values
 			AddQaEdgeMatchBorderingLinesCases(model, testCases);
 			AddQaEdgeMatchBorderingPointsCases(model, testCases);
@@ -614,7 +627,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaCurveTestCases(InMemoryTestDataModel model,
+		private static void AddQaCurveCases(InMemoryTestDataModel model,
 		                                        ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
