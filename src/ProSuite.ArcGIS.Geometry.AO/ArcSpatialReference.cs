@@ -28,11 +28,11 @@ namespace ProSuite.ArcGIS.Geometry.AO
 
 		public int FactoryCode => ((EsriGeometry::ESRI.ArcGIS.Geometry.ISpatialReferenceInfo)_aoSpatialReference).FactoryCode;
 
-		public int SpatialReferenceImpl => _aoSpatialReference.SpatialReferenceImpl;
+		public long SpatialReferenceImpl => _aoSpatialReference.SpatialReferenceImpl;
 
-		public int PrecisionImpl => _aoSpatialReference.PrecisionImpl;
+		public long PrecisionImpl => _aoSpatialReference.PrecisionImpl;
 
-		public int PrecisionExImpl => _aoSpatialReference.PrecisionExImpl;
+		public long PrecisionExImpl => _aoSpatialReference.PrecisionExImpl;
 
 		public bool HasXYPrecision()
 		{

@@ -27,14 +27,14 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 			_aoSelectionSet.MakePermanent();
 		}
 
-		public int Count => _aoSelectionSet.Count;
+		public long Count => _aoSelectionSet.Count;
 
-		public void Add(int oid)
+		public void Add(long oid)
 		{
 			_aoSelectionSet.Add(oid);
 		}
 
-		public void AddList(int count, ref int oidList)
+		public void AddList(long count, ref long oidList)
 		{
 			_aoSelectionSet.AddList(count, ref oidList);
 		}
@@ -76,7 +76,7 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 			_aoSelectionSet.Refresh();
 		}
 
-		public void RemoveList(int count, ref int oidList)
+		public void RemoveList(long count, ref long oidList)
 		{
 			_aoSelectionSet.RemoveList(count, ref oidList);
 		}

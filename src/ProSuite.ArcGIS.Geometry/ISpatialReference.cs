@@ -12,11 +12,11 @@ namespace ESRI.ArcGIS.Geometry
 
 		new int FactoryCode { get; }
 
-		int SpatialReferenceImpl { get; }
+		long SpatialReferenceImpl { get; }
 
-		int PrecisionImpl { get; }
+		long PrecisionImpl { get; }
 
-		int PrecisionExImpl { get; }
+		long PrecisionExImpl { get; }
 
 		bool HasXYPrecision();
 

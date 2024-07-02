@@ -10,11 +10,11 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		void MakePermanent();
 
-		int Count { get; }
+		long Count { get; }
 
-		void Add(int oid);
+		void Add(long oid);
 
-		void AddList(int count, ref int oidList);
+		void AddList(long count, ref long oidList);
 
 		void Combine( ISelectionSet otherSet, esriSetOperation setOp, out ISelectionSet resultSet);
 
@@ -30,7 +30,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		//IEnumIDs Ds { get; }
 
-		void RemoveList(int count, ref int oidList);
+		void RemoveList(long count, ref long oidList);
 	}
 
 	public enum esriSelectionType

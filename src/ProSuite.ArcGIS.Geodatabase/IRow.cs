@@ -9,7 +9,7 @@ namespace ESRI.ArcGIS.Geodatabase
 	{
 		bool HasOID { get; }
 
-		int OID { get; }
+		long OID { get; }
 
 		ITable Table { get; }
 

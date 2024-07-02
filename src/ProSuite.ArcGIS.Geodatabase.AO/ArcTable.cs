@@ -106,7 +106,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		}
 
 
-		public int RowCount(IQueryFilter queryFilter)
+		public long RowCount(IQueryFilter queryFilter)
 		{
 			var arcQueryFilter = (ArcQueryFilter)queryFilter;
 			return _aoTable.RowCount(arcQueryFilter.AoQueryFilter);

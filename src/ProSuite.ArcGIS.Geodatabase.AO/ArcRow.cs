@@ -47,7 +47,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public bool HasOID => _aoObject.HasOID;
 
-		public int OID => _aoObject.OID;
+		public long OID => _aoObject.OID;
 
 		public ITable Table => new ArcTable(_aoObject.Table);
 

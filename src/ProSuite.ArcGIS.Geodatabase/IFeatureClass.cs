@@ -27,7 +27,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		//IFeatureBuffer CreateFeatureBuffer();
 
-		int FeatureCount(IQueryFilter queryFilter);
+		long FeatureCount(IQueryFilter queryFilter);
 
 		IEnumerable<IFeature> Search(IQueryFilter filter, bool recycling);
 

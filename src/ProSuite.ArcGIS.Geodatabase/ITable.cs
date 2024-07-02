@@ -19,7 +19,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		void DeleteSearchedRows(IQueryFilter queryFilter);
 
-		int RowCount(IQueryFilter queryFilter);
+		long RowCount(IQueryFilter queryFilter);
 
 		IEnumerable<IRow> Search(IQueryFilter queryFilter, bool recycling);
 

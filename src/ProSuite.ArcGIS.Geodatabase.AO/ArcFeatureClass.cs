@@ -173,7 +173,7 @@ namespace ESRI.ArcGIS.Geodatabase
 			return _aoFeatureClass.CreateFeatureBuffer();
 		}
 
-		public int FeatureCount(IQueryFilter queryFilter)
+		public long FeatureCount(IQueryFilter queryFilter)
 		{
 			var arcQueryFilter = (ArcQueryFilter)queryFilter;
 			return _aoFeatureClass.FeatureCount(arcQueryFilter.AoQueryFilter);
