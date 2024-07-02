@@ -15,6 +15,7 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.TestFactories;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -175,7 +176,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
 			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.InsideBranches,
-			                                QaGroupConnected.GroupErrorReporting.CombineParts,
+			                                GroupErrorReporting.CombineParts,
 			                                50);
 
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
@@ -237,7 +238,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
 			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
-			                                QaGroupConnected.GroupErrorReporting.CombineParts,
+			                                GroupErrorReporting.CombineParts,
 			                                7);
 
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
@@ -298,7 +299,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
 			                                new List<string> { "GroupField" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
-			                                QaGroupConnected.GroupErrorReporting.CombineParts,
+			                                GroupErrorReporting.CombineParts,
 			                                7);
 
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
@@ -382,7 +383,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
 			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
-			                                QaGroupConnected.GroupErrorReporting.CombineParts,
+			                                GroupErrorReporting.CombineParts,
 			                                50);
 
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
@@ -453,7 +454,7 @@ namespace ProSuite.QA.Tests.Test
 				new[] { ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2) },
 				new List<string> { "Group" },
 				null, QaGroupConnected.ShapeAllowed.All,
-				QaGroupConnected.GroupErrorReporting.CombineParts,
+				GroupErrorReporting.CombineParts,
 				10);
 
 			TestRunnerUtils.RunTests(test, 0, 1000);
@@ -521,7 +522,7 @@ namespace ProSuite.QA.Tests.Test
 				new[] { ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2) },
 				new List<string> { "GroupName;OtherName" },
 				null, QaGroupConnected.ShapeAllowed.All,
-				QaGroupConnected.GroupErrorReporting.CombineParts,
+				GroupErrorReporting.CombineParts,
 				10);
 
 			TestRunnerUtils.RunTests(test, 0, 1000);
@@ -592,7 +593,7 @@ namespace ProSuite.QA.Tests.Test
 				new[] { ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2) },
 				new List<string> { "GroupName(|);OtherName(-)" },
 				null, QaGroupConnected.ShapeAllowed.All,
-				QaGroupConnected.GroupErrorReporting.CombineParts,
+				GroupErrorReporting.CombineParts,
 				10);
 
 			TestRunnerUtils.RunTests(test, 1, 1000); // Group C is not connected
@@ -1521,7 +1522,7 @@ namespace ProSuite.QA.Tests.Test
 				},
 				new[] { "GWK" }, "#",
 				QaGroupConnected.ShapeAllowed.All,
-				QaGroupConnected.GroupErrorReporting.CombineParts,
+				GroupErrorReporting.CombineParts,
 				100);
 			test.SetConstraint(0, "GWK IS NOT NULL AND GWK <> 'zzzz'");
 			test.SetConstraint(1, "GWK IS NOT NULL AND GWK <> 'zzzz'");
@@ -1539,7 +1540,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaGroupConnected(
 				new[] { ReadOnlyTableFactory.Create(roadL) }, new[] { "RTE" }, "#",
 				QaGroupConnected.ShapeAllowed.All,
-				QaGroupConnected.GroupErrorReporting.CombineParts,
+				GroupErrorReporting.CombineParts,
 				0.01);
 			test.SetConstraint(0, "RTE IS NOT NULL AND RTE NOT IN ('UNK','N_A')");
 
@@ -1557,7 +1558,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaGroupConnected(
 				new[] { ReadOnlyTableFactory.Create(roadL) }, new[] { "RTE" }, "#",
 				QaGroupConnected.ShapeAllowed.None,
-				QaGroupConnected.GroupErrorReporting.CombineParts,
+				GroupErrorReporting.CombineParts,
 				100);
 			test.SetConstraint(0, "RTE IS NOT NULL AND RTE NOT IN ('UNK','N_A')");
 
@@ -1684,7 +1685,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
 			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.None,
-			                                QaGroupConnected.GroupErrorReporting.ShortestGaps,
+			                                GroupErrorReporting.ShortestGaps,
 			                                0.1);
 
 			test.CompleteGroupsOutsideTestArea = true;
@@ -1912,7 +1913,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
 			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
-			                                QaGroupConnected.GroupErrorReporting.CombineParts,
+			                                GroupErrorReporting.CombineParts,
 			                                0.1);
 			var runner = new QaContainerTestRunner(10000, test);
 			IEnvelope box = new EnvelopeClass();
@@ -2106,20 +2107,20 @@ namespace ProSuite.QA.Tests.Test
 			Assert.AreEqual(1, tests.Count);
 
 			Assert.AreNotEqual(((QaGroupConnected) tests[0]).ErrorReporting,
-			                   QaGroupConnected.GroupErrorReporting.ShortestGaps);
+								GroupErrorReporting.ShortestGaps);
 			Assert.AreNotEqual(((QaGroupConnected) tests[0]).CompleteGroupsOutsideTestArea,
 			                   true);
 
 			// test optional parameters
 			InstanceConfigurationUtils.AddParameterValue(
 				condition, nameof(QaGroupConnected.ErrorReporting),
-				QaGroupConnected.GroupErrorReporting.ShortestGaps);
+				GroupErrorReporting.ShortestGaps);
 			InstanceConfigurationUtils.AddParameterValue(
 				condition, nameof(QaGroupConnected.CompleteGroupsOutsideTestArea), true);
 
 			tests = fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(((QaGroupConnected) tests[0]).ErrorReporting,
-			                QaGroupConnected.GroupErrorReporting.ShortestGaps);
+			                GroupErrorReporting.ShortestGaps);
 			Assert.AreEqual(((QaGroupConnected) tests[0]).CompleteGroupsOutsideTestArea,
 			                true);
 		}
@@ -2194,7 +2195,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
 			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
-			                                QaGroupConnected.GroupErrorReporting.CombineParts,
+			                                GroupErrorReporting.CombineParts,
 			                                0.1)
 			           {
 				           ReportIndividualGaps = true
@@ -2253,7 +2254,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
 			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
-			                                QaGroupConnected.GroupErrorReporting.ShortestGaps,
+			                                GroupErrorReporting.ShortestGaps,
 			                                0.1);
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 
@@ -2337,7 +2338,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaGroupConnected(new[] { ReadOnlyTableFactory.Create(fc) },
 			                                new List<string> { "Group" }, null,
 			                                QaGroupConnected.ShapeAllowed.All,
-			                                QaGroupConnected.GroupErrorReporting.ShortestGaps,
+			                                GroupErrorReporting.ShortestGaps,
 			                                0.1)
 			           {
 				           ReportIndividualGaps = true

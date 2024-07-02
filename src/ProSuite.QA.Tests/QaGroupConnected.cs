@@ -22,6 +22,7 @@ using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests
 {
@@ -97,17 +98,6 @@ namespace ProSuite.QA.Tests
 			/// ---
 			/// </summary>
 			All = 7
-		}
-
-		#endregion
-
-		#region ErrorReporting enum
-
-		public enum GroupErrorReporting
-		{
-			ReferToFirstPart = 1,
-			ShortestGaps = 2,
-			CombineParts = 4
 		}
 
 		#endregion
