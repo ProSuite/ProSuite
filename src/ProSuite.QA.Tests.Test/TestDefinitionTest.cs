@@ -101,10 +101,10 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(Qa3dConstantZ),
 				                             typeof(QaBorderSense),
 				                             typeof(QaCentroids),
-											 typeof(QaCoplanarRings),
 											 typeof(QaConstraint),
 											 typeof(QaContainedPointsCount),
 											 typeof(QaContainsOther),
+											 typeof(QaCoplanarRings),
 											 typeof(QaCrossesOther),
 											 typeof(QaCrossesSelf),
 				                             typeof(QaCurve),
@@ -178,8 +178,8 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaNonEmptyGeometry),
 											 typeof(QaNotNear),
 											 typeof(QaOrphanNode),
-											 typeof(QaOverlapsSelf),
 											 typeof(QaOverlapsOther),
+											 typeof(QaOverlapsSelf),
 											 typeof(QaPartCoincidenceOther),
 											 typeof(QaPartCoincidenceSelf),
 											 typeof(QaPointNotNear),
@@ -198,8 +198,8 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaSchemaFieldNames),
 											 typeof(QaSchemaFieldProperties),
 											 typeof(QaSchemaFieldPropertiesFromTable),
-											 typeof(QaSchemaReservedFieldNames),
 											 typeof(QaSchemaReservedFieldNameProperties),
+											 typeof(QaSchemaReservedFieldNames),
 											 typeof(QaSchemaSpatialReference),
 											 typeof(QaSegmentLength),
 											 typeof(QaSimpleGeometry),
@@ -214,11 +214,11 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaUnique),
 				                             typeof(QaUnreferencedRows),
 											 typeof(QaValidCoordinateFields),
+											 typeof(QaValidDateValues),
 											 typeof(QaValidNonLinearSegments),
 											 typeof(QaValidUrls),
 											 typeof(QaValue),
-											 typeof(QaValidDateValues),
-				                             typeof(QaWithinBox),
+											 typeof(QaWithinBox),
 											 typeof(QaWithinZRange),
 				                             typeof(QaZDifferenceOther),
 				                             typeof(QaZDifferenceSelf),
@@ -306,15 +306,22 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(Qa3dConstantZ)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaBorderSense)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCentroids)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCoplanarRings)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaContainsOther)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCoplanarRings)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCrossesOther)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCrossesSelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
+			// TODO: Implement Definition
+			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaExtent)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaFlowLogic)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGdbConstraint)));
+			// TODO: Add special case 
+			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGeometryConstraint)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaLineConnectionFieldValues)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxArea)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxLength)));
@@ -336,17 +343,8 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMultipart)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustIntersectOther)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustTouchOther)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNoClosedPaths)));
-
-			// TODO: Implement Definition
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaExtent)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaFlowLogic)));
-
-			// TODO: Add special case 
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGeometryConstraint)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustTouchSelf)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNoClosedPaths)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNonEmptyGeometry)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOrphanNode)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsSelf)));
@@ -362,8 +360,8 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldNames)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldProperties)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldPropertiesFromTable)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaReservedFieldNames)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaReservedFieldNameProperties)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaReservedFieldNames)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSegmentLength)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe)));
@@ -400,8 +398,8 @@ namespace ProSuite.QA.Tests.Test
 			AddQaIntersectsSelfCases(model, testCases);
 			AddQaIsCoveredByOtherCases(model, testCases);
 			AddQaLineGroupConstraintsCases(model, testCases);
-			AddQaLineIntersectCases(model, testCases);
 			AddQaLineIntersectAngleCases(model, testCases);
+			AddQaLineIntersectCases(model, testCases);
 			AddQaLineIntersectZCases(model, testCases);
 			AddQaMaxSlopeCases(model, testCases);
 			AddQaMinAngleCases(model, testCases);
@@ -428,11 +426,11 @@ namespace ProSuite.QA.Tests.Test
 			AddQaSchemaSpatialReferenceCases(model, testCases);
 			AddQaSliverPolygonCases(model, testCases);
 			AddQaSmoothCases(model, testCases);
-			AddQaTouchesSelfCases(model, testCases);
 			AddQaTouchesOtherCases(model, testCases);
+			AddQaTouchesSelfCases(model, testCases);
 			AddQaTrimmedTextFieldsCases(model, testCases);
-			AddQaValidDateValuesCases(model, testCases);
 			AddQaValidCoordinateFieldsCases(model, testCases);
+			AddQaValidDateValuesCases(model, testCases);
 			AddQaValidUrlsCases(model, testCases);
 			AddQaVertexCoincidenceCases(model, testCases);
 			AddQaVertexCoincidenceOtherCases(model, testCases);
@@ -629,53 +627,6 @@ namespace ProSuite.QA.Tests.Test
 			                                     { model.GetVectorDataset() },
 			                                     optionalValues));
 		}
-
-		//private static void AddQaCentroidsCases(InMemoryTestDataModel model,
-		//                                        ICollection<TestDefinitionCase> testCases)
-		//{
-		//	testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 0,
-		//	                                     new object[]
-		//	                                     {
-		//		                                     model.GetVectorDataset(),
-		//		                                     model.GetVectorDataset()
-		//										 }));
-		//	testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 1,
-		//	                                     new object[]
-		//	                                     {
-		//		                                     model.GetVectorDataset(),
-		//		                                     model.GetVectorDataset(),
-		//											 "B.ObjektArt = x AND L.ObjektArt = R.ObjektArt"
-		//										 }));
-		//	testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 2,
-		//	                                     new object[]
-		//	                                     {
-		//											 new[]
-		//											 {
-		//											 model.GetVectorDataset(),
-		//		                                     model.GetVectorDataset(),
-		//											 },
-		//											 new[]
-		//											 {
-		//											 model.GetVectorDataset(),
-		//											 model.GetVectorDataset(),
-		//											 }
-		//										 }));
-		//	testCases.Add(new TestDefinitionCase(typeof(QaCentroids), 3,
-		//	                                     new object[]
-		//	                                     {
-		//		                                     new[]
-		//		                                     {
-		//			                                     model.GetVectorDataset(),
-		//			                                     model.GetVectorDataset(),
-		//		                                     },
-		//		                                     new[]
-		//		                                     {
-		//			                                     model.GetVectorDataset(),
-		//			                                     model.GetVectorDataset(),
-		//		                                     },
-		//											 "B.ObjektArt = x AND L.ObjektArt = R.ObjektArt"
-		//										 }));
-		//}
 
 		private static void AddQaDateFieldsWithoutTimeCases(
 			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
@@ -1566,6 +1517,45 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
+		private static void AddQaLineIntersectAngleCases(InMemoryTestDataModel model,
+		                                                 ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("AngularUnit", AngleUnit.Radiant);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 0,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     0,
+				                                     false
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 2,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     1
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 3,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     1
+			                                     },
+			                                     optionalValues));
+
+		}
+
 		private static void AddQaLineIntersectCases(InMemoryTestDataModel model,
 		                                                 ICollection<TestDefinitionCase> testCases)
 		{
@@ -1619,45 +1609,6 @@ namespace ProSuite.QA.Tests.Test
 													 false
 			                                     },
 			                                     optionalValues));
-
-		}
-
-		private static void AddQaLineIntersectAngleCases(InMemoryTestDataModel model,
-		                                                 ICollection<TestDefinitionCase> testCases)
-		{
-			var optionalValues = new Dictionary<string, object>();
-			optionalValues.Add("AngularUnit", AngleUnit.Radiant);
-
-			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 0,
-			                                     new object[]
-			                                     {
-				                                     new[]
-				                                     {
-					                                     model.GetVectorDataset(),
-					                                     model.GetVectorDataset()
-				                                     },
-				                                     0,
-				                                     false
-			                                     },
-			                                     optionalValues));
-			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 2,
-												 new object[]
-												 {
-													 new[]
-													 {
-														 model.GetVectorDataset(),
-														 model.GetVectorDataset()
-													 },
-													 1
-												 },
-												 optionalValues));
-			testCases.Add(new TestDefinitionCase(typeof(QaLineIntersectAngle), 3,
-												 new object[]
-												 {
-													 model.GetVectorDataset(),
-													 1
-												 },
-												 optionalValues));
 
 		}
 
@@ -1970,28 +1921,6 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaNoBoundaryLoopsCases(InMemoryTestDataModel model,
-		                                              ICollection<TestDefinitionCase> testCases)
-		{
-			testCases.Add(new TestDefinitionCase(typeof(QaNoBoundaryLoops), 0,
-			                                     new object[]
-			                                     {
-				                                     model.GetPolygonDataset(),
-			                                     }));
-			testCases.Add(new TestDefinitionCase(typeof(QaNoBoundaryLoops), 1,
-			                                     new object[]
-			                                     {
-				                                     model.GetPolygonDataset(),
-				                                     0
-			                                     }));
-			testCases.Add(new TestDefinitionCase(typeof(QaNoBoundaryLoops), 2,
-			                                     new object[]
-			                                     {
-				                                     model.GetPolygonDataset(),
-				                                     0, 0, 8.3
-			                                     }));
-		}
-
 		private static void AddQaNeighbourAreasCases(InMemoryTestDataModel model,
 		                                             ICollection<TestDefinitionCase> testCases)
 		{
@@ -2032,7 +1961,29 @@ namespace ProSuite.QA.Tests.Test
 				                                     0
 			                                     }));
 		}
-		
+
+		private static void AddQaNoBoundaryLoopsCases(InMemoryTestDataModel model,
+		                                              ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaNoBoundaryLoops), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNoBoundaryLoops), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+				                                     0
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaNoBoundaryLoops), 2,
+			                                     new object[]
+			                                     {
+				                                     model.GetPolygonDataset(),
+				                                     0, 0, 8.3
+			                                     }));
+		}
+
 		private static void AddQaNodeLineCoincidenceCases(InMemoryTestDataModel model,
 														ICollection<TestDefinitionCase> testCases)
 		{
@@ -2807,60 +2758,6 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaValidDateValuesCases(InMemoryTestDataModel model,
-		                                              ICollection<TestDefinitionCase> testCases)
-		{
-			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 0,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     "06.02.2006", "27.08.2007"
-			                                     }));
-
-			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 1,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     "06.02.2006", "27.08.2007",
-				                                     new[] { "MY_DATE_FIELD1", "MY_DATE_FIELD2" }
-			                                     }));
-
-			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 2,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     "06.02.2006", "27.08.2007",
-				                                     "MY_DATE_FIELD1, MY_DATE_FIELD2"
-			                                     }));
-			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 3,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     "28.04.2013", 0
-			                                     }));
-			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 4,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     "06.02.2006", 0,
-				                                     "MY_DATE_FIELD1, MY_DATE_FIELD2"
-			                                     }));
-			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 5,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     0, "27.08.2007",
-				                                     "MY_DATE_FIELD1, MY_DATE_FIELD2"
-			                                     }));
-			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 6,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     0, 0,
-				                                     "MY_DATE_FIELD1, MY_DATE_FIELD2"
-			                                     }));
-		}
-
 		private static void AddQaValidCoordinateFieldsCases(InMemoryTestDataModel model,
 		                                                    ICollection<TestDefinitionCase> testCases)
 		{
@@ -2876,6 +2773,60 @@ namespace ProSuite.QA.Tests.Test
 				                                     model.GetPointDataset(),
 													 "XCoordinate", "YCoordinate", "ZCoordinate", 1, 1, "de-CH"
 			                                     }, optionalValues));
+		}
+
+		private static void AddQaValidDateValuesCases(InMemoryTestDataModel model,
+													  ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 0,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 "06.02.2006", "27.08.2007"
+												 }));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 1,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 "06.02.2006", "27.08.2007",
+													 new[] { "MY_DATE_FIELD1", "MY_DATE_FIELD2" }
+												 }));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 2,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 "06.02.2006", "27.08.2007",
+													 "MY_DATE_FIELD1, MY_DATE_FIELD2"
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 3,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 "28.04.2013", 0
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 4,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 "06.02.2006", 0,
+													 "MY_DATE_FIELD1, MY_DATE_FIELD2"
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 5,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 0, "27.08.2007",
+													 "MY_DATE_FIELD1, MY_DATE_FIELD2"
+												 }));
+			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 6,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 0, 0,
+													 "MY_DATE_FIELD1, MY_DATE_FIELD2"
+												 }));
 		}
 
 		private static void AddQaValidUrlsCases(InMemoryTestDataModel model,
@@ -3014,6 +2965,25 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
+		private static void AddQaWithinBoxCases(InMemoryTestDataModel model,
+		                                        ICollection<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaWithinBox), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     2600000, 1200000, 2610000, 1210000
+			                                     }));
+
+			testCases.Add(new TestDefinitionCase(typeof(QaWithinBox), 1,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     2600000, 1200000, 2610000, 1210000,
+				                                     true
+			                                     }));
+		}
+
 		private static void AddQaZDifferenceOtherCases(InMemoryTestDataModel model,
 		                                               ICollection<TestDefinitionCase> testCases)
 		{
@@ -3087,24 +3057,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaWithinBoxCases(InMemoryTestDataModel model,
-		                                        ICollection<TestDefinitionCase> testCases)
-		{
-			testCases.Add(new TestDefinitionCase(typeof(QaWithinBox), 0,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     2600000, 1200000, 2610000, 1210000
-			                                     }));
-
-			testCases.Add(new TestDefinitionCase(typeof(QaWithinBox), 1,
-			                                     new object[]
-			                                     {
-				                                     model.GetVectorDataset(),
-				                                     2600000, 1200000, 2610000, 1210000,
-				                                     true
-			                                     }));
-		}
+		
 
 		private static void AddQaZDifferenceSelfCases(InMemoryTestDataModel model,
 		                                              ICollection<TestDefinitionCase> testCases)
