@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace ESRI.ArcGIS.Geodatabase
 {
-	public interface IClass
+	public interface IClass : IDataset
 	{
 		int FindField(string name);
 

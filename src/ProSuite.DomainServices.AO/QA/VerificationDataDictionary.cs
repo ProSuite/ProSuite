@@ -218,7 +218,7 @@ namespace ProSuite.DomainServices.AO.QA
 					continue;
 				}
 
-				IWorkspace workspace = DatasetUtils.GetWorkspace(objectClass);
+				IWorkspace workspace = objectClass.Workspace;
 
 				ICollection<IObjectClass> tables;
 				if (! result.TryGetValue(workspace, out tables))
