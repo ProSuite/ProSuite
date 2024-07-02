@@ -25,8 +25,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainNameRegex_matchIsError))]
 			bool matchIsError,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainNameRegex_patternDescription))] [CanBeNull]
-			string
-				patternDescription)
+			string patternDescription)
 			: base(table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
