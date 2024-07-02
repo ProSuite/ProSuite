@@ -153,6 +153,9 @@ namespace ProSuite.QA.Tests
 			       vertexDef.Limit,
 			       vertexDef.ZOffsetConstraint)
 		{
+			IReadOnlyFeatureClass featureClass = (IReadOnlyFeatureClass)vertexDef.FeatureClass;
+			_shapeType = featureClass.ShapeType;
+
 			if (vertexDef.InvolvedRasters?.Count > 0)
 			{
 				InvolvedRasters = vertexDef.InvolvedRasters.Cast<RasterReference>().ToList();
