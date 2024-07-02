@@ -30,6 +30,8 @@ namespace ProSuite.AGP.Editing.OneClick
 	public abstract class OneClickToolBase : MapTool
 	{
 		private const Key _keyShowOptionsPane = Key.O;
+		private const Key _keyPolygonDraw = Key.P;
+		private const Key _keyLassoDraw = Key.L;
 
 		private readonly TimeSpan _sketchBlockingPeriod = TimeSpan.FromSeconds(1);
 
@@ -46,6 +48,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			UseSnapping = false;
 			HandledKeys.Add(Key.Escape);
+			HandledKeys.Add(_keyLassoDraw);
+			HandledKeys.Add(_keyPolygonDraw);
 			HandledKeys.Add(_keyShowOptionsPane);
 		}
 
@@ -172,7 +176,37 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				await ViewUtils.TryAsync(HandleEscapeAsync, _msg);
 			}
+
+			if (args.Key == _keyPolygonDraw)
+			{
+				SetupPolygonSketch();
+			}
+
+			if (args.Key == _keyLassoDraw)
+			{
+				SetupLassoSketch();
+			}
+
+			await ViewUtils.TryAsync(HandleKeyDownCoreAsync(args), _msg);
 		}
+
+		private void SetupLassoSketch()
+		{
+			SetupSketch(SketchGeometryType.Lasso);
+
+			SetupLassoSketchCore();
+		}
+
+		protected virtual void SetupLassoSketchCore() { }
+
+		private void SetupPolygonSketch()
+		{
+			SetupSketch(SketchGeometryType.Polygon);
+
+			SetupPolygonSketchCore();
+		}
+
+		protected virtual void SetupPolygonSketchCore() { }
 
 		protected override void OnToolKeyUp(MapViewKeyEventArgs args)
 		{
@@ -208,8 +242,22 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => "HandleKeyUpAsync");
 
-			await ViewUtils.TryAsync(async () => { await HandleKeyUpCoreAsync(args); }, _msg);
+			if (args.Key is _keyPolygonDraw or _keyLassoDraw)
+			{
+				ResetSketch();
+			}
+
+			await ViewUtils.TryAsync(HandleKeyUpCoreAsync(args), _msg);
 		}
+
+		private void ResetSketch()
+		{
+			SetupSketch(GetSelectionSketchGeometryType());
+
+			ResetSketchCore();
+		}
+
+		protected virtual void ResetSketchCore() { }
 
 		protected override void OnToolMouseMove(MapViewMouseEventArgs args)
 		{
@@ -474,6 +522,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual void OnKeyDownCore(MapViewKeyEventArgs args) { }
 
 		protected virtual void OnKeyUpCore(MapViewKeyEventArgs args) { }
+
+		protected virtual Task HandleKeyDownCoreAsync(MapViewKeyEventArgs args)
+		{
+			return Task.CompletedTask;
+		}
 
 		protected virtual Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{

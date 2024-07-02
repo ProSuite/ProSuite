@@ -38,8 +38,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private ChangeAlongFeedback _feedback;
 
-		private const Key _keyPolygonDraw = Key.P;
-
 		protected ChangeGeometryAlongToolBase()
 		{
 			IsSketchTool = true;
@@ -47,8 +45,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			GeomIsSimpleAsFeature = false;
 
 			PolygonSketchCursor = ToolUtils.GetCursor(Resources.PolygonDrawerCursor);
-
-			HandledKeys.Add(_keyPolygonDraw);
 		}
 
 		protected Cursor TargetSelectionCursor { get; set; }
@@ -204,30 +200,25 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return await QueuedTask.Run(() => UpdateFeatures(selection, cutSubcurves, progressor));
 		}
 
-		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
+		protected override void SetupPolygonSketchCore()
 		{
-			if (k.Key == _keyPolygonDraw)
-			{
-				SetupSketch(SketchGeometryType.Polygon);
-
-				SetCursor(PolygonSketchCursor);
-			}
+			SetCursor(PolygonSketchCursor);
 		}
 
-		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
+		protected override void SetupLassoSketchCore()
 		{
-			if (k.Key == _keyPolygonDraw)
-			{
-				SketchType = SketchGeometryType.Rectangle;
+			SetCursor(PolygonSketchCursor);
+		}
 
-				if (! IsInSelectionPhase())
-				{
-					SetCursor(TargetSelectionCursor);
-				}
-				else
-				{
-					SetCursor(SelectionCursor);
-				}
+		protected override void ResetSketchCore()
+		{
+			if (! IsInSelectionPhase())
+			{
+				SetCursor(TargetSelectionCursor);
+			}
+			else
+			{
+				SetCursor(SelectionCursor);
 			}
 		}
 
