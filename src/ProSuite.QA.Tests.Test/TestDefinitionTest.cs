@@ -124,6 +124,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaGdbConstraint),
 											 typeof(QaGdbRelease),
 				                             typeof(QaGeometryConstraint),
+											 typeof(QaGroupConnected),
 				                             typeof(QaGroupConstraints),
 				                             typeof(QaHorizontalSegments),
 				                             typeof(QaInteriorIntersectsOther),
@@ -302,7 +303,7 @@ namespace ProSuite.QA.Tests.Test
 
 			var testCases = new List<TestDefinitionCase>();
 
-			//// Test cases with automatic parameter value generation:
+			// Test cases with automatic parameter value generation:
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(Qa3dConstantZ)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaBorderSense)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCentroids)));
@@ -386,6 +387,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaFullCoincidenceCases(model, testCases);
 			AddQaGdbReleaseCases(model, testCases);
 			AddQaGeometryConstraintCases(model, testCases);
+			AddQaGroupConnectedCases(model, testCases);
 			AddQaGroupConstraintsCases(model, testCases);
 			AddQaInteriorIntersectsOtherCases(model, testCases);
 			AddQaInteriorIntersectsSelfCases(model, testCases);
@@ -1004,6 +1006,36 @@ namespace ProSuite.QA.Tests.Test
 			optionalValues.Add("ReportIndividualGaps", true);
 			optionalValues.Add("IgnoreGapsLongerThan", 1.1);
 			optionalValues.Add("CompleteGroupsOutsideTestArea", false);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaGroupConnected), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
+				                                     new[]
+				                                     {
+					                                     "MY_STRING_FIELD1",
+					                                     "MY_STRING_FIELD2"
+				                                     },
+				                                     2
+			                                     },
+			                                     optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaGroupConnected), 1,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDataset(),
+					                                     model.GetVectorDataset()
+				                                     },
+				                                     new[]
+				                                     {
+					                                     "MY_STRING_FIELD1",
+					                                     "MY_STRING_FIELD2"
+				                                     },
+				                                     ";", 2, 1, 15.3
+			                                     },
+			                                     optionalValues));
+		}
 
 		private static void AddQaGroupConstraintsCases(
 			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)

@@ -265,8 +265,7 @@ namespace ProSuite.QA.Tests
 			[DefaultValue(GroupErrorReporting.ShortestGaps)]
 			GroupErrorReporting errorReporting,
 			[Doc(nameof(DocStrings.QaGroupConnected_minimumErrorConnectionLineLength))]
-			double
-				minimumErrorConnectionLineLength)
+			double minimumErrorConnectionLineLength)
 			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) polylineClasses), groupBy)
 		{
 			Assert.ArgumentNotNull(groupBy, nameof(groupBy));
@@ -282,6 +281,17 @@ namespace ProSuite.QA.Tests
 				new Dictionary<Group, List<InvolvedGroupEnds>>(groupByComparer);
 
 			ValueSeparatorBase = valueSeparator;
+		}
+
+		[InternallyUsedTest]
+		public QaGroupConnected(QaGroupConnectedDefinition definition)
+			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.GroupBy, definition.ValueSeparator, definition.AllowedShape,
+			       definition.ErrorReporting, definition.MinimumErrorConnectionLineLength)
+		{
+			ReportIndividualGaps = definition.ReportIndividualGaps;
+			IgnoreGapsLongerThan = definition.IgnoreGapsLongerThan;
+			CompleteGroupsOutsideTestArea = definition.CompleteGroupsOutsideTestArea;
 		}
 
 		[TestParameter(_defaultReportIndividualGaps)]
