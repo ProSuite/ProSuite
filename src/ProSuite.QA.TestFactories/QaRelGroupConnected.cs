@@ -11,6 +11,7 @@ using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -45,7 +46,7 @@ namespace ProSuite.QA.TestFactories
 					new TestParameter("groupBy", typeof(IList<string>),
 					                  DocStrings.QaRelGroupConnected_groupBy),
 					new TestParameter("allowedShape",
-					                  typeof(QaGroupConnected.ShapeAllowed),
+					                  typeof(ShapeAllowed),
 					                  DocStrings.QaRelGroupConnected_allowedShape)
 				};
 
@@ -98,7 +99,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams[3].GetType()));
 			}
 
-			if (objParams[4].GetType() != typeof(QaGroupConnected.ShapeAllowed))
+			if (objParams[4].GetType() != typeof(ShapeAllowed))
 			{
 				throw new ArgumentException(string.Format("expected ShapeAllowed, got {0}",
 				                                          objParams[4].GetType()));
@@ -145,7 +146,7 @@ namespace ProSuite.QA.TestFactories
 		{
 			var test = new QaGroupConnected((IReadOnlyFeatureClass) args[0],
 			                                (IList<string>) args[1],
-			                                (QaGroupConnected.ShapeAllowed) args[2]);
+			                                (ShapeAllowed) args[2]);
 			return test;
 		}
 	}
