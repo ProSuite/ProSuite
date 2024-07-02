@@ -3549,10 +3549,17 @@ namespace ProSuite.QA.Tests.Test
 				{
 					CompareObject(value1, value2, fieldInfo, differences, parentType);
 				}
+				else if (fieldInfo.FieldType.IsEnum)
+				{
+					if (! Equals(value1, value2))
+					{
+						differences.Add(new KeyValuePair<Type, MemberInfo>(parentType, fieldInfo));
+					}
+				}
 
 				// TODO: Consider checking also non-primitive fields
+				//CompareNonPrimitiveObjects(value1, value2, fieldInfo, differences);
 
-				//CompareObject(value1, value2, fieldInfo);
 			}
 
 			return differences;
