@@ -313,8 +313,7 @@ namespace ProSuite.QA.Tests.Test
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCrossesSelf)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
-			// TODO: Implement Definition
-			//testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaExtent)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaFlowLogic)));
 			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey)));

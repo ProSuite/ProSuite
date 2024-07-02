@@ -4,7 +4,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
-using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
@@ -21,11 +20,9 @@ namespace ProSuite.QA.Tests
 		public QaEmptyNotNullTextFieldsDefinition(
 			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_table))] [NotNull]
 			ITableSchemaDef table)
-			: this(table, GetNotNullTextFields(table)) { }
-
-		private static string[] GetNotNullTextFields(ITableSchemaDef table)
+			: base(table)
 		{
-			throw new NotImplementedException();
+			Table = table;
 		}
 
 		[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_1))]
@@ -40,7 +37,6 @@ namespace ProSuite.QA.Tests
 
 			Table = table;
 			NotNullTextFields = notNullTextFields;
-
 		}
 	}
 }
