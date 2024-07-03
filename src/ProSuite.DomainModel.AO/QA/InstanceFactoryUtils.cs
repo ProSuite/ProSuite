@@ -200,8 +200,36 @@ namespace ProSuite.DomainModel.AO.QA
 			return sb;
 		}
 
+
+		/// <summary>
+		/// Gets the test factory based on the TestDefinition. Requires the test class or the test
+		/// factory descriptor to be defined.
+		/// </summary>
+		/// <param name="descriptor"></param>
+		/// <returns>TestFactory or null if neither the test class nor the test factory descriptor are defined.</returns>
 		[CanBeNull]
-		private static IssueFilterFactory CreateIssueFilterFactory(
+		public static IssueFilterFactory GetIssueFilterDefinitionFactory(
+			[NotNull] IssueFilterDescriptor descriptor)
+		{
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			ClassDescriptor classDescriptor = descriptor.Class;
+
+			if (classDescriptor != null)
+			{
+				bool hasDefinitionClass = InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+					classDescriptor, out Type definitionType);
+
+				Assert.True(hasDefinitionClass, "Issue filter {0} has no definition class.", descriptor);
+
+				return new IssueFilterFactory(definitionType, descriptor.ConstructorId);
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		public static IssueFilterFactory CreateIssueFilterFactory(
 			[NotNull] IssueFilterDescriptor descriptor)
 		{
 			Assert.ArgumentNotNull(descriptor, nameof(descriptor));

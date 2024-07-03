@@ -15,6 +15,7 @@ using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.ParameterTypes;
 using ProSuite.QA.TestFactories;
+using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.TestData;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
@@ -253,7 +254,9 @@ namespace ProSuite.QA.Tests.Test
 
 					if (! InstanceUtils.IsObsolete(testType, constructorIdx))
 					{
-						CompareMetadata(testType, constructorIdx);
+						bool hasNoCategory = TestTypeHasNoCategory(testType);
+
+						CompareTestMetadata(testType, constructorIdx, hasNoCategory);
 					}
 
 					TestDescriptor testImplDescriptor =
@@ -3175,6 +3178,81 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
+		[Test]
+		public void CanCreateIssueFilters()
+		{
+			List<Type> refactoredTypes = new List<Type>
+										 {
+										 };
+
+			foreach (Type issueFilterType in refactoredTypes)
+			{
+				Assert.IsFalse(InstanceUtils.HasInternallyUsedAttribute(issueFilterType),
+				               "Internally used issue filter");
+
+				// One is used internally to create using the definition.
+				int constructorCount = issueFilterType.GetConstructors().Length - 1;
+
+				bool lastConstructorIsInternallyUsed =
+					InstanceUtils.IsInternallyUsed(issueFilterType, constructorCount);
+
+				Assert.IsTrue(lastConstructorIsInternallyUsed,
+							  $"Last constructor not internally used in {issueFilterType.Name}");
+
+				for (int constructorIdx = 0;
+					 constructorIdx < constructorCount;
+					 constructorIdx++)
+				{
+					Console.WriteLine("Checking {0}({1})", issueFilterType.Name, constructorIdx);
+
+					if (! InstanceUtils.IsObsolete(issueFilterType, constructorIdx))
+					{
+						CompareIssueFilterMetadata(issueFilterType, constructorIdx, true);
+					}
+
+					IssueFilterDescriptor issueFilterDescriptor =
+						CreateIssueFilterDescriptor(issueFilterType, constructorIdx);
+
+					ClassDescriptor classDescriptor = issueFilterDescriptor.Class;
+					Assert.NotNull(classDescriptor);
+
+					bool hasAlgorithmDefinition =
+						InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+							classDescriptor, out Type definitionType);
+
+					Assert.IsTrue(hasAlgorithmDefinition);
+					Assert.NotNull(definitionType);
+
+					IssueFilterDescriptor ifDefinitionDescriptor =
+						CreateIssueFilterDescriptor(definitionType, constructorIdx);
+
+					// The factory of the definition:
+					IssueFilterFactory ifDefinitionFactory =
+						InstanceFactoryUtils.GetIssueFilterDefinitionFactory(issueFilterDescriptor);
+					Assert.NotNull(ifDefinitionFactory);
+
+					// Initialize the configurations for both the definition and the implementation:
+					IssueFilterConfiguration ifDefinitionConfiguration =
+						new IssueFilterConfiguration("if", ifDefinitionDescriptor);
+					IssueFilterConfiguration ifConfinguration =
+						new IssueFilterConfiguration("if", issueFilterDescriptor);
+
+					// Setup parameters (could go into the factory in the future):
+					//ifDefinitionFactory.Condition = ifDefinitionConfiguration;
+					InstanceConfigurationUtils.InitializeParameterValues(
+						ifDefinitionFactory, ifDefinitionConfiguration);
+
+					// The factory of the implementation:
+					IssueFilterFactory ifFactory = InstanceFactoryUtils.CreateIssueFilterFactory(ifConfinguration);
+
+					Assert.NotNull(ifFactory);
+
+					// NOTE: The instantiation of the tests and the comparisons of the values are
+					// performed in the AreParametersEqual test.
+				}
+			}
+		}
+
 		private static void AddParameterValue(string parameterName, object value,
 		                                      QualityCondition testCondition,
 		                                      QualityCondition testDefCondition)
@@ -3226,7 +3304,9 @@ namespace ProSuite.QA.Tests.Test
 			{
 				Console.WriteLine("Checking {0}({1})", testType.Name, constructorIdx);
 
-				CompareMetadata(testType, constructorIdx);
+				bool hasNoCategory = TestTypeHasNoCategory(testType);
+
+				CompareTestMetadata(testType, constructorIdx, hasNoCategory);
 
 				TestDescriptor testImplDescriptor =
 					CreateTestDescriptor(testType, constructorIdx);
@@ -3273,23 +3353,22 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
-		private static void CompareMetadata(Type testType,
-		                                    int constructorIdx)
+		private static bool TestTypeHasNoCategory(Type testType)
+		{
+			bool hasNoCategory = testType == typeof(QaExportTables) ||
+			                     testType == typeof(QaRowCount);
+
+			return hasNoCategory;
+		}
+
+		private static void CompareTestMetadata(Type testType,
+		                                    int constructorIdx,
+		                                    bool allowNoCategory = false)
 		{
 			TestDescriptor testDescriptor = CreateTestDescriptor(testType, constructorIdx);
-
 			Assert.NotNull(testDescriptor.Class);
 
-			// Using instance info in DDX:
-			IInstanceInfo testInstanceInfo =
-				InstanceDescriptorUtils.GetInstanceInfo(testDescriptor);
-
-			Assert.NotNull(testInstanceInfo);
-			Assert.NotNull(testInstanceInfo.TestDescription);
-			if (testInstanceInfo.InstanceType.Name != "QaExportTables" && testInstanceInfo.InstanceType.Name != "QaRowCount")
-			{
-				Assert.Greater(testInstanceInfo.TestCategories.Length, 0);
-			}
+			IInstanceInfo instanceInfo = CheckInstanceInfo(testDescriptor, allowNoCategory);
 
 			// Algorithm Definition:
 			bool hasAlgorithmDefinition =
@@ -3303,17 +3382,18 @@ namespace ProSuite.QA.Tests.Test
 				CreateTestDescriptor(definitionType, constructorIdx);
 
 			IInstanceInfo instanceDefInfo =
-				InstanceDescriptorUtils.GetInstanceInfo(instanceDefDescriptor,
-				                                        tryAlgorithmDefinition: true);
+				CheckInstanceInfo(instanceDefDescriptor, allowNoCategory, true);
+			//	InstanceDescriptorUtils.GetInstanceInfo(instanceDefDescriptor,
+			//	                                        tryAlgorithmDefinition: true);
 
-			Assert.NotNull(instanceDefInfo);
-			Assert.NotNull(instanceDefInfo.TestDescription);
-			if (testInstanceInfo.InstanceType.Name != "QaExportTables" && testInstanceInfo.InstanceType.Name != "QaRowCount")
-			{
-				Assert.Greater(instanceDefInfo.TestCategories.Length, 0);
-			}
+			//Assert.NotNull(instanceDefInfo);
+			//Assert.NotNull(instanceDefInfo.TestDescription);
+			//if (! allowNoCategory)
+			//{
+			//	Assert.Greater(instanceDefInfo.TestCategories.Length, 0);
+			//}
 
-			Assert.IsTrue(AssertEqual(testInstanceInfo, instanceDefInfo));
+			Assert.IsTrue(AssertEqual(instanceInfo, instanceDefInfo));
 
 			// Use case 2: Load actual factory:
 			TestFactory testFactory = TestFactoryUtils.GetTestFactory(testDescriptor);
@@ -3327,8 +3407,71 @@ namespace ProSuite.QA.Tests.Test
 			// and compare:
 			Assert.IsTrue(AssertEqual(testFactory, testDefinitionFactory));
 
-			Assert.Greater(testInstanceInfo.Parameters.Count, 0);
+			Assert.Greater(instanceInfo.Parameters.Count, 0);
 			Assert.Greater(testDefinitionFactory.Parameters.Count, 0);
+		}
+
+
+		private static void CompareIssueFilterMetadata(Type testType,
+											int constructorIdx,
+											bool allowNoCategory = false)
+		{
+			IssueFilterDescriptor descriptor = CreateIssueFilterDescriptor(testType, constructorIdx);
+			Assert.NotNull(descriptor.Class);
+
+			IInstanceInfo ifInstanceInfo = CheckInstanceInfo(descriptor, allowNoCategory);
+			
+			// Algorithm Definition:
+			bool hasAlgorithmDefinition =
+				InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+					descriptor.Class, out Type definitionType);
+
+			Assert.IsTrue(hasAlgorithmDefinition);
+
+			// Using instance definition:
+			InstanceDescriptor instanceDefDescriptor =
+				CreateTestDescriptor(definitionType, constructorIdx);
+
+			IInstanceInfo instanceDefinitionInfo =
+				CheckInstanceInfo(instanceDefDescriptor, allowNoCategory, true);
+
+			Assert.IsTrue(AssertEqual(ifInstanceInfo, instanceDefinitionInfo));
+
+			// Use case 2: Load actual factory:
+			IssueFilterFactory ifFactory = InstanceFactoryUtils.CreateIssueFilterFactory(descriptor);
+			Assert.NotNull(ifFactory);
+
+			// and definition factory
+			var ifDefinitionFactory =
+				InstanceFactoryUtils.GetIssueFilterDefinitionFactory(descriptor);
+			Assert.NotNull(ifDefinitionFactory);
+
+			// and compare:
+			Assert.IsTrue(AssertEqual(ifFactory, ifDefinitionFactory));
+
+			Assert.Greater(ifInstanceInfo.Parameters.Count, 0);
+			Assert.Greater(ifDefinitionFactory.Parameters.Count, 0);
+		}
+
+		private static IInstanceInfo CheckInstanceInfo(InstanceDescriptor descriptor,
+		                                               bool allowNoCategory,
+		                                               bool tryAlgorithmDefinition = false)
+		{
+			Assert.NotNull(descriptor.Class);
+
+			// Using instance info in DDX:
+			IInstanceInfo instanceInfo =
+				InstanceDescriptorUtils.GetInstanceInfo(descriptor, tryAlgorithmDefinition);
+
+			Assert.NotNull(instanceInfo);
+			Assert.NotNull(instanceInfo.TestDescription);
+
+			if (!allowNoCategory)
+			{
+				Assert.Greater(instanceInfo.TestCategories.Length, 0);
+			}
+
+			return instanceInfo;
 		}
 
 		private static object CreateDefaultValue(TestParameterType testParameterType,
@@ -3469,6 +3612,15 @@ namespace ProSuite.QA.Tests.Test
 
 			return new TestDescriptor(testName, new ClassDescriptor(type),
 			                          constructorIndex);
+		}
+
+		private static IssueFilterDescriptor CreateIssueFilterDescriptor(Type type,
+		                                                   int constructorIndex)
+		{
+			string typeName = $"{type.Name}";
+
+			return new IssueFilterDescriptor(typeName, new ClassDescriptor(type),
+			                                 constructorIndex);
 		}
 	}
 
