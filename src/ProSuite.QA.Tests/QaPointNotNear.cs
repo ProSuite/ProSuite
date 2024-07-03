@@ -216,7 +216,7 @@ namespace ProSuite.QA.Tests
 			_pointDistanceExpressionSql = pointDistanceExpression;
 			_referenceDistanceExpressionsSql = referenceDistanceExpressions;
 
-			if (! string.IsNullOrEmpty(pointDistanceExpression))
+			if (! string.IsNullOrEmpty(pointDistanceExpression) || referenceDistanceExpressions?.Count > 0) 
 			{
 				_useDistanceExpressions = true;
 			}
