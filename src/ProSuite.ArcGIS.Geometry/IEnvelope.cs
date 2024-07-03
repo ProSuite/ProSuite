@@ -61,6 +61,5 @@ namespace ESRI.ArcGIS.Geometry
 		void QueryCoords(out double xMin, out double yMin, out double xMax, out double yMax);
 
 		void CenterAt(IPoint p);
-
 	}
 }

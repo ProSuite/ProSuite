@@ -24,7 +24,6 @@ namespace ESRI.ArcGIS.Geometry
 
 		bool HasMPrecision();
 
-
 		void IsPrecisionEqual(ISpatialReference otherSR, out bool IsPrecisionEqual);
 
 		void SetFalseOriginAndUnits(double falseX, double falseY, double xyUnits);
