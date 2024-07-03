@@ -3183,6 +3183,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			List<Type> refactoredTypes = new List<Type>
 										 {
+											 typeof(IfAll),
 										 };
 
 			foreach (Type issueFilterType in refactoredTypes)
