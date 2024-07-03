@@ -11,10 +11,10 @@
 
   <ItemGroup>
 
-    <Reference Include="ESRI.ArcGIS.Geometry, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geometry.dll</HintPath>
+    <Reference Include="ArcGIS.Core">
+      <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
-      <Aliases>EsriGeometry</Aliases>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
 

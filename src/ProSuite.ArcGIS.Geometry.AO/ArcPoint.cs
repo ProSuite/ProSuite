@@ -1,37 +1,78 @@
-extern alias EsriGeometry;
 using System;
+using ArcGIS.Core.Geometry;
 using ESRI.ArcGIS.Geometry;
-using EnvelopeClass = EsriGeometry::ESRI.ArcGIS.Geometry.EnvelopeClass;
-
 
 namespace ProSuite.ArcGIS.Geometry.AO
 {
 	public class ArcPoint : IPoint
 	{
-		public ArcPoint(EsriGeometry::ESRI.ArcGIS.Geometry.IPoint aoPoint)
+		public ArcPoint(MapPoint aoPoint)
 		{
 			AoPoint = aoPoint;
 		}
 
-		public EsriGeometry::ESRI.ArcGIS.Geometry.IPoint AoPoint { get; set; }
+		public MapPoint AoPoint { get; set; }
 
 		#region Implementation of IGeometry
 
-		public esriGeometryType GeometryType => (esriGeometryType)AoPoint.GeometryType;
+		public esriGeometryType GeometryType => GetProGeometryType();
 
-		public esriGeometryDimension Dimension => (esriGeometryDimension)AoPoint.Dimension;
+		private esriGeometryType GetProGeometryType()
+		{
+			switch (AoPoint.GeometryType)
+			{
+				case global::ArcGIS.Core.Geometry.GeometryType.Unknown:
+					return esriGeometryType.esriGeometryAny;
+				case global::ArcGIS.Core.Geometry.GeometryType.Point:
+					return esriGeometryType.esriGeometryPoint;
+				case global::ArcGIS.Core.Geometry.GeometryType.Envelope:
+					return esriGeometryType.esriGeometryEnvelope;
+				case global::ArcGIS.Core.Geometry.GeometryType.Multipoint:
+					return esriGeometryType.esriGeometryMultipoint;
+				case global::ArcGIS.Core.Geometry.GeometryType.Polyline:
+					return esriGeometryType.esriGeometryPolyline;
+				case global::ArcGIS.Core.Geometry.GeometryType.Polygon:
+					return esriGeometryType.esriGeometryPolygon;
+				case global::ArcGIS.Core.Geometry.GeometryType.Multipatch:
+					return esriGeometryType.esriGeometryMultiPatch;
+				case global::ArcGIS.Core.Geometry.GeometryType.GeometryBag:
+					return esriGeometryType.esriGeometryBag;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+
+		public esriGeometryDimension Dimension
+		{
+			get
+			{
+				switch (AoPoint.Dimension)
+				{
+					case 0:
+						return esriGeometryDimension.esriGeometry0Dimension;
+					case 1:
+						return esriGeometryDimension.esriGeometry1Dimension;
+					case 2:
+						return esriGeometryDimension.esriGeometry2Dimension;
+					case 3:
+						return esriGeometryDimension.esriGeometry3Dimension;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+		}
 
 		public ISpatialReference SpatialReference
 		{
 			get => new ArcSpatialReference(AoPoint.SpatialReference);
-			set => AoPoint.SpatialReference = ((ArcSpatialReference)value).AoSpatialReference;
+			set => throw new NotImplementedException();
 		}
 
 		public bool IsEmpty => AoPoint.IsEmpty;
 
 		void IGeometry.SetEmpty()
 		{
-			AoPoint.SetEmpty();
+			throw new NotImplementedException();
 		}
 
 		public void QueryEnvelope(IEnvelope outEnvelope)
@@ -44,10 +85,10 @@ namespace ProSuite.ArcGIS.Geometry.AO
 
 		void IPoint.SetEmpty()
 		{
-			AoPoint.SetEmpty();
+			throw new NotImplementedException();
 		}
 
-		public IEnvelope Envelope => new ArcEnvelope(AoPoint.Envelope);
+		public IEnvelope Envelope => new ArcEnvelope(AoPoint.Extent);
 
 		void IGeometry.Project(ISpatialReference newReferenceSystem)
 		{
@@ -57,57 +98,58 @@ namespace ProSuite.ArcGIS.Geometry.AO
 
 		void IPoint.SnapToSpatialReference()
 		{
-			AoPoint.SnapToSpatialReference();
+			throw new NotImplementedException();
 		}
 
 		void IPoint.GeoNormalize()
 		{
-			AoPoint.GeoNormalize();
+			throw new NotImplementedException();
 		}
 
 		void IPoint.GeoNormalizeFromLongitude(double longitude)
 		{
-			AoPoint.GeoNormalizeFromLongitude(longitude);
+			throw new NotImplementedException();
 		}
 
 		public void QueryCoords(out double x, out double y)
 		{
-			AoPoint.QueryCoords(out x, out y);
+			x = AoPoint.X;
+			y = AoPoint.Y;
 		}
 
 		public void PutCoords(double x, double y)
 		{
-			AoPoint.PutCoords(x, y);
+			throw new NotImplementedException();
 		}
 
 		public double X
 		{
 			get => AoPoint.X;
-			set => AoPoint.X = value;
+			set => throw new NotImplementedException();
 		}
 
 		public double Y
 		{
 			get => AoPoint.Y;
-			set => AoPoint.Y = value;
+			set => throw new NotImplementedException();
 		}
 
 		public double Z
 		{
 			get => AoPoint.Z;
-			set => AoPoint.Z = value;
+			set => throw new NotImplementedException();
 		}
 
 		public double M
 		{
 			get => AoPoint.M;
-			set => AoPoint.M = value;
+			set => throw new NotImplementedException();
 		}
 
 		public int ID
 		{
 			get => AoPoint.ID;
-			set => AoPoint.ID = value;
+			set => throw new NotImplementedException();
 		}
 
 		//public void ConstrainDistance(double constraintRadius, IPoint anchor)
@@ -127,22 +169,22 @@ namespace ProSuite.ArcGIS.Geometry.AO
 
 		void IPoint.Project(ISpatialReference newReferenceSystem)
 		{
-			AoPoint.Project(((ArcSpatialReference)newReferenceSystem).AoSpatialReference);
+			throw new NotImplementedException();
 		}
 
 		void IGeometry.SnapToSpatialReference()
 		{
-			AoPoint.SnapToSpatialReference();
+			throw new NotImplementedException();
 		}
 
 		void IGeometry.GeoNormalize()
 		{
-			AoPoint.GeoNormalize();
+			throw new NotImplementedException();
 		}
 
 		void IGeometry.GeoNormalizeFromLongitude(double longitude)
 		{
-			AoPoint.GeoNormalizeFromLongitude(longitude);
+			throw new NotImplementedException();
 		}
 
 		#endregion

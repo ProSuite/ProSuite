@@ -1,65 +1,64 @@
-extern alias EsriGeometry;
+using System;
 using ProSuite.ArcGIS.Geometry.AO;
 
 namespace ESRI.ArcGIS.Geometry
 {
 	public class ArcGeometry : IGeometry
 	{
-		public ArcGeometry(EsriGeometry::ESRI.ArcGIS.Geometry.IGeometry aoGeometry)
+		public ArcGeometry(global::ArcGIS.Core.Geometry.Geometry aoGeometry)
 		{
 			AoGeometry = aoGeometry;
 		}
 
-		public EsriGeometry::ESRI.ArcGIS.Geometry.IGeometry AoGeometry { get; set; }
+		public global::ArcGIS.Core.Geometry.Geometry AoGeometry { get; set; }
 
 		#region Implementation of IGeometry
 
-		public esriGeometryType GeometryType => (esriGeometryType)AoGeometry.GeometryType;
+		public esriGeometryType GeometryType => (esriGeometryType) AoGeometry.GeometryType;
 
-		public esriGeometryDimension Dimension => (esriGeometryDimension)AoGeometry.Dimension;
+		public esriGeometryDimension Dimension => (esriGeometryDimension) AoGeometry.Dimension;
 
 		public ISpatialReference SpatialReference
 		{
 			get => new ArcSpatialReference(AoGeometry.SpatialReference);
-			set => AoGeometry.SpatialReference = ((ArcSpatialReference)value).AoSpatialReference;
+			set => throw new NotImplementedException();
 		}
 
 		public bool IsEmpty => AoGeometry.IsEmpty;
 
-		public IEnvelope Envelope => new ArcEnvelope(AoGeometry.Envelope);
+		public IEnvelope Envelope => new ArcEnvelope(AoGeometry.Extent);
 
 		public void SetEmpty()
 		{
-			AoGeometry.SetEmpty();
+			throw new NotImplementedException();
 		}
 
 		public void QueryEnvelope(IEnvelope outEnvelope)
 		{
-			outEnvelope.XMin = AoGeometry.Envelope.XMin;
-			outEnvelope.XMax = AoGeometry.Envelope.XMax;
-			outEnvelope.YMin = AoGeometry.Envelope.YMin;
-			outEnvelope.YMax = AoGeometry.Envelope.YMax;
+			outEnvelope.XMin = AoGeometry.Extent.XMin;
+			outEnvelope.XMax = AoGeometry.Extent.XMax;
+			outEnvelope.YMin = AoGeometry.Extent.YMin;
+			outEnvelope.YMax = AoGeometry.Extent.YMax;
 		}
 
 		public void Project(ISpatialReference newReferenceSystem)
 		{
-			var aoSpatialReference = ((ArcSpatialReference)newReferenceSystem).AoSpatialReference;
-			AoGeometry.Project(aoSpatialReference);
+			throw new NotImplementedException();
 		}
 
 		public void SnapToSpatialReference()
 		{
-			AoGeometry.SnapToSpatialReference();
+			throw new NotImplementedException();
 		}
 
 		public void GeoNormalize()
 		{
-			AoGeometry.GeoNormalize();
+			throw new NotImplementedException();
 		}
 
 		public void GeoNormalizeFromLongitude(double Longitude)
 		{
-			AoGeometry.GeoNormalizeFromLongitude(Longitude);
+			throw new NotImplementedException();
 		}
 
 		#endregion

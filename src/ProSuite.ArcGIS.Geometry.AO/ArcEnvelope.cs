@@ -1,36 +1,37 @@
-extern alias EsriGeometry;
+using System;
+using ArcGIS.Core.Geometry;
 using ProSuite.ArcGIS.Geometry.AO;
 
 namespace ESRI.ArcGIS.Geometry
 {
 	public class ArcEnvelope : IEnvelope
 	{
-		private readonly EsriGeometry::ESRI.ArcGIS.Geometry.IEnvelope _aoEnvelope;
+		private readonly Envelope _aoEnvelope;
 
-		public ArcEnvelope(EsriGeometry::ESRI.ArcGIS.Geometry.IEnvelope envelope)
+		public ArcEnvelope(Envelope envelope)
 		{
 			_aoEnvelope = envelope;
 		}
 
-		public EsriGeometry::ESRI.ArcGIS.Geometry.IEnvelope AoEnvelope => _aoEnvelope;
+		public Envelope AoEnvelope => _aoEnvelope;
 
 		#region Implementation of IGeometry
 
-		public esriGeometryType GeometryType => (esriGeometryType)_aoEnvelope.GeometryType;
+		public esriGeometryType GeometryType => (esriGeometryType) _aoEnvelope.GeometryType;
 
-		public esriGeometryDimension Dimension => (esriGeometryDimension)_aoEnvelope.Dimension;
+		public esriGeometryDimension Dimension => (esriGeometryDimension) _aoEnvelope.Dimension;
 
 		public ISpatialReference SpatialReference
 		{
 			get => new ArcSpatialReference(_aoEnvelope.SpatialReference);
-			set => _aoEnvelope.SpatialReference = ((ArcSpatialReference)value).AoSpatialReference;
+			set => throw new NotImplementedException();
 		}
 
 		public bool IsEmpty => _aoEnvelope.IsEmpty;
 
 		public void SetEmpty()
 		{
-			_aoEnvelope.SetEmpty();
+			throw new NotImplementedException();
 		}
 
 		public void QueryEnvelope(IEnvelope outEnvelope)
@@ -41,28 +42,28 @@ namespace ESRI.ArcGIS.Geometry
 			outEnvelope.YMax = _aoEnvelope.YMax;
 		}
 
-		public IEnvelope Envelope => new ArcEnvelope(_aoEnvelope.Envelope);
+		public IEnvelope Envelope => new ArcEnvelope(_aoEnvelope.Extent);
 
 		public void Project(ISpatialReference newReferenceSystem)
 		{
-			var newAoSpatialRef = ((ArcSpatialReference)newReferenceSystem).AoSpatialReference;
+			var newProSpatialRef = ((ArcSpatialReference) newReferenceSystem).ProSpatialReference;
 
-			_aoEnvelope.Project(newAoSpatialRef);
+			GeometryEngine.Instance.Project(_aoEnvelope, newProSpatialRef);
 		}
 
 		public void SnapToSpatialReference()
 		{
-			_aoEnvelope.SnapToSpatialReference();
+			throw new NotImplementedException();
 		}
 
 		public void GeoNormalize()
 		{
-			_aoEnvelope.GeoNormalize();
+			throw new NotImplementedException();
 		}
 
 		public void GeoNormalizeFromLongitude(double longitude)
 		{
-			_aoEnvelope.GeoNormalizeFromLongitude(longitude);
+			throw new NotImplementedException();
 		}
 
 		#endregion
@@ -72,135 +73,149 @@ namespace ESRI.ArcGIS.Geometry
 		public double Width
 		{
 			get => _aoEnvelope.Width;
-			set => _aoEnvelope.Width = value;
+			set => throw new NotImplementedException();
 		}
 
 		public double Height
 		{
 			get => _aoEnvelope.Height;
-			set => _aoEnvelope.Height = value;
+			set => throw new NotImplementedException();
 		}
 
 		public double Depth
 		{
 			get => _aoEnvelope.Depth;
-			set => _aoEnvelope.Depth = value;
+			set => throw new NotImplementedException();
 		}
 
 		public IPoint LowerLeft
 		{
-			get => new ArcPoint(_aoEnvelope.LowerLeft);
-			set => _aoEnvelope.LowerLeft = ((ArcPoint)value).AoPoint;
+			get => new ArcPoint(MapPointBuilderEx.CreateMapPoint(
+				                    _aoEnvelope.XMin, _aoEnvelope.YMin,
+				                    _aoEnvelope.SpatialReference));
+			set => throw new NotImplementedException();
 		}
 
 		public IPoint UpperLeft
 		{
-			get => new ArcPoint(_aoEnvelope.UpperLeft);
-			set => _aoEnvelope.UpperLeft = ((ArcPoint)value).AoPoint;
+			get => new ArcPoint(MapPointBuilderEx.CreateMapPoint(
+				                    _aoEnvelope.XMin, _aoEnvelope.YMax,
+				                    _aoEnvelope.SpatialReference));
+			set => throw new NotImplementedException();
 		}
 
 		public IPoint UpperRight
 		{
-			get => new ArcPoint(_aoEnvelope.UpperRight);
-			set => _aoEnvelope.UpperRight = ((ArcPoint)value).AoPoint;
+			get => new ArcPoint(MapPointBuilderEx.CreateMapPoint(
+				                    _aoEnvelope.XMax, _aoEnvelope.YMax,
+				                    _aoEnvelope.SpatialReference));
+			set => throw new NotImplementedException();
 		}
 
 		public IPoint LowerRight
 		{
-			get => new ArcPoint(_aoEnvelope.LowerRight);
-			set => _aoEnvelope.LowerRight = ((ArcPoint)value).AoPoint;
+			get => new ArcPoint(MapPointBuilderEx.CreateMapPoint(
+				                    _aoEnvelope.XMax, _aoEnvelope.YMin,
+				                    _aoEnvelope.SpatialReference));
+			set => throw new NotImplementedException();
 		}
 
 		public double XMin
 		{
 			get => _aoEnvelope.XMin;
-			set => _aoEnvelope.XMin = value;
+			set => throw new NotImplementedException();
 		}
 
 		public double YMin
 		{
 			get => _aoEnvelope.YMin;
-			set => _aoEnvelope.YMin = value;
+			set => throw new NotImplementedException();
 		}
 
 		public double XMax
 		{
 			get => _aoEnvelope.XMax;
-			set => _aoEnvelope.XMax = value;
+			set => throw new NotImplementedException();
 		}
 
 		public double YMax
 		{
 			get => _aoEnvelope.YMax;
-			set => _aoEnvelope.YMax = value;
+			set => throw new NotImplementedException();
 		}
 
 		public double MMin
 		{
 			get => _aoEnvelope.MMin;
-			set => _aoEnvelope.MMin = value;
+			set => throw new NotImplementedException();
 		}
 
 		public double MMax
 		{
 			get => _aoEnvelope.MMax;
-			set => _aoEnvelope.MMax = value;
+			set => throw new NotImplementedException();
 		}
 
 		public double ZMin
 		{
 			get => _aoEnvelope.ZMin;
-			set => _aoEnvelope.ZMin = value;
+			set => throw new NotImplementedException();
 		}
 
 		public double ZMax
 		{
 			get => _aoEnvelope.ZMax;
-			set => _aoEnvelope.ZMax = value;
+			set => throw new NotImplementedException();
 		}
 
 		public void Union(IEnvelope inEnvelope)
 		{
-			var aoEnvelope = ((ArcEnvelope)inEnvelope).AoEnvelope;
+			var aoEnvelope = ((ArcEnvelope) inEnvelope).AoEnvelope;
 
-			_aoEnvelope.Union(aoEnvelope);
+			Envelope result = _aoEnvelope.Union(aoEnvelope);
+
+			// TODO: Change semantics, return result
+			throw new NotImplementedException();
 		}
 
 		public void Intersect(IEnvelope inEnvelope)
 		{
-			var aoEnvelope = ((ArcEnvelope)inEnvelope).AoEnvelope;
+			var aoEnvelope = ((ArcEnvelope) inEnvelope).AoEnvelope;
 
-			_aoEnvelope.Intersect(aoEnvelope);
+			Envelope result = _aoEnvelope.Intersection(aoEnvelope);
+
+			// TODO: Change semantics
+			throw new NotImplementedException();
 		}
 
 		public void Offset(double x, double y)
 		{
-			_aoEnvelope.Offset(x, y);
+			throw new NotImplementedException();
 		}
 
 		public void OffsetZ(double z)
 		{
-			_aoEnvelope.OffsetZ(z);
+			throw new NotImplementedException();
 		}
 
 		public void OffsetM(double m)
 		{
-			_aoEnvelope.OffsetM(m);
+			throw new NotImplementedException();
 		}
 
 		public void Expand(double dx, double dy, bool asRatio)
 		{
-			_aoEnvelope.Expand(dx, dy, asRatio);
+			throw new NotImplementedException();
 		}
 
 		public void ExpandZ(double dz, bool asRatio)
 		{
-			_aoEnvelope.ExpandZ(dz, asRatio);
+			throw new NotImplementedException();
 		}
 
 		public void ExpandM(double dm, bool asRatio)
 		{
-			_aoEnvelope.ExpandM(dm, asRatio);
+			throw new NotImplementedException();
 		}
 
 		//public void DefineFromPoints(int count, ref IPoint points)
@@ -210,19 +225,17 @@ namespace ESRI.ArcGIS.Geometry
 
 		public void PutCoords(double xMin, double yMin, double xMax, double yMax)
 		{
-			_aoEnvelope.PutCoords(xMin, yMin, xMax, yMax);
+			throw new NotImplementedException();
 		}
 
 		public void QueryCoords(out double xMin, out double yMin, out double xMax, out double yMax)
 		{
-			_aoEnvelope.QueryCoords(out xMin, out yMin, out xMax, out yMax);
+			throw new NotImplementedException();
 		}
 
 		public void CenterAt(IPoint p)
 		{
-			EsriGeometry::ESRI.ArcGIS.Geometry.IPoint aoPoint = ((ArcPoint)p).AoPoint;
-
-			_aoEnvelope.CenterAt(aoPoint);
+			throw new NotImplementedException();
 		}
 
 		#endregion
