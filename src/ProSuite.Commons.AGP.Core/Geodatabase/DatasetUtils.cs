@@ -244,6 +244,41 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
+		public static IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitions(
+			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
+		{
+			foreach (RelationshipClassDefinition relationshipClassDefinition in geodatabase
+				         .GetDefinitions<RelationshipClassDefinition>())
+			{
+				if (predicate is null || predicate(relationshipClassDefinition))
+				{
+					yield return relationshipClassDefinition;
+				}
+			}
+
+			foreach (AttributedRelationshipClassDefinition relationshipClassDefinition in
+			         geodatabase.GetDefinitions<AttributedRelationshipClassDefinition>())
+			{
+				if (predicate is null || predicate(relationshipClassDefinition))
+				{
+					yield return relationshipClassDefinition;
+				}
+			}
+		}
+
+		public static IEnumerable<RelationshipClass> GetRelationshipClasses(
+			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
+		{
+			foreach (RelationshipClassDefinition relationshipClassDefinition in
+			         GetRelationshipClassDefinitions(geodatabase, predicate))
+			{
+				yield return geodatabase.OpenDataset<RelationshipClass>(
+					relationshipClassDefinition.GetName());
+			}
+		}
+
 		public static bool IsSameTable(Table fc1, Table fc2)
 		{
 			if (ReferenceEquals(fc1, fc2)) return true;
