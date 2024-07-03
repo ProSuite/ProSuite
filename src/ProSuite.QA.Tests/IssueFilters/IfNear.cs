@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Geom;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Coincidence;
 using Pnt = ProSuite.Commons.Geom.Pnt;
 
@@ -35,6 +36,10 @@ namespace ProSuite.QA.Tests.IssueFilters
 		{
 			_near = near;
 		}
+
+		[InternallyUsedTest]
+		public IfNear([NotNull] IfNearDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass, definition.Near) { }
 
 		public override bool Check(QaErrorEventArgs error)
 		{

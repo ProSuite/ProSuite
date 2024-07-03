@@ -3186,6 +3186,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(IfAll),
 											 typeof(IfIntersecting),
 											 typeof(IfInvolvedRows),
+											 typeof(IfNear),
 										 };
 
 			foreach (Type issueFilterType in refactoredTypes)
