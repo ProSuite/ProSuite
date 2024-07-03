@@ -3184,6 +3184,7 @@ namespace ProSuite.QA.Tests.Test
 			List<Type> refactoredTypes = new List<Type>
 										 {
 											 typeof(IfAll),
+											 typeof(IfIntersecting),
 										 };
 
 			foreach (Type issueFilterType in refactoredTypes)
