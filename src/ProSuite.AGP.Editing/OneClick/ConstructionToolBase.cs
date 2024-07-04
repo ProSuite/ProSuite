@@ -41,6 +41,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			IsSketchTool = true;
 			SketchOutputMode = SketchOutputMode.Screen;
 
+			UseSelection = true;
 			GeomIsSimpleAsFeature = false;
 
 			SketchCursor = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
