@@ -213,11 +213,11 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 			case GeometryType.Point:
 			case GeometryType.Polyline:
 			case GeometryType.Polygon:
+			case GeometryType.Multipoint:
+			case GeometryType.Multipatch:
 				return true;
 			case GeometryType.Unknown:
 			case GeometryType.Envelope:
-			case GeometryType.Multipoint:
-			case GeometryType.Multipatch:
 			case GeometryType.GeometryBag:
 				_msg.Debug($"{Caption}: cannot select from geometry of type {geometryType}");
 				return false;
