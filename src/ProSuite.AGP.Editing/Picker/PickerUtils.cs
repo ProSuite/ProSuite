@@ -366,6 +366,12 @@ namespace ProSuite.AGP.Editing.Picker
 		private static void SelectFeature(IPickableFeatureItem pickedItem,
 		                                  SelectionCombinationMethod selectionMethod)
 		{
+			// Clear the selection on the map level, NOT on the layer level
+			if (selectionMethod == SelectionCombinationMethod.New)
+			{
+				ClearSelection();
+			}
+
 			SelectionUtils.SelectFeature(pickedItem.Layer,
 			                             selectionMethod,
 			                             pickedItem.Oid);
