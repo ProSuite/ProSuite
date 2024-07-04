@@ -464,7 +464,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				                     ActiveMapView.ClientToScreen(CurrentMousePosition));
 
 			await ViewUtils.TryAsync(
-				PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers, progressor), _msg);
+				PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers), _msg);
 
 			return true;
 		}
