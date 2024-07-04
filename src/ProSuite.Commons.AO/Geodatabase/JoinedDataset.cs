@@ -5,10 +5,10 @@ using System.Linq;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Collections;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
@@ -172,7 +172,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				IReadOnlyRow rightRow = OtherEndClass.GetRow(id);
 
-				string otherKeyValue = GetNonNullKeyValue(rightRow, OtherClassKeyFieldIndex);
+				string otherKeyValue = GetKeyValue(rightRow, OtherClassKeyFieldIndex);
+
+				if (otherKeyValue == null)
+				{
+					if (JoinType != JoinType.RightJoin)
+					{
+						throw new InvalidDataException(
+							$"No key value in {GdbObjectUtils.ToString(rightRow)} (field: {OtherClassKeyField})");
+					}
+					// TODO: Implement right join: Return the right row without a left row
+				}
 
 				var otherKeyList = new List<string> { otherKeyValue };
 				IList<IReadOnlyRow> resultGeoFeatures = FetchRowsByKey(
@@ -761,8 +771,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 			foreach (IReadOnlyRow row in FetchBridgeTableRowsByKey(geoKeys, bridgeTable,
 				         bridgeTableGeoKeyField, recycle))
 			{
-				// The primary key of the other table:
-				string bridgeOtherKeyValue = GetNonNullKeyValue(row, bridgeTableOtherKeyIdx);
+				// The primary key of the other table. This can be null, for example if the bridge
+				// table is not a relationship table but a regular table with m:1 and 1:m
+				// relationship class (TOP-5877). One side of the relationship might be missing.
+				string bridgeOtherKeyValue = GetKeyValue(row, bridgeTableOtherKeyIdx);
+
+				if (bridgeOtherKeyValue == null)
+				{
+					_msg.DebugFormat("No key value in {0} (field: {1}).",
+					                 GdbObjectUtils.ToString(row), bridgeTableOtherKeyField);
+					continue;
+				}
 
 				// The primary key of the geo table:
 				string bridgeGeoKeyValue = GetNonNullKeyValue(row, bridgeTableGeoKeyIdx);
@@ -809,11 +828,23 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			IReadOnlyRow associationRow = bridgeTable.GetRow(id);
 
-			// The primary key of the other table:
-			string bridgeOtherKeyValue = GetNonNullKeyValue(associationRow, bridgeTableOtherKeyIdx);
+			// The primary key of the other table (can be null in left join)
+			string bridgeOtherKeyValue = GetKeyValue(associationRow, bridgeTableOtherKeyIdx);
 
 			// The primary key of the geo table:
-			string bridgeGeoKeyValue = GetNonNullKeyValue(associationRow, bridgeTableGeoKeyIdx);
+			string bridgeGeoKeyValue = GetKeyValue(associationRow, bridgeTableGeoKeyIdx);
+
+			if (bridgeGeoKeyValue == null)
+			{
+				if (JoinType == JoinType.RightJoin)
+				{
+					// TODO: Should be handled differently once RightJoin is supported:
+				}
+
+				throw new InvalidOperationException(
+					$"Association record {GdbObjectUtils.ToString(associationRow)} has null foreign key in {bridgeTableGeoKeyField}. " +
+					"This is no valid row for this kine of join");
+			}
 
 			var geoKeyList = new List<string> { bridgeGeoKeyValue };
 
@@ -821,17 +852,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 					GeometryEndClass, geoKeyList, GeometryClassKeyField, false)
 				.ToList();
 
-			Assert.AreEqual(1, geoFeatures.Count, "Unexpected number of left table features");
+			Assert.AreEqual(1, geoFeatures.Count,
+			                $"Unexpected number of features found in {GeometryEndClass.Name} with {GeometryClassKeyField} {bridgeGeoKeyValue}. It might not exist or it was filtered or (if more than one were found, the assumed primary key is not unique).");
 
-			var otherKeyList = new List<string> { bridgeOtherKeyValue };
+			IReadOnlyRow rightRow = null;
 
-			IList<IReadOnlyRow> otherFeatures = FetchRowsByKey(
-					OtherEndClass, otherKeyList, OtherClassKeyField, false)
-				.ToList();
+			if (bridgeOtherKeyValue != null)
+			{
+				var otherKeyList = new List<string> { bridgeOtherKeyValue };
 
-			Assert.AreEqual(1, otherFeatures.Count, "Unexpected number of right table features");
+				IList<IReadOnlyRow> otherFeatures = FetchRowsByKey(
+					OtherEndClass, otherKeyList, OtherClassKeyField, false).ToList();
 
-			return CreateJoinedFeature(geoFeatures[0], otherFeatures[0], associationRow);
+				Assert.AreEqual(1, otherFeatures.Count,
+				                "Unexpected number of right table features");
+
+				rightRow = otherFeatures[0];
+			}
+
+			return CreateJoinedFeature(geoFeatures[0], rightRow, associationRow);
 		}
 
 		private void GetAssociationTableKeyFields(ManyToManyAssociationDescription m2nAssociation,
@@ -991,7 +1030,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return rowCount;
 		}
 
-		private static string GetNonNullKeyValue(IReadOnlyRow row, int fieldIndex)
+		[NotNull]
+		private static string GetNonNullKeyValue([NotNull] IReadOnlyRow row,
+		                                         int fieldIndex)
 		{
 			string result = GetKeyValue(row, fieldIndex);
 
@@ -1004,7 +1045,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return result;
 		}
 
-		private static string GetKeyValue(IReadOnlyRow row, int fieldIndex)
+		[CanBeNull]
+		private static string GetKeyValue([NotNull] IReadOnlyRow row, int fieldIndex)
 		{
 			object value = row.get_Value(fieldIndex);
 
