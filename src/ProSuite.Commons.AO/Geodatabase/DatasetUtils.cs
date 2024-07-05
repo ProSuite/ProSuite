@@ -3255,8 +3255,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			int fieldCount = fields.FieldCount;
 
-			var result = new List<IField>(fieldCount);
-
 			for (var fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++)
 			{
 				IField field = fields.Field[fieldIndex];
