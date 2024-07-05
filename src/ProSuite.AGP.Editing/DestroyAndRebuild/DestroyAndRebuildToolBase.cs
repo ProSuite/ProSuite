@@ -190,12 +190,7 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 				_latch.Decrement();
 			}
 
-			await QueuedTask.Run(() =>
-			{
-				SelectionUtils.ClearSelection(ActiveMapView.Map);
-
-				_feedback.Clear();
-			});
+			_feedback.Clear();
 
 			return true; // startSelectionPhase = true;
 		}

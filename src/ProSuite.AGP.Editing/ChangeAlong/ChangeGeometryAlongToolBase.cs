@@ -409,7 +409,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				t => CanUseAsTargetFeature(selectedFeatures, t);
 
 			SpatialRelationship spatialRel =
-				SketchType == SketchGeometryType.Polygon
+				SketchType == SketchGeometryType.Polygon||
+				SketchType == SketchGeometryType.Lasso
 					? SpatialRelationship.Contains
 					: SpatialRelationship.Intersects;
 

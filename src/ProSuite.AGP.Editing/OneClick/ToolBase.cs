@@ -515,21 +515,27 @@ public abstract class ToolBase : MapTool
 			return false;
 		}
 
+		if (! layer.IsVisibleInView(ActiveMapView))
+		{
+			// Takes scale range into account (and probably the parent layer too)
+			NotificationUtils.Add(notifications, $"Layer {layerName} is not visible on map");
+			return false;
+		}
+
 		if (! layer.IsSelectable)
 		{
 			NotificationUtils.Add(notifications, $"Layer {layerName} not selectable");
 			return false;
 		}
 
-		if (CanSelectOnlyEditFeatures() &&
-		    ! layer.IsEditable)
+		if (CanSelectOnlyEditFeatures() && ! layer.IsEditable)
 		{
 			NotificationUtils.Add(notifications, $"Layer {layerName} not editable");
 			return false;
 		}
 
-		if (! CanSelectGeometryType(
-			    GeometryUtils.TranslateEsriGeometryType(layer.ShapeType)))
+		var geometryType = GeometryUtils.TranslateEsriGeometryType(layer.ShapeType);
+		if (! CanSelectGeometryType(geometryType))
 		{
 			NotificationUtils.Add(notifications,
 			                      $"Layer {layerName}: Cannot use geometry type {layer.ShapeType}");

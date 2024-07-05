@@ -132,8 +132,10 @@ namespace ProSuite.AGP.Editing.Picker
 			bool altDown = KeyboardUtils.IsAltDown();
 
 			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
+			SketchGeometryType sketchGeometryType = ToolUtils.GetSketchGeometryType();
 			SpatialRelationship spatialRelationship =
-				ToolUtils.GetSketchGeometryType() == SketchGeometryType.Polygon
+				sketchGeometryType == SketchGeometryType.Polygon ||
+				sketchGeometryType == SketchGeometryType.Lasso
 					? SpatialRelationship.Contains
 					: SpatialRelationship.Intersects;
 
@@ -170,8 +172,10 @@ namespace ProSuite.AGP.Editing.Picker
 					: SelectionCombinationMethod.New;
 
 			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
+			SketchGeometryType sketchGeometryType = ToolUtils.GetSketchGeometryType();
 			SpatialRelationship spatialRelationship =
-				ToolUtils.GetSketchGeometryType() == SketchGeometryType.Polygon
+				sketchGeometryType == SketchGeometryType.Polygon||
+				sketchGeometryType == SketchGeometryType.Lasso
 					? SpatialRelationship.Contains
 					: SpatialRelationship.Intersects;
 
