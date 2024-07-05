@@ -57,7 +57,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			get
 			{
 				// TODO: maintain actual property!
-				return SketchType != SketchGeometryType.Rectangle;
+				return SketchType != SketchGeometryType.Rectangle &&
+				       SketchType != SketchGeometryType.Lasso;
 			}
 		}
 
