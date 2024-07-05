@@ -542,14 +542,6 @@ public abstract class ToolBase : MapTool
 			return false;
 		}
 
-		using var featureClass = layer.GetFeatureClass();
-		if (featureClass is null)
-		{
-			NotificationUtils.Add(notifications,
-			                      $"Layer {layerName} has no valid data source");
-			return false;
-		}
-
 		return CanSelectFromLayerCore(layer);
 	}
 
