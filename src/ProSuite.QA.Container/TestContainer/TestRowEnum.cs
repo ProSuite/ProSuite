@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -12,9 +11,9 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
@@ -29,7 +28,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private readonly int _cachedTableCount;
 		private readonly IDictionary<IReadOnlyTable, CachedTableProps> _cachedSet;
-		private readonly IList<TableFields> _nonCachedTables;
+		private readonly IList<TableSubFields> _nonCachedTables;
 
 		private readonly ITestContainer _container;
 		private readonly IEnvelope _executeEnvelope;
@@ -100,10 +99,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 			ClassifyTables(_testSorter.TestsPerTable,
 			               out Dictionary<IReadOnlyTable, CachedTableProps> cachedSet,
-			               out IList<TableFields> nonCachedTables);
+			               out IList<TableSubFields> nonCachedTables);
 			AddProcessorTables(_container.ContainerTests, cachedSet);
 			_nonCachedTables =
-				new List<TableFields>(nonCachedTables.Where(x => ! cachedSet.ContainsKey(x.Table)));
+				new List<TableSubFields>(
+					nonCachedTables.Where(x => ! cachedSet.ContainsKey(x.Table)));
 
 			_cachedSet = cachedSet;
 
@@ -176,7 +176,8 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				foreach (ContainerTest containerTest in tests)
 				{
-					AdaptSearchTolerance(overlappingFeatures, containerTest.SearchDistance, containerTest.InvolvedTables);
+					AdaptSearchTolerance(overlappingFeatures, containerTest.SearchDistance,
+					                     containerTest.InvolvedTables);
 				}
 			}
 
@@ -205,14 +206,13 @@ namespace ProSuite.QA.Container.TestContainer
 					continue;
 				}
 
-				if (!_cachedSet.ContainsKey(involvedTable))
+				if (! _cachedSet.ContainsKey(involvedTable))
 				{
 					continue;
 				}
 
 				overlappingFeatures.AdaptSearchTolerance(
 					involvedTable, tableSearchDistance);
-
 			}
 		}
 
@@ -342,19 +342,19 @@ namespace ProSuite.QA.Container.TestContainer
 					IEnvelope loaded = _tileCache.GetLoadedExtent(table);
 
 					IGeometry filterGeometry = sf.FilterGeometry;
-                    if (filterGeometry != null &&
-                        !SpatialReferenceUtils.AreEqual(
-                            filterGeometry.SpatialReference,
-                            loaded.SpatialReference))
-                    {
-	                    if (tableProps.HasGeotransformation is IHasGeotransformation hasGeotrans)
-	                    {
-		                    filterGeometry = hasGeotrans.ProjectEx(filterGeometry);
-	                    }
-	                    else
-	                    {
-		                    filterGeometry = GeometryFactory.Clone(filterGeometry);
-		                    filterGeometry.Project(loaded.SpatialReference);
+					if (filterGeometry != null &&
+					    ! SpatialReferenceUtils.AreEqual(
+						    filterGeometry.SpatialReference,
+						    loaded.SpatialReference))
+					{
+						if (tableProps.HasGeotransformation is IHasGeotransformation hasGeotrans)
+						{
+							filterGeometry = hasGeotrans.ProjectEx(filterGeometry);
+						}
+						else
+						{
+							filterGeometry = GeometryFactory.Clone(filterGeometry);
+							filterGeometry.Project(loaded.SpatialReference);
 						}
 					}
 
@@ -528,7 +528,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private IEnumerable<TestRow> EnumNonCachedRows(Tile tile, long tileRowIndex,
 		                                               long tileRowCount)
 		{
-			foreach (TableFields tableFields in _nonCachedTables)
+			foreach (TableSubFields tableFields in _nonCachedTables)
 			{
 				IReadOnlyTable table = tableFields.Table;
 				string origFields = tile.SpatialFilter.SubFields;
@@ -539,7 +539,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 				try
 				{
-					tile.SpatialFilter.SubFields = tableFields.Fields;
+					tile.SpatialFilter.SubFields = tableFields.GetSubFields();
 
 					IList<ContainerTest> currentTests =
 						_testSorter.TestsPerTable[table];
@@ -739,7 +739,7 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			long result = 0;
 
-			foreach (TableFields tableFields in _nonCachedTables)
+			foreach (TableSubFields tableFields in _nonCachedTables)
 			{
 				IReadOnlyTable table = tableFields.Table;
 
@@ -841,12 +841,12 @@ namespace ProSuite.QA.Container.TestContainer
 		private static void ClassifyTables(
 			[NotNull] IDictionary<IReadOnlyTable, IList<ContainerTest>> testsPerTable,
 			[NotNull] out Dictionary<IReadOnlyTable, CachedTableProps> cachedTables,
-			[NotNull] out IList<TableFields> nonCachedTables)
+			[NotNull] out IList<TableSubFields> nonCachedTables)
 		{
 			Assert.ArgumentNotNull(testsPerTable, nameof(testsPerTable));
 
 			cachedTables = new Dictionary<IReadOnlyTable, CachedTableProps>();
-			nonCachedTables = new List<TableFields>();
+			nonCachedTables = new List<TableSubFields>();
 
 			foreach (KeyValuePair<IReadOnlyTable, IList<ContainerTest>> pair in testsPerTable)
 			{
@@ -875,19 +875,11 @@ namespace ProSuite.QA.Container.TestContainer
 					bool excludeShapeField = ! geometryUsed && table is IReadOnlyFeatureClass &&
 					                         ! IsInLocalDatabaseWorkspace(table);
 
-					const string allFields = "*";
-
-					string subFields = excludeShapeField
-						                   ? GetFieldNamesExcludingShapeField(
-							                   (IReadOnlyFeatureClass) table)
-						                   : allFields;
-
-					nonCachedTables.Add(new TableFields(table, subFields,
-					                                    excludeShapeField));
+					nonCachedTables.Add(new TableSubFields(table, excludeShapeField));
 				}
 			}
 		}
-		
+
 		private static void AddRecursive(IReadOnlyTable table,
 		                                 Dictionary<IReadOnlyTable, CachedTableProps> cachedTables)
 		{
@@ -1028,65 +1020,6 @@ namespace ProSuite.QA.Container.TestContainer
 			return table.Workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace;
 		}
 
-		[NotNull]
-		private static string GetFieldNamesExcludingShapeField(
-			[NotNull] IReadOnlyFeatureClass featureClass)
-		{
-			string shapeField = featureClass.ShapeFieldName;
-
-			IFields fields = featureClass.Fields;
-			int fieldCount = fields.FieldCount;
-			var sb = new StringBuilder();
-
-			for (var fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++)
-			{
-				string name = fields.Field[fieldIndex].Name;
-
-				if (! string.Equals(name, shapeField, StringComparison.OrdinalIgnoreCase))
-				{
-					sb.AppendFormat("{0},", name);
-				}
-			}
-
-			return sb.ToString(0, sb.Length - 1);
-		}
-
-		#region nested classes
-
-		#region Nested type: TableFields
-
-		private class TableFields
-		{
-			/// <summary>
-			/// Initializes a new instance of the <see cref="TableFields"/> class.
-			/// </summary>
-			/// <param name="table">The table.</param>
-			/// <param name="fields">The fields.</param>
-			/// <param name="shapeFieldExcluded">if set to <c>true</c> the shape field was excluded for the feature class.</param>
-			public TableFields([NotNull] IReadOnlyTable table, [NotNull] string fields,
-			                   bool shapeFieldExcluded)
-			{
-				Table = table;
-				Fields = fields;
-				ShapeFieldExcluded = shapeFieldExcluded;
-			}
-
-			[NotNull]
-			public string Fields { get; }
-
-			[NotNull]
-			public IReadOnlyTable Table { get; }
-
-			public bool ShapeFieldExcluded { get; }
-
-			public override string ToString() =>
-				$"{Table.Name}; {Fields}; excludeShape:{ShapeFieldExcluded}";
-		}
-
-		#endregion
-
-		#endregion
-
 		#region moving to next tile
 
 		private void LoadCachedRows(Tile tile, TileCache tileCache)
@@ -1223,7 +1156,7 @@ namespace ProSuite.QA.Container.TestContainer
 				(table as ITransformedTable)?.IgnoreOverlappingCachedRows ?? false;
 
 			IDictionary<BaseRow, CachedRow> cachedRows =
-				 !ignoreOverlappingRows
+				! ignoreOverlappingRows
 					? _overlappingFeatures.GetOverlappingCachedRows(table, tile.Box)
 					: new ConcurrentDictionary<BaseRow, CachedRow>();
 
@@ -1233,7 +1166,7 @@ namespace ProSuite.QA.Container.TestContainer
 			// LoadCachedTableRows(cachedRows, table, tile, tileCache);
 
 			int newlyLoadedRows = cachedRows.Count - previousCachedRowCount;
-			if (!ignoreOverlappingRows)
+			if (! ignoreOverlappingRows)
 			{
 				_msg.VerboseDebug(() => $"{table.Name}: Added additional {newlyLoadedRows} rows " +
 				                        $"to the previous {previousCachedRowCount} rows in {tile}");

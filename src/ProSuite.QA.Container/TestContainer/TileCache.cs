@@ -9,9 +9,9 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
@@ -23,7 +23,7 @@ namespace ProSuite.QA.Container.TestContainer
 	internal class TileCache
 	{
 		private readonly IList<IReadOnlyTable> _cachedTables;
-		private readonly IEnvelope _envelopeTemplate = new EnvelopeClass();
+
 		private readonly IBox _testRunBox;
 		private readonly IDictionary<IReadOnlyTable, double> _xyToleranceByTable;
 		private readonly ITestContainer _container;
@@ -298,7 +298,7 @@ namespace ProSuite.QA.Container.TestContainer
 			Assert.ArgumentNotNull(searchGeometry, nameof(searchGeometry));
 
 			IBox searchGeometryBox = ProxyUtils.CreateBox(searchGeometry,
-			                                                   GetXYTolerance(table));
+			                                              GetXYTolerance(table));
 
 			BoxTree<CachedRow> boxTree = _rowBoxTrees[table];
 
@@ -505,6 +505,7 @@ namespace ProSuite.QA.Container.TestContainer
 					// TODO: why can this be
 					return null;
 				}
+
 				result.Add(entry.Value);
 			}
 
@@ -562,7 +563,8 @@ namespace ProSuite.QA.Container.TestContainer
 					              : whereClause + " AND " + notInExpression;
 			}
 
-			IEnvelope filterGeometry = (IEnvelope) ((IClone) tileSpatialFilter.FilterGeometry).Clone();
+			IEnvelope filterGeometry =
+				(IEnvelope) ((IClone) tileSpatialFilter.FilterGeometry).Clone();
 			esriSpatialRelEnum spatialRelationship = tileSpatialFilter.SpatialRelationship;
 
 			IWorkspace workspace = table.Workspace;
@@ -580,7 +582,6 @@ namespace ProSuite.QA.Container.TestContainer
 					tableProps.HasGeotransformation.ProjectEx(filterGeometry);
 			}
 
-
 			double searchTolerance = context.OverlappingFeatures.GetSearchTolerance(table);
 			if (searchTolerance > 0)
 			{
@@ -593,6 +594,12 @@ namespace ProSuite.QA.Container.TestContainer
 				             WhereClause = whereClause,
 				             TileExtent = tileSpatialFilter.FilterGeometry.Envelope
 			             };
+
+			// Exclude blob fields for better performance and memory behaviour:
+			if (tableProps.AdaptSubFields(result.SubFields, out string newSubFields))
+			{
+				result.SubFields = newSubFields;
+			}
 
 			return result;
 		}
