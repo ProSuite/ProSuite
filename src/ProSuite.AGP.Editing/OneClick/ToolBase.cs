@@ -246,9 +246,6 @@ public abstract class ToolBase : MapTool
 	{
 		int tolerance = GetSelectionSettings().SelectionTolerancePixels;
 
-		using var source = GetProgressorSource();
-		var progressor = source?.Progressor;
-
 		using var pickerPrecedence =
 			new PickerPrecedence(geometry, tolerance,
 			                     ActiveMapView.ClientToScreen(CurrentMousePosition));
