@@ -268,6 +268,12 @@ namespace ProSuite.AGP.Editing.Picker
 				return;
 			}
 
+			// Clear the selection on the map level, NOT on the layer level
+			if (selectionMethod == SelectionCombinationMethod.New)
+			{
+				ClearSelection();
+			}
+
 			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
 
 			switch (precedence.GetPickerMode(orderedSelection))
@@ -325,6 +331,12 @@ namespace ProSuite.AGP.Editing.Picker
 				return;
 			}
 
+			// Clear the selection on the map level, NOT on the layer level
+			if (selectionMethod == SelectionCombinationMethod.New)
+			{
+				ClearSelection();
+			}
+
 			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
 
 			switch (pickerMode)
@@ -378,12 +390,6 @@ namespace ProSuite.AGP.Editing.Picker
 		private static void SelectFeature(IPickableFeatureItem pickedItem,
 		                                  SelectionCombinationMethod selectionMethod)
 		{
-			// Clear the selection on the map level, NOT on the layer level
-			if (selectionMethod == SelectionCombinationMethod.New)
-			{
-				ClearSelection();
-			}
-
 			SelectionUtils.SelectFeature(pickedItem.Layer,
 			                             selectionMethod,
 			                             pickedItem.Oid);
@@ -392,12 +398,6 @@ namespace ProSuite.AGP.Editing.Picker
 		private static void SelectFeatures(IPickableFeatureClassItem pickedItem,
 		                                   SelectionCombinationMethod selectionMethod)
 		{
-			// Clear the selection on the map level, NOT on the layer level
-			if (selectionMethod == SelectionCombinationMethod.New)
-			{
-				ClearSelection();
-			}
-
 			var featureClassSelections =
 				pickedItem.Layers
 				          .Select(layer =>
