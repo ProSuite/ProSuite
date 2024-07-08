@@ -36,6 +36,11 @@ namespace ProSuite.AGP.Editing.Erase
 			return SketchGeometryType.Polygon;
 		}
 
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
+		}
+
 		protected override void LogEnteringSketchMode()
 		{
 			_msg.Info(LocalizableStrings.EraseTool_LogEnteringSketchMode);

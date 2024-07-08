@@ -16,6 +16,42 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return new Coordinate2D(point.X + dx, point.Y + dy);
 		}
 
+		public static MapPoint Shifted(this MapPoint point, double dx, double dy)
+		{
+			var builder = new MapPointBuilderEx(point);
+			builder.X += dx;
+			builder.Y += dy;
+			return builder.ToGeometry();
+		}
+
+		public static T Shifted<T>(this T segment, double dx, double dy) where T : Segment
+		{
+			if (segment is LineSegment line)
+			{
+				var movedStart = line.StartCoordinate.Shifted(dx, dy);
+				var movedEnd = line.EndCoordinate.Shifted(dx, dy);
+				var moved = LineBuilderEx.CreateLineSegment(movedStart, movedEnd);
+				return (T) (Segment) moved;
+			}
+
+			if (segment is EllipticArcSegment arc)
+			{
+				throw new NotImplementedException($"{arc.GetType().Name} is not yet implemented");
+			}
+
+			if (segment is CubicBezierSegment cubic)
+			{
+				var builder = new CubicBezierBuilderEx(cubic);
+				builder.StartPoint = builder.StartPoint.Shifted(dx, dy);
+				builder.ControlPoint1 = builder.ControlPoint1.Shifted(dx, dy);
+				builder.ControlPoint2 = builder.ControlPoint2.Shifted(dx, dy);
+				builder.EndPoint = builder.EndPoint.Shifted(dx, dy);
+				return (T) (Segment) builder.ToSegment();
+			}
+
+			throw new NotSupportedException($"Unknown segment type: {segment.GetType().FullName}");
+		}
+
 		public static double GetXyTolerance(Geometry geometry)
 		{
 			return geometry?.SpatialReference?.XYTolerance ?? double.NaN;
@@ -389,7 +425,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// <remarks>
 		/// Time is O(N**2) where N is the number of rings; any better ideas around?
 		/// </remarks>
-		public static ICollection<Polygon> ConnectedComponents(Polygon polygon)
+		public static IList<Polygon> ConnectedComponents(Polygon polygon)
 		{
 			if (polygon is null || polygon.IsEmpty)
 			{
@@ -619,16 +655,16 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) smallestPart;
 		}
 
-		public static T GetLargestSegment<T>([NotNull] IEnumerable<T> segments,
-		                                     Envelope areaOfInterest = null)
-			where T : Segment
+		[CanBeNull]
+		public static Segment GetLargestSegment([NotNull] IEnumerable<Segment> segments,
+		                                        Envelope areaOfInterest = null)
 		{
 			Segment shortesSegment = null;
 			double longestLength = double.Epsilon;
 
 			bool considerAreaOfInterest = areaOfInterest != null && ! areaOfInterest.IsEmpty;
 
-			foreach (T candidate in segments)
+			foreach (Segment candidate in segments)
 			{
 				if (considerAreaOfInterest)
 				{
@@ -652,7 +688,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				}
 			}
 
-			return (T) shortesSegment;
+			return shortesSegment;
 		}
 
 		/// <summary>
@@ -712,6 +748,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			get => _engine ??= GeometryEngine.Instance;
 			set => _engine = value;
 		}
+
+		private static IGeometryEngine _engine;
 
 		#region Access points of a multipart geometry builder
 
@@ -820,7 +858,79 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) builder.ToSegment();
 		}
 
-		private static IGeometryEngine _engine;
+		#region Moving vertices of a multipart geometry builder
+
+		public static void MovePart(this MultipartBuilderEx builder, int partIndex, double dx, double dy)
+		{
+			if (builder is null)
+				throw new ArgumentNullException(nameof(builder));
+
+			int segmentCount = builder.GetSegmentCount(partIndex);
+
+			for (int k = 0; k < segmentCount; k++)
+			{
+				var segment = builder.GetSegment(partIndex, k);
+				var moved = segment.Shifted(dx, dy);
+				builder.ReplaceSegment(partIndex, k, moved);
+			}
+		}
+
+		public static void MoveVertex(this MultipartBuilderEx builder, int partIndex, int vertexIndex, double dx, double dy)
+		{
+			if (builder is null)
+				throw new ArgumentNullException(nameof(builder));
+
+			int segmentCount = builder.GetSegmentCount(partIndex);
+
+			switch (builder)
+			{
+				case PolylineBuilderEx:
+					// update StartPoint on segment i (if exists)
+					// update EndPoint on segment i-1 (if exists)
+					if (vertexIndex < segmentCount)
+						MoveStartPoint(builder, partIndex, vertexIndex, dx, dy);
+					vertexIndex -= 1;
+					if (vertexIndex >= 0)
+						MoveEndPoint(builder, partIndex, vertexIndex, dx, dy);
+					break;
+
+				case PolygonBuilderEx:
+					// update StartPoint of segment i (mod N)
+					// update EndPoint of segment (i-1) (mod N)
+					vertexIndex %= segmentCount;
+					MoveStartPoint(builder, partIndex, vertexIndex, dx, dy);
+					vertexIndex -= 1;
+					if (vertexIndex < 0) vertexIndex += segmentCount;
+					MoveEndPoint(builder, partIndex, vertexIndex, dx, dy);
+					break;
+
+				default:
+					throw new NotSupportedException(
+						"Multipart builder is neither polygon nor polyline builder");
+			}
+		}
+
+		private static void MoveStartPoint(
+			MultipartBuilderEx builder, int partIndex, int segmentIndex, double dx, double dy)
+		{
+			var segment = builder.GetSegment(partIndex, segmentIndex);
+			var segbldr = segment.ToBuilder();
+			segbldr.StartPoint = segbldr.StartPoint.Shifted(dx, dy);
+			var moved = segbldr.ToSegment();
+			builder.ReplaceSegment(partIndex, segmentIndex, moved);
+		}
+
+		private static void MoveEndPoint(
+			MultipartBuilderEx builder, int partIndex, int segmentIndex, double dx, double dy)
+		{
+			var segment = builder.GetSegment(partIndex, segmentIndex);
+			var segbldr = segment.ToBuilder();
+			segbldr.EndPoint = segbldr.EndPoint.Shifted(dx, dy);
+			var moved = segbldr.ToSegment();
+			builder.ReplaceSegment(partIndex, segmentIndex, moved);
+		}
+
+		#endregion
 
 		public static GeometryType TranslateEsriGeometryType(esriGeometryType esriGeometryType)
 		{
