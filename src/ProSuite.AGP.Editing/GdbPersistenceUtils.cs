@@ -26,7 +26,7 @@ namespace ProSuite.AGP.Editing
 			[CanBeNull] IDictionary<Feature, IList<Geometry>> copies = null)
 		{
 			Assert.ArgumentCondition(updates?.Count > 0 || copies?.Count > 0,
-				"Neither updates nor inserts have been provided.");
+			                         "Neither updates nor inserts have been provided.");
 
 			return await ExecuteInTransactionAsync(
 				       editContext => StoreTx(editContext, updates, copies),
@@ -407,9 +407,9 @@ namespace ProSuite.AGP.Editing
 			StoreShape(feature, geometry, editContext);
 		}
 
-		private static void StoreShape(Feature feature,
-		                               Geometry geometry,
-		                               EditOperation.IEditContext editContext)
+		public static void StoreShape(Feature feature,
+		                              Geometry geometry,
+		                              EditOperation.IEditContext editContext)
 		{
 			_msg.DebugFormat("Updating shape of {0}...", GdbObjectUtils.ToString(feature));
 

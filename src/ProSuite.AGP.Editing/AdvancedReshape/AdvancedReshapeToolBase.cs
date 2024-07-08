@@ -241,15 +241,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			var polyline = (Polyline) sketchGeometry;
 
-			List<Feature> selection;
-
 			bool success = await QueuedTaskUtils.Run(async () =>
 			{
 				try
 				{
 					SetCursor(Cursors.Wait);
 
-					selection = GetApplicableSelectedFeatures(activeView).ToList();
+					List<Feature> selection = GetApplicableSelectedFeatures(activeView).ToList();
 
 					var potentiallyAffectedFeatures =
 						GetAdjacentFeatures(selection, cancelableProgressor);
