@@ -144,6 +144,7 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		{
 			Inspector inspector = new Inspector();
 			await inspector.LoadAsync(layer, selectedOid);
+			geometry=ProSuite.Commons.AGP.Core.Spatial.GeometryUtils.Simplify(geometry);
 			inspector.Shape = geometry;
 
 			Attribute subtype = inspector.SubtypeAttribute;
