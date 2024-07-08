@@ -424,7 +424,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, true, layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
+					selection, layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
 					inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&
