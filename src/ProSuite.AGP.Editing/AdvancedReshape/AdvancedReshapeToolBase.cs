@@ -147,7 +147,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_msg.VerboseDebug(() => "OnSketchModifiedAsync");
 
 			// Does it make any difference what the return value is?
-			return await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
+			bool result = await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
+
+			result &= await base.OnSketchModifiedAsync();
+
+			return result;
 		}
 
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
@@ -417,7 +421,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, true, layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
+					selection, true,
+					layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
 					inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&

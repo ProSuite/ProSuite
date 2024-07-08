@@ -64,11 +64,20 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual bool SupportRestoreLastSketch => true;
 
+		protected virtual bool LogSketchVertexZs { get; set; }
+
 		#region MapTool overrides
 
-		protected override Task<bool> OnSketchModifiedAsync()
+		protected override async Task<bool> OnSketchModifiedAsync()
 		{
-			return QueuedTaskUtils.Run(OnSketchModifiedCore);
+			_msg.VerboseDebug(() => "OnSketchModifiedAsync()");
+
+			if (LogSketchVertexZs)
+			{
+				await LogLastSketchVertexZ();
+			}
+
+			return await QueuedTaskUtils.Run(OnSketchModifiedCore);
 		}
 
 		protected override Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
@@ -538,6 +547,60 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				throw new ApplicationException("Error restoring the previous sketch", e);
 			}
+		}
+
+		private async Task<bool> LogLastSketchVertexZ()
+		{
+			Geometry sketch = await GetCurrentSketchAsync();
+
+			if (! sketch.HasZ)
+			{
+				return false;
+			}
+
+			bool result = false;
+			await QueuedTaskUtils.Run(() =>
+			{
+				MapPoint lastPoint = GetLastPoint(sketch);
+
+				if (lastPoint != null)
+				{
+					_msg.InfoFormat("Vertex added, Z={0:N2}", lastPoint.Z);
+					result = true;
+				}
+			});
+
+			return result;
+		}
+
+		private static MapPoint GetLastPoint(Geometry sketch)
+		{
+			MapPoint lastPoint = null;
+			;
+			if (sketch is Multipart multipart)
+			{
+				ReadOnlyPointCollection points = multipart.Points;
+
+				if (points.Count > 0)
+				{
+					lastPoint = points[points.Count - 1];
+				}
+			}
+			else if (sketch is MapPoint point)
+			{
+				lastPoint = point;
+			}
+			else if (sketch is Multipoint multipoint)
+			{
+				ReadOnlyPointCollection points = multipoint.Points;
+
+				if (points.Count > 0)
+				{
+					lastPoint = points[points.Count - 1];
+				}
+			}
+
+			return lastPoint;
 		}
 	}
 }
