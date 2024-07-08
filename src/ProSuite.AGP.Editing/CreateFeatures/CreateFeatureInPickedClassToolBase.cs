@@ -117,7 +117,10 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 			inspector.Shape = geometry;
 
 			Attribute subtype = inspector.SubtypeAttribute;
-			string subtypeName = subtype != null ? subtype.CurrentSubtype.Name : layer.Name;
+
+			string subtypeName = subtype?.CurrentSubtype != null
+				                     ? subtype.CurrentSubtype.Name
+				                     : layer.Name;
 
 			// note: TooltipHeading is null here.
 			var operation = new EditOperation

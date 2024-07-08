@@ -602,9 +602,21 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void SetCursor([CanBeNull] Cursor cursor)
 		{
-			if (cursor != null)
+			if (cursor == null)
+			{
+				return;
+			}
+
+			if (Application.Current.Dispatcher.CheckAccess())
 			{
 				Cursor = cursor;
+			}
+			else
+			{
+				Application.Current.Dispatcher.Invoke(() =>
+				{
+					Cursor = cursor;
+				});
 			}
 		}
 

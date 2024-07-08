@@ -51,8 +51,10 @@ public abstract class ToolBase : MapTool
 	
 	protected Point CurrentMousePosition;
 
+	[NotNull]
 	protected virtual Cursor SelectionCursorCore { get; }
 
+	[NotNull]
 	protected virtual Cursor ConstructionCursorCore { get; }
 
 	protected virtual bool AllowNoSelection => false;
@@ -140,11 +142,16 @@ public abstract class ToolBase : MapTool
 
 		if (args.Key == Key.Escape)
 		{
-			await ViewUtils.TryAsync(ClearSketchAsync, _msg);
+			if (await HasSketchAsync())
+			{
+				await ViewUtils.TryAsync(ClearSketchAsync, _msg);
+			}
+			else
+			{
+				await ViewUtils.TryAsync(HandleEscapeAsync, _msg);
 
-			await ViewUtils.TryAsync(HandleEscapeAsync, _msg);
-
-			StartSelectionPhase();
+				StartSelectionPhase();
+			}
 		}
 
 		await ViewUtils.TryAsync(HandleKeyDownCoreAsync(args), _msg);
@@ -245,9 +252,6 @@ public abstract class ToolBase : MapTool
 	protected virtual async Task<bool> OnSelectionSketchCompleteAsync([NotNull] Geometry geometry)
 	{
 		int tolerance = GetSelectionSettings().SelectionTolerancePixels;
-
-		using var source = GetProgressorSource();
-		var progressor = source?.Progressor;
 
 		using var pickerPrecedence =
 			new PickerPrecedence(geometry, tolerance,
@@ -351,6 +355,13 @@ public abstract class ToolBase : MapTool
 	{
 		SketchType = _defaultSketchGeometryType;
 		SketchSymbol = null;
+	}
+
+	private async Task<bool> HasSketchAsync()
+	{
+		Geometry currentSketch = await GetCurrentSketchAsync();
+
+		return currentSketch?.IsEmpty == false;
 	}
 
 	#endregion
@@ -643,11 +654,37 @@ public abstract class ToolBase : MapTool
 
 	private void SetSelectionCursor()
 	{
-		Cursor = SelectionCursorCore;
+		Cursor cursor = SelectionCursorCore;
+		Assert.NotNull(cursor);
+
+		if (Application.Current.Dispatcher.CheckAccess())
+		{
+			Cursor = cursor;
+		}
+		else
+		{
+			Application.Current.Dispatcher.Invoke(() =>
+			{
+				Cursor = cursor;
+			});
+		}
 	}
 
 	private void SetConstructionCursor()
 	{
-		Cursor = ConstructionCursorCore;
+		Cursor cursor = ConstructionCursorCore;
+		Assert.NotNull(cursor);
+
+		if (Application.Current.Dispatcher.CheckAccess())
+		{
+			Cursor = cursor;
+		}
+		else
+		{
+			Application.Current.Dispatcher.Invoke(() =>
+			{
+				Cursor = cursor;
+			});
+		}
 	}
 }

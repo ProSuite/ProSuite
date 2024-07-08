@@ -68,7 +68,7 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			if (PressedKeys.Contains(Key.LeftShift) || PressedKeys.Contains(Key.RightShift))
 			{
-				return PickerMode.PickAll;
+				return PickerMode.ShowPicker;
 			}
 
 			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
