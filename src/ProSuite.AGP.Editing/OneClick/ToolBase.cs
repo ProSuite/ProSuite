@@ -140,11 +140,16 @@ public abstract class ToolBase : MapTool
 
 		if (args.Key == Key.Escape)
 		{
-			await ViewUtils.TryAsync(ClearSketchAsync, _msg);
+			if (await HasSketchAsync())
+			{
+				await ViewUtils.TryAsync(ClearSketchAsync, _msg);
+			}
+			else
+			{
+				await ViewUtils.TryAsync(HandleEscapeAsync, _msg);
 
-			await ViewUtils.TryAsync(HandleEscapeAsync, _msg);
-
-			StartSelectionPhase();
+				StartSelectionPhase();
+			}
 		}
 
 		await ViewUtils.TryAsync(HandleKeyDownCoreAsync(args), _msg);
@@ -348,6 +353,13 @@ public abstract class ToolBase : MapTool
 	{
 		SketchType = _defaultSketchGeometryType;
 		SketchSymbol = null;
+	}
+
+	private async Task<bool> HasSketchAsync()
+	{
+		Geometry currentSketch = await GetCurrentSketchAsync();
+
+		return currentSketch?.IsEmpty == false;
 	}
 
 	#endregion
