@@ -190,11 +190,6 @@ namespace ProSuite.AGP.Editing.Picker
 				                                     spatialRelationship,
 				                                     progressor).ToList();
 
-				if (progressor is { CancellationToken.IsCancellationRequested: true })
-				{
-					_msg.Debug("Picker canceled");
-				}
-
 				await SelectCandidates(precedence, featureSelection, selectionMethod, pickerMode);
 			});
 		}

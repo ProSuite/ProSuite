@@ -89,7 +89,7 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 	{
 		if (_latch.IsLatched)
 		{
-			return false; // startContructionPhase = false
+			return false; // startConstructionPhase = false
 		}
 
 		(BasicFeatureLayer layer, List<Feature> features) = featuresByLayer.FirstOrDefault();
@@ -101,7 +101,7 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		{
 			_msg.Debug("no selection");
 			_feedback.Clear();
-			return false; // startContructionPhase = false
+			return false; // startConstructionPhase = false
 		}
 
 		_feedback.UpdatePreview(feature.GetShape());
@@ -113,7 +113,7 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 
 		await StartSketchAsync();
 
-		return true; // startContructionPhase = true
+		return true; // startConstructionPhase = true
 	}
 
 	protected override async Task<bool> OnConstructionSketchCompleteAsync(
@@ -144,10 +144,14 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		{
 			Inspector inspector = new Inspector();
 			await inspector.LoadAsync(layer, selectedOid);
+			geometry=ProSuite.Commons.AGP.Core.Spatial.GeometryUtils.Simplify(geometry);
 			inspector.Shape = geometry;
 
 			Attribute subtype = inspector.SubtypeAttribute;
-			string subtypeName = subtype != null ? subtype.CurrentSubtype.Name : layer.Name;
+
+			string subtypeName = subtype?.CurrentSubtype != null
+				                     ? subtype.CurrentSubtype.Name
+				                     : layer.Name;
 
 			// note: TooltipHeading is null here.
 			var operation = new EditOperation
@@ -190,7 +194,14 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 				_latch.Decrement();
 			}
 
-			_feedback.Clear();
+			//TODO: D&R should not clear the selection
+			// but ToolBase does not start selection phase as expected
+			await QueuedTask.Run(() =>
+			{
+				SelectionUtils.ClearSelection(ActiveMapView.Map);
+
+				_feedback.Clear();
+			});
 
 			return true; // startSelectionPhase = true;
 		}
