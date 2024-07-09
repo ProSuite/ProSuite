@@ -12,6 +12,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
@@ -106,8 +107,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		{
 			Inspector inspector = new Inspector();
 			await inspector.LoadAsync(layer, selectedOid);
-			geometry=ProSuite.Commons.AGP.Core.Spatial.GeometryUtils.Simplify(geometry);
-			inspector.Shape = geometry;
+			inspector.Shape = GeometryUtils.Simplify(geometry);
 
 			Attribute subtype = inspector.SubtypeAttribute;
 
