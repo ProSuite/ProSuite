@@ -247,7 +247,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				{
 					SetCursor(Cursors.Wait);
 
-					List<Feature> selection = GetApplicableSelectedFeatures(activeView).ToList();
+					Dictionary<MapMember, List<long>> selectionByLayer =
+						SelectionUtils.GetSelection(activeView.Map);
+
+					List<Feature> selection =
+						GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+							.ToList();
 
 					var potentiallyAffectedFeatures =
 						GetAdjacentFeatures(selection, cancelableProgressor);
