@@ -75,7 +75,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// usable by the tool.
 		/// </summary>
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
-		
+
 		/// <summary>
 		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
 		/// will be called (and potentially in the future also MapTool.HandleKeyUpAsync)
@@ -103,7 +103,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			try
 			{
 				using var source = GetProgressorSource();
-				var progressor = source.Progressor;
+				var progressor = source?.Progressor;
 
 				await QueuedTaskUtils.Run(() =>
 				{
@@ -307,7 +307,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				}, _msg);
 
 				using var source = GetProgressorSource();
-				var progressor = source.Progressor;
+				var progressor = source?.Progressor;
 
 				if (RequiresSelection && await IsInSelectionPhaseAsync())
 				{
@@ -437,6 +437,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
+		[CanBeNull]
 		protected virtual CancelableProgressorSource GetProgressorSource()
 		{
 			var message = Caption ?? string.Empty;
@@ -615,10 +616,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			else
 			{
-				Application.Current.Dispatcher.Invoke(() =>
-				{
-					Cursor = cursor;
-				});
+				Application.Current.Dispatcher.Invoke(() => { Cursor = cursor; });
 			}
 		}
 

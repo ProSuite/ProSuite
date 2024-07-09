@@ -118,11 +118,19 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					GetApplicableSelectedFeatures(selectionByLayer, true).ToList();
 
 				using var source = GetProgressorSource();
-				var progressor = source.Progressor;
+				var progressor = source?.Progressor;
 				RefreshExistingChangeAlongCurves(applicableSelection, progressor);
 			}
 
 			return true;
+		}
+
+		protected override CancelableProgressorSource GetProgressorSource()
+		{
+			// Disable the progressor because it crashes the application when the picker is shown.
+			// In the target selection phase we have a real probability that the picker must be
+			// shown!
+			return null;
 		}
 
 		protected override Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
@@ -143,7 +151,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 								GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
 							using var source = GetProgressorSource();
-							var progressor = source.Progressor;
+							var progressor = source?.Progressor;
 
 							RefreshExistingChangeAlongCurves(selectedFeatures, progressor);
 
