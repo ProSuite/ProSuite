@@ -20,6 +20,7 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Misc;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.UI;
 
@@ -30,6 +31,7 @@ public abstract class ToolBase : MapTool
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	private readonly SketchGeometryType _defaultSketchGeometryType;
+	private readonly Latch _latch = new Latch();
 
 	protected ToolBase(SketchGeometryType sketchGeometryType)
 	{
@@ -219,26 +221,35 @@ public abstract class ToolBase : MapTool
 				return true; // sketchCompleteEventHandled = true;
 			}
 		}
-		
-		bool validSelection = await OnSelectionSketchCompleteAsync(geometry);
 
-		if (validSelection)
+		try
 		{
-			// OnSketchCompleteAsync is on the GUI thread. Here is the right place to change the cursor.
-			// OnSelectionCompleteAsync is on QueuedTask/MCT thread. Changing cursor there doesn't immediately
-			// change it. You would have to move the mouse to trigger cursor change.
-			//StartContructionPhase();
+			// We don't want OnSelectionChangedCoreAsync to react on our selection
+			_latch.Increment();
+			bool validSelection = await OnSelectionSketchCompleteAsync(geometry);
 
-			bool selectionProcessed = await ProcessSelectionAsync();
+			if (validSelection)
+			{
+				// OnSketchCompleteAsync is on the GUI thread. Here is the right place to change the cursor.
+				// OnSelectionCompleteAsync is on QueuedTask/MCT thread. Changing cursor there doesn't immediately
+				// change it. You would have to move the mouse to trigger cursor change.
+				//StartContructionPhase();
 
-			if (selectionProcessed)
-			{
-				StartConstructionPhase();
+				bool selectionProcessed = await ProcessSelectionAsync();
+
+				if (selectionProcessed)
+				{
+					StartConstructionPhase();
+				}
+				else
+				{
+					StartSelectionPhase();
+				}
 			}
-			else
-			{
-				StartSelectionPhase();
-			}
+		}
+		finally
+		{
+			_latch.Decrement();
 		}
 
 		return true; // sketchCompleteEventHandled = true;
