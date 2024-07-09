@@ -407,6 +407,29 @@ public abstract class ToolBase : MapTool
 		return await ViewUtils.TryAsync(task, _msg);
 	}
 
+	private async Task<bool> ProcessSelectionAsync(SelectionSet selection)
+	{
+		using var source = GetProgressorSource();
+		var progressor = source?.Progressor;
+
+		Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+			SelectionUtils.GetSelection<BasicFeatureLayer>(selection);
+
+		if (!CanUseSelection(selectionByLayer, new NotificationCollection()))
+		{
+			return false; // startContructionPhase = false
+		}
+
+		IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
+			GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
+
+		SetSketchSymbolBasedOnSelection(applicableSelection);
+
+		Task<bool> task = ProcessSelectionCoreAsync(applicableSelection, progressor);
+
+		return await ViewUtils.TryAsync(task, _msg);
+	}
+
 	/// <returns><b>true</b>: selection successfully processed and start
 	/// construction phase, <b>false</b>: stay in selection phase.</returns>
 	protected virtual Task<bool> ProcessSelectionCoreAsync(
@@ -424,6 +447,26 @@ public abstract class ToolBase : MapTool
 			LogPromptForSelection();
 			StartSelectionPhase();
 			await ClearSketchAsync();
+		}
+		else if (args.Selection.Count > 0)
+		{
+			// Process existing selection on activate tool.
+			// Do not react on selection made by this tool.
+			if (_latch.IsLatched)
+			{
+				return;
+			}
+
+			bool selectionProcessed = await ProcessSelectionAsync(args.Selection);
+
+			if (selectionProcessed)
+			{
+				StartConstructionPhase();
+			}
+			else
+			{
+				StartSelectionPhase();
+			}
 		}
 	}
 
