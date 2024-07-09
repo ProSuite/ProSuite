@@ -12,6 +12,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
@@ -22,8 +23,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures;
 public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-	private static readonly Latch _latch = new();
 
 	protected CreateFeatureInPickedClassToolBase(SketchGeometryType sketchGeometryType) : base(
 		sketchGeometryType) { }
@@ -61,11 +60,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
 		CancelableProgressor progressor = null)
 	{
-		if (_latch.IsLatched)
-		{
-			return false; // startContructionPhase = false
-		}
-
 		(BasicFeatureLayer layer, List<Feature> features) = featuresByLayer.FirstOrDefault();
 
 		Feature feature = features?.FirstOrDefault();
@@ -113,8 +107,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		{
 			Inspector inspector = new Inspector();
 			await inspector.LoadAsync(layer, selectedOid);
-			geometry=ProSuite.Commons.AGP.Core.Spatial.GeometryUtils.Simplify(geometry);
-			inspector.Shape = geometry;
+			inspector.Shape = GeometryUtils.Simplify(geometry);
 
 			Attribute subtype = inspector.SubtypeAttribute;
 
@@ -144,8 +137,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 			bool succeed = false;
 			try
 			{
-				// todo daro latched operation in ToolBase?
-				_latch.Increment();
 				succeed = await operation.ExecuteAsync();
 			}
 			catch (Exception e)
@@ -163,8 +154,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 				{
 					_msg.Debug($"{Caption}: edit operation failed");
 				}
-
-				_latch.Decrement();
 			}
 
 			return false; // startSelectionPhase = false;

@@ -20,6 +20,7 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Misc;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.UI;
 
@@ -30,6 +31,7 @@ public abstract class ToolBase : MapTool
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	private readonly SketchGeometryType _defaultSketchGeometryType;
+	private readonly Latch _latch = new Latch();
 
 	protected ToolBase(SketchGeometryType sketchGeometryType)
 	{
@@ -200,7 +202,7 @@ public abstract class ToolBase : MapTool
 			return await Task.FromResult(false);
 		}
 
-		if (MapUtils.HasSelection(ActiveMapView))
+		if (MapUtils.HasSelection(ActiveMapView) && InConstructionPhase())
 		{
 			IDictionary<BasicFeatureLayer, List<long>> selection =
 				await GetApplicableSelection<BasicFeatureLayer>();
@@ -219,26 +221,35 @@ public abstract class ToolBase : MapTool
 				return true; // sketchCompleteEventHandled = true;
 			}
 		}
-		
-		bool validSelection = await OnSelectionSketchCompleteAsync(geometry);
 
-		if (validSelection)
+		try
 		{
-			// OnSketchCompleteAsync is on the GUI thread. Here is the right place to change the cursor.
-			// OnSelectionCompleteAsync is on QueuedTask/MCT thread. Changing cursor there doesn't immediately
-			// change it. You would have to move the mouse to trigger cursor change.
-			//StartContructionPhase();
+			// We don't want OnSelectionChangedCoreAsync to react on our selection
+			_latch.Increment();
+			bool validSelection = await OnSelectionSketchCompleteAsync(geometry);
 
-			bool selectionProcessed = await ProcessSelectionAsync();
+			if (validSelection)
+			{
+				// OnSketchCompleteAsync is on the GUI thread. Here is the right place to change the cursor.
+				// OnSelectionCompleteAsync is on QueuedTask/MCT thread. Changing cursor there doesn't immediately
+				// change it. You would have to move the mouse to trigger cursor change.
+				//StartContructionPhase();
 
-			if (selectionProcessed)
-			{
-				StartConstructionPhase();
+				bool selectionProcessed = await ProcessSelectionAsync();
+
+				if (selectionProcessed)
+				{
+					StartConstructionPhase();
+				}
+				else
+				{
+					StartSelectionPhase();
+				}
 			}
-			else
-			{
-				StartSelectionPhase();
-			}
+		}
+		finally
+		{
+			_latch.Decrement();
 		}
 
 		return true; // sketchCompleteEventHandled = true;
@@ -396,6 +407,29 @@ public abstract class ToolBase : MapTool
 		return await ViewUtils.TryAsync(task, _msg);
 	}
 
+	private async Task<bool> ProcessSelectionAsync(SelectionSet selection)
+	{
+		using var source = GetProgressorSource();
+		var progressor = source?.Progressor;
+
+		Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+			SelectionUtils.GetSelection<BasicFeatureLayer>(selection);
+
+		if (!CanUseSelection(selectionByLayer, new NotificationCollection()))
+		{
+			return false; // startContructionPhase = false
+		}
+
+		IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
+			GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
+
+		SetSketchSymbolBasedOnSelection(applicableSelection);
+
+		Task<bool> task = ProcessSelectionCoreAsync(applicableSelection, progressor);
+
+		return await ViewUtils.TryAsync(task, _msg);
+	}
+
 	/// <returns><b>true</b>: selection successfully processed and start
 	/// construction phase, <b>false</b>: stay in selection phase.</returns>
 	protected virtual Task<bool> ProcessSelectionCoreAsync(
@@ -413,6 +447,26 @@ public abstract class ToolBase : MapTool
 			LogPromptForSelection();
 			StartSelectionPhase();
 			await ClearSketchAsync();
+		}
+		else if (args.Selection.Count > 0)
+		{
+			// Process existing selection on activate tool.
+			// Do not react on selection made by this tool.
+			if (_latch.IsLatched)
+			{
+				return;
+			}
+
+			bool selectionProcessed = await ProcessSelectionAsync(args.Selection);
+
+			if (selectionProcessed)
+			{
+				StartConstructionPhase();
+			}
+			else
+			{
+				StartSelectionPhase();
+			}
 		}
 	}
 
@@ -686,5 +740,10 @@ public abstract class ToolBase : MapTool
 				Cursor = cursor;
 			});
 		}
+	}
+
+	private bool InConstructionPhase()
+	{
+		return Cursor == ConstructionCursorCore;
 	}
 }
