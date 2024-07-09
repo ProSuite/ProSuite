@@ -202,7 +202,7 @@ public abstract class ToolBase : MapTool
 			return await Task.FromResult(false);
 		}
 
-		if (MapUtils.HasSelection(ActiveMapView))
+		if (MapUtils.HasSelection(ActiveMapView) && InConstructionPhase())
 		{
 			IDictionary<BasicFeatureLayer, List<long>> selection =
 				await GetApplicableSelection<BasicFeatureLayer>();
@@ -740,5 +740,10 @@ public abstract class ToolBase : MapTool
 				Cursor = cursor;
 			});
 		}
+	}
+
+	private bool InConstructionPhase()
+	{
+		return Cursor == ConstructionCursorCore;
 	}
 }

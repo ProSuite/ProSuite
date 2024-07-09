@@ -194,15 +194,9 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 				_latch.Decrement();
 			}
 
-			//TODO: D&R should not clear the selection
-			// but ToolBase does not start selection phase as expected
-			await QueuedTask.Run(() =>
-			{
-				SelectionUtils.ClearSelection(ActiveMapView.Map);
+			_feedback.Clear();
 
-				_feedback.Clear();
-			});
-
+			LogPromptForSelection();
 			return true; // startSelectionPhase = true;
 		}
 		catch (Exception ex)
