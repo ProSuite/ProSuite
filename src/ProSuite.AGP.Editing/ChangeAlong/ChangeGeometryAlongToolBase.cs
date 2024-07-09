@@ -384,6 +384,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 						await PickerUtils.ShowAsync<IPickableFeatureItem>(
 							pickerPrecedence, orderedCandidates);
 
+					if (pickedItem == null)
+					{
+						return Enumerable.Empty<Feature>();
+					}
+
 					return new List<Feature> { pickedItem.Feature };
 				}
 
