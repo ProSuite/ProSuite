@@ -192,7 +192,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void SetupLassoSketch()
 		{
-			SetupSketch(SketchGeometryType.Lasso);
+			SetupSketch(SketchGeometryType.Lasso, enforceSimpleSketch: true);
 
 			SetupLassoSketchCore();
 		}
@@ -201,7 +201,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void SetupPolygonSketch()
 		{
-			SetupSketch(SketchGeometryType.Polygon);
+			SetupSketch(SketchGeometryType.Polygon, enforceSimpleSketch: true);
+
+			// TODO: Sketch symbol: No vertices
 
 			SetupPolygonSketchCore();
 		}
