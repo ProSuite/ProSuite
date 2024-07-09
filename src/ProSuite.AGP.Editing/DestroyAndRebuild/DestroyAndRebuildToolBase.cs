@@ -13,9 +13,9 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Misc;
 using ProSuite.Commons.UI;
 using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
 
@@ -24,8 +24,6 @@ namespace ProSuite.AGP.Editing.DestroyAndRebuild;
 public abstract class DestroyAndRebuildToolBase : ToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-	private static readonly Latch _latch = new();
 
 	private DestroyAndRebuildFeedback _feedback;
 
@@ -87,11 +85,6 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
 		CancelableProgressor progressor = null)
 	{
-		if (_latch.IsLatched)
-		{
-			return false; // startConstructionPhase = false
-		}
-
 		(BasicFeatureLayer layer, List<Feature> features) = featuresByLayer.FirstOrDefault();
 
 		Feature feature = features?.FirstOrDefault();
@@ -144,8 +137,7 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		{
 			Inspector inspector = new Inspector();
 			await inspector.LoadAsync(layer, selectedOid);
-			geometry=ProSuite.Commons.AGP.Core.Spatial.GeometryUtils.Simplify(geometry);
-			inspector.Shape = geometry;
+			inspector.Shape = GeometryUtils.Simplify(geometry);
 
 			Attribute subtype = inspector.SubtypeAttribute;
 
@@ -172,8 +164,6 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 			bool succeed = false;
 			try
 			{
-				// todo daro latched operation in ToolBase?
-				_latch.Increment();
 				succeed = await operation.ExecuteAsync();
 			}
 			catch (Exception e)
@@ -190,8 +180,6 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 				{
 					_msg.Debug($"{Caption}: edit operation failed");
 				}
-
-				_latch.Decrement();
 			}
 
 			_feedback.Clear();
