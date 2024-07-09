@@ -62,9 +62,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected virtual bool SupportRestoreLastSketch => true;
+		protected bool SupportRestoreLastSketch => true;
 
-		protected virtual bool LogSketchVertexZs { get; set; }
+		protected bool LogSketchVertexZs { get; set; }
 
 		#region MapTool overrides
 
