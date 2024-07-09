@@ -535,8 +535,8 @@ public abstract class ToolBase : MapTool
 	}
 
 	[NotNull]
-	private IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
-		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+	protected IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
+		[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 		[CanBeNull] NotificationCollection notifications = null)
 	{
 		var result = new Dictionary<BasicFeatureLayer, List<Feature>>(selectionByLayer.Count);
