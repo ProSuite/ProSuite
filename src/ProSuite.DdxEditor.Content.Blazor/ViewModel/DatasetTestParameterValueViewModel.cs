@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
 using ProSuite.Commons.Notifications;
@@ -16,7 +17,7 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 public class DatasetTestParameterValueViewModel : ViewModelBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
-	
+
 	[CanBeNull] private string _filterExpression;
 
 	private bool _usedAsReferenceData;
@@ -34,7 +35,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	{
 		_filterExpression = filterExpression;
 		_usedAsReferenceData = usedAsReferenceData;
-		
+
 		ImageSource = imageSource;
 		ModelName = modelName;
 
@@ -214,5 +215,29 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		string value = DisplayValue == null ? "<null>" : $"{DisplayValue}";
 
 		return $"{GetType().Name}: {value} ({ParameterName}, {DataType.Name})";
+	}
+
+	public string ShowFilterExpressionBuilder()
+	{
+		if (Value == null)
+		{
+			_msg.Warn("Please select a dataset first");
+			return null;
+		}
+
+		Either<Dataset, TransformerConfiguration> parameterValue =
+			Value as Either<Dataset, TransformerConfiguration>;
+
+		Dataset dataset = null;
+		parameterValue?.Match<object>(d => dataset = d as Dataset, t => t);
+
+		if (dataset != null)
+		{
+			FilterExpression =
+				Assert.NotNull(Observer.SqlExpressionBuilder, "SQL Expression builder not set")
+				      .BuildSqlExpression((ITableSchemaDef) dataset, _filterExpression);
+		}
+
+		return FilterExpression;
 	}
 }

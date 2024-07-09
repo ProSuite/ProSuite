@@ -29,6 +29,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				new InstanceConfigurationViewModel<QualityCondition>(
 					item, modelBuilder.GetTestParameterDatasetProvider(), itemNavigation);
 
+			viewModel.SqlExpressionBuilder = modelBuilder.GetSqlExpressionBuilder();
+
 			IInstanceConfigurationTableViewControl blazorControl =
 				new QualityConditionBlazor(viewModel);
 
