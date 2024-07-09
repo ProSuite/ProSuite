@@ -23,8 +23,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	private static readonly Latch _latch = new();
-
 	protected CreateFeatureInPickedClassToolBase(SketchGeometryType sketchGeometryType) : base(
 		sketchGeometryType) { }
 
@@ -61,11 +59,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
 		CancelableProgressor progressor = null)
 	{
-		if (_latch.IsLatched)
-		{
-			return false; // startContructionPhase = false
-		}
-
 		(BasicFeatureLayer layer, List<Feature> features) = featuresByLayer.FirstOrDefault();
 
 		Feature feature = features?.FirstOrDefault();
@@ -144,8 +137,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 			bool succeed = false;
 			try
 			{
-				// todo daro latched operation in ToolBase?
-				_latch.Increment();
 				succeed = await operation.ExecuteAsync();
 			}
 			catch (Exception e)
@@ -163,8 +154,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 				{
 					_msg.Debug($"{Caption}: edit operation failed");
 				}
-
-				_latch.Decrement();
 			}
 
 			return false; // startSelectionPhase = false;
