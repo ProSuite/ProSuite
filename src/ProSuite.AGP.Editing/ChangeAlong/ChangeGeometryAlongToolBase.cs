@@ -56,7 +56,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected abstract string EditOperationDescription { get; }
 
 		protected abstract IChangeAlongService MicroserviceClient { get; }
-		
+
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
 		{
 			return SketchGeometryType.Rectangle;
@@ -392,6 +392,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			IEnumerable<Feature> targetFeatures = await ViewUtils.TryAsync(task, _msg);
 
+			if (targetFeatures == null)
+			{
+				// Likely an exception or cancellation
+				return false;
+			}
+
 			ChangeAlongCurves =
 				await QueuedTaskUtils.Run(
 					() => RefreshChangeAlongCurves(selectedFeatures, targetFeatures, progressor));
@@ -409,7 +415,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				t => CanUseAsTargetFeature(selectedFeatures, t);
 
 			SpatialRelationship spatialRel =
-				SketchType == SketchGeometryType.Polygon||
+				SketchType == SketchGeometryType.Polygon ||
 				SketchType == SketchGeometryType.Lasso
 					? SpatialRelationship.Contains
 					: SpatialRelationship.Intersects;
