@@ -573,6 +573,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="pixels"></param>
 		/// <param name="atPoint"></param>
 		/// <returns></returns>
+		/// <remarks>Must run on MCT</remarks>
 		public static double ConvertScreenPixelToMapLength(
 			MapView mapView,
 			int pixels,
