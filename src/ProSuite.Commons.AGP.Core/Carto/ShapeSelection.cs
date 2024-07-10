@@ -28,6 +28,7 @@ public interface IShapeSelection
 	bool SetEmpty();
 
 	IEnumerable<MapPoint> GetSelectedVertices(Geometry shape);
+	IEnumerable<MapPoint> GetUnselectedVertices(Geometry shape);
 
 	bool HitTestVertex(Geometry shape, MapPoint hitPoint, double tolerance);
 }
@@ -85,6 +86,7 @@ public class ShapeSelection : IShapeSelection
 	{
 		if (_items is null) return false;
 		return _items.Any(item => item.PartIndex == partIndex && item.VertexIndex == vertexIndex);
+		// TODO cope with (j,*) and (*,*) items; use binary search on OrderedItems
 	}
 
 	public bool CombineShape(SetCombineMethod method)
@@ -262,6 +264,63 @@ public class ShapeSelection : IShapeSelection
 				else
 				{
 					yield return GetPoint(multipart, item.PartIndex, item.VertexIndex);
+				}
+			}
+		}
+	}
+
+	public IEnumerable<MapPoint> GetUnselectedVertices(Geometry shape)
+	{
+		if (shape is null) yield break;
+		if (shape.IsEmpty) yield break;
+
+		if (IsEmpty)
+		{
+			foreach (var point in GetVertices(shape))
+			{
+				yield return point;
+			}
+		}
+		else if (IsFully)
+		{
+			// yield nothing: no unselected vertices
+		}
+		else if (shape is MapPoint mapPoint)
+		{
+			if (IsEmpty) yield return mapPoint;
+		}
+		else if (shape is Multipoint multipoint)
+		{
+			int pointCount = multipoint.PointCount;
+			for (int i = 0; i < pointCount; i++)
+			{
+				if (! IsVertexSelected(i, i))
+				{
+					yield return multipoint.Points[i];
+				}
+			}
+		}
+		else if (shape is Multipart multipart)
+		{
+			int partCount = multipart.PartCount;
+			for (int k = 0; k < partCount; k++)
+			{
+				var part = multipart.Parts[k];
+				int segmentCount = part.Count;
+				for (int i = 0; i < segmentCount; i++)
+				{
+					if (! IsVertexSelected(k, i))
+					{
+						yield return part[i].StartPoint;
+					}
+				}
+
+				if (segmentCount > 0 && multipart is Polyline)
+				{
+					if (! IsVertexSelected(k, segmentCount))
+					{
+						yield return part[segmentCount - 1].EndPoint;
+					}
 				}
 			}
 		}
