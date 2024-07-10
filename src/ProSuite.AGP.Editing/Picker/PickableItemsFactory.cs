@@ -17,7 +17,7 @@ namespace ProSuite.AGP.Editing.Picker
 			return selectionByClasses.SelectMany(CreateFeatureItems);
 		}
 
-		public static IEnumerable<IPickableFeatureClassItem> CreateFeatureClassItems(
+		public static IEnumerable<IPickableItem> CreateFeatureClassItems(
 			[NotNull] IEnumerable<FeatureSelectionBase> selectionByClasses)
 		{
 			var itemsByName = new Dictionary<string, IPickableFeatureClassItem>();

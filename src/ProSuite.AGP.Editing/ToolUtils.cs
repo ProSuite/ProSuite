@@ -12,6 +12,7 @@ using ArcGIS.Desktop.Internal.Mapping;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
@@ -222,13 +223,25 @@ namespace ProSuite.AGP.Editing
 
 		public static HashSet<long> GetEditableClassHandles([NotNull] MapView mapView)
 		{
-			IEnumerable<BasicFeatureLayer> basicFeatureLayers =
+			var editableClassHandles = new HashSet<long>();
+
+			IEnumerable<BasicFeatureLayer> editableFeatureLayers =
 				MapUtils.GetFeatureLayers<BasicFeatureLayer>(
 					mapView.Map, bfl => bfl?.IsEditable == true);
 
-			HashSet<long> editableClassHandles = basicFeatureLayers
-			                                     .Select(l => l.GetTable().Handle.ToInt64())
-			                                     .ToHashSet();
+			foreach (var featureLayer in editableFeatureLayers)
+			{
+				FeatureClass featureClass = featureLayer.GetFeatureClass();
+
+				if (featureClass == null)
+				{
+					continue;
+				}
+
+				featureClass = DatasetUtils.GetDatabaseFeatureClass(featureClass);
+
+				editableClassHandles.Add(featureClass.Handle.ToInt64());
+			}
 
 			return editableClassHandles;
 		}
@@ -248,6 +261,11 @@ namespace ProSuite.AGP.Editing
 			var featureLayer = editTemplate?.Layer as FeatureLayer;
 
 			return featureLayer;
+		}
+
+		public static SketchGeometryType GetSketchGeometryType()
+		{
+			return MapView.Active?.GetSketchType() ?? SketchGeometryType.None;
 		}
 
 		/// <summary>

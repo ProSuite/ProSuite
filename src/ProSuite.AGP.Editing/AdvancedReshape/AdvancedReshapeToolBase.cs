@@ -147,7 +147,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_msg.VerboseDebug(() => "OnSketchModifiedAsync");
 
 			// Does it make any difference what the return value is?
-			return await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
+			bool result = await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
+
+			result &= await base.OnSketchModifiedAsync();
+
+			return result;
 		}
 
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
@@ -237,15 +241,18 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			var polyline = (Polyline) sketchGeometry;
 
-			List<Feature> selection;
-
 			bool success = await QueuedTaskUtils.Run(async () =>
 			{
 				try
 				{
 					SetCursor(Cursors.Wait);
 
-					selection = GetApplicableSelectedFeatures(activeView).ToList();
+					Dictionary<MapMember, List<long>> selectionByLayer =
+						SelectionUtils.GetSelection(activeView.Map);
+
+					List<Feature> selection =
+						GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+							.ToList();
 
 					var potentiallyAffectedFeatures =
 						GetAdjacentFeatures(selection, cancelableProgressor);
@@ -413,11 +420,14 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			// TODO: Use linear network classes as defined in reshape options
 			TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection.SameClass;
 
-			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
+			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
+			                    {
+				                    ReturnUnJoinedFeatures = true
+			                    };
 
 			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, true, layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
+					selection, layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
 					inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&
