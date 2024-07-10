@@ -469,6 +469,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			await ViewUtils.TryAsync(
 				PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers), _msg);
 
+			await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
+
 			return true;
 		}
 
