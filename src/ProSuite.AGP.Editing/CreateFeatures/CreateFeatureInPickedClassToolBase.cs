@@ -5,25 +5,24 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Editing;
-using ArcGIS.Desktop.Editing.Attributes;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Misc;
-using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
+using ProSuite.Commons.Notifications;
 
 namespace ProSuite.AGP.Editing.CreateFeatures;
 
 public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-	private static readonly Latch _latch = new();
 
 	protected CreateFeatureInPickedClassToolBase(SketchGeometryType sketchGeometryType) : base(
 		sketchGeometryType) { }
@@ -61,11 +60,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
 		CancelableProgressor progressor = null)
 	{
-		if (_latch.IsLatched)
-		{
-			return false; // startContructionPhase = false
-		}
-
 		(BasicFeatureLayer layer, List<Feature> features) = featuresByLayer.FirstOrDefault();
 
 		Feature feature = features?.FirstOrDefault();
@@ -98,78 +92,35 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 			return true; // startSelectionPhase = true;
 		}
 
-		(BasicFeatureLayer layer, List<long> oids) = selectionByLayer.FirstOrDefault();
-
-		if (oids.Count == 0)
+		bool success = await QueuedTaskUtils.Run(async () =>
 		{
-			_msg.Debug("no selection");
-
-			return true; // startSelectionPhase = true;
-		}
-
-		long selectedOid = oids.FirstOrDefault();
-
-		try
-		{
-			Inspector inspector = new Inspector();
-			await inspector.LoadAsync(layer, selectedOid);
-			inspector.Shape = geometry;
-
-			Attribute subtype = inspector.SubtypeAttribute;
-			string subtypeName = subtype != null ? subtype.CurrentSubtype.Name : layer.Name;
-
-			// note: TooltipHeading is null here.
-			var operation = new EditOperation
-			                {
-				                Name = $"Create {subtypeName}",
-				                SelectNewFeatures = true
-			                };
-
-			// todo daro move to base? make utils?
-			RowToken rowToken = operation.Create(inspector.MapMember,
-			                                     inspector.ToDictionary(
-				                                     field => field.FieldName,
-				                                     field => field.CurrentValue));
-
-			if (operation.IsEmpty)
-			{
-				_msg.Debug($"{Caption}: edit operation is empty");
-				return false;
-			}
-
-			bool succeed = false;
 			try
 			{
-				// todo daro latched operation in ToolBase?
-				_latch.Increment();
-				succeed = await operation.ExecuteAsync();
-			}
-			catch (Exception e)
-			{
-				_msg.Debug($"{Caption}: edit operation threw an exception", e);
-			}
-			finally
-			{
-				if (succeed)
+				IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
+					GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
+
+				List<Feature> selectedFeatures = applicableSelection.Values.FirstOrDefault();
+
+				if (selectedFeatures == null || selectedFeatures.Count == 0)
 				{
-					_msg.Info(
-						$"Created new feature {layer.Name} ({subtypeName}) ID: {rowToken.ObjectID}");
-				}
-				else
-				{
-					_msg.Debug($"{Caption}: edit operation failed");
+					_msg.Debug("no applicable selection");
+					return true;
 				}
 
-				_latch.Decrement();
-			}
+				Feature originalFeature = selectedFeatures.First();
 
-			return false; // startSelectionPhase = false;
-		}
-		catch (Exception ex)
-		{
-			_msg.Error(ex.Message, ex);
-			return false; // startSelectionPhase = false;
-		}
+				await StoreNewFeature(geometry, selectionByLayer, originalFeature);
+
+				return false; // startSelectionPhase = false;
+			}
+			catch (Exception ex)
+			{
+				_msg.Error(ex.Message, ex);
+				return false; // startSelectionPhase = false;
+			}
+		});
+
+		return false;
 	}
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)
@@ -179,11 +130,11 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 			case GeometryType.Point:
 			case GeometryType.Polyline:
 			case GeometryType.Polygon:
+			case GeometryType.Multipoint:
+			case GeometryType.Multipatch:
 				return true;
 			case GeometryType.Unknown:
 			case GeometryType.Envelope:
-			case GeometryType.Multipoint:
-			case GeometryType.Multipatch:
 			case GeometryType.GeometryBag:
 				_msg.Debug($"{Caption}: cannot select from geometry of type {geometryType}");
 				return false;
@@ -200,5 +151,46 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 	protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
 	{
 		return layer is FeatureLayer;
+	}
+
+	private async Task StoreNewFeature([NotNull] Geometry sketchGeometry,
+	                                   IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+	                                   Feature originalFeature)
+	{
+		// Prevent invalid Z values and other non-simple geometries:
+		Geometry simplifiedSketch =
+			Assert.NotNull(GeometryUtils.Simplify(sketchGeometry), "Geometry is null");
+
+		Subtype featureSubtype = GdbObjectUtils.GetSubtype(originalFeature);
+		BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
+
+		string subtypeName = featureSubtype != null
+			                     ? featureSubtype.GetName()
+			                     : featureLayer.Name;
+
+		Feature newFeature = null;
+		bool transactionSucceeded =
+			await GdbPersistenceUtils.ExecuteInTransactionAsync(
+				editContext =>
+				{
+					newFeature = GdbPersistenceUtils.InsertTx(
+						editContext, originalFeature, simplifiedSketch);
+
+					return true;
+				}, $"Create {subtypeName}",
+				new[] { originalFeature.GetTable() });
+
+		if (transactionSucceeded)
+		{
+			SelectionUtils.ClearSelection(MapView.Active.Map);
+			SelectionUtils.SelectFeature(featureLayer, SelectionCombinationMethod.New,
+			                             newFeature.GetObjectID());
+			_msg.Info(
+				$"Created new feature {featureLayer.Name} ({subtypeName}) ID: {newFeature.GetObjectID()}");
+		}
+		else
+		{
+			_msg.Warn($"{Caption}: edit operation failed");
+		}
 	}
 }

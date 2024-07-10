@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -19,6 +20,7 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Misc;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.UI;
 
@@ -29,6 +31,7 @@ public abstract class ToolBase : MapTool
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	private readonly SketchGeometryType _defaultSketchGeometryType;
+	private readonly Latch _latch = new Latch();
 
 	protected ToolBase(SketchGeometryType sketchGeometryType)
 	{
@@ -47,21 +50,22 @@ public abstract class ToolBase : MapTool
 	}
 
 	private List<Key> HandledKeys { get; } = new() { Key.Escape, Key.F2 };
+	
+	protected Point CurrentMousePosition;
 
+	[NotNull]
 	protected virtual Cursor SelectionCursorCore { get; }
 
+	[NotNull]
 	protected virtual Cursor ConstructionCursorCore { get; }
 
 	protected virtual bool AllowNoSelection => false;
 
 	#region abstract
-
-	// todo daro revise/refactor!
+	
 	protected abstract void LogPromptForSelection();
 
 	protected abstract SelectionSettings GetSelectionSettings();
-
-	protected abstract Type PickerPrecedenceType { get; }
 
 	protected abstract Task HandleEscapeAsync();
 
@@ -140,14 +144,26 @@ public abstract class ToolBase : MapTool
 
 		if (args.Key == Key.Escape)
 		{
-			await ViewUtils.TryAsync(ClearSketchAsync, _msg);
+			if (await HasSketchAsync())
+			{
+				await ViewUtils.TryAsync(ClearSketchAsync, _msg);
+			}
+			else
+			{
+				await ViewUtils.TryAsync(HandleEscapeAsync, _msg);
 
-			await ViewUtils.TryAsync(HandleEscapeAsync, _msg);
-
-			StartSelectionPhase();
+				StartSelectionPhase();
+			}
 		}
 
 		await ViewUtils.TryAsync(HandleKeyDownCoreAsync(args), _msg);
+	}
+
+	protected override void OnToolMouseMove(MapViewMouseEventArgs args)
+	{
+		CurrentMousePosition = args.ClientPoint;
+
+		base.OnToolMouseMove(args);
 	}
 
 	#endregion
@@ -186,7 +202,7 @@ public abstract class ToolBase : MapTool
 			return await Task.FromResult(false);
 		}
 
-		if (MapUtils.HasSelection(ActiveMapView))
+		if (MapUtils.HasSelection(ActiveMapView) && InConstructionPhase())
 		{
 			IDictionary<BasicFeatureLayer, List<long>> selection =
 				await GetApplicableSelection<BasicFeatureLayer>();
@@ -205,26 +221,35 @@ public abstract class ToolBase : MapTool
 				return true; // sketchCompleteEventHandled = true;
 			}
 		}
-		
-		bool validSelection = await OnSelectionSketchCompleteAsync(geometry);
 
-		if (validSelection)
+		try
 		{
-			// OnSketchCompleteAsync is on the GUI thread. Here is the right place to change the cursor.
-			// OnSelectionCompleteAsync is on QueuedTask/MCT thread. Changing cursor there doesn't immediately
-			// change it. You would have to move the mouse to trigger cursor change.
-			//StartContructionPhase();
+			// We don't want OnSelectionChangedCoreAsync to react on our selection
+			_latch.Increment();
+			bool validSelection = await OnSelectionSketchCompleteAsync(geometry);
 
-			bool selectionProcessed = await ProcessSelectionAsync();
+			if (validSelection)
+			{
+				// OnSketchCompleteAsync is on the GUI thread. Here is the right place to change the cursor.
+				// OnSelectionCompleteAsync is on QueuedTask/MCT thread. Changing cursor there doesn't immediately
+				// change it. You would have to move the mouse to trigger cursor change.
+				//StartContructionPhase();
 
-			if (selectionProcessed)
-			{
-				StartConstructionPhase();
+				bool selectionProcessed = await ProcessSelectionAsync();
+
+				if (selectionProcessed)
+				{
+					StartConstructionPhase();
+				}
+				else
+				{
+					StartSelectionPhase();
+				}
 			}
-			else
-			{
-				StartSelectionPhase();
-			}
+		}
+		finally
+		{
+			_latch.Decrement();
 		}
 
 		return true; // sketchCompleteEventHandled = true;
@@ -239,21 +264,15 @@ public abstract class ToolBase : MapTool
 	{
 		int tolerance = GetSelectionSettings().SelectionTolerancePixels;
 
-		using var source = GetProgressorSource();
-		var progressor = source?.Progressor;
-
-		Type precedenceType = PickerPrecedenceType;
+		using var pickerPrecedence =
+			new PickerPrecedence(geometry, tolerance,
+			                     ActiveMapView.ClientToScreen(CurrentMousePosition));
 
 		Task picker =
 			AllowMultiSelection(out _)
-				? PickerUtils.Show(
-					geometry, tolerance, precedenceType,
-					sketchGeom => FindFeatureSelection(sketchGeom),
-					progressor)
-				: PickerUtils.Show(
-					geometry, tolerance, precedenceType,
-					sketchGeom => FindFeatureSelection(sketchGeom),
-					PickerMode.ShowPicker, progressor);
+				? PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection)
+				: PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection,
+				                        PickerMode.ShowPicker);
 
 		await ViewUtils.TryAsync(picker, _msg);
 
@@ -349,6 +368,13 @@ public abstract class ToolBase : MapTool
 		SketchSymbol = null;
 	}
 
+	private async Task<bool> HasSketchAsync()
+	{
+		Geometry currentSketch = await GetCurrentSketchAsync();
+
+		return currentSketch?.IsEmpty == false;
+	}
+
 	#endregion
 
 	#region selection
@@ -381,6 +407,29 @@ public abstract class ToolBase : MapTool
 		return await ViewUtils.TryAsync(task, _msg);
 	}
 
+	private async Task<bool> ProcessSelectionAsync(SelectionSet selection)
+	{
+		using var source = GetProgressorSource();
+		var progressor = source?.Progressor;
+
+		Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+			SelectionUtils.GetSelection<BasicFeatureLayer>(selection);
+
+		if (!CanUseSelection(selectionByLayer, new NotificationCollection()))
+		{
+			return false; // startContructionPhase = false
+		}
+
+		IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
+			GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
+
+		SetSketchSymbolBasedOnSelection(applicableSelection);
+
+		Task<bool> task = ProcessSelectionCoreAsync(applicableSelection, progressor);
+
+		return await ViewUtils.TryAsync(task, _msg);
+	}
+
 	/// <returns><b>true</b>: selection successfully processed and start
 	/// construction phase, <b>false</b>: stay in selection phase.</returns>
 	protected virtual Task<bool> ProcessSelectionCoreAsync(
@@ -398,6 +447,26 @@ public abstract class ToolBase : MapTool
 			LogPromptForSelection();
 			StartSelectionPhase();
 			await ClearSketchAsync();
+		}
+		else if (args.Selection.Count > 0)
+		{
+			// Process existing selection on activate tool.
+			// Do not react on selection made by this tool.
+			if (_latch.IsLatched)
+			{
+				return;
+			}
+
+			bool selectionProcessed = await ProcessSelectionAsync(args.Selection);
+
+			if (selectionProcessed)
+			{
+				StartConstructionPhase();
+			}
+			else
+			{
+				StartSelectionPhase();
+			}
 		}
 	}
 
@@ -422,7 +491,8 @@ public abstract class ToolBase : MapTool
 
 	private IEnumerable<FeatureSelectionBase> FindFeatureSelection(
 		[NotNull] Geometry geometry,
-		SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
+		SpatialRelationship spatialRelationship = SpatialRelationship.Intersects,
+		[CanBeNull] CancelableProgressor progressor = null)
 	{
 		var featureFinder = new FeatureFinder(ActiveMapView)
 		                    {
@@ -430,7 +500,9 @@ public abstract class ToolBase : MapTool
 			                    DelayFeatureFetching = true
 		                    };
 
-		return featureFinder.FindFeaturesByLayer(geometry, fl => CanSelectFromLayer(fl));
+		const Predicate<Feature> featurePredicate = null;
+		return featureFinder.FindFeaturesByLayer(geometry, fl => CanSelectFromLayer(fl),
+		                                         featurePredicate, progressor);
 	}
 
 	private async Task<IDictionary<T, List<long>>> GetApplicableSelection<T>()
@@ -463,8 +535,8 @@ public abstract class ToolBase : MapTool
 	}
 
 	[NotNull]
-	private IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
-		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+	protected IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
+		[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 		[CanBeNull] NotificationCollection notifications = null)
 	{
 		var result = new Dictionary<BasicFeatureLayer, List<Feature>>(selectionByLayer.Count);
@@ -508,21 +580,27 @@ public abstract class ToolBase : MapTool
 			return false;
 		}
 
+		if (! layer.IsVisibleInView(ActiveMapView))
+		{
+			// Takes scale range into account (and probably the parent layer too)
+			NotificationUtils.Add(notifications, $"Layer {layerName} is not visible on map");
+			return false;
+		}
+
 		if (! layer.IsSelectable)
 		{
 			NotificationUtils.Add(notifications, $"Layer {layerName} not selectable");
 			return false;
 		}
 
-		if (CanSelectOnlyEditFeatures() &&
-		    ! layer.IsEditable)
+		if (CanSelectOnlyEditFeatures() && ! layer.IsEditable)
 		{
 			NotificationUtils.Add(notifications, $"Layer {layerName} not editable");
 			return false;
 		}
 
-		if (! CanSelectGeometryType(
-			    GeometryUtils.TranslateEsriGeometryType(layer.ShapeType)))
+		var geometryType = GeometryUtils.TranslateEsriGeometryType(layer.ShapeType);
+		if (! CanSelectGeometryType(geometryType))
 		{
 			NotificationUtils.Add(notifications,
 			                      $"Layer {layerName}: Cannot use geometry type {layer.ShapeType}");
@@ -630,11 +708,42 @@ public abstract class ToolBase : MapTool
 
 	private void SetSelectionCursor()
 	{
-		Cursor = SelectionCursorCore;
+		Cursor cursor = SelectionCursorCore;
+		Assert.NotNull(cursor);
+
+		if (Application.Current.Dispatcher.CheckAccess())
+		{
+			Cursor = cursor;
+		}
+		else
+		{
+			Application.Current.Dispatcher.Invoke(() =>
+			{
+				Cursor = cursor;
+			});
+		}
 	}
 
 	private void SetConstructionCursor()
 	{
-		Cursor = ConstructionCursorCore;
+		Cursor cursor = ConstructionCursorCore;
+		Assert.NotNull(cursor);
+
+		if (Application.Current.Dispatcher.CheckAccess())
+		{
+			Cursor = cursor;
+		}
+		else
+		{
+			Application.Current.Dispatcher.Invoke(() =>
+			{
+				Cursor = cursor;
+			});
+		}
+	}
+
+	private bool InConstructionPhase()
+	{
+		return Cursor == ConstructionCursorCore;
 	}
 }

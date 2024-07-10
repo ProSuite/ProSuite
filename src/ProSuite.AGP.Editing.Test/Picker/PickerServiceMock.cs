@@ -2,20 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using ProSuite.AGP.Editing.Picker;
 
 namespace ProSuite.AGP.Editing.Test.Picker
 {
 	public class PickerServiceMock : IPickerService
 	{
-		public Task<T> Pick<T>(List<IPickableItem> items, Point pickerLocation, IPickerPrecedence precedence) where T : class, IPickableItem
+		public Task<T> Pick<T>(List<IPickableItem> items, IPickerPrecedence precedence) where T : class, IPickableItem
 		{
 			throw new NotImplementedException();
 		}
 
 		public Task<T> PickSingle<T>(IEnumerable<IPickableItem> items,
-		                             Point pickerLocation,
 		                             IPickerPrecedence precedence)
 			where T : class, IPickableItem
 		{

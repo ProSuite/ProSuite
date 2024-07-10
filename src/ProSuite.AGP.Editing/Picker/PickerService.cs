@@ -10,7 +10,6 @@ using ProSuite.Commons.UI.WPF;
 namespace ProSuite.AGP.Editing.Picker
 {
 	// TODOs:
-	// - Improve item text (subtype, expression)
 	// - Consider tool tip for pickable items with all attributes
 	// - Check performance, consider not just clipping but also weeding
 	// - Configurable selection tolerance (consider using snapping?)
@@ -21,7 +20,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 	public class PickerService : IPickerService
 	{
-		public Task<T> Pick<T>(List<IPickableItem> items, Point pickerLocation,
+		public Task<T> Pick<T>(List<IPickableItem> items,
 		                       IPickerPrecedence precedence) where T : class, IPickableItem
 		{
 			if (items.Count == 1)
@@ -29,11 +28,11 @@ namespace ProSuite.AGP.Editing.Picker
 				return Task.FromResult(precedence.PickBest<T>(items));
 			}
 
-			return PickSingle<T>(items, pickerLocation, precedence);
+			return PickSingle<T>(items, precedence);
 		}
 
+		// todo daro rename?
 		public Task<T> PickSingle<T>(IEnumerable<IPickableItem> items,
-		                             Point pickerLocation,
 		                             IPickerPrecedence precedence)
 			where T : class, IPickableItem
 		{
@@ -55,7 +54,7 @@ namespace ProSuite.AGP.Editing.Picker
 				throw new ArgumentOutOfRangeException();
 			}
 
-			return ShowPickerControlAsync<T>(viewModel, pickerLocation);
+			return ShowPickerControlAsync<T>(viewModel, precedence.PickerLocation);
 		}
 
 		private static async Task<T> ShowPickerControlAsync<T>(PickerViewModel vm, Point location)

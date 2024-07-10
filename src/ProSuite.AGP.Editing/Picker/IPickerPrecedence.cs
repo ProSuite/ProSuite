@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Windows;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Selection;
 
@@ -12,8 +13,12 @@ namespace ProSuite.AGP.Editing.Picker
 
 		Geometry SelectionGeometry { get; set; }
 		int SelectionTolerance { get; }
+		bool IsSingleClick { get; }
+		Point PickerLocation { get; set; }
 
 		PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                         bool areaSelect = false);
+
+		void EnsureGeometryNonEmpty();
 	}
 }
