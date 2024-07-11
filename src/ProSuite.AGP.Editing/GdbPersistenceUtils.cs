@@ -122,8 +122,15 @@ namespace ProSuite.AGP.Editing
 
 			RowBuffer rowBuffer = DuplicateRow(originalFeature);
 
+			using var classDefinition = featureClass.GetDefinition();
+			bool classHasZ = classDefinition.HasZ();
+			bool classHasM = classDefinition.HasM();
+
+			Geometry geometryToStore =
+				GeometryUtils.EnsureGeometrySchema(newGeometry, classHasZ, classHasM);
+
 			Geometry projected = GeometryUtils.EnsureSpatialReference(
-				newGeometry, featureClass.GetSpatialReference());
+				geometryToStore, featureClass.GetSpatialReference());
 
 			SetShape(rowBuffer, projected, featureClass);
 
