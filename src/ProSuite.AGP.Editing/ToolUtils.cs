@@ -83,6 +83,41 @@ namespace ProSuite.AGP.Editing
 		}
 
 		/// <summary>
+		/// Make the given sketch geometry into a polygon suitable for searching.
+		/// If the sketch geometry comes from a "point click", create an envelope
+		/// around this point (width=height=2*tolerance); otherwise return the
+		/// sketch geometry unmodified.
+		/// </summary>
+		public static Geometry SketchToSearchGeometry(Geometry sketch, double tolerance,
+		                                              out bool isPointClick)
+		{
+			var extent = sketch.Extent;
+			isPointClick = extent.Width <= tolerance && extent.Height <= tolerance;
+
+			if (isPointClick)
+			{
+				var clickPoint = sketch.Extent.Center;
+
+				var delta = tolerance * 2;
+
+				// Expand the envelope of the clicked point by tolerance on all sides,
+				// then make it a Polygon to have a high-level geometry:
+
+				var clickExtent = clickPoint.Extent;
+				sketch = GeometryFactory.CreatePolygon(
+					clickExtent.Expand(delta, delta, false),
+					clickExtent.SpatialReference);
+			}
+
+			return sketch;
+		}
+
+		public static double ConvertScreenPixelToMapLength(MapView mapView, int pixels, MapPoint atPoint)
+		{
+			return MapUtils.ConvertScreenPixelToMapLength(mapView, pixels, atPoint);
+		}
+
+		/// <summary>
 		/// Determines if the provided sketch selects the specified derived geometry.
 		/// </summary>
 		/// <param name="sketch">The sketch geometry to be used as test geometry.
@@ -141,7 +176,14 @@ namespace ProSuite.AGP.Editing
 			//	GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
 
 			// Just expand the envelope
-			return envelope.Expand(envelopeExpansion, envelopeExpansion, false);
+			// .. but PickerViewModel needs a polygon to display selection geometry (press space).
+
+			// HasZ, HasM and HasID are inherited from input geometry. Thereßss no need
+			// for GeometryUtils.EnsureGeometrySchema()
+
+			return GeometryFactory.CreatePolygon(
+				envelope.Expand(envelopeExpansion, envelopeExpansion, false),
+				envelope.SpatialReference);
 		}
 
 		public static async Task<bool> FlashResultPolygonsAsync(
@@ -200,6 +242,7 @@ namespace ProSuite.AGP.Editing
 			return editableClassHandles;
 		}
 
+		[CanBeNull]
 		public static FeatureClass GetCurrentTargetFeatureClass(
 			[CanBeNull] EditingTemplate editTemplate)
 		{
@@ -215,6 +258,11 @@ namespace ProSuite.AGP.Editing
 			var featureLayer = editTemplate?.Layer as FeatureLayer;
 
 			return featureLayer;
+		}
+
+		public static SketchGeometryType GetSketchGeometryType()
+		{
+			return MapView.Active?.GetSketchType() ?? SketchGeometryType.None;
 		}
 	}
 }

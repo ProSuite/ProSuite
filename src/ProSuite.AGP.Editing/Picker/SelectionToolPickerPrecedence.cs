@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
@@ -10,41 +11,31 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.Picker
 {
-	public class SelectionToolPickerPrecedence : IPickerPrecedence
+	public class SelectionToolPickerPrecedence : PickerPrecedenceBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private static readonly int _maxItems = 25;
-		private static MapPoint _selectionCentroid;
 
-		private Geometry _selectionGeometry;
+		private MapPoint _selectionCentroid;
 
-		public Geometry SelectionGeometry
+		[UsedImplicitly]
+		public SelectionToolPickerPrecedence(Geometry selectionGeometry,
+		                                     int selectionTolerance,
+		                                     Point pickerLocation) :
+			base(selectionGeometry, selectionTolerance, pickerLocation) { }
+
+		public override PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
+		                                         bool areaSelect = false)
 		{
-			get => _selectionGeometry;
-			set
-			{
-				_selectionGeometry = value;
-				_selectionCentroid = GeometryUtils.Centroid(value);
-			}
-		}
-
-		public int SelectionTolerance { get; set; }
-
-		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
-		                                bool areaSelect = false)
-		{
-			if (KeyboardUtils.IsModifierDown(Key.LeftAlt, exclusive: true) ||
-			    KeyboardUtils.IsModifierDown(Key.RightAlt, exclusive: true))
+			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.RightAlt))
 			{
 				return PickerMode.PickAll;
 			}
 
-			if (KeyboardUtils.IsModifierDown(Key.LeftCtrl, exclusive: true) ||
-			    KeyboardUtils.IsModifierDown(Key.RightCtrl, exclusive: true))
+			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
 			{
 				return PickerMode.ShowPicker;
 			}
@@ -52,21 +43,23 @@ namespace ProSuite.AGP.Editing.Picker
 			return PickerMode.PickBest;
 		}
 
-		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
+		public override IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
 		{
 			return items.Take(_maxItems)
-			            .Select(item => SetScoreConsideringDistances(item, _selectionCentroid))
+			            .Select(item => SetScoreConsideringDistances(item, SelectionCentroid))
 			            .OfType<IPickableFeatureItem>()
-			            .Select(item => SetScoreConsideringDrawingOutline(item, _selectionCentroid))
+			            .Select(item => SetScoreConsideringDrawingOutline(item, SelectionCentroid))
 			            .OrderBy(item => item, new PickableItemComparer());
 		}
 
-		// todo daro move to subclass?
-		[CanBeNull]
-		public T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem
+		public override T PickBest<T>(IEnumerable<IPickableItem> items)
 		{
 			return Order(items).FirstOrDefault() as T;
 		}
+
+		[NotNull]
+		private MapPoint SelectionCentroid =>
+			_selectionCentroid ??= GeometryUtils.Centroid(SelectionGeometry);
 
 		private static IPickableItem SetScoreConsideringDistances(
 			IPickableItem item,
@@ -86,11 +79,13 @@ namespace ProSuite.AGP.Editing.Picker
 				{
 					case GeometryType.Point:
 						score = GeometryUtils.Engine
-						                     .NearestPoint(selectionGeometry, (MapPoint) item.Geometry)
+						                     .NearestPoint(selectionGeometry,
+						                                   (MapPoint) item.Geometry)
 						                     .Distance;
 						break;
 					case GeometryType.Polyline:
-						score = SumDistancesStartEndPoint(selectionGeometry, (Multipart) item.Geometry);
+						score = SumDistancesStartEndPoint(selectionGeometry,
+						                                  (Multipart) item.Geometry);
 						break;
 					case GeometryType.Polygon:
 						// negative
@@ -105,7 +100,7 @@ namespace ProSuite.AGP.Editing.Picker
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
-			
+
 				SetScore(item, score);
 			}
 			catch (Exception e)
@@ -193,7 +188,8 @@ namespace ProSuite.AGP.Editing.Picker
 			Assert.NotNull(drawingOutline);
 			Assert.False(drawingOutline.IsEmpty, "outline is empty");
 			Assert.False(drawingOutline.GeometryType == GeometryType.Point, "outline is a point");
-			Assert.False(drawingOutline.GeometryType == GeometryType.Polyline, "outline is a polyline");
+			Assert.False(drawingOutline.GeometryType == GeometryType.Polyline,
+			             "outline is a polyline");
 
 			return drawingOutline;
 		}

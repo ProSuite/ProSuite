@@ -14,6 +14,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) prototype.Clone();
 		}
 
+		/// <summary>
+		/// Return the given <paramref name="builder"/> with HasZ, HasM, HasID,
+		/// and SpatialReference set from the given <paramref name="template"/>.
+		/// </summary>
 		public static T Configure<T>(this T builder, Geometry template) where T : GeometryBuilderEx
 		{
 			if (builder is null) return null;
@@ -25,6 +29,42 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			builder.SpatialReference = template.SpatialReference;
 
 			return builder;
+		}
+
+		/// <summary>
+		/// Return a new segment builder initialized from the given segment.
+		/// </summary>
+		public static SegmentBuilderEx ToBuilder(this Segment segment)
+		{
+			if (segment is null)
+				throw new ArgumentNullException(nameof(segment));
+
+			switch (segment)
+			{
+				case LineSegment line: return new LineBuilderEx(line);
+				case EllipticArcSegment arc: return new EllipticArcBuilderEx(arc);
+				case CubicBezierSegment cubic: return new CubicBezierBuilderEx(cubic);
+			}
+
+			throw new NotSupportedException($"Unknown segment type: {segment.GetType().Name}");
+		}
+
+		/// <summary>
+		/// Return a new multipart builder initialized from the given
+		/// multipart geometry (Polyline or Polygon).
+		/// </summary>
+		public static MultipartBuilderEx ToBuilder(this Multipart multipart)
+		{
+			if (multipart is null)
+				throw new ArgumentNullException(nameof(multipart));
+
+			switch (multipart)
+			{
+				case Polyline polyline: return new PolylineBuilderEx(polyline);
+				case Polygon polygon: return new PolygonBuilderEx(polygon);
+			}
+
+			throw new NotSupportedException($"Unknown geometry type: {multipart.GetType().Name}");
 		}
 
 		public static GeometryBuilderEx ToBuilder(this Geometry geometry)

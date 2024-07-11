@@ -49,7 +49,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (applicableSelection.Count > 0)
 			{
 				using var source = GetProgressorSource();
-				var progressor = source.Progressor;
+				var progressor = source?.Progressor;
 				AfterSelection(applicableSelection, progressor);
 			}
 
@@ -84,7 +84,7 @@ namespace ProSuite.AGP.Editing.OneClick
 							}
 
 							using var source = GetProgressorSource();
-							var progressor = source.Progressor;
+							var progressor = source?.Progressor;
 
 							CalculateDerivedGeometries(selectedFeatures, progressor);
 
@@ -175,6 +175,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override void LogUsingCurrentSelection()
 		{
 			// using method LogDerivedGeometriesCalculated() for feedback
+		}
+
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
 		}
 
 		protected abstract void CalculateDerivedGeometries(

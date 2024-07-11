@@ -68,6 +68,11 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			return SketchGeometryType.Multipoint;
 		}
 
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
+		}
+
 		protected override EditingTemplate GetSketchTemplate()
 		{
 			return EditingTemplate.Current;
