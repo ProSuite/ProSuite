@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Core.Events;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto;
 
@@ -16,14 +19,39 @@ namespace ProSuite.Commons.AGP.Carto;
 /// </summary>
 public class MapWhiteSelection : IDisposable
 {
+	//private SubscriptionToken _mapSelectionChangedToken;
 	private readonly Dictionary<string, IWhiteSelection> _layerSelections = new();
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	public MapWhiteSelection(MapView mapView)
+	public MapWhiteSelection(MapView mapView, bool syncWithRegularSelection = false)
 	{
 		MapView = mapView ?? throw new ArgumentNullException(nameof(mapView));
+		//SyncWithRegularSelection = syncWithRegularSelection;
+
+		// TODO Set this MapWhiteSelection from regular selection
+
+		//_mapSelectionChangedToken = MapSelectionChangedEvent.Subscribe(OnMapSelectionChanged);
+	}
+
+	private void OnMapSelectionChanged(MapSelectionChangedEventArgs obj)
+	{
+		try
+		{
+			if (SyncWithRegularSelection)
+			{
+				// TODO update white selection from regular selection
+				// TODO how to identify calls due to our own activity? (latching is probably unreliable due to multi-threading)
+			}
+		}
+		catch (Exception ex)
+		{
+			_msg.Error($"{GetType().Name} SelectionChanged: {ex.Message}", ex);
+		}
 	}
 
 	public MapView MapView { get; }
+
+	public bool SyncWithRegularSelection { get; set; }
 
 	/// <returns>true iff the white selection of all layers in the map are empty</returns>
 	public bool IsEmpty => _layerSelections.Values.All(ws => ws.IsEmpty);
@@ -79,6 +107,8 @@ public class MapWhiteSelection : IDisposable
 		return result;
 	}
 
+	/// <returns>true iff the selection changed</returns>
+	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
 	public bool Remove(FeatureLayer layer, IEnumerable<long> oids)
 	{
 		if (! _layerSelections.TryGetValue(layer.URI, out var ws))
@@ -101,10 +131,18 @@ public class MapWhiteSelection : IDisposable
 			_layerSelections.Remove(layer.URI);
 		}
 
+		//if (SyncWithRegularSelection)
+		//{
+		//	var regular = layer.GetSelection();
+		//	regular.Remove(oids);
+		//	layer.SetSelection(regular);
+		//}
+
 		return changed;
 	}
 
 	/// <returns>true iff the selection changed</returns>
+	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
 	public bool Combine(MapPoint clickPoint, double tolerance, SetCombineMethod method)
 	{
 		var changed = false;
@@ -156,12 +194,18 @@ public class MapWhiteSelection : IDisposable
 					}
 				}
 			}
+
+			//if (SyncWithRegularSelection)
+			//{
+			//	UpdateRegularSelection(selection, featureOids);
+			//}
 		}
 
 		return changed;
 	}
 
 	/// <returns>true iff the selection changed</returns>
+	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
 	public bool Combine(Geometry geometry, SetCombineMethod method)
 	{
 		var changed = false;
@@ -251,9 +295,29 @@ public class MapWhiteSelection : IDisposable
 				}
 				//else: not supported (silently ignore)
 			}
+
+			//if (SyncWithRegularSelection)
+			//{
+			//	UpdateRegularSelection(selection, featureOids);
+			//}
 		}
 
 		return changed;
+	}
+
+	/// <remarks>Must call on MCT</remarks>
+	private static void UpdateRegularSelection(IWhiteSelection selection, long[] involvedOids)
+	{
+		var selectedOids = involvedOids.Where(oid => ! (selection.GetShapeSelection(oid)?.IsEmpty ?? true));
+		var unselectedOids = involvedOids.Where(oid => selection.GetShapeSelection(oid)?.IsEmpty ?? false);
+
+		var regular = selection.Layer.GetSelection();
+
+		regular.Add(selectedOids);
+		regular.Remove(unselectedOids);
+
+		// The above has no effect on the map until we layer.SetSelection():
+		selection.Layer.SetSelection(regular);
 	}
 
 	/// <returns>true iff the selection changed (was not already empty)</returns>
@@ -271,6 +335,11 @@ public class MapWhiteSelection : IDisposable
 			}
 		}
 
+		//if (SyncWithRegularSelection)
+		//{
+		//	MapView.Map.ClearSelection();
+		//}
+
 		return changed;
 	}
 
@@ -286,6 +355,10 @@ public class MapWhiteSelection : IDisposable
 
 	public void Dispose()
 	{
-		// presently nothing to dispose
+		//if (_mapSelectionChangedToken is not null)
+		//{
+		//	MapSelectionChangedEvent.Unsubscribe(_mapSelectionChangedToken);
+		//	_mapSelectionChangedToken = null;
+		//}
 	}
 }

@@ -18,8 +18,9 @@ public interface IWhiteSelection
 
 	bool IsEmpty { get; }
 
-	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
+	bool Add(long oid);
 	bool Remove(long oid); // also removes oid's geom from cache
+	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
 	bool SetEmpty();
 
 	bool HitTestVertex(MapPoint hitPoint, double tolerance);
@@ -85,6 +86,54 @@ public class WhiteSelection : IWhiteSelection
 	{
 		_geometryCache.Remove(oid);
 		return _shapes.Remove(oid);
+	}
+
+	public bool Add(long oid)
+	{
+		var shape = GetGeometry(oid);
+
+		if (! _shapes.TryGetValue(oid, out var selection))
+		{
+			selection = new ShapeSelection();
+			_shapes.Add(oid, selection);
+		}
+
+		bool changed = false;
+
+		if (shape is MapPoint)
+		{
+			changed = selection.CombineVertex(0, 0, SetCombineMethod.Add);
+		}
+		else if (shape is Multipoint multipoint)
+		{
+			int vertexCount = multipoint.PointCount;
+			for (int i = 0; i < vertexCount; i++)
+			{
+				if (selection.CombineVertex(i, i, SetCombineMethod.Add))
+				{
+					changed = true;
+				}
+			}
+		}
+		else if (shape is Multipart multipart)
+		{
+			int partCount = multipart.PartCount;
+			for (int k = 0; k < partCount; k++)
+			{
+				var part = multipart.Parts[k];
+				int vertexCount = part.Count;
+				if (multipart is Polyline) vertexCount += 1;
+				for (int i = 0; i < vertexCount; i++)
+				{
+					if (selection.CombineVertex(k, i, SetCombineMethod.Add))
+					{
+						changed = true;
+					}
+				}
+			}
+		}
+
+		return changed;
 	}
 
 	public bool SetEmpty()

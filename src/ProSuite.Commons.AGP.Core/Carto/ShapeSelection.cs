@@ -23,8 +23,8 @@ public interface IShapeSelection
 
 	/// <remarks>For multipoints, set part = vertex = point's index!</remarks>
 	bool CombineVertex(int part, int vertex, SetCombineMethod method);
-	bool CombinePart(int part, SetCombineMethod method);
-	bool CombineShape(SetCombineMethod method);
+	bool CombinePart(int part, int vertexCount, SetCombineMethod method);
+	//bool CombineShape(SetCombineMethod method);
 	bool SetEmpty();
 
 	IEnumerable<MapPoint> GetSelectedVertices(Geometry shape);
@@ -85,11 +85,12 @@ public class ShapeSelection : IShapeSelection
 	public bool IsVertexSelected(int partIndex, int vertexIndex)
 	{
 		if (_items is null) return false;
+
 		return _items.Any(item => item.PartIndex == partIndex && item.VertexIndex == vertexIndex);
 		// TODO cope with (j,*) and (*,*) items; use binary search on OrderedItems
 	}
 
-	public bool CombineShape(SetCombineMethod method)
+	public bool CombineShape(SetCombineMethod method) // TODO drop?
 	{
 		bool changed;
 
@@ -128,7 +129,7 @@ public class ShapeSelection : IShapeSelection
 		return changed;
 	}
 
-	public bool CombinePart(int partIndex, SetCombineMethod method)
+	public bool CombinePart(int partIndex, int vertexCount, SetCombineMethod method)
 	{
 		// Add: _items.Add(part,-1) unless exists; remove all items (part,>=0)
 		// Remove: _items.Remove(part,*)
