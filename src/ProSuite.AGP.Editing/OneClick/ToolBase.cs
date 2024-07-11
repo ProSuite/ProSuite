@@ -492,7 +492,7 @@ public abstract class ToolBase : MapTool
 		return true;
 	}
 
-	private IEnumerable<FeatureSelectionBase> FindFeatureSelection(
+	protected IEnumerable<FeatureSelectionBase> FindFeatureSelection(
 		[NotNull] Geometry geometry,
 		SpatialRelationship spatialRelationship = SpatialRelationship.Intersects,
 		[CanBeNull] CancelableProgressor progressor = null)
