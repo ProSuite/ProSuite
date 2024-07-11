@@ -118,7 +118,7 @@ namespace ProSuite.AGP.Editing
 		                               [NotNull] Feature originalFeature,
 		                               [NotNull] Geometry newGeometry)
 		{
-			FeatureClass featureClass = originalFeature.GetTable();
+			using var featureClass = originalFeature.GetTable();
 
 			RowBuffer rowBuffer = DuplicateRow(originalFeature);
 
@@ -181,7 +181,7 @@ namespace ProSuite.AGP.Editing
 				// Set the attributes
 				rowBuffer = featureClass.CreateRowBuffer();
 
-				FeatureClassDefinition classDefinition = featureClass.GetDefinition();
+				using var classDefinition = featureClass.GetDefinition();
 				GeometryType geometryType = classDefinition.GetShapeType();
 				bool classHasZ = classDefinition.HasZ();
 				bool classHasM = classDefinition.HasM();
@@ -193,12 +193,12 @@ namespace ProSuite.AGP.Editing
 					CopyAttributeValues(attributes, rowBuffer);
 				}
 
-				string shapeFieldName = featureClass.GetDefinition().GetShapeField();
+				string shapeFieldName = classDefinition.GetShapeField();
 
 				foreach (Geometry geometry in geometries)
 				{
-					Assert.True(geometryType == featureClass.GetDefinition().GetShapeType(),
-					            "Geometry type does not match target feature class' shape type.");
+					Assert.AreEqual(geometryType, geometry.GeometryType,
+					                "Geometry type does not match target feature class' shape type.");
 
 					Geometry geometryToStore =
 						GeometryUtils.EnsureGeometrySchema(geometry, classHasZ, classHasM);
@@ -314,7 +314,7 @@ namespace ProSuite.AGP.Editing
 		{
 			warnings = null;
 
-			FeatureClass featureClass = feature.GetTable();
+			using var featureClass = feature.GetTable();
 
 			if (featureClass == null)
 			{
@@ -361,7 +361,8 @@ namespace ProSuite.AGP.Editing
 		                             [NotNull] Geometry geometry,
 		                             FeatureClass featureClass)
 		{
-			string shapeFieldName = featureClass.GetDefinition().GetShapeField();
+			using var classDefinition = featureClass.GetDefinition();
+			string shapeFieldName = classDefinition.GetShapeField();
 
 			SetShape(rowBuffer, geometry, shapeFieldName);
 		}
