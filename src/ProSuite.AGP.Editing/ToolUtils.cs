@@ -242,6 +242,7 @@ namespace ProSuite.AGP.Editing
 			return editableClassHandles;
 		}
 
+		[CanBeNull]
 		public static FeatureClass GetCurrentTargetFeatureClass(
 			[CanBeNull] EditingTemplate editTemplate)
 		{
