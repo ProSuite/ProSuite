@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using NUnit.Framework;
@@ -56,7 +55,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			pickerPrecedence.SelectionGeometry = referenceGeometry;
 
 			Task<IPickableItem> pickSingle =
-				picker.PickSingle<IPickableItem>(items, new Point(42, 99),
+				picker.PickSingle<IPickableItem>(items,
 				                                 pickerPrecedence);
 
 			IPickableItem pickedItem = await pickSingle;

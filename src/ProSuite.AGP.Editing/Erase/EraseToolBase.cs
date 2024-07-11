@@ -10,7 +10,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
@@ -113,7 +112,7 @@ namespace ProSuite.AGP.Editing.Erase
 		private IDictionary<Feature, Geometry> CalculateResultFeatures(
 			MapView activeView, Polygon sketchPolygon)
 		{
-			SelectionSet selectedFeatures = activeView.Map.GetSelection();
+			IEnumerable<Feature> selectedFeatures = GetApplicableSelectedFeatures(activeView);
 
 			var resultFeatures = CalculateResultFeatures(selectedFeatures, sketchPolygon);
 
@@ -121,14 +120,12 @@ namespace ProSuite.AGP.Editing.Erase
 		}
 
 		private static IDictionary<Feature, Geometry> CalculateResultFeatures(
-			SelectionSet selection,
+			IEnumerable<Feature> selectedFeatures,
 			Polygon cutPolygon)
 		{
 			var result = new Dictionary<Feature, Geometry>();
 
-			SpatialReference spatialReference = MapView.Active.Map.SpatialReference;
-
-			foreach (var feature in MapUtils.GetFeatures(selection, spatialReference))
+			foreach (var feature in selectedFeatures)
 			{
 				Geometry featureGeometry = feature.GetShape();
 				featureGeometry = GeometryEngine.Instance.SimplifyAsFeature(featureGeometry, true);
@@ -176,12 +173,13 @@ namespace ProSuite.AGP.Editing.Erase
 				{
 					throw new Exception("One or more result geometries have become empty.");
 				}
+
 				FeatureClass featureClass = feature.GetTable();
 				FeatureClassDefinition classDefinition = featureClass.GetDefinition();
 				GeometryType geometryType = classDefinition.GetShapeType();
 				bool classHasZ = classDefinition.HasZ();
 				bool classHasM = classDefinition.HasM();
-				
+
 				Geometry geometryToStore =
 					GeometryUtils.EnsureGeometrySchema(geometry, classHasZ, classHasM);
 				feature.SetShape(geometryToStore);

@@ -33,11 +33,6 @@ namespace ProSuite.AGP.Editing.Selection
 			SetCursor(SelectionCursor);
 		}
 
-		protected override SketchGeometryType GetSelectionSketchGeometryType()
-		{
-			return SketchGeometryType.Rectangle;
-		}
-
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
 			SetCheckState(ConfigId_SelectionToolButton, true);

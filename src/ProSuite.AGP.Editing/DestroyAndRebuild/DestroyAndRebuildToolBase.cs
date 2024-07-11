@@ -13,9 +13,9 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Misc;
 using ProSuite.Commons.UI;
 using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
 
@@ -24,8 +24,6 @@ namespace ProSuite.AGP.Editing.DestroyAndRebuild;
 public abstract class DestroyAndRebuildToolBase : ToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-	private static readonly Latch _latch = new();
 
 	private DestroyAndRebuildFeedback _feedback;
 
@@ -87,11 +85,6 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
 		CancelableProgressor progressor = null)
 	{
-		if (_latch.IsLatched)
-		{
-			return false; // startContructionPhase = false
-		}
-
 		(BasicFeatureLayer layer, List<Feature> features) = featuresByLayer.FirstOrDefault();
 
 		Feature feature = features?.FirstOrDefault();
@@ -101,7 +94,7 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		{
 			_msg.Debug("no selection");
 			_feedback.Clear();
-			return false; // startContructionPhase = false
+			return false; // startConstructionPhase = false
 		}
 
 		_feedback.UpdatePreview(feature.GetShape());
@@ -113,7 +106,7 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 
 		await StartSketchAsync();
 
-		return true; // startContructionPhase = true
+		return true; // startConstructionPhase = true
 	}
 
 	protected override async Task<bool> OnConstructionSketchCompleteAsync(
@@ -144,10 +137,13 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		{
 			Inspector inspector = new Inspector();
 			await inspector.LoadAsync(layer, selectedOid);
-			inspector.Shape = geometry;
+			inspector.Shape = GeometryUtils.Simplify(geometry);
 
 			Attribute subtype = inspector.SubtypeAttribute;
-			string subtypeName = subtype != null ? subtype.CurrentSubtype.Name : layer.Name;
+
+			string subtypeName = subtype?.CurrentSubtype != null
+				                     ? subtype.CurrentSubtype.Name
+				                     : layer.Name;
 
 			// note: TooltipHeading is null here.
 			var operation = new EditOperation
@@ -168,8 +164,6 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 			bool succeed = false;
 			try
 			{
-				// todo daro latched operation in ToolBase?
-				_latch.Increment();
 				succeed = await operation.ExecuteAsync();
 			}
 			catch (Exception e)
@@ -186,12 +180,11 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 				{
 					_msg.Debug($"{Caption}: edit operation failed");
 				}
-
-				_latch.Decrement();
 			}
 
 			_feedback.Clear();
 
+			LogPromptForSelection();
 			return true; // startSelectionPhase = true;
 		}
 		catch (Exception ex)
@@ -208,11 +201,11 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 			case GeometryType.Point:
 			case GeometryType.Polyline:
 			case GeometryType.Polygon:
+			case GeometryType.Multipoint:
+			case GeometryType.Multipatch:
 				return true;
 			case GeometryType.Unknown:
 			case GeometryType.Envelope:
-			case GeometryType.Multipoint:
-			case GeometryType.Multipatch:
 			case GeometryType.GeometryBag:
 				_msg.Debug($"{Caption}: cannot select from geometry of type {geometryType}");
 				return false;

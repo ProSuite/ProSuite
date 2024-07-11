@@ -11,6 +11,7 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
@@ -243,6 +244,41 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
+		public static IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitions(
+			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
+		{
+			foreach (RelationshipClassDefinition relationshipClassDefinition in geodatabase
+				         .GetDefinitions<RelationshipClassDefinition>())
+			{
+				if (predicate is null || predicate(relationshipClassDefinition))
+				{
+					yield return relationshipClassDefinition;
+				}
+			}
+
+			foreach (AttributedRelationshipClassDefinition relationshipClassDefinition in
+			         geodatabase.GetDefinitions<AttributedRelationshipClassDefinition>())
+			{
+				if (predicate is null || predicate(relationshipClassDefinition))
+				{
+					yield return relationshipClassDefinition;
+				}
+			}
+		}
+
+		public static IEnumerable<RelationshipClass> GetRelationshipClasses(
+			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
+		{
+			foreach (RelationshipClassDefinition relationshipClassDefinition in
+			         GetRelationshipClassDefinitions(geodatabase, predicate))
+			{
+				yield return geodatabase.OpenDataset<RelationshipClass>(
+					relationshipClassDefinition.GetName());
+			}
+		}
+
 		public static bool IsSameTable(Table fc1, Table fc2)
 		{
 			if (ReferenceEquals(fc1, fc2)) return true;
@@ -263,6 +299,59 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			IEnumerable<Table> tables)
 		{
 			return tables.Distinct(new TableComparer());
+		}
+
+		/// <summary>
+		/// Returns the actual table as it exists in the geodatabase, given a joined table.
+		/// </summary>
+		/// <param name="tableWithJoin"></param>
+		/// <returns></returns>
+		/// <exception cref="NotImplementedException"></exception>
+		public static Table GetDatabaseTable(Table tableWithJoin)
+		{
+			if (! tableWithJoin.IsJoinedTable())
+			{
+				return tableWithJoin;
+			}
+
+			if (tableWithJoin is FeatureClass featureClass)
+			{
+				return GetDatabaseFeatureClass(featureClass);
+			}
+
+			// Extract the shape's table name from the (fully qualified) shape field name:
+			TableDefinition tableDefinition = tableWithJoin.GetDefinition();
+
+			if (! tableDefinition.HasObjectID())
+			{
+				throw new NotImplementedException(
+					"Unable to determine the main table without OBJECTID");
+			}
+
+			string oidField = tableDefinition.GetObjectIDField();
+
+			return GetGdbTableContainingField(tableWithJoin, oidField);
+		}
+
+		/// <summary>
+		/// Returns the actual feature class as it exists in the geodatabase, given a joined
+		/// feature class.
+		/// </summary>
+		/// <param name="featureClassWithJoin"></param>
+		/// <returns></returns>
+		/// <exception cref="InvalidOperationException"></exception>
+		public static FeatureClass GetDatabaseFeatureClass(
+			[NotNull] FeatureClass featureClassWithJoin)
+		{
+			if (! featureClassWithJoin.IsJoinedTable())
+			{
+				return featureClassWithJoin;
+			}
+
+			// Extract the shape's table name from the (fully qualified) shape field name:
+			string shapeField = featureClassWithJoin.GetDefinition().GetShapeField();
+
+			return GetGdbTableContainingField(featureClassWithJoin, shapeField);
 		}
 
 		/// <summary>
@@ -492,6 +581,37 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			{
 				DeleteRowsByOIDString(table, sb.ToString());
 			}
+		}
+
+		private static T GetGdbTableContainingField<T>([NotNull] T joinedTable,
+		                                               [NotNull] string qualifiedField)
+			where T : Table
+		{
+			List<string> tokens = qualifiedField.Split('.').ToList();
+
+			if (tokens.Count < 2)
+			{
+				throw new InvalidOperationException(
+					$"The field name {qualifiedField} is not fully qualified for joined table {joinedTable.GetName()}.");
+			}
+
+			tokens.RemoveAt(tokens.Count - 1);
+
+			string tableName = StringUtils.Concatenate(tokens, ".");
+
+			foreach (Table databaseTable in GetDatabaseTables(joinedTable))
+			{
+				if (databaseTable is T dbClassTyped &&
+				    dbClassTyped.GetName()
+				                .Equals(tableName, StringComparison.InvariantCultureIgnoreCase))
+				{
+					return dbClassTyped;
+				}
+			}
+
+			throw new InvalidOperationException(
+				$"No database table found for joined table " +
+				$"{joinedTable.GetName()} and field name {qualifiedField}");
 		}
 
 		/// <summary>
