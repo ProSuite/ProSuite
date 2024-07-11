@@ -262,11 +262,7 @@ public abstract class ToolBase : MapTool
 	/// <b>false</b>: no selection.</returns>
 	protected virtual async Task<bool> OnSelectionSketchCompleteAsync([NotNull] Geometry geometry)
 	{
-		int tolerance = GetSelectionSettings().SelectionTolerancePixels;
-
-		using var pickerPrecedence =
-			new PickerPrecedence(geometry, tolerance,
-			                     ActiveMapView.ClientToScreen(CurrentMousePosition));
+		using var pickerPrecedence = CreatePickerPrecedence(geometry);
 
 		Task picker =
 			AllowMultiSelection(out _)
@@ -277,6 +273,13 @@ public abstract class ToolBase : MapTool
 		await ViewUtils.TryAsync(picker, _msg);
 
 		return MapUtils.HasSelection(ActiveMapView);
+	}
+
+	protected virtual IPickerPrecedence CreatePickerPrecedence(Geometry sketchGeometry)
+	{
+		return new PickerPrecedence(sketchGeometry,
+		                            GetSelectionSettings().SelectionTolerancePixels,
+		                            ActiveMapView.ClientToScreen(CurrentMousePosition));
 	}
 
 	/// <summary>Is on GUI thread. Use QueuedTask.</summary>

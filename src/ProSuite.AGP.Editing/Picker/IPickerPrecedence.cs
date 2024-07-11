@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Windows;
 using ArcGIS.Core.Geometry;
@@ -5,7 +6,7 @@ using ProSuite.Commons.AGP.Selection;
 
 namespace ProSuite.AGP.Editing.Picker
 {
-	public interface IPickerPrecedence
+	public interface IPickerPrecedence : IDisposable
 	{
 		IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items);
 
