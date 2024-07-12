@@ -35,6 +35,8 @@ public abstract class ToolBase : MapTool
 
 	protected ToolBase(SketchGeometryType sketchGeometryType)
 	{
+		ContextMenuID = "esri_mapping_selection2DContextMenu";
+
 		// needed to call OnSelectionChangedAsync
 		UseSelection = true;
 		UseSnapping = false;
