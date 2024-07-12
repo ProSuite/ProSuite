@@ -58,20 +58,26 @@ namespace ProSuite.Commons.AO.Surface
 			var coordinates = geometries
 			             .SelectMany(ExpandToCoodinates)
 			             .OrderByDescending(p => p.z);
-			int cnt = 0;
+			
+			int addedPoints = 0;
+			int ignoredPoints = 0;
+
 			var point = new PointClass();
 			foreach ((double x, double y, double z) in coordinates)
 			{
 				point.PutCoords(x, y);
 				point.Z = z;
-				cnt++;
 				if (IsPointSpike(advancedTin, point))
 				{
+					ignoredPoints++;
 					continue;
 				}
 
+				addedPoints++;
 				tin.AddPointZ(point, TagValue);
 			}
+
+			_msg.InfoFormat("Added {0} points to the TIN. {1} points where identified as spike and ignored.", addedPoints, ignoredPoints);
 		}
 
 		// The Spike-Free algorithm yields different results if points are sorted and added to the TIN feature by feature instead of globally.
