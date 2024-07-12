@@ -1311,7 +1311,8 @@ namespace ProSuite.Commons.AO.Geometry
 				return noNewInstance ? geometry : SysUtils.Clone(geometry);
 			}
 
-			GeoTrans trans = GetGeoTrans(sourceSr.FactoryCode, targetSr.FactoryCode, transformation);
+			GeoTrans trans =
+				GetGeoTrans(sourceSr.FactoryCode, targetSr.FactoryCode, transformation);
 
 			IGeometry2 geom = noNewInstance == false
 				                  ? (IGeometry2) SysUtils.Clone(geometry)
@@ -1320,6 +1321,17 @@ namespace ProSuite.Commons.AO.Geometry
 			geom.ProjectEx(targetSr, trans.Dir, trans.GeogrTrans, false, 0, 0);
 
 			return (T)geom;
+		}
+
+		public static void GetGeoTrans(
+			[NotNull] ISpatialReference sourceSr, [NotNull] ISpatialReference targetSr,
+			out IGeoTransformation geoTransformation, out esriTransformDirection dir,
+			string transformation = null)
+		{
+			GeoTrans trans = GetGeoTrans(sourceSr.FactoryCode, targetSr.FactoryCode, transformation);
+
+			geoTransformation = trans.GeogrTrans;
+			dir = trans.Dir;
 		}
 
 		private class GeoTrans
@@ -1390,7 +1402,7 @@ namespace ProSuite.Commons.AO.Geometry
 				return esriTransformDirection.esriTransformReverse;
 			else
 				throw new Exception(String.Format("{0} does not support going between {1} and {2}",
-				                                  geoTrans.Name, sr1.Name, sr2.Name));
+												  geoTrans.Name, sr1.Name, sr2.Name));
 		}
 
 		private static List<IGeoTransformation> GetTransformations(ISpatialReference fromSR, ISpatialReference toSR)
@@ -1409,9 +1421,9 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				var geoTrans = (IGeoTransformation)gtSet.Next();
 				geoTrans.GetSpatialReferences(out ISpatialReference fromGcsSR,
-				                              out ISpatialReference toGcsSR);
+											  out ISpatialReference toGcsSR);
 				if ((fromGcsSR.FactoryCode == fromFactcode && toGcsSR.FactoryCode == toFactcode) ||
-				    (fromGcsSR.FactoryCode == toFactcode && toGcsSR.FactoryCode == fromFactcode))
+					(fromGcsSR.FactoryCode == toFactcode && toGcsSR.FactoryCode == fromFactcode))
 				{
 					outList.Add(geoTrans);
 				}
@@ -1437,7 +1449,7 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				transList = GetTransList(fromSr, toSr);
 				Assert.True((transList?.Count ?? 0) > 0,
-				            $"No transformation found between SrIds {fromSr} and {toSr}");
+							$"No transformation found between SrIds {fromSr} and {toSr}");
 				_geoTransCache.Value.Add(key, transList);
 			}
 

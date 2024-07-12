@@ -10,10 +10,10 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
@@ -469,13 +469,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		/// <summary>
-		/// Appends the specified field name to <see cref="currentSubFields"/> if there are other fields
+		/// Appends the specified field name to <paramref name="currentSubFields"/> if there are other fields
 		/// already. In case it is null, empty or "*" the specified field name is returned (as single
-		/// sub-field). The <see cref="fieldName"/> can also be a comma-separated list of fields.
+		/// sub-field). The <paramref name="fieldName"/> can also be a comma-separated list of fields.
 		/// </summary>
-		/// <param name="currentSubFields"></param>
-		/// <param name="fieldName"></param>
-		/// <returns></returns>
 		public static string AppendToFieldList([CanBeNull] string currentSubFields,
 		                                       [NotNull] string fieldName)
 		{
@@ -1558,6 +1555,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                      };
 
 			return Count(objectClass, filter);
+		}
+
+		public static long Count([NotNull] ITable table,
+		                         [NotNull] IQueryFilter filter)
+		{
+			if (table is IFeatureClass featureClass)
+			{
+				return featureClass.FeatureCount(filter);
+			}
+
+			return table.RowCount(filter);
 		}
 
 		public static long Count([NotNull] IObjectClass objectClass,

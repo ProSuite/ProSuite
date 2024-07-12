@@ -9,7 +9,7 @@ using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.AO
 {

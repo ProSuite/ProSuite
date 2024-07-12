@@ -14,6 +14,8 @@ namespace ProSuite.QA.Tests
 	public class QaConstraintDefinition : AlgorithmDefinition
 	{
 		public ITableSchemaDef Table { get; }
+
+		[SqlExpression(nameof(Table))]
 		public string Constraint { get; }
 
 		// Internally used by factories:

@@ -1,5 +1,6 @@
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.QA;
 
 namespace ProSuite.Microservices.Client.QA
@@ -9,17 +10,28 @@ namespace ProSuite.Microservices.Client.QA
 	/// Consider moving to separate project, if referencing Microservices.Client
 	/// from the server becomes an issue.
 	/// </summary>
-	public interface IQualityVerificationClient
+	public interface IQualityVerificationClient : IMicroserviceClient
 	{
+		[CanBeNull]
 		QualityVerificationGrpc.QualityVerificationGrpcClient QaGrpcClient { get; }
 
-		bool CanAcceptCalls(bool allowFailOver = false,
-		                    bool logOnlyIfUnhealthy = false);
+		[CanBeNull]
+		QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient DdxClient { get; }
 
-		Task<bool> CanAcceptCallsAsync(bool allowFailOver = false);
-
-		string GetAddress();
-
+		/// <summary>
+		/// Gets the number of running requests on the server / worker.
+		/// </summary>
+		/// <param name="timeOut"></param>
+		/// <param name="runningRequestCount"></param>
+		/// <returns></returns>
 		bool TryGetRunningRequestCount(TimeSpan timeOut, out int runningRequestCount);
+
+		/// <summary>
+		/// Returns a list of worker clients to be used for parallel processing. The address of
+		/// the client must be a load balancer address.
+		/// </summary>
+		/// <param name="desiredNewWorkerCount"></param>
+		/// <returns></returns>
+		IEnumerable<IQualityVerificationClient> GetWorkerClients(int desiredNewWorkerCount);
 	}
 }

@@ -4,12 +4,82 @@ using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
 	public static class WorkspaceUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		/// <summary>
+		/// Opens a file geodatabase. This method must be run on the MCT. Use QueuedTask.Run.
+		/// </summary>
+		/// <returns></returns>
+		public static ArcGIS.Core.Data.Geodatabase OpenFileGeodatabase([NotNull] string path)
+		{
+			var connectionPath = new FileGeodatabaseConnectionPath(new Uri(path));
+
+			return (ArcGIS.Core.Data.Geodatabase) OpenDatastore(connectionPath);
+		}
+
+		/// <summary>
+		/// Opens a file geodatabase. This method must be run on the MCT. Use QueuedTask.Run.
+		/// </summary>
+		/// <returns></returns>
+		public static Datastore OpenDatastore([NotNull] Connector connector)
+		{
+			try
+			{
+				switch (connector)
+				{
+					case DatabaseConnectionFile dbConnection:
+						return new ArcGIS.Core.Data.Geodatabase(dbConnection);
+
+					case DatabaseConnectionProperties dbConnectionProps:
+						return new ArcGIS.Core.Data.Geodatabase(dbConnectionProps);
+
+					case FileGeodatabaseConnectionPath fileGdbConnection:
+						return new ArcGIS.Core.Data.Geodatabase(fileGdbConnection);
+
+					case FileSystemConnectionPath fileSystemConnection:
+						return new FileSystemDatastore(fileSystemConnection);
+
+					// Only supported starting with Pro 3.2
+					//case KnowledgeGraphConnectionProperties knowledgeGraphConnection:
+					//	return new KnowledgeGraph(knowledgeGraphConnection);
+
+					case MemoryConnectionProperties memoryConnectionProperties:
+						return new ArcGIS.Core.Data.Geodatabase(memoryConnectionProperties);
+
+					case MobileGeodatabaseConnectionPath mobileConnectionProperties:
+						return new ArcGIS.Core.Data.Geodatabase(mobileConnectionProperties);
+
+					case PluginDatasourceConnectionPath pluginConnectionPath:
+						return new PluginDatastore(pluginConnectionPath);
+
+					case RealtimeServiceConnectionProperties realtimeServiceConnection:
+						return new RealtimeDatastore(realtimeServiceConnection);
+
+					case ServiceConnectionProperties serviceConnection:
+						return new ArcGIS.Core.Data.Geodatabase(serviceConnection);
+
+					case SQLiteConnectionPath sqLiteConnection:
+						return new Database(sqLiteConnection);
+
+					default:
+						throw new ArgumentOutOfRangeException(
+							$"Unsupported workspace type: {connector?.GetType()}");
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Failed to open Datastore {GetDatastoreDisplayText(connector)}", e);
+				throw;
+			}
+		}
+
 		public static bool IsSameDatastore(Datastore datastore1, Datastore datastore2)
 		{
 			// todo daro check ProProcessingUtils

@@ -27,7 +27,7 @@ namespace ProSuite.UI.DataModel
 			_groupedListView.ClearItems();
 		}
 
-		public void SetDatasets([NotNull] IEnumerable<Dataset> datasets)
+		public void SetDatasets([NotNull] IEnumerable<IDdxDataset> datasets)
 		{
 			Assert.ArgumentNotNull(datasets, nameof(datasets));
 
@@ -37,7 +37,7 @@ namespace ProSuite.UI.DataModel
 			{
 				_groupedListView.ClearItems();
 
-				foreach (Dataset dataset in datasets)
+				foreach (IDdxDataset dataset in datasets)
 				{
 					string categoryName = dataset.DatasetCategory?.Name;
 					string imageKey = DatasetTypeImageLookup.GetImageKey(dataset);

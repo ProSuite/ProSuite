@@ -49,7 +49,7 @@ namespace ProSuite.AGP.WorkList.Test
 				                          }
 			                          };
 
-			IRepository stateRepository =
+			IWorkItemStateRepository stateRepository =
 				new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 			_repository = new IssueItemRepository(new List<Table> { _issuePoints, _issueLines }, stateRepository);
 		}
@@ -442,7 +442,7 @@ namespace ProSuite.AGP.WorkList.Test
 						{geodatabase, new List<Table> {table}}
 					};
 
-				IRepository stateRepository =
+				IWorkItemStateRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
 					new IssueItemRepository(new List<Table> { table }, stateRepository);
@@ -492,7 +492,7 @@ namespace ProSuite.AGP.WorkList.Test
 						{geodatabase, new List<Table> {table}}
 					};
 
-				IRepository stateRepository =
+				IWorkItemStateRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
 					new IssueItemRepository(new List<Table> { table }, stateRepository);
@@ -551,7 +551,7 @@ namespace ProSuite.AGP.WorkList.Test
 						{geodatabase, new List<Table> {table}}
 					};
 
-				IRepository stateRepository =
+				IWorkItemStateRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
 					new IssueItemRepository(new List<Table> { table }, stateRepository);
@@ -602,7 +602,7 @@ namespace ProSuite.AGP.WorkList.Test
 						{geodatabase, new List<Table> {table}}
 					};
 
-				IRepository stateRepository =
+				IWorkItemStateRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
 					new IssueItemRepository(new List<Table> { table }, stateRepository);

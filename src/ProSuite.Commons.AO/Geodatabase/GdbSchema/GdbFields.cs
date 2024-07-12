@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.GeoDb;
-using FieldType = ProSuite.Commons.GeoDb.FieldType;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -71,7 +70,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public IEnumerator<ITableField> GetEnumerator()
 		{
-			return _fields.Select(f => new TableField(f.Name, (FieldType) f.Type, f.Length))
+			return _fields.Select(FieldUtils.ToTableField)
 			              .Cast<ITableField>().GetEnumerator();
 		}
 
@@ -95,7 +94,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			get
 			{
 				IField f = _fields[index];
-				return new TableField(f.Name, (FieldType) f.Type, f.Length);
+
+				return FieldUtils.ToTableField(f);
 			}
 		}
 

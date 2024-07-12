@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Client;
-using ProSuite.Microservices.Client.QA;
+using ProSuite.Microservices.Definitions.QA;
 
 namespace ProSuite.UI.MicroserverState
 {
@@ -15,24 +15,27 @@ namespace ProSuite.UI.MicroserverState
 
 		public ServerStateViewModel()
 		{
-			// For the designer:
-			ServerStates.Add(new ServerState(
-				                 new QualityVerificationServiceClient("Localhost"))
+			// For the designer
+#if DEBUG
+			var localClient = new MockClient("Localhost");
+			var remoteClient = new MockClient("CRASSUS", 5152);
+
+			ServerStates.Add(new ServerState(localClient)
 			                 {
 				                 Text = "Healthy",
 				                 PingLatency = 23,
 				                 ServiceState = ServiceState.Serving
 			                 });
 
-			ServerStates.Add(new ServerState(
-				                 new QualityVerificationServiceClient("CRASSUS", 5152))
+			ServerStates.Add(new ServerState(remoteClient)
 			                 {
 				                 Text = "Unavailable",
 				                 ServiceState = ServiceState.Starting
 			                 });
+#endif
 		}
 
-		public ServerStateViewModel([NotNull] MicroserviceClientBase serviceClient)
+		public ServerStateViewModel([NotNull] IMicroserviceClient serviceClient)
 		{
 			var serverState = new ServerState(serviceClient);
 			CurrentServerState = serverState;
@@ -40,7 +43,7 @@ namespace ProSuite.UI.MicroserverState
 			ServerStates.Add(serverState);
 		}
 
-		public ServerStateViewModel([NotNull] IEnumerable<MicroserviceClientBase> serviceClients)
+		public ServerStateViewModel([NotNull] IEnumerable<IMicroserviceClient> serviceClients)
 		{
 			_msg.Debug("Adding new service states...");
 
@@ -115,5 +118,72 @@ namespace ProSuite.UI.MicroserverState
 		/// The action that closes the host window.
 		/// </summary>
 		public Action CloseAction { get; set; }
+
+		private class MockClient : IMicroserviceClient
+		{
+			public MockClient(string hostName, int port = 5151)
+			{
+				HostName = hostName;
+				Port = port;
+			}
+
+			#region Implementation of IMicroserviceClient
+
+			public string HostName { get; set; }
+			public int Port { get; set; }
+			public bool UseTls { get; set; }
+
+			public string ServiceName => nameof(QualityVerificationGrpc);
+			public string ServiceDisplayName => "Quality Verification Service";
+
+			public bool ChannelIsLoadBalancer { get; set; }
+			public bool CanFailOver { get; set; }
+			public bool ProcessStarted { get; set; }
+
+			public void Disconnect()
+			{
+				throw new NotImplementedException();
+			}
+
+			public bool CanAcceptCalls(bool allowFailOver = false, bool logOnlyIfUnhealthy = false)
+			{
+				return true;
+			}
+
+			public Task<bool> CanAcceptCallsAsync(bool allowFailOver = false)
+			{
+				return Task.FromResult(true);
+			}
+
+			public Task<bool> AllowStartingLocalServerAsync(
+				string executable, string extraArguments = null)
+			{
+				return Task.FromResult(false);
+			}
+
+			public bool AllowStartingLocalServer(string executable, string extraArguments = null)
+			{
+				return false;
+			}
+
+			public bool TryRestart()
+			{
+				throw new NotImplementedException();
+			}
+
+			public string GetAddress()
+			{
+				string scheme = UseTls ? "https" : "http";
+
+				return $"{scheme}://{HostName}:{Port}";
+			}
+
+			public Task<int> GetWorkerServiceCountAsync()
+			{
+				return Task.FromResult(12);
+			}
+
+			#endregion
+		}
 	}
 }

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Validation;
 
@@ -89,7 +89,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public bool ElementNamesAreQualified
 		{
 			get { return _elementNamesAreQualified; }
-			protected set { _elementNamesAreQualified = value; }
+			set { _elementNamesAreQualified = value; }
 		}
 
 		/// <summary>
@@ -108,7 +108,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public string DefaultDatabaseName
 		{
 			get { return _defaultDatabaseName; }
-			protected set { _defaultDatabaseName = value; }
+			set { _defaultDatabaseName = value; }
 		}
 
 		/// <summary>
@@ -128,7 +128,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public string DefaultDatabaseSchemaOwner
 		{
 			get { return _defaultDatabaseSchemaOwner; }
-			protected set { _defaultDatabaseSchemaOwner = value; }
+			set { _defaultDatabaseSchemaOwner = value; }
 		}
 
 		/// <summary>
@@ -656,7 +656,11 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 			foreach (Dataset dataset in _datasets)
 			{
-				_datasetIndex.Add(dataset.Name, dataset);
+				// DPS #185: Ignore deleted datasets to avoid duplicate keys
+				if (! dataset.Deleted)
+				{
+					_datasetIndex.Add(dataset.Name, dataset);
+				}
 			}
 		}
 

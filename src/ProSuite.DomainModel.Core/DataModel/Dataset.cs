@@ -4,6 +4,7 @@ using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
+	// TODO: Consider renaming to DdxDataset to avoid conflict with ArcGIS.Core.Data.Dataset
 	public abstract class Dataset : ModelElement, IDdxDataset, IDatasetDef
 	{
 		[UsedImplicitly] private string _aliasName;

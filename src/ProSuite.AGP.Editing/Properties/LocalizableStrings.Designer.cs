@@ -91,7 +91,7 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select one or more line or polygon features to cut along other feature(s). Press [O] for additional options.&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
+        ///   Looks up a localized string similar to Select one or more line or polygon features to cut along other feature(s).&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
         /// </summary>
         internal static string CutPolygonAlongTool_LogPromptForSelection {
             get {
@@ -145,7 +145,7 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select one or more line or polygon features from which a part should be removed. Press [O] for additional options.&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
+        ///   Looks up a localized string similar to Select one or more line or polygon features from which a part should be removed.&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
         /// </summary>
         internal static string RemoveOverlapsTool_LogPromptForSelection {
             get {
@@ -163,7 +163,7 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select one or more line or polygon features to align with other feature(s). Press [O] for additional options. &lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection. &lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
+        ///   Looks up a localized string similar to Select one or more line or polygon features to align with other feature(s). &lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection. &lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
         /// </summary>
         internal static string ReshapeAlongTool_LogPromptForSelection {
             get {

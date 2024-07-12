@@ -7,7 +7,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.GeoDb;
-using FieldType = ProSuite.Commons.GeoDb.FieldType;
 using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
@@ -89,15 +88,10 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		#region Implementation of IDbTableSchema
 
-		IReadOnlyList<ITableField> ITableSchemaDef.TableFields
-		{
-			get
-			{
-				return _fieldsMock.FieldList
-				                  .Select(f => new TableField(f.Name, (FieldType) f.Type, f.Length))
-				                  .ToList();
-			}
-		}
+		IReadOnlyList<ITableField> ITableSchemaDef.TableFields =>
+			_fieldsMock.FieldList
+			           .Select(FieldUtils.ToTableField)
+			           .ToList();
 
 		#endregion
 

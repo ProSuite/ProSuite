@@ -12,6 +12,7 @@ using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
@@ -19,8 +20,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using ProSuite.Microservices.Client.AGP;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 
 namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
@@ -41,7 +40,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			SecondPhaseCursor = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursorProcess);
 		}
 
-		protected abstract GeometryProcessingClient MicroserviceClient { get; }
+		protected abstract IRemoveOverlapsService MicroserviceClient { get; }
 
 		protected override void OnUpdate()
 		{
@@ -124,8 +123,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			MapView activeMapView = MapView.Active;
 
+			var distinctSelectionByFeatureClass =
+				MapUtils.GetDistinctSelectionByTable(selection)
+				        .ToDictionary(kvp => (FeatureClass) kvp.Key,
+				                      kvp => kvp.Value);
+
 			IEnumerable<Feature> selectedFeatures = MapUtils.GetFeatures(
-				selection, activeMapView.Map.SpatialReference);
+				distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference);
 
 			RemoveOverlapsResult result =
 				MicroserviceClient.RemoveOverlaps(
@@ -362,7 +366,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
+					selection, true, CanOverlapLayer, inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&
 			    cancellabelProgressor.CancellationToken.IsCancellationRequested)

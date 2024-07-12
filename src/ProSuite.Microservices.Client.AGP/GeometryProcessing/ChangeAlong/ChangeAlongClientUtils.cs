@@ -3,10 +3,12 @@ using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.Geometry;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 {
@@ -70,9 +72,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		{
 			var request = CreateCalculateReshapeLinesRequest(selectedFeatures, targetFeatures);
 
-			int deadline = RpcCallUtils.GeometryDefaultDeadline * selectedFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
 
-			return RpcCallUtils.Try(
+			return GrpcClientUtils.Try(
 				options => rpcClient.CalculateReshapeLines(request, options),
 				cancellationToken, deadline);
 		}
@@ -85,9 +87,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		{
 			var request = CreateCalculateCutLinesRequest(selectedFeatures, targetFeatures);
 
-			int deadline = RpcCallUtils.GeometryDefaultDeadline * selectedFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
 
-			return RpcCallUtils.Try(
+			return GrpcClientUtils.Try(
 				options => rpcClient.CalculateCutLines(request, options),
 				cancellationToken, deadline);
 		}

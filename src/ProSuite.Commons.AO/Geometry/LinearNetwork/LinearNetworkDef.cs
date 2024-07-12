@@ -41,6 +41,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 		[NotNull]
 		public IList<LinearNetworkClassDef> NetworkClassDefinitions { get; }
 
+		public bool HasDefaultJunctionClass => _defaultJunctionClass != null;
+
 		[CanBeNull]
 		public IFeatureClass GetDefaultJunctionClass(out int? defaultSubtype)
 		{

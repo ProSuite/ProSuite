@@ -1,6 +1,7 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
 {
@@ -20,6 +21,8 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 			AssertDirectoryExists();
 			return WorkspaceUtils.OpenFileGdbFeatureWorkspace(Path);
 		}
+
+		public override DbConnectionType ConnectionType => DbConnectionType.FileGeodatabase;
 
 		public override string TypeDescription => "File Geodatabase";
 

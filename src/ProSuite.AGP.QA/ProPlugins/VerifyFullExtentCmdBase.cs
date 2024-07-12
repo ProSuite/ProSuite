@@ -1,20 +1,21 @@
-using ArcGIS.Core.Threading.Tasks;
-using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.QA.VerificationProgress;
-using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Progress;
-using ProSuite.DomainModel.AGP.QA;
-using ProSuite.DomainModel.AGP.Workflow;
-using ProSuite.DomainModel.Core.QA.VerificationProgress;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.UI.QA.VerificationProgress;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Threading.Tasks;
+using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.QA.VerificationProgress;
 using ProSuite.AGP.WorkList;
+using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Progress;
+using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.AGP.Workflow;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.VerificationProgress;
+using ProSuite.UI.QA.VerificationProgress;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
@@ -26,6 +27,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			// for each one, the singleton event aggregator updates all at once:
 			Register();
 		}
+
 		private void Register()
 		{
 			VerificationPlugInController.GetInstance(SessionContext).Register(this);
@@ -34,12 +36,16 @@ namespace ProSuite.AGP.QA.ProPlugins
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
+
+		protected virtual Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool>
+			SaveAction => null;
+
 		protected override Task<bool> OnClickCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
 			{
 				MessageBox.Show("No quality verification environment is configured.",
-								"Verify Full Extent", MessageBoxButton.OK, MessageBoxImage.Warning);
+				                "Verify Full Extent", MessageBoxButton.OK, MessageBoxImage.Warning);
 				return Task.FromResult(false);
 			}
 
@@ -61,14 +67,14 @@ namespace ProSuite.AGP.QA.ProPlugins
 			if (qualitySpecification == null)
 			{
 				MessageBox.Show("No Quality Specification is selected", "Verify Full Extent",
-								MessageBoxButton.OK, MessageBoxImage.Warning);
+				                MessageBoxButton.OK, MessageBoxImage.Warning);
 				return Task.FromResult(false);
 			}
 
 			var progressTracker = new QualityVerificationProgressTracker
-			{
-				CancellationTokenSource = new CancellationTokenSource()
-			};
+			                      {
+				                      CancellationTokenSource = new CancellationTokenSource()
+			                      };
 
 			Envelope fullExtent = null;
 
@@ -78,7 +84,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			var appController =
 				new AgpBackgroundVerificationController(WorkListOpener, mapView, fullExtent,
-														spatialRef);
+				                                        spatialRef, SaveAction);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
@@ -93,7 +99,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
-										   qaEnvironment.BackendDisplayName, actionTitle);
+			                               qaEnvironment.BackendDisplayName, actionTitle);
 
 			return Task.FromResult(true);
 		}

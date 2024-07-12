@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
@@ -16,8 +15,9 @@ using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.Microservices.Server.AO.Geodatabase;
 using ProSuite.Microservices.Server.AO.QA;
 
@@ -390,13 +390,20 @@ namespace ProSuite.Microservices.Server.AO
 		private static GdbFeature CreateGdbFeature(GdbObjectMsg gdbObjectMsg,
 		                                           GdbFeatureClass featureClass)
 		{
-			ISpatialReference classSpatialRef = DatasetUtils.GetSpatialReference(featureClass);
+			GdbFeature result = GdbFeature.Create((int) gdbObjectMsg.ObjectId, featureClass);
 
-			IGeometry shape =
-				ProtobufGeometryUtils.FromShapeMsg(gdbObjectMsg.Shape, classSpatialRef);
+			ShapeMsg shapeBuffer = gdbObjectMsg.Shape;
 
-			var result = GdbFeature.Create((int) gdbObjectMsg.ObjectId, featureClass);
-			result.Shape = shape;
+			if (shapeBuffer != null)
+			{
+				ISpatialReference classSpatialRef = DatasetUtils.GetSpatialReference(featureClass);
+
+				// NOTE: Setting the shape can be slow due to the Property-Set work-arounds
+				IGeometry shape =
+					ProtobufGeometryUtils.FromShapeMsg(shapeBuffer, classSpatialRef);
+
+				result.Shape = shape;
+			}
 
 			return result;
 		}
@@ -459,48 +466,17 @@ namespace ProSuite.Microservices.Server.AO
 			{
 				AttributeValue attributeValue = gdbObjectMsg.Values[index];
 
-				switch (attributeValue.ValueCase)
-				{
-					case AttributeValue.ValueOneofCase.None:
-						break;
-					case AttributeValue.ValueOneofCase.DbNull:
-						intoResult.set_Value(index, DBNull.Value);
-						break;
-					case AttributeValue.ValueOneofCase.ShortIntValue:
-						intoResult.set_Value(index, attributeValue.ShortIntValue);
-						break;
-					case AttributeValue.ValueOneofCase.LongIntValue:
-						intoResult.set_Value(index, attributeValue.LongIntValue);
-						break;
-					case AttributeValue.ValueOneofCase.FloatValue:
-						intoResult.set_Value(index, attributeValue.FloatValue);
-						break;
-					case AttributeValue.ValueOneofCase.DoubleValue:
-						intoResult.set_Value(index, attributeValue.DoubleValue);
-						break;
-					case AttributeValue.ValueOneofCase.StringValue:
-						intoResult.set_Value(index, attributeValue.StringValue);
-						break;
-					case AttributeValue.ValueOneofCase.DateTimeTicksValue:
-						intoResult.set_Value(
-							index, new DateTime(attributeValue.DateTimeTicksValue));
-						break;
-					case AttributeValue.ValueOneofCase.UuidValue:
-						var guid = new Guid(attributeValue.UuidValue.Value.ToByteArray());
-						IUID uid = UIDUtils.CreateUID(guid);
-						intoResult.set_Value(index, uid);
-						break;
-					case AttributeValue.ValueOneofCase.BlobValue:
-						intoResult.set_Value(index, attributeValue.BlobValue);
-						break;
-					default:
-						if (table.Fields.Field[index].Type == esriFieldType.esriFieldTypeGeometry)
-						{
-							// Leave empty, it is already assigned to the Shape property
-							break;
-						}
+				object valueObj = ProtoDataQualityUtils.FromAttributeValue(attributeValue);
 
-						throw new ArgumentOutOfRangeException();
+				// Special case:
+				if (valueObj is Guid guid)
+				{
+					valueObj = UIDUtils.CreateUID(guid);
+				}
+
+				if (valueObj != null)
+				{
+					intoResult.set_Value(index, valueObj);
 				}
 			}
 		}

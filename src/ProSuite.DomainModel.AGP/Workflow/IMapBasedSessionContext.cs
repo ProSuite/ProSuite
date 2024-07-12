@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AGP.QA;
+using Dataset = ProSuite.DomainModel.Core.DataModel.Dataset;
 
 namespace ProSuite.DomainModel.AGP.Workflow
 {
@@ -51,5 +52,12 @@ namespace ProSuite.DomainModel.AGP.Workflow
 		/// the change events should be fired in every case.</param>
 		void SetProjectWorkspace([CanBeNull] ProjectWorkspace newProjectWorkspace,
 		                         bool forceChange = false);
+
+		/// <summary>
+		/// Adds details, such as attributes and object categories to the specified datasets.
+		/// Consider encapsulating DDX-methods in a separate interface (sessionContext.Ddx...)
+		/// </summary>
+		/// <param name="toDatasets"></param>
+		void AddDatasetDetails(List<Dataset> toDatasets);
 	}
 }

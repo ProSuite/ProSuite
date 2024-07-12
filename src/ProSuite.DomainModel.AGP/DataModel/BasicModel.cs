@@ -13,10 +13,8 @@ namespace ProSuite.DomainModel.AGP.DataModel
 		public BasicModel(int ddxId,
 		                  [NotNull] string name) : base(name)
 		{
-			Id = ddxId;
+			SetCloneId(ddxId);
 		}
-
-		public new int Id { get; }
 
 		protected override void DatasetAddedCore<T>(T dataset)
 		{

@@ -128,8 +128,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			// log is written in LogEnteringSketchMode
 		}
 
-		protected override void AfterSelection(Map map,
-		                                       IList<Feature> selectedFeatures,
+		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			if (CanStartSketchPhase(selectedFeatures))
@@ -263,7 +262,7 @@ namespace ProSuite.AGP.Editing.OneClick
 							}
 							else
 							{
-								SelectionUtils.ClearSelection();
+								ClearSelection();
 								StartSelectionPhase();
 							}
 						}
@@ -271,7 +270,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					else
 					{
 						ClearSketchAsync();
-						SelectionUtils.ClearSelection();
+						ClearSelection();
 					}
 				});
 
@@ -324,6 +323,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract SketchGeometryType GetSketchGeometryType();
 
+		/// <summary>
+		/// The template that can optionally be used to set up the sketch properties, such as
+		/// z/m-awareness. If the tool uses a template create a feature this method should return
+		/// the relevant template.
+		/// </summary>
+		/// <returns></returns>
+		protected virtual EditingTemplate GetSketchTemplate()
+		{
+			return null;
+		}
+
 		protected virtual bool OnSketchModifiedCore()
 		{
 			return true;
@@ -371,7 +381,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			SetCursor(SketchCursor);
 
-			StartSketchAsync();
+			EditingTemplate relevanteTemplate = GetSketchTemplate();
+
+			if (relevanteTemplate != null)
+			{
+				StartSketchAsync(relevanteTemplate);
+			}
+			else
+			{
+				// TODO: Manually set up Z/M-awareness
+				StartSketchAsync();
+			}
 
 			LogEnteringSketchMode();
 		}
@@ -497,7 +517,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 						if (CanUseSelection(mapView))
 						{
-							AfterSelection(mapView.Map, selection, null);
+							AfterSelection(selection, null);
 						}
 					});
 				}

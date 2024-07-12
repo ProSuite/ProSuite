@@ -1230,7 +1230,7 @@ namespace ProSuite.Commons.AO.Geometry
 			    GeometryUtils.IsZAware(point1) && GeometryUtils.IsZAware(point2))
 			{
 				double zTolerance1 = GeometryUtils.GetZTolerance(point1);
-				double zTolerance2 = GeometryUtils.GetZTolerance(point1);
+				double zTolerance2 = GeometryUtils.GetZTolerance(point2);
 
 				Assert.AreEqual(zTolerance1, zTolerance2, "Z tolerance is not the same");
 

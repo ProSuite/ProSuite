@@ -5,7 +5,7 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ESRI.ArcGIS.ItemIndex;
-using ProSuite.Commons.AGP.WPF;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -57,7 +57,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 				}
 				else
 				{
-					ErrorHandler.HandleFailure($"Cannot delete {Name}", _msg);
+					Gateway.HandleError($"Cannot delete {Name}", _msg);
 				}
 			}), _msg);
 		}

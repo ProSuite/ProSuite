@@ -1,13 +1,12 @@
-﻿using System;
+using System;
 using ProSuite.Commons.Cryptography;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.DomainModels
 {
 	public abstract class EncryptedStringBase : IEquatable<EncryptedStringBase>
 	{
-		private string _encryptedValue;
-		private bool _plainTextKnown;
-		private string _plainTextValue = string.Empty;
+		[UsedImplicitly] private string _encryptedValue;
 
 		protected abstract IStringEncryptor Encryptor { get; }
 
@@ -15,43 +14,32 @@ namespace ProSuite.Commons.DomainModels
 		{
 			get
 			{
-				if (! _plainTextKnown)
+				string result;
+				if (EncryptedValue == null)
 				{
-					if (_encryptedValue == null)
-					{
-						_plainTextValue = null;
-					}
-					else
-					{
-						_plainTextValue = _encryptedValue == string.Empty
-							                  ? string.Empty
-							                  : Encryptor.Decrypt(_encryptedValue);
-					}
-
-					_plainTextKnown = true;
+					result = null;
+				}
+				else
+				{
+					result = EncryptedValue == string.Empty
+						         ? string.Empty
+						         : Encryptor.Decrypt(EncryptedValue);
 				}
 
-				return _plainTextValue;
+				return result;
 			}
 			set
 			{
-				_plainTextValue = value;
-				_encryptedValue = _plainTextValue == null
-					                  ? null
-					                  : Encryptor.Encrypt(value);
-
-				_plainTextKnown = true;
+				EncryptedValue = value == null
+					                 ? null
+					                 : Encryptor.Encrypt(value);
 			}
 		}
 
 		public string EncryptedValue
 		{
-			get { return _encryptedValue; }
-			set
-			{
-				_encryptedValue = value;
-				_plainTextKnown = false;
-			}
+			get => _encryptedValue;
+			set => _encryptedValue = value;
 		}
 
 		public bool Equals(EncryptedStringBase encryptedString)
@@ -61,7 +49,7 @@ namespace ProSuite.Commons.DomainModels
 				return false;
 			}
 
-			return Equals(_encryptedValue, encryptedString._encryptedValue);
+			return Equals(EncryptedValue, encryptedString.EncryptedValue);
 		}
 
 		public override bool Equals(object obj)
@@ -76,8 +64,8 @@ namespace ProSuite.Commons.DomainModels
 
 		public override int GetHashCode()
 		{
-			return _encryptedValue != null
-				       ? _encryptedValue.GetHashCode()
+			return EncryptedValue != null
+				       ? EncryptedValue.GetHashCode()
 				       : 0;
 		}
 	}

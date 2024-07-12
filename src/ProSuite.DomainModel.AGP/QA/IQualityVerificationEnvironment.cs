@@ -37,6 +37,13 @@ namespace ProSuite.DomainModel.AGP.QA
 		Task<QualitySpecification> GetCurrentQualitySpecification();
 
 		/// <summary>
+		/// Loads the full specification for the specified data dictionary id.
+		/// </summary>
+		/// <param name="ddxId"></param>
+		/// <returns></returns>
+		Task<QualitySpecification> GetQualitySpecification(int ddxId);
+
+		/// <summary>
 		/// Sets the customized quality specification version of the current specification.
 		/// </summary>
 		/// <param name="customSpecification"></param>
@@ -79,5 +86,24 @@ namespace ProSuite.DomainModel.AGP.QA
 			[CanBeNull] Geometry perimeter,
 			QualityVerificationProgressTracker progress,
 			[CanBeNull] string resultsPath);
+
+		/// <summary>
+		/// Whether the current environment supports storing issues in the central issue feature
+		/// classes of the production model.
+		/// </summary>
+		/// <returns></returns>
+		bool CanSaveIssuesInProductionModel();
+
+		/// <summary>
+		/// Stores the issues in the central issue feature classes of the production model.
+		/// </summary>
+		/// <param name="verificationResult"></param>
+		/// <param name="errorDeletion"></param>
+		/// <param name="updateLatestTestDate"></param>
+		/// <returns></returns>
+		Task<int> SaveBackgroundVerificationIssues(
+			IQualityVerificationResult verificationResult,
+			ErrorDeletionInPerimeter errorDeletion,
+			bool updateLatestTestDate);
 	}
 }

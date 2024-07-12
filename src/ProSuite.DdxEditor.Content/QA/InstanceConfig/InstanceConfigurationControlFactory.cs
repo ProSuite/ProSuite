@@ -5,7 +5,7 @@ using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.UI.QA.Controls;
 using QualityConditionControl = ProSuite.DdxEditor.Content.QA.QCon.QualityConditionControl;
-#if NET6_0
+#if NET6_0_OR_GREATER
 using ProSuite.DdxEditor.Content.Blazor;
 using ProSuite.DomainModel.Core.QA;
 #endif
@@ -24,10 +24,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			// ReSharper disable once JoinDeclarationAndInitializer
 			QualityConditionControl control;
 
-#if NET6_0
+#if NET6_0_OR_GREATER
 			var viewModel =
 				new InstanceConfigurationViewModel<QualityCondition>(
 					item, modelBuilder.GetTestParameterDatasetProvider(), itemNavigation);
+
+			viewModel.SqlExpressionBuilder = modelBuilder.GetSqlExpressionBuilder();
 
 			IInstanceConfigurationTableViewControl blazorControl =
 				new QualityConditionBlazor(viewModel);
@@ -60,7 +62,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			// ReSharper disable once JoinDeclarationAndInitializer
 			InstanceConfigurationControl control;
 
-#if NET6_0
+#if NET6_0_OR_GREATER
 			var viewModel =
 				new InstanceConfigurationViewModel<InstanceConfiguration>(
 					item, modelBuilder.GetTestParameterDatasetProvider(), itemNavigation);

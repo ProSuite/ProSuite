@@ -18,6 +18,8 @@ using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
@@ -26,9 +28,6 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Input;
-using ProSuite.Microservices.Client.AGP;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
@@ -61,7 +60,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected abstract string EditOperationDescription { get; }
 
-		protected abstract GeometryProcessingClient MicroserviceClient { get; }
+		protected abstract IChangeAlongService MicroserviceClient { get; }
 
 		protected override void OnUpdate()
 		{
@@ -82,7 +81,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					}
 					else
 					{
-						SelectionUtils.ClearSelection();
+						ClearSelection();
 						StartSelectionPhase();
 					}
 				});
@@ -116,9 +115,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
 				Dictionary<MapMember, List<long>> selectionByLayer = args.Selection.ToDictionary();
 				IList<Feature> applicableSelection =
-					GetApplicableSelectedFeatures(selectionByLayer).ToList();
+					GetApplicableSelectedFeatures(selectionByLayer, true).ToList();
 
-				RefreshExistingChangeAlongCurves(applicableSelection, GetCancelableProgressor());
+				using var source = GetProgressorSource();
+				var progressor = source.Progressor;
+				RefreshExistingChangeAlongCurves(applicableSelection, progressor);
 			}
 
 			return true;
@@ -141,8 +142,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 							var selectedFeatures =
 								GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
-							RefreshExistingChangeAlongCurves(selectedFeatures,
-							                                 GetCancelableProgressor());
+							using var source = GetProgressorSource();
+							var progressor = source.Progressor;
+
+							RefreshExistingChangeAlongCurves(selectedFeatures, progressor);
 
 							return true;
 						}
@@ -158,7 +161,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return base.OnEditCompletedAsyncCore(args);
 		}
 
-		protected override void AfterSelection(Map map, IList<Feature> selectedFeatures,
+		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			StartTargetSelectionPhase();
@@ -565,6 +568,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
+				// TODO Why not CancellationToken.None?
 				var cancellationTokenSource = new CancellationTokenSource();
 				cancellationToken = cancellationTokenSource.Token;
 			}
