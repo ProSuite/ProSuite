@@ -402,6 +402,11 @@ public abstract class ToolBase : MapTool
 			IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
 				GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
 
+			if (applicableSelection.Count == 0)
+			{
+				return Task.FromResult(false);
+			}
+
 			SetSketchSymbolBasedOnSelection(applicableSelection);
 
 			return ProcessSelectionCoreAsync(applicableSelection, progressor);
@@ -425,6 +430,11 @@ public abstract class ToolBase : MapTool
 
 		IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
 			GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
+
+		if (applicableSelection.Count == 0)
+		{
+			return false; // startContructionPhase = false
+		}
 
 		SetSketchSymbolBasedOnSelection(applicableSelection);
 
