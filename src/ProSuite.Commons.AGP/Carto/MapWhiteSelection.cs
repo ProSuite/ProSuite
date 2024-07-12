@@ -42,6 +42,26 @@ public class MapWhiteSelection : IDisposable
 		return _layerSelections.Values;
 	}
 
+	/// <summary>
+	/// Just a convenience to enumerate all features in the white selection
+	/// </summary>
+	public IEnumerable<ValueTuple<FeatureLayer, long, Geometry, IShapeSelection>> Enumerate()
+	{
+		foreach (var ws in GetLayerSelections())
+		{
+			var featureLayer = ws.Layer;
+			if (!featureLayer.IsEditable) continue;
+
+			foreach (var oid in ws.GetSelectedOIDs())
+			{
+				var originalShape = ws.GetGeometry(oid);
+				var shapeSelection = ws.GetShapeSelection(oid);
+
+				yield return (featureLayer, oid, originalShape, shapeSelection);
+			}
+		}
+	}
+
 	[NotNull]
 	public IWhiteSelection GetLayerSelection([NotNull] FeatureLayer layer)
 	{
@@ -142,7 +162,7 @@ public class MapWhiteSelection : IDisposable
 	}
 
 	/// <returns>true iff the selection changed</returns>
-	public bool Combine(Envelope extent, SetCombineMethod method)
+	public bool Combine(Geometry geometry, SetCombineMethod method)
 	{
 		var changed = false;
 
@@ -152,7 +172,8 @@ public class MapWhiteSelection : IDisposable
 			method = SetCombineMethod.Add;
 		}
 
-		var selectionSet = MapView.GetFeatures(extent);
+		// Bug: does not find all features if the symbol has an Offset effect (K2#38)
+		var selectionSet = MapView.GetFeatures(geometry);
 		if (selectionSet.IsEmpty) return changed;
 
 		var dict = selectionSet.ToDictionary<FeatureLayer>();
@@ -173,7 +194,7 @@ public class MapWhiteSelection : IDisposable
 
 				if (shape is MapPoint point)
 				{
-					if (GeometryEngine.Instance.Contains(extent, point))
+					if (GeometryEngine.Instance.Contains(geometry, point))
 					{
 						if (selection.Combine(oid, 0, 0, method))
 						{
@@ -185,7 +206,7 @@ public class MapWhiteSelection : IDisposable
 				{
 					for (int i = 0; i < multipoint.PointCount; i++)
 					{
-						if (GeometryEngine.Instance.Contains(extent, multipoint.Points[i]))
+						if (GeometryEngine.Instance.Contains(geometry, multipoint.Points[i]))
 						{
 							// by convention, a multipoint's ith point is both part i and vertex i
 							if (selection.Combine(oid, i, i, method))
@@ -206,7 +227,7 @@ public class MapWhiteSelection : IDisposable
 						{
 							segment = part[i]; // segment i is between vertex i and i+1
 
-							if (GeometryEngine.Instance.Contains(extent, segment.StartPoint))
+							if (GeometryEngine.Instance.Contains(geometry, segment.StartPoint))
 							{
 								if (selection.Combine(oid, j, i, method))
 								{
@@ -218,7 +239,7 @@ public class MapWhiteSelection : IDisposable
 						if (segment != null && shape is Polyline)
 						{
 							// open path (not closed ring): also check last segment's end point:
-							if (GeometryEngine.Instance.Contains(extent, segment.EndPoint))
+							if (GeometryEngine.Instance.Contains(geometry, segment.EndPoint))
 							{
 								if (selection.Combine(oid, j, segmentCount, method))
 								{

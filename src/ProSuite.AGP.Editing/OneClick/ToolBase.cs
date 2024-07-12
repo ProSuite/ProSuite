@@ -35,6 +35,8 @@ public abstract class ToolBase : MapTool
 
 	protected ToolBase(SketchGeometryType sketchGeometryType)
 	{
+		ContextMenuID = "esri_mapping_selection2DContextMenu";
+
 		// needed to call OnSelectionChangedAsync
 		UseSelection = true;
 		UseSnapping = false;
@@ -262,11 +264,7 @@ public abstract class ToolBase : MapTool
 	/// <b>false</b>: no selection.</returns>
 	protected virtual async Task<bool> OnSelectionSketchCompleteAsync([NotNull] Geometry geometry)
 	{
-		int tolerance = GetSelectionSettings().SelectionTolerancePixels;
-
-		using var pickerPrecedence =
-			new PickerPrecedence(geometry, tolerance,
-			                     ActiveMapView.ClientToScreen(CurrentMousePosition));
+		using var pickerPrecedence = CreatePickerPrecedence(geometry);
 
 		Task picker =
 			AllowMultiSelection(out _)
@@ -277,6 +275,13 @@ public abstract class ToolBase : MapTool
 		await ViewUtils.TryAsync(picker, _msg);
 
 		return MapUtils.HasSelection(ActiveMapView);
+	}
+
+	protected virtual IPickerPrecedence CreatePickerPrecedence(Geometry sketchGeometry)
+	{
+		return new PickerPrecedence(sketchGeometry,
+		                            GetSelectionSettings().SelectionTolerancePixels,
+		                            ActiveMapView.ClientToScreen(CurrentMousePosition));
 	}
 
 	/// <summary>Is on GUI thread. Use QueuedTask.</summary>
@@ -399,6 +404,11 @@ public abstract class ToolBase : MapTool
 			IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
 				GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
 
+			if (applicableSelection.Count == 0)
+			{
+				return Task.FromResult(false);
+			}
+
 			SetSketchSymbolBasedOnSelection(applicableSelection);
 
 			return ProcessSelectionCoreAsync(applicableSelection, progressor);
@@ -422,6 +432,11 @@ public abstract class ToolBase : MapTool
 
 		IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
 			GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
+
+		if (applicableSelection.Count == 0)
+		{
+			return false; // startContructionPhase = false
+		}
 
 		SetSketchSymbolBasedOnSelection(applicableSelection);
 
@@ -489,7 +504,7 @@ public abstract class ToolBase : MapTool
 		return true;
 	}
 
-	private IEnumerable<FeatureSelectionBase> FindFeatureSelection(
+	protected IEnumerable<FeatureSelectionBase> FindFeatureSelection(
 		[NotNull] Geometry geometry,
 		SpatialRelationship spatialRelationship = SpatialRelationship.Intersects,
 		[CanBeNull] CancelableProgressor progressor = null)

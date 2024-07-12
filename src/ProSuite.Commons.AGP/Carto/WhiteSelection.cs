@@ -28,6 +28,10 @@ public interface IWhiteSelection
 
 	IEnumerable<MapPoint> GetSelectedVertices();
 
+	IEnumerable<MapPoint> GetUnselectedVertices();
+
+	IEnumerable<Geometry> GetInvolvedFeatureShapes();
+
 	IShapeSelection GetShapeSelection(long oid);
 
 	// Implementation has a cache oid => Geometry
@@ -124,6 +128,30 @@ public class WhiteSelection : IWhiteSelection
 			{
 				yield return vertex;
 			}
+		}
+	}
+
+	public IEnumerable<MapPoint> GetUnselectedVertices()
+	{
+		foreach (var pair in _shapes)
+		{
+			var oid = pair.Key;
+			var selection = pair.Value;
+			var shape = GetGeometry(oid);
+			foreach (var vertex in selection.GetUnselectedVertices(shape))
+			{
+				yield return vertex;
+			}
+		}
+	}
+
+	public IEnumerable<Geometry> GetInvolvedFeatureShapes()
+	{
+		foreach (var pair in _shapes)
+		{
+			var oid = pair.Key;
+			var shape = GetGeometry(oid);
+			yield return shape;
 		}
 	}
 

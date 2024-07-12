@@ -115,5 +115,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 		{
 			item.Score = Math.Round(score, 2);
 		}
+
+		public void Dispose() { }
 	}
 }

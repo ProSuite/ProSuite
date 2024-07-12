@@ -363,5 +363,93 @@ namespace ProSuite.Commons.AGP.Carto
 
 			return null;
 		}
+
+		#region Underlying dataset properties
+
+		// Roughly following the "ArcGIS Pro SDK for .NET: Advanced Editing and Edit Operations"
+		// from a DevSummit tech session recording at https://youtu.be/U4vcNDEkj1w?t=2729
+
+		/// <summary>
+		/// Get how the given layer's dataset is registered with the geodatabase:
+		/// non-versioned, versioned, or versioned with the option to move edits to base.
+		/// </summary>
+		public static RegistrationType GetRegistrationType(this FeatureLayer featureLayer)
+		{
+			using var featureClass = featureLayer.GetFeatureClass();
+			if (featureClass is null) return RegistrationType.Nonversioned;
+			return featureClass.GetRegistrationType();
+		}
+
+		public static GeodatabaseType? GetGeodatabaseType(this FeatureLayer featureLayer)
+		{
+			using var featureClass = featureLayer.GetFeatureClass();
+			using var workspace = featureClass?.GetDatastore();
+
+			if (workspace is Geodatabase geodatabase)
+			{
+				return geodatabase.GetGeodatabaseType();
+			}
+
+			return null;
+		}
+
+		public static bool IsVersioned(this FeatureLayer featureLayer)
+		{
+			return featureLayer.GetRegistrationType() != RegistrationType.Nonversioned;
+		}
+
+		public static bool IsBranchVersioned(this FeatureLayer featureLayer)
+		{
+			using var featureClass = featureLayer.GetFeatureClass();
+			if (featureClass is null) return false;
+			using var workspace = featureClass.GetDatastore();
+			return IsBranchVersioned(workspace);
+		}
+
+		private static bool IsBranchVersioned(Datastore workspace)
+		{
+			if (workspace is not Geodatabase geodatabase) return false;
+			if (! geodatabase.IsVersioningSupported()) return false;
+			var props = geodatabase.GetConnector();
+			if (props is DatabaseConnectionProperties dcProps)
+			{
+				// Utility network FC only:
+				return !string.IsNullOrEmpty(dcProps.Branch);
+			}
+
+			return props is ServiceConnectionProperties;
+		}
+
+		public static bool SupportsUndoRedo(this FeatureLayer featureLayer)
+		{
+			using var featureClass = featureLayer.GetFeatureClass();
+			if (featureClass is null) return false;
+
+			using var workspace = featureClass.GetDatastore();
+			if (workspace is not Geodatabase geodatabase) return false; // TODO how about shapefiles?
+
+			var gdbType = geodatabase.GetGeodatabaseType();
+			if (gdbType == GeodatabaseType.FileSystem)
+				return true; // shapefiles
+			if (gdbType == GeodatabaseType.LocalDatabase)
+				return true; // file gdbs support undo/redo
+
+			var regType = featureClass.GetRegistrationType();
+			var isVersioned = regType != RegistrationType.Nonversioned;
+			if (gdbType == GeodatabaseType.RemoteDatabase && isVersioned)
+				return true;
+
+			if (IsBranchVersioned(workspace))
+			{
+				// Special case branch versioned: all versions except DEFAULT (no parent)
+				var vmgr = geodatabase.GetVersionManager();
+				var currentVersion = vmgr.GetCurrentVersion();
+				return currentVersion.GetParent() != null;
+			}
+
+			return false;
+		}
+
+		#endregion
 	}
 }

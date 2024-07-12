@@ -62,12 +62,66 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return geometry?.PointCount ?? 0;
 		}
 
+		/// <summary>
+		/// Get the part of the given <paramref name="geometry"/> at the
+		/// given <paramref name="partIndex"/>. Throw an exception if the
+		/// <paramref name="partIndex"/> is out of range for the geometry.
+		/// </summary>
+		/// <returns>High-level geometry: a ring of a Polygon is returned
+		/// as a single-part Polygon, and similarly for Polylines</returns>
+		public static Geometry GetPart(Geometry geometry, int partIndex)
+		{
+			if (geometry is null) return null;
+			if (partIndex < 0)
+				throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex,
+				                                      "Must not be negative");
+
+			if (geometry is MapPoint mapPoint)
+			{
+				if (partIndex != 0)
+					throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex,
+					                                      "A point only has part 0");
+				return mapPoint;
+			}
+
+			if (geometry is Multipoint multipoint)
+			{
+				if (partIndex >= multipoint.PointCount)
+				{
+					throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex,
+					                                      "Part index beyond number of parts");
+				}
+				return multipoint.Points[partIndex];
+			}
+
+			if (geometry is Multipart multipart)
+			{
+				if (partIndex >= multipart.PartCount)
+				{
+					throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex,
+					                                      "Part index beyond number of parts");
+				}
+				var path = multipart.Parts[partIndex];
+				var flags = multipart.GetAttributeFlags();
+				var sref = multipart.SpatialReference;
+				return geometry is Polyline
+					       ? PolylineBuilderEx.CreatePolyline(path, flags, sref)
+					       : PolygonBuilderEx.CreatePolygon(path, flags, sref);
+			}
+
+			throw new NotSupportedException(
+				$"Geometry of type {geometry.GetType().Name} is not supported");
+		}
+
 		public static int GetPartCount([CanBeNull] Geometry geometry)
 		{
 			if (geometry is null) return 0;
 			if (geometry is Multipart multipart) return multipart.PartCount;
 			if (geometry is Multipatch multipatch) return multipatch.PartCount;
-			// Note on Multipoint: conceptually PartCount=PointCount, but technically PartCount=1 (here we want technical view)
+			// Convention: a multipoint's ith point is part i and point i (this
+			// is consistent with, e.g., info=NearestVertex(multipoint, hitPoint),
+			// which here would report info.PartIndex == info.PointIndex
+			if (geometry is Multipoint multipoint) return multipoint.PointCount;
 			return 1;
 		}
 
