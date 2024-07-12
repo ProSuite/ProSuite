@@ -1,4 +1,7 @@
+using System;
+using System.Linq;
 using Microsoft.AspNetCore.Components;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
@@ -6,10 +9,12 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
 using ProSuite.Commons.Notifications;
 using ProSuite.DdxEditor.Content.Blazor.View;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
+using ProSuite.UI.QA;
 using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
@@ -229,13 +234,44 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 			Value as Either<Dataset, TransformerConfiguration>;
 
 		Dataset dataset = null;
-		parameterValue?.Match<object>(d => dataset = d as Dataset, t => t);
+		TransformerConfiguration transformerConfiguration = null;
+		parameterValue?.Match<object>(d => dataset = d as Dataset,
+		                              t => transformerConfiguration = t);
+
+		ISqlExpressionBuilder expressionBuilder =
+			Assert.NotNull(Observer.SqlExpressionBuilder, "SQL Expression builder not set");
 
 		if (dataset != null)
 		{
 			FilterExpression =
-				Assert.NotNull(Observer.SqlExpressionBuilder, "SQL Expression builder not set")
-				      .BuildSqlExpression((ITableSchemaDef) dataset, _filterExpression);
+				expressionBuilder.BuildSqlExpression((ITableSchemaDef) dataset, _filterExpression);
+		}
+		else if (transformerConfiguration != null)
+		{
+			var datasetParameter =
+				transformerConfiguration.GetDatasetParameterValues(true, true)
+				                        .FirstOrDefault(d => d is IObjectDataset);
+
+			Assert.NotNull(datasetParameter, "No dataset parameter found");
+
+			Model dataModel = (Model) datasetParameter.Model;
+
+			if (! dataModel.IsMasterDatabaseAccessible)
+			{
+				throw new InvalidOperationException(
+					$"Master database is not accessible. Reason: {dataModel.MasterDatabaseNoAccessReason}");
+			}
+
+			IWorkspaceContext masterDbContext =
+				Assert.NotNull(dataModel.MasterDatabaseWorkspaceContext);
+
+			IOpenDataset datasetOpener = new SimpleDatasetOpener(masterDbContext);
+			GdbTable gdbTable =
+				(GdbTable) InstanceFactory.CreateTransformedTable(
+					transformerConfiguration, datasetOpener);
+
+			FilterExpression =
+				expressionBuilder.BuildSqlExpression(gdbTable, _filterExpression);
 		}
 
 		return FilterExpression;
