@@ -30,6 +30,9 @@ public abstract class ToolBase : MapTool
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	private const Key _keyPolygonDraw = Key.P;
+	private const Key _keyLassoDraw = Key.L;
+
 	private readonly SketchGeometryType _defaultSketchGeometryType;
 	private readonly Latch _latch = new Latch();
 
@@ -51,7 +54,8 @@ public abstract class ToolBase : MapTool
 		ConstructionCursorCore = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
 	}
 
-	private List<Key> HandledKeys { get; } = new() { Key.Escape, Key.F2 };
+	private List<Key> HandledKeys { get; } =
+		new(4) { Key.Escape, Key.F2, _keyLassoDraw, _keyPolygonDraw };
 	
 	protected Point CurrentMousePosition;
 
@@ -158,7 +162,43 @@ public abstract class ToolBase : MapTool
 			}
 		}
 
+		if (! InConstructionPhase())
+		{
+			if (args.Key == _keyPolygonDraw)
+			{
+				SetupPolygonSketch();
+			}
+
+			if (args.Key == _keyLassoDraw)
+			{
+				SetupLassoSketch();
+			}
+		}
+
 		await ViewUtils.TryAsync(HandleKeyDownCoreAsync(args), _msg);
+	}
+
+	protected override void OnToolKeyUp(MapViewKeyEventArgs args)
+	{
+		if (HandledKeys.Contains(args.Key))
+		{
+			args.Handled = true;
+		}
+	}
+
+	protected sealed override async Task HandleKeyUpAsync(MapViewKeyEventArgs args)
+	{
+		_msg.VerboseDebug(() => "HandleKeyUpAsync");
+
+		if (! InConstructionPhase())
+		{
+			if (args.Key is _keyPolygonDraw or _keyLassoDraw)
+			{
+				ResetSketchAppearance();
+			}
+		}
+
+		await ViewUtils.TryAsync(HandleKeyUpCoreAsync(args), _msg);
 	}
 
 	protected override void OnToolMouseMove(MapViewMouseEventArgs args)
@@ -183,6 +223,11 @@ public abstract class ToolBase : MapTool
 	}
 
 	protected virtual Task HandleKeyDownCoreAsync(MapViewKeyEventArgs args)
+	{
+		return Task.CompletedTask;
+	}
+
+	protected virtual Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 	{
 		return Task.CompletedTask;
 	}
@@ -369,8 +414,13 @@ public abstract class ToolBase : MapTool
 
 	private void ResetSketchAppearance()
 	{
-		SketchType = _defaultSketchGeometryType;
+		SetSketchType(_defaultSketchGeometryType);
 		SketchSymbol = null;
+	}
+
+	private void SetSketchType(SketchGeometryType type)
+	{
+		SketchType = type;
 	}
 
 	private async Task<bool> HasSketchAsync()
@@ -379,6 +429,24 @@ public abstract class ToolBase : MapTool
 
 		return currentSketch?.IsEmpty == false;
 	}
+
+	private void SetupPolygonSketch()
+	{
+		SetSketchType(SketchGeometryType.Polygon);
+
+		SetupPolygonSketchCore();
+	}
+
+	protected virtual void SetupPolygonSketchCore() { }
+
+	private void SetupLassoSketch()
+	{
+		SetSketchType(SketchGeometryType.Lasso);
+
+		SetupLassoSketchCore();
+	}
+
+	protected virtual void SetupLassoSketchCore() { }
 
 	#endregion
 
