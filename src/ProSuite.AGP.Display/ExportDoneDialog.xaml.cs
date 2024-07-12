@@ -73,7 +73,7 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ShowError(ex, _msg);
 		}
 	}
 
@@ -86,7 +86,7 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ShowError(ex, _msg);
 		}
 	}
 
@@ -100,7 +100,7 @@ public partial class ExportDoneDialog : Window, INotifyPropertyChanged
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ShowError(ex, _msg);
 		}
 	}
 

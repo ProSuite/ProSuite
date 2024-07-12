@@ -366,11 +366,46 @@ public class GeometryUtilsTest
 		Assert.AreEqual(p0.Y, p3.Y);
 	}
 
+	[Test]
+	public void CanGetPartAndPartCount()
+	{
+		var myPoint = Pt(1.2, 3.4);
+
+		Assert.AreEqual(1, GeometryUtils.GetPartCount(myPoint));
+		Assert.AreEqual(myPoint, GeometryUtils.GetPart(myPoint, 0));
+		Assert.Catch<ArgumentOutOfRangeException>(() => GeometryUtils.GetPart(myPoint, 1));
+
+		var myMultipoint = CreateMultipointXY(1.1, 1.2, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2);
+		Assert.AreEqual(4, GeometryUtils.GetPartCount(myMultipoint));
+		var p0 = GeometryUtils.GetPart(myMultipoint, 0);
+		Assert.IsInstanceOf<MapPoint>(p0);
+		Assert.AreEqual(1.1, ((MapPoint) p0).X);
+		var p3 = GeometryUtils.GetPart(myMultipoint, 3);
+		Assert.IsInstanceOf<MapPoint>(p3);
+		Assert.AreEqual(4.2, ((MapPoint) p3).Y);
+		Assert.Catch<ArgumentOutOfRangeException>(() => GeometryUtils.GetPart(myMultipoint, 4));
+
+		var myPolygon = CreateMultiPolygon();
+		Assert.AreEqual(7, GeometryUtils.GetPartCount(myPolygon));
+		Assert.IsInstanceOf<Polygon>(GeometryUtils.GetPart(myPolygon, 0));
+		Assert.IsInstanceOf<Polygon>(GeometryUtils.GetPart(myPolygon, 6));
+		Assert.Catch<ArgumentOutOfRangeException>(() => GeometryUtils.GetPart(myPolygon, 7));
+
+		Assert.Catch<ArgumentOutOfRangeException>(() => GeometryUtils.GetPart(myPoint, -1));
+	}
+
 	#region Creating test geometries
 
 	private static MapPoint Pt(double x, double y)
 	{
 		return MapPointBuilderEx.CreateMapPoint(x, y);
+	}
+
+	private static Multipoint CreateMultipointXY(params double[] coords)
+	{
+		var builder = new MultipointBuilderEx();
+		builder.AddPoints(MakeCoords(coords));
+		return builder.ToGeometry();
 	}
 
 	private static Polygon CreateUnitSquarePolygon()

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -27,11 +28,18 @@ namespace ProSuite.AGP.Editing.Test.Picker
 		}
 
 		public int SelectionTolerance { get; set; }
+		public bool IsSingleClick { get; }
+		public Point PickerLocation { get; set; }
 
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                bool areaSelect = false)
 		{
 			return PickerMode.PickBest;
+		}
+
+		public void EnsureGeometryNonEmpty()
+		{
+			throw new NotImplementedException();
 		}
 
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
@@ -107,5 +115,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 		{
 			item.Score = Math.Round(score, 2);
 		}
+
+		public void Dispose() { }
 	}
 }

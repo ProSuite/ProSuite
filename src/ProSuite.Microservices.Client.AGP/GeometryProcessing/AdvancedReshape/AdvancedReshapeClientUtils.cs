@@ -187,7 +187,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 				GdbObjectReference objectReference =
 					ProtobufConversionUtils.ToObjectReferenceWithUniqueClassId(selectedFeature);
 
-				toDictionary.Add(objectReference, selectedFeature);
+				toDictionary.TryAdd(objectReference, selectedFeature);
 			}
 		}
 

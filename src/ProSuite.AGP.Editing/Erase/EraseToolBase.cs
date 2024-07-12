@@ -10,7 +10,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
@@ -34,6 +33,11 @@ namespace ProSuite.AGP.Editing.Erase
 		protected override SketchGeometryType GetSketchGeometryType()
 		{
 			return SketchGeometryType.Polygon;
+		}
+
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
 		}
 
 		protected override void LogEnteringSketchMode()
@@ -169,12 +173,13 @@ namespace ProSuite.AGP.Editing.Erase
 				{
 					throw new Exception("One or more result geometries have become empty.");
 				}
+
 				FeatureClass featureClass = feature.GetTable();
 				FeatureClassDefinition classDefinition = featureClass.GetDefinition();
 				GeometryType geometryType = classDefinition.GetShapeType();
 				bool classHasZ = classDefinition.HasZ();
 				bool classHasM = classDefinition.HasM();
-				
+
 				Geometry geometryToStore =
 					GeometryUtils.EnsureGeometrySchema(geometry, classHasZ, classHasM);
 				feature.SetShape(geometryToStore);

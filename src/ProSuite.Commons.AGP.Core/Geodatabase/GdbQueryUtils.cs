@@ -294,20 +294,20 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 			StringBuilder sb = new StringBuilder();
 
-			sb.AppendFormat("SubFields: {0}", filter.SubFields);
-			sb.AppendFormat("WhereClause: {0}", filter.WhereClause);
+			sb.AppendLine($"SubFields: {filter.SubFields}");
+			sb.AppendLine($"WhereClause: {filter.WhereClause}");
 
-			sb.AppendFormat("PrefixClause: {0}", filter.PrefixClause);
-			sb.AppendFormat("PostfixClause: {0}", filter.PostfixClause);
+			sb.AppendLine($"PrefixClause: {filter.PrefixClause}");
+			sb.AppendLine($"PostfixClause: {filter.PostfixClause}");
 
 			var spatialFilter = filter as SpatialQueryFilter;
 
 			if (spatialFilter != null)
 			{
-				sb.AppendFormat("SpatialRel: {0}", spatialFilter.SpatialRelationship);
-				sb.AppendFormat("SpatialRelDescription: {0}",
-				                spatialFilter.SpatialRelationshipDescription);
-				sb.AppendFormat("SearchOrder: {0}", spatialFilter.SearchOrder);
+				sb.AppendLine($"SpatialRel: {spatialFilter.SpatialRelationship}");
+				sb.AppendLine(
+					$"SpatialRelDescription: {spatialFilter.SpatialRelationshipDescription}");
+				sb.AppendLine($"SearchOrder: {spatialFilter.SearchOrder}");
 
 				if (spatialFilter.FilterGeometry != null)
 				{
@@ -321,8 +321,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				if (spatialFilter.OutputSpatialReference != null)
 				{
-					sb.AppendFormat("Output spatial reference: {0}",
-					                spatialFilter.OutputSpatialReference.Name);
+					sb.Append(
+						$"Output spatial reference: {spatialFilter.OutputSpatialReference.Name}");
 				}
 			}
 

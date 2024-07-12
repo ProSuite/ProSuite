@@ -11,7 +11,7 @@
         ResizeMode="CanResizeWithGrip"
         SizeToContent="Height"
         MinWidth="400" MinHeight="300" MaxWidth="1200" MaxHeight="1024"
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         d:DataContext="{Binding Path=LogMessageDetailsViewModel}">
 	<controls:ProWindow.Resources>
 		<ResourceDictionary>

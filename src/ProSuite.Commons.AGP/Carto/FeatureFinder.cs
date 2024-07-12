@@ -212,10 +212,13 @@ namespace ProSuite.Commons.AGP.Carto
 
 						List<long> oids = foundJoined.Select(f => f.GetObjectID()).ToList();
 
-						filter.SubFields = string.Empty;
-						features.AddRange(
-							MapUtils.GetFeatures(featureClass, oids, true, false,
-							                     outputSpatialReference));
+						if (oids.Count > 0)
+						{
+							filter.SubFields = string.Empty;
+							features.AddRange(
+								MapUtils.GetFeatures(featureClass, oids, true, false,
+								                     outputSpatialReference));
+						}
 					}
 					else
 					{
