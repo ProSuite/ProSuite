@@ -20,7 +20,12 @@ public partial class SqlExpressionBlazor : ComponentBase
 
 	public void OnSqlExpressionBuilderClicked()
 	{
-		SqlExpression = QueryBuilderCallback();
+		string resultExpression = QueryBuilderCallback();
+
+		if (resultExpression != null)
+		{
+			SqlExpression = resultExpression;
+		}
 	}
 
 	private void OnInput(ChangeEventArgs args)

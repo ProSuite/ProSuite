@@ -5,6 +5,7 @@ namespace ProSuite.UI.QA
 {
 	public interface ISqlExpressionBuilder
 	{
+		[CanBeNull]
 		string BuildSqlExpression([NotNull] ITableSchemaDef tableSchema,
 		                          string currentExpression);
 	}

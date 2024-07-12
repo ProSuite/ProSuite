@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Components;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
@@ -241,10 +240,10 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		ISqlExpressionBuilder expressionBuilder =
 			Assert.NotNull(Observer.SqlExpressionBuilder, "SQL Expression builder not set");
 
+		ITableSchemaDef layerSchema = null;
 		if (dataset != null)
 		{
-			FilterExpression =
-				expressionBuilder.BuildSqlExpression((ITableSchemaDef) dataset, _filterExpression);
+			layerSchema = (ITableSchemaDef) dataset;
 		}
 		else if (transformerConfiguration != null)
 		{
@@ -266,12 +265,21 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 				Assert.NotNull(dataModel.MasterDatabaseWorkspaceContext);
 
 			IOpenDataset datasetOpener = new SimpleDatasetOpener(masterDbContext);
-			GdbTable gdbTable =
-				(GdbTable) InstanceFactory.CreateTransformedTable(
-					transformerConfiguration, datasetOpener);
 
-			FilterExpression =
-				expressionBuilder.BuildSqlExpression(gdbTable, _filterExpression);
+			layerSchema = (ITableSchemaDef) InstanceFactory.CreateTransformedTable(
+				transformerConfiguration, datasetOpener);
+		}
+
+		if (layerSchema != null)
+		{
+			string result = expressionBuilder.BuildSqlExpression(layerSchema, _filterExpression);
+
+			if (result == null)
+			{
+				return null;
+			}
+
+			FilterExpression = result;
 		}
 
 		return FilterExpression;
