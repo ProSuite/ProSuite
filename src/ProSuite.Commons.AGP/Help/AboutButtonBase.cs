@@ -10,7 +10,6 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using Module = ArcGIS.Desktop.Framework.Contracts.Module;
 
 namespace ProSuite.Commons.AGP.Help;
 
@@ -18,23 +17,32 @@ public abstract class AboutButtonBase : Button
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	private readonly string _caption;
+
+	protected AboutButtonBase([NotNull] string caption)
+	{
+		if (string.IsNullOrWhiteSpace(caption))
+			throw new ArgumentNullException(nameof(caption));
+
+		_caption = caption;
+	}
+
 	protected override void OnClick()
 	{
 		Gateway.LogEntry(_msg);
 
 		try
 		{
-			Module module = GetCurrentModule();
-			string caption = module != null ? module.Caption : "<Unknown>";
+			var configFileSearcher = GetConfigFileSearcher();
 
 			var items = new List<AboutItem>();
-			CollectInformation(items, module);
+			CollectInformation(items, configFileSearcher);
 
 			var message = AboutItem.GetPlainText(items);
 
 			_msg.Info(message);
 
-			Gateway.ShowDialog<AboutWindow>(caption, items);
+			Gateway.ShowDialog<AboutWindow>(_caption, items);
 		}
 		catch (Exception ex)
 		{
@@ -46,10 +54,10 @@ public abstract class AboutButtonBase : Button
 	protected abstract string GetConfigDirEnvVar();
 
 	[CanBeNull]
-	protected abstract Module GetCurrentModule();
+	protected abstract IConfigFileSearcher GetConfigFileSearcher();
 
 	private void CollectInformation([NotNull] ICollection<AboutItem> items,
-	                                [CanBeNull] Module module)
+	                                [CanBeNull] IConfigFileSearcher configFileSearcher)
 	{
 		if (items is null) throw new ArgumentNullException(nameof(items));
 
@@ -85,26 +93,26 @@ public abstract class AboutButtonBase : Button
 			}
 			else
 			{
-				string path = Environment.GetEnvironmentVariable(configDirEnvVar);
+				string configDir = Environment.GetEnvironmentVariable(configDirEnvVar);
 
 				Add(items, currentSection, $"{configDirEnvVar}",
-				    path ?? "environment variable is not defined", "env var");
+				    configDir ?? "environment variable is not defined", "env var");
 			}
 
-			//var searchPaths = module?.ConfigFiles.GetSearchPaths().ToList();
-			//if (searchPaths is not null)
-			//{
-			//	int count = searchPaths.Count;
-			//	var remarks = new[] { "tried first", "tried second", "etc." };
-			//	Add(items, currentSection, "Config Search Path",
-			//	    $"{count} entr{(count == 1 ? "y" : "ies")}");
-			//	for (int i = 0; i < count; i++)
-			//	{
-			//		path = searchPaths[i];
-			//		var remark = i < remarks.Length ? remarks[i] : null;
-			//		Add(items, currentSection, "-", path, remark);
-			//	}
-			//}
+			var searchPaths = configFileSearcher?.GetSearchPaths().ToList();
+			if (searchPaths is not null)
+			{
+				int count = searchPaths.Count;
+				var remarks = new[] { "tried first", "tried second", "etc." };
+				Add(items, currentSection, "Config Search Path",
+				    $"{count} entr{(count == 1 ? "y" : "ies")}");
+				for (int i = 0; i < count; i++)
+				{
+					string path = searchPaths[i];
+					var remark = i < remarks.Length ? remarks[i] : null;
+					Add(items, currentSection, "-", path, remark);
+				}
+			}
 		}
 		catch (Exception ex)
 		{
