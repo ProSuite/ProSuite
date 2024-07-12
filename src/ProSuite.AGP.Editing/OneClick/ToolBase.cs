@@ -34,7 +34,8 @@ public abstract class ToolBase : MapTool
 	private const Key _keyLassoDraw = Key.L;
 
 	private readonly SketchGeometryType _defaultSketchGeometryType;
-	private readonly Latch _latch = new Latch();
+	private readonly Latch _toolActivateLatch = new();
+	private readonly Latch _latch = new();
 
 	protected ToolBase(SketchGeometryType sketchGeometryType)
 	{
@@ -84,6 +85,12 @@ public abstract class ToolBase : MapTool
 	protected sealed override async Task OnToolActivateAsync(bool hasMapViewChanged)
 	{
 		_msg.Debug($"Activate {Caption}");
+
+		// After on tool activate OnSelectionChangedAsync is fired. But ToolBase just needs
+		// OnSelectionChangedAsync when selection is cleared or to react when a selection
+		// is made but not by the tool itself, e.g. select row in table. In all other cases
+		// we want OnSelectionChangedAsync to be latched. Especially when the tool is activated.
+		_toolActivateLatch.Increment();
 
 		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
 
@@ -525,6 +532,11 @@ public abstract class ToolBase : MapTool
 	protected virtual async Task OnSelectionChangedCoreAsync(
 		[NotNull] MapSelectionChangedEventArgs args)
 	{
+		if (_toolActivateLatch.IsLatched)
+		{
+			_toolActivateLatch.Decrement();
+		}
+
 		if (args.Selection.Count == 0)
 		{
 			LogPromptForSelection();
@@ -533,7 +545,7 @@ public abstract class ToolBase : MapTool
 		}
 		else if (args.Selection.Count > 0)
 		{
-			// Process existing selection on activate tool.
+			// Process selection not by this tool, e.g. select row in table, etc.
 			// Do not react on selection made by this tool.
 			if (_latch.IsLatched)
 			{
