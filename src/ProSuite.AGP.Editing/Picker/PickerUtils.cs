@@ -13,12 +13,15 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.Picker
 {
 	public static class PickerUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		#region move, refactor
 
 		public static Uri GetImagePath(esriGeometryType? geometryType)

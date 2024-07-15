@@ -91,6 +91,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			if (table is null) return -1;
 
 			using var definition = table.GetDefinition();
+
 			return GetDefaultSubtypeCode(definition);
 		}
 
@@ -116,28 +117,30 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			if (table is null) return null;
 
 			using var definition = table.GetDefinition();
+
 			return GetDefaultSubtype(definition);
 		}
 
 		[CanBeNull]
-		public static Subtype GetDefaultSubtype(TableDefinition definition)
+		public static Subtype GetDefaultSubtype(TableDefinition tableDefinition)
 		{
-			var defaultCode = GetDefaultSubtypeCode(definition);
+			var defaultCode = GetDefaultSubtypeCode(tableDefinition);
 
-			return GetSubtype(definition, defaultCode);
+			return GetSubtype(tableDefinition, defaultCode);
 		}
 
 		[CanBeNull]
-		public static Subtype GetSubtype(Table table, int subtypeCode)
+		public static Subtype GetSubtype(Table table, int subTypeCode)
 		{
 			if (table is null) return null;
 
 			using var definition = table.GetDefinition();
-			return GetSubtype(definition, subtypeCode);
+
+			return GetSubtype(definition, subTypeCode);
 		}
 
 		[CanBeNull]
-		public static Subtype GetSubtype(TableDefinition definition, int subtypeCode)
+		public static Subtype GetSubtype(TableDefinition definition, int subTypeCode)
 		{
 			if (definition is null) return null;
 
@@ -336,15 +339,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			// Extract the shape's table name from the (fully qualified) shape field name:
-			using TableDefinition definition = tableWithJoin.GetDefinition();
+			using TableDefinition tableDefinition = tableWithJoin.GetDefinition();
 
-			if (! definition.HasObjectID())
+			if (! tableDefinition.HasObjectID())
 			{
 				throw new NotImplementedException(
 					"Unable to determine the main table without OBJECTID");
 			}
 
-			string oidField = definition.GetObjectIDField();
+			string oidField = tableDefinition.GetObjectIDField();
 
 			return GetGdbTableContainingField(tableWithJoin, oidField);
 		}
@@ -420,6 +423,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			if (featureClass is null) return null;
 
 			using var definition = featureClass.GetDefinition();
+
 			return GetAreaFieldName(definition);
 		}
 
@@ -450,6 +454,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			if (featureClass is null) return null;
 
 			using var definition = featureClass.GetDefinition();
+
 			return GetLengthFieldName(definition);
 		}
 
@@ -482,6 +487,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static string GetSubtypeFieldName([NotNull] Table table)
 		{
 			using var definition = table.GetDefinition();
+
 			return GetSubtypeFieldName(definition);
 		}
 
@@ -515,6 +521,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static int GetSubtypeFieldIndex([NotNull] Table table)
 		{
 			using var definition = table.GetDefinition();
+
 			return GetSubtypeFieldIndex(definition);
 		}
 
@@ -537,6 +544,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static string GetObjectIdFieldName([NotNull] Table table)
 		{
 			using var definition = table.GetDefinition();
+
 			return GetObjectIdFieldName(definition);
 		}
 

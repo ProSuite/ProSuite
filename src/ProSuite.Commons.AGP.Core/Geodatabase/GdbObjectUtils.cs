@@ -109,12 +109,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				return null;
 			}
 
+			Subtype subtype = null;
 			try
 			{
-				using Table table = row.GetTable();
-				using TableDefinition definition = table.GetDefinition();
-
-				return DatasetUtils.GetSubtype(definition, subtypeCode.Value);
+				subtype = row.GetTable().GetDefinition().GetSubtypes()
+				             ?.FirstOrDefault(st => st.GetCode() == subtypeCode.Value);
 			}
 			catch (NotSupportedException notSupportedException)
 			{
@@ -122,11 +121,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				_msg.Debug("Subtypes not supported", notSupportedException);
 			}
 
-			return null;
+			return subtype;
 		}
 
 		[NotNull]
-		public static List<Geometry> GetGeometries(
+		public static IList<Geometry> GetGeometries(
 			[NotNull] IEnumerable<Feature> features)
 		{
 			return features.Select(feature => feature.GetShape()).ToList();
