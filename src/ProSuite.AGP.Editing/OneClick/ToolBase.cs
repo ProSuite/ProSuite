@@ -500,7 +500,7 @@ public abstract class ToolBase : MapTool
 		Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
 			SelectionUtils.GetSelection<BasicFeatureLayer>(selection);
 
-		if (!CanUseSelection(selectionByLayer, new NotificationCollection()))
+		if (! CanUseSelection(selectionByLayer, new NotificationCollection()))
 		{
 			return false; // startContructionPhase = false
 		}
