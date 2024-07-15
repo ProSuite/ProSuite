@@ -220,38 +220,59 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override async Task ResetSketchCoreAsync()
 		{
-			if (! await IsInSelectionPhaseAsync())
+			try
 			{
-				SetCursor(TargetSelectionCursor);
+				if (! await IsInSelectionPhaseAsync())
+				{
+					SetCursor(TargetSelectionCursor);
+				}
+				else
+				{
+					SetCursor(SelectionCursor);
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				SetCursor(SelectionCursor);
+				ViewUtils.HandleError(ex, _msg);
 			}
 		}
 
 		protected override async Task ShiftPressedCoreAsync()
 		{
-			if (SelectionCursorShift != null && HasReshapeCurves())
+			try
 			{
-				SetCursor(TargetSelectionCursorShift);
+				if (SelectionCursorShift != null && HasReshapeCurves())
+				{
+					SetCursor(TargetSelectionCursorShift);
+				}
+				else
+				{
+					await base.ShiftPressedCoreAsync();
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				await base.ShiftPressedCoreAsync();
+				ViewUtils.HandleError(ex, _msg);
 			}
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()
 		{
-			// From the subclass' point of view SHIFT is still pressed:
-			if (! await IsInSelectionPhaseAsync())
+			try
 			{
-				SetCursor(TargetSelectionCursor);
+				// From the subclass' point of view SHIFT is still pressed:
+				if (! await IsInSelectionPhaseAsync())
+				{
+					SetCursor(TargetSelectionCursor);
+				}
+				else
+				{
+					await base.ShiftReleasedCoreAsync();
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				await base.ShiftReleasedCoreAsync();
+				ViewUtils.HandleError(ex, _msg);
 			}
 		}
 
@@ -269,7 +290,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return ! HasReshapeCurves();
 			}
 
-			return await QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
+			Task<bool> task = QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
+
+			return await ViewUtils.TryAsync(task, _msg);
 		}
 
 		private bool HasReshapeCurves()
