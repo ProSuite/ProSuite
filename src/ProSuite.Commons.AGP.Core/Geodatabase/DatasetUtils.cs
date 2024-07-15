@@ -47,6 +47,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static string GetName(Table table)
 		{
+			if (table != null && table.IsJoinedTable())
+			{
+				return StringUtils.Concatenate(GetDatabaseTables(table).Select(GetName), "/");
+			}
+
 			return table?.GetName();
 		}
 
@@ -56,6 +61,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			if (table is AnnotationFeatureClass annoClass)
 			{
 				return annoClass.GetName();
+			}
+
+			if (table != null && table.IsJoinedTable())
+			{
+				return StringUtils.Concatenate(GetDatabaseTables(table).Select(GetAliasName), "/");
 			}
 
 			using var definition = table?.GetDefinition();
