@@ -109,11 +109,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				return null;
 			}
 
-			Subtype subtype = null;
 			try
 			{
-				subtype = row.GetTable().GetDefinition().GetSubtypes()
-				             ?.FirstOrDefault(st => st.GetCode() == subtypeCode.Value);
+				using Table table = row.GetTable();
+				using TableDefinition definition = table.GetDefinition();
+
+				return DatasetUtils.GetSubtype(definition, subtypeCode.Value);
 			}
 			catch (NotSupportedException notSupportedException)
 			{
@@ -121,7 +122,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				_msg.Debug("Subtypes not supported", notSupportedException);
 			}
 
-			return subtype;
+			return null;
 		}
 
 		[NotNull]
