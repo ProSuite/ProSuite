@@ -106,8 +106,8 @@ namespace ProSuite.Commons.UI
 			msg.VerboseDebug(() => $"{method}");
 		}
 
-		private static void HandleError(Exception exception, IMsg msg,
-		                                bool suppressErrorMessageBox)
+		public static void HandleError(Exception exception, IMsg msg,
+		                               bool suppressErrorMessageBox = false)
 		{
 			if (suppressErrorMessageBox)
 			{
