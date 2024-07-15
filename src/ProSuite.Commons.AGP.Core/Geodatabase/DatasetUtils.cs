@@ -147,14 +147,23 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			try
 			{
 				// GetSubtypes() returns an empty list if no subtypes
-				var subtypes = definition.GetSubtypes();
-				return subtypes.FirstOrDefault(st => st.GetCode() == subTypeCode);
+				foreach (Subtype subtype in definition.GetSubtypes())
+				{
+					if (subtype.GetCode() == subtypeCode)
+					{
+						return subtype;
+					}
+
+					subtype.Dispose();
+				}
 			}
 			catch (NotSupportedException)
 			{
 				// Shapefiles have no subtypes and throw NotSupportedException
 				return null;
 			}
+
+			return null;
 		}
 
 		[NotNull]
@@ -330,7 +339,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			// Extract the shape's table name from the (fully qualified) shape field name:
-			TableDefinition tableDefinition = tableWithJoin.GetDefinition();
+			using TableDefinition tableDefinition = tableWithJoin.GetDefinition();
 
 			if (! tableDefinition.HasObjectID())
 			{
@@ -359,7 +368,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			// Extract the shape's table name from the (fully qualified) shape field name:
-			string shapeField = featureClassWithJoin.GetDefinition().GetShapeField();
+			using FeatureClassDefinition definition = featureClassWithJoin.GetDefinition();
+			string shapeField = definition.GetShapeField();
 
 			return GetGdbTableContainingField(featureClassWithJoin, shapeField);
 		}
@@ -378,16 +388,16 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				yield break;
 			}
 
-			Join join = table.GetJoin();
+			using Join join = table.GetJoin();
 
-			Table originTable = join.GetOriginTable();
+			using Table originTable = join.GetOriginTable();
 
 			foreach (Table sourceTable in GetDatabaseTables(originTable))
 			{
 				yield return sourceTable;
 			}
 
-			Table destinationTable = join.GetDestinationTable();
+			using Table destinationTable = join.GetDestinationTable();
 
 			foreach (Table sourceTable in GetDatabaseTables(destinationTable))
 			{
@@ -617,6 +627,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				{
 					return dbClassTyped;
 				}
+
+				databaseTable.Dispose();
 			}
 
 			throw new InvalidOperationException(
