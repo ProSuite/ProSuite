@@ -177,14 +177,17 @@ namespace ProSuite.AGP.Editing.OneClick
 				await ViewUtils.TryAsync(HandleEscapeAsync, _msg);
 			}
 
-			if (args.Key == _keyPolygonDraw)
+			if (await IsInSelectionPhaseAsync())
 			{
-				SetupPolygonSketch();
-			}
+				if (args.Key == _keyPolygonDraw)
+				{
+					SetupPolygonSketch();
+				}
 
-			if (args.Key == _keyLassoDraw)
-			{
-				SetupLassoSketch();
+				if (args.Key == _keyLassoDraw)
+				{
+					SetupLassoSketch();
+				}
 			}
 
 			await ViewUtils.TryAsync(HandleKeyDownCoreAsync(args), _msg);
@@ -244,7 +247,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => "HandleKeyUpAsync");
 
-			if (args.Key is _keyPolygonDraw or _keyLassoDraw)
+			if (await IsInSelectionPhaseAsync() && args.Key is _keyPolygonDraw or _keyLassoDraw)
 			{
 				ResetSketch();
 			}
@@ -309,7 +312,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				using var source = GetProgressorSource();
 				var progressor = source?.Progressor;
 
-				if (RequiresSelection && await IsInSelectionPhaseAsync())
+				if (RequiresSelection && IsInSelectionPhase())
 				{
 					return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
 				}
