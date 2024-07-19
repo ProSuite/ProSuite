@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -30,24 +29,49 @@ namespace ProSuite.AGP.Editing
 			return new Cursor(new MemoryStream(bytes));
 		}
 
-		public static bool IsSingleClickSketch([NotNull] Geometry sketchGeometry)
+		public static string GetDisabledReasonNoGeometryMicroservice()
 		{
-			return ! (sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0);
+			return
+				"Geometry Microservice not found or not started. Please make sure the latest ProSuite Extension is installed.";
+		}
+
+		/// <summary>
+		/// Determines whether the sketch geometry is a single click.
+		/// </summary>
+		/// <param name="sketchGeometry">The sketch geometry</param>
+		/// <param name="selectionTolerancePixels">The selection tolerance. If the provided sketch
+		/// geometry (envelope) is smaller than this value, it is assumed to be a single click.
+		/// NOTE: Newer laptops have probably such a high pixel density, that the selection settings
+		/// should not be a fixed pixel count but specified in mm and then calculated.</param>
+		/// <returns></returns>
+		public static bool IsSingleClickSketch([NotNull] Geometry sketchGeometry,
+		                                       int selectionTolerancePixels)
+		{
+			_msg.VerboseDebug(() => $"Sketch width: {sketchGeometry.Extent.Width}, " +
+			                        $"sketch height: {sketchGeometry.Extent.Height}");
+
+			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
+				MapView.Active, selectionTolerancePixels, sketchGeometry.Extent.Center);
+
+			_msg.VerboseDebug(() => $"Selection tolerance in map units: {selectionToleranceMapUnits}");
+
+			return sketchGeometry.Extent.Width <= selectionToleranceMapUnits &&
+			       sketchGeometry.Extent.Height <= selectionToleranceMapUnits;
 		}
 
 		public static Geometry GetSinglePickSelectionArea([NotNull] Geometry sketchGeometry,
 		                                                  int selectionTolerancePixels)
 		{
-			MapPoint sketchPoint = CreatePointFromSketchPolygon(sketchGeometry);
+			MapPoint sketchPoint = sketchGeometry.Extent.Center;
 
-			return BufferGeometryByPixels(sketchPoint, selectionTolerancePixels);
+			return ExpandGeometryByPixels(sketchPoint, selectionTolerancePixels);
 		}
 
 		public static Geometry SketchToSearchGeometry([NotNull] Geometry sketch,
 		                                              int selectionTolerancePixels,
 		                                              out bool singleClick)
 		{
-			singleClick = IsSingleClickSketch(sketch);
+			singleClick = IsSingleClickSketch(sketch, selectionTolerancePixels);
 
 			if (singleClick)
 			{
@@ -98,23 +122,25 @@ namespace ProSuite.AGP.Editing
 			SelectionUtils.SelectFeatures(newFeatures, layersWithSelection);
 		}
 
-		private static MapPoint CreatePointFromSketchPolygon(Geometry sketchGeometry)
-		{
-			var clickCoord =
-				new Coordinate2D(sketchGeometry.Extent.XMin, sketchGeometry.Extent.YMin);
-
-			return MapPointBuilderEx.CreateMapPoint(clickCoord, sketchGeometry.SpatialReference);
-		}
-
-		private static Geometry BufferGeometryByPixels(Geometry sketchGeometry,
+		private static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
 		                                               int pixelBufferDistance)
 		{
-			double bufferDistance = MapUtils.ConvertScreenPixelToMapLength(pixelBufferDistance);
-			
-			Geometry selectionGeometry =
-				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
+			double bufferDistance =
+				MapUtils.ConvertScreenPixelToMapLength(
+				MapView.Active, pixelBufferDistance, sketchGeometry.Extent.Center);
 
-			return selectionGeometry;
+			double envelopeExpansion = bufferDistance * 2;
+
+			Envelope envelope = sketchGeometry.Extent;
+
+			// NOTE: MapToScreen in stereo map is sensitive to Z value (Picker location!)
+
+			// Rather than creating a non-Z-aware polygon with elliptic arcs by using buffer...
+			//Geometry selectionGeometry =
+			//	GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
+
+			// Just expand the envelope
+			return envelope.Expand(envelopeExpansion, envelopeExpansion, false);
 		}
 
 		public static async Task<bool> FlashResultPolygonsAsync(
@@ -152,7 +178,7 @@ namespace ProSuite.AGP.Editing
 		{
 			IEnumerable<BasicFeatureLayer> basicFeatureLayers =
 				MapUtils.GetFeatureLayers<BasicFeatureLayer>(
-					bfl => bfl?.IsEditable == true, mapView);
+					mapView.Map, bfl => bfl?.IsEditable == true);
 
 			HashSet<long> editableClassHandles = basicFeatureLayers
 			                                     .Select(l => l.GetTable().Handle.ToInt64())

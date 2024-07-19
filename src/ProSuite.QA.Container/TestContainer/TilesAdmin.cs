@@ -29,8 +29,9 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		private void EnsureLoaded([NotNull] TileCache tileCache, [NotNull] Tile tile,
-		                          [NotNull] IReadOnlyTable table)
+		                          [NotNull] CachedTableProps tableProps)
 		{
+			IReadOnlyTable table = tableProps.Table;
 			// Check if tileCache is of current tile and current tile is loading
 			if (tileCache.LoadingTileBox != null &&
 			    _boxComparer.Equals(tileCache.LoadingTileBox, tileCache.CurrentTileBox) == false)
@@ -57,17 +58,24 @@ namespace ProSuite.QA.Container.TestContainer
 
 			IDictionary<BaseRow, CachedRow> cachedRows =
 				_tileEnumContext.OverlappingFeatures.GetOverlappingCachedRows(table, tile.Box);
-			tileCache.LoadCachedTableRows(cachedRows, table, tile, _tileEnumContext);
+			tileCache.LoadCachedTableRows(cachedRows, tableProps, tile, _tileEnumContext);
 		}
 
-		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table, IFeatureClassFilter queryFilter,
+		public IEnumerable<IReadOnlyRow> Search(CachedTableProps tableProps, IFeatureClassFilter queryFilter,
 		                                        QueryFilterHelper filterHelper)
 		{
+			IReadOnlyTable table = tableProps.Table;
 			HashSet<long> handledOids = new HashSet<long>();
-			foreach (var tile in GetTiles(queryFilter.FilterGeometry, table))
+			IGeometry filterGeom = queryFilter.FilterGeometry;
+			if (tableProps.HasGeotransformation != null)
+			{
+
+			}
+
+			foreach (var tile in GetTiles(filterGeom, table))
 			{
 				TileCache tileCache = tile.Item1;
-				EnsureLoaded(tile.Item1, tile.Item2, table);
+				EnsureLoaded(tile.Item1, tile.Item2, tableProps);
 
 				IEnumerable<IReadOnlyRow> rows = tileCache.Search(table, queryFilter, filterHelper);
 				if (rows == null)

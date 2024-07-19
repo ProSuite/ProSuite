@@ -5,14 +5,13 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.Microservices.Server.AO.Geodatabase;
 
 namespace ProSuite.Microservices.Server.AO.QA
@@ -145,7 +144,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			throw new NotImplementedException();
 		}
 
-		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
+		public RasterDatasetReference OpenRasterDataset(IDdxRasterDataset dataset)
 		{
 			throw new NotImplementedException();
 		}
@@ -158,7 +157,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
 		}
 
-		public SimpleRasterMosaic OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
+		public MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			// TODO: Just send the catalog & boundary feature class, assuming the raster paths
 			//       are accessible from anywhere

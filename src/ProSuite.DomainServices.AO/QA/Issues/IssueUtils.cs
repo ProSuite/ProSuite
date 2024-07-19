@@ -170,10 +170,10 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 					{
 						if (fieldName == null)
 						{
-							int oid;
+							long oid;
 							try
 							{
-								oid = Convert.ToInt32(id, CultureInfo.InvariantCulture);
+								oid = Convert.ToInt64(id, CultureInfo.InvariantCulture);
 							}
 							catch (FormatException formatException)
 							{

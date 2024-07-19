@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -8,7 +9,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.QA.VerificationProgress;
-using ProSuite.Commons.AGP;
+using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -48,7 +49,10 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
-		protected abstract IProSuiteFacade ProSuiteImpl { get; }
+		protected abstract IWorkListOpener WorkListOpener { get; }
+
+		protected virtual Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool>
+			SaveAction => null;
 
 		protected override Task OnToolActivateAsync(bool active)
 		{
@@ -62,7 +66,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			return base.OnToolActivatedCore(hasMapViewChanged);
 		}
 
-		protected override Task<bool> OnSketchCompleteCoreAsync(
+		protected override async Task<bool> OnSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
@@ -72,16 +76,32 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				MessageBox.Show("No quality verification environment is configured.",
 				                "Verify Extent", MessageBoxButton.OK, MessageBoxImage.Warning);
-				return Task.FromResult(false);
+				return false;
 			}
 
-			if (ToolUtils.IsSingleClickSketch(sketchGeometry))
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				MessageBox.Show("No active map.", "Verify Extent",
+				                MessageBoxButton.OK, MessageBoxImage.Warning);
+				return false;
+			}
+
+			bool isSingleClickSketch = false;
+			await QueuedTask.Run(() =>
+			{
+				isSingleClickSketch =
+					ToolUtils.IsSingleClickSketch(sketchGeometry, GetSelectionTolerancePixels());
+			});
+
+			if (isSingleClickSketch)
 			{
 				MessageBox.Show(
 					"Invalid perimeter. Please draw a box to define the extent to be verified",
 					"Verify Extent",
 					MessageBoxButton.OK, MessageBoxImage.Warning);
-				return Task.FromResult(false);
+				return false;
 			}
 
 			IQualityVerificationEnvironment qaEnvironment =
@@ -94,7 +114,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				MessageBox.Show("No Quality Specification is selected", "Verify Perimeter",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return Task.FromResult(false);
+				return false;
 			}
 
 			var progressTracker = new QualityVerificationProgressTracker
@@ -107,7 +127,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(
-				ProSuiteImpl, MapView.Active, sketchGeometry, spatialRef);
+				WorkListOpener, mapView, sketchGeometry, spatialRef, SaveAction);
 
 			string perimeterName = "Perimeter";
 
@@ -127,7 +147,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			                               Assert.NotNull(qaEnvironment.BackendDisplayName),
 			                               actionTitle);
 
-			return Task.FromResult(true);
+			return true;
 		}
 
 		protected override Task HandleEscapeAsync()

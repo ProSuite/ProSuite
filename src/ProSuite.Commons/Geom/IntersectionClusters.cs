@@ -11,7 +11,7 @@ namespace ProSuite.Commons.Geom
 	/// the geometries must be fully clustered if there are short segments or
 	/// intersections within the tolerance. We try to explicitly model these situations.
 	/// </summary>
-	internal class IntersectionClusters
+	public class IntersectionClusters
 	{
 		private HashSet<IntersectionPoint3D> _multipleSourceIntersections;
 		private HashSet<IntersectionPoint3D> _multipleTargetIntersections;
@@ -54,9 +54,9 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Finds intersections at the same location which reference the same
-		/// target location. These could be just a break in a linear intersection
-		/// or a boundary loop in the source
+		/// Finds intersections at the same (or very similar) source location which reference the
+		/// same location along the target. These could be just a break in a linear intersection,
+		/// a boundary loop in the source or two intersections in two adjacent source segments.
 		/// </summary>
 		/// <param name="intersectionsAlongTarget"></param>
 		/// <returns></returns>
@@ -87,6 +87,60 @@ namespace ProSuite.Commons.Geom
 								// The geometries are not cracked / clustered
 								HasUnClusteredIntersections = true;
 							}
+
+							// Prevent navigation within the cluster (zig-zag back to the same cluster), as in
+							// GeomTopoUtilsTest.CanUnionUnCrackedRingAtSmallOvershootVertex():
+							//
+							//       target
+							//    \  |
+							//     \ |
+							//      \|
+							//       |\
+							//       |/
+							//      /|
+							//     / |
+							//    /
+							// source
+
+							// TODO: The side-effect of setting the DisallowSource properties on the intersection points should be removed!
+							// We could extract a GeometryIntersections class/interface from SubcurveIntersectionPointNavigator (or rename it)
+							// Alternatively we could maintain the relevant information in this class for each intersection.
+							// This class should be interrogated for disallowed navigation at specific intersections 
+							// also by RelationalOperators. -> Remove the DisallowSourceForward flags on the intersection point
+							if (p1.SourcePartIndex == p2.SourcePartIndex)
+							{
+								// The pairs are ordered along the source and the target order might be swapped
+								double p1Along = p1.VirtualSourceVertex;
+								double p2Along = p2.VirtualSourceVertex;
+
+								Linestring ring = _source.GetPart(p1.SourcePartIndex);
+
+								double distanceAlong =
+									SegmentIntersectionUtils.GetVirtualVertexRatioDistance(
+										p1Along, p2Along, ring.SegmentCount);
+
+								// Typically it is very very small, but theoretically it could be almost the entire segments
+								// if the angle is extremely acute.
+								if (Math.Abs(distanceAlong) < 2)
+								{
+									if (distanceAlong > 0)
+									{
+										// p1 is just before p2 along target
+										p1.DisallowSourceForward = true;
+										p2.DisallowSourceBackward = true;
+										// TODO:
+										//DisableSourceNavigationBetween(p1, p2, pointsPerRing);
+									}
+									else if (distanceAlong < 0)
+									{
+										// p1 is just after p2 along target
+										p1.DisallowSourceBackward = true;
+										p2.DisallowSourceForward = true;
+										// TODO:
+										//DisableSourceNavigationBetween(p2, p1, pointsPerRing);
+									}
+								}
+							}
 						}
 					});
 			}
@@ -96,8 +150,8 @@ namespace ProSuite.Commons.Geom
 
 		/// <summary>
 		/// Finds intersections at the same (or very similar) target location which reference the
-		/// same location along the source. These could be just a break in a linear intersection
-		/// or a boundary loop in the source.
+		/// same location along the source. These could be just a break in a linear intersection,
+		/// a boundary loop in the target or two intersections in two adjacent target segments.
 		/// </summary>
 		/// <param name="intersectionsAlongSource"></param>
 		/// <returns></returns>
@@ -139,7 +193,7 @@ namespace ProSuite.Commons.Geom
 							// target
 
 							// TODO: The side-effect of setting the DisallowTarget properties on the intersection points should be removed!
-							// TODO: Extract GeometryIntersections class/interrace from SubcurveIntersectionPointNavigator (or rename it)
+							// TODO: Extract GeometryIntersections class/interface from SubcurveIntersectionPointNavigator (or rename it)
 							// This class should be interrogated for disallowed navigation at specific intersections 
 							// also by RelationalOperators. -> Remove the DisallowTargetForward flags on the intersection point
 							if (p1.TargetPartIndex == p2.TargetPartIndex)

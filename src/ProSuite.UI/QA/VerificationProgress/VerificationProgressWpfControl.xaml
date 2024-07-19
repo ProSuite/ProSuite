@@ -178,7 +178,7 @@
                             ToolTipService.ShowOnDisabled="True">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                             <!-- <Image Source="/ProSuite.UI;component/Properties/Images/Save.png" Stretch="None" /> -->
-                            <Label Padding="0, 0, 0, 0">Save Issues</Label>
+                            <Label Padding="0, 0, 0, 0" Foreground="Black">Save Issues</Label>
                         </StackPanel>
                     </Button>
 

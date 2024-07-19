@@ -17,10 +17,10 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Properties;
 using ProSuite.Commons.Com;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Diagnostics;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Gdb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
@@ -2535,24 +2535,35 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public static bool IsFileGeodatabase([NotNull] IWorkspace workspace)
 		{
-			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			string workspacePath = GetWorkspacePath(workspace);
 
-			const string fgdbClassId = "{71FE75F0-EA0C-4406-873E-B7D53748AE7E}";
+			return workspacePath != null &&
+			       workspacePath.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase);
 
-			return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
-			       fgdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
-			                          StringComparison.OrdinalIgnoreCase);
+			// Original implementation which fails for GdbWorkspace implementations:
+			//const string fgdbClassId = "{71FE75F0-EA0C-4406-873E-B7D53748AE7E}";
+
+			//return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
+			//       fgdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
+			//                          StringComparison.OrdinalIgnoreCase);
 		}
 
 		public static bool IsPersonalGeodatabase([NotNull] IWorkspace workspace)
 		{
-			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			string workspacePath = GetWorkspacePath(workspace);
 
-			const string pgdbClassId = "{DD48C96A-D92A-11D1-AA81-00C04FA33A15}";
+			return workspacePath != null &&
+			       workspacePath.EndsWith(".mdb", StringComparison.OrdinalIgnoreCase);
 
-			return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
-			       pgdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
-			                          StringComparison.OrdinalIgnoreCase);
+			// Original implementation which fails for GdbWorkspace implementations:
+
+			//Assert.ArgumentNotNull(workspace, nameof(workspace));
+
+			//const string pgdbClassId = "{DD48C96A-D92A-11D1-AA81-00C04FA33A15}";
+
+			//return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
+			//       pgdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
+			//                          StringComparison.OrdinalIgnoreCase);
 		}
 
 		/// <summary>
@@ -3262,6 +3273,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				throw deleter.LastException;
 			}
+		}
+
+		[CanBeNull]
+		private static string GetWorkspacePath([NotNull] IWorkspace workspace)
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+
+			if (string.IsNullOrEmpty(workspace.PathName))
+			{
+				return null;
+			}
+
+			return workspace.PathName;
 		}
 
 		#endregion

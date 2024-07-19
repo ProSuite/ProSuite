@@ -4,6 +4,8 @@ using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.GeoDb;
+using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
@@ -24,7 +26,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	}
 
 	public abstract class VirtualTable : IDataset, ITable, IObjectClass, IDatasetEdit, ISchemaLock,
-	                                     ISubtypes, IReadOnlyTable, IRowCreator<VirtualRow>
+	                                     ISubtypes, ITableData, IReadOnlyTable,
+	                                     IRowCreator<VirtualRow>
 	{
 		protected GdbFields _fields;
 		private TableName _tableName;
@@ -547,6 +550,46 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			// ReSharper disable once BaseObjectGetHashCodeCallInGetHashCode
 			return base.GetHashCode();
 		}
+
+		#region Implementation of IDbDataset
+
+		private IDatasetContainer _datasetContainer;
+
+		IDatasetContainer IDatasetDef.DbContainer =>
+			_datasetContainer ??
+			(_datasetContainer = new GeoDbWorkspace(Workspace));
+
+		DatasetType IDatasetDef.DatasetType =>
+			DatasetType == esriDatasetType.esriDTFeatureClass
+				? GeoDb.DatasetType.FeatureClass
+				: GeoDb.DatasetType.Table;
+
+		bool IDatasetDef.Equals(IDatasetDef otherDataset)
+		{
+			return Equals(otherDataset);
+		}
+
+		#endregion
+
+		#region Implementation of IDbTableSchema
+
+		IReadOnlyList<ITableField> ITableSchemaDef.TableFields => GdbFields;
+
+		#endregion
+
+		#region Implementation of ITableData
+
+		IDbRow ITableData.GetRow(long oid)
+		{
+			return GetReadOnlyRow(oid);
+		}
+
+		IEnumerable<IDbRow> ITableData.EnumRows(ITableFilter filter, bool recycle)
+		{
+			return EnumReadOnlyRows(filter, recycle);
+		}
+
+		#endregion
 
 		protected class TableName : IName, IDatasetName, IObjectClassName, ITableName
 		{

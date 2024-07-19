@@ -220,7 +220,7 @@ public class GeometricEffectsTest
 		var dashes14 = Dashes(line, pat_20_20, 0.0, customEndOffset: 50.0); // E > sum(pat)
 		var dashes15 = Dashes(line, pat_20_20, 0.0, customEndOffset: -10.0);
 		var dashes16 = Dashes(line, pat_20_20, 0.0, customEndOffset: -30.0);
-		var dahses17 = Dashes(line, pat_20_20, 0.0, customEndOffset: -50.0);
+		var dashes17 = Dashes(line, pat_20_20, 0.0, customEndOffset: -50.0);
 
 	}
 

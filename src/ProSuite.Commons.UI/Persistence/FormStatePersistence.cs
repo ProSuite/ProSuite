@@ -61,8 +61,8 @@ namespace ProSuite.Commons.UI.Persistence
 		/// <param name="type">type of object to deserialize from file</param>
 		/// <returns></returns>
 		[CanBeNull]
-		internal static object ReadFromXml([NotNull] string fileName,
-		                                   [NotNull] Type type)
+		public static object ReadFromXml([NotNull] string fileName,
+		                                 [NotNull] Type type)
 		{
 			Assert.ArgumentNotNullOrEmpty(fileName, nameof(fileName));
 			Assert.ArgumentNotNull(type, nameof(type));
@@ -92,9 +92,9 @@ namespace ProSuite.Commons.UI.Persistence
 		/// <summary>
 		/// Persists an object to the Xml file
 		/// </summary>
-		internal static void WriteToXml([NotNull] string fileName,
-		                                [NotNull] object settings,
-		                                [NotNull] Type type)
+		public static void WriteToXml([NotNull] string fileName,
+		                              [NotNull] object settings,
+		                              [NotNull] Type type)
 		{
 			Assert.ArgumentNotNullOrEmpty(fileName, nameof(fileName));
 			Assert.ArgumentNotNull(settings, nameof(settings));

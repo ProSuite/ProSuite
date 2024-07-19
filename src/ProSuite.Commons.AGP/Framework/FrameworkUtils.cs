@@ -1,28 +1,31 @@
+using System;
 using ArcGIS.Desktop.Framework;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.Commons.AGP.Framework
+namespace ProSuite.Commons.AGP.Framework;
+
+public static class FrameworkUtils
 {
-	public static class FrameworkUtils
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	public static void ToggleState(string stateId, bool activate)
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		if (string.IsNullOrEmpty(stateId))
+			throw new ArgumentNullException(nameof(stateId));
 
-		public static void ToggleState([NotNull] string stateId, bool activate)
+		if (_msg.IsVerboseDebugEnabled)
 		{
-			Assert.ArgumentNotNullOrEmpty(stateId, nameof(stateId));
+			var action = activate ? "Activate" : "Deactivate";
+			_msg.VerboseDebug($"{action} state {stateId}");
+		}
 
-			_msg.VerboseDebug(() => $"{(activate ? "Activate" : "Deactivate")} state {stateId}");
-
-			if (activate)
-			{
-				FrameworkApplication.State.Activate(stateId);
-			}
-			else
-			{
-				FrameworkApplication.State.Deactivate(stateId);
-			}
+		if (activate)
+		{
+			FrameworkApplication.State.Activate(stateId);
+		}
+		else
+		{
+			FrameworkApplication.State.Deactivate(stateId);
 		}
 	}
 }

@@ -12,7 +12,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		// todo daro: use Factory Method on abstract ISourceClass base to create item
 		//			  instead of passing in reader
-		public IssueItem(long id, [NotNull] Row row) : base(id, row) { }
+		public IssueItem(long objectId, long uniqueTableId, [NotNull] Row row)
+			: base(objectId, uniqueTableId, row) { }
 
 		public string ExceptionRetirementDate { get; set; }
 

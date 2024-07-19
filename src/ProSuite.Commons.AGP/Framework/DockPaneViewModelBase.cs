@@ -1,19 +1,20 @@
+using System;
 using System.Windows.Controls;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using ProSuite.Commons.Essentials.Assertions;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Framework
 {
 	public abstract class DockPaneViewModelBase : DockPane
 	{
-		[NotNull] private readonly Control _contentControl;
+		private readonly Control _contentControl;
 
 		protected DockPaneViewModelBase([NotNull] Control contentControl)
 		{
-			Assert.ArgumentNotNull(contentControl, nameof(contentControl));
-
-			_contentControl = contentControl;
+			_contentControl =
+				contentControl ?? throw new ArgumentNullException(nameof(contentControl));
 		}
 
 		protected override Control OnCreateContent()
@@ -22,5 +23,10 @@ namespace ProSuite.Commons.AGP.Framework
 
 			return _contentControl;
 		}
+
+		/// <summary>
+		/// Gets the OperationManager associated with the current map or null
+		/// </summary>
+		public override OperationManager OperationManager => MapView.Active?.Map.OperationManager;
 	}
 }

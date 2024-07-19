@@ -167,6 +167,22 @@ namespace ProSuite.Commons.AGP.Hosting
 		}
 
 		/// <summary>
+		/// Adds the specified install dir to the PATH environment variable (process scope).
+		/// </summary>
+		/// <param name="installDir"></param>
+		public static void AddBinDirectoryToPath(string installDir)
+		{
+			string proBinDir = Path.Combine(installDir, "bin");
+
+			const string name = "PATH";
+			const EnvironmentVariableTarget scope = EnvironmentVariableTarget.Process;
+
+			var oldValue = Environment.GetEnvironmentVariable(name, scope);
+			var newValue = oldValue + $";{proBinDir}";
+			Environment.SetEnvironmentVariable(name, newValue, scope);
+		}
+
+		/// <summary>
 		/// Resolves the ArcGIS Pro Assembly Path.  Called when loading of an assembly fails.
 		/// </summary>
 		/// <param name="sender"></param>

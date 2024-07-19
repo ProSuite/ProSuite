@@ -623,7 +623,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			             {
 				             Name = Escape(testDescriptor.Name),
 				             Description = Escape(testDescriptor.Description),
-				             Assembly = testDescriptor.TestAssemblyName
+				             Assembly = testDescriptor.AssemblyName
 			             };
 
 			if (testDescriptor.TestClass != null)
@@ -648,7 +648,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			             {
 				             Name = Escape(instanceDescriptor.Name),
 				             Description = Escape(instanceDescriptor.Description),
-				             Assembly = instanceDescriptor.TestAssemblyName
+				             Assembly = instanceDescriptor.AssemblyName
 			             };
 
 			if (instanceDescriptor.Class != null)

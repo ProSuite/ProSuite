@@ -90,6 +90,21 @@ namespace ProSuite.DomainModel.Core.QA
 			_displayableCondition = null;
 		}
 
+		/// <summary>
+		/// Increases the Error count and, if not errors are allowed, sets <see cref="Fulfilled"/>
+		/// to false.
+		/// </summary>
+		/// <returns></returns>
+		public int AddError()
+		{
+			if (AllowErrors)
+			{
+				Fulfilled = false;
+			}
+
+			return ErrorCount++;
+		}
+
 		public bool AllowErrors
 		{
 			get { return _allowErrors; }

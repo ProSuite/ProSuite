@@ -37,6 +37,9 @@
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="Quaestor.LoadReporting">
+      <HintPath>..\..\lib\Quaestor\Quaestor.LoadReporting.dll</HintPath>
+    </Reference>
     <Reference Include="Quaestor.ServiceDiscovery">
       <HintPath>..\..\lib\Quaestor\Quaestor.ServiceDiscovery.dll</HintPath>
     </Reference>
@@ -47,16 +50,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.19.2" />
-    <PackageReference Include="Grpc" Version="2.44.0" />
-    <PackageReference Include="Grpc.HealthCheck" Version="2.44.0" />
+    <PackageReference Include="Grpc.Core.Api" Version="2.62.0" />
+    <PackageReference Include="Grpc.HealthCheck" Version="2.62.0" />
   </ItemGroup>
 
   <ItemGroup>

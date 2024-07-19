@@ -67,6 +67,16 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			_disposableParentDataset?.Dispose();
 		}
 
+		#region Overrides of Object
+
+		public override string ToString()
+		{
+			var geoDataset = (IGeoDataset) _raster;
+			return $"Raster dataset in {GeometryUtils.ToString(geoDataset.Extent, true)}";
+		}
+
+		#endregion
+
 		[NotNull]
 		private IPolygon GetAssumedInterpolationDomain([NotNull] IRaster raster)
 		{

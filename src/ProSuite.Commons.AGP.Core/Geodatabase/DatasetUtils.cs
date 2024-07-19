@@ -1,12 +1,15 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
@@ -17,22 +20,24 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		[NotNull]
 		public static string GetTableDisplayName([NotNull] Table table)
 		{
-			TableDefinition definition = table.GetDefinition();
+			using var definition = table.GetDefinition();
 			string name = definition.GetName();
 			string alias = GetAliasName(definition);
 
+			if (string.IsNullOrEmpty(alias))
+			{
+				alias = name;
+			}
+
 			if (string.Equals(name, alias, StringComparison.CurrentCultureIgnoreCase))
 			{
-				// the alias name is equal to the name (but may have different case)
-				// un-qualify the alias name to preserve it's case.
-				using (var datastore = table.GetDatastore())
-				{
-					var sqlSyntax = datastore.GetSQLSyntax();
-					// TODO why using alias here and not name?
-					if (sqlSyntax == null) return alias;
-					var parts = sqlSyntax.ParseTableName(alias);
-					return parts.Item3;
-				}
+				// Alias name equals table name (but may have different case);
+				// un-qualify the alias name to preserve its case:
+				using var datastore = table.GetDatastore();
+				var sqlSyntax = datastore.GetSQLSyntax();
+				if (sqlSyntax is null) return alias;
+				var parts = sqlSyntax.ParseTableName(alias);
+				return parts.Item3; // table name
 			}
 
 			return alias;
@@ -40,59 +45,110 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static string GetName(Table table)
 		{
+			return table?.GetName();
+		}
+
+		public static string GetAliasName(Table table)
+		{
+			using var definition = table?.GetDefinition();
+			return GetAliasName(definition);
+		}
+
+		[CanBeNull]
+		private static string GetAliasName(TableDefinition definition)
+		{
+			try
+			{
+				return definition?.GetAliasName();
+			}
+			catch (NotSupportedException)
+			{
+				// Shapefiles have no alias and throw NotSupportedException
+				return null;
+			}
+		}
+
+		public static int? GetDefaultSubtypeCode(Table table)
+		{
 			if (table is null) return null;
-			return table.GetDefinition()?.GetName();
-		}
 
-		public static string GetAliasName([NotNull] Table table)
-		{
-			Assert.ArgumentNotNull(table, nameof(table));
-
-			return GetAliasName(table.GetDefinition());
-		}
-
-		[NotNull]
-		public static string GetAliasName([NotNull] TableDefinition definition)
-		{
-			Assert.ArgumentNotNull(definition, nameof(definition));
+			using var definition = table.GetDefinition();
 
 			try
 			{
-				string aliasName = definition.GetAliasName();
-
-				return StringUtils.IsNotEmpty(aliasName)
-					       ? aliasName
-					       : definition.GetName();
+				return definition.GetDefaultSubtypeCode();
 			}
-			catch (NotSupportedException e)
+			catch (NotSupportedException)
 			{
-				// Shapefiles throw a NotSupportedException
-				_msg.Debug("Unable to get alias. Using name", e);
-				return definition.GetName();
+				// Shapefiles have no subtypes and throw NotSupportedException
+				return null;
 			}
 		}
 
 		[CanBeNull]
-		public static SpatialReference GetSpatialReference([NotNull] Feature feature)
+		public static Subtype GetDefaultSubtype(Table table)
 		{
-			Assert.ArgumentNotNull(feature, nameof(feature));
+			if (table is null) return null;
 
-			return GetSpatialReference(feature.GetTable());
+			using var definition = table.GetDefinition();
+
+			try
+			{
+				var defaultCode = definition.GetDefaultSubtypeCode();
+				var subtypes = definition.GetSubtypes();
+				return subtypes.FirstOrDefault(st => st.GetCode() == defaultCode);
+			}
+			catch (NotSupportedException)
+			{
+				// Shapefiles have no subtypes and throw NotSupportedException
+				return null;
+			}
+		}
+
+		[NotNull]
+		public static string ToString([NotNull] Subtype subtype)
+		{
+			string name;
+			try
+			{
+				name = subtype.GetName();
+			}
+			catch (Exception e)
+			{
+				name = $"[error getting Name: {e.Message}]";
+			}
+
+			string code;
+			try
+			{
+				code = subtype.GetCode().ToString(CultureInfo.InvariantCulture);
+			}
+			catch (Exception e)
+			{
+				code = $"[error getting Code: {e.Message}]";
+			}
+
+			return $"name={name} code={code}";
 		}
 
 		[CanBeNull]
-		public static SpatialReference GetSpatialReference([NotNull] this FeatureClass featureClass)
+		public static SpatialReference GetSpatialReference(Feature feature)
 		{
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
-
-			return featureClass.GetDefinition()?.GetSpatialReference();
+			using var featureClass = feature?.GetTable();
+			return GetSpatialReference(featureClass);
 		}
 
-		public static GeometryType GetShapeType([NotNull] FeatureClass featureClass)
+		[CanBeNull]
+		public static SpatialReference GetSpatialReference(this FeatureClass featureClass)
 		{
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+			using var definition = featureClass?.GetDefinition();
+			return definition?.GetSpatialReference();
+		}
 
-			return featureClass.GetDefinition().GetShapeType();
+		public static GeometryType GetShapeType(this FeatureClass featureClass)
+		{
+			using var definition = featureClass?.GetDefinition();
+			return definition?.GetShapeType() ?? GeometryType.Unknown;
 		}
 
 		public static T GetDatasetDefinition<T>(Datastore datastore, string name)
@@ -166,6 +222,258 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			IEnumerable<Table> tables)
 		{
 			return tables.Distinct(new TableComparer());
+		}
+
+		/// <summary>
+		/// Returns the actual database tables from a joined table or, if the table is not a joined
+		/// table, the table itself.
+		/// </summary>
+		/// <param name="table">The potentially joined table</param>
+		/// <returns></returns>
+		public static IEnumerable<Table> GetDatabaseTables([NotNull] Table table)
+		{
+			if (! table.IsJoinedTable())
+			{
+				yield return table;
+				yield break;
+			}
+
+			Join join = table.GetJoin();
+
+			Table originTable = join.GetOriginTable();
+
+			foreach (Table sourceTable in GetDatabaseTables(originTable))
+			{
+				yield return sourceTable;
+			}
+
+			Table destinationTable = join.GetDestinationTable();
+
+			foreach (Table sourceTable in GetDatabaseTables(destinationTable))
+			{
+				yield return sourceTable;
+			}
+		}
+
+		public static bool HasM(FeatureClass featureClass)
+		{
+			using var definition = featureClass.GetDefinition();
+			return definition.HasM();
+		}
+
+		public static bool HasZ(FeatureClass featureClass)
+		{
+			using var definition = featureClass.GetDefinition();
+			return definition.HasZ();
+		}
+
+		[CanBeNull]
+		public static string GetAreaFieldName(FeatureClass featureClass)
+		{
+			if (featureClass is null) return null;
+
+			using var definition = featureClass.GetDefinition();
+
+			return GetAreaFieldName(definition);
+		}
+
+		[CanBeNull]
+		public static string GetAreaFieldName(
+			[NotNull] FeatureClassDefinition featureClassDefinition)
+		{
+			Assert.ArgumentNotNull(featureClassDefinition, nameof(featureClassDefinition));
+
+			try
+			{
+				string areaFieldName = featureClassDefinition.GetAreaField();
+
+				return areaFieldName;
+			}
+			catch (NotImplementedException)
+			{
+				// TODO: Verify this
+				// property is not implemented for feature classes from non-Gdb workspaces 
+				// ("query layers")
+				return null;
+			}
+		}
+
+		[CanBeNull]
+		public static string GetLengthFieldName(FeatureClass featureClass)
+		{
+			if (featureClass is null) return null;
+
+			using var definition = featureClass.GetDefinition();
+
+			return GetLengthFieldName(definition);
+		}
+
+		public static string GetLengthFieldName(FeatureClassDefinition featureClassDefinition)
+		{
+			Assert.ArgumentNotNull(featureClassDefinition, nameof(featureClassDefinition));
+
+			try
+			{
+				string lengthFieldName = featureClassDefinition.GetLengthField();
+
+				return lengthFieldName;
+			}
+			catch (NotImplementedException)
+			{
+				// TODO: Verify this, especially the type of exception
+				// property is not implemented for feature classes from non-Gdb workspaces 
+				// ("query layers")
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Gets the name of the subtype field in a given object class.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <returns>The name of the subtype field, or null if the table has no subtype field.
+		/// </returns>
+		[CanBeNull]
+		public static string GetSubtypeFieldName([NotNull] Table table)
+		{
+			using var definition = table.GetDefinition();
+
+			return GetSubtypeFieldName(definition);
+		}
+
+		[CanBeNull]
+		public static string GetSubtypeFieldName(TableDefinition tableDefinition)
+		{
+			string subtypeFieldName = null;
+			try
+			{
+				return tableDefinition.GetSubtypeField();
+			}
+			catch (NotSupportedException notSupportedException)
+			{
+				// Shapefiles throw a NotSupportedException
+				_msg.Debug("Subtypes not supported", notSupportedException);
+			}
+
+			return subtypeFieldName;
+		}
+
+		/// <summary>
+		/// Gets the index of the subtype field in a given table.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <returns>The index of the subtype field, or -1 
+		/// if the table has no subtype field.</returns>
+		public static int GetSubtypeFieldIndex([NotNull] Table table)
+		{
+			using var definition = table.GetDefinition();
+
+			string subtypeFieldName = GetSubtypeFieldName(table);
+
+			if (string.IsNullOrEmpty(subtypeFieldName))
+			{
+				return -1;
+			}
+
+			int result = definition.FindField(subtypeFieldName);
+
+			return result;
+		}
+
+		/// <summary>
+		/// Gets the name of the object id field in a given table.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <returns>The name of the subtype field, or null if the table has no subtype field.
+		/// </returns>
+		[CanBeNull]
+		public static string GetObjectIdFieldName([NotNull] Table table)
+		{
+			using var definition = table.GetDefinition();
+
+			return GetObjectIdFieldName(definition);
+		}
+
+		[CanBeNull]
+		public static string GetObjectIdFieldName(TableDefinition tableDefinition)
+		{
+			if (! tableDefinition.HasObjectID())
+			{
+				return null;
+			}
+
+			return tableDefinition.GetObjectIDField();
+		}
+
+		/// <summary>
+		/// Deletes rows in a table based on a collection of object IDs.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <param name="oids">The oids.</param>
+		public static void DeleteRows([NotNull] Table table,
+		                              [NotNull] IEnumerable oids)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNull(oids, nameof(oids));
+
+			const int maxLength = 1000;
+
+			var sb = new StringBuilder();
+
+			foreach (object oidObj in oids)
+			{
+				// Convert the (potentially boxed int) object:
+				long oid = Convert.ToInt64(oidObj);
+
+				if (sb.Length == 0)
+				{
+					sb.Append(oid);
+				}
+				else if (sb.Length < maxLength)
+				{
+					sb.AppendFormat(",{0}", oid);
+				}
+				else
+				{
+					// maximum exceeded, delete current oid list
+					DeleteRowsByOIDString(table, sb.ToString());
+
+					// clear string builder
+					sb.Remove(0, sb.Length);
+				}
+			}
+
+			if (sb.Length > 0)
+			{
+				DeleteRowsByOIDString(table, sb.ToString());
+			}
+		}
+
+		/// <summary>
+		/// Deletes rows in a table based on a string containing a comma-separated
+		/// list of object ids.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <param name="oidString">The oid string.</param>
+		private static void DeleteRowsByOIDString([NotNull] Table table,
+		                                          [NotNull] string oidString)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(oidString, nameof(oidString));
+
+			string objectIdFieldName = Assert.NotNullOrEmpty(GetObjectIdFieldName(table));
+
+			string whereClause = $"{objectIdFieldName} IN ({oidString})";
+
+			QueryFilter filter = new QueryFilter { WhereClause = whereClause };
+
+			Stopwatch watch = _msg.DebugStartTiming(
+				"Deleting rows from {0} using where clause {1}",
+				GetName(table), whereClause);
+
+			table.DeleteRows(filter);
+
+			_msg.DebugStopTiming(watch, "Rows deleted");
 		}
 	}
 }

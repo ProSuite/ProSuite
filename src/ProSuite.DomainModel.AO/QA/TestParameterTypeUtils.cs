@@ -4,12 +4,16 @@ using ESRI.ArcGIS.DatasourcesRaster;
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
 using System;
+using System.Linq;
+using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
+using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.LegacyTypes;
 using ProSuite.DomainModel.Core.QA;
@@ -54,6 +58,18 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(dataType, nameof(dataType));
 
 			// NOTE: test more specific types first, base types last
+
+			// Platform independent definition Types:
+			if (typeof(IFeatureClassSchemaDef).IsAssignableFrom(dataType))
+				return TestParameterType.VectorDataset;
+			if (typeof(ITableSchemaDef).IsAssignableFrom(dataType))
+				return TestParameterType.ObjectDataset;
+			if (typeof(IMosaicRasterDatasetDef).IsAssignableFrom(dataType))
+				return TestParameterType.RasterMosaicDataset;
+			if (typeof(IRasterDatasetDef).IsAssignableFrom(dataType))
+				return TestParameterType.RasterDataset;
+			if (typeof(ITerrainDef).IsAssignableFrom(dataType))
+				return TestParameterType.TerrainDataset;
 
 			if (typeof(IReadOnlyFeatureClass).IsAssignableFrom(dataType))
 				return TestParameterType.VectorDataset;
@@ -122,6 +138,15 @@ namespace ProSuite.DomainModel.AO.QA
 				return false;
 			}
 
+			if (typeof(IFeatureClassSchemaDef).IsAssignableFrom(type) ||
+			    typeof(ITableSchemaDef).IsAssignableFrom(type) ||
+			    typeof(IRasterDatasetDef).IsAssignableFrom(type) ||
+			    typeof(ITerrainDef).IsAssignableFrom(type))
+			{
+				return true;
+			}
+
+			// Legacy types:
 			return typeof(IReadOnlyFeatureClass).IsAssignableFrom(type) ||
 			       typeof(IReadOnlyTable).IsAssignableFrom(type) ||
 			       typeof(IFeatureClass).IsAssignableFrom(type) ||
@@ -232,6 +257,26 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 
 			return defaultValue;
+		}
+
+		public static SqlExpressionAttribute GetSqlExpressionAttribute(
+			[NotNull] Type instanceType,
+			[NotNull] TestParameter testParameter)
+		{
+			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
+
+			PropertyInfo propertyInfo =
+				instanceType.GetProperties()
+				            .FirstOrDefault(p => p.Name.Equals(
+					                            testParameter.Name,
+					                            StringComparison.InvariantCultureIgnoreCase));
+
+			if (propertyInfo == null)
+			{
+				return null;
+			}
+
+			return ReflectionUtils.GetAttribute<SqlExpressionAttribute>(propertyInfo);
 		}
 	}
 }

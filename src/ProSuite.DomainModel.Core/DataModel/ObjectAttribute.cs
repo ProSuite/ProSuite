@@ -1,4 +1,5 @@
 using System;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -7,7 +8,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 	/// <summary>
 	/// Represents a field in an objectclass
 	/// </summary>
-	public class ObjectAttribute : Attribute
+	public class ObjectAttribute : Attribute, ITableField
 	{
 		[UsedImplicitly] private bool? _readOnly;
 		[UsedImplicitly] private bool? _isObjectDefining;

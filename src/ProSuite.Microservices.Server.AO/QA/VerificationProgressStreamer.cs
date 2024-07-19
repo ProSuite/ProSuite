@@ -19,7 +19,7 @@ using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
 
@@ -142,12 +142,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			int messageLevel = Level.Info.Value;
 
+			_msg.Info(text);
+
 			WriteMessage(text, messageLevel);
 		}
 
 		public void Warning(string text)
 		{
 			int messageLevel = Level.Warn.Value;
+
+			_msg.Warn(text);
 
 			WriteMessage(text, messageLevel);
 		}
@@ -566,10 +570,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			else
 			{
 				issueProto = ProtobufQaUtils.CreateIssueProto(
-					issueFoundEventArgs,
-					Assert.NotNull(KnownIssueSpatialReference,
-					               "Either background verification inputs or known spatial refereance must be specified"),
-					_standaloneIssueGeometryTypes);
+					issueFoundEventArgs, KnownIssueSpatialReference, _standaloneIssueGeometryTypes);
 			}
 
 			_pendingIssues.Add(issueProto);

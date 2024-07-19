@@ -12,10 +12,10 @@ namespace ProSuite.AGP.QA
 	public class DdxSpecificationReferencesProvider : IQualitySpecificationReferencesProvider
 	{
 		[NotNull] private readonly IMapBasedSessionContext _sessionContext;
-		[NotNull] private readonly QualityVerificationServiceClient _client;
+		[NotNull] private readonly IQualityVerificationClient _client;
 
 		public DdxSpecificationReferencesProvider([NotNull] IMapBasedSessionContext sessionContext,
-		                                          [NotNull] QualityVerificationServiceClient client)
+		                                          [NotNull] IQualityVerificationClient client)
 		{
 			_sessionContext = sessionContext;
 			_client = client;

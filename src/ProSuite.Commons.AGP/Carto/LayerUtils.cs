@@ -6,7 +6,6 @@ using System.Threading;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Carto
@@ -76,8 +75,8 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
-		/// Returns the Object IDs of features found by the layer search. Honors definition queries,
-		/// layer time, etc. defined on the layer. 
+		/// Returns the Object IDs of features found by the layer search.
+		/// Honors definition queries, layer time, etc. defined on the layer.
 		/// </summary>
 		public static IEnumerable<long> SearchObjectIds(
 			[NotNull] BasicFeatureLayer layer,
@@ -85,16 +84,31 @@ namespace ProSuite.Commons.AGP.Carto
 			[CanBeNull] Predicate<Feature> predicate = null,
 			CancellationToken cancellationToken = default)
 		{
+			using var table = layer.GetTable();
+			using var definition = table?.GetDefinition();
+			var oidField = definition?.GetObjectIDField();
+
+			if (string.IsNullOrEmpty(oidField))
+			{
+				yield break; // no OIDs
+			}
+
 			if (filter == null)
 			{
-				filter = new QueryFilter
-				         {
-					         SubFields = layer.GetTable().GetDefinition()?.GetObjectIDField()
-				         };
+				filter = new QueryFilter { SubFields = oidField };
 			}
 			else if (string.IsNullOrEmpty(filter.SubFields))
 			{
-				filter.SubFields = layer.GetTable().GetDefinition()?.GetObjectIDField();
+				filter.SubFields = oidField;
+			}
+			else
+			{
+				// ensure OID field is in SubFields:
+				if (! filter.SubFields.Split(',').Select(fn => fn.Trim())
+				            .Contains(oidField, StringComparer.OrdinalIgnoreCase))
+				{
+					filter.SubFields = string.Concat(filter.SubFields, ",", oidField);
+				}
 			}
 
 			foreach (Feature row in SearchRows(layer, filter, predicate))
@@ -111,46 +125,71 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		[CanBeNull]
-		public static T GetRenderer<T>([NotNull] LayerDocument template) where T : CIMRenderer
+		/// <summary>
+		/// Get the single layer definition of type <typeparamref name="T"/>
+		/// from the given <paramref name="layerDocument"/>; return null if
+		/// there is no single such layer definition in the document.
+		/// </summary>
+		public static T GetSingleLayerCIM<T>(LayerDocument layerDocument) where T : CIMBaseLayer
 		{
-			CIMLayerDocument layerDocument = template.GetCIMLayerDocument();
+			if (layerDocument is null) return null;
+			var cim = layerDocument.GetCIMLayerDocument();
+			var definitions = cim?.LayerDefinitions;
+			var matches = definitions?.OfType<T>().ToArray();
+			return matches?.Length != 1 ? null : matches.Single();
+		}
 
-			// todo daro: implement more robust
-			CIMDefinition definition = layerDocument.LayerDefinitions[0];
-			return ((CIMFeatureLayer) definition)?.Renderer as T;
+		/// <remarks>
+		/// A layer document (.lyrx file) can contain one or more layer definitions!
+		/// </remarks>
+		[CanBeNull]
+		public static CIMRenderer GetRenderer(LayerDocument layerDocument,
+		                                      Func<CIMDefinition, bool> predicate = null)
+		{
+			if (layerDocument is null) return null;
+
+			CIMLayerDocument cim = layerDocument.GetCIMLayerDocument();
+			var definitions = cim?.LayerDefinitions;
+			if (definitions is null || definitions.Length <= 0) return null;
+
+			var definition = predicate is null
+				                 ? definitions.First()
+				                 : definitions.First(predicate);
+
+			return definition is CIMFeatureLayer featureLayer
+				       ? featureLayer.Renderer
+				       : null;
+		}
+
+		/// <summary>
+		/// Get first renderer from <paramref name="layerDocument"/>
+		/// compatible with the given <paramref name="targetLayer"/>.
+		/// </summary>
+		[CanBeNull]
+		public static CIMRenderer GetRenderer(
+			LayerDocument layerDocument, FeatureLayer targetLayer)
+		{
+			return GetRenderer(layerDocument, IsCompatible);
+
+			bool IsCompatible(CIMDefinition cimDefinition)
+			{
+				if (targetLayer is null) return true;
+				return cimDefinition is CIMFeatureLayer cimFeatureLayer &&
+				       targetLayer.CanSetRenderer(cimFeatureLayer.Renderer);
+			}
 		}
 
 		[NotNull]
-		public static LayerDocument CreateLayerDocument([NotNull] string path)
+		public static LayerDocument OpenLayerDocument([NotNull] string filePath)
 		{
-			if (! File.Exists(path))
+			if (! File.Exists(filePath))
 			{
-				throw new ArgumentException($"{path} does not exist");
+				throw new ArgumentException($"{filePath} does not exist");
 			}
 
 			// todo daro no valid .lyrx file
 
-			return new LayerDocument(path);
-		}
-
-		[CanBeNull]
-		public static LayerDocument CreateLayerDocument([NotNull] string path,
-		                                                string layerName)
-		{
-			var layerDocument = CreateLayerDocument(path);
-
-			CIMLayerDocument cimLayerDocument = layerDocument.GetCIMLayerDocument();
-			cimLayerDocument.LayerDefinitions[0].Name = layerName;
-
-			return new LayerDocument(cimLayerDocument);
-		}
-
-		public static void ApplyRenderer([NotNull] FeatureLayer layer,
-		                                 [NotNull] LayerDocument fromTemplate)
-		{
-			var renderer = GetRenderer<CIMRenderer>(fromTemplate);
-			layer.SetRenderer(renderer);
+			return new LayerDocument(filePath);
 		}
 
 		/// <summary>
@@ -195,10 +234,13 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
-		/// Gets the layer's visibility state. Works as well for layers nested in group layers.
+		/// Gets the layer's visibility state.
+		/// Works as well for layers nested in group layers.
 		/// </summary>
-		public static bool IsVisible([NotNull] Layer layer)
+		public static bool IsVisible(Layer layer)
 		{
+			if (layer is null) return false;
+
 			if (! layer.IsVisible)
 			{
 				return false;
@@ -206,51 +248,57 @@ namespace ProSuite.Commons.AGP.Carto
 
 			if (layer.Parent is Layer parentLayer)
 			{
+				// ReSharper disable once TailRecursiveCall
 				return IsVisible(parentLayer);
 			}
 
+			// Version without tail recursion:
+			//var parent = layer.Parent;
+
+			//while (parent is Layer parentLayer)
+			//{
+			//	if (! parentLayer.IsVisible)
+			//	{
+			//		return false;
+			//	}
+
+			//	parent = parentLayer.Parent;
+			//}
+
 			return true;
 		}
 
+		/// <remarks>A layer is considered valid if it has a non-null data table</remarks>
 		public static bool IsLayerValid([CanBeNull] BasicFeatureLayer featureLayer)
 		{
-			// ReSharper disable once UseNullPropagation
-			if (featureLayer == null)
-			{
-				return false;
-			}
-
-			if (featureLayer.GetTable() == null)
-			{
-				return false;
-			}
-
-			return true;
+			using var table = featureLayer?.GetTable();
+			return table != null;
 		}
 
-		// todo daro to MapUtils?
-		[NotNull]
-		public static FeatureClass GetFeatureClass(
-			[NotNull] this BasicFeatureLayer basicFeatureLayer)
+		[CanBeNull]
+		public static FeatureClass GetFeatureClass(this Layer layer)
 		{
-			Assert.ArgumentNotNull(basicFeatureLayer, nameof(basicFeatureLayer));
-			Assert.ArgumentCondition(
-				basicFeatureLayer is FeatureLayer || basicFeatureLayer is AnnotationLayer,
-				"AnnotationLayer has it's own GetFeatureClass() method. There is no base method on BasicFeatureLayer.");
+			// BasicFeatureLayer is the abstract base class for:
+			// FeatureLayer, AnnotationLayer, DimensionLayer;
+			// they all have a feature class as their data source, but,
+			// sadly, BasicFeatureLayer has no GetFeatureClass() method.
 
-			// todo daro try (FeatureClass)BasicFeatureLayer.GetTable()
-			if (basicFeatureLayer is FeatureLayer featureLayer)
+			if (layer is FeatureLayer featureLayer)
 			{
-				return Assert.NotNull(featureLayer.GetFeatureClass());
+				return featureLayer.GetFeatureClass();
 			}
 
-			if (basicFeatureLayer is AnnotationLayer annotationLayer)
+			if (layer is AnnotationLayer annotationLayer)
 			{
-				return Assert.NotNull(annotationLayer.GetFeatureClass());
+				return annotationLayer.GetFeatureClass();
 			}
 
-			throw new ArgumentException(
-				$"{nameof(basicFeatureLayer)} is not of type FeatureLayer nor AnnotationLayer");
+			if (layer is BasicFeatureLayer basicFeatureLayer)
+			{
+				return basicFeatureLayer.GetTable() as FeatureClass;
+			}
+
+			return null;
 		}
 	}
 }

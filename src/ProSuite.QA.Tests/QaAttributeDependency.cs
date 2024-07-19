@@ -5,6 +5,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AttributeDependencies;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
@@ -104,6 +105,7 @@ namespace ProSuite.QA.Tests
 				{
 					filter.AddField(sourceField);
 				}
+
 				foreach (var targetField in _targetFields)
 				{
 					filter.AddField(targetField);

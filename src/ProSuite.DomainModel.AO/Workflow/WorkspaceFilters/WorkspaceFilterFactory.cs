@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Gdb;
 using ProSuite.Commons.NamedValuesExpressions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
@@ -195,7 +195,13 @@ namespace ProSuite.DomainModel.AO.Workflow.WorkspaceFilters
 		[NotNull]
 		private static string ConcatenateGdbTypeNames()
 		{
-			return StringUtils.Concatenate(_workspaceDbTypeInfos, info => info.Name, ",");
+			List<WorkspaceDbTypeInfo> filteredWorkspaceInfos = _workspaceDbTypeInfos;
+
+#if !NET48
+			filteredWorkspaceInfos = _workspaceDbTypeInfos.Where(ti => ti.Name != "pgdb").ToList();
+#endif
+
+			return StringUtils.Concatenate(filteredWorkspaceInfos, info => info.Name, ",");
 		}
 	}
 }

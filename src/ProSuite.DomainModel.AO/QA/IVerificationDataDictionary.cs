@@ -3,6 +3,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.Workflow;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DomainModel.AO.QA
@@ -25,5 +26,7 @@ namespace ProSuite.DomainModel.AO.QA
 			[NotNull] IList<IObjectClass> objectClasses);
 
 		QualityCondition GetQualityCondition(string conditionName);
+
+		IList<Dataset> GetDatasets(IList<int> datasetIds);
 	}
 }

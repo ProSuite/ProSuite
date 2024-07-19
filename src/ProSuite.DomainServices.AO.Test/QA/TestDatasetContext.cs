@@ -4,7 +4,6 @@ using System.IO;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.DataModel;
@@ -69,7 +68,7 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
 		}
 
-		public virtual SimpleRasterMosaic OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
+		public virtual MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			throw new NotImplementedException();
 		}
@@ -79,9 +78,12 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			return TopologyUtils.OpenTopology(_workspace, dataset.Name);
 		}
 
-		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
+		public RasterDatasetReference OpenRasterDataset(IDdxRasterDataset dataset)
 		{
-			return DatasetUtils.OpenRasterDataset((IWorkspace) _workspace, dataset.Name);
+			IRasterDataset rasterDataset =
+				DatasetUtils.OpenRasterDataset((IWorkspace) _workspace, dataset.Name);
+
+			return new RasterDatasetReference(rasterDataset);
 		}
 
 		public IRelationshipClass OpenRelationshipClass(Association association)

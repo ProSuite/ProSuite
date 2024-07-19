@@ -4,6 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Constraints
 {
@@ -35,6 +36,24 @@ namespace ProSuite.QA.Tests.Constraints
 			Description = description;
 			IssueCode = issueCode;
 			AffectedComponent = affectedComponent;
+			_nodes = new List<ConstraintNode>();
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ConstraintNode"/> class from a definition.
+		/// </summary>
+		/// <param name="constraintDefinition">The condition.</param>
+		public ConstraintNode([NotNull] ConstraintNodeDefinition constraintDefinition)
+		{
+			Assert.ArgumentNotNull(constraintDefinition, nameof(constraintDefinition));
+
+			Condition = ExpressionUtils.ParseCaseSensitivityHint(
+				constraintDefinition.Condition,
+				out _caseSensitivityOverride);
+
+			Description = constraintDefinition.Description;
+			IssueCode = constraintDefinition.IssueCode;
+			AffectedComponent = constraintDefinition.AffectedComponent;
 			_nodes = new List<ConstraintNode>();
 		}
 

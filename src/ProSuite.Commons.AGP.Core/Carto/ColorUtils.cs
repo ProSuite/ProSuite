@@ -18,6 +18,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 	/// </summary>
 	public static class ColorUtils
 	{
+		// Always return a new instance (because colors are mutable objects):
+
 		public static CIMColor RedRGB => CreateRGB(255, 0, 0);
 		public static CIMColor GreenRGB => CreateRGB(0, 255, 0);
 		public static CIMColor BlueRGB => CreateRGB(0, 0, 255);
@@ -69,6 +71,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return new CIMHSVColor {H = hue, S = saturation, V = value, Alpha = alpha};
 		}
 
+		/// <param name="color">the color whose alpha is to be modified</param>
+		/// <param name="alpha">between 0 (transparent) and 100 (opaque)</param>
 		public static T SetAlpha<T>(this T color, float alpha) where T : CIMColor
 		{
 			if (color != null)
@@ -80,9 +84,10 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		}
 
 		/// <summary>
-		/// Additive color mixing: (1-f)*a + f*b.
-		/// Requires RGB colors (including HLS and HSV) or gray level colors.
-		/// Not supported for other color spaces.
+		/// Additive color mixing: (1-f)*x + f*y.
+		/// Input colors must be RGB (including HLS and HSV) or CMYK (will
+		/// be converted to RGB) or gray level colors. Other color spaces
+		/// are not supported. The result is always an RGB color.
 		/// </summary>
 		public static CIMRGBColor Blend(CIMColor x, CIMColor y, float f = 0.5f)
 		{

@@ -2,6 +2,7 @@ using System;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
@@ -37,6 +38,10 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		[UsedImplicitly]
 		public string Name => _name;
+
+		// Consider harvesting as well:
+		[CanBeNull]
+		public string AliasName { get; set; }
 
 		[UsedImplicitly]
 		public string Description

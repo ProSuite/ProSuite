@@ -26,6 +26,11 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ArcGIS.Desktop.Framework">
+      <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Framework.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -37,5 +42,9 @@
     <ProjectReference Include="..\ProSuite.AGP.Editing\ProSuite.AGP.Editing.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AGP.Hosting\ProSuite.Commons.AGP.Hosting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="TestData\" />
   </ItemGroup>
 </Project>

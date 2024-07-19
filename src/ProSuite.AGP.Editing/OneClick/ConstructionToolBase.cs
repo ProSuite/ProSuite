@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,6 +24,7 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private const Key _keyFinishSketch = Key.F2;
 		private const Key _keyRestorePrevious = Key.R;
 
 		private Geometry _editSketchBackup;
@@ -42,6 +44,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			GeomIsSimpleAsFeature = false;
 
 			SketchCursor = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
+
+			HandledKeys.Add(_keyFinishSketch);
+			HandledKeys.Add(_keyRestorePrevious);
 		}
 
 		protected Cursor SketchCursor { get; set; }
@@ -214,7 +219,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				_editSketchBackup = null;
 			}
 
-			if (args.Key == Key.F2)
+			if (args.Key == _keyFinishSketch)
 			{
 				// #114: F2 has no effect unless another tool has been used before:
 				Geometry currentSketch = await GetCurrentSketchAsync();
@@ -228,7 +233,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (args.Key == _keyRestorePrevious)
 			{
-				RestorePreviousSketch();
+				await RestorePreviousSketchAsync();
 			}
 		}
 
@@ -257,7 +262,7 @@ namespace ProSuite.AGP.Editing.OneClick
 							}
 							else
 							{
-								SelectionUtils.ClearSelection();
+								ClearSelection();
 								StartSelectionPhase();
 							}
 						}
@@ -265,7 +270,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					else
 					{
 						ClearSketchAsync();
-						SelectionUtils.ClearSelection();
+						ClearSelection();
 					}
 				});
 
@@ -318,6 +323,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract SketchGeometryType GetSketchGeometryType();
 
+		/// <summary>
+		/// The template that can optionally be used to set up the sketch properties, such as
+		/// z/m-awareness. If the tool uses a template create a feature this method should return
+		/// the relevant template.
+		/// </summary>
+		/// <returns></returns>
+		protected virtual EditingTemplate GetSketchTemplate()
+		{
+			return null;
+		}
+
 		protected virtual bool OnSketchModifiedCore()
 		{
 			return true;
@@ -365,7 +381,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			SetCursor(SketchCursor);
 
-			StartSketchAsync();
+			EditingTemplate relevanteTemplate = GetSketchTemplate();
+
+			if (relevanteTemplate != null)
+			{
+				StartSketchAsync(relevanteTemplate);
+			}
+			else
+			{
+				// TODO: Manually set up Z/M-awareness
+				StartSketchAsync();
+			}
 
 			LogEnteringSketchMode();
 		}
@@ -460,7 +486,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		private void RestorePreviousSketch()
+		private async Task RestorePreviousSketchAsync()
 		{
 			if (! SupportRestoreLastSketch)
 			{
@@ -474,28 +500,41 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
-			if (! IsInSketchMode)
+			try
 			{
-				// If a non-rectangular sketch is set while SketchType is rectangle (or probably generally the wrong type)
-				// sketching is not possible any more and the application appears hanging
-
-				// Try start sketch mode:
-				IList<Feature> selection = GetApplicableSelectedFeatures(ActiveMapView).ToList();
-
-				if (CanUseSelection(ActiveMapView))
+				if (! IsInSketchMode)
 				{
-					AfterSelection(selection, null);
+					// If a non-rectangular sketch is set while SketchType is rectangle (or probably generally the wrong type)
+					// sketching is not possible any more and the application appears hanging
+
+					// Try start sketch mode:
+					await QueuedTask.Run(() =>
+					{
+						var mapView = ActiveMapView; // TODO should be passed in from outside QTR
+
+						IList<Feature> selection =
+							GetApplicableSelectedFeatures(mapView).ToList();
+
+						if (CanUseSelection(mapView))
+						{
+							AfterSelection(selection, null);
+						}
+					});
+				}
+
+				if (IsInSketchMode)
+				{
+					await SetCurrentSketchAsync(_previousSketch);
+				}
+				else
+				{
+					_msg.Warn("Sketch cannot be restored in selection phase. " +
+					          "Please try again in the sketch phase.");
 				}
 			}
-
-			if (IsInSketchMode)
+			catch (Exception e)
 			{
-				SetCurrentSketchAsync(_previousSketch);
-			}
-			else
-			{
-				_msg.Warn("Sketch cannot be restored in selection phase. " +
-				          "Please try again in the sketch phase.");
+				throw new ApplicationException("Error restoring the previous sketch", e);
 			}
 		}
 	}

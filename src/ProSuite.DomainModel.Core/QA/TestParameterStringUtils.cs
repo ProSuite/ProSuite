@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -267,6 +268,12 @@ namespace ProSuite.DomainModel.Core.QA
 			{
 				public DummyDataset(string name)
 					: base(name) { }
+
+				#region Overrides of Dataset
+
+				public override DatasetType DatasetType => DatasetType.Null;
+
+				#endregion
 			}
 
 			#endregion

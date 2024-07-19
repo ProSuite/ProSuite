@@ -1,13 +1,15 @@
 using System;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Contracts;
-using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Framework
 {
 	public abstract class ButtonCommandBase : Button
 	{
+		private int _updateErrorCounter;
+		private const int MaxUpdateErrors = 10;
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Overrides of PlugIn
@@ -18,9 +20,20 @@ namespace ProSuite.Commons.AGP.Framework
 			{
 				OnUpdateCore();
 			}
-			catch (Exception e)
+			catch (Exception ex)
 			{
-				_msg.Error($"Error in {GetType().Name}.OnUpdate", e);
+				if (_updateErrorCounter < MaxUpdateErrors)
+				{
+					_msg.Error($"{GetType().Name}.{nameof(OnUpdate)}: {ex.Message}", ex);
+
+					_updateErrorCounter += 1;
+
+					if (_updateErrorCounter == MaxUpdateErrors)
+					{
+						_msg.Error("Will stop reporting errors here to avoid flooding the logs");
+					}
+				}
+				//else: silently ignore to avoid flooding the logs
 			}
 		}
 
@@ -30,10 +43,10 @@ namespace ProSuite.Commons.AGP.Framework
 
 		protected override async void OnClick()
 		{
+			Gateway.LogEntry(_msg);
+
 			try
 			{
-				_msg.VerboseDebug(() => $"{GetType().Name}.OnClick");
-
 				bool success = await OnClickCore();
 
 				if (! success)
@@ -41,9 +54,9 @@ namespace ProSuite.Commons.AGP.Framework
 					_msg.Debug($"OnClickCore false for {Caption}");
 				}
 			}
-			catch (Exception e)
+			catch (Exception ex)
 			{
-				ErrorHandler.HandleError(e, _msg);
+				Gateway.HandleError(ex, _msg);
 			}
 		}
 

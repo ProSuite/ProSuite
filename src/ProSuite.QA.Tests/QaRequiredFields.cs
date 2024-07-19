@@ -4,6 +4,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
@@ -141,6 +142,7 @@ namespace ProSuite.QA.Tests
 			{
 				filter.AddField(InvolvedTables[tableIndex].Fields.Field[requiredFieldIndex].Name);
 			}
+
 			base.ConfigureQueryFilter(tableIndex, filter);
 		}
 

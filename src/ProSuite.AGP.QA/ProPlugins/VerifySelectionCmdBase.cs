@@ -9,7 +9,7 @@ using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
-using ProSuite.Commons.AGP;
+using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
@@ -43,7 +43,10 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
-		protected abstract IProSuiteFacade ProSuiteImpl { get; }
+		protected abstract IWorkListOpener WorkListOpener { get; }
+
+		protected virtual Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool>
+			SaveAction => null;
 
 		protected override async Task<bool> OnClickCore()
 		{
@@ -51,6 +54,15 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				MessageBox.Show("No quality verification environment is configured.",
 				                "Verify Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+				return false;
+			}
+
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				MessageBox.Show("No active map.", "Verify Extent",
+				                MessageBoxButton.OK, MessageBoxImage.Warning);
 				return false;
 			}
 
@@ -67,7 +79,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return false;
 			}
 
-			if (! MapUtils.HasSelection(MapView.Active))
+			if (! MapUtils.HasSelection(mapView.Map))
 			{
 				MessageBox.Show("No selected features", "Verify Selection",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -88,8 +100,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
-			var appController = new AgpBackgroundVerificationController(ProSuiteImpl,
-				MapView.Active, currentExtent, spatialRef);
+			var appController = new AgpBackgroundVerificationController(WorkListOpener,
+				mapView, currentExtent, spatialRef, SaveAction);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel

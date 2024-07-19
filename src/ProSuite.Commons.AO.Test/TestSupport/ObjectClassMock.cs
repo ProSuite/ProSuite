@@ -1,14 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.GeoDb;
+using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
 {
 	public class ObjectClassMock : IObjectClass, ITable, IDataset, ISubtypes, IDatasetEdit,
-	                               IReadOnlyTable
+	                               IReadOnlyTable, ITableData
 	{
 		private static int _nextObjectClassId;
 
@@ -63,6 +67,52 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 			AddField(fieldEdit);
 		}
+
+		#region Implementation of IDbDataset
+
+		string IDatasetDef.Name => _name;
+
+		IDatasetContainer IDatasetDef.DbContainer => new GeoDbWorkspace(_workspaceMock);
+
+		DatasetType IDatasetDef.DatasetType =>
+			((IDataset) this).Type == esriDatasetType.esriDTFeatureClass
+				? DatasetType.FeatureClass
+				: DatasetType.Table;
+
+		bool IDatasetDef.Equals(IDatasetDef otherDataset)
+		{
+			return Equals(otherDataset);
+		}
+
+		#endregion
+
+		#region Implementation of IDbTableSchema
+
+		IReadOnlyList<ITableField> ITableSchemaDef.TableFields =>
+			_fieldsMock.FieldList
+			           .Select(FieldUtils.ToTableField)
+			           .ToList();
+
+		#endregion
+
+		#region Implementation of IDbTable
+
+		IDbRow ITableData.GetRow(long oid)
+		{
+			throw new NotImplementedException();
+		}
+
+		IEnumerable<IDbRow> ITableData.EnumRows(ITableFilter filter, bool recycle)
+		{
+			throw new NotImplementedException();
+		}
+
+		long ITableData.RowCount(ITableFilter filter)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
 
 		public int FindField(string name)
 		{
@@ -213,6 +263,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		public IFeature GetFeature(long OID) => throw new NotImplementedException();
 #else
 		IRow ITable.GetRow(int OID) => throw new NotImplementedException();
+
 		public IFeature GetFeature(int OID) => throw new NotImplementedException();
 #endif
 

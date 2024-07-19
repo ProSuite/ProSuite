@@ -6,12 +6,12 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
 
 namespace ProSuite.AGP.Editing
@@ -30,6 +30,14 @@ namespace ProSuite.AGP.Editing
 				       description, GetDatasetsNonEmpty(updates?.Keys, copies?.Keys));
 		}
 
+		/// <summary>
+		/// BUG: GOTOP-186: Do not use this method for the time being (3.2.2). It will result in
+		/// ghost features, a corrupt display system and edit session.
+		/// </summary>
+		/// <param name="description"></param>
+		/// <param name="updates"></param>
+		/// <param name="copies"></param>
+		/// <returns></returns>
 		public static bool SaveInOperation(
 			[NotNull] string description,
 			[CanBeNull] IDictionary<Feature, Geometry> updates,
@@ -40,6 +48,14 @@ namespace ProSuite.AGP.Editing
 				GetDatasetsNonEmpty(updates?.Keys, copies?.Keys));
 		}
 
+		/// <summary>
+		/// BUG: GOTOP-186: Do not use this method for the time being (3.2.2). It will result in
+		/// ghost features, a corrupt display system and edit session.
+		/// </summary>
+		/// <param name="function"></param>
+		/// <param name="description"></param>
+		/// <param name="datasets"></param>
+		/// <returns></returns>
 		public static bool ExecuteInTransaction(
 			Func<EditOperation.IEditContext, bool> function,
 			[NotNull] string description,
@@ -162,13 +178,7 @@ namespace ProSuite.AGP.Editing
 
 				SpatialReference spatialReference = classDefinition.GetSpatialReference();
 
-				foreach (Attribute attribute in attributes)
-				{
-					if (! attribute.IsSystemField && ! attribute.IsGeometryField)
-					{
-						rowBuffer[attribute.Index] = attribute.CurrentValue;
-					}
-				}
+				CopyAttributeValues(attributes, rowBuffer);
 
 				string shapeFieldName = featureClass.GetDefinition().GetShapeField();
 
@@ -203,6 +213,35 @@ namespace ProSuite.AGP.Editing
 			return newFeatures;
 		}
 
+		public static void CopyAttributeValues([NotNull] IEnumerable<Attribute> attributes, [NotNull] RowBuffer rowBuffer)
+		{
+			IReadOnlyList<Field> fields = rowBuffer.GetFields();
+
+			foreach (Attribute attribute in attributes)
+			{
+				if (attribute.CurrentValue == null || attribute.CurrentValue == DBNull.Value)
+				{
+					continue;
+				}
+
+				int fieldIndex = attribute.Index;
+
+				if (IsEditable(attribute) && ! attribute.IsGeometryField)
+				{
+					if (attribute.Index >= fields.Count ||
+					    fields[attribute.Index].Name != attribute.FieldName)
+					{
+						// Issue #165: Some fields (presumably the SHAPE_LEN or SHAPE_AREA field) do not
+						// exist in the rowBuffer's field list. This happens rarely, with specific layers.
+						// Consider using copy index matrix in these cases.
+						fieldIndex = rowBuffer.FindField(attribute.FieldName);
+					}
+
+					rowBuffer[fieldIndex] = attribute.CurrentValue;
+				}
+			}
+		}
+
 		public static void UpdateTx(EditOperation.IEditContext editContext,
 		                            IDictionary<Feature, Geometry> updates)
 		{
@@ -223,9 +262,9 @@ namespace ProSuite.AGP.Editing
 		{
 			foreach (ResultFeature insert in insertResults)
 			{
-				Feature originalFeatue = insert.OriginalFeature;
+				Feature originalFeature = insert.OriginalFeature;
 
-				Feature newFeature = InsertTx(editContext, originalFeatue, insert.NewGeometry);
+				Feature newFeature = InsertTx(editContext, originalFeature, insert.NewGeometry);
 
 				yield return newFeature;
 
@@ -276,6 +315,28 @@ namespace ProSuite.AGP.Editing
 
 				_msg.DebugFormat("Updated feature {0} is not editable!",
 				                 GdbObjectUtils.ToString(feature));
+				return false;
+			}
+
+			return true;
+		}
+
+		public static bool IsEditable([NotNull] Attribute attribute)
+		{
+			if (! attribute.IsEditable)
+			{
+				return false;
+			}
+
+			if (attribute.IsSystemField)
+			{
+				return false;
+			}
+
+			// Bug in Oracle: IsSystemField returns false for Shape fields!
+			if (attribute.FieldName == "SHAPE.AREA" ||
+			    attribute.FieldName == "SHAPE.LEN")
+			{
 				return false;
 			}
 

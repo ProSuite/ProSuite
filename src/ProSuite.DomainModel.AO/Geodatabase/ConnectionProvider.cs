@@ -1,6 +1,7 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
@@ -53,6 +54,8 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		{
 			return Name;
 		}
+
+		public abstract DbConnectionType ConnectionType { get; }
 
 		[NotNull]
 		public virtual string TypeDescription => "Connection Provider";

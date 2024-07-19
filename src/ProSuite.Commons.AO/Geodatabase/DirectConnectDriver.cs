@@ -7,6 +7,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		Oracle = 2,
 		SqlServer = 3,
 		PostgreSQL = 4,
-		Oracle11g = 5
+		Oracle11g = 5,
+		SQLite = 6,
 	}
 }

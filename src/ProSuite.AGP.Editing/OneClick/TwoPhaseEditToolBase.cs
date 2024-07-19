@@ -9,7 +9,6 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -33,20 +32,25 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => "OnMapSelectionChangedCore");
 
-			if (args.Selection.Count == 0)
+			var selection = args.Selection;
+
+			if (selection.Count == 0)
 			{
 				ResetDerivedGeometries();
 				StartSelectionPhase();
 			}
 
 			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
-			Dictionary<MapMember, List<long>> selectionByLayer = args.Selection.ToDictionary();
+			Dictionary<MapMember, List<long>> selectionByLayer = selection.ToDictionary();
 
-			var applicableSelection = GetApplicableSelectedFeatures(selectionByLayer).ToList();
+			var applicableSelection =
+				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection).ToList();
 
 			if (applicableSelection.Count > 0)
 			{
-				AfterSelection(applicableSelection, GetCancelableProgressor());
+				using var source = GetProgressorSource();
+				var progressor = source.Progressor;
+				AfterSelection(applicableSelection, progressor);
 			}
 
 			return true;
@@ -66,10 +70,23 @@ namespace ProSuite.AGP.Editing.OneClick
 					{
 						try
 						{
-							var selectedFeatures =
-								GetApplicableSelectedFeatures(ActiveMapView).ToList();
+							Dictionary<MapMember, List<long>> selectionByLayer =
+								SelectionUtils.GetSelection(ActiveMapView.Map);
 
-							CalculateDerivedGeometries(selectedFeatures, GetCancelableProgressor());
+							var selectedFeatures =
+								GetDistinctApplicableSelectedFeatures(selectionByLayer).ToList();
+
+							if (selectedFeatures.Count == 0)
+							{
+								ResetDerivedGeometries();
+								StartSelectionPhase();
+								return true;
+							}
+
+							using var source = GetProgressorSource();
+							var progressor = source.Progressor;
+
+							CalculateDerivedGeometries(selectedFeatures, progressor);
 
 							return true;
 						}
@@ -137,7 +154,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			Task task = QueuedTask.Run(
 				() =>
 				{
-					SelectionUtils.ClearSelection();
+					ClearSelection();
 
 					ResetDerivedGeometries();
 
@@ -166,7 +183,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract bool CanUseDerivedGeometries();
 
-		protected abstract bool SelectAndProcessDerivedGeometry(
+		protected abstract Task<bool> SelectAndProcessDerivedGeometry(
 			[NotNull] Dictionary<MapMember, List<long>> selection, [NotNull] Geometry sketch,
 			[CanBeNull] CancelableProgressor progressor);
 

@@ -318,13 +318,9 @@ namespace ProSuite.Commons.Collections
 		}
 
 		/// <summary>
-		/// Cycles through the full list <see cref="maximumFullCycles"/> times.
+		/// Cycles through the full list <paramref name="maximumFullCycles"/> times.
 		/// At the end of the list it will continue at the beginning.
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="list"></param>
-		/// <param name="maximumFullCycles"></param>
-		/// <returns></returns>
 		public static IEnumerable<T> Cycle<T>([NotNull] IList<T> list,
 		                                      int maximumFullCycles)
 		{

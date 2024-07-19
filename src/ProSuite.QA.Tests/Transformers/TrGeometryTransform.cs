@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema.RowValues;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.SpatialIndex;
@@ -352,15 +353,6 @@ namespace ProSuite.QA.Tests.Transformers
 				_msg.VerboseDebug(
 					() => $"Transformer {Resulting.Name}: Searching input table {_t0.Name}...");
 
-				if (filter is IFeatureClassFilter fc &&
-					fc.FilterGeometry?.SpatialReference != _t0.SpatialReference)
-				{
-					IFeatureClassFilter clone = (IFeatureClassFilter)fc.Clone();
-					IGeometry g = GeometryFactory.Clone(fc.FilterGeometry);
-					g.Project(_t0.SpatialReference);
-					clone.FilterGeometry = g;
-					filter = clone;
-				}
 
 				var involvedDict = new Dictionary<IReadOnlyFeature, Involved>();
 

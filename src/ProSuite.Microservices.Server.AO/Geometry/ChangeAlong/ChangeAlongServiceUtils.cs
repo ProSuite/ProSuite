@@ -18,7 +18,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 {
@@ -483,16 +483,20 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 				// Add the standard size text information
 
 				var proj = updatedGeometry.SpatialReference as IProjectedCoordinateSystem;
-				int coordinateUnitFactoryCode = proj.CoordinateUnit.FactoryCode;
-
-				esriUnits linearUnits = esriUnits.esriMeters;
-
-				string sizeChangeMessage = reshaper.GetSizeChangeMessage(
-					updatedGeometry, feature, linearUnits, linearUnits);
-
-				if (! string.IsNullOrEmpty(sizeChangeMessage))
+				//TODO: return correct sizeChangeMessage when SpatialReference is not projected but geographic
+				if (proj != null)
 				{
-					yield return sizeChangeMessage;
+					int coordinateUnitFactoryCode = proj.CoordinateUnit.FactoryCode;
+
+					esriUnits linearUnits = esriUnits.esriMeters;
+
+					string sizeChangeMessage = reshaper.GetSizeChangeMessage(
+						updatedGeometry, feature, linearUnits, linearUnits);
+
+					if (! string.IsNullOrEmpty(sizeChangeMessage))
+					{
+						yield return sizeChangeMessage;
+					}
 				}
 			}
 		}

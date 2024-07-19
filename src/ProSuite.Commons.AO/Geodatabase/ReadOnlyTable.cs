@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.GeoDb;
+using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	public class ReadOnlyTable : IReadOnlyTable, ISubtypes
+	public class ReadOnlyTable : ITableData, IReadOnlyTable, ISubtypes
 	{
 		private static readonly bool _provideFailingOidInException =
 			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
@@ -226,5 +230,54 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return _oidFieldIndex;
 			}
 		}
+
+		#region Implementation of IDbDataset
+
+		private IDatasetContainer _datasetContainer;
+
+		IDatasetContainer IDatasetDef.DbContainer =>
+			_datasetContainer ??
+			(_datasetContainer = new GeoDbWorkspace(DatasetUtils.GetWorkspace(BaseTable)));
+
+		DatasetType IDatasetDef.DatasetType =>
+			((IDataset) BaseTable).Type == esriDatasetType.esriDTFeatureClass
+				? DatasetType.FeatureClass
+				: DatasetType.Table;
+
+		bool IDatasetDef.Equals(IDatasetDef otherDataset)
+		{
+			return Equals(otherDataset);
+		}
+
+		#endregion
+
+		#region Implementation of IDbTableSchema
+
+		IReadOnlyList<ITableField> ITableSchemaDef.TableFields
+		{
+			get
+			{
+				// TODO: If this is heavily used, wrap IFields in separate object.
+				return DatasetUtils.EnumFields(BaseTable.Fields)
+				                   .Select(FieldUtils.ToTableField)
+				                   .ToList();
+			}
+		}
+
+		#endregion
+
+		#region Implementation of IDbTable
+
+		IDbRow ITableData.GetRow(long oid)
+		{
+			return GetRow(oid);
+		}
+
+		IEnumerable<IDbRow> ITableData.EnumRows(ITableFilter filter, bool recycle)
+		{
+			return EnumRows(filter, recycle);
+		}
+
+		#endregion
 	}
 }

@@ -5,6 +5,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.EsriShape;
 
 namespace ProSuite.Commons.AGP.Core.Spatial
 {
@@ -42,12 +43,28 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return count > 0 ? points[0] : null;
 		}
 
+		public static MapPoint GetStartPoint(ReadOnlySegmentCollection segments)
+		{
+			if (segments is null) return null;
+			if (segments.Count < 1) return null;
+			var first = segments[0];
+			return first.StartPoint;
+		}
+
 		public static MapPoint GetEndPoint([CanBeNull] Multipart multipart)
 		{
 			var points = multipart?.Points;
 			if (points is null) return null;
 			int count = points.Count;
 			return count > 0 ? points[count - 1] : null;
+		}
+
+		public static MapPoint GetEndPoint(ReadOnlySegmentCollection segments)
+		{
+			if (segments is null) return null;
+			if (segments.Count < 1) return null;
+			var last = segments[segments.Count - 1];
+			return last.EndPoint;
 		}
 
 		public static MapPoint GetLabelPoint([CanBeNull] Geometry geometry)
@@ -163,18 +180,19 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			{
 				return geometries.Single();
 			}
-
-			if (count == 2)
-			{
-				using (var enumerator = geometries.GetEnumerator())
-				{
-					enumerator.MoveNext();
-					var one = enumerator.Current;
-					enumerator.MoveNext();
-					var two = enumerator.Current;
-					return Engine.Union(one, two);
-				}
-			}
+			//Fails in ArcGIS 3.0 when merging a polygon that is congruent with the island of the first polygon. See issue #168
+			//The list overload: Engine.Union(geometries) works
+			//if (count == 2)
+			//{
+			//	using (var enumerator = geometries.GetEnumerator())
+			//	{
+			//		enumerator.MoveNext();
+			//		var one = enumerator.Current;
+			//		enumerator.MoveNext();
+			//		var two = enumerator.Current;
+			//		return Engine.Union(one, two);
+			//	}
+			//}
 
 			return Engine.Union(geometries);
 		}
@@ -206,7 +224,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static Geometry Difference(Geometry minuend, Geometry subtrahend)
 		{
 			Geometry difference = Engine.Difference(minuend, subtrahend);
-			// Note: difference may has another geometry type than minuend
+			// Note: difference may have another geometry type than minuend
 			return difference;
 		}
 
@@ -448,6 +466,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// </summary>
 		public static T Accelerate<T>(T geometry) where T : Geometry
 		{
+			if (geometry is null) return null;
 			return (T) Engine.AccelerateForRelationalOperations(geometry);
 		}
 
@@ -786,11 +805,37 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				case esriGeometryType.esriGeometryBag:
 					return GeometryType.GeometryBag;
 				case esriGeometryType.esriGeometryAny:
-					return GeometryType.Unknown;
 				case esriGeometryType.esriGeometryNull:
 					return GeometryType.Unknown;
-				default:
+				default: // TODO Why not translate the remaining ones to Unknown as well?
 					throw new ArgumentOutOfRangeException($"Cannot translate {esriGeometryType}");
+			}
+		}
+
+		public static ProSuiteGeometryType TranslateToProSuiteGeometryType(
+			GeometryType esriGeometryType)
+		{
+			switch (esriGeometryType)
+			{
+				case GeometryType.Unknown:
+					return ProSuiteGeometryType.Unknown;
+				case GeometryType.Point:
+					return ProSuiteGeometryType.Point;
+				case GeometryType.Envelope:
+					return ProSuiteGeometryType.Envelope;
+				case GeometryType.Multipoint:
+					return ProSuiteGeometryType.Multipoint;
+				case GeometryType.Polyline:
+					return ProSuiteGeometryType.Polyline;
+				case GeometryType.Polygon:
+					return ProSuiteGeometryType.Polygon;
+				case GeometryType.Multipatch:
+					return ProSuiteGeometryType.MultiPatch;
+				case GeometryType.GeometryBag:
+					return ProSuiteGeometryType.Bag;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(esriGeometryType),
+					                                      esriGeometryType, null);
 			}
 		}
 

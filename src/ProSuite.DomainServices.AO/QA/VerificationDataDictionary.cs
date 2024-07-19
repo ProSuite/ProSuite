@@ -9,6 +9,7 @@ using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.DataModel.Repositories;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 
@@ -22,16 +23,19 @@ namespace ProSuite.DomainServices.AO.QA
 		[NotNull] private readonly IQualitySpecificationRepository _qualitySpecifications;
 		[NotNull] private readonly IQualityConditionRepository _qualityConditions;
 		[NotNull] private readonly IProjectRepository<TModel> _projects;
+		[NotNull] private readonly IDatasetRepository _datasets;
 
 		public VerificationDataDictionary(
 			[NotNull] IDomainTransactionManager domainTransactions,
 			[NotNull] IQualitySpecificationRepository qualitySpecifications,
 			[NotNull] IQualityConditionRepository qualityConditions,
-			[NotNull] IProjectRepository<TModel> projects)
+			[NotNull] IProjectRepository<TModel> projects,
+			[NotNull] IDatasetRepository datasets)
 		{
 			_qualitySpecifications = qualitySpecifications;
 			_qualityConditions = qualityConditions;
 			_projects = projects;
+			_datasets = datasets;
 		}
 
 		public IList<ProjectWorkspaceBase<Project<TModel>, TModel>> GetProjectWorkspaceCandidates(
@@ -84,6 +88,11 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			return result;
+		}
+
+		public IList<Dataset> GetDatasets(IList<int> datasetIds)
+		{
+			return _datasets.Get(datasetIds);
 		}
 
 		[NotNull]

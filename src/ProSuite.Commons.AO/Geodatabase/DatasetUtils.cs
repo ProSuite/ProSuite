@@ -16,6 +16,7 @@ using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -934,6 +935,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return false;
 			}
 
+			if (table is VirtualTable)
+			{
+				return false;
+			}
+
 			return table is IObjectClass objectClass
 				       ? IsRegisteredAsObjectClass(objectClass)
 				       : IsRegisteredAsObjectClass(GetWorkspace(table), GetName(table));
@@ -1521,6 +1527,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(featureWorkspace, nameof(featureWorkspace));
 			Assert.ArgumentNotNull(datasetTypes, nameof(datasetTypes));
 
+			// This is very slow for workspaces with many datasets. Either it should be cached
+			// or we can replace it by only searching for the required datasets
 			IList<IDatasetName> featureDatasetNames =
 				GetFeatureDatasetNames((IWorkspace) featureWorkspace, owner).ToList();
 
@@ -3235,14 +3243,24 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			var result = new List<IField>(fieldCount);
 
+			result.AddRange(EnumFields(fields));
+
+			return result;
+		}
+
+		[NotNull]
+		public static IEnumerable<IField> EnumFields([NotNull] IFields fields)
+		{
+			Assert.ArgumentNotNull(fields, nameof(fields));
+
+			int fieldCount = fields.FieldCount;
+
 			for (var fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++)
 			{
 				IField field = fields.Field[fieldIndex];
 
-				result.Add(field);
+				yield return field;
 			}
-
-			return result;
 		}
 
 		/// <summary>

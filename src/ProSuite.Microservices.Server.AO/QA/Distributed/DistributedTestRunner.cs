@@ -31,7 +31,7 @@ using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
@@ -44,7 +44,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 	/// where the request has MaxParallelProcessing property > 1 which signals the desire
 	/// to run a distributed verification.
 	/// </summary>
-	public partial class DistributedTestRunner : ITestRunner
+	public class DistributedTestRunner : ITestRunner
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -70,9 +70,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			Assert.ArgumentCondition(originalRequest.MaxParallelProcessing > 1,
 			                         "maxParallelDesired must be greater 1");
 
-			_distributedWorkers =
-				new DistributedWorkers(
-					workersClients.Cast<QualityVerificationServiceClient>().ToList());
+			_distributedWorkers = new DistributedWorkers(workersClients.ToList());
 
 			_originalRequest = originalRequest;
 			ParallelConfiguration = new ParallelConfiguration();
@@ -216,9 +214,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			// TODO: Create a structure to check which tileParallel verifications are completed
 
-			// TODO: Consider a BlockingCollection or some other way to limit through-put
-			//       or even the consumer/producer pattern?
-
 			OverallProgressTotal = subVerifications.Count;
 
 			Stack<SubVerification> unhandledSubverifications =
@@ -236,6 +231,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			IDictionary<Task, SubVerification> started =
 				StartSubVerifications(unhandledSubverifications);
+
 			if (started.Count <= 0)
 			{
 				_msg.Debug(
@@ -319,8 +315,11 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					}
 					else
 					{
-						_msg.InfoFormat("Finished verification: {0} at {1}", completed,
-						                finishedClient.GetAddress());
+						_msg.InfoFormat(
+							"Finished verification: {0} at {1} with {2} issues of which {3} were filtered out",
+							completed, finishedClient.GetAddress(), completed.IssueCount,
+							completed.FilteredIssueCount);
+
 						successCount++;
 						CompleteSubverification(completed);
 						SubVerificationObserver?.Finished(completed.Id, ServiceCallStatus.Finished);
@@ -470,6 +469,14 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					return startedVerifications;
 				}
 
+				if (_tasks.Count >= _originalRequest.MaxParallelProcessing)
+				{
+					_msg.DebugFormat(
+						"{0} tasks have already been started (requested degree of parallelism: {1})",
+						_tasks.Count, _originalRequest.MaxParallelProcessing);
+					return startedVerifications;
+				}
+
 				Task newTask = _distributedWorkers.StartNext(
 					subVerifications, Verify, out SubVerification next);
 
@@ -615,6 +622,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					$"Failure in worker {client.GetAddress()}: {subResponse.CancellationMessage}";
 			}
 
+			DrainIssues(subVerification);
+
 			QualityVerificationMsg verificationMsg = subResponse.VerificationMsg;
 
 			if (verificationMsg != null)
@@ -622,8 +631,6 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				// Failures in tests that get reported as issues (typically a configuration error):
 				AddVerification(verificationMsg, QualityVerification);
 			}
-
-			DrainIssues(subVerification);
 
 			return resultMessage;
 		}
@@ -676,7 +683,15 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					QualityCondition qualityCondition =
 						verification.GetQualityCondition(issueMsg.ConditionId);
 
-					ProcessQaError(error, qualityCondition);
+					bool processed = ProcessQaError(error, qualityCondition);
+
+					verification.IssueCount++;
+
+					if (! processed)
+					{
+						verification.FilteredIssueCount++;
+						key.Filtered = true;
+					}
 				}
 
 				drained = true;
@@ -696,9 +711,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			{
 				foreach (long objectId in involvedTable.ObjectIds)
 				{
-					// TODO: Remove int conversion after Server11 merge
 					var involvedRow =
-						new InvolvedRow(involvedTable.TableName, Convert.ToInt32(objectId));
+						new InvolvedRow(involvedTable.TableName, objectId);
 
 					involvedRows.Add(involvedRow);
 				}
@@ -778,8 +792,12 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			return fullyProcessed;
 		}
 
-		private static void StartVerification([CanBeNull] QualityVerification qualityVerification)
+		private void StartVerification([CanBeNull] QualityVerification qualityVerification)
 		{
+			_msg.InfoFormat(
+				"Starting client request with a maximum desired degree of parallelism of {0}...",
+				_originalRequest.MaxParallelProcessing);
+
 			if (qualityVerification == null)
 			{
 				return;
@@ -789,8 +807,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			qualityVerification.StartDate = DateTime.Now;
 		}
 
-		private static void AddVerification([NotNull] QualityVerificationMsg verificationMsg,
-		                                    [CanBeNull] QualityVerification toOverallVerification)
+		private void AddVerification([NotNull] QualityVerificationMsg verificationMsg,
+		                             [CanBeNull] QualityVerification toOverallVerification)
 		{
 			if (toOverallVerification == null)
 			{
@@ -816,10 +834,22 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 				if (! conditionVerificationMsg.Fulfilled)
 				{
-					_msg.Debug(
-						$"The condition {conditionVerification.QualityConditionName} is not fulfilled.");
+					bool hasErrors =
+						KnownIssues.Keys.Any(i => i.ConditionId == conditionId && ! i.Filtered);
 
-					conditionVerification.Fulfilled = false;
+					string message =
+						$"The condition {conditionVerification.QualityConditionName} is not fulfilled according to the worker.";
+
+					if (! hasErrors)
+					{
+						message += " However, all errors have been filtered by the verification.";
+					}
+
+					// According to the client (could be un-fulfilled due to previous worker or verification service):
+					message += $" The condition is fulfilled: {conditionVerification.Fulfilled}";
+
+					// The condition verification should already have been set to false!
+					_msg.Debug(message);
 				}
 
 				if (conditionVerificationMsg.StopConditionId >= 0)
@@ -866,7 +896,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			if (! qualityVerification.Fulfilled)
 			{
-				_msg.InfoFormat("Un-fulfilled conditions: {0}",
+				_msg.InfoFormat("Un-fulfilled conditions:{0}{1}",
+				                Environment.NewLine,
 				                StringUtils.Concatenate(
 					                qualityVerification.ConditionVerifications.Where(
 						                cv => ! cv.Fulfilled), cv => cv.QualityConditionName,
@@ -1431,16 +1462,17 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				return;
 			}
 
-			// Log every 10 seconds or if there are many errors every 10th error or if verbose:
+			// Log every 10 seconds and the first 10 errors or if there are many errors every 10th error or if verbose:
 
 			const int minimumLogInterval = 10;
 			bool itsTimeToLog = subResponse.LastProgressLog <
 			                    DateTime.Now.AddSeconds(-minimumLogInterval);
 
 			int issueCount = subResponse.Issues.Count;
+			bool isFinalResult = responseMsg.ServiceCallStatus != (int) ServiceCallStatus.Running;
 
-			if (_msg.IsVerboseDebugEnabled || itsTimeToLog ||
-			    (issueCount > 100 && issueCount % 10 == 0))
+			if (_msg.IsVerboseDebugEnabled || itsTimeToLog || isFinalResult || (issueCount <= 10) ||
+			    issueCount % 10 == 0)
 			{
 				string issueText = issueCount > 0 ? $" (Issue count: {issueCount})" : string.Empty;
 
@@ -1470,6 +1502,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				_msg.VerboseDebug(() => $"Issue drained from sub-verification queue: {qaError}");
 			}
 
+			// Standard error processing (filtering, updating condition verification, etc.)
 			var eventArgs = new QaErrorEventArgs(qaError);
 			QaError?.Invoke(this, eventArgs);
 
@@ -1478,32 +1511,223 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				return false;
 			}
 
-			Assert.NotNull(qualityCondition, "no quality condition for verification");
-
-			StopInfo stopInfo = null;
-			if (qualityCondition.StopOnError)
-			{
-				stopInfo = new StopInfo(qualityCondition, qaError.Description);
-
-				foreach (InvolvedRow involvedRow in qaError.InvolvedRows)
-				{
-					RowsWithStopConditions.Add(involvedRow.TableName,
-					                           involvedRow.OID, stopInfo);
-				}
-			}
-
-			if (! qualityCondition.AllowErrors)
-			{
-				if (stopInfo != null)
-				{
-					// it's a stop condition, and it is a 'hard' condition, and the error is 
-					// relevant --> consider the stop situation as sufficiently reported 
-					// (no reporting in case of stopped tests required)
-					stopInfo.Reported = true;
-				}
-			}
+			TestExecutionUtils.ReportRowWithStopCondition(qaError, qualityCondition,
+			                                              RowsWithStopConditions);
 
 			return true;
 		}
+
+		#region Row Count
+
+		//
+		// These methods are only used in a special configuration (ParallelConfiguration.SortByNumberOfObjects)
+		[NotNull]
+		private IList<ReadOnlyFeatureClass> GetParallelBaseFeatureClasses(
+			[NotNull] IList<QualityConditionGroup> qcGroups)
+		{
+			QualityConditionGroup parallelGroup =
+				qcGroups.FirstOrDefault(
+					x => x.ExecType == QualityConditionExecType.TileParallel);
+
+			if (parallelGroup == null)
+			{
+				return new List<ReadOnlyFeatureClass>();
+			}
+
+			HashSet<IReadOnlyTable> usedTables = new HashSet<IReadOnlyTable>();
+			foreach (var tests in parallelGroup.QualityConditions.Values)
+			{
+				foreach (ITest test in tests)
+				{
+					foreach (IReadOnlyTable table in test.InvolvedTables)
+					{
+						AddRecursive(table, usedTables);
+					}
+				}
+			}
+
+			IList<ReadOnlyFeatureClass> baseFcs = new List<ReadOnlyFeatureClass>();
+			foreach (IReadOnlyTable table in usedTables)
+			{
+				if (table is ITransformedTable)
+				{
+					continue;
+				}
+
+				if (table is ReadOnlyFeatureClass baseFc)
+				{
+					baseFcs.Add(baseFc);
+				}
+			}
+
+			return baseFcs;
+		}
+
+		private void CountData(IEnumerable<SubVerification> verifications,
+		                       IList<WorkspaceInfo> workspaceInfos)
+		{
+			List<IReadOnlyFeatureClass> baseFcs = new List<IReadOnlyFeatureClass>();
+
+			foreach (WorkspaceInfo workspaceInfo in workspaceInfos)
+			{
+				IWorkspace workspace = workspaceInfo.GetWorkspace();
+
+				foreach (string tableName in workspaceInfo.TableNames)
+				{
+					IFeatureClass fc =
+						((IFeatureWorkspace) workspace).OpenFeatureClass(tableName);
+					baseFcs.Add(ReadOnlyTableFactory.Create(fc));
+				}
+			}
+
+			foreach (SubVerification verification in verifications)
+			{
+				if (verification.QualityConditionGroup.ExecType !=
+				    QualityConditionExecType.TileParallel)
+				{
+					continue;
+				}
+
+				IGeometry envelope =
+					ProtobufGeometryUtils.FromShapeMsg(
+						verification.SubRequest.Parameters.Perimeter);
+				if (envelope == null)
+				{
+					continue;
+				}
+
+				long baseRowsCount = 0;
+				IFeatureClassFilter filter = new AoFeatureClassFilter(
+					envelope, esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects);
+				foreach (var baseFc in baseFcs)
+				{
+					baseRowsCount += baseFc.RowCount(filter);
+				}
+
+				verification.InvolvedBaseRowsCount = baseRowsCount;
+
+				IEnvelope e = envelope.Envelope;
+				_msg.Debug(
+					$"RowCount: {baseRowsCount} [{e.XMin:N0}, {e.YMin:N0}, {e.XMax:N0}, {e.YMax:N0}]");
+			}
+		}
+
+		private void ReportSubverifcationsCreated(
+			[NotNull] IEnumerable<SubVerification> subVerifications)
+		{
+			if (SubVerificationObserver == null)
+			{
+				return;
+			}
+
+			foreach (SubVerification subVerification in subVerifications)
+			{
+				List<string> qcNames = new List<string>();
+
+				var sr = subVerification.SubRequest.Specification;
+				HashSet<int> excludes = new HashSet<int>();
+				foreach (int exclude in sr.ExcludedConditionIds)
+				{
+					excludes.Add(exclude);
+				}
+
+				foreach (QualitySpecificationElementMsg msg in sr.ConditionListSpecification
+				                                                 .Elements)
+				{
+					if (! excludes.Contains(msg.Condition.ConditionId))
+					{
+						qcNames.Add(msg.Condition.Name);
+					}
+				}
+
+				SubVerificationObserver?.CreatedSubverification(
+					subVerification.Id,
+					subVerification.TileEnvelope);
+			}
+		}
+
+		private IList<WorkspaceInfo> GetWorkspaceInfos(
+			IList<ReadOnlyFeatureClass> roFeatureClasses)
+		{
+			Dictionary<IWorkspace, HashSet<string>> wsDict =
+				new Dictionary<IWorkspace, HashSet<string>>();
+			foreach (var roFc in roFeatureClasses)
+			{
+				IFeatureClass fc = (IFeatureClass) roFc.BaseTable;
+				IDataset ds = (IDataset) fc;
+				IWorkspace ws = ds.Workspace;
+				IList<string> fcNames = new List<string>();
+				if (ds.FullName is IQueryName2 qn)
+				{
+					string tables = qn.QueryDef.Tables;
+					foreach (var expression in tables.Split(','))
+					{
+						foreach (string tableName in expression.Split())
+						{
+							if (string.IsNullOrWhiteSpace(tableName))
+							{
+								continue;
+							}
+
+							if (((IWorkspace2) ws).get_NameExists(
+								    esriDatasetType.esriDTFeatureClass, tableName))
+							{
+								fcNames.Add(tableName);
+							}
+						}
+					}
+				}
+				else
+				{
+					fcNames.Add(ds.Name);
+				}
+
+				if (! wsDict.TryGetValue(ws, out HashSet<string> wsInfo))
+				{
+					wsInfo = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+					wsDict.Add(ws, wsInfo);
+				}
+
+				foreach (var fcName in fcNames)
+				{
+					wsInfo.Add(fcName);
+				}
+			}
+
+			List<WorkspaceInfo> wsInfos = new List<WorkspaceInfo>();
+			foreach (var pair in wsDict)
+			{
+				IWorkspace ws = pair.Key;
+				if (pair.Value.Count == 0)
+				{
+					continue;
+				}
+
+				WorkspaceInfo wsInfo = new WorkspaceInfo(ws);
+
+				foreach (string fcName in pair.Value)
+				{
+					wsInfo.TableNames.Add(fcName);
+				}
+
+				wsInfos.Add(wsInfo);
+			}
+
+			return wsInfos;
+		}
+
+		private class WorkspaceInfo : TaskWorkspace
+		{
+			public WorkspaceInfo(IWorkspace workspace)
+				: base(workspace)
+			{
+				TableNames = new List<string>();
+			}
+
+			[NotNull]
+			public List<string> TableNames { get; }
+		}
+
+		#endregion
 	}
 }

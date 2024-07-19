@@ -1,14 +1,19 @@
+using System;
+using System.Linq;
 using Microsoft.AspNetCore.Components;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
 using ProSuite.Commons.Notifications;
 using ProSuite.DdxEditor.Content.Blazor.View;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
+using ProSuite.UI.QA;
 using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
@@ -16,7 +21,7 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 public class DatasetTestParameterValueViewModel : ViewModelBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
-	
+
 	[CanBeNull] private string _filterExpression;
 
 	private bool _usedAsReferenceData;
@@ -34,7 +39,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	{
 		_filterExpression = filterExpression;
 		_usedAsReferenceData = usedAsReferenceData;
-		
+
 		ImageSource = imageSource;
 		ModelName = modelName;
 
@@ -214,5 +219,69 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		string value = DisplayValue == null ? "<null>" : $"{DisplayValue}";
 
 		return $"{GetType().Name}: {value} ({ParameterName}, {DataType.Name})";
+	}
+
+	public string ShowFilterExpressionBuilder()
+	{
+		if (Value == null)
+		{
+			_msg.Warn("Please select a dataset first");
+			return null;
+		}
+
+		Either<Dataset, TransformerConfiguration> parameterValue =
+			Value as Either<Dataset, TransformerConfiguration>;
+
+		Dataset dataset = null;
+		TransformerConfiguration transformerConfiguration = null;
+		parameterValue?.Match<object>(d => dataset = d as Dataset,
+		                              t => transformerConfiguration = t);
+
+		ISqlExpressionBuilder expressionBuilder =
+			Assert.NotNull(Observer.SqlExpressionBuilder, "SQL Expression builder not set");
+
+		ITableSchemaDef layerSchema = null;
+		if (dataset != null)
+		{
+			layerSchema = (ITableSchemaDef) dataset;
+		}
+		else if (transformerConfiguration != null)
+		{
+			var datasetParameter =
+				transformerConfiguration.GetDatasetParameterValues(true, true)
+				                        .FirstOrDefault(d => d is IObjectDataset);
+
+			Assert.NotNull(datasetParameter, "No dataset parameter found");
+
+			Model dataModel = (Model) datasetParameter.Model;
+
+			if (! dataModel.IsMasterDatabaseAccessible)
+			{
+				throw new InvalidOperationException(
+					$"Master database is not accessible. Reason: {dataModel.MasterDatabaseNoAccessReason}");
+			}
+
+			IWorkspaceContext masterDbContext =
+				Assert.NotNull(dataModel.MasterDatabaseWorkspaceContext);
+
+			IOpenDataset datasetOpener = new SimpleDatasetOpener(masterDbContext);
+
+			layerSchema = (ITableSchemaDef) InstanceFactory.CreateTransformedTable(
+				transformerConfiguration, datasetOpener);
+		}
+
+		if (layerSchema != null)
+		{
+			string result = expressionBuilder.BuildSqlExpression(layerSchema, _filterExpression);
+
+			if (result == null)
+			{
+				return null;
+			}
+
+			FilterExpression = result;
+		}
+
+		return FilterExpression;
 	}
 }

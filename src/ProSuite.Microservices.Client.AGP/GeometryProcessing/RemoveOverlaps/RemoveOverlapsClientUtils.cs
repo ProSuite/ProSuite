@@ -3,12 +3,14 @@ using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Notifications;
 using ProSuite.Microservices.Definitions.Geometry;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 {
@@ -18,7 +20,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 
 		[CanBeNull]
 		public static Overlaps CalculateOverlaps(
-			RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
+			[NotNull] RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] IList<Feature> overlappingFeatures,
 			CancellationToken cancellationToken)
@@ -59,18 +61,18 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 
 		[CanBeNull]
 		private static CalculateOverlapsResponse CalculateOverlapsRpc(
-			RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
-			IList<Feature> selectedFeatures,
-			IList<Feature> overlappingFeatures,
+			[NotNull] RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
+			[NotNull] IList<Feature> selectedFeatures,
+			[NotNull] IList<Feature> overlappingFeatures,
 			CancellationToken cancellationToken)
 		{
 			CalculateOverlapsRequest request =
 				CreateCalculateOverlapsRequest(selectedFeatures, overlappingFeatures);
 
-			int deadline = RpcCallUtils.GeometryDefaultDeadline * selectedFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
 
 			CalculateOverlapsResponse response =
-				RpcCallUtils.Try(
+				GrpcClientUtils.Try(
 					o => rpcClient.CalculateOverlaps(request, o),
 					cancellationToken, deadline);
 
@@ -99,10 +101,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 		#region Remove Overlaps
 
 		public static RemoveOverlapsResult RemoveOverlaps(
-			RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
-			IEnumerable<Feature> selectedFeatures,
-			Overlaps overlapsToRemove,
-			IList<Feature> overlappingFeatures,
+			[NotNull] RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
+			[NotNull] IEnumerable<Feature> selectedFeatures,
+			[NotNull] Overlaps overlapsToRemove,
+			[CanBeNull] IList<Feature> overlappingFeatures,
 			CancellationToken cancellationToken)
 		{
 			List<Feature> updateFeatures;
@@ -110,10 +112,11 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 				selectedFeatures, overlapsToRemove, overlappingFeatures,
 				out updateFeatures);
 
-			int deadline = RpcCallUtils.GeometryDefaultDeadline * request.SourceFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
+			               request.SourceFeatures.Count;
 
 			RemoveOverlapsResponse response =
-				RpcCallUtils.Try(
+				GrpcClientUtils.Try(
 					o => rpcClient.RemoveOverlaps(request, o),
 					cancellationToken, deadline);
 
@@ -206,13 +209,14 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 		                                          List<Feature> updateFeatures)
 		{
 			return updateFeatures.First(f => f.GetObjectID() == objectId &&
-			                                 ProtobufConversionUtils.GetUniqueClassId(f) ==
+			                                 GeometryProcessingUtils.GetUniqueClassId(f) ==
 			                                 classId);
 		}
 
 		private static RemoveOverlapsRequest CreateRemoveOverlapsRequest(
-			IEnumerable<Feature> selectedFeatures,
-			Overlaps overlapsToRemove,
+			[NotNull] IEnumerable<Feature> selectedFeatures,
+			[NotNull] Overlaps overlapsToRemove,
+			[CanBeNull]
 			IList<Feature> targetFeaturesForVertexInsertion, //RemoveOverlapsOptions options,
 			out List<Feature> updateFeatures)
 		{
