@@ -68,6 +68,11 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			return SketchGeometryType.Multipoint;
 		}
 
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
+		}
+
 		protected override EditingTemplate GetSketchTemplate()
 		{
 			return EditingTemplate.Current;
@@ -87,7 +92,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 		private static List<long> CreatePointsFeatures(
 			[NotNull] EditOperation.IEditContext editContext,
 			[NotNull] FeatureClass featureClass,
-			[NotNull] IEnumerable<Attribute> attributes,
+			[CanBeNull] IEnumerable<Attribute> attributes,
 			[NotNull] Multipoint multipoint,
 			[CanBeNull] CancelableProgressor cancelableProgressor = null)
 		{
@@ -110,7 +115,11 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				            geometryType == GeometryType.Multipoint,
 				            "Invalid target feature class.");
 
-				GdbPersistenceUtils.CopyAttributeValues(attributes, rowBuffer);
+				// NOTE: The attributes from the template inspector can be null!
+				if (attributes != null)
+				{
+					GdbPersistenceUtils.CopyAttributeValues(attributes, rowBuffer);
+				}
 
 				foreach (MapPoint point in multipoint.Points)
 				{

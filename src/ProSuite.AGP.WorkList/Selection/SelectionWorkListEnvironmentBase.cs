@@ -39,8 +39,7 @@ namespace ProSuite.AGP.WorkList.Selection
 				MapUtils.GetDistinctSelectionByTable(oidsByLayer);
 
 			return new SelectionItemRepository(DatasetUtils.Distinct(selection.Keys),
-			                                   selection,
-			                                   stateRepository);
+			                                   selection, stateRepository);
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,

@@ -150,6 +150,14 @@ namespace ProSuite.AGP.Editing.FillHole
 
 			if (currentTargetClass == null)
 			{
+				throw new Exception("No valid feature template selected to fill the hole with.");
+			}
+
+			// Un-wrap potential joins:
+			currentTargetClass = DatasetUtils.GetDatabaseFeatureClass(currentTargetClass);
+
+			if (currentTargetClass == null)
+			{
 				throw new Exception("No valid template selected");
 			}
 

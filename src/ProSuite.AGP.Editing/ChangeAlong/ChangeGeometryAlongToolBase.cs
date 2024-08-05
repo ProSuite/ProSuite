@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -39,8 +38,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private ChangeAlongFeedback _feedback;
 
-		private const Key _keyPolygonDraw = Key.P;
-
 		protected ChangeGeometryAlongToolBase()
 		{
 			IsSketchTool = true;
@@ -48,8 +45,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			GeomIsSimpleAsFeature = false;
 
 			PolygonSketchCursor = ToolUtils.GetCursor(Resources.PolygonDrawerCursor);
-
-			HandledKeys.Add(_keyPolygonDraw);
 		}
 
 		protected Cursor TargetSelectionCursor { get; set; }
@@ -61,6 +56,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected abstract string EditOperationDescription { get; }
 
 		protected abstract IChangeAlongService MicroserviceClient { get; }
+
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
+		}
 
 		protected override void OnUpdate()
 		{
@@ -118,11 +118,19 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					GetApplicableSelectedFeatures(selectionByLayer, true).ToList();
 
 				using var source = GetProgressorSource();
-				var progressor = source.Progressor;
+				var progressor = source?.Progressor;
 				RefreshExistingChangeAlongCurves(applicableSelection, progressor);
 			}
 
 			return true;
+		}
+
+		protected override CancelableProgressorSource GetProgressorSource()
+		{
+			// Disable the progressor because it crashes the application when the picker is shown.
+			// In the target selection phase we have a real probability that the picker must be
+			// shown!
+			return null;
 		}
 
 		protected override Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
@@ -143,7 +151,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 								GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
 							using var source = GetProgressorSource();
-							var progressor = source.Progressor;
+							var progressor = source?.Progressor;
 
 							RefreshExistingChangeAlongCurves(selectedFeatures, progressor);
 
@@ -200,30 +208,25 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return await QueuedTask.Run(() => UpdateFeatures(selection, cutSubcurves, progressor));
 		}
 
-		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
+		protected override void SetupPolygonSketchCore()
 		{
-			if (k.Key == _keyPolygonDraw)
-			{
-				SetupSketch(SketchGeometryType.Polygon);
-
-				SetCursor(PolygonSketchCursor);
-			}
+			SetCursor(PolygonSketchCursor);
 		}
 
-		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
+		protected override void SetupLassoSketchCore()
 		{
-			if (k.Key == _keyPolygonDraw)
-			{
-				SketchType = SketchGeometryType.Rectangle;
+			SetCursor(PolygonSketchCursor);
+		}
 
-				if (! IsInSelectionPhase())
-				{
-					SetCursor(TargetSelectionCursor);
-				}
-				else
-				{
-					SetCursor(SelectionCursor);
-				}
+		protected override void ResetSketchCore()
+		{
+			if (! IsInSelectionPhase())
+			{
+				SetCursor(TargetSelectionCursor);
+			}
+			else
+			{
+				SetCursor(SelectionCursor);
 			}
 		}
 
@@ -354,59 +357,58 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private async Task<bool> SelectTargetsAsync(
 			[NotNull] List<Feature> selectedFeatures,
-			[NotNull] Geometry sketch,
+			[NotNull] Geometry sketchGeometry,
 			[CanBeNull] CancelableProgressor progressor)
 		{
 			const TargetFeatureSelection targetFeatureSelection =
 				TargetFeatureSelection.VisibleSelectableFeatures;
 
-			bool isSingleClick = false;
-			Point pickerLocation = new Point();
-			List<FeatureSelectionBase> selectionByClass =
-				await QueuedTaskUtils.Run(() =>
-				{
-					sketch = ToolUtils.SketchToSearchGeometry(
-						sketch, GetSelectionTolerancePixels(), out isSingleClick);
-
-					pickerLocation = MapView.Active.MapToScreen(sketch.Extent.Center);
-
-					return FindTargetFeatureCandidates(sketch, targetFeatureSelection,
-					                                   selectedFeatures,
-					                                   progressor);
-				});
-
-			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
+			Task<IEnumerable<Feature>> task = QueuedTaskUtils.Run(async () =>
 			{
-				_msg.Warn("Calculation of reshape lines was cancelled.");
-				return false;
-			}
+				using var pickerPrecedence =
+					new PickerPrecedence(sketchGeometry,
+					                     GetSelectionTolerancePixels(),
+					                     ActiveMapView.ClientToScreen(CurrentMousePosition));
 
-			IEnumerable<Feature> targetFeatures;
+				pickerPrecedence.EnsureGeometryNonEmpty();
 
-			if (isSingleClick &&
-			    SelectionUtils.GetFeatureCount(selectionByClass) > 1)
-			{
-				IEnumerable<IPickableItem> items =
-					await QueuedTask.Run(
-						() => PickableItemsFactory.CreateFeatureItems(
-							PickerUtils.OrderByGeometryDimension(selectionByClass)));
+				List<FeatureSelectionBase> candidates =
+					FindTargetFeatureCandidates(pickerPrecedence.SelectionGeometry,
+					                            targetFeatureSelection, selectedFeatures,
+					                            progressor);
 
-				PickerPrecedence.SelectionGeometry = sketch;
-
-				IPickableFeatureItem pickedItem =
-					await ShowPickerAsync<IPickableFeatureItem>(
-						items, PickerPrecedence, pickerLocation);
-
-				if (pickedItem == null)
+				if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 				{
-					return false;
+					_msg.Warn("Calculation of reshape lines was cancelled.");
+					return Enumerable.Empty<Feature>();
 				}
 
-				targetFeatures = new[] { pickedItem.Feature };
-			}
-			else
+				if (pickerPrecedence.IsSingleClick && candidates.Count > 1)
+				{
+					var orderedCandidates =
+						PickerUtils.OrderByGeometryDimension(candidates).ToList();
+
+					var pickedItem =
+						await PickerUtils.ShowAsync<IPickableFeatureItem>(
+							pickerPrecedence, orderedCandidates);
+
+					if (pickedItem == null)
+					{
+						return Enumerable.Empty<Feature>();
+					}
+
+					return new List<Feature> { pickedItem.Feature };
+				}
+
+				return candidates.SelectMany(c => c.GetFeatures());
+			}, progressor);
+
+			IEnumerable<Feature> targetFeatures = await ViewUtils.TryAsync(task, _msg);
+
+			if (targetFeatures == null)
 			{
-				targetFeatures = selectionByClass.SelectMany(fcs => fcs.GetFeatures());
+				// Likely an exception or cancellation
+				return false;
 			}
 
 			ChangeAlongCurves =
@@ -426,14 +428,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				t => CanUseAsTargetFeature(selectedFeatures, t);
 
 			SpatialRelationship spatialRel =
-				SketchType == SketchGeometryType.Polygon
+				SketchType == SketchGeometryType.Polygon ||
+				SketchType == SketchGeometryType.Lasso
 					? SpatialRelationship.Contains
 					: SpatialRelationship.Intersects;
 
 			FeatureFinder featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
 			                              {
 				                              SelectedFeatures = selectedFeatures,
-				                              SpatialRelationship = spatialRel
+				                              SpatialRelationship = spatialRel,
+				                              ReturnUnJoinedFeatures = true
 			                              };
 
 			var selectionByClass =
@@ -657,6 +661,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			              .Where(
 				              f => IsStoreRequired(f, editableClassHandles, RowChangeType.Insert))
 			              .ToList();
+
+			if (resultFeatures.Count == 0 && inserts.Count == 0)
+			{
+				_msg.Warn("No feature to store probably because nothing has changed not editable.");
+				return false;
+			}
 
 			List<Feature> newFeatures = new List<Feature>();
 

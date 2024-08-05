@@ -23,7 +23,7 @@
         <Label Padding="0,10,0,2" Target="{Binding ElementName=textBoxRemark}">Remark to add to the generated file:</Label>
         <TextBox Padding="2" Name="textBoxRemark" Text="{Binding Remark, Mode=TwoWay}" />
 
-        <Label Padding="0,10,0,2">Path to config file to create/overwrite (XML or CSV):</Label>
+        <Label Padding="0,10,0,2">Path to config file (XML) to create/overwrite:</Label>
         <DockPanel>
             <Button DockPanel.Dock="Right" Padding="5,0,5,0" Content="Browse..." Click="BrowseButtonClicked"/>
 			<TextBox Padding="2" Margin="0,0,2,0" Text="{Binding ConfigFilePath, UpdateSourceTrigger=PropertyChanged}"/>
