@@ -2,12 +2,12 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
-using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.UI.QA.Controls;
 using QualityConditionControl = ProSuite.DdxEditor.Content.QA.QCon.QualityConditionControl;
 #if NET6_0_OR_GREATER
 using ProSuite.DdxEditor.Content.Blazor;
+using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.Core.QA;
 #endif
 
@@ -26,7 +26,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			QualityConditionControl control;
 
 #if NET6_0_OR_GREATER
-
 			IInstanceConfigurationTableViewControl blazorControl =
 				CreateBlazorControl(item, itemNavigation, modelBuilder);
 
@@ -75,6 +74,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			return control;
 		}
 
+#if NET6_0_OR_GREATER
 		private static IInstanceConfigurationTableViewControl CreateBlazorControl<T>(
 			EntityItem<T, T> item, IItemNavigation itemNavigation,
 			CoreDomainModelItemModelBuilder modelBuilder) where T : InstanceConfiguration
@@ -90,5 +90,6 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			return blazorControl;
 		}
+#endif
 	}
 }
