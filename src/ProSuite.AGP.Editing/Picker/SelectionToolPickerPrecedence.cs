@@ -40,6 +40,12 @@ namespace ProSuite.AGP.Editing.Picker
 				return PickerMode.ShowPicker;
 			}
 
+			areaSelect = ! IsSingleClick;
+			if (areaSelect)
+			{
+				return PickerMode.PickAll;
+			}
+
 			return PickerMode.PickBest;
 		}
 
@@ -79,13 +85,11 @@ namespace ProSuite.AGP.Editing.Picker
 				{
 					case GeometryType.Point:
 						score = GeometryUtils.Engine
-						                     .NearestPoint(selectionGeometry,
-						                                   (MapPoint) item.Geometry)
+						                     .NearestPoint(selectionGeometry, (MapPoint) geometry)
 						                     .Distance;
 						break;
 					case GeometryType.Polyline:
-						score = SumDistancesStartEndPoint(selectionGeometry,
-						                                  (Multipart) item.Geometry);
+						score = SumDistancesStartEndPoint(selectionGeometry, (Multipart) geometry);
 						break;
 					case GeometryType.Polygon:
 						// negative
