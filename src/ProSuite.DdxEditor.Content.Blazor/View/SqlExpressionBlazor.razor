@@ -7,10 +7,10 @@
 		</button>
 	</div>
 	<div class="col w-100" style="border: unset">
-		<RadzenTextBox @bind-Value="SqlExpression" oninput="@(OnInput)"/>
+		<RadzenTextBox @bind-Value="Value" oninput="@(OnInput)"/>
 	</div>
 	<div class="col-auto" style="padding-left: unset">
-		@if (! string.IsNullOrEmpty(SqlExpression))
+		@if (! string.IsNullOrEmpty(Value))
 		{
 			<div class="clear rzi-times rzi" onclick="@OnClickResetValue"></div>
 		}

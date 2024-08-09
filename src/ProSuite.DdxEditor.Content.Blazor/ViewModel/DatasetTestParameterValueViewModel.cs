@@ -214,6 +214,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		return qualified ? $"{name} [{ModelName}]" : name;
 	}
 
+	public void FilterExpressionChanged(string expression)
+	{
+		FilterExpression = expression;
+	}
+
 	public override string ToString()
 	{
 		string value = DisplayValue == null ? "<null>" : $"{DisplayValue}";
