@@ -462,9 +462,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			[CanBeNull] CancelableProgressor progressor)
 		{
 			using var pickerPrecedence =
-				new PickerPrecedence(sketchGeometry,
-				                     GetSelectionTolerancePixels(),
-				                     ActiveMapView.ClientToScreen(CurrentMousePosition));
+				CreatePickerPrecedence(sketchGeometry);
 
 			await ViewUtils.TryAsync(
 				PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers), _msg);
@@ -472,6 +470,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
 
 			return true;
+		}
+
+		protected virtual IPickerPrecedence CreatePickerPrecedence(Geometry sketchGeometry)
+		{
+			return new PickerPrecedence(sketchGeometry,
+			                            GetSelectionTolerancePixels(),
+			                            ActiveMapView.ClientToScreen(CurrentMousePosition));
 		}
 
 		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(

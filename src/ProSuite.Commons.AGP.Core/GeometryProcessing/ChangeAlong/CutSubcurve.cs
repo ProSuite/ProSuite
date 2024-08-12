@@ -126,7 +126,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 		{
 			//var segments = (ISegmentCollection)subcurve.Path;
 			//var segments = subcurve.Path.Parts;
-			ICollection<Segment> segmentCol = null;
+			ICollection<Segment> segmentCol = new List<Segment>();
 			subcurve.Path.GetAllSegments(ref segmentCol);
 			var segments = segmentCol.ToList();
 			Segment segment;
