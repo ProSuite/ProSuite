@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Components;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
@@ -12,6 +13,8 @@ using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
 using ProSuite.UI.QA;
 using ProSuite.UI.QA.BoundTableRows;
@@ -25,6 +28,8 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	[CanBeNull] private string _filterExpression;
 
 	private bool _usedAsReferenceData;
+
+	private IDataContainer _uncachedContainer;
 
 	private DatasetTestParameterValueViewModel(
 		[NotNull] TestParameter parameter,
@@ -239,7 +244,7 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 		Dataset dataset = null;
 		TransformerConfiguration transformerConfiguration = null;
-		parameterValue?.Match<object>(d => dataset = d as Dataset,
+		parameterValue?.Match<object>(d => dataset = d,
 		                              t => transformerConfiguration = t);
 
 		ISqlExpressionBuilder expressionBuilder =
@@ -271,8 +276,22 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 
 			IOpenDataset datasetOpener = new SimpleDatasetOpener(masterDbContext);
 
-			layerSchema = (ITableSchemaDef) InstanceFactory.CreateTransformedTable(
+			IReadOnlyTable transformedTable = InstanceFactory.CreateTransformedTable(
 				transformerConfiguration, datasetOpener);
+
+			if (transformedTable is IReadOnlyFeatureClass fc && _uncachedContainer == null)
+			{
+				_uncachedContainer = new UncachedDataContainer(fc.Extent);
+			}
+
+			if (transformedTable is IDataContainerAware transformed)
+			{
+				transformed.DataContainer = _uncachedContainer;
+
+				TestUtils.SetContainer(_uncachedContainer, transformed.InvolvedTables);
+			}
+
+			layerSchema = (ITableSchemaDef) transformedTable;
 		}
 
 		if (layerSchema != null)
