@@ -589,7 +589,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			// translate query class name (if it is one) to table name
 			string gdbDatasetName = ModelElementUtils.GetBaseTableName(
-				masterDatabaseDatasetName);
+				masterDatabaseDatasetName, MasterDatabaseWorkspaceContext);
 
 			return ElementNamesAreQualified
 				       ? gdbDatasetName // expected to be qualified also
