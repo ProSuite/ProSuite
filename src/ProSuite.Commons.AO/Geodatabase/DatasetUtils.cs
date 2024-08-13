@@ -3773,17 +3773,30 @@ namespace ProSuite.Commons.AO.Geodatabase
 					                   .ToList()
 					: null;
 
+			IList<IField> fields = GetFields(table);
+
 			List<IField> candidates =
-				GetFields(table)
-					.Where(f => f.Type == esriFieldType.esriFieldTypeInteger &&
-					            ! f.IsNullable &&
-					            (uniqueIndexes == null ||
-					             uniqueIndexes.Any(ix => ix.Fields.Field[0].Name == f.Name)))
+				fields.Where(f => f.Type == esriFieldType.esriFieldTypeInteger &&
+								! f.IsNullable &&
+								(uniqueIndexes == null ||
+								 uniqueIndexes.Any(ix => ix.Fields.Field[0].Name == f.Name)))
 					.ToList();
 
 			if (candidates.Count == 0)
 			{
-				return null;
+				// Try again without the not-null constraint, because fields in views are always nullable
+				candidates = fields.Where(f => f.Type == esriFieldType.esriFieldTypeInteger &&
+								(uniqueIndexes == null ||
+								 uniqueIndexes.Any(ix => ix.Fields.Field[0].Name == f.Name)))
+					.ToList();
+
+				_msg.DebugFormat("{0}: Candidates with Nullable fields have been included.",
+					DatasetUtils.GetName(table));
+
+				if (candidates.Count == 0)
+				{
+					return null;
+				}
 			}
 
 			if (candidates.Count == 1)
@@ -3791,10 +3804,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return candidates[0];
 			}
 
+			_msg.DebugFormat("Table {0}: Found {1} integer fields that could serve as Object ID fields. " +
+				"Fields called OBJECTID, OID, FID or ID will take precedence.", DatasetUtils.GetName(table),
+				candidates.Count);
+
 			foreach (string preferredName in new[] { "OBJECTID", "OID", "FID", "ID" })
 			{
 				IField preferredField =
-					candidates.FirstOrDefault(field => field.Name == preferredName);
+					candidates.FirstOrDefault(field => field.Name.Equals(preferredName,
+					StringComparison.CurrentCultureIgnoreCase));
+
 				if (preferredField != null)
 				{
 					return preferredField;
