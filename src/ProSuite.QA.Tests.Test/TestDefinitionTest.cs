@@ -3464,10 +3464,11 @@ namespace ProSuite.QA.Tests.Test
 				}
 
 				IIssueFilter testsOrig =
-					TestFactory.CreateIssueFilter(ifConfinguration, new SimpleDatasetOpener(model));
+					InstanceFactoryUtils.CreateIssueFilter(ifConfinguration, new SimpleDatasetOpener(model));
 
 				IIssueFilter testsNew =
-					TestFactory.CreateIssueFilter(ifConfinguration, new SimpleDatasetOpener(model));
+					InstanceFactoryUtils.CreateIssueFilter(ifDefinitionConfiguration,
+					                                       new SimpleDatasetOpener(model));
 
 				List<KeyValuePair<Type, MemberInfo>> differences =
 					ReflectionCompare.RecursiveReflectionCompare(testsOrig, testsNew, true);

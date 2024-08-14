@@ -285,6 +285,34 @@ namespace ProSuite.DomainModel.AO.QA
 				       : null;
 		}
 
+		public static IIssueFilter CreateIssueFilter(
+			[NotNull] IssueFilterConfiguration issueFilterConfiguration,
+			[NotNull] IOpenDataset datasetContext)
+		{
+			try
+			{
+				IssueFilterFactory factory =
+					InstanceFactoryUtils.CreateIssueFilterFactory(issueFilterConfiguration);
+
+				if (factory == null)
+				{
+					throw new ArgumentException(
+						$"Unable to create IssueFilterFactory for {issueFilterConfiguration}");
+				}
+
+				IIssueFilter filter = factory.Create(datasetContext, issueFilterConfiguration);
+				filter.Name = issueFilterConfiguration.Name;
+
+				return filter;
+			}
+			catch (Exception e)
+			{
+				StringBuilder sb =
+					InstanceFactoryUtils.GetErrorMessageWithDetails(issueFilterConfiguration, e);
+
+				throw new InvalidOperationException(sb.ToString(), e);
+			}
+		}
 		public static string GetDefaultDescriptorName([NotNull] Type instanceType,
 		                                              int constructorIndex)
 		{

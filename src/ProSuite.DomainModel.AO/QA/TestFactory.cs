@@ -214,7 +214,7 @@ namespace ProSuite.DomainModel.AO.QA
 				foreach (var issueFilterConfiguration in Condition.IssueFilterConfigurations)
 				{
 					IIssueFilter filter =
-						CreateIssueFilter(issueFilterConfiguration, datasetContext);
+						InstanceFactoryUtils.CreateIssueFilter(issueFilterConfiguration, datasetContext);
 
 					filters.Add(filter);
 				}
@@ -223,35 +223,6 @@ namespace ProSuite.DomainModel.AO.QA
 				{
 					filterTest.SetIssueFilters(Condition.IssueFilterExpression, filters);
 				}
-			}
-		}
-
-		public static IIssueFilter CreateIssueFilter(
-			[NotNull] IssueFilterConfiguration issueFilterConfiguration,
-			[NotNull] IOpenDataset datasetContext)
-		{
-			try
-			{
-				IssueFilterFactory factory =
-					InstanceFactoryUtils.CreateIssueFilterFactory(issueFilterConfiguration);
-
-				if (factory == null)
-				{
-					throw new ArgumentException(
-						$"Unable to create IssueFilterFactory for {issueFilterConfiguration}");
-				}
-
-				IIssueFilter filter = factory.Create(datasetContext, issueFilterConfiguration);
-				filter.Name = issueFilterConfiguration.Name;
-
-				return filter;
-			}
-			catch (Exception e)
-			{
-				StringBuilder sb =
-					InstanceFactoryUtils.GetErrorMessageWithDetails(issueFilterConfiguration, e);
-
-				throw new InvalidOperationException(sb.ToString(), e);
 			}
 		}
 
