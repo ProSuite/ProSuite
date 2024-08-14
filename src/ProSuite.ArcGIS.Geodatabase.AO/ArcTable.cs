@@ -1,51 +1,56 @@
-extern alias EsriGeodatabase;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using ArcGIS.Core.Data;
 using ESRI.ArcGIS.Geodatabase.AO;
 using ProSuite.ArcGIS.Geodatabase.AO;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Text;
-using ICursor = EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ICursor;
-using IEnumDataset = EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IEnumDataset;
 
 
 namespace ESRI.ArcGIS.Geodatabase
 {
-	extern alias EsriSystem;
 
-	public class ArcTable : ITable, IObjectClass, IDataset
+	public class ArcTable : ITable, IObjectClass, ISubtypes
 	{
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ITable _aoTable;
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObjectClass _aoObjectClass;
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset _aoDataset;
+		private readonly Table _proTable;
 
-		public ArcTable(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ITable aoTable)
+		private readonly TableDefinition _tableDefinition;
+		//private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObjectClass _aoObjectClass;
+		//private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset _aoDataset;
+
+		public ArcTable(Table proTable)
 		{
-			_aoTable = aoTable;
-			_aoObjectClass = (EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObjectClass)aoTable;
-			_aoDataset = (EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset)aoTable;
+			_proTable = proTable;
+			_tableDefinition = proTable.GetDefinition();
+
+			//_aoObjectClass = (EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObjectClass)table;
+			//_aoDataset = (EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset)table;
 		}
 
 		#region Implementation of IClass
 
 		public int FindField(string name)
 		{
-			return _aoTable.FindField(name);
+			return _tableDefinition.FindField(name);
 		}
 
 		void IClass.AddField(IField field)
 		{
-			ArcField arcField = (ArcField)field;
+			throw new AbandonedMutexException();
+			//ArcField arcField = (ArcField)field;
 
-			EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField aoField = arcField.AoField;
-			_aoTable.AddField(aoField);
+			//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField aoField = arcField.ProField;
+			//_table.AddField(aoField);
 		}
 
 		void IClass.DeleteField(IField field)
 		{
-			ArcField arcField = (ArcField)field;
-			_aoTable.DeleteField(arcField.AoField);
+			throw new AbandonedMutexException();
+			//ArcField arcField = (ArcField)field;
+			//_table.DeleteField(arcField.ProField);
 		}
-
 
 		//public void AddIndex(IIndex Index)
 		//{
@@ -64,25 +69,52 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public IRow CreateRow()
 		{
-			var aoRow = _aoTable.CreateRow();
-			return new ArcRow((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObject)aoRow);
+			RowBuffer rowBuffer = _proTable.CreateRowBuffer();
+			Row proRow = _proTable.CreateRow(rowBuffer);
+
+			return ArcUtils.ToArcObject(proRow);
 		}
 
-		public IRow GetRow(int oid)
+		public IRow GetRow(long oid)
 		{
-			var aoRow = _aoTable.GetRow(oid);
-			return new ArcRow((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObject)aoRow);
+			IReadOnlyList<long> objectIdList = new[] { oid };
+
+			QueryFilter queryFilter = new QueryFilter()
+			                          {
+				                          ObjectIDs = objectIdList
+			                          };
+
+			using (RowCursor rowCursor = _proTable.Search(queryFilter))
+			{
+				while (rowCursor.MoveNext())
+				{
+					return ArcUtils.ToArcObject(rowCursor.Current);
+				}
+			}
+
+			// TODO: Type of exception?
+			throw new InvalidOperationException($"No row found with OID {oid}");
 		}
 
 		public IEnumerable<IRow> GetRows(object oids, bool recycling)
 		{
-			ICursor cursor = _aoTable.GetRows(oids, recycling);
-
-			EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRow row;
-
-			while ((row = cursor.NextRow()) != null)
+			if (! (oids is IEnumerable<long> oidList))
 			{
-				yield return ArcUtils.ToArcObject(row);
+				throw new InvalidOperationException(
+					$"Cannot convert oids ({oids})to IEnumerable<long>");
+			}
+
+			QueryFilter queryFilter = new QueryFilter()
+			                          {
+				                          ObjectIDs = oidList.ToList()
+			                          };
+
+			using (RowCursor rowCursor = _proTable.Search(queryFilter))
+			{
+				while (rowCursor.MoveNext())
+				{
+					yield return ArcUtils.ToArcObject(rowCursor.Current, this);
+				}
 			}
 		}
 
@@ -94,22 +126,23 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public void UpdateSearchedRows(IQueryFilter queryFilter, IRowBuffer buffer)
 		{
-			var arcQueryFilter = (ArcQueryFilter)queryFilter;
-			var arcRow = (ArcRow)buffer;
-			_aoTable.UpdateSearchedRows(arcQueryFilter.AoQueryFilter, arcRow.AoObject);
+			throw new NotImplementedException();
+			//var arcQueryFilter = (ArcQueryFilter) queryFilter;
+			//var arcRow = (ArcRow) buffer;
+			//_proTable.UpdateSearchedRows(arcQueryFilter.ProQueryFilter, arcRow.ProRow);
 		}
 
 		public void DeleteSearchedRows(IQueryFilter queryFilter)
 		{
-			var arcQueryFilter = (ArcQueryFilter)queryFilter;
-			_aoTable.DeleteSearchedRows(arcQueryFilter.AoQueryFilter);
+			throw new NotImplementedException();
+			//var arcQueryFilter = (ArcQueryFilter) queryFilter;
+			//_proTable.DeleteSearchedRows(arcQueryFilter.ProQueryFilter);
 		}
-
 
 		public long RowCount(IQueryFilter queryFilter)
 		{
-			var arcQueryFilter = (ArcQueryFilter)queryFilter;
-			return _aoTable.RowCount(arcQueryFilter.AoQueryFilter);
+			var arcQueryFilter = (ArcQueryFilter) queryFilter;
+			return _proTable.GetCount(arcQueryFilter.ProQueryFilter);
 		}
 
 		//public IEnumerable<IRow> EnumRows(IQueryFilter queryFilter, bool recycle)
@@ -122,9 +155,9 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public IEnumerable<IRow> Search(IQueryFilter queryFilter, bool recycling)
 		{
-			var arcQueryFilter = (ArcQueryFilter)queryFilter;
+			var arcQueryFilter = (ArcQueryFilter) queryFilter;
 
-			ICursor cursor = _aoTable.Search(arcQueryFilter.AoQueryFilter, recycling);
+			RowCursor cursor = _proTable.Search(arcQueryFilter.ProQueryFilter, recycling);
 
 			return ArcUtils.GetArcRows(cursor);
 			//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRow row;
@@ -137,18 +170,21 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public IEnumerable<IRow> Update(IQueryFilter queryFilter, bool recycling)
 		{
-			var arcQueryFilter = (ArcQueryFilter)queryFilter;
+			throw new NotImplementedException();
+			//var arcQueryFilter = (ArcQueryFilter) queryFilter;
 
-			ICursor cursor = _aoTable.Update(arcQueryFilter.AoQueryFilter, recycling);
+			//ICursor cursor = _proTable.Update(arcQueryFilter.AoQueryFilter, recycling);
 
-			return ArcUtils.GetArcRows(cursor);
+			//return ArcUtils.GetArcRows(cursor);
 		}
 
 		public IEnumerable<IRow> Insert(bool useBuffering)
 		{
-			ICursor cursor = _aoTable.Insert(useBuffering);
+			throw new NotImplementedException();
 
-			return ArcUtils.GetArcRows(cursor);
+			//ICursor cursor = _proTable.Insert(useBuffering);
+
+			//return ArcUtils.GetArcRows(cursor);
 		}
 
 		public ISelectionSet Select(
@@ -157,16 +193,16 @@ namespace ESRI.ArcGIS.Geodatabase
 			esriSelectionOption selOption,
 			IWorkspace selectionContainer)
 		{
-			var arcQueryFilter = (ArcQueryFilter)queryFilter;
-			ArcWorkspace arcWorkspace = (ArcWorkspace)selectionContainer;
+			ArcQueryFilter arcQueryFilter = (ArcQueryFilter) queryFilter;
+			QueryFilter proQueryFilter = arcQueryFilter.ProQueryFilter;
 
-			EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ISelectionSet selectionSet =
-				_aoTable.Select(arcQueryFilter.AoQueryFilter,
-					(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.esriSelectionType)selType,
-					(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.esriSelectionOption)selOption,
-					arcWorkspace.AoWorkspace);
+			ArcWorkspace arcWorkspace = (ArcWorkspace) selectionContainer;
 
-			return new ArcSelectionSet(selectionSet);
+			Selection selectionSet = _proTable.Select(proQueryFilter,
+			                                          (SelectionType) selType,
+			                                          (SelectionOption) selOption);
+
+			return new ArcSelectionSet(selectionSet, _proTable);
 		}
 
 		//void IClass.AddField(IField field)
@@ -197,13 +233,14 @@ namespace ESRI.ArcGIS.Geodatabase
 		//	_aoTable.DeleteIndex(Index);
 		//}
 
-		public IFields Fields => new ArcFields(_aoTable.Fields);
+		public IFields Fields => new ArcFields(_tableDefinition.GetFields(),
+			this is ArcFeatureClass fc ? fc.GeometryDefinition : null);
 
 		//public IIndexes Indexes => ((IClass)_aoTable).Indexes;
 
-		public bool HasOID => _aoTable.HasOID;
+		public bool HasOID => _tableDefinition.HasObjectID();
 
-		public string OIDFieldName => _aoTable.OIDFieldName;
+		public string OIDFieldName => _tableDefinition.GetObjectIDField();
 
 		//public UID CLSID => _aoTable.CLSID;
 
@@ -211,7 +248,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		//public object Extension => _aoTable.Extension;
 
-		public int ObjectClassID => _aoObjectClass.ObjectClassID;
+		public long ObjectClassID => _proTable.GetID();
 
 		public string AliasName
 		{
@@ -219,11 +256,11 @@ namespace ESRI.ArcGIS.Geodatabase
 			{
 				try
 				{
-					string aliasName = _aoObjectClass.AliasName;
+					string aliasName = _tableDefinition.GetAliasName();
 
 					return StringUtils.IsNotEmpty(aliasName)
-						? aliasName
-						: Name;
+						       ? aliasName
+						       : Name;
 				}
 				catch (NotImplementedException)
 				{
@@ -234,15 +271,43 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public IEnumerable<IRelationshipClass> get_RelationshipClasses(esriRelRole role)
 		{
-			var enumRelClasses =
-				_aoObjectClass.get_RelationshipClasses((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.esriRelRole)role);
+			var geodatabase = _proTable.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase;
 
-			EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRelationshipClass relClass;
-
-			while ((relClass = enumRelClasses.Next()) != null)
+			if (geodatabase == null)
 			{
-				yield return new ArcRelationshipClass(relClass);
+				yield break;
 			}
+
+			foreach (var relClassDef in geodatabase.GetDefinitions<RelationshipClassDefinition>())
+			{
+				string relClassName = relClassDef.GetName();
+
+				if  (role == esriRelRole.esriRelRoleAny)
+				{
+					yield return CreateArcRelationshipClass(geodatabase, relClassName);
+				}
+
+				if (role == esriRelRole.esriRelRoleOrigin &&
+				    relClassDef.GetOriginClass() == _tableDefinition.GetName())
+				{
+					yield return CreateArcRelationshipClass(geodatabase, relClassName);
+				}
+
+				if (role == esriRelRole.esriRelRoleDestination &&
+				    relClassDef.GetDestinationClass() == _tableDefinition.GetName())
+				{
+					yield return CreateArcRelationshipClass(geodatabase, relClassName);
+				}
+			}
+		}
+
+		private static IRelationshipClass CreateArcRelationshipClass(
+			global::ArcGIS.Core.Data.Geodatabase geodatabase, string relClassName)
+		{
+			RelationshipClass relClass =
+				geodatabase.OpenDataset<RelationshipClass>(relClassName);
+
+			return new ArcRelationshipClass(relClass);
 		}
 
 		//public IPropertySet ExtensionProperties => _aoTable.ExtensionProperties;
@@ -253,69 +318,53 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public bool CanCopy()
 		{
-			return _aoDataset.CanCopy();
+			return false;
 		}
 
 		public bool CanDelete()
 		{
-			return _aoDataset.CanDelete();
+			return false;
 		}
 
 		public void Delete()
 		{
-			_aoDataset.Delete();
+			throw new NotImplementedException();
 		}
 
 		public bool CanRename()
 		{
-			return _aoDataset.CanRename();
+			return false;
 		}
 
 		public void Rename(string name)
 		{
-			_aoDataset.Rename(name);
+			throw new NotImplementedException();
 		}
 
-		public string Name => _aoDataset.Name;
+		public string Name => _tableDefinition.GetName();
 
-		public IName FullName
-		{
-			get
-			{
-				EsriSystem::ESRI.ArcGIS.esriSystem.IName aoDatasetFullName = _aoDataset.FullName;
-
-				return new ArcName(aoDatasetFullName);
-			}
-		}
+		public IName FullName => new ArcName(this);
 
 		public string BrowseName
 		{
-			get => _aoDataset.BrowseName;
-			set => _aoDataset.BrowseName = value;
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
-		public esriDatasetType Type => (esriDatasetType)_aoDataset.Type;
+		public esriDatasetType Type => (esriDatasetType) esriDatasetType.esriDTTable;
 
-		public string Category => _aoDataset.Category;
+		public string Category => throw new NotImplementedException();
 
 		public IEnumerable<IDataset> Subsets
 		{
 			get
 			{
-				IEnumDataset enumDataset = _aoDataset.Subsets;
-
-				EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset dataset;
-				while ((dataset = enumDataset.Next()) != null)
-				{
-					yield return dataset is EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureClass
-						? new ArcFeatureClass((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureClass)dataset)
-						: new ArcTable((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ITable)dataset);
-				}
+				yield break;
 			}
 		}
 
 		IWorkspace IDataset.Workspace =>
-			new ArcWorkspace((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IWorkspace)_aoDataset.Workspace);
+			new ArcWorkspace(_proTable.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase);
 		//public IWorkspace Workspace => new ArcWorkspace(_aoDataset.Workspace);
 
 		//public IPropertySet PropertySet => _aoDataset.PropertySet;
@@ -326,28 +375,126 @@ namespace ESRI.ArcGIS.Geodatabase
 		//}
 
 		#endregion
+
+		#region Implementation of ISubtypes
+
+		public bool HasSubtype => _tableDefinition.GetSubtypes().Count > 0;
+
+		public int DefaultSubtypeCode
+		{
+			get => _tableDefinition.GetDefaultSubtypeCode();
+			set => throw new NotImplementedException();
+		}
+
+		public object get_DefaultValue(int subtypeCode, string fieldName)
+		{
+			Field field = GetExistingField(fieldName);
+
+			Subtype subtype =
+				_tableDefinition.GetSubtypes()
+				                .FirstOrDefault(s => s.GetCode() == subtypeCode);
+
+			return field.GetDefaultValue(subtype);
+		}
+
+		public void set_DefaultValue(int subtypeCode, string fieldName, object value)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IDomain get_Domain(int subtypeCode, string fieldName)
+		{
+			Field field = GetExistingField(fieldName);
+
+			Subtype subtype =
+				_tableDefinition.GetSubtypes()
+										  .FirstOrDefault(s => s.GetCode() == subtypeCode);
+
+			Domain proDomain = field.GetDomain(subtype);
+
+			return new ArcDomain(proDomain);
+		}
+
+		//public void set_Domain(int SubtypeCode, string FieldName, IDomain Domain)
+		//{
+		//	_aoSubtypes.set_Domain(SubtypeCode, FieldName, Domain);
+		//}
+
+		public string SubtypeFieldName
+		{
+			get => _tableDefinition.GetSubtypeField();
+			set => throw new NotImplementedException();
+		}
+
+		public int SubtypeFieldIndex =>
+			_tableDefinition.FindField(_tableDefinition.GetSubtypeField());
+
+		public string get_SubtypeName(int subtypeCode)
+		{
+			Subtype subtype =
+				_tableDefinition.GetSubtypes()
+				                .FirstOrDefault(s => s.GetCode() == subtypeCode);
+
+			return subtype?.GetName();
+		}
+
+		public IEnumerable<KeyValuePair<int, string>> Subtypes
+		{
+			get
+			{
+				return _tableDefinition.GetSubtypes()
+				                       .Select(s => new KeyValuePair<int, string>(
+					                               s.GetCode(), s.GetName()));
+			}
+		}
+
+		public void AddSubtype(int subtypeCode, string subtypeName)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void DeleteSubtype(int subtypeCode)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		private Field GetExistingField(string fieldName)
+		{
+			Field field =
+				_tableDefinition.GetFields()
+				                          .FirstOrDefault(
+					                          f => f.Name.Equals(
+						                          fieldName,
+						                          StringComparison.CurrentCultureIgnoreCase));
+
+			if (field == null)
+				throw new ArgumentException($"Field {fieldName} does not exist in {Name}");
+			return field;
+		}
 	}
 
 	public class ArcName : IName
 	{
-		private readonly EsriSystem::ESRI.ArcGIS.esriSystem.IName _aoName;
+		private readonly IDataset _dataset;
 
-		public ArcName(EsriSystem::ESRI.ArcGIS.esriSystem.IName aoName)
+		public ArcName(IDataset dataset)
 		{
-			_aoName = aoName;
+			_dataset = dataset;
 		}
 
 		#region Implementation of IName
 
 		public string NameString
 		{
-			get => _aoName.NameString;
-			set { _aoName.NameString = value; }
+			get => _dataset.Name;
+			set => throw new NotImplementedException();
 		}
 
 		public object Open()
 		{
-			return _aoName.Open();
+			return _dataset;
 		}
 
 		#endregion

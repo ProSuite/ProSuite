@@ -1,37 +1,38 @@
 using System.Collections.Generic;
+using ArcGIS.Core.Data;
 using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.ArcGIS.Geodatabase.AO
 {
-	extern alias EsriGeodatabase;
-
 	internal static class ArcUtils
 	{
 		internal static IEnumerable<IRow> GetArcRows(
-			EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ICursor cursor)
+			RowCursor cursor)
 		{
-			EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRow row;
-			while ((row = cursor.NextRow()) != null)
+			Row row;
+			while (cursor.MoveNext())
 			{
+				row = cursor.Current;
+
 				yield return ToArcObject(row);
 			}
 		}
 
-		internal static ITable ToArcTable(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ITable aoTable)
+		internal static ITable ToArcTable(Table proTable)
 		{
-			var result = aoTable is EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass
+			var result = proTable is FeatureClass featureClass
 				? new ArcFeatureClass(featureClass)
-				: (ITable)new ArcTable(aoTable);
+				: (ITable)new ArcTable(proTable);
 
 			return result;
 		}
 
 
-		internal static IRow ToArcObject(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRow aoRow)
+		internal static IRow ToArcObject(Row proRow, ITable parent = null)
 		{
-			var result = aoRow is EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeature feature
-				? (IRow)new ArcFeature(feature)
-				: new ArcRow(aoRow);
+			var result = proRow is Feature feature
+				             ? (IRow) new ArcFeature(feature, parent as IFeatureClass)
+				             : new ArcRow(proRow, parent);
 
 			return result;
 		}

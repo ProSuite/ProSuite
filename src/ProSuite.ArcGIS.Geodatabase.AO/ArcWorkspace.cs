@@ -1,27 +1,24 @@
-extern alias EsriGeodatabase;
-extern alias EsriGeometry;
+using System;
 using System.Collections.Generic;
-using EsriGeodatabase::ESRI.ArcGIS.Geodatabase;
+using System.IO;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Internal.CIM;
 using ESRI.ArcGIS.Geodatabase.AO;
-using EsriGeometry::ESRI.ArcGIS.Geometry;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.ArcGIS.Geodatabase.AO;
 
 namespace ESRI.ArcGIS.Geodatabase
 {
-	extern alias EsriSystem;
-
 	public class ArcWorkspace : IWorkspace, IFeatureWorkspace
 	{
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IWorkspace _aoWorkspace;
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureWorkspace _aoFeatureWorkspace;
+		private readonly global::ArcGIS.Core.Data.Geodatabase _geodatabase;
 
-		public ArcWorkspace(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IWorkspace aoWorkspace)
+		public ArcWorkspace(global::ArcGIS.Core.Data.Geodatabase geodatabase)
 		{
-			_aoWorkspace = aoWorkspace;
-			_aoFeatureWorkspace = (EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureWorkspace)aoWorkspace;
+			_geodatabase = geodatabase;
 		}
 
-		public EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IWorkspace AoWorkspace => _aoWorkspace;
+		public global::ArcGIS.Core.Data.Geodatabase Geodatabase => _geodatabase;
 
 		#region Implementation of IWorkspace
 
@@ -31,47 +28,141 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public IEnumerable<IDataset> get_Datasets(esriDatasetType datasetType)
 		{
-			var enumDataset = _aoWorkspace.get_Datasets(
-				(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.esriDatasetType)datasetType);
-
-			EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset dataset;
-			while ((dataset = enumDataset.Next()) != null)
+			switch (datasetType)
 			{
-				yield return (IDataset)ToArcTable((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ITable)dataset);
+				case esriDatasetType.esriDTFeatureClass:
+					foreach (FeatureClassDefinition definition in _geodatabase
+						         .GetDefinitions<FeatureClassDefinition>())
+					{
+						yield return Open(definition);
+					}
+
+					break;
+				case esriDatasetType.esriDTTable:
+					foreach (TableDefinition definition in _geodatabase
+						         .GetDefinitions<TableDefinition>())
+					{
+						yield return Open(definition);
+					}
+
+					break;
+				case esriDatasetType.esriDTRelationshipClass:
+					foreach (RelationshipClassDefinition definition in _geodatabase
+						         .GetDefinitions<RelationshipClassDefinition>())
+					{
+						yield return Open(definition);
+					}
+
+					break;
+
+				case esriDatasetType.esriDTAny:
+				case esriDatasetType.esriDTContainer:
+				case esriDatasetType.esriDTGeo:
+				case esriDatasetType.esriDTFeatureDataset:
+				case esriDatasetType.esriDTPlanarGraph:
+				case esriDatasetType.esriDTGeometricNetwork:
+				case esriDatasetType.esriDTTopology:
+				case esriDatasetType.esriDTText:
+				case esriDatasetType.esriDTRasterDataset:
+				case esriDatasetType.esriDTRasterBand:
+				case esriDatasetType.esriDTTin:
+				case esriDatasetType.esriDTCadDrawing:
+				case esriDatasetType.esriDTRasterCatalog:
+				case esriDatasetType.esriDTToolbox:
+				case esriDatasetType.esriDTTool:
+				case esriDatasetType.esriDTNetworkDataset:
+				case esriDatasetType.esriDTTerrain:
+				case esriDatasetType.esriDTRepresentationClass:
+				case esriDatasetType.esriDTCadastralFabric:
+				case esriDatasetType.esriDTSchematicDataset:
+				case esriDatasetType.esriDTLocator:
+				case esriDatasetType.esriDTMap:
+				case esriDatasetType.esriDTLayer:
+				case esriDatasetType.esriDTStyle:
+				case esriDatasetType.esriDTMosaicDataset:
+				case esriDatasetType.esriDTLasDataset:
+
+					throw new NotImplementedException();
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(datasetType), datasetType, null);
 			}
 		}
+
+		private IDataset Open(Definition definition)
+		{
+			if (definition is FeatureClassDefinition)
+			{
+				FeatureClass proTable =
+					_geodatabase.OpenDataset<FeatureClass>(definition.GetName());
+				return ArcUtils.ToArcTable(proTable);
+			}
+
+			if (definition is TableDefinition)
+			{
+				Table proTable = _geodatabase.OpenDataset<Table>(definition.GetName());
+				return ArcUtils.ToArcTable(proTable);
+			}
+
+			if (definition is RelationshipClassDefinition)
+			{
+				RelationshipClass proRelClass =
+					_geodatabase.OpenDataset<RelationshipClass>(definition.GetName());
+				return new ArcRelationshipClass(proRelClass);
+			}
+
+			throw new ArgumentOutOfRangeException();
+		}
+
+		//private IEnumerable<T> GetDatasets<T>() where T : Dataset
+		//{
+		//	IEnumerable<Definition> definitions = _geodatabase.GetDefinitions<TableDefinition>();
+
+		//	foreach (Definition tableDefinition in definitions)
+		//	{
+		//		yield return (T) _geodatabase.OpenDataset<Table>(tableDefinition.GetName());
+		//	}
+		//}
 
 		public IEnumerable<IName> get_DatasetNames(esriDatasetType datasetType)
 		{
-			IEnumDatasetName enumDatasetName =
-				_aoWorkspace.get_DatasetNames(
-					(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.esriDatasetType)datasetType);
-
-			EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDatasetName datasetName;
-
-			while ((datasetName = enumDatasetName.Next()) != null)
+			foreach (IDataset dataset in get_Datasets(datasetType))
 			{
-				yield return new ArcName((EsriSystem::ESRI.ArcGIS.esriSystem.IName)datasetName);
+				yield return new ArcName(dataset);
 			}
+
+			//_geodatabase.GetDefinitions<Definition>();
+
+			//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDatasetName datasetName;
+
+			//while ((datasetName = enumDatasetName.Next()) != null)
+			//{
+			//	yield return new ArcName((EsriSystem::ESRI.ArcGIS.esriSystem.IName) datasetName);
+			//}
 		}
 
-		public string PathName => _aoWorkspace.PathName;
+		public string PathName => _geodatabase.GetPath().AbsolutePath;
 
-		public esriWorkspaceType Type => (esriWorkspaceType)_aoWorkspace.Type;
+		public esriWorkspaceType Type => (esriWorkspaceType) _geodatabase.GetGeodatabaseType();
 
 		public bool IsDirectory()
 		{
-			return _aoWorkspace.IsDirectory();
+			GeodatabaseType geodatabaseType = _geodatabase.GetGeodatabaseType();
+
+			return geodatabaseType == GeodatabaseType.FileSystem ||
+			       geodatabaseType == GeodatabaseType.LocalDatabase;
 		}
 
 		public bool Exists()
 		{
-			return _aoWorkspace.Exists();
+			Uri uri = _geodatabase.GetPath();
+
+			return Directory.Exists(uri.LocalPath);
 		}
 
 		public void ExecuteSql(string sqlStmt)
 		{
-			_aoWorkspace.ExecuteSQL(sqlStmt);
+			DatabaseClient.ExecuteStatement(_geodatabase, sqlStmt);
 		}
 
 		#endregion
@@ -80,13 +171,8 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public ITable OpenTable(string name)
 		{
-			EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ITable aoTable = _aoFeatureWorkspace.OpenTable(name);
-
-			var result = ToArcTable(aoTable);
-
-			return result;
+			return ArcUtils.ToArcTable(_geodatabase.OpenDataset<Table>(name));
 		}
-
 
 		//public ITable CreateTable(string Name, IFields Fields, UID CLSID, UID EXTCLSID, string ConfigKeyword)
 		//{
@@ -95,7 +181,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public IFeatureClass OpenFeatureClass(string name)
 		{
-			return (IFeatureClass)OpenTable(name);
+			return (IFeatureClass) OpenTable(name);
 		}
 
 		//public IFeatureClass CreateFeatureClass(string Name, IFields Fields, UID CLSID, UID EXTCLSID, esriFeatureType FeatureType,
@@ -104,31 +190,31 @@ namespace ESRI.ArcGIS.Geodatabase
 		//	return _aoFeatureWorkspace.CreateFeatureClass(Name, Fields, CLSID, EXTCLSID, FeatureType, ShapeFieldName, ConfigKeyword);
 		//}
 
-		public IFeatureDataset OpenFeatureDataset(string Name)
-		{
-			return _aoFeatureWorkspace.OpenFeatureDataset(Name);
-		}
+		//public IFeatureDataset OpenFeatureDataset(string name)
+		//{
+		//	return _geodatabase.OpenDataset<FeatureDataset>(name);
+		//}
 
-		public IFeatureDataset CreateFeatureDataset(string Name, ISpatialReference SpatialReference)
-		{
-			return _aoFeatureWorkspace.CreateFeatureDataset(Name, SpatialReference);
-		}
+		//public IFeatureDataset CreateFeatureDataset(string name, ISpatialReference spatialReference)
+		//{
+		//	return _aoFeatureWorkspace.CreateFeatureDataset(name, spatialReference);
+		//}
 
-		public IQueryDef CreateQueryDef()
-		{
-			return _aoFeatureWorkspace.CreateQueryDef();
-		}
+		//public IQueryDef CreateQueryDef()
+		//{
+		//	return _aoFeatureWorkspace.CreateQueryDef();
+		//}
 
-		public IFeatureDataset OpenFeatureQuery(string QueryName, IQueryDef QueryDef)
-		{
-			return _aoFeatureWorkspace.OpenFeatureQuery(QueryName, QueryDef);
-		}
+		//public IFeatureDataset OpenFeatureQuery(string queryName, IQueryDef queryDef)
+		//{
+		//	return _aoFeatureWorkspace.OpenFeatureQuery(queryName, queryDef);
+		//}
 
 		public IRelationshipClass OpenRelationshipClass(string name)
 		{
-			var aoRelClass = _aoFeatureWorkspace.OpenRelationshipClass(name);
+			var proRelClass = _geodatabase.OpenDataset<RelationshipClass>(name);
 
-			return new ArcRelationshipClass(aoRelClass);
+			return new ArcRelationshipClass(proRelClass);
 		}
 
 		//public IRelationshipClass CreateRelationshipClass(string relClassName, IObjectClass OriginClass, IObjectClass DestinationClass,
@@ -147,25 +233,46 @@ namespace ESRI.ArcGIS.Geodatabase
 			string targetColumns,
 			bool doNotPushJoinToDb)
 		{
-			var aoRelClass = ((ArcRelationshipClass)relClass).AoRelationshipClass;
-			var aoFilter = (srcQueryFilter as ArcQueryFilter)?.AoQueryFilter;
-			var aoSelectionSet = ((ArcSelectionSet)srcSelectionSet)?.AoSelectionSet;
+			var aoRelClass = ((ArcRelationshipClass)relClass).ProRelationshipClass;
+			var aoFilter = (srcQueryFilter as ArcQueryFilter)?.ProQueryFilter;
+			var aoSelectionSet = ((ArcSelectionSet)srcSelectionSet)?.ProSelection;
 
-			var aoTable = _aoFeatureWorkspace.OpenRelationshipQuery(aoRelClass, joinForward, aoFilter, aoSelectionSet,
-				targetColumns, doNotPushJoinToDb);
+			// TODO: Move RelationshipClassJoinDefinition from Commons.AO to some other namespace (Commons.GIS?).
+			//var joinDef = new RelationshipClassJoinDefinition(relationshipClass, joinType);
 
-			return ToArcTable(aoTable);
+			//bool ignoreFirstTable = tablesExpression.Length > 0;
+			//tablesExpression.Append(joinDef.GetTableJoinStatement(ignoreFirstTable));
+
+			//QueryDef queryDef = new QueryDef
+			//                    {
+			//	                    Tables = $@"{layer1Name} JOIN {layer2Name} on {layer1Name}.{layer1JoinColumnName} = {layer2Name}.{layer2JoinColumnName}",
+			//	                    SubFields = targetColumns
+			//                    };
+
+			//QueryTableDescription queryTableDescription = new QueryTableDescription(queryDef)
+			//                                              {
+			//	                                              Name = "JoinedPointLine",
+			//	                                              PrimaryKeys = geodatabase.GetSQLSyntax().QualifyColumnName(layer1Name, layer1JoinColumnName)
+			//                                              };
+
+			//Table queryTable = geodatabase.OpenQueryTable(queryTableDescription);
+
+
+			throw new NotImplementedException();
+
+
+
+
+			//QueryDescription queryDescription = new QueryDescription()
+
+			//var aoTable = _geodatabase.OpenQueryTable(
+			//	aoRelClass, joinForward, aoFilter, aoSelectionSet,
+			//	targetColumns, doNotPushJoinToDb);
+
+			//return ArcUtils.ToArcTable(aoTable);
 		}
 
 		#endregion
 
-
-		private static ITable ToArcTable(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ITable aoTable)
-		{
-			var result = aoTable is EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass
-				? (ITable)new ArcFeatureClass(featureClass)
-				: new ArcTable(aoTable);
-			return result;
-		}
 	}
 }

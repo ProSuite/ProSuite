@@ -1,53 +1,99 @@
-extern alias EsriGeodatabase;
-extern alias EsriSystem;
+using ArcGIS.Core.Data;
 using ESRI.ArcGIS.Geodatabase;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ProSuite.ArcGIS.Geodatabase.AO
 {
 	public class ArcSet : ISet
 	{
-		private readonly EsriSystem::ESRI.ArcGIS.esriSystem.ISet _aoSet;
+		private readonly List<Row> _proRowList;
+		private int _currentIndex;
 
-		public  ArcSet(EsriSystem::ESRI.ArcGIS.esriSystem.ISet aoSet)
+		public  ArcSet(IEnumerable<Row> rows)
 		{
-			_aoSet = aoSet;
+			_proRowList = rows.ToList();
 		}
 
-		public EsriSystem::ESRI.ArcGIS.esriSystem.ISet AoSet => _aoSet;
+		public ICollection<Row> ProRows => _proRowList;
 
 		#region Implementation of ISet
 
 		public void Add(object unk)
 		{
-			_aoSet.Add(unk);
+			_proRowList.Add((Row) unk);
 		}
 
 		public void Remove(object unk)
 		{
-			_aoSet.Remove(unk);
+			Row rowToRemove = (Row)unk;
+			long rowToRemoveOid = rowToRemove.GetObjectID();
+			long rowToRemoveTableId = rowToRemove.GetTable().GetID();
+
+			for (int i = 0; i < _proRowList.Count; i++)
+			{
+				Row item = _proRowList[i];
+
+				if (! IsSameRow(item, rowToRemoveOid, rowToRemoveTableId))
+				{
+					continue;
+				}
+
+				_proRowList.Remove(item);
+				
+			}
+		}
+
+		private static bool IsSameRow(Row rowToTest, long rowOid, long rowTableId)
+		{
+			if (rowOid != rowToTest.GetObjectID())
+			{
+				return false;
+			}
+
+			if (rowTableId != rowToTest.GetTable().GetID())
+			{
+				return false;
+			}
+
+			return true;
 		}
 
 		public void RemoveAll()
 		{
-			_aoSet.RemoveAll();
+			_proRowList.Clear();
 		}
 
-		public bool Find(object unk)
+		public object Find(object unk)
 		{
-			return _aoSet.Find(unk);
+			Row rowToFind = (Row)unk;
+
+			long objectIdToFind = rowToFind.GetObjectID();
+			long objectTableId = rowToFind.GetTable().GetID();
+
+			Row found = _proRowList.Find(row => IsSameRow(row, objectIdToFind, objectTableId));
+
+			if (found == null)
+			{
+				return null;
+			}
+
+			return ArcUtils.ToArcObject(found);
 		}
 
 		public object Next()
 		{
-			return _aoSet.Next();
+			return _currentIndex >= _proRowList.Count
+				       ? null
+				       : ArcUtils.ToArcObject(_proRowList[_currentIndex]);
 		}
 
 		public void Reset()
 		{
-			_aoSet.Reset();
+			_currentIndex = 0;
 		}
 
-		public int Count => _aoSet.Count;
+		public int Count => _proRowList.Count;
 
 		#endregion
 	}

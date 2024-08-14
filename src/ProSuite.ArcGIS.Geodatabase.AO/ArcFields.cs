@@ -1,123 +1,150 @@
-extern alias EsriGeodatabase;
-using EsriGeodatabase::ESRI.ArcGIS.Geodatabase;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.DDL;
 using ProSuite.ArcGIS.Geodatabase.AO;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using Field = ArcGIS.Core.Data.Field;
 
 namespace ESRI.ArcGIS.Geodatabase.AO
 {
 	public class ArcFields : IFields
 	{
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFields _aoFields;
+		private readonly IList<ArcField> _fields;
 
-		public ArcFields(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFields aoFields)
+		public ArcFields(IEnumerable<Field> fields, IGeometryDef geometryDefinition)
 		{
-			_aoFields = aoFields;
+			_fields = fields
+			          .Select(f => new ArcField(
+				                  f, f.FieldType == FieldType.Geometry ? geometryDefinition : null))
+			          .ToList();
 		}
 
-		public int FieldCount => _aoFields.FieldCount;
+		public int FieldCount => _fields.Count;
 
-		public IList<IField> Field => GetFields(_aoFields);
+		public IList<IField> Field => new ReadOnlyList<IField>(_fields.Cast<IField>().ToList());
 
 		public IField get_Field(int index)
 		{
-			return new ArcField(_aoFields.get_Field(index));
+			return _fields[index];
 		}
 
-		public int FindField(string Name)
+		public int FindField(string fieldName)
 		{
-			return _aoFields.FindField(Name);
+			return FindField(
+				f => f.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase));
 		}
 
-		public int FindFieldByAliasName(string Name)
+		public int FindFieldByAliasName(string aliasName)
 		{
-			return _aoFields.FindFieldByAliasName(Name);
+			return FindField(
+				f => f.AliasName.Equals(aliasName, StringComparison.OrdinalIgnoreCase));
 		}
 
-
-		/// <summary>
-		/// Gets the fields.
-		/// </summary>
-		/// <param name="fields">The fields.</param>
-		/// <returns></returns>
-		[NotNull]
-		public static IList<IField> GetFields([NotNull] EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFields fields)
+		private int FindField([NotNull] Predicate<IField> predicate)
 		{
-			Assert.ArgumentNotNull(fields, nameof(fields));
-
-			int fieldCount = fields.FieldCount;
-
-			var result = new List<IField>(fieldCount);
-
-			result.AddRange(EnumFields(fields).Select(f => new ArcField(f)));
-
-			return result;
-		}
-
-		[NotNull]
-		public static IEnumerable<EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField> EnumFields([NotNull] EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFields fields)
-		{
-			Assert.ArgumentNotNull(fields, nameof(fields));
-
-			int fieldCount = fields.FieldCount;
-
-			var result = new List<IField>(fieldCount);
-
-			for (var fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++)
+			for (int i = 0; i < _fields.Count; i++)
 			{
-				EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField field = fields.Field[fieldIndex];
+				ArcField field = _fields[i];
 
-				yield return field;
+				if (predicate(field))
+				{
+					return i;
+				}
 			}
+
+			return -1;
 		}
+
+
+		///// <summary>
+		///// Gets the fields.
+		///// </summary>
+		///// <param name="fields">The fields.</param>
+		///// <returns></returns>
+		//[NotNull]
+		//public static IList<IField> GetFields([NotNull] EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFields fields)
+		//{
+		//	Assert.ArgumentNotNull(fields, nameof(fields));
+
+		//	int fieldCount = fields.FieldCount;
+
+		//	var result = new List<IField>(fieldCount);
+
+		//	result.AddRange(EnumFields(fields).Select(f => new ArcField(f)));
+
+		//	return result;
+		//}
+
+		//[NotNull]
+		//public static IEnumerable<EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField> EnumFields([NotNull] EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFields fields)
+		//{
+		//	Assert.ArgumentNotNull(fields, nameof(fields));
+
+		//	int fieldCount = fields.FieldCount;
+
+		//	var result = new List<IField>(fieldCount);
+
+		//	for (var fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++)
+		//	{
+		//		EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField field = fields.Field[fieldIndex];
+
+		//		yield return field;
+		//	}
+		//}
 	}
 
 	public class ArcField : IField
 	{
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField _aoField;
+		private readonly Field _proField;
 
-		public ArcField(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField aoField)
+		public ArcField(Field proField, IGeometryDef geometryDefinition = null)
 		{
-			_aoField = aoField;
+			_proField = proField;
+
+			GeometryDef = geometryDefinition;
 		}
 
-		public EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField AoField => _aoField;
+		public Field ProField => _proField;
 
 		#region Implementation of IField
 
-		public string Name => _aoField.Name;
+		public string Name => _proField.Name;
 
-		public string AliasName => _aoField.AliasName;
+		public string AliasName => _proField.AliasName;
 
-		public esriFieldType Type => (esriFieldType)_aoField.Type;
+		public esriFieldType Type => (esriFieldType) _proField.FieldType;
 
-		public IDomain Domain => new ArcDomain(_aoField.Domain);
+		public IDomain Domain => new ArcDomain(_proField.GetDomain());
 
-		public object DefaultValue => _aoField.DefaultValue;
+		public object DefaultValue =>
+			_proField.HasDefaultValue ? _proField.GetDefaultValue() : null;
 
-		public int Length => _aoField.Length;
+		public int Length => _proField.Length;
 
-		public int Precision => _aoField.Precision;
+		public int Precision => _proField.Precision;
 
-		public int Scale => _aoField.Scale;
+		public int Scale => _proField.Scale;
 
-		public bool IsNullable => _aoField.IsNullable;
+		public bool IsNullable => _proField.IsNullable;
 
-		public IGeometryDef GeometryDef => new ArcGeometryDef(_aoField.GeometryDef);
+		public IGeometryDef GeometryDef { get; }
 
-		public int VarType => _aoField.VarType;
+		public int VarType => throw new NotImplementedException();
 
-		public bool DomainFixed => _aoField.DomainFixed;
+		public bool DomainFixed => _proField.IsDomainFixed;
 
-		public bool Required => _aoField.Required;
+		public bool Required => _proField.IsRequired;
 
-		public bool Editable => _aoField.Editable;
+		public bool Editable => _proField.IsEditable;
 
-		public bool CheckValue(object Value)
+		public bool CheckValue(object value)
 		{
-			return _aoField.CheckValue(Value);
+			throw new NotImplementedException();
 		}
 
 		#endregion
@@ -125,52 +152,67 @@ namespace ESRI.ArcGIS.Geodatabase.AO
 
 	public class ArcDomain : IDomain
 	{
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDomain _aoDomain;
+		private readonly Domain _proDomain;
 
-		public ArcDomain(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDomain aoDomain)
+		public ArcDomain(Domain proDomain)
 		{
-			_aoDomain = aoDomain;
+			_proDomain = proDomain;
 		}
 
 		#region Implementation of IDomain
 
+		//public int DomainID
+		//{
+		//	get => _proDomain.DomainID;
+		//	set => _proDomain.DomainID = value;
+		//}
+
 		public int DomainID
 		{
-			get => _aoDomain.DomainID;
-			set => _aoDomain.DomainID = value;
+			get => throw new System.NotImplementedException();
+			set => throw new System.NotImplementedException();
 		}
 
 		public string Description
 		{
-			get => _aoDomain.Description;
-			set => _aoDomain.Description = value;
+			get => _proDomain.GetDescription();
+			set => throw new NotImplementedException();
 		}
 
 		public esriFieldType FieldType
 		{
-			get => (esriFieldType)_aoDomain.FieldType;
-			set => _aoDomain.FieldType = (EsriGeodatabase::ESRI.ArcGIS.Geodatabase.esriFieldType)value;
+			get => (esriFieldType)_proDomain.GetFieldType();
+			set => throw new NotImplementedException();
 		}
 
-		public esriMergePolicyType MergePolicy { get; set; }
+		public esriMergePolicyType MergePolicy
+		{
+			get => (esriMergePolicyType)_proDomain.MergePolicy;
+			set => throw new NotImplementedException();
+		}
 
-		public esriSplitPolicyType SplitPolicy { get; set; }
+		public esriSplitPolicyType SplitPolicy
+		{
+			get => (esriSplitPolicyType)_proDomain.SplitPolicy;
+			set => throw new NotImplementedException();
+		}
 
 		public string Name
 		{
-			get => _aoDomain.Name;
-			set => _aoDomain.Name = value;
+			get => _proDomain.GetName();
+			set => throw new NotImplementedException();
 		}
 
 		public string Owner
 		{
-			get => _aoDomain.Owner;
-			set => _aoDomain.Owner = value;
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
-		public bool MemberOf(object Value)
+		public bool MemberOf(object value)
 		{
-			return _aoDomain.MemberOf(Value);
+			throw new NotImplementedException();
+			//return _proDomain.MemberOf(value);
 		}
 
 		#endregion

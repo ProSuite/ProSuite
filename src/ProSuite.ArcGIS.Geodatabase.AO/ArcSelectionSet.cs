@@ -1,5 +1,6 @@
-extern alias EsriGeodatabase;
+using System;
 using System.Collections.Generic;
+using ArcGIS.Core.Data;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geodatabase.AO;
 
@@ -7,78 +8,82 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 {
 	public class ArcSelectionSet : ISelectionSet
 	{
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ISelectionSet _aoSelectionSet;
+		private readonly Selection _proSelection;
+		private readonly Table _proTargetTable;
 
-		public ArcSelectionSet(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ISelectionSet aoSelectionSet)
+		public ArcSelectionSet(Selection proSelection, Table proTargetTable)
 		{
-			_aoSelectionSet = aoSelectionSet;
+			_proSelection = proSelection;
+			_proTargetTable = proTargetTable;
 		}
 
-		public EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ISelectionSet AoSelectionSet => _aoSelectionSet;
+		public Selection ProSelection => _proSelection;
 
 		#region Implementation of ISelectionSet
 
-		public IName FullName => new ArcName(_aoSelectionSet.FullName);
+		public IName FullName => new ArcName(ArcUtils.ToArcTable(_proTargetTable));
 
-		public ITable Target => ArcUtils.ToArcTable(_aoSelectionSet.Target);
+		public ITable Target => ArcUtils.ToArcTable(_proTargetTable);
 
 		public void MakePermanent()
 		{
-			_aoSelectionSet.MakePermanent();
+			throw new NotImplementedException();
+			//_proSelection.MakePermanent();
 		}
 
-		public long Count => _aoSelectionSet.Count;
+		public long Count => _proSelection.GetCount();
 
 		public void Add(long oid)
 		{
-			_aoSelectionSet.Add(oid);
+			_proSelection.Add(new[] { oid });
 		}
 
 		public void AddList(long count, ref long oidList)
 		{
-			_aoSelectionSet.AddList(count, ref oidList);
+			throw new NotImplementedException();
+			//_proSelection.AddList(count, ref oidList);
 		}
 
-		public void Combine(ISelectionSet otherSet, esriSetOperation setOp, out ISelectionSet resultSet)
+		public void Combine(ISelectionSet otherSet, esriSetOperation setOp,
+		                    out ISelectionSet resultSet)
 		{
-			((ArcSelectionSet)otherSet).AoSelectionSet.Combine(
-				_aoSelectionSet, (EsriGeodatabase::ESRI.ArcGIS.Geodatabase.esriSetOperation)setOp,
-				out var aoResultSet);
+			Selection proResultSelection = ((ArcSelectionSet) otherSet).ProSelection.Combine(
+				_proSelection, (SetOperation) setOp);
 
-			resultSet = new ArcSelectionSet(aoResultSet);
+			resultSet = new ArcSelectionSet(proResultSelection, _proTargetTable);
 		}
 
 		public void Search(IQueryFilter queryFilter, bool recycling, out IEnumerable<IRow> result)
 		{
-			var aoQueryFilter = ((ArcQueryFilter)queryFilter).AoQueryFilter;
+			var aoQueryFilter = ((ArcQueryFilter) queryFilter).ProQueryFilter;
 
-			_aoSelectionSet.Search(aoQueryFilter, recycling, out var aoCursor);
+			RowCursor rowCursor = _proSelection.Search(aoQueryFilter, recycling);
 
-			result = ArcUtils.GetArcRows(aoCursor);
+			result = ArcUtils.GetArcRows(rowCursor);
 		}
 
-		public ISelectionSet Select(IQueryFilter queryFilter, esriSelectionType selType, esriSelectionOption selOption,
-			IWorkspace selectionContainer)
+		public ISelectionSet Select(IQueryFilter queryFilter, esriSelectionType selType,
+		                            esriSelectionOption selOption,
+		                            IWorkspace selectionContainer)
 		{
-			var aoQueryFilter = ((ArcQueryFilter)queryFilter).AoQueryFilter;
-			var aoWorkspace = ((ArcWorkspace)selectionContainer).AoWorkspace;
+			var aoQueryFilter = ((ArcQueryFilter) queryFilter).ProQueryFilter;
 
-			var aoSelectionSet = _aoSelectionSet.Select(
-				aoQueryFilter,
-				(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.esriSelectionType)selType,
-				(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.esriSelectionOption)selOption, aoWorkspace);
+			var aoSelectionSet = _proSelection.Select(
+				aoQueryFilter, (SelectionOption) selOption);
 
-			return new ArcSelectionSet(aoSelectionSet);
+			return new ArcSelectionSet(aoSelectionSet, _proTargetTable);
 		}
 
 		public void Refresh()
 		{
-			_aoSelectionSet.Refresh();
+			throw new NotImplementedException();
+			//_proSelection.Refresh();
 		}
 
 		public void RemoveList(long count, ref long oidList)
 		{
-			_aoSelectionSet.RemoveList(count, ref oidList);
+			throw new NotImplementedException();
+			//_proSelection.Remove(count, ref oidList);
 		}
 
 		#endregion

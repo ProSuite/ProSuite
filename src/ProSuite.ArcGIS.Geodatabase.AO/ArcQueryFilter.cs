@@ -1,39 +1,47 @@
-extern alias EsriGeodatabase;
-
 using System;
+using ArcGIS.Core.Data;
 using ESRI.ArcGIS.Geometry;
 
 namespace ESRI.ArcGIS.Geodatabase.AO
 {
 	public class ArcQueryFilter : IQueryFilter
 	{
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IQueryFilter _aoQueryFilter;
+		private readonly QueryFilter _proQueryFilter;
 
-		public ArcQueryFilter(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IQueryFilter aoQueryFilter)
+		public ArcQueryFilter(QueryFilter proQueryFilter)
 		{
-			_aoQueryFilter = aoQueryFilter;
+			_proQueryFilter = proQueryFilter;
 		}
 
-		public EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IQueryFilter AoQueryFilter
-			=> _aoQueryFilter;
+		public QueryFilter ProQueryFilter => _proQueryFilter;
 
 		#region Implementation of IQueryFilter
 
 		public string SubFields
 		{
-			get => _aoQueryFilter.SubFields;
-			set => _aoQueryFilter.SubFields = value;
+			get => _proQueryFilter.SubFields;
+			set => _proQueryFilter.SubFields = value;
 		}
 
 		public void AddField(string subField)
 		{
-			_aoQueryFilter.AddField(subField);
+			string trimmed = subField.Trim();
+
+			if (string.IsNullOrEmpty(_proQueryFilter.SubFields))
+			{
+				// This changes the meaning!?
+				_proQueryFilter.SubFields = trimmed;
+			}
+			else
+			{
+				_proQueryFilter.SubFields += ", " + trimmed;
+			}
 		}
 
 		public string WhereClause
 		{
-			get => _aoQueryFilter.WhereClause;
-			set => _aoQueryFilter.WhereClause = value;
+			get => _proQueryFilter.WhereClause;
+			set => _proQueryFilter.WhereClause = value;
 		}
 
 		public ISpatialReference get_OutputSpatialReference(string fieldName)

@@ -1,96 +1,122 @@
-extern alias EsriGeodatabase;
-extern alias EsriGeometry;
+using System;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.DDL;
 using ESRI.ArcGIS.Geodatabase.AO;
-using EsriGeodatabase::ESRI.ArcGIS.Geodatabase;
-
-using EsriGeometry::ESRI.ArcGIS.Geometry;
-using ProSuite.ArcGIS.Geometry.AO;
-using ArcEnvelope = ESRI.ArcGIS.Geometry.ArcEnvelope;
-using ArcGeometry = ESRI.ArcGIS.Geometry.ArcGeometry;
+using ESRI.ArcGIS.Geometry;
+using ProSuite.ArcGIS.Geodatabase.AO;
 
 namespace ESRI.ArcGIS.Geodatabase
 {
-	extern alias EsriGeometry;
 
 	public class ArcRow : IObject
 	{
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObject _aoObject;
+		private readonly Row _proRow;
+		private readonly ITable _parentTable;
 
-		public ArcRow(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRow aoObject)
-		: this((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObject)aoObject)
-		{ }
-
-		public ArcRow(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObject aoObject)
+		public ArcRow(Row proRow, ITable parentTable)
 		{
-			_aoObject = aoObject;
+			_proRow = proRow;
+			_parentTable = parentTable;
 		}
 
-		public EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObject AoObject => _aoObject;
+		public Row ProRow => _proRow;
 
 		#region Implementation of IRowBuffer
 
-		public object get_Value(int Index)
+		public object get_Value(int index)
 		{
-			return _aoObject.get_Value(Index);
+			return _proRow[index];
 		}
 
-		public void set_Value(int Index, object Value)
+		public void set_Value(int index, object value)
 		{
-			_aoObject.set_Value(Index, Value);
+			_proRow[index] = value;
 		}
 
-		public IFields Fields => new ArcFields(_aoObject.Fields);
+		public IFields Fields =>
+			new ArcFields(_proRow.GetFields(), new ArcGeometryDef(GetShapeDescription()));
+
+		private ShapeDescription GetShapeDescription()
+		{
+			FeatureClass featureClass = _proRow.GetTable() as FeatureClass;
+
+			if (featureClass == null)
+			{
+				return null;
+			}
+
+			FeatureClassDefinition classDefinition = featureClass.GetDefinition();
+
+			return new ShapeDescription(classDefinition);
+		}
 
 		#endregion
 
 		#region Implementation of IRow
 
-		public bool HasOID => _aoObject.HasOID;
+		// TODO: Discuss this
+		//public bool HasOID => _proRow.HasOID;
+		public bool HasOID => throw new NotImplementedException();
 
-		public long OID => _aoObject.OID;
+		public long OID => _proRow.GetObjectID();
 
-		public ITable Table => new ArcTable(_aoObject.Table);
+		public ITable Table => new ArcTable(_proRow.GetTable());
 
 		public void Store()
 		{
-			_aoObject.Store();
+			_proRow.Store();
 		}
 
 		public void Delete()
 		{
-			_aoObject.Delete();
+			_proRow.Delete();
 		}
 
 		#endregion
 
 		#region Implementation of IObject
 
-		public IObjectClass Class => new ArcTable(_aoObject.Table);
+		public IObjectClass Class => new ArcTable(_proRow.GetTable());
 
 		#endregion
 	}
 
 	public class ArcFeature : ArcRow, IFeature
 	{
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeature _aoFeature;
+		private readonly Feature _proFeature;
 
-		public ArcFeature(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeature aoFeature)
-			: base(aoFeature)
+		public ArcFeature(Feature proFeature, IFeatureClass parentClass)
+			: base(proFeature, parentClass as ITable)
 		{
-			_aoFeature = aoFeature;
+			_proFeature = proFeature;
 		}
 
 		#region Implementation of IFeature
 
-		public ESRI.ArcGIS.Geometry.IGeometry ShapeCopy => new ArcGeometry(_aoFeature.ShapeCopy);
-
-		public ESRI.ArcGIS.Geometry.IGeometry Shape
+		public IGeometry ShapeCopy
 		{
-			get => new ArcGeometry(_aoFeature.Shape);
-			set => _aoFeature.Shape = ((ArcGeometry)value).AoGeometry;
+			get
+			{
+				global::ArcGIS.Core.Geometry.Geometry clone = _proFeature.GetShape().Clone();
+				return new ArcGeometry(clone);
+			}
 		}
 
-		public ESRI.ArcGIS.Geometry.IEnvelope Extent => new ArcEnvelope(_aoFeature.Extent);
+		public IGeometry Shape
+		{
+			get => new ArcGeometry(_proFeature.GetShape());
+			set => _proFeature.SetShape(((ArcGeometry) value).ProGeometry);
+		}
+
+		public IEnvelope Extent
+		{
+			get
+			{
+				global::ArcGIS.Core.Geometry.Geometry geometry = _proFeature.GetShape();
+
+				return new ArcEnvelope(geometry.Extent);
+			}
+		}
 
 		#endregion
 	}

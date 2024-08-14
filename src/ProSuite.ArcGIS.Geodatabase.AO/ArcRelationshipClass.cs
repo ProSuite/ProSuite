@@ -1,179 +1,327 @@
-extern alias EsriGeodatabase;
-extern alias EsriSystem;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using ArcGIS.Core.Data;
 using ProSuite.ArcGIS.Geodatabase.AO;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ESRI.ArcGIS.Geodatabase
 {
 	public class ArcRelationshipClass : IRelationshipClass
 	{
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRelationshipClass _aoRelationshipClass;
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset _aoDataset;
+		private readonly RelationshipClass _proRelationshipClass;
+		private readonly RelationshipClassDefinition _proRelationshipClassDefinition;
 
-		public ArcRelationshipClass(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRelationshipClass aoRelationshipClass)
+		public ArcRelationshipClass(RelationshipClass proRelationshipClass)
 		{
-			_aoRelationshipClass = aoRelationshipClass;
-			_aoDataset = (EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset)aoRelationshipClass;
+			_proRelationshipClass = proRelationshipClass;
+			_proRelationshipClassDefinition = proRelationshipClass.GetDefinition();
 		}
 
-		public EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRelationshipClass AoRelationshipClass => _aoRelationshipClass;
+		public RelationshipClass ProRelationshipClass => _proRelationshipClass;
 
 		#region Implementation of IRelationshipClass
 
-		public string OriginPrimaryKey => _aoRelationshipClass.OriginPrimaryKey;
+		public string OriginPrimaryKey => _proRelationshipClassDefinition.GetOriginKeyField();
 
-		public string DestinationPrimaryKey => _aoRelationshipClass.DestinationPrimaryKey;
+		public string DestinationPrimaryKey
+		{
+			get
+			{
+				if (_proRelationshipClassDefinition is
+				    AttributedRelationshipClassDefinition attributedRelClass)
+				{
+					return attributedRelClass.GetDestinationKeyField();
+				}
 
-		public string OriginForeignKey => _aoRelationshipClass.OriginForeignKey;
+				throw new InvalidOperationException(
+					"Only attributed (m:n) relationship classes have a destination key field");
+			}
+		}
 
-		public string DestinationForeignKey => _aoRelationshipClass.DestinationForeignKey;
+		public string OriginForeignKey =>
+			_proRelationshipClassDefinition.GetOriginForeignKeyField();
 
-		public int RelationshipClassID => _aoRelationshipClass.RelationshipClassID;
+		public string DestinationForeignKey
+		{
+			get
+			{
+				if (_proRelationshipClassDefinition is
+				    AttributedRelationshipClassDefinition attributedRelClass)
+				{
+					return attributedRelClass.GetDestinationForeignKeyField();
+				}
 
-		public IObjectClass OriginClass => ToArcTable(_aoRelationshipClass.OriginClass);
+				throw new InvalidOperationException(
+					"Only attributed (m:n) relationship classes have a destination foreign key field");
+			}
+		}
 
-		public IObjectClass DestinationClass => ToArcTable(_aoRelationshipClass.DestinationClass);
+		public long RelationshipClassID => _proRelationshipClass.GetID();
 
-		public string ForwardPathLabel => _aoRelationshipClass.ForwardPathLabel;
+		public IObjectClass OriginClass
+		{
+			get
+			{
+				global::ArcGIS.Core.Data.Geodatabase geodatabase =
+					_proRelationshipClass.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase;
 
-		public string BackwardPathLabel => _aoRelationshipClass.BackwardPathLabel;
+				Assert.NotNull(geodatabase, "No geodatabase could be retrieved from rel class");
 
-		public esriRelCardinality Cardinality => (esriRelCardinality)_aoRelationshipClass.Cardinality;
+				string originClassName = _proRelationshipClassDefinition.GetOriginClass();
 
-		public bool IsAttributed => _aoRelationshipClass.IsAttributed;
+				Table originClass = geodatabase.OpenDataset<Table>(originClassName);
 
-		public bool IsComposite => _aoRelationshipClass.IsComposite;
+				return (IObjectClass) ArcUtils.ToArcTable(originClass);
+			}
+		}
+
+		public IObjectClass DestinationClass
+		{
+			get
+			{
+				global::ArcGIS.Core.Data.Geodatabase geodatabase =
+					_proRelationshipClass.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase;
+
+				Assert.NotNull(geodatabase, "No geodatabase could be retrieved from rel class");
+
+				string destinationClassName = _proRelationshipClassDefinition.GetDestinationClass();
+
+				Table destinationClass = geodatabase.OpenDataset<Table>(destinationClassName);
+
+				return (IObjectClass) ArcUtils.ToArcTable(destinationClass);
+			}
+		}
+
+		public string ForwardPathLabel => _proRelationshipClassDefinition.GetForwardPathLabel();
+
+		public string BackwardPathLabel => _proRelationshipClassDefinition.GetBackwardPathLabel();
+
+		public esriRelCardinality Cardinality =>
+			(esriRelCardinality) _proRelationshipClassDefinition.GetCardinality();
+
+		public bool IsAttributed =>
+			_proRelationshipClassDefinition is AttributedRelationshipClassDefinition;
+
+		public bool IsComposite => _proRelationshipClassDefinition.IsComposite();
 
 		public IRelationship CreateRelationship(IObject originObject, IObject destinationObject)
 		{
-			ArcRow arcOriginObj = (ArcRow)originObject;
-			ArcRow arcDestinationObj = (ArcRow)destinationObject;
+			ArcRow arcOriginObj = (ArcRow) originObject;
+			ArcRow arcDestinationObj = (ArcRow) destinationObject;
 
 			var aoRelationship =
-				_aoRelationshipClass.CreateRelationship(arcOriginObj.AoObject, arcDestinationObj.AoObject);
+				_proRelationshipClass.CreateRelationship(arcOriginObj.ProRow,
+				                                         arcDestinationObj.ProRow);
 
-			return new ArcRelationship(aoRelationship);
+			return new ArcRelationship(aoRelationship, _proRelationshipClass);
 		}
 
 		public IRelationship GetRelationship(IObject originObject, IObject destinationObject)
 		{
-			var aoOriginObj = ((ArcRow)originObject).AoObject;
-			var aoDestinationObj = ((ArcRow)destinationObject).AoObject;
+			throw new NotImplementedException();
 
-			return new ArcRelationship(_aoRelationshipClass.GetRelationship(aoOriginObj, aoDestinationObj));
+			var aoOriginObj = ((ArcRow) originObject).ProRow;
+			var aoDestinationObj = ((ArcRow) destinationObject).ProRow;
+
+			// TODO: Is this the correct way to get an existing relationship?
+			Relationship relationship =
+				_proRelationshipClass.CreateRelationship(aoOriginObj, aoDestinationObj);
+
+			return new ArcRelationship(originObject, destinationObject, _proRelationshipClass);
 		}
 
 		public void DeleteRelationship(IObject originObject, IObject destinationObject)
 		{
-			var aoOriginObj = ((ArcRow)originObject).AoObject;
-			var aoDestinationObj = ((ArcRow)destinationObject).AoObject;
+			var originRow = ((ArcRow) originObject).ProRow;
+			var destinationRow = ((ArcRow) destinationObject).ProRow;
 
-			_aoRelationshipClass.DeleteRelationship(aoOriginObj, aoDestinationObj);
+			_proRelationshipClass.DeleteRelationship(originRow, destinationRow);
 		}
 
 		public ISet GetObjectsRelatedToObject(IObject anObject)
 		{
-			var aoObject = ((ArcRow)anObject).AoObject;
+			long sourceOid = anObject.OID;
+			string sourceClassName = anObject.Class.Name;
 
-			EsriSystem::ESRI.ArcGIS.esriSystem.ISet aoSet = _aoRelationshipClass.GetObjectsRelatedToObject(aoObject);
+			IEnumerable<Row> relatedObjects = GetRelatedObjects(sourceOid, sourceClassName);
 
-			return new ArcSet(aoSet);
+			return new ArcSet(relatedObjects);
 		}
 
 		public void DeleteRelationshipsForObject(IObject anObject)
 		{
-			var aoObject = ((ArcRow)anObject).AoObject;
+			//long sourceOid = anObject.OID;
+			//string sourceClassName = anObject.Class.Name;
 
-			_aoRelationshipClass.DeleteRelationshipsForObject(aoObject);
+			ArcRow sourceRow = (ArcRow) anObject;
+
+			Row sourceRowProRow = sourceRow.ProRow;
+
+			DeleteRelationshipsFor(sourceRowProRow);
+		}
+
+		private void DeleteRelationshipsFor(Row sourceRow)
+		{
+			string sourceClassName = sourceRow.GetTable().GetName();
+
+			foreach (Row relatedRow in GetRelatedObjects(sourceRow.GetObjectID(), sourceClassName))
+			{
+				if (sourceClassName == _proRelationshipClassDefinition.GetOriginClass())
+				{
+					_proRelationshipClass.DeleteRelationship(sourceRow, relatedRow);
+				}
+				else
+				{
+					Assert.True(
+						sourceClassName == _proRelationshipClassDefinition.GetDestinationClass(),
+						"Object is neither origin nor destination of relationship class");
+
+					_proRelationshipClass.DeleteRelationship(relatedRow, sourceRow);
+				}
+			}
 		}
 
 		public ISet GetObjectsRelatedToObjectSet(ISet anObjectSet)
 		{
-			var aoInputSet = ((ArcSet)anObjectSet).AoSet;
+			if (anObjectSet.Count == 0)
+			{
+				return new ArcSet(new List<Row>());
+			}
 
-			EsriSystem::ESRI.ArcGIS.esriSystem.ISet aoSet =
-				_aoRelationshipClass.GetObjectsRelatedToObjectSet(aoInputSet);
+			ICollection<Row> proRows = ((ArcSet) anObjectSet).ProRows;
 
-			return new ArcSet(aoSet);
+			List<long> objectIds = proRows.Select(row => row.GetObjectID())
+			                              .ToList();
+
+			string sourceClassName = proRows.Select(r => r.GetTable().GetName()).First();
+
+			IEnumerable<Row> relatedObjects = GetRelatedObjects(objectIds, sourceClassName);
+
+			return new ArcSet(relatedObjects);
 		}
 
 		public void DeleteRelationshipsForObjectSet(ISet anObjectSet)
 		{
-			var aoInputSet = ((ArcSet)anObjectSet).AoSet;
+			if (anObjectSet.Count == 0)
+			{
+				return;
+			}
 
-			_aoRelationshipClass.DeleteRelationshipsForObjectSet(aoInputSet);
+			ICollection<Row> proRows = ((ArcSet) anObjectSet).ProRows;
+
+			foreach (Row proRow in proRows)
+			{
+				DeleteRelationshipsFor(proRow);
+			}
+
+			//List<long> objectIds = proRows.Select(row => row.GetObjectID())
+			//                              .ToList();
+
+			//string sourceClassName = proRows.Select(r => r.GetTable().GetName()).First();
+
+			//IEnumerable<Row> relatedObjects = GetRelatedObjects(objectIds, sourceClassName);
+
+			//foreach (Row relatedObject in relatedObjects)
+			//{
+			//	DeleteRelationshipsForObject();
+			//}
+
+			//_proRelationshipClass.DeleteRelationship(aoInputSet);
 		}
 
 		#endregion
 
-		private static IObjectClass ToArcTable(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObjectClass aoTable)
+		private IEnumerable<Row> GetRelatedObjects(long sourceOid, string sourceClassName)
 		{
-			var result = aoTable is EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass
-				? new ArcFeatureClass(featureClass)
-				: (IObjectClass)new ArcTable((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ITable)aoTable);
+			return GetRelatedObjects(new[] { sourceOid }, sourceClassName);
+		}
 
-			return result;
+		private IEnumerable<Row> GetRelatedObjects([NotNull] IEnumerable<long> sourceOids,
+		                                           [NotNull] string sourceClassName)
+		{
+			IReadOnlyList<Row> relatedObjects;
+
+			if (sourceClassName == _proRelationshipClassDefinition.GetOriginClass())
+			{
+				relatedObjects =
+					_proRelationshipClass.GetRowsRelatedToOriginRows(sourceOids);
+			}
+			else
+			{
+				Assert.True(
+					sourceClassName == _proRelationshipClassDefinition.GetDestinationClass(),
+					"Object is neither origin nor destination of relationship class");
+
+				relatedObjects =
+					_proRelationshipClass.GetRowsRelatedToDestinationRows(sourceOids);
+			}
+
+			return relatedObjects;
 		}
 
 		#region Implementation of IDataset
 
-		public string Name => _aoDataset.Name;
+		public string Name => _proRelationshipClassDefinition.GetName();
 
-		public IName FullName => new ArcName(_aoDataset.FullName);
+		public IName FullName => new ArcName(this);
 
 		public string BrowseName
 		{
-			get => _aoDataset.BrowseName;
-			set => _aoDataset.BrowseName = value;
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
-		public esriDatasetType Type => (esriDatasetType)_aoDataset.Type;
+		public esriDatasetType Type => esriDatasetType.esriDTRelationshipClass;
 
-		public string Category => _aoDataset.Category;
+		public string Category => throw new NotImplementedException();
 
 		public IEnumerable<IDataset> Subsets
 		{
 			get
 			{
-				EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IEnumDataset enumDataset =
-					_aoDataset.Subsets;
+				throw new NotImplementedException();
 
-				EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset dataset;
-				while ((dataset = enumDataset.Next()) != null)
-				{
-					yield return dataset is EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureClass
-						             ? new ArcFeatureClass((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureClass)dataset)
-						             : new ArcTable((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ITable)dataset);
-				}
+				//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IEnumDataset enumDataset =
+				//	_aoDataset.Subsets;
 
+				//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset dataset;
+				//while ((dataset = enumDataset.Next()) != null)
+				//{
+				//	yield return dataset is EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureClass
+				//		             ? new ArcFeatureClass((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureClass)dataset)
+				//		             : new ArcTable((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ITable)dataset);
+				//}
 			}
 		}
 
-		public IWorkspace Workspace => new ArcWorkspace(_aoDataset.Workspace);
+		public IWorkspace Workspace => new ArcWorkspace(
+			(global::ArcGIS.Core.Data.Geodatabase) _proRelationshipClass.GetDatastore());
 
 		public bool CanCopy()
 		{
-			return _aoDataset.CanCopy();
+			return false;
 		}
 
 		public bool CanDelete()
 		{
-			return _aoDataset.CanDelete();
+			return false;
 		}
 
 		public void Delete()
 		{
-			_aoDataset.Delete();
+			throw new NotImplementedException();
 		}
 
 		public bool CanRename()
 		{
-			return _aoDataset.CanRename();
+			return false;
 		}
 
-		public void Rename(string Name)
+		public void Rename(string name)
 		{
-			_aoDataset.Rename(Name);
+			throw new NotImplementedException();
 		}
 
 		#endregion

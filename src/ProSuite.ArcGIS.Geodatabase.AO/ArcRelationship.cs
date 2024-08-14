@@ -1,35 +1,49 @@
-extern alias EsriGeodatabase;
+using ArcGIS.Core.Data;
+using ProSuite.ArcGIS.Geodatabase.AO;
+
 namespace ESRI.ArcGIS.Geodatabase
 {
 	public class ArcRelationship : IRelationship
 	{
-		private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRelationship _relationship;
+		private readonly Relationship _relationship;
+		private readonly IObject _originRow;
+		private readonly IObject _destinationRow;
+		private readonly RelationshipClass _relationshipClass;
 
-		public ArcRelationship(EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRelationship relationship)
+		public ArcRelationship(Relationship relationship,
+		                       RelationshipClass relationshipClass)
 		{
 			_relationship = relationship;
+
+			_relationshipClass = relationshipClass;
+		}
+
+		public ArcRelationship(IObject originRow,
+		                       IObject destinationRow,
+		                       RelationshipClass relationshipClass)
+		{
+			_originRow = originRow;
+			_destinationRow = destinationRow;
+
+			_relationshipClass = relationshipClass;
 		}
 
 		#region Implementation of IRelationship
 
-		public IRelationshipClass RelationshipClass
-		{
-			get
-			{
-				var aoRelClass = _relationship.RelationshipClass;
-				return new ArcRelationshipClass(aoRelClass);
-			}
-		}
+		public IRelationshipClass RelationshipClass => new ArcRelationshipClass(_relationshipClass);
 
 		public IObject OriginObject
 		{
 			get
 			{
-				var aoOriginObj = _relationship.OriginObject;
+				if (_originRow != null)
+				{
+					return _originRow;
+				}
 
-				return aoOriginObj is EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeature aoFeature
-					? new ArcFeature(aoFeature)
-					: new ArcRow(aoOriginObj);
+				Row row = _relationship.GetOriginRow();
+
+				return (IObject) ArcUtils.ToArcObject(row);
 			}
 		}
 
@@ -37,11 +51,14 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			get
 			{
-				var aoDestinationObj = _relationship.DestinationObject;
+				if (_destinationRow != null)
+				{
+					return _destinationRow;
+				}
 
-				return aoDestinationObj is EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeature aoFeature
-					? new ArcFeature(aoFeature)
-					: new ArcRow(aoDestinationObj);
+				Row row = _relationship.GetDestinationRow();
+
+				return (IObject) ArcUtils.ToArcObject(row);
 			}
 		}
 

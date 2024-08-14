@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -13,6 +13,15 @@
   </ItemGroup>
 
   <ItemGroup>
+
+    <Reference Include="ArcGIS.Core">
+      <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!--<ItemGroup>
     <Reference Include="ESRI.ArcGIS.System, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).System.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
@@ -28,6 +37,6 @@
       <SpecificVersion>False</SpecificVersion>
       <Aliases>EsriGeometry</Aliases>
     </Reference>
-  </ItemGroup>
+  </ItemGroup>-->
 
 </Project>
