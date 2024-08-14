@@ -313,6 +313,37 @@ namespace ProSuite.DomainModel.AO.QA
 				throw new InvalidOperationException(sb.ToString(), e);
 			}
 		}
+
+		public static ITableTransformer CreateTransformer(
+			[NotNull] TransformerConfiguration transformerConfiguration,
+			[NotNull] IOpenDataset datasetContext)
+		{
+			try
+			{
+				TransformerFactory factory =
+					InstanceFactoryUtils.CreateTransformerFactory(transformerConfiguration);
+
+				if (factory == null)
+				{
+					throw new ArgumentException(
+						$"Unable to create TransformerFactory for {transformerConfiguration}");
+				}
+
+				ITableTransformer transformer =
+					factory.Create(datasetContext, transformerConfiguration);
+				transformer.TransformerName = transformerConfiguration.Name;
+
+				return transformer;
+			}
+			catch (Exception e)
+			{
+				StringBuilder sb =
+					InstanceFactoryUtils.GetErrorMessageWithDetails(transformerConfiguration, e);
+
+				throw new InvalidOperationException(sb.ToString(), e);
+			}
+		}
+
 		public static string GetDefaultDescriptorName([NotNull] Type instanceType,
 		                                              int constructorIndex)
 		{
