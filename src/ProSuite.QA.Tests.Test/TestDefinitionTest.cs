@@ -3350,6 +3350,162 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
+		private record ifDefinitionCase(
+			Type IssueFilterType,
+			int ConstructorIndex = -1,
+			object[] ConstructorValues = null,
+			Dictionary<string, object> OptionalParamValues = null);
+
+		[Test]
+		public void AreIssueFilterParametersEqual()
+		{
+			var model = new InMemoryTestDataModel("simple model");
+
+			var ifCases = new List<ifDefinitionCase>();
+
+			// Issue Filter cases with automatic parameter value generation:
+			ifCases.AddRange(CreateDefaultValueIssueFilterCases(typeof(IfIntersecting)));
+			ifCases.AddRange(CreateDefaultValueIssueFilterCases(typeof(IfNear)));
+			ifCases.AddRange(CreateDefaultValueIssueFilterCases(typeof(IfWithin)));
+
+			//
+			// Special Cases
+			//
+			// Manually create values for special cases, such as optional parameters or
+			// difficult assertions:
+			AddIfAllCases(model, ifCases);
+			//AddIfInvolvedRowsCases(model, ifCases);
+
+			foreach (ifDefinitionCase ifCase in ifCases)
+			{
+				Type issueFilterType = ifCase.IssueFilterType;
+				int constructorIdx = ifCase.ConstructorIndex;
+
+				Console.WriteLine("Checking constructor index {0} for issue filter {1}",
+				                  constructorIdx,
+				                  issueFilterType.Name);
+
+				object[] constructorValues = ifCase.ConstructorValues;
+
+				// Optional parameters Name-Value pairs, null if not specified (or no optional parameters):
+				Dictionary<string, object>
+					optionalParamValues = ifCase.OptionalParamValues;
+
+				IssueFilterDescriptor ifDescriptor =
+					CreateIssueFilterDescriptor(issueFilterType, constructorIdx);
+
+				ClassDescriptor classDescriptor = ifDescriptor.Class;
+				Assert.NotNull(classDescriptor);
+
+				IssueFilterFactory ifDefinitionFactory =
+					InstanceFactoryUtils.GetIssueFilterDefinitionFactory(ifDescriptor);
+
+				Assert.NotNull(ifDefinitionFactory);
+
+				bool hasAlgorithmDefinition =
+					InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+						classDescriptor, out Type definitionType);
+
+				Assert.IsTrue(hasAlgorithmDefinition,
+				              $"{ifCase.IssueFilterType.Name} has no IssueFilterDefinition class");
+
+				IssueFilterDescriptor ifDefinitionDescriptor =
+					CreateIssueFilterDescriptor(definitionType, constructorIdx);
+
+				// Initialize the configurations for both the definition and the implementation:
+				IssueFilterConfiguration ifDefinitionConfiguration =
+					new IssueFilterConfiguration("if", ifDefinitionDescriptor);
+				IssueFilterConfiguration ifConfinguration =
+					new IssueFilterConfiguration("if", ifDescriptor);
+
+				// Setup parameters (could go into the factory in the future):
+				//ifDefinitionFactory.Condition = ifDefinitionConfiguration;
+				InstanceConfigurationUtils.InitializeParameterValues(
+					ifDefinitionFactory, ifDefinitionConfiguration);
+
+				// The factory of the implementations
+				IssueFilterFactory ifFactory =
+					InstanceFactoryUtils.CreateIssueFilterFactory(ifConfinguration);
+
+				Assert.NotNull(ifFactory);
+
+				ConstructorInfo constructorInfo = issueFilterType.GetConstructors()[constructorIdx];
+
+				Assert.AreEqual(constructorInfo.GetParameters().Length,
+				                constructorValues.Length,
+				                $"Wrong numbers of constructor parameters for constructor index {constructorIdx}");
+
+				// Create the test parameter values:
+
+				int constructorParameterCount =
+					ifFactory.Parameters.Count(p => p.IsConstructorParameter);
+				for (var i = 0; i < constructorParameterCount; i++)
+				{
+					TestParameter parameter = ifFactory.Parameters[i];
+					object value = constructorValues[i];
+
+					string parameterName = parameter.Name;
+
+					AddParameterValueIssueFilter(parameterName, value, ifConfinguration,
+					                             ifDefinitionConfiguration);
+				}
+
+				if (optionalParamValues != null)
+				{
+					foreach (KeyValuePair<string, object> optionalParam in
+					         optionalParamValues)
+					{
+						AddParameterValueIssueFilter(optionalParam.Key, optionalParam.Value,
+						                             ifConfinguration,
+						                             ifDefinitionConfiguration);
+					}
+				}
+
+				IIssueFilter testsOrig =
+					TestFactory.CreateIssueFilter(ifConfinguration, new SimpleDatasetOpener(model));
+
+				IIssueFilter testsNew =
+					TestFactory.CreateIssueFilter(ifConfinguration, new SimpleDatasetOpener(model));
+
+				List<KeyValuePair<Type, MemberInfo>> differences =
+					ReflectionCompare.RecursiveReflectionCompare(testsOrig, testsNew, true);
+
+				foreach (KeyValuePair<Type, MemberInfo> difference in differences)
+				{
+					Console.WriteLine("Difference: {0} {1}", difference.Key.Name,
+					                  difference.Value.Name);
+				}
+
+				Assert.AreEqual(0, differences.Count,
+				                $"Differences found for {issueFilterType.Name} constructor index {constructorIdx}:");
+			}
+		}
+
+		private static void AddIfAllCases(InMemoryTestDataModel model,
+		                                  ICollection<ifDefinitionCase> ifCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("Filter", "true");
+
+			ifCases.Add(new ifDefinitionCase(typeof(IfAll), 0,
+			                                          new object[]
+			                                          { },
+			                                          optionalValues));
+		}
+
+		private static void AddIfInvolvedRowsCases(InMemoryTestDataModel model,
+		                                           ICollection<ifDefinitionCase> ifCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add(
+				"Tables", new object[] { model.GetVectorDataset(), model.GetVectorDataset() });
+
+			ifCases.Add(new ifDefinitionCase(typeof(IfInvolvedRows), 0,
+			                                          new object[]
+			                                          { "Constraint" },
+			                                          optionalValues));
+		}
+
 		private static void AddParameterValue(string parameterName, object value,
 		                                      QualityCondition testCondition,
 		                                      QualityCondition testDefCondition)
@@ -3387,6 +3543,49 @@ namespace ProSuite.QA.Tests.Test
 					testCondition, parameterName, stringVal);
 				TestParameterValueUtils.AddParameterValue(
 					testDefCondition, parameterName, stringVal);
+			}
+		}
+
+		private static void AddParameterValueIssueFilter(string parameterName, object value,
+		                                                 IssueFilterConfiguration issuefilter, //**
+		                                                 IssueFilterConfiguration
+			                                                 issueFilterDef) //**
+		{
+			// NOTE: For lists, multiple TestParameterValues can be added for the same TestParameter.
+			if (value is IEnumerable enumerable and not string)
+			{
+				foreach (object singleValue in enumerable)
+				{
+					AddSingleParameterValueIssueFilter(parameterName, singleValue, issuefilter,
+					                                   issueFilterDef);
+				}
+			}
+			else
+			{
+				AddSingleParameterValueIssueFilter(parameterName, value, issuefilter,
+				                                   issueFilterDef);
+			}
+		}
+
+		private static void AddSingleParameterValueIssueFilter(string parameterName, object value,
+		                                                       IssueFilterConfiguration issuefilter,
+		                                                       IssueFilterConfiguration
+			                                                       issueFilterDef)
+		{
+			if (value is Dataset datasetVal)
+			{
+				TestParameterValueUtils.AddParameterValue(
+					issuefilter, parameterName, datasetVal);
+				TestParameterValueUtils.AddParameterValue(
+					issueFilterDef, parameterName, datasetVal);
+			}
+			else
+			{
+				string stringVal = Convert.ToString(value);
+				TestParameterValueUtils.AddParameterValue(
+					issuefilter, parameterName, stringVal);
+				TestParameterValueUtils.AddParameterValue(
+					issueFilterDef, parameterName, stringVal);
 			}
 		}
 
@@ -3497,6 +3696,70 @@ namespace ProSuite.QA.Tests.Test
 
 			Assert.Greater(instanceInfo.Parameters.Count, 0);
 			Assert.Greater(testDefinitionFactory.Parameters.Count, 0);
+		}
+
+		private static IEnumerable<ifDefinitionCase> CreateDefaultValueIssueFilterCases(
+			Type issueFilterType)
+		{
+			// One is used internally to create using the definition.
+			int constructorCount = issueFilterType.GetConstructors().Length - 1;
+
+			for (int constructorIdx = 0;
+			     constructorIdx < constructorCount;
+			     constructorIdx++)
+			{
+				Console.WriteLine("Checking {0}({1})", issueFilterType.Name, constructorIdx);
+
+				const bool hasNoCategory = true;
+
+				CompareIssueFilterMetadata(issueFilterType, constructorIdx, hasNoCategory);
+
+				IssueFilterDescriptor filterImplDescriptor =
+					CreateIssueFilterDescriptor(issueFilterType, constructorIdx);
+
+				ClassDescriptor classDescriptor = filterImplDescriptor.Class;
+				Assert.NotNull(classDescriptor);
+
+				bool hasAlgorithmDefinition =
+					InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+						classDescriptor, out Type definitionType);
+
+				Assert.IsTrue(hasAlgorithmDefinition);
+				Assert.NotNull(definitionType);
+
+				IssueFilterConfiguration issueFilter =
+					new IssueFilterConfiguration("if", filterImplDescriptor);
+
+				// The factory of the implementations
+				IssueFilterFactory issueFilterFactory =
+					InstanceFactoryUtils.CreateIssueFilterFactory(issueFilter);
+
+				Assert.NotNull(issueFilterFactory);
+
+				var model = new InMemoryTestDataModel("simple model");
+
+				var parameterList = new List<object>();
+				foreach (TestParameter parameter in issueFilterFactory.Parameters)
+				{
+					object defaultVal =
+						CreateDefaultValue(
+							TestParameterTypeUtils.GetParameterType(parameter.Type), model);
+
+					parameterList.Add(defaultVal);
+				}
+
+				ifDefinitionCase result = new ifDefinitionCase(issueFilterType,
+				                                               constructorIdx,
+				                                               parameterList.ToArray());
+
+				bool hasOptionalParameters =
+					issueFilterFactory.Parameters.Any(p => ! p.IsConstructorParameter);
+
+				Assert.False(hasOptionalParameters,
+				             $"The type {issueFilterType.Name} has optional parameters. Use manual configuration!");
+
+				yield return result;
+			}
 		}
 
 		private static void CompareIssueFilterMetadata(Type testType,

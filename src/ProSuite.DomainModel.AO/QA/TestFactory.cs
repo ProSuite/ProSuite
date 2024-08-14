@@ -226,7 +226,7 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 		}
 
-		private static IIssueFilter CreateIssueFilter(
+		public static IIssueFilter CreateIssueFilter(
 			[NotNull] IssueFilterConfiguration issueFilterConfiguration,
 			[NotNull] IOpenDataset datasetContext)
 		{
