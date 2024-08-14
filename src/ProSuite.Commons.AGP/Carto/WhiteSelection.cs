@@ -18,14 +18,14 @@ public interface IWhiteSelection
 
 	bool IsEmpty { get; }
 
-	bool Add(long oid);
+	bool Add(long oid); // TODO add all vertices or none?
 	bool Remove(long oid); // also removes oid's geom from cache
 	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
 	bool SetEmpty();
 
 	bool HitTestVertex(MapPoint hitPoint, double tolerance);
 
-	IEnumerable<long> GetSelectedOIDs();
+	IEnumerable<long> GetSelectedOIDs(); // TODO rename GetInvolvedOIDs?
 
 	IEnumerable<MapPoint> GetSelectedVertices();
 
@@ -70,7 +70,8 @@ public class WhiteSelection : IWhiteSelection
 
 		if (!_shapes.TryGetValue(oid, out var selection))
 		{
-			selection = new ShapeSelection();
+			var shape = GetGeometry(oid);
+			selection = new ShapeSelection(shape);
 			_shapes.Add(oid, selection);
 		}
 
@@ -94,7 +95,7 @@ public class WhiteSelection : IWhiteSelection
 
 		if (! _shapes.TryGetValue(oid, out var selection))
 		{
-			selection = new ShapeSelection();
+			selection = new ShapeSelection(shape);
 			_shapes.Add(oid, selection);
 		}
 
@@ -147,12 +148,12 @@ public class WhiteSelection : IWhiteSelection
 	{
 		foreach (var pair in _shapes)
 		{
-			var oid = pair.Key;
+			//var oid = pair.Key;
 			var selection = pair.Value;
 
-			var shape = GetGeometry(oid);
+			//var shape = GetGeometry(oid);
 
-			if (selection.HitTestVertex(shape, hitPoint, tolerance))
+			if (selection.HitTestVertex(/*shape,*/ hitPoint, tolerance))
 			{
 				return true;
 			}
@@ -170,10 +171,10 @@ public class WhiteSelection : IWhiteSelection
 	{
 		foreach (var pair in _shapes)
 		{
-			var oid = pair.Key;
+			//var oid = pair.Key;
 			var selection = pair.Value;
-			var shape = GetGeometry(oid);
-			foreach (var vertex in selection.GetSelectedVertices(shape))
+			//var shape = GetGeometry(oid);
+			foreach (var vertex in selection.GetSelectedVertices(/*shape*/))
 			{
 				yield return vertex;
 			}
@@ -184,10 +185,10 @@ public class WhiteSelection : IWhiteSelection
 	{
 		foreach (var pair in _shapes)
 		{
-			var oid = pair.Key;
+			//var oid = pair.Key;
 			var selection = pair.Value;
-			var shape = GetGeometry(oid);
-			foreach (var vertex in selection.GetUnselectedVertices(shape))
+			//var shape = GetGeometry(oid);
+			foreach (var vertex in selection.GetUnselectedVertices(/*shape*/))
 			{
 				yield return vertex;
 			}

@@ -62,6 +62,45 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return geometry?.PointCount ?? 0;
 		}
 
+		public static int GetPointCount([CanBeNull] Geometry geometry, int partIndex)
+		{
+			if (geometry is null) return 0;
+
+			if (partIndex < 0)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+
+			if (geometry is Multipart multipart)
+			{
+				if (partIndex >= multipart.PartCount)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+				var part = multipart.Parts[partIndex];
+				return part.Count + 1; // part.Count is segments, +1 gives vertices
+			}
+
+			if (geometry is Multipatch multipatch)
+			{
+				if (partIndex >= multipatch.PartCount)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+				return multipatch.GetPatchPointCount(partIndex);
+			}
+
+			if (geometry is Multipoint multipoint)
+			{
+				if (partIndex >= multipoint.PointCount)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+				return 1;
+			}
+
+			if (geometry is MapPoint)
+			{
+				if (partIndex != 0)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+				return 1;
+			}
+
+			throw new NotSupportedException($"Geometry of type {geometry.GetType().Name} is not supported");
+		}
+
 		/// <summary>
 		/// Get the part of the given <paramref name="geometry"/> at the
 		/// given <paramref name="partIndex"/>. Throw an exception if the
