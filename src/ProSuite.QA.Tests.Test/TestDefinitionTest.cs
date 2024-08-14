@@ -3585,6 +3585,133 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
+		private record TrDefinitionCase(
+			Type TransformerType,
+			int ConstructorIndex = -1,
+			object[] ConstructorValues = null,
+			Dictionary<string, object> OptionalParamValues = null);
+
+		[Test]
+		public void AreTransformerParametersEqual()
+		{
+			var model = new InMemoryTestDataModel("simple model");
+
+			var trCases = new List<TrDefinitionCase>();
+
+			// Transformer cases with automatic parameter value generation:
+			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrDissolve)));
+
+			//
+			// Special Cases
+			//
+			// Manually create values for special cases, such as optional parameters or
+			// difficult assertions:
+			//AddTrDissolve(model, trCases);
+
+			foreach (TrDefinitionCase trCase in trCases)
+			{
+				Type transformerType = trCase.TransformerType;
+				int constructorIdx = trCase.ConstructorIndex;
+
+				Console.WriteLine("Checking constructor index {0} for transformer {1}",
+				                  constructorIdx,
+				                  transformerType.Name);
+
+				object[] constructorValues = trCase.ConstructorValues;
+
+				// Optional parameters Name-Value pairs, null if not specified (or no optional parameters):
+				Dictionary<string, object>
+					optionalParamValues = trCase.OptionalParamValues;
+
+				TransformerDescriptor trDescriptor =
+					CreateTransformerDescriptor(transformerType, constructorIdx);
+
+				ClassDescriptor classDescriptor = trDescriptor.Class;
+				Assert.NotNull(classDescriptor);
+
+				TransformerFactory trDefinitionFactory =
+					InstanceFactoryUtils.GetTransformerDefinitionFactory(trDescriptor);
+
+				Assert.NotNull(trDefinitionFactory);
+
+				bool hasAlgorithmDefinition =
+					InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+						classDescriptor, out Type definitionType);
+
+				Assert.IsTrue(hasAlgorithmDefinition,
+				              $"{trCase.TransformerType.Name} has no TransformerDefinition class");
+
+				TransformerDescriptor trDefinitionDescriptor =
+					CreateTransformerDescriptor(definitionType, constructorIdx);
+
+				// Initialize the configurations for both the definition and the implementation:
+				TransformerConfiguration trDefinitionConfiguration =
+					new TransformerConfiguration("tr", trDefinitionDescriptor);
+				TransformerConfiguration trConfinguration =
+					new TransformerConfiguration("tr", trDescriptor);
+
+				// Setup parameters (could go into the factory in the future):
+				InstanceConfigurationUtils.InitializeParameterValues(
+					trDefinitionFactory, trDefinitionConfiguration);
+
+				// The factory of the implementations
+				TransformerFactory trFactory =
+					InstanceFactoryUtils.CreateTransformerFactory(trConfinguration);
+
+				Assert.NotNull(trFactory);
+
+				ConstructorInfo constructorInfo = transformerType.GetConstructors()[constructorIdx];
+
+				Assert.AreEqual(constructorInfo.GetParameters().Length,
+				                constructorValues.Length,
+				                $"Wrong numbers of constructor parameters for constructor index {constructorIdx}");
+
+				// Create the test parameter values:
+
+				int constructorParameterCount =
+					trFactory.Parameters.Count(p => p.IsConstructorParameter);
+				for (var i = 0; i < constructorParameterCount; i++)
+				{
+					TestParameter parameter = trFactory.Parameters[i];
+					object value = constructorValues[i];
+
+					string parameterName = parameter.Name;
+
+					AddParameterValueTransformer(parameterName, value, trConfinguration,
+					                             trDefinitionConfiguration);
+				}
+
+				if (optionalParamValues != null)
+				{
+					foreach (KeyValuePair<string, object> optionalParam in
+					         optionalParamValues)
+					{
+						AddParameterValueTransformer(optionalParam.Key, optionalParam.Value,
+						                             trConfinguration,
+						                             trDefinitionConfiguration);
+					}
+				}
+
+				ITableTransformer testsOrig =
+					InstanceFactoryUtils.CreateTransformer(trConfinguration, new SimpleDatasetOpener(model));
+
+				ITableTransformer testsNew =
+					InstanceFactoryUtils.CreateTransformer(trConfinguration, new SimpleDatasetOpener(model));
+
+				List<KeyValuePair<Type, MemberInfo>> differences =
+					ReflectionCompare.RecursiveReflectionCompare(testsOrig, testsNew, true);
+
+				foreach (KeyValuePair<Type, MemberInfo> difference in differences)
+				{
+					Console.WriteLine("Difference: {0} {1}", difference.Key.Name,
+					                  difference.Value.Name);
+				}
+
+				Assert.AreEqual(0, differences.Count,
+				                $"Differences found for {transformerType.Name} constructor index {constructorIdx}:");
+			}
+		}
+
 		private static void AddParameterValue(string parameterName, object value,
 		                                      QualityCondition testCondition,
 		                                      QualityCondition testDefCondition)
@@ -3665,6 +3792,49 @@ namespace ProSuite.QA.Tests.Test
 					issuefilter, parameterName, stringVal);
 				TestParameterValueUtils.AddParameterValue(
 					issueFilterDef, parameterName, stringVal);
+			}
+		}
+
+		private static void AddParameterValueTransformer(string parameterName, object value,
+		                                                 TransformerConfiguration transformer, //**
+		                                                 TransformerConfiguration
+			                                                 transformerDef) //**
+		{
+			// NOTE: For lists, multiple TranformerValues can be added for the same Transformer.
+			if (value is IEnumerable enumerable and not string)
+			{
+				foreach (object singleValue in enumerable)
+				{
+					AddSingleParameterValueTransformer(parameterName, singleValue, transformer,
+					                                   transformerDef);
+				}
+			}
+			else
+			{
+				AddSingleParameterValueTransformer(parameterName, value, transformer,
+				                                   transformerDef);
+			}
+		}
+
+		private static void AddSingleParameterValueTransformer(string parameterName, object value,
+		                                                       TransformerConfiguration transformer,
+		                                                       TransformerConfiguration
+			                                                       transformerDef)
+		{
+			if (value is Dataset datasetVal)
+			{
+				TestParameterValueUtils.AddParameterValue(
+					transformer, parameterName, datasetVal);
+				TestParameterValueUtils.AddParameterValue(
+					transformerDef, parameterName, datasetVal);
+			}
+			else
+			{
+				string stringVal = Convert.ToString(value);
+				TestParameterValueUtils.AddParameterValue(
+					transformer, parameterName, stringVal);
+				TestParameterValueUtils.AddParameterValue(
+					transformerDef, parameterName, stringVal);
 			}
 		}
 
@@ -3882,6 +4052,72 @@ namespace ProSuite.QA.Tests.Test
 
 			Assert.Greater(ifInstanceInfo.Parameters.Count, 0);
 			Assert.Greater(ifDefinitionFactory.Parameters.Count, 0);
+		}
+
+		private static IEnumerable<TrDefinitionCase> CreateDefaultValueTransformerCases(
+			Type transformerType)
+		{
+			// One is used internally to create using the definition.
+			int constructorCount = transformerType.GetConstructors().Length - 1;
+
+			for (int constructorIdx = 0;
+			     constructorIdx < constructorCount;
+			     constructorIdx++)
+			{
+				Console.WriteLine("Checking {0}({1})", transformerType.Name, constructorIdx);
+
+				bool hasNoCategory = TestTypeHasNoCategory(transformerType);
+
+				CompareTestMetadata(transformerType, constructorIdx, hasNoCategory);
+
+				CompareTransformerMetadata(transformerType, constructorIdx, hasNoCategory);
+
+				TransformerDescriptor filterImplDescriptor =
+					CreateTransformerDescriptor(transformerType, constructorIdx);
+
+				ClassDescriptor classDescriptor = filterImplDescriptor.Class;
+				Assert.NotNull(classDescriptor);
+
+				bool hasAlgorithmDefinition =
+					InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+						classDescriptor, out Type definitionType);
+
+				Assert.IsTrue(hasAlgorithmDefinition);
+				Assert.NotNull(definitionType);
+
+				TransformerConfiguration transformer =
+					new TransformerConfiguration("tr", filterImplDescriptor);
+
+				// The factory of the implementations
+				TransformerFactory transformerFactory =
+					InstanceFactoryUtils.CreateTransformerFactory(transformer);
+
+				Assert.NotNull(transformerFactory);
+
+				var model = new InMemoryTestDataModel("simple model");
+
+				var parameterList = new List<object>();
+				foreach (TestParameter parameter in transformerFactory.Parameters)
+				{
+					object defaultVal =
+						CreateDefaultValue(
+							TestParameterTypeUtils.GetParameterType(parameter.Type), model);
+
+					parameterList.Add(defaultVal);
+				}
+
+				TrDefinitionCase result = new TrDefinitionCase(transformerType,
+				                                               constructorIdx,
+				                                               parameterList.ToArray());
+
+				bool hasOptionalParameters =
+					transformerFactory.Parameters.Any(p => ! p.IsConstructorParameter);
+
+				Assert.False(hasOptionalParameters,
+				             $"The type {transformerType.Name} has optional parameters. Use manual configuration!");
+
+				yield return result;
+			}
 		}
 
 		private static void CompareTransformerMetadata(Type testType,
