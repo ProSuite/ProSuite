@@ -202,11 +202,11 @@ namespace ProSuite.DomainModel.AO.QA
 
 
 		/// <summary>
-		/// Gets the test factory based on the TestDefinition. Requires the test class or the test
+		/// Gets the test factory based on the IssueFilterDefinition. Requires the issue filter class or the issue filter
 		/// factory descriptor to be defined.
 		/// </summary>
 		/// <param name="descriptor"></param>
-		/// <returns>TestFactory or null if neither the test class nor the test factory descriptor are defined.</returns>
+		/// <returns>IssueFilterFactory or null if neither the issue filter class nor the issue filter factory descriptor are defined.</returns>
 		[CanBeNull]
 		public static IssueFilterFactory GetIssueFilterDefinitionFactory(
 			[NotNull] IssueFilterDescriptor descriptor)
@@ -228,6 +228,33 @@ namespace ProSuite.DomainModel.AO.QA
 			return null;
 		}
 
+		/// <summary>
+		/// Gets the transformer factory based on the TransformerDefinition. Requires the transformer class or the transformer
+		/// factory descriptor to be defined.
+		/// </summary>
+		/// <param name="descriptor"></param>
+		/// <returns>TransformerFactory or null if neither the transfomrer class nor the transformer factory descriptor are defined.</returns>
+		[CanBeNull]
+		public static TransformerFactory GetTransformerDefinitionFactory(
+			[NotNull] TransformerDescriptor descriptor)
+		{
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			ClassDescriptor classDescriptor = descriptor.Class;
+
+			if (classDescriptor != null)
+			{
+				bool hasDefinitionClass = InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+					classDescriptor, out Type definitionType);
+
+				Assert.True(hasDefinitionClass, "Transformer {0} has no definition class.", descriptor);
+
+				return new TransformerFactory(definitionType, descriptor.ConstructorId);
+			}
+
+			return null;
+		}
+
 		[CanBeNull]
 		public static IssueFilterFactory CreateIssueFilterFactory(
 			[NotNull] IssueFilterDescriptor descriptor)
@@ -244,7 +271,7 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[CanBeNull]
-		private static TransformerFactory CreateTransformerFactory(
+		public static TransformerFactory CreateTransformerFactory(
 			[NotNull] TransformerDescriptor descriptor)
 		{
 			Assert.ArgumentNotNull(descriptor, nameof(descriptor));

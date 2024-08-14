@@ -18,6 +18,8 @@ using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.TestData;
+using ProSuite.QA.Tests.Transformers;
+using FieldInfo = System.Reflection.FieldInfo;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
@@ -3506,6 +3508,82 @@ namespace ProSuite.QA.Tests.Test
 			                                          optionalValues));
 		}
 
+		[Test]
+		public void CanCreateTransformers()
+		{
+			List<Type> refactoredTypes = new List<Type>
+										 {
+											 //typeof(TrDissolve),
+										 };
+
+			foreach (Type transformerType in refactoredTypes)
+			{
+				Assert.IsFalse(InstanceUtils.HasInternallyUsedAttribute(transformerType),
+							   "Internally used transformer");
+
+				// One is used internally to create using the definition.
+				int constructorCount = transformerType.GetConstructors().Length - 1;
+
+				bool lastConstructorIsInternallyUsed =
+					InstanceUtils.IsInternallyUsed(transformerType, constructorCount);
+
+				Assert.IsTrue(lastConstructorIsInternallyUsed,
+							  $"Last constructor not internally used in {transformerType.Name}");
+
+				for (int constructorIdx = 0;
+					 constructorIdx < constructorCount;
+					 constructorIdx++)
+				{
+					Console.WriteLine("Checking {0}({1})", transformerType.Name, constructorIdx);
+
+					if (!InstanceUtils.IsObsolete(transformerType, constructorIdx))
+					{
+						CompareTransformerMetadata(transformerType, constructorIdx, true);
+					}
+
+					TransformerDescriptor trDescriptor =
+						CreateTransformerDescriptor(transformerType, constructorIdx);
+
+					ClassDescriptor classDescriptor = trDescriptor.Class;
+					Assert.NotNull(classDescriptor);
+
+					bool hasAlgorithmDefinition =
+						InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+							classDescriptor, out Type definitionType);
+
+					Assert.IsTrue(hasAlgorithmDefinition);
+					Assert.NotNull(definitionType);
+
+					TransformerDescriptor trDefinitionDescriptor =
+						CreateTransformerDescriptor(definitionType, constructorIdx);
+
+					// The factory of the definition:
+					TransformerFactory trDefinitionFactory =
+						InstanceFactoryUtils.GetTransformerDefinitionFactory(trDescriptor);
+					Assert.NotNull(trDefinitionFactory);
+
+					// Initialize the configurations for both the definition and the implementation:
+					TransformerConfiguration trDefinitionConfiguration =
+						new TransformerConfiguration("tr", trDefinitionDescriptor);
+					TransformerConfiguration trConfinguration =
+						new TransformerConfiguration("tr", trDescriptor);
+
+					// Setup parameters (could go into the factory in the future):
+					InstanceConfigurationUtils.InitializeParameterValues(
+						trDefinitionFactory, trDefinitionConfiguration);
+
+					// The factory of the implementation:
+					TransformerFactory trFactory =
+						InstanceFactoryUtils.CreateTransformerFactory(trConfinguration);
+
+					Assert.NotNull(trFactory);
+
+					// NOTE: The instantiation of the issue filters and the comparisons of the values are
+					// performed in the AreParametersEqual test.
+				}
+			}
+		}
+
 		private static void AddParameterValue(string parameterName, object value,
 		                                      QualityCondition testCondition,
 		                                      QualityCondition testDefCondition)
@@ -3805,6 +3883,49 @@ namespace ProSuite.QA.Tests.Test
 			Assert.Greater(ifDefinitionFactory.Parameters.Count, 0);
 		}
 
+		private static void CompareTransformerMetadata(Type testType,
+		                                               int constructorIdx,
+		                                               bool allowNoCategory = false)
+		{
+			TransformerDescriptor descriptor =
+				CreateTransformerDescriptor(testType, constructorIdx);
+			Assert.NotNull(descriptor.Class);
+
+			IInstanceInfo trInstanceInfo = CheckInstanceInfo(descriptor, allowNoCategory);
+
+			// Algorithm Definition:
+			bool hasAlgorithmDefinition =
+				InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+					descriptor.Class, out Type definitionType);
+
+			Assert.IsTrue(hasAlgorithmDefinition);
+
+			// Using instance definition:
+			InstanceDescriptor instanceDefDescriptor =
+				CreateTestDescriptor(definitionType, constructorIdx);
+
+			IInstanceInfo instanceDefinitionInfo =
+				CheckInstanceInfo(instanceDefDescriptor, allowNoCategory, true);
+
+			Assert.IsTrue(AssertEqual(trInstanceInfo, instanceDefinitionInfo));
+
+			// Use case 2: Load actual factory:
+			TransformerFactory trFactory =
+				InstanceFactoryUtils.CreateTransformerFactory(descriptor);
+			Assert.NotNull(trFactory);
+
+			// and definition factory
+			var trDefinitionFactory =
+				InstanceFactoryUtils.GetTransformerDefinitionFactory(descriptor);
+			Assert.NotNull(trDefinitionFactory);
+			
+			// and compare:
+			Assert.IsTrue(AssertEqual(trFactory, trDefinitionFactory));
+
+			Assert.Greater(trInstanceInfo.Parameters.Count, 0);
+			Assert.Greater(trDefinitionFactory.Parameters.Count, 0);
+		}
+
 		private static IInstanceInfo CheckInstanceInfo(InstanceDescriptor descriptor,
 		                                               bool allowNoCategory,
 		                                               bool tryAlgorithmDefinition = false)
@@ -3972,6 +4093,15 @@ namespace ProSuite.QA.Tests.Test
 			string typeName = $"{type.Name}";
 
 			return new IssueFilterDescriptor(typeName, new ClassDescriptor(type),
+			                                 constructorIndex);
+		}
+
+		private static TransformerDescriptor CreateTransformerDescriptor(Type type,
+			int constructorIndex)
+		{
+			string typeName = $"{type.Name}";
+
+			return new TransformerDescriptor(typeName, new ClassDescriptor(type),
 			                                 constructorIndex);
 		}
 	}
