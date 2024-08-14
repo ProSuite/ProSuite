@@ -409,7 +409,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 				if (_tableNamesByQueryClassNames.Value.ContainsKey(queryLayerName))
 				{
 					// It has been created already, use it directly (otherwise error 'The featureclass already exists')
-					return DatasetUtils.OpenTable(workspace, queryLayerName);
+					if (DatasetUtils.TryOpenTable(workspace, queryLayerName,
+					                              out ITable existingTable))
+					{
+						_msg.DebugFormat("Re-using previously defined table with name {0}",
+						                 queryLayerName);
+						return existingTable;
+					}
 				}
 
 				_msg.DebugFormat("Opening query layer with name {0}", queryLayerName);

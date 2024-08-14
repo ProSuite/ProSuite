@@ -423,6 +423,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
+		public static bool TryOpenTable([NotNull] IFeatureWorkspace workspace,
+		                                [NotNull] string name,
+		                                out ITable table)
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+
+			try
+			{
+				table = OpenTable(workspace, name);
+				return true;
+			}
+			catch (Exception e)
+			{
+				table = null;
+				return false;
+			}
+		}
+
 		/// <summary>
 		/// Opens a relationship class given its name and a featureWorkspace.
 		/// </summary>
