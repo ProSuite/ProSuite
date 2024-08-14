@@ -1231,21 +1231,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return queryDescription;
 		}
 
-		public static ITable CreateQueryLayerClass([NotNull] ISqlWorkspace sqlWorksace,
+		public static ITable CreateQueryLayerClass([NotNull] ISqlWorkspace sqlWorkspace,
 		                                           [NotNull] IQueryDescription queryDescription,
 		                                           [NotNull] string name)
 		{
 			// NOTE: the unqualified name of a query class must start with a '%'
 			if (! IsQueryLayerClassName(name))
 			{
-				name = GetQueryLayerClassName((IFeatureWorkspace) sqlWorksace, name);
+				name = GetQueryLayerClassName((IFeatureWorkspace) sqlWorkspace, name);
 			}
 
 			_msg.DebugFormat(
 				"Opening query layer with name {0} using the following query description: {1}",
 				name, QueryDescriptionToString(queryDescription));
 
-			ITable queryClass = sqlWorksace.OpenQueryClass(name, queryDescription);
+			ITable queryClass = sqlWorkspace.OpenQueryClass(name, queryDescription);
 			return queryClass;
 		}
 
@@ -3796,21 +3796,22 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			List<IField> candidates =
 				fields.Where(f => f.Type == esriFieldType.esriFieldTypeInteger &&
-								! f.IsNullable &&
-								(uniqueIndexes == null ||
-								 uniqueIndexes.Any(ix => ix.Fields.Field[0].Name == f.Name)))
-					.ToList();
+				                  ! f.IsNullable &&
+				                  (uniqueIndexes == null ||
+				                   uniqueIndexes.Any(ix => ix.Fields.Field[0].Name == f.Name)))
+				      .ToList();
 
 			if (candidates.Count == 0)
 			{
 				// Try again without the not-null constraint, because fields in views are always nullable
 				candidates = fields.Where(f => f.Type == esriFieldType.esriFieldTypeInteger &&
-								(uniqueIndexes == null ||
-								 uniqueIndexes.Any(ix => ix.Fields.Field[0].Name == f.Name)))
-					.ToList();
+				                               (uniqueIndexes == null ||
+				                                uniqueIndexes.Any(
+					                                ix => ix.Fields.Field[0].Name == f.Name)))
+				                   .ToList();
 
 				_msg.DebugFormat("{0}: Candidates with Nullable fields have been included.",
-					DatasetUtils.GetName(table));
+				                 GetName(table));
 
 				if (candidates.Count == 0)
 				{
@@ -3823,15 +3824,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return candidates[0];
 			}
 
-			_msg.DebugFormat("Table {0}: Found {1} integer fields that could serve as Object ID fields. " +
-				"Fields called OBJECTID, OID, FID or ID will take precedence.", DatasetUtils.GetName(table),
+			_msg.DebugFormat(
+				"Table {0}: Found {1} integer fields that could serve as Object ID fields. " +
+				"Fields called OBJECTID, OID, FID or ID will take precedence.", GetName(table),
 				candidates.Count);
 
 			foreach (string preferredName in new[] { "OBJECTID", "OID", "FID", "ID" })
 			{
 				IField preferredField =
 					candidates.FirstOrDefault(field => field.Name.Equals(preferredName,
-					StringComparison.CurrentCultureIgnoreCase));
+						                          StringComparison.CurrentCultureIgnoreCase));
 
 				if (preferredField != null)
 				{

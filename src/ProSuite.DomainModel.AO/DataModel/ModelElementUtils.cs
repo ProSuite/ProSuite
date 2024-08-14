@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -19,9 +20,10 @@ namespace ProSuite.DomainModel.AO.DataModel
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull]
-		private static readonly ThreadLocal<IDictionary<string, string>> _tableNamesByQueryClassNames =
-			new ThreadLocal<IDictionary<string, string>>(() => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
+		[NotNull] private static readonly ThreadLocal<IDictionary<string, string>>
+			_tableNamesByQueryClassNames =
+				new ThreadLocal<IDictionary<string, string>>(
+					() => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
 
 		public static bool IsInSchema([NotNull] IWorkspace workspace,
 		                              [NotNull] string gdbDatasetName,
@@ -368,7 +370,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			if (! hasDubiousOid && (! hasUnknownSref || ! queryDescription.IsSpatialQuery))
 			{
-				_msg.DebugFormat("Opening {0} as normal table (OID field is deemed usable)", gdbDatasetName);
+				_msg.DebugFormat("Opening {0} as normal table (OID field is deemed usable)",
+				                 gdbDatasetName);
 				return DatasetUtils.OpenTable(workspace, gdbDatasetName);
 			}
 
@@ -377,7 +380,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				if (StringUtils.IsNotEmpty(oidFieldName))
 				{
 					_msg.DebugFormat("Opening {0} as view, using configured OID field {1}",
-						gdbDatasetName, oidFieldName);	
+					                 gdbDatasetName, oidFieldName);
 					queryDescription.OIDFields = oidFieldName;
 				}
 				else
@@ -387,7 +390,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 					if (uniqueIntegerField != null)
 					{
 						_msg.DebugFormat("Determined {0} as OID field for {1}",
-							uniqueIntegerField.Name, gdbDatasetName);
+						                 uniqueIntegerField.Name, gdbDatasetName);
 
 						queryDescription.OIDFields = uniqueIntegerField.Name;
 					}
@@ -444,7 +447,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		private static bool HasDubiousOid(IFields fields,
-			string oidColumnName)
+		                                  string oidColumnName)
 		{
 			if (StringUtils.IsNullOrEmptyOrBlank(oidColumnName))
 			{
@@ -465,7 +468,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[NotNull]
 		public static string GetBaseTableName([NotNull] string gdbDatasetOrQueryClassName,
-			IWorkspaceContext workspaceContext = null)
+		                                      IWorkspaceContext workspaceContext = null)
 		{
 			Assert.ArgumentNotNullOrEmpty(gdbDatasetOrQueryClassName,
 			                              nameof(gdbDatasetOrQueryClassName));
@@ -478,7 +481,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			string baseTableName;
 			if (_tableNamesByQueryClassNames.Value.TryGetValue(gdbDatasetOrQueryClassName,
-			                                             out baseTableName))
+			                                                   out baseTableName))
 			{
 				return baseTableName;
 			}
@@ -488,12 +491,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 			// table from the query name:
 			string tableName = gdbDatasetOrQueryClassName.Replace("%", "");
 
-
 			// If the same view / query is referenced by multiple layers, an _1, _2 etc. is appended
 			// Before trying to open the table (which takes time) check if this could be the case:
 			const string underscoreWithDigit = @"(_\d)$";
-			System.Text.RegularExpressions.Regex regex =
-				new System.Text.RegularExpressions.Regex(underscoreWithDigit);
+			Regex regex =
+				new Regex(underscoreWithDigit);
 
 			if (! regex.IsMatch(tableName))
 			{
@@ -509,9 +511,10 @@ namespace ProSuite.DomainModel.AO.DataModel
 				{
 					exists = workspaceContext?.FeatureWorkspace.OpenTable(originalTable) != null;
 				}
-				catch(Exception)
+				catch (Exception)
 				{
-					_msg.DebugFormat("Cannot open table {0}. Assuming it does not exist.", originalTable);
+					_msg.DebugFormat("Cannot open table {0}. Assuming it does not exist.",
+					                 originalTable);
 					exists = false;
 				}
 			}
@@ -519,14 +522,14 @@ namespace ProSuite.DomainModel.AO.DataModel
 			if (exists)
 			{
 				_msg.DebugFormat("Extracted and found table name {0} from query name {1}",
-					originalTable, gdbDatasetOrQueryClassName);
+				                 originalTable, gdbDatasetOrQueryClassName);
 
 				return originalTable;
 			}
 
 			// Let's assume that the original view already has a suffix, such as _1:
 			_msg.DebugFormat("Extracted table name {0} from query name {1}",
-				tableName, gdbDatasetOrQueryClassName);
+			                 tableName, gdbDatasetOrQueryClassName);
 
 			return tableName;
 		}
