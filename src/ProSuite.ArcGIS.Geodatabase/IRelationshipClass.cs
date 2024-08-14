@@ -10,7 +10,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		string DestinationForeignKey { get; }
 
-		int RelationshipClassID { get; }
+		long RelationshipClassID { get; }
 
 		IObjectClass OriginClass { get; }
 
@@ -72,7 +72,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		void RemoveAll();
 
-		bool Find(object unk);
+		object Find(object unk);
 
 		object Next();
 

@@ -5,7 +5,7 @@ namespace ESRI.ArcGIS.Geodatabase
 {
 	public interface IObjectClass : IClass
 	{
-		int ObjectClassID { get; }
+		long ObjectClassID { get; }
 
 		IEnumerable<IRelationshipClass> get_RelationshipClasses(esriRelRole role);
 

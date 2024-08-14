@@ -19,11 +19,11 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		IFeature CreateFeature();
 
-		IFeature GetFeature(int id);
+		IFeature GetFeature(long id);
 
 		//IFeatureCursor GetFeatures(object fids, [In] bool Recycling);
 
-		int FeatureClassID { get; }
+		long FeatureClassID { get; }
 
 		//IFeatureBuffer CreateFeatureBuffer();
 

@@ -9,7 +9,7 @@ namespace ESRI.ArcGIS.Geodatabase
 	{
 		IRow CreateRow();
 
-		IRow GetRow(int oid);
+		IRow GetRow(long oid);
 
 		IEnumerable<IRow> GetRows(object oids, bool recycling);
 
