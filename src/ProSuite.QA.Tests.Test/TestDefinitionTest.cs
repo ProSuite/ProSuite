@@ -3306,10 +3306,10 @@ namespace ProSuite.QA.Tests.Test
 						CompareIssueFilterMetadata(issueFilterType, constructorIdx, true);
 					}
 
-					IssueFilterDescriptor issueFilterDescriptor =
+					IssueFilterDescriptor ifDescriptor =
 						CreateIssueFilterDescriptor(issueFilterType, constructorIdx);
 
-					ClassDescriptor classDescriptor = issueFilterDescriptor.Class;
+					ClassDescriptor classDescriptor = ifDescriptor.Class;
 					Assert.NotNull(classDescriptor);
 
 					bool hasAlgorithmDefinition =
@@ -3324,14 +3324,14 @@ namespace ProSuite.QA.Tests.Test
 
 					// The factory of the definition:
 					IssueFilterFactory ifDefinitionFactory =
-						InstanceFactoryUtils.GetIssueFilterDefinitionFactory(issueFilterDescriptor);
+						InstanceFactoryUtils.GetIssueFilterDefinitionFactory(ifDescriptor);
 					Assert.NotNull(ifDefinitionFactory);
 
 					// Initialize the configurations for both the definition and the implementation:
 					IssueFilterConfiguration ifDefinitionConfiguration =
 						new IssueFilterConfiguration("if", ifDefinitionDescriptor);
 					IssueFilterConfiguration ifConfinguration =
-						new IssueFilterConfiguration("if", issueFilterDescriptor);
+						new IssueFilterConfiguration("if", ifDescriptor);
 
 					// Setup parameters (could go into the factory in the future):
 					//ifDefinitionFactory.Condition = ifDefinitionConfiguration;
@@ -3344,7 +3344,7 @@ namespace ProSuite.QA.Tests.Test
 
 					Assert.NotNull(ifFactory);
 
-					// NOTE: The instantiation of the tests and the comparisons of the values are
+					// NOTE: The instantiation of the issue filters and the comparisons of the values are
 					// performed in the AreParametersEqual test.
 				}
 			}
@@ -3392,7 +3392,7 @@ namespace ProSuite.QA.Tests.Test
 
 		private static IEnumerable<TestDefinitionCase> CreateDefaultValueTestCases(Type testType)
 		{
-			// One is used internally to create using a the definition.
+			// One is used internally to create using the definition.
 			int constructorCount = testType.GetConstructors().Length - 1;
 
 			for (int constructorIdx = 0;
@@ -3480,15 +3480,6 @@ namespace ProSuite.QA.Tests.Test
 
 			IInstanceInfo instanceDefInfo =
 				CheckInstanceInfo(instanceDefDescriptor, allowNoCategory, true);
-			//	InstanceDescriptorUtils.GetInstanceInfo(instanceDefDescriptor,
-			//	                                        tryAlgorithmDefinition: true);
-
-			//Assert.NotNull(instanceDefInfo);
-			//Assert.NotNull(instanceDefInfo.TestDescription);
-			//if (! allowNoCategory)
-			//{
-			//	Assert.Greater(instanceDefInfo.TestCategories.Length, 0);
-			//}
 
 			Assert.IsTrue(AssertEqual(instanceInfo, instanceDefInfo));
 
