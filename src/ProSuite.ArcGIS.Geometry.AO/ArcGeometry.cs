@@ -5,28 +5,28 @@ namespace ESRI.ArcGIS.Geometry
 {
 	public class ArcGeometry : IGeometry
 	{
-		public ArcGeometry(global::ArcGIS.Core.Geometry.Geometry aoGeometry)
+		public ArcGeometry(global::ArcGIS.Core.Geometry.Geometry proGeometry)
 		{
-			AoGeometry = aoGeometry;
+			ProGeometry = proGeometry;
 		}
 
-		public global::ArcGIS.Core.Geometry.Geometry AoGeometry { get; set; }
+		public global::ArcGIS.Core.Geometry.Geometry ProGeometry { get; set; }
 
 		#region Implementation of IGeometry
 
-		public esriGeometryType GeometryType => (esriGeometryType) AoGeometry.GeometryType;
+		public esriGeometryType GeometryType => (esriGeometryType) ProGeometry.GeometryType;
 
-		public esriGeometryDimension Dimension => (esriGeometryDimension) AoGeometry.Dimension;
+		public esriGeometryDimension Dimension => (esriGeometryDimension) ProGeometry.Dimension;
 
 		public ISpatialReference SpatialReference
 		{
-			get => new ArcSpatialReference(AoGeometry.SpatialReference);
+			get => new ArcSpatialReference(ProGeometry.SpatialReference);
 			set => throw new NotImplementedException();
 		}
 
-		public bool IsEmpty => AoGeometry.IsEmpty;
+		public bool IsEmpty => ProGeometry.IsEmpty;
 
-		public IEnvelope Envelope => new ArcEnvelope(AoGeometry.Extent);
+		public IEnvelope Envelope => new ArcEnvelope(ProGeometry.Extent);
 
 		public void SetEmpty()
 		{
@@ -35,10 +35,10 @@ namespace ESRI.ArcGIS.Geometry
 
 		public void QueryEnvelope(IEnvelope outEnvelope)
 		{
-			outEnvelope.XMin = AoGeometry.Extent.XMin;
-			outEnvelope.XMax = AoGeometry.Extent.XMax;
-			outEnvelope.YMin = AoGeometry.Extent.YMin;
-			outEnvelope.YMax = AoGeometry.Extent.YMax;
+			outEnvelope.XMin = ProGeometry.Extent.XMin;
+			outEnvelope.XMax = ProGeometry.Extent.XMax;
+			outEnvelope.YMin = ProGeometry.Extent.YMin;
+			outEnvelope.YMax = ProGeometry.Extent.YMax;
 		}
 
 		public void Project(ISpatialReference newReferenceSystem)

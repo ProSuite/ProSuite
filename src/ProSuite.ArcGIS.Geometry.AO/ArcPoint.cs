@@ -6,12 +6,12 @@ namespace ProSuite.ArcGIS.Geometry.AO
 {
 	public class ArcPoint : IPoint
 	{
-		public ArcPoint(MapPoint aoPoint)
+		public ArcPoint(MapPoint proPoint)
 		{
-			AoPoint = aoPoint;
+			ProPoint = proPoint;
 		}
 
-		public MapPoint AoPoint { get; set; }
+		public MapPoint ProPoint { get; set; }
 
 		#region Implementation of IGeometry
 
@@ -19,7 +19,7 @@ namespace ProSuite.ArcGIS.Geometry.AO
 
 		private esriGeometryType GetProGeometryType()
 		{
-			switch (AoPoint.GeometryType)
+			switch (ProPoint.GeometryType)
 			{
 				case global::ArcGIS.Core.Geometry.GeometryType.Unknown:
 					return esriGeometryType.esriGeometryAny;
@@ -46,7 +46,7 @@ namespace ProSuite.ArcGIS.Geometry.AO
 		{
 			get
 			{
-				switch (AoPoint.Dimension)
+				switch (ProPoint.Dimension)
 				{
 					case 0:
 						return esriGeometryDimension.esriGeometry0Dimension;
@@ -64,11 +64,11 @@ namespace ProSuite.ArcGIS.Geometry.AO
 
 		public ISpatialReference SpatialReference
 		{
-			get => new ArcSpatialReference(AoPoint.SpatialReference);
+			get => new ArcSpatialReference(ProPoint.SpatialReference);
 			set => throw new NotImplementedException();
 		}
 
-		public bool IsEmpty => AoPoint.IsEmpty;
+		public bool IsEmpty => ProPoint.IsEmpty;
 
 		void IGeometry.SetEmpty()
 		{
@@ -77,10 +77,10 @@ namespace ProSuite.ArcGIS.Geometry.AO
 
 		public void QueryEnvelope(IEnvelope outEnvelope)
 		{
-			outEnvelope.XMin = AoPoint.X;
-			outEnvelope.XMax = AoPoint.X;
-			outEnvelope.YMin = AoPoint.Y;
-			outEnvelope.YMax = AoPoint.Y;
+			outEnvelope.XMin = ProPoint.X;
+			outEnvelope.XMax = ProPoint.X;
+			outEnvelope.YMin = ProPoint.Y;
+			outEnvelope.YMax = ProPoint.Y;
 		}
 
 		void IPoint.SetEmpty()
@@ -88,7 +88,7 @@ namespace ProSuite.ArcGIS.Geometry.AO
 			throw new NotImplementedException();
 		}
 
-		public IEnvelope Envelope => new ArcEnvelope(AoPoint.Extent);
+		public IEnvelope Envelope => new ArcEnvelope(ProPoint.Extent);
 
 		void IGeometry.Project(ISpatialReference newReferenceSystem)
 		{
@@ -113,8 +113,8 @@ namespace ProSuite.ArcGIS.Geometry.AO
 
 		public void QueryCoords(out double x, out double y)
 		{
-			x = AoPoint.X;
-			y = AoPoint.Y;
+			x = ProPoint.X;
+			y = ProPoint.Y;
 		}
 
 		public void PutCoords(double x, double y)
@@ -124,31 +124,31 @@ namespace ProSuite.ArcGIS.Geometry.AO
 
 		public double X
 		{
-			get => AoPoint.X;
+			get => ProPoint.X;
 			set => throw new NotImplementedException();
 		}
 
 		public double Y
 		{
-			get => AoPoint.Y;
+			get => ProPoint.Y;
 			set => throw new NotImplementedException();
 		}
 
 		public double Z
 		{
-			get => AoPoint.Z;
+			get => ProPoint.Z;
 			set => throw new NotImplementedException();
 		}
 
 		public double M
 		{
-			get => AoPoint.M;
+			get => ProPoint.M;
 			set => throw new NotImplementedException();
 		}
 
 		public int ID
 		{
-			get => AoPoint.ID;
+			get => ProPoint.ID;
 			set => throw new NotImplementedException();
 		}
 
