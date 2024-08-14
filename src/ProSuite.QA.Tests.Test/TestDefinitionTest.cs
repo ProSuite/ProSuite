@@ -3352,7 +3352,7 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
-		private record ifDefinitionCase(
+		private record IfDefinitionCase(
 			Type IssueFilterType,
 			int ConstructorIndex = -1,
 			object[] ConstructorValues = null,
@@ -3363,7 +3363,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			var model = new InMemoryTestDataModel("simple model");
 
-			var ifCases = new List<ifDefinitionCase>();
+			var ifCases = new List<IfDefinitionCase>();
 
 			// Issue Filter cases with automatic parameter value generation:
 			ifCases.AddRange(CreateDefaultValueIssueFilterCases(typeof(IfIntersecting)));
@@ -3378,7 +3378,7 @@ namespace ProSuite.QA.Tests.Test
 			AddIfAllCases(model, ifCases);
 			//AddIfInvolvedRowsCases(model, ifCases);
 
-			foreach (ifDefinitionCase ifCase in ifCases)
+			foreach (IfDefinitionCase ifCase in ifCases)
 			{
 				Type issueFilterType = ifCase.IssueFilterType;
 				int constructorIdx = ifCase.ConstructorIndex;
@@ -3485,42 +3485,42 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		private static void AddIfAllCases(InMemoryTestDataModel model,
-		                                  ICollection<ifDefinitionCase> ifCases)
+		                                  ICollection<IfDefinitionCase> ifCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("Filter", "true");
 
-			ifCases.Add(new ifDefinitionCase(typeof(IfAll), 0,
-			                                          new object[]
-			                                          { },
-			                                          optionalValues));
+			ifCases.Add(new IfDefinitionCase(typeof(IfAll), 0,
+			                                 new object[]
+			                                 { },
+			                                 optionalValues));
 		}
 
 		private static void AddIfInvolvedRowsCases(InMemoryTestDataModel model,
-		                                           ICollection<ifDefinitionCase> ifCases)
+		                                           ICollection<IfDefinitionCase> ifCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add(
 				"Tables", new object[] { model.GetVectorDataset(), model.GetVectorDataset() });
 
-			ifCases.Add(new ifDefinitionCase(typeof(IfInvolvedRows), 0,
-			                                          new object[]
-			                                          { "Constraint" },
-			                                          optionalValues));
+			ifCases.Add(new IfDefinitionCase(typeof(IfInvolvedRows), 0,
+			                                 new object[]
+			                                 { "Constraint" },
+			                                 optionalValues));
 		}
 
 		[Test]
 		public void CanCreateTransformers()
 		{
 			List<Type> refactoredTypes = new List<Type>
-										 {
-											 //typeof(TrDissolve),
-										 };
+			                             {
+				                             //typeof(TrDissolve),
+			                             };
 
 			foreach (Type transformerType in refactoredTypes)
 			{
 				Assert.IsFalse(InstanceUtils.HasInternallyUsedAttribute(transformerType),
-							   "Internally used transformer");
+				               "Internally used transformer");
 
 				// One is used internally to create using the definition.
 				int constructorCount = transformerType.GetConstructors().Length - 1;
@@ -3529,15 +3529,15 @@ namespace ProSuite.QA.Tests.Test
 					InstanceUtils.IsInternallyUsed(transformerType, constructorCount);
 
 				Assert.IsTrue(lastConstructorIsInternallyUsed,
-							  $"Last constructor not internally used in {transformerType.Name}");
+				              $"Last constructor not internally used in {transformerType.Name}");
 
 				for (int constructorIdx = 0;
-					 constructorIdx < constructorCount;
-					 constructorIdx++)
+				     constructorIdx < constructorCount;
+				     constructorIdx++)
 				{
 					Console.WriteLine("Checking {0}({1})", transformerType.Name, constructorIdx);
 
-					if (!InstanceUtils.IsObsolete(transformerType, constructorIdx))
+					if (! InstanceUtils.IsObsolete(transformerType, constructorIdx))
 					{
 						CompareTransformerMetadata(transformerType, constructorIdx, true);
 					}
@@ -3626,11 +3626,11 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		private static void AddParameterValueIssueFilter(string parameterName, object value,
-		                                                 IssueFilterConfiguration issuefilter, //**
+		                                                 IssueFilterConfiguration issuefilter,
 		                                                 IssueFilterConfiguration
-			                                                 issueFilterDef) //**
+			                                                 issueFilterDef)
 		{
-			// NOTE: For lists, multiple TestParameterValues can be added for the same TestParameter.
+			// NOTE: For lists, multiple IssueFilterParameterValues can be added for the same IssueFilterParameter.
 			if (value is IEnumerable enumerable and not string)
 			{
 				foreach (object singleValue in enumerable)
@@ -3777,7 +3777,7 @@ namespace ProSuite.QA.Tests.Test
 			Assert.Greater(testDefinitionFactory.Parameters.Count, 0);
 		}
 
-		private static IEnumerable<ifDefinitionCase> CreateDefaultValueIssueFilterCases(
+		private static IEnumerable<IfDefinitionCase> CreateDefaultValueIssueFilterCases(
 			Type issueFilterType)
 		{
 			// One is used internally to create using the definition.
@@ -3827,7 +3827,7 @@ namespace ProSuite.QA.Tests.Test
 					parameterList.Add(defaultVal);
 				}
 
-				ifDefinitionCase result = new ifDefinitionCase(issueFilterType,
+				IfDefinitionCase result = new IfDefinitionCase(issueFilterType,
 				                                               constructorIdx,
 				                                               parameterList.ToArray());
 
@@ -3919,7 +3919,7 @@ namespace ProSuite.QA.Tests.Test
 			var trDefinitionFactory =
 				InstanceFactoryUtils.GetTransformerDefinitionFactory(descriptor);
 			Assert.NotNull(trDefinitionFactory);
-			
+
 			// and compare:
 			Assert.IsTrue(AssertEqual(trFactory, trDefinitionFactory));
 
