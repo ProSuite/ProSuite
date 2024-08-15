@@ -218,7 +218,9 @@ namespace ProSuite.DomainServices.AO.QA
 					continue;
 				}
 
-				IWorkspace workspace = objectClass.Workspace;
+				// Once GIS.Geodatabase interface is used:
+				//IWorkspace workspace = objectClass.Workspace;
+				IWorkspace workspace = ((IDataset) objectClass).Workspace;
 
 				ICollection<IObjectClass> tables;
 				if (! result.TryGetValue(workspace, out tables))
