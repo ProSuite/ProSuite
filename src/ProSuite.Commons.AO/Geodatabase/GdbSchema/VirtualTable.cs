@@ -125,41 +125,41 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public virtual int FindField(string name) => GdbFields.FindField(name);
 
-		void IClass.AddField(IField Field) => AddFieldT(Field);
+		void IClass.AddField(IField field) => AddFieldT(field);
 
-		void IObjectClass.AddField(IField Field) => AddFieldT(Field);
+		void IObjectClass.AddField(IField field) => AddFieldT(field);
 
-		void ITable.AddField(IField Field) => AddFieldT(Field);
+		void ITable.AddField(IField field) => AddFieldT(field);
 
-		public void AddField(IField Field) => AddFieldT(Field);
+		public void AddField(IField field) => AddFieldT(field);
 
-		public virtual int AddFieldT(IField Field) => GdbFields.AddField(Field);
+		public virtual int AddFieldT(IField field) => GdbFields.AddField(field);
 
-		void IClass.DeleteField(IField Field) => DeleteField(Field);
+		void IClass.DeleteField(IField field) => DeleteField(field);
 
-		void IObjectClass.DeleteField(IField Field) => DeleteField(Field);
+		void IObjectClass.DeleteField(IField field) => DeleteField(field);
 
-		void ITable.DeleteField(IField Field) => DeleteField(Field);
+		void ITable.DeleteField(IField field) => DeleteField(field);
 
-		public virtual void DeleteField(IField Field) =>
+		public virtual void DeleteField(IField field) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IClass.AddIndex(IIndex Index) => AddIndex(Index);
+		void IClass.AddIndex(IIndex index) => AddIndex(index);
 
-		void IObjectClass.AddIndex(IIndex Index) => AddIndex(Index);
+		void IObjectClass.AddIndex(IIndex index) => AddIndex(index);
 
-		void ITable.AddIndex(IIndex Index) => AddIndex(Index);
+		void ITable.AddIndex(IIndex index) => AddIndex(index);
 
-		public virtual void AddIndex(IIndex Index) =>
+		public virtual void AddIndex(IIndex index) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IClass.DeleteIndex(IIndex Index) => DeleteIndex(Index);
+		void IClass.DeleteIndex(IIndex index) => DeleteIndex(index);
 
-		void IObjectClass.DeleteIndex(IIndex Index) => DeleteIndex(Index);
+		void IObjectClass.DeleteIndex(IIndex index) => DeleteIndex(index);
 
-		void ITable.DeleteIndex(IIndex Index) => DeleteIndex(Index);
+		void ITable.DeleteIndex(IIndex index) => DeleteIndex(index);
 
-		public virtual void DeleteIndex(IIndex Index) =>
+		public virtual void DeleteIndex(IIndex index) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IFields IClass.Fields => Fields;
@@ -224,29 +224,29 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			throw new NotImplementedException("Implement in derived class");
 
 #if Server11
-		IRow ITable.GetRow(long OID) => GetRow(OID);
+		IRow ITable.GetRow(long oid) => GetRow(oid);
 
-		public IFeature GetFeature(long OID) => (IFeature) GetRow(OID);
+		public IFeature GetFeature(long oid) => (IFeature) GetRow(oid);
 #else
 		IRow ITable.GetRow(int OID) => GetRow(OID);
 
 		public IFeature GetFeature(int OID) => (IFeature) GetRow(OID);
 #endif
 
-		IReadOnlyRow IReadOnlyTable.GetRow(long OID) => GetReadOnlyRow(OID);
+		IReadOnlyRow IReadOnlyTable.GetRow(long oid) => GetReadOnlyRow(oid);
 
-		public virtual IRow GetRow(long OID) =>
+		public virtual IRow GetRow(long oid) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		public virtual IReadOnlyRow GetReadOnlyRow(long OID) =>
+		public virtual IReadOnlyRow GetReadOnlyRow(long oid) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		ICursor ITable.GetRows(object oids, bool Recycling) => GetRows(oids, Recycling);
+		ICursor ITable.GetRows(object oids, bool recycling) => GetRows(oids, recycling);
 
-		public IFeatureCursor GetFeatures(object oids, bool Recycling) =>
-			(IFeatureCursor) GetRows(oids, Recycling);
+		public IFeatureCursor GetFeatures(object oids, bool recycling) =>
+			(IFeatureCursor) GetRows(oids, recycling);
 
-		public virtual ICursor GetRows(object oids, bool Recycling)
+		public virtual ICursor GetRows(object oids, bool recycling)
 		{
 			if (! (oids is IEnumerable<int> oidList))
 			{
@@ -270,8 +270,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual void UpdateSearchedRows(IQueryFilter queryFilter, IRowBuffer buffer) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void ITable.DeleteSearchedRows(IQueryFilter QueryFilter) =>
-			DeleteSearchedRows(QueryFilter);
+		void ITable.DeleteSearchedRows(IQueryFilter queryFilter) =>
+			DeleteSearchedRows(queryFilter);
 
 		public virtual void DeleteSearchedRows(IQueryFilter queryFilter) =>
 			throw new NotImplementedException("Implement in derived class");
@@ -308,8 +308,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return false;
 		}
 
-		ICursor ITable.Search([CanBeNull] IQueryFilter queryFilter, bool Recycling) =>
-			SearchT(queryFilter, Recycling);
+		ICursor ITable.Search([CanBeNull] IQueryFilter queryFilter, bool recycling) =>
+			SearchT(queryFilter, recycling);
 
 		protected virtual IFeatureCursor FeatureClassSearch([CanBeNull] IQueryFilter queryFilter,
 		                                                    bool recycling) =>
@@ -330,13 +330,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			EnumReadOnlyRows([CanBeNull] ITableFilter queryFilter, bool recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		ICursor ITable.Update(IQueryFilter queryFilter, bool Recycling) =>
-			UpdateT(queryFilter, Recycling);
+		ICursor ITable.Update(IQueryFilter queryFilter, bool recycling) =>
+			UpdateT(queryFilter, recycling);
 
-		public virtual IFeatureCursor Update(IQueryFilter queryFilter, bool Recycling) =>
-			(IFeatureCursor) UpdateT(queryFilter, Recycling);
+		public virtual IFeatureCursor Update(IQueryFilter queryFilter, bool recycling) =>
+			(IFeatureCursor) UpdateT(queryFilter, recycling);
 
-		public virtual ICursor UpdateT(IQueryFilter queryFilter, bool Recycling) =>
+		public virtual ICursor UpdateT(IQueryFilter queryFilter, bool recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ICursor ITable.Insert(bool useBuffering) => InsertT(useBuffering);
@@ -434,17 +434,17 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual bool IsBeingEdited()
 			=> throw new NotImplementedException("Implement in derived class");
 
-		void ISubtypes.AddSubtype(int SubtypeCode, string SubtypeName)
-			=> AddSubtype(SubtypeCode, SubtypeName);
+		void ISubtypes.AddSubtype(int subtypeCode, string subtypeName)
+			=> AddSubtype(subtypeCode, subtypeName);
 
-		public virtual void AddSubtype(int SubtypeCode, string SubtypeName)
+		public virtual void AddSubtype(int subtypeCode, string subtypeName)
 		{
 			throw new NotImplementedException("Implement in derived class");
 		}
 
-		void ISubtypes.DeleteSubtype(int SubtypeCode) => DeleteSubtype(SubtypeCode);
+		void ISubtypes.DeleteSubtype(int subtypeCode) => DeleteSubtype(subtypeCode);
 
-		public virtual void DeleteSubtype(int SubtypeCode)
+		public virtual void DeleteSubtype(int subtypeCode)
 		{
 			throw new NotImplementedException("Implement in derived class");
 		}
@@ -466,16 +466,16 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			set => throw new NotImplementedException("Implement in derived class");
 		}
 
-		object ISubtypes.get_DefaultValue(int SubtypeCode, string FieldName) =>
-			get_DefaultValue(SubtypeCode, FieldName);
+		object ISubtypes.get_DefaultValue(int subtypeCode, string fieldName) =>
+			get_DefaultValue(subtypeCode, fieldName);
 
-		void ISubtypes.set_DefaultValue(int SubtypeCode, string FieldName, object Value) =>
-			set_DefaultValue(SubtypeCode, FieldName, Value);
+		void ISubtypes.set_DefaultValue(int subtypeCode, string fieldName, object value) =>
+			set_DefaultValue(subtypeCode, fieldName, value);
 
-		public virtual object get_DefaultValue(int SubtypeCode, string FieldName) =>
+		public virtual object get_DefaultValue(int subtypeCode, string fieldName) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		public virtual void set_DefaultValue(int SubtypeCode, string FieldName, object Value) =>
+		public virtual void set_DefaultValue(int subtypeCode, string fieldName, object value) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		public virtual object DefaultValue
@@ -484,16 +484,16 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			set => throw new NotImplementedException("Implement in derived class");
 		}
 
-		IDomain ISubtypes.get_Domain(int SubtypeCode, string FieldName) =>
-			get_Domain(SubtypeCode, FieldName);
+		IDomain ISubtypes.get_Domain(int subtypeCode, string fieldName) =>
+			get_Domain(subtypeCode, fieldName);
 
-		void ISubtypes.set_Domain(int SubtypeCode, string FieldName, IDomain Domain) =>
-			set_Domain(SubtypeCode, FieldName, Domain);
+		void ISubtypes.set_Domain(int subtypeCode, string fieldName, IDomain domain) =>
+			set_Domain(subtypeCode, fieldName, domain);
 
-		public virtual IDomain get_Domain(int SubtypeCode, string FieldName)
+		public virtual IDomain get_Domain(int subtypeCode, string fieldName)
 			=> throw new NotImplementedException("Implement in derived class");
 
-		public virtual void set_Domain(int SubtypeCode, string FieldName, IDomain Domain)
+		public virtual void set_Domain(int subtypeCode, string fieldName, IDomain domain)
 			=> throw new NotImplementedException("Implement in derived class");
 
 		string ISubtypes.SubtypeFieldName
