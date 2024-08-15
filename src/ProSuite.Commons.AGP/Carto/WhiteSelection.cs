@@ -18,25 +18,25 @@ public interface IWhiteSelection
 
 	bool IsEmpty { get; }
 
-	bool Add(long oid); // TODO add all vertices or none?
+	bool Add(long oid); // add just the oid/shape, don't select any vertices
 	bool Remove(long oid); // also removes oid's geom from cache
 	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
-	bool SetEmpty();
+	bool SetEmpty(); // true iff changed, even if only an "empty oid" is removed; cache not cleared
 
 	bool HitTestVertex(MapPoint hitPoint, double tolerance);
 
-	IEnumerable<long> GetSelectedOIDs(); // TODO rename GetInvolvedOIDs?
+	IEnumerable<long> GetInvolvedOIDs();
+
+	IEnumerable<Geometry> GetInvolvedShapes();
 
 	IEnumerable<MapPoint> GetSelectedVertices();
 
 	IEnumerable<MapPoint> GetUnselectedVertices();
 
-	IEnumerable<Geometry> GetInvolvedFeatureShapes();
-
 	IShapeSelection GetShapeSelection(long oid);
 
 	// Implementation has a cache oid => Geometry
-	Geometry GetGeometry(long oid);
+	Geometry GetGeometry(long oid); // TODO drop from iface (now that we have IShapeSelection.Shape)
 	void CacheGeometries(params long[] oid);
 	void ClearGeometryCache();
 }
@@ -91,57 +91,71 @@ public class WhiteSelection : IWhiteSelection
 
 	public bool Add(long oid)
 	{
+		if (_shapes.ContainsKey(oid))
+		{
+			return false; // already in selection, nothing changed
+		}
+
 		var shape = GetGeometry(oid);
+		var selection = new ShapeSelection(shape);
+		_shapes.Add(oid, selection);
+		return true;
 
-		if (! _shapes.TryGetValue(oid, out var selection))
-		{
-			selection = new ShapeSelection(shape);
-			_shapes.Add(oid, selection);
-		}
+		//var shape = GetGeometry(oid);
 
-		bool changed = false;
+		//if (! _shapes.TryGetValue(oid, out var selection))
+		//{
+		//	selection = new ShapeSelection(shape);
+		//	_shapes.Add(oid, selection);
+		//}
 
-		if (shape is MapPoint)
-		{
-			changed = selection.CombineVertex(0, 0, SetCombineMethod.Add);
-		}
-		else if (shape is Multipoint multipoint)
-		{
-			int vertexCount = multipoint.PointCount;
-			for (int i = 0; i < vertexCount; i++)
-			{
-				if (selection.CombineVertex(i, i, SetCombineMethod.Add))
-				{
-					changed = true;
-				}
-			}
-		}
-		else if (shape is Multipart multipart)
-		{
-			int partCount = multipart.PartCount;
-			for (int k = 0; k < partCount; k++)
-			{
-				var part = multipart.Parts[k];
-				int vertexCount = part.Count;
-				if (multipart is Polyline) vertexCount += 1;
-				for (int i = 0; i < vertexCount; i++)
-				{
-					if (selection.CombineVertex(k, i, SetCombineMethod.Add))
-					{
-						changed = true;
-					}
-				}
-			}
-		}
+		//bool changed = false;
 
-		return changed;
+		//if (shape is MapPoint)
+		//{
+		//	changed = selection.CombineVertex(0, 0, SetCombineMethod.Add);
+		//}
+		//else if (shape is Multipoint multipoint)
+		//{
+		//	int vertexCount = multipoint.PointCount;
+		//	for (int i = 0; i < vertexCount; i++)
+		//	{
+		//		if (selection.CombineVertex(i, i, SetCombineMethod.Add))
+		//		{
+		//			changed = true;
+		//		}
+		//	}
+		//}
+		//else if (shape is Multipart multipart)
+		//{
+		//	int partCount = multipart.PartCount;
+		//	for (int k = 0; k < partCount; k++)
+		//	{
+		//		var part = multipart.Parts[k];
+		//		int vertexCount = part.Count;
+		//		if (multipart is Polyline) vertexCount += 1;
+		//		for (int i = 0; i < vertexCount; i++)
+		//		{
+		//			if (selection.CombineVertex(k, i, SetCombineMethod.Add))
+		//			{
+		//				changed = true;
+		//			}
+		//		}
+		//	}
+		//}
+
+		//return changed;
 	}
 
 	public bool SetEmpty()
 	{
-		var nonEmpty = _shapes.Values.Any(p => !p.IsEmpty);
+		//var nonEmpty = _shapes.Values.Any(p => !p.IsEmpty);
+		//_shapes.Clear();
+		//return nonEmpty;
+
+		var changed = _shapes.Count > 0;
 		_shapes.Clear();
-		return nonEmpty;
+		return changed;
 	}
 
 	public bool HitTestVertex(MapPoint hitPoint, double tolerance)
@@ -162,7 +176,7 @@ public class WhiteSelection : IWhiteSelection
 		return false;
 	}
 
-	public IEnumerable<long> GetSelectedOIDs()
+	public IEnumerable<long> GetInvolvedOIDs()
 	{
 		return _shapes.Keys;
 	}
@@ -195,7 +209,7 @@ public class WhiteSelection : IWhiteSelection
 		}
 	}
 
-	public IEnumerable<Geometry> GetInvolvedFeatureShapes()
+	public IEnumerable<Geometry> GetInvolvedShapes()
 	{
 		foreach (var pair in _shapes)
 		{

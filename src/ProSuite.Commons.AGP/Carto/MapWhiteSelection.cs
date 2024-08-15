@@ -80,7 +80,7 @@ public class MapWhiteSelection : IDisposable
 			var featureLayer = ws.Layer;
 			if (!featureLayer.IsEditable) continue;
 
-			foreach (var oid in ws.GetSelectedOIDs())
+			foreach (var oid in ws.GetInvolvedOIDs())
 			{
 				var originalShape = ws.GetGeometry(oid);
 				var shapeSelection = ws.GetShapeSelection(oid);
@@ -143,7 +143,7 @@ public class MapWhiteSelection : IDisposable
 
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
-	public bool Combine(MapPoint clickPoint, double tolerance, SetCombineMethod method)
+	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method)
 	{
 		var changed = false;
 
@@ -153,12 +153,9 @@ public class MapWhiteSelection : IDisposable
 			method = SetCombineMethod.Add;
 		}
 
-		var extent = clickPoint.Extent.Expand(tolerance / 2, tolerance / 2, false);
+		var extent = clickPoint.Extent.Expand(tolerance, tolerance, false);
 
-		var selectionSet = MapView.GetFeatures(extent);
-		if (selectionSet.IsEmpty) return changed;
-
-		var dict = selectionSet.ToDictionary<FeatureLayer>();
+		var dict = GetFeatures(MapView, extent);
 
 		foreach (var pair in dict)
 		{
@@ -174,24 +171,23 @@ public class MapWhiteSelection : IDisposable
 				var shape = selection.GetGeometry(oid);
 				if (shape is null || shape.IsEmpty) continue;
 
-				var proximity = GeometryEngine.Instance.NearestVertex(shape, clickPoint);
-				if (proximity.Distance <= tolerance)
+				bool added = selection.Add(oid);
+				if (added)
 				{
-					var vertexIndex = proximity.PointIndex ??
-					                  throw new InvalidOperationException(
-						                  "NearestVertex() must return non-null PointIndex");
+					changed = true;
+				}
 
-					if (shape is Multipoint)
-					{
-						// by convention, a multipoint's ith point is both part i and vertex i
-						Assert.AreEqual(proximity.PartIndex, proximity.PointIndex,
-						                "Expect partIndex == vertexIndex for multipoint");
-					}
+				if (SelectVertex(selection, oid, shape, clickPoint, tolerance, method, out bool vertexTouched))
+				{
+					changed = true;
+				}
 
-					if (selection.Combine(oid, proximity.PartIndex, vertexIndex, method))
-					{
-						changed = true;
-					}
+				if (method == SetCombineMethod.Xor && ! added && ! vertexTouched)
+				{
+					// User xor-selected a previously selected shape, but not a vertex
+					// of this shape: remove the entire shape/oid from the white selection
+					selection.Remove(oid);
+					changed = true;
 				}
 			}
 
@@ -204,9 +200,36 @@ public class MapWhiteSelection : IDisposable
 		return changed;
 	}
 
+	private static bool SelectVertex(
+		IWhiteSelection selection, long oid, Geometry shape,
+		MapPoint clickPoint, double tolerance, SetCombineMethod method, out bool vertexTouched)
+	{
+		var proximity = GeometryEngine.Instance.NearestVertex(shape, clickPoint);
+		if (proximity.Distance <= tolerance)
+		{
+			vertexTouched = true;
+
+			var vertexIndex = proximity.PointIndex ??
+			                  throw new InvalidOperationException(
+				                  "NearestVertex() must return non-null PointIndex");
+
+			if (shape is Multipoint)
+			{
+				// by convention, a multipoint's ith point is both part i and vertex i
+				Assert.AreEqual(proximity.PartIndex, proximity.PointIndex,
+				                "Expect partIndex == vertexIndex for multipoint");
+			}
+
+			return selection.Combine(oid, proximity.PartIndex, vertexIndex, method);
+		}
+
+		vertexTouched = false;
+		return false;
+	}
+
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
-	public bool Combine(Geometry geometry, SetCombineMethod method)
+	public bool Select(Geometry geometry, SetCombineMethod method)
 	{
 		var changed = false;
 
@@ -216,11 +239,7 @@ public class MapWhiteSelection : IDisposable
 			method = SetCombineMethod.Add;
 		}
 
-		// Bug: does not find all features if the symbol has an Offset effect (K2#38)
-		var selectionSet = MapView.GetFeatures(geometry);
-		if (selectionSet.IsEmpty) return changed;
-
-		var dict = selectionSet.ToDictionary<FeatureLayer>();
+		var dict = GetFeatures(MapView, geometry);
 
 		foreach (var pair in dict)
 		{
@@ -236,64 +255,24 @@ public class MapWhiteSelection : IDisposable
 				var shape = selection.GetGeometry(oid);
 				if (shape is null || shape.IsEmpty) continue;
 
-				if (shape is MapPoint point)
+				bool added = selection.Add(oid);
+				if (added)
 				{
-					if (GeometryEngine.Instance.Contains(geometry, point))
-					{
-						if (selection.Combine(oid, 0, 0, method))
-						{
-							changed = true;
-						}
-					}
+					changed = true;
 				}
-				else if (shape is Multipoint multipoint)
-				{
-					for (int i = 0; i < multipoint.PointCount; i++)
-					{
-						if (GeometryEngine.Instance.Contains(geometry, multipoint.Points[i]))
-						{
-							// by convention, a multipoint's ith point is both part i and vertex i
-							if (selection.Combine(oid, i, i, method))
-							{
-								changed = true;
-							}
-						}
-					}
-				}
-				else if (shape is Multipart multipart)
-				{
-					for (int j = 0; j < multipart.PartCount; j++)
-					{
-						var part = multipart.Parts[j];
-						int segmentCount = part.Count;
-						Segment segment = null;
-						for (int i = 0; i < segmentCount; i++)
-						{
-							segment = part[i]; // segment i is between vertex i and i+1
 
-							if (GeometryEngine.Instance.Contains(geometry, segment.StartPoint))
-							{
-								if (selection.Combine(oid, j, i, method))
-								{
-									changed = true;
-								}
-							}
-						}
-
-						if (segment != null && shape is Polyline)
-						{
-							// open path (not closed ring): also check last segment's end point:
-							if (GeometryEngine.Instance.Contains(geometry, segment.EndPoint))
-							{
-								if (selection.Combine(oid, j, segmentCount, method))
-								{
-									changed = true;
-								}
-							}
-						}
-					}
+				if (SelectVertices(selection, oid, shape, geometry, method, out int touchedVertices))
+				{
+					changed = true;
 				}
-				//else: not supported (silently ignore)
+
+				if (method == SetCombineMethod.Xor && !added && touchedVertices == 0)
+				{
+					// user xor-selected a previously selected shape but not a single vertex:
+					// remove this entire shape/oid from the white selection
+					selection.Remove(oid);
+					changed = true;
+				}
 			}
 
 			//if (SyncWithRegularSelection)
@@ -303,6 +282,99 @@ public class MapWhiteSelection : IDisposable
 		}
 
 		return changed;
+	}
+
+	private static bool SelectVertices(
+		IWhiteSelection selection, long oid, Geometry shape,
+		Geometry perimeter, SetCombineMethod method, out int touchedVertices)
+	{
+		bool changed = false;
+		touchedVertices = 0;
+
+		if (shape is MapPoint point)
+		{
+			if (GeometryEngine.Instance.Contains(perimeter, point))
+			{
+				touchedVertices += 1;
+				if (selection.Combine(oid, 0, 0, method))
+				{
+					changed = true;
+				}
+			}
+		}
+		else if (shape is Multipoint multipoint)
+		{
+			for (int i = 0; i < multipoint.PointCount; i++)
+			{
+				if (GeometryEngine.Instance.Contains(perimeter, multipoint.Points[i]))
+				{
+					touchedVertices += 1;
+					// by convention, a multipoint's ith point is both part i and vertex i
+					if (selection.Combine(oid, i, i, method))
+					{
+						changed = true;
+					}
+				}
+			}
+		}
+		else if (shape is Multipart multipart)
+		{
+			for (int j = 0; j < multipart.PartCount; j++)
+			{
+				var part = multipart.Parts[j];
+				int segmentCount = part.Count;
+				Segment segment = null;
+				for (int i = 0; i < segmentCount; i++)
+				{
+					segment = part[i]; // segment i is between vertex i and i+1
+
+					if (GeometryEngine.Instance.Contains(perimeter, segment.StartPoint))
+					{
+						touchedVertices += 1;
+						if (selection.Combine(oid, j, i, method))
+						{
+							changed = true;
+						}
+					}
+				}
+
+				if (segment != null && shape is Polyline)
+				{
+					// open path (not closed ring): also check last segment's end point:
+					if (GeometryEngine.Instance.Contains(perimeter, segment.EndPoint))
+					{
+						touchedVertices += 1;
+						if (selection.Combine(oid, j, segmentCount, method))
+						{
+							changed = true;
+						}
+					}
+				}
+			}
+		}
+		//else: not supported (silently ignore)
+
+		return changed;
+	}
+
+	private static Dictionary<FeatureLayer, List<long>> GetFeatures(MapView mapView, Geometry geometry)
+	{
+		if (mapView is null)
+			throw new ArgumentNullException(nameof(mapView));
+		if (geometry is null || geometry.IsEmpty)
+			return new Dictionary<FeatureLayer, List<long>>(0);
+
+		// Notes:
+		// - MapView.GetFeatures() checks for intersection with symbolization,
+		//   not geometry, that is, a vertex or segment in the gap of a dashed
+		//   line will not be selected -- this is BAD for our White Tool
+		// - TODO test the optional visualIntersect bool parameter (default is true, try false)
+		// - what's the difference between GetFeatures() and GetFeaturesEx()?
+		// - could use our own code to select (see SelectionTool)
+		// - Bug: does not find all features if the symbol has an Offset effect (K2#38)
+
+		var selectionSet = mapView.GetFeatures(geometry);
+		return selectionSet.ToDictionary<FeatureLayer>();
 	}
 
 	/// <remarks>Must call on MCT</remarks>

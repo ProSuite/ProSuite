@@ -15,6 +15,7 @@ public enum ShapeSelectionState { Not, Partially, Entirely }
 /// </summary>
 public interface IShapeSelection
 {
+	Geometry Shape { get; }
 	bool IsEmpty { get; }
 	bool IsFully { get; }
 
@@ -28,10 +29,10 @@ public interface IShapeSelection
 	bool CombineShape(SetCombineMethod method);
 	bool SetEmpty();
 
-	IEnumerable<MapPoint> GetSelectedVertices(/*Geometry shape*/);
-	IEnumerable<MapPoint> GetUnselectedVertices(/*Geometry shape*/);
+	IEnumerable<MapPoint> GetSelectedVertices();
+	IEnumerable<MapPoint> GetUnselectedVertices();
 
-	bool HitTestVertex(/*Geometry shape,*/ MapPoint hitPoint, double tolerance);
+	bool HitTestVertex(MapPoint hitPoint, double tolerance);
 }
 
 public class ShapeSelection : IShapeSelection
