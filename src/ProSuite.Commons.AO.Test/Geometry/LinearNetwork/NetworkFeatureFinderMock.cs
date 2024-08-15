@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
@@ -18,6 +18,16 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 		}
 
 		#region Implementation of ILinearNetworkFeatureFinder
+
+		public override ILinearNetworkFeatureFinder Union(ILinearNetworkFeatureFinder other)
+		{
+			LinearNetworkFeatureFinderBase otherFeatureFinder =
+				other as LinearNetworkFeatureFinderBase;
+
+			Assert.NotNull(otherFeatureFinder, "The other feature finder must be of the same type");
+
+			return new LinearNetworkGdbFeatureFinder(UnionTargetFeatureSet(otherFeatureFinder));
+		}
 
 		protected override IList<IFeature> ReadFeaturesCore(IGeometry searchGeometry,
 		                                                    ICollection<esriGeometryType>
