@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
@@ -29,11 +29,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		private IName _fullName;
 
-		public static GdbWorkspace CreateNullWorkspace()
+		public static GdbWorkspace CreateEmptyWorkspace(long? workspaceHandle = null)
 		{
-			BackingDataStore dataStore = new GdbTableContainer(new GdbTable[0]);
+			BackingDataStore dataStore = new GdbTableContainer();
 
-			return new GdbWorkspace(dataStore);
+			return new GdbWorkspace(dataStore, workspaceHandle);
 		}
 
 		public static GdbWorkspace CreateFromFgdb([NotNull] IWorkspace fileGdbWorkspace,
