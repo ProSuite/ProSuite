@@ -7,6 +7,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.RemoveOverlaps;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.AO;
@@ -114,6 +115,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 					selectedFeatureList
 						.Select(f => f.Class)
 						.First(c => c.ObjectClassID == gdbRef.ClassId) as IFeatureClass;
+
+				Assert.NotNull(fClass);
 
 				List<IGeometry> overlapGeometries =
 					ProtobufGeometryUtils.FromShapeMsgList<IGeometry>(
