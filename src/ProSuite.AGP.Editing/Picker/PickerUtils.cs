@@ -171,7 +171,7 @@ namespace ProSuite.AGP.Editing.Picker
 			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
 			SketchGeometryType sketchGeometryType = ToolUtils.GetSketchGeometryType();
 			SpatialRelationship spatialRelationship =
-				sketchGeometryType == SketchGeometryType.Polygon||
+				sketchGeometryType == SketchGeometryType.Polygon ||
 				sketchGeometryType == SketchGeometryType.Lasso
 					? SpatialRelationship.Contains
 					: SpatialRelationship.Intersects;
@@ -205,7 +205,7 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			var picker = new PickerService();
 
-			if (precedence.IsSingleClick)
+			if (typeof(T) == typeof(IPickableFeatureItem))
 			{
 				var items = PickableItemsFactory
 				            .CreateFeatureItems(orderedSelection)
@@ -213,7 +213,8 @@ namespace ProSuite.AGP.Editing.Picker
 
 				return (T) await picker.Pick<IPickableFeatureItem>(items, precedence);
 			}
-			else
+
+			if (typeof(T) == typeof(IPickableFeatureClassItem))
 			{
 				var items = PickableItemsFactory
 				            .CreateFeatureClassItems(orderedSelection)
@@ -221,6 +222,8 @@ namespace ProSuite.AGP.Editing.Picker
 
 				return (T) await picker.Pick<IPickableFeatureClassItem>(items, precedence);
 			}
+
+			throw new ArgumentOutOfRangeException(nameof(IPickableItem));
 		}
 
 		/// <summary>
