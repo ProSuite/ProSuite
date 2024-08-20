@@ -30,8 +30,12 @@ public abstract class ToolBase : MapTool
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	private const Key _keyPolygonDraw = Key.P;
+	private const Key _keyLassoDraw = Key.L;
+
 	private readonly SketchGeometryType _defaultSketchGeometryType;
-	private readonly Latch _latch = new Latch();
+	private readonly Latch _toolActivateLatch = new();
+	private readonly Latch _latch = new();
 
 	protected ToolBase(SketchGeometryType sketchGeometryType)
 	{
@@ -51,7 +55,8 @@ public abstract class ToolBase : MapTool
 		ConstructionCursorCore = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
 	}
 
-	private List<Key> HandledKeys { get; } = new() { Key.Escape, Key.F2 };
+	private List<Key> HandledKeys { get; } =
+		new(4) { Key.Escape, Key.F2, _keyLassoDraw, _keyPolygonDraw };
 	
 	protected Point CurrentMousePosition;
 
@@ -80,6 +85,12 @@ public abstract class ToolBase : MapTool
 	protected sealed override async Task OnToolActivateAsync(bool hasMapViewChanged)
 	{
 		_msg.Debug($"Activate {Caption}");
+
+		// After on tool activate OnSelectionChangedAsync is fired. But ToolBase just needs
+		// OnSelectionChangedAsync when selection is cleared or to react when a selection
+		// is made but not by the tool itself, e.g. select row in table. In all other cases
+		// we want OnSelectionChangedAsync to be latched. Especially when the tool is activated.
+		_toolActivateLatch.Increment();
 
 		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
 
@@ -158,7 +169,43 @@ public abstract class ToolBase : MapTool
 			}
 		}
 
+		if (! InConstructionPhase())
+		{
+			if (args.Key == _keyPolygonDraw)
+			{
+				SetupPolygonSketch();
+			}
+
+			if (args.Key == _keyLassoDraw)
+			{
+				SetupLassoSketch();
+			}
+		}
+
 		await ViewUtils.TryAsync(HandleKeyDownCoreAsync(args), _msg);
+	}
+
+	protected override void OnToolKeyUp(MapViewKeyEventArgs args)
+	{
+		if (HandledKeys.Contains(args.Key))
+		{
+			args.Handled = true;
+		}
+	}
+
+	protected sealed override async Task HandleKeyUpAsync(MapViewKeyEventArgs args)
+	{
+		_msg.VerboseDebug(() => "HandleKeyUpAsync");
+
+		if (! InConstructionPhase())
+		{
+			if (args.Key is _keyPolygonDraw or _keyLassoDraw)
+			{
+				ResetSketchAppearance();
+			}
+		}
+
+		await ViewUtils.TryAsync(HandleKeyUpCoreAsync(args), _msg);
 	}
 
 	protected override void OnToolMouseMove(MapViewMouseEventArgs args)
@@ -183,6 +230,11 @@ public abstract class ToolBase : MapTool
 	}
 
 	protected virtual Task HandleKeyDownCoreAsync(MapViewKeyEventArgs args)
+	{
+		return Task.CompletedTask;
+	}
+
+	protected virtual Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 	{
 		return Task.CompletedTask;
 	}
@@ -266,13 +318,10 @@ public abstract class ToolBase : MapTool
 	{
 		using var pickerPrecedence = CreatePickerPrecedence(geometry);
 
-		Task picker =
-			AllowMultiSelection(out _)
-				? PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection)
-				: PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection,
-				                        PickerMode.ShowPicker);
-
-		await ViewUtils.TryAsync(picker, _msg);
+		await (AllowMultiSelection(out _)
+			       ? PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection)
+			       : PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection,
+			                               PickerMode.ShowPicker));
 
 		return MapUtils.HasSelection(ActiveMapView);
 	}
@@ -369,8 +418,13 @@ public abstract class ToolBase : MapTool
 
 	private void ResetSketchAppearance()
 	{
-		SketchType = _defaultSketchGeometryType;
+		SetSketchType(_defaultSketchGeometryType);
 		SketchSymbol = null;
+	}
+
+	private void SetSketchType(SketchGeometryType type)
+	{
+		SketchType = type;
 	}
 
 	private async Task<bool> HasSketchAsync()
@@ -379,6 +433,24 @@ public abstract class ToolBase : MapTool
 
 		return currentSketch?.IsEmpty == false;
 	}
+
+	private void SetupPolygonSketch()
+	{
+		SetSketchType(SketchGeometryType.Polygon);
+
+		SetupPolygonSketchCore();
+	}
+
+	protected virtual void SetupPolygonSketchCore() { }
+
+	private void SetupLassoSketch()
+	{
+		SetSketchType(SketchGeometryType.Lasso);
+
+		SetupLassoSketchCore();
+	}
+
+	protected virtual void SetupLassoSketchCore() { }
 
 	#endregion
 
@@ -425,7 +497,7 @@ public abstract class ToolBase : MapTool
 		Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
 			SelectionUtils.GetSelection<BasicFeatureLayer>(selection);
 
-		if (!CanUseSelection(selectionByLayer, new NotificationCollection()))
+		if (! CanUseSelection(selectionByLayer, new NotificationCollection()))
 		{
 			return false; // startContructionPhase = false
 		}
@@ -457,6 +529,11 @@ public abstract class ToolBase : MapTool
 	protected virtual async Task OnSelectionChangedCoreAsync(
 		[NotNull] MapSelectionChangedEventArgs args)
 	{
+		if (_toolActivateLatch.IsLatched)
+		{
+			_toolActivateLatch.Decrement();
+		}
+
 		if (args.Selection.Count == 0)
 		{
 			LogPromptForSelection();
@@ -465,7 +542,7 @@ public abstract class ToolBase : MapTool
 		}
 		else if (args.Selection.Count > 0)
 		{
-			// Process existing selection on activate tool.
+			// Process selection not by this tool, e.g. select row in table, etc.
 			// Do not react on selection made by this tool.
 			if (_latch.IsLatched)
 			{
