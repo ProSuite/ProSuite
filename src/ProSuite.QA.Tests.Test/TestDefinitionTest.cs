@@ -96,145 +96,152 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
+		private static List<Type> RefactoredTypes
+		{
+			get
+			{
+				List<Type> refactoredTypes = new List<Type>
+				                             {
+					                             typeof(Qa3dConstantZ),
+					                             typeof(QaBorderSense),
+					                             typeof(QaCentroids),
+					                             typeof(QaConstraint),
+					                             typeof(QaContainedPointsCount),
+					                             typeof(QaContainsOther),
+					                             typeof(QaCoplanarRings),
+					                             typeof(QaCrossesOther),
+					                             typeof(QaCrossesSelf),
+					                             typeof(QaCurve),
+					                             typeof(QaDangleCount),
+					                             typeof(QaDateFieldsWithoutTime),
+					                             typeof(QaDuplicateGeometrySelf),
+					                             typeof(QaEdgeMatchBorderingLines),
+					                             typeof(QaEdgeMatchBorderingPoints),
+					                             typeof(QaEdgeMatchCrossingAreas),
+					                             typeof(QaEdgeMatchCrossingLines),
+					                             typeof(QaEmptyNotNullTextFields),
+					                             typeof(QaExportTables),
+					                             typeof(QaExtent),
+					                             typeof(QaFlowLogic),
+					                             typeof(QaForeignKey),
+					                             typeof(QaFullCoincidence),
+					                             typeof(QaGdbConstraint),
+					                             typeof(QaGdbRelease),
+					                             typeof(QaGeometryConstraint),
+					                             typeof(QaGroupConnected),
+					                             typeof(QaGroupConstraints),
+					                             typeof(QaHorizontalSegments),
+					                             typeof(QaInteriorIntersectsOther),
+					                             typeof(QaInteriorIntersectsSelf),
+					                             typeof(QaInteriorRings),
+					                             typeof(QaIntersectionMatrixOther),
+					                             typeof(QaIntersectionMatrixSelf),
+					                             typeof(QaIntersectsOther),
+					                             typeof(QaIntersectsSelf),
+					                             typeof(QaIsCoveredByOther),
+					                             typeof(QaLineConnectionFieldValues),
+					                             typeof(QaLineGroupConstraints),
+					                             typeof(QaLineIntersect),
+					                             typeof(QaLineIntersectAngle),
+					                             typeof(QaLineIntersectZ),
+					                             typeof(QaMaxArea),
+					                             typeof(QaMaxLength),
+					                             typeof(QaMaxSlope),
+					                             typeof(QaMaxVertexCount),
+					                             typeof(QaMeasures),
+					                             typeof(QaMeasuresAtPoints),
+					                             typeof(QaMinAngle),
+					                             typeof(QaMinArea),
+					                             typeof(QaMinIntersect),
+					                             typeof(QaMinLength),
+					                             typeof(QaMinMeanSegmentLength),
+					                             typeof(QaMinNodeDistance),
+					                             typeof(QaMinSegAngle),
+					                             typeof(QaMonotonicMeasures),
+					                             typeof(QaMonotonicZ),
+					                             typeof(QaMpAllowedPartTypes),
+					                             typeof(QaMpConstantPointIdsPerRing),
+					                             typeof(QaMpFootprintHoles),
+					                             typeof(QaMpHorizontalAzimuths),
+					                             typeof(QaMpHorizontalHeights),
+					                             typeof(QaMpHorizontalPerpendicular),
+					                             typeof(QaMpNonIntersectingRingFootprints),
+					                             typeof(QaMpSinglePartFootprint),
+					                             typeof(QaMpVertexNotNearFace),
+					                             typeof(QaMpVerticalFaces),
+					                             typeof(QaMultipart),
+					                             typeof(QaMustBeNearOther),
+					                             typeof(QaMustIntersectMatrixOther),
+					                             typeof(QaMustIntersectOther),
+					                             typeof(QaMustTouchOther),
+					                             typeof(QaMustTouchSelf),
+					                             typeof(QaNeighbourAreas),
+					                             typeof(QaNoBoundaryLoops),
+					                             typeof(QaNoClosedPaths),
+					                             typeof(QaNodeLineCoincidence),
+					                             typeof(QaNoGaps),
+					                             typeof(QaNonEmptyGeometry),
+					                             typeof(QaNotNear),
+					                             typeof(QaNoTouchingParts),
+					                             typeof(QaOrphanNode),
+					                             typeof(QaOverlapsOther),
+					                             typeof(QaOverlapsSelf),
+					                             typeof(QaPartCoincidenceOther),
+					                             typeof(QaPartCoincidenceSelf),
+					                             typeof(QaPointNotNear),
+					                             typeof(QaPointOnLine),
+					                             typeof(QaPseudoNodes),
+					                             typeof(QaRegularExpression),
+					                             typeof(QaRequiredFields),
+					                             typeof(QaRouteMeasuresContinuous),
+					                             typeof(QaRouteMeasuresUnique),
+					                             typeof(QaRowCount),
+					                             typeof(QaSchemaFieldAliases),
+					                             typeof(QaSchemaFieldDomainCodedValues),
+					                             typeof(QaSchemaFieldDomainDescriptions),
+					                             typeof(QaSchemaFieldDomainNameRegex),
+					                             typeof(QaSchemaFieldDomainNames),
+					                             typeof(QaSchemaFieldDomains),
+					                             typeof(QaSchemaFieldNameRegex),
+					                             typeof(QaSchemaFieldNames),
+					                             typeof(QaSchemaFieldProperties),
+					                             typeof(QaSchemaFieldPropertiesFromTable),
+					                             typeof(QaSchemaReservedFieldNameProperties),
+					                             typeof(QaSchemaReservedFieldNames),
+					                             typeof(QaSchemaSpatialReference),
+					                             typeof(QaSegmentLength),
+					                             typeof(QaSimpleGeometry),
+					                             typeof(QaSliverPolygon),
+					                             typeof(QaSmooth),
+					                             typeof(QaSurfacePipe),
+					                             typeof(QaSurfaceSpikes),
+					                             typeof(QaSurfaceVertex),
+					                             typeof(QaTouchesOther),
+					                             typeof(QaTouchesSelf),
+					                             typeof(QaTrimmedTextFields),
+					                             typeof(QaUnique),
+					                             typeof(QaUnreferencedRows),
+					                             typeof(QaValidCoordinateFields),
+					                             typeof(QaValidDateValues),
+					                             typeof(QaValidNonLinearSegments),
+					                             typeof(QaValidUrls),
+					                             typeof(QaValue),
+					                             typeof(QaVertexCoincidence),
+					                             typeof(QaVertexCoincidenceOther),
+					                             typeof(QaVertexCoincidenceSelf),
+					                             typeof(QaWithinBox),
+					                             typeof(QaWithinZRange),
+					                             typeof(QaZDifferenceOther),
+					                             typeof(QaZDifferenceSelf)
+				                             };
+				return refactoredTypes;
+			}
+		}
+
 		[Test]
 		public void CanCreateTests()
 		{
-			List<Type> refactoredTypes = new List<Type>
-			                             {
-				                             typeof(Qa3dConstantZ),
-				                             typeof(QaBorderSense),
-				                             typeof(QaCentroids),
-				                             typeof(QaConstraint),
-				                             typeof(QaContainedPointsCount),
-				                             typeof(QaContainsOther),
-				                             typeof(QaCoplanarRings),
-				                             typeof(QaCrossesOther),
-				                             typeof(QaCrossesSelf),
-				                             typeof(QaCurve),
-				                             typeof(QaDangleCount),
-				                             typeof(QaDateFieldsWithoutTime),
-				                             typeof(QaDuplicateGeometrySelf),
-				                             typeof(QaEdgeMatchBorderingLines),
-				                             typeof(QaEdgeMatchBorderingPoints),
-				                             typeof(QaEdgeMatchCrossingAreas),
-				                             typeof(QaEdgeMatchCrossingLines),
-				                             typeof(QaEmptyNotNullTextFields),
-				                             typeof(QaExportTables),
-				                             typeof(QaExtent),
-				                             typeof(QaFlowLogic),
-				                             typeof(QaForeignKey),
-				                             typeof(QaFullCoincidence),
-				                             typeof(QaGdbConstraint),
-				                             typeof(QaGdbRelease),
-				                             typeof(QaGeometryConstraint),
-				                             typeof(QaGroupConnected),
-				                             typeof(QaGroupConstraints),
-				                             typeof(QaHorizontalSegments),
-				                             typeof(QaInteriorIntersectsOther),
-				                             typeof(QaInteriorIntersectsSelf),
-				                             typeof(QaInteriorRings),
-				                             typeof(QaIntersectionMatrixOther),
-				                             typeof(QaIntersectionMatrixSelf),
-				                             typeof(QaIntersectsOther),
-				                             typeof(QaIntersectsSelf),
-				                             typeof(QaIsCoveredByOther),
-				                             typeof(QaLineConnectionFieldValues),
-				                             typeof(QaLineGroupConstraints),
-				                             typeof(QaLineIntersect),
-				                             typeof(QaLineIntersectAngle),
-				                             typeof(QaLineIntersectZ),
-				                             typeof(QaMaxArea),
-				                             typeof(QaMaxLength),
-				                             typeof(QaMaxSlope),
-				                             typeof(QaMaxVertexCount),
-				                             typeof(QaMeasures),
-				                             typeof(QaMeasuresAtPoints),
-				                             typeof(QaMinAngle),
-				                             typeof(QaMinArea),
-				                             typeof(QaMinIntersect),
-				                             typeof(QaMinLength),
-				                             typeof(QaMinMeanSegmentLength),
-				                             typeof(QaMinNodeDistance),
-				                             typeof(QaMinSegAngle),
-				                             typeof(QaMonotonicMeasures),
-				                             typeof(QaMonotonicZ),
-				                             typeof(QaMpAllowedPartTypes),
-				                             typeof(QaMpConstantPointIdsPerRing),
-				                             typeof(QaMpFootprintHoles),
-				                             typeof(QaMpHorizontalAzimuths),
-				                             typeof(QaMpHorizontalHeights),
-				                             typeof(QaMpHorizontalPerpendicular),
-				                             typeof(QaMpNonIntersectingRingFootprints),
-				                             typeof(QaMpSinglePartFootprint),
-				                             typeof(QaMpVertexNotNearFace),
-				                             typeof(QaMpVerticalFaces),
-				                             typeof(QaMultipart),
-				                             typeof(QaMustBeNearOther),
-				                             typeof(QaMustIntersectMatrixOther),
-				                             typeof(QaMustIntersectOther),
-				                             typeof(QaMustTouchOther),
-				                             typeof(QaMustTouchSelf),
-				                             typeof(QaNeighbourAreas),
-				                             typeof(QaNoBoundaryLoops),
-				                             typeof(QaNoClosedPaths),
-				                             typeof(QaNodeLineCoincidence),
-				                             typeof(QaNoGaps),
-				                             typeof(QaNonEmptyGeometry),
-				                             typeof(QaNotNear),
-				                             typeof(QaNoTouchingParts),
-				                             typeof(QaOrphanNode),
-				                             typeof(QaOverlapsOther),
-				                             typeof(QaOverlapsSelf),
-				                             typeof(QaPartCoincidenceOther),
-				                             typeof(QaPartCoincidenceSelf),
-				                             typeof(QaPointNotNear),
-				                             typeof(QaPointOnLine),
-				                             typeof(QaPseudoNodes),
-				                             typeof(QaRegularExpression),
-				                             typeof(QaRequiredFields),
-				                             typeof(QaRouteMeasuresContinuous),
-				                             typeof(QaRouteMeasuresUnique),
-				                             typeof(QaRowCount),
-				                             typeof(QaSchemaFieldAliases),
-				                             typeof(QaSchemaFieldDomainCodedValues),
-				                             typeof(QaSchemaFieldDomainDescriptions),
-				                             typeof(QaSchemaFieldDomainNameRegex),
-				                             typeof(QaSchemaFieldDomainNames),
-				                             typeof(QaSchemaFieldDomains),
-				                             typeof(QaSchemaFieldNameRegex),
-				                             typeof(QaSchemaFieldNames),
-				                             typeof(QaSchemaFieldProperties),
-				                             typeof(QaSchemaFieldPropertiesFromTable),
-				                             typeof(QaSchemaReservedFieldNameProperties),
-				                             typeof(QaSchemaReservedFieldNames),
-				                             typeof(QaSchemaSpatialReference),
-				                             typeof(QaSegmentLength),
-				                             typeof(QaSimpleGeometry),
-				                             typeof(QaSliverPolygon),
-				                             typeof(QaSmooth),
-				                             typeof(QaSurfacePipe),
-				                             typeof(QaSurfaceSpikes),
-				                             typeof(QaSurfaceVertex),
-				                             typeof(QaTouchesOther),
-				                             typeof(QaTouchesSelf),
-				                             typeof(QaTrimmedTextFields),
-				                             typeof(QaUnique),
-				                             typeof(QaUnreferencedRows),
-				                             typeof(QaValidCoordinateFields),
-				                             typeof(QaValidDateValues),
-				                             typeof(QaValidNonLinearSegments),
-				                             typeof(QaValidUrls),
-				                             typeof(QaValue),
-				                             typeof(QaVertexCoincidence),
-				                             typeof(QaVertexCoincidenceOther),
-				                             typeof(QaVertexCoincidenceSelf),
-				                             typeof(QaWithinBox),
-				                             typeof(QaWithinZRange),
-				                             typeof(QaZDifferenceOther),
-				                             typeof(QaZDifferenceSelf)
-			                             };
-
-			foreach (Type testType in refactoredTypes)
+			foreach (Type testType in RefactoredTypes)
 			{
 				Assert.IsFalse(InstanceUtils.HasInternallyUsedAttribute(testType),
 				               "Internally used tests are only used by factories and do not require a TestDefinition");
@@ -307,11 +314,8 @@ namespace ProSuite.QA.Tests.Test
 			object[] ConstructorValues = null,
 			Dictionary<string, object> OptionalParamValues = null);
 
-		[Test]
-		public void AreParametersEqual()
+		private static List<TestDefinitionCase> DefineTestCases(InMemoryTestDataModel model)
 		{
-			var model = new InMemoryTestDataModel("simple model");
-
 			var testCases = new List<TestDefinitionCase>();
 
 			// Test cases with automatic parameter value generation:
@@ -456,6 +460,16 @@ namespace ProSuite.QA.Tests.Test
 			AddQaZDifferenceOtherCases(model, testCases);
 			AddQaZDifferenceSelfCases(model, testCases);
 
+			return testCases;
+		}
+
+		[Test]
+		public void AreParametersEqual()
+		{
+			var model = new InMemoryTestDataModel("simple model");
+
+			List<TestDefinitionCase> testCases = DefineTestCases(model);
+
 			foreach (TestDefinitionCase testCase in testCases)
 			{
 				Type testType = testCase.TestType;
@@ -556,6 +570,8 @@ namespace ProSuite.QA.Tests.Test
 				                $"Differences found for {testType.Name} constructor index {constructorIdx}:");
 			}
 		}
+
+		#region Methods to add special TestDefinitionCases
 
 		private static void AddQaContainedPointsCountCases(InMemoryTestDataModel model,
 		                                                   ICollection<TestDefinitionCase>
@@ -3271,6 +3287,8 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
+		#endregion
+
 		[Test]
 		public void CanCreateIssueFilters()
 		{
@@ -3464,7 +3482,8 @@ namespace ProSuite.QA.Tests.Test
 				}
 
 				IIssueFilter testsOrig =
-					InstanceFactoryUtils.CreateIssueFilter(ifConfinguration, new SimpleDatasetOpener(model));
+					InstanceFactoryUtils.CreateIssueFilter(ifConfinguration,
+					                                       new SimpleDatasetOpener(model));
 
 				IIssueFilter testsNew =
 					InstanceFactoryUtils.CreateIssueFilter(ifDefinitionConfiguration,
@@ -3483,6 +3502,8 @@ namespace ProSuite.QA.Tests.Test
 				                $"Differences found for {issueFilterType.Name} constructor index {constructorIdx}:");
 			}
 		}
+
+		#region Methods to add special issue filter definition cases
 
 		private static void AddIfAllCases(InMemoryTestDataModel model,
 		                                  ICollection<IfDefinitionCase> ifCases)
@@ -3508,6 +3529,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 { "Constraint" },
 			                                 optionalValues));
 		}
+
+		#endregion
 
 		[Test]
 		public void CanCreateTransformers()
@@ -3693,10 +3716,12 @@ namespace ProSuite.QA.Tests.Test
 				}
 
 				ITableTransformer testsOrig =
-					InstanceFactoryUtils.CreateTransformer(trConfinguration, new SimpleDatasetOpener(model));
+					InstanceFactoryUtils.CreateTransformer(trConfinguration,
+					                                       new SimpleDatasetOpener(model));
 
 				ITableTransformer testsNew =
-					InstanceFactoryUtils.CreateTransformer(trConfinguration, new SimpleDatasetOpener(model));
+					InstanceFactoryUtils.CreateTransformer(trConfinguration,
+					                                       new SimpleDatasetOpener(model));
 
 				List<KeyValuePair<Type, MemberInfo>> differences =
 					ReflectionCompare.RecursiveReflectionCompare(testsOrig, testsNew, true);
@@ -3847,7 +3872,8 @@ namespace ProSuite.QA.Tests.Test
 			     constructorIdx < constructorCount;
 			     constructorIdx++)
 			{
-				Console.WriteLine("Checking {0}({1})", testType.Name, constructorIdx);
+				Console.WriteLine("Creating default test case for {0}({1})", testType.Name,
+				                  constructorIdx);
 
 				bool hasNoCategory = TestTypeHasNoCategory(testType);
 
@@ -4340,6 +4366,104 @@ namespace ProSuite.QA.Tests.Test
 
 			return new TransformerDescriptor(typeName, new ClassDescriptor(type),
 			                                 constructorIndex);
+		}
+
+		[Test]
+		public static void CheckCompletenessCanCreateTest()
+		{
+			Type typeFromTestAssembly = typeof(Qa3dConstantZ);
+			Assembly testAssembly = typeFromTestAssembly.Assembly;
+
+			List<Assembly> assemblies = new List<Assembly> { testAssembly };
+
+			List<Type> testTypes = CollectTestTypes(assemblies);
+
+			List<Type> missingCanCreateTypes =
+				FindMissingCanCreateTypes(testTypes, RefactoredTypes);
+
+			if (missingCanCreateTypes.Any())
+			{
+				foreach (var missingCanCreateType in missingCanCreateTypes)
+				{
+					Console.WriteLine("Not implemented in method CanCreateTest: " +
+					                  missingCanCreateType.Name);
+				}
+
+				throw new AssertionException(
+					"One or more types missing in method CanCreateTest()");
+			}
+			else
+			{
+				Console.WriteLine(
+					"All types are present in the RefactoredTypes in method CanCreateTest().");
+			}
+		}
+
+		[Test]
+		public static void CheckCompletenessAreParametersEqual()
+		{
+			List<Type> missingAreParametersEqualTypes =
+				FindMissingAreParametersEqualTypes(RefactoredTypes);
+
+			if (missingAreParametersEqualTypes.Any())
+			{
+				foreach (var missingAreParametersEqualType in missingAreParametersEqualTypes)
+				{
+					Console.WriteLine("Not implemented in method AreParametersEqual: " +
+					                  missingAreParametersEqualType.Name);
+				}
+
+				throw new AssertionException(
+					"One or more types missing in method AreParametersEqual()");
+			}
+
+			else
+			{
+				Console.WriteLine(
+					"All types are present in testCases in method AreParametersEqual().");
+			}
+		}
+
+		private static List<Type> CollectTestTypes(IEnumerable<Assembly> assemblies)
+		{
+			const bool includeObsolete = false;
+			const bool includeInternallyUsed = false;
+
+			var testTypes = new List<Type>();
+
+			foreach (Assembly assembly in assemblies)
+			{
+				foreach (Type testType in TestFactoryUtils.GetTestClasses(
+					         assembly, includeObsolete, includeInternallyUsed))
+				{
+					// Add the testType to the list
+					testTypes.Add(testType);
+				}
+			}
+
+			return testTypes;
+		}
+
+		static List<Type> FindMissingCanCreateTypes(List<Type> testassemblyTypes,
+		                                            List<Type> canCreateTypes)
+		{
+			return testassemblyTypes.Except(canCreateTypes).ToList();
+		}
+
+		static List<Type> FindMissingAreParametersEqualTypes(List<Type> testassemblyTypes)
+		{
+			var model = new InMemoryTestDataModel("simple model");
+
+			List<TestDefinitionCase> testCases = DefineTestCases(model);
+
+			List<Type> testDefinitionTypes = new List<Type>();
+
+			foreach (TestDefinitionCase testCase in testCases)
+			{
+				testDefinitionTypes.Add(testCase.TestType);
+			}
+
+			return testassemblyTypes.Except(testDefinitionTypes).ToList();
 		}
 	}
 
