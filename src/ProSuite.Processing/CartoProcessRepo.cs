@@ -244,7 +244,6 @@ namespace ProSuite.Processing
 			XElement processElement,
 			IReadOnlyList<XElement> declaredTypes, IReadOnlyList<Type> knownTypes)
 		{
-
 			var typeElement = processElement.Element("TypeReference");
 			var typeAlias = (string) typeElement?.Attribute("name") ??
 			                throw new FormatException(AppendLineInfo("Process has no type reference", processElement));

@@ -464,8 +464,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			using var pickerPrecedence =
 				CreatePickerPrecedence(sketchGeometry);
 
-			await ViewUtils.TryAsync(
-				PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers), _msg);
+			await PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers);
 
 			await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
 

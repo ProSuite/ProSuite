@@ -318,13 +318,10 @@ public abstract class ToolBase : MapTool
 	{
 		using var pickerPrecedence = CreatePickerPrecedence(geometry);
 
-		Task picker =
-			AllowMultiSelection(out _)
-				? PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection)
-				: PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection,
-				                        PickerMode.ShowPicker);
-
-		await ViewUtils.TryAsync(picker, _msg);
+		await (AllowMultiSelection(out _)
+			       ? PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection)
+			       : PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection,
+			                               PickerMode.ShowPicker));
 
 		return MapUtils.HasSelection(ActiveMapView);
 	}
