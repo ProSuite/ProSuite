@@ -366,7 +366,7 @@ public class MapWhiteSelection : IDisposable
 		return changed;
 	}
 
-	private static Dictionary<FeatureLayer, List<long>> GetFeatures(MapView mapView, Geometry geometry)
+	private Dictionary<FeatureLayer, List<long>> GetFeatures(MapView mapView, Geometry geometry)
 	{
 		if (mapView is null)
 			throw new ArgumentNullException(nameof(mapView));
@@ -377,14 +377,18 @@ public class MapWhiteSelection : IDisposable
 		// - MapView.GetFeatures() checks for intersection with symbolization,
 		//   not geometry, that is, a vertex or segment in the gap of a dashed
 		//   line will not be selected -- this is BAD for our White Tool
-		// - TODO test the optional visualIntersect bool parameter (default is true, try false)
-		// - what's the difference between GetFeatures() and GetFeaturesEx()?
-		// - could use our own code to select (see SelectionTool)
+		// - The optional visualIntersect bool parameter (default is true)
+		//   sounds promising but seems to have no effect when set to false
+		// - What's the difference between GetFeatures() and GetFeaturesEx()?
+		// - Could use our own code to select (see SelectionTool)
 		// - Bug: does not find all features if the symbol has an Offset effect (K2#38)
 
-		var selectionSet = mapView.GetFeatures(geometry);
+		var selectionSet = mapView.GetFeatures(geometry, VisualIntersect);
+		//var selectionSet = mapView.GetFeaturesEx(geometry, VisualIntersect);
 		return selectionSet.ToDictionary<FeatureLayer>();
 	}
+
+	public bool VisualIntersect { get; set; } = true;
 
 	/// <remarks>Must call on MCT</remarks>
 	private static void UpdateRegularSelection(IWhiteSelection selection, long[] involvedOids)
