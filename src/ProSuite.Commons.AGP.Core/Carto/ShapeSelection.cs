@@ -32,7 +32,12 @@ public interface IShapeSelection
 	IEnumerable<MapPoint> GetSelectedVertices();
 	IEnumerable<MapPoint> GetUnselectedVertices();
 
-	bool HitTestVertex(MapPoint hitPoint, double tolerance);
+	/// <param name="hitPoint">where the user clicked</param>
+	/// <param name="tolerance">maximum allowed distance</param>
+	/// <param name="vertex">the actual vertex found or null</param>
+	/// <returns>true iff any selected vertex is within
+	/// <paramref name="tolerance"/> of <paramref name="hitPoint"/></returns>
+	bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
 
 	/// <remarks>Callers duty to make sure the given <paramref name="shape"/>
 	/// is compatible with this selection (part/vertex count)</remarks>
@@ -269,25 +274,29 @@ public class ShapeSelection : IShapeSelection
 		return _blocks.SetEmpty();
 	}
 
-	/// <returns>true iff any selected vertex is within
-	/// <paramref name="tolerance"/> of <paramref name="hitPoint"/></returns>
-	public bool HitTestVertex(MapPoint hitPoint, double tolerance)
+	public bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex)
 	{
-		if (hitPoint is null || hitPoint.IsEmpty) return false;
+		if (hitPoint is null || hitPoint.IsEmpty)
+		{
+			vertex = null;
+			return false;
+		}
 
 		var toleranceSquared = tolerance * tolerance;
 
-		foreach (var vertex in GetSelectedVertices())
+		foreach (var candidate in GetSelectedVertices())
 		{
-			var dx = vertex.X - hitPoint.X;
-			var dy = vertex.Y - hitPoint.Y;
+			var dx = candidate.X - hitPoint.X;
+			var dy = candidate.Y - hitPoint.Y;
 			var dd = dx * dx + dy * dy;
 			if (dd <= toleranceSquared)
 			{
+				vertex = candidate;
 				return true;
 			}
 		}
 
+		vertex = null;
 		return false;
 	}
 

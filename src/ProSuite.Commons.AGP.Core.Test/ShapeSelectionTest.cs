@@ -133,8 +133,10 @@ public class ShapeSelectionTest
 		var tolerance = 0.15; // a little more than pyth(hitPoint)
 
 		selection.CombineVertex(0, 0, SetCombineMethod.New);
-		Assert.True(selection.HitTestVertex(hitPoint, tolerance));
-		Assert.False(selection.HitTestVertex(hitPoint, tolerance / 2));
+		Assert.True(selection.HitTestVertex(hitPoint, tolerance, out var vertex));
+		Assert.NotNull(vertex);
+		Assert.False(selection.HitTestVertex(hitPoint, tolerance / 2, out vertex));
+		Assert.Null(vertex);
 
 		// other geometry types... but since HitTestVertex is implemented
 		// in terms of GetSelectedVertices this should be enough for now

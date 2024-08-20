@@ -23,7 +23,7 @@ public interface IWhiteSelection
 	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
 	bool SetEmpty(); // true iff changed, even if only an "empty oid" is removed; cache not cleared
 
-	bool HitTestVertex(MapPoint hitPoint, double tolerance);
+	bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
 
 	IEnumerable<long> GetInvolvedOIDs();
 
@@ -159,7 +159,7 @@ public class WhiteSelection : IWhiteSelection
 		return changed;
 	}
 
-	public bool HitTestVertex(MapPoint hitPoint, double tolerance)
+	public bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex)
 	{
 		foreach (var pair in _shapes)
 		{
@@ -168,12 +168,13 @@ public class WhiteSelection : IWhiteSelection
 
 			//var shape = GetGeometry(oid);
 
-			if (selection.HitTestVertex(/*shape,*/ hitPoint, tolerance))
+			if (selection.HitTestVertex(hitPoint, tolerance, out vertex))
 			{
 				return true;
 			}
 		}
 
+		vertex = null;
 		return false;
 	}
 

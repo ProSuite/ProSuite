@@ -19,6 +19,7 @@ namespace ProSuite.Commons.AGP.Carto;
 public class MapWhiteSelection : IDisposable
 {
 	//private SubscriptionToken _mapSelectionChangedToken;
+	// TODO probably should keep _layerSelections ordered as in the ToC
 	private readonly Dictionary<string, IWhiteSelection> _layerSelections = new();
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -57,11 +58,21 @@ public class MapWhiteSelection : IDisposable
 
 	/// <returns>true iff <paramref name="point"/> is within
 	/// <paramref name="tolerance"/> of a selected vertex</returns>
-	public bool HitTestVertex(MapPoint point, double tolerance)
+	public bool HitTestVertex(MapPoint point, double tolerance, out MapPoint vertex)
 	{
 		var all = GetLayerSelections();
 
-		return all.Any(ws => ws.HitTestVertex(point, tolerance));
+		// TODO either find closest hit or first in layer order?!
+		foreach (var ws in all)
+		{
+			if (ws.HitTestVertex(point, tolerance, out vertex))
+			{
+				return true;
+			}
+		}
+
+		vertex = null;
+		return false;
 	}
 
 	public ICollection<IWhiteSelection> GetLayerSelections()
