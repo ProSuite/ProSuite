@@ -11,10 +11,13 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
+using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
 using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
@@ -107,6 +110,27 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		await StartSketchAsync();
 
 		return true; // startConstructionPhase = true
+	}
+
+	protected override async Task<bool> OnSelectionSketchCompleteAsync(Geometry geometry)
+	{
+		using var pickerPrecedence = CreatePickerPrecedence(geometry);
+
+		Task picker;
+
+		if (pickerPrecedence is SelectionToolPickerPrecedence)
+		{
+			picker = PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection);
+		}
+		else
+		{
+			picker = PickerUtils.ShowAsync<IPickableFeatureItem>(
+				pickerPrecedence, FindFeatureSelection, PickerMode.ShowPicker);
+		}
+
+		await ViewUtils.TryAsync(picker, _msg);
+
+		return MapUtils.HasSelection(ActiveMapView);
 	}
 
 	protected override async Task<bool> OnConstructionSketchCompleteAsync(

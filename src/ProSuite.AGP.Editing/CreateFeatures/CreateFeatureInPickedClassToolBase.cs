@@ -8,7 +8,9 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
+using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -17,6 +19,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
+using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.CreateFeatures;
 
@@ -79,6 +82,27 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		await StartSketchAsync();
 
 		return true; // startContructionPhase = true
+	}
+
+	protected override async Task<bool> OnSelectionSketchCompleteAsync(Geometry geometry)
+	{
+		using var pickerPrecedence = CreatePickerPrecedence(geometry);
+
+		Task picker;
+
+		if (pickerPrecedence is SelectionToolPickerPrecedence)
+		{
+			picker = PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection);
+		}
+		else
+		{
+			picker = PickerUtils.ShowAsync<IPickableFeatureItem>(
+				pickerPrecedence, FindFeatureSelection, PickerMode.ShowPicker);
+		}
+
+		await ViewUtils.TryAsync(picker, _msg);
+
+		return MapUtils.HasSelection(ActiveMapView);
 	}
 
 	protected override async Task<bool> OnConstructionSketchCompleteAsync(
