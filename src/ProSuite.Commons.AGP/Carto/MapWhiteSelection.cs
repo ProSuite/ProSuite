@@ -92,10 +92,9 @@ public class MapWhiteSelection : IDisposable
 
 			foreach (var oid in ws.GetInvolvedOIDs())
 			{
-				//var originalShape = ws.GetGeometry(oid);
 				var shapeSelection = ws.GetShapeSelection(oid);
 
-				yield return (featureLayer, oid, /*originalShape,*/ shapeSelection);
+				yield return (featureLayer, oid, shapeSelection);
 			}
 		}
 	}

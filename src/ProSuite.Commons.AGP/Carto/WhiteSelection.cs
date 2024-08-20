@@ -150,10 +150,6 @@ public class WhiteSelection : IWhiteSelection
 
 	public bool SetEmpty()
 	{
-		//var nonEmpty = _shapes.Values.Any(p => !p.IsEmpty);
-		//_shapes.Clear();
-		//return nonEmpty;
-
 		var changed = _shapes.Count > 0;
 		_shapes.Clear();
 		return changed;
@@ -163,10 +159,7 @@ public class WhiteSelection : IWhiteSelection
 	{
 		foreach (var pair in _shapes)
 		{
-			//var oid = pair.Key;
 			var selection = pair.Value;
-
-			//var shape = GetGeometry(oid);
 
 			if (selection.HitTestVertex(hitPoint, tolerance, out vertex))
 			{
@@ -187,10 +180,9 @@ public class WhiteSelection : IWhiteSelection
 	{
 		foreach (var pair in _shapes)
 		{
-			//var oid = pair.Key;
 			var selection = pair.Value;
-			//var shape = GetGeometry(oid);
-			foreach (var vertex in selection.GetSelectedVertices(/*shape*/))
+
+			foreach (var vertex in selection.GetSelectedVertices())
 			{
 				yield return vertex;
 			}
@@ -201,10 +193,9 @@ public class WhiteSelection : IWhiteSelection
 	{
 		foreach (var pair in _shapes)
 		{
-			//var oid = pair.Key;
 			var selection = pair.Value;
-			//var shape = GetGeometry(oid);
-			foreach (var vertex in selection.GetUnselectedVertices(/*shape*/))
+
+			foreach (var vertex in selection.GetUnselectedVertices())
 			{
 				yield return vertex;
 			}
@@ -214,12 +205,6 @@ public class WhiteSelection : IWhiteSelection
 	public IEnumerable<Geometry> GetInvolvedShapes()
 	{
 		return _shapes.Values.Select(sel => sel.Shape);
-		//foreach (var pair in _shapes)
-		//{
-		//	var oid = pair.Key;
-		//	var shape = GetGeometry(oid);
-		//	yield return shape;
-		//}
 	}
 
 	public IShapeSelection GetShapeSelection(long oid)
