@@ -57,11 +57,18 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return geometry?.SpatialReference?.XYTolerance ?? double.NaN;
 		}
 
+		/// <returns>The total number of points (vertices) across all parts
+		/// of the given <paramref name="geometry"/>; 0 if empty or null</returns>
 		public static int GetPointCount([CanBeNull] Geometry geometry)
 		{
 			return geometry?.PointCount ?? 0;
 		}
 
+		/// <returns>The number of points (vertices) in the indicated part
+		/// or 0 if the given geometry is null or empty (and always
+		/// 1 for points and multipoints)</returns>
+		/// <remarks>An error occurs if the given part index is negative
+		/// or beyond the number of parts in the given geometry.</remarks>
 		public static int GetPointCount([CanBeNull] Geometry geometry, int partIndex)
 		{
 			if (geometry is null) return 0;
@@ -152,6 +159,9 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				$"Geometry of type {geometry.GetType().Name} is not supported");
 		}
 
+		/// <returns>The number of parts in the given geometry, or zero
+		/// if it is null or empty</returns>
+		/// <remarks>Each point of a multipoint is considered a part</remarks>
 		public static int GetPartCount([CanBeNull] Geometry geometry)
 		{
 			if (geometry is null) return 0;
@@ -849,6 +859,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static int GetPointCount(this MultipartBuilderEx builder,
 		                                int partIndex)
 		{
+			// There is always one more vertex than there are segments,
+			// even for rings, because the last vertex duplicates the first:
 			return builder.GetSegmentCount(partIndex) + 1;
 		}
 
