@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.Carto;
 
@@ -678,11 +679,13 @@ public class BlockList : IEnumerable<BlockList.Block>
 		return count;
 	}
 
+	[MustDisposeResource]
 	IEnumerator IEnumerable.GetEnumerator()
 	{
 		return GetEnumerator();
 	}
 
+	[MustDisposeResource]
 	public IEnumerator<Block> GetEnumerator()
 	{
 		return GetBlocks().GetEnumerator();
