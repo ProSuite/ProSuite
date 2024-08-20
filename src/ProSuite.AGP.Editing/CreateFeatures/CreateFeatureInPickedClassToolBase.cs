@@ -63,6 +63,8 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
 		CancelableProgressor progressor = null)
 	{
+		Assert.ArgumentCondition(featuresByLayer.Count == 1, "selection count has to be 1");
+
 		(BasicFeatureLayer layer, List<Feature> features) = featuresByLayer.FirstOrDefault();
 
 		Feature feature = features?.FirstOrDefault();
