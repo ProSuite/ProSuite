@@ -39,6 +39,7 @@ public interface IWhiteSelection
 	Geometry GetGeometry(long oid); // TODO drop from iface (now that we have IShapeSelection.Shape)
 	void CacheGeometries(params long[] oid);
 	void ClearGeometryCache();
+	void RefreshGeometries(); // reload all cached geometries (call when they have changed)
 }
 
 public class WhiteSelection : IWhiteSelection
@@ -211,12 +212,13 @@ public class WhiteSelection : IWhiteSelection
 
 	public IEnumerable<Geometry> GetInvolvedShapes()
 	{
-		foreach (var pair in _shapes)
-		{
-			var oid = pair.Key;
-			var shape = GetGeometry(oid);
-			yield return shape;
-		}
+		return _shapes.Values.Select(sel => sel.Shape);
+		//foreach (var pair in _shapes)
+		//{
+		//	var oid = pair.Key;
+		//	var shape = GetGeometry(oid);
+		//	yield return shape;
+		//}
 	}
 
 	public IShapeSelection GetShapeSelection(long oid)
@@ -277,6 +279,18 @@ public class WhiteSelection : IWhiteSelection
 	public void ClearGeometryCache()
 	{
 		_geometryCache.Clear();
+	}
+
+	public void RefreshGeometries()
+	{
+		ClearGeometryCache(); // force reload
+		CacheGeometries(_shapes.Keys.ToArray());
+
+		foreach (var pair in _shapes)
+		{
+			var shape = GetGeometry(pair.Key);
+			pair.Value.SetShape(shape);
+		}
 	}
 
 	#endregion

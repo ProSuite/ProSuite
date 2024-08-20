@@ -33,6 +33,10 @@ public interface IShapeSelection
 	IEnumerable<MapPoint> GetUnselectedVertices();
 
 	bool HitTestVertex(MapPoint hitPoint, double tolerance);
+
+	/// <remarks>Callers duty to make sure the given <paramref name="shape"/>
+	/// is compatible with this selection (part/vertex count)</remarks>
+	void SetShape(Geometry shape);
 }
 
 public class ShapeSelection : IShapeSelection
@@ -45,7 +49,12 @@ public class ShapeSelection : IShapeSelection
 		_blocks = new BlockList();
 	}
 
-	public Geometry Shape { get; }
+	public Geometry Shape { get; private set; }
+
+	public void SetShape(Geometry shape)
+	{
+		Shape = shape ?? throw new ArgumentNullException(nameof(shape));
+	}
 
 	public bool IsEmpty => _blocks.IsEmpty;
 
@@ -53,6 +62,14 @@ public class ShapeSelection : IShapeSelection
 
 	public bool IsVertexSelected(int partIndex, int vertexIndex)
 	{
+		if (Shape is Multipoint)
+		{
+			// outside world: a multipoint's points are its parts
+			// inside representation: all points in part 0 (for efficiency)
+			vertexIndex = partIndex;
+			partIndex = 0;
+		}
+
 		return _blocks.ContainsVertex(partIndex, vertexIndex);
 	}
 
@@ -63,6 +80,15 @@ public class ShapeSelection : IShapeSelection
 		int partCount = GetPartCount(Shape);
 		if (partIndex >= partCount)
 			throw new ArgumentOutOfRangeException(nameof(partIndex));
+
+		if (Shape is Multipoint)
+		{
+			// outside world: a multipoint's points are its parts
+			// inside representation: all points in part 0 (for efficiency)
+			return _blocks.ContainsVertex(0, partIndex)
+				       ? ShapeSelectionState.Entirely
+				       : ShapeSelectionState.Not;
+		}
 
 		int partVertexCount = GetVertexCount(Shape, partIndex);
 		int selectedVertexCount = _blocks.CountVertices(partIndex);
@@ -190,8 +216,8 @@ public class ShapeSelection : IShapeSelection
 	{
 		if (Shape is Multipoint)
 		{
-			// outside world: points of a Multipoint are its parts
-			// inside representation: all points in part 0 (for good performance of our data structure)
+			// outside world: a multipoint's points are its parts
+			// inside representation: all points in part 0 (for efficiency)
 			vertexIndex = partIndex;
 			partIndex = 0;
 		}

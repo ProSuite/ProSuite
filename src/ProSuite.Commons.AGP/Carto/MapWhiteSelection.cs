@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArcGIS.Core.Events;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
@@ -73,7 +72,7 @@ public class MapWhiteSelection : IDisposable
 	/// <summary>
 	/// Just a convenience to enumerate all features in the white selection
 	/// </summary>
-	public IEnumerable<ValueTuple<FeatureLayer, long, Geometry, IShapeSelection>> Enumerate()
+	public IEnumerable<ValueTuple<FeatureLayer, long, IShapeSelection>> Enumerate()
 	{
 		foreach (var ws in GetLayerSelections())
 		{
@@ -82,10 +81,10 @@ public class MapWhiteSelection : IDisposable
 
 			foreach (var oid in ws.GetInvolvedOIDs())
 			{
-				var originalShape = ws.GetGeometry(oid);
+				//var originalShape = ws.GetGeometry(oid);
 				var shapeSelection = ws.GetShapeSelection(oid);
 
-				yield return (featureLayer, oid, originalShape, shapeSelection);
+				yield return (featureLayer, oid, /*originalShape,*/ shapeSelection);
 			}
 		}
 	}
@@ -422,6 +421,16 @@ public class MapWhiteSelection : IDisposable
 		foreach (var selection in all)
 		{
 			selection.ClearGeometryCache();
+		}
+	}
+
+	public void RefreshGeometries()
+	{
+		var all = GetLayerSelections();
+
+		foreach (var selection in all)
+		{
+			selection.RefreshGeometries();
 		}
 	}
 
