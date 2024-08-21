@@ -484,10 +484,10 @@ namespace ProSuite.Microservices.Server.AO
 			}
 		}
 
-		private static DateTime? FromTicks(long ticks)
+		public static DateTime? FromTicks(long ticks)
 		{
 			DateTime? defaultCreationDate =
-				ticks == 0
+				ticks <= 0
 					? (DateTime?) null
 					: new DateTime(ticks);
 			return defaultCreationDate;
