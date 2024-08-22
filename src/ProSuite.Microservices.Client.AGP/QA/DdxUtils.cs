@@ -524,10 +524,10 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 				SpatialReference sr = GetSpatialReference(spatialReferencesByWkId, modelMsg);
 
-				List<IDdxDataset> datasets = projectWorkspaceMsg.DatasetIds
-				                                                .Select(datasetId =>
-					                                                datasetsById[datasetId])
-				                                                .ToList();
+				List<IDdxDataset> datasets =
+					projectWorkspaceMsg.DatasetIds
+					                   .Select(datasetId => datasetsById[datasetId])
+					                   .ToList();
 
 				var projectWorkspace = new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
 				                                            projectMsg.Name,
