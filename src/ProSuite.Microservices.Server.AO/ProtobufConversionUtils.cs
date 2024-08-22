@@ -60,11 +60,21 @@ namespace ProSuite.Microservices.Server.AO
 		{
 			var result = new Dictionary<long, GdbFeatureClass>();
 
+			// Create minimal workspace (for equality comparisons)
+			var workspaces = new Dictionary<long, GdbWorkspace>();
+
 			foreach (ObjectClassMsg classMsg in objectClassMsgs)
 			{
+				if (! workspaces.TryGetValue(classMsg.WorkspaceHandle, out GdbWorkspace workspace))
+				{
+					workspace = GdbWorkspace.CreateEmptyWorkspace(classMsg.WorkspaceHandle);
+					workspaces.Add(classMsg.WorkspaceHandle, workspace);
+				}
+
 				if (! result.ContainsKey(classMsg.ClassHandle))
 				{
-					GdbFeatureClass gdbTable = (GdbFeatureClass) FromObjectClassMsg(classMsg, null);
+					GdbFeatureClass gdbTable =
+						(GdbFeatureClass) FromObjectClassMsg(classMsg, workspace);
 
 					result.Add(classMsg.ClassHandle, gdbTable);
 				}
@@ -474,10 +484,10 @@ namespace ProSuite.Microservices.Server.AO
 			}
 		}
 
-		private static DateTime? FromTicks(long ticks)
+		public static DateTime? FromTicks(long ticks)
 		{
 			DateTime? defaultCreationDate =
-				ticks == 0
+				ticks <= 0
 					? (DateTime?) null
 					: new DateTime(ticks);
 			return defaultCreationDate;

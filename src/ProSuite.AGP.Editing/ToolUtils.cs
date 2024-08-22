@@ -1,13 +1,17 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
+using ArcGIS.Desktop.Internal.Mapping;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
@@ -263,6 +267,31 @@ namespace ProSuite.AGP.Editing
 		public static SketchGeometryType GetSketchGeometryType()
 		{
 			return MapView.Active?.GetSketchType() ?? SketchGeometryType.None;
+		}
+
+		/// <summary>
+		/// Get the current selection color (or the default Cyan RGB
+		/// if anything goes wrong).
+		/// </summary>
+		[NotNull]
+		public static CIMColor GetSelectionColor()
+		{
+			var defaultColor = ColorUtils.CyanRGB;
+
+			try
+			{
+				using var settings = SelectionSettings.CreateFromUserProfile();
+				var xml = settings.DefaultSelectionColor;
+				if (string.IsNullOrEmpty(xml))
+					return defaultColor;
+				var color = CIMColor.GetColorObject(xml);
+				return color ?? defaultColor;
+			}
+			catch (Exception ex)
+			{
+				_msg.Error($"Error getting user profile selection color: {ex.Message}", ex);
+				return defaultColor;
+			}
 		}
 	}
 }
