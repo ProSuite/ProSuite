@@ -111,6 +111,11 @@ namespace ProSuite.ArcGIS.Geometry.AO
 			throw new NotImplementedException();
 		}
 
+		public IGeometry Clone()
+		{
+			return new ArcPoint((MapPoint) ProPoint.Clone());
+		}
+
 		public void QueryCoords(out double x, out double y)
 		{
 			x = ProPoint.X;

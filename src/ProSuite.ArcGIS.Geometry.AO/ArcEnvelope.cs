@@ -66,6 +66,12 @@ namespace ESRI.ArcGIS.Geometry
 			throw new NotImplementedException();
 		}
 
+		public IGeometry Clone()
+		{
+			Envelope clone = (Envelope) _proEnvelope.Clone();
+			return new ArcEnvelope(clone);
+		}
+
 		#endregion
 
 		#region Implementation of IEnvelope

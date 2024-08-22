@@ -23,6 +23,8 @@ namespace ESRI.ArcGIS.Geometry
 		void GeoNormalize();
 
 		void GeoNormalizeFromLongitude(double Longitude);
+
+		IGeometry Clone();
 	}
 
 	public enum esriGeometryDimension

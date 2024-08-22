@@ -61,6 +61,11 @@ namespace ESRI.ArcGIS.Geometry
 			throw new NotImplementedException();
 		}
 
+		public IGeometry Clone()
+		{
+			return new ArcGeometry(ProGeometry.Clone());
+		}
+
 		#endregion
 	}
 }
