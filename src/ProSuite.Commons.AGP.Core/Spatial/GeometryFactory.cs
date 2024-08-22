@@ -49,6 +49,14 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			throw new NotSupportedException($"Unknown segment type: {segment.GetType().Name}");
 		}
 
+		public static PolylineBuilderEx ToBuilder(this Polyline polyline)
+		{
+			if (polyline is null)
+				throw new ArgumentNullException(nameof(polyline));
+
+			return new PolylineBuilderEx(polyline);
+		}
+
 		/// <summary>
 		/// Return a new multipart builder initialized from the given
 		/// multipart geometry (Polyline or Polygon).

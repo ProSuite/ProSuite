@@ -394,6 +394,81 @@ public class GeometryUtilsTest
 		Assert.Catch<ArgumentOutOfRangeException>(() => GeometryUtils.GetPart(myPoint, -1));
 	}
 
+	[Test]
+	public void CanRemoveVerticesPolyline()
+	{
+		// Cannot remove anything from an empty builder:
+
+		var emptyPolyline = CreatePolylineXY();
+		Assert.True(emptyPolyline.IsEmpty);
+		var builder = emptyPolyline.ToBuilder();
+		Assert.True(builder.IsEmpty);
+		Assert.AreEqual(0, builder.PartCount);
+
+		Assert.Throws<InvalidOperationException>(() => GeometryUtils.RemoveVertices(builder, 0, 0));
+
+		var polyline = CreatePolylineXY(0, 0, 1, 1, 2, 2, 3, 3, double.NaN, 4, 4, 5, 5);
+
+		// Remove two vertices along the line:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 1, 2);
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(1, builder.GetSegmentCount(0));
+		Assert.AreEqual(0.0, builder.GetSegment(0, 0).StartCoordinate.X);
+		Assert.AreEqual(3.0, builder.GetSegment(0, 0).EndCoordinate.X);
+		Assert.AreEqual(1, builder.GetSegmentCount(1));
+
+		// Remove one vertex at beginning:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 0, 0); // remove first vertex
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(2, builder.GetSegmentCount(0));
+		Assert.AreEqual(1.0, builder.GetSegment(0, 0).StartCoordinate.X);
+		Assert.AreEqual(1, builder.GetSegmentCount(1));
+
+		// Remove three vertices (of four) -> remove part:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 0, 2);
+		Assert.AreEqual(1, builder.PartCount);
+		// formerly 2nd part becomes the 1st and only part:
+		Assert.AreEqual(4.0, builder.GetSegment(0, 0).StartCoordinate.X);
+
+		// Remove one vertex at end (leaving 3 vertices):
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 3, 3);
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(2, builder.GetSegmentCount(0));
+		Assert.AreEqual(2.0, builder.GetSegment(0, 1).EndCoordinate.X);
+
+		// Remove two vertices at end (leaving 2 vertices):
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 2, 3);
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(1, builder.GetSegmentCount(0));
+		Assert.AreEqual(1.0, builder.GetSegment(0, 0).EndCoordinate.X);
+
+		// Remove all vertices of 2nd part:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 1, 0, 1);
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(3.0, builder.GetSegment(0, 2).EndCoordinate.X);
+
+		// Remove vertices such that only ONE vertex remains:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 1, 1, 1);
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(3.0, builder.GetSegment(0, 2).EndCoordinate.X);
+
+		// Can catch invalid arguments:
+		builder = polyline.ToBuilder();
+		// part index out of range:
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(builder, 2, 0, 0));
+		// first/last vertex index out of range
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(builder, 1, 2, 2));
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(builder, 1, 0, 2));
+
+	}
+
 	#region Creating test geometries
 
 	private static MapPoint Pt(double x, double y)
@@ -453,6 +528,46 @@ public class GeometryUtilsTest
 		{
 			yield return new Coordinate2D(coords[i - 1], coords[i]);
 		}
+	}
+
+	private static Polyline CreatePolylineXY(params double[] xys)
+	{
+		// TODO Copied from ShapeSelectionTest --> move to GeometryFactory?!
+		var builder = new PolylineBuilderEx();
+		builder.HasZ = builder.HasM = builder.HasID = false;
+
+		var coords = new double[4];
+		int j = 0; // index into coords
+		bool startNewPart = true;
+
+		foreach (double value in xys)
+		{
+			if (double.IsNaN(value))
+			{
+				startNewPart = true;
+				j = 0; // flush coords
+			}
+			else
+			{
+				coords[j++] = value;
+
+				if (j == 4)
+				{
+					var p0 = new Coordinate2D(coords[0], coords[1]);
+					var p1 = new Coordinate2D(coords[2], coords[3]);
+					var seg = LineBuilderEx.CreateLineSegment(p0, p1);
+					builder.AddSegment(seg, startNewPart);
+					startNewPart = false;
+					// 2nd coord pair becomes 1st pair
+					coords[0] = coords[2];
+					coords[1] = coords[3];
+					// prepare for another coord pair:
+					j = 2;
+				}
+			}
+		}
+
+		return builder.ToGeometry();
 	}
 
 	#endregion

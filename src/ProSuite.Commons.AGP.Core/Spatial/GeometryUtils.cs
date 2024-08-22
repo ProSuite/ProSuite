@@ -963,6 +963,73 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) builder.ToSegment();
 		}
 
+		/// <summary>
+		/// Remove the vertices from first to last (both inclusive) in the
+		/// given part from the given Polyline builder. The resulting gap
+		/// is filled with a straight line segment. All indices are validated
+		/// against the given <paramref name="builder"/>. If no last vertex
+		/// is given, it defaults to the given first vertex.
+		/// </summary>
+		public static void RemoveVertices(/*this*/ PolylineBuilderEx builder, int partIndex,
+		                                  int firstVertex, int lastVertex = -1)
+		{
+			if (builder is null)
+				throw new ArgumentNullException(nameof(builder));
+
+			if (builder.PartCount <= 0)
+				throw new InvalidOperationException("no parts at all (empty builder)");
+			if (partIndex < 0 || partIndex >= builder.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+
+			if (lastVertex < 0) lastVertex = firstVertex; // convenience
+			if (lastVertex < firstVertex) return; // nothing to remove
+			var verticesInPart = builder.GetSegmentCount(partIndex) + 1;
+
+			if (firstVertex < 0 || firstVertex >= verticesInPart)
+				throw new ArgumentOutOfRangeException(nameof(firstVertex));
+			if (lastVertex >= verticesInPart)
+				throw new ArgumentOutOfRangeException(nameof(lastVertex));
+
+			// If less than two vertices remain, remove entire part:
+			int verticesToRemove = lastVertex - firstVertex + 1;
+			if (verticesInPart - verticesToRemove < 2)
+			{
+				builder.RemovePart(partIndex);
+				return;
+			}
+
+			if (firstVertex == 0)
+			{
+				// Remove first k segments:
+				for (int i = 0; i <= lastVertex; i++)
+				{
+					builder.RemoveSegment(partIndex, i, false);
+				}
+			}
+			else if (lastVertex == verticesInPart - 1)
+			{
+				// Remove last k segments (from end to avoid memory moving):
+				for (int i = lastVertex; i >= firstVertex; i--)
+				{
+					var segmentIndex = i - 1;
+					builder.RemoveSegment(partIndex, segmentIndex, false);
+				}
+			}
+			else
+			{
+				// Remove segments last through first, then
+				// Replace segment first-1 with line segment to close the gap
+				var startPoint = builder.Parts[partIndex][firstVertex - 1].StartPoint;
+				var endPoint = builder.Parts[partIndex][lastVertex].EndPoint;
+				for (int i = lastVertex; i >= firstVertex; i--)
+				{
+					builder.RemoveSegment(partIndex, i, false);
+				}
+				var straight = LineBuilderEx.CreateLineSegment(startPoint, endPoint);
+				builder.ReplaceSegment(partIndex, firstVertex - 1, straight);
+			}
+		}
+
 		#region Moving vertices of a multipart geometry builder
 
 		public static void MovePart(this MultipartBuilderEx builder, int partIndex, double dx, double dy)
