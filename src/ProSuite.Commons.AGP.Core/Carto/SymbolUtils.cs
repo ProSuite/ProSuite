@@ -1236,7 +1236,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 					{
 						var expr = mapping.ValueExpressionInfo?.Expression ??
 								   mapping.Expression ?? "(n/a)";
-						throw new Exception(
+						_msg.Warn(
 							$"Cannot apply primitive override (primitive {mapping.PrimitiveName}, " +
 							$"property {mapping.PropertyName}, value {expr}): {ex.Message}");
 					}
