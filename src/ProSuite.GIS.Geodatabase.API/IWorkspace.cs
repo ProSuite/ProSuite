@@ -23,7 +23,6 @@ namespace ESRI.ArcGIS.Geodatabase
 		void ExecuteSql(string sqlStmt);
 	}
 
-
 	public interface IFeatureWorkspace
 	{
 		ITable OpenTable(string name);
@@ -72,7 +71,6 @@ namespace ESRI.ArcGIS.Geodatabase
 		//	string OriginForeignKey,
 		//	string destForeignKey);
 
-
 		ITable OpenRelationshipQuery(
 			IRelationshipClass relClass,
 			bool joinForward,
@@ -80,6 +78,11 @@ namespace ESRI.ArcGIS.Geodatabase
 			ISelectionSet srcSelectionSet,
 			string targetColumns,
 			bool doNotPushJoinToDb);
+
+		// Originally from a separate interface:
+		IEnumerable<IDomain> Domains();
+
+		IDomain get_DomainByName(string domainName);
 	}
 
 	public enum esriWorkspaceType

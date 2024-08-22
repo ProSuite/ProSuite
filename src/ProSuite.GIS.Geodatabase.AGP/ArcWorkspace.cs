@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Internal.CIM;
 using ESRI.ArcGIS.Geodatabase.AO;
-using ESRI.ArcGIS.Geometry;
 using ProSuite.ArcGIS.Geodatabase.AO;
 
 namespace ESRI.ArcGIS.Geodatabase
@@ -233,9 +232,9 @@ namespace ESRI.ArcGIS.Geodatabase
 			string targetColumns,
 			bool doNotPushJoinToDb)
 		{
-			var aoRelClass = ((ArcRelationshipClass)relClass).ProRelationshipClass;
+			var aoRelClass = ((ArcRelationshipClass) relClass).ProRelationshipClass;
 			var aoFilter = (srcQueryFilter as ArcQueryFilter)?.ProQueryFilter;
-			var aoSelectionSet = ((ArcSelectionSet)srcSelectionSet)?.ProSelection;
+			var aoSelectionSet = ((ArcSelectionSet) srcSelectionSet)?.ProSelection;
 
 			// TODO: Move RelationshipClassJoinDefinition from Commons.AO to some other namespace (Commons.GIS?).
 			//var joinDef = new RelationshipClassJoinDefinition(relationshipClass, joinType);
@@ -257,11 +256,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 			//Table queryTable = geodatabase.OpenQueryTable(queryTableDescription);
 
-
 			throw new NotImplementedException();
-
-
-
 
 			//QueryDescription queryDescription = new QueryDescription()
 
@@ -272,7 +267,19 @@ namespace ESRI.ArcGIS.Geodatabase
 			//return ArcUtils.ToArcTable(aoTable);
 		}
 
-		#endregion
+		public IEnumerable<IDomain> Domains()
+		{
+			return _geodatabase.GetDomains().Select(d => new ArcDomain(d));
+		}
 
+		public IDomain get_DomainByName(string domainName)
+		{
+			return (from proDomain in _geodatabase.GetDomains()
+			        where proDomain.GetName()
+			                       .Equals(domainName, StringComparison.InvariantCultureIgnoreCase)
+			        select new ArcDomain(proDomain)).FirstOrDefault();
+		}
+
+		#endregion
 	}
 }
