@@ -22,6 +22,24 @@ namespace ProSuite.ArcGIS.Geometry.AO
 			throw new NotImplementedException();
 		}
 
+		public double GetArea()
+		{
+			return _proPolygon.Area;
+		}
+
+		#endregion
+
+		#region Implementation of IGeometryCollection
+
+		public int GeometryCount { get; set; }
+
+		public IGeometry get_Geometry(int index)
+		{
+			ReadOnlySegmentCollection segmentCollection = ((Multipart) _proPolygon).Parts[index];
+
+			throw new NotImplementedException();
+		}
+
 		#endregion
 	}
 }

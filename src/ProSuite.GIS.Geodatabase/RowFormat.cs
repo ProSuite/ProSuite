@@ -390,7 +390,7 @@ namespace ProSuite.GIS.Geodatabase
 				if (row is IFeature)
 				{
 					IGeometry shape = ((IFeature) row).Shape;
-					value = GeometryUtils.Format(shape.GeometryType);
+					value = Format(shape.GeometryType);
 					return true;
 				}
 			}
@@ -410,8 +410,8 @@ namespace ProSuite.GIS.Geodatabase
 
 			if (row is IFeature)
 			{
-				var area = (IArea) ((IFeature) row).Shape;
-				value = area.Area;
+				var polygon = (IPolygon) ((IFeature) row).Shape;
+				value = polygon.GetArea();
 			}
 
 			return value;
@@ -448,7 +448,7 @@ namespace ProSuite.GIS.Geodatabase
 
 			if (row is IFeature)
 			{
-				var curve = (ICurve) ((IFeature) row).Shape;
+				var curve = (IPolyline) ((IFeature) row).Shape;
 				value = curve.Length;
 			}
 
@@ -475,5 +475,79 @@ namespace ProSuite.GIS.Geodatabase
 		}
 
 		#endregion
+
+		// TODO: Move to GeometryUtils
+		/// <summary>
+		/// Translates the given geometryType enum value to an human readable form.
+		/// </summary>
+		[NotNull]
+		public static string Format(esriGeometryType geometryType)
+		{
+			switch (geometryType)
+			{
+				case esriGeometryType.esriGeometryLine:
+					return "Line";
+
+				case esriGeometryType.esriGeometryPoint:
+					return "Point";
+
+				case esriGeometryType.esriGeometryMultipoint:
+					return "Multi-Point";
+
+				case esriGeometryType.esriGeometryPolygon:
+					return "Polygon";
+
+				case esriGeometryType.esriGeometryPolyline:
+					return "Polyline";
+
+				case esriGeometryType.esriGeometryEnvelope:
+					return "Envelope";
+
+				case esriGeometryType.esriGeometryAny:
+					return "Any";
+
+				case esriGeometryType.esriGeometryBag:
+					return "Bag";
+
+				case esriGeometryType.esriGeometryBezier3Curve:
+					return "Bezier-3-curve";
+
+				case esriGeometryType.esriGeometryCircularArc:
+					return "Circular-Arc";
+
+				case esriGeometryType.esriGeometryEllipticArc:
+					return "Elliptic-Arc";
+
+				case esriGeometryType.esriGeometryMultiPatch:
+					return "Multi-Patch";
+
+				case esriGeometryType.esriGeometryNull:
+					return "NULL";
+
+				case esriGeometryType.esriGeometryPath:
+					return "Path";
+
+				case esriGeometryType.esriGeometryRay:
+					return "Ray";
+
+				case esriGeometryType.esriGeometryRing:
+					return "Ring";
+
+				case esriGeometryType.esriGeometrySphere:
+					return "Sphere";
+
+				case esriGeometryType.esriGeometryTriangleFan:
+					return "Triangle-Fan";
+
+				case esriGeometryType.esriGeometryTriangles:
+					return "Triangles";
+
+				case esriGeometryType.esriGeometryTriangleStrip:
+					return "Triangle-Strip";
+
+				default:
+					return $"Unknown geometry type: {geometryType}";
+			}
+		}
 	}
 }

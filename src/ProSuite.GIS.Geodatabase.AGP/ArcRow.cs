@@ -1,9 +1,12 @@
 using System;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
+using ArcGIS.Core.Geometry;
 using ESRI.ArcGIS.Geodatabase.AO;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.ArcGIS.Geodatabase.AO;
+using ProSuite.ArcGIS.Geometry.AO;
+using ProSuite.GIS.Geometry.AGP;
 
 namespace ESRI.ArcGIS.Geodatabase
 {
@@ -104,7 +107,37 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public IGeometry Shape
 		{
-			get => new ArcGeometry(_proFeature.GetShape());
+			get
+			{
+				global::ArcGIS.Core.Geometry.Geometry proGeometry = _proFeature.GetShape();
+
+				if (proGeometry is Polygon polygon)
+				{
+					return new ArcPolygon(polygon);
+				}
+
+				if (proGeometry is Polyline polyline)
+				{
+					return new ArcPolyline(polyline);
+				}
+
+				if (proGeometry is Multipoint multipoint)
+				{
+					return new ArcMultipoint(multipoint);
+				}
+
+				if (proGeometry is Multipatch multipatch)
+				{
+					return new ArcMultipatch(multipatch);
+				}
+
+				if (proGeometry is MapPoint point)
+				{
+					return new ArcPoint(point);
+				}
+
+				return new ArcGeometry(proGeometry);
+			}
 			set => _proFeature.SetShape(((ArcGeometry) value).ProGeometry);
 		}
 
