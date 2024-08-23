@@ -5,13 +5,12 @@ using System.Threading;
 using ArcGIS.Core.Data;
 using ESRI.ArcGIS.Geodatabase.AO;
 using ProSuite.ArcGIS.Geodatabase.AO;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Text;
-
+using ProSuite.GIS.Geodatabase;
+using Subtype = ArcGIS.Core.Data.Subtype;
 
 namespace ESRI.ArcGIS.Geodatabase
 {
-
 	public class ArcTable : ITable, IObjectClass, ISubtypes
 	{
 		private readonly Table _proTable;
@@ -141,8 +140,35 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public long RowCount(IQueryFilter queryFilter)
 		{
-			var arcQueryFilter = (ArcQueryFilter) queryFilter;
-			return _proTable.GetCount(arcQueryFilter.ProQueryFilter);
+			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
+
+			return _proTable.GetCount(proQueryFilter);
+		}
+
+		private static QueryFilter GetProQueryFilter(IQueryFilter queryFilter)
+		{
+			QueryFilter proQueryFilter;
+
+			if (queryFilter is ArcQueryFilter arcQueryFilter)
+			{
+				proQueryFilter = arcQueryFilter.ProQueryFilter;
+			}
+			else if (queryFilter is TableFilter tableFilter)
+			{
+				proQueryFilter = new QueryFilter()
+				                 {
+					                 SubFields = tableFilter.SubFields,
+					                 WhereClause = tableFilter.WhereClause,
+					                 PostfixClause = tableFilter.PostfixClause,
+					                 //OutputSpatialReference = tableFilter.OutputSpatialReference
+				                 };
+			}
+			else
+			{
+				throw new ArgumentException("Unknown filter type");
+			}
+
+			return proQueryFilter;
 		}
 
 		//public IEnumerable<IRow> EnumRows(IQueryFilter queryFilter, bool recycle)
@@ -155,9 +181,9 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public IEnumerable<IRow> Search(IQueryFilter queryFilter, bool recycling)
 		{
-			var arcQueryFilter = (ArcQueryFilter) queryFilter;
+			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
 
-			RowCursor cursor = _proTable.Search(arcQueryFilter.ProQueryFilter, recycling);
+			RowCursor cursor = _proTable.Search(proQueryFilter, recycling);
 
 			return ArcUtils.GetArcRows(cursor);
 			//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRow row;
@@ -193,8 +219,7 @@ namespace ESRI.ArcGIS.Geodatabase
 			esriSelectionOption selOption,
 			IWorkspace selectionContainer)
 		{
-			ArcQueryFilter arcQueryFilter = (ArcQueryFilter) queryFilter;
-			QueryFilter proQueryFilter = arcQueryFilter.ProQueryFilter;
+			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
 
 			ArcWorkspace arcWorkspace = (ArcWorkspace) selectionContainer;
 
@@ -234,7 +259,9 @@ namespace ESRI.ArcGIS.Geodatabase
 		//}
 
 		public IFields Fields => new ArcFields(_tableDefinition.GetFields(),
-			this is ArcFeatureClass fc ? fc.GeometryDefinition : null);
+		                                       this is ArcFeatureClass fc
+			                                       ? fc.GeometryDefinition
+			                                       : null);
 
 		//public IIndexes Indexes => ((IClass)_aoTable).Indexes;
 
@@ -282,7 +309,7 @@ namespace ESRI.ArcGIS.Geodatabase
 			{
 				string relClassName = relClassDef.GetName();
 
-				if  (role == esriRelRole.esriRelRoleAny)
+				if (role == esriRelRole.esriRelRoleAny)
 				{
 					yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				}
@@ -357,10 +384,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public IEnumerable<IDataset> Subsets
 		{
-			get
-			{
-				yield break;
-			}
+			get { yield break; }
 		}
 
 		IWorkspace IDataset.Workspace =>
@@ -408,7 +432,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 			Subtype subtype =
 				_tableDefinition.GetSubtypes()
-										  .FirstOrDefault(s => s.GetCode() == subtypeCode);
+				                .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
 			Domain proDomain = field.GetDomain(subtype);
 
@@ -464,10 +488,10 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			Field field =
 				_tableDefinition.GetFields()
-				                          .FirstOrDefault(
-					                          f => f.Name.Equals(
-						                          fieldName,
-						                          StringComparison.CurrentCultureIgnoreCase));
+				                .FirstOrDefault(
+					                f => f.Name.Equals(
+						                fieldName,
+						                StringComparison.CurrentCultureIgnoreCase));
 
 			if (field == null)
 				throw new ArgumentException($"Field {fieldName} does not exist in {Name}");

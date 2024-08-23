@@ -164,6 +164,26 @@ namespace ESRI.ArcGIS.Geodatabase
 			DatabaseClient.ExecuteStatement(_geodatabase, sqlStmt);
 		}
 
+		public esriConnectionDBMS DbmsType
+		{
+			get
+			{
+				if (_geodatabase.GetGeodatabaseType() != GeodatabaseType.RemoteDatabase)
+				{
+					return esriConnectionDBMS.esriDBMS_Unknown;
+				}
+
+				var connectionProps = _geodatabase.GetConnector() as DatabaseConnectionProperties;
+
+				if (connectionProps == null)
+				{
+					return esriConnectionDBMS.esriDBMS_Unknown;
+				}
+
+				return (esriConnectionDBMS) connectionProps.DBMS;
+			}
+		}
+
 		#endregion
 
 		#region Implementation of IFeatureWorkspace

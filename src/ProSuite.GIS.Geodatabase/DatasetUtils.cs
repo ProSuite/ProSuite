@@ -171,6 +171,26 @@ namespace ProSuite.GIS.Geodatabase
 		}
 
 		/// <summary>
+		/// Gets the named field or throw an exception if the there is no such field.
+		/// </summary>
+		/// <param name="table">The table.</param>
+		/// <param name="fieldName">Name of the field.</param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentException">Field not found in table.</exception>
+		[NotNull]
+		public static IField GetField([NotNull] ITable table,
+		                              [NotNull] string fieldName)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
+
+			IField field = table.Fields.Field[GetFieldIndex(table, fieldName)];
+
+			return Assert.NotNull(field, "field '{0}' not found in '{1}'",
+			                      fieldName, GetName(table));
+		}
+
+		/// <summary>
 		/// Gets the fields.
 		/// </summary>
 		/// <param name="objectClass">The object class.</param>

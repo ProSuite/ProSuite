@@ -21,6 +21,11 @@ namespace ESRI.ArcGIS.Geodatabase
 		bool Exists();
 
 		void ExecuteSql(string sqlStmt);
+
+		/// <summary>
+		/// The type of DBMS used by the (remote) workspace.
+		/// </summary>
+		esriConnectionDBMS DbmsType { get; }
 	}
 
 	public interface IFeatureWorkspace
