@@ -301,7 +301,7 @@ namespace ProSuite.GIS.Geodatabase
 				int subtypeCode = subtypeValue.Value;
 				try
 				{
-					domain = subtypes.Domain[subtypeCode, field.Name];
+					domain = subtypes.get_Domain(subtypeCode, field.Name);
 				}
 				catch (Exception e)
 				{

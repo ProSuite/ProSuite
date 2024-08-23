@@ -4,7 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase;
 
-namespace ProSuite.DomainModel.Core.DataModel
+namespace ProSuite.DomainModel.Core.DataModel.GIS
 {
 	public static class AttributeUtils
 	{
