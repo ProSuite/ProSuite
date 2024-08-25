@@ -24,10 +24,13 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 	public class GeometryProcessingClient : MicroserviceClientBase,
 	                                        IAdvancedReshapeService,
 	                                        IRemoveOverlapsService,
+											ICrackerService,
 	                                        ICalculateHolesService,
 	                                        IChangeAlongService
+
 	{
 		private RemoveOverlapsGrpc.RemoveOverlapsGrpcClient RemoveOverlapsClient { get; set; }
+		private CrackGrpc.CrackGrpcClient CrackClient { get; set; }
 		private ChangeAlongGrpc.ChangeAlongGrpcClient ChangeAlongClient { get; set; }
 		private ReshapeGrpc.ReshapeGrpcClient ReshapeClient { get; set; }
 		private FillHolesGrpc.FillHolesGrpcClient RemoveHolesClient { get; set; }
@@ -46,6 +49,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		protected override void ChannelOpenedCore(ChannelBase channel)
 		{
 			RemoveOverlapsClient = new RemoveOverlapsGrpc.RemoveOverlapsGrpcClient(channel);
+			CrackClient = new CrackGrpc.CrackGrpcClient(channel);
 			ChangeAlongClient = new ChangeAlongGrpc.ChangeAlongGrpcClient(channel);
 			ReshapeClient = new ReshapeGrpc.ReshapeGrpcClient(channel);
 			RemoveHolesClient = new FillHolesGrpc.FillHolesGrpcClient(channel);
@@ -120,6 +124,19 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			return HoleClientUtils.CalculateHoles(
 				RemoveHolesClient, selectedFeatures, clipEnvelopes, unionFeatures,
 				cancellationToken);
+		}
+
+		[NotNull]
+		public CrackPoints Crack(
+			IList<Feature> selectedFeatures,
+			IList<Feature> targetFeatures,
+			CancellationToken cancellationToken)
+		{
+			if (CrackClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
+			return CrackClientUtils.Crack(
+				CrackClient, selectedFeatures, targetFeatures, cancellationToken);
 		}
 
 		[NotNull]

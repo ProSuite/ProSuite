@@ -222,7 +222,7 @@ namespace ProSuite.Microservices.Client.AGP
 			var result = new GdbObjRefMsg();
 
 			result.ClassHandle = GeometryProcessingUtils.GetUniqueClassId(row);
-			result.ObjectId = (int) row.GetObjectID();
+			result.ObjectId = row.GetObjectID();
 
 			return result;
 		}
@@ -248,7 +248,7 @@ namespace ProSuite.Microservices.Client.AGP
 			// Or use handle?
 			result.ClassHandle = objectClassHandle;
 
-			result.ObjectId = (int) feature.GetObjectID();
+			result.ObjectId = feature.GetObjectID();
 
 			result.Shape = ToShapeMsg(geometry, useSpatialRefWkId);
 
