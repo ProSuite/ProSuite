@@ -6,7 +6,7 @@ namespace ESRI.ArcGIS.Geodatabase
 	{
 		IName FullName { get; }
 
-		ITable Target {  get; }
+		ITable Target { get; }
 
 		void MakePermanent();
 
@@ -16,15 +16,15 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		void AddList(long count, ref long oidList);
 
-		void Combine( ISelectionSet otherSet, esriSetOperation setOp, out ISelectionSet resultSet);
+		void Combine(ISelectionSet otherSet, esriSetOperation setOp, out ISelectionSet resultSet);
 
 		void Search(IQueryFilter queryFilter, bool recycling, out IEnumerable<IRow> cursor);
 
 		ISelectionSet Select(
-		  IQueryFilter queryFilter,
-		   esriSelectionType selType,
-		  esriSelectionOption selOption,
-		  IWorkspace selectionContainer);
+			IQueryFilter queryFilter,
+			esriSelectionType selType,
+			esriSelectionOption selOption,
+			IWorkspace selectionContainer);
 
 		void Refresh();
 

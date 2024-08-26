@@ -78,9 +78,6 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		void Reset();
 
-		int Count
-		{
-			get;
-		}
+		int Count { get; }
 	}
 }

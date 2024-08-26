@@ -1,7 +1,4 @@
-
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace ESRI.ArcGIS.Geodatabase
 {

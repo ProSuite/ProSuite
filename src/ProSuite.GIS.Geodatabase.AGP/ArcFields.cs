@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.DDL;
-using ProSuite.ArcGIS.Geodatabase.AO;
 using ProSuite.Commons.DomainModels;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Field = ArcGIS.Core.Data.Field;
 
@@ -59,7 +55,6 @@ namespace ESRI.ArcGIS.Geodatabase.AO
 
 			return -1;
 		}
-
 
 		///// <summary>
 		///// Gets the fields.
@@ -169,8 +164,8 @@ namespace ESRI.ArcGIS.Geodatabase.AO
 
 		public int DomainID
 		{
-			get => throw new System.NotImplementedException();
-			set => throw new System.NotImplementedException();
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
 		public string Description
@@ -181,19 +176,19 @@ namespace ESRI.ArcGIS.Geodatabase.AO
 
 		public esriFieldType FieldType
 		{
-			get => (esriFieldType)_proDomain.GetFieldType();
+			get => (esriFieldType) _proDomain.GetFieldType();
 			set => throw new NotImplementedException();
 		}
 
 		public esriMergePolicyType MergePolicy
 		{
-			get => (esriMergePolicyType)_proDomain.MergePolicy;
+			get => (esriMergePolicyType) _proDomain.MergePolicy;
 			set => throw new NotImplementedException();
 		}
 
 		public esriSplitPolicyType SplitPolicy
 		{
-			get => (esriSplitPolicyType)_proDomain.SplitPolicy;
+			get => (esriSplitPolicyType) _proDomain.SplitPolicy;
 			set => throw new NotImplementedException();
 		}
 

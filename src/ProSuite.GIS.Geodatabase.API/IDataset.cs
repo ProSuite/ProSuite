@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 
 namespace ESRI.ArcGIS.Geodatabase
 {

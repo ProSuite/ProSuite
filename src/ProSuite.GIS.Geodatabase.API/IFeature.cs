@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 
 namespace ESRI.ArcGIS.Geodatabase

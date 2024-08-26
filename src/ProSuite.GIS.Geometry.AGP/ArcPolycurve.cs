@@ -1,7 +1,7 @@
+using System;
 using ArcGIS.Core.Geometry;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.ArcGIS.Geometry.AO;
-using System;
 
 namespace ProSuite.GIS.Geometry.AGP
 {
@@ -35,7 +35,6 @@ namespace ProSuite.GIS.Geometry.AGP
 		public bool IsClosed => FromPoint.Equals(ToPoint);
 
 		#endregion
-
 
 		#region Implementation of IGeometryCollection
 

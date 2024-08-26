@@ -26,6 +26,9 @@ namespace ESRI.ArcGIS.Geodatabase
 		/// The type of DBMS used by the (remote) workspace.
 		/// </summary>
 		esriConnectionDBMS DbmsType { get; }
+
+		// TODO:
+		// IWorkspaceName GetWorkspaceName()
 	}
 
 	public interface IFeatureWorkspace

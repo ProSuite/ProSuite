@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace ESRI.ArcGIS.Geodatabase
 {
 	public interface IClass : IDataset
@@ -20,7 +18,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		bool HasOID { get; }
 
-		string OIDFieldName {  get; }
+		string OIDFieldName { get; }
 
 		//UID CLSID { get; }
 

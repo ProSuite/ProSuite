@@ -21,12 +21,11 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 		public static ArcTable ToArcTable(Table proTable)
 		{
 			ArcTable result = proTable is FeatureClass featureClass
-				? new ArcFeatureClass(featureClass)
-				: new ArcTable(proTable);
+				                  ? new ArcFeatureClass(featureClass)
+				                  : new ArcTable(proTable);
 
 			return result;
 		}
-
 
 		internal static IRow ToArcObject(Row proRow, ITable parent = null)
 		{

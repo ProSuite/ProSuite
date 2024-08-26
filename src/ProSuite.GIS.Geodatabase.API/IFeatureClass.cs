@@ -36,9 +36,9 @@ namespace ESRI.ArcGIS.Geodatabase
 		IEnumerable<IFeature> Insert(bool useBuffering);
 
 		ISelectionSet Select(
-		  IQueryFilter queryFilter,
-		  esriSelectionType selType,
-		  esriSelectionOption selOption,
-		  IWorkspace selectionContainer);
+			IQueryFilter queryFilter,
+			esriSelectionType selType,
+			esriSelectionOption selOption,
+			IWorkspace selectionContainer);
 	}
 }

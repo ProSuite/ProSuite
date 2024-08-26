@@ -1,7 +1,7 @@
-using ArcGIS.Core.Data;
-using ESRI.ArcGIS.Geodatabase;
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Core.Data;
+using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.ArcGIS.Geodatabase.AO
 {
@@ -10,7 +10,7 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 		private readonly List<Row> _proRowList;
 		private int _currentIndex;
 
-		public  ArcSet(IEnumerable<Row> rows)
+		public ArcSet(IEnumerable<Row> rows)
 		{
 			_proRowList = rows.ToList();
 		}
@@ -26,7 +26,7 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 
 		public void Remove(object unk)
 		{
-			Row rowToRemove = (Row)unk;
+			Row rowToRemove = (Row) unk;
 			long rowToRemoveOid = rowToRemove.GetObjectID();
 			long rowToRemoveTableId = rowToRemove.GetTable().GetID();
 
@@ -40,7 +40,6 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 				}
 
 				_proRowList.Remove(item);
-				
 			}
 		}
 
@@ -66,7 +65,7 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 
 		public object Find(object unk)
 		{
-			Row rowToFind = (Row)unk;
+			Row rowToFind = (Row) unk;
 
 			long objectIdToFind = rowToFind.GetObjectID();
 			long objectTableId = rowToFind.GetTable().GetID();

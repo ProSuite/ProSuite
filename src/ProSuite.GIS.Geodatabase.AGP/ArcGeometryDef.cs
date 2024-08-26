@@ -19,7 +19,7 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 
 		public int AvgNumPoints => throw new NotImplementedException();
 
-		public esriGeometryType GeometryType => (esriGeometryType)_shapeDescription.GeometryType;
+		public esriGeometryType GeometryType => (esriGeometryType) _shapeDescription.GeometryType;
 
 		public double get_GridSize(int index)
 		{
@@ -28,7 +28,8 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 
 		public int GridCount => throw new NotImplementedException();
 
-		public ISpatialReference SpatialReference => new ArcSpatialReference(_shapeDescription.SpatialReference);
+		public ISpatialReference SpatialReference =>
+			new ArcSpatialReference(_shapeDescription.SpatialReference);
 
 		public bool HasZ => _shapeDescription.HasZ;
 

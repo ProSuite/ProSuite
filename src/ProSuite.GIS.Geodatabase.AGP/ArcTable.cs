@@ -13,7 +13,6 @@ namespace ESRI.ArcGIS.Geodatabase
 {
 	public class ArcTable : ITable, IObjectClass, ISubtypes
 	{
-		
 		//private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObjectClass _aoObjectClass;
 		//private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset _aoDataset;
 
@@ -226,8 +225,8 @@ namespace ESRI.ArcGIS.Geodatabase
 			ArcWorkspace arcWorkspace = (ArcWorkspace) selectionContainer;
 
 			Selection selectionSet = ProTable.Select(proQueryFilter,
-			                                          (SelectionType) selType,
-			                                          (SelectionOption) selOption);
+			                                         (SelectionType) selType,
+			                                         (SelectionOption) selOption);
 
 			return new ArcSelectionSet(selectionSet, ProTable);
 		}
@@ -418,7 +417,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 			Subtype subtype =
 				ProTableDefinition.GetSubtypes()
-				                .FirstOrDefault(s => s.GetCode() == subtypeCode);
+				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
 			return field.GetDefaultValue(subtype);
 		}
@@ -434,7 +433,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 			Subtype subtype =
 				ProTableDefinition.GetSubtypes()
-				                .FirstOrDefault(s => s.GetCode() == subtypeCode);
+				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
 			Domain proDomain = field.GetDomain(subtype);
 
@@ -459,7 +458,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			Subtype subtype =
 				ProTableDefinition.GetSubtypes()
-				                .FirstOrDefault(s => s.GetCode() == subtypeCode);
+				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
 			return subtype?.GetName();
 		}
@@ -469,8 +468,8 @@ namespace ESRI.ArcGIS.Geodatabase
 			get
 			{
 				return ProTableDefinition.GetSubtypes()
-				                       .Select(s => new KeyValuePair<int, string>(
-					                               s.GetCode(), s.GetName()));
+				                         .Select(s => new KeyValuePair<int, string>(
+					                                 s.GetCode(), s.GetName()));
 			}
 		}
 
@@ -490,10 +489,10 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			Field field =
 				ProTableDefinition.GetFields()
-				                .FirstOrDefault(
-					                f => f.Name.Equals(
-						                fieldName,
-						                StringComparison.CurrentCultureIgnoreCase));
+				                  .FirstOrDefault(
+					                  f => f.Name.Equals(
+						                  fieldName,
+						                  StringComparison.CurrentCultureIgnoreCase));
 
 			if (field == null)
 				throw new ArgumentException($"Field {fieldName} does not exist in {Name}");

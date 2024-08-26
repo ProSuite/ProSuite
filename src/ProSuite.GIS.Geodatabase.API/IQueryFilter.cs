@@ -1,4 +1,3 @@
-
 using ESRI.ArcGIS.Geometry;
 
 namespace ESRI.ArcGIS.Geodatabase

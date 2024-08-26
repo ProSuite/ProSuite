@@ -18,7 +18,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		string SubtypeFieldName { get; set; }
 
-		int SubtypeFieldIndex {get; }
+		int SubtypeFieldIndex { get; }
 
 		string get_SubtypeName(int subtypeCode);
 
