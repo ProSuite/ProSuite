@@ -1,10 +1,11 @@
 using System;
 using ArcGIS.Core.Geometry;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.GIS.Geometry.AGP;
 
 namespace ProSuite.ArcGIS.Geometry.AO
 {
-	public class ArcPolygon : ArcGeometry, IPolygon
+	public class ArcPolygon : ArcPolycurve, IPolygon
 	{
 		private readonly Polygon _proPolygon;
 
@@ -25,19 +26,6 @@ namespace ProSuite.ArcGIS.Geometry.AO
 		public double GetArea()
 		{
 			return _proPolygon.Area;
-		}
-
-		#endregion
-
-		#region Implementation of IGeometryCollection
-
-		public int GeometryCount { get; set; }
-
-		public IGeometry get_Geometry(int index)
-		{
-			ReadOnlySegmentCollection segmentCollection = ((Multipart) _proPolygon).Parts[index];
-
-			throw new NotImplementedException();
 		}
 
 		#endregion

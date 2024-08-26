@@ -448,7 +448,7 @@ namespace ProSuite.GIS.Geodatabase
 
 			if (row is IFeature)
 			{
-				var curve = (IPolyline) ((IFeature) row).Shape;
+				var curve = (IPolycurve) ((IFeature) row).Shape;
 				value = curve.Length;
 			}
 

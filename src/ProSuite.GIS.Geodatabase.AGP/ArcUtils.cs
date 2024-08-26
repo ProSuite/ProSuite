@@ -4,7 +4,7 @@ using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.ArcGIS.Geodatabase.AO
 {
-	internal static class ArcUtils
+	public static class ArcUtils
 	{
 		internal static IEnumerable<IRow> GetArcRows(
 			RowCursor cursor)
@@ -18,11 +18,11 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 			}
 		}
 
-		internal static ITable ToArcTable(Table proTable)
+		public static ArcTable ToArcTable(Table proTable)
 		{
-			var result = proTable is FeatureClass featureClass
+			ArcTable result = proTable is FeatureClass featureClass
 				? new ArcFeatureClass(featureClass)
-				: (ITable)new ArcTable(proTable);
+				: new ArcTable(proTable);
 
 			return result;
 		}

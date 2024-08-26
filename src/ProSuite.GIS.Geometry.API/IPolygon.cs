@@ -1,6 +1,6 @@
 namespace ESRI.ArcGIS.Geometry
 {
-	public interface IPolygon : IGeometry, IGeometryCollection
+	public interface IPolygon : IPolycurve
 	{
 		int ExteriorRingCount { get; }
 

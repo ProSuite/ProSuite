@@ -10,7 +10,6 @@ using ProSuite.GIS.Geometry.AGP;
 
 namespace ESRI.ArcGIS.Geodatabase
 {
-
 	public class ArcRow : IObject
 	{
 		private readonly Row _proRow;
@@ -26,7 +25,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		#region Implementation of IRowBuffer
 
-		public object get_Value(int index)
+		public virtual object get_Value(int index)
 		{
 			return _proRow[index];
 		}
@@ -94,13 +93,18 @@ namespace ESRI.ArcGIS.Geodatabase
 			_proFeature = proFeature;
 		}
 
+		protected virtual global::ArcGIS.Core.Geometry.Geometry GetProGeometry()
+		{
+			return _proFeature.GetShape();
+		}
+
 		#region Implementation of IFeature
 
 		public IGeometry ShapeCopy
 		{
 			get
 			{
-				global::ArcGIS.Core.Geometry.Geometry clone = _proFeature.GetShape().Clone();
+				global::ArcGIS.Core.Geometry.Geometry clone = GetProGeometry().Clone();
 				return new ArcGeometry(clone);
 			}
 		}
@@ -118,7 +122,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 				if (proGeometry is Polyline polyline)
 				{
-					return new ArcPolyline(polyline);
+					return new ArcPolycurve(polyline);
 				}
 
 				if (proGeometry is Multipoint multipoint)

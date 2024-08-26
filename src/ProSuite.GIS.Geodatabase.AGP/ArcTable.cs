@@ -13,26 +13,28 @@ namespace ESRI.ArcGIS.Geodatabase
 {
 	public class ArcTable : ITable, IObjectClass, ISubtypes
 	{
-		private readonly Table _proTable;
-
-		private readonly TableDefinition _tableDefinition;
+		
 		//private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObjectClass _aoObjectClass;
 		//private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset _aoDataset;
 
 		public ArcTable(Table proTable)
 		{
-			_proTable = proTable;
-			_tableDefinition = proTable.GetDefinition();
+			ProTable = proTable;
+			ProTableDefinition = proTable.GetDefinition();
 
 			//_aoObjectClass = (EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObjectClass)table;
 			//_aoDataset = (EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset)table;
 		}
 
+		public Table ProTable { get; }
+
+		public TableDefinition ProTableDefinition { get; }
+
 		#region Implementation of IClass
 
 		public int FindField(string name)
 		{
-			return _tableDefinition.FindField(name);
+			return ProTableDefinition.FindField(name);
 		}
 
 		void IClass.AddField(IField field)
@@ -68,8 +70,8 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public IRow CreateRow()
 		{
-			RowBuffer rowBuffer = _proTable.CreateRowBuffer();
-			Row proRow = _proTable.CreateRow(rowBuffer);
+			RowBuffer rowBuffer = ProTable.CreateRowBuffer();
+			Row proRow = ProTable.CreateRow(rowBuffer);
 
 			return ArcUtils.ToArcObject(proRow);
 		}
@@ -83,7 +85,7 @@ namespace ESRI.ArcGIS.Geodatabase
 				                          ObjectIDs = objectIdList
 			                          };
 
-			using (RowCursor rowCursor = _proTable.Search(queryFilter))
+			using (RowCursor rowCursor = ProTable.Search(queryFilter))
 			{
 				while (rowCursor.MoveNext())
 				{
@@ -108,7 +110,7 @@ namespace ESRI.ArcGIS.Geodatabase
 				                          ObjectIDs = oidList.ToList()
 			                          };
 
-			using (RowCursor rowCursor = _proTable.Search(queryFilter))
+			using (RowCursor rowCursor = ProTable.Search(queryFilter))
 			{
 				while (rowCursor.MoveNext())
 				{
@@ -142,7 +144,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
 
-			return _proTable.GetCount(proQueryFilter);
+			return ProTable.GetCount(proQueryFilter);
 		}
 
 		private static QueryFilter GetProQueryFilter(IQueryFilter queryFilter)
@@ -183,7 +185,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
 
-			RowCursor cursor = _proTable.Search(proQueryFilter, recycling);
+			RowCursor cursor = ProTable.Search(proQueryFilter, recycling);
 
 			return ArcUtils.GetArcRows(cursor);
 			//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRow row;
@@ -223,11 +225,11 @@ namespace ESRI.ArcGIS.Geodatabase
 
 			ArcWorkspace arcWorkspace = (ArcWorkspace) selectionContainer;
 
-			Selection selectionSet = _proTable.Select(proQueryFilter,
+			Selection selectionSet = ProTable.Select(proQueryFilter,
 			                                          (SelectionType) selType,
 			                                          (SelectionOption) selOption);
 
-			return new ArcSelectionSet(selectionSet, _proTable);
+			return new ArcSelectionSet(selectionSet, ProTable);
 		}
 
 		//void IClass.AddField(IField field)
@@ -258,16 +260,16 @@ namespace ESRI.ArcGIS.Geodatabase
 		//	_aoTable.DeleteIndex(Index);
 		//}
 
-		public IFields Fields => new ArcFields(_tableDefinition.GetFields(),
+		public IFields Fields => new ArcFields(ProTableDefinition.GetFields(),
 		                                       this is ArcFeatureClass fc
 			                                       ? fc.GeometryDefinition
 			                                       : null);
 
 		//public IIndexes Indexes => ((IClass)_aoTable).Indexes;
 
-		public bool HasOID => _tableDefinition.HasObjectID();
+		public bool HasOID => ProTableDefinition.HasObjectID();
 
-		public string OIDFieldName => _tableDefinition.GetObjectIDField();
+		public string OIDFieldName => ProTableDefinition.GetObjectIDField();
 
 		//public UID CLSID => _aoTable.CLSID;
 
@@ -275,7 +277,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		//public object Extension => _aoTable.Extension;
 
-		public long ObjectClassID => _proTable.GetID();
+		public long ObjectClassID => ProTable.GetID();
 
 		public string AliasName
 		{
@@ -283,7 +285,7 @@ namespace ESRI.ArcGIS.Geodatabase
 			{
 				try
 				{
-					string aliasName = _tableDefinition.GetAliasName();
+					string aliasName = ProTableDefinition.GetAliasName();
 
 					return StringUtils.IsNotEmpty(aliasName)
 						       ? aliasName
@@ -298,7 +300,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public IEnumerable<IRelationshipClass> get_RelationshipClasses(esriRelRole role)
 		{
-			var geodatabase = _proTable.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase;
+			var geodatabase = ProTable.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase;
 
 			if (geodatabase == null)
 			{
@@ -315,13 +317,13 @@ namespace ESRI.ArcGIS.Geodatabase
 				}
 
 				if (role == esriRelRole.esriRelRoleOrigin &&
-				    relClassDef.GetOriginClass() == _tableDefinition.GetName())
+				    relClassDef.GetOriginClass() == ProTableDefinition.GetName())
 				{
 					yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				}
 
 				if (role == esriRelRole.esriRelRoleDestination &&
-				    relClassDef.GetDestinationClass() == _tableDefinition.GetName())
+				    relClassDef.GetDestinationClass() == ProTableDefinition.GetName())
 				{
 					yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				}
@@ -368,7 +370,7 @@ namespace ESRI.ArcGIS.Geodatabase
 			throw new NotImplementedException();
 		}
 
-		public string Name => _tableDefinition.GetName();
+		public string Name => ProTableDefinition.GetName();
 
 		public IName FullName => new ArcName(this);
 
@@ -388,7 +390,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		}
 
 		IWorkspace IDataset.Workspace =>
-			new ArcWorkspace(_proTable.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase);
+			new ArcWorkspace(ProTable.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase);
 		//public IWorkspace Workspace => new ArcWorkspace(_aoDataset.Workspace);
 
 		//public IPropertySet PropertySet => _aoDataset.PropertySet;
@@ -402,11 +404,11 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		#region Implementation of ISubtypes
 
-		public bool HasSubtype => _tableDefinition.GetSubtypes().Count > 0;
+		public bool HasSubtype => ProTableDefinition.GetSubtypes().Count > 0;
 
 		public int DefaultSubtypeCode
 		{
-			get => _tableDefinition.GetDefaultSubtypeCode();
+			get => ProTableDefinition.GetDefaultSubtypeCode();
 			set => throw new NotImplementedException();
 		}
 
@@ -415,7 +417,7 @@ namespace ESRI.ArcGIS.Geodatabase
 			Field field = GetExistingField(fieldName);
 
 			Subtype subtype =
-				_tableDefinition.GetSubtypes()
+				ProTableDefinition.GetSubtypes()
 				                .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
 			return field.GetDefaultValue(subtype);
@@ -431,7 +433,7 @@ namespace ESRI.ArcGIS.Geodatabase
 			Field field = GetExistingField(fieldName);
 
 			Subtype subtype =
-				_tableDefinition.GetSubtypes()
+				ProTableDefinition.GetSubtypes()
 				                .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
 			Domain proDomain = field.GetDomain(subtype);
@@ -446,17 +448,17 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public string SubtypeFieldName
 		{
-			get => _tableDefinition.GetSubtypeField();
+			get => ProTableDefinition.GetSubtypeField();
 			set => throw new NotImplementedException();
 		}
 
 		public int SubtypeFieldIndex =>
-			_tableDefinition.FindField(_tableDefinition.GetSubtypeField());
+			ProTableDefinition.FindField(ProTableDefinition.GetSubtypeField());
 
 		public string get_SubtypeName(int subtypeCode)
 		{
 			Subtype subtype =
-				_tableDefinition.GetSubtypes()
+				ProTableDefinition.GetSubtypes()
 				                .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
 			return subtype?.GetName();
@@ -466,7 +468,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			get
 			{
-				return _tableDefinition.GetSubtypes()
+				return ProTableDefinition.GetSubtypes()
 				                       .Select(s => new KeyValuePair<int, string>(
 					                               s.GetCode(), s.GetName()));
 			}
@@ -487,7 +489,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		private Field GetExistingField(string fieldName)
 		{
 			Field field =
-				_tableDefinition.GetFields()
+				ProTableDefinition.GetFields()
 				                .FirstOrDefault(
 					                f => f.Name.Equals(
 						                fieldName,
