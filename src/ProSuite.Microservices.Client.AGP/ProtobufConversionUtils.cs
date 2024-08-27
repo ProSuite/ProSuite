@@ -7,6 +7,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using Google.Protobuf;
+using Google.Protobuf.Collections;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -17,6 +18,7 @@ using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Geom.Wkb;
 using ProSuite.Commons.Logging;
+using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using Version = ArcGIS.Core.Data.Version;
 
@@ -561,6 +563,11 @@ namespace ProSuite.Microservices.Client.AGP
 				return GeomConversionUtils.CreateMultipatch((Polyhedron) geom, spatialReference);
 			}
 
+			throw new NotImplementedException();
+		}
+
+		public static List<Geometry> FromShapeMsgList(RepeatedField<CrackPointMsg> shapeBufferList, SpatialReference spatialReference)
+		{
 			throw new NotImplementedException();
 		}
 	}
