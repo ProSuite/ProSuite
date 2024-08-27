@@ -102,14 +102,14 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 
 		public static CrackerResult InsertCrackPoints(
 			[NotNull] CrackGrpc.CrackGrpcClient rpcClient,
-			[NotNull] IList<Feature> selectedFeatures,
-			[NotNull] IList<Feature> intersectingFeatures,
+			[NotNull] IList<Feature> sourceFeatures, //selected + intersecting
+			[NotNull] CrackPoints crackPointsToAdd,
 			CancellationToken cancellationToken)
 		{
-			List<Feature> updateFeatures = null; // out parameter, feels wrong to pass null
-			CalculateCrackPointsRequest request = CreateCalculateCrackPointsRequest(
-				selectedFeatures, intersectingFeatures
-				);
+			List<Feature> updateFeatures;
+			ApplyCrackPointsRequest request = CreateApplyCrackPointsRequest(
+				sourceFeatures, crackPointsToAdd,
+				out updateFeatures);
 
 			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
 			               request.SourceFeatures.Count;
@@ -160,7 +160,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 
 		private static void ReAssociateResponsePoints(
 			CalculateCrackPointsResponse response,
-			IList<CrackPoints> results,
+
+			IList<CrackerResultPoints> results,
+
 			List<Feature> updateFeatures)
 		{
 			foreach (var resultByFeature in response.ResultsByFeature)
