@@ -76,7 +76,7 @@ public interface IWhiteSelection
 
 		public override string ToString()
 		{
-			return $"{State} {OID} (details: {OptionalDetails ?? "none"})";
+			return $"{State} OID {OID} (details: {OptionalDetails ?? "none"})";
 		}
 	}
 

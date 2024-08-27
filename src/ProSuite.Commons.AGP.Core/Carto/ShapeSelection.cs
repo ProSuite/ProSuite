@@ -367,31 +367,75 @@ public class ShapeSelection : IShapeSelection
 			return false;
 		}
 
-		int numParts = GetPartCount(shape);
-
-		var block = _blocks.MaxBy(b => b.Part);
-		if (block.Part >= numParts)
+		if (shape.GeometryType != Shape.GeometryType)
 		{
-			message =
-				$"Selection refers to part {block.Part} but shape's max part index is {numParts - 1}";
+			message = $"Geometry type differs: {shape.GeometryType} (requested) vs. {Shape.GeometryType} (in selection)";
 			return false;
 		}
 
-		var groups = _blocks.GroupBy(b => b.Part);
-		foreach (var group in groups)
+		int yourParts = GetPartCount(shape);
+		int myParts = GetPartCount(Shape);
+		if (yourParts != myParts)
 		{
-			int numVertices = GetVertexCount(shape, group.Key);
-			int maxIndex = group.Max(b => b.First + b.Count - 1);
-			if (! (maxIndex < numVertices))
+			message = $"Number of parts differ: {yourParts} (requested) vs. {myParts} (in selection)";
+			return false;
+		}
+
+		if (shape.PointCount != Shape.PointCount)
+		{
+			message = $"Number of points differ: {shape.PointCount} (requested) vs. {Shape.PointCount} (in selection)";
+			return false;
+		}
+
+		if (shape is Multipart yourMultipart && Shape is Multipart myMultipart)
+		{
+			int m = yourMultipart.PartCount;
+			if (m != myMultipart.PartCount)
 			{
-				message =
-					$"Selection refers to vertex {maxIndex} but max vertex index is {numVertices - 1} (in part {group.Key})";
+				message = $"Number of parts differ: {yourParts} (requested) vs. {myParts} (in selection)";
 				return false;
+			}
+
+			for (int k = 0; k < m; k++)
+			{
+				int myVertexCount = GetVertexCount(myMultipart, k);
+				int yourVertexCount = GetVertexCount(yourMultipart, k);
+				if (myVertexCount != yourVertexCount)
+				{
+					message = $"Number of vertices in part {k} differ: {yourVertexCount} (requested) vs. {myVertexCount} (in selection)";
+					return false;
+				}
 			}
 		}
 
 		message = string.Empty;
 		return true;
+
+		//int numParts = GetPartCount(shape);
+
+		//var block = _blocks.MaxBy(b => b.Part);
+		//if (block.Part >= numParts)
+		//{
+		//	message =
+		//		$"Selection refers to part {block.Part} but shape's max part index is {numParts - 1}";
+		//	return false;
+		//}
+
+		//var groups = _blocks.GroupBy(b => b.Part);
+		//foreach (var group in groups)
+		//{
+		//	int numVertices = GetVertexCount(shape, group.Key);
+		//	int maxIndex = group.Max(b => b.First + b.Count - 1);
+		//	if (! (maxIndex < numVertices))
+		//	{
+		//		message =
+		//			$"Selection refers to vertex {maxIndex} but max vertex index is {numVertices - 1} (in part {group.Key})";
+		//		return false;
+		//	}
+		//}
+
+		//message = string.Empty;
+		//return true;
 	}
 
 	#region Private methods
