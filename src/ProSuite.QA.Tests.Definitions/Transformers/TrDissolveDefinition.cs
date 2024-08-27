@@ -28,7 +28,7 @@ namespace ProSuite.QA.Tests.Transformers
 			IFeatureClassSchemaDef featureClass)
 			: base(new List<ITableSchemaDef> { featureClass })
 		{
-			_toDissolve = featureClass;
+			FeatureClass = featureClass;
 			NeighborSearchOption = _defaultSearchOption;
 		}
 
