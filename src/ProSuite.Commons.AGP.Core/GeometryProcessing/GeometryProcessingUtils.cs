@@ -4,13 +4,16 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing
 {
 	public static class GeometryProcessingUtils
 	{
-		public static int GetUniqueClassId(Row row)
+		public static long GetUniqueClassId(Row row)
 		{
 			return GetUniqueClassId(row.GetTable());
 		}
 
-		public static int GetUniqueClassId(Table table)
+		public static long GetUniqueClassId(Table table)
 		{
+			// TEST:
+			return table.GetID();
+
 			// TODO: long is now supported everywhere, remove this method.
 			// NOTE: We cannot use the table handle because it is a 64-bit integer!
 			// On the server side, it will be converted to a 32-bit integer which changes its value
