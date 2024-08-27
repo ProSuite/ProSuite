@@ -138,8 +138,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			if (CrackClient == null)
 				throw new InvalidOperationException("No microservice available.");
 
-			return CrackerClientUtils.InsertCrackPoints(
-				CrackClient, sourceFeatures, crackPointsToAdd, cancellationToken);
+			return CrackerClientUtils.CalculateCrackPoints(
+				CrackClient, selectedFeatures, targetFeatures, cancellationToken);
 		}
 
 		[NotNull]

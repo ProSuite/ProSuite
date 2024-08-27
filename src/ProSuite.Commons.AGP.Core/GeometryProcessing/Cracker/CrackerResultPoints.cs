@@ -5,16 +5,18 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker
 {
+
 	public class CrackerResultPoints
 	{
 		public CrackerResultPoints(
 			[NotNull] Feature originalFeature,
 			[NotNull] Geometry updatedGeometry,
 			[CanBeNull] IList<Geometry> insertCrackPoints = null)
+
 		{
 			OriginalFeature = originalFeature;
 			UpdatedGeometry = updatedGeometry;
-			InsertCrackPoints = insertCrackPoints ?? new List<Geometry>(0);
+			insertCrackPoints = insertCrackPoints ?? new List<Geometry>(0);
 		}
 
 		[NotNull]
