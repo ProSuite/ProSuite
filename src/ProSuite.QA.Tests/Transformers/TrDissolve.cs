@@ -22,6 +22,7 @@ using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.Network;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -29,11 +30,6 @@ namespace ProSuite.QA.Tests.Transformers
 	[GeometryTransformer]
 	public class TrDissolve : TableTransformer<TransformedFeatureClass>
 	{
-		public enum SearchOption
-		{
-			Tile,
-			All
-		}
 
 		private const SearchOption _defaultSearchOption = SearchOption.Tile;
 
@@ -49,6 +45,19 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			_toDissolve = featureClass;
 			NeighborSearchOption = _defaultSearchOption;
+		}
+
+		[InternallyUsedTest]
+		public TrDissolve(
+			[NotNull] TrDissolveDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass)
+		{
+			Search = definition.Search;
+			NeighborSearchOption = definition.NeighborSearchOption;
+			Attributes = definition.Attributes;
+			GroupBy = definition.GroupBy;
+			Constraint = definition.Constraint;
+			CreateMultipartFeatures = definition.CreateMultipartFeatures;
 		}
 
 		[TestParameter]

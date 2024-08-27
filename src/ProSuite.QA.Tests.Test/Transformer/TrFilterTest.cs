@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
@@ -755,7 +756,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrDissolve trDissolveDisjoint =
 				new TrDissolve(trDisjoint.GetTransformed())
 				{
-					NeighborSearchOption = TrDissolve.SearchOption.All,
+					NeighborSearchOption = SearchOption.All,
 					Attributes = new List<string>
 					             { "COUNT(TLM_STEHENDES_GEWAESSER_OBJECTID) AS ANZAHL_LAEUFE" },
 					GroupBy = new List<string> { "GEWISS_NR" },

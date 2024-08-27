@@ -13,6 +13,7 @@ using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
 using ProSuite.QA.Tests.Transformers.Filters;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {
@@ -76,7 +77,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			TrDissolve dissolve =
 				new TrDissolve(ReadOnlyTableFactory.Create(fc))
-				{ Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All };
+				{ Search = 1, NeighborSearchOption = SearchOption.All };
 			QaMinLength test = new QaMinLength(dissolve.GetTransformed(), 100);
 
 			{
@@ -132,7 +133,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			TrDissolve dissolve =
 				new TrDissolve(ReadOnlyTableFactory.Create(fc))
-				{ Search = 1, NeighborSearchOption = TrDissolve.SearchOption.Tile };
+				{ Search = 1, NeighborSearchOption = SearchOption.Tile };
 
 			// Ensure unique OID:
 			List<long> objectIDs = dissolve
@@ -196,7 +197,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			TrDissolve dissolve =
 				new TrDissolve(ReadOnlyTableFactory.Create(fc))
-				{ Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All };
+				{ Search = 1, NeighborSearchOption = SearchOption.All };
 
 			// Ensure unique OID:
 			List<long> objectIDs = dissolve
@@ -259,7 +260,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			TrDissolve dissolve =
 				new TrDissolve(ReadOnlyTableFactory.Create(fc))
-				{ Search = 1, NeighborSearchOption = TrDissolve.SearchOption.Tile };
+				{ Search = 1, NeighborSearchOption = SearchOption.Tile };
 
 			QaConstraint test = new QaConstraint(dissolve.GetTransformed(), "ObjectId < 0");
 			{
@@ -320,7 +321,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new TrDissolve(ReadOnlyTableFactory.Create(fc))
 				{
 					Search = 1,
-					NeighborSearchOption = TrDissolve.SearchOption.All,
+					NeighborSearchOption = SearchOption.All,
 					CreateMultipartFeatures = true
 				};
 			QaMinLength test = new QaMinLength(dissolve.GetTransformed(), 100);
@@ -598,7 +599,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new TrDissolve(ReadOnlyTableFactory.Create(lineFc))
 				{
 					Search = 1,
-					NeighborSearchOption = TrDissolve.SearchOption.All
+					NeighborSearchOption = SearchOption.All
 				};
 			TrLineToPolygon lineToPolygon = new TrLineToPolygon(dissolve.GetTransformed());
 			QaIntersectsOther test = new QaIntersectsOther(
@@ -633,7 +634,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrDissolve trDissolve = new TrDissolve(fg)
 			                        {
 				                        Search = 0,
-				                        NeighborSearchOption = TrDissolve.SearchOption.All,
+				                        NeighborSearchOption = SearchOption.All,
 				                        CreateMultipartFeatures = true
 			                        };
 			trDissolve.SetConstraint(0, "OBJEKTART = 7");
@@ -849,7 +850,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			TrDissolve dsSg = new TrDissolve((IReadOnlyFeatureClass) mjFg.GetTransformed())
 			                  {
-				                  NeighborSearchOption = TrDissolve.SearchOption.All,
+				                  NeighborSearchOption = SearchOption.All,
 				                  Attributes = new List<string>
 				                               {
 					                               "COUNT(TLM_STEHENDES_GEWAESSER_OBJECTID) AS ANZAHL_LAEUFE"
@@ -1117,7 +1118,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrDissolve trDisDjSgwFgw =
 				new TrDissolve(roDjSgwFgw)
 				{
-					NeighborSearchOption = TrDissolve.SearchOption.All,
+					NeighborSearchOption = SearchOption.All,
 					Attributes =
 						new[] { "COUNT(TLM_STEHENDES_GEWAESSER_OBJECTID) AS ANZAHL_LAEUFE" },
 					GroupBy = new[] { "GEWISS_NR" }

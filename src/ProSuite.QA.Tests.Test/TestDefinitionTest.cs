@@ -3537,7 +3537,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			List<Type> refactoredTypes = new List<Type>
 			                             {
-				                             //typeof(TrDissolve),
+				                             typeof(TrDissolve),
 			                             };
 
 			foreach (Type transformerType in refactoredTypes)
@@ -3622,14 +3622,14 @@ namespace ProSuite.QA.Tests.Test
 			var trCases = new List<TrDefinitionCase>();
 
 			// Transformer cases with automatic parameter value generation:
-			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrDissolve)));
+			//trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrDissolve)));
 
 			//
 			// Special Cases
 			//
 			// Manually create values for special cases, such as optional parameters or
 			// difficult assertions:
-			//AddTrDissolve(model, trCases);
+			AddTrDissolve(model, trCases);
 
 			foreach (TrDefinitionCase trCase in trCases)
 			{
@@ -3735,6 +3735,27 @@ namespace ProSuite.QA.Tests.Test
 				Assert.AreEqual(0, differences.Count,
 				                $"Differences found for {transformerType.Name} constructor index {constructorIdx}:");
 			}
+		}
+
+
+		private static void AddTrDissolve(InMemoryTestDataModel model,
+		                                  ICollection<TestDefinitionCase>
+			                                  testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("Search", 1.0);
+			optionalValues.Add("NeighborSearchOption", "Tile");
+			optionalValues.Add("Attributes", "MAX(LAUF_NR) AS MAX_LAUF_NR");
+			optionalValues.Add("GroupBy", "");
+			optionalValues.Add("Constraint", "");
+			optionalValues.Add("CreateMultipartFeatures", false);
+
+			testCases.Add(new TestDefinitionCase(typeof(TrDissolve), 0,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+												 },
+												 optionalValues));
 		}
 
 		private static void AddParameterValue(string parameterName, object value,
