@@ -5,12 +5,13 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Notifications;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
+using SpatialReference = ArcGIS.Core.Geometry.SpatialReference;
 
 namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 {
@@ -19,7 +20,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 		#region Calculate CrackPoints
 
 		[CanBeNull]
-		public static CrackPoints CalculateCrackPoints(
+		public static CrackerResult CalculateCrackPoints(
 			[NotNull] CrackGrpc.CrackGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] IList<Feature> intersectingFeatures,
@@ -34,27 +35,54 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 				return null;
 			}
 
-			var result = new CrackPoints();
+			// match the selected features with the protobuf features -> use GdbObjRef (shapefile support!)
 
-			// Get the spatial reference from a shape (== map spatial reference) rather than a feature class.
-			SpatialReference spatialReference = selectedFeatures
-			                                    .Select(f => f.GetShape().SpatialReference)
-			                                    .FirstOrDefault();
+			var resultFeaturesWithCrackPoints = new List<CrackedFeature>();
 
-			foreach (CrackPointsMsg crackPointMsg in response.CrackPoints)
-			{
-				GdbObjectReference gdbObjRef = new GdbObjectReference(
-					crackPointMsg.OriginalFeatureRef.ClassHandle,
-					crackPointMsg.OriginalFeatureRef.ObjectId);
+			ReAssociateResponsePoints(response, resultFeaturesWithCrackPoints, selectedFeatures);
 
-				List<Geometry> intersectGeometries =
-					ProtobufConversionUtils.FromShapeMsgList(crackPointMsg.CrackPoints, spatialReference);
+			var result = new CrackerResult { };
+			result.ResultsByFeature = resultFeaturesWithCrackPoints;
+			//if (response.CrackPoints != null)
+			//{
+			//	result.TargetFeaturesToUpdate = new Dictionary<Feature, Geometry>();
 
-				result.AddGeometries(gdbObjRef, intersectGeometries);
-			}
+			//	foreach (CrackPointsMsg crackPointsMsg in response.CrackPoints)
+			//	{
+			//		GdbObjRefMsg gdbObjRefMsg = crackPointsMsg.OriginalFeatureRef;
 
-			result.Notifications.AddRange(
-				response.Notifications.Select(n => new Notification(n)));
+			//		Feature originalFeature =
+			//			GetOriginalFeature(gdbObjRefMsg.ObjectId, gdbObjRefMsg.ClassHandle,
+			//			                   updateFeatures);
+			//	}
+			//}
+
+			// TODO: Handle notifications/nonstrorable messages
+
+			return result;
+
+			//var result = new CrackPoints();
+
+			//// Get the spatial reference from a shape (== map spatial reference) rather than a feature class.
+			//SpatialReference spatialReference = selectedFeatures
+			//                                    .Select(f => f.GetShape().SpatialReference)
+			//                                    .FirstOrDefault();
+
+			//foreach (CrackPointsMsg crackPointMsg in response.CrackPoints)
+			//{
+			//	GdbObjectReference gdbObjRef = new GdbObjectReference(
+			//		crackPointMsg.OriginalFeatureRef.ClassHandle,
+			//		crackPointMsg.OriginalFeatureRef.ObjectId);
+
+			//	CrackPoints newCrackPoints =
+			//		ProtobufConversionUtils.FromShapeMsgList(
+			//			crackPointMsg.CrackPoints, spatialReference);
+
+			//	result.AddCrackPoints(gdbObjRef, (IList<CrackPoint>) newCrackPoints);
+			//}
+
+			//result.Notifications.AddRange(
+			//	response.Notifications.Select(n => new Notification(n)));
 
 			return result;
 		}
@@ -100,96 +128,104 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 
 		#region Insert CrackPoints
 
-		public static CrackerResult InsertCrackPoints(
-			[NotNull] CrackGrpc.CrackGrpcClient rpcClient,
-			[NotNull] IList<Feature> sourceFeatures, //selected + intersecting
-			[NotNull] CrackPoints crackPointsToAdd,
-			CancellationToken cancellationToken)
-		{
-			List<Feature> updateFeatures;
-			ApplyCrackPointsRequest request = CreateApplyCrackPointsRequest(
-				sourceFeatures, crackPointsToAdd,
-				out updateFeatures);
+		//public static CrackerResult InsertCrackPoints(
+		//	[NotNull] CrackGrpc.CrackGrpcClient rpcClient,
+		//	[NotNull] IList<Feature> selectedFeatures,
+		//	[NotNull] IList<Feature> intersectingFeatures,
+		//	[NotNull] CrackPoints crackPointsToAdd,
+		//	List<Feature> updateFeatures,
+		//	CancellationToken cancellationToken)
+		//{
+		//	CalculateCrackPointsRequest request = CreateCalculateCrackPointsRequest(
+		//		selectedFeatures, intersectingFeatures);
 
-			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
-			               request.SourceFeatures.Count;
+		//	int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
+		//	               request.SourceFeatures.Count;
 
-			CalculateCrackPointsResponse response =
-				GrpcClientUtils.Try(
-					o => rpcClient.CalculateCrackPoints(request, o),
-					cancellationToken, deadline);
+		//	CalculateCrackPointsResponse response =
+		//		GrpcClientUtils.Try(
+		//			o => rpcClient.CalculateCrackPoints(request, o),
+		//			cancellationToken, deadline);
 
-			return GetCalculateCrackPointsResult(response, updateFeatures);
-		}
+		//	return GetCalculateCrackPointsResult(response, updateFeatures);
+		//}
 
-		private static CrackerResult GetCalculateCrackPointsResult(
-			CalculateCrackPointsResponse response,
-			List<Feature> updateFeatures)
-		{
-			// unpack 
-			var result = new CrackerResult
-			             {
-				            
-			             };
+		//private static CrackerResult GetCalculateCrackPointsResult(
+		//	CalculateCrackPointsResponse response,
+		//	List<Feature> updateFeatures)
+		//{
+		//	// unpack 
+		//	var result = new CrackerResult
+		//	             { };
+		//	// match the selected features with the protobuf features -> use GdbObjRef (shapefile support!)
 
-			IList<CrackPoints> resultPointsByFeature = result.ResultsByFeature;
+		//	var resultFeaturesWithCrackPoints = new List<CrackPoints>();
 
-			// match the selected features with the protobuf features -> use GdbObjRef (shapefile support!)
+		//	ReAssociateResponsePoints(response, resultFeaturesWithCrackPoints,                          updateFeatures);
 
-			ReAssociateResponsePoints(response, resultPointsByFeature,
-			                              updateFeatures);
+		//	result.ResultsByFeature = resultFeaturesWithCrackPoints;
+		//	//if (response.CrackPoints != null)
+		//	//{
+		//	//	result.TargetFeaturesToUpdate = new Dictionary<Feature, Geometry>();
 
-			if (response.CrackPoints != null)
-			{
-				result.TargetFeaturesToUpdate = new Dictionary<Feature, Geometry>();
+		//	//	foreach (CrackPointsMsg crackPointsMsg in response.CrackPoints)
+		//	//	{
+		//	//		GdbObjRefMsg gdbObjRefMsg = crackPointsMsg.OriginalFeatureRef;
 
-				foreach (CrackPointsMsg crackPointsMsg in response.CrackPoints)
-				{
-					GdbObjRefMsg gdbObjRefMsg = crackPointsMsg.OriginalFeatureRef;
+		//	//		Feature originalFeature =
+		//	//			GetOriginalFeature(gdbObjRefMsg.ObjectId, gdbObjRefMsg.ClassHandle,
+		//	//			                   updateFeatures);
+		//	//	}
+		//	//}
 
-					Feature originalFeature =
-						GetOriginalFeature(gdbObjRefMsg.ObjectId, gdbObjRefMsg.ClassHandle,
-						                   updateFeatures);
-
-
-				}
-			}
-
-			return result;
-		}
+		//	return result;
+		//}
 
 		private static void ReAssociateResponsePoints(
 			CalculateCrackPointsResponse response,
-
-			IList<CrackerResultPoints> results,
-
-			List<Feature> updateFeatures)
+			IList<CrackedFeature> results,
+			IList<Feature> updateFeatures)
 		{
-			foreach (var resultByFeature in response.ResultsByFeature)
+			foreach (var returnedFeature in response.CrackPoints)
 			{
-				GdbObjRefMsg featureRef = resultByFeature.OriginalFeatureRef;
+				GdbObjRefMsg featureRef = returnedFeature.OriginalFeatureRef;
 
 				Feature originalFeature = GetOriginalFeature(featureRef, updateFeatures);
+
+				var originalFeatureRef = new GdbObjectReference(originalFeature);
+
+				CrackedFeature crackPointsPerFeature = new CrackedFeature(originalFeature);
 
 				// It's important to assign the full spatial reference from the original to avoid
 				// losing the VCS. Get it from the shape, because all calculations are in Map SR!
 				SpatialReference sr = originalFeature.GetShape().SpatialReference;
 
-				Geometry updatedGeometry =
-					ProtobufConversionUtils.FromShapeMsg(resultByFeature.UpdatedGeometry, sr);
+				foreach (CrackPointMsg crackPointMsg in returnedFeature.CrackPoints)
+				{
+					MapPoint point =
+						(MapPoint) ProtobufConversionUtils.FromShapeMsg(crackPointMsg.Point, sr);
 
-				List<Geometry> newGeometries =
-					ProtobufConversionUtils.FromShapeMsgList(resultByFeature.NewGeometries, sr);
+					var crackPoint = new CrackPoint(Assert.NotNull(point));
+					crackPoint.ViolatesMinimumSegmentLength =
+						crackPointMsg.ViolatesMinimumSegmentLength;
+					crackPoint.TargetVertexOnlyDifferentInZ =
+						crackPointMsg.TargetVertexOnlyDifferentInZ;
+					crackPoint.TargetVertexDifferentWithinTolerance =
+						crackPointMsg.TargetVertexDifferentWithinTolerance;
 
-				var crackerResultPoints = new CrackerResultPoints(
-					originalFeature, Assert.NotNull(updatedGeometry), newGeometries);
+					crackPointsPerFeature.CrackPoints.Add(crackPoint);
+				}
 
-				results.Add(crackerResultPoints);
+				//var crackerResultPoints = new CrackerResultPoints(
+				//	originalFeature,
+				//	ProtobufConversionUtils.FromShapeMsgList(returnedFeature.CrackPoints, sr));
+
+				results.Add(crackPointsPerFeature);
 			}
 		}
 
 		private static Feature GetOriginalFeature(GdbObjRefMsg featureBuffer,
-		                                          List<Feature> updateFeatures)
+		                                          IList<Feature> updateFeatures)
 		{
 			// consider using anything unique as an identifier, e.g. a GUID
 			long classId = featureBuffer.ClassHandle;
@@ -199,22 +235,87 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 		}
 
 		private static Feature GetOriginalFeature(long objectId, long classId,
-		                                          List<Feature> updateFeatures)
+		                                          IList<Feature> updateFeatures)
 		{
 			return updateFeatures.First(f => f.GetObjectID() == objectId &&
 			                                 GeometryProcessingUtils.GetUniqueClassId(f) ==
 			                                 classId);
 		}
 
+		//private static CaculateCrackPointsRequest CreateCaculateCrackPointsRequest(
+		//	[NotNull] IEnumerable<Feature> selectedFeatures,
+		//	[NotNull] CrackPoints crackPointsToAdd,
+		//	out List<Feature> updateFeatures)
+		//{
+		//	var request = new CaculateCrackPointsRequest { };
+
+		//	updateFeatures = new List<Feature>();
+
+		//	var selectedFeatureList = CollectionUtils.GetCollection(selectedFeatures);
+
+		//	ProtobufConversionUtils.ToGdbObjectMsgList(
+		//		selectedFeatureList, request.SourceFeatures, request.ClassDefinitions);
+
+		//	updateFeatures.AddRange(selectedFeatureList);
+
+		//	foreach (var crackPointsBySourceRef in crackPointsToAdd.CrackPointLocations)
+		//	{
+		//		int classId = (int) crackPointsBySourceRef.Key.ClassId;
+		//		int objectId = (int) crackPointsBySourceRef.Key.ObjectId;
+
+		//		var crackPointsMsg = new CrackPointsMsg();
+		//		crackPointsMsg.OriginalFeatureRef = new GdbObjRefMsg()
+		//		                                    {
+		//			                                    ClassHandle = classId,
+		//			                                    ObjectId = objectId
+		//		                                    };
+
+		//		foreach (Geometry crackPoint in crackPointsBySourceRef.Value)
+		//		{
+		//			crackPointsMsg.CrackPoints.Add(
+		//				ProtobufConversionUtils.ToShapeMsg(crackPoint, true));
+		//		}
+
+		//		request.CrackPoints.Add(crackPointsMsg);
+		//	}
+
+		//	return request;
+		//}
+
+		#endregion
+
+		public static IList<ResultFeature> ApplyCrackPoints(
+			[NotNull] CrackGrpc.CrackGrpcClient rpcClient,
+			IEnumerable<Feature> selectedFeatures,
+			CrackerResult crackPointsToAdd,
+			IList<Feature> intersectingFeatures,
+			CancellationToken cancellationToken)
+		{
+			ApplyCrackPointsRequest request =
+				CreateApplyCrackPointsRequest(selectedFeatures, crackPointsToAdd,
+											intersectingFeatures, out List<Feature> updatedFeatures);
+
+
+			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
+			               request.SourceFeatures.Count;
+
+			ApplyCrackPointsResponse response =
+				GrpcClientUtils.Try(
+				o => rpcClient.ApplyCrackPoints(request, o),
+				cancellationToken, deadline);
+
+			return GetApplyCrackPointsResult(response, updatedFeatures);
+
+		}
+
 		private static ApplyCrackPointsRequest CreateApplyCrackPointsRequest(
 			[NotNull] IEnumerable<Feature> selectedFeatures,
-			[NotNull] CrackPoints crackPointsToAdd,
+			[NotNull] CrackerResult crackPointsToAdd,
+			[CanBeNull]
+			IList<Feature> targetFeaturesForVertexInsertion, //RemoveOverlapsOptions options,
 			out List<Feature> updateFeatures)
 		{
-			var request = new ApplyCrackPointsRequest
-			              {
-		
-			              };
+			var request = new ApplyCrackPointsRequest();
 
 			updateFeatures = new List<Feature>();
 
@@ -225,30 +326,105 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 
 			updateFeatures.AddRange(selectedFeatureList);
 
-			foreach (var crackPointsBySourceRef in crackPointsToAdd.CrackPointLocations)
+			foreach (var crackedFeature in crackPointsToAdd.ResultsByFeature)
 			{
-				int classId = (int)crackPointsBySourceRef.Key.ClassId;
-				int objectId = (int)crackPointsBySourceRef.Key.ObjectId;
+				int classId = (int) crackedFeature.GdbFeatureReference.ClassId;
+				int objectId = (int) crackedFeature.GdbFeatureReference.ObjectId;
 
 				var crackPointsMsg = new CrackPointsMsg();
-				crackPointsMsg.OriginalFeatureRef = new GdbObjRefMsg()
-				                                    {
-					                                    ClassHandle = classId,
-					                                    ObjectId = objectId
-				                                    };
+				crackPointsMsg.OriginalFeatureRef =
+					new GdbObjRefMsg()
+					{
+						ClassHandle = classId,
+						ObjectId = objectId
+					};
 
-				foreach (Geometry crackPoint in crackPointsBySourceRef.Value)
+				foreach (var crackPoint in crackedFeature.CrackPoints)
 				{
-					crackPointsMsg.CrackPoints.Add(ProtobufConversionUtils.ToShapeMsg(crackPoint, true));
+					var crackPointMsg =
+						new CrackPointMsg()
+						{
+							Point = ProtobufConversionUtils.ToShapeMsg(
+								crackPoint.Point, true),
+							ViolatesMinimumSegmentLength =
+								crackPoint.ViolatesMinimumSegmentLength,
+							TargetVertexOnlyDifferentInZ =
+								crackPoint.TargetVertexOnlyDifferentInZ,
+							TargetVertexDifferentWithinTolerance =
+								crackPoint.TargetVertexDifferentWithinTolerance
+						};
+					crackPointsMsg.CrackPoints.Add(crackPointMsg);
 				}
 
 				request.CrackPoints.Add(crackPointsMsg);
 			}
 
-
 			return request;
 		}
 
-		#endregion
+
+		private static List<ResultFeature> GetApplyCrackPointsResult(
+			ApplyCrackPointsResponse response,
+			List<Feature> updateFeatures) {
+			// unpack
+
+
+
+			var featuresByObjRef = new Dictionary<GdbObjectReference, Feature>();
+
+			FeatureProcessingUtils.AddInputFeatures(updateFeatures, featuresByObjRef);
+
+
+			//var result = new RemoveOverlapsResult {
+			//	                                      ResultHasMultiparts = response.ResultHasMultiparts
+			//                                      };
+
+			//IList<OverlapResultGeometries> resultGeometriesByFeature = result.ResultsByFeature;
+
+			// match the selected features with the protobuf features -> use GdbObjRef (shapefile support!)
+
+
+			SpatialReference resultSpatialReference =
+				updateFeatures.FirstOrDefault()?.GetShape().SpatialReference;
+
+			var resultFeatures = new List<ResultFeature>(
+				FeatureDtoConversionUtils.FromUpdateMsgs(response.ResultFeatures, featuresByObjRef,
+				                                         resultSpatialReference));
+
+			return resultFeatures;
+			//foreach (ResultObjectMsg resultFeatureMsg in response.ResultFeatures)
+		 //  {
+			//   resultFeatureMsg.
+		 //  }
+
+		 //  ReAssociateResponsePoints(response, resultGeometriesByFeature,
+		 //                            updateFeatures);
+
+			//ReAssociateResponseGeometries(response, resultGeometriesByFeature,
+			//                              updateFeatures);
+
+			//if (response.TargetFeaturesToUpdate != null) {
+			//	result.TargetFeaturesToUpdate = new Dictionary<Feature, Geometry>();
+
+			//	foreach (GdbObjectMsg targetMsg in response.TargetFeaturesToUpdate) {
+			//		Feature originalFeature =
+			//			GetOriginalFeature(targetMsg.ObjectId, targetMsg.ClassHandle,
+			//			                   updateFeatures);
+
+			//		// It's important to assign the full spatial reference from the original to avoid
+			//		// losing the VCS:
+			//		SpatialReference sr = originalFeature.GetShape().SpatialReference;
+
+			//		result.TargetFeaturesToUpdate.Add(
+			//			originalFeature, ProtobufConversionUtils.FromShapeMsg(targetMsg.Shape, sr));
+			//	}
+			//}
+
+			//foreach (string message in response.NonStorableMessages) {
+			//	result.NonStorableMessages.Add(message);
+			//}
+
+			//return result;
+		}
 	}
 }

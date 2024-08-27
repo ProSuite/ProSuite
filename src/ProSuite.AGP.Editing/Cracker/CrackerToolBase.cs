@@ -10,18 +10,15 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.AGP.Editing.Cracker;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
-using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Text;
-using Overlaps = ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker.Overlaps;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
@@ -29,7 +26,7 @@ namespace ProSuite.AGP.Editing.Cracker
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private Overlaps _overlaps;
+		private CrackerResult _resultCrackPoints;
 		private CrackerFeedback _feedback;
 		private IList<Feature> _overlappingFeatures;
 
@@ -78,8 +75,8 @@ namespace ProSuite.AGP.Editing.Cracker
 		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 		                                                   CancelableProgressor progressor)
 		{
-			IList<Feature> overlappingFeatures =
-				GetOverlappingFeatures(selectedFeatures, progressor);
+			IList<Feature> intersectingFeatures =
+				GetIntersectingFeatures(selectedFeatures, progressor);
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
@@ -87,7 +84,8 @@ namespace ProSuite.AGP.Editing.Cracker
 				return;
 			}
 
-			_overlaps = CalculateOverlaps(selectedFeatures, overlappingFeatures, progressor);
+			_resultCrackPoints =
+				CalculateCrackPoints(selectedFeatures, intersectingFeatures, progressor);
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
@@ -95,18 +93,18 @@ namespace ProSuite.AGP.Editing.Cracker
 				return;
 			}
 
-			// TODO: Options
-			bool insertVerticesInTarget = true;
-			_overlappingFeatures = insertVerticesInTarget
-				                       ? overlappingFeatures
-				                       : null;
+			//// TODO: Options
+			//bool insertVerticesInTarget = true;
+			//_overlappingFeatures = insertVerticesInTarget
+			//	                       ? intersectingFeatures
+			//	                       : null;
 
-			_feedback.Update(_overlaps);
+			_feedback.Update(_resultCrackPoints);
 		}
 
 		protected override bool CanUseDerivedGeometries()
 		{
-			return _overlaps != null && _overlaps.HasOverlaps();
+			return _resultCrackPoints != null && _resultCrackPoints.ResultsByFeature.Count > 0;
 		}
 
 		protected override async Task<bool> SelectAndProcessDerivedGeometry(
@@ -114,11 +112,11 @@ namespace ProSuite.AGP.Editing.Cracker
 			Geometry sketch,
 			CancelableProgressor progressor)
 		{
-			Assert.NotNull(_overlaps);
+			Assert.NotNull(_resultCrackPoints);
 
-			Overlaps overlapsToRemove = SelectOverlaps(_overlaps, sketch);
+			CrackerResult crackPointsToApply = SelectCrackPointsToApply(_resultCrackPoints, sketch);
 
-			if (! overlapsToRemove.HasOverlaps())
+			if (! crackPointsToApply.HasCrackPoints)
 			{
 				return false;
 			}
@@ -130,23 +128,25 @@ namespace ProSuite.AGP.Editing.Cracker
 				        .ToDictionary(kvp => (FeatureClass) kvp.Key,
 				                      kvp => kvp.Value);
 
-			IEnumerable<Feature> selectedFeatures = MapUtils.GetFeatures(
-				distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference);
+			var selectedFeatures = MapUtils.GetFeatures(
+				distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference).ToList();
 
-			RemoveOverlapsResult result =
-				MicroserviceClient.RemoveOverlaps(
-					selectedFeatures, overlapsToRemove, _overlappingFeatures,
+			IList<Feature> intersectingFeatures =
+				GetIntersectingFeatures(selectedFeatures, progressor);
+
+			var result =
+				MicroserviceClient.ApplyCrackPoints(
+					selectedFeatures, crackPointsToApply, intersectingFeatures,
 					progressor?.CancellationToken ?? new CancellationTokenSource().Token);
 
 			var updates = new Dictionary<Feature, Geometry>();
-			var inserts = new Dictionary<Feature, IList<Geometry>>();
 
 			HashSet<long> editableClassHandles = ToolUtils.GetEditableClassHandles(activeMapView);
 
-			foreach (OverlapResultGeometries resultPerFeature in result.ResultsByFeature)
+			foreach (ResultFeature resultFeature in result)
 			{
-				Feature originalFeature = resultPerFeature.OriginalFeature;
-				Geometry updatedGeometry = resultPerFeature.UpdatedGeometry;
+				Feature originalFeature = resultFeature.OriginalFeature;
+				Geometry updatedGeometry = resultFeature.NewGeometry;
 
 				if (! IsStoreRequired(originalFeature, updatedGeometry, editableClassHandles))
 				{
@@ -154,58 +154,22 @@ namespace ProSuite.AGP.Editing.Cracker
 				}
 
 				updates.Add(originalFeature, updatedGeometry);
-
-				if (resultPerFeature.InsertGeometries.Count > 0)
-				{
-					inserts.Add(originalFeature,
-					            resultPerFeature.InsertGeometries);
-				}
-			}
-
-			if (result.TargetFeaturesToUpdate != null)
-			{
-				var updatedTargets = new List<Feature>();
-				foreach (KeyValuePair<Feature, Geometry> kvp in result.TargetFeaturesToUpdate)
-				{
-					if (! IsStoreRequired(kvp.Key, kvp.Value, editableClassHandles))
-					{
-						continue;
-					}
-
-					updatedTargets.Add(kvp.Key);
-					updates.Add(kvp.Key, kvp.Value);
-				}
-
-				if (updatedTargets.Count > 0)
-				{
-					_msg.InfoFormat("Target features with potential vertex insertions: {0}",
-					                StringUtils.Concatenate(updatedTargets,
-					                                        GdbObjectUtils.GetDisplayValue, ", "));
-				}
 			}
 
 			IEnumerable<Dataset> datasets =
-				GdbPersistenceUtils.GetDatasetsNonEmpty(updates.Keys, inserts.Keys);
-
-			var newFeatures = new List<Feature>();
+				GdbPersistenceUtils.GetDatasetsNonEmpty(updates.Keys);
 
 			bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
 				             editContext =>
 				             {
-					             _msg.DebugFormat("Saving {0} updates and {1} inserts...",
-					                              updates.Count,
-					                              inserts.Count);
+					             _msg.DebugFormat("Saving {0} updates...",
+					                              updates.Count);
 
 					             GdbPersistenceUtils.UpdateTx(editContext, updates);
-
-					             newFeatures.AddRange(
-						             GdbPersistenceUtils.InsertTx(editContext, inserts));
 
 					             return true;
 				             },
 				             "Remove overlaps", datasets);
-
-			ToolUtils.SelectNewFeatures(newFeatures, activeMapView);
 
 			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
 
@@ -216,42 +180,33 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		protected override void ResetDerivedGeometries()
 		{
-			_overlaps = null;
+			_resultCrackPoints = null;
 			_feedback.DisposeOverlays();
 		}
 
 		protected override void LogDerivedGeometriesCalculated(CancelableProgressor progressor)
 		{
-			if (_overlaps != null && _overlaps.Notifications.Count > 0)
-			{
-				_msg.Info(_overlaps.Notifications.Concatenate(Environment.NewLine));
-
-				if (! _overlaps.HasOverlaps())
-				{
-					_msg.InfoFormat("Select one or more different features.");
-				}
-			}
-			else if (_overlaps == null || ! _overlaps.HasOverlaps())
+			if (_resultCrackPoints == null || ! _resultCrackPoints.HasCrackPoints)
 			{
 				_msg.Info(
-					"No overlap of other polygons with current selection found. Select one or more different features.");
+					"No intersections with other geometries found. Please select several features to calculate crack points.");
 			}
 
-			if (_overlaps != null && _overlaps.HasOverlaps())
+			if (_resultCrackPoints != null && _resultCrackPoints.HasCrackPoints)
 			{
-				string msg = _overlaps.OverlapGeometries.Count == 1
-					             ? "Select the overlap to subtract from the selection"
-					             : "Select one or more overlaps to subtract from the selection. Draw a box to select overlaps completely within the box.";
+				string msg = _resultCrackPoints.ResultsByFeature.Count == 1
+								 ? "Select the crack points to apply."
+								 : $"Crack points have been found in {_resultCrackPoints.ResultsByFeature.Count} features. Select one or more crack points. Draw a box to select targets completely within the box.";
 
 				_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
 			}
 		}
 
-		private Overlaps CalculateOverlaps(IList<Feature> selectedFeatures,
-		                                   IList<Feature> overlappingFeatures,
-		                                   CancelableProgressor progressor)
+		private CrackerResult CalculateCrackPoints(IList<Feature> selectedFeatures,
+		                                           IList<Feature> intersectingFeatures,
+		                                           CancelableProgressor progressor)
 		{
-			Overlaps overlaps;
+			CrackerResult resultCrackPoints;
 
 			CancellationToken cancellationToken;
 
@@ -267,55 +222,46 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			if (MicroserviceClient != null)
 			{
-				overlaps =
-					MicroserviceClient.CalculateOverlaps(selectedFeatures, overlappingFeatures,
-					                                     cancellationToken);
+				resultCrackPoints =
+					MicroserviceClient.CalculateCrackPoints(selectedFeatures, intersectingFeatures,
+					                                        cancellationToken);
 			}
 			else
 			{
 				throw new InvalidConfigurationException("Microservice has not been started.");
 			}
 
-			return overlaps;
+			return resultCrackPoints;
 		}
 
-		private Overlaps SelectOverlaps(Overlaps overlaps, Geometry sketch)
+		private CrackerResult SelectCrackPointsToApply(CrackerResult crackerResultPoints,
+		                                               Geometry sketch)
 		{
-			if (overlaps == null)
+			CrackerResult result = new CrackerResult();
+
+			if (crackerResultPoints == null)
 			{
-				return new Overlaps();
+				return result;
 			}
 
 			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
 			                                          out bool singlePick);
 
-			// in case of single pick the line has priority...
-			Overlaps result = overlaps.SelectNewOverlaps(
-				o => o.GeometryType == GeometryType.Polyline &&
-				     ToolUtils.IsSelected(sketch, o, singlePick));
-
-			// ... over the polygon
-			if (! result.HasOverlaps() || ! singlePick)
+			foreach (CrackedFeature crackedFeature in crackerResultPoints.ResultsByFeature)
 			{
-				result.AddGeometries(overlaps,
-				                     g => g.GeometryType == GeometryType.Polygon &&
-				                          ToolUtils.IsSelected(sketch, g, singlePick));
-			}
+				CrackedFeature selectedPointsByFeature = new CrackedFeature(crackedFeature.Feature);
 
-			if (singlePick)
-			{
-				// Filter to the smallest overlap
-				foreach (var overlap in result.OverlapGeometries)
+				foreach (CrackPoint crackPoint in crackedFeature.CrackPoints)
 				{
-					IList<Geometry> geometries = overlap.Value;
-
-					if (geometries.Count > 1)
+					if (ToolUtils.IsSelected(sketch, crackPoint.Point, singlePick))
 					{
-						Geometry smallest = GeometryUtils.GetSmallestGeometry(geometries);
-
-						geometries.Clear();
-						geometries.Add(smallest);
+						selectedPointsByFeature.CrackPoints.Add(crackPoint);
 					}
+				}
+
+				if (selectedPointsByFeature.CrackPoints.Count > 0)
+				{
+					result.ResultsByFeature.Add(selectedPointsByFeature);
 				}
 			}
 
@@ -351,7 +297,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		#region Search target features
 
 		[NotNull]
-		private IList<Feature> GetOverlappingFeatures(
+		private IList<Feature> GetIntersectingFeatures(
 			[NotNull] ICollection<Feature> selectedFeatures,
 			[CanBeNull] CancelableProgressor cancellabelProgressor)
 		{

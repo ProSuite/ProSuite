@@ -3,29 +3,15 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker
-{
-
-	public class CrackerResultPoints
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker {
+	public class CrackerResultPoints(
+		[NotNull] Feature originalFeature,
+		[CanBeNull] CrackPoints insertCrackPoints)
 	{
-		public CrackerResultPoints(
-			[NotNull] Feature originalFeature,
-			[NotNull] Geometry updatedGeometry,
-			[CanBeNull] IList<Geometry> insertCrackPoints = null)
-
-		{
-			OriginalFeature = originalFeature;
-			UpdatedGeometry = updatedGeometry;
-			insertCrackPoints = insertCrackPoints ?? new List<Geometry>(0);
-		}
-
 		[NotNull]
-		public Feature OriginalFeature { get; }
+		public Feature OriginalFeature { get; } = originalFeature;
 
-		[NotNull]
-		public Geometry UpdatedGeometry { get; }
-
-		[NotNull]
-		public IList<Geometry> InsertCrackPoints { get; }
+		[CanBeNull]
+		public CrackPoints InsertCrackPoints { get; } = insertCrackPoints;
 	}
 }

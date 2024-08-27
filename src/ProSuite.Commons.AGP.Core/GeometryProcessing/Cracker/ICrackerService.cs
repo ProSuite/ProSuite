@@ -10,13 +10,13 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 /// </summary>
 public interface ICrackerService
 {
-	CrackPoints CalculateCrackPoints(
+	CrackerResult CalculateCrackPoints(
 		[NotNull] IList<Feature> selectedFeatures,
-		[NotNull] IList<Feature> intersectingFeatures,
+		[NotNull] IList<Feature> targetFeatures,
 		CancellationToken cancellationToken);
 
-	CrackerResult Cracker([NotNull] IEnumerable<Feature> selectedFeatures,
-	                                    [NotNull] CrackPoints crackPointsToAdd,
-	                                    [NotNull] IList<Feature> intersectingFeatures,
-	                                    CancellationToken cancellationToken);
+	IList<ResultFeature> ApplyCrackPoints([NotNull] IEnumerable<Feature> selectedFeatures,
+	                                     [NotNull] CrackerResult crackPointsToAdd,
+	                                     [NotNull] IList<Feature> intersectingFeatures,
+	                                     CancellationToken cancellationToken);
 }

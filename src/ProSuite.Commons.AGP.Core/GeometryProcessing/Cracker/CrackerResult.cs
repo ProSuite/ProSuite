@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -10,13 +11,8 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker
 	{
 		#region Result objects produced when storing features
 
-		public IList<CrackPoints> ResultsByFeature { get; } =
-			new List<CrackPoints>();
-
-		[CanBeNull]
-		public IDictionary<Feature, Geometry> TargetFeaturesToUpdate { get; set; }
-
-		public bool ResultHasMultiparts { get; set; }
+		public IList<CrackedFeature> ResultsByFeature { get; set; } =
+			new List<CrackedFeature>();
 
 		#endregion
 
@@ -24,10 +20,12 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker
 
 		public IList<Feature> NewCrackPoint { get; } = new List<Feature>();
 
-		public IList<Feature> AllResultFeatures { get; } = new List<Feature>();
+		//public IList<Feature> AllResultFeatures { get; } = new List<Feature>();
 
 		[NotNull]
 		public IList<string> NonStorableMessages { get; } = new List<string>(0);
+
+		public bool HasCrackPoints => ResultsByFeature.Sum(f => f.CrackPoints.Count) > 0;
 
 		#endregion
 	}
