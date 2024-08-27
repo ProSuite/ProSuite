@@ -112,6 +112,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			[NotNull] IList<Feature> intersectingFeatures)
 		{
 			var request = new CalculateCrackPointsRequest();
+			request.CrackOptions = new CrackOptionsMsg();
 
 			ProtobufConversionUtils.ToGdbObjectMsgList(selectedFeatures,
 			                                           request.SourceFeatures,
@@ -316,6 +317,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			out List<Feature> updateFeatures)
 		{
 			var request = new ApplyCrackPointsRequest();
+			request.CrackOptions = new CrackOptionsMsg();
 
 			updateFeatures = new List<Feature>();
 
