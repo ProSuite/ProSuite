@@ -5,11 +5,16 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ESRI.ArcGIS.Geodatabase.AO;
 using ProSuite.ArcGIS.Geodatabase.AO;
+using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.Logging;
+using Version = ArcGIS.Core.Data.Version;
 
 namespace ESRI.ArcGIS.Geodatabase
 {
-	public class ArcWorkspace : IWorkspace, IFeatureWorkspace
+	public class ArcWorkspace : IFeatureWorkspace
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly global::ArcGIS.Core.Data.Geodatabase _geodatabase;
 
 		public ArcWorkspace(global::ArcGIS.Core.Data.Geodatabase geodatabase)
@@ -184,6 +189,11 @@ namespace ESRI.ArcGIS.Geodatabase
 			}
 		}
 
+		public IWorkspaceName GetWorkspaceName()
+		{
+			return new ArcWorkspaceName(this);
+		}
+
 		#endregion
 
 		#region Implementation of IFeatureWorkspace
@@ -299,6 +309,140 @@ namespace ESRI.ArcGIS.Geodatabase
 			                       .Equals(domainName, StringComparison.InvariantCultureIgnoreCase)
 			        select new ArcDomain(proDomain)).FirstOrDefault();
 		}
+
+		public bool IsSameDatabase(IFeatureWorkspace otherWorkspace)
+		{
+			if (otherWorkspace == null)
+			{
+				return false;
+			}
+
+			if (otherWorkspace is not ArcWorkspace otherArcWorkspace)
+			{
+				return false;
+			}
+
+			if (otherArcWorkspace.Geodatabase.Handle == _geodatabase.Handle)
+			{
+				return true;
+			}
+
+			if (_geodatabase.IsVersioningSupported() !=
+			    otherArcWorkspace.Geodatabase.IsVersioningSupported())
+			{
+				return false;
+			}
+
+			if (! _geodatabase.IsVersioningSupported())
+			{
+				// both are not versioned. Compare file paths
+				if (string.IsNullOrEmpty(PathName) ||
+				    string.IsNullOrEmpty(otherWorkspace.PathName))
+				{
+					return false;
+				}
+
+				//Determines whether two Uri instances have the same value.
+				// e.g. these paths are equal
+				// C:\Users\daro\AppData\Local\Temp\GdbWorkspaceTest.gdb
+				// file:///C:/Users/daro/AppData/Local/Temp/GdbWorkspaceTest.gdb
+				return Equals(new Uri(PathName), new Uri(otherWorkspace.PathName));
+			}
+
+			// Both are versioned. Compare creation date of default version.
+			VersionManager thisVersionManager = _geodatabase.GetVersionManager();
+			VersionManager otherVersionManager = otherArcWorkspace.Geodatabase.GetVersionManager();
+
+			if (thisVersionManager == null || otherVersionManager == null)
+			{
+				return false;
+			}
+
+			Version thisDefaultVersion = thisVersionManager.GetDefaultVersion();
+			Version otherDefaultVersion = otherVersionManager.GetDefaultVersion();
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.DebugFormat("Compare default version names ({0}, {1})",
+				                 thisDefaultVersion.GetName(), otherDefaultVersion.GetName());
+			}
+
+			if (! thisDefaultVersion.GetName().Equals(otherDefaultVersion.GetName()))
+			{
+				return false;
+			}
+
+			DateTime thisCreationDate = thisDefaultVersion.GetCreatedDate();
+			DateTime otherCreationDate = otherDefaultVersion.GetCreatedDate();
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.DebugFormat("Compare default version creation date: {0},{1}",
+				                 thisCreationDate, otherCreationDate);
+			}
+
+			if (! Equals(thisCreationDate, otherCreationDate))
+			{
+				return false;
+			}
+
+			DateTime thisModifyDate = thisDefaultVersion.GetModifiedDate();
+			DateTime otherModifyDate = otherDefaultVersion.GetModifiedDate();
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.DebugFormat("Compare default version last modified date: {0},{1}",
+				                 thisModifyDate, otherModifyDate);
+			}
+
+			return Equals(thisModifyDate, otherModifyDate);
+		}
+
+		#endregion
+	}
+
+	public class ArcWorkspaceName : IWorkspaceName
+	{
+		private readonly ArcWorkspace _arcWorkspace;
+		private readonly DatastoreName _datastoreName;
+
+		public ArcWorkspaceName(ArcWorkspace arcWorkspace)
+		{
+			_arcWorkspace = arcWorkspace;
+			_datastoreName = new DatastoreName(arcWorkspace.Geodatabase);
+		}
+
+		#region IName members
+
+		public object Open()
+		{
+			return _arcWorkspace;
+		}
+
+		public string NameString { get; set; }
+
+		#endregion
+
+		#region IWorkspaceName members
+
+		public string PathName
+		{
+			get => _arcWorkspace.PathName;
+		}
+
+		public esriWorkspaceType Type => _arcWorkspace.Type;
+
+		public string Category =>
+			throw new NotImplementedException("Implement in derived class");
+
+		public string ConnectionString => _datastoreName.ConnectionString;
+
+		public string WorkspaceFactoryProgID => throw new NotImplementedException();
+
+		public string BrowseName => throw new NotImplementedException();
+
+		public IEnumerable<KeyValuePair<string, string>> ConnectionProperties =>
+			_datastoreName.ConnectionProperties;
 
 		#endregion
 	}

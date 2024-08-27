@@ -72,7 +72,7 @@ namespace ESRI.ArcGIS.Geodatabase
 			RowBuffer rowBuffer = ProTable.CreateRowBuffer();
 			Row proRow = ProTable.CreateRow(rowBuffer);
 
-			return ArcUtils.ToArcObject(proRow);
+			return ArcUtils.ToArcRow(proRow);
 		}
 
 		public IRow GetRow(long oid)
@@ -84,11 +84,12 @@ namespace ESRI.ArcGIS.Geodatabase
 				                          ObjectIDs = objectIdList
 			                          };
 
-			using (RowCursor rowCursor = ProTable.Search(queryFilter))
+			const bool recycling = false;
+			using (RowCursor rowCursor = ProTable.Search(queryFilter, recycling))
 			{
 				while (rowCursor.MoveNext())
 				{
-					return ArcUtils.ToArcObject(rowCursor.Current);
+					return ArcUtils.ToArcRow(rowCursor.Current);
 				}
 			}
 
@@ -113,7 +114,7 @@ namespace ESRI.ArcGIS.Geodatabase
 			{
 				while (rowCursor.MoveNext())
 				{
-					yield return ArcUtils.ToArcObject(rowCursor.Current, this);
+					yield return ArcUtils.ToArcRow(rowCursor.Current, this);
 				}
 			}
 		}

@@ -43,7 +43,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 				Row row = _relationship.GetOriginRow();
 
-				return (IObject) ArcUtils.ToArcObject(row);
+				return (IObject) ArcUtils.ToArcRow(row);
 			}
 		}
 
@@ -58,7 +58,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 				Row row = _relationship.GetDestinationRow();
 
-				return (IObject) ArcUtils.ToArcObject(row);
+				return (IObject) ArcUtils.ToArcRow(row);
 			}
 		}
 

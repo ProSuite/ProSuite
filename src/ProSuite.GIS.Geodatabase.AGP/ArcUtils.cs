@@ -14,7 +14,7 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 			{
 				row = cursor.Current;
 
-				yield return ToArcObject(row);
+				yield return ToArcRow(row);
 			}
 		}
 
@@ -27,13 +27,9 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 			return result;
 		}
 
-		internal static IRow ToArcObject(Row proRow, ITable parent = null)
+		internal static ArcRow ToArcRow(Row proRow, ITable parent = null)
 		{
-			var result = proRow is Feature feature
-				             ? (IRow) new ArcFeature(feature, parent as IFeatureClass)
-				             : new ArcRow(proRow, parent);
-
-			return result;
+			return ArcRow.Create(proRow, parent);
 		}
 	}
 }

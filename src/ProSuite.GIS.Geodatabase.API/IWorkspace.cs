@@ -27,11 +27,10 @@ namespace ESRI.ArcGIS.Geodatabase
 		/// </summary>
 		esriConnectionDBMS DbmsType { get; }
 
-		// TODO:
-		// IWorkspaceName GetWorkspaceName()
+		IWorkspaceName GetWorkspaceName();
 	}
 
-	public interface IFeatureWorkspace
+	public interface IFeatureWorkspace : IWorkspace
 	{
 		ITable OpenTable(string name);
 
@@ -91,6 +90,8 @@ namespace ESRI.ArcGIS.Geodatabase
 		IEnumerable<IDomain> Domains();
 
 		IDomain get_DomainByName(string domainName);
+
+		bool IsSameDatabase(IFeatureWorkspace otherWorkspace);
 	}
 
 	public enum esriWorkspaceType

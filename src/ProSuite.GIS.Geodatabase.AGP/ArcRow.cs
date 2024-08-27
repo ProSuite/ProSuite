@@ -1,23 +1,35 @@
 using System;
+using ArcGIS.Core;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Geometry;
-using ESRI.ArcGIS.Geodatabase.AO;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.ArcGIS.Geodatabase.AO;
 using ProSuite.ArcGIS.Geometry.AO;
+using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geometry.AGP;
 
 namespace ESRI.ArcGIS.Geodatabase
 {
 	public class ArcRow : IObject
 	{
-		private readonly Row _proRow;
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private Row _proRow;
 		private readonly ITable _parentTable;
 
-		public ArcRow(Row proRow, ITable parentTable)
+		public static ArcRow Create(Row proRow, ITable parentTable)
+		{
+			var result = proRow is Feature feature
+				             ? new ArcFeature(feature, (IFeatureClass) parentTable)
+				             : new ArcRow(proRow, parentTable);
+
+			return result;
+		}
+
+		protected ArcRow(Row proRow, ITable parentTable)
 		{
 			_proRow = proRow;
+			OID = proRow.GetObjectID();
+
 			_parentTable = parentTable;
 		}
 
@@ -27,30 +39,19 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public virtual object get_Value(int index)
 		{
-			return _proRow[index];
+			object result = null;
+
+			TryOrRefreshRow<Row>(r => result = r[index]);
+
+			return result;
 		}
 
 		public void set_Value(int index, object value)
 		{
-			_proRow[index] = value;
+			TryOrRefreshRow<Row>(r => r[index] = value);
 		}
 
-		public IFields Fields =>
-			new ArcFields(_proRow.GetFields(), new ArcGeometryDef(GetShapeDescription()));
-
-		private ShapeDescription GetShapeDescription()
-		{
-			FeatureClass featureClass = _proRow.GetTable() as FeatureClass;
-
-			if (featureClass == null)
-			{
-				return null;
-			}
-
-			FeatureClassDefinition classDefinition = featureClass.GetDefinition();
-
-			return new ShapeDescription(classDefinition);
-		}
+		public IFields Fields => _parentTable.Fields;
 
 		#endregion
 
@@ -58,29 +59,69 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		// TODO: Discuss this
 		//public bool HasOID => _proRow.HasOID;
-		public bool HasOID => throw new NotImplementedException();
+		public bool HasOID => OID >= 0;
 
-		public long OID => _proRow.GetObjectID();
+		public long OID { get; }
 
-		public ITable Table => new ArcTable(_proRow.GetTable());
+		public ITable Table => _parentTable;
 
 		public void Store()
 		{
-			_proRow.Store();
+			TryOrRefreshRow<Row>(r => r.Store());
 		}
 
 		public void Delete()
 		{
-			_proRow.Delete();
+			TryOrRefreshRow<Row>(r => r.Delete());
 		}
 
 		#endregion
 
 		#region Implementation of IObject
 
-		public IObjectClass Class => new ArcTable(_proRow.GetTable());
+		public IObjectClass Class => (IObjectClass) _parentTable;
 
 		#endregion
+
+		protected bool IsDisposed
+		{
+			get
+			{
+				try
+				{
+					_proRow.GetObjectID();
+					return false;
+				}
+				catch (ObjectDisposedException)
+				{
+					return true;
+				}
+				catch (ObjectDisconnectedException)
+				{
+					return true;
+				}
+			}
+		}
+
+		protected void TryOrRefreshRow<T>(Action<T> action) where T : Row
+		{
+			if (IsDisposed)
+			{
+				ArcRow refreshedArcRow = _parentTable.GetRow(OID) as ArcRow;
+
+				_proRow = refreshedArcRow?.ProRow;
+			}
+
+			try
+			{
+				action((T) _proRow);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug("Row operation failed", e);
+				throw;
+			}
+		}
 	}
 
 	public class ArcFeature : ArcRow, IFeature
@@ -95,7 +136,11 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		protected virtual global::ArcGIS.Core.Geometry.Geometry GetProGeometry()
 		{
-			return _proFeature.GetShape();
+			global::ArcGIS.Core.Geometry.Geometry result = null;
+
+			TryOrRefreshRow<Feature>(r => result = r.GetShape());
+
+			return result;
 		}
 
 		#region Implementation of IFeature
@@ -113,7 +158,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			get
 			{
-				global::ArcGIS.Core.Geometry.Geometry proGeometry = _proFeature.GetShape();
+				global::ArcGIS.Core.Geometry.Geometry proGeometry = GetProGeometry();
 
 				if (proGeometry is Polygon polygon)
 				{
@@ -142,14 +187,22 @@ namespace ESRI.ArcGIS.Geodatabase
 
 				return new ArcGeometry(proGeometry);
 			}
-			set => _proFeature.SetShape(((ArcGeometry) value).ProGeometry);
+			set
+			{
+				global::ArcGIS.Core.Geometry.Geometry proGeometry =
+					((ArcGeometry) value).ProGeometry;
+
+				TryOrRefreshRow<Feature>(r => r.SetShape(proGeometry));
+			}
 		}
 
 		public IEnvelope Extent
 		{
 			get
 			{
-				global::ArcGIS.Core.Geometry.Geometry geometry = _proFeature.GetShape();
+				global::ArcGIS.Core.Geometry.Geometry geometry = null;
+
+				TryOrRefreshRow<Feature>(r => geometry = _proFeature.GetShape());
 
 				return new ArcEnvelope(geometry.Extent);
 			}

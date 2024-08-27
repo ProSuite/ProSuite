@@ -77,14 +77,14 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 				return null;
 			}
 
-			return ArcUtils.ToArcObject(found);
+			return ArcUtils.ToArcRow(found);
 		}
 
 		public object Next()
 		{
 			return _currentIndex >= _proRowList.Count
 				       ? null
-				       : ArcUtils.ToArcObject(_proRowList[_currentIndex]);
+				       : ArcUtils.ToArcRow(_proRowList[_currentIndex]);
 		}
 
 		public void Reset()
