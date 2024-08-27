@@ -1,4 +1,8 @@
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using System;
+using System.Collections.Generic;
+using ArcGIS.Core.Data;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 {
@@ -17,6 +21,18 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			// Default;
 			return 5000;
+		}
+
+
+		public static void AddInputFeatures(
+			[NotNull] IEnumerable<Feature> features,
+			[NotNull] IDictionary<GdbObjectReference, Feature> toDictionary) {
+			foreach (Feature selectedFeature in features) {
+				GdbObjectReference objectReference =
+					ProtobufConversionUtils.ToObjectReferenceWithUniqueClassId(selectedFeature);
+
+				toDictionary.TryAdd(objectReference, selectedFeature);
+			}
 		}
 	}
 }
