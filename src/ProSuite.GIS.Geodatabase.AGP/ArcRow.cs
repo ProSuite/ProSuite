@@ -105,6 +105,10 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		protected void TryOrRefreshRow<T>(Action<T> action) where T : Row
 		{
+			// This is a workaround because the original Pro row could be disposed.
+			// TODO: A more deterministic approach, such as
+			// delta.RefreshAll(_workspaceContext.FeatureWorkspace);
+			// In the OperationCompleting event (see original rule engine).
 			if (IsDisposed)
 			{
 				ArcRow refreshedArcRow = _parentTable.GetRow(OID) as ArcRow;
