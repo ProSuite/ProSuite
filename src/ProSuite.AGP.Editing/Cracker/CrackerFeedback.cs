@@ -21,17 +21,18 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		public CrackerFeedback()
 		{
+			// TODO: Outlines: https://github.com/Esri/arcgis-pro-sdk/wiki/ProSnippets-Symbology
 			_overlapLineSymbol =
 				SymbolUtils.CreateLineSymbol(255, 0, 0, 2);
 
 			_overlapPolygonSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
 
 			CIMColor red = ColorUtils.CreateRGB(255, 0, 0);
-			CIMColor green = ColorUtils.CreateRGB(0, 255, 0);
+			CIMColor green = ColorUtils.CreateRGB(0, 200, 0);
 
-			_redCircleMarker = SymbolUtils.CreateMarker(red, 5, SymbolUtils.MarkerStyle.Circle);
-			_greenSquareMarker = SymbolUtils.CreateMarker(green, 5, SymbolUtils.MarkerStyle.Square);
-			_greenCircleMarker = SymbolUtils.CreateMarker(green, 5, SymbolUtils.MarkerStyle.Circle);
+			_redCircleMarker = SymbolUtils.CreateMarker(red, 10, SymbolUtils.MarkerStyle.Circle);
+			_greenSquareMarker = SymbolUtils.CreateMarker(green, 10, SymbolUtils.MarkerStyle.Square);
+			_greenCircleMarker = SymbolUtils.CreateMarker(green, 10, SymbolUtils.MarkerStyle.Circle);
 
 			//_crackPointRed = SymbolUtils.CreateMarker(255, 0, 0, 10, SimpleMarkerStyle.Circle);
 		}

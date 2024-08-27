@@ -287,7 +287,7 @@ namespace ProSuite.Microservices.Client.AGP
 			foreach (Feature feature in features)
 			{
 				FeatureClass featureClass = feature.GetTable();
-				int uniqueClassId = GeometryProcessingUtils.GetUniqueClassId(featureClass);
+				long uniqueClassId = GeometryProcessingUtils.GetUniqueClassId(featureClass);
 
 				Geometry shape = feature.GetShape();
 
@@ -332,14 +332,14 @@ namespace ProSuite.Microservices.Client.AGP
 		/// <returns></returns>
 		public static GdbObjectReference ToObjectReferenceWithUniqueClassId(Row row)
 		{
-			int uniqueClassId = GeometryProcessingUtils.GetUniqueClassId(row);
+			long uniqueClassId = GeometryProcessingUtils.GetUniqueClassId(row);
 
 			return new GdbObjectReference(uniqueClassId, row.GetObjectID());
 		}
 
 		public static ObjectClassMsg ToObjectClassMsg(
 			[NotNull] Table objectClass,
-			int classHandle,
+			long classHandle,
 			[CanBeNull] SpatialReference spatialRef = null)
 		{
 			esriGeometryType geometryType = TranslateAGPShapeType(objectClass);

@@ -272,6 +272,18 @@ namespace ProSuite.Microservices.Server.AO
 						         ProtobufGeometryUtils.FromSpatialReferenceMsg(
 							         objectClassMsg.SpatialReference)
 				         };
+
+				if (objectClassMsg.Fields == null || objectClassMsg.Fields.Count == 0)
+				{
+					// The shape field can be important to determine Z/M awareness, etc:
+					bool hasZ = result.SpatialReference.HasZPrecision();
+					bool hasM = result.SpatialReference.HasMPrecision();
+					IField shapeField = FieldUtils.CreateShapeField(
+						result.ShapeFieldName, geometryType, result.SpatialReference,
+						0d, hasZ, hasM);
+
+					result.AddField(shapeField);
+				}
 			}
 
 			AddFields(objectClassMsg, result, geometryType);
