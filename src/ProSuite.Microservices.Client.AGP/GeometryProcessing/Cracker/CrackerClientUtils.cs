@@ -102,15 +102,14 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 
 		public static CrackerResult InsertCrackPoints(
 			[NotNull] CrackGrpc.CrackGrpcClient rpcClient,
-			[NotNull] IEnumerable<Feature> selectedFeatures,
-			[NotNull] CrackPoints crackPointsToAdd,
-			[CanBeNull] IList<Feature> intersectingFeatures,
+			[NotNull] IList<Feature> selectedFeatures,
+			[NotNull] IList<Feature> intersectingFeatures,
 			CancellationToken cancellationToken)
 		{
-			List<Feature> updateFeatures;
+			List<Feature> updateFeatures = null; // out parameter, feels wrong to pass null
 			CalculateCrackPointsRequest request = CreateCalculateCrackPointsRequest(
-				selectedFeatures, intersectingFeatures);
-
+				selectedFeatures, intersectingFeatures
+				);
 
 			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
 			               request.SourceFeatures.Count;
@@ -120,10 +119,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 					o => rpcClient.CalculateCrackPoints(request, o),
 					cancellationToken, deadline);
 
-			return GetCalculateCrackPointsResponse(response, updateFeatures);
+			return GetCalculateCrackPointsResult(response, updateFeatures);
 		}
 
-		private static CalculateCrackPointsResponse GetCalculateCrackPointsResponse(
+		private static CrackerResult GetCalculateCrackPointsResult(
 			CalculateCrackPointsResponse response,
 			List<Feature> updateFeatures)
 		{
@@ -133,43 +132,35 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 				            
 			             };
 
-			IList<CrackerResultPoints> resultPointsByFeature = result.ResultsByFeature;
+			IList<CrackPoints> resultPointsByFeature = result.ResultsByFeature;
 
 			// match the selected features with the protobuf features -> use GdbObjRef (shapefile support!)
 
 			ReAssociateResponsePoints(response, resultPointsByFeature,
 			                              updateFeatures);
 
-			if (response.TargetFeaturesToUpdate != null)
+			if (response.CrackPoints != null)
 			{
 				result.TargetFeaturesToUpdate = new Dictionary<Feature, Geometry>();
 
-				foreach (GdbObjectMsg targetMsg in response.TargetFeaturesToUpdate)
+				foreach (CrackPointsMsg crackPointsMsg in response.CrackPoints)
 				{
+					GdbObjRefMsg gdbObjRefMsg = crackPointsMsg.OriginalFeatureRef;
+
 					Feature originalFeature =
-						GetOriginalFeature(targetMsg.ObjectId, targetMsg.ClassHandle,
+						GetOriginalFeature(gdbObjRefMsg.ObjectId, gdbObjRefMsg.ClassHandle,
 						                   updateFeatures);
 
-					// It's important to assign the full spatial reference from the original to avoid
-					// losing the VCS:
-					SpatialReference sr = originalFeature.GetShape().SpatialReference;
 
-					result.TargetFeaturesToUpdate.Add(
-						originalFeature, ProtobufConversionUtils.FromShapeMsg(targetMsg.Shape, sr));
 				}
-			}
-
-			foreach (string message in response.NonStorableMessages)
-			{
-				result.NonStorableMessages.Add(message);
 			}
 
 			return result;
 		}
 
 		private static void ReAssociateResponsePoints(
-			RemoveOverlapsResponse response,
-			IList<CrackerResultPoints> results,
+			CalculateCrackPointsResponse response,
+			IList<CrackPoints> results,
 			List<Feature> updateFeatures)
 		{
 			foreach (var resultByFeature in response.ResultsByFeature)
@@ -213,11 +204,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			                                 classId);
 		}
 
-		private static RemoveOverlapsRequest CreateRemoveOverlapsRequest(
+		private static ApplyCrackPointsRequest CreateApplyCrackPointsRequest(
 			[NotNull] IEnumerable<Feature> selectedFeatures,
 			[NotNull] CrackPoints crackPointsToAdd,
-			[CanBeNull]
-			IList<Feature> targetFeaturesForVertexInsertion, //RemoveOverlapsOptions options,
 			out List<Feature> updateFeatures)
 		{
 			var request = new ApplyCrackPointsRequest
@@ -254,14 +243,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 				request.CrackPoints.Add(crackPointsMsg);
 			}
 
-			if (targetFeaturesForVertexInsertion != null)
-			{
-				ProtobufConversionUtils.ToGdbObjectMsgList(
-					targetFeaturesForVertexInsertion, request.UpdatableTargetFeatures,
-					request.ClassDefinitions);
-
-				updateFeatures.AddRange(targetFeaturesForVertexInsertion);
-			}
 
 			return request;
 		}
