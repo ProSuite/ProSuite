@@ -3629,7 +3629,7 @@ namespace ProSuite.QA.Tests.Test
 			//
 			// Manually create values for special cases, such as optional parameters or
 			// difficult assertions:
-			AddTrDissolve(model, trCases);
+			AddTrDissolveCases(model, trCases);
 
 			foreach (TrDefinitionCase trCase in trCases)
 			{
@@ -3738,9 +3738,9 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 
-		private static void AddTrDissolve(InMemoryTestDataModel model,
-		                                  ICollection<TestDefinitionCase>
-			                                  testCases)
+		private static void AddTrDissolveCases(InMemoryTestDataModel model,
+		                                  ICollection<TrDefinitionCase>
+			                                  trCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("Search", 1.0);
@@ -3750,7 +3750,7 @@ namespace ProSuite.QA.Tests.Test
 			optionalValues.Add("Constraint", "");
 			optionalValues.Add("CreateMultipartFeatures", false);
 
-			testCases.Add(new TestDefinitionCase(typeof(TrDissolve), 0,
+			trCases.Add(new TrDefinitionCase(typeof(TrDissolve), 0,
 												 new object[]
 												 {
 													 model.GetVectorDataset(),
