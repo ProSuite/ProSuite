@@ -31,7 +31,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 	                                        IChangeAlongService
 
 	{
-		private ICrackerService CrackerClient { get; set; }
 		private RemoveOverlapsGrpc.RemoveOverlapsGrpcClient RemoveOverlapsClient { get; set; }
 		private CrackGrpc.CrackGrpcClient CrackClient { get; set; }
 		private ChangeAlongGrpc.ChangeAlongGrpcClient ChangeAlongClient { get; set; }
@@ -127,19 +126,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			return HoleClientUtils.CalculateHoles(
 				RemoveHolesClient, selectedFeatures, clipEnvelopes, unionFeatures,
 				cancellationToken);
-		}
-
-		[NotNull]
-		public CrackerResult CalculateCrackPoints(
-			IList<Feature> sourceFeatures,
-			CrackPoints crackPointsToAdd,
-			CancellationToken cancellationToken)
-		{
-			if (CrackClient == null)
-				throw new InvalidOperationException("No microservice available.");
-
-			return CrackerClientUtils.CalculateCrackPoints(
-				CrackClient, selectedFeatures, targetFeatures, cancellationToken);
 		}
 
 		[NotNull]
@@ -256,16 +242,29 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 				       ReshapeClient, polylineFeature, reshapeLine, useNonDefaultReshapeSide);
 		}
 
-		public CrackPoints CalculateCrackPoints(IList<Feature> selectedFeatures, IList<Feature> intersectingFeatures,
-		                                        CancellationToken cancellationToken)
+		public CrackerResult CalculateCrackPoints(
+			IList<Feature> selectedFeatures,
+			IList<Feature> targetFeatures,
+		                                          CancellationToken cancellationToken)
 		{
-			return CrackerClient.CalculateCrackPoints(selectedFeatures, intersectingFeatures, cancellationToken);
+			if (CrackClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
+			return CrackerClientUtils.CalculateCrackPoints(CrackClient, selectedFeatures, targetFeatures, cancellationToken);
 		}
 
-		public CrackerResult Cracker(IEnumerable<Feature> selectedFeatures, CrackPoints crackPointsToAdd,
-		                             IList<Feature> intersectingFeatures, CancellationToken cancellationToken)
+		public IList<ResultFeature> ApplyCrackPoints(
+			IEnumerable<Feature> selectedFeatures,
+			CrackerResult crackPointsToAdd,
+		    IList<Feature> intersectingFeatures,
+			CancellationToken cancellationToken)
 		{
-			return CrackerClient.Cracker(selectedFeatures, crackPointsToAdd, intersectingFeatures, cancellationToken);
+			if (CrackClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
+			return CrackerClientUtils.ApplyCrackPoints(
+				CrackClient, selectedFeatures, crackPointsToAdd, intersectingFeatures,
+				cancellationToken);
 		}
 	}
 }
