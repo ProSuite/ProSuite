@@ -7,14 +7,14 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 	public static class ArcUtils
 	{
 		internal static IEnumerable<IRow> GetArcRows(
-			RowCursor cursor)
+			RowCursor cursor, ITable sourceTable = null)
 		{
 			Row row;
 			while (cursor.MoveNext())
 			{
 				row = cursor.Current;
 
-				yield return ToArcRow(row);
+				yield return ToArcRow(row, sourceTable);
 			}
 		}
 
@@ -29,6 +29,11 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 
 		internal static ArcRow ToArcRow(Row proRow, ITable parent = null)
 		{
+			if (parent == null)
+			{
+				parent = ToArcTable(proRow.GetTable());
+			}
+
 			return ArcRow.Create(proRow, parent);
 		}
 	}

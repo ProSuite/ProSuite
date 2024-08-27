@@ -187,7 +187,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 			RowCursor cursor = ProTable.Search(proQueryFilter, recycling);
 
-			return ArcUtils.GetArcRows(cursor);
+			return ArcUtils.GetArcRows(cursor, this);
 			//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRow row;
 
 			//while ((row = cursor.NextRow()) != null)
