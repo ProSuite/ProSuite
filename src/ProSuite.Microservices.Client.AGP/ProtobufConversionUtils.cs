@@ -565,10 +565,5 @@ namespace ProSuite.Microservices.Client.AGP
 
 			throw new NotImplementedException();
 		}
-
-		public static List<Geometry> FromShapeMsgList(RepeatedField<CrackPointMsg> shapeBufferList, SpatialReference spatialReference)
-		{
-			throw new NotImplementedException();
-		}
 	}
 }
