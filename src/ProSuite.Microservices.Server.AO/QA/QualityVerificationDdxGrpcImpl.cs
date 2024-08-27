@@ -435,6 +435,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ModelMsg modelMsg =
 				ProtoDataQualityUtils.ToDdxModelMsg(productionModel, srWkId, referencedDatasetMsgs);
 
+			modelMsg.UserConnection =
+				ProtobufGdbUtils.ToConnectionMsg(productionModel.UserConnectionProvider);
 			// If necessary, return the list of referenced workspaces
 			// However, this is currently not needed anywhere and requires opening workpaces, which is slow!
 
