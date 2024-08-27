@@ -195,8 +195,8 @@ namespace ProSuite.AGP.Editing.Cracker
 			if (_resultCrackPoints != null && _resultCrackPoints.HasCrackPoints)
 			{
 				string msg = _resultCrackPoints.ResultsByFeature.Count == 1
-								 ? "Select the crack points to apply."
-								 : $"Crack points have been found in {_resultCrackPoints.ResultsByFeature.Count} features. Select one or more crack points. Draw a box to select targets completely within the box.";
+					             ? "Select the crack points to apply."
+					             : $"Crack points have been found in {_resultCrackPoints.ResultsByFeature.Count} features. Select one or more crack points. Draw a box to select targets completely within the box.";
 
 				_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
 			}
@@ -362,6 +362,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			esriGeometryType shapeType = featureLayer.ShapeType;
 
 			return shapeType == esriGeometryType.esriGeometryPolygon ||
+			       shapeType == esriGeometryType.esriGeometryPolyline ||
 			       shapeType == esriGeometryType.esriGeometryMultiPatch;
 		}
 
