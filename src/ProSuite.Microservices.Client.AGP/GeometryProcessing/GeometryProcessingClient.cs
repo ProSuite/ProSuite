@@ -9,11 +9,13 @@ using Grpc.Net.Client;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Microservices.Client.GrpcNet;
@@ -29,6 +31,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 	                                        IChangeAlongService
 
 	{
+		private ICrackerService CrackerClient { get; set; }
 		private RemoveOverlapsGrpc.RemoveOverlapsGrpcClient RemoveOverlapsClient { get; set; }
 		private CrackGrpc.CrackGrpcClient CrackClient { get; set; }
 		private ChangeAlongGrpc.ChangeAlongGrpcClient ChangeAlongClient { get; set; }
@@ -127,16 +130,16 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		}
 
 		[NotNull]
-		public CrackPoints Crack(
-			IList<Feature> selectedFeatures,
-			IList<Feature> targetFeatures,
+		public CrackerResult CalculateCrackPoints(
+			IList<Feature> sourceFeatures,
+			CrackPoints crackPointsToAdd,
 			CancellationToken cancellationToken)
 		{
 			if (CrackClient == null)
 				throw new InvalidOperationException("No microservice available.");
 
-			return CrackClientUtils.Crack(
-				CrackClient, selectedFeatures, targetFeatures, cancellationToken);
+			return CrackerClientUtils.InsertCrackPoints(
+				CrackClient, sourceFeatures, crackPointsToAdd, cancellationToken);
 		}
 
 		[NotNull]
@@ -251,6 +254,18 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return await AdvancedReshapeClientUtils.GetOpenJawReplacementPointAsync(
 				       ReshapeClient, polylineFeature, reshapeLine, useNonDefaultReshapeSide);
+		}
+
+		public CrackPoints CalculateCrackPoints(IList<Feature> selectedFeatures, IList<Feature> intersectingFeatures,
+		                                        CancellationToken cancellationToken)
+		{
+			return CrackerClient.CalculateCrackPoints(selectedFeatures, intersectingFeatures, cancellationToken);
+		}
+
+		public CrackerResult Cracker(IEnumerable<Feature> selectedFeatures, CrackPoints crackPointsToAdd,
+		                             IList<Feature> intersectingFeatures, CancellationToken cancellationToken)
+		{
+			return CrackerClient.Cracker(selectedFeatures, crackPointsToAdd, intersectingFeatures, cancellationToken);
 		}
 	}
 }
