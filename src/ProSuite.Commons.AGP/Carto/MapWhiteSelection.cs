@@ -116,22 +116,22 @@ public class MapWhiteSelection : IDisposable
 		return result;
 	}
 
-	/// <returns>true iff the selection changed</returns>
+	/// <returns>number of features actually removed from selection</returns>
 	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
-	public bool Remove(FeatureLayer layer, IEnumerable<long> oids)
+	public int Remove(FeatureLayer layer, IEnumerable<long> oids)
 	{
 		if (! _layerSelections.TryGetValue(layer.URI, out var ws))
 		{
-			return false; // layer has no white selection
+			return 0; // layer has no white selection
 		}
 
-		bool changed = false;
+		int removed = 0;
 
 		foreach (var oid in oids)
 		{
 			if (ws.Remove(oid))
 			{
-				changed = true;
+				removed += 1;
 			}
 		}
 
@@ -147,7 +147,7 @@ public class MapWhiteSelection : IDisposable
 		//	layer.SetSelection(regular);
 		//}
 
-		return changed;
+		return removed;
 	}
 
 	/// <returns>true iff the selection changed</returns>
@@ -438,14 +438,49 @@ public class MapWhiteSelection : IDisposable
 		}
 	}
 
-	public void RefreshGeometries()
+
+	/// <returns>number of features updated and removed</returns>
+	public ValueTuple<int,int> UpdateGeometries()
 	{
+		int updated = 0;
+		int removed = 0;
+
 		var all = GetLayerSelections();
 
 		foreach (var selection in all)
 		{
-			selection.RefreshGeometries();
+			var list = selection.UpdateGeometries();
+
+			updated += list.Count(r => r.State == IWhiteSelection.RefreshState.Updated);
+			removed += list.Count(r => r.State == IWhiteSelection.RefreshState.Removed);
 		}
+
+		return (updated, removed);
+	}
+
+	/// <summary>
+	/// Try update geometries in selection (reload from data store),
+	/// but if part/vertex count don't agree, remove from selection.
+	/// </summary>
+	/// <returns>number of features updated and removed</returns>
+	public ValueTuple<int,int> UpdateOrRemove(FeatureLayer layer, IEnumerable<long> oids)
+	{
+		if (!_layerSelections.TryGetValue(layer.URI, out var ws))
+		{
+			return (0, 0); // layer has no white selection
+		}
+
+		var result = ws.UpdateGeometries(oids);
+
+		if (ws.IsEmpty)
+		{
+			_layerSelections.Remove(layer.URI);
+		}
+
+		int updated = result.Count(r => r.State == IWhiteSelection.RefreshState.Updated);
+		int removed = result.Count(r => r.State == IWhiteSelection.RefreshState.Removed);
+
+		return (updated, removed);
 	}
 
 	public void Dispose()

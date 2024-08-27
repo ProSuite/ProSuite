@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.Commons.AGP.Carto;
 
@@ -39,7 +40,51 @@ public interface IWhiteSelection
 	Geometry GetGeometry(long oid); // TODO drop from iface (now that we have IShapeSelection.Shape)
 	void CacheGeometries(params long[] oid);
 	void ClearGeometryCache();
-	void RefreshGeometries(); // reload all cached geometries (call when they have changed)
+
+	/// <summary>
+	/// Reload (given or all) geometries from data store.
+	/// If a geometry is no longer compatible with the current
+	/// shape selection, this shape is removed from the selection!
+	/// </summary>
+	/// <param name="oids">Optional list of OIDs (if missing: reload all)</param>
+	/// <returns>List updated (shape compatible with selection) and removed
+	/// (shape incompatible with selection) OIDs</returns>
+	List<RefreshInfo> UpdateGeometries(IEnumerable<long> oids = null);
+
+	public class RefreshInfo
+	{
+		public readonly long OID;
+		public readonly RefreshState State;
+		public readonly string OptionalDetails;
+
+		private RefreshInfo(long oid, RefreshState state, string details = null)
+		{
+			OID = oid;
+			State = state;
+			OptionalDetails = details;
+		}
+
+		public static RefreshInfo Updated(long oid)
+		{
+			return new RefreshInfo(oid, RefreshState.Updated);
+		}
+
+		public static RefreshInfo Removed(long oid, string details = null)
+		{
+			return new RefreshInfo(oid, RefreshState.Removed, details);
+		}
+
+		public override string ToString()
+		{
+			return $"{State} {OID} (details: {OptionalDetails ?? "none"})";
+		}
+	}
+
+	public enum RefreshState
+	{
+		Updated, // shape is still compatible with selection
+		Removed // shape was incompatible with selection
+	}
 }
 
 public class WhiteSelection : IWhiteSelection
@@ -238,27 +283,35 @@ public class WhiteSelection : IWhiteSelection
 
 	public void CacheGeometries(params long[] oids)
 	{
+		var missingOids = oids.Where(oid => !HasGeometry(oid)).ToList();
+		if (missingOids.Any())
+		{
+			ReloadGeometries(missingOids);
+		}
+	}
+
+	private void ReloadGeometries(IReadOnlyList<long> objectIDs)
+	{
+		if (objectIDs is null || objectIDs.Count < 1) return;
+
 		using var fc = Layer.GetFeatureClass();
 		using var defn = fc.GetDefinition();
+
 		var shapeField = defn.GetShapeField();
 		var oidField = defn.GetObjectIDField();
 
 		var filter = new QueryFilter { SubFields = $"{oidField},{shapeField}" };
 
-		var missingOids = oids.Where(oid => !HasGeometry(oid)).ToList();
-		if (missingOids.Any())
+		filter.ObjectIDs = objectIDs;
+
+		using var cursor = Layer.Search(filter);
+
+		while (cursor.MoveNext())
 		{
-			filter.ObjectIDs = missingOids;
-
-			using var cursor = Layer.Search(filter);
-
-			while (cursor.MoveNext())
-			{
-				using var feature = (Feature) cursor.Current;
-				var oid = feature.GetObjectID();
-				var shape = feature.GetShape();
-				_geometryCache[oid] = shape;
-			}
+			using var feature = (Feature)cursor.Current;
+			var oid = feature.GetObjectID();
+			var shape = feature.GetShape();
+			_geometryCache[oid] = shape;
 		}
 	}
 
@@ -267,16 +320,37 @@ public class WhiteSelection : IWhiteSelection
 		_geometryCache.Clear();
 	}
 
-	public void RefreshGeometries()
+	public List<IWhiteSelection.RefreshInfo> UpdateGeometries(IEnumerable<long> oids = null)
 	{
-		ClearGeometryCache(); // force reload
-		CacheGeometries(_shapes.Keys.ToArray());
+		if (oids is null) oids = _shapes.Keys;
+		else oids = oids.Intersect(_shapes.Keys);
 
-		foreach (var pair in _shapes)
+		var list = oids.ToList();
+
+		ReloadGeometries(list);
+
+		// update on IShapeSelection objects, if still compatible:
+
+		var result = new List<IWhiteSelection.RefreshInfo>();
+
+		foreach (var oid in list)
 		{
-			var shape = GetGeometry(pair.Key);
-			pair.Value.SetShape(shape);
+			var shape = GetGeometry(oid);
+			var selection = GetShapeSelection(oid) ??
+			                throw new AssertionException($"No shape selection for OID {oid}");
+			if (selection.IsCompatible(shape, out var message))
+			{
+				selection.SetShape(shape);
+				result.Add(IWhiteSelection.RefreshInfo.Updated(oid));
+			}
+			else
+			{
+				_shapes.Remove(oid);
+				result.Add(IWhiteSelection.RefreshInfo.Removed(oid, message));
+			}
 		}
+
+		return result;
 	}
 
 	#endregion

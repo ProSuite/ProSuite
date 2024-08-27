@@ -43,6 +43,10 @@ public interface IShapeSelection
 	/// <remarks>Callers duty to make sure the given <paramref name="shape"/>
 	/// is compatible with this selection (part/vertex count)</remarks>
 	void SetShape(Geometry shape);
+
+	/// <returns>true iff given shape is compatible with this selection</returns>
+	/// <remarks>shape and selection are compatible if part and vertex counts are in range</remarks>
+	bool IsCompatible(Geometry geometry, out string message);
 }
 
 public class ShapeSelection : IShapeSelection
@@ -346,6 +350,50 @@ public class ShapeSelection : IShapeSelection
 		throw new NotSupportedException($"Shape of type {shape.GetType().Name} is not supported");
 	}
 
+	public bool IsCompatible(Geometry shape, out string message)
+	{
+		message = string.Empty;
+		if (IsEmpty) return true;
+
+		if (shape is null)
+		{
+			message = "Shape is null (but selection is not empty)";
+			return false;
+		}
+
+		if (shape.IsEmpty)
+		{
+			message = "Shape is empty (but selection is not empty)";
+			return false;
+		}
+
+		int numParts = GetPartCount(shape);
+
+		var block = _blocks.MaxBy(b => b.Part);
+		if (block.Part >= numParts)
+		{
+			message =
+				$"Selection refers to part {block.Part} but shape's max part index is {numParts - 1}";
+			return false;
+		}
+
+		var groups = _blocks.GroupBy(b => b.Part);
+		foreach (var group in groups)
+		{
+			int numVertices = GetVertexCount(shape, group.Key);
+			int maxIndex = group.Max(b => b.First + b.Count - 1);
+			if (! (maxIndex < numVertices))
+			{
+				message =
+					$"Selection refers to vertex {maxIndex} but max vertex index is {numVertices - 1} (in part {group.Key})";
+				return false;
+			}
+		}
+
+		message = string.Empty;
+		return true;
+	}
+
 	#region Private methods
 
 	private static IEnumerable<BlockList.Block> Invert(
@@ -520,6 +568,7 @@ public class ShapeSelection : IShapeSelection
 
 		if (shape is Multipoint multipoint)
 		{
+			// by convention, the points of a multipoint ar its parts:
 			return multipoint.Points[partIndex];
 		}
 
