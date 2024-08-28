@@ -3538,6 +3538,7 @@ namespace ProSuite.QA.Tests.Test
 			List<Type> refactoredTypes = new List<Type>
 			                             {
 				                             typeof(TrDissolve),
+											 typeof(TrGetNodes),
 			                             };
 
 			foreach (Type transformerType in refactoredTypes)
@@ -3630,6 +3631,7 @@ namespace ProSuite.QA.Tests.Test
 			// Manually create values for special cases, such as optional parameters or
 			// difficult assertions:
 			AddTrDissolveCases(model, trCases);
+			AddTrGetNodesCases(model, trCases);
 
 			foreach (TrDefinitionCase trCase in trCases)
 			{
@@ -3756,6 +3758,22 @@ namespace ProSuite.QA.Tests.Test
 													 model.GetVectorDataset(),
 												 },
 												 optionalValues));
+		}
+
+
+		private static void AddTrGetNodesCases(InMemoryTestDataModel model,
+		                                        ICollection<TrDefinitionCase>
+			                                        trCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("Attributes", "MAX(LAUF_NR) AS MAX_LAUF_NR");
+
+			trCases.Add(new TrDefinitionCase(typeof(TrGetNodes), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetVectorDataset(),
+			                                 },
+			                                 optionalValues));
 		}
 
 		private static void AddParameterValue(string parameterName, object value,
