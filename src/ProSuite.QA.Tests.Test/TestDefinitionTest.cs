@@ -3539,6 +3539,7 @@ namespace ProSuite.QA.Tests.Test
 			                             {
 				                             typeof(TrDissolve),
 											 typeof(TrGetNodes),
+											 typeof(TrIntersect)
 			                             };
 
 			foreach (Type transformerType in refactoredTypes)
@@ -3624,6 +3625,7 @@ namespace ProSuite.QA.Tests.Test
 
 			// Transformer cases with automatic parameter value generation:
 			//trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrDissolve)));
+			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrIntersect)));
 
 			//
 			// Special Cases
