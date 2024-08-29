@@ -3,58 +3,56 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto;
+
+public interface IMapWhiteSelection
+{
+	Map Map { get; } // the map to which this white selection belongs
+
+	bool IsEmpty { get; } // true iff no involved features (regardless of vertices)
+	bool Select(MapPoint clickPont, double tolerance, SetCombineMethod method);
+	bool Select(Geometry geometry, SetCombineMethod method);
+	int Remove(FeatureLayer layer, IEnumerable<long> oids);
+	bool SetEmpty();
+
+	bool HitTestVertex(MapPoint point, double tolerance, out MapPoint vertex);
+	IEnumerable<IWhiteSelection> GetLayerSelections();
+	IWhiteSelection GetLayerSelection(FeatureLayer layer);
+
+	ValueTuple<int, int> RefreshGeometries(); // all in mws; remove from sel where incompatible
+	ValueTuple<int, int> RefreshGeometries(FeatureLayer layer, IEnumerable<long> oids);
+
+	void ClearGeometryCache();
+
+	void UpdateRegularSelection();
+	bool UpdateWhiteSelection(SelectionSet regular);
+}
 
 /// <summary>
 /// The white selection over all layers in a given map (we need a MapView,
 /// not just the map, to have the MapView.GetFeatures() function available).
 /// Maintains a collection of <see cref="IWhiteSelection"/> instances.
 /// </summary>
-public class MapWhiteSelection : IDisposable
+public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 {
-	//private SubscriptionToken _mapSelectionChangedToken;
+	private readonly MapView _mapView;
 	// TODO probably should keep _layerSelections ordered as in the ToC
 	private readonly Dictionary<string, IWhiteSelection> _layerSelections = new();
-	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	public MapWhiteSelection(MapView mapView, bool syncWithRegularSelection = false)
+	public MapWhiteSelection(MapView mapView)
 	{
-		MapView = mapView ?? throw new ArgumentNullException(nameof(mapView));
-		//SyncWithRegularSelection = syncWithRegularSelection;
-
-		// TODO Set this MapWhiteSelection from regular selection
-
-		//_mapSelectionChangedToken = MapSelectionChangedEvent.Subscribe(OnMapSelectionChanged);
+		_mapView = mapView ?? throw new ArgumentNullException(nameof(mapView));
 	}
 
-	private void OnMapSelectionChanged(MapSelectionChangedEventArgs obj)
-	{
-		try
-		{
-			if (SyncWithRegularSelection)
-			{
-				// TODO update white selection from regular selection
-				// TODO how to identify calls due to our own activity? (latching is probably unreliable due to multi-threading)
-			}
-		}
-		catch (Exception ex)
-		{
-			_msg.Error($"{GetType().Name} SelectionChanged: {ex.Message}", ex);
-		}
-	}
+	public Map Map => _mapView.Map;
 
-	public MapView MapView { get; }
-
-	public bool SyncWithRegularSelection { get; set; }
-
-	/// <returns>true iff the white selection of all layers in the map are empty</returns>
-	public bool IsEmpty => _layerSelections.Values.All(ws => ws.IsEmpty);
+	/// <returns>true iff the no involved features (regardless of selected vertices)</returns>
+	public bool IsEmpty => _layerSelections.Values.Sum(ws => ws.InvolvedFeatureCount) <= 0;
+	//public bool IsEmpty => _layerSelections.Values.All(ws => ws.IsEmpty);
 
 	/// <returns>true iff <paramref name="point"/> is within
 	/// <paramref name="tolerance"/> of a selected vertex</returns>
@@ -75,28 +73,9 @@ public class MapWhiteSelection : IDisposable
 		return false;
 	}
 
-	public ICollection<IWhiteSelection> GetLayerSelections()
+	public IEnumerable<IWhiteSelection> GetLayerSelections()
 	{
 		return _layerSelections.Values;
-	}
-
-	/// <summary>
-	/// Just a convenience to enumerate all features in the white selection
-	/// </summary>
-	public IEnumerable<ValueTuple<FeatureLayer, long, IShapeSelection>> Enumerate()
-	{
-		foreach (var ws in GetLayerSelections())
-		{
-			var featureLayer = ws.Layer;
-			if (!featureLayer.IsEditable) continue;
-
-			foreach (var oid in ws.GetInvolvedOIDs())
-			{
-				var shapeSelection = ws.GetShapeSelection(oid);
-
-				yield return (featureLayer, oid, shapeSelection);
-			}
-		}
 	}
 
 	[NotNull]
@@ -135,17 +114,10 @@ public class MapWhiteSelection : IDisposable
 			}
 		}
 
-		if (ws.IsEmpty)
+		if (ws.InvolvedFeatureCount <= 0)
 		{
 			_layerSelections.Remove(layer.URI);
 		}
-
-		//if (SyncWithRegularSelection)
-		//{
-		//	var regular = layer.GetSelection();
-		//	regular.Remove(oids);
-		//	layer.SetSelection(regular);
-		//}
 
 		return removed;
 	}
@@ -154,6 +126,8 @@ public class MapWhiteSelection : IDisposable
 	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
 	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method)
 	{
+		// TODO Consider new behavior: if click on vertex of involved feature, operate on this vertex alone; otherwise behave as below:
+
 		var changed = false;
 
 		if (method == SetCombineMethod.New)
@@ -164,7 +138,7 @@ public class MapWhiteSelection : IDisposable
 
 		var extent = clickPoint.Extent.Expand(tolerance, tolerance, false);
 
-		var dict = GetFeatures(MapView, extent);
+		var dict = GetFeatures(_mapView, extent);
 
 		foreach (var pair in dict)
 		{
@@ -199,11 +173,6 @@ public class MapWhiteSelection : IDisposable
 					changed = true;
 				}
 			}
-
-			//if (SyncWithRegularSelection)
-			//{
-			//	UpdateRegularSelection(selection, featureOids);
-			//}
 		}
 
 		return changed;
@@ -248,7 +217,7 @@ public class MapWhiteSelection : IDisposable
 			method = SetCombineMethod.Add;
 		}
 
-		var dict = GetFeatures(MapView, geometry);
+		var dict = GetFeatures(_mapView, geometry);
 
 		foreach (var pair in dict)
 		{
@@ -283,11 +252,6 @@ public class MapWhiteSelection : IDisposable
 					changed = true;
 				}
 			}
-
-			//if (SyncWithRegularSelection)
-			//{
-			//	UpdateRegularSelection(selection, featureOids);
-			//}
 		}
 
 		return changed;
@@ -383,12 +347,10 @@ public class MapWhiteSelection : IDisposable
 		// - Could use our own code to select (see SelectionTool)
 		// - Bug: does not find all features if the symbol has an Offset effect (K2#38)
 
-		var selectionSet = mapView.GetFeatures(geometry, VisualIntersect);
-		//var selectionSet = mapView.GetFeaturesEx(geometry, VisualIntersect);
+		var selectionSet = mapView.GetFeatures(geometry);
+		//var selectionSet = mapView.GetFeaturesEx(geometry);
 		return selectionSet.ToDictionary<FeatureLayer>();
 	}
-
-	public bool VisualIntersect { get; set; } = true;
 
 	/// <remarks>Must call on MCT</remarks>
 	private static void UpdateRegularSelection(IWhiteSelection selection, long[] involvedOids)
@@ -414,18 +376,60 @@ public class MapWhiteSelection : IDisposable
 
 		foreach (var selection in all)
 		{
-			if (selection.SetEmpty())
+			if (selection.Clear())
 			{
 				changed = true;
 			}
 		}
 
-		//if (SyncWithRegularSelection)
-		//{
-		//	MapView.Map.ClearSelection();
-		//}
+		_layerSelections.Clear();
 
 		return changed;
+	}
+
+	/// <summary>
+	/// Try update all geometries in selection (reload from data store),
+	/// but if part/vertex count don't agree, remove from selection.
+	/// </summary>
+	/// <returns>number of shape selections retained unchanged
+	/// and modified (presently: cleared)</returns>
+	public ValueTuple<int,int> RefreshGeometries()
+	{
+		int retained = 0;
+		int removed = 0;
+
+		var all = GetLayerSelections();
+
+		foreach (var ws in all)
+		{
+			var list = ws.RefreshGeometries();
+
+			retained += list.Count(r => r.State == IWhiteSelection.RefreshState.SelectionRetained);
+			removed += list.Count(r => r.State == IWhiteSelection.RefreshState.SelectionModified);
+		}
+
+		return (retained, removed);
+	}
+
+	/// <summary>
+	/// Try update given geometries in selection (reload from data store),
+	/// but if part/vertex count don't agree, remove from selection.
+	/// </summary>
+	/// <returns>number of shape selections retained unchanged
+	/// and modified (presently: cleared)</returns>
+	public ValueTuple<int,int> RefreshGeometries(FeatureLayer layer, IEnumerable<long> oids)
+	{
+		if (!_layerSelections.TryGetValue(layer.URI, out var ws))
+		{
+			return (0, 0); // layer has no white selection
+		}
+
+		var result = ws.RefreshGeometries(oids);
+
+		int retained = result.Count(r => r.State == IWhiteSelection.RefreshState.SelectionRetained);
+		int modified = result.Count(r => r.State == IWhiteSelection.RefreshState.SelectionModified);
+
+		return (retained, modified);
 	}
 
 	public void ClearGeometryCache()
@@ -438,57 +442,101 @@ public class MapWhiteSelection : IDisposable
 		}
 	}
 
-
-	/// <returns>number of features updated and removed</returns>
-	public ValueTuple<int,int> UpdateGeometries()
+	/// <summary>
+	/// Select on the Map exactly those features that are involved
+	/// in this white selection (regardless of selected vertices).
+	/// </summary>
+	public void UpdateRegularSelection()
 	{
-		int updated = 0;
-		int removed = 0;
+		var dict = GetLayerSelections()
+			.ToDictionary(s => s.Layer, s => s.GetInvolvedOIDs().ToList());
 
-		var all = GetLayerSelections();
+		var regular = SelectionSet.FromDictionary(dict);
 
-		foreach (var selection in all)
-		{
-			var list = selection.UpdateGeometries();
-
-			updated += list.Count(r => r.State == IWhiteSelection.RefreshState.Updated);
-			removed += list.Count(r => r.State == IWhiteSelection.RefreshState.Removed);
-		}
-
-		return (updated, removed);
+		// TODO This triggers an OnSelectionChangedAsync some time later (!) -- how to latch?
+		// DARO reports that using IDisplayTable to set selection does not (or synchronously) raise OnSelectionChanged
+		Map.SetSelection(regular);
 	}
 
 	/// <summary>
-	/// Try update geometries in selection (reload from data store),
-	/// but if part/vertex count don't agree, remove from selection.
+	/// Modify this white selection to contain exactly the features
+	/// in the given regular selection. Selected vertices of features
+	/// already in the white selection remain unchanged; vertices of
+	/// features newly added are in state unselected.
 	/// </summary>
-	/// <returns>number of features updated and removed</returns>
-	public ValueTuple<int,int> UpdateOrRemove(FeatureLayer layer, IEnumerable<long> oids)
+	/// <returns>true iff the while selection changed in any way
+	/// (and thus should be redrawn)</returns>
+	/// <remarks>The white selection is much more resource intensive
+	/// than the regular selection (which is just a list of OIDs);
+	/// consider not updating the white selection if the regular
+	/// selection is large (say more than 50 features).</remarks>
+	public bool UpdateWhiteSelection(SelectionSet regular)
 	{
-		if (!_layerSelections.TryGetValue(layer.URI, out var ws))
+		if (regular is null) return false;
+
+		// features in regular but not in white: add (select all vertices? none?)
+		// features in white but not in regular: remove
+		// features in both white and regular: keep (don't select all vertices?)
+
+		var dict = regular.ToDictionary<FeatureLayer>();
+
+		bool changed = false;
+
+		if (dict.Count == 0)
 		{
-			return (0, 0); // layer has no white selection
+			changed = SetEmpty();
+		}
+		else
+		{
+			foreach (var pair in dict)
+			{
+				var featureLayer = pair.Key;
+				var oids = pair.Value;
+
+				var ws = GetLayerSelection(featureLayer);
+				foreach (var oid in oids)
+				{
+					var sel = ws.GetShapeSelection(oid);
+					if (sel is null)
+					{
+						if (ws.Add(oid))
+						{
+							changed = true;
+						}
+					}
+					//else: leave alone
+				}
+
+				var hashSet = oids.ToHashSet();
+				var drops = ws.GetInvolvedOIDs().Where(oid => !hashSet.Contains(oid)).ToList();
+				foreach (var oid in drops)
+				{
+					if (ws.Remove(oid))
+					{
+						changed = true;
+					}
+				}
+			}
+
+			// layers in white but not in regular:
+			var regularLayers = dict.Keys.ToHashSet();
+			foreach (var ws in GetLayerSelections())
+			{
+				if (!regularLayers.Contains(ws.Layer)) // stable instances or better use URI?
+				{
+					if (ws.Clear())
+					{
+						changed = true;
+					}
+				}
+			}
 		}
 
-		var result = ws.UpdateGeometries(oids);
-
-		if (ws.IsEmpty)
-		{
-			_layerSelections.Remove(layer.URI);
-		}
-
-		int updated = result.Count(r => r.State == IWhiteSelection.RefreshState.Updated);
-		int removed = result.Count(r => r.State == IWhiteSelection.RefreshState.Removed);
-
-		return (updated, removed);
+		return changed;
 	}
 
 	public void Dispose()
 	{
-		//if (_mapSelectionChangedToken is not null)
-		//{
-		//	MapSelectionChangedEvent.Unsubscribe(_mapSelectionChangedToken);
-		//	_mapSelectionChangedToken = null;
-		//}
+		// nothing to dispose at the moment
 	}
 }

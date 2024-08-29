@@ -17,12 +17,13 @@ public interface IWhiteSelection
 {
 	FeatureLayer Layer { get; }
 
-	bool IsEmpty { get; }
-
 	bool Add(long oid); // add just the oid/shape, don't select any vertices
 	bool Remove(long oid); // also removes oid's geom from cache
 	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
-	bool SetEmpty(); // true iff changed, even if only an "empty oid" is removed; cache not cleared
+	bool Clear(); // true iff changed, even if only an "empty oid" is removed; cache not cleared
+
+	int InvolvedFeatureCount { get; }
+	int SelectedVertexCount { get; }
 
 	bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
 
@@ -49,7 +50,7 @@ public interface IWhiteSelection
 	/// <param name="oids">Optional list of OIDs (if missing: reload all)</param>
 	/// <returns>List updated (shape compatible with selection) and removed
 	/// (shape incompatible with selection) OIDs</returns>
-	List<RefreshInfo> UpdateGeometries(IEnumerable<long> oids = null);
+	List<RefreshInfo> RefreshGeometries(IEnumerable<long> oids = null);
 
 	public class RefreshInfo
 	{
@@ -64,14 +65,14 @@ public interface IWhiteSelection
 			OptionalDetails = details;
 		}
 
-		public static RefreshInfo Updated(long oid)
+		public static RefreshInfo Retained(long oid)
 		{
-			return new RefreshInfo(oid, RefreshState.Updated);
+			return new RefreshInfo(oid, RefreshState.SelectionRetained);
 		}
 
-		public static RefreshInfo Removed(long oid, string details = null)
+		public static RefreshInfo Modified(long oid, string details = null)
 		{
-			return new RefreshInfo(oid, RefreshState.Removed, details);
+			return new RefreshInfo(oid, RefreshState.SelectionModified, details);
 		}
 
 		public override string ToString()
@@ -82,8 +83,8 @@ public interface IWhiteSelection
 
 	public enum RefreshState
 	{
-		Updated, // shape is still compatible with selection
-		Removed // shape was incompatible with selection
+		SelectionRetained, // new shape was compatible, selection retained
+		SelectionModified, // incompatible new shape, selection modified (usually cleared)
 	}
 }
 
@@ -99,7 +100,9 @@ public class WhiteSelection : IWhiteSelection
 
 	public FeatureLayer Layer { get; }
 
-	public bool IsEmpty => _shapes.Values.All(ss => ss.IsEmpty);
+	public int InvolvedFeatureCount => _shapes.Count;
+
+	public int SelectedVertexCount => _shapes.Values.Sum(ss => ss.SelectedVertexCount);
 
 	public bool Combine(long oid, int part, int vertex, SetCombineMethod method)
 	{
@@ -193,7 +196,7 @@ public class WhiteSelection : IWhiteSelection
 		//return changed;
 	}
 
-	public bool SetEmpty()
+	public bool Clear()
 	{
 		var changed = _shapes.Count > 0;
 		_shapes.Clear();
@@ -320,12 +323,14 @@ public class WhiteSelection : IWhiteSelection
 		_geometryCache.Clear();
 	}
 
-	public List<IWhiteSelection.RefreshInfo> UpdateGeometries(IEnumerable<long> oids = null)
+	public List<IWhiteSelection.RefreshInfo> RefreshGeometries(IEnumerable<long> oids = null)
 	{
 		if (oids is null) oids = _shapes.Keys;
 		else oids = oids.Intersect(_shapes.Keys);
 
 		var list = oids.ToList();
+
+		// (re)load into geometry cache:
 
 		ReloadGeometries(list);
 
@@ -335,19 +340,29 @@ public class WhiteSelection : IWhiteSelection
 
 		foreach (var oid in list)
 		{
-			var shape = GetGeometry(oid);
+			var newShape = GetGeometry(oid);
 			var selection = GetShapeSelection(oid) ??
 			                throw new AssertionException($"No shape selection for OID {oid}");
-			if (selection.IsCompatible(shape, out var message))
-			{
-				selection.SetShape(shape);
-				result.Add(IWhiteSelection.RefreshInfo.Updated(oid));
-			}
-			else
-			{
-				_shapes.Remove(oid);
-				result.Add(IWhiteSelection.RefreshInfo.Removed(oid, message));
-			}
+
+			selection.UpdateShape(newShape, out bool cleared, out string reason);
+
+			result.Add(cleared
+				           ? IWhiteSelection.RefreshInfo.Modified(oid, reason)
+				           : IWhiteSelection.RefreshInfo.Retained(oid));
+
+			//if (selection.IsCompatible(newShape, out var message))
+			//{
+			//	// new and previous shape are compatible: set and keep vertex selection
+			//	selection.SetShape(newShape);
+			//	result.Add(IWhiteSelection.RefreshInfo.Updated(oid));
+			//}
+			//else
+			//{
+			//	// new shape is incompatible (type, parts, vertex count): set and clear selection
+			//	selection.Clear();
+			//	selection.SetShape(newShape);
+			//	result.Add(IWhiteSelection.RefreshInfo.Removed(oid, message));
+			//}
 		}
 
 		return result;

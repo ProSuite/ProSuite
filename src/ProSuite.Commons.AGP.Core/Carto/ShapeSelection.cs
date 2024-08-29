@@ -20,6 +20,7 @@ public interface IShapeSelection
 	bool IsEmpty { get; }
 	bool IsFully { get; }
 
+	int SelectedVertexCount { get; }
 	ShapeSelectionState IsShapeSelected();
 	ShapeSelectionState IsPartSelected(int partIndex);
 	bool IsVertexSelected(int partIndex, int vertexIndex);
@@ -28,7 +29,7 @@ public interface IShapeSelection
 	bool CombineVertex(int part, int vertex, SetCombineMethod method);
 	bool CombinePart(int part, SetCombineMethod method);
 	bool CombineShape(SetCombineMethod method);
-	bool SetEmpty();
+	bool Clear();
 
 	IEnumerable<MapPoint> GetSelectedVertices();
 	IEnumerable<MapPoint> GetUnselectedVertices();
@@ -40,9 +41,9 @@ public interface IShapeSelection
 	/// <paramref name="tolerance"/> of <paramref name="hitPoint"/></returns>
 	bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
 
-	/// <remarks>Callers duty to make sure the given <paramref name="shape"/>
-	/// is compatible with this selection (part/vertex count)</remarks>
-	void SetShape(Geometry shape);
+	/// <remarks>If the new shape is not compatible (type, part count, vertex
+	/// count) with the current shape, the selection is first cleared.</remarks>
+	void UpdateShape(Geometry newShape, out bool selectionCleared, out string selectionClearedReason);
 
 	/// <returns>true iff given shape is compatible with this selection</returns>
 	/// <remarks>shape and selection are compatible if part and vertex counts are in range</remarks>
@@ -61,14 +62,11 @@ public class ShapeSelection : IShapeSelection
 
 	public Geometry Shape { get; private set; }
 
-	public void SetShape(Geometry shape)
-	{
-		Shape = shape ?? throw new ArgumentNullException(nameof(shape));
-	}
-
 	public bool IsEmpty => _blocks.IsEmpty;
 
 	public bool IsFully => IsShapeSelected() == ShapeSelectionState.Entirely;
+
+	public int SelectedVertexCount => _blocks.Sum(b => b.Count);
 
 	public bool IsVertexSelected(int partIndex, int vertexIndex)
 	{
@@ -126,102 +124,6 @@ public class ShapeSelection : IShapeSelection
 		return result;
 	}
 
-	public bool CombineShape(SetCombineMethod method)
-	{
-		bool changed;
-
-		switch (method)
-		{
-			case SetCombineMethod.Add:
-			case SetCombineMethod.New:
-				changed = AddShape(Shape, _blocks);
-				break;
-			case SetCombineMethod.Remove:
-				changed = _blocks.SetEmpty();
-				break;
-			case SetCombineMethod.And:
-				changed = false;
-				// nothing to do
-				break;
-			case SetCombineMethod.Xor:
-				changed = XorShape(Shape, _blocks);
-				break;
-			default:
-				throw new ArgumentOutOfRangeException(nameof(method), method, null);
-		}
-
-		return changed;
-	}
-
-	private static bool AddShape(Geometry shape, BlockList blocks)
-	{
-		if (shape is null)
-			throw new ArgumentNullException(nameof(shape));
-		if (blocks is null)
-			throw new ArgumentNullException(nameof(blocks));
-
-		if (shape.IsEmpty) return false;
-
-		var selected = blocks.CountVertices();
-		var total = GeometryUtils.GetPointCount(shape);
-		var changed = selected != total; // not already entirely selected
-
-		if (shape is MapPoint)
-		{
-			blocks.SetEmpty();
-			blocks.Add(0, 0);
-		}
-		else if (shape is Multipoint multipoint)
-		{
-			blocks.SetEmpty();
-			blocks.Add(0, 0, multipoint.PointCount);
-		}
-		else if (shape is Multipart multipart)
-		{
-			blocks.SetEmpty();
-			int partCount = multipart.PartCount;
-			for (int k = 0; k < partCount; k++)
-			{
-				var part = multipart.Parts[k];
-				var segmentCount = part.Count;
-				var vertexCount = multipart is Polygon ? segmentCount : segmentCount + 1;
-				blocks.Add(k, 0, vertexCount);
-			}
-		}
-		else
-		{
-			throw new NotSupportedException($"Shape type {shape.GetType().Name} is not supported");
-		}
-
-		return changed;
-	}
-
-	private static bool XorShape(Geometry shape, BlockList blocks)
-	{
-		if (shape is null)
-			throw new ArgumentNullException(nameof(shape));
-		if (blocks is null)
-			throw new ArgumentNullException(nameof(blocks));
-
-		if (shape.IsEmpty) return false;
-
-		var inverted = Invert(blocks, shape);
-
-		blocks.SetEmpty();
-
-		foreach (var block in inverted)
-		{
-			blocks.Add(block.Part, block.First, block.Count);
-		}
-
-		return true;
-	}
-
-	public bool CombinePart(int partIndex, SetCombineMethod method)
-	{
-		throw new NotImplementedException();
-	}
-
 	public bool CombineVertex(int partIndex, int vertexIndex, SetCombineMethod method)
 	{
 		if (Shape is Multipoint)
@@ -236,7 +138,7 @@ public class ShapeSelection : IShapeSelection
 
 		if (method == SetCombineMethod.New)
 		{
-			changed = SetEmpty();
+			changed = Clear();
 			method = SetCombineMethod.Add;
 		}
 
@@ -257,7 +159,7 @@ public class ShapeSelection : IShapeSelection
 			// remove all but the given vertex:
 			var contained = _blocks.ContainsVertex(partIndex, vertexIndex);
 			if (contained && _blocks.CountVertices() == 1) return false;
-			SetEmpty();
+			Clear();
 			if (contained) _blocks.Add(partIndex, vertexIndex);
 			return true;
 		}
@@ -274,9 +176,41 @@ public class ShapeSelection : IShapeSelection
 		throw new ArgumentOutOfRangeException(nameof(method), method, null);
 	}
 
-	public bool SetEmpty()
+	public bool CombinePart(int partIndex, SetCombineMethod method)
 	{
-		return _blocks.SetEmpty();
+		throw new NotImplementedException();
+	}
+
+	public bool CombineShape(SetCombineMethod method)
+	{
+		bool changed;
+
+		switch (method)
+		{
+			case SetCombineMethod.Add:
+			case SetCombineMethod.New:
+				changed = AddShape(Shape, _blocks);
+				break;
+			case SetCombineMethod.Remove:
+				changed = _blocks.Clear();
+				break;
+			case SetCombineMethod.And:
+				changed = false;
+				// nothing to do
+				break;
+			case SetCombineMethod.Xor:
+				changed = XorShape(Shape, _blocks);
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(method), method, null);
+		}
+
+		return changed;
+	}
+
+	public bool Clear()
+	{
+		return _blocks.Clear();
 	}
 
 	public bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex)
@@ -312,8 +246,6 @@ public class ShapeSelection : IShapeSelection
 
 	public IEnumerable<MapPoint> GetUnselectedVertices()
 	{
-		if (Shape.IsEmpty) return Enumerable.Empty<MapPoint>();
-
 		var blocks = Invert(_blocks, Shape);
 
 		return GetVertices(Shape, blocks);
@@ -327,8 +259,13 @@ public class ShapeSelection : IShapeSelection
 	public static IEnumerable<BlockList.Block> Invert(
 		IEnumerable<BlockList.Block> blocks, Geometry shape)
 	{
-		if (shape is null)
-			throw new ArgumentNullException(nameof(shape));
+		if (blocks is null)
+			throw new ArgumentNullException(nameof(blocks));
+
+		if (shape is null || shape.IsEmpty)
+		{
+			return Enumerable.Empty<BlockList.Block>();
+		}
 
 		if (shape is MapPoint)
 		{
@@ -436,6 +373,29 @@ public class ShapeSelection : IShapeSelection
 
 		//message = string.Empty;
 		//return true;
+	}
+
+	public void UpdateShape(Geometry newShape, out bool selectionCleared, out string selectionClearedReason)
+	{
+		if (newShape is null)
+			throw new ArgumentNullException(nameof(newShape));
+
+		bool compatible = IsCompatible(newShape, out string message);
+
+		if (compatible)
+		{
+			selectionCleared = false;
+			selectionClearedReason = null;
+		}
+		else
+		{
+			Clear();
+
+			selectionCleared = true;
+			selectionClearedReason = message;
+		}
+
+		Shape = newShape;
 	}
 
 	#region Private methods
@@ -629,13 +589,77 @@ public class ShapeSelection : IShapeSelection
 		throw new NotSupportedException($"Shape of type {shape.GetType().Name} is not supported");
 	}
 
+	private static bool AddShape(Geometry shape, BlockList blocks)
+	{
+		if (shape is null)
+			throw new ArgumentNullException(nameof(shape));
+		if (blocks is null)
+			throw new ArgumentNullException(nameof(blocks));
+
+		if (shape.IsEmpty) return false;
+
+		var selected = blocks.CountVertices();
+		var total = GeometryUtils.GetPointCount(shape);
+		var changed = selected != total; // not already entirely selected
+
+		if (shape is MapPoint)
+		{
+			blocks.Clear();
+			blocks.Add(0, 0);
+		}
+		else if (shape is Multipoint multipoint)
+		{
+			blocks.Clear();
+			blocks.Add(0, 0, multipoint.PointCount);
+		}
+		else if (shape is Multipart multipart)
+		{
+			blocks.Clear();
+			int partCount = multipart.PartCount;
+			for (int k = 0; k < partCount; k++)
+			{
+				var part = multipart.Parts[k];
+				var segmentCount = part.Count;
+				var vertexCount = multipart is Polygon ? segmentCount : segmentCount + 1;
+				blocks.Add(k, 0, vertexCount);
+			}
+		}
+		else
+		{
+			throw new NotSupportedException($"Shape type {shape.GetType().Name} is not supported");
+		}
+
+		return changed;
+	}
+
+	private static bool XorShape(Geometry shape, BlockList blocks)
+	{
+		if (shape is null)
+			throw new ArgumentNullException(nameof(shape));
+		if (blocks is null)
+			throw new ArgumentNullException(nameof(blocks));
+
+		if (shape.IsEmpty) return false;
+
+		var inverted = Invert(blocks, shape);
+
+		blocks.Clear();
+
+		foreach (var block in inverted)
+		{
+			blocks.Add(block.Part, block.First, block.Count);
+		}
+
+		return true;
+	}
+
 	#endregion
 }
 
 /// <summary>
-/// Linked list of blocks of contiguous sequences of vertices,
-/// always ordered by (part,vertex). New part always entails a
-/// new block. Blocks do not overlap (such blocks are merged).
+/// Linked list of blocks of sequences of contiguous vertices,
+/// always ordered by (part, first vertex). A new part always
+/// starts a new block. Blocks never overlap (such blocks are merged).
 /// </summary>
 public class BlockList : IEnumerable<BlockList.Block>
 {
@@ -646,34 +670,29 @@ public class BlockList : IEnumerable<BlockList.Block>
 
 	public bool IsEmpty => _head.Next is null;
 
-	public bool Add(int part, int vertexIndex)
+	public bool Add(int part, int vertex, int count = 1)
 	{
-		return Add(part, vertexIndex, 1);
-	}
+		// if vertex is in existing block: grow this block and merge down the list
+		// otherwise: append new block to before and merge down the list
 
-	public bool Add(int part, int first, int count)
-	{
-		// if first is in existing block: grow this block and merge down the list
-		// else append block to before and merge down the list
-
-		var node = Find(part, first, out var before);
+		var node = Find(part, vertex, out var before);
 
 		if (node is not null)
 		{
-			if (Contains(node, part, first, count))
+			if (Contains(node, part, vertex, count))
 			{
 				return false; // already fully contained
 			}
 
 			// args extend beyond node: grow node to contain args
-			var beyond = Math.Max(node.First + node.Count, first + count);
-			node.Count = beyond - first;
+			var beyond = Math.Max(node.First + node.Count, vertex + count);
+			node.Count = beyond - vertex;
 
 			MergeBlocks(node);
 		}
 		else
 		{
-			node = NewNode(part, first, count);
+			node = NewNode(part, vertex, count);
 			node.Next = before.Next;
 			before.Next = node;
 
@@ -731,7 +750,7 @@ public class BlockList : IEnumerable<BlockList.Block>
 
 	// TODO Toggle(partIndex, vertexIndex): efficient implementation of this frequent XOR operation (for now: if (Contains) Remove else Add)
 
-	public bool SetEmpty()
+	public bool Clear()
 	{
 		var wasEmpty = IsEmpty;
 
@@ -868,6 +887,10 @@ public class BlockList : IEnumerable<BlockList.Block>
 		_free = node;
 	}
 
+	/// <summary>
+	/// Internal representation of a <see cref="Block"/>:
+	/// has a next pointer to implement a linked list of blocks
+	/// </summary>
 	private class Node
 	{
 		public int Part { get; private set; }
@@ -899,6 +922,9 @@ public class BlockList : IEnumerable<BlockList.Block>
 		}
 	}
 
+	/// <summary>
+	/// A sequence of consecutive vertices in a part of a geometry.
+	/// </summary>
 	public readonly struct Block
 	{
 		public readonly int Part;

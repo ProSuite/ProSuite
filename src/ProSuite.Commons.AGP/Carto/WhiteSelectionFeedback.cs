@@ -67,15 +67,15 @@ public class WhiteSelectionFeedback : IDisposable
 		}
 	}
 
-	/// <param name="ws">The white selection to draw; pass null to remove</param>
+	/// <param name="mws">The white selection to draw; pass null to remove</param>
 	/// <remarks>Must call on MCT</remarks>
-	public void DrawWhiteSelection(MapWhiteSelection ws)
+	public void DrawWhiteSelection(IMapWhiteSelection mws)
 	{
 		// - wire frame of involved features (polylines and polygons)
 		// - unselected vertices (empty square)
 		// - selected vertices (filled square)
 
-		if (ws is null)
+		if (mws is null)
 		{
 			_involvedSegmentsOverlay?.Dispose();
 			_involvedSegmentsOverlay = null;
@@ -93,7 +93,7 @@ public class WhiteSelectionFeedback : IDisposable
 		if (mapView is null) return;
 
 		var segmentsSymRef = GetInvolvedSegmentsSymRef();
-		var segments = CreateSegmentsPolyline(ws);
+		var segments = CreateSegmentsPolyline(mws);
 
 		if (segments is null || segments.IsEmpty)
 		{
@@ -113,7 +113,7 @@ public class WhiteSelectionFeedback : IDisposable
 		}
 
 		var unselectedSymbol = GetUnselectedVertexSymRef();
-		var unselectedMultipoint = CreateUnselectedVertexMultipoint(ws);
+		var unselectedMultipoint = CreateUnselectedVertexMultipoint(mws);
 
 		if (unselectedMultipoint is null || unselectedMultipoint.IsEmpty)
 		{
@@ -133,7 +133,7 @@ public class WhiteSelectionFeedback : IDisposable
 		}
 
 		var selectedSymbol = GetSelectedVertexSymRef();
-		var selectedMultipoint = CreateSelectedVertexMultipoint(ws);
+		var selectedMultipoint = CreateSelectedVertexMultipoint(mws);
 
 		if (selectedMultipoint is null || selectedMultipoint.IsEmpty)
 		{
@@ -214,11 +214,11 @@ public class WhiteSelectionFeedback : IDisposable
 		}
 	}
 
-	private static Multipoint CreateSelectedVertexMultipoint(MapWhiteSelection mws)
+	private static Multipoint CreateSelectedVertexMultipoint(IMapWhiteSelection mws)
 	{
 		var all = mws.GetLayerSelections();
 
-		var builder = new MultipointBuilderEx(mws.MapView.Map.SpatialReference);
+		var builder = new MultipointBuilderEx(mws.Map.SpatialReference);
 
 		foreach (var ws in all)
 		{
@@ -233,11 +233,11 @@ public class WhiteSelectionFeedback : IDisposable
 		return (Multipoint) result;
 	}
 
-	private static Multipoint CreateUnselectedVertexMultipoint(MapWhiteSelection mws)
+	private static Multipoint CreateUnselectedVertexMultipoint(IMapWhiteSelection mws)
 	{
 		var all = mws.GetLayerSelections();
 
-		var builder = new MultipointBuilderEx(mws.MapView.Map.SpatialReference);
+		var builder = new MultipointBuilderEx(mws.Map.SpatialReference);
 
 		foreach (var ws in all)
 		{
@@ -253,7 +253,7 @@ public class WhiteSelectionFeedback : IDisposable
 		return (Multipoint) result;
 	}
 
-	private static Polyline CreateSegmentsPolyline(MapWhiteSelection mws)
+	private static Polyline CreateSegmentsPolyline(IMapWhiteSelection mws)
 	{
 		var all = mws.GetLayerSelections();
 

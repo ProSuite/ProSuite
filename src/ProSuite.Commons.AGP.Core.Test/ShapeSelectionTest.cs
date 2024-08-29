@@ -76,7 +76,7 @@ public class ShapeSelectionTest
 		var selection1 = new ShapeSelection(point);
 		selection1.CombineVertex(0, 0, SetCombineMethod.New);
 		Assert.AreEqual(point, selection1.GetSelectedVertices().Single());
-		selection1.SetEmpty();
+		selection1.Clear();
 		Assert.False(selection1.GetSelectedVertices().Any());
 
 		// Multipoint: constituent points are parts (not vertices)
@@ -119,7 +119,7 @@ public class ShapeSelectionTest
 		Assert.AreEqual(5, point.Y);
 		selection4.CombineVertex(0, 0, SetCombineMethod.Add);
 		Assert.AreEqual(2, selection4.GetSelectedVertices().Count());
-		selection4.SetEmpty();
+		selection4.Clear();
 		Assert.False(selection4.GetSelectedVertices().Any());
 	}
 
@@ -289,8 +289,8 @@ public class ShapeSelectionTest
 		// can't merge blocks because part differs:
 		Assert.AreEqual(2, blocks.Count());
 
-		Assert.True(blocks.SetEmpty());
-		Assert.False(blocks.SetEmpty());
+		Assert.True(blocks.Clear());
+		Assert.False(blocks.Clear());
 	}
 
 	[Test]
@@ -336,7 +336,7 @@ public class ShapeSelectionTest
 		blocks2.Add(0, 1); // select the middle vertex
 		var inverted2 = ShapeSelection.Invert(blocks2, multipoint).ToList();
 		Assert.AreEqual(2, inverted2.Count);
-		blocks2.SetEmpty();
+		blocks2.Clear();
 		blocks2.Add(0, 0);
 		blocks2.Add(0, 2);
 		inverted2 = ShapeSelection.Invert(blocks2, multipoint).ToList();
@@ -355,7 +355,7 @@ public class ShapeSelectionTest
 		Assert.AreEqual(1, inverted3[2].Part);
 		Assert.AreEqual(0, inverted3[2].First);
 		Assert.AreEqual(2, inverted3[2].Count);
-		blocks3.SetEmpty();
+		blocks3.Clear();
 		blocks3.Add(0, 0);
 		blocks3.Add(0, 2);
 		blocks3.Add(1, 0, 2); // entire 2nd part
@@ -375,7 +375,7 @@ public class ShapeSelectionTest
 		Assert.AreEqual(1, inverted4[2].Part);
 		Assert.AreEqual(0, inverted4[2].First);
 		Assert.AreEqual(3, inverted4[2].Count);
-		blocks4.SetEmpty();
+		blocks4.Clear();
 		blocks4.Add(0, 0);
 		blocks4.Add(0, 2);
 		blocks4.Add(1, 0, 3); // entire 2nd part
