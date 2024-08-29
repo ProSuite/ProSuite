@@ -17,6 +17,10 @@ namespace ProSuite.AGP.Editing.Cracker
 		private readonly CIMSymbolReference redCircleMarker;
 		private readonly CIMSymbolReference greenCircleMarker;
 		private readonly CIMSymbolReference greenSquareMarker;
+		private readonly CIMSymbolReference redCrossMarker;
+		private readonly CIMSymbolReference redSquareMarker;
+		private readonly CIMSymbolReference mintCircleMarker;
+		private readonly CIMSymbolReference greySquareMarker;
 
 		private readonly List<IDisposable> _overlays = new List<IDisposable>();
 
@@ -43,8 +47,9 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			CIMColor red = ColorUtils.CreateRGB(255, 0, 0);
 			CIMColor green = ColorUtils.CreateRGB(0, 200, 0);
+			CIMColor mint = ColorUtils.CreateRGB(0, 255, 150);
+			CIMColor grey = ColorUtils.CreateRGB(100, 100, 100);
 			CIMColor white = ColorUtils.CreateRGB(255, 255, 255);
-			CIMColor orangeWip = ColorUtils.CreateRGB(255, 77, 6);
 
 			redCircleMarker =
 				CreateOutlinedPointSymbol(red, white, 10, SymbolUtils.MarkerStyle.Circle);
@@ -52,6 +57,15 @@ namespace ProSuite.AGP.Editing.Cracker
 				CreateOutlinedPointSymbol(green, white, 10, SymbolUtils.MarkerStyle.Circle);
 			greenSquareMarker =
 				CreateOutlinedPointSymbol(green, white, 10, SymbolUtils.MarkerStyle.Square);
+			mintCircleMarker =
+				CreateOutlinedPointSymbol(mint, white, 10, SymbolUtils.MarkerStyle.Circle);
+			redCrossMarker =
+				CreateOutlinedPointSymbol(red, white, 10, SymbolUtils.MarkerStyle.Cross);
+			greySquareMarker =
+				CreateOutlinedPointSymbol(grey, white, 5, SymbolUtils.MarkerStyle.Square);
+			redSquareMarker =
+				CreateOutlinedPointSymbol(red, white, 5, SymbolUtils.MarkerStyle.Square);
+			//TODO: remove segment line feature
 		}
 
 		public void Update([CanBeNull] CrackerResult crackerResult)
@@ -75,6 +89,14 @@ namespace ProSuite.AGP.Editing.Cracker
 						_overlays.Add(addedCrackPoint);
 					}
 
+					else if (crackPoint.TargetVertexOnlyDifferentInZ)
+					{
+						IDisposable addedCrackPoint =
+							MapView.Active.AddOverlay(crackPoint.Point, mintCircleMarker);
+
+						_overlays.Add(addedCrackPoint);
+					}
+
 					else if (crackPoint.TargetVertexDifferentWithinTolerance)
 					{
 						IDisposable addedCrackPoint =
@@ -82,6 +104,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 						_overlays.Add(addedCrackPoint);
 					}
+
 					else
 					{
 						IDisposable addedCrackPoint =
