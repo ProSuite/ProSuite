@@ -5,33 +5,23 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Shared.ArcGIS;
 
 namespace ProSuite.Commons.AO.Test.Surface
 {
 	[TestFixture]
 	public class SpikeFreeTinGeneratorTests
 	{
-		private ArcGISLicenses _lic;
-
 		private static ISpatialReference _spatialReference;
 
 		[OneTimeSetUp]
 		public void Setup()
 		{
-			_lic = new ArcGISLicenses();
-			_lic.Checkout(EsriProduct.ArcEditor, EsriExtension.ThreeDAnalyst,
-			              EsriExtension.SpatialAnalyst);
+			ArcGISLicenseUtils.EnsureArcGISLicense(true);
 
 			_spatialReference = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
-		}
-
-		[OneTimeTearDown]
-		public void TearDown()
-		{
-			_lic.Release();
 		}
 
 		[Test]
