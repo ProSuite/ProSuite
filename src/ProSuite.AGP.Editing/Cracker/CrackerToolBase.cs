@@ -80,7 +80,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
-				_msg.Warn("Calculation of removable overlaps was cancelled.");
+				_msg.Warn("Calculation of crack points was cancelled.");
 				return;
 			}
 
@@ -89,7 +89,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
-				_msg.Warn("Calculation of removable overlaps was cancelled.");
+				_msg.Warn("Calculation of crack points was cancelled.");
 				return;
 			}
 
@@ -169,7 +169,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 					             return true;
 				             },
-				             "Remove overlaps", datasets);
+				             "Crack feature(s)", datasets);
 
 			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
 
