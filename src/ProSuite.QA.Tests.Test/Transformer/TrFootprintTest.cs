@@ -11,6 +11,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Test;
 using ProSuite.Commons.Test.Testing;
 using ProSuite.Commons.Testing;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Transformers;
 using Path = System.IO.Path;
 
@@ -45,17 +46,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			var transformer = new TrFootprint(roBuildings);
 
-			WKSEnvelope wksEnvelope = WksGeometryUtils.CreateWksEnvelope(
-				roBuildings.Extent.XMin, roBuildings.Extent.YMin,
-				roBuildings.Extent.XMax, roBuildings.Extent.YMax);
-
 			TransformedFeatureClass featureClass = transformer.GetTransformed();
 
 			Assert.NotNull(featureClass.BackingDataset);
 			var transformedBackingDataset =
 				(TransformedBackingDataset) featureClass.BackingDataset;
 
-			transformedBackingDataset.DataContainer = new UncachedDataContainer(wksEnvelope);
+			transformedBackingDataset.DataContainer = new UncachedDataContainer(roBuildings.Extent);
 
 			bool originalValue = IntersectionUtils.UseCustomIntersect;
 
@@ -183,17 +180,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		{
 			var transformer1 = new TrFootprint(roBuildings);
 
-			WKSEnvelope wksEnvelope = WksGeometryUtils.CreateWksEnvelope(
-				roBuildings.Extent.XMin, roBuildings.Extent.YMin,
-				roBuildings.Extent.XMax, roBuildings.Extent.YMax);
-
 			TransformedFeatureClass featureClass = transformer1.GetTransformed();
 
 			Assert.NotNull(featureClass.BackingDataset);
 			var transformedBackingDataset =
 				(TransformedBackingDataset) featureClass.BackingDataset;
 
-			transformedBackingDataset.DataContainer = new UncachedDataContainer(wksEnvelope);
+			transformedBackingDataset.DataContainer = new UncachedDataContainer(roBuildings.Extent);
 
 			var srTolerance =
 				(ISpatialReferenceTolerance) ((IClone) featureClass.SpatialReference).Clone();

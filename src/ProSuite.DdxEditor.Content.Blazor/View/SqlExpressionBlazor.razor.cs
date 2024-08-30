@@ -5,17 +5,21 @@ namespace ProSuite.DdxEditor.Content.Blazor.View;
 
 public partial class SqlExpressionBlazor : ComponentBase
 {
-	public string SqlExpression { get; set; }
+	[Parameter]
+	public string Value { get; set; }
 
 	[Parameter]
-	public EventCallback OnTextChanged { get; set; }
+	public EventCallback<string> ValueChanged { get; set; }
+
+	[Parameter]
+	public EventCallback<string> ExpressionChanged { get; set; }
 
 	[Parameter]
 	public Func<string> QueryBuilderCallback { get; set; }
 
 	public void OnClickResetValue()
 	{
-		SqlExpression = string.Empty;
+		Value = string.Empty;
 	}
 
 	public void OnSqlExpressionBuilderClicked()
@@ -24,13 +28,15 @@ public partial class SqlExpressionBlazor : ComponentBase
 
 		if (resultExpression != null)
 		{
-			SqlExpression = resultExpression;
+			Value = resultExpression;
 		}
 	}
 
 	private void OnInput(ChangeEventArgs args)
 	{
-		SqlExpression = (args.Value?.ToString());
-		OnTextChanged.InvokeAsync();
+		Value = args.Value?.ToString();
+
+		// Necessary to trigger the dirty flag to enable saving
+		ExpressionChanged.InvokeAsync(Value);
 	}
 }

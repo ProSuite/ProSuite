@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
@@ -484,7 +485,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			var tr = new TrOnlyContainedFeatures(ReadOnlyTableFactory.Create(lineFc),
 			                                     ReadOnlyTableFactory.Create(polyFc));
 
-			WKSEnvelope wksEnvelope = WksGeometryUtils.CreateWksEnvelope(-100, -100, 100, 100);
+			IEnvelope envelope = GeometryFactory.CreateEnvelope(-100, -100, 100, 100);
 
 			FilteredFeatureClass filteredFeatureClass = tr.GetTransformed();
 
@@ -497,7 +498,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			var transformedBackingDataset =
 				(TransformedBackingData) filteredFeatureClass.BackingDataset;
 
-			transformedBackingDataset.DataSearchContainer = new UncachedDataContainer(wksEnvelope);
+			transformedBackingDataset.DataSearchContainer = new UncachedDataContainer(envelope);
 
 			// By now the DatasetContainer should have been assigned -> test non-spatial filter:
 			var filteredRows = filteredFeatureClass.EnumReadOnlyRows(tableFilter, false).ToList();

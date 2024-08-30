@@ -39,7 +39,9 @@
 						<Template Context="subViewModel">
 							@if (subViewModel is DatasetTestParameterValueViewModel vm)
 							{
-								<SqlExpressionBlazor QueryBuilderCallback="vm.ShowFilterExpressionBuilder"></SqlExpressionBlazor>
+								<SqlExpressionBlazor @bind-value="vm.FilterExpression" 
+								                     QueryBuilderCallback="vm.ShowFilterExpressionBuilder" 
+								                     ExpressionChanged="vm.FilterExpressionChanged"></SqlExpressionBlazor>
 							}
 						</Template>
 					</RadzenDataGridColumn>
