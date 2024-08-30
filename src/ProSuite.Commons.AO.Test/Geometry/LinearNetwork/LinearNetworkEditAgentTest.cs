@@ -209,6 +209,62 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 		}
 
 		[Test]
+		public void DoesNotSplitEdgeOnNodeUpdateForNonSplittingNode()
+		{
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
+
+			FeatureClassMock edgeClass, junctionClass;
+			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out junctionClass);
+
+			// Set network classes to not split:
+			foreach (LinearNetworkClassDef classDefinition in networkDef.NetworkClassDefinitions)
+			{
+				classDefinition.Splitting = false;
+			}
+
+			var networkFeatureFinder = new NetworkFeatureFinderMock();
+
+			LinearNetworkEditAgent observer = new LinearNetworkEditAgent(
+				                                  networkDef, networkFeatureFinder)
+			                                  {
+				                                  NoCaching = true
+			                                  };
+
+			// Existing feature:
+			IPolyline edge1Polyline = GeometryFactory.CreatePolyline(
+				GeometryFactory.CreatePoint(2600000, 1200000, 450, double.NaN, sr),
+				GeometryFactory.CreatePoint(2600020, 1200010, 452, double.NaN, sr));
+
+			CreateInOperation(() => CreateFeature(edgeClass, edge1Polyline), observer);
+
+			// Add a junction feature that does not intersect the edge:
+			IPoint junctionPoint =
+				GeometryFactory.CreatePoint(2600002, 1200002, 450, double.NaN, sr);
+
+			IFeature insertedJunction = CreateInOperation(
+				() => CreateFeature(junctionClass, junctionPoint), observer);
+			Assert.NotNull(insertedJunction);
+			Assert.AreEqual(1, observer.GetCreatedInLastOperation().Count());
+
+			// Now move it onto the edge:
+			IPoint movedPoint = GeometryFactory.CreatePoint(2600002, 1200001, 450, double.NaN, sr);
+
+			IFeature updated = UpdateInOperation(() =>
+			{
+				insertedJunction.Shape = movedPoint;
+				insertedJunction.Store();
+				return insertedJunction;
+			}, observer);
+
+			Assert.AreEqual(1, observer.GetUpdatedInLastOperation().Count());
+			Assert.IsTrue(updated == observer.GetUpdatedInLastOperation().First());
+
+			// 1 original edge + its 2 junctions + 1 junction + 0 split-insert edge
+			Assert.AreEqual(4, networkFeatureFinder.TargetFeatureCandidates.Count);
+		}
+
+		[Test]
 		public void CanSplitEdgeOnEdgeUpdate()
 		{
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(

@@ -540,11 +540,21 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 
 			foreach (IFeature junctionFeature in junctions)
 			{
+				if (! NetworkDefinition.IsSplittingJunction(junctionFeature))
+				{
+					continue;
+				}
+
 				IPoint junctionPoint = (IPoint) junctionFeature.Shape;
 
 				foreach (IFeature edgeFeature in NetworkFeatureFinder.FindEdgeFeaturesAt(
 					         junctionPoint))
 				{
+					if (! NetworkDefinition.IsSplittingEdge(edgeFeature))
+					{
+						continue;
+					}
+
 					IPolyline edge = (IPolyline) edgeFeature.ShapeCopy;
 
 					if (GeometryUtils.InteriorIntersects(edge, junctionPoint))
