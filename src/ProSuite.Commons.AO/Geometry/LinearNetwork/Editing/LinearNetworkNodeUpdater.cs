@@ -77,6 +77,12 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 		/// </summary>
 		public IList<IFeature> UpdatedFeatures { get; } = new List<IFeature>();
 
+		/// <summary>
+		/// The new location of the edge end points that have been moved during the update.
+		/// This could theoretically be used by the caller to perform subsequent splits.
+		/// </summary>
+		public IList<IPoint> MovedEdgeEndpoints { get; } = new List<IPoint>();
+
 		public void UpdateFeature(
 			[NotNull] IFeature reshapedFeature,
 			[NotNull] IGeometry newGeometry)
@@ -179,6 +185,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 				fromPointSnapped = EnsureConnectivityWithAdjacentFeatures(
 					reshapedEdgeFeature, originalPolyline, true, newFrom,
 					connectedNonReshapedEdgesAtFrom);
+
+				MovedEdgeEndpoints.Add(newFrom);
 			}
 
 			if (updatedAtTo)
@@ -189,6 +197,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 				toPointSnapped = EnsureConnectivityWithAdjacentFeatures(
 					reshapedEdgeFeature, originalPolyline, false, newTo,
 					connectedNonReshapedEdgesAtTo);
+
+				MovedEdgeEndpoints.Add(newTo);
 			}
 
 			if (fromPointSnapped)

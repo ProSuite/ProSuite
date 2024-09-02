@@ -304,6 +304,12 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 
 			TrySplitExistingEdgesByJunctions(junctions);
 
+			if (! NetworkDefinition.HasDefaultJunctionClass)
+			{
+				// We cannot rely on junctions, the split logic has to be performed at inserted/updated edge end points
+				TrySplitExistingEdgesByEdgeEndpoint();
+			}
+
 			if (DeleteOrphanedJunctionsOnEdgeDelete)
 			{
 				DeleteOrphanedJunctions(GetEdgeFeatures(_deletedInOperation));
@@ -571,6 +577,105 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 				List<IFeature> splittingJunctions = kvp.Value;
 
 				SplitAtJunctions(edgeFeature, splittingJunctions);
+			}
+		}
+
+		private void TrySplitExistingEdgesByEdgeEndpoint()
+		{
+			var splitPointsPerEdge = new Dictionary<IFeature, List<IPoint>>();
+
+			// Collect split points for inserts
+			foreach (IFeature edgeFeature in GetEdgeFeatures(_createdInOperation))
+			{
+				if (! NetworkDefinition.IsSplittingEdge(edgeFeature))
+				{
+					continue;
+				}
+
+				AddSplitPoint(edgeFeature, true, splitPointsPerEdge);
+				AddSplitPoint(edgeFeature, false, splitPointsPerEdge);
+			}
+
+			// Add split points of updated edge end points
+			foreach (IFeature edgeFeature in GetEdgeFeatures(_updatedInOperation.Keys))
+			{
+				if (! NetworkDefinition.IsSplittingEdge(edgeFeature))
+				{
+					continue;
+				}
+
+				IPolyline updatedEdge = (IPolyline) edgeFeature.Shape;
+
+				if (EndPointChanged(edgeFeature, true))
+				{
+					AddSplitPoint(updatedEdge.FromPoint, splitPointsPerEdge);
+				}
+
+				if (EndPointChanged(edgeFeature, false))
+				{
+					AddSplitPoint(updatedEdge.ToPoint, splitPointsPerEdge);
+				}
+			}
+
+			// Apply the splits to the target edges
+			foreach (var kvp in splitPointsPerEdge)
+			{
+				IFeature edgeFeature = kvp.Key;
+				List<IPoint> splittingPoints = kvp.Value;
+
+				IMultipoint splitPoints = GeometryFactory.CreateMultipoint(splittingPoints);
+
+				_msg.DebugFormat("Splitting {0} by using {1} split junction(s) {1}",
+				                 GdbObjectUtils.ToString(edgeFeature), splittingPoints.Count);
+
+				List<IFeature> newEdges =
+					LinearNetworkEditUtils.SplitAtPoints(edgeFeature,
+					                                     (IPointCollection) splitPoints);
+
+				foreach (IFeature newEdge in newEdges)
+				{
+					NetworkFeatureFinder.TargetFeatureCandidates?.Add(newEdge);
+				}
+			}
+		}
+
+		private bool EndPointChanged(IFeature edgeFeature, bool atFromEnd)
+		{
+			IPolyline newShape = (IPolyline) edgeFeature.Shape;
+			IPolyline oldShape = (IPolyline) _updatedInOperation[edgeFeature];
+
+			IPoint newPoint = atFromEnd ? newShape.FromPoint : newShape.ToPoint;
+			IPoint oldPoint = atFromEnd ? oldShape.FromPoint : oldShape.ToPoint;
+
+			return ! GeometryUtils.AreEqualInXY(newPoint, oldPoint);
+		}
+
+		private void AddSplitPoint(
+			[NotNull] IFeature splittingEdgeFeature,
+			bool atFromPoint,
+			[NotNull] Dictionary<IFeature, List<IPoint>> toResultSplitPointsPerEdge)
+		{
+			IPolyline edge = (IPolyline) splittingEdgeFeature.Shape;
+
+			IPoint endPoint = atFromPoint ? edge.FromPoint : edge.ToPoint;
+
+			AddSplitPoint(endPoint, toResultSplitPointsPerEdge);
+		}
+
+		private void AddSplitPoint(
+			[NotNull] IPoint splitPoint,
+			[NotNull] Dictionary<IFeature, List<IPoint>> toResultSplitPointsPerEdge)
+		{
+			foreach (IFeature otherEdgeFeature in NetworkFeatureFinder.FindEdgeFeaturesAt(
+				         splitPoint))
+			{
+				IPolyline otherEdge = (IPolyline) otherEdgeFeature.Shape;
+
+				if (GeometryUtils.InteriorIntersects(otherEdge, splitPoint))
+				{
+					CollectionUtils.AddToValueList(toResultSplitPointsPerEdge, otherEdgeFeature,
+					                               splitPoint);
+				}
 			}
 		}
 
