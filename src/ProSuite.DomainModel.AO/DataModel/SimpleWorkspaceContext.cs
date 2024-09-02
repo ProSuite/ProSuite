@@ -162,7 +162,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			Assert.ArgumentNotNullOrEmpty(gdbDatasetName, nameof(gdbDatasetName));
 
 			// TODO for query classes: translate owner part also (observed for pg: query class is always owned by *connected* user)
-			string gdbTableName = ModelElementUtils.GetBaseTableName(gdbDatasetName);
+			string gdbTableName = ModelElementUtils.GetBaseTableName(gdbDatasetName, this);
 
 			WorkspaceDataset workspaceDataset;
 			return _workspaceDatasetByGdbDatasetName.TryGetValue(
