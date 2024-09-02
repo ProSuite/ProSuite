@@ -15,6 +15,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public LinearNetworkDataset(VectorDataset dataset)
 		{
 			_dataset = dataset;
+			_splitting = true;
 		}
 
 		/// <summary>
