@@ -61,7 +61,7 @@ namespace ProSuite.Commons.AO.Surface
 		/// An optional coordinate transformer that transforms the source data to the target spatial reference
 		/// before it is added to the TIN.
 		/// </summary>
-		public ICoordinateTransformer CoordinateTransformer { private get; set; }
+		public ICoordinateTransformer CoordinateTransformer { protected get; set; }
 
 		/// <summary>
 		/// Suggests subdivisions of the area of interest that are not expected to exceed the specified
@@ -530,7 +530,7 @@ namespace ProSuite.Commons.AO.Surface
 			}
 		}
 
-		private void AddFeaturesToTin(ITinEdit tin, esriTinSurfaceType surfaceType,
+		protected virtual void AddFeaturesToTin(ITinEdit tin, esriTinSurfaceType surfaceType,
 		                              IFeatureClass featureClass, IQueryFilter filter,
 		                              IGeometry inExtent)
 		{

@@ -77,6 +77,12 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 		/// </summary>
 		public IList<IFeature> UpdatedFeatures { get; } = new List<IFeature>();
 
+		/// <summary>
+		/// The new location of the edge end points that have been moved during the update.
+		/// This could theoretically be used by the caller to perform subsequent splits.
+		/// </summary>
+		public IList<IPoint> MovedEdgeEndpoints { get; } = new List<IPoint>();
+
 		public void UpdateFeature(
 			[NotNull] IFeature reshapedFeature,
 			[NotNull] IGeometry newGeometry)
@@ -179,6 +185,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 				fromPointSnapped = EnsureConnectivityWithAdjacentFeatures(
 					reshapedEdgeFeature, originalPolyline, true, newFrom,
 					connectedNonReshapedEdgesAtFrom);
+
+				MovedEdgeEndpoints.Add(newFrom);
 			}
 
 			if (updatedAtTo)
@@ -189,6 +197,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 				toPointSnapped = EnsureConnectivityWithAdjacentFeatures(
 					reshapedEdgeFeature, originalPolyline, false, newTo,
 					connectedNonReshapedEdgesAtTo);
+
+				MovedEdgeEndpoints.Add(newTo);
 			}
 
 			if (fromPointSnapped)
@@ -779,6 +789,35 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 
 			// TOP-5858: Move all coincident junctions. There can be more than one at the same
 			// location even in the same network. Hence we should not check if there is one already.
+			// Except if the there is a junction feature at the target location that matches the
+			// source feature's type
+			// TODO: Find only other junctions of the same network class (including potential where clause):
+			// -> Enhance NetworkFeatureFinder to support this: FindJunctionFeaturesAt(newEndPoint, inSameNetworkClassFeature)
+			IList<IFeature> otherJunctionsAtNewEndPoint =
+				NetworkFeatureFinder.FindJunctionFeaturesAt(newEndPoint).ToList();
+
+			foreach (IFeature junctionFeature in junctionFeatures.ToList())
+			{
+				foreach (IFeature otherJunction in otherJunctionsAtNewEndPoint)
+				{
+					if (GdbObjectUtils.IsSameObject(junctionFeature, otherJunction,
+					                                ObjectClassEquality.SameTableSameVersion))
+					{
+						continue;
+					}
+
+					// TODO: If only the relevant other junctions (i.e. from the same network class) are found
+					//       this will become obsolete:
+					if (DatasetUtils.IsSameObjectClass(otherJunction.Class, junctionFeature.Class,
+					                                   ObjectClassEquality.SameTableSameVersion))
+					{
+						// TOP-5886: Do not move the junction on top of another junction of the same type
+						junctionFeatures.Remove(junctionFeature);
+						break;
+					}
+				}
+			}
+
 			foreach (IFeature junctionFeature in junctionFeatures)
 			{
 				StoreSingleFeatureShape(junctionFeature, newEndPoint);

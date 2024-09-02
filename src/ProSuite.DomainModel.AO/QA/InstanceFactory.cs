@@ -371,7 +371,7 @@ namespace ProSuite.DomainModel.AO.QA
 			throw new ArgumentException($"Unhandled type {paramVal.GetType()}");
 		}
 
-		private static IReadOnlyTable CreateTransformedTable(
+		public static IReadOnlyTable CreateTransformedTable(
 			[NotNull] TransformerConfiguration transformerConfiguration,
 			[NotNull] IOpenDataset datasetContext)
 		{

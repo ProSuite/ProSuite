@@ -1,4 +1,7 @@
+using System;
+using System.Linq;
 using Microsoft.AspNetCore.Components;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
@@ -6,10 +9,14 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
 using ProSuite.Commons.Notifications;
 using ProSuite.DdxEditor.Content.Blazor.View;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
+using ProSuite.UI.QA;
 using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
@@ -21,6 +28,8 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 	[CanBeNull] private string _filterExpression;
 
 	private bool _usedAsReferenceData;
+
+	private IDataContainer _uncachedContainer;
 
 	private DatasetTestParameterValueViewModel(
 		[NotNull] TestParameter parameter,
@@ -210,6 +219,11 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 		return qualified ? $"{name} [{ModelName}]" : name;
 	}
 
+	public void FilterExpressionChanged(string expression)
+	{
+		FilterExpression = expression;
+	}
+
 	public override string ToString()
 	{
 		string value = DisplayValue == null ? "<null>" : $"{DisplayValue}";
@@ -229,13 +243,67 @@ public class DatasetTestParameterValueViewModel : ViewModelBase
 			Value as Either<Dataset, TransformerConfiguration>;
 
 		Dataset dataset = null;
-		parameterValue?.Match<object>(d => dataset = d as Dataset, t => t);
+		TransformerConfiguration transformerConfiguration = null;
+		parameterValue?.Match<object>(d => dataset = d,
+		                              t => transformerConfiguration = t);
 
+		ISqlExpressionBuilder expressionBuilder =
+			Assert.NotNull(Observer.SqlExpressionBuilder, "SQL Expression builder not set");
+
+		ITableSchemaDef layerSchema = null;
 		if (dataset != null)
 		{
-			FilterExpression =
-				Assert.NotNull(Observer.SqlExpressionBuilder, "SQL Expression builder not set")
-				      .BuildSqlExpression((ITableSchemaDef) dataset, _filterExpression);
+			layerSchema = (ITableSchemaDef) dataset;
+		}
+		else if (transformerConfiguration != null)
+		{
+			var datasetParameter =
+				transformerConfiguration.GetDatasetParameterValues(true, true)
+				                        .FirstOrDefault(d => d is IObjectDataset);
+
+			Assert.NotNull(datasetParameter, "No dataset parameter found");
+
+			Model dataModel = (Model) datasetParameter.Model;
+
+			if (! dataModel.IsMasterDatabaseAccessible)
+			{
+				throw new InvalidOperationException(
+					$"Master database is not accessible. Reason: {dataModel.MasterDatabaseNoAccessReason}");
+			}
+
+			IWorkspaceContext masterDbContext =
+				Assert.NotNull(dataModel.MasterDatabaseWorkspaceContext);
+
+			IOpenDataset datasetOpener = new SimpleDatasetOpener(masterDbContext);
+
+			IReadOnlyTable transformedTable = InstanceFactory.CreateTransformedTable(
+				transformerConfiguration, datasetOpener);
+
+			if (transformedTable is IReadOnlyFeatureClass fc && _uncachedContainer == null)
+			{
+				_uncachedContainer = new UncachedDataContainer(fc.Extent);
+			}
+
+			if (transformedTable is IDataContainerAware transformed)
+			{
+				transformed.DataContainer = _uncachedContainer;
+
+				TestUtils.SetContainer(_uncachedContainer, transformed.InvolvedTables);
+			}
+
+			layerSchema = (ITableSchemaDef) transformedTable;
+		}
+
+		if (layerSchema != null)
+		{
+			string result = expressionBuilder.BuildSqlExpression(layerSchema, _filterExpression);
+
+			if (result == null)
+			{
+				return null;
+			}
+
+			FilterExpression = result;
 		}
 
 		return FilterExpression;

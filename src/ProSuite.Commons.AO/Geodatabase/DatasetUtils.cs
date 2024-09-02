@@ -1936,9 +1936,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
 
-			var result = new Dictionary<int, string>();
-
 			var subtypes = objectClass as ISubtypes;
+
+			return GetSubtypeNamesByCode(subtypes);
+		}
+
+		public static IDictionary<int, string> GetSubtypeNamesByCode(
+			[CanBeNull] ISubtypes subtypes)
+		{
+			var result = new Dictionary<int, string>();
 
 			if (subtypes == null || ! subtypes.HasSubtype)
 			{
