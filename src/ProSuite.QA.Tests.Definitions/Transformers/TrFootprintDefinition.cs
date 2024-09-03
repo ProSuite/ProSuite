@@ -9,7 +9,7 @@ namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
 	[GeometryTransformer]
-	public class TrFootprintDefinition : AlgorithmDefinition
+	public class TrFootprintDefinition : TrGeometryTransformDefinition
 	{
 		public IFeatureClassSchemaDef MultipatchClass { get; }
 

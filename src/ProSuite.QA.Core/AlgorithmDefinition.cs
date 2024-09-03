@@ -22,31 +22,16 @@ namespace ProSuite.QA.Core
 		protected const AngleUnit DefaultAngleUnit = AngleUnit.Radiant;
 
 		public IList<ITableSchemaDef> InvolvedTables { get; }
-		public ProSuiteGeometryType GeometryType { get; }
+
 
 		protected AlgorithmDefinition([NotNull] ITableSchemaDef involvedTable) : this(
 			new[] { involvedTable }) { }
-
-		// New constructor to accept geometry type
-		protected AlgorithmDefinition([NotNull] ITableSchemaDef involvedTable, ProSuiteGeometryType geometryType) : this(
-			new[] { involvedTable })
-		{
-			GeometryType = geometryType;
-		}
 
 		protected AlgorithmDefinition([NotNull] IEnumerable<ITableSchemaDef> involvedTables)
 		{
 			Assert.ArgumentNotNull(involvedTables, nameof(involvedTables));
 
 			InvolvedTables = new List<ITableSchemaDef>(involvedTables);
-		}
-
-		// New constructor for multiple tables with geometry type
-		protected AlgorithmDefinition([NotNull] IEnumerable<ITableSchemaDef> involvedTables, ProSuiteGeometryType geometryType)
-		{
-			Assert.ArgumentNotNull(involvedTables, nameof(involvedTables));
-			InvolvedTables = new List<ITableSchemaDef>(involvedTables);
-			GeometryType = geometryType;
 		}
 
 		public object CreateInstance(AlgorithmDefinition definition)
