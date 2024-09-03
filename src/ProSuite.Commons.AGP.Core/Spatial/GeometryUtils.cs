@@ -1030,6 +1030,58 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			}
 		}
 
+		/// <summary>
+		/// Remove vertices from a Polygon builder.
+		/// Presently, only a single vertex can be removed at a time (expect
+		/// <paramref name="firstVertex"/> == <paramref name="lastVertex"/>).
+		/// The resulting gap is filled with a straight line segment.
+		/// The vertex indices are taken modulo the part's segment count,
+		/// that is, they are cyclic.
+		/// </summary>
+		public static void RemoveVertices(/*this*/ PolygonBuilderEx builder, int partIndex,
+		                                  int firstVertex, int lastVertex = -1)
+		{
+			if (builder is null)
+				throw new ArgumentNullException(nameof(builder));
+
+			if (builder.PartCount <= 0)
+				throw new InvalidOperationException("no parts at all (empty builder)");
+			if (partIndex < 0 || partIndex >= builder.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+
+			if (lastVertex < 0) lastVertex = firstVertex; // convenience;
+			else if (lastVertex != firstVertex)
+				throw new NotImplementedException("Can only remove one vertex for now");
+
+			var segmentCount = builder.GetSegmentCount(partIndex);
+
+			firstVertex %= segmentCount;
+
+			if (segmentCount <= 2)
+			{
+				builder.RemovePart(partIndex);
+				return;
+			}
+
+			if (firstVertex == 0) // vertex is start/end-point
+			{
+				// remove last segment, replace first segment:
+				var startPoint = builder.Parts[partIndex][segmentCount - 1].StartPoint;
+				var endPoint = builder.Parts[partIndex][0].EndPoint;
+				var straight = LineBuilderEx.CreateLineSegment(startPoint, endPoint);
+				builder.RemoveSegment(partIndex, segmentCount - 1, false); // leave gap
+				builder.ReplaceSegment(partIndex, 0, straight); // new segment closes gap
+			}
+			else // any other vertex
+			{
+				var startPoint = builder.Parts[partIndex][firstVertex - 1].StartPoint;
+				var endPoint = builder.Parts[partIndex][firstVertex].EndPoint;
+				var straight = LineBuilderEx.CreateLineSegment(startPoint, endPoint);
+				builder.RemoveSegment(partIndex, firstVertex, false); // leave gap
+				builder.ReplaceSegment(partIndex, firstVertex - 1, straight);
+			}
+		}
+
 		#region Moving vertices of a multipart geometry builder
 
 		public static void MovePart(this MultipartBuilderEx builder, int partIndex, double dx, double dy)
