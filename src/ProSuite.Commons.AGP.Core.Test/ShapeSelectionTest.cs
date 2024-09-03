@@ -3,6 +3,7 @@ using System.Threading;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Hosting;
 
 namespace ProSuite.Commons.AGP.Core.Test;
@@ -142,99 +143,7 @@ public class ShapeSelectionTest
 		// in terms of GetSelectedVertices this should be enough for now
 	}
 
-	private static MapPoint CreatePointXY(double x, double y)
-	{
-		return MapPointBuilderEx.CreateMapPoint(new Coordinate2D(x, y));
-	}
-
-	private static Multipoint CreateMultipointXY(params double[] xys)
-	{
-		var builder = new MultipointBuilderEx();
-		builder.HasZ = builder.HasM = builder.HasID = false;
-		for (int i = 0; i < xys.Length - 1; i += 2)
-		{
-			builder.AddPoint(new Coordinate2D(xys[i], xys[i + 1]));
-		}
-		return builder.ToGeometry();
-	}
-
-	private static Polyline CreatePolylineXY(params double[] xys)
-	{
-		var builder = new PolylineBuilderEx();
-		builder.HasZ = builder.HasM = builder.HasID = false;
-
-		var coords = new double[4];
-		int j = 0; // index into coords
-		bool startNewPart = true;
-
-		foreach (double value in xys)
-		{
-			if (double.IsNaN(value))
-			{
-				startNewPart = true;
-				j = 0; // flush coords
-			}
-			else
-			{
-				coords[j++] = value;
-
-				if (j == 4)
-				{
-					var p0 = new Coordinate2D(coords[0], coords[1]);
-					var p1 = new Coordinate2D(coords[2], coords[3]);
-					var seg = LineBuilderEx.CreateLineSegment(p0, p1);
-					builder.AddSegment(seg, startNewPart);
-					startNewPart = false;
-					// 2nd coord pair becomes 1st pair
-					coords[0] = coords[2];
-					coords[1] = coords[3];
-					// prepare for another coord pair:
-					j = 2;
-				}
-			}
-		}
-
-		return builder.ToGeometry();
-	}
-
-	private static Polygon CreatePolygonXY(params double[] xys)
-	{
-		var builder = new PolygonBuilderEx();
-		builder.HasZ = builder.HasM = builder.HasID = false;
-
-		var coords = new double[4];
-		int j = 0; // index into coords
-		bool startNewPart = true;
-
-		foreach (double value in xys)
-		{
-			if (double.IsNaN(value))
-			{
-				startNewPart = true;
-				j = 0; // flush coords
-			}
-			else
-			{
-				coords[j++] = value;
-
-				if (j == 4)
-				{
-					var p0 = new Coordinate2D(coords[0], coords[1]);
-					var p1 = new Coordinate2D(coords[2], coords[3]);
-					var seg = LineBuilderEx.CreateLineSegment(p0, p1);
-					builder.AddSegment(seg, startNewPart);
-					startNewPart = false;
-					// 2nd coord pair becomes 1st pair
-					coords[0] = coords[2];
-					coords[1] = coords[3];
-					// prepare for another coord pair:
-					j = 2;
-				}
-			}
-		}
-
-		return builder.ToGeometry();
-	}
+	#region BlockList tests
 
 	[Test]
 	public void CanBlockList()
@@ -384,4 +293,30 @@ public class ShapeSelectionTest
 		Assert.AreEqual(1, inverted4[0].First);
 		Assert.AreEqual(1, inverted4[0].Count);
 	}
+
+	#endregion
+
+	#region Private test utils
+
+	private static MapPoint CreatePointXY(double x, double y)
+	{
+		return MapPointBuilderEx.CreateMapPoint(new Coordinate2D(x, y));
+	}
+
+	private static Multipoint CreateMultipointXY(params double[] xys)
+	{
+		return GeometryFactory.CreateMultipointXY(xys);
+	}
+
+	private static Polyline CreatePolylineXY(params double[] xys)
+	{
+		return GeometryFactory.CreatePolylineXY(xys);
+	}
+
+	private static Polygon CreatePolygonXY(params double[] xys)
+	{
+		return GeometryFactory.CreatePolygonXY(xys);
+	}
+
+	#endregion
 }

@@ -476,13 +476,6 @@ public class GeometryUtilsTest
 		return MapPointBuilderEx.CreateMapPoint(x, y);
 	}
 
-	private static Multipoint CreateMultipointXY(params double[] coords)
-	{
-		var builder = new MultipointBuilderEx();
-		builder.AddPoints(MakeCoords(coords));
-		return builder.ToGeometry();
-	}
-
 	private static Polygon CreateUnitSquarePolygon()
 	{
 		//  1 #####    vertex order:
@@ -530,44 +523,19 @@ public class GeometryUtilsTest
 		}
 	}
 
+	private static Multipoint CreateMultipointXY(params double[] xys)
+	{
+		return GeometryFactory.CreateMultipointXY(xys);
+	}
+
 	private static Polyline CreatePolylineXY(params double[] xys)
 	{
-		// TODO Copied from ShapeSelectionTest --> move to GeometryFactory?!
-		var builder = new PolylineBuilderEx();
-		builder.HasZ = builder.HasM = builder.HasID = false;
+		return GeometryFactory.CreatePolylineXY(xys);
+	}
 
-		var coords = new double[4];
-		int j = 0; // index into coords
-		bool startNewPart = true;
-
-		foreach (double value in xys)
-		{
-			if (double.IsNaN(value))
-			{
-				startNewPart = true;
-				j = 0; // flush coords
-			}
-			else
-			{
-				coords[j++] = value;
-
-				if (j == 4)
-				{
-					var p0 = new Coordinate2D(coords[0], coords[1]);
-					var p1 = new Coordinate2D(coords[2], coords[3]);
-					var seg = LineBuilderEx.CreateLineSegment(p0, p1);
-					builder.AddSegment(seg, startNewPart);
-					startNewPart = false;
-					// 2nd coord pair becomes 1st pair
-					coords[0] = coords[2];
-					coords[1] = coords[3];
-					// prepare for another coord pair:
-					j = 2;
-				}
-			}
-		}
-
-		return builder.ToGeometry();
+	private static Polygon CreatePolygonXY(params double[] xys)
+	{
+		return GeometryFactory.CreatePolygonXY(xys);
 	}
 
 	#endregion
