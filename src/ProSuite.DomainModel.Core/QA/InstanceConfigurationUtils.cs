@@ -7,6 +7,7 @@ using ProSuite.Commons.Com;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
@@ -258,10 +259,15 @@ namespace ProSuite.DomainModel.Core.QA
 				}
 			}
 
-			domainTransactions.Reattach(datasets);
+			// TOP-5890: Only re-attach mapped entities. Dummy-Datasets (DatasetType.Null) fail:
+			var attachableDatasets =
+				datasets.Where(d => d.DatasetType != DatasetType.Null).ToList();
 
-			_msg.DebugStopTiming(watch, "Conditions loaded and reattached ({0:N0} datasets(s))",
-			                     datasets.Count);
+			domainTransactions.Reattach(attachableDatasets);
+
+			_msg.DebugStopTiming(
+				watch, "Conditions with {0} datasets loaded and reattached ({1} datasets(s))",
+				datasets.Count, attachableDatasets.Count);
 
 			return datasets;
 		}
