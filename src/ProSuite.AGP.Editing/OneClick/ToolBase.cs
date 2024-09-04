@@ -56,7 +56,11 @@ public abstract class ToolBase : MapTool
 	}
 
 	private List<Key> HandledKeys { get; } =
-		new(4) { Key.Escape, Key.F2, _keyLassoDraw, _keyPolygonDraw };
+		new(6)
+		{
+			Key.Escape, Key.LeftShift, Key.RightShift,
+			Key.F2, _keyLassoDraw, _keyPolygonDraw
+		};
 	
 	protected Point CurrentMousePosition;
 

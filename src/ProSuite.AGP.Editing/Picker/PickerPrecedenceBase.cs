@@ -54,7 +54,7 @@ namespace ProSuite.AGP.Editing.Picker
 			if (KeyboardUtils.IsShiftDown())
 			{
 				PressedKeys.Add(Key.LeftShift);
-				PressedKeys.Add(Key.LeftShift);
+				PressedKeys.Add(Key.RightShift);
 			}
 		}
 
@@ -66,11 +66,6 @@ namespace ProSuite.AGP.Editing.Picker
 		public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                        bool areaSelect = false)
 		{
-			if (PressedKeys.Contains(Key.LeftShift) || PressedKeys.Contains(Key.RightShift))
-			{
-				return PickerMode.ShowPicker;
-			}
-
 			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
 			{
 				return PickerMode.ShowPicker;
