@@ -14,6 +14,11 @@ public class GeometryFactoryTest
 	[OneTimeSetUp]
 	public void OneTimeSetUp()
 	{
+		// Helps core host apps (like unit tests) find dependencies like
+		// CoreInterop.dll, freetype.dll, etc. in the proper place and version
+		var installDir = ProRuntimeUtils.GetProInstallDir();
+		ProRuntimeUtils.AddBinDirectoryToPath(installDir);
+
 		CoreHostProxy.Initialize();
 	}
 
@@ -105,7 +110,7 @@ public class GeometryFactoryTest
 		Assert.False(polygon.IsEmpty);
 		Assert.AreEqual(1, polygon.PartCount);
 		Assert.AreEqual(5, polygon.PointCount);
-		//Assert.AreEqual(1.0, polygon.Area, delta); TODO DllNotFoundException
+		Assert.AreEqual(1.0, polygon.Area, delta);
 		Assert.AreEqual(4.0, polygon.Length, delta);
 
 		// 3 *--------*
@@ -120,7 +125,7 @@ public class GeometryFactoryTest
 			4, 1, 4, 2, 5, 2, 5, 1, 4, 1);
 		Assert.AreEqual(3, polygon.PartCount);
 		Assert.AreEqual(15, polygon.PointCount);
-		//Assert.AreEqual(9.0, polygon.Area, delta); TODO DllNotFoundException
+		Assert.AreEqual(9.0, polygon.Area, delta);
 		Assert.AreEqual(20.0, polygon.Length, delta);
 
 		// Need at least 4 coords for a (degenerate) part,
@@ -138,6 +143,6 @@ public class GeometryFactoryTest
 		Assert.AreEqual(1, polygon.PartCount);
 		Assert.AreEqual(3, polygon.PointCount);
 		Assert.AreEqual(sqrt2 + sqrt2, polygon.Length);
-		//Assert.AreEqual(0.0, polygon.Area, delta); // TODO DllNotFoundException
+		Assert.AreEqual(0.0, polygon.Area, delta);
 	}
 }

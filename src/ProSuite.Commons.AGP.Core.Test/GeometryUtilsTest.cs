@@ -17,6 +17,11 @@ public class GeometryUtilsTest
 	[OneTimeSetUp]
 	public void OneTimeSetUp()
 	{
+		// Helps core host apps (like unit tests) find dependencies like
+		// CoreInterop.dll, freetype.dll, etc. in the proper place and version
+		var installDir = ProRuntimeUtils.GetProInstallDir();
+		ProRuntimeUtils.AddBinDirectoryToPath(installDir);
+
 		CoreHostProxy.Initialize();
 	}
 
@@ -485,7 +490,7 @@ public class GeometryUtilsTest
 		// |   |
 		// 0---3
 		var unitSquare = CreatePolygonXY(0, 0, 0, 1, 1, 1, 1, 0, 0, 0);
-		//Assert.AreEqual(1.0, unitSquare.Area, delta); // TODO throws CoreInterop.dll not found
+		Assert.AreEqual(1.0, unitSquare.Area, delta);
 
 		builder = unitSquare.ToBuilder();
 		GeometryUtils.RemoveVertices(builder, 0, 2); // remove "regular" vertex
@@ -505,7 +510,7 @@ public class GeometryUtilsTest
 		// | \
 		// 0--2
 		var triangle = CreatePolygonXY(0, 0, 0, 1, 1, 0, 0, 0);
-		//Assert.AreEqual(0.5, unitSquare.Area, delta); // TODO throws CoreInterop.dll not found
+		Assert.AreEqual(0.5, triangle.Area, delta);
 
 		builder = triangle.ToBuilder();
 		GeometryUtils.RemoveVertices(builder, 0, 1);
@@ -515,7 +520,7 @@ public class GeometryUtilsTest
 
 		// 0===1  (degenerate polygon)
 		var degenerate = CreatePolygonXY(0, 0, 1, 1);
-		//Assert.AreEqual(0.0, degenerate.Area); // TODO throws CoreInterop.dll not found
+		Assert.AreEqual(0.0, degenerate.Area);
 		Assert.AreEqual(2 * sqrt2, degenerate.Length);
 
 		builder = degenerate.ToBuilder();
