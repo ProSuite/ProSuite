@@ -19,7 +19,7 @@ public partial class SqlExpressionBlazor : ComponentBase
 
 	public void OnClickResetValue()
 	{
-		Value = string.Empty;
+		SetValue(string.Empty);
 	}
 
 	public void OnSqlExpressionBuilderClicked()
@@ -28,13 +28,18 @@ public partial class SqlExpressionBlazor : ComponentBase
 
 		if (resultExpression != null)
 		{
-			Value = resultExpression;
+			SetValue(resultExpression);
 		}
 	}
 
 	private void OnInput(ChangeEventArgs args)
 	{
-		Value = args.Value?.ToString();
+		SetValue(args.Value?.ToString());
+	}
+
+	private void SetValue(string newValue)
+	{
+		Value = newValue;
 
 		// Necessary to trigger the dirty flag to enable saving
 		ExpressionChanged.InvokeAsync(Value);
