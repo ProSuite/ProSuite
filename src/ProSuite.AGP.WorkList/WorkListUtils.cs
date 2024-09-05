@@ -225,10 +225,10 @@ namespace ProSuite.AGP.WorkList
 
 			string result = workspaces[0].ConnectionString;
 
-			if (workspaces.Count > 0)
+			if (workspaces.Count > 1)
 			{
 				_msg.Info(
-					$"There are many issue geodatabases in {worklistDefinitionFile} but only one is expected. Taking the first one {result}");
+					$"There are several issue geodatabases in {worklistDefinitionFile} but only one is expected. Taking the first one {result}");
 			}
 			else
 			{
