@@ -7,6 +7,7 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -18,6 +19,7 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
@@ -25,7 +27,7 @@ using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
-	public abstract class AdvancedReshapeToolBase : ConstructionToolBase
+	public abstract class AdvancedReshapeToolBase : ConstructionToolBase, ISymbolizedSketchTool
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -41,7 +43,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		// - Connected lines reshape
 		// - Update feedback on toggle layer visibility
 
-		private AdvancedReshapeFeedback _feedback;
+		[CanBeNull] private AdvancedReshapeFeedback _feedback;
 
 		private Task<bool> _updateFeedbackTask;
 
@@ -119,9 +121,21 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override void OnToolActivatingCore()
 		{
-			_feedback = new AdvancedReshapeFeedback();
+			_feedback = new AdvancedReshapeFeedback(this);
+
+			if (MapUtils.HasSelection(ActiveMapView) &&
+			    ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology)
+			{
+				SetSketchSymbol(SelectionUtils.GetSelection(ActiveMapView.Map));
+			}
 
 			base.OnToolActivatingCore();
+		}
+
+		protected override void OnSelectionPhaseStarted()
+		{
+			// clear any remaining feedback or sketch symbol
+			_feedback?.Clear();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
@@ -231,11 +245,37 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		//	}
 		//}
 
+		protected override void SetSketchSymbol(Dictionary<MapMember, List<long>> selection)
+		{
+			Dictionary<BasicFeatureLayer, List<long>> dictionary =
+			selection.Where(pair => pair.Key is BasicFeatureLayer)
+			.ToDictionary(pair => (BasicFeatureLayer)pair.Key, pair => pair.Value);
+
+			IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
+			GetApplicableSelectedFeatures(dictionary);
+
+			if (SelectionUtils.GetFeatureCount(applicableSelection) != 1)
+			{
+				_feedback?.ClearSketchSymbol();
+				return;
+			}
+
+			// todo daro stop if more than one feature
+			(BasicFeatureLayer layer, IList<Feature> features) = applicableSelection.FirstOrDefault();
+
+			if (layer is not FeatureLayer featureLayer)
+			{
+				return;
+			}
+
+			_feedback?.SetSketchSymbol(featureLayer, Assert.NotNull(features.FirstOrDefault()));
+		}
+
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
 			Geometry sketchGeometry, EditingTemplate editTemplate, MapView activeView,
 			CancelableProgressor cancelableProgressor = null)
 		{
-			_feedback.Clear();
+			_feedback?.Clear();
 
 			// TODO: cancel all running background tasks...
 
@@ -316,7 +356,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override void OnSketchResetCore()
 		{
-			_feedback.Clear();
+			_feedback?.Clear(clearSketchSymbol: false);
 			_nonDefaultSideMode = false;
 		}
 
@@ -364,7 +404,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			if (sketchPolyline == null || sketchPolyline.IsEmpty || sketchPolyline.PointCount < 2)
 			{
-				_feedback?.Clear();
+				_feedback?.Clear(clearSketchSymbol: false);
 				return true;
 			}
 
@@ -543,6 +583,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			return await QueuedTaskUtils.Run(
 				       () => _feedback?.UpdatePreview(reshapeResult?.ResultFeatures));
+		}
+
+		public new MapView ActiveMapView => base.ActiveMapView;
+
+		public void SetSketchSymbol(CIMSymbolReference symbolReferencembol)
+		{
+			SketchSymbol = symbolReferencembol;
 		}
 	}
 }
