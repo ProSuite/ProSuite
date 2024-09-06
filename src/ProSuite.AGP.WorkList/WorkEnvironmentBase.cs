@@ -40,7 +40,7 @@ namespace ProSuite.AGP.WorkList
 
 			string fileName = string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
 
-			string definitionFilePath = GetDefinitionFile(fileName);
+			string definitionFilePath = GetDefinitionFileFromProjectFolder(fileName);
 
 			IWorkItemStateRepository stateRepository =
 				CreateStateRepositoryCore(definitionFilePath, uniqueName);
