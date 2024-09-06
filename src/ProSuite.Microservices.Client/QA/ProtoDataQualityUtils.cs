@@ -633,30 +633,6 @@ namespace ProSuite.Microservices.Client.QA
 
 				result = new ForeignKeyAssociation(
 					associationMsgName, cardinality, foreignKey, primaryKey);
-
-				result.End1.SetCloneId(associationMsg.End1Id);
-				result.End2.SetCloneId(associationMsg.End2Id);
-
-				if (result.End1.CanChangeDocumentAssociationEdit)
-				{
-					result.End1.DocumentAssociationEdit = associationMsg.End1DocumentEdit;
-				}
-
-				if (result.End2.CanChangeDocumentAssociationEdit)
-				{
-					result.End2.DocumentAssociationEdit = associationMsg.End2DocumentEdit;
-				}
-
-				result.End1.CascadeDeletion = associationMsg.End1CascadeDeletion;
-				result.End2.CascadeDeletion = associationMsg.End2CascadeDeletion;
-
-				result.End1.CopyPolicy = (CopyPolicy) associationMsg.End1CopyPolicy;
-				result.End2.CopyPolicy = (CopyPolicy) associationMsg.End2CopyPolicy;
-
-				result.End1.CascadeDeleteOrphans = associationMsg.End1CascadeDeleteOrphans;
-				result.End2.CascadeDeleteOrphans = associationMsg.End2CascadeDeleteOrphans;
-
-				result.SetCloneId(associationMsg.AssociationId);
 			}
 			else
 			{
@@ -678,6 +654,30 @@ namespace ProSuite.Microservices.Client.QA
 					originForeignKey.Name, (FieldType) originForeignKey.Type,
 					originPrimaryKeyAttribute);
 			}
+
+			result.End1.SetCloneId(associationMsg.End1Id);
+			result.End2.SetCloneId(associationMsg.End2Id);
+
+			if (result.End1.CanChangeDocumentAssociationEdit)
+			{
+				result.End1.DocumentAssociationEdit = associationMsg.End1DocumentEdit;
+			}
+
+			if (result.End2.CanChangeDocumentAssociationEdit)
+			{
+				result.End2.DocumentAssociationEdit = associationMsg.End2DocumentEdit;
+			}
+
+			result.End1.CascadeDeletion = associationMsg.End1CascadeDeletion;
+			result.End2.CascadeDeletion = associationMsg.End2CascadeDeletion;
+
+			result.End1.CopyPolicy = (CopyPolicy) associationMsg.End1CopyPolicy;
+			result.End2.CopyPolicy = (CopyPolicy) associationMsg.End2CopyPolicy;
+
+			result.End1.CascadeDeleteOrphans = associationMsg.End1CascadeDeleteOrphans;
+			result.End2.CascadeDeleteOrphans = associationMsg.End2CascadeDeleteOrphans;
+
+			result.SetCloneId(associationMsg.AssociationId);
 
 			return result;
 		}
