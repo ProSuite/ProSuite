@@ -131,7 +131,14 @@ namespace ProSuite.Commons.AGP.Carto
 
 			if (mapMember is IDisplayTable displayTable)
 			{
-				return Assert.NotNull(displayTable.GetTable());
+				Table table = displayTable.GetTable();
+				if (table == null)
+				{
+					throw new InvalidOperationException(
+						$"Layer {mapMember.Name} is invalid has no table");
+				}
+
+				return table;
 			}
 
 			throw new ArgumentException(
