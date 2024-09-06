@@ -17,7 +17,11 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.QA.WorkList;
 
-public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
+
+/// <summary>
+/// Implements the <see cref="IWorkListItemDatastore"/> for the issue file geodatabase schema.
+/// </summary>
+public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -25,7 +29,7 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 	private string _issueGdbPath;
 
-	public FgdbIssueWorkListItemDatastore(string workListFileOrIssueGdbPath)
+	public FileGdbIssueWorkListItemDatastore(string workListFileOrIssueGdbPath)
 	{
 		string gdbPath = null;
 		if (workListFileOrIssueGdbPath != null &&

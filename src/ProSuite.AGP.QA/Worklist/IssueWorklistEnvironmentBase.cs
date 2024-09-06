@@ -43,7 +43,7 @@ namespace ProSuite.AGP.QA.WorkList
 
 		protected IssueWorkListEnvironmentBase([CanBeNull] string path)
 		{
-			_workListItemDatastore = new FgdbIssueWorkListItemDatastore(path);
+			_workListItemDatastore = new FileGdbIssueWorkListItemDatastore(path);
 		}
 
 		public override string FileSuffix => ".iwl";
