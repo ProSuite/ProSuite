@@ -345,30 +345,23 @@ namespace ProSuite.Microservices.Client.QA
 			serviceProgress.ProgressType = (VerificationProgressType) progressMsg.ProgressType;
 			serviceProgress.ProgressStep = (VerificationProgressStep) progressMsg.ProgressStep;
 
-			serviceProgress.ProcessingMessage =
-				progressMsg.ProcessingStepMessage;
+			serviceProgress.ProcessingMessage = progressMsg.ProcessingStepMessage;
 
 			if (progressMsg.OverallProgressTotalSteps > 0)
 			{
-				serviceProgress.OverallProgressTotalSteps =
-					progressMsg.OverallProgressTotalSteps;
+				serviceProgress.OverallProgressTotalSteps = progressMsg.OverallProgressTotalSteps;
 			}
 
-			serviceProgress.OverallProgressCurrentStep =
-				progressMsg.OverallProgressCurrentStep;
+			serviceProgress.OverallProgressCurrentStep = progressMsg.OverallProgressCurrentStep;
 
 			if (progressMsg.DetailedProgressTotalSteps > 0)
 			{
-				serviceProgress.DetailedProgressTotalSteps =
-					progressMsg.DetailedProgressTotalSteps;
+				serviceProgress.DetailedProgressTotalSteps = progressMsg.DetailedProgressTotalSteps;
 			}
 
-			serviceProgress.DetailedProgressCurrentStep =
-				progressMsg.DetailedProgressCurrentStep;
+			serviceProgress.DetailedProgressCurrentStep = progressMsg.DetailedProgressCurrentStep;
 
-			if (progressMsg.CurrentBox != null &&
-			    progressMsg.CurrentBox.XMax > 0 &&
-			    progressMsg.CurrentBox.YMax > 0)
+			if (progressMsg.CurrentBox != null)
 			{
 				serviceProgress.CurrentTile = new EnvelopeXY(
 					progressMsg.CurrentBox.XMin, progressMsg.CurrentBox.YMin,

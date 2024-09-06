@@ -246,8 +246,14 @@ namespace ProSuite.Microservices.Client.QA
 					parameterMsg.WhereClause = datasetParamValue.FilterExpression ?? string.Empty;
 					parameterMsg.UsedAsReferenceData = datasetParamValue.UsedAsReferenceData;
 				}
+				else if (parameterValue is ScalarTestParameterValue scalarParamValue)
+				{
+					// Transport in invariant culture, it will be formatted on the client
+					parameterMsg.Value = scalarParamValue.PersistedStringValue;
+				}
 				else
 				{
+					// Does this ever happen?
 					parameterMsg.Value = parameterValue.StringValue;
 				}
 
