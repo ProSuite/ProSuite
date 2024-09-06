@@ -82,7 +82,7 @@ namespace ProSuite.AGP.QA.WorkList
 			RemoveFromMapCore(GetTablesCore());
 		}
 
-		protected override T GetContainerCore<T>()
+		protected override T GetLayerContainerCore<T>()
 		{
 			var groupLayerName = "QA";
 
@@ -102,7 +102,7 @@ namespace ProSuite.AGP.QA.WorkList
 
 		private void AddToMapCore(IEnumerable<Table> tables)
 		{
-			var groupLayer = GetContainerCore<GroupLayer>();
+			var groupLayer = GetLayerContainerCore<GroupLayer>();
 
 			foreach (var table in tables)
 			{
@@ -157,7 +157,8 @@ namespace ProSuite.AGP.QA.WorkList
 
 		private void RemoveFromMapCore(IEnumerable<Table> tables)
 		{
-			GroupLayer groupLayer = GetContainerCore<GroupLayer>();
+			// Search inside the QA group layer for the tables to remove (to allow for renaming)
+			GroupLayer groupLayer = GetLayerContainerCore<GroupLayer>();
 
 			var tableList = tables.ToList();
 
