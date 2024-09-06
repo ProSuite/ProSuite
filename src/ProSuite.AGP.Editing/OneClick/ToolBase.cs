@@ -14,6 +14,7 @@ using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
@@ -26,7 +27,7 @@ using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.OneClick;
 
-public abstract class ToolBase : MapTool
+public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -416,7 +417,7 @@ public abstract class ToolBase : MapTool
 		}
 		else
 		{
-			SketchSymbol = symbol.MakeSymbolReference();
+			SetSketchSymbol(symbol.MakeSymbolReference());
 		}
 	}
 
@@ -841,5 +842,12 @@ public abstract class ToolBase : MapTool
 	private bool InConstructionPhase()
 	{
 		return Cursor == ConstructionCursorCore;
+	}
+
+	public new MapView ActiveMapView => base.ActiveMapView;
+
+	public void SetSketchSymbol(CIMSymbolReference symbolReferencembol)
+	{
+		SketchSymbol = symbolReferencembol;
 	}
 }

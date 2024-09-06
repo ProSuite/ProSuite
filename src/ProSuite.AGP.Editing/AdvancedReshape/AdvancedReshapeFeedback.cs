@@ -2,17 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
 	public class AdvancedReshapeFeedback
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		[CanBeNull] private readonly ISymbolizedSketchTool _tool;
 		private IDisposable _openJawReplacedEndPointOverlay;
 
 		private IDisposable _polygonPreviewOverlayAdd;
@@ -28,6 +35,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			_addAreaSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
 			_removeAreaSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
+		}
+
+		public AdvancedReshapeFeedback(ISymbolizedSketchTool tool) : this()
+		{
+			_tool = tool;
 		}
 
 		public void UpdateOpenJawReplacedEndPoint([CanBeNull] MapPoint point)
@@ -79,8 +91,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return Task.FromResult(true);
 		}
 
-		public void Clear()
+		public void Clear(bool clearSketchSymbol = true)
 		{
+			if (clearSketchSymbol)
+			{
+				ClearSketchSymbol();
+			}
+
 			_openJawReplacedEndPointOverlay?.Dispose();
 			_openJawReplacedEndPointOverlay = null;
 
@@ -126,6 +143,45 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			polySymbol.SymbolLayers[1] = SymbolFactory.Instance.ConstructSolidFill(transparent);
 
 			return hollowCircle;
+		}
+
+		public bool CanSetSketchSymbol(FeatureLayer layer)
+		{
+			return GeometryUtils.TranslateEsriGeometryType(layer.ShapeType) ==
+			       GeometryType.Polyline;
+		}
+
+		public void SetSketchSymbol([NotNull] FeatureLayer layer, [CanBeNull] Feature feature)
+		{
+			Assert.NotNull(_tool, $"Ensure {nameof(ISymbolizedSketchTool)} is not null.");
+
+			if (! CanSetSketchSymbol(layer))
+			{
+				return;
+			}
+
+			if (feature == null)
+			{
+				ClearSketchSymbol();
+				return;
+			}
+
+			CIMSymbol symbol = layer.LookupSymbol(feature.GetObjectID(), _tool.ActiveMapView);
+
+			if (symbol == null)
+			{
+				_msg.Debug(
+					$"Cannot set sketch symbol: no symbol found for {GdbObjectUtils.GetDisplayValue(feature)}");
+			}
+			else
+			{
+				_tool.SetSketchSymbol(symbol.MakeSymbolReference());
+			}
+		}
+
+		public void ClearSketchSymbol()
+		{
+			_tool?.SetSketchSymbol(null);
 		}
 	}
 }

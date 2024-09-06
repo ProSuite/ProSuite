@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -78,6 +79,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			return await QueuedTaskUtils.Run(OnSketchModifiedCore);
+		}
+
+		protected override void OnSelectionPhaseStarted()
+		{
+			base.OnSelectionPhaseStarted();
 		}
 
 		protected override Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
@@ -297,10 +303,17 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			if (! CanUseSelection(ActiveMapView))
+			Dictionary<MapMember, List<long>> selection =
+				SelectionUtils.GetSelection(args.Selection);
+
+			if (! CanUseSelection(selection))
 			{
 				//LogPromptForSelection();
 				StartSelectionPhase();
+			}
+			else if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology)
+			{
+				SetSketchSymbol(selection);
 			}
 
 			// TODO: virtual RefreshFeedbackCoreAsync(), override in AdvancedReshape
@@ -332,6 +345,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		#endregion
 
+		// todo daro move to base?
+		protected virtual void SetSketchSymbol(Dictionary<MapMember, List<long>> selection) { }
+
 		protected abstract SketchGeometryType GetSketchGeometryType();
 
 		/// <summary>
@@ -356,17 +372,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		protected abstract void LogEnteringSketchMode();
-
-		/// <summary>
-		/// Determines whether the provided selection can be used by this tool.
-		/// </summary>
-		/// <param name="selection"></param>
-		/// <returns></returns>
-		protected virtual bool CanUseSelection(Dictionary<MapMember, List<long>> selection)
-		{
-			// TODO
-			return selection.Count > 0;
-		}
 
 		protected abstract Task<bool> OnEditSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
@@ -427,22 +432,23 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		/// <summary>
-		/// Determines whether the provided selection can be used by this tool.
-		/// </summary>
-		/// <param name="selection"></param>
-		/// <returns></returns>
-		private bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection)
-		{
-			var mapMemberDictionary = new Dictionary<MapMember, List<long>>(selection.Count);
+		//// todo daro drop
+		///// <summary>
+		///// Determines whether the provided selection can be used by this tool.
+		///// </summary>
+		///// <param name="selection"></param>
+		///// <returns></returns>
+		//private bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection)
+		//{
+		//	var mapMemberDictionary = new Dictionary<MapMember, List<long>>(selection.Count);
 
-			foreach (var keyValuePair in selection)
-			{
-				mapMemberDictionary.Add(keyValuePair.Key, keyValuePair.Value);
-			}
+		//	foreach (var keyValuePair in selection)
+		//	{
+		//		mapMemberDictionary.Add(keyValuePair.Key, keyValuePair.Value);
+		//	}
 
-			return CanUseSelection(mapMemberDictionary);
-		}
+		//	return CanUseSelection(mapMemberDictionary);
+		//}
 
 		private bool CanStartSketchPhase(IList<Feature> selectedFeatures)
 		{
