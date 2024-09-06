@@ -3,6 +3,7 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
@@ -24,18 +25,21 @@ namespace ProSuite.DomainServices.AO.QA
 		[NotNull] private readonly IQualityConditionRepository _qualityConditions;
 		[NotNull] private readonly IProjectRepository<TModel> _projects;
 		[NotNull] private readonly IDatasetRepository _datasets;
+		[NotNull] private readonly IAssociationRepository _associations;
 
 		public VerificationDataDictionary(
 			[NotNull] IDomainTransactionManager domainTransactions,
 			[NotNull] IQualitySpecificationRepository qualitySpecifications,
 			[NotNull] IQualityConditionRepository qualityConditions,
 			[NotNull] IProjectRepository<TModel> projects,
-			[NotNull] IDatasetRepository datasets)
+			[NotNull] IDatasetRepository datasets,
+			[NotNull] IAssociationRepository associations)
 		{
 			_qualitySpecifications = qualitySpecifications;
 			_qualityConditions = qualityConditions;
 			_projects = projects;
 			_datasets = datasets;
+			_associations = associations;
 		}
 
 		public IList<ProjectWorkspaceBase<Project<TModel>, TModel>> GetProjectWorkspaceCandidates(
@@ -93,6 +97,12 @@ namespace ProSuite.DomainServices.AO.QA
 		public IList<Dataset> GetDatasets(IList<int> datasetIds)
 		{
 			return _datasets.Get(datasetIds);
+		}
+
+		public IList<Association> GetAssociations(IList<int> referencedDatasetIds)
+		{
+			Assert.NotNull(_associations, "Association repository has not been set up.");
+			return _associations.GetByReferencedDatasetIds(referencedDatasetIds);
 		}
 
 		[NotNull]
