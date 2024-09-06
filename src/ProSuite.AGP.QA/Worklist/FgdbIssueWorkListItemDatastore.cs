@@ -23,29 +23,33 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 	private readonly string _domainName = "CORRECTION_STATUS_CD";
 
-	private string _path;
+	private string _issueGdbPath;
 
-	public FgdbIssueWorkListItemDatastore(string path)
+	public FgdbIssueWorkListItemDatastore(string workListFileOrIssueGdbPath)
 	{
 		string gdbPath = null;
-		if (path != null && path.EndsWith(".iwl", StringComparison.InvariantCultureIgnoreCase))
+		if (workListFileOrIssueGdbPath != null &&
+		    workListFileOrIssueGdbPath.EndsWith(
+			    ".iwl", StringComparison.InvariantCultureIgnoreCase))
 		{
 			// It's the definition file
-			if (! ContainsValidIssueGdbPath(path, out gdbPath, out string message))
+			if (! ContainsValidIssueGdbPath(workListFileOrIssueGdbPath, out gdbPath,
+			                                out string message))
 			{
 				throw new InvalidOperationException(
-					$"The issue work list {path} references a geodatabase that does not exist.");
+					$"The issue work list {workListFileOrIssueGdbPath} references a geodatabase that does not exist.");
 			}
 
-			_msg.DebugFormat("Extracted issue gdb path from {0}: {1}", path, gdbPath);
+			_msg.DebugFormat("Extracted issue gdb path from {0}: {1}", workListFileOrIssueGdbPath,
+			                 gdbPath);
 		}
 		else
 		{
 			// Assume it is already an issue.gdb path:
-			gdbPath = path;
+			gdbPath = workListFileOrIssueGdbPath;
 		}
 
-		_path = gdbPath;
+		_issueGdbPath = gdbPath;
 	}
 
 	#region Implementation of IWorkListItemDatastore
@@ -55,11 +59,12 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		message = null;
 
 		// TODO: Can the path really be null?
-		if (_path != null && _path.EndsWith(".iwl", StringComparison.InvariantCultureIgnoreCase))
+		if (_issueGdbPath != null &&
+		    _issueGdbPath.EndsWith(".iwl", StringComparison.InvariantCultureIgnoreCase))
 		{
 			// It's the definition file
-			string iwlFilePath = _path;
-			if (! ContainsValidIssueGdbPath(_path, out string _, out message))
+			string iwlFilePath = _issueGdbPath;
+			if (! ContainsValidIssueGdbPath(_issueGdbPath, out string _, out message))
 			{
 				return false;
 			}
@@ -70,16 +75,16 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 	public IEnumerable<Table> GetTables()
 	{
-		if (string.IsNullOrEmpty(_path))
+		if (string.IsNullOrEmpty(_issueGdbPath))
 		{
-			return Enumerable.Empty<Table>();
+			return [];
 		}
 
 		// todo daro: ensure layers are not already in map
 		// todo daro: inline
 		using Geodatabase geodatabase =
 			new Geodatabase(
-				new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)));
+				new FileGeodatabaseConnectionPath(new Uri(_issueGdbPath, UriKind.Absolute)));
 
 		return DatasetUtils.OpenTables(geodatabase, IssueGdbSchema.IssueFeatureClassNames)
 		                   .ToList();
@@ -87,9 +92,9 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 	public async Task<bool> TryPrepareSchema()
 	{
-		if (_path == null)
+		if (_issueGdbPath == null)
 		{
-			_msg.Debug($"{nameof(_path)} is null");
+			_msg.Debug($"{nameof(_issueGdbPath)} is null");
 			return false;
 		}
 
@@ -97,25 +102,26 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 		using (Geodatabase geodatabase =
 		       new Geodatabase(
-			       new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)))
+			       new FileGeodatabaseConnectionPath(new Uri(_issueGdbPath, UriKind.Absolute)))
 		      )
 		{
 			if (geodatabase.GetDomains()
 			               .Any(domain => string.Equals(_domainName, domain.GetName())))
 			{
-				_msg.Debug($"Domain {_domainName} already exists in {_path}");
+				_msg.Debug($"Domain {_domainName} already exists in {_issueGdbPath}");
 				return true;
 			}
 		}
 
 		// the GP tool is going to fail on creating a domain with the same name
 		await Task.WhenAll(
-			GeoprocessingUtils.CreateDomainAsync(_path, _domainName,
+			GeoprocessingUtils.CreateDomainAsync(_issueGdbPath, _domainName,
 			                                     "Correction status for work list"),
 			GeoprocessingUtils.AddCodedValueToDomainAsync(
-				_path, _domainName, (int) IssueCorrectionStatus.NotCorrected, "Not Corrected"),
+				_issueGdbPath, _domainName, (int) IssueCorrectionStatus.NotCorrected,
+				"Not Corrected"),
 			GeoprocessingUtils.AddCodedValueToDomainAsync(
-				_path, _domainName, (int) IssueCorrectionStatus.Corrected, "Corrected"));
+				_issueGdbPath, _domainName, (int) IssueCorrectionStatus.Corrected, "Corrected"));
 
 		_msg.DebugStopTiming(watch, "Prepared schema - domain");
 
@@ -131,6 +137,13 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 	                                              params Attributes[] attributes)
 	{
 		return new AttributeReader(definition, attributes);
+	}
+
+	public string SuggestWorkListGroupName()
+	{
+		string directoryName = Path.GetDirectoryName(_issueGdbPath);
+
+		return Path.GetFileName(directoryName);
 	}
 
 	#endregion
