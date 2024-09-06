@@ -25,11 +25,15 @@ namespace ProSuite.AGP.WorkList
 
 		public abstract string FileSuffix { get; }
 
+		protected string DisplayName { get; set; }
+
 		[NotNull]
 		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName,
 		                                                 [CanBeNull] string displayName = null)
 		{
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
+
+			DisplayName = displayName ?? SuggestWorkListName();
 
 			if (! await TryPrepareSchemaCoreAsync())
 			{
@@ -38,7 +42,9 @@ namespace ProSuite.AGP.WorkList
 
 			Stopwatch watch = Stopwatch.StartNew();
 
-			string fileName = string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
+			string
+				fileName =
+					DisplayName; // string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
 
 			string definitionFilePath = GetDefinitionFileFromProjectFolder(fileName);
 
@@ -55,11 +61,16 @@ namespace ProSuite.AGP.WorkList
 
 			IWorkList result = CreateWorkListCore(
 				CreateItemRepositoryCore(tables, stateRepository),
-				uniqueName, displayName);
+				uniqueName, DisplayName);
 
 			_msg.DebugFormat("Created work list {0}", uniqueName);
 
 			return result;
+		}
+
+		protected virtual string SuggestWorkListName()
+		{
+			return null;
 		}
 
 		protected virtual Task<IList<Table>> PrepareReferencedTables()
