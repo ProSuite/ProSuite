@@ -18,4 +18,8 @@
 		<RootNamespace>ESRI.ArcGIS.Geometry</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+  </ItemGroup>
+
 </Project>

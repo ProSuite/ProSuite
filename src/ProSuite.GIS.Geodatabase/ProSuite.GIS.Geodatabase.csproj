@@ -17,6 +17,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
     <ProjectReference Include="..\ProSuite.GIS.Geodatabase.API\ProSuite.GIS.Geodatabase.API.csproj" />

@@ -19,6 +19,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.GIS.Geometry.API\ProSuite.GIS.Geometry.API.csproj" />
   </ItemGroup>
