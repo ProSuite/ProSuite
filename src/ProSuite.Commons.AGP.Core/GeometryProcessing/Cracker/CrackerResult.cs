@@ -1,11 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker
-
 {
 	public class CrackerResult
 	{
