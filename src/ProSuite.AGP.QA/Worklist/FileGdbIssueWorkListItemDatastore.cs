@@ -81,7 +81,7 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 	{
 		if (string.IsNullOrEmpty(_issueGdbPath))
 		{
-			return [];
+			return Enumerable.Empty<Table>();
 		}
 
 		// todo daro: ensure layers are not already in map
