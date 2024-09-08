@@ -123,8 +123,14 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 						_msg.DebugFormat("Geometry: {0}",
 						                 spatialFilter.FilterGeometry.GeometryType);
 						_msg.DebugFormat("SpatialRel: {0}", spatialFilter.SpatialRelationship);
+
+						// TODO: Remove once 3.0 is de-supported
+						// TODO: Define compilation symbol / variable in project for Pro versions
+#if DEBUG
 						_msg.DebugFormat("SpatialRelDescription: {0}",
 						                 spatialFilter.SpatialRelationshipDescription);
+#endif
+
 						_msg.DebugFormat("SearchOrder: {0}", spatialFilter.SearchOrder);
 					}
 				}
@@ -305,8 +311,14 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			if (spatialFilter != null)
 			{
 				sb.AppendLine($"SpatialRel: {spatialFilter.SpatialRelationship}");
+
+				// TODO: Remove once 3.0 is de-supported
+				// TODO: Define compilation symbol / variable in project for Pro versions
+#if DEBUG
 				sb.AppendLine(
 					$"SpatialRelDescription: {spatialFilter.SpatialRelationshipDescription}");
+#endif
+
 				sb.AppendLine($"SearchOrder: {spatialFilter.SearchOrder}");
 
 				if (spatialFilter.FilterGeometry != null)

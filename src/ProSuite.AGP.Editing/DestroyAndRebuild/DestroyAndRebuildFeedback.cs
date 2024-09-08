@@ -32,6 +32,7 @@ public class DestroyAndRebuildFeedback
 	{
 		const SymbolUtils.FillStyle noFill = SymbolUtils.FillStyle.Null;
 		var blue = ColorFactory.Instance.CreateRGBColor(0, 0, 200);
+		var red = ColorFactory.Instance.CreateRGBColor(255, 0, 0);
 
 		_pointSymbol = QueuedTask
 		               .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
@@ -43,7 +44,7 @@ public class DestroyAndRebuildFeedback
 			                         blue, 8, SimpleMarkerStyle.Circle)).Result;
 		_endPointSymbol = QueuedTask
 		                  .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-			                       blue, 12, SimpleMarkerStyle.Diamond)).Result;
+			                       red, 12, SimpleMarkerStyle.Diamond)).Result;
 
 		var stroke = SymbolUtils.CreateSolidStroke(blue, 2.0);
 		_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
