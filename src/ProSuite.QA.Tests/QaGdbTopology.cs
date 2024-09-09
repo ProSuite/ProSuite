@@ -285,8 +285,7 @@ namespace ProSuite.QA.Tests
 				{
 					if (! errorFeature.IsException && ! errorFeature.IsDeleted)
 					{
-						string topologyName = ((IDataset) topology).Name;
-						string description = $"{GetRuleName(rule)} ({topologyName})";
+						string description = $"{GetRuleName(rule)} ({GetName(topology)})";
 
 						errorCount += ReportError(
 							description, GetInvolvedRows(errorFeature),
@@ -422,18 +421,29 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			IPolygon dirtyArea = topology.DirtyArea[GetAsPolygon(geometry)];
+			IPolygon dirtyArea = null;
+			try
+			{
+				dirtyArea = topology.DirtyArea[GetAsPolygon(geometry)];
+			}
+			catch (COMException comException)
+			{
+				// For example System.Runtime.InteropServices.COMException (0x80046197): 0x80046197
+				// happens if the topology has a schema change and must be validated as schema owner
+				// in the un-versioned state
+				throw new InvalidOperationException(
+					$"Error getting dirty areas for topology {GetName(topology)}. Try validating " +
+					$"the topology in ArcGIS as schema owner.", comException);
+			}
 
 			if (dirtyArea == null || dirtyArea.IsEmpty)
 			{
 				return NoError;
 			}
 
-			string topologyName = ((IDataset) topology).Name;
-
 			IssueCode issueCode;
 			string description =
-				GetErrorDescription(topologyName, validationException, out issueCode);
+				GetErrorDescription(GetName(topology), validationException, out issueCode);
 
 			return ReportError(
 				description, GetInvolvedDatasets(topology),
@@ -499,6 +509,11 @@ namespace ProSuite.QA.Tests
 			}
 
 			return GeometryFactory.CreatePolygon(envelope);
+		}
+
+		private static string GetName(ITopology topology)
+		{
+			return ((IDataset) topology).Name;
 		}
 	}
 }
