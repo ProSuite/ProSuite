@@ -119,37 +119,16 @@ namespace ProSuite.QA.TestFactories
 			return result;
 		}
 
-		//Change to DefinitionVersion below once this derives from QaFactoryBase again
 		protected override void SetPropertyValue(object test, TestParameter testParameter,
 		                                         object value)
 		{
+			var factoryDef = (QaGdbConstraintFactoryDefinition) FactoryDefinition;
 			var ignoredParameters = new[]
 			                        {
-				                        _allowNullValuesForCodedValueDomains,
-				                        _allowNullValuesForRangeDomains,
-				                        _fields
+				                        factoryDef.AllowNullValuesForCodedValueDomains,
+				                        factoryDef.AllowNullValuesForRangeDomains,
+				                        factoryDef.FieldsParameterName
 			                        };
-
-			if (ignoredParameters.Any(
-				    param => string.Equals(testParameter.Name, param,
-				                           StringComparison.OrdinalIgnoreCase)))
-			{
-				return;
-			}
-
-			base.SetPropertyValue(test, testParameter, value);
-		}
-
-		//protected override void SetPropertyValue(object test, TestParameter testParameter,
-		//                                         object value)
-		//{
-		//	var factoryDef = (QaGdbConstraintFactoryDefinition) FactoryDefinition;
-		//	var ignoredParameters = new[]
-		//	                        {
-		//		                        factoryDef.AllowNullValuesForCodedValueDomains,
-		//		                        factoryDef.AllowNullValuesForRangeDomains,
-		//		                        factoryDef.FieldsParameterName
-		//	                        };
 
 			if (ignoredParameters.Any(
 				    param => string.Equals(testParameter.Name, param,
