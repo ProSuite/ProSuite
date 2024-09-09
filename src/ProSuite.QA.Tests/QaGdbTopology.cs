@@ -55,6 +55,12 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaGdbTopology_featureClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass> featureClasses)
 			: this(GetTopologies(featureClasses), featureClasses) { }
+
+		[InternallyUsedTest]
+		public QaGdbTopology([NotNull] QaGdbTopologyDefinition definition)
+			: this(GetTopologies(definition),
+			       definition.FeatureClasses.Cast<IReadOnlyFeatureClass>()) { }
+
 		private QaGdbTopology([NotNull] IList<ITopology> topologies,
 		                      [NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses)
 			: base(featureClasses)
@@ -151,6 +157,24 @@ namespace ProSuite.QA.Tests
 
 			return topologies;
 		}
+
+		private static IList<ITopology> GetTopologies([NotNull] QaGdbTopologyDefinition definition)
+		{
+			if (definition.FeatureClasses.Count == 0)
+			{
+				if (definition.Topology != null)
+				{
+					TopologyReference topoReference = (TopologyReference) definition.Topology;
+					return new List<ITopology> { topoReference.Topology };
+				}
+
+				throw new ArgumentException(
+					"Either the topology or better the feature classes must be defined.");
+			}
+
+			return GetTopologies(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>());
+		}
+
 		private static IFeatureClass ExpectFeatureClass(IReadOnlyFeatureClass featureClass)
 		{
 			ReadOnlyFeatureClass roFeatureClass = featureClass as ReadOnlyFeatureClass;
