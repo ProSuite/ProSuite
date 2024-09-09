@@ -4707,6 +4707,11 @@ namespace ProSuite.QA.Tests.Test
 					continue;
 				}
 
+				if (property.DeclaringType == typeof(Delegate))
+				{
+					continue;
+				}
+
 				object value1 = property.GetValue(first, null);
 				object value2 = property.GetValue(second, null);
 
