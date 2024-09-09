@@ -6,9 +6,9 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
@@ -16,7 +16,7 @@ using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test.TestData
 {
-	public class InMemoryTestDataModel : MasterDatabaseDatasetContext, IDatasetContext
+	public class TestDataModel : MasterDatabaseDatasetContext, IDatasetContext
 	{
 		private readonly IFeatureWorkspace _workspace;
 		private readonly SimpleModel _model;
@@ -30,10 +30,18 @@ namespace ProSuite.QA.Tests.Test.TestData
 		private const string _terrainName = "terrain";
 		private const string _mosaicName = "mosaic";
 		private const string _featureClassMultipatch = "multipatch";
+		private const string _topology = "topology";
 
-		public InMemoryTestDataModel(string name)
+		/// <summary>
+		/// Creates a new geodatabase with test data and its associated model.
+		/// In-memory geodatabase is used by default, but it does not support topologies.
+		/// </summary>
+		/// <param name="name"></param>
+		/// <param name="inMemory"></param>
+		public TestDataModel(string name,
+		                     bool inMemory = true)
 		{
-			_workspace = CreateInMemoryWorkspace(name);
+			_workspace = CreateFullGeodatabase(name, inMemory);
 
 			_model = new SimpleModel(name, (IWorkspace) _workspace);
 
@@ -44,6 +52,7 @@ namespace ProSuite.QA.Tests.Test.TestData
 			_model.AddDataset(new ModelVectorDataset(_featureClassFootprints));
 			_model.AddDataset(new VerifiedRasterDataset(_rasterName));
 			_model.AddDataset(new VerifiedRasterMosaicDataset(_mosaicName));
+			_model.AddDataset(new VerifiedTopologyDataset(_topology));
 			_model.AddDataset(new ModelVectorDataset(_featureClassMultipatch));
 			_model.AddDataset(CreateTerrainDataset());
 		}
@@ -72,7 +81,7 @@ namespace ProSuite.QA.Tests.Test.TestData
 
 		public VectorDataset GetPointDataset()
 		{
-			return (VectorDataset)_model.GetDatasetByModelName(_featureClassPoints);
+			return (VectorDataset) _model.GetDatasetByModelName(_featureClassPoints);
 		}
 
 		public VectorDataset GetVectorDataset()
@@ -107,7 +116,12 @@ namespace ProSuite.QA.Tests.Test.TestData
 
 		public VectorDataset GetMultipatchDataset()
 		{
-			return (VectorDataset)_model.GetDatasetByModelName(_featureClassMultipatch);
+			return (VectorDataset) _model.GetDatasetByModelName(_featureClassMultipatch);
+		}
+
+		public TopologyDataset GetTopologyDataset()
+		{
+			return (TopologyDataset) _model.GetDatasetByModelName(_topology);
 		}
 
 		private SimpleTerrainDataset CreateTerrainDataset()
@@ -130,11 +144,10 @@ namespace ProSuite.QA.Tests.Test.TestData
 			return terrainDataset;
 		}
 
-		private static IFeatureWorkspace CreateInMemoryWorkspace(string name)
+		private static IFeatureWorkspace CreateFullGeodatabase(string name,
+		                                                       bool inMemory)
 		{
-			IWorkspaceName wsName = WorkspaceUtils.CreateInMemoryWorkspace(name);
-
-			IFeatureWorkspace workspace = (IFeatureWorkspace) ((IName) wsName).Open();
+			IFeatureWorkspace workspace = CreateWorkspace(name, inMemory);
 
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95,
@@ -156,7 +169,8 @@ namespace ProSuite.QA.Tests.Test.TestData
 			IFieldsEdit lineFields = new FieldsClass();
 			lineFields.AddField(FieldUtils.CreateOIDField());
 			lineFields.AddField(
-				FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolyline, sr, 0D, true, true));
+				FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolyline, sr, 0D, true,
+				                            true));
 			lineFields.AddField(
 				FieldUtils.CreateField("MY_DATE_FIELD1", esriFieldType.esriFieldTypeDate));
 			lineFields.AddField(
@@ -197,7 +211,32 @@ namespace ProSuite.QA.Tests.Test.TestData
 			CreateElevationRasterDataset(rasterWorkspace, _rasterName, "TIFF", dataEnvelope, 100.0,
 			                             sr);
 
+			if (! inMemory)
+			{
+				// The FGDB supports the topology!
+				IFeatureDataset featureDataset =
+					DatasetUtils.CreateFeatureDataset(workspace, "TopoDataset", sr);
+
+				ITopologyContainer topologyContainer = (ITopologyContainer) featureDataset;
+
+				topologyContainer.CreateTopology(_topology, 0.01, 1000, null);
+			}
+
 			return workspace;
+		}
+
+		private static IFeatureWorkspace CreateWorkspace(string name,
+		                                                 bool inMemory)
+		{
+			if (inMemory)
+			{
+				IWorkspaceName wsName = WorkspaceUtils.CreateInMemoryWorkspace(name);
+
+				IFeatureWorkspace workspace = (IFeatureWorkspace) ((IName) wsName).Open();
+				return workspace;
+			}
+
+			return TestWorkspaceUtils.CreateTestFgdbWorkspace(name);
 		}
 
 		private static IRasterDataset CreateElevationRasterDataset(

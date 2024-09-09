@@ -232,7 +232,8 @@ namespace ProSuite.QA.Tests.Test
 					                             typeof(QaWithinBox),
 					                             typeof(QaWithinZRange),
 					                             typeof(QaZDifferenceOther),
-					                             typeof(QaZDifferenceSelf)
+					                             typeof(QaZDifferenceSelf),
+					                             typeof(QaGdbTopology)
 				                             };
 				return refactoredTypes;
 			}
@@ -314,82 +315,82 @@ namespace ProSuite.QA.Tests.Test
 			object[] ConstructorValues = null,
 			Dictionary<string, object> OptionalParamValues = null);
 
-		private static List<TestDefinitionCase> DefineTestCases(InMemoryTestDataModel model)
+		private static List<TestDefinitionCase> DefineTestCases(TestDataModel model)
 		{
 			var testCases = new List<TestDefinitionCase>();
 
 			// Test cases with automatic parameter value generation:
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(Qa3dConstantZ)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaBorderSense)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCentroids)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaContainsOther)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCoplanarRings)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCrossesOther)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCrossesSelf)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaExtent)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaFlowLogic)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGdbConstraint)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaLineConnectionFieldValues)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxArea)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxLength)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxVertexCount)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMeasures)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMeasuresAtPoints)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinArea)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinIntersect)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinLength)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinMeanSegmentLength)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinNodeDistance)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMonotonicMeasures)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpAllowedPartTypes)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpConstantPointIdsPerRing)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpHorizontalAzimuths)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpHorizontalHeights)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpHorizontalPerpendicular)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpVerticalFaces)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMultipart)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustIntersectOther)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustTouchOther)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustTouchSelf)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNoClosedPaths)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNonEmptyGeometry)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOrphanNode)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsSelf)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsOther)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaPointOnLine)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRequiredFields)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRouteMeasuresContinuous)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRouteMeasuresUnique)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldAliases)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainCodedValues)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainNameRegex)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainNames)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomains)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldNameRegex)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldNames)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldProperties)));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(Qa3dConstantZ), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaBorderSense), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCentroids), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaConstraint), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaContainsOther), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCoplanarRings), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCrossesOther), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaCrossesSelf), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDangleCount), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaDuplicateGeometrySelf), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaEmptyNotNullTextFields), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaExtent), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaFlowLogic), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaForeignKey), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaGdbConstraint), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaHorizontalSegments), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaLineConnectionFieldValues), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxArea), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxLength), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMaxVertexCount), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMeasures), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMeasuresAtPoints), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinArea), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinIntersect), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinLength), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinMeanSegmentLength), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMinNodeDistance), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMonotonicMeasures), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpAllowedPartTypes), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpConstantPointIdsPerRing), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpHorizontalAzimuths), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpHorizontalHeights), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpHorizontalPerpendicular), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMpVerticalFaces), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMultipart), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustIntersectOther), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustTouchOther), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaMustTouchSelf), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNoClosedPaths), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNonEmptyGeometry), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOrphanNode), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsSelf), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaOverlapsOther), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaPointOnLine), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRequiredFields), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRouteMeasuresContinuous), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaRouteMeasuresUnique), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldAliases), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainCodedValues), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainNameRegex), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomainNames), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldDomains), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldNameRegex), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldNames), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaFieldProperties), model));
 			testCases.AddRange(
-				CreateDefaultValueTestCases(typeof(QaSchemaFieldPropertiesFromTable)));
+				CreateDefaultValueTestCases(typeof(QaSchemaFieldPropertiesFromTable), model));
 			testCases.AddRange(
-				CreateDefaultValueTestCases(typeof(QaSchemaReservedFieldNameProperties)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaReservedFieldNames)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSegmentLength)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfaceSpikes)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfaceVertex)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNoTouchingParts)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaUnique)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaUnreferencedRows)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaValidNonLinearSegments)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaValue)));
-			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaWithinZRange)));
+				CreateDefaultValueTestCases(typeof(QaSchemaReservedFieldNameProperties), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSchemaReservedFieldNames), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSegmentLength), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSimpleGeometry), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfacePipe), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfaceSpikes), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaSurfaceVertex), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaNoTouchingParts), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaUnique), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaUnreferencedRows), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaValidNonLinearSegments), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaValue), model));
+			testCases.AddRange(CreateDefaultValueTestCases(typeof(QaWithinZRange), model));
 
 			//
 			// Special Cases
@@ -460,13 +461,16 @@ namespace ProSuite.QA.Tests.Test
 			AddQaZDifferenceOtherCases(model, testCases);
 			AddQaZDifferenceSelfCases(model, testCases);
 
+			// Cannot be tested using an in-memory workspace:
+			AddQaGdbTopologyCases(model, testCases);
+
 			return testCases;
 		}
 
 		[Test]
 		public void AreParametersEqual()
 		{
-			var model = new InMemoryTestDataModel("simple model");
+			var model = new TestDataModel("simple_model", false);
 
 			List<TestDefinitionCase> testCases = DefineTestCases(model);
 
@@ -573,7 +577,7 @@ namespace ProSuite.QA.Tests.Test
 
 		#region Methods to add special TestDefinitionCases
 
-		private static void AddQaContainedPointsCountCases(InMemoryTestDataModel model,
+		private static void AddQaContainedPointsCountCases(TestDataModel model,
 		                                                   ICollection<TestDefinitionCase>
 			                                                   testCases)
 		{
@@ -648,7 +652,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaCurveCases(InMemoryTestDataModel model,
+		private static void AddQaCurveCases(TestDataModel model,
 		                                    ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -663,7 +667,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		private static void AddQaDateFieldsWithoutTimeCases(
-			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
+			TestDataModel model, ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaDateFieldsWithoutTime), 0,
 			                                     new object[]
@@ -679,7 +683,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaEdgeMatchBorderingLinesCases(InMemoryTestDataModel model,
+		private static void AddQaEdgeMatchBorderingLinesCases(TestDataModel model,
 		                                                      ICollection<TestDefinitionCase>
 			                                                      testCases)
 		{
@@ -731,7 +735,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaEdgeMatchBorderingPointsCases(InMemoryTestDataModel model,
+		private static void AddQaEdgeMatchBorderingPointsCases(TestDataModel model,
 		                                                       ICollection<TestDefinitionCase>
 			                                                       testCases)
 		{
@@ -786,7 +790,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaEdgeMatchCrossingAreasCases(InMemoryTestDataModel model,
+		private static void AddQaEdgeMatchCrossingAreasCases(TestDataModel model,
 		                                                     ICollection<TestDefinitionCase>
 			                                                     testCases)
 		{
@@ -860,7 +864,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaEdgeMatchCrossingLinesCases(InMemoryTestDataModel model,
+		private static void AddQaEdgeMatchCrossingLinesCases(TestDataModel model,
 		                                                     ICollection<TestDefinitionCase>
 			                                                     testCases)
 		{
@@ -921,7 +925,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		private static void AddQaExportTablesCases(
-			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
+			TestDataModel model, ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("ExportTileIds", false);
@@ -939,7 +943,17 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaFullCoincidenceCases(InMemoryTestDataModel model,
+		private static void AddQaGdbTopologyCases(TestDataModel model,
+		                                          List<TestDefinitionCase> testCases)
+		{
+			testCases.Add(new TestDefinitionCase(typeof(QaGdbTopology), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetTopologyDataset()
+			                                     }));
+		}
+
+		private static void AddQaFullCoincidenceCases(TestDataModel model,
 		                                              ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1023,7 +1037,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		private static void AddQaGdbReleaseCases(
-			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
+			TestDataModel model, ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaGdbRelease), 0,
 			                                     new object[]
@@ -1037,7 +1051,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		private static void AddQaGeometryConstraintCases(
-			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
+			TestDataModel model, ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaGeometryConstraint), 0,
 			                                     new object[]
@@ -1048,7 +1062,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		private static void AddQaGroupConnectedCases(
-			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
+			TestDataModel model, ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("ReportIndividualGaps", true);
@@ -1086,7 +1100,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		private static void AddQaGroupConstraintsCases(
-			InMemoryTestDataModel model, ICollection<TestDefinitionCase> testCases)
+			TestDataModel model, ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("ExistsRowGroupFilters", new[] { "String1" });
@@ -1148,7 +1162,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaInteriorIntersectsOtherCases(InMemoryTestDataModel model,
+		private static void AddQaInteriorIntersectsOtherCases(TestDataModel model,
 		                                                      ICollection<TestDefinitionCase>
 			                                                      testCases)
 		{
@@ -1203,7 +1217,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaInteriorIntersectsSelfCases(InMemoryTestDataModel model,
+		private static void AddQaInteriorIntersectsSelfCases(TestDataModel model,
 		                                                     ICollection<TestDefinitionCase>
 			                                                     testCases)
 		{
@@ -1258,7 +1272,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaInteriorRingsCases(InMemoryTestDataModel model,
+		private static void AddQaInteriorRingsCases(TestDataModel model,
 		                                            ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1275,7 +1289,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaIntersectionMatrixOtherCases(InMemoryTestDataModel model,
+		private static void AddQaIntersectionMatrixOtherCases(TestDataModel model,
 		                                                      ICollection<TestDefinitionCase>
 			                                                      testCases)
 		{
@@ -1344,7 +1358,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaIntersectionMatrixSelfCases(InMemoryTestDataModel model,
+		private static void AddQaIntersectionMatrixSelfCases(TestDataModel model,
 		                                                     ICollection<TestDefinitionCase>
 			                                                     testCases)
 		{
@@ -1396,7 +1410,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaIntersectsOtherCases(InMemoryTestDataModel model,
+		private static void AddQaIntersectsOtherCases(TestDataModel model,
 		                                              ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1451,7 +1465,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaIntersectsSelfCases(InMemoryTestDataModel model,
+		private static void AddQaIntersectsSelfCases(TestDataModel model,
 		                                             ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1495,7 +1509,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaIsCoveredByOtherCases(InMemoryTestDataModel model,
+		private static void AddQaIsCoveredByOtherCases(TestDataModel model,
 		                                               ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>
@@ -1649,7 +1663,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaLineGroupConstraintsCases(InMemoryTestDataModel model,
+		private static void AddQaLineGroupConstraintsCases(TestDataModel model,
 		                                                   ICollection<TestDefinitionCase>
 			                                                   testCases)
 		{
@@ -1686,7 +1700,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaLineIntersectAngleCases(InMemoryTestDataModel model,
+		private static void AddQaLineIntersectAngleCases(TestDataModel model,
 		                                                 ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1724,7 +1738,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaLineIntersectCases(InMemoryTestDataModel model,
+		private static void AddQaLineIntersectCases(TestDataModel model,
 		                                            ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1779,7 +1793,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaLineIntersectZCases(InMemoryTestDataModel model,
+		private static void AddQaLineIntersectZCases(TestDataModel model,
 		                                             ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1839,7 +1853,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaMaxSlopeCases(InMemoryTestDataModel model,
+		private static void AddQaMaxSlopeCases(TestDataModel model,
 		                                       ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1854,7 +1868,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaMinAngleCases(InMemoryTestDataModel model,
+		private static void AddQaMinAngleCases(TestDataModel model,
 		                                       ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1893,7 +1907,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaMinSegAngleCases(InMemoryTestDataModel model,
+		private static void AddQaMinSegAngleCases(TestDataModel model,
 		                                          ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1917,7 +1931,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaMonotonicZCases(InMemoryTestDataModel model,
+		private static void AddQaMonotonicZCases(TestDataModel model,
 		                                         ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1933,7 +1947,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaMpFootprintHolesCases(InMemoryTestDataModel model,
+		private static void AddQaMpFootprintHolesCases(TestDataModel model,
 		                                               ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1951,7 +1965,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaMpNonIntersectingRingFootprintsCases(InMemoryTestDataModel model,
+		private static void AddQaMpNonIntersectingRingFootprintsCases(TestDataModel model,
 			ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -1966,7 +1980,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaMpSinglePartFootprintCases(InMemoryTestDataModel model,
+		private static void AddQaMpSinglePartFootprintCases(TestDataModel model,
 		                                                    ICollection<TestDefinitionCase>
 			                                                    testCases)
 		{
@@ -1981,7 +1995,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaMpVertexNotNearFaceCases(InMemoryTestDataModel model,
+		private static void AddQaMpVertexNotNearFaceCases(TestDataModel model,
 		                                                  ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -2009,7 +2023,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaMustBeNearOtherCases(InMemoryTestDataModel model,
+		private static void AddQaMustBeNearOtherCases(TestDataModel model,
 		                                              ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -2030,7 +2044,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaMustIntersectMatrixOtherCases(InMemoryTestDataModel model,
+		private static void AddQaMustIntersectMatrixOtherCases(TestDataModel model,
 		                                                       ICollection<TestDefinitionCase>
 			                                                       testCases)
 		{
@@ -2088,7 +2102,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaNeighbourAreasCases(InMemoryTestDataModel model,
+		private static void AddQaNeighbourAreasCases(TestDataModel model,
 		                                             ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaNeighbourAreas), 0,
@@ -2129,7 +2143,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaNoBoundaryLoopsCases(InMemoryTestDataModel model,
+		private static void AddQaNoBoundaryLoopsCases(TestDataModel model,
 		                                              ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaNoBoundaryLoops), 0,
@@ -2151,7 +2165,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaNodeLineCoincidenceCases(InMemoryTestDataModel model,
+		private static void AddQaNodeLineCoincidenceCases(TestDataModel model,
 		                                                  ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -2212,7 +2226,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaNoGapsCases(InMemoryTestDataModel model,
+		private static void AddQaNoGapsCases(TestDataModel model,
 		                                     ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaNoGaps), 0,
@@ -2291,7 +2305,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaNotNearCases(InMemoryTestDataModel model,
+		private static void AddQaNotNearCases(TestDataModel model,
 		                                      ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -2351,7 +2365,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaPartCoincidenceOtherCases(InMemoryTestDataModel model,
+		private static void AddQaPartCoincidenceOtherCases(TestDataModel model,
 		                                                   ICollection<TestDefinitionCase>
 			                                                   testCases)
 		{
@@ -2395,7 +2409,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaPartCoincidenceSelfCases(InMemoryTestDataModel model,
+		private static void AddQaPartCoincidenceSelfCases(TestDataModel model,
 		                                                  ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -2466,7 +2480,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaPointNotNearCases(InMemoryTestDataModel model,
+		private static void AddQaPointNotNearCases(TestDataModel model,
 		                                           ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -2537,7 +2551,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaPseudoNodesCases(InMemoryTestDataModel model,
+		private static void AddQaPseudoNodesCases(TestDataModel model,
 		                                          ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -2604,7 +2618,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaRegularExpressionCases(InMemoryTestDataModel model,
+		private static void AddQaRegularExpressionCases(TestDataModel model,
 		                                                ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -2666,7 +2680,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaRowCountCases(InMemoryTestDataModel model,
+		private static void AddQaRowCountCases(TestDataModel model,
 		                                       ICollection<TestDefinitionCase>
 			                                       testCases)
 		{
@@ -2688,7 +2702,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaSchemaFieldDomainDescriptionsCases(InMemoryTestDataModel model,
+		private static void AddQaSchemaFieldDomainDescriptionsCases(TestDataModel model,
 			ICollection<TestDefinitionCase>
 				testCases)
 		{
@@ -2705,7 +2719,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaSchemaSpatialReferenceCases(InMemoryTestDataModel model,
+		private static void AddQaSchemaSpatialReferenceCases(TestDataModel model,
 		                                                     ICollection<TestDefinitionCase>
 			                                                     testCases)
 		{
@@ -2747,7 +2761,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaSliverPolygonCases(InMemoryTestDataModel model,
+		private static void AddQaSliverPolygonCases(TestDataModel model,
 		                                            ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaSliverPolygon), 0,
@@ -2764,7 +2778,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaSmoothCases(InMemoryTestDataModel model,
+		private static void AddQaSmoothCases(TestDataModel model,
 		                                     ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -2778,7 +2792,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaTouchesOtherCases(InMemoryTestDataModel model,
+		private static void AddQaTouchesOtherCases(TestDataModel model,
 		                                           ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -2828,7 +2842,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaTouchesSelfCases(InMemoryTestDataModel model,
+		private static void AddQaTouchesSelfCases(TestDataModel model,
 		                                          ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -2866,7 +2880,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaTrimmedTextFieldsCases(InMemoryTestDataModel model,
+		private static void AddQaTrimmedTextFieldsCases(TestDataModel model,
 		                                                ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaTrimmedTextFields), 0,
@@ -2926,7 +2940,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaValidCoordinateFieldsCases(InMemoryTestDataModel model,
+		private static void AddQaValidCoordinateFieldsCases(TestDataModel model,
 		                                                    ICollection<TestDefinitionCase>
 			                                                    testCases)
 		{
@@ -2945,7 +2959,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaValidDateValuesCases(InMemoryTestDataModel model,
+		private static void AddQaValidDateValuesCases(TestDataModel model,
 		                                              ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaValidDateValues), 0,
@@ -2999,7 +3013,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaValidUrlsCases(InMemoryTestDataModel model,
+		private static void AddQaValidUrlsCases(TestDataModel model,
 		                                        ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -3013,7 +3027,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }, optionalValues));
 		}
 
-		private static void AddQaVertexCoincidenceCases(InMemoryTestDataModel model,
+		private static void AddQaVertexCoincidenceCases(TestDataModel model,
 		                                                ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -3034,7 +3048,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaVertexCoincidenceOtherCases(InMemoryTestDataModel model,
+		private static void AddQaVertexCoincidenceOtherCases(TestDataModel model,
 		                                                     ICollection<TestDefinitionCase>
 			                                                     testCases)
 		{
@@ -3091,7 +3105,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaVertexCoincidenceSelfCases(InMemoryTestDataModel model,
+		private static void AddQaVertexCoincidenceSelfCases(TestDataModel model,
 		                                                    ICollection<TestDefinitionCase>
 			                                                    testCases)
 		{
@@ -3137,7 +3151,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaWithinBoxCases(InMemoryTestDataModel model,
+		private static void AddQaWithinBoxCases(TestDataModel model,
 		                                        ICollection<TestDefinitionCase> testCases)
 		{
 			testCases.Add(new TestDefinitionCase(typeof(QaWithinBox), 0,
@@ -3156,7 +3170,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     }));
 		}
 
-		private static void AddQaZDifferenceOtherCases(InMemoryTestDataModel model,
+		private static void AddQaZDifferenceOtherCases(TestDataModel model,
 		                                               ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -3229,7 +3243,7 @@ namespace ProSuite.QA.Tests.Test
 			                                     optionalValues));
 		}
 
-		private static void AddQaZDifferenceSelfCases(InMemoryTestDataModel model,
+		private static void AddQaZDifferenceSelfCases(TestDataModel model,
 		                                              ICollection<TestDefinitionCase> testCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -3379,7 +3393,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void AreIssueFilterParametersEqual()
 		{
-			var model = new InMemoryTestDataModel("simple model");
+			var model = new TestDataModel("simple model");
 
 			var ifCases = new List<IfDefinitionCase>();
 
@@ -3505,7 +3519,7 @@ namespace ProSuite.QA.Tests.Test
 
 		#region Methods to add special issue filter definition cases
 
-		private static void AddIfAllCases(InMemoryTestDataModel model,
+		private static void AddIfAllCases(TestDataModel model,
 		                                  ICollection<IfDefinitionCase> ifCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -3517,7 +3531,7 @@ namespace ProSuite.QA.Tests.Test
 			                                 optionalValues));
 		}
 
-		private static void AddIfInvolvedRowsCases(InMemoryTestDataModel model,
+		private static void AddIfInvolvedRowsCases(TestDataModel model,
 		                                           ICollection<IfDefinitionCase> ifCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
@@ -3538,8 +3552,8 @@ namespace ProSuite.QA.Tests.Test
 			List<Type> refactoredTypes = new List<Type>
 			                             {
 				                             typeof(TrDissolve),
-											 typeof(TrGetNodes),
-											 typeof(TrIntersect)
+				                             typeof(TrGetNodes),
+				                             typeof(TrIntersect)
 			                             };
 
 			foreach (Type transformerType in refactoredTypes)
@@ -3619,7 +3633,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void AreTransformerParametersEqual()
 		{
-			var model = new InMemoryTestDataModel("simple model");
+			var model = new TestDataModel("simple model");
 
 			var trCases = new List<TrDefinitionCase>();
 
@@ -3741,10 +3755,9 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
-
-		private static void AddTrDissolveCases(InMemoryTestDataModel model,
-		                                  ICollection<TrDefinitionCase>
-			                                  trCases)
+		private static void AddTrDissolveCases(TestDataModel model,
+		                                       ICollection<TrDefinitionCase>
+			                                       trCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("Search", 1.0);
@@ -3755,17 +3768,16 @@ namespace ProSuite.QA.Tests.Test
 			optionalValues.Add("CreateMultipartFeatures", false);
 
 			trCases.Add(new TrDefinitionCase(typeof(TrDissolve), 0,
-												 new object[]
-												 {
-													 model.GetVectorDataset(),
-												 },
-												 optionalValues));
+			                                 new object[]
+			                                 {
+				                                 model.GetVectorDataset(),
+			                                 },
+			                                 optionalValues));
 		}
 
-
-		private static void AddTrGetNodesCases(InMemoryTestDataModel model,
-		                                        ICollection<TrDefinitionCase>
-			                                        trCases)
+		private static void AddTrGetNodesCases(TestDataModel model,
+		                                       ICollection<TrDefinitionCase>
+			                                       trCases)
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add("Attributes", "MAX(LAUF_NR) AS MAX_LAUF_NR");
@@ -3904,7 +3916,8 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
-		private static IEnumerable<TestDefinitionCase> CreateDefaultValueTestCases(Type testType)
+		private static IEnumerable<TestDefinitionCase> CreateDefaultValueTestCases(
+			Type testType, TestDataModel model)
 		{
 			// One is used internally to create using the definition.
 			int constructorCount = testType.GetConstructors().Length - 1;
@@ -3939,8 +3952,6 @@ namespace ProSuite.QA.Tests.Test
 				TestFactory testFactory = TestFactoryUtils.CreateTestFactory(testCondition);
 
 				Assert.NotNull(testFactory);
-
-				var model = new InMemoryTestDataModel("simple model");
 
 				var parameterList = new List<object>();
 				foreach (TestParameter parameter in testFactory.Parameters)
@@ -4052,7 +4063,7 @@ namespace ProSuite.QA.Tests.Test
 
 				Assert.NotNull(issueFilterFactory);
 
-				var model = new InMemoryTestDataModel("simple model");
+				var model = new TestDataModel("simple model");
 
 				var parameterList = new List<object>();
 				foreach (TestParameter parameter in issueFilterFactory.Parameters)
@@ -4161,7 +4172,7 @@ namespace ProSuite.QA.Tests.Test
 
 				Assert.NotNull(transformerFactory);
 
-				var model = new InMemoryTestDataModel("simple model");
+				var model = new TestDataModel("simple model");
 
 				var parameterList = new List<object>();
 				foreach (TestParameter parameter in transformerFactory.Parameters)
@@ -4252,7 +4263,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		private static object CreateDefaultValue(TestParameterType testParameterType,
-		                                         InMemoryTestDataModel model)
+		                                         TestDataModel model)
 		{
 			switch (testParameterType)
 			{
@@ -4493,7 +4504,7 @@ namespace ProSuite.QA.Tests.Test
 
 		static List<Type> FindMissingAreParametersEqualTypes(List<Type> testassemblyTypes)
 		{
-			var model = new InMemoryTestDataModel("simple model");
+			var model = new TestDataModel("simple model");
 
 			List<TestDefinitionCase> testCases = DefineTestCases(model);
 
