@@ -15,6 +15,7 @@ using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.ParameterTypes;
 using ProSuite.QA.TestFactories;
+using ProSuite.QA.Tests.Coincidence;
 using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.TestData;
@@ -233,7 +234,8 @@ namespace ProSuite.QA.Tests.Test
 					                             typeof(QaWithinZRange),
 					                             typeof(QaZDifferenceOther),
 					                             typeof(QaZDifferenceSelf),
-					                             typeof(QaGdbTopology)
+					                             typeof(QaGdbTopology),
+												 typeof(QaTopoNotNear)
 				                             };
 				return refactoredTypes;
 			}
@@ -461,8 +463,10 @@ namespace ProSuite.QA.Tests.Test
 			AddQaZDifferenceOtherCases(model, testCases);
 			AddQaZDifferenceSelfCases(model, testCases);
 
-			// Cannot be tested using an in-memory workspace:
+			// Cannot be tested using an in-memory workspace, as it requires a real geodatabase.
 			AddQaGdbTopologyCases(model, testCases);
+
+			AddQaTopoNotNearCases(model, testCases);
 
 			return testCases;
 		}
@@ -950,6 +954,14 @@ namespace ProSuite.QA.Tests.Test
 			                                     new object[]
 			                                     {
 				                                     model.GetTopologyDataset()
+			                                     }));
+			testCases.Add(new TestDefinitionCase(typeof(QaGdbTopology), 1,
+			                                     new object[]
+			                                     {
+				                                     new[]
+				                                     {
+					                                     model.GetVectorDatasetInTopology()
+				                                     }
 			                                     }));
 		}
 
@@ -2790,6 +2802,126 @@ namespace ProSuite.QA.Tests.Test
 				                                     model.GetVectorDataset(),
 				                                     0.5
 			                                     }, optionalValues));
+		}
+
+		private static void AddQaTopoNotNearCases(TestDataModel model,
+		                                         List<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("CrossingMinLengthFactor", 0.3);
+			optionalValues.Add("NotReportedCondition", "1 = 1");
+			optionalValues.Add("IgnoreNeighborCondition", "2 = 2");
+			optionalValues.Add("JunctionCoincidenceTolerance", 0.333);
+			optionalValues.Add("ConnectionMode", ConnectionMode.EndpointOnVertex);
+			optionalValues.Add("UnconnectedLineCapStyle", LineCapStyle.Butt);
+			optionalValues.Add("IgnoreLoopsWithinNearDistance", true);
+			optionalValues.Add("IgnoreInconsistentLineSymbolEnds", true);
+			optionalValues.Add("AllowCoincidentSections", true);
+			optionalValues.Add("RightSideNears", new List<string> {"one"});
+			optionalValues.Add("EndCapStyle", LineCapStyle.Butt);
+			optionalValues.Add("JunctionIsEndExpression", "true");
+
+			testCases.Add(new TestDefinitionCase(typeof(QaTopoNotNear), 0,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 1.1,
+													 5.2,
+													 true
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTopoNotNear), 1,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 1.1,
+													 5.2,
+													 true,
+													 1234.5
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTopoNotNear), 2,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetPolygonDataset(),
+													 1.1,
+													 5.2,
+													 true
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTopoNotNear), 3,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetPolygonDataset(),
+													 1.1,
+													 5.2,
+													 true,
+													 1234.5
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTopoNotNear), 4,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 1.1,
+													 5.2
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTopoNotNear), 5,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 1.1,
+													 5.2,
+													 1234.5
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTopoNotNear), 6,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetPolygonDataset(),
+													 1.1,
+													 5.2
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTopoNotNear), 7,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetPolygonDataset(),
+													 1.1,
+													 5.2,
+													 1234.5
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTopoNotNear), 8,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 1.1,
+													 "SHAPE_LEN",
+													 3.0,
+													 6.6,
+													 true
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTopoNotNear), 9,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetPolygonDataset(),
+													 1.1,
+													 3.0,
+													 6.6,
+													 true
+												 }, optionalValues));
+			testCases.Add(new TestDefinitionCase(typeof(QaTopoNotNear), 10,
+												 new object[]
+												 {
+													 model.GetVectorDataset(),
+													 model.GetPolygonDataset(),
+													 1.1,
+													 "fc1",
+													 "fc2",
+													 3.0,
+													 6.6,
+													 true
+												 }, optionalValues));
+
 		}
 
 		private static void AddQaTouchesOtherCases(TestDataModel model,

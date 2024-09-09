@@ -25,6 +25,7 @@ namespace ProSuite.QA.Tests.Test.TestData
 		private const string _featureClassMasspoints = "masspoints";
 		private const string _featureClassPoints = "points";
 		private const string _featureClassPolylines = "lines";
+		private const string _featureClassPolylinesInTopo = "linesInTopo";
 		private const string _table = "table";
 		private const string _rasterName = "raster";
 		private const string _terrainName = "terrain";
@@ -49,6 +50,7 @@ namespace ProSuite.QA.Tests.Test.TestData
 			_model.AddDataset(new ModelTableDataset(_table));
 			_model.AddDataset(new ModelVectorDataset(_featureClassPoints));
 			_model.AddDataset(new ModelVectorDataset(_featureClassPolylines));
+			_model.AddDataset(new ModelVectorDataset(_featureClassPolylinesInTopo));
 			_model.AddDataset(new ModelVectorDataset(_featureClassFootprints));
 			_model.AddDataset(new VerifiedRasterDataset(_rasterName));
 			_model.AddDataset(new VerifiedRasterMosaicDataset(_mosaicName));
@@ -87,6 +89,11 @@ namespace ProSuite.QA.Tests.Test.TestData
 		public VectorDataset GetVectorDataset()
 		{
 			return (VectorDataset) _model.GetDatasetByModelName(_featureClassPolylines);
+		}
+
+		public VectorDataset GetVectorDatasetInTopology()
+		{
+			return (VectorDataset)_model.GetDatasetByModelName(_featureClassPolylinesInTopo);
 		}
 
 		public VectorDataset GetPolygonDataset()
@@ -217,9 +224,15 @@ namespace ProSuite.QA.Tests.Test.TestData
 				IFeatureDataset featureDataset =
 					DatasetUtils.CreateFeatureDataset(workspace, "TopoDataset", sr);
 
+				IFeatureClass fc =
+					DatasetUtils.CreateSimpleFeatureClass(featureDataset,
+					                                      _featureClassPolylinesInTopo, lineFields,
+					                                      null);
+
 				ITopologyContainer topologyContainer = (ITopologyContainer) featureDataset;
 
-				topologyContainer.CreateTopology(_topology, 0.01, 1000, null);
+				ITopology topo = topologyContainer.CreateTopology(_topology, 0.01, 1000, null);
+				topo.AddClass(fc, 1, 1, 1, false);
 			}
 
 			return workspace;
