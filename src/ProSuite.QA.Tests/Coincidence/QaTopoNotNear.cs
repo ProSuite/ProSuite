@@ -9,6 +9,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Text;
@@ -145,7 +146,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			bool is3D,
 			[Doc(nameof(DocStrings.QaNotNear_tileSize))]
 			double tileSize)
-			: this(new[] {featureClass},
+			: this(new[] { featureClass },
 			       near / 2,
 			       new ConstantFeatureDistanceProvider(near / 2),
 			       new ConstantPairDistanceProvider(minLength),
@@ -187,7 +188,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			bool is3D,
 			[Doc(nameof(DocStrings.QaNotNear_tileSize))]
 			double tileSize)
-			: this(new[] {featureClass, reference},
+			: this(new[] { featureClass, reference },
 			       near / 2,
 			       new ConstantFeatureDistanceProvider(near / 2),
 			       new ConstantPairDistanceProvider(minLength),
@@ -257,6 +258,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			: this(featureClass, reference, near, minLength, false) { }
 
 		// ctor 8
+		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaTopoNotNear(
 			[Doc(nameof(DocStrings.QaNotNear_featureClass))]
 			IReadOnlyFeatureClass featureClass,
@@ -269,8 +271,8 @@ namespace ProSuite.QA.Tests.Coincidence
 			bool is3D)
 			: this(featureClass,
 			       near,
-			       new ExpressionBasedDistanceProvider(new[] {nearExpression},
-			                                           new[] {featureClass}),
+			       new ExpressionBasedDistanceProvider(new[] { nearExpression },
+			                                           new[] { featureClass }),
 			       connectedMinLengthFactor,
 			       defaultUnconnectedMinLengthFactor,
 			       is3D) { }
@@ -289,7 +291,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			double defaultUnconnectedMinLengthFactor,
 			[Doc(nameof(DocStrings.QaNotNear_is3D))]
 			bool is3D)
-			: this(new[] {featureClass, reference},
+			: this(new[] { featureClass, reference },
 			       near / 2,
 			       new ConstantFeatureDistanceProvider(near / 2),
 			       new ConstantPairDistanceProvider(
@@ -325,8 +327,8 @@ namespace ProSuite.QA.Tests.Coincidence
 			: this(featureClass,
 			       reference,
 			       near / 2,
-			       new ExpressionBasedDistanceProvider(new[] {featureClassNear, referenceNear},
-			                                           new[] {featureClass, reference}),
+			       new ExpressionBasedDistanceProvider(new[] { featureClassNear, referenceNear },
+			                                           new[] { featureClass, reference }),
 			       connectedMinLengthFactor,
 			       defaultUnconnectedMinLengthFactor,
 			       is3D)
@@ -338,6 +340,52 @@ namespace ProSuite.QA.Tests.Coincidence
 			IgnoreLoopsWithinNearDistance = _defaultIgnoreLoopsWithinNearDistance;
 		}
 
+		[InternallyUsedTest]
+		public QaTopoNotNear(QaTopoNotNearDefinition definition)
+			: this(new QaTopoNotNearConstructionHelper(definition)) { }
+
+		private QaTopoNotNear(QaTopoNotNearConstructionHelper constructionHelper)
+			: this(constructionHelper.GetAllFeatureClasses(),
+			       constructionHelper.Definition.Near,
+			       constructionHelper.GetNearExpressionProvider(),
+			       constructionHelper.GetConnectedMinLengthProvider(),
+			       constructionHelper.GetDefaultUnconnectedMinLengthProvider(),
+			       constructionHelper.Definition.Is3D)
+		{
+			if (constructionHelper.ExpressionBasedDistanceProvider != null)
+			{
+				constructionHelper.ExpressionBasedDistanceProvider
+				                  .GetSqlCaseSensitivityForTableIndex = GetSqlCaseSensitivity;
+			}
+
+			QaTopoNotNearDefinition definition = constructionHelper.Definition;
+
+			foreach (KeyValuePair<int, IFeatureClassSchemaDef> kvp in definition.TopoTables)
+			{
+				_topoTables.Add(kvp.Key, (IReadOnlyFeatureClass) kvp.Value);
+			}
+
+			foreach (var kvp in definition.ConflictTables)
+			{
+				_conflictTables.Add(kvp.Key, (IReadOnlyFeatureClass) kvp.Value);
+			}
+
+			_isDirected = definition.IsDirected;
+
+			CrossingMinLengthFactor = definition.CrossingMinLengthFactor;
+			NotReportedCondition = definition.NotReportedCondition;
+			IgnoreNeighborCondition = definition.IgnoreNeighborCondition;
+			JunctionCoincidenceTolerance = definition.JunctionCoincidenceTolerance;
+			ConnectionMode = definition.ConnectionMode;
+			UnconnectedLineCapStyle = definition.UnconnectedLineCapStyle;
+			IgnoreLoopsWithinNearDistance = definition.IgnoreLoopsWithinNearDistance;
+			IgnoreInconsistentLineSymbolEnds = definition.IgnoreInconsistentLineSymbolEnds;
+			AllowCoincidentSections = definition.AllowCoincidentSections;
+			RightSideNears = definition.RightSideNears;
+			EndCapStyle = definition.EndCapStyle;
+			JunctionIsEndExpression = definition.JunctionIsEndExpression;
+		}
+
 		protected QaTopoNotNear(
 			IReadOnlyFeatureClass featureClass,
 			double near,
@@ -345,7 +393,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			double connectedMinLengthFactor,
 			double defaultUnconnectedMinLengthFactor,
 			bool is3D)
-			: this(new[] {featureClass},
+			: this(new[] { featureClass },
 			       near,
 			       nearExpressionsProvider,
 			       new FactorDistanceProvider(connectedMinLengthFactor,
@@ -370,7 +418,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			double connectedMinLengthFactor,
 			double defaultUnconnectedMinLengthFactor,
 			bool is3D)
-			: this(new[] {featureClass, reference},
+			: this(new[] { featureClass, reference },
 			       near,
 			       nearExpressionsProvider,
 			       new FactorDistanceProvider(connectedMinLengthFactor,
@@ -390,13 +438,13 @@ namespace ProSuite.QA.Tests.Coincidence
 		private QaTopoNotNear(
 			[NotNull] IList<IReadOnlyFeatureClass> featureClasses,
 			double near,
-			[NotNull] IFeatureDistanceProvider nearExpressionsProvider,
+			[NotNull] IFeatureDistanceProvider featureDistanceProvider,
 			[NotNull] IPairDistanceProvider connectedMinLengthProvider,
 			[NotNull] IPairDistanceProvider defaultUnconnectedMinLengthProvider,
 			bool is3D)
 			: base(featureClasses,
 			       near * 2,
-			       nearExpressionsProvider,
+			       featureDistanceProvider,
 			       connectedMinLengthProvider,
 			       defaultUnconnectedMinLengthProvider,
 			       is3D, 0) { }
@@ -684,7 +732,8 @@ namespace ProSuite.QA.Tests.Coincidence
 			foreach (int topoTableIndex in _topoTables.Keys)
 			{
 				IFeatureClassFilter topoFilter = filters[topoTableIndex];
-				topoFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				topoFilter.SpatialRelationship =
+					esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 				_topoFilters.Add(topoTableIndex, topoFilter);
 				_topoHelpers.Add(topoTableIndex, helpers[topoTableIndex]);
 			}
@@ -965,7 +1014,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			var subpart = new ConnectedSegmentsSubpart(part, curveSelection, curve);
 			Dictionary<SegmentRelation, double> minLengths = GetMinLengths(
-				new[] {subpart}, SegmentRelationsToCheck);
+				new[] { subpart }, SegmentRelationsToCheck);
 
 			double maxMinLength = 0;
 			foreach (double minLength in minLengths.Values)
@@ -1024,7 +1073,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			double l0 = curve.GetLength();
 
-			List<ConnectedLines>[] allRaws = {rawStarts, rawEnds};
+			List<ConnectedLines>[] allRaws = { rawStarts, rawEnds };
 			relevantSegment =
 				GetRelevantSegment(SegmentRelationsToCheck, allRaws) ?? relevantSegment;
 
@@ -1312,7 +1361,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			double diff = 0;
 			foreach (ConnectedSegmentsSubpart linePart in line.BaseSegments)
 			{
-				var curves = new List<SubClosedCurve> {linePart.ConnectedCurve};
+				var curves = new List<SubClosedCurve> { linePart.ConnectedCurve };
 
 				foreach (
 					ConnectedSegmentsSubpart fullPart in fullLine.GetParts(linePart))
@@ -1532,7 +1581,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			SegmentPairRelation relevantSegment =
 				GetRelevantSegment(
 					SegmentRelationsToCheck,
-					new[] {new List<ConnectedLines> {lineWithoutNotReported.Line}});
+					new[] { new List<ConnectedLines> { lineWithoutNotReported.Line } });
 
 			var reduced = new ConnectedLinesEx(
 				lineWithoutNotReported.Line,
@@ -1684,7 +1733,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				yield break;
 			}
 
-			var treeProvider = new NeighborsContinuations(new[] {connectedEx});
+			var treeProvider = new NeighborsContinuations(new[] { connectedEx });
 			foreach (
 				ConnectedLinesEx sub in
 				GetSubconnecteds(connectedEx, treeProvider, continuationFinder, relevantSegment))
@@ -2148,7 +2197,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 					List<NeighboredSegmentsSubpart> continuations =
 						continuationFinder.GetContinuations(
-							search, new[] {part}, breakOnExcludeFound: false);
+							search, new[] { part }, breakOnExcludeFound: false);
 					if (continuations == null)
 					{
 						continue;
@@ -2165,7 +2214,7 @@ namespace ProSuite.QA.Tests.Coincidence
 						var startNeighbored =
 							new ConnectedPartsNeighbor(
 								continuation, 0,
-								new List<NeighboredSegmentsSubpart> {continuation},
+								new List<NeighboredSegmentsSubpart> { continuation },
 								continuationFinder);
 						foreach (ConnectedPartsGrower connected in
 						         GetConnected(connectedPartsGrower, startConnected,
@@ -2493,7 +2542,7 @@ namespace ProSuite.QA.Tests.Coincidence
 					return NoError;
 				}
 
-				var lines = new List<IGeometry> {errorGeometry};
+				var lines = new List<IGeometry> { errorGeometry };
 				lines.AddRange(errorEx.CircularNeighbor.GetGeometry());
 				errorGeometry = (IPolyline) GeometryFactory.CreateUnion(lines, 0);
 
@@ -2928,6 +2977,75 @@ namespace ProSuite.QA.Tests.Coincidence
 
 				return condition?.IsFulfilled(row, tableIndex, neighbor, neighborTableIndex)
 				       ?? false;
+			}
+		}
+
+		protected class QaTopoNotNearConstructionHelper
+		{
+			public QaTopoNotNearDefinition Definition { get; }
+
+			[CanBeNull] private ExpressionBasedDistanceProvider _expressionBasedDistanceProvider;
+
+			public QaTopoNotNearConstructionHelper(QaTopoNotNearDefinition definition)
+			{
+				Definition = definition;
+			}
+
+			public IFeatureDistanceProvider GetNearExpressionProvider()
+			{
+				if (Definition.NearExpressionsProvider != null)
+				{
+					return ExpressionBasedDistanceProvider;
+				}
+
+				return new ConstantFeatureDistanceProvider(Definition.Near);
+			}
+
+			[CanBeNull]
+			public ExpressionBasedDistanceProvider ExpressionBasedDistanceProvider
+			{
+				get
+				{
+					if (_expressionBasedDistanceProvider == null &&
+					    Definition.NearExpressionsProvider != null)
+					{
+						_expressionBasedDistanceProvider =
+							new ExpressionBasedDistanceProvider(Definition.NearExpressionsProvider);
+					}
+
+					return _expressionBasedDistanceProvider;
+				}
+			}
+
+			public IPairDistanceProvider GetConnectedMinLengthProvider()
+			{
+				if (Definition.NearExpressionsProvider != null)
+				{
+					return new FactorDistanceProvider(
+						Definition.ConnectedMinLengthFactor,
+						Assert.NotNull(ExpressionBasedDistanceProvider));
+				}
+
+				return new ConstantPairDistanceProvider(
+					Definition.ConnectedMinLengthConstantDistance);
+			}
+
+			public IPairDistanceProvider GetDefaultUnconnectedMinLengthProvider()
+			{
+				if (Definition.NearExpressionsProvider != null)
+				{
+					return new FactorDistanceProvider(
+						Definition.DefaultUnconnectedMinLengthFactor,
+						Assert.NotNull(ExpressionBasedDistanceProvider));
+				}
+
+				return new ConstantPairDistanceProvider(
+					Definition.DefaultUnconnectedMinLengthConstantDistance);
+			}
+
+			public IList<IReadOnlyFeatureClass> GetAllFeatureClasses()
+			{
+				return Definition.AllFeatureClasses.Cast<IReadOnlyFeatureClass>().ToList();
 			}
 		}
 
