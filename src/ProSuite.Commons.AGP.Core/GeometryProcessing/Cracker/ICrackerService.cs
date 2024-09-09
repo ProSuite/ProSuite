@@ -16,7 +16,7 @@ public interface ICrackerService
 		CancellationToken cancellationToken);
 
 	IList<ResultFeature> ApplyCrackPoints([NotNull] IEnumerable<Feature> selectedFeatures,
-	                                     [NotNull] CrackerResult crackPointsToAdd,
-	                                     [NotNull] IList<Feature> intersectingFeatures,
-	                                     CancellationToken cancellationToken);
+	                                      [NotNull] CrackerResult crackPointsToAdd,
+	                                      [NotNull] IList<Feature> intersectingFeatures,
+	                                      CancellationToken cancellationToken);
 }

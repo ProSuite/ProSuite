@@ -139,7 +139,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return (IObjectClass) OpenTable(dataset);
 		}
 
-		public ITopology OpenTopology(ITopologyDataset dataset)
+		public TopologyReference OpenTopology(ITopologyDataset dataset)
 		{
 			throw new NotImplementedException();
 		}
