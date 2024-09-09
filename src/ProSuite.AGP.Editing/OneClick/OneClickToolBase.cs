@@ -156,14 +156,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					ShowOptionsPane();
 				}
 
-				if (KeyboardUtils.IsShiftKey(args.Key))
-				{
-					// todo daro rename to SetShiftCursor?
-					// This sets shift cursor. But don't do it in QueuedTask because
-					// tool cursor is not updated until mouse is moved for the first time.
-					ShiftPressedCore();
-				}
-
 				OnKeyDownCore(args);
 			}, _msg, suppressErrorMessageBox: true);
 		}
@@ -172,22 +164,40 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => "HandleKeyDownAsync");
 
-			if (args.Key == Key.Escape)
+			try
 			{
-				await ViewUtils.TryAsync(HandleEscapeAsync, _msg);
-			}
+				if (KeyboardUtils.IsShiftKey(args.Key))
+				{
+					// todo daro rename to SetShiftCursor?
+					// This sets shift cursor. But don't do it in QueuedTask because
+					// tool cursor is not updated until mouse is moved for the first time.
+					await ShiftPressedCoreAsync();
+				}
 
-			if (args.Key == _keyPolygonDraw)
+				if (args.Key == Key.Escape)
+				{
+					await HandleEscapeAsync();
+				}
+
+				if (await IsInSelectionPhaseAsync())
+				{
+					if (args.Key == _keyPolygonDraw)
+					{
+						SetupPolygonSketch();
+					}
+
+					if (args.Key == _keyLassoDraw)
+					{
+						SetupLassoSketch();
+					}
+				}
+
+				await HandleKeyDownCoreAsync(args);
+			}
+			catch (Exception ex)
 			{
-				SetupPolygonSketch();
+				ViewUtils.HandleError(ex, _msg);
 			}
-
-			if (args.Key == _keyLassoDraw)
-			{
-				SetupLassoSketch();
-			}
-
-			await ViewUtils.TryAsync(HandleKeyDownCoreAsync(args), _msg);
 		}
 
 		private void SetupLassoSketch()
@@ -218,11 +228,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				ViewUtils.Try(() =>
 				{
-					if (KeyboardUtils.IsShiftKey(args.Key))
-					{
-						ShiftReleasedCore();
-					}
-
 					OnKeyUpCore(args);
 
 					// NOTE: The HandleKeyUpAsync is only called for handled keys.
@@ -244,22 +249,37 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => "HandleKeyUpAsync");
 
-			if (args.Key is _keyPolygonDraw or _keyLassoDraw)
+			try
 			{
-				ResetSketch();
-			}
+				if (KeyboardUtils.IsShiftKey(args.Key))
+				{
+					await ShiftReleasedCoreAsync();
+				}
 
-			await ViewUtils.TryAsync(HandleKeyUpCoreAsync(args), _msg);
+				if (await IsInSelectionPhaseAsync() && args.Key is _keyPolygonDraw or _keyLassoDraw)
+				{
+					await ResetSketchAsync();
+				}
+
+				await HandleKeyUpCoreAsync(args);
+			}
+			catch (Exception ex)
+			{
+				ViewUtils.HandleError(ex, _msg);
+			}
 		}
 
-		private void ResetSketch()
+		private async Task ResetSketchAsync()
 		{
 			SetupSketch(GetSelectionSketchGeometryType());
 
-			ResetSketchCore();
+			await ResetSketchCoreAsync();
 		}
 
-		protected virtual void ResetSketchCore() { }
+		protected virtual Task ResetSketchCoreAsync()
+		{
+			return Task.CompletedTask;
+		}
 
 		protected override void OnToolMouseMove(MapViewMouseEventArgs args)
 		{
@@ -326,17 +346,17 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected virtual void ShiftPressedCore()
+		protected virtual async Task ShiftPressedCoreAsync()
 		{
-			if (SelectionCursorShift != null && IsInSelectionPhase(true))
+			if (SelectionCursorShift != null && await IsInSelectionPhaseCoreAsync(true))
 			{
 				SetCursor(SelectionCursorShift);
 			}
 		}
 
-		protected virtual void ShiftReleasedCore()
+		protected virtual async Task ShiftReleasedCoreAsync()
 		{
-			if (SelectionCursor != null && IsInSelectionPhase(true))
+			if (SelectionCursor != null && await IsInSelectionPhaseCoreAsync(true))
 			{
 				SetCursor(SelectionCursor);
 			}
@@ -501,26 +521,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			                                         featurePredicate, progressor);
 		}
 
-		// TODO: Make obsolete, always use Async overload?
-		protected bool IsInSelectionPhase()
-		{
-			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
-
-			return IsInSelectionPhase(shiftDown);
-		}
-
-		protected virtual bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			return false;
-		}
-
 		protected Task<bool> IsInSelectionPhaseAsync()
 		{
 			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
 			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
 
-			return IsInSelectionPhaseCoreAsync(shiftDown);
+			return ViewUtils.TryAsync(IsInSelectionPhaseCoreAsync(shiftDown), _msg);
 		}
 
 		protected virtual Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)

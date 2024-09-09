@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -9,23 +10,50 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.GP;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.QA.WorkList;
 
-public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
+
+/// <summary>
+/// Implements the <see cref="IWorkListItemDatastore"/> for the issue file geodatabase schema.
+/// </summary>
+public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	private readonly string _domainName = "CORRECTION_STATUS_CD";
 
-	private string _path;
+	private string _issueGdbPath;
 
-	public FgdbIssueWorkListItemDatastore(string path)
+	public FileGdbIssueWorkListItemDatastore(string workListFileOrIssueGdbPath)
 	{
-		_path = path;
+		string gdbPath = null;
+		if (workListFileOrIssueGdbPath != null &&
+		    workListFileOrIssueGdbPath.EndsWith(
+			    ".iwl", StringComparison.InvariantCultureIgnoreCase))
+		{
+			// It's the definition file
+			if (! ContainsValidIssueGdbPath(workListFileOrIssueGdbPath, out gdbPath,
+			                                out string message))
+			{
+				throw new InvalidOperationException(
+					$"The issue work list {workListFileOrIssueGdbPath} references a geodatabase that does not exist.");
+			}
+
+			_msg.DebugFormat("Extracted issue gdb path from {0}: {1}", workListFileOrIssueGdbPath,
+			                 gdbPath);
+		}
+		else
+		{
+			// Assume it is already an issue.gdb path:
+			gdbPath = workListFileOrIssueGdbPath;
+		}
+
+		_issueGdbPath = gdbPath;
 	}
 
 	#region Implementation of IWorkListItemDatastore
@@ -35,15 +63,13 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		message = null;
 
 		// TODO: Can the path really be null?
-		if (_path != null && _path.EndsWith(".iwl", StringComparison.InvariantCultureIgnoreCase))
+		if (_issueGdbPath != null &&
+		    _issueGdbPath.EndsWith(".iwl", StringComparison.InvariantCultureIgnoreCase))
 		{
 			// It's the definition file
-			string gdbPath = WorkListUtils.GetIssueGeodatabasePath(_path);
-
-			if (gdbPath == null)
+			string iwlFilePath = _issueGdbPath;
+			if (! ContainsValidIssueGdbPath(_issueGdbPath, out string _, out message))
 			{
-				message =
-					$"The issue work list {_path} references a geodatabase that does not exist.";
 				return false;
 			}
 		}
@@ -53,7 +79,7 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 	public IEnumerable<Table> GetTables()
 	{
-		if (string.IsNullOrEmpty(_path))
+		if (string.IsNullOrEmpty(_issueGdbPath))
 		{
 			return Enumerable.Empty<Table>();
 		}
@@ -62,7 +88,7 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		// todo daro: inline
 		using Geodatabase geodatabase =
 			new Geodatabase(
-				new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)));
+				new FileGeodatabaseConnectionPath(new Uri(_issueGdbPath, UriKind.Absolute)));
 
 		return DatasetUtils.OpenTables(geodatabase, IssueGdbSchema.IssueFeatureClassNames)
 		                   .ToList();
@@ -70,9 +96,9 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 	public async Task<bool> TryPrepareSchema()
 	{
-		if (_path == null)
+		if (_issueGdbPath == null)
 		{
-			_msg.Debug($"{nameof(_path)} is null");
+			_msg.Debug($"{nameof(_issueGdbPath)} is null");
 			return false;
 		}
 
@@ -80,25 +106,26 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 		using (Geodatabase geodatabase =
 		       new Geodatabase(
-			       new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)))
+			       new FileGeodatabaseConnectionPath(new Uri(_issueGdbPath, UriKind.Absolute)))
 		      )
 		{
 			if (geodatabase.GetDomains()
 			               .Any(domain => string.Equals(_domainName, domain.GetName())))
 			{
-				_msg.Debug($"Domain {_domainName} already exists in {_path}");
+				_msg.Debug($"Domain {_domainName} already exists in {_issueGdbPath}");
 				return true;
 			}
 		}
 
 		// the GP tool is going to fail on creating a domain with the same name
 		await Task.WhenAll(
-			GeoprocessingUtils.CreateDomainAsync(_path, _domainName,
+			GeoprocessingUtils.CreateDomainAsync(_issueGdbPath, _domainName,
 			                                     "Correction status for work list"),
 			GeoprocessingUtils.AddCodedValueToDomainAsync(
-				_path, _domainName, (int) IssueCorrectionStatus.NotCorrected, "Not Corrected"),
+				_issueGdbPath, _domainName, (int) IssueCorrectionStatus.NotCorrected,
+				"Not Corrected"),
 			GeoprocessingUtils.AddCodedValueToDomainAsync(
-				_path, _domainName, (int) IssueCorrectionStatus.Corrected, "Corrected"));
+				_issueGdbPath, _domainName, (int) IssueCorrectionStatus.Corrected, "Corrected"));
 
 		_msg.DebugStopTiming(watch, "Prepared schema - domain");
 
@@ -116,7 +143,31 @@ public class FgdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		return new AttributeReader(definition, attributes);
 	}
 
+	public string SuggestWorkListGroupName()
+	{
+		string directoryName = Path.GetDirectoryName(_issueGdbPath);
+
+		return Path.GetFileName(directoryName);
+	}
+
 	#endregion
+
+	private static bool ContainsValidIssueGdbPath([NotNull] string iwlFilePath,
+	                                              out string gdbPath,
+	                                              out string message)
+	{
+		gdbPath = WorkListUtils.GetIssueGeodatabasePath(iwlFilePath);
+		message = null;
+
+		if (gdbPath == null)
+		{
+			message =
+				$"The issue work list {iwlFilePath} references a geodatabase that does not exist.";
+			return false;
+		}
+
+		return true;
+	}
 
 	private async Task<Table> EnsureStatusFieldCoreAsync(Table table)
 	{

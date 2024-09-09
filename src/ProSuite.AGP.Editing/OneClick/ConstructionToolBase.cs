@@ -53,15 +53,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Cursor SketchCursor { get; set; }
 
-		protected bool IsInSketchMode
-		{
-			get
-			{
-				// TODO: maintain actual property!
-				return SketchType != SketchGeometryType.Rectangle &&
-				       SketchType != SketchGeometryType.Lasso;
-			}
-		}
+		protected bool IsInSketchMode => Cursor == SketchCursor;
 
 		protected bool SupportRestoreLastSketch => true;
 
@@ -73,7 +65,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => "OnSketchModifiedAsync()");
 
-			if (LogSketchVertexZs)
+			if (LogSketchVertexZs && IsInSketchMode)
 			{
 				await LogLastSketchVertexZ();
 			}
@@ -128,11 +120,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			RememberSketch();
 
 			base.OnToolDeactivateCore(hasMapViewChanged);
-		}
-
-		protected override bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			return ! IsInSketchMode;
 		}
 
 		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)

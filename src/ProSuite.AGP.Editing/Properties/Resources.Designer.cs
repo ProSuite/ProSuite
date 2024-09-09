@@ -83,6 +83,36 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] CrackerToolCursor {
+            get {
+                object obj = ResourceManager.GetObject("CrackerToolCursor", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] CrackerToolCursorProcess {
+            get {
+                object obj = ResourceManager.GetObject("CrackerToolCursorProcess", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] CrackerToolCursorShift {
+            get {
+                object obj = ResourceManager.GetObject("CrackerToolCursorShift", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] CreateFeatureInPickedClassCursor {
             get {
                 object obj = ResourceManager.GetObject("CreateFeatureInPickedClassCursor", resourceCulture);

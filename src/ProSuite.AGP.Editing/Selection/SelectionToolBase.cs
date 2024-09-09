@@ -47,11 +47,6 @@ namespace ProSuite.AGP.Editing.Selection
 			await base.OnToolDeactivateAsync(hasMapViewChanged);
 		}
 
-		protected override bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			return true;
-		}
-
 		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftIsPressed)
 		{
 			return Task.FromResult(true);
