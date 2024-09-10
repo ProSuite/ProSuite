@@ -270,6 +270,18 @@ namespace ProSuite.DomainModel.Core.DataModel
 			return Id;
 		}
 
+		// TODO: Consier making the attribute role a proper value type such as a struct / record
+		// Some code uses the == comparison and expects it to work as value type comparison.
+		public static bool operator ==(AttributeRole left, AttributeRole right)
+		{
+			return left?.Id == right?.Id;
+		}
+
+		public static bool operator !=(AttributeRole left, AttributeRole right)
+		{
+			return left?.Id != right?.Id;
+		}
+
 		#endregion
 	}
 }
