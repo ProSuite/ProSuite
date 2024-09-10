@@ -73,7 +73,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 				Table originClass = geodatabase.OpenDataset<Table>(originClassName);
 
-				return (IObjectClass) ArcUtils.ToArcTable(originClass);
+				return ArcUtils.ToArcTable(originClass);
 			}
 		}
 
@@ -90,7 +90,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 				Table destinationClass = geodatabase.OpenDataset<Table>(destinationClassName);
 
-				return (IObjectClass) ArcUtils.ToArcTable(destinationClass);
+				return ArcUtils.ToArcTable(destinationClass);
 			}
 		}
 
@@ -140,14 +140,14 @@ namespace ESRI.ArcGIS.Geodatabase
 			_proRelationshipClass.DeleteRelationship(originRow, destinationRow);
 		}
 
-		public ISet GetObjectsRelatedToObject(IObject anObject)
+		public IEnumerable<IObject> GetObjectsRelatedToObject(IObject anObject)
 		{
 			long sourceOid = anObject.OID;
 			string sourceClassName = anObject.Class.Name;
 
 			IEnumerable<Row> relatedObjects = GetRelatedObjects(sourceOid, sourceClassName);
 
-			return new ArcSet(relatedObjects);
+			return relatedObjects.Select(o => ArcUtils.ToArcRow(o));
 		}
 
 		public void DeleteRelationshipsForObject(IObject anObject)
@@ -183,11 +183,11 @@ namespace ESRI.ArcGIS.Geodatabase
 			}
 		}
 
-		public ISet GetObjectsRelatedToObjectSet(ISet anObjectSet)
+		public IEnumerable<IObject> GetObjectsRelatedToObjectSet(ISet anObjectSet)
 		{
 			if (anObjectSet.Count == 0)
 			{
-				return new ArcSet(new List<Row>());
+				yield break;
 			}
 
 			ICollection<Row> proRows = ((ArcSet) anObjectSet).ProRows;
@@ -199,7 +199,10 @@ namespace ESRI.ArcGIS.Geodatabase
 
 			IEnumerable<Row> relatedObjects = GetRelatedObjects(objectIds, sourceClassName);
 
-			return new ArcSet(relatedObjects);
+			foreach (ArcRow related in relatedObjects.Select(o => ArcUtils.ToArcRow(o)))
+			{
+				yield return related;
+			}
 		}
 
 		public void DeleteRelationshipsForObjectSet(ISet anObjectSet)

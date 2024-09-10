@@ -27,7 +27,7 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 			return result;
 		}
 
-		internal static ArcRow ToArcRow(Row proRow, ITable parent = null)
+		public static ArcRow ToArcRow(Row proRow, ITable parent = null)
 		{
 			if (parent == null)
 			{

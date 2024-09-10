@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ESRI.ArcGIS.Geodatabase
 {
 	public interface IRelationshipClass : IDataset
@@ -36,13 +38,13 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		void DeleteRelationship(IObject originObject, IObject destinationObject);
 
-		ISet GetObjectsRelatedToObject(IObject anObject);
+		IEnumerable<IObject> GetObjectsRelatedToObject(IObject anObject);
 
 		//IEnumRelationship GetRelationshipsForObject(IObject anObject);
 
 		void DeleteRelationshipsForObject(IObject anObject);
 
-		ISet GetObjectsRelatedToObjectSet(ISet anObjectSet);
+		IEnumerable<IObject> GetObjectsRelatedToObjectSet(ISet anObjectSet);
 
 		//IEnumRelationship GetRelationshipsForObjectSet(ISet anObjectSet);
 
