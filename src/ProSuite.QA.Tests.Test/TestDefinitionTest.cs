@@ -3686,6 +3686,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(TrDissolve),
 				                             typeof(TrGetNodes),
 				                             typeof(TrIntersect)
+											 typeof(TrMultilineToLine)
 			                             };
 
 			foreach (Type transformerType in refactoredTypes)
@@ -3780,6 +3781,7 @@ namespace ProSuite.QA.Tests.Test
 			// difficult assertions:
 			AddTrDissolveCases(model, trCases);
 			AddTrGetNodesCases(model, trCases);
+			AddTrMultilineToLineCases(model, trCases);
 
 			foreach (TrDefinitionCase trCase in trCases)
 			{
@@ -3922,6 +3924,16 @@ namespace ProSuite.QA.Tests.Test
 			                                 optionalValues));
 		}
 
+		private static void AddTrMultilineToLineCases(TestDataModel model,
+		                                            ICollection<TrDefinitionCase>
+			                                            trCases)
+		{
+			trCases.Add(new TrDefinitionCase(typeof(TrMultilineToLine), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetVectorDataset(),
+			                                 }));
+		}
 		private static void AddParameterValue(string parameterName, object value,
 		                                      QualityCondition testCondition,
 		                                      QualityCondition testDefCondition)
