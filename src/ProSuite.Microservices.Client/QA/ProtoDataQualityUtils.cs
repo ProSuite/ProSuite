@@ -537,7 +537,19 @@ namespace ProSuite.Microservices.Client.QA
 				                     AssociationType = associationType,
 				                     Cardinality = (int) association.Cardinality,
 				                     End1Dataset = association.End1.ObjectDataset.Id,
-				                     End2Dataset = association.End2.ObjectDataset.Id
+				                     End2Dataset = association.End2.ObjectDataset.Id,
+				                     End1Id = association.End1.Id,
+				                     End2Id = association.End2.Id,
+				                     End1DocumentEdit = association.End1.DocumentAssociationEdit,
+				                     End2DocumentEdit = association.End2.DocumentAssociationEdit,
+				                     End1CascadeDeletion = association.End1.CascadeDeletion,
+				                     End2CascadeDeletion = association.End2.CascadeDeletion,
+				                     End1CopyPolicy = (int) association.End1.CopyPolicy,
+				                     End2CopyPolicy = (int) association.End2.CopyPolicy,
+				                     End1CascadeDeleteOrphans =
+					                     association.End1.CascadeDeleteOrphans,
+				                     End2CascadeDeleteOrphans =
+					                     association.End2.CascadeDeleteOrphans
 			                     };
 
 			if (includeDetails)
