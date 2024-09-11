@@ -83,6 +83,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 		/// </summary>
 		public IList<IPoint> MovedEdgeEndpoints { get; } = new List<IPoint>();
 
+		public bool DisableSplittingByNodes { get; set; }
+
 		public void UpdateFeature(
 			[NotNull] IFeature reshapedFeature,
 			[NotNull] IGeometry newGeometry)
@@ -103,23 +105,26 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			// Drag along existing edges:
 			JunctionUpdated(oldPoint, (IPoint) junctionFeature.Shape);
 
-			// Split existing edges at the new junction:
-			foreach (IFeature edgeFeature in NetworkFeatureFinder.FindEdgeFeaturesAt(newPoint))
+			if (! DisableSplittingByNodes)
 			{
-				IPolyline edge = (IPolyline) edgeFeature.ShapeCopy;
-
-				if (! GeometryUtils.InteriorIntersects(edge, newPoint))
+				// Split existing edges at the new junction:
+				foreach (IFeature edgeFeature in NetworkFeatureFinder.FindEdgeFeaturesAt(newPoint))
 				{
-					continue;
-				}
+					IPolyline edge = (IPolyline) edgeFeature.ShapeCopy;
 
-				var newEdges =
-					LinearNetworkEditUtils.SplitAtJunctions(
-						edgeFeature, new[] { junctionFeature });
+					if (! GeometryUtils.InteriorIntersects(edge, newPoint))
+					{
+						continue;
+					}
 
-				foreach (IFeature newEdge in newEdges)
-				{
-					NetworkFeatureFinder.TargetFeatureCandidates?.Add(newEdge);
+					var newEdges =
+						LinearNetworkEditUtils.SplitAtJunctions(
+							edgeFeature, new[] { junctionFeature });
+
+					foreach (IFeature newEdge in newEdges)
+					{
+						NetworkFeatureFinder.TargetFeatureCandidates?.Add(newEdge);
+					}
 				}
 			}
 		}
