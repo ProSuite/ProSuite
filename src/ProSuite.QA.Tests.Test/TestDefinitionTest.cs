@@ -3687,6 +3687,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(TrGetNodes),
 				                             typeof(TrIntersect)
 											 typeof(TrMultilineToLine)
+											 typeof(TrMultipolygonToPolygon)
 			                             };
 
 			foreach (Type transformerType in refactoredTypes)
@@ -3782,6 +3783,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrDissolveCases(model, trCases);
 			AddTrGetNodesCases(model, trCases);
 			AddTrMultilineToLineCases(model, trCases);
+			AddTrMultipolygonToPolygonCases(model, trCases);
 
 			foreach (TrDefinitionCase trCase in trCases)
 			{
@@ -3934,6 +3936,22 @@ namespace ProSuite.QA.Tests.Test
 				                                 model.GetVectorDataset(),
 			                                 }));
 		}
+
+		private static void AddTrMultipolygonToPolygonCases(TestDataModel model,
+		                                              ICollection<TrDefinitionCase>
+			                                              trCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("TransformedParts", "SinglePolygons");
+
+			trCases.Add(new TrDefinitionCase(typeof(TrMultipolygonToPolygon), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetVectorDataset(),
+			                                 },
+			                                 optionalValues));
+		}
+
 		private static void AddParameterValue(string parameterName, object value,
 		                                      QualityCondition testCondition,
 		                                      QualityCondition testDefCondition)

@@ -10,6 +10,7 @@ using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -74,14 +75,6 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		public enum PolygonPart
-		{
-			SinglePolygons,
-			OuterRings,
-			InnerRings,
-			AllRings
-		}
-
 		public const string AttrOuterRingIndex = "OuterRingIndex";
 		public const string AttrInnerRingIndex = "InnerRingIndex";
 
@@ -100,6 +93,14 @@ namespace ProSuite.QA.Tests.Transformers
 			[NotNull] [DocTr(nameof(DocTrStrings.TrMultipolygonToPolygon_featureClass))]
 			IReadOnlyFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolygon) { }
+
+		[InternallyUsedTest]
+		public TrMultipolygonToPolygon(
+			[NotNull] TrMultipolygonToPolygonDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass)
+		{
+			TransformedParts = definition.TransformedParts;
+		}
 
 		protected override IList<int> AddCustomAttributes(TransformedFeatureClass transformedFc)
 		{
