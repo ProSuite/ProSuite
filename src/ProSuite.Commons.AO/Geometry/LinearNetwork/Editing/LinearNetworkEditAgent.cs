@@ -494,8 +494,10 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 		private IFeature CreateJunction([NotNull] IPoint point)
 		{
 			IFeature junctionFeature = null;
-			if (JunctionFeatureFactory != null)
+			if (JunctionFeatureFactory != null &&
+			    NetworkDefinition.GetDefaultJunctionClass(out _) != null)
 			{
+				// TODO: This is a very obscure and often confusing feature that should probably be removed altogether:
 				junctionFeature = JunctionFeatureFactory.CreateJunction(NetworkDefinition);
 			}
 
