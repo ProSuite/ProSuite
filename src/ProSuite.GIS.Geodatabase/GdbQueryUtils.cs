@@ -478,11 +478,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			foreach (IRelationshipClass relationshipClass in relationshipClasses)
 			{
-				ISet pairs = relationshipClass.GetObjectsRelatedToObject(obj);
-
-				for (var related = (IObject) pairs.Next();
-				     related != null;
-				     related = (IObject) pairs.Next())
+				foreach (IObject related in relationshipClass.GetObjectsRelatedToObject(obj))
 				{
 					yield return related;
 				}
