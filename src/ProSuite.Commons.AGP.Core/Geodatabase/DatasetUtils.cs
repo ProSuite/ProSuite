@@ -6,7 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.Mapping;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -57,12 +56,6 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static string GetAliasName(Table table)
 		{
-			// NOTE: Bug! Returns empty string if it's an AnnotationFeatureClass
-			if (table is AnnotationFeatureClass annoClass)
-			{
-				return annoClass.GetName();
-			}
-
 			if (table != null && table.IsJoinedTable())
 			{
 				return StringUtils.Concatenate(GetDatabaseTables(table).Select(GetAliasName), "/");
@@ -75,13 +68,21 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		[CanBeNull]
 		private static string GetAliasName(TableDefinition definition)
 		{
+			if (definition is null) return null;
+
 			try
 			{
-				return definition?.GetAliasName();
+				// GetAliasName() returns an empty string, if the alias is not set
+				string alias = definition.GetAliasName();
+
+				if(string.IsNullOrEmpty(alias)) alias = definition.GetName();
+				return alias;
 			}
-			catch (NotSupportedException)
+			catch (NotSupportedException notSupportedException)
 			{
-				// Shapefiles have no alias and throw NotSupportedException
+				// Shapefiles throw a NotSupportedException
+				_msg.Debug("Subtypes not supported", notSupportedException);
+
 				return null;
 			}
 		}
