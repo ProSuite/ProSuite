@@ -192,7 +192,10 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 				}
 
 				// The edge is split, if it really is part of the network definition
-				return IsFeatureInNetworkClass(feature, edgeClassDef);
+				if (IsFeatureInNetworkClass(feature, edgeClassDef))
+				{
+					return true;
+				}
 			}
 
 			return false;
