@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
@@ -22,11 +23,15 @@ public class WhiteSelectionFeedback : IDisposable
 	private IDisposable _involvedSegmentsOverlay;
 	private IDisposable _selectedVertexOverlay;
 	private IDisposable _unselectedVertexOverlay;
+	private IDisposable _selectedControlPointOverlay;
+	private IDisposable _unselectedControlPointOverlay;
 	private IDisposable _activeVertexOverlay;
 
 	private CIMSymbolReference _involvedSegmentsSymRef;
 	private CIMSymbolReference _selectedVertexSymRef;
 	private CIMSymbolReference _unselectedVertexSymRef;
+	private CIMSymbolReference _selectedControlPointSymRef;
+	private CIMSymbolReference _unselectedControlPointSymRef;
 	private CIMSymbolReference _activeVertexSymRef;
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -86,6 +91,12 @@ public class WhiteSelectionFeedback : IDisposable
 			_unselectedVertexOverlay?.Dispose();
 			_unselectedVertexOverlay = null;
 
+			_selectedControlPointOverlay?.Dispose();
+			_selectedControlPointOverlay = null;
+
+			_unselectedControlPointOverlay?.Dispose();
+			_unselectedControlPointOverlay = null;
+
 			return;
 		}
 
@@ -100,56 +111,81 @@ public class WhiteSelectionFeedback : IDisposable
 			_involvedSegmentsOverlay?.Dispose();
 			_involvedSegmentsOverlay = null;
 		}
+		else if (_involvedSegmentsOverlay is null)
+		{
+			_involvedSegmentsOverlay = mapView.AddOverlay(segments, segmentsSymRef);
+		}
 		else
 		{
-			if (_involvedSegmentsOverlay is null)
-			{
-				_involvedSegmentsOverlay = mapView.AddOverlay(segments, segmentsSymRef);
-			}
-			else
-			{
-				UpdateOverlay(mapView, _involvedSegmentsOverlay, segments, segmentsSymRef);
-			}
+			UpdateOverlay(mapView, _involvedSegmentsOverlay, segments, segmentsSymRef);
 		}
 
-		var unselectedSymbol = GetUnselectedVertexSymRef();
-		var unselectedMultipoint = CreateUnselectedVertexMultipoint(mws);
+		var unselectedVertexSymbol = GetUnselectedVertexSymRef();
+		var unselectedVertices = CreateVertexMultipoint(mws, false, false);
 
-		if (unselectedMultipoint is null || unselectedMultipoint.IsEmpty)
+		if (unselectedVertices is null || unselectedVertices.IsEmpty)
 		{
 			_unselectedVertexOverlay?.Dispose();
 			_unselectedVertexOverlay = null;
 		}
+		else if (_unselectedVertexOverlay is null)
+		{
+			_unselectedVertexOverlay = mapView.AddOverlay(unselectedVertices, unselectedVertexSymbol);
+		}
 		else
 		{
-			if (_unselectedVertexOverlay is null)
-			{
-				_unselectedVertexOverlay = mapView.AddOverlay(unselectedMultipoint, unselectedSymbol);
-			}
-			else
-			{
-				UpdateOverlay(mapView, _unselectedVertexOverlay, unselectedMultipoint, unselectedSymbol);
-			}
+			UpdateOverlay(mapView, _unselectedVertexOverlay, unselectedVertices, unselectedVertexSymbol);
 		}
 
-		var selectedSymbol = GetSelectedVertexSymRef();
-		var selectedMultipoint = CreateSelectedVertexMultipoint(mws);
+		var unselectedControlSymbol = GetUnselectedControlPointSymRef();
+		var unselectedControlPoints = CreateVertexMultipoint(mws, false, true);
 
-		if (selectedMultipoint is null || selectedMultipoint.IsEmpty)
+		if (unselectedControlPoints is null || unselectedControlPoints.IsEmpty)
+		{
+			_unselectedControlPointOverlay?.Dispose();
+			_unselectedControlPointOverlay = null;
+		}
+		else if (_unselectedControlPointOverlay is null)
+		{
+			_unselectedControlPointOverlay = mapView.AddOverlay(unselectedControlPoints, unselectedControlSymbol);
+		}
+		else
+		{
+			UpdateOverlay(mapView, _unselectedControlPointOverlay, unselectedControlPoints, unselectedControlSymbol);
+		}
+
+		var selectedVertexSymbol = GetSelectedVertexSymRef();
+		var selectedVertices = CreateVertexMultipoint(mws, true, false);
+
+		if (selectedVertices is null || selectedVertices.IsEmpty)
 		{
 			_selectedVertexOverlay?.Dispose();
 			_selectedVertexOverlay = null;
 		}
+		else if (_selectedVertexOverlay is null)
+		{
+			_selectedVertexOverlay = mapView.AddOverlay(selectedVertices, selectedVertexSymbol);
+		}
 		else
 		{
-			if (_selectedVertexOverlay is null)
-			{
-				_selectedVertexOverlay = mapView.AddOverlay(selectedMultipoint, selectedSymbol);
-			}
-			else
-			{
-				UpdateOverlay(mapView, _selectedVertexOverlay, selectedMultipoint, selectedSymbol);
-			}
+			UpdateOverlay(mapView, _selectedVertexOverlay, selectedVertices, selectedVertexSymbol);
+		}
+
+		var selectedControlSymbol = GetSelectedControlPointSymRef();
+		var selectedControlPoints = CreateVertexMultipoint(mws, true, true);
+
+		if (selectedControlPoints is null || selectedControlPoints.IsEmpty)
+		{
+			_selectedControlPointOverlay?.Dispose();
+			_selectedControlPointOverlay = null;
+		}
+		else if (_selectedControlPointOverlay is null)
+		{
+			_selectedControlPointOverlay = mapView.AddOverlay(selectedControlPoints, selectedControlSymbol);
+		}
+		else
+		{
+			UpdateOverlay(mapView, _selectedControlPointOverlay, selectedControlPoints, selectedControlSymbol);
 		}
 	}
 
@@ -196,6 +232,12 @@ public class WhiteSelectionFeedback : IDisposable
 		_unselectedVertexOverlay?.Dispose();
 		_unselectedVertexOverlay = null;
 
+		_selectedControlPointOverlay?.Dispose();
+		_selectedControlPointOverlay = null;
+
+		_unselectedControlPointOverlay?.Dispose();
+		_unselectedControlPointOverlay = null;
+
 		_activeVertexOverlay?.Dispose();
 		_activeVertexOverlay = null;
 	}
@@ -214,26 +256,20 @@ public class WhiteSelectionFeedback : IDisposable
 		}
 	}
 
-	private static Multipoint CreateSelectedVertexMultipoint(IMapWhiteSelection mws)
+	private static bool IsControlPoint(MapPoint point)
 	{
-		var all = mws.GetLayerSelections();
-
-		var builder = new MultipointBuilderEx(mws.Map.SpatialReference);
-
-		foreach (var ws in all)
-		{
-			var points = ws.GetSelectedVertices();
-			builder.AddPoints(points);
-		}
-
-		var multipoint = builder.ToGeometry();
-
-		var result = GeometryEngine.Instance.SimplifyAsFeature(multipoint, true);
-
-		return (Multipoint) result;
+		if (point is null) return false;
+		return point.HasID && point.ID != 0;
 	}
 
-	private static Multipoint CreateUnselectedVertexMultipoint(IMapWhiteSelection mws)
+	/// <summary>
+	/// Create a multipoint with all the vertices of the given white selection.
+	/// Use parameters to control which vertices are added to the multipoint:
+	/// all, only selected, or only unselected; and, optionally, amongst those
+	/// pick only regular vertices or only control points.
+	/// </summary>
+	private static Multipoint CreateVertexMultipoint(
+		IMapWhiteSelection mws, bool? selected = null, bool? controlPoints = null)
 	{
 		var all = mws.GetLayerSelections();
 
@@ -241,7 +277,25 @@ public class WhiteSelectionFeedback : IDisposable
 
 		foreach (var ws in all)
 		{
-			var points = ws.GetUnselectedVertices();
+			IEnumerable<MapPoint> points;
+
+			if (selected is null)
+			{
+				// both selected and unselected vertices:
+				points = ws.GetSelectedVertices().Concat(ws.GetUnselectedVertices());
+			}
+			else
+			{
+				// either selected or unselected vertices:
+				points = selected.Value ? ws.GetSelectedVertices() : ws.GetUnselectedVertices();
+			}
+
+			if (controlPoints.HasValue)
+			{
+				bool wantControlPoint = controlPoints.Value; // do not inline!
+				points = points.Where(p => IsControlPoint(p) == wantControlPoint);
+			}
+
 			builder.AddPoints(points);
 		}
 
@@ -276,6 +330,8 @@ public class WhiteSelectionFeedback : IDisposable
 	{
 		_selectedVertexSymRef = null;
 		_unselectedVertexSymRef = null;
+		_selectedControlPointSymRef = null;
+		_unselectedControlPointSymRef = null;
 		_involvedSegmentsSymRef = null;
 		_activeVertexSymRef = null;
 	}
@@ -312,6 +368,21 @@ public class WhiteSelectionFeedback : IDisposable
 	}
 
 	/// <remarks>Must call on MCT</remarks>>
+	private CIMSymbolReference GetSelectedControlPointSymRef()
+	{
+		if (_selectedControlPointSymRef is null)
+		{
+			double factor = Math.Sqrt(2);
+			var color = SelectionColor;
+			var size = SelectionVertexSize * factor; // to compensate diamond vs square (rot 45°)
+			var symbol = SymbolUtils.CreatePointSymbol(color, size, SymbolUtils.MarkerStyle.Diamond);
+			_selectedControlPointSymRef = symbol.MakeSymbolReference();
+		}
+
+		return _selectedControlPointSymRef;
+	}
+
+	/// <remarks>Must call on MCT</remarks>>
 	private CIMSymbolReference GetUnselectedVertexSymRef()
 	{
 		if (_unselectedVertexSymRef is null)
@@ -326,6 +397,24 @@ public class WhiteSelectionFeedback : IDisposable
 		}
 
 		return _unselectedVertexSymRef;
+	}
+
+	/// <remarks>Must call on MCT</remarks>>
+	private CIMSymbolReference GetUnselectedControlPointSymRef()
+	{
+		if (_unselectedControlPointSymRef is null)
+		{
+			double factor = Math.Sqrt(2.0);
+			var color = SelectionColor;
+			var size = SelectionVertexSize * factor; // to compensate diamond vs square (rot 45°)
+			var stroke = SymbolUtils.CreateSolidStroke(color, size / 5);
+			var polySym = SymbolUtils.CreatePolygonSymbol(ColorUtils.WhiteRGB, SymbolUtils.FillStyle.Solid, stroke);
+			var marker = SymbolUtils.CreateMarker(SymbolUtils.MarkerStyle.Diamond, polySym, size);
+			var symbol = SymbolUtils.CreatePointSymbol(marker);
+			_unselectedControlPointSymRef = symbol.MakeSymbolReference();
+		}
+
+		return _unselectedControlPointSymRef;
 	}
 
 	/// <remarks>Must call on MCT</remarks>>
