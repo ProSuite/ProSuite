@@ -73,11 +73,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return await QueuedTaskUtils.Run(OnSketchModifiedCore);
 		}
 
-		protected override void OnSelectionPhaseStarted()
-		{
-			base.OnSelectionPhaseStarted();
-		}
-
 		protected override Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
 		{
 			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
@@ -288,19 +283,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (ActiveMapView == null)
 			{
 				return false;
-			}
+			}	
 
-			Dictionary<MapMember, List<long>> selection =
-				SelectionUtils.GetSelection(args.Selection);
-
-			if (! CanUseSelection(selection))
+			if (! CanUseSelection(ActiveMapView))
 			{
 				//LogPromptForSelection();
 				StartSelectionPhase();
-			}
-			else if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology)
-			{
-				SetSketchSymbol(selection);
 			}
 
 			// TODO: virtual RefreshFeedbackCoreAsync(), override in AdvancedReshape
@@ -331,9 +319,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		#endregion
-
-		// todo daro move to base?
-		protected virtual void SetSketchSymbol(Dictionary<MapMember, List<long>> selection) { }
 
 		protected abstract SketchGeometryType GetSketchGeometryType();
 
