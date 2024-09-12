@@ -211,18 +211,21 @@ namespace ProSuite.Commons.AGP.Selection
 			return GetSelection<T>(selectionSet);
 		}
 
+		[NotNull]
 		public static Dictionary<MapMember, List<long>> GetSelection(
 			SelectionSet selectionSet)
 		{
 			return selectionSet.ToDictionary();
 		}
 
+		[NotNull]
 		public static Dictionary<T, List<long>> GetSelection<T>(
 			SelectionSet selectionSet) where T : MapMember
 		{
 			return selectionSet.ToDictionary<T>();
 		}
 
+		[NotNull]
 		public static Dictionary<MapMember, List<long>> GetSelection(
 			MapSelectionChangedEventArgs selectionChangedArgs)
 		{
@@ -230,11 +233,19 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		public static int GetFeatureCount(
+			[NotNull] IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> selection)
+		{
+			Assert.ArgumentNotNull(selection, nameof(selection));
+
+			return selection.Select(pair => pair.Value).Sum(set => set.Count);
+		}
+
+		public static int GetFeatureCount(
 			[NotNull] IDictionary<BasicFeatureLayer, List<long>> selection)
 		{
 			Assert.ArgumentNotNull(selection, nameof(selection));
 
-			return selection.Values.Sum(set => set.Count());
+			return selection.Values.Sum(set => set.Count);
 		}
 
 		public static int GetFeatureCount(
@@ -242,7 +253,7 @@ namespace ProSuite.Commons.AGP.Selection
 		{
 			Assert.ArgumentNotNull(selection, nameof(selection));
 
-			return selection.Values.Sum(set => set.Count());
+			return selection.Values.Sum(set => set.Count);
 		}
 
 		public static int GetFeatureCount(
@@ -282,6 +293,45 @@ namespace ProSuite.Commons.AGP.Selection
 				                : "-> {0:N0} features selected in {1} '{2}'";
 
 			_msg.InfoFormat(format, selectionCount, mapMemberType, mapMemberName);
+		}
+
+		[NotNull]
+		public static Dictionary<BasicFeatureLayer, List<Feature>>
+			GetApplicableSelectedFeatures(
+				[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+				[CanBeNull] Predicate<BasicFeatureLayer> predicate = null,
+				bool withoutJoins = false)
+		{
+			Assert.ArgumentNotNull(selectionByLayer, nameof(selectionByLayer));
+
+			var result = new Dictionary<BasicFeatureLayer, List<Feature>>(selectionByLayer.Count);
+
+			SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
+
+			foreach (var oidsByLayer in GetApplicableSelection(selectionByLayer, predicate))
+			{
+				BasicFeatureLayer layer = oidsByLayer.Key;
+				List<long> oids = oidsByLayer.Value;
+
+				var features = MapUtils
+				               .GetFeatures(layer, oids, withoutJoins, recycling: false,
+				                            mapSpatialReference)
+				               .ToList();
+
+				result.Add(layer, features);
+			}
+
+			return result;
+		}
+
+		public static IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>>
+			GetApplicableSelection(
+				[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+				[CanBeNull] Predicate<BasicFeatureLayer> predicate = null)
+		{
+			Assert.ArgumentNotNull(selectionByLayer, nameof(selectionByLayer));
+
+			return selectionByLayer.Where(pair => predicate != null && predicate(pair.Key));
 		}
 	}
 }
