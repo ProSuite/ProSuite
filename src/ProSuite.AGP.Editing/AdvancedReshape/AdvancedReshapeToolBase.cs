@@ -7,7 +7,6 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -19,7 +18,6 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
@@ -44,6 +42,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		// - Update feedback on toggle layer visibility
 
 		[CanBeNull] private AdvancedReshapeFeedback _feedback;
+		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
 		private Task<bool> _updateFeedbackTask;
 
@@ -119,27 +118,27 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			       geometryType == GeometryType.Polygon;
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override async void OnToolActivatingCore()
 		{
-			_feedback = new AdvancedReshapeFeedback(this);
+			_feedback = new AdvancedReshapeFeedback();
 
-			if (MapUtils.HasSelection(ActiveMapView) &&
-			    ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology)
-			{
-				SetSketchSymbol(SelectionUtils.GetSelection(ActiveMapView.Map));
-			}
+			_symbolizedSketch =
+				new SymbolizedSketchTypeBasedOnSelection(this, SketchGeometryType.Line);
+			await ViewUtils.TryAsync(
+				QueuedTask.Run(() => { _symbolizedSketch.SetSketchSymbolBasedOnSelection(); }),
+				_msg);
 
 			base.OnToolActivatingCore();
 		}
 
 		protected override void OnSelectionPhaseStarted()
 		{
-			// clear any remaining feedback or sketch symbol
 			_feedback?.Clear();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_symbolizedSketch?.Dispose();
 			_feedback?.Clear();
 			_feedback = null;
 
@@ -245,30 +244,28 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		//	}
 		//}
 
-		protected override void SetSketchSymbol(Dictionary<MapMember, List<long>> selection)
+		public bool CanSelectFromLayer(Layer layer)
 		{
-			Dictionary<BasicFeatureLayer, List<long>> dictionary =
-			selection.Where(pair => pair.Key is BasicFeatureLayer)
-			.ToDictionary(pair => (BasicFeatureLayer)pair.Key, pair => pair.Value);
+			return base.CanSelectFromLayer(layer);
+		}
 
-			IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
-			GetApplicableSelectedFeatures(dictionary);
-
-			if (SelectionUtils.GetFeatureCount(applicableSelection) != 1)
+		public bool CanSetConstructionSketchSymbol(GeometryType geometryType)
+		{
+			switch (geometryType)
 			{
-				_feedback?.ClearSketchSymbol();
-				return;
+				case GeometryType.Polyline:
+					return true;
+				case GeometryType.Point:
+				case GeometryType.Polygon:
+				case GeometryType.Unknown:
+				case GeometryType.Envelope:
+				case GeometryType.Multipoint:
+				case GeometryType.Multipatch:
+				case GeometryType.GeometryBag:
+					return false;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
 			}
-
-			// todo daro stop if more than one feature
-			(BasicFeatureLayer layer, IList<Feature> features) = applicableSelection.FirstOrDefault();
-
-			if (layer is not FeatureLayer featureLayer)
-			{
-				return;
-			}
-
-			_feedback?.SetSketchSymbol(featureLayer, Assert.NotNull(features.FirstOrDefault()));
 		}
 
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
@@ -356,7 +353,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override void OnSketchResetCore()
 		{
-			_feedback?.Clear(clearSketchSymbol: false);
+			_feedback?.Clear();
+			
 			_nonDefaultSideMode = false;
 		}
 
@@ -404,7 +402,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			if (sketchPolyline == null || sketchPolyline.IsEmpty || sketchPolyline.PointCount < 2)
 			{
-				_feedback?.Clear(clearSketchSymbol: false);
+				_feedback?.Clear();
 				return true;
 			}
 
@@ -585,11 +583,14 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				       () => _feedback?.UpdatePreview(reshapeResult?.ResultFeatures));
 		}
 
-		public new MapView ActiveMapView => base.ActiveMapView;
-
-		public void SetSketchSymbol(CIMSymbolReference symbolReferencembol)
+		public void SetSketchSymbol(CIMSymbolReference symbolReference)
 		{
-			SketchSymbol = symbolReferencembol;
+			SketchSymbol = symbolReference;
+		}
+
+		public void SetSketchType(SketchGeometryType type)
+		{
+			SketchType = type;
 		}
 	}
 }
