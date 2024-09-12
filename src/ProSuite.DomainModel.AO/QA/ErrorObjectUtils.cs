@@ -433,9 +433,17 @@ namespace ProSuite.DomainModel.AO.QA
 					datasetResolver.GetDatasetByInvolvedRowTableName(
 						involvedRow.TableName, qualityCondition);
 
-				Assert.NotNull(dataset,
-				               "Unable to resolve dataset {0} for quality condition {1}",
-				               involvedRow.TableName, qualityCondition.Name);
+				if (dataset == null)
+				{
+					// TOP-5874: Some transformers cannot provide the correct table, such as TrMakeTable
+					_msg.InfoFormat("Unable to resolve dataset {0} for quality condition {1}",
+					                involvedRow.TableName, qualityCondition.Name);
+					yield break;
+				}
+
+				//Assert.NotNull(dataset,
+				//               "Unable to resolve dataset {0} for quality condition {1}",
+				//               involvedRow.TableName, qualityCondition.Name);
 
 				yield return new InvolvedRow(dataset.Name, involvedRow.OID);
 			}

@@ -110,6 +110,8 @@ namespace ProSuite.Microservices.Client.QA
 					{
 						if (VerificationMsg.SavedVerificationId >= 0)
 						{
+							_msg.DebugFormat("Getting verification details from DDX (<id> {0}).",
+							                 VerificationMsg.SavedVerificationId);
 							_qualityVerification =
 								_qualityVerificationRepository.Get(
 									VerificationMsg.SavedVerificationId);
@@ -123,6 +125,8 @@ namespace ProSuite.Microservices.Client.QA
 						}
 						else
 						{
+							_msg.DebugFormat(
+								"Using verification details provided from QA service.");
 							_qualityVerification = GetQualityVerificationTx(VerificationMsg);
 						}
 					});

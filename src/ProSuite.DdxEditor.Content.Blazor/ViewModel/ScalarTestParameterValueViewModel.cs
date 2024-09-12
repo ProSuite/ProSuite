@@ -7,6 +7,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.DdxEditor.Content.Blazor.View;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 
@@ -95,11 +96,27 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 		Assert.True(TryGetQueriedDatasetParameter(out DatasetTestParameterValue datasetParameter),
 		            "Queried dataset parameter does not exist");
 
-		var tableSchema = datasetParameter.DatasetValue as ITableSchemaDef;
+		Dataset dataset = datasetParameter.DatasetValue;
+		TransformerConfiguration transformerConfiguration = datasetParameter.ValueSource;
 
-		if (tableSchema == null)
+		ITableSchemaDef tableSchema = null;
+		if (dataset != null)
 		{
-			_msg.WarnFormat("Please select a table or feature class for parameter '{0}' first",
+			tableSchema = dataset as ITableSchemaDef;
+
+			if (tableSchema == null)
+			{
+				// Topologies, Rasters, etc
+				_msg.WarnFormat("The dataset {0} does not support queries", dataset.Name);
+			}
+		}
+		else if (transformerConfiguration != null)
+		{
+			tableSchema = GetTransformedTableSchemaDef(transformerConfiguration);
+		}
+		else
+		{
+			_msg.WarnFormat("Please select a dataset for parameter '{0}' first",
 			                datasetParameter.TestParameterName);
 			return null;
 		}
