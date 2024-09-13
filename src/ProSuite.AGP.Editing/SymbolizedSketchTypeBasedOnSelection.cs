@@ -225,10 +225,10 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 				return SketchGeometryType.Line;
 			case GeometryType.Polygon:
 				return SketchGeometryType.Polygon;
-			case GeometryType.Unknown:
-			case GeometryType.Envelope:
 			case GeometryType.Multipatch:
 				return SketchGeometryType.Multipatch;
+			case GeometryType.Unknown:
+			case GeometryType.Envelope:
 			case GeometryType.GeometryBag:
 				throw new ArgumentOutOfRangeException(nameof(geometryType),
 				                                      $@"Cannot apply sketch geometry type for {nameof(geometryType)}");
