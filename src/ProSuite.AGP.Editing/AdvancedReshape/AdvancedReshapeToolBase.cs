@@ -52,6 +52,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected AdvancedReshapeToolBase()
 		{
+			FireSketchEvents = true;
+			
 			// This is our property:
 			RequiresSelection = true;
 
