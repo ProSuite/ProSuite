@@ -125,7 +125,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_feedback = new AdvancedReshapeFeedback();
 
 			_symbolizedSketch =
-				new SymbolizedSketchTypeBasedOnSelection(this, SketchGeometryType.Line);
+				new SymbolizedSketchTypeBasedOnSelection(this, GetSelectionSketchGeometryType());
 			await ViewUtils.TryAsync(
 				QueuedTask.Run(() => { _symbolizedSketch.SetSketchSymbolBasedOnSelection(); }),
 				_msg);

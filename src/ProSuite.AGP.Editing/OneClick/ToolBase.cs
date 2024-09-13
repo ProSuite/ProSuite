@@ -34,13 +34,13 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	private const Key _keyPolygonDraw = Key.P;
 	private const Key _keyLassoDraw = Key.L;
 
-	private readonly SketchGeometryType _defaultSketchGeometryType;
+	private readonly SketchGeometryType _selectionSketchGeometryType;
 	private readonly Latch _toolActivateLatch = new();
 	private readonly Latch _latch = new();
 
 	private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
-	protected ToolBase(SketchGeometryType sketchGeometryType)
+	protected ToolBase(SketchGeometryType selectionSketchGeometryType)
 	{
 		ContextMenuID = "esri_mapping_selection2DContextMenu";
 
@@ -50,9 +50,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		IsSketchTool = true;
 		FireSketchEvents = true;
 		IsWYSIWYG = true;
-		SketchType = sketchGeometryType;
+		SketchType = selectionSketchGeometryType;
 
-		_defaultSketchGeometryType = sketchGeometryType;
+		_selectionSketchGeometryType = selectionSketchGeometryType;
 		
 		SelectionCursorCore = ToolUtils.GetCursor(Resources.SelectionToolNormal);
 		ConstructionCursorCore = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
@@ -100,7 +100,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		_toolActivateLatch.Increment();
 
 		_symbolizedSketch =
-			new SymbolizedSketchTypeBasedOnSelection(this, _defaultSketchGeometryType);
+			new SymbolizedSketchTypeBasedOnSelection(this, _selectionSketchGeometryType);
 
 		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
 

@@ -27,8 +27,8 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	protected CreateFeatureInPickedClassToolBase(SketchGeometryType sketchGeometryType) : base(
-		sketchGeometryType) { }
+	protected CreateFeatureInPickedClassToolBase(SketchGeometryType selectionSketchGeometryType) : base(
+		selectionSketchGeometryType) { }
 
 	protected override Cursor SelectionCursorCore =>
 		ToolUtils.GetCursor(Resources.CreateFeatureInPickedClassCursor);
