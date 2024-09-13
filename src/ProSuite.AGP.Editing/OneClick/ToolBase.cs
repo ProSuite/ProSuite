@@ -466,8 +466,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			return false; // startContructionPhase = false
 		}
 
-		IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
-			GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
+		Dictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
+			SelectionUtils.GetApplicableSelectedFeatures(selectionByLayer, CanSelectFromLayer);
 
 		if (applicableSelection.Count == 0)
 		{
@@ -585,36 +585,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			}
 
 			result.Add(layer, oids);
-		}
-
-		return result;
-	}
-
-	[NotNull]
-	[Obsolete("Use SelectionUtils.GetApplicableSelectedFeatures")]
-	protected IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
-		[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-		[CanBeNull] NotificationCollection notifications = null)
-	{
-		var result = new Dictionary<BasicFeatureLayer, List<Feature>>(selectionByLayer.Count);
-
-		SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
-
-		foreach (KeyValuePair<BasicFeatureLayer, List<long>> oidsByLayer in selectionByLayer)
-		{
-			BasicFeatureLayer layer = oidsByLayer.Key;
-			List<long> oids = oidsByLayer.Value;
-
-			if (! CanSelectFromLayer(layer, notifications))
-			{
-				continue;
-			}
-
-			var features = MapUtils
-			               .GetFeatures(layer, oids, withoutJoins: true, recycling: false,
-			                            mapSpatialReference).ToList();
-
-			result.Add(layer, features);
 		}
 
 		return result;

@@ -122,8 +122,9 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		{
 			try
 			{
-				IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
-					GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
+				var applicableSelection =
+					SelectionUtils.GetApplicableSelectedFeatures(
+						selectionByLayer, CanSelectFromLayer);
 
 				List<Feature> selectedFeatures = applicableSelection.Values.FirstOrDefault();
 
