@@ -217,7 +217,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			{
 				_symbolizedSketch.ResetSketchType();
 				_symbolizedSketch.ClearSketchSymbol();
-				//ResetSketchAppearance();
 			}
 		}
 
@@ -461,9 +460,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	{
 		using var source = GetProgressorSource();
 		var progressor = source?.Progressor;
-
-		//Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
-		//	SelectionUtils.GetSelection<BasicFeatureLayer>(selection);
 
 		if (! CanUseSelection(selectionByLayer, new NotificationCollection()))
 		{

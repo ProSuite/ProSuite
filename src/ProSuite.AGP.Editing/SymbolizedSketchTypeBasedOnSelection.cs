@@ -21,7 +21,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	[NotNull] private readonly ISymbolizedSketchTool _tool;
-	private readonly SketchGeometryType _defaultSketchType;
+	private readonly SketchGeometryType _selectionSketchGeometryType;
 
 	bool _showFeatureSketchSymbology;
 
@@ -33,12 +33,12 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	/// first FeatureLayer if many features are selected from many FeatureLayers.
 	/// </summary>
 	/// <param name="tool"></param>
-	/// <param name="defaultSketchType"></param>
+	/// <param name="selectionSketchGeometryType"></param>
 	public SymbolizedSketchTypeBasedOnSelection([NotNull] ISymbolizedSketchTool tool,
-	                                              SketchGeometryType defaultSketchType)
+	                                            SketchGeometryType selectionSketchGeometryType)
 	{
 		_tool = tool;
-		_defaultSketchType = defaultSketchType;
+		_selectionSketchGeometryType = selectionSketchGeometryType;
 
 		_showFeatureSketchSymbology = ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
 
@@ -62,7 +62,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 
 	public void ResetSketchType()
 	{
-		_tool.SetSketchType(_defaultSketchType);
+		_tool.SetSketchType(_selectionSketchGeometryType);
 	}
 
 	/// <summary>
@@ -191,7 +191,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		if (layer is not FeatureLayer featLayer)
 		{
 			_msg.Debug(
-				"Cannot set sketch symbol. No feature selected or applicable selection is not from FeatureLayer");
+				"Cannot set sketch symbol. No feature selected or no applicable selection from FeatureLayer");
 			return null;
 		}
 

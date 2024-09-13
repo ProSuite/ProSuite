@@ -13,7 +13,6 @@ namespace ProSuite.AGP.Editing.Picker
 		T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem;
 
 		Geometry SelectionGeometry { get; set; }
-		int SelectionTolerance { get; }
 		bool IsSingleClick { get; }
 		Point PickerLocation { get; set; }
 
