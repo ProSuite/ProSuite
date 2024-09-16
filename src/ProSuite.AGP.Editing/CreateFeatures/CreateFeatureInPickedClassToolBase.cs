@@ -18,7 +18,6 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Notifications;
 using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.CreateFeatures;
@@ -109,7 +108,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 			return true; // startSelectionPhase = true;
 		}
 
-		bool success = await QueuedTaskUtils.Run(async () =>
+		await QueuedTaskUtils.Run(async () =>
 		{
 			try
 			{
@@ -139,7 +138,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 			}
 		});
 
-		return false;
+		return false; // startSelectionPhase = false;
 	}
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)

@@ -116,7 +116,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	}
 
 	/// <summary>
-	/// Is always on MCT.
+	/// Is always on worker thread.
 	/// </summary>
 	private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
 	{

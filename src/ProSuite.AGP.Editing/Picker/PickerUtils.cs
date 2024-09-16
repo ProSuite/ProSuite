@@ -195,7 +195,6 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			var picker = new PickerService();
 
-
 			// todo daro PickableItemsFactory as method parameter to group items.
 			if (typeof(T) == typeof(IPickableFeatureItem))
 			{
