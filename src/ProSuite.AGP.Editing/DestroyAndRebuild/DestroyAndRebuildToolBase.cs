@@ -120,27 +120,6 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		return true; // startConstructionPhase = true
 	}
 
-	protected override async Task<bool> OnSelectionSketchCompleteAsync(Geometry geometry)
-	{
-		using var pickerPrecedence = CreatePickerPrecedence(geometry);
-
-		Task picker;
-
-		if (pickerPrecedence is SelectionToolPickerPrecedence)
-		{
-			picker = PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection);
-		}
-		else
-		{
-			picker = PickerUtils.ShowAsync<IPickableFeatureItem>(
-				pickerPrecedence, FindFeatureSelection, PickerMode.ShowPicker);
-		}
-
-		await ViewUtils.TryAsync(picker, _msg);
-
-		return MapUtils.HasSelection(ActiveMapView);
-	}
-
 	protected override async Task<bool> OnConstructionSketchCompleteAsync(
 		Geometry geometry, IDictionary<BasicFeatureLayer, List<long>> selectionByLayer)
 	{

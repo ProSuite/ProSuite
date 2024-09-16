@@ -362,8 +362,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		await (AllowMultiSelection(out _)
 			       ? PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection)
-			       : PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection,
-			                               PickerMode.ShowPicker));
+			       : PickerUtils.ShowAsync<IPickableFeatureItem>(
+				       pickerPrecedence, FindFeatureSelection, PickerMode.ShowPicker));
 
 		return MapUtils.HasSelection(ActiveMapView);
 	}
