@@ -116,12 +116,11 @@ namespace ProSuite.AGP.Editing
 
 		public static Feature InsertTx([NotNull] EditOperation.IEditContext editContext,
 		                               [NotNull] Feature originalFeature,
-		                               [NotNull] Geometry newGeometry,
-		                               [CanBeNull] ICollection<string> excludeFields = null)
+		                               [NotNull] Geometry newGeometry)
 		{
 			using var featureClass = originalFeature.GetTable();
 
-			RowBuffer rowBuffer = DuplicateRow(originalFeature, excludeFields);
+			RowBuffer rowBuffer = DuplicateRow(originalFeature);
 
 			using var classDefinition = featureClass.GetDefinition();
 			bool classHasZ = classDefinition.HasZ();
@@ -375,19 +374,17 @@ namespace ProSuite.AGP.Editing
 			rowBuffer[shapeFieldName] = geometry;
 		}
 
-		private static RowBuffer DuplicateRow(Row row, ICollection<string> excludeFields = null,
-		                                      bool includeShape = false)
+		private static RowBuffer DuplicateRow(Row row, bool includeShape = false)
 		{
 			RowBuffer rowBuffer = row.GetTable().CreateRowBuffer();
 
-			CopyValues(row, rowBuffer, excludeFields, includeShape);
+			CopyValues(row, rowBuffer, includeShape);
 
 			return rowBuffer;
 		}
 
 		private static void CopyValues(Row fromRow, RowBuffer toRowBuffer,
-									   ICollection<string> excludeFields = null,
-									   bool includeShape = false)
+		                               bool includeShape = false)
 		{
 			IReadOnlyList<Field> fields = fromRow.GetFields();
 
@@ -401,11 +398,6 @@ namespace ProSuite.AGP.Editing
 				}
 
 				if (field.FieldType == FieldType.Geometry && ! includeShape)
-				{
-					continue;
-				}
-
-				if (excludeFields != null && excludeFields.Contains(field.Name))
 				{
 					continue;
 				}
