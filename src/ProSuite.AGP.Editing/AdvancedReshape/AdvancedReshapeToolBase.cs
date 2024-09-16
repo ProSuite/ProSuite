@@ -251,6 +251,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return base.CanSelectFromLayer(layer);
 		}
 
+		public bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+		{
+			return base.CanUseSelection(selectionByLayer);
+		}
+
 		public bool CanSetConstructionSketchSymbol(GeometryType geometryType)
 		{
 			switch (geometryType)

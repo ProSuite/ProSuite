@@ -692,17 +692,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (mapView is null)
 				throw new ArgumentNullException(nameof(mapView));
 
-			Dictionary<MapMember, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection(mapView.Map);
+			Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection<BasicFeatureLayer>(mapView.Map);
 
 			return CanUseSelection(selectionByLayer);
 		}
 
-		protected virtual bool CanUseSelection([NotNull] Dictionary<MapMember, List<long>> selectionByLayer)
+		protected virtual bool CanUseSelection([NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+		                                       [CanBeNull] NotificationCollection notifications = null)
 		{
 			return AllowNotApplicableFeaturesInSelection
-				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key as Layer))
-				       : selectionByLayer.All(l => CanSelectFromLayer(l.Key as Layer));
+				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key, notifications))
+				       : selectionByLayer.All(l => CanSelectFromLayer(l.Key, notifications));
 		}
 
 		protected IEnumerable<Feature> GetDistinctApplicableSelectedFeatures(

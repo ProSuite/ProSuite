@@ -324,14 +324,14 @@ namespace ProSuite.Commons.AGP.Selection
 			return result;
 		}
 
-		public static IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>>
-			GetApplicableSelection(
-				[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-				[CanBeNull] Predicate<BasicFeatureLayer> predicate = null)
+		public static Dictionary<BasicFeatureLayer, List<long>> GetApplicableSelection(
+			[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+			[CanBeNull] Predicate<BasicFeatureLayer> predicate = null)
 		{
 			Assert.ArgumentNotNull(selectionByLayer, nameof(selectionByLayer));
 
-			return selectionByLayer.Where(pair => predicate != null && predicate(pair.Key));
+			return selectionByLayer.Where(pair => predicate != null && predicate(pair.Key))
+			                       .ToDictionary(p => p.Key, p => p.Value);
 		}
 	}
 }

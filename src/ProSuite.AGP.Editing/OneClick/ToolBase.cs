@@ -263,6 +263,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		return CanSelectFromLayer(layer as BasicFeatureLayer);
 	}
 
+	public bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+	{
+		return CanUseSelection(selectionByLayer, null);
+	}
+
 	public virtual bool CanSetConstructionSketchSymbol(GeometryType geometryType)
 	{
 		return true;
@@ -293,7 +298,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		if (MapUtils.HasSelection(ActiveMapView) && InConstructionPhase())
 		{
-			IDictionary<BasicFeatureLayer, List<long>> selection =
+			Dictionary<BasicFeatureLayer, List<long>> selection =
 				await GetApplicableSelection<BasicFeatureLayer>();
 
 			if (CanUseSelection(selection))
@@ -456,7 +461,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	}
 
 	private async Task<bool> ProcessSelectionAsync(
-		[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
 	{
 		using var source = GetProgressorSource();
 		var progressor = source?.Progressor;
@@ -561,7 +566,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		                                         featurePredicate, progressor);
 	}
 
-	private async Task<IDictionary<T, List<long>>> GetApplicableSelection<T>()
+	private async Task<Dictionary<T, List<long>>> GetApplicableSelection<T>()
 		where T : BasicFeatureLayer
 	{
 		// todo daro rename, revise method
@@ -569,7 +574,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		Dictionary<T, List<long>> selectionByLayer =
 			await QueuedTask.Run(() => SelectionUtils.GetSelection<T>(ActiveMapView.Map));
 
-		IDictionary<T, List<long>> result =
+		Dictionary<T, List<long>> result =
 			new Dictionary<T, List<long>>(selectionByLayer.Count);
 
 		var notifications = new NotificationCollection();
@@ -644,8 +649,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	/// <param name="notifications">Pass in a NotificationCollection if you
 	/// want the reasons loggad at info level. Pass in null if you want no logging</param>
 	/// <returns></returns>
-	private bool CanUseSelection(
-		[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+	public bool CanUseSelection(
+		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 		[CanBeNull] NotificationCollection notifications = null)
 	{
 		void LogInfo(NotificationCollection collection)

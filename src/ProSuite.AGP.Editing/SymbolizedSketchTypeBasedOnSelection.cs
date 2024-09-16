@@ -74,9 +74,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 
 		try
 		{
-			Dictionary<BasicFeatureLayer, List<long>> selection =
-				SelectionUtils.GetSelection<BasicFeatureLayer>(MapView.Active.Map);
-
+			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(MapView.Active.Map);
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
 			SetSketchSymbolBasedOnSelection(featureLayer, oids);
@@ -113,8 +111,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 
 		try
 		{
-			Dictionary<BasicFeatureLayer, List<long>> selection =
-				SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
+			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
 
 			await QueuedTask.Run(() =>
 			{
@@ -184,6 +181,12 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		{
 			_msg.Debug(
 				$"Features from {layerCount} different layers selected. Take the first layer.");
+		}
+
+		if (! _tool.CanUseSelection(oidsByLayer.ToDictionary(pair => pair.Key, pair => pair.Value)))
+		{
+			_msg.Debug("Cannot use selection");
+			return null;
 		}
 
 		(BasicFeatureLayer layer, List<long> oids) = oidsByLayer.FirstOrDefault();

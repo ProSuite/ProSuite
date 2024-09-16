@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -88,7 +87,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				return Task.FromResult(true);
 			}
 
-			if (CanUseSelection(SelectionUtils.GetSelection(e)))
+			if (CanUseSelection(SelectionUtils.GetSelection<BasicFeatureLayer>(e.Selection)))
 			{
 				StartSketchPhase();
 			}
