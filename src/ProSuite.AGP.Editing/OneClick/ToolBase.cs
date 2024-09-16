@@ -303,7 +303,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			Dictionary<BasicFeatureLayer, List<long>> selection =
 				await GetApplicableSelection<BasicFeatureLayer>();
 
-			if (CanUseSelection(selection))
+			if (CanUseSelection(selection, new NotificationCollection()))
 			{
 				bool constructionProcessed = await OnConstructionSketchCompleteAsync(geometry, selection);
 
@@ -653,7 +653,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	/// <returns></returns>
 	public bool CanUseSelection(
 		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-		[CanBeNull] NotificationCollection notifications = null)
+		[CanBeNull] NotificationCollection notifications)
 	{
 		void LogInfo(NotificationCollection collection)
 		{
