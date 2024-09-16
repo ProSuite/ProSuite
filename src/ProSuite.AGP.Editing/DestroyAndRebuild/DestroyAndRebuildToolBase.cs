@@ -35,6 +35,12 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 	protected override Cursor SelectionCursorCore =>
 		ToolUtils.GetCursor(Resources.DestroyAndRebuildToolCursor);
 
+	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch(
+		SketchGeometryType selectionSketchGeometryType)
+	{
+		return new SymbolizedSketchTypeBasedOnSelection(this, selectionSketchGeometryType);
+	}
+
 	protected override bool AllowMultiSelection(out string reason)
 	{
 		reason = "Destroy and rebuild not possible. Please select only one feature.";

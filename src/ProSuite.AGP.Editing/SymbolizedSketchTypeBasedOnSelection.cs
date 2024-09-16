@@ -78,6 +78,8 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
 			SetSketchSymbolBasedOnSelection(featureLayer, oids);
+
+			SetSketchType(featureLayer);
 		}
 		catch (Exception ex)
 		{
@@ -99,7 +101,18 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		_showFeatureSketchSymbology =
 			ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
 
-		SetSketchSymbolBasedOnSelection();
+		try
+		{
+			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(MapView.Active.Map);
+			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
+
+			// only set sketch symbol not sketch type!
+			SetSketchSymbolBasedOnSelection(featureLayer, oids);
+		}
+		catch (Exception ex)
+		{
+			_msg.Error(ex.Message, ex);
+		}
 	}
 
 	/// <summary>
@@ -118,6 +131,8 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 				List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
 				SetSketchSymbolBasedOnSelection(featureLayer, oids);
+
+				SetSketchType(featureLayer);
 			});
 		}
 		catch (Exception ex)
@@ -126,7 +141,8 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		}
 	}
 
-	private void SetSketchSymbolBasedOnSelection(FeatureLayer featureLayer, IList<long> oids)
+	private void SetSketchSymbolBasedOnSelection([CanBeNull] FeatureLayer featureLayer,
+	                                             [CanBeNull] IList<long> oids)
 	{
 		if (featureLayer == null || oids == null)
 		{
@@ -157,7 +173,16 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 				"Cannot set sketch symbol. Show feature symbology in sketch is turned off.");
 			ClearSketchSymbol();
 		}
+	}
 
+	private void SetSketchType([CanBeNull] BasicFeatureLayer featureLayer)
+	{
+		if (featureLayer == null)
+		{
+			return;
+		}
+
+		GeometryType geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
 		_tool.SetSketchType(GetApplicableSketchType(geometryType));
 	}
 

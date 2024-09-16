@@ -38,7 +38,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	private readonly Latch _toolActivateLatch = new();
 	private readonly Latch _latch = new();
 
-	private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
+	[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
 	protected ToolBase(SketchGeometryType selectionSketchGeometryType)
 	{
@@ -85,6 +85,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected abstract bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer layer);
 
+	protected abstract SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch(
+		SketchGeometryType selectionSketchGeometryType);
+
 	#endregion
 
 	#region overrides
@@ -99,15 +102,14 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		// we want OnSelectionChangedAsync to be latched. Especially when the tool is activated.
 		_toolActivateLatch.Increment();
 
-		_symbolizedSketch =
-			new SymbolizedSketchTypeBasedOnSelection(this, _selectionSketchGeometryType);
+		_symbolizedSketch = GetSymbolizedSketch(_selectionSketchGeometryType);
 
 		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
 
 		if (MapUtils.HasSelection(ActiveMapView))
 		{
 			await ViewUtils.TryAsync(
-				QueuedTask.Run(() => { _symbolizedSketch.SetSketchSymbolBasedOnSelection(); }),
+				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchSymbolBasedOnSelection(); }),
 				_msg);
 
 			bool selectionProcessed = await ViewUtils.TryAsync(ProcessSelectionAsync(), _msg);
@@ -131,7 +133,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	{
 		_msg.Debug($"Deactivate {Caption}");
 
-		_symbolizedSketch.Dispose();
+		_symbolizedSketch?.Dispose();
 
 		await ViewUtils.TryAsync(OnToolDeactivateCoreAsync(hasMapViewChanged), _msg);
 	}
@@ -215,8 +217,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		{
 			if (args.Key is _keyPolygonDraw or _keyLassoDraw)
 			{
-				_symbolizedSketch.ResetSketchType();
-				_symbolizedSketch.ClearSketchSymbol();
+				_symbolizedSketch?.ResetSketchType();
+				_symbolizedSketch?.ClearSketchSymbol();
 			}
 		}
 

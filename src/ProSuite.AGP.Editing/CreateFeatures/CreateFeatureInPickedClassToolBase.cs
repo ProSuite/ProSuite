@@ -30,6 +30,12 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 	protected CreateFeatureInPickedClassToolBase(SketchGeometryType selectionSketchGeometryType) : base(
 		selectionSketchGeometryType) { }
 
+	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch(
+		SketchGeometryType selectionSketchGeometryType)
+	{
+		return new SymbolizedSketchTypeBasedOnSelection(this, selectionSketchGeometryType);
+	}
+
 	protected override Cursor SelectionCursorCore =>
 		ToolUtils.GetCursor(Resources.CreateFeatureInPickedClassCursor);
 
