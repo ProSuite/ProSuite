@@ -124,13 +124,16 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_feedback = new AdvancedReshapeFeedback();
 
+			base.OnToolActivatingCore();
+		}
+
+		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
+		{
 			_symbolizedSketch =
 				new SymbolizedSketchTypeBasedOnSelection(this, GetSelectionSketchGeometryType());
-			await ViewUtils.TryAsync(
-				QueuedTask.Run(() => { _symbolizedSketch.SetSketchSymbolBasedOnSelection(); }),
-				_msg);
+			_symbolizedSketch.SetSketchSymbolBasedOnSelection();
 
-			base.OnToolActivatingCore();
+			return base.OnToolActivatedCore(hasMapViewChanged);
 		}
 
 		protected override void OnSelectionPhaseStarted()
