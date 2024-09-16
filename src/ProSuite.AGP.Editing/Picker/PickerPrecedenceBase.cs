@@ -66,6 +66,11 @@ namespace ProSuite.AGP.Editing.Picker
 		public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                        bool areaSelect = false)
 		{
+			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+			{
+				return PickerMode.PickAll;
+			}
+
 			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
 			{
 				return PickerMode.ShowPicker;

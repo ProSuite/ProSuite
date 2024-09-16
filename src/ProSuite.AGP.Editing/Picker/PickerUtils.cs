@@ -125,9 +125,6 @@ namespace ProSuite.AGP.Editing.Picker
 					? SelectionCombinationMethod.XOR
 					: SelectionCombinationMethod.New;
 
-			// Has to be on GUI thread
-			bool altDown = KeyboardUtils.IsAltDown();
-
 			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
 			SketchGeometryType sketchGeometryType = ToolUtils.GetSketchGeometryType();
 			SpatialRelationship spatialRelationship =
@@ -146,15 +143,8 @@ namespace ProSuite.AGP.Editing.Picker
 				var featureSelection = getCandidates(precedence.SelectionGeometry,
 				                                     spatialRelationship,
 				                                     progressor).ToList();
-				if (altDown)
-				{
-					await SelectCandidates(precedence, featureSelection,
-					                       selectionMethod, PickerMode.PickAll);
-				}
-				else
-				{
-					await SelectCandidates(precedence, featureSelection, selectionMethod);
-				}
+
+				await SelectCandidates(precedence, featureSelection, selectionMethod);
 			});
 		}
 
@@ -205,6 +195,8 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			var picker = new PickerService();
 
+
+			// todo daro PickableItemsFactory as method parameter to group items.
 			if (typeof(T) == typeof(IPickableFeatureItem))
 			{
 				var items = PickableItemsFactory
