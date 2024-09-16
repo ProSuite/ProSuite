@@ -228,12 +228,13 @@ namespace ProSuite.AGP.Editing.Picker
 			IPickerPrecedence precedence,
 			IEnumerable<FeatureSelectionBase> orderedSelection)
 		{
-			if (precedence.IsSingleClick)
+			if (precedence.AggregateItems)
 			{
-				return await ShowAsync<IPickableFeatureItem>(precedence, orderedSelection);
+				return await ShowAsync<IPickableFeatureClassItem>(precedence, orderedSelection);
 			}
 
-			return await ShowAsync<IPickableFeatureClassItem>(precedence, orderedSelection);
+			return await ShowAsync<IPickableFeatureItem>(precedence, orderedSelection);
+
 		}
 
 		#endregion

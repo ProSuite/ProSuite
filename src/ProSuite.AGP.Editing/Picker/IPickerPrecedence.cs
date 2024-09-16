@@ -14,6 +14,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		Geometry SelectionGeometry { get; set; }
 		bool IsSingleClick { get; }
+		bool AggregateItems { get; }
 		Point PickerLocation { get; set; }
 
 		PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
