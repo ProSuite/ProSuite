@@ -285,6 +285,16 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return 0.0;
 		}
 
+		public static double GetLength([CanBeNull] Multipart multipart, int partIndex)
+		{
+			if (multipart is null) return 0.0;
+			if (multipart.IsEmpty) return 0.0;
+			if (partIndex < 0 || partIndex >= multipart.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex, "no such part");
+			var path = multipart.Parts[partIndex];
+			return path.Sum(seg => seg.Length);
+		}
+
 		public static AttributeFlags GetAttributeFlags(this Geometry geometry)
 		{
 			var flags = AttributeFlags.None;
