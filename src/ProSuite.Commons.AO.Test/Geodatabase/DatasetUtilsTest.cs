@@ -404,7 +404,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
-		public void CanQualifyFieldNameFGDB()
+		public void CanQualifyFieldNameFileGdb()
 		{
 			const string featureClassName = "lines";
 			const string fieldName = "OBJEKTART";
@@ -415,6 +415,23 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureClass featureClass = DatasetUtils.OpenFeatureClass(workspace,
 				featureClassName);
 
+			string qualified = DatasetUtils.QualifyFieldName(featureClass, fieldName);
+
+			Assert.AreEqual($"{featureClassName}.{fieldName}", qualified);
+		}
+
+		[Test]
+		public void CanQualifyFieldNameMobileGdb()
+		{
+			const string featureClassName = "main.lines";
+			const string fieldName = "OBJEKTART";
+
+			IFeatureWorkspace workspace =
+				WorkspaceUtils.OpenMobileGdbFeatureWorkspace(TestData.GetMobileGdbPath());
+
+			IFeatureClass featureClass = DatasetUtils.OpenFeatureClass(workspace,
+				featureClassName);
+			
 			string qualified = DatasetUtils.QualifyFieldName(featureClass, fieldName);
 
 			Assert.AreEqual($"{featureClassName}.{fieldName}", qualified);

@@ -355,6 +355,41 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return (IFeatureWorkspace) OpenPgdbWorkspace(path);
 		}
 
+		/// <summary>
+		/// Opens a mobile geodatabase workspace.
+		/// </summary>
+		/// <param name="path">The path to the mobile geodatabase file (*.geodatabase).</param>
+		/// <returns></returns>
+		[NotNull]
+		public static IWorkspace OpenMobileGdbWorkspace([NotNull] string path)
+		{
+			Assert.ArgumentNotNullOrEmpty(path, nameof(path));
+
+			string connectionString = string.Format("DATABASE={0}", path);
+			return OpenMobileGdbWorkspaceFromString(connectionString);
+		}
+
+		[NotNull]
+		public static IWorkspace OpenMobileGdbWorkspaceFromString(
+			[NotNull] string connectionString)
+		{
+			Assert.ArgumentNotNullOrEmpty(connectionString, nameof(connectionString));
+
+			var factory = (IWorkspaceFactory2) GetSqliteWorkspaceFactory();
+
+			_msg.VerboseDebug(
+				() =>
+					$"Opening mobile geodatabase workspace using connection string {connectionString}");
+
+			return OpenWorkspace(factory, connectionString);
+		}
+
+		[NotNull]
+		public static IFeatureWorkspace OpenMobileGdbFeatureWorkspace([NotNull] string path)
+		{
+			return (IFeatureWorkspace) OpenMobileGdbWorkspace(path);
+		}
+
 		[NotNull]
 		public static IWorkspace OpenSDEWorkspace([NotNull] string repositoryName,
 		                                          DirectConnectDriver driver,
@@ -889,6 +924,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 				                         StringComparison.InvariantCultureIgnoreCase))
 				{
 					return OpenPgdbWorkspace(catalogPath);
+				}
+
+				if (catalogPath.EndsWith(".geodatabase",
+				                         StringComparison.InvariantCultureIgnoreCase))
+				{
+					return OpenMobileGdbWorkspace(catalogPath);
 				}
 
 				if (Directory.Exists(catalogPath))
@@ -2566,6 +2607,24 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//                          StringComparison.OrdinalIgnoreCase);
 		}
 
+		public static bool IsMobileGeodatabase([NotNull] IWorkspace workspace)
+		{
+			string workspacePath = GetWorkspacePath(workspace);
+
+			return workspacePath != null &&
+				   workspacePath.EndsWith(".geodatabase", StringComparison.OrdinalIgnoreCase);
+
+			// Original implementation which fails for GdbWorkspace implementations:
+
+			//Assert.ArgumentNotNull(workspace, nameof(workspace));
+
+			//const string mobileGdbClassId = "{DEB394DD-6F72-4C2C-AB4D-4C4E04CBBF9F}";
+
+			//return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
+			//       mobileGdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
+			//                               StringComparison.OrdinalIgnoreCase);
+		}
+
 		/// <summary>
 		/// Determines whether the specified workspace is an SDE workspace.
 		/// DO NOT USE with custom workspace implementations.
@@ -2839,9 +2898,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 					{
 						return WorkspaceDbType.FileGeodatabase;
 					}
-					else if (IsPersonalGeodatabase(workspace))
+					if (IsPersonalGeodatabase(workspace))
 					{
 						return WorkspaceDbType.PersonalGeodatabase;
+					}
+					if (IsMobileGeodatabase(workspace))
+					{
+						return WorkspaceDbType.MobileGeodatabase;
 					}
 
 					break;
@@ -2895,6 +2958,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				case WorkspaceDbType.FileGeodatabase:
 				case WorkspaceDbType.PersonalGeodatabase:
+				case WorkspaceDbType.MobileGeodatabase:
 					return esriWorkspaceType.esriLocalDatabaseWorkspace;
 				case WorkspaceDbType.ArcSDE:
 				case WorkspaceDbType.ArcSDESqlServer:
@@ -3055,6 +3119,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static IWorkspaceFactory GetAccessWorkspaceFactory()
 		{
 			return GetWorkspaceFactory("esriDataSourcesGDB.AccessWorkspaceFactory");
+		}
+
+		[NotNull]
+		public static IWorkspaceFactory GetSqliteWorkspaceFactory()
+		{
+			return GetWorkspaceFactory("esriDataSourcesGDB.SqliteWorkspaceFactory");
 		}
 
 		[NotNull]

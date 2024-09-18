@@ -187,6 +187,15 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		}
 
 		[Test]
+		public void LearningTestSQLSyntaxMobileGdb()
+		{
+			IWorkspace workspace =
+				WorkspaceUtils.OpenMobileGdbWorkspace(TestData.GetMobileGdbPath());
+
+			LogSqlSyntax(workspace);
+		}
+
+		[Test]
 		[Ignore("requires PROSUITE_DDX in sql express")]
 		public void LearningTestWorkspacePropertiesSDESqlServer()
 		{
@@ -263,6 +272,15 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			//esriWorkspacePropLastCompressStatus: not supported (0.005400 ms)
 
 			// PGDB with readonly flag set: IsReadOnly = true, CanEdit = false
+		}
+
+		[Test]
+		public void LearningTestWorkspacePropertiesMobileGdb()
+		{
+			IWorkspace workspace =
+				WorkspaceUtils.OpenMobileGdbWorkspace(TestData.GetMobileGdbPath());
+
+			LogWorkspaceProperties(workspace);
 		}
 
 		private static void LogSqlSyntax([NotNull] IWorkspace workspace)
@@ -552,16 +570,18 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
 
 			Assert.IsFalse(WorkspaceUtils.IsPersonalGeodatabase(workspace));
+			Assert.IsFalse(WorkspaceUtils.IsMobileGeodatabase(workspace));
 			Assert.IsFalse(WorkspaceUtils.IsFileGeodatabase(workspace));
 		}
 
 		[Test]
-		public void CanDetermineIsFgdb()
+		public void CanDetermineIsFileGdb()
 		{
 			IWorkspace workspace =
 				WorkspaceUtils.OpenFileGdbWorkspace(TestData.GetGdbTableJointUtilsPath());
 
 			Assert.IsFalse(WorkspaceUtils.IsPersonalGeodatabase(workspace));
+			Assert.IsFalse(WorkspaceUtils.IsMobileGeodatabase(workspace));
 			Assert.IsTrue(WorkspaceUtils.IsFileGeodatabase(workspace));
 		}
 	}
