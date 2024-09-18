@@ -351,11 +351,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					 true), 1000),
 				FieldUtils.CreateIntegerField("RouteId"));
 
+			// TOP-5893: Dissolve with GroupBy on Date field!
 			ITable table = DatasetUtils.CreateTable(
 				ws, "RouteTbl", "config",
 				FieldUtils.CreateOIDField(),
 				FieldUtils.CreateIntegerField("RouteFk"),
-				FieldUtils.CreateIntegerField("RouteNr"));
+				FieldUtils.CreateIntegerField("RouteNr"),
+				FieldUtils.CreateDateField("RouteDate"));
 
 			const string relRoute = "relRoute";
 			TestWorkspaceUtils.CreateSimple1NRelationship(
@@ -364,6 +366,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			int iRouteId = lineFc.FindField("RouteId");
 			int iRouteFk = table.FindField("RouteFk");
 			int iRouteNr = table.FindField("RouteNr");
+			int iRouteDate = table.FindField("RouteDate");
+
 			{
 				IFeature f = lineFc.CreateFeature();
 				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(10, 10).Curve;
@@ -417,18 +421,21 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				IRow r = table.CreateRow();
 				r.Value[iRouteFk] = 1;
 				r.Value[iRouteNr] = 100;
+				r.Value[iRouteDate] = new DateTime(2015, 1, 1);
 				r.Store();
 			}
 			{
 				IRow r = table.CreateRow();
 				r.Value[iRouteFk] = 3;
 				r.Value[iRouteNr] = 100;
+				r.Value[iRouteDate] = new DateTime(2015, 1, 2);
 				r.Store();
 			}
 			{
 				IRow r = table.CreateRow();
 				r.Value[iRouteFk] = 4;
 				r.Value[iRouteNr] = 100;
+				r.Value[iRouteDate] = new DateTime(2015, 1, 1);
 				r.Store();
 			}
 			{
@@ -489,12 +496,22 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new TrDissolve((IReadOnlyFeatureClass) joined.GetTransformed())
 				{
 					Search = 1,
-					Attributes = new List<string> { "Min(RouteTbl.RouteFk) AS MinRouteFk" },
+					Attributes = new List<string>
+					             {
+						             "Min(RouteTbl.RouteFk) AS MinRouteFk",
+						             "MAX(RouteTbl.RouteDate) AS MaxRouteDate"
+					             },
 					GroupBy = new List<string> { "RouteTbl.RouteNr" }
 				};
 			TrLineToPolygon lineToPolygon =
 				new TrLineToPolygon(dissolve.GetTransformed())
-				{ Attributes = new[] { "RouteTbl.RouteNr" } };
+				{
+					Attributes = new[]
+					             {
+						             "RouteTbl.RouteNr",
+						             "MaxRouteDate"
+					             }
+				};
 
 			{
 				QaMinArea test = new QaMinArea(lineToPolygon.GetTransformed(), 1000);
@@ -510,7 +527,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 			{
 				QaMinArea test = new QaMinArea(lineToPolygon.GetTransformed(), 1000);
-				test.SetConstraint(0, "RouteTbl.RouteNr > 100");
+				test.SetConstraint(0, "RouteTbl.RouteNr > 100 AND MaxRouteDate IS NULL");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);
