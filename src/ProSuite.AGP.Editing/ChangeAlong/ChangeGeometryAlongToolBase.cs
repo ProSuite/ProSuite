@@ -218,61 +218,62 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			SetCursor(PolygonSketchCursor);
 		}
 
-		protected override void ResetSketchCore()
+		protected override async Task ResetSketchCoreAsync()
 		{
-			if (! IsInSelectionPhase())
+			try
 			{
-				SetCursor(TargetSelectionCursor);
+				if (! await IsInSelectionPhaseAsync())
+				{
+					SetCursor(TargetSelectionCursor);
+				}
+				else
+				{
+					SetCursor(SelectionCursor);
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				SetCursor(SelectionCursor);
+				ViewUtils.HandleError(ex, _msg);
 			}
 		}
 
-		protected override void ShiftPressedCore()
+		protected override async Task ShiftPressedCoreAsync()
 		{
-			if (SelectionCursorShift != null && HasReshapeCurves())
+			try
 			{
-				SetCursor(TargetSelectionCursorShift);
+				if (SelectionCursorShift != null && HasReshapeCurves())
+				{
+					SetCursor(TargetSelectionCursorShift);
+				}
+				else
+				{
+					await base.ShiftPressedCoreAsync();
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				base.ShiftPressedCore();
+				ViewUtils.HandleError(ex, _msg);
 			}
 		}
 
-		protected override void ShiftReleasedCore()
+		protected override async Task ShiftReleasedCoreAsync()
 		{
-			// From the subclass' point of view SHIFT is still pressed:
-			if (! IsInSelectionPhase())
+			try
 			{
-				SetCursor(TargetSelectionCursor);
+				// From the subclass' point of view SHIFT is still pressed:
+				if (! await IsInSelectionPhaseAsync())
+				{
+					SetCursor(TargetSelectionCursor);
+				}
+				else
+				{
+					await base.ShiftReleasedCoreAsync();
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				base.ShiftReleasedCore();
+				ViewUtils.HandleError(ex, _msg);
 			}
-		}
-
-		protected override bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			if (HasReshapeCurves())
-			{
-				return false;
-			}
-
-			// First or second phase:
-			if (shiftIsPressed)
-			{
-				// With reshape curves and shift it would mean we're in the target selection phase
-				return ! HasReshapeCurves();
-			}
-
-			var task = QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
-
-			// NOTE: In rare situations this can result in a dead-lock / hang of the application.
-			return task.Result;
 		}
 
 		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -289,7 +290,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return ! HasReshapeCurves();
 			}
 
-			return await QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
+			Task<bool> task = QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
+
+			return await ViewUtils.TryAsync(task, _msg);
 		}
 
 		private bool HasReshapeCurves()
