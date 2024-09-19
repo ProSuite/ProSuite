@@ -35,6 +35,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			get { return _statesByRow ??= ReadStatesByRow(); }
 		}
 
+		public string WorkListDefinitionFilePath { get; set; }
+
 		public int? CurrentIndex { get; set; }
 
 		public IWorkItem Refresh(IWorkItem item)

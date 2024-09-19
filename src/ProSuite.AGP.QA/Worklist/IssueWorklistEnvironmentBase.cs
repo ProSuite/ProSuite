@@ -52,7 +52,12 @@ namespace ProSuite.AGP.QA.WorkList
 
 		protected override string SuggestWorkListName()
 		{
-			return _workListItemDatastore.SuggestWorkListGroupName();
+			return _workListItemDatastore.SuggestWorkListName();
+		}
+
+		protected override string SuggestWorkListLayerName()
+		{
+			return "Issue Work List";
 		}
 
 		protected override async Task<IList<Table>> PrepareReferencedTables()
@@ -102,7 +107,6 @@ namespace ProSuite.AGP.QA.WorkList
 			}
 
 			// Expected behaviour:
-			// - In the sub-group all layers belong to this specific work list.
 			// - They should be re-nameable by the user.
 			// - They should be deletable by the user (in which case a new layer should be re-added)
 			// - If the layer is moved outside the group a new layer should be added. Only layers within the

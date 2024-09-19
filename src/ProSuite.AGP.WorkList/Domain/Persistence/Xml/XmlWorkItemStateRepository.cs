@@ -13,19 +13,11 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 	public class XmlWorkItemStateRepository
 		: WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition>
 	{
-		private string _filePath;
-
-		public string FilePath
-		{
-			get => _filePath;
-			set => _filePath = value;
-		}
-
 		public XmlWorkItemStateRepository(string filePath, string name, Type type,
 		                                  int? currentItemIndex = null) : base(
 			name, type, currentItemIndex)
 		{
-			_filePath = filePath;
+			WorkListDefinitionFilePath = filePath;
 		}
 
 		public static XmlWorkListDefinition Import(string xmlFilePath)
@@ -40,7 +32,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		protected override void Store(XmlWorkListDefinition definition)
 		{
 			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-			helper.SaveToFile(definition, _filePath);
+			helper.SaveToFile(definition, WorkListDefinitionFilePath);
 		}
 
 		protected override XmlWorkListDefinition CreateDefinition(
@@ -95,12 +87,12 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		{
 			var result = new Dictionary<GdbObjectReference, XmlWorkItemState>();
 
-			if (! File.Exists(_filePath))
+			if (! File.Exists(WorkListDefinitionFilePath))
 			{
 				return result;
 			}
 
-			XmlWorkListDefinition definition = Import(_filePath);
+			XmlWorkListDefinition definition = Import(WorkListDefinitionFilePath);
 
 			// Challenge: Re-create the GdbRowIdentity from the XmlWorkItemState:
 			// NOTE: Either we re-open the workspaces or we also maintain the workspaces here

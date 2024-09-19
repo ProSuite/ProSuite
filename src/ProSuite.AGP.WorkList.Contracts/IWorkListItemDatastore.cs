@@ -24,6 +24,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		IAttributeReader CreateAttributeReader([NotNull] TableDefinition definition,
 		                                       [NotNull] params Attributes[] attributes);
 
-		string SuggestWorkListGroupName();
+		string SuggestWorkListName();
 	}
 }

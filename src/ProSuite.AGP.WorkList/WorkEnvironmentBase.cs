@@ -11,6 +11,7 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
@@ -25,15 +26,14 @@ namespace ProSuite.AGP.WorkList
 
 		public abstract string FileSuffix { get; }
 
-		protected string DisplayName { get; set; }
+		protected string DisplayName { get; private set; }
 
 		[NotNull]
-		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName,
-		                                                 [CanBeNull] string displayName = null)
+		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName)
 		{
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
 
-			DisplayName = displayName ?? SuggestWorkListName();
+			DisplayName = SuggestWorkListName() ?? uniqueName;
 
 			if (! await TryPrepareSchemaCoreAsync())
 			{
@@ -42,11 +42,7 @@ namespace ProSuite.AGP.WorkList
 
 			Stopwatch watch = Stopwatch.StartNew();
 
-			string
-				fileName =
-					DisplayName; // string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
-
-			string definitionFilePath = GetDefinitionFileFromProjectFolder(fileName);
+			string definitionFilePath = GetDefinitionFileFromProjectFolder();
 
 			IWorkItemStateRepository stateRepository =
 				CreateStateRepositoryCore(definitionFilePath, uniqueName);
@@ -68,7 +64,10 @@ namespace ProSuite.AGP.WorkList
 			return result;
 		}
 
-		protected virtual string SuggestWorkListName()
+		[CanBeNull]
+		protected abstract string SuggestWorkListName();
+
+		protected virtual string SuggestWorkListLayerName()
 		{
 			return null;
 		}
@@ -79,12 +78,14 @@ namespace ProSuite.AGP.WorkList
 			return Task.FromResult(result);
 		}
 
-		public string GetDefinitionFileFromProjectFolder([NotNull] string worklistDisplayName)
+		public string GetDefinitionFileFromProjectFolder()
 		{
-			Assert.ArgumentNotNullOrEmpty(worklistDisplayName, nameof(worklistDisplayName));
+			Assert.ArgumentNotNullOrEmpty(DisplayName, nameof(DisplayName));
+
+			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(DisplayName, '_');
 
 			return WorkListUtils.GetDatasource(
-				Project.Current.HomeFolderPath, worklistDisplayName, FileSuffix);
+				Project.Current.HomeFolderPath, fileName, FileSuffix);
 		}
 
 		/// <summary>
@@ -158,7 +159,7 @@ namespace ProSuite.AGP.WorkList
 		#region Private
 
 		[NotNull]
-		private static FeatureLayer CreateWorklistLayer(
+		private FeatureLayer CreateWorklistLayer(
 			[NotNull] IWorkList worklist,
 			[NotNull] string path,
 			[NotNull] ILayerContainerEdit layerContainer)
@@ -173,8 +174,10 @@ namespace ProSuite.AGP.WorkList
 				table = datastore.OpenTable(worklist.Name);
 				Assert.NotNull(table);
 
+				string workListLayerName = SuggestWorkListLayerName() ?? worklist.DisplayName;
+
 				return LayerFactory.Instance.CreateLayer<FeatureLayer>(
-					WorkListUtils.CreateLayerParams((FeatureClass) table, worklist.DisplayName),
+					WorkListUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
 					layerContainer);
 			}
 			finally
