@@ -31,5 +31,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		bool CanRename();
 
 		void Rename(string Name);
+
+		object NativeImplementation { get; }
 	}
 }

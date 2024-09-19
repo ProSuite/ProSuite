@@ -232,6 +232,8 @@ namespace ESRI.ArcGIS.Geodatabase
 			return new ArcSelectionSet(selectionSet, ProTable);
 		}
 
+		public object NativeImplementation => ProTable;
+
 		//void IClass.AddField(IField field)
 		//{
 		//	ArcField arcField = (ArcField)field;
@@ -482,6 +484,46 @@ namespace ESRI.ArcGIS.Geodatabase
 		public void DeleteSubtype(int subtypeCode)
 		{
 			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		#region Equality members
+
+		// TODO: Consider implementing operator == / !=
+
+		public bool Equals(ArcTable other)
+		{
+			if (other == null)
+			{
+				return false;
+			}
+
+			return ProTable.Handle.Equals(other.ProTable.Handle);
+		}
+
+		public override bool Equals(object other)
+		{
+			if (ReferenceEquals(null, other)) return false;
+
+			if (ReferenceEquals(this, other)) return true;
+
+			if (other is ArcTable arcTable)
+			{
+				return Equals(arcTable);
+			}
+
+			if (other is Table proTable)
+			{
+				return ProTable.Handle.Equals(proTable.Handle);
+			}
+
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			return ProTable.Handle.GetHashCode();
 		}
 
 		#endregion

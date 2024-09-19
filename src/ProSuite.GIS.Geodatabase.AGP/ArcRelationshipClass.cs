@@ -327,6 +327,48 @@ namespace ESRI.ArcGIS.Geodatabase
 			throw new NotImplementedException();
 		}
 
+		public object NativeImplementation => ProRelationshipClass;
+
+		#endregion
+
+		#region Equality members
+
+		// TODO: Consider implementing operator == / !=
+
+		public bool Equals(ArcRelationshipClass other)
+		{
+			if (other == null)
+			{
+				return false;
+			}
+
+			return ProRelationshipClass.Handle.Equals(other.ProRelationshipClass.Handle);
+		}
+
+		public override bool Equals(object other)
+		{
+			if (ReferenceEquals(null, other)) return false;
+
+			if (ReferenceEquals(this, other)) return true;
+
+			if (other is ArcRelationshipClass arcRelationshipClass)
+			{
+				return Equals(arcRelationshipClass);
+			}
+
+			if (other is RelationshipClass proRelationshipClass)
+			{
+				return ProRelationshipClass.Handle.Equals(proRelationshipClass.Handle);
+			}
+
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			return ProRelationshipClass.Handle.GetHashCode();
+		}
+
 		#endregion
 	}
 }
