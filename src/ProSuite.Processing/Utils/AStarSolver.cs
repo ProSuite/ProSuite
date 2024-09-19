@@ -1,324 +1,224 @@
-using ProSuite.Commons.Collections;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace ProSuite.Processing.Utils
+using ProSuite.Commons.Collections;
+
+namespace ProSuite.Processing.Utils;
+
+public class AStarSolver<TNode, TEdge> where TNode : IEquatable<TNode>
 {
-	public class AStarSolver<TN, TE> where TN : IEquatable<TN> where TE : IEquatable<TE>
+	/// <summary>
+	/// The graph used by the A* pathfinder.
+	/// Designed to be easy to implement while providing what A* needs.
+	/// </summary>
+	public interface IGraph //<TNode, TEdge> where TNode : IEquatable<TNode>
 	{
-		private readonly Graph<TN, TE> _graph;
-		private readonly Graph<TN, TE>.Node _targetNode;
-		private readonly Func<TN, double> _estimator; // relative to target node!
-		private readonly Dictionary<Graph<TN, TE>.Node, StarNode> _starNodes;
-
-		private AStarSolver(Graph<TN, TE> graph, Graph<TN,TE>.Node targetNode, Func<TN, double> estimator)
-		{
-			_graph = graph ?? throw new ArgumentNullException(nameof(graph));
-			_targetNode = targetNode ?? throw new ArgumentNullException(nameof(targetNode));
-			_estimator = estimator ?? throw new ArgumentNullException(nameof(estimator));
-			_starNodes = new Dictionary<Graph<TN, TE>.Node, StarNode>();
-		}
+		/// <summary>
+		/// Get all edges that are incident to the given node.
+		/// </summary>
+		IEnumerable<TEdge> GetIncidentEdges(TNode node);
 
 		/// <summary>
-		/// Find the shortest route from given start node to given target node.
-		/// Roughly following the pseudocode in the Wikipedia article about the
-		/// A* algorithm: https://de.wikipedia.org/wiki/A*-Algorithmus
+		/// Expect the given edge to be incident on the given node
+		/// and return the node at the other end of the edge, that
+		/// is, the adjacent node.
 		/// </summary>
-		/// <returns>The adorned targetNode (G=cost, F irrelevant, use the Link
-		/// property to trace back the path) or null (if no route exists)</returns>
-		public static StarNode Solve(Graph<TN,TE> graph, Graph<TN, TE>.Node startNode, Graph<TN, TE>.Node targetNode, Func<TN, double> estimator)
+		TNode GetOtherNode(TNode node, TEdge edge);
+
+		/// <returns>True iff <paramref name="edge"/> is incident on <paramref name="node"/></returns>
+		bool IsIncident(TEdge edge, TNode node);
+
+		/// <returns>The cost of travelling along the given edge.
+		/// Must not be negative or search algorithms may fail.</returns>
+		double GetEdgeCost(TEdge edge);
+
+		/// <summary>
+		/// Get an estimate for the cost of the cheapest route from
+		/// <paramref name="fromNode"/> to <paramref name="toNode"/>.
+		/// Can be zero, but not negative. Must not overestimate!
+		/// </summary>
+		/// <remarks>This is the heuristic that speeds up A* search.
+		/// Straight-line distance is an excellent such heuristic.</remarks>
+		double GetCostEstimate(TNode fromNode, TNode toNode);
+	}
+
+	private readonly IGraph _graph;
+
+	public AStarSolver(IGraph graph)
+	{
+		_graph = graph ?? throw new ArgumentNullException(nameof(graph));
+	}
+
+	/// <summary>
+	/// Find the shortest path from given start node to given target node.
+	/// Roughly following the pseudocode in the Wikipedia article about the
+	/// A* algorithm: https://de.wikipedia.org/wiki/A*-Algorithmus
+	/// </summary>
+	/// <returns>The list of edges along the shortest path from start to target</returns>
+	public IReadOnlyList<TEdge> Solve(TNode startNode, TNode targetNode)
+	{
+		if (startNode is null)
+			throw new ArgumentNullException(nameof(startNode));
+		if (targetNode is null)
+			throw new ArgumentNullException(nameof(targetNode));
+
+		var openList = new OpenQueue(_graph, targetNode);
+		var closedList = new HashSet<TNode>();
+
+		openList.Add(startNode);
+
+		while (openList.Count > 0)
 		{
-			if (graph is null)
-				throw new ArgumentNullException(nameof(graph));
-			if (startNode is null)
-				throw new ArgumentNullException(nameof(startNode));
-			if (targetNode is null)
-				throw new ArgumentNullException(nameof(targetNode));
-			if (estimator is null)
-				throw new ArgumentNullException(nameof(estimator));
+			// node with least F value (heuristically cheapest)
+			var currentNode = openList.Pop();
 
-			var solver = new AStarSolver<TN,TE>(graph, targetNode, estimator);
-
-			return solver.Solve(startNode);
-
-			//var openList = new OpenQueue();
-			//var closedList = new HashSet<Graph<TN, TE>.Node>();
-			//var starNodes = new Dictionary<Graph<TN, TE>.Node, StarNode>();
-
-			//openList.Add(new StarNode(startNode, 0)); // estimate ignored
-
-			//while (openList.Count > 0)
-			//{
-			//	var currentNode = openList.Pop();
-
-			//	if (currentNode.Node.Equals(targetNode))
-			//	{
-			//		return currentNode; // found
-			//	}
-
-			//	closedList.Add(currentNode.Node); // to avoid cycling
-
-			//	ExpandNode(currentNode, estimator, openList, closedList, starNodes);
-			//}
-
-			//return null; // no path from start to target
-		}
-
-		private StarNode Solve(Graph<TN, TE>.Node startNode)
-		{
-			if (startNode is null)
-				throw new ArgumentNullException(nameof(startNode));
-
-			var openList = new OpenQueue();
-			var closedList = new HashSet<Graph<TN, TE>.Node>();
-
-			openList.Add(new StarNode(startNode, 0)); // estimate ignored
-
-			while (openList.Count > 0)
+			if (Equals(currentNode, targetNode))
 			{
-				var currentNode = openList.Pop();
-
-				if (currentNode.Node.Equals(_targetNode))
-				{
-					return currentNode; // found
-				}
-
-				closedList.Add(currentNode.Node); // to avoid cycling
-
-				ExpandNode(currentNode, openList, closedList);
+				return RetrievePath(currentNode, openList);
 			}
 
-			return null; // no path from start to target
+			closedList.Add(currentNode); // avoid cycling
+
+			ExpandNode(currentNode, openList, closedList);
 		}
 
-		private StarNode SolveAll()
+		return null; // no path from start to target
+	}
+
+	private object SolveAll(TNode targetNode)
+	{
+		// build a spanning tree rooted at the given targetNode
+		// sketch: add all nodes (except target) to openlist
+		// here the heuristic is of no value, essentially Dijkstra
+		throw new NotImplementedException();
+	}
+
+	private void ExpandNode(TNode currentNode,
+	                        OpenQueue openList, ISet<TNode> closedList)
+	{
+		var incidentEdges = _graph.GetIncidentEdges(currentNode);
+
+		foreach (var edge in incidentEdges)
 		{
-			// build a spanning tree rooted at the _targetNode
-			throw new NotImplementedException();
-		}
+			var successor = _graph.GetOtherNode(currentNode, edge);
+			if (closedList.Contains(successor))
+				continue; // already fully treated
 
-		private object SolveAll(Graph<TN, TE>.Node[] startNodes)
-		{
-			if (startNodes is null)
-				throw new ArgumentNullException(nameof(startNodes));
-			if (startNodes.Any(n => n is null))
-				throw new ArgumentNullException(nameof(startNodes), "must not be null");
+			var tentativeG = openList.G(currentNode) + _graph.GetEdgeCost(edge);
+			if (openList.Contains(successor) && tentativeG >= openList.G(successor))
+				continue; // new path is not cheaper
 
-			var openList = new OpenQueue();
-			foreach (var startNode in startNodes)
-			{
-				openList.Add(GetStarNode(startNode));
-			}
+			openList.SetLink(successor, edge);
+			openList.SetG(successor, tentativeG);
 
-			throw new NotImplementedException();
-		}
-
-		private void ExpandNode(StarNode currentNode,
-		                        OpenQueue openList, ISet<Graph<TN, TE>.Node> closedList)
-		{
-			var edges = _graph.GetIncidentEdges(currentNode.Node);
-
-			foreach (var incidentEdge in edges)
-			{
-				var adjacent = incidentEdge.GetOtherNode(currentNode.Node);
-				if (closedList.Contains(adjacent)) continue; // already fully treated
-
-				var successor = GetStarNode(adjacent);
-				var tentativeG = currentNode.G + incidentEdge.Cost;
-				if (openList.Contains(successor) && tentativeG >= successor.G) continue;
-
-				successor.Link = currentNode;
-				successor.G = tentativeG;
-
-				openList.Remove(successor); // O(N) !!
-				successor.F = tentativeG + H(successor.Node);
-				openList.Add(successor); // O(log N)
-			}
-		}
-
-		private StarNode GetStarNode(Graph<TN, TE>.Node node)
-		{
-			if (!_starNodes.TryGetValue(node, out var starNode))
-			{
-				starNode = new StarNode(node, H(node));
-				_starNodes.Add(node, starNode);
-			}
-
-			return starNode;
-		}
-
-		private double H(Graph<TN, TE>.Node node)
-		{
-			return _estimator(node.Payload);
-		}
-
-		private class OpenQueue : PriorityQueue<StarNode>
-		{
-			// Required OpenList operations:
-			// - Count: int
-			// - Pop(): Node // remove least estimate node
-			// - Contains(Node): bool // presently: O(N)
-			// - PriorityChanged(Node) // reorder internally; presently: Remove(node) and Add(node), which is O(N)!
-
-			protected override bool Priority(StarNode a, StarNode b)
-			{
-				// smaller estimate = higher priority
-				return a.F < b.F;
-			}
-		}
-
-		public class StarNode
-		{
-			public Graph<TN, TE>.Node Node { get; }
-			public double G { get; set; } // known cost so far
-			public double F { get; set; } // = G+H (estimate)
-			public StarNode Link { get; set; }
-
-			public StarNode(Graph<TN, TE>.Node node, double estimate)
-			{
-				Node = node ?? throw new ArgumentNullException(nameof(node));
-
-				if (estimate < 0 || double.IsNaN(estimate))
-					throw new ArgumentOutOfRangeException(nameof(estimate), estimate,
-														  "most be non-negative");
-
-				G = 0;
-				F = estimate;
-			}
-
-			public override string ToString()
-			{
-				return $"{Node}, G = {G}, F = {F}";
-			}
+			// If successor is already on open list, reorder because
+			// changing G changes priority (G increased, priority decreases);
+			// otherwise, add successor to open list.
+			// Our PQ only offers Remove() (slow) and Add() (ok):
+			openList.Remove(successor); // TODO O(N) !! (combine a hash with pq, hash points into heap)
+			openList.Add(successor); // O(log N)
 		}
 	}
 
-	public class Graph<TN, TE> where TN : IEquatable<TN> where TE : IEquatable<TE>
+	/// <summary>
+	/// Given the target node and the open list (which in our implementation
+	/// also collects predecessor links) after A* has completed, build the
+	/// list of edges that make up the shortest path.
+	/// </summary>
+	private IReadOnlyList<TEdge> RetrievePath(TNode targetNode, OpenQueue openList)
 	{
-		private readonly Dictionary<TN, Node> _nodes = new();
-		private readonly Dictionary<TE, Edge> _edges = new();
-		private readonly Dictionary<Node, IReadOnlyList<Edge>> _cache = new();
+		var path = new List<TEdge>();
 
-		public Node AddNode(TN payload)
+		var node = targetNode;
+		var edge = openList.Link(node);
+		while (edge is not null)
 		{
-			if (payload is null)
-				throw new ArgumentNullException(nameof(payload));
+			path.Add(edge);
 
-			if (!_nodes.TryGetValue(payload, out Node node))
-			{
-				node = new Node(payload);
-				_nodes.Add(payload, node);
-			}
-
-			return node;
+			node = _graph.GetOtherNode(node, edge);
+			edge = openList.Link(node);
 		}
 
-		public void AddEdge(Node fromNode, Node toNode, double cost, TE payload)
+		path.Reverse();
+		return path;
+	}
+
+	private class OpenQueue : PriorityQueue<TNode>
+	{
+		// Required OpenList operations:
+		// - Count: int
+		// - Pop(): Node // remove least estimate node
+		// - Contains(Node): bool // presently O(N) --> want a parallel hash (also for next operation)
+		// - PriorityChanged(Node) // reorder internally; presently: Remove(node) and Add(node), which is O(N)!
+
+		private readonly IGraph _graph;
+		private readonly Dictionary<TNode, double> _g = new();
+		private readonly Dictionary<TNode, TEdge> _link = new();
+
+		public OpenQueue(IGraph graph, TNode targetNode)
 		{
-			if (payload is null)
-				throw new ArgumentNullException(nameof(payload));
-
-			if (_edges.ContainsKey(payload))
-				throw new InvalidOperationException($"Duplicate edge: {payload}");
-
-			var edge = new Edge(fromNode, toNode, cost, payload);
-			_cache.Remove(fromNode);
-			_cache.Remove(toNode);
-			_edges.Add(payload, edge);
+			_graph = graph ?? throw new ArgumentNullException(nameof(graph));
+			Target = targetNode ?? throw new ArgumentNullException(nameof(targetNode));
 		}
 
-		public Node FindNode(TN payload)
+		private TNode Target { get; }
+
+		public double G(TNode node)
 		{
-			if (payload is null) return null;
-			return _nodes.TryGetValue(payload, out Node node) ? node : null;
+			if (node is null) return 0.0;
+			return _g.TryGetValue(node, out var value) ? value : 0.0;
 		}
 
-		public Edge FindEdge(TE payload)
+		/// <remarks>Changing G changes the node's priority: Remove and re-Add!</remarks>
+		public void SetG(TNode node, double value)
 		{
-			if (payload is null) return null;
-			return _edges.TryGetValue(payload, out Edge edge) ? edge : null;
+			if (node is null)
+				throw new ArgumentNullException(nameof(node));
+			if (!(value >= 0) || double.IsNaN(value) || double.IsInfinity(value))
+				throw new ArgumentOutOfRangeException(nameof(value), "must non-negative and finite");
+			_g[node] = value;
 		}
 
-		public IReadOnlyList<Edge> GetIncidentEdges(Node node)
+		public TEdge Link(TNode node)
 		{
-			if (!_cache.TryGetValue(node, out var list))
-			{
-				list = _edges.Values.Where(e => node.Equals(e.FromNode) || node.Equals(e.ToNode)).ToList();
-				_cache.Add(node, list);
-			}
-
-			return list;
+			if (node is null) return default;
+			return _link.TryGetValue(node, out var edge) ? edge : default;
 		}
 
-		public Node SplitEdge(Edge edge, Func<TE, Tuple<TE, TE>> splitter)
+		public void SetLink(TNode node, TEdge incidentEdge)
 		{
-			throw new NotImplementedException();
+			if (node is null)
+				throw new ArgumentNullException(nameof(node));
+			if (incidentEdge is null)
+				throw new ArgumentNullException(nameof(incidentEdge));
+			if (!_graph.IsIncident(incidentEdge, node))
+				throw new ArgumentException("Node must be start or end of edge");
+
+			_link[node] = incidentEdge;
 		}
 
-		public Edge Unsplit(Node node, Func<TE, TE, TE> merger)
+		protected override bool Priority(TNode a, TNode b)
 		{
-			// only if node degree 2
-			// and merger returns a non-null payload for the merged edge
-			throw new NotImplementedException();
+			double aF = F(a);
+			double bF = F(b);
+			// smaller estimate = higher priority
+			return aF < bF;
 		}
 
-		public class Node : IEquatable<Node>
+		private double F(TNode node)
 		{
-			public TN Payload { get; }
-
-			public Node(TN payload)
-			{
-				Payload = payload ?? throw new ArgumentNullException(nameof(payload));
-			}
-
-			public bool Equals(Node other)
-			{
-				if (other is null) return false;
-				return Equals(other.Payload, Payload);
-			}
-
-			public override bool Equals(object obj)
-			{
-				return Equals(obj as Node);
-			}
-
-			public override int GetHashCode()
-			{
-				return Payload.GetHashCode();
-			}
-
-			public override string ToString()
-			{
-				return Payload.ToString();
-			}
+			var g = G(node); // known cost so far
+			var h = H(node); // optimistic estimate (typically straight-line distance)
+			return g + h;
 		}
 
-		public class Edge
+		/// <summary>
+		/// The heuristic: optimistic estimate for remaining
+		/// cost to target. Must NOT overestimate the cost!
+		/// </summary>
+		private double H(TNode node)
 		{
-			public Node FromNode { get; }
-			public Node ToNode { get; }
-			public double Cost { get; }
-			public TE Payload { get; }
-
-			public Edge(Node fromNode, Node toNode, double cost, TE payload)
-			{
-				FromNode = fromNode ?? throw new ArgumentNullException(nameof(fromNode));
-				ToNode = toNode ?? throw new ArgumentNullException(nameof(toNode));
-				if (double.IsNaN(cost) || cost < 0)
-					throw new ArgumentOutOfRangeException(nameof(cost), cost, "must be non-negative");
-				Cost = cost;
-				Payload = payload; // can be null or anything
-			}
-
-			public Node GetOtherNode(Node node)
-			{
-				if (node.Equals(FromNode))
-					return ToNode;
-				if (node.Equals(ToNode))
-					return FromNode;
-				throw new InvalidOperationException("This edge is not incident to given node");
-			}
+			return _graph.GetCostEstimate(node, Target);
 		}
 	}
 }
