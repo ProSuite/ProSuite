@@ -787,6 +787,8 @@ namespace ProSuite.Microservices.Client.QA
 
 				ObjectSubtype objectSubtype = objectType.AddObjectSubType(subTypeMsg.Name);
 
+				objectSubtype.SetCloneId(subTypeMsg.ObjectCategoryId);
+
 				foreach (ObjectSubtypeCriterionMsg criterionMsg in
 				         subTypeMsg.ObjectSubtypeCriterion)
 				{
