@@ -271,7 +271,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 			catch (Exception ex)
 			{
-				_msg.Error(ex.Message, ex);
+				_msg.Debug(ex.Message, ex);
 			}
 
 			return false;
