@@ -5,54 +5,55 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
-namespace ProSuite.AGP.Editing.Picker;
-
-public abstract class PickableFeatureItemBase : PropertyChangedBase, IPickableFeatureItem
+namespace ProSuite.AGP.Editing.Picker
 {
-	private readonly string _displayValue;
-	private bool _selected;
-
-	/// <summary>
-	/// Has to be called on MCT
-	/// </summary>
-	protected PickableFeatureItemBase(BasicFeatureLayer layer, Feature feature,
-	                                  Geometry geometry, long oid, string displayValue)
+	public abstract class PickableFeatureItemBase : PropertyChangedBase, IPickableFeatureItem
 	{
-		Layer = layer;
-		Feature = feature;
-		Geometry = geometry;
-		Oid = oid;
-		_displayValue = displayValue;
-	}
+		private readonly string _displayValue;
+		private bool _selected;
 
-	[NotNull]
-	public Feature Feature { get; }
+		/// <summary>
+		/// Has to be called on MCT
+		/// </summary>
+		protected PickableFeatureItemBase(BasicFeatureLayer layer, Feature feature,
+		                                  Geometry geometry, long oid, string displayValue)
+		{
+			Layer = layer;
+			Feature = feature;
+			Geometry = geometry;
+			Oid = oid;
+			_displayValue = displayValue;
+		}
 
-	public long Oid { get; }
+		[NotNull]
+		public Feature Feature { get; }
 
-	[NotNull]
-	public Geometry Geometry { get; }
+		public long Oid { get; }
 
-	[NotNull]
-	public BasicFeatureLayer Layer { get; }
+		[NotNull]
+		public Geometry Geometry { get; }
 
-	public bool Selected
-	{
-		get => _selected;
-		set => SetProperty(ref _selected, value);
-	}
+		[NotNull]
+		public BasicFeatureLayer Layer { get; }
 
-	[NotNull]
-	public string DisplayValue => ToString();
+		public bool Selected
+		{
+			get => _selected;
+			set => SetProperty(ref _selected, value);
+		}
 
-	public abstract ImageSource ImageSource { get; }
+		[NotNull]
+		public string DisplayValue => ToString();
 
-	public double Score { get; set; }
+		public abstract ImageSource ImageSource { get; }
 
-	public override string ToString()
-	{
-		// TODO: Alternatively allow using layer.QueryDisplayExpressions. But typically this is just the OID which is not very useful -> Requires configuration
+		public double Score { get; set; }
 
-		return Score >= double.Epsilon ? $"{_displayValue} - {Score}" : $"{_displayValue}";
+		public override string ToString()
+		{
+			// TODO: Alternatively allow using layer.QueryDisplayExpressions. But typically this is just the OID which is not very useful -> Requires configuration
+
+			return Score >= double.Epsilon ? $"{_displayValue} - {Score}" : $"{_displayValue}";
+		}
 	}
 }
