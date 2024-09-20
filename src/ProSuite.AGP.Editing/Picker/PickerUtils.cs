@@ -121,7 +121,8 @@ namespace ProSuite.AGP.Editing.Picker
 		// TODO daro: change signature to .. Func<IEnumerable<FeatureSelectionBase>> because CancelableProgressor should be null?
 		public static async Task ShowAsync(
 			[NotNull] IPickerPrecedence precedence,
-			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor, IEnumerable<FeatureSelectionBase>> getCandidates)
+			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor,
+				IEnumerable<FeatureSelectionBase>> getCandidates)
 		{
 			SelectionCombinationMethod selectionMethod =
 				KeyboardUtils.IsShiftDown()
@@ -163,7 +164,8 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public static async Task ShowAsync(
 			[NotNull] IPickerPrecedence precedence,
-			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor, IEnumerable<FeatureSelectionBase>> getCandidates,
+			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor,
+				IEnumerable<FeatureSelectionBase>> getCandidates,
 			PickerMode pickerMode)
 		{
 			SelectionCombinationMethod selectionMethod =
@@ -174,7 +176,7 @@ namespace ProSuite.AGP.Editing.Picker
 			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
 			SketchGeometryType sketchGeometryType = ToolUtils.GetSketchGeometryType();
 			SpatialRelationship spatialRelationship =
-				sketchGeometryType == SketchGeometryType.Polygon||
+				sketchGeometryType == SketchGeometryType.Polygon ||
 				sketchGeometryType == SketchGeometryType.Lasso
 					? SpatialRelationship.Contains
 					: SpatialRelationship.Intersects;
@@ -208,7 +210,13 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			var picker = new PickerService();
 
-			if (precedence.IsSingleClick)
+			bool isRequestingFeatures =
+				typeof(IPickableFeatureItem).IsAssignableFrom(typeof(T));
+
+			bool isRequestingFeatureClasses =
+				typeof(IPickableFeatureClassItem).IsAssignableFrom(typeof(T));
+
+			if (isRequestingFeatures || (precedence.IsSingleClick && ! isRequestingFeatureClasses))
 			{
 				var items = PickableItemsFactory
 				            .CreateFeatureItems(orderedSelection)
@@ -274,7 +282,7 @@ namespace ProSuite.AGP.Editing.Picker
 			switch (precedence.GetPickerMode(orderedSelection))
 			{
 				case PickerMode.ShowPicker:
-					
+
 					IPickableItem pickedItem = await ShowAsync(precedence, orderedSelection);
 
 					if (pickedItem is IPickableFeatureItem featureItem)
