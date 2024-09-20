@@ -249,7 +249,10 @@ namespace ProSuite.Microservices.Client.QA
 				else if (parameterValue is ScalarTestParameterValue scalarParamValue)
 				{
 					// Transport in invariant culture, it will be formatted on the client
-					parameterMsg.Value = scalarParamValue.PersistedStringValue;
+					if (scalarParamValue.PersistedStringValue != null)
+					{
+						parameterMsg.Value = scalarParamValue.PersistedStringValue;
+					}
 				}
 				else
 				{
