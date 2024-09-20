@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.ArcGIS.Geodatabase.AO
 {
@@ -18,16 +20,19 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 			}
 		}
 
-		public static ArcTable ToArcTable(Table proTable)
+		public static ArcTable ToArcTable([NotNull] Table proTable)
 		{
-			ArcTable result = proTable is FeatureClass featureClass
+			Table databaseTable = DatasetUtils.GetDatabaseTable(proTable);
+
+			ArcTable result = databaseTable is FeatureClass featureClass
 				                  ? new ArcFeatureClass(featureClass)
 				                  : new ArcTable(proTable);
 
 			return result;
 		}
 
-		public static ArcRow ToArcRow(Row proRow, ITable parent = null)
+		public static ArcRow ToArcRow([NotNull] Row proRow,
+		                              [CanBeNull] ITable parent = null)
 		{
 			if (parent == null)
 			{
