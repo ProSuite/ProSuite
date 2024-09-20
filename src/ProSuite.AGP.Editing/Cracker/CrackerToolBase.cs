@@ -41,7 +41,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		protected abstract ICrackerService MicroserviceClient { get; }
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
 

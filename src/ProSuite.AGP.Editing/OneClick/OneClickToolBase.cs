@@ -33,6 +33,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		private const Key _keyPolygonDraw = Key.P;
 		private const Key _keyLassoDraw = Key.L;
 
+		private int _updateErrorCounter;
+		private const int MaxUpdateErrors = 10;
+
 		private readonly TimeSpan _sketchBlockingPeriod = TimeSpan.FromSeconds(1);
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -89,6 +92,33 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual Cursor SelectionCursor { get; set; }
 		protected virtual Cursor SelectionCursorShift { get; set; }
+
+		#region Overrides of PlugIn
+
+		protected override void OnUpdate()
+		{
+			try
+			{
+				OnUpdateCore();
+			}
+			catch (Exception ex)
+			{
+				if (_updateErrorCounter < MaxUpdateErrors)
+				{
+					_msg.Error($"{GetType().Name}.{nameof(OnUpdate)}: {ex.Message}", ex);
+
+					_updateErrorCounter += 1;
+
+					if (_updateErrorCounter == MaxUpdateErrors)
+					{
+						_msg.Error("Will stop reporting errors here to avoid flooding the logs");
+					}
+				}
+				//else: silently ignore to avoid flooding the logs
+			}
+		}
+
+		#endregion
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
@@ -345,6 +375,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				return await Task.FromResult(true);
 			}
 		}
+
+		protected virtual void OnUpdateCore() { }
 
 		protected virtual async Task ShiftPressedCoreAsync()
 		{

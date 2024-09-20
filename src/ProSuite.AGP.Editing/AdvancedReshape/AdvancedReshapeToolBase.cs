@@ -62,7 +62,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected abstract IAdvancedReshapeService MicroserviceClient { get; }
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
 

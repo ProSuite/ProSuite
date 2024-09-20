@@ -62,7 +62,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return SketchGeometryType.Rectangle;
 		}
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
 

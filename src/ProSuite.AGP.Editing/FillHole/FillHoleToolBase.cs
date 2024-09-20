@@ -48,7 +48,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected abstract ICalculateHolesService MicroserviceClient { get; }
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
 

@@ -56,7 +56,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		#region Overrides of PlugIn
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			UpdateEnabled();
 		}

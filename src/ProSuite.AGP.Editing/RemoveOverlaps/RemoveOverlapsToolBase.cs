@@ -42,7 +42,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected abstract IRemoveOverlapsService MicroserviceClient { get; }
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
 
