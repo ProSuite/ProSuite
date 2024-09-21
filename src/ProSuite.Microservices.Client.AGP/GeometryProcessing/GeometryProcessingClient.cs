@@ -6,6 +6,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using Grpc.Core;
 using Grpc.Net.Client;
+using ProSuite.AGP.Editing.Cracker;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
@@ -245,18 +246,22 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		public CrackerResult CalculateCrackPoints(
 			IList<Feature> selectedFeatures,
 			IList<Feature> targetFeatures,
-		                                          CancellationToken cancellationToken)
+			ICrackerToolOptions crackerToolOptions,
+
+												  CancellationToken cancellationToken)
 		{
 			if (CrackClient == null)
 				throw new InvalidOperationException("No microservice available.");
 
-			return CrackerClientUtils.CalculateCrackPoints(CrackClient, selectedFeatures, targetFeatures, cancellationToken);
+			return CrackerClientUtils.CalculateCrackPoints(CrackClient, selectedFeatures, targetFeatures,
+				crackerToolOptions, cancellationToken);
 		}
 
 		public IList<ResultFeature> ApplyCrackPoints(
 			IEnumerable<Feature> selectedFeatures,
 			CrackerResult crackPointsToAdd,
 		    IList<Feature> intersectingFeatures,
+		    ICrackerToolOptions crackerToolOptions,
 			CancellationToken cancellationToken)
 		{
 			if (CrackClient == null)
@@ -264,7 +269,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return CrackerClientUtils.ApplyCrackPoints(
 				CrackClient, selectedFeatures, crackPointsToAdd, intersectingFeatures,
-				cancellationToken);
+				crackerToolOptions, cancellationToken);
 		}
 	}
 }
