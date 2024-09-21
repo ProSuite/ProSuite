@@ -13,10 +13,12 @@ public interface ICrackerService
 	CrackerResult CalculateCrackPoints(
 		[NotNull] IList<Feature> selectedFeatures,
 		[NotNull] IList<Feature> targetFeatures,
+		ICrackerToolOptions crackerToolOptions,
 		CancellationToken cancellationToken);
 
 	IList<ResultFeature> ApplyCrackPoints([NotNull] IEnumerable<Feature> selectedFeatures,
 	                                      [NotNull] CrackerResult crackPointsToAdd,
 	                                      [NotNull] IList<Feature> intersectingFeatures,
-	                                      CancellationToken cancellationToken);
+	                                      ICrackerToolOptions crackerToolOptions,
+										  CancellationToken cancellationToken);
 }
