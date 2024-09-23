@@ -373,7 +373,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnSketchResetCore() { }
 
-		private void StartSketchPhase()
+		protected void StartSketchPhase()
 		{
 			SetupSketch(GetSketchGeometryType(), SketchOutputMode.Map, true, false);
 
@@ -469,7 +469,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			StartSketchAsync();
 		}
 
-		private void RememberSketch(Geometry knownSketch = null)
+		protected void RememberSketch(Geometry knownSketch = null)
 		{
 			if (! SupportRestoreLastSketch)
 			{

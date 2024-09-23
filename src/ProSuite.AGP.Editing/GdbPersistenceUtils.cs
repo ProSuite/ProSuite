@@ -357,7 +357,7 @@ namespace ProSuite.AGP.Editing
 			return true;
 		}
 
-		private static void SetShape([NotNull] RowBuffer rowBuffer,
+		public static void SetShape([NotNull] RowBuffer rowBuffer,
 		                             [NotNull] Geometry geometry,
 		                             FeatureClass featureClass)
 		{
