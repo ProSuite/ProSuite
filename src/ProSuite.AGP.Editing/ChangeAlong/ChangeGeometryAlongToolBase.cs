@@ -373,12 +373,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					                     GetSelectionTolerancePixels(),
 					                     ActiveMapView.ClientToScreen(CurrentMousePosition));
 
-				pickerPrecedence.EnsureGeometryNonEmpty();
+				Geometry selectionGeometry = pickerPrecedence.GetSelectionGeometry();
 
 				List<FeatureSelectionBase> candidates =
-					FindTargetFeatureCandidates(pickerPrecedence.SelectionGeometry,
-					                            targetFeatureSelection, selectedFeatures,
-					                            progressor);
+					FindTargetFeatureCandidates(selectionGeometry, targetFeatureSelection,
+					                            selectedFeatures, progressor);
 
 				if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 				{
