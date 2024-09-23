@@ -1,4 +1,5 @@
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 

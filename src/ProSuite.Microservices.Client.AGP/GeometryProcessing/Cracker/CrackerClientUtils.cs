@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.AGP.Editing.Cracker;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
@@ -24,11 +25,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			[NotNull] CrackGrpc.CrackGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] IList<Feature> intersectingFeatures,
+			ICrackerToolOptions crackerToolOptions,
 			CancellationToken cancellationToken)
 		{
 			CalculateCrackPointsResponse response =
 				CalculateCrackPointsRpc(rpcClient, selectedFeatures, intersectingFeatures,
-				                        cancellationToken);
+				                        crackerToolOptions, cancellationToken);
 
 			if (response == null || cancellationToken.IsCancellationRequested)
 			{
@@ -92,10 +94,11 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			[NotNull] CrackGrpc.CrackGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] IList<Feature> intersectingFeatures,
+			ICrackerToolOptions crackerToolOptions,
 			CancellationToken cancellationToken)
 		{
 			CalculateCrackPointsRequest request =
-				CreateCalculateCrackPointsRequest(selectedFeatures, intersectingFeatures);
+				CreateCalculateCrackPointsRequest(selectedFeatures, intersectingFeatures, crackerToolOptions);
 
 			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
 
@@ -109,7 +112,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 
 		private static CalculateCrackPointsRequest CreateCalculateCrackPointsRequest(
 			[NotNull] IList<Feature> selectedFeatures,
-			[NotNull] IList<Feature> intersectingFeatures)
+			[NotNull] IList<Feature> intersectingFeatures,
+			ICrackerToolOptions crackerToolOptions)
 		{
 			var request = new CalculateCrackPointsRequest();
 			request.CrackOptions = new CrackOptionsMsg();
@@ -122,7 +126,29 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			                                           request.TargetFeatures,
 			                                           request.ClassDefinitions);
 
+			request.CrackOptions = ToCrackerToolOptionsMsg(crackerToolOptions);
+
 			return request;
+		}
+
+		private static CrackOptionsMsg ToCrackerToolOptionsMsg(ICrackerToolOptions crackerToolOptions)
+		{
+			var result = new CrackOptionsMsg();
+
+			result.CrackOnlyWithinSameClass =
+				crackerToolOptions.TargetFeatureSelection == TargetFeatureSelection.SameClass;
+			result.RespectMinimumSegmentLength =
+				crackerToolOptions.RespectMinimumSegmentLength;
+			result.MinimumSegmentLength =
+				crackerToolOptions.MinimumSegmentLength;
+			result.SnapToTargetVertices =
+				crackerToolOptions.SnapToTargetVertices;
+			result.SnapTolerance =
+				crackerToolOptions.SnapTolerance;
+			result.UseSourceZs =
+				crackerToolOptions.UseSourceZs;
+
+			return result;
 		}
 
 		#endregion
@@ -290,11 +316,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			IEnumerable<Feature> selectedFeatures,
 			CrackerResult crackPointsToAdd,
 			IList<Feature> intersectingFeatures,
+			ICrackerToolOptions crackerToolOptions,
 			CancellationToken cancellationToken)
 		{
 			ApplyCrackPointsRequest request =
 				CreateApplyCrackPointsRequest(selectedFeatures, crackPointsToAdd,
-											intersectingFeatures, out List<Feature> updatedFeatures);
+											crackerToolOptions, out List<Feature> updatedFeatures);
 
 
 			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
@@ -312,8 +339,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 		private static ApplyCrackPointsRequest CreateApplyCrackPointsRequest(
 			[NotNull] IEnumerable<Feature> selectedFeatures,
 			[NotNull] CrackerResult crackPointsToAdd,
-			[CanBeNull]
-			IList<Feature> targetFeaturesForVertexInsertion, //RemoveOverlapsOptions options,
+			ICrackerToolOptions crackerToolOptions,
 			out List<Feature> updateFeatures)
 		{
 			var request = new ApplyCrackPointsRequest();
@@ -360,6 +386,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 
 				request.CrackPoints.Add(crackPointsMsg);
 			}
+
+			request.CrackOptions = ToCrackerToolOptionsMsg(crackerToolOptions);
 
 			return request;
 		}

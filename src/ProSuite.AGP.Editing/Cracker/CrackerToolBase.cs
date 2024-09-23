@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +12,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
@@ -19,12 +22,17 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.ManagedOptions;
+using static System.Environment;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
 	public abstract class CrackerToolBase : TwoPhaseEditToolBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private CrackerToolOptions _crackerToolOptions;
+		private OverridableSettingsProvider<PartialCrackerToolOptions> _settingsProvider;
 
 		private CrackerResult _resultCrackPoints;
 		private CrackerFeedback _feedback;
@@ -39,6 +47,25 @@ namespace ProSuite.AGP.Editing.Cracker
 			SecondPhaseCursor = ToolUtils.GetCursor(Resources.CrackerToolCursorProcess);
 		}
 
+		protected string OptionsFileName => "CrackerToolOptions.xml";
+
+		[CanBeNull]
+		protected virtual string CentralConfigDir => null;
+
+		protected string LocalConfigDir
+		{
+			get
+			{
+				string localApp = GetFolderPath(SpecialFolder.ApplicationData);
+
+				return Path.Combine(localApp, "swisstopo", "Topgis");
+
+				// TODO: In the future use this:
+				//return EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				//	AppDataFolder.Roaming);
+			}
+		}
+
 		protected abstract ICrackerService MicroserviceClient { get; }
 
 		protected override void OnUpdateCore()
@@ -51,6 +78,8 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		protected override void OnToolActivatingCore()
 		{
+			InitializeOptions();
+
 			_feedback = new CrackerFeedback();
 		}
 
@@ -137,6 +166,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			var result =
 				MicroserviceClient.ApplyCrackPoints(
 					selectedFeatures, crackPointsToApply, intersectingFeatures,
+					_crackerToolOptions,
 					progressor?.CancellationToken ?? new CancellationTokenSource().Token);
 
 			var updates = new Dictionary<Feature, Geometry>();
@@ -224,7 +254,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			{
 				resultCrackPoints =
 					MicroserviceClient.CalculateCrackPoints(selectedFeatures, intersectingFeatures,
-					                                        cancellationToken);
+					                                        _crackerToolOptions, cancellationToken);
 			}
 			else
 			{
@@ -294,6 +324,42 @@ namespace ProSuite.AGP.Editing.Cracker
 			return true;
 		}
 
+		private CrackerToolOptions InitializeOptions()
+		{
+			Stopwatch watch = _msg.DebugStartTiming();
+
+			// NOTE: by only reading the file locations we can save a couple of 100ms
+			string currentCentralConfigDir = CentralConfigDir;
+			string currentLocalConfigDir = LocalConfigDir;
+
+			if (_settingsProvider == null ||
+			    _settingsProvider.IsStale(currentCentralConfigDir, currentLocalConfigDir))
+			{
+				_settingsProvider =
+					new OverridableSettingsProvider<PartialCrackerToolOptions>(
+						currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+
+				PartialCrackerToolOptions localConfiguration, centralConfiguration;
+
+				_settingsProvider.GetConfigurations(out localConfiguration,
+				                                    out centralConfiguration);
+
+				_crackerToolOptions = new CrackerToolOptions(centralConfiguration,
+				                                             localConfiguration);
+			}
+
+			_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
+
+			string optionsMessage = _crackerToolOptions.GetLocalOverridesMessage();
+
+			if (! string.IsNullOrEmpty(optionsMessage))
+			{
+				_msg.Info(optionsMessage);
+			}
+
+			return _crackerToolOptions;
+		}
+
 		#region Search target features
 
 		[NotNull]
@@ -307,15 +373,24 @@ namespace ProSuite.AGP.Editing.Cracker
 			Envelope inExtent = ActiveMapView.Extent;
 
 			// todo daro To tool Options? See ChangeGeometryAlongToolBase.SelectTargetsAsync() as well.
-			const TargetFeatureSelection targetFeatureSelection =
-				TargetFeatureSelection.VisibleSelectableFeatures;
+			TargetFeatureSelection targetFeatureSelection =
+				_crackerToolOptions.TargetFeatureSelection;
 
 			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
 
 			// They might be stored (insert target vertices):
 			featureFinder.ReturnUnJoinedFeatures = true;
 
-			IEnumerable<FeatureSelectionBase> featureClassSelections =
+
+			// Options which are not directly passed to the Microservice via _crackerToolOptions
+			// Snap crack points within tolerance to target vertices
+			if (_crackerToolOptions.SnapToTargetVertices)
+			{
+				featureFinder.ExtraSearchTolerance = _crackerToolOptions.SnapTolerance;
+			}
+
+			// Set the feature classes to ignore
+			IEnumerable< FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
 					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
 

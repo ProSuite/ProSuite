@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.UtilityNetwork.Trace;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
@@ -55,6 +57,11 @@ namespace ProSuite.Commons.AGP.Carto
 		/// </summary>
 		public bool ReturnUnJoinedFeatures { get; set; }
 
+		/// <summary>
+		/// Extra tolerance that will be added to all provided (or calculated) search geometries.
+		/// </summary>
+		public double ExtraSearchTolerance { get; set; }
+
 		public IEnumerable<FeatureSelectionBase> FindFeaturesByLayer(
 			[NotNull] Geometry searchGeometry,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
@@ -72,10 +79,10 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public IEnumerable<FeatureSelectionBase> FindFeaturesByLayer(
-			IEnumerable<BasicFeatureLayer> layers,
-			Geometry searchGeometry,
-			Predicate<Feature> featurePredicate,
-			CancelableProgressor cancelableProgressor)
+			[NotNull] IEnumerable<BasicFeatureLayer> layers,
+			[NotNull] Geometry searchGeometry,
+			[CanBeNull] Predicate<Feature> featurePredicate,
+			[CanBeNull] CancelableProgressor cancelableProgressor)
 		{
 			SpatialReference outputSpatialReference = _mapView.Map.SpatialReference;
 
@@ -91,6 +98,8 @@ namespace ProSuite.Commons.AGP.Carto
 				{
 					featurePredicate = f => true;
 				}
+
+				searchGeometry = Assert.NotNull(ExpandWithExtraTolerance(searchGeometry));
 
 				QueryFilter filter =
 					GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
@@ -161,10 +170,10 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="cancelableProgressor"></param>
 		/// <returns></returns>
 		public IEnumerable<FeatureSelectionBase> FindFeaturesByFeatureClass(
-			IEnumerable<BasicFeatureLayer> featureLayers,
-			Geometry searchGeometry,
-			Predicate<Feature> featurePredicate,
-			CancelableProgressor cancelableProgressor)
+			[NotNull] IEnumerable<BasicFeatureLayer> featureLayers,
+			[NotNull] Geometry searchGeometry,
+			[CanBeNull] Predicate<Feature> featurePredicate,
+			[CanBeNull] CancelableProgressor cancelableProgressor)
 		{
 			IEnumerable<IGrouping<IntPtr, BasicFeatureLayer>> layersGroupedByClass =
 				featureLayers.GroupBy(fl => fl.GetTable().Handle);
@@ -194,6 +203,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 					Assert.NotNull(featureClass,
 					               $"Layer {basicFeatureLayer.Name} has null feature class");
+
+					searchGeometry = ExpandWithExtraTolerance(searchGeometry);
 
 					QueryFilter filter =
 						GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
@@ -369,7 +380,7 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[CanBeNull]
-		private static Geometry GetSearchGeometry(
+		private Geometry GetSearchGeometry(
 			[NotNull] ICollection<Feature> intersectingFeatures,
 			[CanBeNull] Envelope clipExtent)
 		{
@@ -384,6 +395,19 @@ namespace ProSuite.Commons.AGP.Carto
 
 				result = GeometryBagBuilderEx.CreateGeometryBag(intersectingGeometries, sr);
 				//result = GeometryEngine.Instance.Union(intersectingGeometries);
+			}
+
+			result = ExpandWithExtraTolerance(result);
+
+			return result;
+		}
+
+		[CanBeNull]
+		private Geometry ExpandWithExtraTolerance([CanBeNull] Geometry result)
+		{
+			if (result != null && ExtraSearchTolerance > 0)
+			{
+				result = result.Extent.Expand(ExtraSearchTolerance, ExtraSearchTolerance, false);
 			}
 
 			return result;
