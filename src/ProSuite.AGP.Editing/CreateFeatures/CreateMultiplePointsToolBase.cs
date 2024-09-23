@@ -80,9 +80,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected override void LogEnteringSketchMode()
 		{
-			EditingTemplate editTemplate = EditingTemplate.Current;
-
-			string layerName = ToolUtils.CurrentTargetLayer(editTemplate)?.Name ?? string.Empty;
+			string layerName = GetTargetObjectTypeName();
 
 			_msg.InfoFormat(
 				"Draw one or more points. Finish the sketch to create the individual point features in '{0}'.",
@@ -188,9 +186,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		private void UpdateEnabled()
 		{
-			EditingTemplate editTemplate = EditingTemplate.Current;
-
-			esriGeometryType? geometryType = ToolUtils.CurrentTargetLayer(editTemplate)?.ShapeType;
+			esriGeometryType? geometryType = GetTargetLayerShapeType();
 
 			Enabled = geometryType == esriGeometryType.esriGeometryPoint ||
 			          geometryType == esriGeometryType.esriGeometryMultipoint;
@@ -213,8 +209,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 					List<long> newFeatureIds;
 
-					FeatureClass currentTargetClass =
-						ToolUtils.GetCurrentTargetFeatureClass(editTemplate);
+					FeatureClass currentTargetClass = GetCurrentTargetClass();
 
 					if (currentTargetClass == null)
 					{
@@ -239,7 +234,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 								       editTemplate.Inspector, multipoint,
 								       cancelableProgressor);
 
-							       _msg.DebugFormat("Created new featrue IDs: {0}", newFeatureIds);
+							       _msg.DebugFormat("Created new feature IDs: {0}", newFeatureIds);
 
 							       return newFeatureIds.Count > 0;
 						       }, "Create multiple points", datasets);
@@ -267,5 +262,34 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 		}
 
 		#endregion
+
+		protected virtual esriGeometryType? GetTargetLayerShapeType()
+		{
+			EditingTemplate editTemplate = EditingTemplate.Current;
+
+			FeatureLayer currentTargetLayer = ToolUtils.CurrentTargetLayer(editTemplate);
+
+			esriGeometryType? geometryType = currentTargetLayer?.ShapeType;
+
+			return geometryType;
+		}
+
+		protected virtual FeatureClass GetCurrentTargetClass()
+		{
+			EditingTemplate editTemplate =
+				Assert.NotNull(EditingTemplate.Current, "No edit template");
+
+			FeatureClass currentTargetClass =
+				ToolUtils.GetCurrentTargetFeatureClass(editTemplate);
+
+			return currentTargetClass;
+		}
+
+		protected virtual string GetTargetObjectTypeName()
+		{
+			EditingTemplate editTemplate = EditingTemplate.Current;
+
+			return ToolUtils.CurrentTargetLayer(editTemplate)?.Name ?? string.Empty;
+		}
 	}
 }
