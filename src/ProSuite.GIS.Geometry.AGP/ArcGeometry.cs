@@ -1,12 +1,16 @@
 using System;
 using ProSuite.ArcGIS.Geometry.AO;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ESRI.ArcGIS.Geometry
 {
 	public class ArcGeometry : IGeometry
 	{
-		public ArcGeometry(global::ArcGIS.Core.Geometry.Geometry proGeometry)
+		public ArcGeometry([NotNull] global::ArcGIS.Core.Geometry.Geometry proGeometry)
 		{
+			Assert.ArgumentNotNull(proGeometry, nameof(proGeometry));
+
 			ProGeometry = proGeometry;
 		}
 

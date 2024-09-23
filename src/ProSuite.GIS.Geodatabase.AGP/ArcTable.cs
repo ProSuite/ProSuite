@@ -391,8 +391,20 @@ namespace ESRI.ArcGIS.Geodatabase
 			get { yield break; }
 		}
 
-		IWorkspace IDataset.Workspace =>
-			new ArcWorkspace(ProTable.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase);
+		IWorkspace IDataset.Workspace
+		{
+			get
+			{
+				var geodatabase = ProTable.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase;
+
+				if (geodatabase == null)
+				{
+					return null;
+				}
+
+				return new ArcWorkspace(geodatabase);
+			}
+		}
 		//public IWorkspace Workspace => new ArcWorkspace(_aoDataset.Workspace);
 
 		//public IPropertySet PropertySet => _aoDataset.PropertySet;
