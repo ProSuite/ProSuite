@@ -308,6 +308,7 @@ public class WhiteSelection : IWhiteSelection
 		filter.ObjectIDs = objectIDs;
 
 		using var cursor = Layer.Search(filter);
+		if (cursor is null) return; // no valid data source
 
 		while (cursor.MoveNext())
 		{
