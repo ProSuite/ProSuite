@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.UtilityNetwork.Trace;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -353,7 +352,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 			if (targetSelectionType == TargetFeatureSelection.SameClass &&
 			    ! Assert.NotNull(selectedFeatures).Any(
-				    f => DatasetUtils.IsSameTable(f.GetTable(), basicFeatureLayer.GetTable())))
+				    f => LayerUsesFeatureClass(basicFeatureLayer, f.GetTable())))
 			{
 				return false;
 			}
@@ -377,6 +376,22 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			return true;
+		}
+
+		private static bool
+			LayerUsesFeatureClass(BasicFeatureLayer featureLayer, FeatureClass featureClass)
+		{
+			var layerClass = featureLayer.GetTable() as FeatureClass;
+
+			if (layerClass == null)
+			{
+				return false;
+			}
+
+			FeatureClass dbLayerClass =
+				DatasetUtils.GetDatabaseFeatureClass(layerClass);
+
+			return DatasetUtils.IsSameTable(featureClass, dbLayerClass);
 		}
 
 		[CanBeNull]
