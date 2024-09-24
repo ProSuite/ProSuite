@@ -29,7 +29,6 @@ namespace ProSuite.Commons.AGP.Gdb
 			switch (connector)
 			{
 				case DatabaseConnectionProperties connectionProperties:
-
 					ConnectionString = connectionString;
 					WorkspaceFactory = WorkspaceFactory.SDE;
 					break;
@@ -41,6 +40,11 @@ namespace ProSuite.Commons.AGP.Gdb
 					ConnectionString = fileSystemConnection.Path.ToString();
 					WorkspaceFactory = WorkspaceFactory.Shapefile;
 					break;
+				case MobileGeodatabaseConnectionPath mobileGeodatabaseConnectionPath:
+					ConnectionString = mobileGeodatabaseConnectionPath.Path.ToString();
+					WorkspaceFactory = WorkspaceFactory.SQLite;
+					break;
+
 				default:
 					throw new NotImplementedException(
 						$"connector {connector.GetType()} is not implemented");
