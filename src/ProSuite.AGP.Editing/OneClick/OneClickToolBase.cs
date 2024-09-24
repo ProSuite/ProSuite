@@ -93,6 +93,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual Cursor SelectionCursor { get; set; }
 		protected virtual Cursor SelectionCursorShift { get; set; }
 
+		/// <summary>
+		/// Flag to indicate that currently the selection is changed by the <see cref="OnSelectionSketchCompleteAsync"/> method.
+		/// </summary>
+		protected bool IsCompletingSelectionSketch { get; set; }
+
 		#region Overrides of PlugIn
 
 		protected override void OnUpdate()
@@ -441,8 +446,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
 		{
-			// TODO: Use async overload added at 3.0
+			_msg.VerboseDebug(() => $"OnMapSelectionChangedAsync ({Caption})");
+			// NOTE: This method is called repeatedly with different selection sets during the
+			//       OnSelectionSketchCompleteAsync method. Therefore, the flag is set to prevent
+			//       multiple calls to the AfterSelectionMethod with intermediate results!
+			//       The ProcessSelection method is called at the end of the sketch completion.
 			// Note: app crashes on uncaught exceptions here
+
+			if (IsCompletingSelectionSketch)
+			{
+				return;
+			}
 
 			Task<bool> task = QueuedTask.Run(() => OnMapSelectionChangedCore(args));
 
@@ -513,13 +527,21 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Geometry sketchGeometry,
 			[CanBeNull] CancelableProgressor progressor)
 		{
-			using var pickerPrecedence =
-				CreatePickerPrecedence(sketchGeometry);
+			try
+			{
+				IsCompletingSelectionSketch = true;
 
-			await ViewUtils.TryAsync(
-				PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers), _msg);
+				using var pickerPrecedence = CreatePickerPrecedence(sketchGeometry);
 
-			await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
+				await ViewUtils.TryAsync(
+					PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers), _msg);
+
+				await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
+			}
+			finally
+			{
+				IsCompletingSelectionSketch = false;
+			}
 
 			return true;
 		}
