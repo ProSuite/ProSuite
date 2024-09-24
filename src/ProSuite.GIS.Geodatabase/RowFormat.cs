@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using ESRI.ArcGIS.Geodatabase;
-using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.GIS.Geodatabase.API;
+using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geodatabase
 {

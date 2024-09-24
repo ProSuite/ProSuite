@@ -1,7 +1,7 @@
 using System;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.GIS.Geodatabase.API;
 
 namespace ProSuite.GIS.Geodatabase
 {

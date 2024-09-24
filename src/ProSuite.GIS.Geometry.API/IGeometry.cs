@@ -1,4 +1,4 @@
-namespace ESRI.ArcGIS.Geometry
+namespace ProSuite.GIS.Geometry.API
 {
 	public interface IGeometry
 	{

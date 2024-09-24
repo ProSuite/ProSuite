@@ -1,7 +1,6 @@
 using System;
 using ArcGIS.Core.Geometry;
-using ESRI.ArcGIS.Geometry;
-using ProSuite.ArcGIS.Geometry.AO;
+using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geometry.AGP
 {

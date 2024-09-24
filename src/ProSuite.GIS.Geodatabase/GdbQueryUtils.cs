@@ -4,15 +4,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using ProSuite.GIS.Geodatabase;
+using ProSuite.GIS.Geodatabase.API;
 
-namespace ProSuite.Commons.AO.Geodatabase
+namespace ProSuite.GIS.Geodatabase
 {
 	public static class GdbQueryUtils
 	{

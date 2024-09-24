@@ -3,26 +3,25 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ESRI.ArcGIS.Geodatabase.AO;
-using ProSuite.ArcGIS.Geodatabase.AO;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Logging;
+using ProSuite.GIS.Geodatabase.API;
 using Version = ArcGIS.Core.Data.Version;
 
-namespace ESRI.ArcGIS.Geodatabase
+namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcWorkspace : IFeatureWorkspace
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly global::ArcGIS.Core.Data.Geodatabase _geodatabase;
+		private readonly ArcGIS.Core.Data.Geodatabase _geodatabase;
 
-		public ArcWorkspace(global::ArcGIS.Core.Data.Geodatabase geodatabase)
+		public ArcWorkspace(ArcGIS.Core.Data.Geodatabase geodatabase)
 		{
 			_geodatabase = geodatabase;
 		}
 
-		public global::ArcGIS.Core.Data.Geodatabase Geodatabase => _geodatabase;
+		public ArcGIS.Core.Data.Geodatabase Geodatabase => _geodatabase;
 
 		#region Implementation of IWorkspace
 

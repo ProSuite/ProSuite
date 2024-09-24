@@ -1,5 +1,5 @@
 using ArcGIS.Core.Geometry;
-using ESRI.ArcGIS.Geometry;
+using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geometry.AGP
 {

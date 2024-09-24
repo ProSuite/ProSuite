@@ -4,9 +4,10 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.GIS.Geodatabase.API;
 using Field = ArcGIS.Core.Data.Field;
 
-namespace ESRI.ArcGIS.Geodatabase.AO
+namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcFields : IFields
 	{

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.GIS.Geodatabase.API;
 
-namespace ProSuite.ArcGIS.Geodatabase.AO
+namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcSet : ISet
 	{

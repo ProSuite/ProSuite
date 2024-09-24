@@ -1,10 +1,10 @@
 using System;
 using System.Globalization;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.GIS.Geodatabase.API;
 
-namespace ProSuite.Commons.AO.Geodatabase
+namespace ProSuite.GIS.Geodatabase
 {
 	public static class GdbSqlUtils
 	{

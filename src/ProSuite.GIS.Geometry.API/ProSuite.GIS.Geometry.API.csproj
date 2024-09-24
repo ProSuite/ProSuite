@@ -14,8 +14,6 @@
     <NoWarn>1591</NoWarn>
 
     <TargetFramework>netstandard2.0</TargetFramework>
-
-		<RootNamespace>ESRI.ArcGIS.Geometry</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ESRI.ArcGIS.Geodatabase
+namespace ProSuite.GIS.Geodatabase.API
 {
 	public interface IWorkspaceName : IName
 	{

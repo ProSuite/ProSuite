@@ -1,9 +1,9 @@
 using System;
 using System.Globalization;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.GIS.Geodatabase.API;
 
 namespace ProSuite.GIS.Geodatabase
 {

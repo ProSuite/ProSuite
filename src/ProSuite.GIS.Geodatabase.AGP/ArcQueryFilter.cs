@@ -1,8 +1,9 @@
 using System;
 using ArcGIS.Core.Data;
-using ESRI.ArcGIS.Geometry;
+using ProSuite.GIS.Geodatabase.API;
+using ProSuite.GIS.Geometry.API;
 
-namespace ESRI.ArcGIS.Geodatabase.AO
+namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcQueryFilter : IQueryFilter
 	{

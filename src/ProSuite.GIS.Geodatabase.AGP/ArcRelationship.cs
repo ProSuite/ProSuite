@@ -1,7 +1,7 @@
 using ArcGIS.Core.Data;
-using ProSuite.ArcGIS.Geodatabase.AO;
+using ProSuite.GIS.Geodatabase.API;
 
-namespace ESRI.ArcGIS.Geodatabase
+namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcRelationship : IRelationship
 	{

@@ -2,13 +2,13 @@ using System;
 using ArcGIS.Core;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ESRI.ArcGIS.Geometry;
-using ProSuite.ArcGIS.Geometry.AO;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
+using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
+using ProSuite.GIS.Geometry.API;
 
-namespace ESRI.ArcGIS.Geodatabase
+namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcRow : IObject
 	{
@@ -141,9 +141,9 @@ namespace ESRI.ArcGIS.Geodatabase
 			_proFeature = proFeature;
 		}
 
-		protected virtual global::ArcGIS.Core.Geometry.Geometry GetProGeometry()
+		protected virtual ArcGIS.Core.Geometry.Geometry GetProGeometry()
 		{
-			global::ArcGIS.Core.Geometry.Geometry result = null;
+			ArcGIS.Core.Geometry.Geometry result = null;
 
 			TryOrRefreshRow<Feature>(r => result = r.GetShape());
 
@@ -156,7 +156,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			get
 			{
-				global::ArcGIS.Core.Geometry.Geometry clone = GetProGeometry().Clone();
+				ArcGIS.Core.Geometry.Geometry clone = GetProGeometry().Clone();
 				return new ArcGeometry(clone);
 			}
 		}
@@ -165,7 +165,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			get
 			{
-				global::ArcGIS.Core.Geometry.Geometry proGeometry = GetProGeometry();
+				ArcGIS.Core.Geometry.Geometry proGeometry = GetProGeometry();
 
 				if (proGeometry is Polygon polygon)
 				{
@@ -196,7 +196,7 @@ namespace ESRI.ArcGIS.Geodatabase
 			}
 			set
 			{
-				global::ArcGIS.Core.Geometry.Geometry proGeometry =
+				ArcGIS.Core.Geometry.Geometry proGeometry =
 					((ArcGeometry) value).ProGeometry;
 
 				TryOrRefreshRow<Feature>(r => r.SetShape(proGeometry));
@@ -207,7 +207,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			get
 			{
-				global::ArcGIS.Core.Geometry.Geometry geometry = null;
+				ArcGIS.Core.Geometry.Geometry geometry = null;
 
 				TryOrRefreshRow<Feature>(r => geometry = _proFeature.GetShape());
 

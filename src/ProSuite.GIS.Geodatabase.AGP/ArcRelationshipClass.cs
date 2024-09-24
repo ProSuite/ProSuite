@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ProSuite.ArcGIS.Geodatabase.AO;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.GIS.Geodatabase.API;
 
-namespace ESRI.ArcGIS.Geodatabase
+namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcRelationshipClass : IRelationshipClass
 	{
@@ -64,8 +64,8 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			get
 			{
-				global::ArcGIS.Core.Data.Geodatabase geodatabase =
-					_proRelationshipClass.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase;
+				ArcGIS.Core.Data.Geodatabase geodatabase =
+					_proRelationshipClass.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
 
 				Assert.NotNull(geodatabase, "No geodatabase could be retrieved from rel class");
 
@@ -81,8 +81,8 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			get
 			{
-				global::ArcGIS.Core.Data.Geodatabase geodatabase =
-					_proRelationshipClass.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase;
+				ArcGIS.Core.Data.Geodatabase geodatabase =
+					_proRelationshipClass.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
 
 				Assert.NotNull(geodatabase, "No geodatabase could be retrieved from rel class");
 
@@ -300,7 +300,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		}
 
 		public IWorkspace Workspace => new ArcWorkspace(
-			(global::ArcGIS.Core.Data.Geodatabase) _proRelationshipClass.GetDatastore());
+			(ArcGIS.Core.Data.Geodatabase) _proRelationshipClass.GetDatastore());
 
 		public bool CanCopy()
 		{

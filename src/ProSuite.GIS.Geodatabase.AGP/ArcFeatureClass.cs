@@ -4,13 +4,12 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Geometry;
-using ESRI.ArcGIS.Geodatabase.AO;
-using ESRI.ArcGIS.Geometry;
-using ProSuite.ArcGIS.Geodatabase.AO;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Geom.EsriShape;
+using ProSuite.GIS.Geodatabase.API;
+using ProSuite.GIS.Geometry.API;
 
-namespace ESRI.ArcGIS.Geodatabase
+namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcFeatureClass : ArcTable, ITable, IFeatureClass
 	{

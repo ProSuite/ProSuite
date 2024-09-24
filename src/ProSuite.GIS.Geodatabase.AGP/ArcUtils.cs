@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.GIS.Geodatabase.API;
 
-namespace ProSuite.ArcGIS.Geodatabase.AO
+namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public static class ArcUtils
 	{
@@ -22,7 +21,8 @@ namespace ProSuite.ArcGIS.Geodatabase.AO
 
 		public static ArcTable ToArcTable([NotNull] Table proTable)
 		{
-			Table databaseTable = DatasetUtils.GetDatabaseTable(proTable);
+			Table databaseTable =
+				Commons.AGP.Core.Geodatabase.DatasetUtils.GetDatabaseTable(proTable);
 
 			ArcTable result = databaseTable is FeatureClass featureClass
 				                  ? new ArcFeatureClass(featureClass)

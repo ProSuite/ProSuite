@@ -1,20 +1,20 @@
 using System;
-using ProSuite.ArcGIS.Geometry.AO;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.GIS.Geometry.API;
 
-namespace ESRI.ArcGIS.Geometry
+namespace ProSuite.GIS.Geometry.AGP
 {
 	public class ArcGeometry : IGeometry
 	{
-		public ArcGeometry([NotNull] global::ArcGIS.Core.Geometry.Geometry proGeometry)
+		public ArcGeometry([NotNull] ArcGIS.Core.Geometry.Geometry proGeometry)
 		{
 			Assert.ArgumentNotNull(proGeometry, nameof(proGeometry));
 
 			ProGeometry = proGeometry;
 		}
 
-		public global::ArcGIS.Core.Geometry.Geometry ProGeometry { get; set; }
+		public ArcGIS.Core.Geometry.Geometry ProGeometry { get; set; }
 
 		#region Implementation of IGeometry
 

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using ProSuite.GIS.Geodatabase.API;
 
 namespace ProSuite.GIS.Geodatabase
 {

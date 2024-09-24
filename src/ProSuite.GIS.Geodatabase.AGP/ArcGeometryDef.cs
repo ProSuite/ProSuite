@@ -1,12 +1,12 @@
 using System;
 using ArcGIS.Core.Data.DDL;
-using ESRI.ArcGIS.Geometry;
-using ProSuite.ArcGIS.Geometry.AO;
-using IGeometryDef = ESRI.ArcGIS.Geodatabase.IGeometryDef;
+using ProSuite.GIS.Geometry.AGP;
+using ProSuite.GIS.Geometry.API;
+using API_IGeometryDef = ProSuite.GIS.Geodatabase.API.IGeometryDef;
 
-namespace ProSuite.ArcGIS.Geodatabase.AO
+namespace ProSuite.GIS.Geodatabase.AGP
 {
-	public class ArcGeometryDef : IGeometryDef
+	public class ArcGeometryDef : API_IGeometryDef
 	{
 		private readonly ShapeDescription _shapeDescription;
 

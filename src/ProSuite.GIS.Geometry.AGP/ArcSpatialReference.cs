@@ -1,8 +1,8 @@
 using System;
 using ArcGIS.Core.Geometry;
-using ESRI.ArcGIS.Geometry;
+using ProSuite.GIS.Geometry.API;
 
-namespace ProSuite.ArcGIS.Geometry.AO
+namespace ProSuite.GIS.Geometry.AGP
 {
 	public class ArcSpatialReference : ISpatialReference
 	{

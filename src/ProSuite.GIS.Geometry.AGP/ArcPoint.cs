@@ -1,8 +1,8 @@
 using System;
 using ArcGIS.Core.Geometry;
-using ESRI.ArcGIS.Geometry;
+using ProSuite.GIS.Geometry.API;
 
-namespace ProSuite.ArcGIS.Geometry.AO
+namespace ProSuite.GIS.Geometry.AGP
 {
 	public class ArcPoint : IPoint
 	{
@@ -21,21 +21,21 @@ namespace ProSuite.ArcGIS.Geometry.AO
 		{
 			switch (ProPoint.GeometryType)
 			{
-				case global::ArcGIS.Core.Geometry.GeometryType.Unknown:
+				case ArcGIS.Core.Geometry.GeometryType.Unknown:
 					return esriGeometryType.esriGeometryAny;
-				case global::ArcGIS.Core.Geometry.GeometryType.Point:
+				case ArcGIS.Core.Geometry.GeometryType.Point:
 					return esriGeometryType.esriGeometryPoint;
-				case global::ArcGIS.Core.Geometry.GeometryType.Envelope:
+				case ArcGIS.Core.Geometry.GeometryType.Envelope:
 					return esriGeometryType.esriGeometryEnvelope;
-				case global::ArcGIS.Core.Geometry.GeometryType.Multipoint:
+				case ArcGIS.Core.Geometry.GeometryType.Multipoint:
 					return esriGeometryType.esriGeometryMultipoint;
-				case global::ArcGIS.Core.Geometry.GeometryType.Polyline:
+				case ArcGIS.Core.Geometry.GeometryType.Polyline:
 					return esriGeometryType.esriGeometryPolyline;
-				case global::ArcGIS.Core.Geometry.GeometryType.Polygon:
+				case ArcGIS.Core.Geometry.GeometryType.Polygon:
 					return esriGeometryType.esriGeometryPolygon;
-				case global::ArcGIS.Core.Geometry.GeometryType.Multipatch:
+				case ArcGIS.Core.Geometry.GeometryType.Multipatch:
 					return esriGeometryType.esriGeometryMultiPatch;
-				case global::ArcGIS.Core.Geometry.GeometryType.GeometryBag:
+				case ArcGIS.Core.Geometry.GeometryType.GeometryBag:
 					return esriGeometryType.esriGeometryBag;
 				default:
 					throw new ArgumentOutOfRangeException();

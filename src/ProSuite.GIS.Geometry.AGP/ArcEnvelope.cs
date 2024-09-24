@@ -1,8 +1,8 @@
 using System;
 using ArcGIS.Core.Geometry;
-using ProSuite.ArcGIS.Geometry.AO;
+using ProSuite.GIS.Geometry.API;
 
-namespace ESRI.ArcGIS.Geometry
+namespace ProSuite.GIS.Geometry.AGP
 {
 	public class ArcEnvelope : IEnvelope
 	{

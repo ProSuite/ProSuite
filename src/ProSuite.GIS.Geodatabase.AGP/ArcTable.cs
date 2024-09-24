@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
-using ESRI.ArcGIS.Geodatabase.AO;
-using ProSuite.ArcGIS.Geodatabase.AO;
 using ProSuite.Commons.Text;
-using ProSuite.GIS.Geodatabase;
-using Subtype = ArcGIS.Core.Data.Subtype;
+using ProSuite.GIS.Geodatabase.API;
 
-namespace ESRI.ArcGIS.Geodatabase
+namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcTable : ITable, IObjectClass, ISubtypes
 	{
@@ -302,7 +299,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public IEnumerable<IRelationshipClass> get_RelationshipClasses(esriRelRole role)
 		{
-			var geodatabase = ProTable.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase;
+			var geodatabase = ProTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
 
 			if (geodatabase == null)
 			{
@@ -333,7 +330,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		}
 
 		private static IRelationshipClass CreateArcRelationshipClass(
-			global::ArcGIS.Core.Data.Geodatabase geodatabase, string relClassName)
+			ArcGIS.Core.Data.Geodatabase geodatabase, string relClassName)
 		{
 			RelationshipClass relClass =
 				geodatabase.OpenDataset<RelationshipClass>(relClassName);
@@ -395,7 +392,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			get
 			{
-				var geodatabase = ProTable.GetDatastore() as global::ArcGIS.Core.Data.Geodatabase;
+				var geodatabase = ProTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
 
 				if (geodatabase == null)
 				{
@@ -430,7 +427,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			Field field = GetExistingField(fieldName);
 
-			Subtype subtype =
+			ArcGIS.Core.Data.Subtype subtype =
 				ProTableDefinition.GetSubtypes()
 				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
@@ -446,7 +443,7 @@ namespace ESRI.ArcGIS.Geodatabase
 		{
 			Field field = GetExistingField(fieldName);
 
-			Subtype subtype =
+			ArcGIS.Core.Data.Subtype subtype =
 				ProTableDefinition.GetSubtypes()
 				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
@@ -471,7 +468,7 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public string get_SubtypeName(int subtypeCode)
 		{
-			Subtype subtype =
+			ArcGIS.Core.Data.Subtype subtype =
 				ProTableDefinition.GetSubtypes()
 				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 

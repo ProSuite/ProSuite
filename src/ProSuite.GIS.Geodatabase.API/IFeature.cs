@@ -1,6 +1,6 @@
-using ESRI.ArcGIS.Geometry;
+using ProSuite.GIS.Geometry.API;
 
-namespace ESRI.ArcGIS.Geodatabase
+namespace ProSuite.GIS.Geodatabase.API
 {
 	public interface IFeature : IObject
 	{
