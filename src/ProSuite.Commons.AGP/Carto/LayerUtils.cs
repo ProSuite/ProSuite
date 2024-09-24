@@ -63,21 +63,21 @@ namespace ProSuite.Commons.AGP.Carto
 			_msg.VerboseDebug(() => $"Querying layer {((MapMember) layer).Name} using filter: " +
 			                        $"{GdbQueryUtils.FilterPropertiesToString(filter)}");
 
-			using (RowCursor cursor = layer.Search(filter))
+			using RowCursor cursor = layer.Search(filter);
+			if (cursor is null) yield break; // no valid data source
+
+			while (cursor.MoveNext())
 			{
-				while (cursor.MoveNext())
+				if (cancellationToken.IsCancellationRequested)
 				{
-					if (cancellationToken.IsCancellationRequested)
-					{
-						yield break;
-					}
+					yield break;
+				}
 
-					T currentRow = (T) cursor.Current;
+				T currentRow = (T) cursor.Current;
 
-					if (predicate(currentRow))
-					{
-						yield return currentRow;
-					}
+				if (predicate(currentRow))
+				{
+					yield return currentRow;
 				}
 			}
 		}
