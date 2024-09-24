@@ -18,7 +18,6 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Notifications;
 using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.CreateFeatures;
@@ -27,8 +26,20 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	protected CreateFeatureInPickedClassToolBase(SketchGeometryType sketchGeometryType) : base(
-		sketchGeometryType) { }
+	[CanBeNull]
+	protected virtual ICollection<string> GetExclusionFieldNames()
+	{
+		return null;
+	}
+
+	protected CreateFeatureInPickedClassToolBase(SketchGeometryType selectionSketchGeometryType) : base(
+		selectionSketchGeometryType) { }
+
+	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch(
+		SketchGeometryType selectionSketchGeometryType)
+	{
+		return new SymbolizedSketchTypeBasedOnSelection(this, selectionSketchGeometryType);
+	}
 
 	protected override Cursor SelectionCursorCore =>
 		ToolUtils.GetCursor(Resources.CreateFeatureInPickedClassCursor);
@@ -86,27 +97,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		return true; // startContructionPhase = true
 	}
 
-	protected override async Task<bool> OnSelectionSketchCompleteAsync(Geometry geometry)
-	{
-		using var pickerPrecedence = CreatePickerPrecedence(geometry);
-
-		Task picker;
-
-		if (pickerPrecedence is SelectionToolPickerPrecedence)
-		{
-			picker = PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection);
-		}
-		else
-		{
-			picker = PickerUtils.ShowAsync<IPickableFeatureItem>(
-				pickerPrecedence, FindFeatureSelection, PickerMode.ShowPicker);
-		}
-
-		await ViewUtils.TryAsync(picker, _msg);
-
-		return MapUtils.HasSelection(ActiveMapView);
-	}
-
 	protected override async Task<bool> OnConstructionSketchCompleteAsync(
 		Geometry geometry, IDictionary<BasicFeatureLayer, List<long>> selectionByLayer)
 	{
@@ -118,12 +108,13 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 			return true; // startSelectionPhase = true;
 		}
 
-		bool success = await QueuedTaskUtils.Run(async () =>
+		await QueuedTaskUtils.Run(async () =>
 		{
 			try
 			{
-				IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
-					GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
+				var applicableSelection =
+					SelectionUtils.GetApplicableSelectedFeatures(
+						selectionByLayer, CanSelectFromLayer);
 
 				List<Feature> selectedFeatures = applicableSelection.Values.FirstOrDefault();
 
@@ -133,9 +124,10 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 					return true;
 				}
 
+				BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
 				Feature originalFeature = selectedFeatures.First();
 
-				await StoreNewFeature(geometry, selectionByLayer, originalFeature);
+				await StoreNewFeature(featureLayer, originalFeature, geometry, GetExclusionFieldNames());
 
 				return false; // startSelectionPhase = false;
 			}
@@ -146,7 +138,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 			}
 		});
 
-		return false;
+		return false; // startSelectionPhase = false;
 	}
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)
@@ -179,16 +171,16 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		return layer is FeatureLayer;
 	}
 
-	private async Task StoreNewFeature([NotNull] Geometry sketchGeometry,
-	                                   IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-	                                   Feature originalFeature)
+	private async Task StoreNewFeature([NotNull] BasicFeatureLayer featureLayer,
+	                                   [NotNull] Feature originalFeature,
+	                                   [NotNull] Geometry sketchGeometry,
+	                                   [CanBeNull] ICollection<string> exclusionFieldNames)
 	{
 		// Prevent invalid Z values and other non-simple geometries:
 		Geometry simplifiedSketch =
 			Assert.NotNull(GeometryUtils.Simplify(sketchGeometry), "Geometry is null");
 
 		Subtype featureSubtype = GdbObjectUtils.GetSubtype(originalFeature);
-		BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
 
 		string subtypeName = featureSubtype != null
 			                     ? featureSubtype.GetName()
@@ -200,7 +192,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 				editContext =>
 				{
 					newFeature = GdbPersistenceUtils.InsertTx(
-						editContext, originalFeature, simplifiedSketch);
+						editContext, originalFeature, simplifiedSketch, exclusionFieldNames);
 
 					return true;
 				}, $"Create {subtypeName}",

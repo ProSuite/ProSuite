@@ -34,13 +34,13 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	private const Key _keyPolygonDraw = Key.P;
 	private const Key _keyLassoDraw = Key.L;
 
-	private readonly SketchGeometryType _defaultSketchGeometryType;
+	private readonly SketchGeometryType _selectionSketchGeometryType;
 	private readonly Latch _toolActivateLatch = new();
 	private readonly Latch _latch = new();
 
-	private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
+	[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
-	protected ToolBase(SketchGeometryType sketchGeometryType)
+	protected ToolBase(SketchGeometryType selectionSketchGeometryType)
 	{
 		ContextMenuID = "esri_mapping_selection2DContextMenu";
 
@@ -50,9 +50,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		IsSketchTool = true;
 		FireSketchEvents = true;
 		IsWYSIWYG = true;
-		SketchType = sketchGeometryType;
+		SketchType = selectionSketchGeometryType;
 
-		_defaultSketchGeometryType = sketchGeometryType;
+		_selectionSketchGeometryType = selectionSketchGeometryType;
 		
 		SelectionCursorCore = ToolUtils.GetCursor(Resources.SelectionToolNormal);
 		ConstructionCursorCore = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
@@ -85,6 +85,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected abstract bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer layer);
 
+	protected abstract SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch(
+		SketchGeometryType selectionSketchGeometryType);
+
 	#endregion
 
 	#region overrides
@@ -99,15 +102,14 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		// we want OnSelectionChangedAsync to be latched. Especially when the tool is activated.
 		_toolActivateLatch.Increment();
 
-		_symbolizedSketch =
-			new SymbolizedSketchTypeBasedOnSelection(this, _defaultSketchGeometryType);
+		_symbolizedSketch = GetSymbolizedSketch(_selectionSketchGeometryType);
 
 		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
 
 		if (MapUtils.HasSelection(ActiveMapView))
 		{
 			await ViewUtils.TryAsync(
-				QueuedTask.Run(() => { _symbolizedSketch.SetSketchSymbolBasedOnSelection(); }),
+				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchSymbolBasedOnSelection(); }),
 				_msg);
 
 			bool selectionProcessed = await ViewUtils.TryAsync(ProcessSelectionAsync(), _msg);
@@ -131,7 +133,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	{
 		_msg.Debug($"Deactivate {Caption}");
 
-		_symbolizedSketch.Dispose();
+		_symbolizedSketch?.Dispose();
 
 		await ViewUtils.TryAsync(OnToolDeactivateCoreAsync(hasMapViewChanged), _msg);
 	}
@@ -215,8 +217,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		{
 			if (args.Key is _keyPolygonDraw or _keyLassoDraw)
 			{
-				_symbolizedSketch.ResetSketchType();
-				_symbolizedSketch.ClearSketchSymbol();
+				_symbolizedSketch?.ResetSketchType();
+				_symbolizedSketch?.ClearSketchSymbol();
 			}
 		}
 
@@ -263,6 +265,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		return CanSelectFromLayer(layer as BasicFeatureLayer);
 	}
 
+	public bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+	{
+		return CanUseSelection(selectionByLayer, null);
+	}
+
 	public virtual bool CanSetConstructionSketchSymbol(GeometryType geometryType)
 	{
 		return true;
@@ -293,10 +300,10 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		if (MapUtils.HasSelection(ActiveMapView) && InConstructionPhase())
 		{
-			IDictionary<BasicFeatureLayer, List<long>> selection =
+			Dictionary<BasicFeatureLayer, List<long>> selection =
 				await GetApplicableSelection<BasicFeatureLayer>();
 
-			if (CanUseSelection(selection))
+			if (CanUseSelection(selection, new NotificationCollection()))
 			{
 				bool constructionProcessed = await OnConstructionSketchCompleteAsync(geometry, selection);
 
@@ -355,8 +362,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		await (AllowMultiSelection(out _)
 			       ? PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection)
-			       : PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection,
-			                               PickerMode.ShowPicker));
+			       : PickerUtils.ShowAsync<IPickableFeatureItem>(
+				       pickerPrecedence, FindFeatureSelection, PickerMode.ShowPicker));
 
 		return MapUtils.HasSelection(ActiveMapView);
 	}
@@ -456,7 +463,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	}
 
 	private async Task<bool> ProcessSelectionAsync(
-		[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
 	{
 		using var source = GetProgressorSource();
 		var progressor = source?.Progressor;
@@ -466,8 +473,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			return false; // startContructionPhase = false
 		}
 
-		IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
-			GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
+		Dictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
+			SelectionUtils.GetApplicableSelectedFeatures(selectionByLayer, CanSelectFromLayer);
 
 		if (applicableSelection.Count == 0)
 		{
@@ -561,7 +568,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		                                         featurePredicate, progressor);
 	}
 
-	private async Task<IDictionary<T, List<long>>> GetApplicableSelection<T>()
+	private async Task<Dictionary<T, List<long>>> GetApplicableSelection<T>()
 		where T : BasicFeatureLayer
 	{
 		// todo daro rename, revise method
@@ -569,7 +576,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		Dictionary<T, List<long>> selectionByLayer =
 			await QueuedTask.Run(() => SelectionUtils.GetSelection<T>(ActiveMapView.Map));
 
-		IDictionary<T, List<long>> result =
+		Dictionary<T, List<long>> result =
 			new Dictionary<T, List<long>>(selectionByLayer.Count);
 
 		var notifications = new NotificationCollection();
@@ -585,36 +592,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			}
 
 			result.Add(layer, oids);
-		}
-
-		return result;
-	}
-
-	[NotNull]
-	[Obsolete("Use SelectionUtils.GetApplicableSelectedFeatures")]
-	protected IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
-		[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-		[CanBeNull] NotificationCollection notifications = null)
-	{
-		var result = new Dictionary<BasicFeatureLayer, List<Feature>>(selectionByLayer.Count);
-
-		SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
-
-		foreach (KeyValuePair<BasicFeatureLayer, List<long>> oidsByLayer in selectionByLayer)
-		{
-			BasicFeatureLayer layer = oidsByLayer.Key;
-			List<long> oids = oidsByLayer.Value;
-
-			if (! CanSelectFromLayer(layer, notifications))
-			{
-				continue;
-			}
-
-			var features = MapUtils
-			               .GetFeatures(layer, oids, withoutJoins: true, recycling: false,
-			                            mapSpatialReference).ToList();
-
-			result.Add(layer, features);
 		}
 
 		return result;
@@ -674,9 +651,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	/// <param name="notifications">Pass in a NotificationCollection if you
 	/// want the reasons loggad at info level. Pass in null if you want no logging</param>
 	/// <returns></returns>
-	private bool CanUseSelection(
-		[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-		[CanBeNull] NotificationCollection notifications = null)
+	public bool CanUseSelection(
+		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+		[CanBeNull] NotificationCollection notifications)
 	{
 		void LogInfo(NotificationCollection collection)
 		{

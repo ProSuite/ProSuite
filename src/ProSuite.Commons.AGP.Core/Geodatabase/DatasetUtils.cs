@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -75,7 +76,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				// GetAliasName() returns an empty string, if the alias is not set
 				string alias = definition.GetAliasName();
 
-				if(string.IsNullOrEmpty(alias)) alias = definition.GetName();
+				if (string.IsNullOrEmpty(alias)) alias = definition.GetName();
 				return alias;
 			}
 			catch (NotSupportedException notSupportedException)
@@ -227,20 +228,53 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				$"Unsupported datastore type: {datastore.GetConnectionString()}.");
 		}
 
-		public static T OpenDataset<T>(Datastore datastore, string datasetName) where T : Dataset
+		/// <exception cref="ArgumentOutOfRangeException">Datastore is not Geodatabase nor
+		/// FileSystemDatastore (Shapefile)</exception>
+		/// <exception cref="GeodatabaseTableException">Table was not found</exception>
+		public static T OpenDataset<T>([NotNull] Datastore datastore, [NotNull] string datasetName)
+			where T : Dataset
 		{
-			if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+			try
 			{
-				return geodatabase.OpenDataset<T>(datasetName);
-			}
+				if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+				{
+					return geodatabase.OpenDataset<T>(datasetName);
+				}
 
-			if (datastore is FileSystemDatastore fsDatastore)
+				if (datastore is FileSystemDatastore fsDatastore)
+				{
+					return fsDatastore.OpenDataset<T>(datasetName);
+				}
+			}
+			catch (GeodatabaseTableException ex)
 			{
-				return fsDatastore.OpenDataset<T>(datasetName);
+				// dataset does not exist
+				_msg.Error(ex.Message, ex);
+				throw;
 			}
 
 			throw new ArgumentOutOfRangeException(
 				$"Unsupported datastore: {datastore.GetConnectionString()}");
+		}
+
+		public static bool TryOpenDataset<T>([NotNull] Datastore datastore,
+		                                     [NotNull] string datasetName,
+		                                     [CanBeNull] out T dataset)
+			where T : Dataset
+		{
+			dataset = null;
+
+			try
+			{
+				dataset = OpenDataset<T>(datastore, datasetName);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return false;
 		}
 
 		public static IEnumerable<Table> OpenTables(ArcGIS.Core.Data.Geodatabase geodatabase,

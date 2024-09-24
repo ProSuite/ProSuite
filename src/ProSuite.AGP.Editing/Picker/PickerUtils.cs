@@ -195,7 +195,6 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			var picker = new PickerService();
 
-
 			// todo daro PickableItemsFactory as method parameter to group items.
 			if (typeof(T) == typeof(IPickableFeatureItem))
 			{
@@ -230,10 +229,17 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			if (precedence.IsSingleClick)
 			{
+				// allways show picker with non-aggregated items
 				return await ShowAsync<IPickableFeatureItem>(precedence, orderedSelection);
 			}
 
-			return await ShowAsync<IPickableFeatureClassItem>(precedence, orderedSelection);
+			if (precedence.AggregateItems)
+			{
+				// Ctrl is pressed and it isn't a single click selection sketch
+				return await ShowAsync<IPickableFeatureClassItem>(precedence, orderedSelection);
+			}
+
+			return await ShowAsync<IPickableFeatureItem>(precedence, orderedSelection);
 		}
 
 		#endregion

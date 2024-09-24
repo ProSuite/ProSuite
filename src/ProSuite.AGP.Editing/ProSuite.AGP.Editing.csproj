@@ -117,6 +117,7 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="PickerUI\Images\Annotation.png" />
     <Resource Include="PickerUI\Images\LineGeometry.bmp" />
     <Resource Include="PickerUI\Images\PointGeometry.bmp" />
     <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />

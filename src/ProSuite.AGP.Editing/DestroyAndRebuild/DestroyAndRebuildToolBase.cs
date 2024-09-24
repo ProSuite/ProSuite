@@ -35,6 +35,12 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 	protected override Cursor SelectionCursorCore =>
 		ToolUtils.GetCursor(Resources.DestroyAndRebuildToolCursor);
 
+	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch(
+		SketchGeometryType selectionSketchGeometryType)
+	{
+		return new SymbolizedSketchTypeBasedOnSelection(this, selectionSketchGeometryType);
+	}
+
 	protected override bool AllowMultiSelection(out string reason)
 	{
 		reason = "Destroy and rebuild not possible. Please select only one feature.";
@@ -112,27 +118,6 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		await StartSketchAsync();
 
 		return true; // startConstructionPhase = true
-	}
-
-	protected override async Task<bool> OnSelectionSketchCompleteAsync(Geometry geometry)
-	{
-		using var pickerPrecedence = CreatePickerPrecedence(geometry);
-
-		Task picker;
-
-		if (pickerPrecedence is SelectionToolPickerPrecedence)
-		{
-			picker = PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection);
-		}
-		else
-		{
-			picker = PickerUtils.ShowAsync<IPickableFeatureItem>(
-				pickerPrecedence, FindFeatureSelection, PickerMode.ShowPicker);
-		}
-
-		await ViewUtils.TryAsync(picker, _msg);
-
-		return MapUtils.HasSelection(ActiveMapView);
 	}
 
 	protected override async Task<bool> OnConstructionSketchCompleteAsync(

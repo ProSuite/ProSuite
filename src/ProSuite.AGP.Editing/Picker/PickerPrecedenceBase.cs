@@ -35,6 +35,9 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public bool IsSingleClick { get; }
 
+		public bool AggregateItems =>
+			PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl);
+
 		public Point PickerLocation { get; set; }
 
 		public void AreModifierKeysPressed()

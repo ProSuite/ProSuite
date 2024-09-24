@@ -52,6 +52,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected AdvancedReshapeToolBase()
 		{
+			FireSketchEvents = true;
+			
 			// This is our property:
 			RequiresSelection = true;
 
@@ -122,13 +124,16 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_feedback = new AdvancedReshapeFeedback();
 
-			_symbolizedSketch =
-				new SymbolizedSketchTypeBasedOnSelection(this, SketchGeometryType.Line);
-			await ViewUtils.TryAsync(
-				QueuedTask.Run(() => { _symbolizedSketch.SetSketchSymbolBasedOnSelection(); }),
-				_msg);
-
 			base.OnToolActivatingCore();
+		}
+
+		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
+		{
+			_symbolizedSketch =
+				new SymbolizedSketchTypeBasedOnSelection(this, GetSelectionSketchGeometryType());
+			_symbolizedSketch.SetSketchSymbolBasedOnSelection();
+
+			return base.OnToolActivatedCore(hasMapViewChanged);
 		}
 
 		protected override void OnSelectionPhaseStarted()
@@ -247,6 +252,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		public bool CanSelectFromLayer(Layer layer)
 		{
 			return base.CanSelectFromLayer(layer);
+		}
+
+		public bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+		{
+			return base.CanUseSelection(selectionByLayer);
 		}
 
 		public bool CanSetConstructionSketchSymbol(GeometryType geometryType)

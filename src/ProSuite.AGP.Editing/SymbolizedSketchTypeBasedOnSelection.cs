@@ -74,12 +74,12 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 
 		try
 		{
-			Dictionary<BasicFeatureLayer, List<long>> selection =
-				SelectionUtils.GetSelection<BasicFeatureLayer>(MapView.Active.Map);
-
+			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(MapView.Active.Map);
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
 			SetSketchSymbolBasedOnSelection(featureLayer, oids);
+
+			SetSketchType(featureLayer);
 		}
 		catch (Exception ex)
 		{
@@ -101,11 +101,22 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		_showFeatureSketchSymbology =
 			ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
 
-		SetSketchSymbolBasedOnSelection();
+		try
+		{
+			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(MapView.Active.Map);
+			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
+
+			// only set sketch symbol not sketch type!
+			SetSketchSymbolBasedOnSelection(featureLayer, oids);
+		}
+		catch (Exception ex)
+		{
+			_msg.Error(ex.Message, ex);
+		}
 	}
 
 	/// <summary>
-	/// Is always on MCT.
+	/// Is always on worker thread.
 	/// </summary>
 	private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
 	{
@@ -113,14 +124,15 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 
 		try
 		{
-			Dictionary<BasicFeatureLayer, List<long>> selection =
-				SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
+			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
 
 			await QueuedTask.Run(() =>
 			{
 				List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
 				SetSketchSymbolBasedOnSelection(featureLayer, oids);
+
+				SetSketchType(featureLayer);
 			});
 		}
 		catch (Exception ex)
@@ -129,7 +141,8 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		}
 	}
 
-	private void SetSketchSymbolBasedOnSelection(FeatureLayer featureLayer, IList<long> oids)
+	private void SetSketchSymbolBasedOnSelection([CanBeNull] FeatureLayer featureLayer,
+	                                             [CanBeNull] IList<long> oids)
 	{
 		if (featureLayer == null || oids == null)
 		{
@@ -160,7 +173,16 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 				"Cannot set sketch symbol. Show feature symbology in sketch is turned off.");
 			ClearSketchSymbol();
 		}
+	}
 
+	private void SetSketchType([CanBeNull] BasicFeatureLayer featureLayer)
+	{
+		if (featureLayer == null)
+		{
+			return;
+		}
+
+		GeometryType geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
 		_tool.SetSketchType(GetApplicableSketchType(geometryType));
 	}
 
@@ -184,6 +206,12 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		{
 			_msg.Debug(
 				$"Features from {layerCount} different layers selected. Take the first layer.");
+		}
+
+		if (! _tool.CanUseSelection(oidsByLayer.ToDictionary(pair => pair.Key, pair => pair.Value)))
+		{
+			_msg.Debug("Cannot use selection");
+			return null;
 		}
 
 		(BasicFeatureLayer layer, List<long> oids) = oidsByLayer.FirstOrDefault();
@@ -225,10 +253,10 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 				return SketchGeometryType.Line;
 			case GeometryType.Polygon:
 				return SketchGeometryType.Polygon;
-			case GeometryType.Unknown:
-			case GeometryType.Envelope:
 			case GeometryType.Multipatch:
 				return SketchGeometryType.Multipatch;
+			case GeometryType.Unknown:
+			case GeometryType.Envelope:
 			case GeometryType.GeometryBag:
 				throw new ArgumentOutOfRangeException(nameof(geometryType),
 				                                      $@"Cannot apply sketch geometry type for {nameof(geometryType)}");
