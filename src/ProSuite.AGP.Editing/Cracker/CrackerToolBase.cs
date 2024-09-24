@@ -12,7 +12,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
@@ -332,21 +331,18 @@ namespace ProSuite.AGP.Editing.Cracker
 			string currentCentralConfigDir = CentralConfigDir;
 			string currentLocalConfigDir = LocalConfigDir;
 
-			if (_settingsProvider == null ||
-			    _settingsProvider.IsStale(currentCentralConfigDir, currentLocalConfigDir))
-			{
-				_settingsProvider =
-					new OverridableSettingsProvider<PartialCrackerToolOptions>(
-						currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+			// For the time being, we always reload the options because they could have been updated in ArcMap
+			_settingsProvider =
+				new OverridableSettingsProvider<PartialCrackerToolOptions>(
+					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
 
-				PartialCrackerToolOptions localConfiguration, centralConfiguration;
+			PartialCrackerToolOptions localConfiguration, centralConfiguration;
 
-				_settingsProvider.GetConfigurations(out localConfiguration,
-				                                    out centralConfiguration);
+			_settingsProvider.GetConfigurations(out localConfiguration,
+			                                    out centralConfiguration);
 
-				_crackerToolOptions = new CrackerToolOptions(centralConfiguration,
-				                                             localConfiguration);
-			}
+			_crackerToolOptions = new CrackerToolOptions(centralConfiguration,
+			                                             localConfiguration);
 
 			_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
 
@@ -381,7 +377,6 @@ namespace ProSuite.AGP.Editing.Cracker
 			// They might be stored (insert target vertices):
 			featureFinder.ReturnUnJoinedFeatures = true;
 
-
 			// Options which are not directly passed to the Microservice via _crackerToolOptions
 			// Snap crack points within tolerance to target vertices
 			if (_crackerToolOptions.SnapToTargetVertices)
@@ -390,7 +385,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			}
 
 			// Set the feature classes to ignore
-			IEnumerable< FeatureSelectionBase> featureClassSelections =
+			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
 					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
 
