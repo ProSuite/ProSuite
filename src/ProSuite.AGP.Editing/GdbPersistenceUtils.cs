@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -358,8 +359,8 @@ namespace ProSuite.AGP.Editing
 		}
 
 		public static void SetShape([NotNull] RowBuffer rowBuffer,
-		                             [NotNull] Geometry geometry,
-		                             FeatureClass featureClass)
+		                            [NotNull] Geometry geometry,
+		                            FeatureClass featureClass)
 		{
 			using var classDefinition = featureClass.GetDefinition();
 			string shapeFieldName = classDefinition.GetShapeField();
@@ -371,7 +372,15 @@ namespace ProSuite.AGP.Editing
 		                             [NotNull] Geometry geometry,
 		                             string shapeFieldName)
 		{
-			rowBuffer[shapeFieldName] = geometry;
+			try
+			{
+				rowBuffer[shapeFieldName] = geometry;
+			}
+			catch (Exception e)
+			{
+				_msg.VerboseDebug(() => $"Error persisting shape {geometry.ToXml()}");
+				throw new DataException($"Error setting shape of new feature: {e.Message}", e);
+			}
 		}
 
 		private static RowBuffer DuplicateRow(Row row, bool includeShape = false)
@@ -437,10 +446,11 @@ namespace ProSuite.AGP.Editing
 				feature.SetShape(projected);
 				feature.Store();
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
 				_msg.VerboseDebug(() => $"Error persisting shape {geometry.ToXml()}");
-				throw;
+				throw new DataException($"Error updating shape of feature " +
+				                        $"{GdbObjectUtils.ToString(feature)}: {e.Message}", e);
 			}
 			finally
 			{
