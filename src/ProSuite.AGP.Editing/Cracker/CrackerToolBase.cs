@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +11,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
@@ -22,7 +22,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
-using static System.Environment;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
@@ -51,19 +50,8 @@ namespace ProSuite.AGP.Editing.Cracker
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
-		protected string LocalConfigDir
-		{
-			get
-			{
-				string localApp = GetFolderPath(SpecialFolder.ApplicationData);
-
-				return Path.Combine(localApp, "swisstopo", "Topgis");
-
-				// TODO: In the future use this:
-				//return EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
-				//	AppDataFolder.Roaming);
-			}
-		}
+		protected virtual string LocalConfigDir =>
+			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
 
 		protected abstract ICrackerService MicroserviceClient { get; }
 
