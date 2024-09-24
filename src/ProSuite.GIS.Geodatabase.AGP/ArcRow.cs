@@ -4,6 +4,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.ArcGIS.Geometry.AO;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geometry.AGP;
 
@@ -18,6 +19,8 @@ namespace ESRI.ArcGIS.Geodatabase
 
 		public static ArcRow Create(Row proRow, ITable parentTable)
 		{
+			Assert.NotNull(proRow, "No row provided");
+
 			var result = proRow is Feature feature
 				             ? new ArcFeature(feature, (IFeatureClass) parentTable)
 				             : new ArcRow(proRow, parentTable);
