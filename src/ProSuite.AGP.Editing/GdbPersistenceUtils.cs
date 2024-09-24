@@ -421,7 +421,7 @@ namespace ProSuite.AGP.Editing
 		{
 			_msg.DebugFormat("Updating shape of {0}...", GdbObjectUtils.ToString(feature));
 
-			if (geometry.IsEmpty)
+			if (geometry == null || geometry.IsEmpty)
 			{
 				throw new Exception("One or more updates geometries have become empty.");
 			}
@@ -442,8 +442,10 @@ namespace ProSuite.AGP.Editing
 				_msg.VerboseDebug(() => $"Error persisting shape {geometry.ToXml()}");
 				throw;
 			}
-
-			editContext.Invalidate(feature);
+			finally
+			{
+				editContext.Invalidate(feature);
+			}
 		}
 
 		public static IEnumerable<Dataset> GetDatasetsNonEmpty(
