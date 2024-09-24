@@ -398,17 +398,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				TModel productionModel = project.ProductionModel;
 
-				var projectMsg =
-					new ProjectMsg
-					{
-						ProjectId = project.Id,
-						ModelId = productionModel.Id,
-						Name = project.Name,
-						ShortName = project.ShortName,
-						MinimumScaleDenominator = project.MinimumScaleDenominator,
-						ExcludeReadOnlyDatasetsFromProjectWorkspace =
-							project.ExcludeReadOnlyDatasetsFromProjectWorkspace
-					};
+				var projectMsg = ProtobufUtils.ToProjectMsg(project);
 
 				CallbackUtils.DoWithNonNull(
 					projectMsg.ToolConfigDirectory, s => project.ToolConfigDirectory = s);
