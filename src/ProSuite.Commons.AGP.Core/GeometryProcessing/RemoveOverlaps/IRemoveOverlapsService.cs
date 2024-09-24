@@ -18,5 +18,6 @@ public interface IRemoveOverlapsService
 	RemoveOverlapsResult RemoveOverlaps([NotNull] IEnumerable<Feature> selectedFeatures,
 	                                    [NotNull] Overlaps overlapsToRemove,
 	                                    [NotNull] IList<Feature> overlappingFeatures,
+	                                    [NotNull] RemoveOverlapsOptions options,
 	                                    CancellationToken cancellationToken);
 }

@@ -1,11 +1,11 @@
-using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
 
-namespace ProSuite.AGP.Editing.RemoveOverlaps
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps
 {
 	public class RemoveOverlapsOptions : OptionsBase<PartialRemoveOverlapsOptions>
 	{
@@ -19,6 +19,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		public CentralizableSetting<bool> CentralizableExplodeMultipartResults { get; }
 
 		public CentralizableSetting<bool> CentralizableInsertVerticesInTarget { get; }
+
+		public CentralizableSetting<ChangeAlongZSource> CentralizableZSource { get; }
 
 		public RemoveOverlapsOptions(
 			[CanBeNull] PartialRemoveOverlapsOptions centralOptions,
@@ -46,6 +48,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			CentralizableInsertVerticesInTarget = InitializeSetting<bool>(
 				ReflectionUtils.GetProperty(() => LocalOptions.InsertVerticesInTarget),
 				false);
+
+			CentralizableZSource =
+				InitializeSetting<ChangeAlongZSource>(
+					ReflectionUtils.GetProperty(() => LocalOptions.ZSource),
+					ChangeAlongZSource.Target);
+
+			CentralizableZSource.TooltipAppendix = GetTooltipAppendix(ZSourceByDataset);
 		}
 
 		public bool LimitOverlapCalculationToExtent
@@ -72,6 +81,38 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			set { CentralizableInsertVerticesInTarget.CurrentValue = value; }
 		}
 
+		public ChangeAlongZSource ZSource
+		{
+			get { return CentralizableZSource.CurrentValue; }
+			set { CentralizableZSource.CurrentValue = value; }
+		}
+
+		private List<DatasetSpecificValue<ChangeAlongZSource>> ZSourceByDataset
+		{
+			get
+			{
+				List<DatasetSpecificValue<ChangeAlongZSource>> zSourceByDataset = null;
+
+				if (LocalOptions.DatasetSpecificZSource != null &&
+				    LocalOptions.DatasetSpecificZSource.Count > 0)
+				{
+					zSourceByDataset = LocalOptions.DatasetSpecificZSource;
+				}
+				else if (CentralOptions != null)
+				{
+					zSourceByDataset = CentralOptions.DatasetSpecificZSource;
+				}
+
+				return zSourceByDataset;
+			}
+		}
+
+		public IFlexibleSettingProvider<ChangeAlongZSource> GetZSourceOptionProvider()
+		{
+			return new DatasetSpecificSettingProvider<ChangeAlongZSource>(
+				"Z values for changed vertices", ZSource, ZSourceByDataset);
+		}
+
 		#region Overrides of OptionsBase<PartialRemoveOverlapsOptions>
 
 		public override void RevertToDefaults()
@@ -83,6 +124,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			CentralizableExplodeMultipartResults.RevertToDefault();
 
 			CentralizableInsertVerticesInTarget.RevertToDefault();
+
+			CentralizableZSource.RevertToDefault();
 		}
 
 		public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -113,6 +156,12 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			if (HasLocalOverride(CentralizableInsertVerticesInTarget,
 			                     "Insert vertices in target fetures for topological correctness",
 			                     notifications))
+			{
+				result = true;
+			}
+
+			if (HasLocalOverride(CentralizableZSource,
+			                     "Take Z values for changed vertices", notifications))
 			{
 				result = true;
 			}

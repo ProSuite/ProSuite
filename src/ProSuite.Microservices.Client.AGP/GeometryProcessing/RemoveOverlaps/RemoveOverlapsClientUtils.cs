@@ -8,6 +8,7 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Notifications;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
@@ -105,11 +106,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			[NotNull] IEnumerable<Feature> selectedFeatures,
 			[NotNull] Overlaps overlapsToRemove,
 			[CanBeNull] IList<Feature> overlappingFeatures,
+			[NotNull] RemoveOverlapsOptions options,
 			CancellationToken cancellationToken)
 		{
 			List<Feature> updateFeatures;
 			RemoveOverlapsRequest request = CreateRemoveOverlapsRequest(
-				selectedFeatures, overlapsToRemove, overlappingFeatures,
+				selectedFeatures, overlapsToRemove, overlappingFeatures, options,
 				out updateFeatures);
 
 			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
@@ -119,6 +121,11 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 				GrpcClientUtils.Try(
 					o => rpcClient.RemoveOverlaps(request, o),
 					cancellationToken, deadline);
+
+			if (response == null || cancellationToken.IsCancellationRequested)
+			{
+				return null;
+			}
 
 			return GetRemoveOverlapsResult(response, updateFeatures);
 		}
@@ -216,16 +223,36 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 		private static RemoveOverlapsRequest CreateRemoveOverlapsRequest(
 			[NotNull] IEnumerable<Feature> selectedFeatures,
 			[NotNull] Overlaps overlapsToRemove,
-			[CanBeNull]
-			IList<Feature> targetFeaturesForVertexInsertion, //RemoveOverlapsOptions options,
+			[CanBeNull] IList<Feature> targetFeaturesForVertexInsertion,
+			[NotNull] RemoveOverlapsOptions options,
 			out List<Feature> updateFeatures)
 		{
 			var request = new RemoveOverlapsRequest
 			              {
-				              ExplodeMultipartResults = true, // options.ExplodeMultipartResults,
+				              ExplodeMultipartResults = options.ExplodeMultipartResults,
 				              StoreOverlapsAsNewFeatures =
 					              false // options.StoreOverlapsAsNewFeatures
 			              };
+
+			DatasetSpecificSettingProvider<ChangeAlongZSource> datasetSpecificValues =
+				options.GetZSourceOptionProvider() as
+					DatasetSpecificSettingProvider<ChangeAlongZSource>;
+
+			if (datasetSpecificValues != null)
+			{
+				request.DatasetSpecificZSources.AddRange(
+					datasetSpecificValues.DatasetSpecificValues.Select(
+						dss => new DatasetSpecificZSource()
+						       { DatasetName = dss.Dataset, ZSource = (int) dss.Value }));
+			}
+
+			// Add the fallback value with an empty string as dataset name
+			request.DatasetSpecificZSources.Add(
+				new DatasetSpecificZSource()
+				{
+					DatasetName = string.Empty,
+					ZSource = (int) options.ZSource
+				});
 
 			updateFeatures = new List<Feature>();
 
@@ -256,7 +283,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 				request.Overlaps.Add(overlapMsg);
 			}
 
-			if (targetFeaturesForVertexInsertion != null)
+			if (targetFeaturesForVertexInsertion != null && options.InsertVerticesInTarget)
 			{
 				ProtobufConversionUtils.ToGdbObjectMsgList(
 					targetFeaturesForVertexInsertion, request.UpdatableTargetFeatures,

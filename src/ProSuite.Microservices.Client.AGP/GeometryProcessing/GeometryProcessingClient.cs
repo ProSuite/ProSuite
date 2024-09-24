@@ -6,7 +6,6 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using Grpc.Core;
 using Grpc.Net.Client;
-using ProSuite.AGP.Editing.Cracker;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
@@ -27,7 +26,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 	public class GeometryProcessingClient : MicroserviceClientBase,
 	                                        IAdvancedReshapeService,
 	                                        IRemoveOverlapsService,
-											ICrackerService,
+	                                        ICrackerService,
 	                                        ICalculateHolesService,
 	                                        IChangeAlongService
 
@@ -104,6 +103,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		public RemoveOverlapsResult RemoveOverlaps(IEnumerable<Feature> selectedFeatures,
 		                                           Overlaps overlapsToRemove,
 		                                           IList<Feature> overlappingFeatures,
+		                                           RemoveOverlapsOptions options,
 		                                           CancellationToken cancellationToken)
 		{
 			if (RemoveOverlapsClient == null)
@@ -111,7 +111,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return RemoveOverlapsClientUtils.RemoveOverlaps(
 				RemoveOverlapsClient, selectedFeatures, overlapsToRemove, overlappingFeatures,
-				cancellationToken);
+				options, cancellationToken);
 		}
 
 		[CanBeNull]
@@ -247,21 +247,21 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			IList<Feature> selectedFeatures,
 			IList<Feature> targetFeatures,
 			ICrackerToolOptions crackerToolOptions,
-
-												  CancellationToken cancellationToken)
+			CancellationToken cancellationToken)
 		{
 			if (CrackClient == null)
 				throw new InvalidOperationException("No microservice available.");
 
-			return CrackerClientUtils.CalculateCrackPoints(CrackClient, selectedFeatures, targetFeatures,
-				crackerToolOptions, cancellationToken);
+			return CrackerClientUtils.CalculateCrackPoints(CrackClient, selectedFeatures,
+			                                               targetFeatures,
+			                                               crackerToolOptions, cancellationToken);
 		}
 
 		public IList<ResultFeature> ApplyCrackPoints(
 			IEnumerable<Feature> selectedFeatures,
 			CrackerResult crackPointsToAdd,
-		    IList<Feature> intersectingFeatures,
-		    ICrackerToolOptions crackerToolOptions,
+			IList<Feature> intersectingFeatures,
+			ICrackerToolOptions crackerToolOptions,
 			CancellationToken cancellationToken)
 		{
 			if (CrackClient == null)
