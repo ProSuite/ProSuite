@@ -167,6 +167,76 @@ namespace ProSuite.AGP.Editing
 			[NotNull] EditOperation.IEditContext editContext,
 			[NotNull] FeatureClass featureClass,
 			[NotNull] IList<Geometry> geometries,
+			[CanBeNull] Func<string, FeatureClassDefinition, object> getAttributeValueFunc)
+		{
+			Assert.ArgumentNotNull(editContext, nameof(editContext));
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+			Assert.ArgumentCondition(geometries.Count > 0, "List of geometries is empty.");
+
+			var newFeatures = new List<Feature>();
+
+			RowBuffer rowBuffer = null;
+
+			try
+			{
+				// Set the attributes
+				rowBuffer = featureClass.CreateRowBuffer();
+
+				using var classDefinition = featureClass.GetDefinition();
+				GeometryType geometryType = classDefinition.GetShapeType();
+				bool classHasZ = classDefinition.HasZ();
+				bool classHasM = classDefinition.HasM();
+
+				SpatialReference spatialReference = classDefinition.GetSpatialReference();
+
+				foreach (Field field in rowBuffer.GetFields())
+				{
+					if (! field.IsEditable || field.FieldType == FieldType.Geometry)
+					{
+						continue;
+					}
+
+					rowBuffer[field.Name] =
+						getAttributeValueFunc?.Invoke(field.Name, classDefinition) ?? DBNull.Value;
+				}
+
+				string shapeFieldName = classDefinition.GetShapeField();
+
+				foreach (Geometry geometry in geometries)
+				{
+					Assert.AreEqual(geometryType, geometry.GeometryType,
+					                "Geometry type does not match target feature class' shape type.");
+
+					Geometry geometryToStore =
+						GeometryUtils.EnsureGeometrySchema(geometry, classHasZ, classHasM);
+
+					geometryToStore = GeometryUtils.EnsureSpatialReference(
+						geometryToStore, spatialReference);
+
+					rowBuffer[shapeFieldName] = geometryToStore;
+
+					var feature = featureClass.CreateRow(rowBuffer);
+
+					feature.Store();
+
+					//To Indicate that the attribute table has to be updated
+					editContext.Invalidate(feature);
+
+					newFeatures.Add(feature);
+				}
+			}
+			finally
+			{
+				rowBuffer?.Dispose();
+			}
+
+			return newFeatures;
+		}
+
+		public static IList<Feature> InsertTx(
+			[NotNull] EditOperation.IEditContext editContext,
+			[NotNull] FeatureClass featureClass,
+			[NotNull] IList<Geometry> geometries,
 			[CanBeNull] IEnumerable<Attribute> attributes)
 		{
 			Assert.ArgumentNotNull(editContext, nameof(editContext));

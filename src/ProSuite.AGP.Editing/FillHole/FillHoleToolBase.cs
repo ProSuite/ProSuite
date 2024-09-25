@@ -12,6 +12,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -19,6 +20,7 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
 
 namespace ProSuite.AGP.Editing.FillHole
 {
@@ -146,20 +148,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 			EditingTemplate editTemplate = EditingTemplate.Current;
 
-			FeatureClass currentTargetClass = ToolUtils.GetCurrentTargetFeatureClass(editTemplate);
-
-			if (currentTargetClass == null)
-			{
-				throw new Exception("No valid feature template selected to fill the hole with.");
-			}
-
-			// Un-wrap potential joins:
-			currentTargetClass = DatasetUtils.GetDatabaseFeatureClass(currentTargetClass);
-
-			if (currentTargetClass == null)
-			{
-				throw new Exception("No valid template selected");
-			}
+			FeatureClass currentTargetClass = GetCurrentTargetClass(out _);
 
 			var datasets = new List<Dataset> { currentTargetClass };
 
@@ -174,25 +163,94 @@ namespace ProSuite.AGP.Editing.FillHole
 					             newFeatures = GdbPersistenceUtils.InsertTx(
 						             editContext, currentTargetClass,
 						             holesToFill.Cast<Geometry>().ToList(),
-						             editTemplate.Inspector);
+						             GetFieldValue);
 
 					             _msg.InfoFormat("Successfully created {0} new {1} feature(s).",
-					                             newFeatures.Count, editTemplate.Name);
+					                             newFeatures.Count, currentTargetClass.GetName());
 
 					             return true;
 				             },
 				             "Fill hole(s)", datasets);
 
-			var targetLayer = (BasicFeatureLayer) editTemplate.Layer;
-			var objectIds = newFeatures.Select(f => f.GetObjectID()).ToList();
+			foreach (IDisplayTable displayTable in MapUtils
+				         .GetFeatureLayersForSelection<FeatureLayer>(
+					         MapView.Active.Map, currentTargetClass))
+			{
+				if (displayTable is FeatureLayer featureLayer)
+				{
+					var objectIds = newFeatures.Select(f => f.GetObjectID()).ToList();
 
-			SelectionUtils.SelectRows(targetLayer, SelectionCombinationMethod.Add, objectIds);
+					SelectionUtils.SelectRows(featureLayer, SelectionCombinationMethod.Add,
+					                          objectIds);
+				}
+			}
+
+			//var targetLayer = (BasicFeatureLayer) editTemplate.Layer;
+			//var objectIds = newFeatures.Select(f => f.GetObjectID()).ToList();
+
+			//SelectionUtils.SelectRows(targetLayer, SelectionCombinationMethod.Add, objectIds);
 
 			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
 
 			CalculateDerivedGeometries(currentSelection, progressor);
 
 			return saved;
+		}
+
+		protected virtual FeatureClass GetCurrentTargetClass(out Subtype subtype)
+		{
+			return ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
+		}
+
+		//[NotNull]
+		//protected virtual FeatureClass GetCurrentTargetClass()
+		//{
+		//	EditingTemplate editTemplate =
+		//		Assert.NotNull(EditingTemplate.Current, "No edit template");
+
+		//	FeatureClass currentTargetClass =
+		//		ToolUtils.GetCurrentTargetFeatureClass(editTemplate);
+
+		//	if (currentTargetClass == null)
+		//	{
+		//		throw new Exception("No valid feature template selected to fill the hole with.");
+		//	}
+
+		//	// Un-wrap potential joins:
+		//	currentTargetClass = DatasetUtils.GetDatabaseFeatureClass(currentTargetClass);
+
+		//	if (currentTargetClass == null)
+		//	{
+		//		throw new Exception("No valid template selected");
+		//	}
+
+		//	return currentTargetClass;
+		//}
+
+		protected virtual object GetFieldValue([NotNull] string fieldName,
+		                                       [NotNull] FeatureClassDefinition featureClassDef)
+		{
+			EditingTemplate template = EditingTemplate.Current;
+
+			if (template == null)
+			{
+				return DBNull.Value;
+			}
+
+			if (! template.Inspector.HasAttributes)
+			{
+				return DBNull.Value;
+			}
+
+			Attribute attribute = template.Inspector.FirstOrDefault(
+				a => a.FieldName.Equals(fieldName, StringComparison.InvariantCultureIgnoreCase));
+
+			if (attribute == null)
+			{
+				return DBNull.Value;
+			}
+
+			return attribute.DefaultValue;
 		}
 
 		protected override void ResetDerivedGeometries()
