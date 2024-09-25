@@ -80,23 +80,100 @@ namespace ProSuite.Processing.Test
 			graph.AddEdge(lh, wb, 183);
 			graph.AddEdge(hb, wb, 102);
 
-			//estimator = (node,target) =>
-			//{
-			//	if (node is null)
-			//		throw new ArgumentNullException(nameof(node));
-			//	if (target.Name != wb.Name)
-			//		throw new NotImplementedException("This estimator only works with target node Würzburg");
-			//	if (node.Name == ff.Name) return 96;
-			//	if (node.Name == kl.Name) return 158;
-			//	if (node.Name == lh.Name) return 108;
-			//	if (node.Name == wb.Name) return 0;
-			//	if (node.Name == sb.Name) return 222;
-			//	if (node.Name == kr.Name) return 140;
-			//	if (node.Name == hb.Name) return 87;
-			//	return double.PositiveInfinity;
-			//};
-
 			return graph;
+		}
+
+		public class Graph<TNode, TEdge> where TNode : IEquatable<TNode> where TEdge : IEquatable<TEdge>
+		{
+			private readonly Dictionary<TNode, IList<TEdge>> _nodes = new();
+			private readonly Dictionary<TEdge, ValueTuple<TNode, TNode>> _edges = new();
+
+			public IEnumerable<TNode> Nodes => _nodes.Keys;
+
+			public IEnumerable<(TEdge, TNode, TNode)> Edges =>
+				_edges.Select(p => ValueTuple.Create(p.Key, p.Value.Item1, p.Value.Item2));
+
+			public bool AddNode(TNode node)
+			{
+				if (node is null)
+					throw new ArgumentNullException(nameof(node));
+
+				if (_nodes.ContainsKey(node))
+				{
+					return false; // already a node in the graph
+				}
+
+				_nodes.Add(node, new List<TEdge>());
+				return true;
+			}
+
+			public void AddEdge(TEdge edge, TNode fromNode, TNode toNode)
+			{
+				if (edge is null)
+					throw new ArgumentNullException(nameof(edge));
+				if (fromNode is null)
+					throw new ArgumentNullException(nameof(fromNode));
+				if (toNode is null)
+					throw new ArgumentNullException(nameof(toNode));
+
+				if (_edges.ContainsKey(edge))
+					throw new InvalidOperationException("Duplicate edge");
+
+				if (! _nodes.TryGetValue(fromNode, out var fromList))
+					throw new InvalidOperationException($"Given node is not in this graph: {fromNode}");
+				if (! _nodes.TryGetValue(toNode, out var toList))
+					throw new InvalidOperationException($"Given node is not in this graph: {toNode}");
+
+				_edges.Add(edge, ValueTuple.Create(fromNode, toNode));
+				fromList.Add(edge);
+				toList.Add(edge);
+			}
+
+			public bool RemoveNode(TNode node)
+			{
+				if (node is null) return false;
+				var removed = _nodes.Remove(node,out var edges);
+				if (! removed) return false; // was not in our graph
+				// Must also remove all edges incident to the removed node:
+				foreach (var edge in edges)
+				{
+					_edges.Remove(edge);
+				}
+				return true;
+			}
+
+			public bool RemoveEdge(TEdge edge)
+			{
+				if (edge is null) return false;
+				ValueTuple<TNode, TNode> pair;
+				var removed = _edges.Remove(edge, out pair);
+				if (! removed) return false; // was not in our graph
+				// Must also remove edge from node incidence lists:
+				TNode fromNode = pair.Item1, toNode = pair.Item2;
+				_nodes.GetValueOrDefault(fromNode)?.Remove(edge);
+				_nodes.GetValueOrDefault(toNode)?.Remove(edge);
+				return true;
+			}
+
+			public IEnumerable<(TEdge, TNode)> GetIncidentEdges(TNode node)
+			{
+				if (node is null) yield break;
+				if (! _nodes.TryGetValue(node, out var edges)) yield break;
+				foreach (var edge in edges)
+				{
+					var (fromNode, toNode) = _edges[edge];
+					var adjacent = GetOtherEnd(node, fromNode, toNode);
+					yield return (edge, adjacent);
+				}
+			}
+
+			private static TNode GetOtherEnd(TNode node, TNode fromNode, TNode toNode)
+			{
+				if (Equals(node, fromNode)) return toNode;
+				if (Equals(node, toNode)) return fromNode;
+				throw new InvalidOperationException(
+					$"Given {nameof(node)} is neither {nameof(fromNode)} nor {nameof(toNode)}");
+			}
 		}
 
 		public class Graph : AStarSolver<Node,Edge>.IGraph/*<Node, Edge>*/
