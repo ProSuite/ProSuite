@@ -153,39 +153,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected virtual FeatureClass GetCurrentTargetClass(out Subtype subtype)
 		{
-			EditingTemplate editingTemplate = EditingTemplate.Current;
-			subtype = null;
-
-			if (editingTemplate == null)
-			{
-				throw new InvalidOperationException("No current template");
-			}
-
-			FeatureClass currentTargetClass =
-				ToolUtils.GetCurrentTargetFeatureClass(editingTemplate);
-
-			if (currentTargetClass == null)
-			{
-				throw new InvalidOperationException("No current target feature class");
-			}
-
-			FeatureClassDefinition classDefinition = currentTargetClass.GetDefinition();
-
-			string subtypeField = classDefinition.GetSubtypeField();
-
-			if (! string.IsNullOrEmpty(subtypeField))
-			{
-				object subtypeValue = editingTemplate.Inspector[subtypeField];
-
-				if (subtypeValue != null && subtypeValue != DBNull.Value)
-				{
-					int subtypeCode = (int) subtypeValue;
-					subtype = classDefinition.GetSubtypes()
-					                         .FirstOrDefault(s => s.GetCode() == subtypeCode);
-				}
-			}
-
-			return currentTargetClass;
+			return ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
 		}
 
 		protected virtual string GetTargetObjectTypeName()
@@ -211,6 +179,16 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			return geometryType;
 		}
 
+		protected virtual void SetPredefinedFields(RowBuffer rowBuffer)
+		{
+			EditingTemplate template = EditingTemplate.Current;
+
+			if (template != null && template.Inspector.HasAttributes)
+			{
+				GdbPersistenceUtils.CopyAttributeValues(template.Inspector, rowBuffer);
+			}
+		}
+
 		#endregion
 
 		private void OnActiveTemplateChanged(ActiveTemplateChangedEventArgs e)
@@ -220,6 +198,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				FeatureClass newTargetClass = GetCurrentTargetClass(out _);
 
 				TargetClassChanged(newTargetClass);
+
 			}, _msg, true);
 		}
 
@@ -259,6 +238,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 					editContext =>
 					{
 						RowBuffer rowBuffer = featureClass.CreateRowBuffer(subtype);
+
+						SetPredefinedFields(rowBuffer);
 
 						SetNullValuesToGdbDefault(rowBuffer, featureClassDef, subtype);
 
