@@ -87,6 +87,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps
 			set { CentralizableZSource.CurrentValue = value; }
 		}
 
+		[NotNull]
 		private List<DatasetSpecificValue<ChangeAlongZSource>> ZSourceByDataset
 		{
 			get
@@ -103,7 +104,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps
 					zSourceByDataset = CentralOptions.DatasetSpecificZSource;
 				}
 
-				return zSourceByDataset;
+				return zSourceByDataset ?? new List<DatasetSpecificValue<ChangeAlongZSource>>();
 			}
 		}
 
