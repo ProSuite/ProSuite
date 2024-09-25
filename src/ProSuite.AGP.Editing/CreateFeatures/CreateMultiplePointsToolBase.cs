@@ -137,10 +137,13 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 						return result;
 					}
 
+					// NOTE: Sometimes on CreateRow the following exception is thrown:
+					// The feature does not have any associated geometry
+					// (which is no problem most of the time)
+					GdbPersistenceUtils.SetShape(rowBuffer, resultGeometry, featureClass);
+
 					// Set Z/M awareness
 					feature = featureClass.CreateRow(rowBuffer);
-
-					feature.SetShape(resultGeometry);
 
 					feature.Store();
 
