@@ -284,25 +284,13 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		public static IEnumerable<T> GetLayers<T>([NotNull] Map map,
-		                                          [CanBeNull] Predicate<T> layerPredicate)
-			where T : Layer
+		public static IEnumerable<T> GetLayers<T>(
+			Map map, Predicate<T> layerPredicate = null) where T : Layer
 		{
-			foreach (Layer layer in map.GetLayersAsFlattenedList())
-			{
-				var matchingTypeLayer = layer as T;
-
-				if (matchingTypeLayer == null)
-				{
-					continue;
-				}
-
-				if (layerPredicate == null ||
-				    layerPredicate(matchingTypeLayer))
-				{
-					yield return matchingTypeLayer;
-				}
-			}
+			if (map is null) return Enumerable.Empty<T>();
+			return map.GetLayersAsFlattenedList()
+			   .OfType<T>()
+			   .Where(l => layerPredicate is null || layerPredicate(l));
 		}
 
 		/// <summary>
@@ -477,8 +465,7 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public static IEnumerable<T> GetFeatureLayers<T>(
-			[NotNull] Map map,
-			[CanBeNull] Predicate<T> layerPredicate,
+			Map map, Predicate<T> layerPredicate = null,
 			bool includeInvalid = false) where T : BasicFeatureLayer
 		{
 			Predicate<T> combinedPredicate;
@@ -489,16 +476,12 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 			else
 			{
-				// Check for validity first because in most cases the specified layerPredicate
-				// uses the FeatureClass name etc. which results in null-pointers if evaluated first.
+				// Check for validity first so that the predicate can assume the layer has a FeatureClass
 				combinedPredicate = l =>
 					LayerUtils.IsLayerValid(l) && (layerPredicate == null || layerPredicate(l));
 			}
 
-			foreach (T basicFeatureLayer in GetLayers(map, combinedPredicate))
-			{
-				yield return basicFeatureLayer;
-			}
+			return GetLayers(map, combinedPredicate);
 		}
 
 		public static IEnumerable<StandaloneTable> GetStandaloneTables(
