@@ -389,7 +389,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				if (pickerPrecedence.IsSingleClick && candidates.Count > 1)
 				{
 					var orderedCandidates =
-						PickerUtils.OrderByGeometryDimension(candidates).ToList();
+					candidates.OrderBy(candidate => candidate.ShapeDimension);
 
 					var pickedItem =
 						await PickerUtils.ShowAsync<IPickableFeatureItem>(

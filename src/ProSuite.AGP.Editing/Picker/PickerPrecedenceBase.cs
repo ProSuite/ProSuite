@@ -66,8 +66,7 @@ namespace ProSuite.AGP.Editing.Picker
 			SelectionGeometry = PickerUtils.EnsureNonEmpty(SelectionGeometry, SelectionTolerance);
 		}
 
-		public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
-		                                        bool areaSelect = false)
+		public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
 		{
 			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
 			{
@@ -79,13 +78,13 @@ namespace ProSuite.AGP.Editing.Picker
 				return PickerMode.ShowPicker;
 			}
 
-			areaSelect = ! IsSingleClick;
+			bool areaSelect = ! IsSingleClick;
 			if (areaSelect)
 			{
 				return PickerMode.PickAll;
 			}
 
-			if (CountLowestShapeDimensionFeatures(orderedSelection) > 1)
+			if (CountLowestShapeDimension(orderedSelection) > 1)
 			{
 				return PickerMode.ShowPicker;
 			}
@@ -93,7 +92,7 @@ namespace ProSuite.AGP.Editing.Picker
 			return PickerMode.PickBest;
 		}
 
-		public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
+		public virtual IEnumerable<T> Order<T>(IEnumerable<T> items) where T : IPickableItem
 		{
 			return items;
 		}
@@ -104,8 +103,8 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			return items.FirstOrDefault() as T;
 		}
-
-		protected static int CountLowestShapeDimensionFeatures(
+		
+		protected static int CountLowestShapeDimension(
 			IEnumerable<FeatureSelectionBase> layerSelection)
 		{
 			var count = 0;

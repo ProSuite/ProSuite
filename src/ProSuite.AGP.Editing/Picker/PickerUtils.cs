@@ -11,7 +11,6 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Input;
 
@@ -48,17 +47,6 @@ namespace ProSuite.AGP.Editing.Picker
 					throw new ArgumentOutOfRangeException(
 						$"Unsupported geometry type: {geometryType}");
 			}
-		}
-
-		[NotNull]
-		public static IEnumerable<FeatureSelectionBase> OrderByGeometryDimension(
-			[NotNull] IEnumerable<FeatureSelectionBase> selection)
-		{
-			Assert.ArgumentNotNull(selection, nameof(selection));
-
-			return selection
-			       .GroupBy(classSelection => classSelection.ShapeDimension)
-			       .OrderBy(group => group.Key).SelectMany(fcs => fcs);
 		}
 
 		public static Geometry EnsureNonEmpty([NotNull] Geometry sketch, int tolerancePixel)
@@ -142,7 +130,9 @@ namespace ProSuite.AGP.Editing.Picker
 				const CancelableProgressor progressor = null;
 				var featureSelection = getCandidates(precedence.SelectionGeometry,
 				                                     spatialRelationship,
-				                                     progressor).ToList();
+				                                     progressor)
+				                       .OrderBy(candidate => candidate.ShapeDimension)
+				                       .ToList();
 
 				await SelectCandidates(precedence, featureSelection, selectionMethod);
 			});
@@ -175,7 +165,9 @@ namespace ProSuite.AGP.Editing.Picker
 				const CancelableProgressor progressor = null;
 				var featureSelection = getCandidates(precedence.SelectionGeometry,
 				                                     spatialRelationship,
-				                                     progressor).ToList();
+				                                     progressor)
+				                       .OrderBy(candidate => candidate.ShapeDimension)
+				                       .ToList();
 
 				await SelectCandidates(precedence, featureSelection, selectionMethod, pickerMode);
 			});
@@ -245,10 +237,10 @@ namespace ProSuite.AGP.Editing.Picker
 		#endregion
 
 		private static async Task SelectCandidates(IPickerPrecedence precedence,
-		                                           List<FeatureSelectionBase> featureSelection,
+		                                           ICollection<FeatureSelectionBase> orderedSelection,
 		                                           SelectionCombinationMethod selectionMethod)
 		{
-			if (! featureSelection.Any())
+			if (! orderedSelection.Any())
 			{
 				if (selectionMethod == SelectionCombinationMethod.XOR)
 				{
@@ -266,8 +258,6 @@ namespace ProSuite.AGP.Editing.Picker
 			{
 				ClearSelection();
 			}
-
-			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
 
 			switch (precedence.GetPickerMode(orderedSelection))
 			{
@@ -307,11 +297,11 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		private static async Task SelectCandidates(IPickerPrecedence precedence,
-		                                           List<FeatureSelectionBase> featureSelection,
+		                                           List<FeatureSelectionBase> orderedSelection,
 		                                           SelectionCombinationMethod selectionMethod,
 		                                           PickerMode pickerMode)
 		{
-			if (! featureSelection.Any())
+			if (! orderedSelection.Any())
 			{
 				if (selectionMethod == SelectionCombinationMethod.XOR)
 				{
@@ -329,8 +319,6 @@ namespace ProSuite.AGP.Editing.Picker
 			{
 				ClearSelection();
 			}
-
-			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
 
 			switch (pickerMode)
 			{
@@ -446,11 +434,11 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		private static async Task SelectCandidates<T>(IPickerPrecedence precedence,
-		                                              List<FeatureSelectionBase> featureSelection,
+		                                              List<FeatureSelectionBase> orderedSelection,
 		                                              SelectionCombinationMethod selectionMethod)
 			where T : class, IPickableItem
 		{
-			if (! featureSelection.Any())
+			if (! orderedSelection.Any())
 			{
 				if (selectionMethod == SelectionCombinationMethod.XOR)
 				{
@@ -468,8 +456,6 @@ namespace ProSuite.AGP.Editing.Picker
 			{
 				ClearSelection();
 			}
-
-			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
 
 			switch (precedence.GetPickerMode(orderedSelection))
 			{
@@ -509,12 +495,12 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		private static async Task SelectCandidates<T>(IPickerPrecedence precedence,
-		                                              List<FeatureSelectionBase> featureSelection,
+		                                              List<FeatureSelectionBase> orderedSelection,
 		                                              SelectionCombinationMethod selectionMethod,
 		                                              PickerMode pickerMode)
 			where T : class, IPickableItem
 		{
-			if (! featureSelection.Any())
+			if (! orderedSelection.Any())
 			{
 				if (selectionMethod == SelectionCombinationMethod.XOR)
 				{
@@ -532,8 +518,6 @@ namespace ProSuite.AGP.Editing.Picker
 			{
 				ClearSelection();
 			}
-
-			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
 
 			switch (pickerMode)
 			{
