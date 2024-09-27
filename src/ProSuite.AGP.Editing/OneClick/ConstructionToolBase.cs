@@ -282,9 +282,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (ActiveMapView == null)
 			{
 				return false;
-			}	
+			}
 
-			if (! CanUseSelection(ActiveMapView))
+			if (RequiresSelection && ! CanUseSelection(ActiveMapView))
 			{
 				//LogPromptForSelection();
 				StartSelectionPhase();
