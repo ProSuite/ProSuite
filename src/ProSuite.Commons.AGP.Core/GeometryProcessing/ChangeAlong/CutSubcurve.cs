@@ -168,7 +168,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 			return angle;
 		}
 
-		public Polyline Path { get; }
+		public Polyline Path { get; set; }
 
 		[CanBeNull]
 		public Geometry ExtraTargetInsertPoints { get; set; }

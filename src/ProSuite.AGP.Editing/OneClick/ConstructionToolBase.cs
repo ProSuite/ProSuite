@@ -87,7 +87,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				return Task.FromResult(true);
 			}
 
-			if (CanUseSelection(SelectionUtils.GetSelection(e)))
+			if (CanUseSelection(SelectionUtils.GetSelection<BasicFeatureLayer>(e.Selection)))
 			{
 				StartSketchPhase();
 			}
@@ -282,7 +282,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (ActiveMapView == null)
 			{
 				return false;
-			}
+			}	
 
 			if (! CanUseSelection(ActiveMapView))
 			{
@@ -344,17 +344,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract void LogEnteringSketchMode();
 
-		/// <summary>
-		/// Determines whether the provided selection can be used by this tool.
-		/// </summary>
-		/// <param name="selection"></param>
-		/// <returns></returns>
-		protected virtual bool CanUseSelection(Dictionary<MapMember, List<long>> selection)
-		{
-			// TODO
-			return selection.Count > 0;
-		}
-
 		protected abstract Task<bool> OnEditSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			EditingTemplate editTemplate,
@@ -414,22 +403,23 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		/// <summary>
-		/// Determines whether the provided selection can be used by this tool.
-		/// </summary>
-		/// <param name="selection"></param>
-		/// <returns></returns>
-		private bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection)
-		{
-			var mapMemberDictionary = new Dictionary<MapMember, List<long>>(selection.Count);
+		//// todo daro drop
+		///// <summary>
+		///// Determines whether the provided selection can be used by this tool.
+		///// </summary>
+		///// <param name="selection"></param>
+		///// <returns></returns>
+		//private bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection)
+		//{
+		//	var mapMemberDictionary = new Dictionary<MapMember, List<long>>(selection.Count);
 
-			foreach (var keyValuePair in selection)
-			{
-				mapMemberDictionary.Add(keyValuePair.Key, keyValuePair.Value);
-			}
+		//	foreach (var keyValuePair in selection)
+		//	{
+		//		mapMemberDictionary.Add(keyValuePair.Key, keyValuePair.Value);
+		//	}
 
-			return CanUseSelection(mapMemberDictionary);
-		}
+		//	return CanUseSelection(mapMemberDictionary);
+		//}
 
 		private bool CanStartSketchPhase(IList<Feature> selectedFeatures)
 		{

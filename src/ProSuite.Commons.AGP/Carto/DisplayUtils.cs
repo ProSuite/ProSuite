@@ -2,11 +2,66 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Desktop.Mapping;
 using System;
 using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto;
 
 public static class DisplayUtils
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	/// <summary>
+	/// Get if given <paramref name="map"/> has Layer Masking
+	/// enabled (true) or not (false). For Pro before 3.3 this
+	/// was not possible and this function returns null.
+	/// </summary>
+	/// <remarks>Must run on MCT</remarks>
+	public static bool? UsesLayerMasking([CanBeNull] Map map)
+	{
+		if (map is null) return null;
+		var cim = map.GetDefinition();
+		const string propertyName = "UseMasking";
+		// Use reflection: property only exists since Pro 3.3
+		var property = cim.GetType().GetProperty(propertyName);
+		object value = property?.GetValue(cim);
+		return value is bool flag ? flag : null;
+	}
+
+	/// <summary>
+	/// Turn Layer Masking (LM) on the given map on or off.
+	/// </summary>
+	/// <returns>true iff any layer or map was modified</returns>
+	public static bool ToggleLayerMasking(Map map, bool turnOn)
+	{
+		if (map is null) return false;
+
+		var cim = map.GetDefinition();
+		const string propertyName = "UseMasking";
+		// Use reflection: property only exists since Pro 3.3
+		var property = cim.GetType().GetProperty(propertyName);
+
+		if (property is null)
+		{
+			_msg.Debug($"No property {propertyName} on CIMMap (probably on old " +
+			           $"version of ArcGIS Pro): must use a hack to toggle LM");
+			return ToggleLayerMaskingHack(map, turnOn);
+		}
+
+		// Good: our ArcGIS Pro has the UseMasking CIM property:
+		var currentValue = property.GetValue(cim);
+		if (currentValue is bool flag && flag == turnOn)
+		{
+			// current setting is already good: avoid the expensive SetDefinition call
+			return false;
+		}
+
+		property.SetValue(cim, turnOn);
+		map.SetDefinition(cim);
+
+		return true;
+	}
+
 	/// <summary>
 	/// Turn Layer Masking (LM) on the given layer container
 	/// (map or group layer) on or off. This is not officially
@@ -14,7 +69,7 @@ public static class DisplayUtils
 	/// the feature has been requested in Redlands in 2023.
 	/// </summary>
 	/// <returns>true iff any layer was modified</returns>
-	public static bool ToggleLayerMasking(ILayerContainer container, bool turnOn)
+	private static bool ToggleLayerMaskingHack(ILayerContainer container, bool turnOn)
 	{
 		const string prefix = "_SKIP_";
 
@@ -113,10 +168,10 @@ public static class DisplayUtils
 	{
 		bool anyModified = false;
 		var layers = GetLayersInOrder(container);
-		// Note: traversal below assumes layers are in pre-order
 
 		GroupLayer controllingLayer = null;
 
+		// This loop assumes layers are on pre-order:
 		foreach (var layer in layers)
 		{
 			// Because SLD controlling layers are never nested (outermost
@@ -252,8 +307,9 @@ public static class DisplayUtils
 			yield return groupLayer;
 		}
 
-		// Assume Pro API yields layers in pre-order:
-		// this is reasonable and likely, but not documented
+		// Assume Pro API yields layers in pre-order: this is reasonable
+		// and likely, but not documented; Charlie from Esri Inc. writes:
+		// “that's a safe assumption I reckon” (2024-02-21)
 		foreach (var layer in container.GetLayersAsFlattenedList())
 		{
 			yield return layer;

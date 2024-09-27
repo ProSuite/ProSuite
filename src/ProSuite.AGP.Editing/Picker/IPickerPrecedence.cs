@@ -19,7 +19,7 @@ namespace ProSuite.AGP.Editing.Picker
 		int SelectionTolerance { get; }
 
 		bool IsSingleClick { get; }
-
+		bool AggregateItems { get; }
 		Point PickerLocation { get; set; }
 
 		PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,

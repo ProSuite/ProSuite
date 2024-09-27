@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.Logging;
@@ -71,10 +70,7 @@ namespace ProSuite.AGP.Editing.Selection
 			await ViewUtils.TryAsync(task, _msg);
 		}
 
-		protected override void LogUsingCurrentSelection()
-		{
-			// throw new NotImplementedException();
-		}
+		protected override void LogUsingCurrentSelection() { }
 
 		protected override void LogPromptForSelection()
 		{

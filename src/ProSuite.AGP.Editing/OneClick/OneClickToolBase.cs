@@ -533,8 +533,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				using var pickerPrecedence = CreatePickerPrecedence(sketchGeometry);
 
-				await ViewUtils.TryAsync(
-					PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers), _msg);
+			await PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers);
 
 				await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
 			}
@@ -687,8 +686,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		private bool CanSelectFromLayer([CanBeNull] Layer layer,
-		                                NotificationCollection notifications = null)
+		protected bool CanSelectFromLayer([CanBeNull] Layer layer,
+		                                  NotificationCollection notifications = null)
 		{
 			if (layer is not BasicFeatureLayer featureLayer)
 			{
@@ -747,17 +746,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (mapView is null)
 				throw new ArgumentNullException(nameof(mapView));
 
-			Dictionary<MapMember, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection(mapView.Map);
+			Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection<BasicFeatureLayer>(mapView.Map);
 
 			return CanUseSelection(selectionByLayer);
 		}
 
-		private bool CanUseSelection([NotNull] Dictionary<MapMember, List<long>> selectionByLayer)
+		protected virtual bool CanUseSelection([NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+		                                       [CanBeNull] NotificationCollection notifications = null)
 		{
 			return AllowNotApplicableFeaturesInSelection
-				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key as Layer))
-				       : selectionByLayer.All(l => CanSelectFromLayer(l.Key as Layer));
+				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key, notifications))
+				       : selectionByLayer.All(l => CanSelectFromLayer(l.Key, notifications));
 		}
 
 		protected IEnumerable<Feature> GetDistinctApplicableSelectedFeatures(
@@ -819,6 +819,55 @@ namespace ProSuite.AGP.Editing.OneClick
 					new Notification(
 						$"{filteredCount} of {selectionCount + filteredCount} selected features cannot be used by the tool."));
 			}
+		}
+
+		[NotNull]
+		protected IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
+			[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+			bool unJoinedFeaturesForEditing = false,
+			[CanBeNull] NotificationCollection notifications = null)
+		{
+			var filteredCount = 0;
+			var selectionCount = 0;
+
+			var result = new Dictionary<BasicFeatureLayer, List<Feature>>(selectionByLayer.Count);
+
+			SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
+
+			foreach (KeyValuePair<BasicFeatureLayer, List<long>> oidsByLayer in selectionByLayer)
+			{
+				BasicFeatureLayer layer = oidsByLayer.Key;
+				List<long> oids = oidsByLayer.Value;
+
+				if (! CanSelectFromLayer(layer, notifications))
+				{
+					filteredCount += oidsByLayer.Value.Count;
+					continue;
+				}
+
+				var features = MapUtils
+				               .GetFeatures(layer, oids, unJoinedFeaturesForEditing,
+				                            recycling: false, mapSpatialReference).ToList();
+
+				result.Add(layer, features);
+				selectionCount++;
+			}
+
+			if (filteredCount == 1)
+			{
+				notifications?.Insert(
+					0, new Notification("The selected feature cannot be used by the tool."));
+			}
+
+			if (filteredCount > 1)
+			{
+				notifications?.Insert(
+					0,
+					new Notification(
+						$"{filteredCount} of {selectionCount + filteredCount} selected features cannot be used by the tool."));
+			}
+
+			return result;
 		}
 
 		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView mapView)

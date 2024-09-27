@@ -57,9 +57,55 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return geometry?.SpatialReference?.XYTolerance ?? double.NaN;
 		}
 
+		/// <returns>The total number of points (vertices) across all parts
+		/// of the given <paramref name="geometry"/>; 0 if empty or null</returns>
 		public static int GetPointCount([CanBeNull] Geometry geometry)
 		{
 			return geometry?.PointCount ?? 0;
+		}
+
+		/// <returns>The number of points (vertices) in the indicated part
+		/// or 0 if the given geometry is null or empty (and always
+		/// 1 for points and multipoints)</returns>
+		/// <remarks>An error occurs if the given part index is negative
+		/// or beyond the number of parts in the given geometry.</remarks>
+		public static int GetPointCount([CanBeNull] Geometry geometry, int partIndex)
+		{
+			if (geometry is null) return 0;
+
+			if (partIndex < 0)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+
+			if (geometry is Multipart multipart)
+			{
+				if (partIndex >= multipart.PartCount)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+				var part = multipart.Parts[partIndex];
+				return part.Count + 1; // part.Count is segments, +1 gives vertices
+			}
+
+			if (geometry is Multipatch multipatch)
+			{
+				if (partIndex >= multipatch.PartCount)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+				return multipatch.GetPatchPointCount(partIndex);
+			}
+
+			if (geometry is Multipoint multipoint)
+			{
+				if (partIndex >= multipoint.PointCount)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+				return 1;
+			}
+
+			if (geometry is MapPoint)
+			{
+				if (partIndex != 0)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+				return 1;
+			}
+
+			throw new NotSupportedException($"Geometry of type {geometry.GetType().Name} is not supported");
 		}
 
 		/// <summary>
@@ -113,6 +159,9 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				$"Geometry of type {geometry.GetType().Name} is not supported");
 		}
 
+		/// <returns>The number of parts in the given geometry, or zero
+		/// if it is null or empty</returns>
+		/// <remarks>Each point of a multipoint is considered a part</remarks>
 		public static int GetPartCount([CanBeNull] Geometry geometry)
 		{
 			if (geometry is null) return 0;
@@ -810,6 +859,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static int GetPointCount(this MultipartBuilderEx builder,
 		                                int partIndex)
 		{
+			// There is always one more vertex than there are segments,
+			// even for rings, because the last vertex duplicates the first:
 			return builder.GetSegmentCount(partIndex) + 1;
 		}
 
@@ -910,6 +961,125 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			}
 
 			return (T) builder.ToSegment();
+		}
+
+		/// <summary>
+		/// Remove the vertices from first to last (both inclusive) in the
+		/// given part from the given Polyline builder. The resulting gap
+		/// is filled with a straight line segment. All indices are validated
+		/// against the given <paramref name="builder"/>. If no last vertex
+		/// is given, it defaults to the given first vertex.
+		/// </summary>
+		public static void RemoveVertices(/*this*/ PolylineBuilderEx builder, int partIndex,
+		                                  int firstVertex, int lastVertex = -1)
+		{
+			if (builder is null)
+				throw new ArgumentNullException(nameof(builder));
+
+			if (builder.PartCount <= 0)
+				throw new InvalidOperationException("no parts at all (empty builder)");
+			if (partIndex < 0 || partIndex >= builder.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+
+			if (lastVertex < 0) lastVertex = firstVertex; // convenience
+			if (lastVertex < firstVertex) return; // nothing to remove
+			var verticesInPart = builder.GetSegmentCount(partIndex) + 1;
+
+			if (firstVertex < 0 || firstVertex >= verticesInPart)
+				throw new ArgumentOutOfRangeException(nameof(firstVertex));
+			if (lastVertex >= verticesInPart)
+				throw new ArgumentOutOfRangeException(nameof(lastVertex));
+
+			// If less than two vertices remain, remove entire part:
+			int verticesToRemove = lastVertex - firstVertex + 1;
+			if (verticesInPart - verticesToRemove < 2)
+			{
+				builder.RemovePart(partIndex);
+				return;
+			}
+
+			if (firstVertex == 0)
+			{
+				// Remove first k segments:
+				for (int i = 0; i <= lastVertex; i++)
+				{
+					builder.RemoveSegment(partIndex, i, false);
+				}
+			}
+			else if (lastVertex == verticesInPart - 1)
+			{
+				// Remove last k segments (from end to avoid memory moving):
+				for (int i = lastVertex; i >= firstVertex; i--)
+				{
+					var segmentIndex = i - 1;
+					builder.RemoveSegment(partIndex, segmentIndex, false);
+				}
+			}
+			else
+			{
+				// Remove segments last through first, then
+				// Replace segment first-1 with line segment to close the gap
+				var startPoint = builder.Parts[partIndex][firstVertex - 1].StartPoint;
+				var endPoint = builder.Parts[partIndex][lastVertex].EndPoint;
+				for (int i = lastVertex; i >= firstVertex; i--)
+				{
+					builder.RemoveSegment(partIndex, i, false);
+				}
+				var straight = LineBuilderEx.CreateLineSegment(startPoint, endPoint);
+				builder.ReplaceSegment(partIndex, firstVertex - 1, straight);
+			}
+		}
+
+		/// <summary>
+		/// Remove vertices from a Polygon builder.
+		/// Presently, only a single vertex can be removed at a time (expect
+		/// <paramref name="firstVertex"/> == <paramref name="lastVertex"/>).
+		/// The resulting gap is filled with a straight line segment.
+		/// The vertex indices are taken modulo the part's segment count,
+		/// that is, they are cyclic.
+		/// </summary>
+		public static void RemoveVertices(/*this*/ PolygonBuilderEx builder, int partIndex,
+		                                  int firstVertex, int lastVertex = -1)
+		{
+			if (builder is null)
+				throw new ArgumentNullException(nameof(builder));
+
+			if (builder.PartCount <= 0)
+				throw new InvalidOperationException("no parts at all (empty builder)");
+			if (partIndex < 0 || partIndex >= builder.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+
+			if (lastVertex < 0) lastVertex = firstVertex; // convenience;
+			else if (lastVertex != firstVertex)
+				throw new NotImplementedException("Can only remove one vertex for now");
+
+			var segmentCount = builder.GetSegmentCount(partIndex);
+
+			firstVertex %= segmentCount;
+
+			if (segmentCount <= 2)
+			{
+				builder.RemovePart(partIndex);
+				return;
+			}
+
+			if (firstVertex == 0) // vertex is start/end-point
+			{
+				// remove last segment, replace first segment:
+				var startPoint = builder.Parts[partIndex][segmentCount - 1].StartPoint;
+				var endPoint = builder.Parts[partIndex][0].EndPoint;
+				var straight = LineBuilderEx.CreateLineSegment(startPoint, endPoint);
+				builder.RemoveSegment(partIndex, segmentCount - 1, false); // leave gap
+				builder.ReplaceSegment(partIndex, 0, straight); // new segment closes gap
+			}
+			else // any other vertex
+			{
+				var startPoint = builder.Parts[partIndex][firstVertex - 1].StartPoint;
+				var endPoint = builder.Parts[partIndex][firstVertex].EndPoint;
+				var straight = LineBuilderEx.CreateLineSegment(startPoint, endPoint);
+				builder.RemoveSegment(partIndex, firstVertex, false); // leave gap
+				builder.ReplaceSegment(partIndex, firstVertex - 1, straight);
+			}
 		}
 
 		#region Moving vertices of a multipart geometry builder

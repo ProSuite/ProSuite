@@ -17,6 +17,11 @@ public class GeometryUtilsTest
 	[OneTimeSetUp]
 	public void OneTimeSetUp()
 	{
+		// Helps core host apps (like unit tests) find dependencies like
+		// CoreInterop.dll, freetype.dll, etc. in the proper place and version
+		var installDir = ProRuntimeUtils.GetProInstallDir();
+		ProRuntimeUtils.AddBinDirectoryToPath(installDir);
+
 		CoreHostProxy.Initialize();
 	}
 
@@ -394,18 +399,190 @@ public class GeometryUtilsTest
 		Assert.Catch<ArgumentOutOfRangeException>(() => GeometryUtils.GetPart(myPoint, -1));
 	}
 
+	[Test]
+	public void CanRemoveVertices_Polyline()
+	{
+		// Cannot remove anything from an empty builder:
+
+		var emptyPolyline = CreatePolylineXY();
+		Assert.True(emptyPolyline.IsEmpty);
+		var builder = emptyPolyline.ToBuilder();
+		Assert.True(builder.IsEmpty);
+		Assert.AreEqual(0, builder.PartCount);
+
+		Assert.Throws<InvalidOperationException>(() => GeometryUtils.RemoveVertices(builder, 0, 0));
+
+		var polyline = CreatePolylineXY(0, 0, 1, 1, 2, 2, 3, 3, double.NaN, 4, 4, 5, 5);
+
+		// Remove two vertices along the line:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 1, 2);
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(1, builder.GetSegmentCount(0));
+		Assert.AreEqual(0.0, builder.GetSegment(0, 0).StartCoordinate.X);
+		Assert.AreEqual(3.0, builder.GetSegment(0, 0).EndCoordinate.X);
+		Assert.AreEqual(1, builder.GetSegmentCount(1));
+
+		// Remove one vertex at beginning:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 0, 0); // remove first vertex
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(2, builder.GetSegmentCount(0));
+		Assert.AreEqual(1.0, builder.GetSegment(0, 0).StartCoordinate.X);
+		Assert.AreEqual(1, builder.GetSegmentCount(1));
+
+		// Remove three vertices (of four) -> remove part:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 0, 2);
+		Assert.AreEqual(1, builder.PartCount);
+		// formerly 2nd part becomes the 1st and only part:
+		Assert.AreEqual(4.0, builder.GetSegment(0, 0).StartCoordinate.X);
+
+		// Remove one vertex at end (leaving 3 vertices):
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 3, 3);
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(2, builder.GetSegmentCount(0));
+		Assert.AreEqual(2.0, builder.GetSegment(0, 1).EndCoordinate.X);
+
+		// Remove two vertices at end (leaving 2 vertices):
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 2, 3);
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(1, builder.GetSegmentCount(0));
+		Assert.AreEqual(1.0, builder.GetSegment(0, 0).EndCoordinate.X);
+
+		// Remove all vertices of 2nd part:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 1, 0, 1);
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(3.0, builder.GetSegment(0, 2).EndCoordinate.X);
+
+		// Remove vertices such that only ONE vertex remains:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 1, 1, 1);
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(3.0, builder.GetSegment(0, 2).EndCoordinate.X);
+
+		// Can catch invalid arguments:
+		builder = polyline.ToBuilder();
+		// part index out of range:
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(builder, 2, 0, 0));
+		// first/last vertex index out of range
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(builder, 1, 2, 2));
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(builder, 1, 0, 2));
+	}
+
+	[Test]
+	public void CanRemoveVertices_Polygon()
+	{
+		double sqrt2 = Math.Sqrt(2.0);
+		const double delta = 1e-6;
+
+		var emptyPolygon = CreatePolygonXY();
+		Assert.True(emptyPolygon.IsEmpty);
+		var builder = emptyPolygon.ToBuilder();
+		Assert.True(builder.IsEmpty);
+		Assert.AreEqual(0, builder.PartCount);
+		Assert.Throws<InvalidOperationException>(() => GeometryUtils.RemoveVertices(builder, 0, 0));
+
+		// 1---2
+		// |   |
+		// 0---3
+		var unitSquare = CreatePolygonXY(0, 0, 0, 1, 1, 1, 1, 0, 0, 0);
+		Assert.AreEqual(1.0, unitSquare.Area, delta);
+
+		builder = unitSquare.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 2); // remove "regular" vertex
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(3, builder.Parts[0].Count); // only 3 segments after removal
+		Assert.AreEqual(1.0 + 1.0 + sqrt2, builder.Parts[0].Sum(s => s.Length), delta);
+		Assert.AreEqual(0.0, builder.GetPoint(0, 0).X); // StartPoint didn't change
+
+		builder = unitSquare.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 0); // remove start=end vertex
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(3, builder.Parts[0].Count);
+		Assert.AreEqual(1.0 + 1.0 + sqrt2, builder.Parts[0].Sum(s => s.Length));
+		// here start=end vertex must have changed, but it's undefined how
+
+		// 1
+		// | \
+		// 0--2
+		var triangle = CreatePolygonXY(0, 0, 0, 1, 1, 0, 0, 0);
+		Assert.AreEqual(0.5, triangle.Area, delta);
+
+		builder = triangle.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 1);
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(2, builder.Parts[0].Count);
+		Assert.AreEqual(1.0 + 1.0, builder.Parts[0].Sum(s => s.Length));
+
+		// 0===1  (degenerate polygon)
+		var degenerate = CreatePolygonXY(0, 0, 1, 1);
+		Assert.AreEqual(0.0, degenerate.Area);
+		Assert.AreEqual(2 * sqrt2, degenerate.Length);
+
+		builder = degenerate.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 1);
+		Assert.AreEqual(0, builder.PartCount);
+		Assert.True(builder.IsEmpty);
+
+		// 3 1--------2
+		// 2 |  3--2  |  1--2
+		//   |  |  |  |  |  |
+		// 1 |  0--1  |  0--3
+		// 0 0--------3
+		//   0  1  2  3  4  5
+		// Parts in order are: big outer, small inner, small outer
+		var polygon = GeometryFactory.CreatePolygonXY(
+			0, 0, 0, 3, 3, 3, 3, 0, 0, 0, double.NaN,
+			1, 1, 2, 1, 2, 2, 1, 2, 1, 1, double.NaN,
+			4, 1, 4, 2, 5, 2, 5, 1, 4, 1);
+
+		builder = polygon.ToBuilder();
+
+		// remove a vertex in last part
+		GeometryUtils.RemoveVertices(builder, 2, 2);
+		Assert.AreEqual(3, builder.PartCount);
+		Assert.AreEqual(3, builder.Parts[2].Count);
+
+		// remove another vertex in last part, which collapses to a line
+		GeometryUtils.RemoveVertices(builder, 2, 2);
+		Assert.AreEqual(3, builder.PartCount);
+		Assert.AreEqual(2, builder.Parts[2].Count);
+
+		// remove another vertex in last part removes the part
+		GeometryUtils.RemoveVertices(builder, 2, 1);
+		Assert.AreEqual(2, builder.PartCount);
+
+		// remove vertex in each of the remaining two parts
+		GeometryUtils.RemoveVertices(builder, 1, 0);
+		GeometryUtils.RemoveVertices(builder, 0, 0);
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(1.0+1.0+sqrt2, builder.Parts[1].Sum(s => s.Length), delta);
+		Assert.AreEqual(3.0 + 3.0 + 3 * sqrt2, builder.Parts[0].Sum(s => s.Length), delta);
+
+		// remove two vertices in inner part removes that part:
+		GeometryUtils.RemoveVertices(builder, 1, 1);
+		GeometryUtils.RemoveVertices(builder, 1, 0);
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(3.0 + 3.0 + 3 * sqrt2, builder.Parts[0].Sum(s => s.Length), delta);
+
+		// Can catch invalid arguments:
+		builder = polygon.ToBuilder();
+		// part index out of range
+		Assert.Throws<ArgumentOutOfRangeException>(
+			() => GeometryUtils.RemoveVertices(builder, 9, 0));
+		// with polygons, we treat vertex indices cyclically (mod N), so no exception here:
+		GeometryUtils.RemoveVertices(builder, 0, 99);
+	}
+
 	#region Creating test geometries
 
 	private static MapPoint Pt(double x, double y)
 	{
 		return MapPointBuilderEx.CreateMapPoint(x, y);
-	}
-
-	private static Multipoint CreateMultipointXY(params double[] coords)
-	{
-		var builder = new MultipointBuilderEx();
-		builder.AddPoints(MakeCoords(coords));
-		return builder.ToGeometry();
 	}
 
 	private static Polygon CreateUnitSquarePolygon()
@@ -453,6 +630,21 @@ public class GeometryUtilsTest
 		{
 			yield return new Coordinate2D(coords[i - 1], coords[i]);
 		}
+	}
+
+	private static Multipoint CreateMultipointXY(params double[] xys)
+	{
+		return GeometryFactory.CreateMultipointXY(xys);
+	}
+
+	private static Polyline CreatePolylineXY(params double[] xys)
+	{
+		return GeometryFactory.CreatePolylineXY(xys);
+	}
+
+	private static Polygon CreatePolygonXY(params double[] xys)
+	{
+		return GeometryFactory.CreatePolygonXY(xys);
 	}
 
 	#endregion
