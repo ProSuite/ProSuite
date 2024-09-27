@@ -20,7 +20,6 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
 
 namespace ProSuite.AGP.Editing.FillHole
 {
@@ -146,9 +145,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 			MapView activeMapView = MapView.Active;
 
-			EditingTemplate editTemplate = EditingTemplate.Current;
-
-			FeatureClass currentTargetClass = GetCurrentTargetClass(out _);
+			FeatureClass currentTargetClass = GetCurrentTargetClass(out Subtype targetSubtype);
 
 			var datasets = new List<Dataset> { currentTargetClass };
 
@@ -161,9 +158,8 @@ namespace ProSuite.AGP.Editing.FillHole
 					                              holesToFill.Count);
 
 					             newFeatures = GdbPersistenceUtils.InsertTx(
-						             editContext, currentTargetClass,
-						             holesToFill.Cast<Geometry>().ToList(),
-						             GetFieldValue);
+						             editContext, currentTargetClass, targetSubtype,
+						             holesToFill, GetFieldValue);
 
 					             _msg.InfoFormat("Successfully created {0} new {1} feature(s).",
 					                             newFeatures.Count, currentTargetClass.GetName());
@@ -185,11 +181,6 @@ namespace ProSuite.AGP.Editing.FillHole
 				}
 			}
 
-			//var targetLayer = (BasicFeatureLayer) editTemplate.Layer;
-			//var objectIds = newFeatures.Select(f => f.GetObjectID()).ToList();
-
-			//SelectionUtils.SelectRows(targetLayer, SelectionCombinationMethod.Add, objectIds);
-
 			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
 
 			CalculateDerivedGeometries(currentSelection, progressor);
@@ -202,55 +193,19 @@ namespace ProSuite.AGP.Editing.FillHole
 			return ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
 		}
 
-		//[NotNull]
-		//protected virtual FeatureClass GetCurrentTargetClass()
-		//{
-		//	EditingTemplate editTemplate =
-		//		Assert.NotNull(EditingTemplate.Current, "No edit template");
-
-		//	FeatureClass currentTargetClass =
-		//		ToolUtils.GetCurrentTargetFeatureClass(editTemplate);
-
-		//	if (currentTargetClass == null)
-		//	{
-		//		throw new Exception("No valid feature template selected to fill the hole with.");
-		//	}
-
-		//	// Un-wrap potential joins:
-		//	currentTargetClass = DatasetUtils.GetDatabaseFeatureClass(currentTargetClass);
-
-		//	if (currentTargetClass == null)
-		//	{
-		//		throw new Exception("No valid template selected");
-		//	}
-
-		//	return currentTargetClass;
-		//}
-
-		protected virtual object GetFieldValue([NotNull] string fieldName,
-		                                       [NotNull] FeatureClassDefinition featureClassDef)
+		protected virtual object GetFieldValue([NotNull] Field field,
+		                                       [NotNull] FeatureClassDefinition featureClassDef,
+		                                       [CanBeNull] Subtype subtype)
 		{
-			EditingTemplate template = EditingTemplate.Current;
-
-			if (template == null)
+			// If there is an active template, use it:
+			if (GdbPersistenceUtils.TryGetFieldValueFromTemplate(
+				    field.Name, EditingTemplate.Current, out object result))
 			{
-				return DBNull.Value;
+				return result;
 			}
 
-			if (! template.Inspector.HasAttributes)
-			{
-				return DBNull.Value;
-			}
-
-			Attribute attribute = template.Inspector.FirstOrDefault(
-				a => a.FieldName.Equals(fieldName, StringComparison.InvariantCultureIgnoreCase));
-
-			if (attribute == null)
-			{
-				return DBNull.Value;
-			}
-
-			return attribute.DefaultValue;
+			// Otherwise: Geodatabase default value:
+			return field.GetDefaultValue(subtype);
 		}
 
 		protected override void ResetDerivedGeometries()
