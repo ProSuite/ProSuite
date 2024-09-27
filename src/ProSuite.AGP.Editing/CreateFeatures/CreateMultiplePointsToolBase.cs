@@ -244,8 +244,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				}
 				finally
 				{
-					// Anything but the Wait cursor
-					SetCursor(Cursors.Arrow);
+					SetCursor(SketchCursor);
 				}
 			});
 
