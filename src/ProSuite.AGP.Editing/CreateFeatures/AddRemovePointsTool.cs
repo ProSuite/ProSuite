@@ -261,7 +261,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.ReportError(ex, _msg);
+			Gateway.LogError(ex, _msg);
 		}
 
 		return Task.FromResult(0);
@@ -318,7 +318,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.ReportError(ex, _msg);
+			Gateway.LogError(ex, _msg);
 		}
 	}
 
@@ -391,7 +391,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.ReportError(ex, _msg);
+			Gateway.LogError(ex, _msg);
 		}
 		return null;
 	}
@@ -449,12 +449,19 @@ public class AddRemovePointsTool : MapTool
 
 	protected override void OnToolMouseMove(MapViewMouseEventArgs args)
 	{
-		if (_activated && _firstMove)
+		try
 		{
-			_firstMove = false;
-			var symbol = SketchSymbol;
-			SketchSymbol = null;
-			SketchSymbol = symbol;
+			if (_activated && _firstMove)
+			{
+				_firstMove = false;
+				var symbol = SketchSymbol;
+				SketchSymbol = null;
+				SketchSymbol = symbol;
+			}
+		}
+		catch (Exception ex)
+		{
+			Gateway.LogError(ex, _msg);
 		}
 	}
 
