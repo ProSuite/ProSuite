@@ -646,6 +646,57 @@ namespace ProSuite.Commons.Essentials.CodeAnnotations
 	}
 
 	/// <summary>
+	/// Indicates that the resource disposal must be handled by the use site,
+	/// meaning that the resource ownership is transferred to the callee.
+	/// This annotation can be used to annotate disposable types or their constructors individually to enable
+	/// the resource disposal IDE code analysis in every context where the new instance of this type is created.
+	/// Factory methods and 'out' parameters can also be annotated to indicate that the return value of disposable type
+	/// needs handling.
+	/// </summary>
+	/// <remarks>
+	/// Annotation of input parameters with this attribute is meaningless.<br/>
+	/// Constructors inherit this attribute from their type, if it is annotated,
+	/// but not from the base constructors they delegate to (if any).<br/>
+	/// Resource disposal is expected to be expressed via either <c>using (resource)</c> statement,
+	/// <c>using var</c> declaration, explicit 'Dispose' method call, or an argument passing
+	/// to a parameter with the <see cref="HandlesResourceDisposalAttribute"/> attribute applied.
+	/// </remarks>
+	[AttributeUsage(
+		AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Parameter)]
+	public sealed class MustDisposeResourceAttribute : Attribute
+	{
+		public MustDisposeResourceAttribute()
+		{
+			Value = true;
+		}
+
+		public MustDisposeResourceAttribute(bool value)
+		{
+			Value = value;
+		}
+
+		/// <summary>
+		/// When set to <c>false</c>, disposing of the resource is not obligatory.
+		/// The main use-case for explicit <c>[MustDisposeResource(false)]</c> annotation is to loosen inherited annotation.
+		/// </summary>
+		public bool Value { get; }
+	}
+
+	/// <summary>
+	/// Indicates that method or class instance acquires resource ownership and will dispose it after use.
+	/// </summary>
+	/// <remarks>
+	/// Annotation of 'out' parameter with this attribute is meaningless.<br/>
+	/// When a instance method is annotated with this attribute,
+	/// it means that it is handling the resource disposal of the corresponding resource instance.<br/>
+	/// When a field or a property is annotated with this attribute, it means that this type owns the resource
+	/// and will handle the resource disposal properly (e.g. in own IDisposable implementation).
+	/// </remarks>
+	[AttributeUsage(
+		AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Field | AttributeTargets.Property)]
+	public sealed class HandlesResourceDisposalAttribute : Attribute { }
+
+	/// <summary>
 	/// This annotation allows to enforce allocation-less usage patterns of delegates for performance-critical APIs.
 	/// When this annotation is applied to the parameter of delegate type, IDE checks the input argument of this parameter:
 	/// * When lambda expression or anonymous method is passed as an argument, IDE verifies that the passed closure

@@ -49,7 +49,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (applicableSelection.Count > 0)
 			{
 				using var source = GetProgressorSource();
-				var progressor = source.Progressor;
+				var progressor = source?.Progressor;
 				AfterSelection(applicableSelection, progressor);
 			}
 
@@ -84,7 +84,7 @@ namespace ProSuite.AGP.Editing.OneClick
 							}
 
 							using var source = GetProgressorSource();
-							var progressor = source.Progressor;
+							var progressor = source?.Progressor;
 
 							CalculateDerivedGeometries(selectedFeatures, progressor);
 
@@ -124,19 +124,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return result;
 		}
 
-		protected override bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			if (shiftIsPressed)
-			{
-				return true;
-			}
-
-			var task = QueuedTask.Run(IsInSelectionPhaseQueued);
-
-			// This can dead-lock! Remove everywhere, use async overload
-			return task.Result;
-		}
-
 		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
 			if (shiftDown)
@@ -164,17 +151,24 @@ namespace ProSuite.AGP.Editing.OneClick
 			await ViewUtils.TryAsync(task, _msg);
 		}
 
-		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
+		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{
-			if (KeyboardUtils.IsShiftKey(k.Key))
+			if (KeyboardUtils.IsShiftKey(args.Key))
 			{
-				Cursor = IsInSelectionPhase(true) ? SelectionCursor : SecondPhaseCursor;
+				Cursor = await ViewUtils.TryAsync(IsInSelectionPhaseCoreAsync(true), _msg)
+					         ? SelectionCursor
+					         : SecondPhaseCursor;
 			}
 		}
 
 		protected override void LogUsingCurrentSelection()
 		{
 			// using method LogDerivedGeometriesCalculated() for feedback
+		}
+
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
 		}
 
 		protected abstract void CalculateDerivedGeometries(

@@ -41,6 +41,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			IsSketchTool = true;
 			SketchOutputMode = SketchOutputMode.Screen;
 
+			UseSelection = true;
 			GeomIsSimpleAsFeature = false;
 
 			SketchCursor = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
@@ -51,22 +52,24 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Cursor SketchCursor { get; set; }
 
-		protected bool IsInSketchMode
-		{
-			get
-			{
-				// TODO: maintain actual property!
-				return SketchType != SketchGeometryType.Rectangle;
-			}
-		}
+		protected bool IsInSketchMode => Cursor == SketchCursor;
 
-		protected virtual bool SupportRestoreLastSketch => true;
+		protected bool SupportRestoreLastSketch => true;
+
+		protected bool LogSketchVertexZs { get; set; }
 
 		#region MapTool overrides
 
-		protected override Task<bool> OnSketchModifiedAsync()
+		protected override async Task<bool> OnSketchModifiedAsync()
 		{
-			return QueuedTaskUtils.Run(OnSketchModifiedCore);
+			_msg.VerboseDebug(() => "OnSketchModifiedAsync()");
+
+			if (LogSketchVertexZs && IsInSketchMode)
+			{
+				await LogLastSketchVertexZ();
+			}
+
+			return await QueuedTaskUtils.Run(OnSketchModifiedCore);
 		}
 
 		protected override Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
@@ -84,7 +87,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				return Task.FromResult(true);
 			}
 
-			if (CanUseSelection(SelectionUtils.GetSelection(e)))
+			if (CanUseSelection(SelectionUtils.GetSelection<BasicFeatureLayer>(e.Selection)))
 			{
 				StartSketchPhase();
 			}
@@ -111,11 +114,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			RememberSketch();
 
 			base.OnToolDeactivateCore(hasMapViewChanged);
-		}
-
-		protected override bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			return ! IsInSketchMode;
 		}
 
 		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -284,7 +282,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (ActiveMapView == null)
 			{
 				return false;
-			}
+			}	
 
 			if (! CanUseSelection(ActiveMapView))
 			{
@@ -346,17 +344,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract void LogEnteringSketchMode();
 
-		/// <summary>
-		/// Determines whether the provided selection can be used by this tool.
-		/// </summary>
-		/// <param name="selection"></param>
-		/// <returns></returns>
-		protected virtual bool CanUseSelection(Dictionary<MapMember, List<long>> selection)
-		{
-			// TODO
-			return selection.Count > 0;
-		}
-
 		protected abstract Task<bool> OnEditSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			EditingTemplate editTemplate,
@@ -416,22 +403,23 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		/// <summary>
-		/// Determines whether the provided selection can be used by this tool.
-		/// </summary>
-		/// <param name="selection"></param>
-		/// <returns></returns>
-		private bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection)
-		{
-			var mapMemberDictionary = new Dictionary<MapMember, List<long>>(selection.Count);
+		//// todo daro drop
+		///// <summary>
+		///// Determines whether the provided selection can be used by this tool.
+		///// </summary>
+		///// <param name="selection"></param>
+		///// <returns></returns>
+		//private bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection)
+		//{
+		//	var mapMemberDictionary = new Dictionary<MapMember, List<long>>(selection.Count);
 
-			foreach (var keyValuePair in selection)
-			{
-				mapMemberDictionary.Add(keyValuePair.Key, keyValuePair.Value);
-			}
+		//	foreach (var keyValuePair in selection)
+		//	{
+		//		mapMemberDictionary.Add(keyValuePair.Key, keyValuePair.Value);
+		//	}
 
-			return CanUseSelection(mapMemberDictionary);
-		}
+		//	return CanUseSelection(mapMemberDictionary);
+		//}
 
 		private bool CanStartSketchPhase(IList<Feature> selectedFeatures)
 		{
@@ -536,6 +524,60 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				throw new ApplicationException("Error restoring the previous sketch", e);
 			}
+		}
+
+		private async Task<bool> LogLastSketchVertexZ()
+		{
+			Geometry sketch = await GetCurrentSketchAsync();
+
+			if (! sketch.HasZ)
+			{
+				return false;
+			}
+
+			bool result = false;
+			await QueuedTaskUtils.Run(() =>
+			{
+				MapPoint lastPoint = GetLastPoint(sketch);
+
+				if (lastPoint != null)
+				{
+					_msg.InfoFormat("Vertex added, Z={0:N2}", lastPoint.Z);
+					result = true;
+				}
+			});
+
+			return result;
+		}
+
+		private static MapPoint GetLastPoint(Geometry sketch)
+		{
+			MapPoint lastPoint = null;
+			;
+			if (sketch is Multipart multipart)
+			{
+				ReadOnlyPointCollection points = multipart.Points;
+
+				if (points.Count > 0)
+				{
+					lastPoint = points[points.Count - 1];
+				}
+			}
+			else if (sketch is MapPoint point)
+			{
+				lastPoint = point;
+			}
+			else if (sketch is Multipoint multipoint)
+			{
+				ReadOnlyPointCollection points = multipoint.Points;
+
+				if (points.Count > 0)
+				{
+					lastPoint = points[points.Count - 1];
+				}
+			}
+
+			return lastPoint;
 		}
 	}
 }

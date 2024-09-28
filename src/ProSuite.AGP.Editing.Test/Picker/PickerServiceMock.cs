@@ -2,21 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using ProSuite.AGP.Editing.Picker;
 
 namespace ProSuite.AGP.Editing.Test.Picker
 {
 	public class PickerServiceMock : IPickerService
 	{
-		public Func<Task<T>> Pick<T>(List<IPickableItem> items, Point pickerLocation, IPickerPrecedence precedence) where T : class, IPickableItem
+		public Task<T> Pick<T>(List<IPickableItem> items, IPickerPrecedence precedence) where T : class, IPickableItem
 		{
 			throw new NotImplementedException();
 		}
 
-		public Func<Task<T>> PickSingle<T>(IEnumerable<IPickableItem> items,
-		                                   Point pickerLocation,
-		                                   IPickerPrecedence precedence)
+		public Task<T> PickSingle<T>(IEnumerable<IPickableItem> items,
+		                             IPickerPrecedence precedence)
 			where T : class, IPickableItem
 		{
 			// todo daro remove toList()
@@ -24,12 +22,13 @@ namespace ProSuite.AGP.Editing.Test.Picker
 
 			IPickableItem bestPick = precedence.PickBest<IPickableItem>(orderedItems);
 
-			return async () =>
-			{
-				await Task.FromResult(typeof(T));
+			return Task.FromResult((T) bestPick);
+			//return async () =>
+			//{
+			//	await Task.FromResult(typeof(T));
 
-				return (T) bestPick;
-			};
+			//	return (T) bestPick;
+			//};
 		}
 	}
 }

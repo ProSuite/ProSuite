@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -10,11 +11,11 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Notifications;
 
 namespace ProSuite.AGP.Editing.Erase
 {
@@ -36,6 +37,11 @@ namespace ProSuite.AGP.Editing.Erase
 			return SketchGeometryType.Polygon;
 		}
 
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
+		}
+
 		protected override void LogEnteringSketchMode()
 		{
 			_msg.Info(LocalizableStrings.EraseTool_LogEnteringSketchMode);
@@ -50,19 +56,13 @@ namespace ProSuite.AGP.Editing.Erase
 			_msg.InfoFormat(LocalizableStrings.EraseTool_LogPromptForSelection);
 		}
 
-		protected override bool CanUseSelection(Dictionary<MapMember, List<long>> selection)
+		protected override bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection,
+		                                        NotificationCollection notifications = null)
 		{
 			bool hasPolycurveSelection = false;
 
-			foreach (MapMember mapMember in selection.Keys)
+			foreach (var layer in selection.Keys.OfType<FeatureLayer>())
 			{
-				var layer = mapMember as FeatureLayer;
-
-				if (layer == null)
-				{
-					continue;
-				}
-
 				if (layer.ShapeType == esriGeometryType.esriGeometryPolygon ||
 				    layer.ShapeType == esriGeometryType.esriGeometryPolyline)
 				{
@@ -108,7 +108,7 @@ namespace ProSuite.AGP.Editing.Erase
 		private IDictionary<Feature, Geometry> CalculateResultFeatures(
 			MapView activeView, Polygon sketchPolygon)
 		{
-			SelectionSet selectedFeatures = activeView.Map.GetSelection();
+			IEnumerable<Feature> selectedFeatures = GetApplicableSelectedFeatures(activeView);
 
 			var resultFeatures = CalculateResultFeatures(selectedFeatures, sketchPolygon);
 
@@ -116,14 +116,12 @@ namespace ProSuite.AGP.Editing.Erase
 		}
 
 		private static IDictionary<Feature, Geometry> CalculateResultFeatures(
-			SelectionSet selection,
+			IEnumerable<Feature> selectedFeatures,
 			Polygon cutPolygon)
 		{
 			var result = new Dictionary<Feature, Geometry>();
 
-			SpatialReference spatialReference = MapView.Active.Map.SpatialReference;
-
-			foreach (var feature in MapUtils.GetFeatures(selection, spatialReference))
+			foreach (var feature in selectedFeatures)
 			{
 				Geometry featureGeometry = feature.GetShape();
 				featureGeometry = GeometryEngine.Instance.SimplifyAsFeature(featureGeometry, true);
@@ -171,12 +169,13 @@ namespace ProSuite.AGP.Editing.Erase
 				{
 					throw new Exception("One or more result geometries have become empty.");
 				}
+
 				FeatureClass featureClass = feature.GetTable();
 				FeatureClassDefinition classDefinition = featureClass.GetDefinition();
 				GeometryType geometryType = classDefinition.GetShapeType();
 				bool classHasZ = classDefinition.HasZ();
 				bool classHasM = classDefinition.HasM();
-				
+
 				Geometry geometryToStore =
 					GeometryUtils.EnsureGeometrySchema(geometry, classHasZ, classHasM);
 				feature.SetShape(geometryToStore);

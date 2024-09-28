@@ -288,7 +288,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 			_attributes.Add(attribute);
 
-			_msg.DebugFormat("Added attribute {0}", attribute.Name);
+			_msg.VerboseDebug(() => $"Added attribute {attribute.Name}");
 
 			return attribute;
 		}
@@ -444,7 +444,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		#region Implementation of IDbTableSchema
 
-		public IReadOnlyList<ITableField> TableFields => (IReadOnlyList<ITableField>) Attributes;
+		public IReadOnlyList<ITableField> TableFields
+			=> (IReadOnlyList<ITableField>) GetAttributes();
 
 		public bool HasOID => _attributes.Any(a => a.FieldType == FieldType.ObjectID);
 

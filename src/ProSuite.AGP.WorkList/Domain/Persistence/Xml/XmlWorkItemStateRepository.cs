@@ -54,22 +54,39 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 				index = CurrentIndex.Value;
 			}
 
-			List<XmlWorkItemState> stateList = states.ToList();
-
 			var definition = new XmlWorkListDefinition
 			                 {
-				                 Name = Name, TypeName = Type.FullName,
-				                 AssemblyName = Type.Assembly.GetName().Name, Items = stateList,
+				                 Name = Name,
+				                 TypeName = Type.FullName,
+				                 AssemblyName = Type.Assembly.GetName().Name,
 				                 CurrentIndex = index
 			                 };
 
-			definition.Items = stateList;
+			definition.Items = new List<XmlWorkItemState>();
 
 			var xmlWorkspaces = new List<XmlWorkListWorkspace>(tablesByWorkspace.Count);
 
 			Populate(tablesByWorkspace, xmlWorkspaces, sourceClasses);
 
+			// NOTE: During upgrade from 1.2.x to 1.3.x, there can be duplicate OIDs of which one
+			// has an invalid TableId.
+			HashSet<long> tableIds = new HashSet<long>();
+
+			foreach (XmlTableReference table in xmlWorkspaces.SelectMany(
+				         workspace => workspace.Tables))
+			{
+				tableIds.Add(table.Id);
+			}
+
 			definition.Workspaces = xmlWorkspaces;
+
+			foreach (XmlWorkItemState state in states)
+			{
+				if (tableIds.Contains(state.Row.TableId))
+				{
+					definition.Items.Add(state);
+				}
+			}
 
 			return definition;
 		}

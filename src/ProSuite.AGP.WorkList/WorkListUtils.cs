@@ -10,7 +10,6 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
-using ProSuite.Commons.Ado;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
@@ -226,10 +225,10 @@ namespace ProSuite.AGP.WorkList
 
 			string result = workspaces[0].ConnectionString;
 
-			if (workspaces.Count > 0)
+			if (workspaces.Count > 1)
 			{
 				_msg.Info(
-					$"There are many issue geodatabases in {worklistDefinitionFile} but only one is expected. Taking the first one {result}");
+					$"There are several issue geodatabases in {worklistDefinitionFile} but only one is expected. Taking the first one {result}");
 			}
 			else
 			{
@@ -468,6 +467,16 @@ namespace ProSuite.AGP.WorkList
 		private static Datastore GetDatastore([NotNull] XmlWorkListWorkspace workspace,
 		                                      [NotNull] NotificationCollection notifications)
 		{
+			// TODO: Find a solution for SDE files. The original SDE files are not provided by the
+			// workspace! The geodatabase path is always a local temp file, such as
+			// ...AppData\\Local\\Temp\\ArcGISProTemp55352\\84864a323a7c4bd2802815271f9afaa3.sde
+			// We would need to go through the Project Items, find the connection files and compare
+			// the connection properties of each SDE file with the current connection!
+			// This behaviour should probably be an option only if we find no better way of re-opening
+			// the connection using the encrypted password.
+			// Other work-around (to be tested!): Delay the opening of the referenced tables and hope the workspace
+			// becomes valid if any of the other layers in the map reference the exact same workspace.
+
 			// TODO: In case of FGDB/Shapefile, support relative path to worklist file
 
 			// DBCLIENT = oracle
@@ -479,6 +488,8 @@ namespace ProSuite.AGP.WorkList
 			// VERSION = SDE.DEFAULT
 			// DB_CONNECTION_PROPERTIES = topgist
 			// USER = topgis_tlm
+
+			string connectionString = workspace.ConnectionString;
 
 			try
 			{
@@ -492,75 +503,22 @@ namespace ProSuite.AGP.WorkList
 					case WorkspaceFactory.FileGDB:
 						return new Geodatabase(
 							new FileGeodatabaseConnectionPath(
-								new Uri(workspace.ConnectionString, UriKind.Absolute)));
+								new Uri(connectionString, UriKind.Absolute)));
 
 					case WorkspaceFactory.SDE:
-						var builder = new ConnectionStringBuilder(workspace.ConnectionString);
-
-						Assert.True(
-							Enum.TryParse(builder["dbclient"], ignoreCase: true,
-							              out EnterpriseDatabaseType databaseType),
-							$"Cannot parse {nameof(EnterpriseDatabaseType)} from connection string {workspace.ConnectionString}");
-
-						Assert.True(
-							Enum.TryParse(builder["authentication_mode"], ignoreCase: true,
-							              out AuthenticationMode authMode),
-							$"Cannot parse {nameof(AuthenticationMode)} from connection string {workspace.ConnectionString}");
-
-						string instance = builder["instance"];
-
-						// Typically the instance is saved as "sde:oracle11g:TOPGIST:SDE"
-						if (databaseType == EnterpriseDatabaseType.Oracle)
-						{
-							// Real-world examples:
-							// - "sde:oracle11g:TOPGIST:SDE"
-							// - "sde:oracle$sde:oracle11g:gdzh"
-
-							// NOTE: Sometimes the DB_CONNECTION_PROPERTIES contains the single instance name,
-							//       but it can also contain the colon-separated components.
-
-							string[] strings = instance?.Split(':');
-
-							if (strings?.Length > 1)
-							{
-								string lastItem = strings[^1];
-
-								if (lastItem.Equals("SDE", StringComparison.OrdinalIgnoreCase))
-								{
-									// Take the second last item
-									instance = strings[^2];
-								}
-								else
-								{
-									instance = lastItem;
-								}
-							}
-						}
-
-						var connectionProperties =
-							new DatabaseConnectionProperties(databaseType)
-							{
-								AuthenticationMode = authMode,
-								ProjectInstance = builder["project_instance"],
-								Database =
-									builder[
-										"server"], // is always null in CIMFeatureDatasetDataConnection
-								Instance = instance,
-								Version = builder["version"],
-								Branch = builder["branch"], // ?
-								Password = builder["encrypted_password"],
-								User = builder["user"]
-							};
+						DatabaseConnectionProperties connectionProperties =
+							WorkspaceUtils.GetConnectionProperties(connectionString);
 
 						_msg.Debug(
-							$"Opening workspace from connection string {workspace.ConnectionString} converted to {connectionProperties}");
+							$"Opening workspace from connection string {connectionString} " +
+							$"converted to {WorkspaceUtils.ConnectionPropertiesToString(connectionProperties)}");
 
 						return new Geodatabase(connectionProperties);
 
 					case WorkspaceFactory.Shapefile:
 						return new FileSystemDatastore(
 							new FileSystemConnectionPath(
-								new Uri(workspace.ConnectionString, UriKind.Absolute),
+								new Uri(connectionString, UriKind.Absolute),
 								FileSystemDatastoreType.Shapefile));
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -569,11 +527,11 @@ namespace ProSuite.AGP.WorkList
 			catch (Exception e)
 			{
 				string message =
-					$"Cannot open {workspace.WorkspaceFactory} workspace from connection string {workspace.ConnectionString} ({e.Message})";
+					$"Cannot open {workspace.WorkspaceFactory} workspace from connection string {connectionString} ({e.Message})";
 
 				_msg.Debug(message, e);
 
-				NotificationUtils.Add(notifications, $"{workspace.ConnectionString}");
+				NotificationUtils.Add(notifications, $"{connectionString}");
 				return null;
 			}
 		}
@@ -613,14 +571,26 @@ namespace ProSuite.AGP.WorkList
 		{
 			var result = new Dictionary<Table, List<long>>();
 
+			// TODO: Delete backward compatibility at ca. 1.5
+			bool backwardCompatibleLoading = false;
 			foreach (XmlWorkItemState item in xmlItems)
 			{
 				if (! tablesById.TryGetValue(item.Row.TableId, out Table table))
 				{
-					_msg.Warn(
-						$"Table {item.Row.TableName} (UniqueID={item.Row.TableId}) not found in the " +
-						$"list of available tables ({StringUtils.Concatenate(tablesById.Values, t => t.GetName(), ", ")}).");
-					continue;
+					// Not found by table ID. For backward compatibility, try Id:
+					table =
+						tablesById.Values.FirstOrDefault(t => t.GetID() == item.Row.TableId);
+
+					if (table == null)
+					{
+						_msg.Warn(
+							$"Table {item.Row.TableName} (UniqueID={item.Row.TableId}) not found in the " +
+							$"list of available tables ({StringUtils.Concatenate(tablesById.Values, t => t.GetName(), ", ")}).");
+						continue;
+					}
+
+					// Found by legacy (version 1.2.x) table ID
+					backwardCompatibleLoading = true;
 				}
 
 				if (! result.ContainsKey(table))
@@ -630,7 +600,12 @@ namespace ProSuite.AGP.WorkList
 				else
 				{
 					List<long> oids = result[table];
-					oids.Add(item.Row.OID);
+
+					// Prevent duplicates (duplicates would happen on upgrading)
+					if (! backwardCompatibleLoading || ! oids.Contains(item.Row.OID))
+					{
+						oids.Add(item.Row.OID);
+					}
 				}
 			}
 

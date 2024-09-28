@@ -305,7 +305,7 @@ namespace ProSuite.Microservices.AO
 			{
 				List<FieldMsg> fieldMessages = new List<FieldMsg>();
 
-				foreach (ObjectAttribute attribute in objectDataset.Attributes)
+				foreach (ObjectAttribute attribute in objectDataset.GetAttributes())
 				{
 					fieldMessages.Add(ToFieldMsg(attribute));
 				}

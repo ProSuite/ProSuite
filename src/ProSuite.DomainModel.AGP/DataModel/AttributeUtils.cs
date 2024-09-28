@@ -1,12 +1,15 @@
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AGP.DataModel
 {
 	public static class AttributeUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		public static int GetFieldIndex([NotNull] Table table,
 		                                [NotNull] ObjectAttribute objectAttribute)
 		{
@@ -94,6 +97,21 @@ namespace ProSuite.DomainModel.AGP.DataModel
 
 			return fieldIndexCache?.GetFieldIndex(featureClass, shapeField) ??
 			       definition.FindField(shapeField);
+		}
+
+		[CanBeNull]
+		public static ObjectAttribute GetAttribute([NotNull] IObjectDataset dataset,
+		                                           [NotNull] AttributeRole role)
+		{
+			ObjectAttribute attribute = dataset.GetAttribute(role);
+
+			if (attribute != null)
+			{
+				return attribute;
+			}
+
+			_msg.Debug($"Attribute role {role} does not exist in {dataset.Name}");
+			return null;
 		}
 	}
 }

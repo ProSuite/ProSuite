@@ -6,10 +6,12 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
@@ -45,11 +47,21 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static string GetName(Table table)
 		{
+			if (table != null && table.IsJoinedTable())
+			{
+				return StringUtils.Concatenate(GetDatabaseTables(table).Select(GetName), "/");
+			}
+
 			return table?.GetName();
 		}
 
 		public static string GetAliasName(Table table)
 		{
+			if (table != null && table.IsJoinedTable())
+			{
+				return StringUtils.Concatenate(GetDatabaseTables(table).Select(GetAliasName), "/");
+			}
+
 			using var definition = table?.GetDefinition();
 			return GetAliasName(definition);
 		}
@@ -57,31 +69,46 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		[CanBeNull]
 		private static string GetAliasName(TableDefinition definition)
 		{
+			if (definition is null) return null;
+
 			try
 			{
-				return definition?.GetAliasName();
+				// GetAliasName() returns an empty string, if the alias is not set
+				string alias = definition.GetAliasName();
+
+				if (string.IsNullOrEmpty(alias)) alias = definition.GetName();
+				return alias;
 			}
-			catch (NotSupportedException)
+			catch (NotSupportedException notSupportedException)
 			{
-				// Shapefiles have no alias and throw NotSupportedException
+				// Shapefiles throw a NotSupportedException
+				_msg.Debug("Subtypes not supported", notSupportedException);
+
 				return null;
 			}
 		}
 
-		public static int? GetDefaultSubtypeCode(Table table)
+		public static int GetDefaultSubtypeCode(Table table)
 		{
-			if (table is null) return null;
+			if (table is null) return -1;
 
 			using var definition = table.GetDefinition();
+			return GetDefaultSubtypeCode(definition);
+		}
+
+		public static int GetDefaultSubtypeCode(TableDefinition definition)
+		{
+			if (definition is null) return -1;
 
 			try
 			{
+				// GetDefaultSubtypeCode() returns -1 if no subtypes
 				return definition.GetDefaultSubtypeCode();
 			}
 			catch (NotSupportedException)
 			{
 				// Shapefiles have no subtypes and throw NotSupportedException
-				return null;
+				return -1;
 			}
 		}
 
@@ -91,18 +118,51 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			if (table is null) return null;
 
 			using var definition = table.GetDefinition();
+			return GetDefaultSubtype(definition);
+		}
+
+		[CanBeNull]
+		public static Subtype GetDefaultSubtype(TableDefinition definition)
+		{
+			var defaultCode = GetDefaultSubtypeCode(definition);
+
+			return GetSubtype(definition, defaultCode);
+		}
+
+		[CanBeNull]
+		public static Subtype GetSubtype(Table table, int subtypeCode)
+		{
+			if (table is null) return null;
+
+			using var definition = table.GetDefinition();
+			return GetSubtype(definition, subtypeCode);
+		}
+
+		[CanBeNull]
+		public static Subtype GetSubtype(TableDefinition definition, int subtypeCode)
+		{
+			if (definition is null) return null;
 
 			try
 			{
-				var defaultCode = definition.GetDefaultSubtypeCode();
-				var subtypes = definition.GetSubtypes();
-				return subtypes.FirstOrDefault(st => st.GetCode() == defaultCode);
+				// GetSubtypes() returns an empty list if no subtypes
+				foreach (Subtype subtype in definition.GetSubtypes())
+				{
+					if (subtype.GetCode() == subtypeCode)
+					{
+						return subtype;
+					}
+
+					subtype.Dispose();
+				}
 			}
 			catch (NotSupportedException)
 			{
 				// Shapefiles have no subtypes and throw NotSupportedException
 				return null;
 			}
+
+			return null;
 		}
 
 		[NotNull]
@@ -168,20 +228,53 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				$"Unsupported datastore type: {datastore.GetConnectionString()}.");
 		}
 
-		public static T OpenDataset<T>(Datastore datastore, string datasetName) where T : Dataset
+		/// <exception cref="ArgumentOutOfRangeException">Datastore is not Geodatabase nor
+		/// FileSystemDatastore (Shapefile)</exception>
+		/// <exception cref="GeodatabaseTableException">Table was not found</exception>
+		public static T OpenDataset<T>([NotNull] Datastore datastore, [NotNull] string datasetName)
+			where T : Dataset
 		{
-			if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+			try
 			{
-				return geodatabase.OpenDataset<T>(datasetName);
-			}
+				if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+				{
+					return geodatabase.OpenDataset<T>(datasetName);
+				}
 
-			if (datastore is FileSystemDatastore fsDatastore)
+				if (datastore is FileSystemDatastore fsDatastore)
+				{
+					return fsDatastore.OpenDataset<T>(datasetName);
+				}
+			}
+			catch (GeodatabaseTableException ex)
 			{
-				return fsDatastore.OpenDataset<T>(datasetName);
+				// dataset does not exist
+				_msg.Error(ex.Message, ex);
+				throw;
 			}
 
 			throw new ArgumentOutOfRangeException(
 				$"Unsupported datastore: {datastore.GetConnectionString()}");
+		}
+
+		public static bool TryOpenDataset<T>([NotNull] Datastore datastore,
+		                                     [NotNull] string datasetName,
+		                                     [CanBeNull] out T dataset)
+			where T : Dataset
+		{
+			dataset = null;
+
+			try
+			{
+				dataset = OpenDataset<T>(datastore, datasetName);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return false;
 		}
 
 		public static IEnumerable<Table> OpenTables(ArcGIS.Core.Data.Geodatabase geodatabase,
@@ -199,6 +292,41 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			                                   .Where(tableNames.Contains))
 			{
 				yield return geodatabase.OpenDataset<Table>(name);
+			}
+		}
+
+		public static IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitions(
+			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
+		{
+			foreach (RelationshipClassDefinition relationshipClassDefinition in geodatabase
+				         .GetDefinitions<RelationshipClassDefinition>())
+			{
+				if (predicate is null || predicate(relationshipClassDefinition))
+				{
+					yield return relationshipClassDefinition;
+				}
+			}
+
+			foreach (AttributedRelationshipClassDefinition relationshipClassDefinition in
+			         geodatabase.GetDefinitions<AttributedRelationshipClassDefinition>())
+			{
+				if (predicate is null || predicate(relationshipClassDefinition))
+				{
+					yield return relationshipClassDefinition;
+				}
+			}
+		}
+
+		public static IEnumerable<RelationshipClass> GetRelationshipClasses(
+			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
+		{
+			foreach (RelationshipClassDefinition relationshipClassDefinition in
+			         GetRelationshipClassDefinitions(geodatabase, predicate))
+			{
+				yield return geodatabase.OpenDataset<RelationshipClass>(
+					relationshipClassDefinition.GetName());
 			}
 		}
 
@@ -225,6 +353,60 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		/// <summary>
+		/// Returns the actual table as it exists in the geodatabase, given a joined table.
+		/// </summary>
+		/// <param name="tableWithJoin"></param>
+		/// <returns></returns>
+		/// <exception cref="NotImplementedException"></exception>
+		public static Table GetDatabaseTable(Table tableWithJoin)
+		{
+			if (! tableWithJoin.IsJoinedTable())
+			{
+				return tableWithJoin;
+			}
+
+			if (tableWithJoin is FeatureClass featureClass)
+			{
+				return GetDatabaseFeatureClass(featureClass);
+			}
+
+			// Extract the shape's table name from the (fully qualified) shape field name:
+			using TableDefinition definition = tableWithJoin.GetDefinition();
+
+			if (! definition.HasObjectID())
+			{
+				throw new NotImplementedException(
+					"Unable to determine the main table without OBJECTID");
+			}
+
+			string oidField = definition.GetObjectIDField();
+
+			return GetGdbTableContainingField(tableWithJoin, oidField);
+		}
+
+		/// <summary>
+		/// Returns the actual feature class as it exists in the geodatabase, given a joined
+		/// feature class.
+		/// </summary>
+		/// <param name="featureClassWithJoin"></param>
+		/// <returns></returns>
+		/// <exception cref="InvalidOperationException"></exception>
+		public static FeatureClass GetDatabaseFeatureClass(
+			[NotNull] FeatureClass featureClassWithJoin)
+		{
+			if (! featureClassWithJoin.IsJoinedTable())
+			{
+				return featureClassWithJoin;
+			}
+
+			// Extract the shape's table name from the (fully qualified) shape field name:
+			using FeatureClassDefinition definition = featureClassWithJoin.GetDefinition();
+			string shapeField = definition.GetShapeField();
+
+			return GetGdbTableContainingField(featureClassWithJoin, shapeField);
+		}
+
+		/// <summary>
 		/// Returns the actual database tables from a joined table or, if the table is not a joined
 		/// table, the table itself.
 		/// </summary>
@@ -238,16 +420,16 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				yield break;
 			}
 
-			Join join = table.GetJoin();
+			using Join join = table.GetJoin();
 
-			Table originTable = join.GetOriginTable();
+			using Table originTable = join.GetOriginTable();
 
 			foreach (Table sourceTable in GetDatabaseTables(originTable))
 			{
 				yield return sourceTable;
 			}
 
-			Table destinationTable = join.GetDestinationTable();
+			using Table destinationTable = join.GetDestinationTable();
 
 			foreach (Table sourceTable in GetDatabaseTables(destinationTable))
 			{
@@ -273,7 +455,6 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			if (featureClass is null) return null;
 
 			using var definition = featureClass.GetDefinition();
-
 			return GetAreaFieldName(definition);
 		}
 
@@ -304,7 +485,6 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			if (featureClass is null) return null;
 
 			using var definition = featureClass.GetDefinition();
-
 			return GetLengthFieldName(definition);
 		}
 
@@ -328,34 +508,37 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		/// <summary>
-		/// Gets the name of the subtype field in a given object class.
+		/// Gets the name of the subtype field in a given table.
 		/// </summary>
 		/// <param name="table">The table.</param>
-		/// <returns>The name of the subtype field, or null if the table has no subtype field.
-		/// </returns>
+		/// <returns>The name of the subtype field, or null
+		/// if the table has no subtype field.</returns>
 		[CanBeNull]
 		public static string GetSubtypeFieldName([NotNull] Table table)
 		{
 			using var definition = table.GetDefinition();
-
 			return GetSubtypeFieldName(definition);
 		}
 
 		[CanBeNull]
-		public static string GetSubtypeFieldName(TableDefinition tableDefinition)
+		public static string GetSubtypeFieldName(TableDefinition definition)
 		{
-			string subtypeFieldName = null;
 			try
 			{
-				return tableDefinition.GetSubtypeField();
+				// GetSubtypeField() returns an empty string if no subtypes
+				string fieldName = definition.GetSubtypeField();
+
+				return string.IsNullOrEmpty(fieldName)
+					       ? null
+					       : fieldName;
 			}
 			catch (NotSupportedException notSupportedException)
 			{
 				// Shapefiles throw a NotSupportedException
 				_msg.Debug("Subtypes not supported", notSupportedException);
-			}
 
-			return subtypeFieldName;
+				return null;
+			}
 		}
 
 		/// <summary>
@@ -367,42 +550,40 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static int GetSubtypeFieldIndex([NotNull] Table table)
 		{
 			using var definition = table.GetDefinition();
+			return GetSubtypeFieldIndex(definition);
+		}
 
-			string subtypeFieldName = GetSubtypeFieldName(table);
+		public static int GetSubtypeFieldIndex(TableDefinition definition)
+		{
+			string subtypeFieldName = GetSubtypeFieldName(definition);
 
-			if (string.IsNullOrEmpty(subtypeFieldName))
-			{
-				return -1;
-			}
-
-			int result = definition.FindField(subtypeFieldName);
-
-			return result;
+			return string.IsNullOrEmpty(subtypeFieldName)
+				       ? -1
+				       : definition.FindField(subtypeFieldName);
 		}
 
 		/// <summary>
 		/// Gets the name of the object id field in a given table.
 		/// </summary>
 		/// <param name="table">The table.</param>
-		/// <returns>The name of the subtype field, or null if the table has no subtype field.
-		/// </returns>
+		/// <returns>The name of the objectId field, or null
+		/// if the table has no objectId field.</returns>
 		[CanBeNull]
 		public static string GetObjectIdFieldName([NotNull] Table table)
 		{
 			using var definition = table.GetDefinition();
-
 			return GetObjectIdFieldName(definition);
 		}
 
 		[CanBeNull]
-		public static string GetObjectIdFieldName(TableDefinition tableDefinition)
+		public static string GetObjectIdFieldName(TableDefinition definition)
 		{
-			if (! tableDefinition.HasObjectID())
+			if (! definition.HasObjectID())
 			{
 				return null;
 			}
 
-			return tableDefinition.GetObjectIDField();
+			return definition.GetObjectIDField();
 		}
 
 		/// <summary>
@@ -447,6 +628,39 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			{
 				DeleteRowsByOIDString(table, sb.ToString());
 			}
+		}
+
+		private static T GetGdbTableContainingField<T>([NotNull] T joinedTable,
+		                                               [NotNull] string qualifiedField)
+			where T : Table
+		{
+			List<string> tokens = qualifiedField.Split('.').ToList();
+
+			if (tokens.Count < 2)
+			{
+				throw new InvalidOperationException(
+					$"The field name {qualifiedField} is not fully qualified for joined table {joinedTable.GetName()}.");
+			}
+
+			tokens.RemoveAt(tokens.Count - 1);
+
+			string tableName = StringUtils.Concatenate(tokens, ".");
+
+			foreach (Table databaseTable in GetDatabaseTables(joinedTable))
+			{
+				if (databaseTable is T dbClassTyped &&
+				    dbClassTyped.GetName()
+				                .Equals(tableName, StringComparison.InvariantCultureIgnoreCase))
+				{
+					return dbClassTyped;
+				}
+
+				databaseTable.Dispose();
+			}
+
+			throw new InvalidOperationException(
+				$"No database table found for joined table " +
+				$"{joinedTable.GetName()} and field name {qualifiedField}");
 		}
 
 		/// <summary>

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
 using ArcGIS.Desktop.Core.Events;
@@ -21,7 +20,6 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		//private LoggingEventsAppender _appenderDelegate = new LoggingEventsAppender();
-		private readonly List<LogType> _disabledLogTypes = new();
 		private readonly object _lockLogMessages = new();
 		private readonly UserStateManager<LogPaneFormState> _formStateManager;
 		private LoggingEventItem _selectedRow;
@@ -45,14 +43,9 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
 			ProjectClosedEvent.Unsubscribe(OnProjectClosed);
 
-			var pane =
-				(LogDockPaneViewModelBase) FrameworkApplication.DockPaneManager.Find(LogDockPaneDamlID);
-			if (pane == null)
-			{
-				return;
-			}
+			var pane = FrameworkApplication.DockPaneManager.Find(LogDockPaneDamlID);
 
-			if (pane.IsVisible)
+			if (pane != null && pane.IsVisible)
 			{
 				pane.Hide();
 			}
@@ -99,9 +92,9 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		}
 
 		#endregion
+
 		public static Exception LoggingConfigurationException { get; set; }
 
-		// TODO Use a ring buffer! Now we accumulate forever! (user could clear manually)
 		public ObservableCollection<LoggingEventItem> LogMessageList { get; }
 
 		public LoggingEventItem SelectedRow
@@ -120,7 +113,7 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private static void OpenLogLinkMessage(object msg)
 		{
-			var message = (LoggingEventItem) msg;
+			//var message = (LoggingEventItem) msg;
 
 			// TODO inform UI that "Hyperlink" is clicked
 			//_msg.Info($"Hyperlink clicked {message.LinkMessage}");
@@ -153,7 +146,20 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private bool IsLogLevelEnabled(LogType level)
 		{
-			return ! _disabledLogTypes.Contains(level);
+			switch (level)
+			{
+				case LogType.Verbose:
+					return VerboseLogsAreVisible;
+				case LogType.Debug:
+					return DebugLogsAreVisible;
+				case LogType.Info:
+				case LogType.Warn:
+				case LogType.Error:
+				case LogType.Other:
+					return true;
+			}
+
+			return true;
 		}
 
 		protected override void OnShow(bool isVisible)
@@ -204,36 +210,23 @@ namespace ProSuite.Commons.AGP.LoggerUI
 
 		private void FilterLogs(object parameter)
 		{
-			//var type = (string)parameter;
-
-			// TODO filter log list or log4net has built in option?
-			//filteredMessagedList = LogMessageList.Where(t => t.Type == LogType.Debug)
-
-			if (DebugLogsAreVisible)
-			{
-				_disabledLogTypes.Remove(LogType.Debug);
-			}
-			else
-			{
-				_disabledLogTypes.Add(LogType.Debug);
-			}
-
-			if (VerboseLogsAreVisible)
-			{
-				_disabledLogTypes.Remove(LogType.Verbose);
-			}
-			else
-			{
-				_disabledLogTypes.Add(LogType.Verbose);
-			}
+			// Called from Context Menu commands.
+			// Nothing to do after the last fixing/refactoring,
+			// but keep it ready should we want further changes,
+			// such as actually filtering the already logged events.
 		}
 
-		public bool DebugLogsAreVisible { set; get; }
+		private bool _debugLogsAreVisible;
+		public bool DebugLogsAreVisible
+		{
+			get => _debugLogsAreVisible;
+			set => SetProperty(ref _debugLogsAreVisible, value);
+		}
 
 		public bool VerboseLogsAreVisible
 		{
-			set => _msg.IsVerboseDebugEnabled = value;
 			get => _msg.IsVerboseDebugEnabled;
+			set => _msg.IsVerboseDebugEnabled = value;
 		}
 
 		#endregion

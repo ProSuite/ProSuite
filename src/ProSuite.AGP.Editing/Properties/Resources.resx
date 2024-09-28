@@ -124,6 +124,18 @@
   <data name="AdvancedReshapeToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\AdvancedReshapeToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="CrackerToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\CrackerToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="CrackerToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\CrackerToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="CrackerToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\CrackerToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="CreateFeatureInPickedClassCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\CreateFeatureInPickedClassCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="CutPolygonAlongTool" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\CutPolygonAlongTool.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -135,6 +147,9 @@
   </data>
   <data name="CutPolygonAlongToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\CutPolygonAlongToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="DestroyAndRebuildToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\DestroyAndRebuildToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="EditSketchCrosshair" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\EditSketchCrosshair.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

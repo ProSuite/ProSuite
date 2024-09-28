@@ -245,8 +245,14 @@ namespace ProSuite.Microservices.Client.QA
 					parameterMsg.WhereClause = datasetParamValue.FilterExpression ?? string.Empty;
 					parameterMsg.UsedAsReferenceData = datasetParamValue.UsedAsReferenceData;
 				}
+				else if (parameterValue is ScalarTestParameterValue scalarParamValue)
+				{
+					// Transport in invariant culture, it will be formatted on the client
+					parameterMsg.Value = scalarParamValue.PersistedStringValue;
+				}
 				else
 				{
+					// Does this ever happen?
 					parameterMsg.Value = parameterValue.StringValue;
 				}
 
@@ -536,7 +542,7 @@ namespace ProSuite.Microservices.Client.QA
 			{
 				if (dataset is ObjectDataset objectDataset)
 				{
-					foreach (ObjectAttribute attribute in objectDataset.Attributes)
+					foreach (ObjectAttribute attribute in objectDataset.GetAttributes())
 					{
 						AttributeMsg attributeMsg = ToAttributeMsg(attribute);
 
@@ -554,9 +560,9 @@ namespace ProSuite.Microservices.Client.QA
 		}
 
 		public static Dataset FromDatasetMsg(DatasetMsg datasetMsg,
-		                                     Func<int, string, Dataset> factoryMethod)
+		                                     Func<DatasetMsg, Dataset> factoryMethod)
 		{
-			Dataset dataset = factoryMethod(datasetMsg.DatasetId, datasetMsg.Name);
+			Dataset dataset = factoryMethod(datasetMsg);
 
 			dataset.SetCloneId(datasetMsg.DatasetId);
 
@@ -616,6 +622,8 @@ namespace ProSuite.Microservices.Client.QA
 				ObjectType objectType =
 					dataset.AddObjectType(objectTypeMsg.SubtypeCode, objectTypeMsg.Name);
 
+				objectType.SetCloneId(objectTypeMsg.ObjectCategoryId);
+
 				objectTypeBySubtypeCode.Add(objectType.SubtypeCode, objectType);
 			}
 
@@ -643,6 +651,7 @@ namespace ProSuite.Microservices.Client.QA
 
 			var objTypeMsg = new ObjectCategoryMsg
 			                 {
+				                 ObjectCategoryId = objectType.Id,
 				                 Name = objectType.Name,
 				                 SubtypeCode = subTypeCode
 			                 };
@@ -653,6 +662,7 @@ namespace ProSuite.Microservices.Client.QA
 			{
 				var subTypeMsg = new ObjectCategoryMsg
 				                 {
+					                 ObjectCategoryId = objectSubtype.Id,
 					                 Name = objectSubtype.Name,
 					                 SubtypeCode = subTypeCode
 				                 };
@@ -690,11 +700,21 @@ namespace ProSuite.Microservices.Client.QA
 			AttributeValue attributeValue = null;
 			if (valueObject != null && valueObject != DBNull.Value)
 			{
-				attributeValue = ToAttributeValue(fieldType, valueObject);
+				try
+				{
+					attributeValue = ToAttributeValue(fieldType, valueObject);
+				}
+				catch (Exception e)
+				{
+					_msg.Debug($"Error encoding value {valueObject} for field type {fieldType} " +
+					           $"for attribute {attribute.Name} of {attribute.Dataset?.Name}", e);
+					throw;
+				}
 			}
 
 			var attributeMsg = new AttributeMsg
 			                   {
+				                   AttributeId = attribute.Id,
 				                   Name = attribute.Name ?? string.Empty,
 				                   Type = (int) attribute.FieldType,
 				                   IsReadonly = attribute.ReadOnly,
@@ -742,6 +762,8 @@ namespace ProSuite.Microservices.Client.QA
 				                            IsObjectDefining = attributeMsg.IsObjectDefining,
 				                            ReadOnly = attributeMsg.IsReadonly
 			                            };
+
+			attribute.SetCloneId(attributeMsg.AttributeId);
 
 			object nonApplicableValue =
 				FromAttributeValue(attributeMsg.NonApplicableValue);

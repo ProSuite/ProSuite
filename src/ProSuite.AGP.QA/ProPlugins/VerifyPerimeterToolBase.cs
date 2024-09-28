@@ -150,6 +150,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 			return true;
 		}
 
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
+		}
+
 		protected override Task HandleEscapeAsync()
 		{
 			return Task.CompletedTask;

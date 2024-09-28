@@ -7,6 +7,7 @@ using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core.UnitFormats;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -60,7 +61,7 @@ namespace ProSuite.Commons.AGP.Carto
 				throw new ArgumentNullException(nameof(map));
 
 			double referenceScale = map.ReferenceScale;
-			if (!(referenceScale > 0))
+			if (! (referenceScale > 0))
 				throw new InvalidOperationException(
 					"Map has no ReferenceScale; cannot convert between points and map units");
 			// TODO use MapView's current scale instead?
@@ -99,7 +100,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 			foreach (KeyValuePair<MapMember, List<long>> pair in oidsByLayer)
 			{
-				Table table = GetTable(pair.Key);
+				Table table = DatasetUtils.GetDatabaseTable(GetTable(pair.Key));
 
 				var tableId = new GdbTableIdentity(table);
 
@@ -128,14 +129,16 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			Assert.ArgumentNotNull(mapMember, nameof(mapMember));
 
-			if (mapMember is BasicFeatureLayer basicFeatureLayer)
+			if (mapMember is IDisplayTable displayTable)
 			{
-				return Assert.NotNull(basicFeatureLayer.GetTable());
-			}
+				Table table = displayTable.GetTable();
+				if (table == null)
+				{
+					throw new InvalidOperationException(
+						$"Layer {mapMember.Name} is invalid has no table");
+				}
 
-			if (mapMember is StandaloneTable standaloneTable)
-			{
-				return Assert.NotNull(standaloneTable.GetTable());
+				return table;
 			}
 
 			throw new ArgumentException(
@@ -264,6 +267,7 @@ namespace ProSuite.Commons.AGP.Carto
 				featureClass = GetUnJoinedFeatureClass(featureClass);
 			}
 
+			// TODO: Split by 1000 OIDs to avoid too large queries
 			var filter = new QueryFilter
 			             {
 				             WhereClause =
@@ -302,30 +306,40 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
-		/// Returns feature layers that contain a set of specified OIDs. This method can be used
-		/// to filter out layers that have a restrictive definition query which potentially
-		/// excludes the specified OIDs. These layers ca be used for flashing or zooming to the
-		/// respective features.
+		/// Returns feature layers and stand-alone tables that contain a set of specified OIDs.
+		/// This method can be used to filter layers that have a restrictive definition query
+		/// which potentially excludes the specified OIDs. These layers ca be used for flashing
+		/// or zooming to the respective features or selecting the respective rows.
 		/// </summary>
-		public static IEnumerable<T> GetFeatureLayersContainingOids<T>(
-			[NotNull] Map map,
-			[NotNull] Predicate<T> layerPredicate,
-			IReadOnlyList<long> objectIds) where T : BasicFeatureLayer
+		public static IEnumerable<T> GetDisplayTablesContainingOids<T>(
+			[NotNull] IEnumerable<MapMember> mapMembers,
+			[NotNull] Predicate<T> predicate,
+			IReadOnlyList<long> objectIds) where T : class, IDisplayTable
 		{
 			// NOTE: Flashing works fine on invisible layers, but not if there is a definition
 			//       query that excludes the feature.
 
 			var filteredLayers = new List<T>();
 
-			foreach (T featureLayer in GetFeatureLayers(map, layerPredicate))
+			foreach (T displayTable in GetDisplayTables(mapMembers, predicate))
 			{
-				if (string.IsNullOrWhiteSpace(featureLayer.DefinitionQuery))
+				string definitionQuery = null;
+				if (displayTable is BasicFeatureLayer featureLayer)
 				{
-					// Return the first layer without definition query:
-					return new[] { featureLayer };
+					definitionQuery = featureLayer.DefinitionQuery;
+				}
+				else if (displayTable is StandaloneTable standaloneTable)
+				{
+					definitionQuery = standaloneTable.DefinitionQuery;
 				}
 
-				filteredLayers.Add(featureLayer);
+				if (string.IsNullOrWhiteSpace(definitionQuery))
+				{
+					// Return the first layer without definition query:
+					return new[] { displayTable };
+				}
+
+				filteredLayers.Add(displayTable);
 			}
 
 			var layersWithSomeOids = new List<T>();
@@ -333,7 +347,9 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				var queryFilter = new QueryFilter
 				                  {
-					                  ObjectIDs = objectIds
+					                  ObjectIDs = objectIds,
+					                  // OID will be ensured in SearchObjectIds:
+					                  SubFields = string.Empty
 				                  };
 
 				int foundCount = LayerUtils.SearchObjectIds(restrictedLayer, queryFilter).Count();
@@ -428,6 +444,38 @@ namespace ProSuite.Commons.AGP.Carto
 			return filteredSelectableLayers;
 		}
 
+		public static IEnumerable<T> GetDisplayTables<T>(
+			[NotNull] IEnumerable<MapMember> mapMembers,
+			[CanBeNull] Predicate<T> predicate,
+			bool includeInvalid = false) where T : class, IDisplayTable
+		{
+			// TODO: Redirect GetLayers, GetStandaloneTables to this method to avoid code duplication
+			Predicate<T> displayTablePredicate;
+
+			if (includeInvalid)
+			{
+				displayTablePredicate = predicate;
+			}
+			else
+			{
+				// Check for validity first because in most cases the specified layerPredicate
+				// uses the FeatureClass name etc. which results in null-pointers if evaluated first.
+				displayTablePredicate = l => l.GetTable() != null &&
+				                             (predicate == null || predicate(l));
+			}
+
+			Predicate<MapMember> mapMemberPredicate = mm =>
+				mm is T t && (displayTablePredicate == null || displayTablePredicate(t));
+
+			foreach (MapMember mapMember in mapMembers)
+			{
+				if (mapMemberPredicate(mapMember))
+				{
+					yield return (T) (IDisplayTable) mapMember;
+				}
+			}
+		}
+
 		public static IEnumerable<T> GetFeatureLayers<T>(
 			[NotNull] Map map,
 			[CanBeNull] Predicate<T> layerPredicate,
@@ -451,19 +499,6 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				yield return basicFeatureLayer;
 			}
-		}
-
-		[CanBeNull] // TODO Rename GetFeatureLayerBySourceClassName
-		public static BasicFeatureLayer GetFeatureLayer(
-			[NotNull] Map map,
-			[CanBeNull] string featureClassName)
-		{
-			return GetFeatureLayers<BasicFeatureLayer>(
-					map,
-					lyr => string.Equals(lyr.GetFeatureClass().GetName(),
-					                     featureClassName,
-					                     StringComparison.OrdinalIgnoreCase))
-				.FirstOrDefault();
 		}
 
 		public static IEnumerable<StandaloneTable> GetStandaloneTables(
@@ -508,7 +543,36 @@ namespace ProSuite.Commons.AGP.Carto
 				.FirstOrDefault();
 		}
 
+		public static string GetLocationUnitAbbreviation([NotNull] Map map)
+		{
+			DisplayUnitFormat locationUnitFormat = map.GetLocationUnitFormat();
+
+			string locationUnitAbbreviation = locationUnitFormat?.Abbreviation;
+
+			return locationUnitAbbreviation;
+		}
+
+		public static string GetElevationUnitAbbreviation(Map map)
+		{
+			DisplayUnitFormat elevationUnitFormat = map.GetElevationUnitFormat();
+
+			string elevationUnitAbbreviation = elevationUnitFormat?.Abbreviation;
+
+			return elevationUnitAbbreviation;
+		}
+
 		#region Not MapUtils --> move elsewhere
+
+		/// <summary>
+		/// Converts a screen point to a map point.
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <param name="screenPoint">The global screen coordinates.</param>
+		/// <returns></returns>
+		public static MapPoint ToMapPoint(MapView mapView, Point screenPoint)
+		{
+			return mapView.ScreenToMap(screenPoint);
+		}
 
 		public static Geometry ToMapGeometry(MapView mapView,
 		                                     Polygon screenGeometry)
@@ -573,6 +637,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="pixels"></param>
 		/// <param name="atPoint"></param>
 		/// <returns></returns>
+		/// <remarks>Must run on MCT</remarks>
 		public static double ConvertScreenPixelToMapLength(
 			MapView mapView,
 			int pixels,
@@ -757,7 +822,7 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		#endregion
-		
+
 		private static FeatureClass GetUnJoinedFeatureClass(FeatureClass featureClass)
 		{
 			// Get the shape's table name

@@ -448,15 +448,18 @@ namespace ProSuite.DdxEditor.Content
 				                 .Select(qc => new RequiredDependingItem(qc, qc.Name))
 				                 .Cast<DependingItem>());
 
-			result.AddRange(
-				InstanceConfigurations.Get<TransformerConfiguration>(allCategories)
-				                      .Select(tr => new RequiredDependingItem(tr, tr.Name))
-				                      .Cast<DependingItem>());
+			if (SupportsTransformersAndFilters)
+			{
+				result.AddRange(
+					InstanceConfigurations.Get<TransformerConfiguration>(allCategories)
+					                      .Select(tr => new RequiredDependingItem(tr, tr.Name))
+					                      .Cast<DependingItem>());
 
-			result.AddRange(
-				InstanceConfigurations.Get<IssueFilterConfiguration>(allCategories)
-				                      .Select(iF => new RequiredDependingItem(iF, iF.Name))
-				                      .Cast<DependingItem>());
+				result.AddRange(
+					InstanceConfigurations.Get<IssueFilterConfiguration>(allCategories)
+					                      .Select(iF => new RequiredDependingItem(iF, iF.Name))
+					                      .Cast<DependingItem>());
+			}
 
 			result.AddRange(
 				subCategories.Select(c => new DataQualityCategoryDependingItem(

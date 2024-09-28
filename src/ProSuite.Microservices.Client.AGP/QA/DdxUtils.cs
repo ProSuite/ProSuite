@@ -17,12 +17,12 @@ using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.Microservices.Client.DataModel;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using Dataset = ProSuite.DomainModel.Core.DataModel.Dataset;
-using DatasetType = ProSuite.Commons.GeoDb.DatasetType;
 using GeometryType = ProSuite.DomainModel.Core.DataModel.GeometryType;
 
 namespace ProSuite.Microservices.Client.AGP.QA
@@ -36,7 +36,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidatesAsync(
 			[NotNull] ICollection<Table> tables,
-			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
+			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient,
+			[CanBeNull] IModelFactory modelFactory = null)
 		{
 			var datastoresByHandle = new Dictionary<long, Datastore>();
 			var spatialReferencesByWkId = new Dictionary<long, SpatialReference>();
@@ -58,7 +59,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			List<ProjectWorkspace> candidates =
 				await LoadProjectWorkspaceAsync(request, datastoresByHandle,
 				                                spatialReferencesByWkId,
-				                                ddxClient);
+				                                ddxClient, modelFactory);
 
 			return candidates;
 		}
@@ -169,11 +170,13 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (ModelMsg modelMsg in getSpecificationResponse.ReferencedModels)
 			{
-				DdxModel model = CreateDdxModel(modelMsg, (id, name) => new BasicModel(id, name));
+				DdxModel model =
+					CreateDdxModel(modelMsg, (msg) => new BasicModel(msg.ModelId, msg.Name));
 
 				foreach (int datasetId in modelMsg.DatasetIds)
 				{
-					if (datasetsById.TryGetValue(datasetId, out IDdxDataset dataset))
+					if (datasetsById.TryGetValue(datasetId, out IDdxDataset dataset) &&
+					    ! model.Contains(dataset))
 					{
 						model.AddDataset((Dataset) dataset);
 					}
@@ -196,9 +199,9 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		}
 
 		public static DdxModel CreateDdxModel(ModelMsg modelMsg,
-		                                      Func<int, string, DdxModel> modelFactory)
+		                                      Func<ModelMsg, DdxModel> modelFactory)
 		{
-			DdxModel model = modelFactory(modelMsg.ModelId, modelMsg.Name);
+			DdxModel model = modelFactory(modelMsg);
 
 			model.SqlCaseSensitivity = (SqlCaseSensitivity) modelMsg.SqlCaseSensitivity;
 			model.DefaultDatabaseName = modelMsg.DefaultDatabaseName;
@@ -206,6 +209,55 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			model.ElementNamesAreQualified = modelMsg.ElementNamesAreQualified;
 
 			return model;
+		}
+
+		/// <summary>
+		/// Creates the ID/datasets dictionary. The datasets have their models assigned but
+		/// do not contain any details, such as Attributes or ObjectCategories.
+		/// </summary>
+		/// <param name="datasetMsgs"></param>
+		/// <param name="modelMsgs"></param>
+		/// <param name="modelFactory"></param>
+		/// <returns></returns>
+		public static Dictionary<int, IDdxDataset> CreateDatasets(
+			[NotNull] IEnumerable<DatasetMsg> datasetMsgs,
+			[NotNull] IEnumerable<ModelMsg> modelMsgs,
+			[CanBeNull] IModelFactory modelFactory)
+		{
+			Dictionary<int, IDdxDataset> datasetsById = FromDatasetMsgs(datasetMsgs, modelFactory);
+
+			foreach (ModelMsg modelMsg in modelMsgs)
+			{
+				DdxModel model = modelFactory == null
+					                 ? new BasicModel(modelMsg.ModelId, modelMsg.Name)
+					                 : modelFactory.CreateModel(modelMsg);
+
+				foreach (int datasetId in modelMsg.DatasetIds)
+				{
+					if (! datasetsById.TryGetValue(datasetId, out IDdxDataset dataset))
+					{
+						continue;
+					}
+
+					if (modelMsg.ErrorDatasetIds.Contains(datasetId))
+					{
+						ObjectDataset objectDataset = (ObjectDataset) dataset;
+						IErrorDataset errorDataset = CreateErrorDataset(
+							datasetId, dataset.GeometryType, dataset.Name, objectDataset.Attributes,
+							objectDataset.ObjectTypes);
+
+						datasetsById[datasetId] = (Dataset) errorDataset;
+						dataset = errorDataset;
+					}
+
+					if (! model.Contains(dataset) && model.Datasets.All(ds => ds.Id != datasetId))
+					{
+						model.AddDataset((Dataset) dataset);
+					}
+				}
+			}
+
+			return datasetsById;
 		}
 
 		public static void AddDatasetsDetailsAsync(
@@ -232,8 +284,17 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (DatasetMsg errorDatasetMsg in response.Datasets)
 			{
+				_msg.DebugFormat("Adding dataset details to {0}", errorDatasetMsg.Name);
+
 				ObjectDataset originalDataset = (ObjectDataset)
 					datasets.First(e => e.Id == errorDatasetMsg.DatasetId);
+
+				if (originalDataset.Attributes.Count > 0)
+				{
+					_msg.DebugFormat("Dataset details already loaded for {0}",
+					                 originalDataset.Name);
+					continue;
+				}
 
 				ProtoDataQualityUtils.AddDetailsToDataset(originalDataset, errorDatasetMsg);
 			}
@@ -371,7 +432,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			[NotNull] GetProjectWorkspacesRequest request,
 			[NotNull] Dictionary<long, Datastore> datastores,
 			Dictionary<long, SpatialReference> spatialReferencesByWkId,
-			QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
+			QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient,
+			[CanBeNull] IModelFactory modelFactory = null)
 		{
 			GetProjectWorkspacesResponse response =
 				await GrpcClientUtils.TryAsync(async callOptions =>
@@ -387,38 +449,10 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			}
 
 			RepeatedField<DatasetMsg> datasetMsgs = response.Datasets;
+			RepeatedField<ModelMsg> modelMsgs = response.Models;
 
-			Dictionary<int, IDdxDataset> datasetsById = FromDatasetMsgs(datasetMsgs);
-
-			var models = new List<BasicModel>();
-
-			foreach (ModelMsg modelMsg in response.Models)
-			{
-				BasicModel model = new BasicModel(modelMsg.ModelId, modelMsg.Name);
-
-				foreach (int datasetId in modelMsg.DatasetIds)
-				{
-					if (! datasetsById.TryGetValue(datasetId, out IDdxDataset dataset))
-					{
-						continue;
-					}
-
-					if (modelMsg.ErrorDatasetIds.Contains(datasetId))
-					{
-						ObjectDataset objectDataset = (ObjectDataset) dataset;
-						IErrorDataset errorDataset = CreateErrorDataset(
-							datasetId, dataset.GeometryType, dataset.Name, objectDataset.Attributes,
-							objectDataset.ObjectTypes);
-
-						datasetsById[datasetId] = (Dataset) errorDataset;
-						dataset = errorDataset;
-					}
-
-					model.AddDataset((Dataset) dataset);
-				}
-
-				models.Add(model);
-			}
+			Dictionary<int, IDdxDataset> datasetsById =
+				CreateDatasets(datasetMsgs, modelMsgs, modelFactory);
 
 			List<ProjectWorkspace> candidates = null;
 
@@ -490,10 +524,10 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 				SpatialReference sr = GetSpatialReference(spatialReferencesByWkId, modelMsg);
 
-				List<IDdxDataset> datasets = projectWorkspaceMsg.DatasetIds
-				                                                .Select(datasetId =>
-					                                                datasetsById[datasetId])
-				                                                .ToList();
+				List<IDdxDataset> datasets =
+					projectWorkspaceMsg.DatasetIds
+					                   .Select(datasetId => datasetsById[datasetId])
+					                   .ToList();
 
 				var projectWorkspace = new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
 				                                            projectMsg.Name,
@@ -510,47 +544,27 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		}
 
 		private static Dictionary<int, IDdxDataset> FromDatasetMsgs(
-			[NotNull] IEnumerable<DatasetMsg> datasetMsgs)
+			[NotNull] IEnumerable<DatasetMsg> datasetMsgs,
+			[CanBeNull] IModelFactory modelFactory = null)
 		{
 			var datasetsById = new Dictionary<int, IDdxDataset>();
 
-			Dataset dataset;
 			foreach (DatasetMsg datasetMsg in datasetMsgs)
 			{
-				var datasetType = (DatasetType) datasetMsg.DatasetType;
-
-				// TODO: Proper type! -> Requires factory
-				//switch (datasetType)
-				//{
-				//	case DatasetType.Null:
-				//		break;
-				//	case DatasetType.Any:
-				//		break;
-				//	case DatasetType.Table:
-				//		break;
-				//	case DatasetType.FeatureClass:
-				//		new ModelVectorDataset(datasetMsg.DatasetId, datasetMsg.Name, null,
-				//									                       datasetMsg.AliasName);
-				//		break;
-				//	case DatasetType.Topology:
-				//		break;
-				//	case DatasetType.Raster:
-				//		break;
-				//	case DatasetType.RasterMosaic:
-				//		break;
-				//	case DatasetType.Terrain:
-				//		break;
-				//	default:
-				//		throw new ArgumentOutOfRangeException();
-				//}
-
-				dataset = ProtoDataQualityUtils.FromDatasetMsg(
-					datasetMsg, (id, name) => new BasicDataset(id, name));
-
-				if (! datasetsById.ContainsKey(dataset.Id))
+				if (datasetsById.ContainsKey(datasetMsg.DatasetId))
 				{
-					datasetsById.Add(dataset.Id, dataset);
+					continue;
 				}
+
+				Func<DatasetMsg, Dataset> factoryMethod =
+					msg => modelFactory != null
+						       ? modelFactory.CreateDataset(msg)
+						       : new BasicDataset(msg.DatasetId, msg.Name);
+
+				Dataset dataset = ProtoDataQualityUtils.FromDatasetMsg(
+					datasetMsg, factoryMethod);
+
+				datasetsById.Add(dataset.Id, dataset);
 			}
 
 			return datasetsById;
