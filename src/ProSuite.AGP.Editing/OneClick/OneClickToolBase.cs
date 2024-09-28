@@ -293,7 +293,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (await IsInSelectionPhaseAsync() && args.Key is _keyPolygonDraw or _keyLassoDraw)
 				{
-					await ResetSketchAsync();
+					await ResetSelectionSketchAsync();
 				}
 
 				await HandleKeyUpCoreAsync(args);
@@ -304,7 +304,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		private async Task ResetSketchAsync()
+		private async Task ResetSelectionSketchAsync()
 		{
 			SetupSketch(GetSelectionSketchGeometryType());
 
@@ -428,6 +428,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		                           bool completeSketchOnMouseUp = true,
 		                           bool enforceSimpleSketch = false)
 		{
+			_msg.VerboseDebug(
+				() =>
+					$"Setting up sketch with type {sketchType}, output mode {sketchOutputMode}, " +
+					$"snapping: {useSnapping}, completeSketchOnMouseUp: {completeSketchOnMouseUp}, " +
+					$"enforceSimplifySketch: {enforceSimpleSketch}");
+
 			SketchOutputMode = sketchOutputMode;
 
 			// Note: set CompleteSketchOnMouseUp before SketchType, or it has no effect
@@ -533,7 +539,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				using var pickerPrecedence = CreatePickerPrecedence(sketchGeometry);
 
-			await PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers);
+				await PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers);
 
 				await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
 			}
@@ -752,8 +758,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			return CanUseSelection(selectionByLayer);
 		}
 
-		protected virtual bool CanUseSelection([NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-		                                       [CanBeNull] NotificationCollection notifications = null)
+		protected virtual bool CanUseSelection(
+			[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+			[CanBeNull] NotificationCollection notifications = null)
 		{
 			return AllowNotApplicableFeaturesInSelection
 				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key, notifications))

@@ -53,7 +53,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected AdvancedReshapeToolBase()
 		{
 			FireSketchEvents = true;
-			
+
 			// This is our property:
 			RequiresSelection = true;
 
@@ -138,6 +138,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override void OnSelectionPhaseStarted()
 		{
+			base.OnSelectionPhaseStarted();
 			_feedback?.Clear();
 		}
 
@@ -364,7 +365,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected override void OnSketchResetCore()
 		{
 			_feedback?.Clear();
-			
+
 			_nonDefaultSideMode = false;
 		}
 
