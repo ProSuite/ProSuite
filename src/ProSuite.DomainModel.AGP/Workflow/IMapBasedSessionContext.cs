@@ -54,10 +54,14 @@ namespace ProSuite.DomainModel.AGP.Workflow
 		                         bool forceChange = false);
 
 		/// <summary>
-		/// Adds details, such as attributes and object categories to the specified datasets.
+		/// Adds details, such as
+		/// - Attributes
+		/// - Object categories
+		/// - Association Ends and referenced associations
+		/// to the specified datasets.
 		/// Consider encapsulating DDX-methods in a separate interface (sessionContext.Ddx...)
 		/// </summary>
 		/// <param name="toDatasets"></param>
-		void AddDatasetDetails(List<Dataset> toDatasets);
+		void AddDatasetDetails(IList<Dataset> toDatasets);
 	}
 }

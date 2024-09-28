@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
@@ -7,8 +8,10 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Microservices.Client.QA;
+using ProSuite.Microservices.Definitions.Shared.Ddx;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.AO
@@ -343,6 +346,56 @@ namespace ProSuite.Microservices.AO
 			relTableMsg.WorkspaceHandle = workspace?.GetHashCode() ?? -1;
 
 			return relTableMsg;
+		}
+
+		public static ConnectionMsg ToConnectionMsg([NotNull] ConnectionProvider connectionProvider)
+		{
+			string connectionString = null;
+
+			if (connectionProvider is FilePathConnectionProviderBase filePathConnection)
+			{
+				connectionString = filePathConnection.Path;
+			}
+			else if (connectionProvider is SdeDirectConnectionProvider sdeDirectConnection)
+			{
+				connectionString = ToConnectionString(sdeDirectConnection);
+			}
+
+			return new ConnectionMsg
+			       {
+				       ConnectionId = connectionProvider.Id,
+				       ConnectionString = connectionString,
+				       ConnectionType = (int) connectionProvider.ConnectionType,
+				       Name = connectionProvider.Name
+			       };
+		}
+
+		private static string ToConnectionString(
+			[NotNull] SdeDirectConnectionProvider sdeDirectConnection)
+		{
+			var connectinProps = new Dictionary<string, string>();
+
+			connectinProps["DBCLIENT"] = sdeDirectConnection.DbmsTypeName;
+			connectinProps["INSTANCE"] = sdeDirectConnection.DatabaseName;
+
+			if (sdeDirectConnection.DatabaseType == DatabaseType.SqlServer ||
+			    sdeDirectConnection.DatabaseType == DatabaseType.PostgreSQL)
+			{
+				connectinProps["DATABASE"] = sdeDirectConnection.RepositoryName;
+			}
+
+			if (sdeDirectConnection.VersionName != null)
+			{
+				connectinProps["VERSION"] = sdeDirectConnection.VersionName;
+			}
+
+			if (sdeDirectConnection is SdeDirectDbUserConnectionProvider sdeDirectDbUser)
+			{
+				connectinProps["USER"] = sdeDirectDbUser.UserName;
+				connectinProps["PASSWORD"] = sdeDirectDbUser.EncryptedPasswordValue;
+			}
+
+			return string.Join(";", connectinProps.Select(p => $"{p.Key}={p.Value}"));
 		}
 
 		private static FieldMsg ToFieldMsg(IField field)

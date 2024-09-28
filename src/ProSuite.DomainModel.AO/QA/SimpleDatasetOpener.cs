@@ -92,6 +92,8 @@ namespace ProSuite.DomainModel.AO.QA
 				return true;
 			if (typeof(ITerrainDef) == dataType)
 				return true;
+			if (typeof(ITopologyDef) == dataType)
+				return true;
 
 			if (typeof(IReadOnlyFeatureClass) == dataType)
 				return true;
@@ -127,6 +129,9 @@ namespace ProSuite.DomainModel.AO.QA
 				return true;
 
 			if (typeof(TerrainReference) == dataType)
+				return true;
+
+			if (typeof(TopologyReference) == dataType)
 				return true;
 
 			return false;
@@ -166,7 +171,9 @@ namespace ProSuite.DomainModel.AO.QA
 				return tbl != null ? ReadOnlyTableFactory.Create(tbl) : null;
 			}
 
-			if (typeof(ITopology) == knownType)
+			if (typeof(ITopology) == knownType ||
+			    typeof(ITopologyDef) == knownType ||
+			    typeof(TopologyReference) == knownType)
 				return _datasetContext.OpenTopology((ITopologyDataset) dataset);
 
 			if (typeof(IMosaicDataset) == knownType)

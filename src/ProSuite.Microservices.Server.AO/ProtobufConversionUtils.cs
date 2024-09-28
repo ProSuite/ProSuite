@@ -15,6 +15,7 @@ using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
+using ProSuite.Microservices.Client;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
@@ -371,7 +372,7 @@ namespace ProSuite.Microservices.Server.AO
 					xmlParameter = new XmlDatasetTestParameterValue()
 					               {
 						               TestParameterName = parameterMsg.Name,
-						               Value = parameterMsg.Value,
+						               Value = ProtobufGeomUtils.EmptyToNull(parameterMsg.Value),
 						               WorkspaceId = parameterMsg.WorkspaceId,
 						               WhereClause = parameterMsg.WhereClause
 					               };
@@ -381,7 +382,7 @@ namespace ProSuite.Microservices.Server.AO
 					xmlParameter = new XmlScalarTestParameterValue()
 					               {
 						               TestParameterName = parameterMsg.Name,
-						               Value = parameterMsg.Value
+						               Value = ProtobufGeomUtils.EmptyToNull(parameterMsg.Value)
 					               };
 				}
 
