@@ -151,7 +151,7 @@
     <value>Select one or more line or polygon features to align with other feature(s). &lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection. &lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.</value>
   </data>
   <data name="ReshapeAlongTool_LogUsingCurrentSelection" xml:space="preserve">
-    <value>Select the target line or polygon features to align with. &lt;br&gt;-Press [ESC] to select a different feature.</value>
+    <value>Select the target line or polygon features to align with. &lt;br&gt;- Press [ESC] to select a different feature.</value>
   </data>
   <data name="EraseTool_LogEnteringSketchMode" xml:space="preserve">
     <value>Sketch a hole or any polygon to be erased from the selection.&lt;br&gt;Press [ESC] to reselect the polygon(s).</value>
@@ -160,6 +160,15 @@
     <value>Select one or more features.&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.</value>
   </data>
   <data name="SelectionTool_LogPromptForSelection" xml:space="preserve">
-    <value>Select one or more features by clicking or dragging a box. Options: &lt;br&gt;-Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;-Press CTRL and drag a box to show a list of selectable feature classes.&lt;br&gt;-Press ALT and click to select all features at the click point.</value>
+    <value>Select one or more features by clicking or dragging a box:
+- Press and hold SHIFT to add or remove features from the existing selection.
+- Press CTRL and drag a box to show a list of selectable feature classes.
+- Press ALT and click to select all features at the click point.</value>
+  </data>
+  <data name="RemoveHoleTool_LogPromptForSelection" xml:space="preserve">
+    <value>Select one or more polygon features which contain the hole(s) to be removed.</value>
+  </data>
+  <data name="FillHoleTool_LogPromptForSelection" xml:space="preserve">
+    <value>Select a polygon that contains a hole or several polygons with a gap in between.</value>
   </data>
 </root>

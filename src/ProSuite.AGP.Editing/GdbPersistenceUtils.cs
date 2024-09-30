@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Editing.Templates;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -25,6 +28,9 @@ namespace ProSuite.AGP.Editing
 			[CanBeNull] IDictionary<Feature, Geometry> updates,
 			[CanBeNull] IDictionary<Feature, IList<Geometry>> copies = null)
 		{
+			Assert.ArgumentCondition(updates?.Count > 0 || copies?.Count > 0,
+			                         "Neither updates nor inserts have been provided.");
+
 			return await ExecuteInTransactionAsync(
 				       editContext => StoreTx(editContext, updates, copies),
 				       description, GetDatasetsNonEmpty(updates?.Keys, copies?.Keys));
@@ -113,14 +119,22 @@ namespace ProSuite.AGP.Editing
 
 		public static Feature InsertTx([NotNull] EditOperation.IEditContext editContext,
 		                               [NotNull] Feature originalFeature,
-		                               [NotNull] Geometry newGeometry)
+		                               [NotNull] Geometry newGeometry,
+		                               [CanBeNull] ICollection<string> excludeFields = null)
 		{
-			FeatureClass featureClass = originalFeature.GetTable();
+			using var featureClass = originalFeature.GetTable();
 
-			RowBuffer rowBuffer = DuplicateRow(originalFeature);
+			RowBuffer rowBuffer = DuplicateRow(originalFeature, excludeFields);
+
+			using var classDefinition = featureClass.GetDefinition();
+			bool classHasZ = classDefinition.HasZ();
+			bool classHasM = classDefinition.HasM();
+
+			Geometry geometryToStore =
+				GeometryUtils.EnsureGeometrySchema(newGeometry, classHasZ, classHasM);
 
 			Geometry projected = GeometryUtils.EnsureSpatialReference(
-				newGeometry, featureClass.GetSpatialReference());
+				geometryToStore, featureClass.GetSpatialReference());
 
 			SetShape(rowBuffer, projected, featureClass);
 
@@ -154,13 +168,14 @@ namespace ProSuite.AGP.Editing
 
 		public static IList<Feature> InsertTx(
 			[NotNull] EditOperation.IEditContext editContext,
-			[NotNull] FeatureClass featureClass,
-			[NotNull] IList<Geometry> geometries,
-			IEnumerable<Attribute> attributes)
+			[NotNull] FeatureClass targetFeatureClass,
+			[CanBeNull] Subtype targetSubtype,
+			[NotNull] IEnumerable<Geometry> geometries,
+			[CanBeNull] Func<Field, FeatureClassDefinition, Subtype, object> getAttributeValueFunc,
+			[CanBeNull] CancelableProgressor cancelableProgressor = null)
 		{
 			Assert.ArgumentNotNull(editContext, nameof(editContext));
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
-			Assert.ArgumentCondition(geometries.Count > 0, "List of geometries is empty.");
+			Assert.ArgumentNotNull(targetFeatureClass, nameof(targetFeatureClass));
 
 			var newFeatures = new List<Feature>();
 
@@ -169,23 +184,41 @@ namespace ProSuite.AGP.Editing
 			try
 			{
 				// Set the attributes
-				rowBuffer = featureClass.CreateRowBuffer();
+				rowBuffer = targetFeatureClass.CreateRowBuffer();
 
-				FeatureClassDefinition classDefinition = featureClass.GetDefinition();
+				using var classDefinition = targetFeatureClass.GetDefinition();
 				GeometryType geometryType = classDefinition.GetShapeType();
 				bool classHasZ = classDefinition.HasZ();
 				bool classHasM = classDefinition.HasM();
 
 				SpatialReference spatialReference = classDefinition.GetSpatialReference();
 
-				CopyAttributeValues(attributes, rowBuffer);
+				foreach (Field field in rowBuffer.GetFields())
+				{
+					if (! field.IsEditable || field.FieldType == FieldType.Geometry)
+					{
+						continue;
+					}
 
-				string shapeFieldName = featureClass.GetDefinition().GetShapeField();
+					rowBuffer[field.Name] =
+						getAttributeValueFunc?.Invoke(field, classDefinition, targetSubtype) ??
+						DBNull.Value;
+				}
 
+				string shapeFieldName = classDefinition.GetShapeField();
+
+				int geometryCount = 0;
 				foreach (Geometry geometry in geometries)
 				{
-					Assert.True(geometryType == featureClass.GetDefinition().GetShapeType(),
-					            "Geometry type does not match target feature class' shape type.");
+					if (cancelableProgressor != null &&
+					    cancelableProgressor.CancellationToken.IsCancellationRequested)
+					{
+						return newFeatures;
+					}
+
+					geometryCount++;
+					Assert.AreEqual(geometryType, geometry.GeometryType,
+					                "Geometry type does not match target feature class' shape type.");
 
 					Geometry geometryToStore =
 						GeometryUtils.EnsureGeometrySchema(geometry, classHasZ, classHasM);
@@ -195,7 +228,73 @@ namespace ProSuite.AGP.Editing
 
 					rowBuffer[shapeFieldName] = geometryToStore;
 
-					var feature = featureClass.CreateRow(rowBuffer);
+					var feature = targetFeatureClass.CreateRow(rowBuffer);
+
+					feature.Store();
+
+					// Invalidate display / attribute table
+					editContext.Invalidate(feature);
+
+					newFeatures.Add(feature);
+				}
+
+				Assert.True(geometryCount > 0, "List of geometries is empty");
+			}
+			finally
+			{
+				rowBuffer?.Dispose();
+			}
+
+			return newFeatures;
+		}
+
+		public static IList<Feature> InsertTx(
+			[NotNull] EditOperation.IEditContext editContext,
+			[NotNull] FeatureClass targetFeatureClass,
+			[NotNull] IList<Geometry> geometries,
+			[CanBeNull] IEnumerable<Attribute> attributes)
+		{
+			Assert.ArgumentNotNull(editContext, nameof(editContext));
+			Assert.ArgumentNotNull(targetFeatureClass, nameof(targetFeatureClass));
+			Assert.ArgumentCondition(geometries.Count > 0, "List of geometries is empty.");
+
+			var newFeatures = new List<Feature>();
+
+			RowBuffer rowBuffer = null;
+
+			try
+			{
+				// Set the attributes
+				rowBuffer = targetFeatureClass.CreateRowBuffer();
+
+				using var classDefinition = targetFeatureClass.GetDefinition();
+				GeometryType geometryType = classDefinition.GetShapeType();
+				bool classHasZ = classDefinition.HasZ();
+				bool classHasM = classDefinition.HasM();
+
+				SpatialReference spatialReference = classDefinition.GetSpatialReference();
+
+				if (attributes != null)
+				{
+					CopyAttributeValues(attributes, rowBuffer);
+				}
+
+				string shapeFieldName = classDefinition.GetShapeField();
+
+				foreach (Geometry geometry in geometries)
+				{
+					Assert.AreEqual(geometryType, geometry.GeometryType,
+					                "Geometry type does not match target feature class' shape type.");
+
+					Geometry geometryToStore =
+						GeometryUtils.EnsureGeometrySchema(geometry, classHasZ, classHasM);
+
+					geometryToStore = GeometryUtils.EnsureSpatialReference(
+						geometryToStore, spatialReference);
+
+					rowBuffer[shapeFieldName] = geometryToStore;
+
+					var feature = targetFeatureClass.CreateRow(rowBuffer);
 
 					feature.Store();
 
@@ -213,7 +312,8 @@ namespace ProSuite.AGP.Editing
 			return newFeatures;
 		}
 
-		public static void CopyAttributeValues([NotNull] IEnumerable<Attribute> attributes, [NotNull] RowBuffer rowBuffer)
+		public static void CopyAttributeValues([NotNull] IEnumerable<Attribute> attributes,
+		                                       [NotNull] RowBuffer rowBuffer)
 		{
 			IReadOnlyList<Field> fields = rowBuffer.GetFields();
 
@@ -300,7 +400,7 @@ namespace ProSuite.AGP.Editing
 		{
 			warnings = null;
 
-			FeatureClass featureClass = feature.GetTable();
+			using var featureClass = feature.GetTable();
 
 			if (featureClass == null)
 			{
@@ -343,11 +443,48 @@ namespace ProSuite.AGP.Editing
 			return true;
 		}
 
-		private static void SetShape([NotNull] RowBuffer rowBuffer,
-		                             [NotNull] Geometry geometry,
-		                             FeatureClass featureClass)
+		/// <summary>
+		/// Returns true if the specified template has a default value for the
+		/// specified field name other than null or DB-Null.
+		/// </summary>
+		/// <param name="fieldName"></param>
+		/// <param name="template"></param>
+		/// <param name="value"></param>
+		/// <returns></returns>
+		public static bool TryGetFieldValueFromTemplate([NotNull] string fieldName,
+		                                                [CanBeNull] EditingTemplate template,
+		                                                out object value)
 		{
-			string shapeFieldName = featureClass.GetDefinition().GetShapeField();
+			value = null;
+			if (template == null)
+			{
+				return false;
+			}
+
+			if (! template.Inspector.HasAttributes)
+			{
+				return false;
+			}
+
+			Attribute attribute = template.Inspector.FirstOrDefault(
+				a => a.FieldName.Equals(fieldName, StringComparison.InvariantCultureIgnoreCase));
+
+			if (attribute == null)
+			{
+				return false;
+			}
+
+			value = attribute.CurrentValue;
+
+			return value != null && value != DBNull.Value;
+		}
+
+		public static void SetShape([NotNull] RowBuffer rowBuffer,
+		                            [NotNull] Geometry geometry,
+		                            FeatureClass featureClass)
+		{
+			using var classDefinition = featureClass.GetDefinition();
+			string shapeFieldName = classDefinition.GetShapeField();
 
 			SetShape(rowBuffer, geometry, shapeFieldName);
 		}
@@ -356,20 +493,30 @@ namespace ProSuite.AGP.Editing
 		                             [NotNull] Geometry geometry,
 		                             string shapeFieldName)
 		{
-			rowBuffer[shapeFieldName] = geometry;
+			try
+			{
+				rowBuffer[shapeFieldName] = geometry;
+			}
+			catch (Exception e)
+			{
+				_msg.VerboseDebug(() => $"Error persisting shape {geometry.ToXml()}");
+				throw new DataException($"Error setting shape of new feature: {e.Message}", e);
+			}
 		}
 
-		private static RowBuffer DuplicateRow(Row row, bool includeShape = false)
+		private static RowBuffer DuplicateRow(Row row, ICollection<string> excludeFields = null,
+		                                      bool includeShape = false)
 		{
 			RowBuffer rowBuffer = row.GetTable().CreateRowBuffer();
 
-			CopyValues(row, rowBuffer, includeShape);
+			CopyValues(row, rowBuffer, excludeFields, includeShape);
 
 			return rowBuffer;
 		}
 
 		private static void CopyValues(Row fromRow, RowBuffer toRowBuffer,
-		                               bool includeShape = false)
+									   ICollection<string> excludeFields = null,
+									   bool includeShape = false)
 		{
 			IReadOnlyList<Field> fields = fromRow.GetFields();
 
@@ -387,6 +534,11 @@ namespace ProSuite.AGP.Editing
 					continue;
 				}
 
+				if (excludeFields != null && excludeFields.Contains(field.Name))
+				{
+					continue;
+				}
+
 				toRowBuffer[i] = fromRow[i];
 			}
 		}
@@ -400,13 +552,13 @@ namespace ProSuite.AGP.Editing
 			StoreShape(feature, geometry, editContext);
 		}
 
-		private static void StoreShape(Feature feature,
-		                               Geometry geometry,
-		                               EditOperation.IEditContext editContext)
+		public static void StoreShape(Feature feature,
+		                              Geometry geometry,
+		                              EditOperation.IEditContext editContext)
 		{
 			_msg.DebugFormat("Updating shape of {0}...", GdbObjectUtils.ToString(feature));
 
-			if (geometry.IsEmpty)
+			if (geometry == null || geometry.IsEmpty)
 			{
 				throw new Exception("One or more updates geometries have become empty.");
 			}
@@ -422,13 +574,16 @@ namespace ProSuite.AGP.Editing
 				feature.SetShape(projected);
 				feature.Store();
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
 				_msg.VerboseDebug(() => $"Error persisting shape {geometry.ToXml()}");
-				throw;
+				throw new DataException($"Error updating shape of feature " +
+				                        $"{GdbObjectUtils.ToString(feature)}: {e.Message}", e);
 			}
-
-			editContext.Invalidate(feature);
+			finally
+			{
+				editContext.Invalidate(feature);
+			}
 		}
 
 		public static IEnumerable<Dataset> GetDatasetsNonEmpty(

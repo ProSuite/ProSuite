@@ -7,6 +7,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
@@ -49,6 +50,17 @@ namespace ProSuite.Commons.AGP.Carto
 		// todo daro rethink usage
 		public bool DelayFeatureFetching { get; set; }
 
+		/// <summary>
+		/// Whether the returned features shall be based on the original table that contains the
+		/// shape field or the joined table of the layer having been joined.
+		/// </summary>
+		public bool ReturnUnJoinedFeatures { get; set; }
+
+		/// <summary>
+		/// Extra tolerance that will be added to all provided (or calculated) search geometries.
+		/// </summary>
+		public double ExtraSearchTolerance { get; set; }
+
 		public IEnumerable<FeatureSelectionBase> FindFeaturesByLayer(
 			[NotNull] Geometry searchGeometry,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
@@ -66,10 +78,10 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public IEnumerable<FeatureSelectionBase> FindFeaturesByLayer(
-			IEnumerable<BasicFeatureLayer> layers,
-			Geometry searchGeometry,
-			Predicate<Feature> featurePredicate,
-			CancelableProgressor cancelableProgressor)
+			[NotNull] IEnumerable<BasicFeatureLayer> layers,
+			[NotNull] Geometry searchGeometry,
+			[CanBeNull] Predicate<Feature> featurePredicate,
+			[CanBeNull] CancelableProgressor cancelableProgressor)
 		{
 			SpatialReference outputSpatialReference = _mapView.Map.SpatialReference;
 
@@ -86,10 +98,15 @@ namespace ProSuite.Commons.AGP.Carto
 					featurePredicate = f => true;
 				}
 
+				searchGeometry = Assert.NotNull(ExpandWithExtraTolerance(searchGeometry));
+
 				QueryFilter filter =
 					GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
 
 				FeatureClass featureClass = basicFeatureLayer.GetFeatureClass();
+
+				Assert.NotNull(featureClass,
+				               $"Layer {basicFeatureLayer.Name} has null feature class");
 
 				if (DelayFeatureFetching)
 				{
@@ -102,11 +119,12 @@ namespace ProSuite.Commons.AGP.Carto
 					if (objectIds.Count > 0)
 					{
 						yield return new OidSelection(basicFeatureLayer, objectIds,
-													  outputSpatialReference);
+						                              outputSpatialReference);
 					}
 				}
 				else
 				{
+					// TODO: Honour ReturnUnJoinedFeatures value.
 					filter.OutputSpatialReference = outputSpatialReference;
 
 					List<Feature> features =
@@ -151,10 +169,10 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="cancelableProgressor"></param>
 		/// <returns></returns>
 		public IEnumerable<FeatureSelectionBase> FindFeaturesByFeatureClass(
-			IEnumerable<BasicFeatureLayer> featureLayers,
-			Geometry searchGeometry,
-			Predicate<Feature> featurePredicate,
-			CancelableProgressor cancelableProgressor)
+			[NotNull] IEnumerable<BasicFeatureLayer> featureLayers,
+			[NotNull] Geometry searchGeometry,
+			[CanBeNull] Predicate<Feature> featurePredicate,
+			[CanBeNull] CancelableProgressor cancelableProgressor)
 		{
 			IEnumerable<IGrouping<IntPtr, BasicFeatureLayer>> layersGroupedByClass =
 				featureLayers.GroupBy(fl => fl.GetTable().Handle);
@@ -182,15 +200,18 @@ namespace ProSuite.Commons.AGP.Carto
 					basicFeatureLayer = layers.First();
 					featureClass = basicFeatureLayer.GetFeatureClass();
 
+					Assert.NotNull(featureClass,
+					               $"Layer {basicFeatureLayer.Name} has null feature class");
+
+					searchGeometry = ExpandWithExtraTolerance(searchGeometry);
+
 					QueryFilter filter =
 						GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
 					filter.WhereClause = layers.Key;
 
 					filter.OutputSpatialReference = outputSpatialReference;
 
-					bool isJoinedTable = featureClass.IsJoinedTable();
-
-					if (isJoinedTable)
+					if (ReturnUnJoinedFeatures && featureClass.IsJoinedTable())
 					{
 						filter.SubFields = featureClass.GetDefinition().GetObjectIDField();
 
@@ -201,20 +222,23 @@ namespace ProSuite.Commons.AGP.Carto
 
 						List<long> oids = foundJoined.Select(f => f.GetObjectID()).ToList();
 
-						filter.SubFields = string.Empty;
-						features.AddRange(
-							MapUtils.GetFeatures(featureClass, oids, true, false,
-							                     outputSpatialReference));
+						if (oids.Count > 0)
+						{
+							filter.SubFields = string.Empty;
+							features.AddRange(
+								MapUtils.GetFeatures(featureClass, oids, true, false,
+								                     outputSpatialReference));
+						}
 					}
 					else
 					{
 						IEnumerable<Feature> foundFeatures =
-							GdbQueryUtils.GetFeatures(featureClass, filter, false, cancellationToken)
-							             .Where(f => featurePredicate == null || featurePredicate(f));
+							GdbQueryUtils
+								.GetFeatures(featureClass, filter, false, cancellationToken)
+								.Where(f => featurePredicate == null || featurePredicate(f));
 
 						features.AddRange(foundFeatures);
 					}
-
 				}
 
 				if (featureClass != null && features.Count > 0)
@@ -236,8 +260,6 @@ namespace ProSuite.Commons.AGP.Carto
 		/// type SameClass these features are used to determine whether a potential target feature comes
 		/// from the same class as one of them.
 		/// </param>
-		/// <param name="withoutJoins">Whether the result features shall be based on the original,
-		/// potentially joined table, or not.</param>
 		/// <param name="layerPredicate">An additional layer predicate to be tested.</param>
 		/// <param name="extent">The area of interest to which the search can be limited</param>
 		/// <param name="cancelableProgressor">The progress/cancel tracker.</param>
@@ -249,7 +271,6 @@ namespace ProSuite.Commons.AGP.Carto
 		[NotNull]
 		public IEnumerable<FeatureSelectionBase> FindIntersectingFeaturesByFeatureClass(
 			[NotNull] Dictionary<MapMember, List<long>> intersectingSelectedFeatures,
-			bool withoutJoins = false,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Envelope extent = null,
 			[CanBeNull] CancelableProgressor cancelableProgressor = null)
@@ -258,6 +279,8 @@ namespace ProSuite.Commons.AGP.Carto
 				FeatureSelectionType != TargetFeatureSelection.SelectedFeatures &&
 				FeatureSelectionType != TargetFeatureSelection.Undefined,
 				"Unsupported target selection type");
+
+			bool withoutJoins = ReturnUnJoinedFeatures;
 
 			SpatialReference spatialReference = _mapView.Map.SpatialReference;
 			SelectedFeatures =
@@ -329,7 +352,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 			if (targetSelectionType == TargetFeatureSelection.SameClass &&
 			    ! Assert.NotNull(selectedFeatures).Any(
-				    f => DatasetUtils.IsSameTable(f.GetTable(), basicFeatureLayer.GetTable())))
+				    f => LayerUsesFeatureClass(basicFeatureLayer, f.GetTable())))
 			{
 				return false;
 			}
@@ -355,8 +378,24 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
+		private static bool
+			LayerUsesFeatureClass(BasicFeatureLayer featureLayer, FeatureClass featureClass)
+		{
+			var layerClass = featureLayer.GetTable() as FeatureClass;
+
+			if (layerClass == null)
+			{
+				return false;
+			}
+
+			FeatureClass dbLayerClass =
+				DatasetUtils.GetDatabaseFeatureClass(layerClass);
+
+			return DatasetUtils.IsSameTable(featureClass, dbLayerClass);
+		}
+
 		[CanBeNull]
-		private static Geometry GetSearchGeometry(
+		private Geometry GetSearchGeometry(
 			[NotNull] ICollection<Feature> intersectingFeatures,
 			[CanBeNull] Envelope clipExtent)
 		{
@@ -371,6 +410,19 @@ namespace ProSuite.Commons.AGP.Carto
 
 				result = GeometryBagBuilderEx.CreateGeometryBag(intersectingGeometries, sr);
 				//result = GeometryEngine.Instance.Union(intersectingGeometries);
+			}
+
+			result = ExpandWithExtraTolerance(result);
+
+			return result;
+		}
+
+		[CanBeNull]
+		private Geometry ExpandWithExtraTolerance([CanBeNull] Geometry result)
+		{
+			if (result != null && ExtraSearchTolerance > 0)
+			{
+				result = result.Extent.Expand(ExtraSearchTolerance, ExtraSearchTolerance, false);
 			}
 
 			return result;

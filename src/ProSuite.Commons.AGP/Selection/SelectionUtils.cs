@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Carto;
@@ -101,11 +102,18 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		public static void SelectFeatures([NotNull] IEnumerable<Feature> features,
-		                                  [NotNull] IList<BasicFeatureLayer> inLayers)
+		                                  [NotNull] IList<BasicFeatureLayer> inLayers,
+		                                  [CanBeNull] CancelableProgressor progressor = null)
 		{
 			foreach (IGrouping<IntPtr, Feature> featuresByClassHandle in features.GroupBy(
 				         f => f.GetTable().Handle))
 			{
+				if (progressor is { CancellationToken.IsCancellationRequested: true })
+				{
+					_msg.Debug("Select features canceled");
+					break;
+				}
+
 				long classHandle = featuresByClassHandle.Key.ToInt64();
 
 				List<long> objectIds = featuresByClassHandle.Select(f => f.GetObjectID()).ToList();
@@ -113,6 +121,12 @@ namespace ProSuite.Commons.AGP.Selection
 				foreach (var layer in inLayers.Where(
 					         fl => fl.GetTable().Handle.ToInt64() == classHandle))
 				{
+					if (progressor is { CancellationToken.IsCancellationRequested: true })
+					{
+						_msg.Debug("Select features canceled");
+						break;
+					}
+
 					SelectRows(layer, SelectionCombinationMethod.Add, objectIds);
 				}
 			}
@@ -130,7 +144,8 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public static long SelectFeatures(
 			[NotNull] ICollection<FeatureSelectionBase> featuresPerLayers,
-			SelectionCombinationMethod selectionCombinationMethod)
+			SelectionCombinationMethod selectionCombinationMethod,
+			[CanBeNull] CancelableProgressor progressor = null)
 		{
 			Assert.ArgumentNotNull(featuresPerLayers, nameof(featuresPerLayers));
 
@@ -138,6 +153,12 @@ namespace ProSuite.Commons.AGP.Selection
 
 			foreach (FeatureSelectionBase featuresPerLayer in featuresPerLayers)
 			{
+				if (progressor is { CancellationToken.IsCancellationRequested: true })
+				{
+					_msg.Debug("Select features canceled");
+					break;
+				}
+
 				result += SelectRows(featuresPerLayer.BasicFeatureLayer,
 				                     selectionCombinationMethod,
 				                     featuresPerLayer.GetOids().ToList());
@@ -190,22 +211,49 @@ namespace ProSuite.Commons.AGP.Selection
 			return GetSelection<T>(selectionSet);
 		}
 
+		[NotNull]
 		public static Dictionary<MapMember, List<long>> GetSelection(
 			SelectionSet selectionSet)
 		{
 			return selectionSet.ToDictionary();
 		}
 
+		[NotNull]
 		public static Dictionary<T, List<long>> GetSelection<T>(
 			SelectionSet selectionSet) where T : MapMember
 		{
 			return selectionSet.ToDictionary<T>();
 		}
 
+		[NotNull]
 		public static Dictionary<MapMember, List<long>> GetSelection(
 			MapSelectionChangedEventArgs selectionChangedArgs)
 		{
 			return GetSelection(selectionChangedArgs.Selection);
+		}
+
+		public static int GetFeatureCount(
+			[NotNull] IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> selection)
+		{
+			Assert.ArgumentNotNull(selection, nameof(selection));
+
+			return selection.Select(pair => pair.Value).Sum(set => set.Count);
+		}
+
+		public static int GetFeatureCount(
+			[NotNull] IDictionary<BasicFeatureLayer, List<long>> selection)
+		{
+			Assert.ArgumentNotNull(selection, nameof(selection));
+
+			return selection.Values.Sum(set => set.Count);
+		}
+
+		public static int GetFeatureCount(
+			[NotNull] IDictionary<BasicFeatureLayer, List<Feature>> selection)
+		{
+			Assert.ArgumentNotNull(selection, nameof(selection));
+
+			return selection.Values.Sum(set => set.Count);
 		}
 
 		public static int GetFeatureCount(
@@ -245,6 +293,45 @@ namespace ProSuite.Commons.AGP.Selection
 				                : "-> {0:N0} features selected in {1} '{2}'";
 
 			_msg.InfoFormat(format, selectionCount, mapMemberType, mapMemberName);
+		}
+
+		[NotNull]
+		public static Dictionary<BasicFeatureLayer, List<Feature>>
+			GetApplicableSelectedFeatures(
+				[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+				[CanBeNull] Predicate<BasicFeatureLayer> predicate = null,
+				bool withoutJoins = false)
+		{
+			Assert.ArgumentNotNull(selectionByLayer, nameof(selectionByLayer));
+
+			var result = new Dictionary<BasicFeatureLayer, List<Feature>>(selectionByLayer.Count);
+
+			SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
+
+			foreach (var oidsByLayer in GetApplicableSelection(selectionByLayer, predicate))
+			{
+				BasicFeatureLayer layer = oidsByLayer.Key;
+				List<long> oids = oidsByLayer.Value;
+
+				var features = MapUtils
+				               .GetFeatures(layer, oids, withoutJoins, recycling: false,
+				                            mapSpatialReference)
+				               .ToList();
+
+				result.Add(layer, features);
+			}
+
+			return result;
+		}
+
+		public static Dictionary<BasicFeatureLayer, List<long>> GetApplicableSelection(
+			[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+			[CanBeNull] Predicate<BasicFeatureLayer> predicate = null)
+		{
+			Assert.ArgumentNotNull(selectionByLayer, nameof(selectionByLayer));
+
+			return selectionByLayer.Where(pair => predicate != null && predicate(pair.Key))
+			                       .ToDictionary(p => p.Key, p => p.Value);
 		}
 	}
 }

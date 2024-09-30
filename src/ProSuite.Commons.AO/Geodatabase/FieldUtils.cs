@@ -403,6 +403,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return esriFieldType.esriFieldTypeString;
 			if (dataType == typeof(Guid))
 				return esriFieldType.esriFieldTypeGUID;
+			if (dataType == typeof(DateTime))
+				return esriFieldType.esriFieldTypeDate;
 
 			// can exist for datatable-expression columns, i.e. SUM(...)
 			if (dataType == typeof(long))

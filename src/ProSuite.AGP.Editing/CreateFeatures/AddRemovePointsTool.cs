@@ -6,13 +6,17 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Events;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.Selection;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Collections;
@@ -57,6 +61,7 @@ public class AddRemovePointsTool : MapTool
 	private readonly IList<Element> _elements;
 	private CIMSymbolReference _addSymbol;
 	private CIMSymbolReference _removeSymbol;
+	private SubscriptionToken _editCompletedToken;
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -139,6 +144,13 @@ public class AddRemovePointsTool : MapTool
 
 	protected virtual bool DoubleClickCommits => true;
 
+	protected virtual bool SelectNewFeatures => true;
+
+	protected virtual SelectionSettings GetSelectionSettings()
+	{
+		return new SelectionSettings();
+	}
+
 	/// <remarks>Will be called on the MCT</remarks>
 	protected virtual void Activate()
 	{
@@ -216,10 +228,19 @@ public class AddRemovePointsTool : MapTool
 
 			_activated = true;
 			_firstMove = true;
+
+			// Subscribe to EditCompleted (but at most once) to get Undo/Redo events:
+			if (_editCompletedToken is not null)
+			{
+				EditCompletedEvent.Unsubscribe(_editCompletedToken);
+				_editCompletedToken = null;
+			}
+
+			_editCompletedToken = EditCompletedEvent.Subscribe(OnEditCompleted);
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ShowError(ex, _msg);
 		}
 	}
 
@@ -230,10 +251,16 @@ public class AddRemovePointsTool : MapTool
 			_activated = false;
 
 			ClearElements();
+
+			if (_editCompletedToken is not null)
+			{
+				EditCompletedEvent.Unsubscribe(_editCompletedToken);
+				_editCompletedToken = null;
+			}
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 
 		return Task.FromResult(0);
@@ -262,7 +289,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ShowError(ex, _msg);
 		}
 	}
 
@@ -282,10 +309,14 @@ public class AddRemovePointsTool : MapTool
 			{
 				args.Handled = true; // subclass stuff
 			}
+			else if (args.Key is Key.Z && IsCtrlDown)
+			{
+				args.Handled = _elements.Count > 0; // anything to undo?
+			}
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 	}
 
@@ -332,12 +363,23 @@ public class AddRemovePointsTool : MapTool
 					await QueuedTask.Run(UpdateSketch);
 				}
 			}
+			else if (args.Key == Key.Z && IsCtrlDown)
+			{
+				if (_elements.Count > 0)
+				{
+					var element = _elements[_elements.Count - 1];
+					element.Overlay.Dispose();
+					_elements.RemoveAt(_elements.Count - 1);
+				}
+			}
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 	}
+
+	private static bool IsCtrlDown => Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
 
 	protected override bool? OnActivePaneChanged(Pane pane)
 	{
@@ -348,7 +390,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 		return null;
 	}
@@ -362,7 +404,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 			return Task.FromResult(true);
 		}
 	}
@@ -386,7 +428,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 
 		return true;
@@ -417,6 +459,30 @@ public class AddRemovePointsTool : MapTool
 
 	#endregion
 
+	private Task OnEditCompleted(EditCompletedEventArgs args)
+	{
+		try
+		{
+			if (args.CompletedType == EditCompletedType.Undo ||
+			    args.CompletedType == EditCompletedType.Redo)
+			{
+				if (_elements.Count > 0)
+				{
+					ClearElements();
+					_msg.Warn($"{Caption}: sketch discarded because an {args.CompletedType} " +
+					          $"operation occurred; please sketch again");
+					// TODO could analyze args.Creates/Deletes/Modifies and update _elements accordingly
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			Gateway.ReportError(ex, _msg);
+		}
+
+		return Task.CompletedTask;
+	}
+
 	/// <summary>Update sketch symbol and tip based on current values</summary>
 	/// <remarks>Must call on MCT</remarks>
 	private void UpdateSketch()
@@ -435,7 +501,9 @@ public class AddRemovePointsTool : MapTool
 		//   - if within eps of existing point feature: of type Remove
 		//   - otherwise: of type Add
 
-		const double delta = 10.0; // TODO pixels, convert to map units, see ActiveMapView.ScreenToMap()
+		var settings = GetSelectionSettings();
+		var tolerancePixels = settings.SelectionTolerancePixels;
+		var delta = MapUtils.ConvertScreenPixelToMapLength(ActiveMapView, tolerancePixels, point);
 
 		var element = FindElement(_elements, point, delta);
 
@@ -585,7 +653,7 @@ public class AddRemovePointsTool : MapTool
 
 		var operation = new EditOperation();
 		operation.Name = $"Update {targetLayer.Name} (+{adds.Count} -{drops.Count})";
-		operation.SelectNewFeatures = true;
+		operation.SelectNewFeatures = SelectNewFeatures;
 
 		foreach (var element in adds)
 		{

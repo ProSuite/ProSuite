@@ -84,9 +84,10 @@ namespace ProSuite.Commons.AGP.Core.Test
 			Assert.NotNull(layer);
 
 			layer.LabelLayer(out string markerGuid);
-			var layer2 = SymbolUtils.FindPrimitiveByName<CIMObject>(pointSymbol, markerGuid);
-			Assert.NotNull(layer);
+			var layer2 = SymbolUtils.FindPrimitiveByName<CIMObject>(pointSymbol, markerGuid, out var path);
+			Assert.NotNull(layer2);
 			Assert.AreSame(layer, layer2);
+			Assert.AreEqual("layer 0", path);
 
 			// Again, but on a more complicated symbol
 
@@ -96,7 +97,7 @@ namespace ProSuite.Commons.AGP.Core.Test
 			                              .SetMarkerPlacementAtExtremities(ExtremityPlacement.Both);
 			var blackStroke = SymbolUtils.CreateSolidStroke(black, 2)
 			                             .AddDashes(SymbolUtils.CreateDashPattern(20, 10));
-			var symbol = SymbolUtils.CreateLineSymbol(blackStroke, circleMarker, squareMarker)
+			var symbol = SymbolUtils.CreateLineSymbol(squareMarker, circleMarker, blackStroke)
 			                        .AddGlobalEffect(SymbolUtils.CreateEffectOffset(10));
 
 			var globalEffect = SymbolUtils.FindPrimitiveByPath<CIMGeometricEffect>(symbol, "effect 0");
@@ -111,6 +112,14 @@ namespace ProSuite.Commons.AGP.Core.Test
 			markerPlacement.LabelPlacement(out string placementLabel);
 			//var circleGraphic = SymbolUtils.FindPrimitive<CIMMarkerGraphic>(symbol, "layer 2 graphic 0 layer 0");
 			//circleGraphic.LabelGraphic(out Guid graphicLabel);
+
+			var effect = SymbolUtils.FindPrimitiveByName<CIMGeometricEffect>(symbol, dashesLabel, out path);
+			Assert.NotNull(effect);
+			Assert.AreEqual("layer 0 effect 0", path);
+
+			var placement = SymbolUtils.FindPrimitiveByName<CIMMarkerPlacement>(symbol, placementLabel, out path);
+			Assert.NotNull(placement);
+			Assert.AreEqual("layer 2 placement", path);
 
 			var reference = symbol.CreateReference();
 			reference.AddMapping(offsetLabel, "Offset", "[OFFSET]");

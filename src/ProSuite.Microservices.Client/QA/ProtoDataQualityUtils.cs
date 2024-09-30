@@ -14,6 +14,7 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
+using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
 
 namespace ProSuite.Microservices.Client.QA
 {
@@ -245,8 +246,17 @@ namespace ProSuite.Microservices.Client.QA
 					parameterMsg.WhereClause = datasetParamValue.FilterExpression ?? string.Empty;
 					parameterMsg.UsedAsReferenceData = datasetParamValue.UsedAsReferenceData;
 				}
+				else if (parameterValue is ScalarTestParameterValue scalarParamValue)
+				{
+					// Transport in invariant culture, it will be formatted on the client
+					if (scalarParamValue.PersistedStringValue != null)
+					{
+						parameterMsg.Value = scalarParamValue.PersistedStringValue;
+					}
+				}
 				else
 				{
+					// Does this ever happen?
 					parameterMsg.Value = parameterValue.StringValue;
 				}
 
@@ -480,8 +490,10 @@ namespace ProSuite.Microservices.Client.QA
 
 		#region ProtoModelUtils
 
-		public static ModelMsg ToDdxModelMsg(DdxModel productionModel, SpatialReferenceMsg srWkId,
-		                                     ICollection<DatasetMsg> referencedDatasetMsgs)
+		public static ModelMsg ToDdxModelMsg(
+			[NotNull] DdxModel productionModel,
+			SpatialReferenceMsg srWkId,
+			ICollection<DatasetMsg> referencedDatasetMsgs)
 		{
 			var modelMsg =
 				new ModelMsg
@@ -517,6 +529,59 @@ namespace ProSuite.Microservices.Client.QA
 			return modelMsg;
 		}
 
+		public static AssociationMsg ToAssociationMsg(Association association,
+		                                              bool includeDetails = false)
+		{
+			int associationType = association is ForeignKeyAssociation ? 0 : 1;
+			var associationMsg = new AssociationMsg
+			                     {
+				                     AssociationId = association.Id,
+				                     Name = association.Name,
+				                     AssociationType = associationType,
+				                     Cardinality = (int) association.Cardinality,
+				                     End1Dataset = association.End1.ObjectDataset.Id,
+				                     End2Dataset = association.End2.ObjectDataset.Id,
+				                     End1Id = association.End1.Id,
+				                     End2Id = association.End2.Id,
+				                     End1DocumentEdit = association.End1.DocumentAssociationEdit,
+				                     End2DocumentEdit = association.End2.DocumentAssociationEdit,
+				                     End1CascadeDeletion = association.End1.CascadeDeletion,
+				                     End2CascadeDeletion = association.End2.CascadeDeletion,
+				                     End1CopyPolicy = (int) association.End1.CopyPolicy,
+				                     End2CopyPolicy = (int) association.End2.CopyPolicy,
+				                     End1CascadeDeleteOrphans =
+					                     association.End1.CascadeDeleteOrphans,
+				                     End2CascadeDeleteOrphans =
+					                     association.End2.CascadeDeleteOrphans
+			                     };
+
+			if (includeDetails)
+			{
+				var attributes = new List<AttributeMsg>();
+
+				if (association is AttributedAssociation attributedAssociation)
+				{
+					attributes.Add(ToAttributeMsg(attributedAssociation.DestinationEnd.ForeignKey));
+					attributes.Add(ToAttributeMsg(attributedAssociation.DestinationEnd.PrimaryKey));
+					attributes.Add(ToAttributeMsg(attributedAssociation.OriginEnd.ForeignKey));
+					attributes.Add(ToAttributeMsg(attributedAssociation.OriginEnd.PrimaryKey));
+				}
+				else if (association is ForeignKeyAssociation foreignKeyAssociation)
+				{
+					attributes.Add(ToAttributeMsg(foreignKeyAssociation.ForeignKeyEnd.ForeignKey));
+					attributes.Add(ToAttributeMsg(foreignKeyAssociation.PrimaryKeyEnd.PrimaryKey));
+				}
+				else
+				{
+					Assert.CantReach("Unknown association type");
+				}
+
+				associationMsg.Attributes.AddRange(attributes);
+			}
+
+			return associationMsg;
+		}
+
 		public static DatasetMsg ToDatasetMsg([NotNull] Dataset dataset,
 		                                      bool includeDetails = false)
 		{
@@ -536,7 +601,7 @@ namespace ProSuite.Microservices.Client.QA
 			{
 				if (dataset is ObjectDataset objectDataset)
 				{
-					foreach (ObjectAttribute attribute in objectDataset.Attributes)
+					foreach (ObjectAttribute attribute in objectDataset.GetAttributes())
 					{
 						AttributeMsg attributeMsg = ToAttributeMsg(attribute);
 
@@ -554,9 +619,9 @@ namespace ProSuite.Microservices.Client.QA
 		}
 
 		public static Dataset FromDatasetMsg(DatasetMsg datasetMsg,
-		                                     Func<int, string, Dataset> factoryMethod)
+		                                     Func<DatasetMsg, Dataset> factoryMethod)
 		{
-			Dataset dataset = factoryMethod(datasetMsg.DatasetId, datasetMsg.Name);
+			Dataset dataset = factoryMethod(datasetMsg);
 
 			dataset.SetCloneId(datasetMsg.DatasetId);
 
@@ -566,6 +631,101 @@ namespace ProSuite.Microservices.Client.QA
 				GetGeometryType((ProSuiteGeometryType) datasetMsg.GeometryType);
 
 			return dataset;
+		}
+
+		public static Association FromAssociationMsg(
+			[NotNull] AssociationMsg associationMsg,
+			[NotNull] IDictionary<int, IDdxDataset> datasetsById)
+		{
+			Association result = null;
+
+			string associationMsgName = associationMsg.Name;
+			var cardinality = (AssociationCardinality) associationMsg.Cardinality;
+
+			if (associationMsg.AssociationType == 0)
+			{
+				AttributeMsg foreignKeyAttributeMsg = associationMsg.Attributes[0];
+				AttributeMsg primaryKeyAttributeMsg = associationMsg.Attributes[1];
+
+				ObjectAttribute foreignKey = EnsureAttributeExists(
+					foreignKeyAttributeMsg, datasetsById, associationMsg.End1Dataset);
+				ObjectAttribute primaryKey = EnsureAttributeExists(
+					primaryKeyAttributeMsg, datasetsById, associationMsg.End2Dataset);
+
+				result = new ForeignKeyAssociation(
+					associationMsgName, cardinality, foreignKey, primaryKey);
+			}
+			else
+			{
+				AttributeMsg destinationForeignKey = associationMsg.Attributes[0];
+				AttributeMsg destinationPrimaryKey = associationMsg.Attributes[1];
+				AttributeMsg originForeignKey = associationMsg.Attributes[2];
+				AttributeMsg originPrimaryKey = associationMsg.Attributes[3];
+
+				ObjectAttribute destinationPrimaryKeyAttribute = EnsureAttributeExists(
+					destinationPrimaryKey, datasetsById, associationMsg.End1Dataset);
+
+				ObjectAttribute originPrimaryKeyAttribute = EnsureAttributeExists(
+					originPrimaryKey, datasetsById, associationMsg.End2Dataset);
+
+				result = new AttributedAssociation(
+					associationMsgName, cardinality,
+					destinationForeignKey.Name, (FieldType) destinationForeignKey.Type,
+					destinationPrimaryKeyAttribute,
+					originForeignKey.Name, (FieldType) originForeignKey.Type,
+					originPrimaryKeyAttribute);
+			}
+
+			result.End1.SetCloneId(associationMsg.End1Id);
+			result.End2.SetCloneId(associationMsg.End2Id);
+
+			if (result.End1.CanChangeDocumentAssociationEdit)
+			{
+				result.End1.DocumentAssociationEdit = associationMsg.End1DocumentEdit;
+			}
+
+			if (result.End2.CanChangeDocumentAssociationEdit)
+			{
+				result.End2.DocumentAssociationEdit = associationMsg.End2DocumentEdit;
+			}
+
+			result.End1.CascadeDeletion = associationMsg.End1CascadeDeletion;
+			result.End2.CascadeDeletion = associationMsg.End2CascadeDeletion;
+
+			result.End1.CopyPolicy = (CopyPolicy) associationMsg.End1CopyPolicy;
+			result.End2.CopyPolicy = (CopyPolicy) associationMsg.End2CopyPolicy;
+
+			result.End1.CascadeDeleteOrphans = associationMsg.End1CascadeDeleteOrphans;
+			result.End2.CascadeDeleteOrphans = associationMsg.End2CascadeDeleteOrphans;
+
+			result.SetCloneId(associationMsg.AssociationId);
+
+			return result;
+		}
+
+		private static ObjectAttribute EnsureAttributeExists(
+			[NotNull] AttributeMsg attributeMsg,
+			[NotNull] IDictionary<int, IDdxDataset> datasetsById,
+			int datasetId)
+		{
+			if (! datasetsById.TryGetValue(datasetId, out IDdxDataset objectDataset))
+			{
+				throw new InvalidOperationException(
+					$"Dataset with id {datasetId} not found in the dictionary.");
+			}
+
+			var end = (ObjectDataset) objectDataset;
+
+			ObjectAttribute existingAttribute =
+				end.Attributes.FirstOrDefault(a => a.Id == attributeMsg.AttributeId);
+
+			if (existingAttribute == null)
+			{
+				ObjectAttribute keyAttribute = FromAttributeMsg(attributeMsg);
+				existingAttribute = end.AddAttribute(keyAttribute);
+			}
+
+			return existingAttribute;
 		}
 
 		public static ObjectDataset CreateErrorDataset(int datasetId, string name,
@@ -599,14 +759,15 @@ namespace ProSuite.Microservices.Client.QA
 			return result;
 		}
 
-		public static void AddDetailsToDataset(ObjectDataset dataset, DatasetMsg detailedDatasetMsg)
+		public static void AddDetailsToDataset([NotNull] ObjectDataset objectDataset,
+		                                       [NotNull] DatasetMsg detailedDatasetMsg)
 		{
 			// Enrich the original dataset with the details:
 			foreach (AttributeMsg attributeMsg in detailedDatasetMsg.Attributes)
 			{
 				ObjectAttribute attribute = FromAttributeMsg(attributeMsg);
 
-				dataset.AddAttribute(attribute);
+				objectDataset.AddAttribute(attribute);
 			}
 
 			var objectTypeBySubtypeCode = new Dictionary<int, ObjectType>();
@@ -614,7 +775,9 @@ namespace ProSuite.Microservices.Client.QA
 				         m => m.ObjectSubtypeCriterion.Count == 0))
 			{
 				ObjectType objectType =
-					dataset.AddObjectType(objectTypeMsg.SubtypeCode, objectTypeMsg.Name);
+					objectDataset.AddObjectType(objectTypeMsg.SubtypeCode, objectTypeMsg.Name);
+
+				objectType.SetCloneId(objectTypeMsg.ObjectCategoryId);
 
 				objectTypeBySubtypeCode.Add(objectType.SubtypeCode, objectType);
 			}
@@ -626,6 +789,8 @@ namespace ProSuite.Microservices.Client.QA
 				ObjectType objectType = objectTypeBySubtypeCode[subTypeMsg.SubtypeCode];
 
 				ObjectSubtype objectSubtype = objectType.AddObjectSubType(subTypeMsg.Name);
+
+				objectSubtype.SetCloneId(subTypeMsg.ObjectCategoryId);
 
 				foreach (ObjectSubtypeCriterionMsg criterionMsg in
 				         subTypeMsg.ObjectSubtypeCriterion)
@@ -643,6 +808,7 @@ namespace ProSuite.Microservices.Client.QA
 
 			var objTypeMsg = new ObjectCategoryMsg
 			                 {
+				                 ObjectCategoryId = objectType.Id,
 				                 Name = objectType.Name,
 				                 SubtypeCode = subTypeCode
 			                 };
@@ -653,6 +819,7 @@ namespace ProSuite.Microservices.Client.QA
 			{
 				var subTypeMsg = new ObjectCategoryMsg
 				                 {
+					                 ObjectCategoryId = objectSubtype.Id,
 					                 Name = objectSubtype.Name,
 					                 SubtypeCode = subTypeCode
 				                 };
@@ -682,26 +849,58 @@ namespace ProSuite.Microservices.Client.QA
 			}
 		}
 
-		public static AttributeMsg ToAttributeMsg(ObjectAttribute attribute)
+		private static AttributeMsg ToAttributeMsg(Attribute associationAttribute)
 		{
-			FieldType fieldType = attribute.FieldType;
-			var valueObject = attribute.NonApplicableValue;
+			AttributeMsg attributeMsg = CreateAttributeMsg(associationAttribute);
+
+			return attributeMsg;
+		}
+
+		private static AttributeMsg ToAttributeMsg(ObjectAttribute objectAttribute)
+		{
+			AttributeMsg attributeMsg = CreateAttributeMsg(objectAttribute);
+
+			// ObjectAttribute properties:
+			attributeMsg.AttributeRole = objectAttribute.Role?.Id ?? -1;
+			attributeMsg.IsReadonly = objectAttribute.ReadOnly;
+			attributeMsg.IsObjectDefining = objectAttribute.IsObjectDefining;
+
+			FieldType fieldType = objectAttribute.FieldType;
+
+			var valueObject = objectAttribute.NonApplicableValue;
 
 			AttributeValue attributeValue = null;
 			if (valueObject != null && valueObject != DBNull.Value)
 			{
-				attributeValue = ToAttributeValue(fieldType, valueObject);
+				try
+				{
+					attributeValue = ToAttributeValue(fieldType, valueObject);
+				}
+				catch (Exception e)
+				{
+					_msg.Debug($"Error encoding value {valueObject} for field type {fieldType} " +
+					           $"for attribute {objectAttribute.Name} of {objectAttribute.Dataset?.Name}",
+					           e);
+					throw;
+				}
 			}
+
+			attributeMsg.NonApplicableValue = attributeValue;
+
+			return attributeMsg;
+		}
+
+		private static AttributeMsg CreateAttributeMsg(Attribute attribute)
+		{
+			// Initialize the properties of the base class:
 
 			var attributeMsg = new AttributeMsg
 			                   {
+				                   AttributeId = attribute.Id,
 				                   Name = attribute.Name ?? string.Empty,
-				                   Type = (int) attribute.FieldType,
-				                   IsReadonly = attribute.ReadOnly,
-				                   IsObjectDefining = attribute.IsObjectDefining,
-				                   AttributeRole = attribute.Role?.Id ?? -1,
-				                   NonApplicableValue = attributeValue
+				                   Type = (int) attribute.FieldType
 			                   };
+
 			return attributeMsg;
 		}
 
@@ -742,6 +941,8 @@ namespace ProSuite.Microservices.Client.QA
 				                            IsObjectDefining = attributeMsg.IsObjectDefining,
 				                            ReadOnly = attributeMsg.IsReadonly
 			                            };
+
+			attribute.SetCloneId(attributeMsg.AttributeId);
 
 			object nonApplicableValue =
 				FromAttributeValue(attributeMsg.NonApplicableValue);
@@ -916,7 +1117,7 @@ namespace ProSuite.Microservices.Client.QA
 		}
 
 		[CanBeNull]
-		private static GeometryType GetGeometryType(ProSuiteGeometryType proSuiteGeometryType)
+		public static GeometryType GetGeometryType(ProSuiteGeometryType proSuiteGeometryType)
 		{
 			if (proSuiteGeometryType == ProSuiteGeometryType.Unknown)
 			{

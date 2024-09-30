@@ -41,7 +41,7 @@ public abstract class ToggleSymbolLayerDrawingButtonBase : Button
 		}
 		catch (Exception ex)
 		{
-			Gateway.HandleError(ex, _msg);
+			Gateway.ShowError(ex, _msg);
 		}
 	}
 

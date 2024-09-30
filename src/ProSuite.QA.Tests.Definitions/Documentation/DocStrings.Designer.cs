@@ -2570,15 +2570,35 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all errors in &apos;topology&apos; defined in a geodatabase
+        ///   Looks up a localized string similar to Finds all geodatabase topology errors in &apos;topology&apos;. Consider using the other constructor for better support. This constructor is for backward-compatibility only.
         ///
-        ///Remark: ITopology.Validate() is used if the test is run while editing.
-        ///Otherwise, the dirty areas are reported as errors.
-        ///The reported errors are copies of the errorFeatures of the topology&apos;s errorFeatureContainer.
+        ///Remark: If the topology has not been previously validated, the dirty areas are reported as issues.
+        ///The reported issues are copies of the error features of the topology&apos;s error features..
         /// </summary>
         public static string QaGdbTopology_0 {
             get {
                 return ResourceManager.GetString("QaGdbTopology_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all geodatabase topology errors in the topologies referenced by &apos;featureClasses&apos;.
+        ///
+        ///Remark: If a topology has not been previously validated, the dirty areas are reported as issues.
+        ///The reported issues are copies of the error features of the topology&apos;s error features..
+        /// </summary>
+        public static string QaGdbTopology_1 {
+            get {
+                return ResourceManager.GetString("QaGdbTopology_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature classes that participate in a geodatabase topology.
+        /// </summary>
+        public static string QaGdbTopology_featureClasses {
+            get {
+                return ResourceManager.GetString("QaGdbTopology_featureClasses", resourceCulture);
             }
         }
         

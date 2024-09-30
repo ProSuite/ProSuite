@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -18,8 +20,10 @@ namespace ProSuite.DomainModel.AO.DataModel
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull] private static readonly IDictionary<string, string> _tableNamesByQueryClassNames =
-			new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+		[NotNull] private static readonly ThreadLocal<IDictionary<string, string>>
+			_tableNamesByQueryClassNames =
+				new ThreadLocal<IDictionary<string, string>>(
+					() => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
 
 		public static bool IsInSchema([NotNull] IWorkspace workspace,
 		                              [NotNull] string gdbDatasetName,
@@ -125,7 +129,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		[CanBeNull]
-		public static ITopology TryOpenFromMasterDatabase(
+		public static TopologyReference TryOpenFromMasterDatabase(
 			ITopologyDataset dataset, bool allowAlways = false)
 		{
 			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
@@ -352,19 +356,31 @@ namespace ProSuite.DomainModel.AO.DataModel
 				queryDescription.SpatialReference == null ||
 				queryDescription.SpatialReference is IUnknownCoordinateSystem;
 
-			bool hasUnknownOid =
-				StringUtils.IsNullOrEmptyOrBlank(queryDescription.OIDColumnName) ||
-				queryDescription.IsOIDMappedColumn;
+			// NOTE: We want to distinguish between un-registered tables with proper OIDField etc.
+			// such as PostGIS tables and views that might or might not contain a decent OIDFIeld
+			// candidate.
+			// In case it is a dataset from a data dictionary, it could have been configured there
+			// but in standalone situations, we have to rely on some heuristics if it a view (which
+			// we would like to avoid in case of a proper PostGIS spatial table).
+			// NOTE: queryDescription.IsOIDMappedColumn is always false in 11.3 and cannot be used
+			// for this distinction (if this was ever the case).
 
-			if (! hasUnknownOid && (! hasUnknownSref || ! queryDescription.IsSpatialQuery))
+			bool hasDubiousOid =
+				HasDubiousOid(queryDescription.Fields, queryDescription.OIDColumnName);
+
+			if (! hasDubiousOid && (! hasUnknownSref || ! queryDescription.IsSpatialQuery))
 			{
+				_msg.DebugFormat("Opening {0} as normal table (OID field is deemed usable)",
+				                 gdbDatasetName);
 				return DatasetUtils.OpenTable(workspace, gdbDatasetName);
 			}
 
-			if (hasUnknownOid)
+			if (hasDubiousOid)
 			{
 				if (StringUtils.IsNotEmpty(oidFieldName))
 				{
+					_msg.DebugFormat("Opening {0} as view, using configured OID field {1}",
+					                 gdbDatasetName, oidFieldName);
 					queryDescription.OIDFields = oidFieldName;
 				}
 				else
@@ -373,6 +389,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 					if (uniqueIntegerField != null)
 					{
+						_msg.DebugFormat("Determined {0} as OID field for {1}",
+						                 uniqueIntegerField.Name, gdbDatasetName);
+
 						queryDescription.OIDFields = uniqueIntegerField.Name;
 					}
 				}
@@ -383,38 +402,73 @@ namespace ProSuite.DomainModel.AO.DataModel
 				queryDescription.SpatialReference = spatialReferenceDescriptor?.SpatialReference;
 			}
 
+			string queryLayerName = null;
+
 			try
 			{
 				// NOTE: the unqualified name of the query class must start with a '%'
-				string queryLayerName =
-					DatasetUtils.GetQueryLayerClassName(workspace, gdbDatasetName);
+				queryLayerName = DatasetUtils.GetQueryLayerClassName(workspace, gdbDatasetName);
+
+				if (_tableNamesByQueryClassNames.Value.ContainsKey(queryLayerName))
+				{
+					// It has been created already, use it directly (otherwise error 'The featureclass already exists')
+					if (DatasetUtils.TryOpenTable(workspace, queryLayerName,
+					                              out ITable existingTable))
+					{
+						_msg.DebugFormat("Re-using previously defined table with name {0}",
+						                 queryLayerName);
+						return existingTable;
+					}
+				}
 
 				_msg.DebugFormat("Opening query layer with name {0}", queryLayerName);
 
 				ITable queryClass = sqlWorksace.OpenQueryClass(queryLayerName, queryDescription);
 
+				// This is probably not the case any more, or just in specific situations (oracle?):
 				// NOTE: the query class is owned by the *connected* user, not by the owner of the underlying table/view
 
 				string queryClassName = DatasetUtils.GetName(queryClass);
 
 				_msg.DebugFormat("Name of opened query layer class: {0}", queryClassName);
 
-				_tableNamesByQueryClassNames[queryClassName] = gdbDatasetName;
+				_tableNamesByQueryClassNames.Value[queryClassName] = gdbDatasetName;
 
 				return queryClass;
 			}
 			catch (Exception ex)
 			{
 				_msg.WarnFormat(
-					"Unable to open unregistered table {0} as query layer: {1}",
-					gdbDatasetName, ex.Message);
+					"Unable to open unregistered table {0} as query layer with name {1}: {2}",
+					gdbDatasetName, queryLayerName, ex.Message);
 
 				return DatasetUtils.OpenTable(workspace, gdbDatasetName);
 			}
 		}
 
+		private static bool HasDubiousOid(IFields fields,
+		                                  string oidColumnName)
+		{
+			if (StringUtils.IsNullOrEmptyOrBlank(oidColumnName))
+			{
+				return true;
+			}
+
+			int oidFieldIdx = fields.FindField(oidColumnName);
+
+			if (oidFieldIdx < 0)
+			{
+				return true;
+			}
+
+			bool isNullable = fields.Field[oidFieldIdx].IsNullable;
+
+			return isNullable;
+		}
+
 		[NotNull]
-		public static string GetBaseTableName([NotNull] string gdbDatasetOrQueryClassName)
+		public static string GetBaseTableName([NotNull] string gdbDatasetOrQueryClassName,
+		                                      IWorkspaceContext workspaceContext = null)
 		{
 			Assert.ArgumentNotNullOrEmpty(gdbDatasetOrQueryClassName,
 			                              nameof(gdbDatasetOrQueryClassName));
@@ -426,14 +480,58 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 
 			string baseTableName;
-			if (_tableNamesByQueryClassNames.TryGetValue(gdbDatasetOrQueryClassName,
-			                                             out baseTableName))
+			if (_tableNamesByQueryClassNames.Value.TryGetValue(gdbDatasetOrQueryClassName,
+			                                                   out baseTableName))
 			{
 				return baseTableName;
 			}
 
-			// return name as is
-			return gdbDatasetOrQueryClassName;
+			// If the query class has been opened by another client (and not yet in this process,
+			// we do not have it in the name cache. Nevertheless, we shall try to extract the base
+			// table from the query name:
+			string tableName = gdbDatasetOrQueryClassName.Replace("%", "");
+
+			// If the same view / query is referenced by multiple layers, an _1, _2 etc. is appended
+			// Before trying to open the table (which takes time) check if this could be the case:
+			const string underscoreWithDigit = @"(_\d)$";
+			Regex regex =
+				new Regex(underscoreWithDigit);
+
+			if (! regex.IsMatch(tableName))
+			{
+				return tableName;
+			}
+
+			string originalTable = regex.Replace(tableName, string.Empty);
+
+			bool exists = true;
+			if (workspaceContext != null)
+			{
+				try
+				{
+					exists = workspaceContext?.FeatureWorkspace.OpenTable(originalTable) != null;
+				}
+				catch (Exception)
+				{
+					_msg.DebugFormat("Cannot open table {0}. Assuming it does not exist.",
+					                 originalTable);
+					exists = false;
+				}
+			}
+
+			if (exists)
+			{
+				_msg.DebugFormat("Extracted and found table name {0} from query name {1}",
+				                 originalTable, gdbDatasetOrQueryClassName);
+
+				return originalTable;
+			}
+
+			// Let's assume that the original view already has a suffix, such as _1:
+			_msg.DebugFormat("Extracted table name {0} from query name {1}",
+			                 tableName, gdbDatasetOrQueryClassName);
+
+			return tableName;
 		}
 
 		[NotNull]

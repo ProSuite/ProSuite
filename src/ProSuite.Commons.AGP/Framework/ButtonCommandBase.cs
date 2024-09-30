@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Dialogs;
 
 namespace ProSuite.Commons.AGP.Framework
 {
@@ -56,7 +57,7 @@ namespace ProSuite.Commons.AGP.Framework
 			}
 			catch (Exception ex)
 			{
-				Gateway.HandleError(ex, _msg);
+				ErrorHandler.HandleError(ex, _msg);
 			}
 		}
 

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -12,10 +15,43 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 		#region Field declarations
 
 		private readonly bool _isReshapeMemberCandidate;
+		private readonly bool? _touchingDifferentParts;
+
+		private readonly SubcurveNode _fromNode;
+		private readonly SubcurveNode _toNode;
+
+		private double? _lineAngleAtFrom;
+		private double? _lineAngleAtTo;
 
 		#endregion
 
 		#region Constructors
+
+		public CutSubcurve([NotNull] Polyline path,
+		                   bool touchAtFromPoint,
+		                   bool touchAtToPoint,
+		                   [CanBeNull] SubcurveNode fromNode = null,
+		                   [CanBeNull] SubcurveNode toNode = null,
+		                   bool? touchingDifferentParts = false)
+		{
+			Path = path;
+
+			TouchAtToPoint = touchAtToPoint;
+			TouchAtFromPoint = touchAtFromPoint;
+
+			_fromNode = fromNode;
+			_toNode = toNode;
+			_touchingDifferentParts = touchingDifferentParts;
+		}
+
+		public bool TouchAtFromPoint { get; }
+
+		public bool TouchAtToPoint { get; }
+
+		private SubcurveNode FromNode => _fromNode;
+
+		public SubcurveNode ToNode => _toNode;
+
 
 		public CutSubcurve([NotNull] Polyline path,
 		                   bool canReshape,
@@ -59,7 +95,80 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 			}
 		}
 
-		public Polyline Path { get; }
+		public double LineAngleAtFrom
+		{
+			get
+			{
+				if (_lineAngleAtFrom == null)
+				{
+					_lineAngleAtFrom = GetLineAngle(this, _fromNode);
+				}
+
+				return (double)_lineAngleAtFrom;
+			}
+		}
+
+		public double LineAngleAtTo
+		{
+			get
+			{
+				if (_lineAngleAtTo == null)
+				{
+					_lineAngleAtTo = GetLineAngle(this, _toNode);
+				}
+
+				return (double)_lineAngleAtTo;
+			}
+		}
+
+		private static double GetLineAngle([NotNull] CutSubcurve subcurve,
+		                                   SubcurveNode atNode)
+		{
+			//var segments = (ISegmentCollection)subcurve.Path;
+			//var segments = subcurve.Path.Parts;
+			ICollection<Segment> segmentCol = new List<Segment>();
+			subcurve.Path.GetAllSegments(ref segmentCol);
+			var segments = segmentCol.ToList();
+			Segment segment;
+
+			var reverseOrientation = false;
+
+			if (atNode == subcurve.ToNode)
+			{
+				// use last segment and the line needs to be inverted
+				//segment = segments.Segment[segments.SegmentCount - 1];
+				segment = segments[segments.Count - 1];
+				reverseOrientation = true;
+			}
+			else
+			{
+				segment = segments[0];
+			}
+
+			//var line = segment as ILine;
+			//LineSegment line = LineBuilderEx.CreateLineSegment(segment);
+			LineSegment line = segment as LineSegment;
+
+			if (line == null)
+			{
+				//line = new LineClass();
+				//segment.QueryTangent(esriSegmentExtension.esriNoExtension, 1, true, 10, line);
+				line = GeometryEngine.Instance.QueryTangent(segment, SegmentExtensionType.NoExtension, 1, AsRatioOrLength.AsRatio, 10);
+			}
+
+			double angle = line.Angle;
+
+			if (reverseOrientation)
+			{
+				angle = angle >= Math.PI
+					        ? angle - Math.PI
+					        : angle + Math.PI;
+			}
+
+			return angle;
+		}
+
+		public Polyline Path { get; set; }
 
 		[CanBeNull]
 		public Geometry ExtraTargetInsertPoints { get; set; }
