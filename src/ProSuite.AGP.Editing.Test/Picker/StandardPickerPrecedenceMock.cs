@@ -43,6 +43,11 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			throw new NotImplementedException();
 		}
 
+		public Geometry GetSelectionGeometry()
+		{
+			return SelectionGeometry;
+		}
+
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
 		{
 			return items.Take(_maxItems)

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.DomainModel.Core.DataModel
@@ -444,8 +444,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		#region Implementation of IDbTableSchema
 
-		public IReadOnlyList<ITableField> TableFields
-			=> (IReadOnlyList<ITableField>) GetAttributes();
+		public IReadOnlyList<ITableField> TableFields => GetAttributes().ToList();
 
 		public bool HasOID => _attributes.Any(a => a.FieldType == FieldType.ObjectID);
 

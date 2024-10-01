@@ -545,8 +545,9 @@ namespace ProSuite.DdxEditor.Content.Models
 			var topologyDataset = dataset as TopologyDataset;
 			if (topologyDataset != null)
 			{
-				return Assert.NotNull(datasetContext.OpenTopology(topologyDataset))
-				             .FeatureDataset;
+				TopologyReference topologyReference = datasetContext.OpenTopology(topologyDataset);
+
+				return Assert.NotNull(topologyReference?.Topology).FeatureDataset;
 			}
 
 			return null;

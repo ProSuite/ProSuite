@@ -12,6 +12,9 @@ namespace ProSuite.Commons.AGP.Framework;
 
 /// <summary>
 /// Utils at the gateway between Pro SDK and our own code.
+/// The ShowFoo() methods bring up a modal dialog and log.
+/// The ReportFoo() methods do anything modeless and log.
+/// The LogFoo() methods only log (no other reporting).
 /// </summary>
 public static class Gateway
 {
@@ -131,6 +134,20 @@ public static class Gateway
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void ReportError(Exception ex, IMsg logger, string caption = null)
 	{
+		// Here we COULD consider a toast notification (in addition to a log entry)
+		// For now, just forward to LogError:
+		LogError(ex, logger, caption);
+	}
+
+	/// <summary>
+	/// Write the given error to the appropriate log.
+	/// Do no other reporting (no dialog, no toast, just log).
+	/// The <paramref name="caption"/> defaults to the caller's name.
+	/// </summary>
+	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	public static void LogError(Exception ex, IMsg logger, string caption = null)
+	{
 		if (ex is null) return;
 
 		if (caption is null)
@@ -143,8 +160,6 @@ public static class Gateway
 
 		logger ??= _msg; // default to our own logger
 		logger.Error($"{caption}: {message}", ex);
-
-		// Here we COULD consider a toast notification
 	}
 
 	/// <summary>
@@ -180,6 +195,18 @@ public static class Gateway
 	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
 	public static void ReportError(string message, IMsg logger, string caption = null)
 	{
+		// Here we COULD consider a toast notification (in addition to a log entry)
+		// For now, just forward to LogError:
+		LogError(message, logger, caption);
+	}
+
+	/// <summary>
+	/// Write the given message to the appropriate log.
+	/// Do no other reporting (no dialog, no toast, just log).
+	/// </summary>
+	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
+	public static void LogError(string message, IMsg logger, string caption = null)
+	{
 		if (message is null) return;
 
 		logger ??= _msg; // default to our own logger
@@ -192,8 +219,6 @@ public static class Gateway
 		{
 			logger.Error($"{caption}: {message}");
 		}
-
-		// Here we COULD consider a toast notification
 	}
 
 	/// <summary>
