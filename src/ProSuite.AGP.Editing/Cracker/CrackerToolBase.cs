@@ -115,7 +115,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			//	                       ? intersectingFeatures
 			//	                       : null;
 
-			_feedback.Update(_resultCrackPoints);
+			_feedback.Update(_resultCrackPoints, selectedFeatures);
 		}
 
 		protected override bool CanUseDerivedGeometries()

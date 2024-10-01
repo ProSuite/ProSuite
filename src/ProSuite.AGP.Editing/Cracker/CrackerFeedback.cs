@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.Cracker
@@ -62,21 +65,37 @@ namespace ProSuite.AGP.Editing.Cracker
 			redCrossMarker =
 				CreateOutlinedPointSymbol(red, white, 10, SymbolUtils.MarkerStyle.Cross);
 			greySquareMarker =
-				CreateOutlinedPointSymbol(grey, white, 5, SymbolUtils.MarkerStyle.Square);
+				CreateOutlinedPointSymbol(grey, white, 15, SymbolUtils.MarkerStyle.Square); // TODO: Fix: All markers are drawn as Circles!
 			redSquareMarker =
 				CreateOutlinedPointSymbol(red, white, 5, SymbolUtils.MarkerStyle.Square);
 			//TODO: remove segment line feature
 		}
 
-		public void Update([CanBeNull] CrackerResult crackerResult)
+		public void Update([CanBeNull] CrackerResult crackerResult, IList<Feature> selectedFeatures)
 		{
+			// clear any previous drawings
 			DisposeOverlays();
+
+			// get the Vertices
+			foreach (var feature in selectedFeatures)
+			{
+				IEnumerable<MapPoint> vertices = GeometryUtils.GetVertices(feature);
+
+				// draw vertices before drawing crack points
+				foreach (var vertex in vertices)
+				{
+					IDisposable addedVertex =
+						MapView.Active.AddOverlay(vertex, greySquareMarker);
+					_overlays.Add(addedVertex);
+				}
+			}
 
 			if (crackerResult == null)
 			{
 				return;
 			}
 
+			// draw crackpoints
 			foreach (var crackedFeature in crackerResult.ResultsByFeature)
 			{
 				foreach (CrackPoint crackPoint in crackedFeature.CrackPoints)
@@ -89,7 +108,8 @@ namespace ProSuite.AGP.Editing.Cracker
 						_overlays.Add(addedCrackPoint);
 					}
 
-					else if (crackPoint.TargetVertexOnlyDifferentInZ)
+					else if (crackPoint
+					         .TargetVertexOnlyDifferentInZ) //not implemented in server yet
 					{
 						IDisposable addedCrackPoint =
 							MapView.Active.AddOverlay(crackPoint.Point, mintCircleMarker);
@@ -98,6 +118,8 @@ namespace ProSuite.AGP.Editing.Cracker
 					}
 
 					else if (crackPoint.TargetVertexDifferentWithinTolerance)
+						// Draws a green square, if a vertex in the source feature is within tolerance, and therefore will snap a source vertex to the targets square-marked vertex
+						// TODO: Add to Jira and remove comment
 					{
 						IDisposable addedCrackPoint =
 							MapView.Active.AddOverlay(crackPoint.Point, greenSquareMarker);
