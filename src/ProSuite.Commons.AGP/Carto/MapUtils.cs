@@ -491,11 +491,11 @@ namespace ProSuite.Commons.AGP.Carto
 		/// </summary>
 		/// <param name="map"></param>
 		/// <returns></returns>
-		public static IEnumerable<FeatureLayer> GetEditableLayers(
+		public static IEnumerable<BasicFeatureLayer> GetEditableLayers(
 			[NotNull] Map map)
 		{
-			IEnumerable<FeatureLayer> editLayers =
-				GetFeatureLayers<FeatureLayer>(map, bfl => bfl?.IsEditable == true);
+			IEnumerable<BasicFeatureLayer> editLayers =
+				GetFeatureLayers<BasicFeatureLayer>(map, bfl => bfl?.IsEditable == true);
 
 			return editLayers;
 		}
