@@ -25,7 +25,7 @@ using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
-	public abstract class AdvancedReshapeToolBase : ConstructionToolBase
+	public abstract class AdvancedReshapeToolBase : ConstructionToolBase, ISymbolizedSketchTool
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -41,7 +41,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		// - Connected lines reshape
 		// - Update feedback on toggle layer visibility
 
-		private AdvancedReshapeFeedback _feedback;
+		[CanBeNull] private AdvancedReshapeFeedback _feedback;
+		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
 		private Task<bool> _updateFeedbackTask;
 
@@ -51,6 +52,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected AdvancedReshapeToolBase()
 		{
+			FireSketchEvents = true;
+
 			// This is our property:
 			RequiresSelection = true;
 
@@ -117,15 +120,31 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			       geometryType == GeometryType.Polygon;
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override async void OnToolActivatingCore()
 		{
 			_feedback = new AdvancedReshapeFeedback();
 
 			base.OnToolActivatingCore();
 		}
 
+		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
+		{
+			_symbolizedSketch =
+				new SymbolizedSketchTypeBasedOnSelection(this, GetSelectionSketchGeometryType());
+			_symbolizedSketch.SetSketchSymbolBasedOnSelection();
+
+			return base.OnToolActivatedCore(hasMapViewChanged);
+		}
+
+		protected override void OnSelectionPhaseStarted()
+		{
+			base.OnSelectionPhaseStarted();
+			_feedback?.Clear();
+		}
+
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_symbolizedSketch?.Dispose();
 			_feedback?.Clear();
 			_feedback = null;
 
@@ -231,11 +250,40 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		//	}
 		//}
 
+		public bool CanSelectFromLayer(Layer layer)
+		{
+			return base.CanSelectFromLayer(layer);
+		}
+
+		public bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+		{
+			return base.CanUseSelection(selectionByLayer);
+		}
+
+		public bool CanSetConstructionSketchSymbol(GeometryType geometryType)
+		{
+			switch (geometryType)
+			{
+				case GeometryType.Polyline:
+					return true;
+				case GeometryType.Point:
+				case GeometryType.Polygon:
+				case GeometryType.Unknown:
+				case GeometryType.Envelope:
+				case GeometryType.Multipoint:
+				case GeometryType.Multipatch:
+				case GeometryType.GeometryBag:
+					return false;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
+			}
+		}
+
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
 			Geometry sketchGeometry, EditingTemplate editTemplate, MapView activeView,
 			CancelableProgressor cancelableProgressor = null)
 		{
-			_feedback.Clear();
+			_feedback?.Clear();
 
 			// TODO: cancel all running background tasks...
 
@@ -316,7 +364,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override void OnSketchResetCore()
 		{
-			_feedback.Clear();
+			_feedback?.Clear();
+
 			_nonDefaultSideMode = false;
 		}
 
@@ -543,6 +592,16 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			return await QueuedTaskUtils.Run(
 				       () => _feedback?.UpdatePreview(reshapeResult?.ResultFeatures));
+		}
+
+		public void SetSketchSymbol(CIMSymbolReference symbolReference)
+		{
+			SketchSymbol = symbolReference;
+		}
+
+		public void SetSketchType(SketchGeometryType type)
+		{
+			SketchType = type;
 		}
 	}
 }

@@ -55,6 +55,9 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public bool IsSingleClick { get; }
 
+		public bool AggregateItems =>
+			PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl);
+
 		public Point PickerLocation { get; set; }
 
 		public void AreModifierKeysPressed()
@@ -74,7 +77,7 @@ namespace ProSuite.AGP.Editing.Picker
 			if (KeyboardUtils.IsShiftDown())
 			{
 				PressedKeys.Add(Key.LeftShift);
-				PressedKeys.Add(Key.LeftShift);
+				PressedKeys.Add(Key.RightShift);
 			}
 		}
 
@@ -86,9 +89,9 @@ namespace ProSuite.AGP.Editing.Picker
 		public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
 		                                        bool areaSelect = false)
 		{
-			if (PressedKeys.Contains(Key.LeftShift) || PressedKeys.Contains(Key.RightShift))
+			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
 			{
-				return PickerMode.ShowPicker;
+				return PickerMode.PickAll;
 			}
 
 			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))

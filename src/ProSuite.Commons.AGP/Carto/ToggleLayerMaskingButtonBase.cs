@@ -2,6 +2,7 @@ using System;
 using System.Windows.Media.Imaging;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Logging;
 using Button = ArcGIS.Desktop.Framework.Contracts.Button;
@@ -19,6 +20,33 @@ public abstract class ToggleLayerMaskingButtonBase : Button
 	private bool? _toggleState; // initially unknown
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	protected ToggleLayerMaskingButtonBase()
+	{
+		ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
+
+		Initialize();
+	}
+
+	private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs args)
+	{
+		// empirical: may get this twice, once for the old and once for the new active map
+		Initialize();
+	}
+
+	/// <remarks>Must call on MCT</remarks>
+	private async void Initialize()
+	{
+		try
+		{
+			var map = MapView.Active?.Map;
+			_toggleState = await QueuedTask.Run(() => DisplayUtils.UsesLayerMasking(map));
+		}
+		catch (Exception ex)
+		{
+			_msg.Error($"{GetType().Name}: {ex.Message}", ex);
+		}
+	}
 
 	protected override async void OnClick()
 	{

@@ -31,7 +31,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			string tableName;
 			try
 			{
-				tableName = row.GetTable().GetName();
+				using Table table = row.GetTable();
+				tableName = table.GetName();
 			}
 			catch (Exception e)
 			{
@@ -43,7 +44,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static string GetDisplayValue(Row row)
 		{
-			string className = DatasetUtils.GetAliasName(row.GetTable());
+			using Table table = row.GetTable();
+			string className = DatasetUtils.GetAliasName(table);
 
 			return GetDisplayValue(row, className);
 		}
@@ -68,8 +70,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 
-			Table table = row.GetTable();
-
+			using Table table = row.GetTable();
 			string subtypeFieldName = DatasetUtils.GetSubtypeFieldName(table);
 
 			if (! string.IsNullOrEmpty(subtypeFieldName))
@@ -108,11 +109,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				return null;
 			}
 
-			Subtype subtype = null;
 			try
 			{
-				subtype = row.GetTable().GetDefinition().GetSubtypes()
-				             ?.FirstOrDefault(st => st.GetCode() == subtypeCode.Value);
+				using Table table = row.GetTable();
+				using TableDefinition definition = table.GetDefinition();
+
+				return DatasetUtils.GetSubtype(definition, subtypeCode.Value);
 			}
 			catch (NotSupportedException notSupportedException)
 			{
@@ -120,7 +122,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				_msg.Debug("Subtypes not supported", notSupportedException);
 			}
 
-			return subtype;
+			return null;
 		}
 
 		[NotNull]
@@ -134,8 +136,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static IEnumerable<Feature> Filter([NotNull] IEnumerable<Feature> features,
 		                                          GeometryType byGeometryType)
 		{
-			return features.Where(
-				f => DatasetUtils.GetShapeType(f.GetTable()) == byGeometryType);
+			foreach (Feature feature in features)
+			{
+				using FeatureClass featureClass = feature.GetTable();
+
+				if (featureClass.GetShapeType() == byGeometryType)
+				{
+					yield return feature;
+				}
+			}
 		}
 
 		public static bool IsSameFeature(Feature feature1, Feature feature2)

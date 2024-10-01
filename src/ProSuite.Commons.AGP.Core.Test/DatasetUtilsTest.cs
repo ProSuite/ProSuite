@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
+using ArcGIS.Core.Data.Mapping;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -22,7 +25,7 @@ public class DatasetUtilsTest
 
 		_testGdb = CreateTestGdb();
 	}
-
+	
 	[Test]
 	public void Subtypes_Tests()
 	{
@@ -61,8 +64,42 @@ public class DatasetUtilsTest
 		Assert.AreEqual(-1, DatasetUtils.GetSubtypeFieldIndex(table));
 	}
 
+	[Test]
+	public void TableNames_Tests()
+	{
+		//Test an FC
+		var fc = _testGdb.OpenDataset<FeatureClass>("fc");
+		Assert.NotNull(fc);
+
+		Assert.AreEqual("fc", DatasetUtils.GetName(fc));
+		Assert.AreEqual("fcAlias", DatasetUtils.GetAliasName(fc));
+
+		// Test a Table without AliasName
+		var table = _testGdb.OpenDataset<Table>("tbl");
+		
+		Assert.NotNull(table);
+
+		Assert.AreEqual("tbl", DatasetUtils.GetName(table));
+		Assert.AreEqual("tbl", DatasetUtils.GetAliasName(table));
+		//Creating a dataset without AliasName automatically sets alias=name
+		Assert.AreEqual(table.GetName(), table.GetDefinition().GetAliasName());
+
+		//Test an AnnoFC
+		var anno = _testGdb.OpenDataset<AnnotationFeatureClass>("anno");
+		Assert.NotNull(anno);
+		
+		Assert.AreEqual("anno", DatasetUtils.GetName(anno));
+		Assert.AreEqual("annoAlias", DatasetUtils.GetAliasName(anno));
+
+		//possible further tests
+		// - FC/Tables with joins
+		// - other workspaces (qualifiers)
+	}
+
 	private static ArcGIS.Core.Data.Geodatabase CreateTestGdb()
 	{
+		//var gdb = SchemaBuilder.CreateGeodatabase(
+		//	new FileGeodatabaseConnectionPath(new Uri(@"C:\temp\abc.gdb", UriKind.Absolute)));
 		var gdb = SchemaBuilder.CreateGeodatabase(new MemoryConnectionProperties());
 
 		SchemaBuilder schemaBuilder = new SchemaBuilder(gdb);
@@ -74,6 +111,8 @@ public class DatasetUtilsTest
 				      new FieldDescription("SomeString", FieldType.String)
 			      },
 			new ShapeDescription(GeometryType.Point, SpatialReferences.WGS84));
+
+		featureClassDescription.AliasName = $"{featureClassDescription.Name}Alias";
 
 		featureClassDescription.SubtypeFieldDescription =
 			new SubtypeFieldDescription(
@@ -97,10 +136,31 @@ public class DatasetUtilsTest
 
 		schemaBuilder.Create(tableDescription);
 
-		if (! schemaBuilder.Build())
+		AnnotationFeatureClassDescription annoFeatureClassDescription =
+			new AnnotationFeatureClassDescription(
+				"anno", new List<FieldDescription>
+				        {
+					        new FieldDescription("SomeInteger", FieldType.Integer),
+					        new FieldDescription("SomeString", FieldType.String)
+				        },
+				new ShapeDescription(GeometryType.Polygon, SpatialReferences.WGS84),
+				new CIMMaplexGeneralPlacementProperties(),
+				new List<CIMLabelClass>
+				{
+					new CIMLabelClass
+					{ TextSymbol = new CIMSymbolReference { Symbol = new CIMTextSymbol() } }
+				});
+
+		annoFeatureClassDescription.AliasName = $"{annoFeatureClassDescription.Name}Alias";
+
+		schemaBuilder.Create(annoFeatureClassDescription);
+
+		bool success = schemaBuilder.Build();
+		if (! success)
 		{
 			IReadOnlyList<string> errorMessages = schemaBuilder.ErrorMessages;
-			//etc.
+			throw new Exception(
+				$"Error setting up test gdb ({errorMessages.Count} error message(s)).");
 		}
 
 		return gdb;

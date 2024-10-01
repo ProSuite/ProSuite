@@ -8,7 +8,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// <summary>
 	/// Allows implementors to be notified of specific feature-level operations.
 	/// The -ing methods can be used to modify the involved features to be stored.
-	/// Hence implementations are not necessarily side-effect free (observer effect;-)
+	/// Hence, implementations are not necessarily side-effect-free (observer effect;-)
 	/// </summary>
 	public interface IEditOperationObserver : IEquatable<IEditOperationObserver>
 	{

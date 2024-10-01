@@ -84,6 +84,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		public static readonly AttributeRole EmailAddress = new AttributeRole(520);
 
+		public static readonly AttributeRole ReleaseID = new AttributeRole(816);
+
 		private static readonly Dictionary<int, AttributeRole> _roles =
 			new Dictionary<int, AttributeRole>();
 

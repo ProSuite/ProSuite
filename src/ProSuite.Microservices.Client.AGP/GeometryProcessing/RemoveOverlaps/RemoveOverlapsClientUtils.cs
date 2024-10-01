@@ -238,7 +238,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 				options.GetZSourceOptionProvider() as
 					DatasetSpecificSettingProvider<ChangeAlongZSource>;
 
-			if (datasetSpecificValues != null)
+			if (datasetSpecificValues?.DatasetSpecificValues != null)
 			{
 				request.DatasetSpecificZSources.AddRange(
 					datasetSpecificValues.DatasetSpecificValues.Select(

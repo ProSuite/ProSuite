@@ -4,6 +4,8 @@ using ESRI.ArcGIS.DatasourcesRaster;
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
 using System;
+using System.Linq;
+using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
@@ -11,6 +13,7 @@ using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
+using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.LegacyTypes;
 using ProSuite.DomainModel.Core.QA;
@@ -260,6 +263,26 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 
 			return defaultValue;
+		}
+
+		public static SqlExpressionAttribute GetSqlExpressionAttribute(
+			[NotNull] Type instanceType,
+			[NotNull] TestParameter testParameter)
+		{
+			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
+
+			PropertyInfo propertyInfo =
+				instanceType.GetProperties()
+				            .FirstOrDefault(p => p.Name.Equals(
+					                            testParameter.Name,
+					                            StringComparison.InvariantCultureIgnoreCase));
+
+			if (propertyInfo == null)
+			{
+				return null;
+			}
+
+			return ReflectionUtils.GetAttribute<SqlExpressionAttribute>(propertyInfo);
 		}
 	}
 }

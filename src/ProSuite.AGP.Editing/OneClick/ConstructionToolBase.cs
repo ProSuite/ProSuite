@@ -52,7 +52,38 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Cursor SketchCursor { get; set; }
 
-		protected bool IsInSketchMode => Cursor == SketchCursor;
+		/// <summary>
+		/// Whether the geometry sketch (as opposed to the selection sketch) is currently active
+		/// and visible and can be manipulated by the user. This property is false during an
+		/// intermediate selection (using shift key). <see cref="IsInSketchPhase"/> however
+		/// will remain true in an intermediate selection.
+		/// </summary>
+		protected bool IsInSketchMode
+		{
+			get
+			{
+				if (! IsInSketchPhase)
+				{
+					return false;
+				}
+
+				bool selectingDuringSketchPhase =
+					RequiresSelection &&
+					KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+					KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+
+				return ! selectingDuringSketchPhase;
+			}
+		}
+
+		/// <summary>
+		/// Property which indicates whether the tool is in the sketch phase. The difference to
+		/// <see cref="IsInSketchMode"/> is that this property reflects the general phase of the
+		/// tool. Even during the sketch phase an intermittent selection can be performed.
+		/// In order to evaluate weather the actual sketch is currently visible and edited,
+		/// use <see cref="IsInSketchMode"/>.
+		/// </summary>
+		protected bool IsInSketchPhase { get; set; }
 
 		protected bool SupportRestoreLastSketch => true;
 
@@ -87,7 +118,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				return Task.FromResult(true);
 			}
 
-			if (CanUseSelection(SelectionUtils.GetSelection(e)))
+			if (CanUseSelection(SelectionUtils.GetSelection<BasicFeatureLayer>(e.Selection)))
 			{
 				StartSketchPhase();
 			}
@@ -98,6 +129,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		#endregion
 
 		#region OneClickToolBase overrides
+
+		protected override void OnSelectionPhaseStarted()
+		{
+			IsInSketchPhase = false;
+		}
 
 		protected override void OnToolActivatingCore()
 		{
@@ -116,9 +152,26 @@ namespace ProSuite.AGP.Editing.OneClick
 			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
-		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
+		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
-			return Task.FromResult(! IsInSketchMode);
+			if (! RequiresSelection)
+			{
+				return false;
+			}
+
+			if (shiftDown)
+			{
+				return true;
+			}
+
+			bool result = await QueuedTask.Run(IsInSelectionPhaseQueued);
+
+			return result;
+		}
+
+		private bool IsInSelectionPhaseQueued()
+		{
+			return ! CanUseSelection(ActiveMapView);
 		}
 
 		protected override void LogUsingCurrentSelection()
@@ -284,7 +337,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			if (! CanUseSelection(ActiveMapView))
+			if (RequiresSelection && ! CanUseSelection(ActiveMapView))
 			{
 				//LogPromptForSelection();
 				StartSelectionPhase();
@@ -344,17 +397,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract void LogEnteringSketchMode();
 
-		/// <summary>
-		/// Determines whether the provided selection can be used by this tool.
-		/// </summary>
-		/// <param name="selection"></param>
-		/// <returns></returns>
-		protected virtual bool CanUseSelection(Dictionary<MapMember, List<long>> selection)
-		{
-			// TODO
-			return selection.Count > 0;
-		}
-
 		protected abstract Task<bool> OnEditSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			EditingTemplate editTemplate,
@@ -392,6 +434,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			LogEnteringSketchMode();
+
+			IsInSketchPhase = true;
 		}
 
 		private static bool CanFinishSketch(Geometry sketch)
@@ -414,22 +458,23 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		/// <summary>
-		/// Determines whether the provided selection can be used by this tool.
-		/// </summary>
-		/// <param name="selection"></param>
-		/// <returns></returns>
-		private bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection)
-		{
-			var mapMemberDictionary = new Dictionary<MapMember, List<long>>(selection.Count);
+		//// todo daro drop
+		///// <summary>
+		///// Determines whether the provided selection can be used by this tool.
+		///// </summary>
+		///// <param name="selection"></param>
+		///// <returns></returns>
+		//private bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection)
+		//{
+		//	var mapMemberDictionary = new Dictionary<MapMember, List<long>>(selection.Count);
 
-			foreach (var keyValuePair in selection)
-			{
-				mapMemberDictionary.Add(keyValuePair.Key, keyValuePair.Value);
-			}
+		//	foreach (var keyValuePair in selection)
+		//	{
+		//		mapMemberDictionary.Add(keyValuePair.Key, keyValuePair.Value);
+		//	}
 
-			return CanUseSelection(mapMemberDictionary);
-		}
+		//	return CanUseSelection(mapMemberDictionary);
+		//}
 
 		private bool CanStartSketchPhase(IList<Feature> selectedFeatures)
 		{

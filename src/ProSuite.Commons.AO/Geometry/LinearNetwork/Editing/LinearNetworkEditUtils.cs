@@ -16,12 +16,20 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			[NotNull] IFeature edgeFeature,
 			[NotNull] IEnumerable<IFeature> splittingJunctions)
 		{
-			const bool projectPointsOntoPathToSplit = false;
-			const bool createParts = true;
-
 			var splitPoints =
 				(IPointCollection) GeometryFactory.CreateMultipoint(
 					splittingJunctions.Select(f => (IPoint) f.Shape));
+
+			List<IFeature> result = SplitAtPoints(edgeFeature, splitPoints);
+
+			return result;
+		}
+
+		public static List<IFeature> SplitAtPoints([NotNull] IFeature edgeFeature,
+		                                           [NotNull] IPointCollection splitPoints)
+		{
+			const bool projectPointsOntoPathToSplit = false;
+			const bool createParts = true;
 
 			var edge = (IPolyline) edgeFeature.Shape;
 
@@ -39,8 +47,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 
 				// store the update
 				IFeature existingFeature = AssignGeometryToFeature(geometryToStoreInOriginal,
-					edgeFeature,
-					false);
+					edgeFeature, false);
+
 				existingFeature.Store();
 
 				// store other new geometries as inserts
@@ -130,8 +138,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 
 			Pnt2D newEndPnt = new Pnt2D(newEndPoint.X, newEndPoint.Y);
 
-			IPoint fromPoint = new PointClass() {SpatialReference = newEndPoint.SpatialReference};
-			IPoint toPoint = new PointClass() {SpatialReference = newEndPoint.SpatialReference};
+			IPoint fromPoint = new PointClass() { SpatialReference = newEndPoint.SpatialReference };
+			IPoint toPoint = new PointClass() { SpatialReference = newEndPoint.SpatialReference };
 
 			double searchToleranceSquared = networkFeatureFinder.SearchTolerance *
 			                                networkFeatureFinder.SearchTolerance;

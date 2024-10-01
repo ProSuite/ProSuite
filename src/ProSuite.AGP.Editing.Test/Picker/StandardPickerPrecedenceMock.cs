@@ -29,6 +29,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 
 		public int SelectionTolerance { get; set; }
 		public bool IsSingleClick { get; }
+		public bool AggregateItems { get; }
 		public Point PickerLocation { get; set; }
 
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,

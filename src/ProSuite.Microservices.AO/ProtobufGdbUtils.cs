@@ -71,13 +71,24 @@ namespace ProSuite.Microservices.AO
 		                                          bool includeFieldValues = false,
 		                                          string subFields = null)
 		{
-			var result = new GdbObjectMsg();
+			var result = ToGdbObjectMsg((IRow) featureOrObject, includeSpatialRef,
+			                            includeFieldValues, subFields);
 
 			result.ClassHandle = featureOrObject.Class.ObjectClassID;
 
-			result.ObjectId = featureOrObject.OID;
+			return result;
+		}
 
-			if (featureOrObject is IFeature feature)
+		public static GdbObjectMsg ToGdbObjectMsg([NotNull] IRow featureOrRow,
+		                                          bool includeSpatialRef = false,
+		                                          bool includeFieldValues = false,
+		                                          string subFields = null)
+		{
+			var result = new GdbObjectMsg();
+
+			result.ObjectId = featureOrRow.OID;
+
+			if (featureOrRow is IFeature feature)
 			{
 				// NOTE: Normal fields just return null if they have not been fetched due to sub-field restrictions.
 				//       However, the Shape property E_FAILs.
@@ -107,13 +118,13 @@ namespace ProSuite.Microservices.AO
 
 			if (includeFieldValues)
 			{
-				IFields fields = featureOrObject.Fields;
+				IFields fields = featureOrRow.Fields;
 
 				for (int i = 0; i < fields.FieldCount; i++)
 				{
 					IField field = fields.Field[i];
 
-					object valueObject = featureOrObject.Value[i];
+					object valueObject = featureOrRow.Value[i];
 
 					var attributeValue = new AttributeValue();
 

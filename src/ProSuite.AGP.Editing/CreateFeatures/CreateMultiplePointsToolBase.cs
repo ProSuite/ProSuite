@@ -15,7 +15,6 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
 
 namespace ProSuite.AGP.Editing.CreateFeatures
 {
@@ -68,11 +67,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			return SketchGeometryType.Multipoint;
 		}
 
-		protected override SketchGeometryType GetSelectionSketchGeometryType()
-		{
-			return SketchGeometryType.Rectangle;
-		}
-
 		protected override EditingTemplate GetSketchTemplate()
 		{
 			return EditingTemplate.Current;
@@ -87,81 +81,172 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				layerName);
 		}
 
-		private static List<long> CreatePointsFeatures(
+		#region Overrides of OneClickToolBase
+
+		protected override void LogPromptForSelection() { }
+
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
+		}
+
+		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
+			Geometry sketchGeometry,
+			EditingTemplate editTemplate,
+			MapView activeView,
+			CancelableProgressor cancelableProgressor = null)
+		{
+			bool success = await QueuedTaskUtils.Run(async () =>
+			{
+				try
+				{
+					SetCursor(Cursors.Wait);
+
+					List<long> newFeatureIds;
+
+					FeatureClass currentTargetClass = GetCurrentTargetClass(out Subtype subtype);
+
+					if (currentTargetClass == null)
+					{
+						throw new Exception("No valid template selected");
+					}
+
+					IEnumerable<Dataset> datasets = new List<Dataset> { currentTargetClass };
+
+					var multipoint = (Multipoint) sketchGeometry;
+
+					if (multipoint?.IsEmpty != false)
+					{
+						_msg.Warn("Sketch is null or empty. No feature was created.");
+						return false;
+					}
+
+					return await GdbPersistenceUtils.ExecuteInTransactionAsync(
+						       editContext =>
+						       {
+							       newFeatureIds = CreatePointFeatures(
+								       editContext, currentTargetClass, subtype, GetFieldValue,
+								       multipoint,
+								       cancelableProgressor);
+
+							       _msg.DebugFormat("Created new feature IDs: {0}", newFeatureIds);
+
+							       return newFeatureIds.Count > 0;
+						       }, "Create multiple points", datasets);
+				}
+				finally
+				{
+					SetCursor(SketchCursor);
+				}
+			});
+
+			return success;
+		}
+
+		protected override CancelableProgressor GetSketchCompleteProgressor()
+		{
+			var sketchCompleteProgressorSource =
+				new CancelableProgressorSource("Creating multiple points from the sketch...",
+				                               "cancelled");
+
+			CancelableProgressor sketchCompleteProgressor =
+				sketchCompleteProgressorSource.Progressor;
+
+			return sketchCompleteProgressor;
+		}
+
+		#endregion
+
+		#region Virtual members
+
+		protected virtual esriGeometryType? GetTargetLayerShapeType()
+		{
+			EditingTemplate editTemplate = EditingTemplate.Current;
+
+			FeatureLayer currentTargetLayer = ToolUtils.CurrentTargetLayer(editTemplate);
+
+			esriGeometryType? geometryType = currentTargetLayer?.ShapeType;
+
+			return geometryType;
+		}
+
+		protected virtual FeatureClass GetCurrentTargetClass(out Subtype subtype)
+		{
+			return ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
+		}
+
+		protected virtual object GetFieldValue([NotNull] Field field,
+		                                       [NotNull] FeatureClassDefinition featureClassDef,
+		                                       [CanBeNull] Subtype subtype)
+		{
+			// If there is an active template, use it:
+			if (GdbPersistenceUtils.TryGetFieldValueFromTemplate(
+				    field.Name, EditingTemplate.Current, out object result))
+			{
+				return result;
+			}
+
+			// Otherwise: Geodatabase default value:
+			return field.GetDefaultValue(subtype);
+		}
+
+		protected virtual string GetTargetObjectTypeName()
+		{
+			EditingTemplate editTemplate = EditingTemplate.Current;
+
+			return ToolUtils.CurrentTargetLayer(editTemplate)?.Name ?? string.Empty;
+		}
+
+		#endregion
+
+		private static List<long> CreatePointFeatures(
 			[NotNull] EditOperation.IEditContext editContext,
-			[NotNull] FeatureClass featureClass,
-			[CanBeNull] IEnumerable<Attribute> attributes,
+			[NotNull] FeatureClass targetFeatureClass,
+			[CanBeNull] Subtype targetSubtype,
+			[CanBeNull] Func<Field, FeatureClassDefinition, Subtype, object> getAttributeValueFunc,
 			[NotNull] Multipoint multipoint,
 			[CanBeNull] CancelableProgressor cancelableProgressor = null)
 		{
 			var result = new List<long>();
 
-			RowBuffer rowBuffer = null;
-			Feature feature = null;
+			FeatureClassDefinition featureClassDefinition = targetFeatureClass.GetDefinition();
 
-			try
+			var pointGeometries = multipoint.Points.Select(
+				p => CreateResultGeometry(p, featureClassDefinition));
+
+			foreach (Feature newFeature in GdbPersistenceUtils.InsertTx(
+				         editContext, targetFeatureClass, targetSubtype,
+				         pointGeometries, getAttributeValueFunc,
+				         cancelableProgressor))
 			{
-				// Set the attributes
-				rowBuffer = featureClass.CreateRowBuffer();
-
-				FeatureClassDefinition classDefinition = featureClass.GetDefinition();
-				GeometryType geometryType = classDefinition.GetShapeType();
-				bool classHasZ = classDefinition.HasZ();
-				bool classHasM = classDefinition.HasM();
-
-				Assert.True(geometryType == GeometryType.Point ||
-				            geometryType == GeometryType.Multipoint,
-				            "Invalid target feature class.");
-
-				// NOTE: The attributes from the template inspector can be null!
-				if (attributes != null)
-				{
-					GdbPersistenceUtils.CopyAttributeValues(attributes, rowBuffer);
-				}
-
-				foreach (MapPoint point in multipoint.Points)
-				{
-					Geometry resultGeometry;
-					if (geometryType == GeometryType.Point)
-					{
-						resultGeometry = CreatePoint(point, classHasZ, classHasM);
-					}
-					else
-					{
-						resultGeometry = CreateSingleMultipoint(point, classHasZ, classHasM);
-					}
-
-					if (cancelableProgressor != null &&
-					    cancelableProgressor.CancellationToken.IsCancellationRequested)
-					{
-						return result;
-					}
-
-					// NOTE: Sometimes on CreateRow the following exception is thrown:
-					// The feature does not have any associated geometry
-					// (which is no problem most of the time)
-					GdbPersistenceUtils.SetShape(rowBuffer, resultGeometry, featureClass);
-
-					// Set Z/M awareness
-					feature = featureClass.CreateRow(rowBuffer);
-
-					feature.Store();
-
-					//To Indicate that the attribute table has to be updated
-					editContext.Invalidate(feature);
-
-					result.Add(feature.GetObjectID());
-				}
-
-				// Do some other processing with the row.
-			}
-			finally
-			{
-				rowBuffer?.Dispose();
-				feature?.Dispose();
+				result.Add(newFeature.GetObjectID());
 			}
 
 			return result;
+		}
+
+		private static Geometry CreateResultGeometry(MapPoint point,
+		                                             FeatureClassDefinition classDefinition)
+		{
+			GeometryType geometryType = classDefinition.GetShapeType();
+			bool classHasZ = classDefinition.HasZ();
+			bool classHasM = classDefinition.HasM();
+
+			Assert.True(geometryType == GeometryType.Point ||
+			            geometryType == GeometryType.Multipoint,
+			            "Invalid target feature class.");
+
+			Geometry resultGeometry;
+			if (geometryType == GeometryType.Point)
+			{
+				resultGeometry = CreatePoint(point, classHasZ, classHasM);
+			}
+			else
+			{
+				resultGeometry = CreateSingleMultipoint(point, classHasZ, classHasM);
+			}
+
+			return resultGeometry;
 		}
 
 		private static Geometry CreateSingleMultipoint(MapPoint point, bool zAware, bool mAware)
@@ -193,106 +278,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 			Enabled = geometryType == esriGeometryType.esriGeometryPoint ||
 			          geometryType == esriGeometryType.esriGeometryMultipoint;
-		}
-
-		#region Overrides of OneClickToolBase
-
-		protected override void LogPromptForSelection() { }
-
-		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
-			Geometry sketchGeometry, EditingTemplate editTemplate,
-			MapView activeView,
-			CancelableProgressor cancelableProgressor = null)
-		{
-			bool success = await QueuedTaskUtils.Run(async () =>
-			{
-				try
-				{
-					SetCursor(Cursors.Wait);
-
-					List<long> newFeatureIds;
-
-					FeatureClass currentTargetClass = GetCurrentTargetClass();
-
-					if (currentTargetClass == null)
-					{
-						throw new Exception("No valid template selected");
-					}
-
-					IEnumerable<Dataset> datasets = new List<Dataset> { currentTargetClass };
-
-					var multipoint = (Multipoint) sketchGeometry;
-
-					if (multipoint?.IsEmpty != false)
-					{
-						_msg.Warn("Sketch is null or empty. No feature was created.");
-						return false;
-					}
-
-					return await GdbPersistenceUtils.ExecuteInTransactionAsync(
-						       editContext =>
-						       {
-							       newFeatureIds = CreatePointsFeatures(
-								       editContext, currentTargetClass,
-								       editTemplate.Inspector, multipoint,
-								       cancelableProgressor);
-
-							       _msg.DebugFormat("Created new feature IDs: {0}", newFeatureIds);
-
-							       return newFeatureIds.Count > 0;
-						       }, "Create multiple points", datasets);
-				}
-				finally
-				{
-					// Anything but the Wait cursor
-					SetCursor(Cursors.Arrow);
-				}
-			});
-
-			return success;
-		}
-
-		protected override CancelableProgressor GetSketchCompleteProgressor()
-		{
-			var sketchCompleteProgressorSource =
-				new CancelableProgressorSource("Creating multiple points from the sketch...",
-				                               "cancelled");
-
-			CancelableProgressor sketchCompleteProgressor =
-				sketchCompleteProgressorSource.Progressor;
-
-			return sketchCompleteProgressor;
-		}
-
-		#endregion
-
-		protected virtual esriGeometryType? GetTargetLayerShapeType()
-		{
-			EditingTemplate editTemplate = EditingTemplate.Current;
-
-			FeatureLayer currentTargetLayer = ToolUtils.CurrentTargetLayer(editTemplate);
-
-			esriGeometryType? geometryType = currentTargetLayer?.ShapeType;
-
-			return geometryType;
-		}
-
-		protected virtual FeatureClass GetCurrentTargetClass()
-		{
-			EditingTemplate editTemplate =
-				Assert.NotNull(EditingTemplate.Current, "No edit template");
-
-			FeatureClass currentTargetClass =
-				ToolUtils.GetCurrentTargetFeatureClass(editTemplate);
-
-			return currentTargetClass;
-		}
-
-		protected virtual string GetTargetObjectTypeName()
-		{
-			EditingTemplate editTemplate = EditingTemplate.Current;
-
-			return ToolUtils.CurrentTargetLayer(editTemplate)?.Name ?? string.Empty;
 		}
 	}
 }
