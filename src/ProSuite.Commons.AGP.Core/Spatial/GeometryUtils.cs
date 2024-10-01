@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
+using esriGeometryType = ArcGIS.Core.CIM.esriGeometryType;
 
 namespace ProSuite.Commons.AGP.Core.Spatial
 {
@@ -91,6 +92,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 					throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex,
 					                                      "Part index beyond number of parts");
 				}
+
 				return multipoint.Points[partIndex];
 			}
 
@@ -101,6 +103,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 					throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex,
 					                                      "Part index beyond number of parts");
 				}
+
 				var path = multipart.Parts[partIndex];
 				var flags = multipart.GetAttributeFlags();
 				var sref = multipart.SpatialReference;
@@ -914,7 +917,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		#region Moving vertices of a multipart geometry builder
 
-		public static void MovePart(this MultipartBuilderEx builder, int partIndex, double dx, double dy)
+		public static void MovePart(this MultipartBuilderEx builder, int partIndex, double dx,
+		                            double dy)
 		{
 			if (builder is null)
 				throw new ArgumentNullException(nameof(builder));
@@ -929,7 +933,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			}
 		}
 
-		public static void MoveVertex(this MultipartBuilderEx builder, int partIndex, int vertexIndex, double dx, double dy)
+		public static void MoveVertex(this MultipartBuilderEx builder, int partIndex,
+		                              int vertexIndex, double dx, double dy)
 		{
 			if (builder is null)
 				throw new ArgumentNullException(nameof(builder));
@@ -1081,6 +1086,40 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			MapPoint upperRight = GetUpperRight(extent);
 
 			return $"{Format(lowerLeft, digits)}, {Format(upperRight, digits)}";
+		}
+
+		public static IEnumerable<MapPoint> GetVertices(Feature feature)
+		{
+			// Check the type of geometry
+			if (feature.GetShape() is Polyline polyline)
+			{
+				// Access vertices of a polyline
+				foreach (var point in polyline.Points)
+				{
+					yield return point;
+				}
+			}
+			else if (feature.GetShape() is Polygon polygon)
+			{
+				// Access vertices of a polygon
+				foreach (var point in polygon.Points)
+				{
+					yield return point;
+				}
+			}
+			else if (feature.GetShape() is Multipoint multipoint)
+			{
+				// Access vertices of a multipoint
+				foreach (var point in multipoint.Points)
+				{
+					yield return point;
+				}
+			}
+			else if (feature.GetShape() is MapPoint mapPoint)
+			{
+				// Single point geometry
+				yield return mapPoint;
+			}
 		}
 	}
 }
