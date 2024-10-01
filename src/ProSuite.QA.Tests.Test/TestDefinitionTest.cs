@@ -3684,6 +3684,7 @@ namespace ProSuite.QA.Tests.Test
 			List<Type> refactoredTypes = new List<Type>
 			                             {
 				                             typeof(TrDissolve),
+											 typeof(TrGeometryToPoints),
 				                             typeof(TrGetNodes),
 				                             typeof(TrIntersect)
 											 typeof(TrMultilineToLine)
@@ -3782,6 +3783,7 @@ namespace ProSuite.QA.Tests.Test
 			// Manually create values for special cases, such as optional parameters or
 			// difficult assertions:
 			AddTrDissolveCases(model, trCases);
+			AddTrGeometryToPointsCases(model, trCases);
 			AddTrGetNodesCases(model, trCases);
 			AddTrMultilineToLineCases(model, trCases);
 			AddTrMultipolygonToPolygonCases(model, trCases);
@@ -3912,6 +3914,23 @@ namespace ProSuite.QA.Tests.Test
 			                                 },
 			                                 optionalValues));
 		}
+
+
+		private static void AddTrGeometryToPointsCases(TestDataModel model,
+												ICollection<TrDefinitionCase>
+													trCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+
+			trCases.Add(new TrDefinitionCase(typeof(TrGeometryToPoints), 0,
+											 new object[]
+											 {
+												 model.GetPolygonDataset(),
+												 "EntireGeometry"
+											 },
+												optionalValues));
+		}
+
 
 		private static void AddTrGetNodesCases(TestDataModel model,
 		                                       ICollection<TrDefinitionCase>
