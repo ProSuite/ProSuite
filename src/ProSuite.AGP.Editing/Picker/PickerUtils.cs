@@ -118,7 +118,8 @@ namespace ProSuite.AGP.Editing.Picker
 		// TODO daro: change signature to .. Func<IEnumerable<FeatureSelectionBase>> because CancelableProgressor should be null?
 		public static async Task ShowAsync(
 			[NotNull] IPickerPrecedence precedence,
-			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor, IEnumerable<FeatureSelectionBase>> getCandidates)
+			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor,
+				IEnumerable<FeatureSelectionBase>> getCandidates)
 		{
 			SelectionCombinationMethod selectionMethod =
 				KeyboardUtils.IsShiftDown()
@@ -135,12 +136,12 @@ namespace ProSuite.AGP.Editing.Picker
 
 			await QueuedTaskUtils.Run(async () =>
 			{
-				precedence.EnsureGeometryNonEmpty();
+				Geometry selectionGeometry = precedence.GetSelectionGeometry();
 
 				// NOTE daro: passing in a delayed cancellable progressor in conjunction with
 				// picker window crashes Pro. A non-delayed progressor works fine.
 				const CancelableProgressor progressor = null;
-				var featureSelection = getCandidates(precedence.SelectionGeometry,
+				var featureSelection = getCandidates(selectionGeometry,
 				                                     spatialRelationship,
 				                                     progressor).ToList();
 
@@ -150,7 +151,8 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public static async Task ShowAsync(
 			[NotNull] IPickerPrecedence precedence,
-			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor, IEnumerable<FeatureSelectionBase>> getCandidates,
+			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor,
+				IEnumerable<FeatureSelectionBase>> getCandidates,
 			PickerMode pickerMode)
 		{
 			SelectionCombinationMethod selectionMethod =
@@ -168,14 +170,13 @@ namespace ProSuite.AGP.Editing.Picker
 
 			await QueuedTaskUtils.Run(async () =>
 			{
-				precedence.EnsureGeometryNonEmpty();
+				Geometry selectionGeometry = precedence.GetSelectionGeometry();
 
 				// NOTE daro: passing in a delayed cancellable progressor in conjunction with
 				// picker window crashes Pro. A non-delayed progressor works fine.
 				const CancelableProgressor progressor = null;
-				var featureSelection = getCandidates(precedence.SelectionGeometry,
-				                                     spatialRelationship,
-				                                     progressor).ToList();
+				List<FeatureSelectionBase> featureSelection =
+					getCandidates(selectionGeometry, spatialRelationship, progressor).ToList();
 
 				await SelectCandidates(precedence, featureSelection, selectionMethod, pickerMode);
 			});
@@ -195,8 +196,13 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			var picker = new PickerService();
 
-			// todo daro PickableItemsFactory as method parameter to group items.
-			if (typeof(T) == typeof(IPickableFeatureItem))
+			bool isRequestingFeatures =
+				typeof(IPickableFeatureItem).IsAssignableFrom(typeof(T));
+
+			bool isRequestingFeatureClasses =
+				typeof(IPickableFeatureClassItem).IsAssignableFrom(typeof(T));
+
+			if (isRequestingFeatures || (precedence.IsSingleClick && ! isRequestingFeatureClasses))
 			{
 				var items = PickableItemsFactory
 				            .CreateFeatureItems(orderedSelection)
@@ -272,7 +278,7 @@ namespace ProSuite.AGP.Editing.Picker
 			switch (precedence.GetPickerMode(orderedSelection))
 			{
 				case PickerMode.ShowPicker:
-					
+
 					IPickableItem pickedItem = await ShowAsync(precedence, orderedSelection);
 
 					if (pickedItem is IPickableFeatureItem featureItem)

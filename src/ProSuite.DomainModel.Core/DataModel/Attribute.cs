@@ -64,6 +64,10 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[UsedImplicitly]
 		public string Name => _name;
 
+		// Consider harvesting as well:
+		[CanBeNull]
+		public string AliasName { get; set; }
+
 		[UsedImplicitly]
 		public string Description
 		{

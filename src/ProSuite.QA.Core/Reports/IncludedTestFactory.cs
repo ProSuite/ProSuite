@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
 using ProSuite.QA.Core.IssueCodes;
 
@@ -11,6 +12,8 @@ namespace ProSuite.QA.Core.Reports
 {
 	public class IncludedTestFactory : IncludedInstance, IComparable<IncludedTestFactory>
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly Type _testFactoryType;
 
 		public IncludedTestFactory([NotNull] Type testFactoryType)
@@ -34,7 +37,7 @@ namespace ProSuite.QA.Core.Reports
 
 			if (factoryDefinitionType != null)
 			{
-				return (TestFactoryDefinition)Activator.CreateInstance(factoryDefinitionType);
+				return (TestFactoryDefinition) Activator.CreateInstance(factoryDefinitionType);
 			}
 
 			ConstructorInfo ctor = testFactoryType.GetConstructors()[0];
@@ -51,7 +54,16 @@ namespace ProSuite.QA.Core.Reports
 				ReflectionUtils.GetAssemblyDirectory(testFactoryAssembly),
 				$"{InstanceUtils.GetDefinitionsAssemblyName(testFactoryAssembly.GetName().Name)}.dll");
 
-			Assembly definitionsAssembly = Assembly.LoadFrom(fullPath);
+			Assembly definitionsAssembly;
+			try
+			{
+				definitionsAssembly = Assembly.LoadFrom(fullPath);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Assembly could not be loaded: {fullPath}", e);
+				return null;
+			}
 
 			string definitionName =
 				InstanceUtils.GetAlgorithmDefinitionName(testFactoryType.FullName);

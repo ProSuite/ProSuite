@@ -1,8 +1,10 @@
-using ProSuite.Commons.AGP.Carto;
+using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.ManagedOptions;
 
-namespace ProSuite.AGP.Editing.RemoveOverlaps
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps
 {
 	public class PartialRemoveOverlapsOptions : PartialOptionsBase
 	{
@@ -18,6 +20,12 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		[CanBeNull]
 		public OverridableSetting<bool> InsertVerticesInTarget { get; set; }
 
+		[CanBeNull]
+		public OverridableSetting<ChangeAlongZSource> ZSource { get; set; }
+
+		[CanBeNull]
+		public List<DatasetSpecificValue<ChangeAlongZSource>> DatasetSpecificZSource { get; set; }
+
 		#region Overrides of PartialOptionsBase
 
 		public override PartialOptionsBase Clone()
@@ -32,6 +40,17 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			result.ExplodeMultipartResults = TryClone(ExplodeMultipartResults);
 
 			result.InsertVerticesInTarget = TryClone(InsertVerticesInTarget);
+
+			result.ZSource = TryClone(ZSource);
+
+			if (DatasetSpecificZSource != null)
+			{
+				result.DatasetSpecificZSource =
+					new List<DatasetSpecificValue<ChangeAlongZSource>>();
+
+				result.DatasetSpecificZSource.AddRange(
+					DatasetSpecificZSource.Select(dsz => dsz.Clone()));
+			}
 
 			return result;
 		}

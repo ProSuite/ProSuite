@@ -84,6 +84,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		public static readonly AttributeRole EmailAddress = new AttributeRole(520);
 
+		public static readonly AttributeRole ReleaseID = new AttributeRole(816);
+
 		private static readonly Dictionary<int, AttributeRole> _roles =
 			new Dictionary<int, AttributeRole>();
 
@@ -268,6 +270,18 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public override int GetHashCode()
 		{
 			return Id;
+		}
+
+		// TODO: Consier making the attribute role a proper value type such as a struct / record
+		// Some code uses the == comparison and expects it to work as value type comparison.
+		public static bool operator ==(AttributeRole left, AttributeRole right)
+		{
+			return left?.Id == right?.Id;
+		}
+
+		public static bool operator !=(AttributeRole left, AttributeRole right)
+		{
+			return left?.Id != right?.Id;
 		}
 
 		#endregion

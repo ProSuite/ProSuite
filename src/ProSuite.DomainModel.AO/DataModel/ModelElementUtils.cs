@@ -129,7 +129,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		[CanBeNull]
-		public static ITopology TryOpenFromMasterDatabase(
+		public static TopologyReference TryOpenFromMasterDatabase(
 			ITopologyDataset dataset, bool allowAlways = false)
 		{
 			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,

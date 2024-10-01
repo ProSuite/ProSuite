@@ -9,5 +9,7 @@ namespace ProSuite.Microservices.Client.DataModel
 		DdxModel CreateModel([NotNull] ModelMsg modelMsg);
 
 		Dataset CreateDataset([NotNull] DatasetMsg datasetMsg);
+
+		Association CreateAssociation(AssociationMsg associationMsg);
 	}
 }

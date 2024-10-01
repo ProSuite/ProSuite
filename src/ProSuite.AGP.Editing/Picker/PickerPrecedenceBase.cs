@@ -16,11 +16,12 @@ namespace ProSuite.AGP.Editing.Picker
 		protected List<Key> PressedKeys { get; } = new();
 
 		[UsedImplicitly]
-		protected PickerPrecedenceBase(Geometry selectionGeometry,
+		protected PickerPrecedenceBase(Geometry sketchGeometry,
 		                               int selectionTolerance,
 		                               Point pickerLocation)
 		{
-			SelectionGeometry = selectionGeometry;
+			SketchGeometry = sketchGeometry;
+			SelectionGeometry = sketchGeometry;
 			SelectionTolerance = selectionTolerance;
 			PickerLocation = pickerLocation;
 
@@ -29,7 +30,26 @@ namespace ProSuite.AGP.Editing.Picker
 			AreModifierKeysPressed();
 		}
 
+		/// <summary>
+		/// The original sketch geometry, without expansion or simplification.
+		/// </summary>
+		public Geometry SketchGeometry { get; set; }
+
+		[Obsolete(
+			"Use GetSelectionGeometry() which ensures that a single-pick is turned into a polygon")]
 		public Geometry SelectionGeometry { get; set; }
+
+		/// <summary>
+		/// Side-effect-free method that returns the geometry which can be used for spatial queries.
+		/// For single-click picks, it returns the geometry expanded by the <see cref="SelectionTolerance"/>. 
+		/// This method must be called on the CIM thread.
+		/// </summary>
+		/// <returns></returns>
+		public Geometry GetSelectionGeometry()
+		{
+			// TODO: Simplify polygons?
+			return PickerUtils.EnsureNonEmpty(SketchGeometry, SelectionTolerance);
+		}
 
 		public int SelectionTolerance { get; }
 
@@ -137,6 +157,7 @@ namespace ProSuite.AGP.Editing.Picker
 		public void Dispose()
 		{
 			SelectionGeometry = null;
+			SketchGeometry = null;
 			PressedKeys.Clear();
 		}
 	}

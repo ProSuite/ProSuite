@@ -8,9 +8,9 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container.TestSupport;
@@ -137,7 +137,7 @@ namespace ProSuite.QA.Container
 				else if (constraintArea != null)
 				{
 					queryArea =
-						((ITopologicalOperator)constraintArea).Intersect(
+						((ITopologicalOperator) constraintArea).Intersect(
 							queryArea, esriGeometryDimension.esriGeometry2Dimension);
 				}
 
@@ -1111,8 +1111,7 @@ namespace ProSuite.QA.Container
 
 		private static void AssertValidFieldNameCount(
 			[NotNull] IEnumerable<IReadOnlyTable> tables,
-			[NotNull] IEnumerable<string>
-				fieldNames)
+			[NotNull] IEnumerable<string> fieldNames)
 		{
 			int tableCount = tables.Count();
 			int fieldCount = fieldNames.Count();
@@ -1176,6 +1175,20 @@ namespace ProSuite.QA.Container
 
 			throw new ArgumentException(
 				string.Format("Unhandled geometry type: {0}", g0Type));
+		}
+
+		public static void SetContainer(IDataContainer dataContainer,
+		                                IEnumerable<IReadOnlyTable> containerAwareTables)
+		{
+			foreach (IReadOnlyTable table in containerAwareTables)
+			{
+				if (table is IDataContainerAware transformed)
+				{
+					transformed.DataContainer = dataContainer;
+
+					SetContainer(dataContainer, transformed.InvolvedTables);
+				}
+			}
 		}
 
 		#region Nested types

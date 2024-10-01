@@ -484,6 +484,22 @@ namespace ProSuite.Commons.AGP.Carto
 			return GetLayers(map, combinedPredicate);
 		}
 
+		/// <summary>
+		/// Returns the layers for which
+		/// (a) the user has data source level permission to edit and
+		/// (b) it is made editable on the map
+		/// </summary>
+		/// <param name="map"></param>
+		/// <returns></returns>
+		public static IEnumerable<FeatureLayer> GetEditableLayers(
+			[NotNull] Map map)
+		{
+			IEnumerable<FeatureLayer> editLayers =
+				GetFeatureLayers<FeatureLayer>(map, bfl => bfl?.IsEditable == true);
+
+			return editLayers;
+		}
+
 		public static IEnumerable<StandaloneTable> GetStandaloneTables(
 			[NotNull] Map map,
 			[CanBeNull] Predicate<StandaloneTable> tablePredicate,
