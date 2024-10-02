@@ -1044,6 +1044,8 @@ namespace ProSuite.QA.Container.TestContainer
 					if (preloadedCache?.IsLoaded(cachedTable, tile) == true)
 					{
 						cachedRows = preloadedCache.TransferCachedRows(tileCache, cachedTable);
+						_msg.Debug($"{tableProps.Table.Name}: Using {cachedRows.Count} " +
+						           $"previously cached rows in {tile}");
 					}
 
 					cachedRows = cachedRows ?? LoadCachedTableRows(tableProps, tile, tileCache);
@@ -1168,12 +1170,12 @@ namespace ProSuite.QA.Container.TestContainer
 			int newlyLoadedRows = cachedRows.Count - previousCachedRowCount;
 			if (! ignoreOverlappingRows)
 			{
-				_msg.VerboseDebug(() => $"{table.Name}: Added additional {newlyLoadedRows} rows " +
-				                        $"to the previous {previousCachedRowCount} rows in {tile}");
+				_msg.Debug($"{table.Name}: Added additional {newlyLoadedRows} rows " +
+				           $"to the previous {previousCachedRowCount} rows in {tile}");
 			}
 			else
 			{
-				_msg.VerboseDebug(() => $"{table.Name}: Set {newlyLoadedRows} rows in {tile}");
+				_msg.Debug($"{table.Name}: Set {newlyLoadedRows} rows in {tile}");
 			}
 
 			if (_loadedRowCountPerTable != null)

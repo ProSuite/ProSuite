@@ -1,18 +1,19 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.QA.Container.TestContainer
 {
 	internal class TilesAdmin
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly TileCache _tileCache;
 		private readonly ITileEnumContext _tileEnumContext;
 
@@ -46,22 +47,26 @@ namespace ProSuite.QA.Container.TestContainer
 				Assert.True(w.XMin <= l.Min.X && w.YMin <= l.Min.Y &&
 				            w.XMax >= l.Max.X && w.YMax >= l.Max.Y,
 				            "Extent mismatch");
-				
-				
+
 				return;
 			}
 
 			if (tileCache.GetLoadedExtent(table) != null)
 			{
+				_msg.Debug($"Tile {tileCache.CurrentTileBox} already loaded for {tableProps}");
 				return;
 			}
 
 			IDictionary<BaseRow, CachedRow> cachedRows =
 				_tileEnumContext.OverlappingFeatures.GetOverlappingCachedRows(table, tile.Box);
 			tileCache.LoadCachedTableRows(cachedRows, tableProps, tile, _tileEnumContext);
+
+			_msg.Debug($"Loaded {cachedRows.Count} rows in {tileCache.CurrentTileBox} " +
+			           $"for {tableProps}");
 		}
 
-		public IEnumerable<IReadOnlyRow> Search(CachedTableProps tableProps, IFeatureClassFilter queryFilter,
+		public IEnumerable<IReadOnlyRow> Search(CachedTableProps tableProps,
+		                                        IFeatureClassFilter queryFilter,
 		                                        QueryFilterHelper filterHelper)
 		{
 			IReadOnlyTable table = tableProps.Table;
@@ -94,8 +99,8 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		private IEnumerable<Tuple<TileCache, Tile>> GetTiles(
-			[NotNull]IGeometry geometry,
-			[NotNull]IReadOnlyTable table)
+			[NotNull] IGeometry geometry,
+			[NotNull] IReadOnlyTable table)
 		{
 			foreach (Tile tile in _tileEnumContext.TileEnum.EnumTiles(geometry))
 			{
