@@ -25,7 +25,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		private readonly CIMSymbolReference mintCircleMarker;
 		private readonly CIMSymbolReference greySquareMarker;
 
-		private readonly List<IDisposable> _overlays = new List<IDisposable>();
+		private readonly List<IDisposable> _overlays = new();
 
 		// Create a point symbol with an outline
 		private static CIMSymbolReference CreateOutlinedPointSymbol(
@@ -34,7 +34,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			var stroke = SymbolUtils.CreateSolidStroke(strokeColor, size / 5);
 			var polySym =
 				SymbolUtils.CreatePolygonSymbol(fillColor, SymbolUtils.FillStyle.Solid, stroke);
-			var marker = SymbolUtils.CreateMarker(SymbolUtils.MarkerStyle.Circle, polySym, size);
+			var marker = SymbolUtils.CreateMarker(style, polySym, size);
 			var symbol = SymbolUtils.CreatePointSymbol(marker);
 			_outlinedPointSymRef = symbol.MakeSymbolReference();
 
@@ -65,7 +65,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			redCrossMarker =
 				CreateOutlinedPointSymbol(red, white, 10, SymbolUtils.MarkerStyle.Cross);
 			greySquareMarker =
-				CreateOutlinedPointSymbol(grey, white, 15, SymbolUtils.MarkerStyle.Square); // TODO: Fix: All markers are drawn as Circles!
+				CreateOutlinedPointSymbol(grey, white, 5, SymbolUtils.MarkerStyle.Square);
 			redSquareMarker =
 				CreateOutlinedPointSymbol(red, white, 5, SymbolUtils.MarkerStyle.Square);
 			//TODO: remove segment line feature
@@ -76,7 +76,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			// clear any previous drawings
 			DisposeOverlays();
 
-			// get the Vertices
+			// get all vertices of selected features
 			foreach (var feature in selectedFeatures)
 			{
 				IEnumerable<MapPoint> vertices = GeometryUtils.GetVertices(feature);
@@ -118,8 +118,7 @@ namespace ProSuite.AGP.Editing.Cracker
 					}
 
 					else if (crackPoint.TargetVertexDifferentWithinTolerance)
-						// Draws a green square, if a vertex in the source feature is within tolerance, and therefore will snap a source vertex to the targets square-marked vertex
-						// TODO: Add to Jira and remove comment
+
 					{
 						IDisposable addedCrackPoint =
 							MapView.Active.AddOverlay(crackPoint.Point, greenSquareMarker);
