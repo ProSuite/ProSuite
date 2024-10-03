@@ -44,7 +44,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 	/// where the request has MaxParallelProcessing property > 1 which signals the desire
 	/// to run a distributed verification.
 	/// </summary>
-	public partial class DistributedTestRunner : ITestRunner
+	public class DistributedTestRunner : ITestRunner
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -711,9 +711,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			{
 				foreach (long objectId in involvedTable.ObjectIds)
 				{
-					// TODO: Remove int conversion after Server11 merge
 					var involvedRow =
-						new InvolvedRow(involvedTable.TableName, Convert.ToInt32(objectId));
+						new InvolvedRow(involvedTable.TableName, objectId);
 
 					involvedRows.Add(involvedRow);
 				}
@@ -897,7 +896,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			if (! qualityVerification.Fulfilled)
 			{
-				_msg.InfoFormat("Un-fulfilled conditions: {0}",
+				_msg.InfoFormat("Un-fulfilled conditions:{0}{1}",
+				                Environment.NewLine,
 				                StringUtils.Concatenate(
 					                qualityVerification.ConditionVerifications.Where(
 						                cv => ! cv.Fulfilled), cv => cv.QualityConditionName,
@@ -1516,5 +1516,218 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			return true;
 		}
+
+		#region Row Count
+
+		//
+		// These methods are only used in a special configuration (ParallelConfiguration.SortByNumberOfObjects)
+		[NotNull]
+		private IList<ReadOnlyFeatureClass> GetParallelBaseFeatureClasses(
+			[NotNull] IList<QualityConditionGroup> qcGroups)
+		{
+			QualityConditionGroup parallelGroup =
+				qcGroups.FirstOrDefault(
+					x => x.ExecType == QualityConditionExecType.TileParallel);
+
+			if (parallelGroup == null)
+			{
+				return new List<ReadOnlyFeatureClass>();
+			}
+
+			HashSet<IReadOnlyTable> usedTables = new HashSet<IReadOnlyTable>();
+			foreach (var tests in parallelGroup.QualityConditions.Values)
+			{
+				foreach (ITest test in tests)
+				{
+					foreach (IReadOnlyTable table in test.InvolvedTables)
+					{
+						AddRecursive(table, usedTables);
+					}
+				}
+			}
+
+			IList<ReadOnlyFeatureClass> baseFcs = new List<ReadOnlyFeatureClass>();
+			foreach (IReadOnlyTable table in usedTables)
+			{
+				if (table is ITransformedTable)
+				{
+					continue;
+				}
+
+				if (table is ReadOnlyFeatureClass baseFc)
+				{
+					baseFcs.Add(baseFc);
+				}
+			}
+
+			return baseFcs;
+		}
+
+		private void CountData(IEnumerable<SubVerification> verifications,
+		                       IList<WorkspaceInfo> workspaceInfos)
+		{
+			List<IReadOnlyFeatureClass> baseFcs = new List<IReadOnlyFeatureClass>();
+
+			foreach (WorkspaceInfo workspaceInfo in workspaceInfos)
+			{
+				IWorkspace workspace = workspaceInfo.GetWorkspace();
+
+				foreach (string tableName in workspaceInfo.TableNames)
+				{
+					IFeatureClass fc =
+						((IFeatureWorkspace) workspace).OpenFeatureClass(tableName);
+					baseFcs.Add(ReadOnlyTableFactory.Create(fc));
+				}
+			}
+
+			foreach (SubVerification verification in verifications)
+			{
+				if (verification.QualityConditionGroup.ExecType !=
+				    QualityConditionExecType.TileParallel)
+				{
+					continue;
+				}
+
+				IGeometry envelope =
+					ProtobufGeometryUtils.FromShapeMsg(
+						verification.SubRequest.Parameters.Perimeter);
+				if (envelope == null)
+				{
+					continue;
+				}
+
+				long baseRowsCount = 0;
+				IFeatureClassFilter filter = new AoFeatureClassFilter(
+					envelope, esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects);
+				foreach (var baseFc in baseFcs)
+				{
+					baseRowsCount += baseFc.RowCount(filter);
+				}
+
+				verification.InvolvedBaseRowsCount = baseRowsCount;
+
+				IEnvelope e = envelope.Envelope;
+				_msg.Debug(
+					$"RowCount: {baseRowsCount} [{e.XMin:N0}, {e.YMin:N0}, {e.XMax:N0}, {e.YMax:N0}]");
+			}
+		}
+
+		private void ReportSubverifcationsCreated(
+			[NotNull] IEnumerable<SubVerification> subVerifications)
+		{
+			if (SubVerificationObserver == null)
+			{
+				return;
+			}
+
+			foreach (SubVerification subVerification in subVerifications)
+			{
+				List<string> qcNames = new List<string>();
+
+				var sr = subVerification.SubRequest.Specification;
+				HashSet<int> excludes = new HashSet<int>();
+				foreach (int exclude in sr.ExcludedConditionIds)
+				{
+					excludes.Add(exclude);
+				}
+
+				foreach (QualitySpecificationElementMsg msg in sr.ConditionListSpecification
+				                                                 .Elements)
+				{
+					if (! excludes.Contains(msg.Condition.ConditionId))
+					{
+						qcNames.Add(msg.Condition.Name);
+					}
+				}
+
+				SubVerificationObserver?.CreatedSubverification(
+					subVerification.Id,
+					subVerification.TileEnvelope);
+			}
+		}
+
+		private IList<WorkspaceInfo> GetWorkspaceInfos(
+			IList<ReadOnlyFeatureClass> roFeatureClasses)
+		{
+			Dictionary<IWorkspace, HashSet<string>> wsDict =
+				new Dictionary<IWorkspace, HashSet<string>>();
+			foreach (var roFc in roFeatureClasses)
+			{
+				IFeatureClass fc = (IFeatureClass) roFc.BaseTable;
+				IDataset ds = (IDataset) fc;
+				IWorkspace ws = ds.Workspace;
+				IList<string> fcNames = new List<string>();
+				if (ds.FullName is IQueryName2 qn)
+				{
+					string tables = qn.QueryDef.Tables;
+					foreach (var expression in tables.Split(','))
+					{
+						foreach (string tableName in expression.Split())
+						{
+							if (string.IsNullOrWhiteSpace(tableName))
+							{
+								continue;
+							}
+
+							if (((IWorkspace2) ws).get_NameExists(
+								    esriDatasetType.esriDTFeatureClass, tableName))
+							{
+								fcNames.Add(tableName);
+							}
+						}
+					}
+				}
+				else
+				{
+					fcNames.Add(ds.Name);
+				}
+
+				if (! wsDict.TryGetValue(ws, out HashSet<string> wsInfo))
+				{
+					wsInfo = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+					wsDict.Add(ws, wsInfo);
+				}
+
+				foreach (var fcName in fcNames)
+				{
+					wsInfo.Add(fcName);
+				}
+			}
+
+			List<WorkspaceInfo> wsInfos = new List<WorkspaceInfo>();
+			foreach (var pair in wsDict)
+			{
+				IWorkspace ws = pair.Key;
+				if (pair.Value.Count == 0)
+				{
+					continue;
+				}
+
+				WorkspaceInfo wsInfo = new WorkspaceInfo(ws);
+
+				foreach (string fcName in pair.Value)
+				{
+					wsInfo.TableNames.Add(fcName);
+				}
+
+				wsInfos.Add(wsInfo);
+			}
+
+			return wsInfos;
+		}
+
+		private class WorkspaceInfo : TaskWorkspace
+		{
+			public WorkspaceInfo(IWorkspace workspace)
+				: base(workspace)
+			{
+				TableNames = new List<string>();
+			}
+
+			[NotNull]
+			public List<string> TableNames { get; }
+		}
+
+		#endregion
 	}
 }

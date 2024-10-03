@@ -14,8 +14,8 @@ public interface IMapWhiteSelection
 	Map Map { get; } // the map to which this white selection belongs
 
 	bool IsEmpty { get; } // true iff no involved features (regardless of vertices)
-	bool Select(MapPoint clickPont, double tolerance, SetCombineMethod method);
-	bool Select(Geometry geometry, SetCombineMethod method);
+	bool Select(MapPoint clickPont, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates);
+	bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates);
 	int Remove(FeatureLayer layer, IEnumerable<long> oids);
 	bool SetEmpty();
 
@@ -123,10 +123,12 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 	}
 
 	/// <returns>true iff the selection changed</returns>
-	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
-	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method)
+	/// <remarks>Must call on MCT</remarks>
+	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
 	{
-		// TODO Consider new behavior: if click on vertex of involved feature, operate on this vertex alone; otherwise behave as below:
+		//var extent = clickPoint.Extent.Expand(tolerance, tolerance, false);
+		//var dict = GetFeatures(extent);
+		var dict = candidates;
 
 		var changed = false;
 
@@ -135,10 +137,6 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 			changed = SetEmpty();
 			method = SetCombineMethod.Add;
 		}
-
-		var extent = clickPoint.Extent.Expand(tolerance, tolerance, false);
-
-		var dict = GetFeatures(_mapView, extent);
 
 		foreach (var pair in dict)
 		{
@@ -207,8 +205,11 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
-	public bool Select(Geometry geometry, SetCombineMethod method)
+	public bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
 	{
+		//var dict = GetFeatures(geometry);
+		var dict = candidates;
+
 		var changed = false;
 
 		if (method == SetCombineMethod.New)
@@ -216,8 +217,6 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 			changed = SetEmpty();
 			method = SetCombineMethod.Add;
 		}
-
-		var dict = GetFeatures(_mapView, geometry);
 
 		foreach (var pair in dict)
 		{
@@ -330,10 +329,9 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		return changed;
 	}
 
-	private Dictionary<FeatureLayer, List<long>> GetFeatures(MapView mapView, Geometry geometry)
+	/// <remarks>Must call on MCT</remarks>
+	private Dictionary<FeatureLayer, List<long>> GetFeatures(Geometry geometry)
 	{
-		if (mapView is null)
-			throw new ArgumentNullException(nameof(mapView));
 		if (geometry is null || geometry.IsEmpty)
 			return new Dictionary<FeatureLayer, List<long>>(0);
 
@@ -347,24 +345,9 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		// - Could use our own code to select (see SelectionTool)
 		// - Bug: does not find all features if the symbol has an Offset effect (K2#38)
 
-		var selectionSet = mapView.GetFeatures(geometry);
+		var selectionSet = _mapView.GetFeatures(geometry);
 		//var selectionSet = mapView.GetFeaturesEx(geometry);
 		return selectionSet.ToDictionary<FeatureLayer>();
-	}
-
-	/// <remarks>Must call on MCT</remarks>
-	private static void UpdateRegularSelection(IWhiteSelection selection, long[] involvedOids)
-	{
-		var selectedOids = involvedOids.Where(oid => ! (selection.GetShapeSelection(oid)?.IsEmpty ?? true));
-		var unselectedOids = involvedOids.Where(oid => selection.GetShapeSelection(oid)?.IsEmpty ?? false);
-
-		var regular = selection.Layer.GetSelection();
-
-		regular.Add(selectedOids);
-		regular.Remove(unselectedOids);
-
-		// The above has no effect on the map until we layer.SetSelection():
-		selection.Layer.SetSelection(regular);
 	}
 
 	/// <returns>true iff the selection changed (was not already empty)</returns>
@@ -446,6 +429,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 	/// Select on the Map exactly those features that are involved
 	/// in this white selection (regardless of selected vertices).
 	/// </summary>
+	/// <remarks>Must call on MCT</remarks>
 	public void UpdateRegularSelection()
 	{
 		var dict = GetLayerSelections()

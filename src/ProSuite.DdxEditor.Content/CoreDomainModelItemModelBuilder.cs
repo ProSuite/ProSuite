@@ -37,6 +37,7 @@ using ProSuite.DomainModel.Core.DataModel.Xml;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.DomainModel.Core.QA.Xml;
+using ProSuite.UI.QA;
 
 namespace ProSuite.DdxEditor.Content
 {
@@ -370,6 +371,11 @@ namespace ProSuite.DdxEditor.Content
 
 		public abstract ITestParameterDatasetProvider GetTestParameterDatasetProvider();
 
+		public virtual ISqlExpressionBuilder GetSqlExpressionBuilder()
+		{
+			return null;
+		}
+
 		public virtual C Resolve<C>()
 		{
 			// implement in project-specific subclass based on project registry
@@ -451,7 +457,7 @@ namespace ProSuite.DdxEditor.Content
 
 				result.AddRange(
 					InstanceConfigurations.Get<IssueFilterConfiguration>(allCategories)
-					                      .Select(iF=> new RequiredDependingItem(iF, iF.Name))
+					                      .Select(iF => new RequiredDependingItem(iF, iF.Name))
 					                      .Cast<DependingItem>());
 			}
 

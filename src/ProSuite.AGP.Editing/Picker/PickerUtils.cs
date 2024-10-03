@@ -11,6 +11,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Input;
 
@@ -47,6 +48,17 @@ namespace ProSuite.AGP.Editing.Picker
 					throw new ArgumentOutOfRangeException(
 						$"Unsupported geometry type: {geometryType}");
 			}
+		}
+
+		[NotNull]
+		public static IEnumerable<FeatureSelectionBase> OrderByGeometryDimension(
+			[NotNull] IEnumerable<FeatureSelectionBase> selection)
+		{
+			Assert.ArgumentNotNull(selection, nameof(selection));
+
+			return selection
+			       .GroupBy(classSelection => classSelection.ShapeDimension)
+			       .OrderBy(group => group.Key).SelectMany(fcs => fcs);
 		}
 
 		public static Geometry EnsureNonEmpty([NotNull] Geometry sketch, int tolerancePixel)
@@ -106,7 +118,8 @@ namespace ProSuite.AGP.Editing.Picker
 		// TODO daro: change signature to .. Func<IEnumerable<FeatureSelectionBase>> because CancelableProgressor should be null?
 		public static async Task ShowAsync(
 			[NotNull] IPickerPrecedence precedence,
-			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor, IEnumerable<FeatureSelectionBase>> getCandidates)
+			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor,
+				IEnumerable<FeatureSelectionBase>> getCandidates)
 		{
 			SelectionCombinationMethod selectionMethod =
 				KeyboardUtils.IsShiftDown()
@@ -123,16 +136,14 @@ namespace ProSuite.AGP.Editing.Picker
 
 			await QueuedTaskUtils.Run(async () =>
 			{
-				precedence.EnsureGeometryNonEmpty();
+				Geometry selectionGeometry = precedence.GetSelectionGeometry();
 
 				// NOTE daro: passing in a delayed cancellable progressor in conjunction with
 				// picker window crashes Pro. A non-delayed progressor works fine.
 				const CancelableProgressor progressor = null;
-				var featureSelection = getCandidates(precedence.SelectionGeometry,
+				var featureSelection = getCandidates(selectionGeometry,
 				                                     spatialRelationship,
-				                                     progressor)
-				                       .OrderBy(candidate => candidate.ShapeDimension)
-				                       .ToList();
+				                                     progressor).ToList();
 
 				await SelectCandidates(precedence, featureSelection, selectionMethod);
 			});
@@ -140,7 +151,8 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public static async Task ShowAsync(
 			[NotNull] IPickerPrecedence precedence,
-			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor, IEnumerable<FeatureSelectionBase>> getCandidates,
+			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor,
+				IEnumerable<FeatureSelectionBase>> getCandidates,
 			PickerMode pickerMode)
 		{
 			SelectionCombinationMethod selectionMethod =
@@ -158,16 +170,14 @@ namespace ProSuite.AGP.Editing.Picker
 
 			await QueuedTaskUtils.Run(async () =>
 			{
-				precedence.EnsureGeometryNonEmpty();
+				Geometry selectionGeometry = precedence.GetSelectionGeometry();
 
 				// NOTE daro: passing in a delayed cancellable progressor in conjunction with
 				// picker window crashes Pro. A non-delayed progressor works fine.
 				const CancelableProgressor progressor = null;
 				var featureSelection = getCandidates(precedence.SelectionGeometry,
 				                                     spatialRelationship,
-				                                     progressor)
-				                       .OrderBy(candidate => candidate.ShapeDimension)
-				                       .ToList();
+				                                     progressor).ToList();
 
 				await SelectCandidates(precedence, featureSelection, selectionMethod, pickerMode);
 			});
@@ -187,8 +197,13 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			var picker = new PickerService();
 
-			// todo daro PickableItemsFactory as method parameter to group items.
-			if (typeof(T) == typeof(IPickableFeatureItem))
+			bool isRequestingFeatures =
+				typeof(IPickableFeatureItem).IsAssignableFrom(typeof(T));
+
+			bool isRequestingFeatureClasses =
+				typeof(IPickableFeatureClassItem).IsAssignableFrom(typeof(T));
+
+			if (isRequestingFeatures || (precedence.IsSingleClick && ! isRequestingFeatureClasses))
 			{
 				var items = PickableItemsFactory
 				            .CreateFeatureItems(orderedSelection)
@@ -259,10 +274,12 @@ namespace ProSuite.AGP.Editing.Picker
 				ClearSelection();
 			}
 
+			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
+
 			switch (precedence.GetPickerMode(orderedSelection))
 			{
 				case PickerMode.ShowPicker:
-					
+
 					IPickableItem pickedItem = await ShowAsync(precedence, orderedSelection);
 
 					if (pickedItem is IPickableFeatureItem featureItem)
@@ -457,6 +474,8 @@ namespace ProSuite.AGP.Editing.Picker
 				ClearSelection();
 			}
 
+			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
+
 			switch (precedence.GetPickerMode(orderedSelection))
 			{
 				case PickerMode.ShowPicker:
@@ -518,6 +537,8 @@ namespace ProSuite.AGP.Editing.Picker
 			{
 				ClearSelection();
 			}
+
+			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
 
 			switch (pickerMode)
 			{

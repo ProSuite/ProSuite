@@ -228,14 +228,29 @@ namespace ProSuite.Microservices.Client.QA
 
 			try
 			{
-				if (arg.SchemaRequest != null)
+				try
 				{
-					result.Schema = verificationDataProvider.GetGdbSchema(arg.SchemaRequest);
+					if (arg.SchemaRequest != null)
+					{
+						result.Schema = verificationDataProvider.GetGdbSchema(arg.SchemaRequest);
+					}
+					else if (arg.DataRequest != null)
+					{
+						result.Data = verificationDataProvider
+						              .GetData(arg.DataRequest).FirstOrDefault();
+					}
 				}
-				else if (arg.DataRequest != null)
+				catch (Exception e)
 				{
-					result.Data = verificationDataProvider
-					              .GetData(arg.DataRequest).FirstOrDefault();
+					_msg.Debug("Error handling data request", e);
+
+					// Communicate the error to the server but do not throw here (it might just be
+					// a test whether a where clause is valid). The server shall decide whether it
+					// wants to continue or not.
+					result.ErrorMessage = e.Message;
+					callRequestStream.WriteAsync(result);
+
+					return false;
 				}
 
 				callRequestStream.WriteAsync(result);

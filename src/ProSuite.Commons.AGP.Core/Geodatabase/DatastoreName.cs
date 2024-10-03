@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
@@ -45,6 +48,100 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return _connector != null
 				       ? WorkspaceUtils.GetDatastoreDisplayText(_connector)
 				       : "<undefined connection>";
+		}
+
+		public IEnumerable<KeyValuePair<string, string>> ConnectionProperties
+		{
+			get
+			{
+				if (_connector is DatabaseConnectionProperties properties)
+				{
+					if (! string.IsNullOrEmpty(properties.Instance))
+						yield return new KeyValuePair<string, string>(
+							"INSTANCE", properties.Instance);
+
+					if (! string.IsNullOrEmpty(properties.DBMS.ToString()))
+						yield return new KeyValuePair<string, string>(
+							"DBMS", properties.DBMS.ToString());
+
+					if (! string.IsNullOrEmpty(properties.AuthenticationMode.ToString()))
+						yield return new KeyValuePair<string, string>(
+							"AUTHENTICATION_MODE", properties.AuthenticationMode.ToString());
+
+					if (! string.IsNullOrEmpty(properties.User))
+						yield return new KeyValuePair<string, string>("USER", properties.User);
+
+					if (! string.IsNullOrEmpty(properties.Password))
+						yield return new KeyValuePair<string, string>(
+							"PASSWORD", properties.Password);
+
+					if (! string.IsNullOrEmpty(properties.Database))
+						yield return new KeyValuePair<string, string>(
+							"DATABASE", properties.Database);
+
+					if (! string.IsNullOrEmpty(properties.ProjectInstance))
+						yield return new KeyValuePair<string, string>(
+							"PROJECT_INSTANCE", properties.ProjectInstance);
+
+					if (! string.IsNullOrEmpty(properties.Version))
+						yield return
+							new KeyValuePair<string, string>("VERSION", properties.Version);
+
+					if (! string.IsNullOrEmpty(properties.Branch))
+						yield return new KeyValuePair<string, string>("BRANCH", properties.Branch);
+				}
+
+				if (_connector is DatabaseConnectionFile sdeFile)
+				{
+					yield return new KeyValuePair<string, string>("PATH", sdeFile.Path.ToString());
+				}
+
+				if (_connector is FileGeodatabaseConnectionPath fgdbPath)
+				{
+					yield return new KeyValuePair<string, string>("PATH", fgdbPath.Path.ToString());
+				}
+
+				if (_connector is FileSystemConnectionPath fsPath)
+				{
+					yield return new KeyValuePair<string, string>("TYPE", fsPath.Type.ToString());
+					yield return new KeyValuePair<string, string>("PATH", fsPath.Path.ToString());
+				}
+
+				if (_connector is MemoryConnectionProperties memoryConnection)
+				{
+					yield return new KeyValuePair<string, string>("NAME", memoryConnection.Name);
+				}
+
+				if (_connector is MobileGeodatabaseConnectionPath mobilePath)
+				{
+					yield return new KeyValuePair<string, string>(
+						"PATH", mobilePath.Path.ToString());
+				}
+
+				if (_connector is PluginDatasourceConnectionPath pluginPath)
+				{
+					yield return new KeyValuePair<string, string>(
+						"PLUGIN_IDENTIFIER", pluginPath.PluginIdentifier);
+					yield return new KeyValuePair<string, string>(
+						"DATASOURCE_PATH", pluginPath.DatasourcePath.ToString());
+				}
+
+				if (_connector is RealtimeServiceConnectionProperties serviceConnection)
+				{
+					yield return new KeyValuePair<string, string>(
+						"URL", serviceConnection.URL.AbsolutePath);
+				}
+			}
+		}
+
+		public string ConnectionString
+		{
+			get
+			{
+				// TODO: Unit test, verify this logic. Currently just used for comparisons.
+				return StringUtils.Concatenate(
+					ConnectionProperties.Select(kvp => $"{kvp.Key}={kvp.Value}"), ";");
+			}
 		}
 
 		#region Equality members

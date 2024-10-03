@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -23,6 +24,9 @@ namespace ProSuite.Commons.IoC
 		[NotNull] private readonly IWindsorContainer _inner;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		public IDictionary<string, Version> AssemblyRedirects { get; } =
+			new Dictionary<string, Version>();
 
 		#region Constructors
 
@@ -289,7 +293,7 @@ namespace ProSuite.Commons.IoC
 			throw new ArgumentException("No child node with name {0}", nodeName);
 		}
 
-		private static void UnwireAssemblyResolve()
+		private void UnwireAssemblyResolve()
 		{
 			_msg.VerboseDebug(() => "Unwiring AssemblyResolve event");
 
@@ -303,7 +307,7 @@ namespace ProSuite.Commons.IoC
 			}
 		}
 
-		private static void WireAssemblyResolve()
+		private void WireAssemblyResolve()
 		{
 			_msg.VerboseDebug(() => "Wiring AssemblyResolve event");
 
@@ -318,11 +322,37 @@ namespace ProSuite.Commons.IoC
 		#region Event handlers
 
 		[CanBeNull]
-		private static Assembly CurrentDomain_AssemblyResolve(object sender,
-		                                                      ResolveEventArgs args)
+		private Assembly CurrentDomain_AssemblyResolve(object sender,
+		                                               ResolveEventArgs args)
 		{
-			return AssemblyResolveUtils.TryLoadAssembly(
-				args.Name, Assembly.GetExecutingAssembly().CodeBase, _msg.Debug);
+			string name = args.Name;
+			string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+
+			if (AssemblyRedirects.Count == 0)
+			{
+				return AssemblyResolveUtils.TryLoadAssembly(name, codeBase, _msg.Debug);
+			}
+
+			// Check if a version redirect is defined for the assembly:
+			AssemblyName assemblyName;
+
+			try
+			{
+				assemblyName = new AssemblyName(name);
+			}
+			catch (Exception e)
+			{
+				_msg.DebugFormat("Error loading assembly name '{0}': {1}", name, e.Message);
+				return null;
+			}
+
+			if (AssemblyRedirects.TryGetValue(assemblyName.Name, out Version version))
+			{
+				return AssemblyResolveUtils.TryLoadAssembly(
+					name, codeBase, version, _msg.Debug);
+			}
+
+			return AssemblyResolveUtils.TryLoadAssembly(name, codeBase, _msg.Debug);
 		}
 
 		#endregion

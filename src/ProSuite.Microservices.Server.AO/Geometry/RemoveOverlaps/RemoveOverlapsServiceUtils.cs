@@ -9,7 +9,9 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.RemoveOverlaps;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.ManagedOptions;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
@@ -87,6 +89,21 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			bool explodeMultiparts = request.ExplodeMultipartResults;
 			bool storeOverlapsAsNewFeatures = request.StoreOverlapsAsNewFeatures;
 
+			int defaultZSourceValue =
+				request.DatasetSpecificZSources
+				       .FirstOrDefault(dsz => dsz.DatasetName == string.Empty)
+				       ?.ZSource ?? (int) ChangeAlongZSource.Target;
+
+			ChangeAlongZSource fallBack = (ChangeAlongZSource) defaultZSourceValue;
+			List<DatasetSpecificValue<ChangeAlongZSource>> zSourcesByDatasetName =
+				request.DatasetSpecificZSources
+				       .Select(dsz => new DatasetSpecificValue<ChangeAlongZSource>(
+					               dsz.DatasetName, (ChangeAlongZSource) dsz.ZSource)).ToList();
+
+			IFlexibleSettingProvider<ChangeAlongZSource> zSourceProvider =
+				new DatasetSpecificSettingProvider<ChangeAlongZSource>(
+					"Z values for changed vertices", fallBack, zSourcesByDatasetName);
+
 			//GdbTableContainer container = ProtobufConversionUtils.CreateGdbTableContainer(
 			//	request.ClassDefinitions, null, out _);
 
@@ -129,10 +146,10 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			// Remove overlaps
 			OverlapsRemover overlapsRemover = RemoveOverlaps(
 				selectedFeatureList, overlaps, targetFeaturesForVertexInsertion, explodeMultiparts,
-				storeOverlapsAsNewFeatures, trackCancel);
+				storeOverlapsAsNewFeatures, zSourceProvider, trackCancel);
 
 			// Pack response
-			var result = overlapsRemover.Result;
+			RemoveOverlapsResult result = overlapsRemover.Result;
 
 			var response = new RemoveOverlapsResponse();
 
@@ -167,10 +184,14 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			[NotNull] IList<IFeature> targetFeaturesForVertexInsertion,
 			bool explodeMultiparts,
 			bool storeOverlapsAsNewFeatures,
+			IFlexibleSettingProvider<ChangeAlongZSource> zSourceProvider,
 			[CanBeNull] ITrackCancel trackCancel)
 		{
 			var overlapsRemover =
-				new OverlapsRemover(explodeMultiparts, storeOverlapsAsNewFeatures);
+				new OverlapsRemover(explodeMultiparts, storeOverlapsAsNewFeatures)
+				{
+					ZSourceProvider = zSourceProvider
+				};
 
 			overlapsRemover.CalculateResults(
 				selectedFeatureList, overlaps, targetFeaturesForVertexInsertion, trackCancel);

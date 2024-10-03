@@ -26,6 +26,7 @@
 
   <PropertyGroup>
     <UseWindowsForms>true</UseWindowsForms>
+    <ForceDesignerDPIUnaware>true</ForceDesignerDPIUnaware>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
