@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Editing.Cracker;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
@@ -218,9 +219,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (args.Key == _keyDisplayVertices)
 				{
-					//SetupDisplayVertices //TODO: wie in TopGis
-
-					_msg.InfoFormat("Vertex display mode toggled");
+					ToggleVertices();
 				}
 
 				if (await IsInSelectionPhaseAsync())
@@ -242,6 +241,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				ViewUtils.HandleError(ex, _msg);
 			}
+		}
+
+		protected virtual void ToggleVertices()
+		{
 		}
 
 		private void SetupLassoSketch()

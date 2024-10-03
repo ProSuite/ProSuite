@@ -9,6 +9,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
@@ -31,10 +32,10 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		private CrackerToolOptions _crackerToolOptions;
 		private OverridableSettingsProvider<PartialCrackerToolOptions> _settingsProvider;
-
 		private CrackerResult _resultCrackPoints;
 		private CrackerFeedback _feedback;
 		private IList<Feature> _overlappingFeatures;
+		private readonly VertexLabels _vertexLabels;
 
 		protected CrackerToolBase()
 		{
@@ -43,6 +44,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			SelectionCursor = ToolUtils.GetCursor(Resources.CrackerToolCursor);
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.CrackerToolCursorShift);
 			SecondPhaseCursor = ToolUtils.GetCursor(Resources.CrackerToolCursorProcess);
+			_vertexLabels = new VertexLabels();
 		}
 
 		protected string OptionsFileName => "CrackerToolOptions.xml";
@@ -74,6 +76,15 @@ namespace ProSuite.AGP.Editing.Cracker
 		{
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+		}
+
+		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		{
+			bool result = base.OnMapSelectionChangedCore(args);
+
+			_vertexLabels.UpdateLabels();
+
+			return result;
 		}
 
 		protected override void LogPromptForSelection()
@@ -121,6 +132,22 @@ namespace ProSuite.AGP.Editing.Cracker
 		protected override bool CanUseDerivedGeometries()
 		{
 			return _resultCrackPoints != null && _resultCrackPoints.ResultsByFeature.Count > 0;
+		}
+
+		protected override void ToggleVertices()
+		{
+			base.ToggleVertices();
+
+			try
+			{
+				_vertexLabels.Toggle();
+
+				_vertexLabels.UpdateLabels();
+			}
+			catch (Exception ex)
+			{
+				_msg.Error($"Toggling Vertices Labels Error: {ex.Message}");
+			}
 		}
 
 		protected override async Task<bool> SelectAndProcessDerivedGeometry(
@@ -192,6 +219,9 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			CalculateDerivedGeometries(currentSelection, progressor);
 
+			// TODO:
+			//_vertexLabels.UpdateLabels();
+
 			return saved;
 		}
 
@@ -199,6 +229,8 @@ namespace ProSuite.AGP.Editing.Cracker
 		{
 			_resultCrackPoints = null;
 			_feedback.DisposeOverlays();
+
+			_vertexLabels.DisposeOverlays();
 		}
 
 		protected override void LogDerivedGeometriesCalculated(CancelableProgressor progressor)
