@@ -252,10 +252,10 @@ namespace ProSuite.AGP.Editing.Picker
 		#endregion
 
 		private static async Task SelectCandidates(IPickerPrecedence precedence,
-		                                           ICollection<FeatureSelectionBase> orderedSelection,
+		                                           ICollection<FeatureSelectionBase> featureSelection,
 		                                           SelectionCombinationMethod selectionMethod)
 		{
-			if (! orderedSelection.Any())
+			if (! featureSelection.Any())
 			{
 				if (selectionMethod == SelectionCombinationMethod.XOR)
 				{
@@ -451,11 +451,11 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		private static async Task SelectCandidates<T>(IPickerPrecedence precedence,
-		                                              List<FeatureSelectionBase> orderedSelection,
+		                                              List<FeatureSelectionBase> featureSelection,
 		                                              SelectionCombinationMethod selectionMethod)
 			where T : class, IPickableItem
 		{
-			if (! orderedSelection.Any())
+			if (! featureSelection.Any())
 			{
 				if (selectionMethod == SelectionCombinationMethod.XOR)
 				{
@@ -514,12 +514,12 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		private static async Task SelectCandidates<T>(IPickerPrecedence precedence,
-		                                              List<FeatureSelectionBase> orderedSelection,
+		                                              List<FeatureSelectionBase> featureSelection,
 		                                              SelectionCombinationMethod selectionMethod,
 		                                              PickerMode pickerMode)
 			where T : class, IPickableItem
 		{
-			if (! orderedSelection.Any())
+			if (! featureSelection.Any())
 			{
 				if (selectionMethod == SelectionCombinationMethod.XOR)
 				{
