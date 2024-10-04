@@ -31,7 +31,6 @@ namespace ProSuite.QA.Container.TestContainer
 		private readonly IList<TableSubFields> _nonCachedTables;
 
 		private readonly ITestContainer _container;
-		private readonly IEnvelope _executeEnvelope;
 		private readonly IPolygon _executePolygon;
 		private readonly IRelationalOperator _executePolygonRelOp;
 		private readonly TileCache _tileCache;
@@ -79,7 +78,6 @@ namespace ProSuite.QA.Container.TestContainer
 			Assert.ArgumentNotNull(container, nameof(container));
 
 			_container = container;
-			_executeEnvelope = executeEnvelope;
 			_executePolygon = executePolygon;
 
 			_testSorter = new TestSorter(container.ContainerTests);
@@ -334,38 +332,28 @@ namespace ProSuite.QA.Container.TestContainer
 				return null;
 			}
 
-			if ((queryFilter is ITileFilter tf && tf.TileExtent != null) ||
+			IFeatureClassFilter spatialFilter = queryFilter as IFeatureClassFilter;
+
+			IEnvelope loadedExtent = _tileCache.GetLoadedExtent(table);
+
+			IGeometry filterGeometry =
+				GetFilterGeometry(spatialFilter, loadedExtent.SpatialReference, tableProps);
+
+			if ((queryFilter is ITileFilter tileFilter && tileFilter.TileExtent != null) ||
 			    filterHelper.FullGeometrySearch)
 			{
-				if (queryFilter is IFeatureClassFilter sf)
+				if (filterGeometry != null)
 				{
-					IEnvelope loaded = _tileCache.GetLoadedExtent(table);
-
-					IGeometry filterGeometry = sf.FilterGeometry;
-					if (filterGeometry != null &&
-					    ! SpatialReferenceUtils.AreEqual(
-						    filterGeometry.SpatialReference,
-						    loaded.SpatialReference))
+					if (! ((IRelationalOperator) loadedExtent).Contains(filterGeometry))
 					{
-						if (tableProps.HasGeotransformation is IHasGeotransformation hasGeotrans)
-						{
-							filterGeometry = hasGeotrans.ProjectEx(filterGeometry);
-						}
-						else
-						{
-							filterGeometry = GeometryFactory.Clone(filterGeometry);
-							filterGeometry.Project(loaded.SpatialReference);
-						}
-					}
-
-					if (filterGeometry != null &&
-					    ! ((IRelationalOperator) loaded).Contains(filterGeometry))
-					{
+						// Out-of-tile search! This is signalled by// tileFilter.TileExtent != null
+						// or filterHelper.FullGeometrySearch but it is probably not yet implemented
+						// properly for all transformers. See TrDissolve for example unit tests.
 						_tilesAdmin = _tilesAdmin ?? new TilesAdmin(this, _tileCache);
-						return _tilesAdmin.Search(tableProps, sf, filterHelper);
+						return _tilesAdmin.Search(tableProps, spatialFilter, filterHelper);
 					}
 
-					if (filterGeometry != sf.FilterGeometry)
+					if (filterGeometry != Assert.NotNull(spatialFilter).FilterGeometry)
 					{
 						queryFilter = queryFilter.Clone();
 						((IFeatureClassFilter) queryFilter).FilterGeometry = filterGeometry;
@@ -373,7 +361,47 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 			}
 
+			if (spatialFilter != null && filterGeometry != null &&
+			    ! ((IRelationalOperator) loadedExtent).Contains(filterGeometry))
+			{
+				// Throw?
+				_msg.WarnFormat(
+					"The filter geometry is not completely covered by the tile cache's extent: {0}",
+					GeometryUtils.ToString(filterGeometry.Envelope, true));
+			}
+
 			return _tileCache.Search(table, queryFilter, filterHelper);
+		}
+
+		[CanBeNull]
+		private static IGeometry GetFilterGeometry(
+			[CanBeNull] IFeatureClassFilter spatialFilter,
+			[NotNull] ISpatialReference desiredSpatialReference,
+			[NotNull] CachedTableProps tableProps)
+		{
+			if (spatialFilter == null)
+			{
+				return null;
+			}
+
+			IGeometry filterGeometry = spatialFilter.FilterGeometry;
+
+			if (filterGeometry != null &&
+			    ! SpatialReferenceUtils.AreEqual(
+				    filterGeometry.SpatialReference, desiredSpatialReference))
+			{
+				if (tableProps.HasGeotransformation is IHasGeotransformation hasGeotrans)
+				{
+					filterGeometry = hasGeotrans.ProjectEx(filterGeometry);
+				}
+				else
+				{
+					filterGeometry = GeometryFactory.Clone(filterGeometry);
+					filterGeometry.Project(desiredSpatialReference);
+				}
+			}
+
+			return filterGeometry;
 		}
 
 		public IEnumerable<Tile> EnumInvolvedTiles(IGeometry geometry)
@@ -1104,7 +1132,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private IEnumerable<TestRow> EnumRows(Tile tile, TileCache tileCache)
 		{
-			long cachedRowCount = tileCache.GetTablesRowCount();
+			long cachedRowCount = tileCache.GetCachedRowCount();
 			long nonCachedRowCount = GetTileNonCachedTablesRowCount(tile.SpatialFilter);
 			int rasterRowCount = GetTileRasterRowCount(tile);
 

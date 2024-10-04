@@ -10,6 +10,13 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.QA.Container.TestContainer
 {
+	/// <summary>
+	/// A second-level cache for entire <see cref="TileCache"/> instances kept in memory.
+	/// Currently, all tiles left and lower than the current tile are removed from the cache
+	/// when a new tile is prepared.
+	/// TODO: Keep the single tile to the left. Consider direct data access when loading data
+	/// in areas left or lower the currently cached tiles to avoid multiple loading of the full tile.
+	/// </summary>
 	internal class TilesAdmin
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -53,7 +60,8 @@ namespace ProSuite.QA.Container.TestContainer
 
 			if (tileCache.GetLoadedExtent(table) != null)
 			{
-				_msg.Debug($"Tile {tileCache.CurrentTileBox} already loaded for {tableProps}");
+				_msg.VerboseDebug(() => $"Tile {tileCache.CurrentTileBox} already loaded for " +
+				                        $"{tableProps} ({tileCache.GetCachedRowCount(table)})");
 				return;
 			}
 
@@ -72,10 +80,9 @@ namespace ProSuite.QA.Container.TestContainer
 			IReadOnlyTable table = tableProps.Table;
 			HashSet<long> handledOids = new HashSet<long>();
 			IGeometry filterGeom = queryFilter.FilterGeometry;
-			if (tableProps.HasGeotransformation != null)
-			{
 
-			}
+			// TODO!
+			if (tableProps.HasGeotransformation != null) { }
 
 			foreach (var tile in GetTiles(filterGeom, table))
 			{
