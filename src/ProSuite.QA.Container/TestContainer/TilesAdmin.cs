@@ -136,9 +136,10 @@ namespace ProSuite.QA.Container.TestContainer
 			List<Box> toRemove = new List<Box>();
 			foreach (var pair in _caches)
 			{
+				// TODO: Keep 1 tile to the left and probably the one directly below
 				Box cachedBox = pair.Key;
 				if (cachedBox.Min.Y < tileBox.Min.Y
-				    || (cachedBox.Min.Y == tileBox.Min.Y && cachedBox.Min.X < tileBox.Min.X))
+				    || (cachedBox.Min.Y <= tileBox.Min.Y && cachedBox.Min.X < tileBox.Min.X))
 				{
 					toRemove.Add(cachedBox);
 				}
