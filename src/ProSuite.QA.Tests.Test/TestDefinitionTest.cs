@@ -3543,6 +3543,7 @@ namespace ProSuite.QA.Tests.Test
 			// Manually create values for special cases, such as optional parameters or
 			// difficult assertions:
 			AddIfAllCases(model, ifCases);
+			//ToDo: Find correct special case for IfInvolvedRows ...
 			//AddIfInvolvedRowsCases(model, ifCases);
 
 			return ifCases;
@@ -3551,7 +3552,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void AreIssueFilterParametersEqual()
 		{
-			var model = new TestDataModel("simple_model", false);
+			var model = new TestDataModel("simple_model");
 
 			List<IfDefinitionCase> ifCases = DefineIfCases(model);
 
