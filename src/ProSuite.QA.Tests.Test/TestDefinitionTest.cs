@@ -3435,19 +3435,26 @@ namespace ProSuite.QA.Tests.Test
 
 		#endregion
 
+		private static List<Type> IfRefactoredTypes
+		{
+			get
+			{
+				List<Type> ifRefactoredTypes = new List<Type>
+				                               {
+					                               typeof(IfAll),
+					                               typeof(IfIntersecting),
+					                               typeof(IfInvolvedRows),
+					                               typeof(IfNear),
+					                               typeof(IfWithin)
+				                               };
+				return ifRefactoredTypes;
+			}
+		}
+
 		[Test]
 		public void CanCreateIssueFilters()
 		{
-			List<Type> refactoredTypes = new List<Type>
-			                             {
-				                             typeof(IfAll),
-				                             typeof(IfIntersecting),
-				                             typeof(IfInvolvedRows),
-				                             typeof(IfNear),
-				                             typeof(IfWithin),
-			                             };
-
-			foreach (Type issueFilterType in refactoredTypes)
+			foreach (Type issueFilterType in IfRefactoredTypes)
 			{
 				Assert.IsFalse(InstanceUtils.HasInternallyUsedAttribute(issueFilterType),
 				               "Internally used issue filter");
@@ -3522,13 +3529,9 @@ namespace ProSuite.QA.Tests.Test
 			object[] ConstructorValues = null,
 			Dictionary<string, object> OptionalParamValues = null);
 
-		[Test]
-		public void AreIssueFilterParametersEqual()
+		private static List<IfDefinitionCase> DefineIfCases(TestDataModel model)
 		{
-			var model = new TestDataModel("simple model");
-
 			var ifCases = new List<IfDefinitionCase>();
-
 			// Issue Filter cases with automatic parameter value generation:
 			ifCases.AddRange(CreateDefaultValueIssueFilterCases(typeof(IfIntersecting)));
 			ifCases.AddRange(CreateDefaultValueIssueFilterCases(typeof(IfNear)));
@@ -3541,6 +3544,16 @@ namespace ProSuite.QA.Tests.Test
 			// difficult assertions:
 			AddIfAllCases(model, ifCases);
 			//AddIfInvolvedRowsCases(model, ifCases);
+
+			return ifCases;
+		}
+
+		[Test]
+		public void AreIssueFilterParametersEqual()
+		{
+			var model = new TestDataModel("simple_model", false);
+
+			List<IfDefinitionCase> ifCases = DefineIfCases(model);
 
 			foreach (IfDefinitionCase ifCase in ifCases)
 			{
@@ -3671,9 +3684,16 @@ namespace ProSuite.QA.Tests.Test
 				"Tables", new object[] { model.GetVectorDataset(), model.GetVectorDataset() });
 
 			ifCases.Add(new IfDefinitionCase(typeof(IfInvolvedRows), 0,
-			                                 new object[]
-			                                 { "Constraint" },
-			                                 optionalValues));
+											  new object[]
+											  {
+												  //new[]
+												  //{
+													  //model.GetVectorDataset(),
+													  //model.GetVectorDataset(),
+												  //},
+												  "Constraint"
+											  },
+											  optionalValues));
 		}
 
 		#endregion
@@ -4651,6 +4671,65 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
+		[Test]
+		public static void CheckCompletenessCanCreateIssueFilter()
+		{
+			Type typeFromTestAssembly = typeof(IfAll);
+
+			Assembly testAssembly = typeFromTestAssembly.Assembly;
+			string assemblyName = testAssembly.GetName().Name;
+			string desiredNamespace = $"{assemblyName}.IssueFilters";
+			var issueFilterTypes = testAssembly.GetTypes()
+			                                   .Where(t => t.Namespace == desiredNamespace &&
+			                                               t.IsPublic == true)
+			                                   .ToList();
+
+			List<Type> missingCanCreateTypes =
+				FindMissingCanCreateTypes(issueFilterTypes, IfRefactoredTypes);
+
+			if (missingCanCreateTypes.Any())
+			{
+				foreach (var missingCanCreateType in missingCanCreateTypes)
+				{
+					Console.WriteLine("Not implemented in method CanCreateIssueFilters: " +
+					                  missingCanCreateType.Name);
+				}
+
+				throw new AssertionException(
+					"One or more types missing in method CanCreateIssueFilters()");
+			}
+			else
+			{
+				Console.WriteLine(
+					"All types are present in the IfRefactoredTypes in method CanCreateIssueFilters().");
+			}
+		}
+
+		[Test]
+		public static void CheckCompletenessAreIssueFilterParametersEqual()
+		{
+			List<Type> missingAreParametersEqualTypes =
+				FindMissingAreIssueFilterParametersEqualTypes(IfRefactoredTypes);
+
+			if (missingAreParametersEqualTypes.Any())
+			{
+				foreach (var missingAreParametersEqualType in missingAreParametersEqualTypes)
+				{
+					Console.WriteLine("Not implemented in method AreIssueFilterParametersEqual: " +
+					                  missingAreParametersEqualType.Name);
+				}
+
+				throw new AssertionException(
+					"One or more types missing in method AreIssueFilterParametersEqual()");
+			}
+
+			else
+			{
+				Console.WriteLine(
+					"All types are present in ifCases in method AreIssueFilterParametersEqual().");
+			}
+		}
+
 		private static List<Type> CollectTestTypes(IEnumerable<Assembly> assemblies)
 		{
 			const bool includeObsolete = false;
@@ -4691,6 +4770,22 @@ namespace ProSuite.QA.Tests.Test
 			}
 
 			return testassemblyTypes.Except(testDefinitionTypes).ToList();
+		}
+
+		static List<Type> FindMissingAreIssueFilterParametersEqualTypes(List<Type> issueFilterTypes)
+		{
+			var model = new TestDataModel("simple model");
+
+			List<IfDefinitionCase> ifCases = DefineIfCases(model);
+
+			List<Type> ifDefinitionTypes = new List<Type>();
+
+			foreach (IfDefinitionCase ifCase in ifCases)
+			{
+				ifDefinitionTypes.Add(ifCase.IssueFilterType);
+			}
+
+			return issueFilterTypes.Except(ifDefinitionTypes).ToList();
 		}
 	}
 
