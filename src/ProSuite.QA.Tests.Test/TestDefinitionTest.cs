@@ -3685,10 +3685,10 @@ namespace ProSuite.QA.Tests.Test
 			                             {
 				                             typeof(TrDissolve),
 				                             typeof(TrGetNodes),
-				                             typeof(TrIntersect)
-											 typeof(TrMultilineToLine)
-											 typeof(TrMultipolygonToPolygon)
-											 typeof(TrPolygonToLine)
+				                             typeof(TrIntersect),
+				                             typeof(TrMultilineToLine),
+				                             typeof(TrMultipolygonToPolygon),
+				                             typeof(TrPolygonToLine)
 			                             };
 
 			foreach (Type transformerType in refactoredTypes)
