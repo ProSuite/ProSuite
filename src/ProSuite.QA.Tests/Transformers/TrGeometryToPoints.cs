@@ -95,6 +95,11 @@ namespace ProSuite.QA.Tests.Transformers
 			_component = component;
 		}
 
+		[InternallyUsedTest]
+		public TrGeometryToPoints(
+			[NotNull] TrGeometryToPointsDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass, definition.Component) { }
+
 		protected override IList<int> AddCustomAttributes(TransformedFeatureClass transformedFc)
 		{
 			return new List<int>(
