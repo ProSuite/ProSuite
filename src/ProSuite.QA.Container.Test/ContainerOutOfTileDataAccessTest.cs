@@ -6,155 +6,157 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.QA.Container.Test;
-
-public class ContainerOutOfTileDataAccessTest : ContainerTest
+namespace ProSuite.QA.Container.Test
 {
-	private IList<IFeatureClassFilter> _filter;
-	private IList<QueryFilterHelper> _helper;
-
-	public ContainerOutOfTileDataAccessTest([NotNull] params IReadOnlyTable[] tables) :
-		base(tables) { }
-
-	public void SetSearchDistance(double searchDistance)
+	public class ContainerOutOfTileDataAccessTest : ContainerTest
 	{
-		SearchDistance = searchDistance;
-	}
+		private IList<IFeatureClassFilter> _filter;
+		private IList<QueryFilterHelper> _helper;
 
-	public double SearchDistanceIntoNeighbourTiles { get; set; }
+		public ContainerOutOfTileDataAccessTest([NotNull] params IReadOnlyTable[] tables) :
+			base(tables) { }
 
-	public Func<TileInfo, IList<IReadOnlyRow>, int> TileProcessed;
-
-	#region Overrides of VerifyingContainerTest
-
-	private IEnvelope OutsideTileLeftSearchGeometry { get; set; }
-	private IEnvelope OutsideTileRightSearchGeometry { get; set; }
-
-	/// <summary>
-	/// Property used on FilterHelper e.g. by filters or transformers to signal full search.
-	/// </summary>
-	public bool UseFullGeometrySearch { get; set; }
-
-	/// <summary>
-	/// Property used in TileAdmin (second-level cache) to signal full search during tile loading.
-	/// </summary>
-	public bool UseTileEnvelope { get; set; }
-
-	protected override void BeginTileCore(BeginTileParameters parameters)
-	{
-		// Adapt properties relevant to out-of-tile search:
-		CopyFilters(out _filter, out _helper);
-		foreach (var helper in _helper)
+		public void SetSearchDistance(double searchDistance)
 		{
-			helper.FullGeometrySearch = UseFullGeometrySearch;
+			SearchDistance = searchDistance;
 		}
 
-		if (UseTileEnvelope)
+		public double SearchDistanceIntoNeighbourTiles { get; set; }
+
+		public Func<TileInfo, IList<IReadOnlyRow>, int> TileProcessed;
+
+		#region Overrides of VerifyingContainerTest
+
+		private IEnvelope OutsideTileLeftSearchGeometry { get; set; }
+		private IEnvelope OutsideTileRightSearchGeometry { get; set; }
+
+		/// <summary>
+		/// Property used on FilterHelper e.g. by filters or transformers to signal full search.
+		/// </summary>
+		public bool UseFullGeometrySearch { get; set; }
+
+		/// <summary>
+		/// Property used in TileAdmin (second-level cache) to signal full search during tile loading.
+		/// </summary>
+		public bool UseTileEnvelope { get; set; }
+
+		protected override void BeginTileCore(BeginTileParameters parameters)
 		{
-			foreach (IFeatureClassFilter featureClassFilter in _filter)
+			// Adapt properties relevant to out-of-tile search:
+			CopyFilters(out _filter, out _helper);
+			foreach (var helper in _helper)
 			{
-				var tileFilter = (AoFeatureClassFilter) featureClassFilter;
-				tileFilter.TileExtent = parameters.TileEnvelope;
-			}
-		}
-
-		IEnvelope currentTile = parameters.TileEnvelope;
-
-		double tolerance = 0.01;
-		Assert.True(SearchDistance > tolerance, "Invalid search distance");
-
-		IEnvelope tilePlusSearchDistance =
-			GeometryUtils.GetExpandedEnvelope(currentTile, SearchDistanceIntoNeighbourTiles);
-
-		OutsideTileLeftSearchGeometry = GeometryFactory.CreateEnvelope(
-			tilePlusSearchDistance.XMin, tilePlusSearchDistance.YMin,
-			currentTile.XMin - tolerance, tilePlusSearchDistance.YMax,
-			currentTile.SpatialReference);
-
-		OutsideTileRightSearchGeometry = GeometryFactory.CreateEnvelope(
-			currentTile.XMax + tolerance, tilePlusSearchDistance.YMin,
-			tilePlusSearchDistance.XMax, tilePlusSearchDistance.YMax, currentTile.SpatialReference);
-	}
-
-	protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
-	{
-		for (int involvedIndex = 0; involvedIndex < InvolvedTables.Count; involvedIndex++)
-		{
-			IReadOnlyTable involvedTable = InvolvedTables[involvedIndex];
-
-			IReadOnlyFeatureClass featureClass = involvedTable as IReadOnlyFeatureClass;
-
-			if (featureClass == null)
-			{
-				continue;
+				helper.FullGeometrySearch = UseFullGeometrySearch;
 			}
 
-			// Search inside the tile:
-			IReadOnlyFeature feature = (IReadOnlyFeature) row;
-
-			bool thisRowFound = false;
-			foreach (IReadOnlyRow foundRow in Search(involvedIndex, feature.Shape))
+			if (UseTileEnvelope)
 			{
-				if (IsSameObject(foundRow, row))
+				foreach (IFeatureClassFilter featureClassFilter in _filter)
 				{
-					thisRowFound = true;
+					var tileFilter = (AoFeatureClassFilter) featureClassFilter;
+					tileFilter.TileExtent = parameters.TileEnvelope;
 				}
 			}
 
-			Assert.True(thisRowFound, "Tested row not found inside tile!");
+			IEnvelope currentTile = parameters.TileEnvelope;
+
+			double tolerance = 0.01;
+			Assert.True(SearchDistance > tolerance, "Invalid search distance");
+
+			IEnvelope tilePlusSearchDistance =
+				GeometryUtils.GetExpandedEnvelope(currentTile, SearchDistanceIntoNeighbourTiles);
+
+			OutsideTileLeftSearchGeometry = GeometryFactory.CreateEnvelope(
+				tilePlusSearchDistance.XMin, tilePlusSearchDistance.YMin,
+				currentTile.XMin - tolerance, tilePlusSearchDistance.YMax,
+				currentTile.SpatialReference);
+
+			OutsideTileRightSearchGeometry = GeometryFactory.CreateEnvelope(
+				currentTile.XMax + tolerance, tilePlusSearchDistance.YMin,
+				tilePlusSearchDistance.XMax, tilePlusSearchDistance.YMax,
+				currentTile.SpatialReference);
 		}
 
-		return 0;
-	}
-
-	protected override int CompleteTileCore(TileInfo args)
-	{
-		if (args.State == TileState.Initial)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
+			for (int involvedIndex = 0; involvedIndex < InvolvedTables.Count; involvedIndex++)
+			{
+				IReadOnlyTable involvedTable = InvolvedTables[involvedIndex];
+
+				IReadOnlyFeatureClass featureClass = involvedTable as IReadOnlyFeatureClass;
+
+				if (featureClass == null)
+				{
+					continue;
+				}
+
+				// Search inside the tile:
+				IReadOnlyFeature feature = (IReadOnlyFeature) row;
+
+				bool thisRowFound = false;
+				foreach (IReadOnlyRow foundRow in Search(involvedIndex, feature.Shape))
+				{
+					if (IsSameObject(foundRow, row))
+					{
+						thisRowFound = true;
+					}
+				}
+
+				Assert.True(thisRowFound, "Tested row not found inside tile!");
+			}
+
 			return 0;
 		}
 
-		var foundOutsideTileRows = new List<IReadOnlyRow>();
-
-		for (int involvedIndex = 0; involvedIndex < InvolvedTables.Count; involvedIndex++)
+		protected override int CompleteTileCore(TileInfo args)
 		{
-			IReadOnlyTable involvedTable = InvolvedTables[involvedIndex];
-
-			IReadOnlyFeatureClass featureClass = involvedTable as IReadOnlyFeatureClass;
-
-			if (featureClass == null)
+			if (args.State == TileState.Initial)
 			{
-				continue;
+				return 0;
 			}
 
-			foundOutsideTileRows.AddRange(Search(involvedIndex,
-			                                     OutsideTileLeftSearchGeometry));
-			foundOutsideTileRows.AddRange(Search(involvedIndex,
-			                                     OutsideTileRightSearchGeometry));
+			var foundOutsideTileRows = new List<IReadOnlyRow>();
+
+			for (int involvedIndex = 0; involvedIndex < InvolvedTables.Count; involvedIndex++)
+			{
+				IReadOnlyTable involvedTable = InvolvedTables[involvedIndex];
+
+				IReadOnlyFeatureClass featureClass = involvedTable as IReadOnlyFeatureClass;
+
+				if (featureClass == null)
+				{
+					continue;
+				}
+
+				foundOutsideTileRows.AddRange(Search(involvedIndex,
+				                                     OutsideTileLeftSearchGeometry));
+				foundOutsideTileRows.AddRange(Search(involvedIndex,
+				                                     OutsideTileRightSearchGeometry));
+			}
+
+			TileProcessed?.Invoke(args, foundOutsideTileRows);
+
+			return 0;
 		}
 
-		TileProcessed?.Invoke(args, foundOutsideTileRows);
+		#endregion
 
-		return 0;
-	}
+		private IEnumerable<IReadOnlyRow> Search(int involvedTableIndex, IGeometry searchGeometry)
+		{
+			IReadOnlyTable involvedTable = InvolvedTables[involvedTableIndex];
 
-	#endregion
+			IFeatureClassFilter filter = _filter[involvedTableIndex];
+			filter.FilterGeometry = searchGeometry;
 
-	private IEnumerable<IReadOnlyRow> Search(int involvedTableIndex, IGeometry searchGeometry)
-	{
-		IReadOnlyTable involvedTable = InvolvedTables[involvedTableIndex];
+			QueryFilterHelper filterHelper = _helper[involvedTableIndex];
 
-		IFeatureClassFilter filter = _filter[involvedTableIndex];
-		filter.FilterGeometry = searchGeometry;
+			IEnumerable<IReadOnlyRow> readOnlyRows = Search(involvedTable, filter, filterHelper);
+			return readOnlyRows;
+		}
 
-		QueryFilterHelper filterHelper = _helper[involvedTableIndex];
-
-		IEnumerable<IReadOnlyRow> readOnlyRows = Search(involvedTable, filter, filterHelper);
-		return readOnlyRows;
-	}
-
-	private static bool IsSameObject(IReadOnlyRow row1, IReadOnlyRow row2)
-	{
-		return row1.OID == row2.OID && row1.Table.Equals(row2.Table);
+		private static bool IsSameObject(IReadOnlyRow row1, IReadOnlyRow row2)
+		{
+			return row1.OID == row2.OID && row1.Table.Equals(row2.Table);
+		}
 	}
 }
