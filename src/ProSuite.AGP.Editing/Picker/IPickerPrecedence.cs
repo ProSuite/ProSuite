@@ -12,10 +12,6 @@ namespace ProSuite.AGP.Editing.Picker
 
 		T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem;
 
-		[Obsolete(
-			"Use GetSelectionGeometry() which ensures that a single-pick is turned into a polygon")]
-		Geometry SelectionGeometry { get; set; }
-
 		int SelectionTolerance { get; }
 
 		bool IsSingleClick { get; }
@@ -23,9 +19,6 @@ namespace ProSuite.AGP.Editing.Picker
 		Point PickerLocation { get; set; }
 
 		PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection);
-
-		[Obsolete("Not necessary if using GetSelectionGeometry()")]
-		void EnsureGeometryNonEmpty();
 
 		/// <summary>
 		/// Returns the geometry which can be used for spatial queries.
