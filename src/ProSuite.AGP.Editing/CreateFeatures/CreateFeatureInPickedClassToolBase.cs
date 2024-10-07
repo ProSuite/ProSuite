@@ -32,8 +32,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		return null;
 	}
 
-	protected CreateFeatureInPickedClassToolBase(SketchGeometryType selectionSketchGeometryType) : base(
-		selectionSketchGeometryType) { }
+	protected CreateFeatureInPickedClassToolBase(SketchGeometryType selectionSketchGeometryType) : base() { }
 
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch(
 		SketchGeometryType selectionSketchGeometryType)

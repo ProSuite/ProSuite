@@ -34,13 +34,12 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	private const Key _keyPolygonDraw = Key.P;
 	private const Key _keyLassoDraw = Key.L;
 
-	private readonly SketchGeometryType _selectionSketchGeometryType;
 	private readonly Latch _toolActivateLatch = new();
 	private readonly Latch _latch = new();
 
 	[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
-	protected ToolBase(SketchGeometryType selectionSketchGeometryType)
+	protected ToolBase()
 	{
 		ContextMenuID = "esri_mapping_selection2DContextMenu";
 
@@ -50,10 +49,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		IsSketchTool = true;
 		FireSketchEvents = true;
 		IsWYSIWYG = true;
-		SketchType = selectionSketchGeometryType;
 
-		_selectionSketchGeometryType = selectionSketchGeometryType;
-		
 		SelectionCursorCore = ToolUtils.GetCursor(Resources.SelectionToolNormal);
 		ConstructionCursorCore = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
 	}
@@ -88,6 +84,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	protected abstract SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch(
 		SketchGeometryType selectionSketchGeometryType);
 
+	protected virtual SketchGeometryType GetDefaultSelectionSketchType()
+	{
+		return SketchGeometryType.Rectangle;
+	}
+
 	#endregion
 
 	#region overrides
@@ -102,7 +103,10 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		// we want OnSelectionChangedAsync to be latched. Especially when the tool is activated.
 		_toolActivateLatch.Increment();
 
-		_symbolizedSketch = GetSymbolizedSketch(_selectionSketchGeometryType);
+		SketchGeometryType selectionSketchGeometryType = GetDefaultSelectionSketchType();
+
+		_symbolizedSketch = GetSymbolizedSketch(selectionSketchGeometryType);
+		_symbolizedSketch?.ToggleSketchType(selectionSketchGeometryType);
 
 		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
 
@@ -189,12 +193,12 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		{
 			if (args.Key == _keyPolygonDraw)
 			{
-				SetupPolygonSketch();
+				_symbolizedSketch?.ToggleSketchType(SketchGeometryType.Polygon);
 			}
 
-			if (args.Key == _keyLassoDraw)
+			else if (args.Key == _keyLassoDraw)
 			{
-				SetupLassoSketch();
+				_symbolizedSketch?.ToggleSketchType(SketchGeometryType.Lasso);
 			}
 		}
 
@@ -215,11 +219,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		if (! InConstructionPhase())
 		{
-			if (args.Key is _keyPolygonDraw or _keyLassoDraw)
-			{
-				_symbolizedSketch?.ResetSketchType();
-				_symbolizedSketch?.ClearSketchSymbol();
-			}
+			//if (args.Key is _keyPolygonDraw or _keyLassoDraw)
+			//{
+			//	_symbolizedSketch?.ResetSketchType();
+			//	_symbolizedSketch?.ClearSketchSymbol();
+			//}
 		}
 
 		await ViewUtils.TryAsync(HandleKeyUpCoreAsync(args), _msg);
@@ -275,14 +279,14 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		return true;
 	}
 
-	public void SetSketchType(SketchGeometryType type)
-	{
-		SketchType = type;
-	}
-
 	public void SetSketchSymbol(CIMSymbolReference symbolReference)
 	{
 		SketchSymbol = symbolReference;
+	}
+
+	public void SetSketchType(SketchGeometryType? sketchType)
+	{
+		SketchType = sketchType;
 	}
 
 	protected virtual Task<bool> OnSketchModifiedCoreAsync()
@@ -390,24 +394,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		return currentSketch?.IsEmpty == false;
 	}
-
-	private void SetupPolygonSketch()
-	{
-		SetSketchType(SketchGeometryType.Polygon);
-
-		SetupPolygonSketchCore();
-	}
-
-	protected virtual void SetupPolygonSketchCore() { }
-
-	private void SetupLassoSketch()
-	{
-		SetSketchType(SketchGeometryType.Lasso);
-
-		SetupLassoSketchCore();
-	}
-
-	protected virtual void SetupLassoSketchCore() { }
 
 	#endregion
 

@@ -21,9 +21,10 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	[NotNull] private readonly ISymbolizedSketchTool _tool;
-	private readonly SketchGeometryType _selectionSketchGeometryType;
+	private readonly SketchGeometryType _defaultSelectionSketchType;
 
-	bool _showFeatureSketchSymbology;
+	private SketchGeometryType _currentSelectionSketchType;
+	private bool _showFeatureSketchSymbology;
 
 	/// <summary>
 	/// Sets sketch geometry type based on current selection.
@@ -33,12 +34,14 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	/// first FeatureLayer if many features are selected from many FeatureLayers.
 	/// </summary>
 	/// <param name="tool"></param>
-	/// <param name="selectionSketchGeometryType"></param>
+	/// <param name="defaultSelectionSketchType"></param>
 	public SymbolizedSketchTypeBasedOnSelection([NotNull] ISymbolizedSketchTool tool,
-	                                            SketchGeometryType selectionSketchGeometryType)
+	                                            SketchGeometryType defaultSelectionSketchType)
 	{
 		_tool = tool;
-		_selectionSketchGeometryType = selectionSketchGeometryType;
+		_defaultSelectionSketchType = defaultSelectionSketchType;
+
+		SetSketchType(tool, defaultSelectionSketchType);
 
 		_showFeatureSketchSymbology = ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
 
@@ -55,14 +58,29 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		ResetSketchType();
 	}
 
-	public void ClearSketchSymbol()
+	private void ClearSketchSymbol()
 	{
 		_tool.SetSketchSymbol(null);
 	}
 
-	public void ResetSketchType()
+	private void ResetSketchType()
 	{
-		_tool.SetSketchType(_selectionSketchGeometryType);
+		SetSketchType(_tool, _defaultSelectionSketchType);
+	}
+
+	private void SetSketchType(ISymbolizedSketchTool tool, SketchGeometryType type)
+	{
+		tool.SetSketchType(type);
+		_currentSelectionSketchType = type;
+	}
+
+	public void ToggleSketchType(SketchGeometryType sketchType)
+	{
+		SketchGeometryType type = _currentSelectionSketchType == sketchType
+			                          ? _defaultSelectionSketchType
+			                          : sketchType;
+		SetSketchType(_tool, type);
+		_msg.Debug($"selection sketch type {type}");
 	}
 
 	/// <summary>
@@ -147,7 +165,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		if (featureLayer == null || oids == null)
 		{
 			ClearSketchSymbol();
-			ResetSketchType();
+			SetSketchType(_tool, _currentSelectionSketchType);
 
 			return;
 		}
@@ -183,7 +201,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		}
 
 		GeometryType geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
-		_tool.SetSketchType(GetApplicableSketchType(geometryType));
+		SetSketchType(_tool, GetApplicableSketchType(geometryType));
 	}
 
 	private List<long> GetApplicableSelection(
