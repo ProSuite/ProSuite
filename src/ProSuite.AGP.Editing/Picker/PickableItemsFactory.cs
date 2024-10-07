@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.PickerUI;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -14,12 +16,6 @@ namespace ProSuite.AGP.Editing.Picker
 		// NOTE: Hack! This cache doesn't invlidate if layer properties change.
 		private static readonly HashSet<string> _layersWithExpression = new();
 
-		public static IEnumerable<IPickableItem> CreateFeatureItems(
-			[NotNull] IEnumerable<FeatureSelectionBase> selectionByClasses)
-		{
-			return selectionByClasses.SelectMany(CreatePickableFeatureItems);
-		}
-
 		public static IEnumerable<IPickableItem> CreateFeatureClassItems(
 			[NotNull] IEnumerable<FeatureSelectionBase> selectionByClasses)
 		{
@@ -27,23 +23,30 @@ namespace ProSuite.AGP.Editing.Picker
 
 			foreach (FeatureSelectionBase selection in selectionByClasses)
 			{
-				BasicFeatureLayer layer = selection.BasicFeatureLayer;
-				bool isAnnotation = layer is AnnotationLayer;
-
-				FeatureClass featureClass = selection.FeatureClass;
-				string name = featureClass.GetName();
-
-				if (itemsByName.ContainsKey(name))
+				try
 				{
-					IPickableFeatureClassItem item = itemsByName[name];
-					item.Layers.Add(layer);
+					BasicFeatureLayer layer = selection.BasicFeatureLayer;
+					bool isAnnotation = layer is AnnotationLayer;
+
+					Table featureClass = selection.Table;
+					string name = featureClass.GetName();
+
+					if (itemsByName.ContainsKey(name))
+					{
+						IPickableFeatureClassItem item = itemsByName[name];
+						item.Layers.Add(layer);
+					}
+					else
+					{
+						IPickableFeatureClassItem item = CreatePickableClassItem(selection, featureClass, isAnnotation);
+						item.Layers.Add(layer);
+
+						itemsByName.Add(name, item);
+					}
 				}
-				else
+				finally
 				{
-					IPickableFeatureClassItem item = CreatePickableClassItem(selection, featureClass, isAnnotation);
-					item.Layers.Add(layer);
-
-					itemsByName.Add(name, item);
+					selection.Dispose();
 				}
 			}
 
@@ -51,15 +54,18 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		private static IPickableFeatureClassItem CreatePickableClassItem(
-			FeatureSelectionBase selection, Dataset dataset, bool isAnnotation)
+			TableSelection selection, Dataset dataset, bool isAnnotation)
 		{
-			List<Feature> features = selection.GetFeatures().ToList();
+			using Table table = selection.Table;
+			var features = GdbQueryUtils.GetFeatures(table, selection.GetOids(), null, false)
+			                            .ToList();
+
 			return isAnnotation
 				       ? new PickableAnnotationFeatureClassItem(dataset, features)
 				       : new PickableFeatureClassItem(dataset, features);
 		}
 
-		private static IEnumerable<IPickableItem> CreatePickableFeatureItems(
+		public static IEnumerable<IPickableItem> CreatePickableFeatureItems(
 			[NotNull] FeatureSelectionBase classSelection)
 		{
 			BasicFeatureLayer layer = classSelection.BasicFeatureLayer;
@@ -94,7 +100,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 			if (expressionExists)
 			{
-				foreach (var feature in classSelection.GetFeatures())
+				foreach (var feature in GetFeatures(classSelection))
 				{
 					long oid = feature.GetObjectID();
 					string expr = layer.GetDisplayExpressions(new[] { oid }).FirstOrDefault();
@@ -114,13 +120,19 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 			else
 			{
-				foreach (var feature in classSelection.GetFeatures())
+				foreach (var feature in GetFeatures(classSelection))
 				{
 					yield return CreatePickableFeatureItem(layer, feature, feature.GetObjectID(),
 					                                       GdbObjectUtils.GetDisplayValue(feature),
 					                                       isAnnotation);
 				}
 			}
+		}
+
+		private static IEnumerable<Feature> GetFeatures(TableSelection classSelection)
+		{
+			using Table table = classSelection.Table;
+			return GdbQueryUtils.GetFeatures(table, classSelection.GetOids(), null, false);
 		}
 
 		private static IPickableItem CreatePickableFeatureItem(BasicFeatureLayer layer,
@@ -132,6 +144,33 @@ namespace ProSuite.AGP.Editing.Picker
 				       ? new PickableAnnotationFeatureItem(layer, feature, feature.GetShape(), oid,
 				                                           expr)
 				       : new PickableFeatureItem(layer, feature, feature.GetShape(), oid, expr);
+		}
+	}
+
+	public class PickableFeatureClassItemsFactory : IPickableItemsFactory
+	{
+		public IEnumerable<IPickableItem> CreateItems(IEnumerable<TableSelection> candidates)
+		{
+			return PickableItemsFactory.CreateFeatureClassItems(
+				candidates.OfType<FeatureSelectionBase>());
+		}
+
+		public IPickerViewModel CreateViewModel(Geometry selectionGeometry)
+		{
+			return new PickerViewModel(selectionGeometry);
+		}
+	}
+
+	public class PickableFeatureItemsFactory : IPickableItemsFactory
+	{
+		public IEnumerable<IPickableItem> CreateItems(IEnumerable<TableSelection> candidates)
+		{
+			return candidates.OfType<FeatureSelectionBase>().SelectMany(PickableItemsFactory.CreatePickableFeatureItems);
+		}
+
+		public IPickerViewModel CreateViewModel(Geometry selectionGeometry)
+		{
+			return new PickerViewModel(selectionGeometry);
 		}
 	}
 }

@@ -7,6 +7,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Selection
 {
+	// todo daro still needed?
 	public class FeatureSelection : FeatureSelectionBase
 	{
 		private readonly IList<Feature> _features;
@@ -19,7 +20,7 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		[NotNull]
-		public override IEnumerable<Feature> GetFeatures()
+		private IEnumerable<Feature> GetFeatures()
 		{
 			return _features;
 		}

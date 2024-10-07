@@ -387,7 +387,11 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			foreach (var classSelection in featureClassSelections)
 			{
-				foundFeatures.AddRange(classSelection.GetFeatures());
+				using Table table = classSelection.Table;
+				IEnumerable<Feature> features =
+					GdbQueryUtils.GetFeatures(table, classSelection.GetOids(), null, false);
+
+				foundFeatures.AddRange(features);
 			}
 
 			// Remove the selected features from the set of overlapping features.

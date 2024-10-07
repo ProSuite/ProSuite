@@ -431,7 +431,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			foreach (var classSelection in featureClassSelections)
 			{
-				foundFeatures.AddRange(classSelection.GetFeatures());
+				using Table table = classSelection.Table;
+				foundFeatures.AddRange(GdbQueryUtils.GetFeatures(table, classSelection.GetOids(), null, false));
 			}
 
 			// Remove the selected features from the set of overlapping features.

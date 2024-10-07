@@ -412,7 +412,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					return new List<Feature> { pickedItem.Feature };
 				}
 
-				return candidates.SelectMany(c => c.GetFeatures());
+				return candidates.SelectMany(candidate =>
+				{
+					using Table table = candidate.Table;
+					return GdbQueryUtils.GetFeatures(table, candidate.GetOids(), null, false);
+				});
 			}, progressor);
 
 			IEnumerable<Feature> targetFeatures = await ViewUtils.TryAsync(task, _msg);
