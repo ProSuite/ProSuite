@@ -27,7 +27,7 @@ using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
-	public abstract class OneClickToolBase : MapTool
+	public abstract class OneClickToolBase : MapTool, ISketchTool
 	{
 		private const Key _keyShowOptionsPane = Key.O;
 		private const Key _keyPolygonDraw = Key.P;
@@ -44,6 +44,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		private DateTime _lastSketchFinishedTime;
 
 		protected Point CurrentMousePosition;
+
+		private SelectionSketchTypeToggle _selectionSketchTypeToggle;
 
 		protected OneClickToolBase()
 		{
@@ -137,6 +139,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			try
 			{
+				SetupSelectionSketch();
+
 				using var source = GetProgressorSource();
 				var progressor = source?.Progressor;
 
@@ -291,24 +295,12 @@ namespace ProSuite.AGP.Editing.OneClick
 					await ShiftReleasedCoreAsync();
 				}
 
-				if (await IsInSelectionPhaseAsync() && args.Key is _keyPolygonDraw or _keyLassoDraw)
-				{
-					await ResetSelectionSketchAsync();
-				}
-
 				await HandleKeyUpCoreAsync(args);
 			}
 			catch (Exception ex)
 			{
 				ViewUtils.HandleError(ex, _msg);
 			}
-		}
-
-		private async Task ResetSelectionSketchAsync()
-		{
-			SetupSketch(GetSelectionSketchGeometryType());
-
-			await ResetSketchCoreAsync();
 		}
 
 		protected virtual Task ResetSketchCoreAsync()
@@ -401,10 +393,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void StartSelectionPhase()
 		{
-			SelectionSettings settings = GetSelectionSettings();
-
-			SetupSketch(GetSelectionSketchGeometryType(), settings.SketchOutputMode);
-
 			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
 			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
 
@@ -413,13 +401,15 @@ namespace ProSuite.AGP.Editing.OneClick
 			OnSelectionPhaseStarted();
 		}
 
-		/// <summary>
-		/// Sets up the tool for a sketch that is typically used
-		/// to select things (features, graphics, etc.)
-		/// </summary>
-		protected void SetupRectangleSketch()
+		private void SetupSelectionSketch()
 		{
-			SetupSketch(SketchGeometryType.Rectangle);
+			SelectionSettings settings = GetSelectionSettings();
+
+			SketchGeometryType selectionSketchType = GetSelectionSketchGeometryType();
+
+			_selectionSketchTypeToggle = new SelectionSketchTypeToggle(this, selectionSketchType);
+
+			SetupSketch(selectionSketchType, settings.SketchOutputMode);
 		}
 
 		protected void SetupSketch(SketchGeometryType? sketchType,
@@ -444,6 +434,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			UseSnapping = useSnapping;
 
 			GeomIsSimpleAsFeature = enforceSimpleSketch;
+
+			_selectionSketchTypeToggle.ToggleSketchType(sketchType);
 		}
 
 		protected abstract SketchGeometryType GetSelectionSketchGeometryType();
@@ -901,6 +893,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			var map = ActiveMapView?.Map;
 			map?.ClearSelection();
+		}
+
+		public void SetSketchType(SketchGeometryType? sketchType)
+		{
+			SketchType = sketchType;
 		}
 	}
 }

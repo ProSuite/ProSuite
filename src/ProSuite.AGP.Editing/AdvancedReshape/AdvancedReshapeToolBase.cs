@@ -598,10 +598,5 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			SketchSymbol = symbolReference;
 		}
-
-		public void SetSketchType(SketchGeometryType? sketchType)
-		{
-			SketchType = sketchType;
-		}
 	}
 }

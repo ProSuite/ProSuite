@@ -237,6 +237,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
+		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
+		{
+			if (await IsInSelectionPhaseAsync())
+			{
+				return;
+			}
+
+			SetCursor(TargetSelectionCursor);
+		}
+
 		protected override async Task ShiftPressedCoreAsync()
 		{
 			try

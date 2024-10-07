@@ -16,14 +16,11 @@ using ProSuite.Commons.Logging;
 namespace ProSuite.AGP.Editing;
 
 // todo 3D, test multipatch sketch symbol!
-public class SymbolizedSketchTypeBasedOnSelection : IDisposable
+public class SymbolizedSketchTypeBasedOnSelection : SelectionSketchTypeToggleBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	[NotNull] private readonly ISymbolizedSketchTool _tool;
-	private readonly SketchGeometryType _defaultSelectionSketchType;
-
-	private SketchGeometryType _currentSelectionSketchType;
 	private bool _showFeatureSketchSymbology;
 
 	/// <summary>
@@ -36,12 +33,10 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	/// <param name="tool"></param>
 	/// <param name="defaultSelectionSketchType"></param>
 	public SymbolizedSketchTypeBasedOnSelection([NotNull] ISymbolizedSketchTool tool,
-	                                            SketchGeometryType defaultSelectionSketchType)
+	                                            SketchGeometryType defaultSelectionSketchType) :
+		base(tool, defaultSelectionSketchType)
 	{
 		_tool = tool;
-		_defaultSelectionSketchType = defaultSelectionSketchType;
-
-		SetSketchType(tool, defaultSelectionSketchType);
 
 		_showFeatureSketchSymbology = ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
 
@@ -49,38 +44,18 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		MapSelectionChangedEvent.Subscribe(OnMapSelectionChangedAsync);
 	}
 
-	public void Dispose()
+	protected override void DisposeCore()
 	{
 		SketchModifiedEvent.Unsubscribe(OnSketchModified);
 		MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);
 
 		ClearSketchSymbol();
-		ResetSketchType();
+		ResetSelectionSketchType();
 	}
 
 	private void ClearSketchSymbol()
 	{
 		_tool.SetSketchSymbol(null);
-	}
-
-	private void ResetSketchType()
-	{
-		SetSketchType(_tool, _defaultSelectionSketchType);
-	}
-
-	private void SetSketchType(ISymbolizedSketchTool tool, SketchGeometryType type)
-	{
-		tool.SetSketchType(type);
-		_currentSelectionSketchType = type;
-	}
-
-	public void ToggleSketchType(SketchGeometryType sketchType)
-	{
-		SketchGeometryType type = _currentSelectionSketchType == sketchType
-			                          ? _defaultSelectionSketchType
-			                          : sketchType;
-		SetSketchType(_tool, type);
-		_msg.Debug($"selection sketch type {type}");
 	}
 
 	/// <summary>
@@ -165,7 +140,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		if (featureLayer == null || oids == null)
 		{
 			ClearSketchSymbol();
-			SetSketchType(_tool, _currentSelectionSketchType);
+			SetCurrentSelectionSketchType();
 
 			return;
 		}

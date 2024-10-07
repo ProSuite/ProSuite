@@ -196,7 +196,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 				_symbolizedSketch?.ToggleSketchType(SketchGeometryType.Polygon);
 			}
 
-			else if (args.Key == _keyLassoDraw)
+			if (args.Key == _keyLassoDraw)
 			{
 				_symbolizedSketch?.ToggleSketchType(SketchGeometryType.Lasso);
 			}
@@ -216,15 +216,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	protected sealed override async Task HandleKeyUpAsync(MapViewKeyEventArgs args)
 	{
 		_msg.VerboseDebug(() => "HandleKeyUpAsync");
-
-		if (! InConstructionPhase())
-		{
-			//if (args.Key is _keyPolygonDraw or _keyLassoDraw)
-			//{
-			//	_symbolizedSketch?.ResetSketchType();
-			//	_symbolizedSketch?.ClearSketchSymbol();
-			//}
-		}
 
 		await ViewUtils.TryAsync(HandleKeyUpCoreAsync(args), _msg);
 	}

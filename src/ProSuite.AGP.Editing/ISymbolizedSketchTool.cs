@@ -6,13 +6,11 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing;
 
-public interface ISymbolizedSketchTool
+public interface ISymbolizedSketchTool : ISketchTool
 {
 	bool CanSetConstructionSketchSymbol(GeometryType geometryType);
 
 	void SetSketchSymbol([CanBeNull] CIMSymbolReference symbolReference);
-
-	void SetSketchType(SketchGeometryType? sketchType);
 
 	bool CanSelectFromLayer([CanBeNull] Layer layer);
 	
