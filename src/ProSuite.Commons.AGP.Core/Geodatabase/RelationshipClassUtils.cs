@@ -63,12 +63,16 @@ public static class RelationshipClassUtils
 		string name = originClass.GetName();
 		using var geodatabase = (ArcGIS.Core.Data.Geodatabase) originClass.GetDatastore();
 
+		return GetDestinationClassNames(geodatabase, name);
+	}
+
+	public static IEnumerable<string> GetDestinationClassNames([NotNull] ArcGIS.Core.Data.Geodatabase geodatabase, string originClassName)
+	{
 		IEnumerable<RelationshipClassDefinition> definitions =
 			DatasetUtils.GetRelationshipClassDefinitions(geodatabase, relClass =>
 				                                             string.Equals(
-					                                             relClass.GetOriginClass(), name,
+					                                             relClass.GetOriginClass(), originClassName,
 					                                             StringComparison.OrdinalIgnoreCase));
-
 
 		foreach (RelationshipClassDefinition definition in definitions)
 		{
