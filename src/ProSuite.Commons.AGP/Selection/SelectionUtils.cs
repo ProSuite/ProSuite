@@ -237,6 +237,14 @@ namespace ProSuite.Commons.AGP.Selection
 		}
 
 		public static int GetFeatureCount(
+			[NotNull] IEnumerable<KeyValuePair<MapMember, List<long>>> selection)
+		{
+			Assert.ArgumentNotNull(selection, nameof(selection));
+
+			return selection.Select(pair => pair.Value).Sum(set => set.Count);
+		}
+
+		public static int GetFeatureCount(
 			[NotNull] IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> selection)
 		{
 			Assert.ArgumentNotNull(selection, nameof(selection));
