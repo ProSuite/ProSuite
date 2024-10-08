@@ -26,7 +26,7 @@ using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
-	public abstract class CrackerToolBase : TwoPhaseEditToolBase
+	public abstract class CrackerToolBase : TopologicalCrackingToolBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -34,7 +34,6 @@ namespace ProSuite.AGP.Editing.Cracker
 		private OverridableSettingsProvider<PartialCrackerToolOptions> _settingsProvider;
 		private CrackerResult _resultCrackPoints;
 		private CrackerFeedback _feedback;
-		private IList<Feature> _overlappingFeatures;
 		private readonly VertexLabels _vertexLabels;
 
 		protected CrackerToolBase()
@@ -54,8 +53,6 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		protected virtual string LocalConfigDir =>
 			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
-
-		protected abstract ICrackerService MicroserviceClient { get; }
 
 		protected override void OnUpdateCore()
 		{
@@ -247,72 +244,6 @@ namespace ProSuite.AGP.Editing.Cracker
 
 				_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
 			}
-		}
-
-		private CrackerResult CalculateCrackPoints(IList<Feature> selectedFeatures,
-		                                           IList<Feature> intersectingFeatures,
-		                                           CancelableProgressor progressor)
-		{
-			CrackerResult resultCrackPoints;
-
-			CancellationToken cancellationToken;
-
-			if (progressor != null)
-			{
-				cancellationToken = progressor.CancellationToken;
-			}
-			else
-			{
-				var cancellationTokenSource = new CancellationTokenSource();
-				cancellationToken = cancellationTokenSource.Token;
-			}
-
-			if (MicroserviceClient != null)
-			{
-				resultCrackPoints =
-					MicroserviceClient.CalculateCrackPoints(selectedFeatures, intersectingFeatures,
-					                                        _crackerToolOptions, cancellationToken);
-			}
-			else
-			{
-				throw new InvalidConfigurationException("Microservice has not been started.");
-			}
-
-			return resultCrackPoints;
-		}
-
-		private CrackerResult SelectCrackPointsToApply(CrackerResult crackerResultPoints,
-		                                               Geometry sketch)
-		{
-			CrackerResult result = new CrackerResult();
-
-			if (crackerResultPoints == null)
-			{
-				return result;
-			}
-
-			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
-			                                          out bool singlePick);
-
-			foreach (CrackedFeature crackedFeature in crackerResultPoints.ResultsByFeature)
-			{
-				CrackedFeature selectedPointsByFeature = new CrackedFeature(crackedFeature.Feature);
-
-				foreach (CrackPoint crackPoint in crackedFeature.CrackPoints)
-				{
-					if (ToolUtils.IsSelected(sketch, crackPoint.Point, singlePick))
-					{
-						selectedPointsByFeature.CrackPoints.Add(crackPoint);
-					}
-				}
-
-				if (selectedPointsByFeature.CrackPoints.Count > 0)
-				{
-					result.ResultsByFeature.Add(selectedPointsByFeature);
-				}
-			}
-
-			return result;
 		}
 
 		private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
