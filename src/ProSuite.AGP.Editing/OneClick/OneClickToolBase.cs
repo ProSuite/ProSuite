@@ -429,8 +429,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			// Note: set CompleteSketchOnMouseUp before SketchType, or it has no effect
 			CompleteSketchOnMouseUp = completeSketchOnMouseUp;
 
-			SketchType = sketchType;
-
 			UseSnapping = useSnapping;
 
 			GeomIsSimpleAsFeature = enforceSimpleSketch;

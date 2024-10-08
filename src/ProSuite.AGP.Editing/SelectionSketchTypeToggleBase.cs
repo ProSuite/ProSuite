@@ -37,6 +37,10 @@ public abstract class SelectionSketchTypeToggleBase : IDisposable
 
 	protected void SetCurrentSelectionSketchType()
 	{
+		if (_currentSelectionSketchType == null)
+		{
+			ResetSelectionSketchType();
+		}
 		SetSketchType(_tool, _currentSelectionSketchType);
 	}
 
