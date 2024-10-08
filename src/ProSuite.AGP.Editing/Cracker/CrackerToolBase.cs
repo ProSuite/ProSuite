@@ -100,7 +100,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		                                                   CancelableProgressor progressor)
 		{
 			IList<Feature> intersectingFeatures =
-				GetIntersectingFeatures(selectedFeatures, progressor);
+				GetIntersectingFeatures(selectedFeatures, _crackerToolOptions, progressor);
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
@@ -109,7 +109,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			}
 
 			_resultCrackPoints =
-				CalculateCrackPoints(selectedFeatures, intersectingFeatures, progressor);
+				CalculateCrackPoints(selectedFeatures, intersectingFeatures, _crackerToolOptions, progressor);
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
