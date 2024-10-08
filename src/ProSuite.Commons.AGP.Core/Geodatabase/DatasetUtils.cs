@@ -50,6 +50,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return table?.GetName();
 		}
 
+		[CanBeNull]
 		public static string GetAliasName(Table table)
 		{
 			// NOTE: Bug! Returns empty string if it's an AnnotationFeatureClass

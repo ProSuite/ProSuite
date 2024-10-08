@@ -356,7 +356,7 @@ namespace ProSuite.Microservices.Client.AGP
 				new ObjectClassMsg()
 				{
 					Name = name,
-					Alias = aliasName,
+					Alias = aliasName ?? string.Empty, 
 					ClassHandle = classHandle,
 					SpatialReference = ToSpatialReferenceMsg(
 						spatialRef, SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),
