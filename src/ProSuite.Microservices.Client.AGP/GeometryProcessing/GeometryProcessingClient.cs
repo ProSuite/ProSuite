@@ -261,7 +261,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			IEnumerable<Feature> selectedFeatures,
 			CrackerResult crackPointsToAdd,
 			IList<Feature> intersectingFeatures,
-			ICrackerToolOptions crackerToolOptions,
+			ICrackerToolOptions crackerOptions,
 			CancellationToken cancellationToken)
 		{
 			if (CrackClient == null)
@@ -269,7 +269,22 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return CrackerClientUtils.ApplyCrackPoints(
 				CrackClient, selectedFeatures, crackPointsToAdd, intersectingFeatures,
-				crackerToolOptions, cancellationToken);
+				crackerOptions, cancellationToken);
+		}
+
+		public IList<ResultFeature> ChopLines(
+			IEnumerable<Feature> selectedFeatures,
+			CrackerResult splitPoints,
+			IList<Feature> intersectingFeatures,
+			ICrackerToolOptions chopperOptions,
+			CancellationToken cancellationToken)
+		{
+			if (CrackClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
+			return CrackerClientUtils.ChopLines(
+				CrackClient, selectedFeatures, splitPoints, intersectingFeatures,
+				chopperOptions, cancellationToken);
 		}
 	}
 }

@@ -66,6 +66,27 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 			return response;
 		}
 
+		public override async Task<ChopLinesResponse> ChopLines(ApplyCrackPointsRequest request,
+		                                                  ServerCallContext context)
+		{
+			Stopwatch watch = _msg.DebugStartTiming();
+
+			ProcessUtils.TrySetThreadIdAsName();
+
+			Func<ITrackCancel, ChopLinesResponse> func =
+				trackCancel => CrackServiceUtils.ChopLines(request, trackCancel);
+
+			ChopLinesResponse response =
+				await GrpcServerUtils.ExecuteServiceCall(func, context, _staTaskScheduler, true) ??
+				new ChopLinesResponse();
+
+			_msg.DebugStopTiming(watch, "Chopped lines for peer {0} ({1} source feature(s))",
+			                     context.Peer, request.SourceFeatures.Count);
+
+			return response;
+
+		}
+
 		#endregion
 	}
 }

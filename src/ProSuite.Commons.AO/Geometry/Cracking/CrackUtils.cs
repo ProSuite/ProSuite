@@ -1724,7 +1724,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return result;
 		}
 
-		private static IEnumerable<IPolyline> GetSplitPolycurves(
+		public static IEnumerable<IPolyline> GetSplitPolycurves(
 			[NotNull] IFeature lineFeature,
 			[NotNull] IPointCollection splitPoints,
 			double? maxSplitPointDistanceToLine)

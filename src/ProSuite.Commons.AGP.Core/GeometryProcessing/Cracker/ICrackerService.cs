@@ -19,6 +19,12 @@ public interface ICrackerService
 	IList<ResultFeature> ApplyCrackPoints([NotNull] IEnumerable<Feature> selectedFeatures,
 	                                      [NotNull] CrackerResult crackPointsToAdd,
 	                                      [NotNull] IList<Feature> intersectingFeatures,
-	                                      ICrackerToolOptions crackerToolOptions,
+	                                      ICrackerToolOptions crackerOptions,
 										  CancellationToken cancellationToken);
+
+	IList<ResultFeature> ChopLines([NotNull] IEnumerable<Feature> selectedFeatures,
+	                                      [NotNull] CrackerResult splitPoints,
+	                                      [NotNull] IList<Feature> intersectingFeatures,
+	                                      ICrackerToolOptions chopperOptions,
+	                                      CancellationToken cancellationToken);
 }

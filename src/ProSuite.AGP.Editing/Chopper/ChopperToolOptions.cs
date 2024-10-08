@@ -5,17 +5,17 @@ using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
 
-namespace ProSuite.AGP.Editing.Cracker
+namespace ProSuite.AGP.Editing.Chopper
 {
-	public class CrackerToolOptions : OptionsBase<PartialCrackerToolOptions>, ICrackerToolOptions
+	public class ChopperToolOptions : OptionsBase<PartialChopperToolOptions>, ICrackerToolOptions
 	{
-		public CrackerToolOptions([CanBeNull] PartialCrackerToolOptions centralOptions,
-		                          [CanBeNull] PartialCrackerToolOptions localOptions)
+		public ChopperToolOptions([CanBeNull] PartialChopperToolOptions centralOptions,
+		                          [CanBeNull] PartialChopperToolOptions localOptions)
 		{
 			CentralOptions = centralOptions;
 
 			LocalOptions = localOptions ??
-			               new PartialCrackerToolOptions();
+			               new PartialChopperToolOptions();
 
 			CentralizableTargetFeatureSelection =
 				InitializeSetting<TargetFeatureSelection>(
@@ -37,9 +37,9 @@ namespace ProSuite.AGP.Editing.Cracker
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.SnapTolerance), 0.0);
 
-			CentralizableRemoveUnnecessaryVertices =
+			CentralizableExcludeInteriorInteriorIntersections =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.RemoveUnnecessaryVertices),
+					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeInteriorInteriorIntersections),
 					false);
 
 			CentralizableUseSourceZs =
@@ -64,7 +64,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		public CentralizableSetting<TargetFeatureSelection>
 			CentralizableTargetFeatureSelection { get; private set; }
 
-		public CentralizableSetting<bool> CentralizableRemoveUnnecessaryVertices
+		public CentralizableSetting<bool> CentralizableExcludeInteriorInteriorIntersections
 		{
 			get;
 			private set;
@@ -106,7 +106,10 @@ namespace ProSuite.AGP.Editing.Cracker
 			get { return CentralizableUseSourceZs.CurrentValue; }
 		}
 
-		public bool ExcludeInteriorInteriorIntersections => false;
+		public bool ExcludeInteriorInteriorIntersections
+		{
+			get { return CentralizableExcludeInteriorInteriorIntersections.CurrentValue; }
+		}
 
 		#endregion
 
@@ -120,7 +123,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			CentralizableSnapToTargetVertices.RevertToDefault();
 			CentralizableSnapTolerance.RevertToDefault();
 
-			CentralizableRemoveUnnecessaryVertices.RevertToDefault();
+			CentralizableExcludeInteriorInteriorIntersections.RevertToDefault();
 
 			CentralizableUseSourceZs.RevertToDefault();
 		}
@@ -164,8 +167,8 @@ namespace ProSuite.AGP.Editing.Cracker
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableRemoveUnnecessaryVertices,
-			                     "Remove unnecessary vertices", notifications))
+			if (HasLocalOverride(CentralizableExcludeInteriorInteriorIntersections,
+			                     "Only chop at endpoints intersecting selected line's interior (T shapes)", notifications))
 			{
 				result = true;
 			}
@@ -175,7 +178,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		public override string GetLocalOverridesMessage()
 		{
-			const string optionsName = "Cracker Tool Options";
+			const string optionsName = "Chopper Tool Options";
 
 			return GetLocalOverridesMessage(optionsName);
 		}
