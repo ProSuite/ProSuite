@@ -229,8 +229,6 @@ namespace ProSuite.AGP.Editing.Cracker
 		{
 			_resultCrackPoints = null;
 			_feedback.DisposeOverlays();
-
-			_vertexLabels.DisposeOverlays();
 		}
 
 		protected override void LogDerivedGeometriesCalculated(CancelableProgressor progressor)
