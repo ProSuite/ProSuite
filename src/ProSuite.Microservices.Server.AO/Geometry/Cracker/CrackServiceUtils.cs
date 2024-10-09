@@ -50,6 +50,10 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 
 			bool useSourceZs = optionsMsg.UseSourceZs;
 
+			IntersectionPointOptions intersectionPointOptions = (IntersectionPointOptions) optionsMsg.IntersectionPointOptions;
+
+			bool addCrackPointsOnExistingVertices = optionsMsg.AddCrackPointsOnExistingVertices;
+
 			bool onlyWithinSameClass = optionsMsg.CrackOnlyWithinSameClass;
 
 			IList<FeatureVertexInfo> vertexInfos =
@@ -57,7 +61,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 				                                    snapTolerance, minimumSegmentLength);
 
 			CrackPointCalculator crackPointCalculator = CreateCrackPointCalculator(
-				snapTolerance, minimumSegmentLength, useSourceZs, calculationPerimeter);
+				snapTolerance, minimumSegmentLength, useSourceZs, intersectionPointOptions, addCrackPointsOnExistingVertices, calculationPerimeter);
 
 			if (targetFeatures.Count == 0)
 			{
@@ -348,13 +352,15 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 			double? snapTolerance,
 			double? minimumSegmentLength,
 			bool useSourceZs,
+			IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsOnExistingVertices,
 			[CanBeNull] IGeometry perimeter)
 		{
 			IEnvelope inExtent = perimeter?.Envelope;
 
 			var cracker = new CrackPointCalculator(
-				snapTolerance, minimumSegmentLength, addCrackPointsOnExistingVertices: false,
-				useSourceZs, IntersectionPointOptions.IncludeLinearIntersectionAllPoints, inExtent);
+				snapTolerance, minimumSegmentLength,useSourceZs,
+				intersectionPointOptions, addCrackPointsOnExistingVertices, inExtent);
 
 			// Special handling of multipatch targets:
 			cracker.TargetTransformation = CrackUtils.ExtractBoundariesForMultipatches;

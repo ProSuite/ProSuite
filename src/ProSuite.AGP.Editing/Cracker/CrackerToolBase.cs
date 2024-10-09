@@ -106,8 +106,12 @@ namespace ProSuite.AGP.Editing.Cracker
 				return;
 			}
 
+			IntersectionPointOptions intersectionPointOptions =
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints;
+
 			_resultCrackPoints =
-				CalculateCrackPoints(selectedFeatures, intersectingFeatures, _crackerToolOptions, progressor);
+				CalculateCrackPoints(selectedFeatures, intersectingFeatures, _crackerToolOptions,
+				                     intersectionPointOptions, false, progressor);
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
@@ -172,10 +176,13 @@ namespace ProSuite.AGP.Editing.Cracker
 			IList<Feature> intersectingFeatures =
 				GetIntersectingFeatures(selectedFeatures, progressor);
 
+			IntersectionPointOptions intersectionPointOptions =
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints;
+
 			var result =
 				MicroserviceClient.ApplyCrackPoints(
 					selectedFeatures, crackPointsToApply, intersectingFeatures,
-					_crackerToolOptions,
+					_crackerToolOptions, intersectionPointOptions, false,
 					progressor?.CancellationToken ?? new CancellationTokenSource().Token);
 
 			var updates = new Dictionary<Feature, Geometry>();

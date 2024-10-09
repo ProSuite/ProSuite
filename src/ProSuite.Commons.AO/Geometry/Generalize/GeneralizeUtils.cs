@@ -638,9 +638,8 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 			// and un-selected protecting features (protect every intersecting vertex)
 			var crackPointCalculator =
 				new CrackPointCalculator(
-					snapTolerance, minimumSegmentLength,
-					addCrackPointsAlsoOnExistingVertices, false,
-					intersectionOption, null);
+					snapTolerance, minimumSegmentLength, false,
+					intersectionOption, addCrackPointsAlsoOnExistingVertices, null);
 
 			return crackPointCalculator;
 		}

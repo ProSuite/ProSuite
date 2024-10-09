@@ -24,11 +24,14 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] IList<Feature> intersectingFeatures,
 			ICrackerToolOptions crackerToolOptions,
+			IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsOnExistingVertices,
 			CancellationToken cancellationToken)
 		{
 			CalculateCrackPointsResponse response =
 				CalculateCrackPointsRpc(rpcClient, selectedFeatures, intersectingFeatures,
-				                        crackerToolOptions, cancellationToken);
+				                        crackerToolOptions, intersectionPointOptions,
+				                        addCrackPointsOnExistingVertices, cancellationToken);
 
 			if (response == null || cancellationToken.IsCancellationRequested)
 			{
@@ -93,11 +96,15 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] IList<Feature> intersectingFeatures,
 			ICrackerToolOptions crackerToolOptions,
+			IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsOnExistingVertices,
 			CancellationToken cancellationToken)
 		{
 			CalculateCrackPointsRequest request =
 				CreateCalculateCrackPointsRequest(selectedFeatures, intersectingFeatures,
-				                                  crackerToolOptions);
+				                                  crackerToolOptions,
+				                                  intersectionPointOptions,
+				                                  addCrackPointsOnExistingVertices);
 
 			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
 
@@ -112,7 +119,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 		private static CalculateCrackPointsRequest CreateCalculateCrackPointsRequest(
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] IList<Feature> intersectingFeatures,
-			ICrackerToolOptions crackerToolOptions)
+			ICrackerToolOptions crackerToolOptions,
+			IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsOnExistingVertices)
 		{
 			var request = new CalculateCrackPointsRequest();
 			request.CrackOptions = new CrackOptionsMsg();
@@ -125,28 +134,31 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			                                           request.TargetFeatures,
 			                                           request.ClassDefinitions);
 
-			request.CrackOptions = ToCrackerToolOptionsMsg(crackerToolOptions);
+			request.CrackOptions = ToCrackerToolOptionsMsg(crackerToolOptions,
+														   intersectionPointOptions,
+			                                               addCrackPointsOnExistingVertices);
 
 			return request;
 		}
 
 		private static CrackOptionsMsg ToCrackerToolOptionsMsg(
-			ICrackerToolOptions crackerToolOptions)
+			ICrackerToolOptions crackerToolOptions,
+			IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsOnExistingVertices)
 		{
 			var result = new CrackOptionsMsg();
 
 			result.CrackOnlyWithinSameClass =
 				crackerToolOptions.TargetFeatureSelection == TargetFeatureSelection.SameClass;
-			result.RespectMinimumSegmentLength =
-				crackerToolOptions.RespectMinimumSegmentLength;
-			result.MinimumSegmentLength =
-				crackerToolOptions.MinimumSegmentLength;
-			result.SnapToTargetVertices =
-				crackerToolOptions.SnapToTargetVertices;
-			result.SnapTolerance =
-				crackerToolOptions.SnapTolerance;
-			result.UseSourceZs =
-				crackerToolOptions.UseSourceZs;
+			result.RespectMinimumSegmentLength = crackerToolOptions.RespectMinimumSegmentLength;
+			result.MinimumSegmentLength = crackerToolOptions.MinimumSegmentLength;
+			result.SnapToTargetVertices = crackerToolOptions.SnapToTargetVertices;
+			result.SnapTolerance = crackerToolOptions.SnapTolerance;
+			result.UseSourceZs = crackerToolOptions.UseSourceZs;
+			result.ExcludeInteriorInteriorIntersection =
+				crackerToolOptions.ExcludeInteriorInteriorIntersections;
+			result.IntersectionPointOptions = (int) intersectionPointOptions;
+			result.AddCrackPointsOnExistingVertices = addCrackPointsOnExistingVertices;
 
 			return result;
 		}
@@ -317,11 +329,14 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			CrackerResult crackPointsToAdd,
 			IList<Feature> intersectingFeatures,
 			ICrackerToolOptions crackerToolOptions,
+			IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsOnExistingVertices,
 			CancellationToken cancellationToken)
 		{
 			ApplyCrackPointsRequest request =
 				CreateApplyCrackPointsRequest(selectedFeatures, crackPointsToAdd,
-				                              crackerToolOptions,
+				                              crackerToolOptions, intersectionPointOptions,
+				                              addCrackPointsOnExistingVertices,
 				                              out List<Feature> updatedFeatures);
 
 			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
@@ -339,6 +354,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			[NotNull] IEnumerable<Feature> selectedFeatures,
 			[NotNull] CrackerResult crackPointsToAdd,
 			ICrackerToolOptions crackerToolOptions,
+			IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsOnExistingVertices,
 			out List<Feature> updateFeatures)
 		{
 			var request = new ApplyCrackPointsRequest();
@@ -386,7 +403,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 				request.CrackPoints.Add(crackPointsMsg);
 			}
 
-			request.CrackOptions = ToCrackerToolOptionsMsg(crackerToolOptions);
+			request.CrackOptions = ToCrackerToolOptionsMsg(crackerToolOptions,
+														   intersectionPointOptions,
+			                                               addCrackPointsOnExistingVertices);
 
 			return request;
 		}
@@ -458,11 +477,16 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			CrackerResult crackPointsToAdd,
 			IList<Feature> intersectingFeatures,
 			ICrackerToolOptions chopperOptions,
+			IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsOnExistingVertices,
 			CancellationToken cancellationToken)
 		{
 			ApplyCrackPointsRequest request =
 				CreateApplyCrackPointsRequest(selectedFeatures, crackPointsToAdd,
-				                              chopperOptions, out List<Feature> updatedFeatures);
+				                              chopperOptions,
+				                              intersectionPointOptions,
+				                              addCrackPointsOnExistingVertices,
+				                              out List<Feature> updatedFeatures);
 
 			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
 			               request.SourceFeatures.Count;

@@ -23,6 +23,9 @@ public abstract class TopologicalCrackingToolBase : TwoPhaseEditToolBase
 	protected CrackerResult CalculateCrackPoints(IList<Feature> selectedFeatures,
 	                                             IList<Feature> intersectingFeatures,
 	                                             ICrackerToolOptions crackerToolOptions,
+
+												 IntersectionPointOptions intersectionPointOptions,
+												 bool addCrackPointsOnExistingVertices,
 	                                             CancelableProgressor progressor)
 	{
 		CrackerResult resultCrackPoints;
@@ -43,7 +46,8 @@ public abstract class TopologicalCrackingToolBase : TwoPhaseEditToolBase
 		{
 			resultCrackPoints =
 				MicroserviceClient.CalculateCrackPoints(selectedFeatures, intersectingFeatures,
-				                                        crackerToolOptions, cancellationToken);
+				                                        crackerToolOptions, intersectionPointOptions,
+				                                        addCrackPointsOnExistingVertices, cancellationToken);
 		}
 		else
 		{
