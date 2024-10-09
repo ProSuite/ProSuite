@@ -10,7 +10,7 @@ using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
-	public class ArcRow : IObject
+	public class ArcRow : IObject, IRowSubtypes
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -129,6 +129,33 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				throw;
 			}
 		}
+
+		#region Implementation of IRowSubtypes
+
+		public int SubtypeCode
+		{
+			get
+			{
+				int? subtypeCode =
+					Commons.AGP.Core.Geodatabase.GdbObjectUtils.GetSubtypeCode(_proRow);
+
+				return subtypeCode ?? -1;
+			}
+			set => throw new NotImplementedException();
+		}
+
+		public void InitDefaultValues()
+		{
+			ArcGIS.Core.Data.Subtype subtype =
+				Commons.AGP.Core.Geodatabase.GdbObjectUtils.GetSubtype(_proRow);
+
+			ArcTable arcTable = (ArcTable) _parentTable;
+
+			Commons.AGP.Core.Geodatabase.GdbObjectUtils.SetNullValuesToGdbDefault(
+				_proRow, arcTable.ProTableDefinition, subtype);
+		}
+
+		#endregion
 	}
 
 	public class ArcFeature : ArcRow, IFeature
