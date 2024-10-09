@@ -174,7 +174,7 @@ namespace ProSuite.AGP.Editing.Cracker
 				distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference).ToList();
 
 			IList<Feature> intersectingFeatures =
-				GetIntersectingFeatures(selectedFeatures, progressor);
+				GetIntersectingFeatures(selectedFeatures, _crackerToolOptions, progressor);
 
 			IntersectionPointOptions intersectionPointOptions =
 				IntersectionPointOptions.IncludeLinearIntersectionAllPoints;
@@ -311,70 +311,6 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		#region Search target features
-
-		[NotNull]
-		private IList<Feature> GetIntersectingFeatures(
-			[NotNull] ICollection<Feature> selectedFeatures,
-			[CanBeNull] CancelableProgressor cancellabelProgressor)
-		{
-			Dictionary<MapMember, List<long>> selection =
-				SelectionUtils.GetSelection(ActiveMapView.Map);
-
-			Envelope inExtent = ActiveMapView.Extent;
-
-			// todo daro To tool Options? See ChangeGeometryAlongToolBase.SelectTargetsAsync() as well.
-			TargetFeatureSelection targetFeatureSelection =
-				_crackerToolOptions.TargetFeatureSelection;
-
-			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
-
-			// They might be stored (insert target vertices):
-			featureFinder.ReturnUnJoinedFeatures = true;
-
-			// Options which are not directly passed to the Microservice via _crackerToolOptions
-			// Snap crack points within tolerance to target vertices
-			if (_crackerToolOptions.SnapToTargetVertices)
-			{
-				featureFinder.ExtraSearchTolerance = _crackerToolOptions.SnapTolerance;
-			}
-
-			// Set the feature classes to ignore
-			IEnumerable<FeatureSelectionBase> featureClassSelections =
-				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
-
-			if (cancellabelProgressor != null &&
-			    cancellabelProgressor.CancellationToken.IsCancellationRequested)
-			{
-				return new List<Feature>();
-			}
-
-			var foundFeatures = new List<Feature>();
-
-			foreach (var classSelection in featureClassSelections)
-			{
-				foundFeatures.AddRange(classSelection.GetFeatures());
-			}
-
-			// Remove the selected features from the set of overlapping features.
-			// This is also important to make sure the geometries don't get mixed up / reset 
-			// by inserting target vertices
-			foundFeatures.RemoveAll(
-				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
-
-			return foundFeatures;
-		}
-
-		private bool CanOverlapLayer(Layer layer)
-		{
-			var featureLayer = layer as FeatureLayer;
-
-			List<string>
-				ignoredClasses = new List<string>(); // RemoveOverlapsOptions.IgnoreFeatureClasses;
-
-			return CanOverlapGeometryType(featureLayer) &&
-			       (ignoredClasses == null || ! IgnoreLayer(layer, ignoredClasses));
-		}
 
 		private static bool CanOverlapGeometryType([CanBeNull] FeatureLayer featureLayer)
 		{

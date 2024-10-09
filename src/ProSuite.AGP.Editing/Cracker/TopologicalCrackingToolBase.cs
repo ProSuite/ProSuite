@@ -70,17 +70,21 @@ public abstract class TopologicalCrackingToolBase : TwoPhaseEditToolBase
 
 		Envelope inExtent = ActiveMapView.Extent;
 
-		// todo daro To tool Options? See ChangeGeometryAlongToolBase.SelectTargetsAsync() as well.
 		TargetFeatureSelection targetFeatureSelection =
 			crackerToolOptions.TargetFeatureSelection;
+
+		if (targetFeatureSelection == TargetFeatureSelection.SelectedFeatures)
+		{
+			// NOTE: cracking within selection is signalled to the server by an empty target list.
+			return new List<Feature>();
+		}
 
 		var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
 
 		// They might be stored (insert target vertices):
 		featureFinder.ReturnUnJoinedFeatures = true;
 
-		// Options which are not directly passed to the Microservice via _crackerToolOptions
-		// Snap crack points within tolerance to target vertices
+		// Snap crack points within tolerance to target vertices: enlarge search envelope.
 		if (crackerToolOptions.SnapToTargetVertices)
 		{
 			featureFinder.ExtraSearchTolerance = crackerToolOptions.SnapTolerance;
@@ -103,12 +107,6 @@ public abstract class TopologicalCrackingToolBase : TwoPhaseEditToolBase
 		{
 			foundFeatures.AddRange(classSelection.GetFeatures());
 		}
-
-		// Remove the selected features from the set of overlapping features.
-		// This is also important to make sure the geometries don't get mixed up / reset 
-		// by inserting target vertices
-		foundFeatures.RemoveAll(
-			f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
 
 		return foundFeatures;
 	}
