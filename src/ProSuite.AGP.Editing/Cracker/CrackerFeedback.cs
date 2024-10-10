@@ -8,6 +8,7 @@ using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
@@ -15,7 +16,7 @@ namespace ProSuite.AGP.Editing.Cracker
 	{
 		private static CIMLineSymbol _overlapLineSymbol;
 		private readonly CIMPolygonSymbol _overlapPolygonSymbol;
-
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private static CIMSymbolReference _outlinedPointSymRef;
 		private readonly CIMSymbolReference redCircleMarker;
 		private readonly CIMSymbolReference greenCircleMarker;
@@ -31,7 +32,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		private static CIMSymbolReference CreateOutlinedPointSymbol(
 			CIMColor fillColor, CIMColor strokeColor, double size, SymbolUtils.MarkerStyle style)
 		{
-			var stroke = SymbolUtils.CreateSolidStroke(strokeColor, size / 5);
+			var stroke = SymbolUtils.CreateSolidStroke(strokeColor, size / 2);
 			var polySym =
 				SymbolUtils.CreatePolygonSymbol(fillColor, SymbolUtils.FillStyle.Solid, stroke);
 			var marker = SymbolUtils.CreateMarker(style, polySym, size);
@@ -55,19 +56,19 @@ namespace ProSuite.AGP.Editing.Cracker
 			CIMColor white = ColorUtils.CreateRGB(255, 255, 255);
 
 			redCircleMarker =
-				CreateOutlinedPointSymbol(red, white, 10, SymbolUtils.MarkerStyle.Circle);
+				CreateOutlinedPointSymbol(red, white, 5, SymbolUtils.MarkerStyle.Circle);
 			greenCircleMarker =
-				CreateOutlinedPointSymbol(green, white, 10, SymbolUtils.MarkerStyle.Circle);
+				CreateOutlinedPointSymbol(green, white, 5, SymbolUtils.MarkerStyle.Circle);
 			greenSquareMarker =
-				CreateOutlinedPointSymbol(green, white, 10, SymbolUtils.MarkerStyle.Square);
+				CreateOutlinedPointSymbol(green, white, 5, SymbolUtils.MarkerStyle.Square);
 			mintCircleMarker =
-				CreateOutlinedPointSymbol(mint, white, 10, SymbolUtils.MarkerStyle.Circle);
+				CreateOutlinedPointSymbol(mint, white, 5, SymbolUtils.MarkerStyle.Circle);
 			redCrossMarker =
-				CreateOutlinedPointSymbol(red, white, 10, SymbolUtils.MarkerStyle.Cross);
+				CreateOutlinedPointSymbol(white, red, 7, SymbolUtils.MarkerStyle.Cross);
 			greySquareMarker =
-				CreateOutlinedPointSymbol(grey, white, 5, SymbolUtils.MarkerStyle.Square);
+				CreateOutlinedPointSymbol(grey, white, 3, SymbolUtils.MarkerStyle.Square);
 			redSquareMarker =
-				CreateOutlinedPointSymbol(red, white, 5, SymbolUtils.MarkerStyle.Square);
+				CreateOutlinedPointSymbol(red, white, 3, SymbolUtils.MarkerStyle.Square);
 			//TODO: remove segment line feature
 		}
 
@@ -88,6 +89,7 @@ namespace ProSuite.AGP.Editing.Cracker
 						MapView.Active.AddOverlay(vertex, greySquareMarker);
 					_overlays.Add(addedVertex);
 				}
+				
 			}
 
 			if (crackerResult == null)
@@ -146,5 +148,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			_overlays.Clear();
 		}
+
+
 	}
 }

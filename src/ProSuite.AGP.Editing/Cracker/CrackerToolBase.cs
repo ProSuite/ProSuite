@@ -16,7 +16,6 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
-using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -32,7 +31,6 @@ namespace ProSuite.AGP.Editing.Cracker
 		private OverridableSettingsProvider<PartialCrackerToolOptions> _settingsProvider;
 		private CrackerResult _resultCrackPoints;
 		private CrackerFeedback _feedback;
-		private readonly VertexLabels _vertexLabels;
 
 		protected CrackerToolBase()
 		{
@@ -41,7 +39,6 @@ namespace ProSuite.AGP.Editing.Cracker
 			SelectionCursor = ToolUtils.GetCursor(Resources.CrackerToolCursor);
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.CrackerToolCursorShift);
 			SecondPhaseCursor = ToolUtils.GetCursor(Resources.CrackerToolCursorProcess);
-			_vertexLabels = new VertexLabels();
 		}
 
 		protected string OptionsFileName => "CrackerToolOptions.xml";
@@ -77,7 +74,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		{
 			bool result = base.OnMapSelectionChangedCore(args);
 
-			_vertexLabels.UpdateLabels();
+			//_vertexLabels.UpdateLabels();
 
 			return result;
 		}
@@ -139,9 +136,9 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			try
 			{
-				_vertexLabels.Toggle();
+				//_vertexLabels.Toggle();
 
-				_vertexLabels.UpdateLabels();
+				//_vertexLabels.UpdateLabels();
 			}
 			catch (Exception ex)
 			{
