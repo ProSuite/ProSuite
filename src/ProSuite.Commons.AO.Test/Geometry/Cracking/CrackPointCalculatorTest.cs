@@ -638,11 +638,11 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 				IntersectionPointOptions.IncludeLinearIntersectionEndpoints;
 			bool addCrackPointsAlsoOnExistingVertices = true;
 
-			CrackPointCalculator crackPointCalculator =
-				CreateCrackPointCalculator(tolerance, inExtent);
-
 			bool customIntersectOrig = IntersectionUtils.UseCustomIntersect;
 			IntersectionUtils.UseCustomIntersect = true;
+
+			CrackPointCalculator crackPointCalculator =
+				CreateCrackPointCalculator(tolerance, inExtent);
 
 			//
 			// Symmetrical cracking:
