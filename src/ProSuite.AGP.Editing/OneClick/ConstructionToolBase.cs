@@ -417,7 +417,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void StartSketchPhase()
 		{
-			SetupSketch(GetSketchGeometryType(), SketchOutputMode.Map, true, false);
+			UseSnapping = true;
+			CompleteSketchOnMouseUp = false;
+			SetSketchType(GetSketchGeometryType());
 
 			SetCursor(SketchCursor);
 

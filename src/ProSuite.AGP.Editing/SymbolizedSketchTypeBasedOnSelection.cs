@@ -16,7 +16,7 @@ using ProSuite.Commons.Logging;
 namespace ProSuite.AGP.Editing;
 
 // todo 3D, test multipatch sketch symbol!
-public class SymbolizedSketchTypeBasedOnSelection : SelectionSketchTypeToggleBase
+public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -31,10 +31,7 @@ public class SymbolizedSketchTypeBasedOnSelection : SelectionSketchTypeToggleBas
 	/// first FeatureLayer if many features are selected from many FeatureLayers.
 	/// </summary>
 	/// <param name="tool"></param>
-	/// <param name="defaultSelectionSketchType"></param>
-	public SymbolizedSketchTypeBasedOnSelection([NotNull] ISymbolizedSketchTool tool,
-	                                            SketchGeometryType defaultSelectionSketchType) :
-		base(tool, defaultSelectionSketchType)
+	public SymbolizedSketchTypeBasedOnSelection([NotNull] ISymbolizedSketchTool tool)
 	{
 		_tool = tool;
 
@@ -44,13 +41,12 @@ public class SymbolizedSketchTypeBasedOnSelection : SelectionSketchTypeToggleBas
 		MapSelectionChangedEvent.Subscribe(OnMapSelectionChangedAsync);
 	}
 
-	protected override void DisposeCore()
+	public void Dispose()
 	{
 		SketchModifiedEvent.Unsubscribe(OnSketchModified);
 		MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);
 
 		ClearSketchSymbol();
-		ResetSelectionSketchType();
 	}
 
 	private void ClearSketchSymbol()
@@ -71,7 +67,6 @@ public class SymbolizedSketchTypeBasedOnSelection : SelectionSketchTypeToggleBas
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
 			SetSketchSymbolBasedOnSelection(featureLayer, oids);
-
 			SetSketchType(featureLayer);
 		}
 		catch (Exception ex)
@@ -140,8 +135,6 @@ public class SymbolizedSketchTypeBasedOnSelection : SelectionSketchTypeToggleBas
 		if (featureLayer == null || oids == null)
 		{
 			ClearSketchSymbol();
-			SetCurrentSelectionSketchType();
-
 			return;
 		}
 
@@ -176,7 +169,7 @@ public class SymbolizedSketchTypeBasedOnSelection : SelectionSketchTypeToggleBas
 		}
 
 		GeometryType geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
-		SetSketchType(_tool, GetApplicableSketchType(geometryType));
+		_tool.SetSketchType(GetApplicableSketchType(geometryType));
 	}
 
 	private List<long> GetApplicableSelection(
