@@ -34,10 +34,9 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 
 	protected CreateFeatureInPickedClassToolBase(SketchGeometryType selectionSketchGeometryType) : base() { }
 
-	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch(
-		SketchGeometryType selectionSketchGeometryType)
+	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
-		return new SymbolizedSketchTypeBasedOnSelection(this, selectionSketchGeometryType);
+		return new SymbolizedSketchTypeBasedOnSelection(this);
 	}
 
 	protected override Cursor SelectionCursorCore =>
