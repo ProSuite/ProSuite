@@ -91,13 +91,10 @@ namespace ProSuite.AGP.Editing.Chopper
 				return;
 			}
 
-			IntersectionPointOptions intersectionPointOptions =
-				IntersectionPointOptions.IncludeLinearIntersectionEndpoints;
-
 			_resultChopPoints =
 				CalculateCrackPoints(selectedFeatures, intersectingFeatures, _chopperToolOptions,
-				                     intersectionPointOptions, true,
-				                     progressor);
+				                     IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
+				                     true, progressor);
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
@@ -146,14 +143,11 @@ namespace ProSuite.AGP.Editing.Chopper
 			IList<Feature> intersectingFeatures =
 				GetIntersectingFeatures(selectedFeatures, _chopperToolOptions, progressor);
 
-			IntersectionPointOptions intersectionPointOptions =
-				IntersectionPointOptions.IncludeLinearIntersectionEndpoints;
-
 			var result =
 				MicroserviceClient.ChopLines(
 					selectedFeatures, chopPointsToApply, intersectingFeatures,
-					_chopperToolOptions, intersectionPointOptions, true,
-					progressor?.CancellationToken ?? new CancellationTokenSource().Token);
+					_chopperToolOptions, IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
+					true, progressor?.CancellationToken ?? new CancellationTokenSource().Token);
 
 			var updates = new Dictionary<Feature, Geometry>();
 			var inserts = new Dictionary<Feature, IList<Geometry>>();

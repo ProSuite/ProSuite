@@ -23,7 +23,6 @@ public abstract class TopologicalCrackingToolBase : TwoPhaseEditToolBase
 	protected CrackerResult CalculateCrackPoints(IList<Feature> selectedFeatures,
 	                                             IList<Feature> intersectingFeatures,
 	                                             ICrackerToolOptions crackerToolOptions,
-
 												 IntersectionPointOptions intersectionPointOptions,
 												 bool addCrackPointsOnExistingVertices,
 	                                             CancelableProgressor progressor)
