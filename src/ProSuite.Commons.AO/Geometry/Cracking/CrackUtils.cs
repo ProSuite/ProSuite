@@ -23,29 +23,20 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static CrackPointCalculator CreateChopPointCalculator(
-			[NotNull] ICrackingOptions crackingOptions,
+			[NotNull] ICrackingOptions choppingOptions,
 			bool excludeInteriorInteriorIntersections,
 			[CanBeNull] IEnvelope inExtent = null)
 		{
 			var cracker = new CrackPointCalculator(
-				              crackingOptions,
+				              choppingOptions,
 				              IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
-				              true,
 				              inExtent)
 			              {
 				              // chopping mode
-				              //AddCrackPointsOnExistingVertices = true
+				              AddCrackPointsOnExistingVertices = true
 			              };
 
-			if (excludeInteriorInteriorIntersections)
-			{
-				// only use line end points as intersection targets
-				cracker.TargetTransformation =
-					originalTarget =>
-						originalTarget.Dimension == esriGeometryDimension.esriGeometry1Dimension
-							? GeometryUtils.GetBoundary(originalTarget)
-							: null;
-			}
+			cracker.ExcludeInteriorInteriorIntersections = excludeInteriorInteriorIntersections;
 
 			return cracker;
 		}
@@ -57,7 +48,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			var cracker = new CrackPointCalculator(
 				crackingOptions,
 				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
-				false,
 				inExtent);
 
 			// Special handling of multipatch targets:
@@ -74,7 +64,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			var cracker = new CrackPointCalculator(
 				crackingOptions,
 				IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
-				true,
 				null);
 
 			// Only crack in 2D because roofs can have multiple Z values at the same XY location

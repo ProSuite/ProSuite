@@ -23,9 +23,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		public CrackPointCalculator([NotNull] ICrackingOptions crackingOptions,
 		                            IntersectionPointOptions intersectionPointOption,
-		                            bool addCrackPointsAlsoOnExistingVertices,
-
-									[CanBeNull] IEnvelope perimeter)
+		                            [CanBeNull] IEnvelope perimeter)
 		{
 			Perimeter = perimeter;
 
@@ -47,14 +45,13 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			UseSourceZs = crackingOptions.UseSourceZs;
 			IntersectionPointOption = intersectionPointOption;
-
 		}
 
 		public CrackPointCalculator(double? snapTolerance, double? minimumSegmentLength,
+		                            bool addCrackPointsOnExistingVertices,
 		                            bool useSourceZs,
 		                            IntersectionPointOptions intersectionPointOption,
-		                            bool addCrackPointsOnExistingVertices,
-									[CanBeNull] IEnvelope perimeter)
+		                            [CanBeNull] IEnvelope perimeter)
 		{
 			Perimeter = perimeter;
 			SnapTolerance = snapTolerance;
@@ -78,6 +75,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		public bool AddCrackPointsOnExistingVertices { get; set; }
 
 		public bool UseSourceZs { get; set; }
+
+		public bool ExcludeInteriorInteriorIntersections { get; set; }
 
 		public IntersectionPointOptions IntersectionPointOption { get; set; }
 
@@ -171,6 +170,15 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			else
 			{
 				transformedIntersectionTarget = intersectionTarget;
+			}
+
+			if (ExcludeInteriorInteriorIntersections &&
+			    transformedIntersectionTarget.Dimension ==
+			    esriGeometryDimension.esriGeometry1Dimension)
+			{
+				// only use line end points as intersection targets
+				transformedIntersectionTarget =
+					GeometryUtils.GetBoundary(transformedIntersectionTarget);
 			}
 
 			IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> result;

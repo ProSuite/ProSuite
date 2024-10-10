@@ -50,9 +50,13 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 
 			bool useSourceZs = optionsMsg.UseSourceZs;
 
-			IntersectionPointOptions intersectionPointOptions = (IntersectionPointOptions) optionsMsg.IntersectionPointOptions;
+			IntersectionPointOptions intersectionPointOptions =
+				(IntersectionPointOptions) optionsMsg.IntersectionPointOptions;
 
 			bool addCrackPointsOnExistingVertices = optionsMsg.AddCrackPointsOnExistingVertices;
+
+			bool excludeInteriorInteriorIntersections =
+				optionsMsg.ExcludeInteriorInteriorIntersection;
 
 			bool onlyWithinSameClass = optionsMsg.CrackOnlyWithinSameClass;
 
@@ -61,7 +65,9 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 				                                    snapTolerance, minimumSegmentLength);
 
 			CrackPointCalculator crackPointCalculator = CreateCrackPointCalculator(
-				snapTolerance, minimumSegmentLength, useSourceZs, intersectionPointOptions, addCrackPointsOnExistingVertices, calculationPerimeter);
+				snapTolerance, minimumSegmentLength, useSourceZs,
+				excludeInteriorInteriorIntersections, intersectionPointOptions,
+				addCrackPointsOnExistingVertices, calculationPerimeter);
 
 			if (targetFeatures.Count == 0)
 			{
@@ -352,6 +358,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 			double? snapTolerance,
 			double? minimumSegmentLength,
 			bool useSourceZs,
+			bool excludeInteriorInteriorIntersection,
 			IntersectionPointOptions intersectionPointOptions,
 			bool addCrackPointsOnExistingVertices,
 			[CanBeNull] IGeometry perimeter)
@@ -359,8 +366,9 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 			IEnvelope inExtent = perimeter?.Envelope;
 
 			var cracker = new CrackPointCalculator(
-				snapTolerance, minimumSegmentLength,useSourceZs,
-				intersectionPointOptions, addCrackPointsOnExistingVertices, inExtent);
+				snapTolerance, minimumSegmentLength, addCrackPointsOnExistingVertices, useSourceZs, intersectionPointOptions, inExtent);
+
+			cracker.ExcludeInteriorInteriorIntersections = excludeInteriorInteriorIntersection;
 
 			// Special handling of multipatch targets:
 			cracker.TargetTransformation = CrackUtils.ExtractBoundariesForMultipatches;
