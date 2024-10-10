@@ -28,8 +28,6 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 
 	private DestroyAndRebuildFeedback _feedback;
 
-	protected DestroyAndRebuildToolBase() : base() { }
-
 	protected override Cursor SelectionCursorCore =>
 		ToolUtils.GetCursor(Resources.DestroyAndRebuildToolCursor);
 
