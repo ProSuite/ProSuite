@@ -88,12 +88,8 @@ namespace ProSuite.AGP.Editing.Cracker
 					IDisposable addedVertex =
 						MapView.Active.AddOverlay(vertex, greySquareMarker);
 					_overlays.Add(addedVertex);
-				if (DisplayVerticesCoordinates){
-						IDisposable addedLabel =
-						MapView.Active.AddOverlay(vertex, redCrossMarker);
-					_overlays.Add(addedLabel);
 				}
-				}
+				
 			}
 
 			if (crackerResult == null)
@@ -153,49 +149,6 @@ namespace ProSuite.AGP.Editing.Cracker
 			_overlays.Clear();
 		}
 
-		#region VerticesLabels
 
-		public bool DisplayVerticesCoordinates { get; set; }
-		private static readonly CIMTextSymbol _textSymbol = null;
-
-		private static CIMTextGraphic CreatePointLabel(string text){
-			var textGraphic = new CIMTextGraphic {
-				                                     Symbol = _textSymbol
-					                                     .MakeSymbolReference(),
-				                                     
-				                                     Text = text
-			                                     };
-
-
-		   // TODO: Check in SymbolUtils, how the CreatePoint Symbol is done
-
-
-
-		   return textGraphic;
-		}
-		
-		private void UpdateVerticesLabels()
-		{
-			
-		}
-
-		public void ToggleVerticesLabels()
-		{
-			// Toggle the DisplayVerticesCoordinates property
-			DisplayVerticesCoordinates = ! DisplayVerticesCoordinates;
-			// Log the change
-			_msg.Info($"DisplayVerticesCoordinates toggled to {DisplayVerticesCoordinates}");
-			// Draw or dispose the coordinate overlay
-			if (DisplayVerticesCoordinates)
-			{
-				Update(CrackerToolBase.ResultCrackPoints, CrackerToolBase.SelectedFeatures);
-			}
-			else
-			{
-				DisposeOverlays();
-			}
-		}
-
-		#endregion
 	}
 }
