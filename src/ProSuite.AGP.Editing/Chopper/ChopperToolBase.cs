@@ -71,7 +71,7 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		protected override void LogPromptForSelection()
 		{
-			_msg.Info(LocalizableStrings.RemoveOverlapsTool_LogPromptForSelection);
+			_msg.Info(LocalizableStrings.ChopperTool_LogPromptForSelection);
 		}
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)

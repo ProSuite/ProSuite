@@ -81,7 +81,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		protected override void LogPromptForSelection()
 		{
-			_msg.Info(LocalizableStrings.RemoveOverlapsTool_LogPromptForSelection);
+			_msg.Info(LocalizableStrings.CrackerTool_LogPromptForSelection);
 		}
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
