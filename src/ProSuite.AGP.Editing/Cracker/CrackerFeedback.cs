@@ -8,6 +8,7 @@ using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
@@ -15,7 +16,7 @@ namespace ProSuite.AGP.Editing.Cracker
 	{
 		private static CIMLineSymbol _overlapLineSymbol;
 		private readonly CIMPolygonSymbol _overlapPolygonSymbol;
-
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private static CIMSymbolReference _outlinedPointSymRef;
 		private readonly CIMSymbolReference redCircleMarker;
 		private readonly CIMSymbolReference greenCircleMarker;
@@ -63,7 +64,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			mintCircleMarker =
 				CreateOutlinedPointSymbol(mint, white, 10, SymbolUtils.MarkerStyle.Circle);
 			redCrossMarker =
-				CreateOutlinedPointSymbol(red, white, 10, SymbolUtils.MarkerStyle.Cross);
+				CreateOutlinedPointSymbol(white, red, 10, SymbolUtils.MarkerStyle.Cross);
 			greySquareMarker =
 				CreateOutlinedPointSymbol(grey, white, 5, SymbolUtils.MarkerStyle.Square);
 			redSquareMarker =
@@ -87,6 +88,11 @@ namespace ProSuite.AGP.Editing.Cracker
 					IDisposable addedVertex =
 						MapView.Active.AddOverlay(vertex, greySquareMarker);
 					_overlays.Add(addedVertex);
+				if (DisplayVerticesCoordinates){
+						IDisposable addedLabel =
+						MapView.Active.AddOverlay(vertex, redCrossMarker);
+					_overlays.Add(addedLabel);
+				}
 				}
 			}
 
@@ -146,5 +152,50 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			_overlays.Clear();
 		}
+
+		#region VerticesLabels
+
+		public bool DisplayVerticesCoordinates { get; set; }
+		private static readonly CIMTextSymbol _textSymbol = null;
+
+		private static CIMTextGraphic CreatePointLabel(string text){
+			var textGraphic = new CIMTextGraphic {
+				                                     Symbol = _textSymbol
+					                                     .MakeSymbolReference(),
+				                                     
+				                                     Text = text
+			                                     };
+
+
+		   // TODO: Check in SymbolUtils, how the CreatePoint Symbol is done
+
+
+
+		   return textGraphic;
+		}
+		
+		private void UpdateVerticesLabels()
+		{
+			
+		}
+
+		public void ToggleVerticesLabels()
+		{
+			// Toggle the DisplayVerticesCoordinates property
+			DisplayVerticesCoordinates = ! DisplayVerticesCoordinates;
+			// Log the change
+			_msg.Info($"DisplayVerticesCoordinates toggled to {DisplayVerticesCoordinates}");
+			// Draw or dispose the coordinate overlay
+			if (DisplayVerticesCoordinates)
+			{
+				Update(CrackerToolBase.ResultCrackPoints, CrackerToolBase.SelectedFeatures);
+			}
+			else
+			{
+				DisposeOverlays();
+			}
+		}
+
+		#endregion
 	}
 }
