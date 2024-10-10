@@ -1,3 +1,8 @@
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -13,11 +18,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ProSuite.AGP.Editing.Chopper
 {
@@ -91,8 +91,12 @@ namespace ProSuite.AGP.Editing.Chopper
 				return;
 			}
 
+			IntersectionPointOptions intersectionPointOptions =
+				IntersectionPointOptions.IncludeLinearIntersectionEndpoints;
+
 			_resultChopPoints =
 				CalculateCrackPoints(selectedFeatures, intersectingFeatures, _chopperToolOptions,
+				                     intersectionPointOptions, true,
 				                     progressor);
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
@@ -142,10 +146,13 @@ namespace ProSuite.AGP.Editing.Chopper
 			IList<Feature> intersectingFeatures =
 				GetIntersectingFeatures(selectedFeatures, _chopperToolOptions, progressor);
 
+			IntersectionPointOptions intersectionPointOptions =
+				IntersectionPointOptions.IncludeLinearIntersectionEndpoints;
+
 			var result =
 				MicroserviceClient.ChopLines(
 					selectedFeatures, chopPointsToApply, intersectingFeatures,
-					_chopperToolOptions,
+					_chopperToolOptions, intersectionPointOptions, true,
 					progressor?.CancellationToken ?? new CancellationTokenSource().Token);
 
 			var updates = new Dictionary<Feature, Geometry>();

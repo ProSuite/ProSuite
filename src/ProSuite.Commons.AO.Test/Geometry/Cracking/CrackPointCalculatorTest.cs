@@ -47,8 +47,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			double? minimumSegmentLength = 0.5;
 
 			var crackPointCalculatorTargetZ = new CrackPointCalculator(
-				snapTolerance, minimumSegmentLength, false, false,
-				IntersectionPointOptions.IncludeLinearIntersectionAllPoints, null);
+				snapTolerance, minimumSegmentLength, false,
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints, false, null);
 
 			int expectedCrackPoints = 0;
 			double expectedResultZ = double.NaN;
@@ -73,8 +73,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 
 			// Now the same but with UseSourceZ:
 			var crackPointCalculatorSourceZ = new CrackPointCalculator(
-				snapTolerance, minimumSegmentLength, false, true,
-				IntersectionPointOptions.IncludeLinearIntersectionAllPoints, null);
+				snapTolerance, minimumSegmentLength, false,
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				true, null);
 
 			expectedCrackPoints = 1;
 			expectedResultZ = 620;
@@ -119,8 +120,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			double? minimumSegmentLength = 0.5;
 
 			var crackPointCalculatorTargetZ = new CrackPointCalculator(
-				snapTolerance, minimumSegmentLength, false, false,
-				IntersectionPointOptions.IncludeLinearIntersectionAllPoints, null);
+				snapTolerance, minimumSegmentLength, false,
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				false, null);
 
 			int expectCrackPoints = 1;
 			var expectedResultZ = 620;
@@ -130,8 +132,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 
 			// Now the same but with UseSourceZ:
 			var crackPointCalculatorSourceZ = new CrackPointCalculator(
-				snapTolerance, minimumSegmentLength, false, true,
-				IntersectionPointOptions.IncludeLinearIntersectionAllPoints, null);
+				snapTolerance, minimumSegmentLength, false,
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				true, null);
 
 			expectCrackPoints = 0;
 			expectedResultZ = 605;
@@ -184,8 +187,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			double? minimumSegmentLength = 0.5;
 
 			var crackPointCalculatorTargetZ = new CrackPointCalculator(
-				snapTolerance, minimumSegmentLength, false, false,
-				IntersectionPointOptions.IncludeLinearIntersectionAllPoints, null);
+				snapTolerance, minimumSegmentLength, false,
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				false, null);
 
 			int expectCrackPoints = 2;
 			var expectedResultZ = 640;
@@ -195,8 +199,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 
 			// Now the same but with UseSourceZ:
 			var crackPointCalculatorSourceZ = new CrackPointCalculator(
-				snapTolerance, minimumSegmentLength, false, true,
-				IntersectionPointOptions.IncludeLinearIntersectionAllPoints, null);
+				snapTolerance, minimumSegmentLength, false,
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				true, null);
 
 			expectCrackPoints = 0;
 			expectedResultZ = 605;
@@ -250,8 +255,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			double? minimumSegmentLength = 0.5;
 
 			var crackPointCalculatorTargetZ = new CrackPointCalculator(
-				snapTolerance, minimumSegmentLength, false, false,
-				IntersectionPointOptions.IncludeLinearIntersectionAllPoints, null);
+				snapTolerance, minimumSegmentLength, false,
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				false, null);
 
 			int expectCrackPoints = 3;
 			var expectedResultZ = 640;
@@ -261,8 +267,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 
 			// Now the same but with UseSourceZ:
 			var crackPointCalculatorSourceZ = new CrackPointCalculator(
-				snapTolerance, minimumSegmentLength, false, true,
-				IntersectionPointOptions.IncludeLinearIntersectionAllPoints, null);
+				snapTolerance, minimumSegmentLength, false,
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				true, null);
 
 			expectCrackPoints = 0;
 			expectedResultZ = 605;
@@ -297,8 +304,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			var featureVertexInfo = new FeatureVertexInfo(feature, null, tolerance, tolerance);
 
 			var crackPointCalculator = new CrackPointCalculator(
-				tolerance, tolerance, false, true,
-				IntersectionPointOptions.IncludeLinearIntersectionEndpoints, null);
+				tolerance, tolerance, false,
+				IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
+				true, null);
 			crackPointCalculator.UseCustomIntersect = true;
 
 			CrackUtils.AddGeometryPartIntersectionCrackPoints(featureVertexInfo,
@@ -327,8 +335,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			var featureVertexInfo = new FeatureVertexInfo(feature, null, tolerance, tolerance);
 
 			var crackPointCalculator = new CrackPointCalculator(
-				tolerance, tolerance, false, true,
-				IntersectionPointOptions.IncludeLinearIntersectionEndpoints, null);
+				tolerance, tolerance, false,
+				IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
+				true, null);
 
 			crackPointCalculator.TargetTransformation =
 				g => GeometryFactory.CreateMultipoint((IPointCollection) g);
@@ -362,8 +371,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			featureVertexInfo = new FeatureVertexInfo(feature, null, tolerance, tolerance);
 
 			crackPointCalculator = new CrackPointCalculator(
-				tolerance, tolerance, false, true,
-				IntersectionPointOptions.IncludeLinearIntersectionEndpoints, null);
+				tolerance, tolerance, false,
+				IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
+				true, null);
 
 			crackPointCalculator.TargetTransformation =
 				g => GeometryFactory.CreateMultipoint((IPointCollection) g);
@@ -408,10 +418,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 
 			var snapTolerance = 0.2;
 			var crackPointCalculator = new CrackPointCalculator(
-				snapTolerance, null, addCrackPointsOnExistingVertices,
-				useSourceZs,
-				IntersectionPointOptions
-					.IncludeLinearIntersectionAllPoints, null);
+				snapTolerance, null,
+				useSourceZs, IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				addCrackPointsOnExistingVertices, null);
 			crackPointCalculator.UseCustomIntersect = true;
 
 			var result = crackPointCalculator.GetIntersectionPoints(
@@ -473,10 +482,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 
 			snapTolerance = 0.8;
 			crackPointCalculator = new CrackPointCalculator(
-				snapTolerance, null, addCrackPointsOnExistingVertices,
-				useSourceZs,
-				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
-				null);
+				snapTolerance, null,
+				useSourceZs, IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				addCrackPointsOnExistingVertices, null);
 			crackPointCalculator.UseCustomIntersect = true;
 
 			result = crackPointCalculator.GetIntersectionPoints(
@@ -503,10 +511,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 
 			double? snapTolerance = null;
 			var crackPointCalculator = new CrackPointCalculator(
-				snapTolerance, null, addCrackPointsOnExistingVertices,
-				useSourceZs,
-				IntersectionPointOptions
-					.IncludeLinearIntersectionAllPoints, null);
+				snapTolerance, null,
+				useSourceZs, IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				addCrackPointsOnExistingVertices, null);
 			crackPointCalculator.UseCustomIntersect = true;
 
 			IPolyline sourceGeometry = GeometryFactory.CreatePolyline(poly1);
@@ -518,10 +525,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 
 			snapTolerance = 0.1;
 			crackPointCalculator = new CrackPointCalculator(
-				snapTolerance, null, addCrackPointsOnExistingVertices,
-				useSourceZs,
-				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
-				null);
+				snapTolerance, null,
+				useSourceZs, IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				addCrackPointsOnExistingVertices, null);
 			crackPointCalculator.UseCustomIntersect = true;
 
 			result = crackPointCalculator.GetIntersectionPoints(
@@ -543,9 +549,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			var featureVertexInfo = new FeatureVertexInfo(feature, null, tolerance, tolerance);
 
 			var crackPointCalculator = new CrackPointCalculator(
-				tolerance, tolerance, false, true,
-				IntersectionPointOptions
-					.IncludeLinearIntersectionEndpoints, null);
+				tolerance, tolerance, false,
+				IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
+				true, null);
 			crackPointCalculator.UseCustomIntersect = true;
 
 			CrackUtils.AddGeometryPartIntersectionCrackPoints(featureVertexInfo,
@@ -583,8 +589,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			bool customIntersectOrig = IntersectionUtils.UseCustomIntersect;
 			IntersectionUtils.UseCustomIntersect = false;
 			var crackPointCalculator = new CrackPointCalculator(
-				tolerance, tolerance, false, true,
-				IntersectionPointOptions.IncludeLinearIntersectionEndpoints, null);
+				tolerance, tolerance, false,
+				IntersectionPointOptions.IncludeLinearIntersectionEndpoints, true, null);
 
 			try
 			{
@@ -599,8 +605,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			// spatial reference.
 			IntersectionUtils.UseCustomIntersect = true;
 			crackPointCalculator = new CrackPointCalculator(
-				tolerance, tolerance, false, true,
-				IntersectionPointOptions.IncludeLinearIntersectionEndpoints, null);
+				tolerance, tolerance, false,
+				IntersectionPointOptions.IncludeLinearIntersectionEndpoints, true, null);
 
 			featureVertexInfo = new FeatureVertexInfo(mockRoof, null, tolerance, tolerance);
 			CrackUtils.AddCrackPoints(featureVertexInfo, mockFootprint, crackPointCalculator);
@@ -646,8 +652,12 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 					      UseSourceZs = new OverridableSetting<bool>(true, true)
 				      });
 
+			IntersectionPointOptions intersectionPointOptions =
+				IntersectionPointOptions.IncludeLinearIntersectionEndpoints;
+			bool addCrackPointsAlsoOnExistingVertices = true;
+
 			CrackPointCalculator crackPointCalculator =
-				CreateCrackPointCalculator(tolerance, inExtent);
+				CreateCrackPointCalculator(tolerance, inExtent, intersectionPointOptions, true);
 
 			bool customIntersectOrig = IntersectionUtils.UseCustomIntersect;
 			IntersectionUtils.UseCustomIntersect = true;
@@ -669,7 +679,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			                                 .ToList();
 
 			crackPointCalculator =
-				CreateCrackPointCalculator(tolerance, inExtent);
+				CreateCrackPointCalculator(tolerance, inExtent, intersectionPointOptions,
+				                           addCrackPointsAlsoOnExistingVertices);
 
 			result = CrackUtils.CalculateFeatureVertexInfos(
 				updatedFeatures, null, crackPointCalculator, options, inExtent, null);
@@ -694,7 +705,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			var featureVertexInfo = new FeatureVertexInfo(mockRoof, null, tolerance, tolerance);
 
 			crackPointCalculator =
-				CreateCrackPointCalculator(tolerance, inExtent);
+				CreateCrackPointCalculator(tolerance, inExtent, intersectionPointOptions,
+				                           addCrackPointsAlsoOnExistingVertices);
 
 			CrackUtils.AddCrackPoints(featureVertexInfo, mockFootprint, crackPointCalculator);
 			Assert.AreEqual(71, GetDistinctCrackPointLocationCount(featureVertexInfo));
@@ -703,7 +715,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 			CrackUtils.AddRemovePoints(result, resultGeometries, null, null);
 
 			featureVertexInfo = new FeatureVertexInfo(mockFootprint, null, tolerance, tolerance);
-			crackPointCalculator = CreateCrackPointCalculator(tolerance, inExtent);
+			crackPointCalculator = CreateCrackPointCalculator(
+				tolerance, inExtent, intersectionPointOptions,
+				addCrackPointsAlsoOnExistingVertices);
 			CrackUtils.AddCrackPoints(featureVertexInfo, mockRoof, crackPointCalculator);
 
 			Assert.AreEqual(65, GetDistinctCrackPointLocationCount(featureVertexInfo));
@@ -712,12 +726,12 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 		}
 
 		private static CrackPointCalculator CreateCrackPointCalculator(double tolerance,
-			[NotNull] IEnvelope inExtent,
-			bool useSourceZ = true)
+			[NotNull] IEnvelope inExtent, IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsAlsoOnExistingVertices, bool useSourceZ = true)
 		{
 			var crackPointCalculator = new CrackPointCalculator(
-				tolerance, tolerance, false, useSourceZ,
-				IntersectionPointOptions.IncludeLinearIntersectionAllPoints, inExtent);
+				tolerance, tolerance, useSourceZ,
+				intersectionPointOptions, addCrackPointsAlsoOnExistingVertices, inExtent);
 
 			return crackPointCalculator;
 		}
@@ -736,8 +750,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 
 			var crackPointCalculator =
 				new CrackPointCalculator(
-					tolerance, tolerance, true, true,
-					IntersectionPointOptions.IncludeLinearIntersectionEndpoints, null);
+					tolerance, tolerance, true,
+					IntersectionPointOptions.IncludeLinearIntersectionEndpoints, true, null);
 
 			crackPointCalculator.In3D = false;
 

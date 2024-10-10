@@ -125,6 +125,53 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return null;
 		}
 
+		/// <summary>
+		/// Sets the values of the <see cref="RowBuffer"/> which are not yet initialized to the
+		/// default values defined in the Geodatabase.
+		/// </summary>
+		/// <param name="rowBuffer"></param>
+		/// <param name="tableDefinition"></param>
+		/// <param name="subtype"></param>
+		public static void SetNullValuesToGdbDefault(
+			[NotNull] RowBuffer rowBuffer,
+			[NotNull] TableDefinition tableDefinition,
+			[CanBeNull] Subtype subtype)
+		{
+			DoForAllFields(
+				field =>
+				{
+					object currentValue = rowBuffer[field.Name];
+					if (currentValue != null && currentValue != DBNull.Value)
+					{
+						rowBuffer[field.Name] = field.GetDefaultValue(subtype);
+					}
+				}, tableDefinition);
+		}
+
+		/// <summary>
+		/// Sets the values of the <see cref="RowBuffer"/> which are not yet initialized to the
+		/// default values defined in the Geodatabase.
+		/// </summary>
+		/// <param name="row"></param>
+		/// <param name="tableDefinition"></param>
+		/// <param name="subtype"></param>
+		public static void SetNullValuesToGdbDefault(
+			[NotNull] Row row,
+			[NotNull] TableDefinition tableDefinition,
+			[CanBeNull] Subtype subtype)
+		{
+			DoForAllFields(
+				field =>
+				{
+					// If the value has not been set (e.g. by the subclass), use the GDB default:
+					object currentValue = row[field.Name];
+					if (currentValue != null && currentValue != DBNull.Value)
+					{
+						row[field.Name] = field.GetDefaultValue(subtype);
+					}
+				}, tableDefinition);
+		}
+
 		[NotNull]
 		public static IList<Geometry> GetGeometries(
 			[NotNull] IEnumerable<Feature> features)
@@ -282,6 +329,26 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			return false;
+		}
+
+		private static void DoForAllFields([NotNull] Action<Field> action,
+		                                   [NotNull] TableDefinition tableDefinition,
+		                                   bool exceptShape = true)
+		{
+			foreach (Field field in tableDefinition.GetFields())
+			{
+				if (! field.IsEditable)
+				{
+					continue;
+				}
+
+				if (exceptShape && field.FieldType == FieldType.Geometry)
+				{
+					continue;
+				}
+
+				action(field);
+			}
 		}
 	}
 }

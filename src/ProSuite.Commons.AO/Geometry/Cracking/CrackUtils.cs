@@ -30,10 +30,11 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			var cracker = new CrackPointCalculator(
 				              crackingOptions,
 				              IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
+				              true,
 				              inExtent)
 			              {
 				              // chopping mode
-				              AddCrackPointsOnExistingVertices = true
+				              //AddCrackPointsOnExistingVertices = true
 			              };
 
 			if (excludeInteriorInteriorIntersections)
@@ -56,6 +57,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			var cracker = new CrackPointCalculator(
 				crackingOptions,
 				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				false,
 				inExtent);
 
 			// Special handling of multipatch targets:
@@ -72,6 +74,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			var cracker = new CrackPointCalculator(
 				crackingOptions,
 				IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
+				true,
 				null);
 
 			// Only crack in 2D because roofs can have multiple Z values at the same XY location

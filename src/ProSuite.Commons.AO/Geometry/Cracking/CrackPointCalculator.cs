@@ -23,7 +23,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		public CrackPointCalculator([NotNull] ICrackingOptions crackingOptions,
 		                            IntersectionPointOptions intersectionPointOption,
-		                            [CanBeNull] IEnvelope perimeter)
+		                            bool addCrackPointsAlsoOnExistingVertices,
+
+									[CanBeNull] IEnvelope perimeter)
 		{
 			Perimeter = perimeter;
 
@@ -45,19 +47,21 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			UseSourceZs = crackingOptions.UseSourceZs;
 			IntersectionPointOption = intersectionPointOption;
+
 		}
 
 		public CrackPointCalculator(double? snapTolerance, double? minimumSegmentLength,
-		                            bool addCrackPointsOnExistingVertices, bool useSourceZs,
+		                            bool useSourceZs,
 		                            IntersectionPointOptions intersectionPointOption,
-		                            [CanBeNull] IEnvelope perimeter)
+		                            bool addCrackPointsOnExistingVertices,
+									[CanBeNull] IEnvelope perimeter)
 		{
 			Perimeter = perimeter;
 			SnapTolerance = snapTolerance;
 			MinimumSegmentLength = minimumSegmentLength;
-			AddCrackPointsOnExistingVertices = addCrackPointsOnExistingVertices;
 			UseSourceZs = useSourceZs;
 			IntersectionPointOption = intersectionPointOption;
+			AddCrackPointsOnExistingVertices = addCrackPointsOnExistingVertices;
 		}
 
 		[CanBeNull]
