@@ -529,11 +529,20 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				IsCompletingSelectionSketch = true;
 
-				using var pickerPrecedence = CreatePickerPrecedence(sketchGeometry);
+				using var precedence = CreatePickerPrecedence(sketchGeometry);
 
-				await PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers);
+				await QueuedTaskUtils.Run(async () =>
+				{
+					IEnumerable<FeatureSelectionBase> candidates =
+						FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
+						                        precedence.SpatialRelationship);
 
-				await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
+					List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
+
+					PickerUtils.Select(items, precedence.SelectionCombinationMethod);
+
+					ProcessSelection(progressor);
+				}, progressor);
 			}
 			finally
 			{

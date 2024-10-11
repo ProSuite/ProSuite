@@ -1,31 +1,34 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Selection;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.AGP.Editing.Picker;
+
+public interface IPickerPrecedence : IDisposable
 {
-	public interface IPickerPrecedence : IDisposable
-	{
-		IEnumerable<T> Order<T>(IEnumerable<T> items) where T : IPickableItem;
+	Point PickerLocation { get; set; }
+	SpatialRelationship SpatialRelationship { get; }
+	SelectionCombinationMethod SelectionCombinationMethod { get; }
 
-		T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem;
+	IEnumerable<T> Order<T>(IEnumerable<T> items) where T : IPickableItem;
 
-		int SelectionTolerance { get; }
+	IPickableItem PickBest(IEnumerable<IPickableItem> items);
 
-		bool IsSingleClick { get; }
-		bool AggregateItems { get; }
-		Point PickerLocation { get; set; }
+	PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection);
 
-		PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection);
+	/// <summary>
+	/// Returns the geometry which can be used for spatial queries.
+	/// For single-click picks, it returns the geometry expanded by the <see cref="PickerPrecedenceBase.SelectionTolerance" />.
+	/// This method must be called on the CIM thread.
+	/// </summary>
+	/// <returns></returns>
+	Geometry GetSelectionGeometry();
 
-		/// <summary>
-		/// Returns the geometry which can be used for spatial queries.
-		/// For single-click picks, it returns the geometry expanded by the <see cref="PickerPrecedenceBase.SelectionTolerance"/>. 
-		/// This method must be called on the CIM thread.
-		/// </summary>
-		/// <returns></returns>
-		Geometry GetSelectionGeometry();
-	}
+	IPickableItemsFactory CreateItemsFactory();
+
+	IPickableItemsFactory CreateItemsFactory<T>() where T : IPickableItem;
 }

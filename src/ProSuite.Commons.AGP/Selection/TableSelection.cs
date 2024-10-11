@@ -7,7 +7,7 @@ namespace ProSuite.Commons.AGP.Selection;
 
 public abstract class TableSelection : IDisposable
 {
-	protected TableSelection(Table table)
+	protected TableSelection([NotNull] Table table)
 	{
 		Table = table ??
 		        throw new ArgumentNullException(nameof(table));

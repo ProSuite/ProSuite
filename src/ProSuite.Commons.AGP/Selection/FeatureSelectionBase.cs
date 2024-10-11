@@ -7,6 +7,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Selection;
 
+// todo daro Rename to MapSelection
 public abstract class FeatureSelectionBase : TableSelection
 {
 	protected FeatureSelectionBase([NotNull] BasicFeatureLayer basicFeatureLayer) : base(
