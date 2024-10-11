@@ -173,7 +173,7 @@ namespace ProSuite.Commons.AO.Test.Surface
 				new SimpleTerrain("TEST", new List<SimpleTerrainDataSource> { terrainDataSource },
 				                  10, null);
 			var tinGenerator =
-				new SpikeFreeTinGenerator(simpleTerrain, freezeDistance, insertionBuffer, null);
+				new SpikeFreeTinGenerator(simpleTerrain, freezeDistance, insertionBuffer, null, null);
 			tinGenerator.AllowIncompleteInterpolationDomainAtBoundary = true;
 
 			return tinGenerator;
