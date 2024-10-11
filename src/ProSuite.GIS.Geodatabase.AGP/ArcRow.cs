@@ -1,6 +1,7 @@
 using System;
 using ArcGIS.Core;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
@@ -143,21 +144,21 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			get
 			{
 				int? subtypeCode =
-					Commons.AGP.Core.Geodatabase.GdbObjectUtils.GetSubtypeCode(_proRow);
+					GdbObjectUtils.GetSubtypeCode(_proRow);
 
 				return subtypeCode ?? -1;
 			}
-			set => Commons.AGP.Core.Geodatabase.GdbObjectUtils.SetSubtypeCode(_proRow, value);
+			set => GdbObjectUtils.SetSubtypeCode(_proRow, value);
 		}
 
 		public void InitDefaultValues()
 		{
-			ArcGIS.Core.Data.Subtype subtype =
-				Commons.AGP.Core.Geodatabase.GdbObjectUtils.GetSubtype(_proRow);
+			Subtype subtype =
+				GdbObjectUtils.GetSubtype(_proRow);
 
 			ArcTable arcTable = (ArcTable) _parentTable;
 
-			Commons.AGP.Core.Geodatabase.GdbObjectUtils.SetNullValuesToGdbDefault(
+			GdbObjectUtils.SetNullValuesToGdbDefault(
 				_proRow, arcTable.ProTableDefinition, subtype);
 		}
 
@@ -217,7 +218,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			if (fromShape is ArcGeometry arcGeometry)
 			{
-				return arcGeometry.ProGeometry;
+				result = arcGeometry.ProGeometry;
+			}
+			else if (fromShape is IMutableGeometry mutable)
+			{
+				result = (ArcGIS.Core.Geometry.Geometry) mutable.ToNativeImplementation();
 			}
 			else
 			{
