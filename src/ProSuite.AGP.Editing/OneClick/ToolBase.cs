@@ -38,6 +38,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	private readonly Latch _latch = new();
 
 	[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
+	[CanBeNull] private SelectionSketchTypeToggle _selectionSketchToggle;
 
 	protected ToolBase()
 	{
@@ -81,8 +82,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected abstract bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer layer);
 
-	protected abstract SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch(
-		SketchGeometryType selectionSketchGeometryType);
+	protected abstract SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch();
 
 	protected virtual SketchGeometryType GetDefaultSelectionSketchType()
 	{
@@ -103,10 +103,10 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		// we want OnSelectionChangedAsync to be latched. Especially when the tool is activated.
 		_toolActivateLatch.Increment();
 
-		SketchGeometryType selectionSketchGeometryType = GetDefaultSelectionSketchType();
+		_symbolizedSketch = GetSymbolizedSketch();
 
-		_symbolizedSketch = GetSymbolizedSketch(selectionSketchGeometryType);
-		_symbolizedSketch?.ToggleSketchType(selectionSketchGeometryType);
+		_selectionSketchToggle =
+			new SelectionSketchTypeToggle(this, GetDefaultSelectionSketchType());
 
 		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
 
@@ -193,12 +193,12 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		{
 			if (args.Key == _keyPolygonDraw)
 			{
-				_symbolizedSketch?.ToggleSketchType(SketchGeometryType.Polygon);
+				SetupPolygonSketch();
 			}
 
 			if (args.Key == _keyLassoDraw)
 			{
-				_symbolizedSketch?.ToggleSketchType(SketchGeometryType.Lasso);
+				SetupLassoSketch();
 			}
 		}
 
@@ -402,6 +402,30 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		return currentSketch?.IsEmpty == false;
 	}
+
+	private void SetupSelectionSketch()
+	{
+		_selectionSketchToggle?.Toggle(GetDefaultSelectionSketchType());
+	}
+
+	private void SetupPolygonSketch()
+	{
+		_selectionSketchToggle?.Toggle(SketchGeometryType.Polygon);
+
+		SetupPolygonSketchCore();
+	}
+
+	protected virtual void SetupPolygonSketchCore() { }
+
+	private void SetupLassoSketch()
+	{
+		_selectionSketchToggle?.Toggle(SketchGeometryType.Lasso);
+
+		SetupLassoSketchCore();
+	}
+
+	protected virtual void SetupLassoSketchCore() { }
+
 
 	#endregion
 
@@ -699,6 +723,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected void StartSelectionPhase()
 	{
+		SetupSelectionSketch();
+
 		StartSelectionPhaseCore();
 
 		// don't snap anymore if cannot use selection

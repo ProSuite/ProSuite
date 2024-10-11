@@ -28,15 +28,12 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 
 	private DestroyAndRebuildFeedback _feedback;
 
-	protected DestroyAndRebuildToolBase() : base() { }
-
 	protected override Cursor SelectionCursorCore =>
 		ToolUtils.GetCursor(Resources.DestroyAndRebuildToolCursor);
 
-	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch(
-		SketchGeometryType selectionSketchGeometryType)
+	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
-		return new SymbolizedSketchTypeBasedOnSelection(this, selectionSketchGeometryType);
+		return new SymbolizedSketchTypeBasedOnSelection(this);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)

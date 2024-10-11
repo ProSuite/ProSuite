@@ -365,7 +365,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			Cursor = TargetSelectionCursor;
 
-			SetupSketch(SketchGeometryType.Rectangle);
+			SetSketchType(SketchGeometryType.Rectangle);
 		}
 
 		private async Task<bool> SelectTargetsAsync(
