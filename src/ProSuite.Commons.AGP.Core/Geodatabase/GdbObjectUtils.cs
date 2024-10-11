@@ -125,6 +125,19 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return null;
 		}
 
+		public static void SetSubtypeCode([NotNull] Row row, int subTypeCode)
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
+			using Table table = row.GetTable();
+			string subtypeFieldName = DatasetUtils.GetSubtypeFieldName(table);
+
+			if (! string.IsNullOrEmpty(subtypeFieldName))
+			{
+				row[subtypeFieldName] = subTypeCode;
+			}
+		}
+
 		/// <summary>
 		/// Sets the values of the <see cref="RowBuffer"/> which are not yet initialized to the
 		/// default values defined in the Geodatabase.

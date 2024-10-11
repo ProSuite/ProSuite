@@ -25,7 +25,6 @@
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
     <ProjectReference Include="..\ProSuite.GIS.Geodatabase.API\ProSuite.GIS.Geodatabase.API.csproj" />
-    <ProjectReference Include="..\ProSuite.GIS.Geodatabase\ProSuite.GIS.Geodatabase.csproj" />
     <ProjectReference Include="..\ProSuite.GIS.Geometry.AGP\ProSuite.GIS.Geometry.AGP.csproj" />
   </ItemGroup>
 

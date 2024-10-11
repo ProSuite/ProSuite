@@ -1,6 +1,4 @@
-using ProSuite.GIS.Geometry.API;
-
-namespace ProSuite.GIS.Geometry.AGP
+namespace ProSuite.GIS.Geometry.API
 {
 	public interface IMultiPatch : IGeometry, IGeometryCollection
 	{

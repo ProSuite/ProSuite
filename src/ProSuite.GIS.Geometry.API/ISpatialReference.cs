@@ -53,6 +53,29 @@ namespace ProSuite.GIS.Geometry.API
 		ILinearUnit ZCoordinateUnit { get; set; }
 
 		void Changed();
+
+		//// Trial:
+		double get_XYResolution(bool bStandardUnits);
+
+		double get_ZResolution(bool bStandardUnits);
+
+		double XYTolerance { get; }
+		double ZTolerance { get; }
+		double MTolerance { get; }
+	}
+
+	public interface ISpatialReferenceResolution
+	{
+		double get_XYResolution(bool bStandardUnits);
+
+		double get_ZResolution(bool bStandardUnits);
+	}
+
+	public interface ISpatialReferenceTolerance
+	{
+		double XYTolerance { get; }
+		double ZTolerance { get; }
+		double MTolerance { get; }
 	}
 
 	public interface ILinearUnit : IUnit

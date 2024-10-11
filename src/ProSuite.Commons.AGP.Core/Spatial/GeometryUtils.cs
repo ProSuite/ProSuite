@@ -1258,10 +1258,15 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return $"{Format(lowerLeft, digits)}, {Format(upperRight, digits)}";
 		}
 
-		public static IEnumerable<MapPoint> GetVertices(Feature feature)
+		public static IEnumerable<MapPoint> GetVertices([NotNull] Feature feature)
+		{
+			return GetVertices(feature.GetShape());
+		}
+
+		public static IEnumerable<MapPoint> GetVertices([CanBeNull] Geometry geometry)
 		{
 			// Check the type of geometry
-			if (feature.GetShape() is Polyline polyline)
+			if (geometry is Polyline polyline)
 			{
 				// Access vertices of a polyline
 				foreach (var point in polyline.Points)
@@ -1269,7 +1274,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 					yield return point;
 				}
 			}
-			else if (feature.GetShape() is Polygon polygon)
+			else if (geometry is Polygon polygon)
 			{
 				// Access vertices of a polygon
 				foreach (var point in polygon.Points)
@@ -1277,7 +1282,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 					yield return point;
 				}
 			}
-			else if (feature.GetShape() is Multipoint multipoint)
+			else if (geometry is Multipoint multipoint)
 			{
 				// Access vertices of a multipoint
 				foreach (var point in multipoint.Points)
@@ -1285,7 +1290,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 					yield return point;
 				}
 			}
-			else if (feature.GetShape() is MapPoint mapPoint)
+			else if (geometry is MapPoint mapPoint)
 			{
 				// Single point geometry
 				yield return mapPoint;
