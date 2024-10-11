@@ -154,7 +154,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				field =>
 				{
 					object currentValue = rowBuffer[field.Name];
-					if (currentValue != null && currentValue != DBNull.Value)
+
+					if (currentValue == null || currentValue == DBNull.Value)
 					{
 						rowBuffer[field.Name] = field.GetDefaultValue(subtype);
 					}
@@ -178,7 +179,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				{
 					// If the value has not been set (e.g. by the subclass), use the GDB default:
 					object currentValue = row[field.Name];
-					if (currentValue != null && currentValue != DBNull.Value)
+
+					if (currentValue == null || currentValue == DBNull.Value)
 					{
 						row[field.Name] = field.GetDefaultValue(subtype);
 					}
