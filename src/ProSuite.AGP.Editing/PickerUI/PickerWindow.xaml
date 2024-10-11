@@ -8,7 +8,7 @@
                     xmlns:pickerUi="clr-namespace:ProSuite.AGP.Editing.PickerUI"
                     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
                     xmlns:picker="clr-namespace:ProSuite.AGP.Editing.Picker"
-                    d:DataContext="{d:DesignInstance Type=pickerUi:PickerViewModel}"
+                    d:DataContext="{d:DesignInstance Type=pickerUi:IPickerViewModel}"
                     mc:Ignorable="d"
                     ShowTitleBar="false"
                     TitlebarHeight="0"
