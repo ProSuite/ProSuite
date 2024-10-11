@@ -295,25 +295,18 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					if (IsInSketchMode)
 					{
-						// if sketch is empty, also remove selection and return to selection phase
+						// todo daro await
+						Geometry sketch = GetCurrentSketchAsync().Result;
 
-						if (! RequiresSelection)
+						if (sketch != null && ! sketch.IsEmpty)
 						{
-							// remain in sketch mode, just reset the sketch
 							ResetSketch();
 						}
 						else
 						{
-							// todo daro await
-							Geometry sketch = GetCurrentSketchAsync().Result;
-
-							if (sketch != null && ! sketch.IsEmpty)
+							ClearSelection();
+							if (RequiresSelection)
 							{
-								ResetSketch();
-							}
-							else
-							{
-								ClearSelection();
 								StartSelectionPhase();
 							}
 						}
