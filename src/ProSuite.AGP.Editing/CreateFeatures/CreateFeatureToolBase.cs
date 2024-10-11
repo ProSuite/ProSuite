@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -106,6 +105,13 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
+		protected override CancelableProgressorSource GetProgressorSource()
+		{
+			// Disable the progressor because creating a new feature is typically fast,
+			// and it conflicts with the possible error message.
+			return null;
+		}
+
 		protected override EditingTemplate GetSketchTemplate()
 		{
 			return EditingTemplate.Current;
@@ -198,7 +204,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				FeatureClass newTargetClass = GetCurrentTargetClass(out _);
 
 				TargetClassChanged(newTargetClass);
-
 			}, _msg, true);
 		}
 
@@ -241,7 +246,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 						SetPredefinedFields(rowBuffer);
 
-						GdbObjectUtils.SetNullValuesToGdbDefault(rowBuffer, featureClassDef, subtype);
+						GdbObjectUtils.SetNullValuesToGdbDefault(
+							rowBuffer, featureClassDef, subtype);
 
 						Geometry projected =
 							MakeGeometryStorable(simplifiedSketch, featureClassDef);

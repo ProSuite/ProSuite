@@ -396,16 +396,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			MapView activeView,
 			CancelableProgressor cancelableProgressor = null);
 
-		protected virtual CancelableProgressor GetSelectionProgressor()
-		{
-			return null;
-		}
-
-		protected virtual CancelableProgressor GetSketchCompleteProgressor()
-		{
-			return null;
-		}
-
 		protected virtual void OnSketchResetCore() { }
 
 		protected void StartSketchPhase()
