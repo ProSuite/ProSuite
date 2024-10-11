@@ -405,8 +405,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void SetupSelectionSketch()
 		{
-			SelectionSettings settings = GetSelectionSettings();
-			SetupSketch(settings.SketchOutputMode);
+			SetupSketch();
 
 			_selectionSketchType.Toggle(GetSelectionSketchGeometryType());
 		}
@@ -422,6 +421,8 @@ namespace ProSuite.AGP.Editing.OneClick
 					$"snapping: {useSnapping}, completeSketchOnMouseUp: {completeSketchOnMouseUp}, " +
 					$"enforceSimplifySketch: {enforceSimpleSketch}");
 
+			// screen coords are currently not supported and only relevant
+			// when selecting with the View being in 3D viewing mode
 			SketchOutputMode = sketchOutputMode;
 
 			// Note: set CompleteSketchOnMouseUp before SketchType, or it has no effect
