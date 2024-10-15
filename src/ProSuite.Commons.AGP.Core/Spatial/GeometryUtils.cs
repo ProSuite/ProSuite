@@ -963,6 +963,37 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) builder.ToSegment();
 		}
 
+		public static void RemoveVertices( /*this*/ MultipartBuilderEx builder, int partIndex,
+		                                            int firstVertex, int lastVertex = -1)
+		{
+
+			switch( builder.GeometryType)
+			{
+				case GeometryType.Polyline:
+					RemoveVertices((PolylineBuilderEx)builder, partIndex, firstVertex, lastVertex);
+					break;
+				case GeometryType.Polygon:
+					RemoveVertices((PolygonBuilderEx)builder, partIndex, firstVertex, lastVertex);
+					break;
+
+				//case GeometryType.Unknown:
+				//	break;
+				//case GeometryType.Point:
+				//	break;
+				//case GeometryType.Envelope:
+				//	break;
+				//case GeometryType.Multipoint:
+				//	break;
+				//case GeometryType.Multipatch:
+				//	break;
+				//case GeometryType.GeometryBag:
+				//	break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+
+		}
+
 		/// <summary>
 		/// Remove the vertices from first to last (both inclusive) in the
 		/// given part from the given Polyline builder. The resulting gap
