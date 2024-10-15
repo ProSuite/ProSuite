@@ -39,7 +39,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			ContextMenuID = "esri_editing_SketchContextMenu";
 
 			IsSketchTool = true;
-			SketchOutputMode = SketchOutputMode.Screen;
 
 			UseSelection = true;
 			GeomIsSimpleAsFeature = false;
@@ -417,7 +416,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void StartSketchPhase()
 		{
-			SetupSketch(GetSketchGeometryType(), SketchOutputMode.Map, true, false);
+			UseSnapping = true;
+			CompleteSketchOnMouseUp = false;
+			SetSketchType(GetSketchGeometryType());
 
 			SetCursor(SketchCursor);
 

@@ -130,7 +130,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
 		{
 			_symbolizedSketch =
-				new SymbolizedSketchTypeBasedOnSelection(this, GetSelectionSketchGeometryType());
+				new SymbolizedSketchTypeBasedOnSelection(this);
 			_symbolizedSketch.SetSketchSymbolBasedOnSelection();
 
 			return base.OnToolActivatedCore(hasMapViewChanged);
@@ -597,11 +597,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		public void SetSketchSymbol(CIMSymbolReference symbolReference)
 		{
 			SketchSymbol = symbolReference;
-		}
-
-		public void SetSketchType(SketchGeometryType type)
-		{
-			SketchType = type;
 		}
 	}
 }

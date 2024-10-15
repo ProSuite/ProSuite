@@ -8,7 +8,7 @@ namespace ProSuite.AGP.Editing.Picker
 {
 	public interface IPickerPrecedence : IDisposable
 	{
-		IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items);
+		IEnumerable<T> Order<T>(IEnumerable<T> items) where T : IPickableItem;
 
 		T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem;
 
@@ -22,8 +22,7 @@ namespace ProSuite.AGP.Editing.Picker
 		bool AggregateItems { get; }
 		Point PickerLocation { get; set; }
 
-		PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
-		                         bool areaSelect = false);
+		PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection);
 
 		[Obsolete("Not necessary if using GetSelectionGeometry()")]
 		void EnsureGeometryNonEmpty();

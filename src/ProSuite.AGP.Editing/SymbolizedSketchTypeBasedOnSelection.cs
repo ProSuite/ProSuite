@@ -21,9 +21,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	[NotNull] private readonly ISymbolizedSketchTool _tool;
-	private readonly SketchGeometryType _selectionSketchGeometryType;
-
-	bool _showFeatureSketchSymbology;
+	private bool _showFeatureSketchSymbology;
 
 	/// <summary>
 	/// Sets sketch geometry type based on current selection.
@@ -33,12 +31,9 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	/// first FeatureLayer if many features are selected from many FeatureLayers.
 	/// </summary>
 	/// <param name="tool"></param>
-	/// <param name="selectionSketchGeometryType"></param>
-	public SymbolizedSketchTypeBasedOnSelection([NotNull] ISymbolizedSketchTool tool,
-	                                            SketchGeometryType selectionSketchGeometryType)
+	public SymbolizedSketchTypeBasedOnSelection([NotNull] ISymbolizedSketchTool tool)
 	{
 		_tool = tool;
-		_selectionSketchGeometryType = selectionSketchGeometryType;
 
 		_showFeatureSketchSymbology = ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
 
@@ -52,17 +47,11 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);
 
 		ClearSketchSymbol();
-		ResetSketchType();
 	}
 
-	public void ClearSketchSymbol()
+	private void ClearSketchSymbol()
 	{
 		_tool.SetSketchSymbol(null);
-	}
-
-	public void ResetSketchType()
-	{
-		_tool.SetSketchType(_selectionSketchGeometryType);
 	}
 
 	/// <summary>
@@ -78,7 +67,6 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
 			SetSketchSymbolBasedOnSelection(featureLayer, oids);
-
 			SetSketchType(featureLayer);
 		}
 		catch (Exception ex)
@@ -147,8 +135,6 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		if (featureLayer == null || oids == null)
 		{
 			ClearSketchSymbol();
-			ResetSketchType();
-
 			return;
 		}
 

@@ -101,10 +101,12 @@ namespace ProSuite.Commons.AGP.Selection
 			return actualSelectionCount;
 		}
 
-		public static void SelectFeatures([NotNull] IEnumerable<Feature> features,
+		public static long SelectFeatures([NotNull] IEnumerable<Feature> features,
 		                                  [NotNull] IList<BasicFeatureLayer> inLayers,
 		                                  [CanBeNull] CancelableProgressor progressor = null)
 		{
+			long result = 0;
+
 			foreach (IGrouping<IntPtr, Feature> featuresByClassHandle in features.GroupBy(
 				         f => f.GetTable().Handle))
 			{
@@ -127,9 +129,11 @@ namespace ProSuite.Commons.AGP.Selection
 						break;
 					}
 
-					SelectRows(layer, SelectionCombinationMethod.Add, objectIds);
+					result += SelectRows(layer, SelectionCombinationMethod.Add, objectIds);
 				}
 			}
+
+			return result;
 		}
 
 		public static long SelectFeatures([NotNull] FeatureSelectionBase featuresPerLayer,
@@ -230,6 +234,14 @@ namespace ProSuite.Commons.AGP.Selection
 			MapSelectionChangedEventArgs selectionChangedArgs)
 		{
 			return GetSelection(selectionChangedArgs.Selection);
+		}
+
+		public static int GetFeatureCount(
+			[NotNull] IEnumerable<KeyValuePair<MapMember, List<long>>> selection)
+		{
+			Assert.ArgumentNotNull(selection, nameof(selection));
+
+			return selection.Select(pair => pair.Value).Sum(set => set.Count);
 		}
 
 		public static int GetFeatureCount(

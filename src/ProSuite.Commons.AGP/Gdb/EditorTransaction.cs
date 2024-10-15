@@ -56,7 +56,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			return await ExecuteAsync(description);
 		}
 
-		private bool Execute(string description)
+		public bool Execute(string description)
 		{
 			_editOperation.Name = description;
 

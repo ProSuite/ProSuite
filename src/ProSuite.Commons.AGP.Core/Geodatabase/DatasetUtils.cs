@@ -299,21 +299,21 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
 		{
-			foreach (RelationshipClassDefinition relationshipClassDefinition in geodatabase
+			foreach (RelationshipClassDefinition definition in geodatabase
 				         .GetDefinitions<RelationshipClassDefinition>())
 			{
-				if (predicate is null || predicate(relationshipClassDefinition))
+				if (predicate is null || predicate(definition))
 				{
-					yield return relationshipClassDefinition;
+					yield return definition;
 				}
 			}
 
-			foreach (AttributedRelationshipClassDefinition relationshipClassDefinition in
+			foreach (AttributedRelationshipClassDefinition definition in
 			         geodatabase.GetDefinitions<AttributedRelationshipClassDefinition>())
 			{
-				if (predicate is null || predicate(relationshipClassDefinition))
+				if (predicate is null || predicate(definition))
 				{
-					yield return relationshipClassDefinition;
+					yield return definition;
 				}
 			}
 		}
@@ -322,12 +322,21 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
 		{
-			foreach (RelationshipClassDefinition relationshipClassDefinition in
+			foreach (RelationshipClassDefinition definition in
 			         GetRelationshipClassDefinitions(geodatabase, predicate))
 			{
 				yield return geodatabase.OpenDataset<RelationshipClass>(
-					relationshipClassDefinition.GetName());
+					definition.GetName());
+				
+				definition.Dispose();
 			}
+		}
+
+		public static RelationshipClass OpenRelationshipClass(
+			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+			[NotNull] string relClassName)
+		{
+			return OpenDataset<RelationshipClass>(geodatabase, relClassName);
 		}
 
 		public static bool IsSameTable(Table fc1, Table fc2)
