@@ -163,6 +163,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				return true;
 			}
 
+			if (IsInSketchPhase)
+			{
+				return false;
+			}
+
 			bool result = await QueuedTask.Run(IsInSelectionPhaseQueued);
 
 			return result;
@@ -196,11 +201,6 @@ namespace ProSuite.AGP.Editing.OneClick
 				if (_intermittentSelectionPhase)
 				{
 					// This is called repeatedly while keeping the shift key pressed
-					return;
-				}
-
-				if (! IsInSketchMode)
-				{
 					return;
 				}
 
@@ -437,7 +437,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			LogEnteringSketchMode();
 
 			IsInSketchPhase = true;
+
+			OnSketchPhaseStarted();
 		}
+
+		protected virtual void OnSketchPhaseStarted() { }
 
 		private static bool CanFinishSketch(Geometry sketch)
 		{
