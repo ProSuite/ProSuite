@@ -106,6 +106,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
 			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
+			// NOTE daro: Pro 3.3 this method is called e.g. on 'Clear Selection' or select row in attribute table. So the above
+			//			  note is not correct anymore.
 
 			// This method is presumably called in the following situation only:
 			// MapTool.UseSelection is true and your MapTool does sketching (i.e. i used SketchType = SketchGeometryType.Line)
@@ -163,6 +165,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				return true;
 			}
 
+			if (IsInSketchPhase)
+			{
+				return false;
+			}
+
 			bool result = await QueuedTask.Run(IsInSelectionPhaseQueued);
 
 			return result;
@@ -196,11 +203,6 @@ namespace ProSuite.AGP.Editing.OneClick
 				if (_intermittentSelectionPhase)
 				{
 					// This is called repeatedly while keeping the shift key pressed
-					return;
-				}
-
-				if (! IsInSketchMode)
-				{
 					return;
 				}
 
@@ -248,7 +250,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					StartSketchPhase();
 
-					if (_editSketchBackup != null)
+					if (_editSketchBackup != null && CanSetSketch(_editSketchBackup))
 					{
 						await ActiveMapView.SetCurrentSketchAsync(_editSketchBackup);
 
@@ -284,6 +286,23 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (args.Key == _keyRestorePrevious)
 			{
 				await RestorePreviousSketchAsync();
+			}
+		}
+
+		private bool CanSetSketch(Geometry geometry)
+		{
+			GeometryType geometryType = geometry.GeometryType;
+
+			switch (GetSketchGeometryType())
+			{
+				case SketchGeometryType.Point:
+					return geometryType == GeometryType.Point;
+				case SketchGeometryType.Line:
+					return geometryType == GeometryType.Polyline;
+				case SketchGeometryType.Polygon:
+					return geometryType == GeometryType.Polygon;
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
 		}
 
@@ -437,7 +456,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			LogEnteringSketchMode();
 
 			IsInSketchPhase = true;
+
+			OnSketchPhaseStarted();
 		}
+
+		protected virtual void OnSketchPhaseStarted() { }
 
 		private static bool CanFinishSketch(Geometry sketch)
 		{
