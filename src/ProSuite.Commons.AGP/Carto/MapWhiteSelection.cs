@@ -4,6 +4,7 @@ using System.Linq;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -185,9 +186,12 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		{
 			vertexTouched = true;
 
-			var vertexIndex = proximity.PointIndex ??
+			var globalIndex = proximity.PointIndex ??
 			                  throw new InvalidOperationException(
 				                  "NearestVertex() must return non-null PointIndex");
+
+			var localIndex = GeometryUtils.GetLocalVertexIndex(shape, globalIndex, out _);
+			// assert: proximity.PartIndex == partIndex (out param from GetLocalVertexIndex)
 
 			if (shape is Multipoint)
 			{
@@ -196,7 +200,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 				                "Expect partIndex == vertexIndex for multipoint");
 			}
 
-			return selection.Combine(oid, proximity.PartIndex, vertexIndex, method);
+			return selection.Combine(oid, proximity.PartIndex, localIndex, method);
 		}
 
 		vertexTouched = false;
