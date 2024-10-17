@@ -120,6 +120,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			       geometryType == GeometryType.Polygon;
 		}
 
+		protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
+		{
+			return layer is FeatureLayer;
+		}
+
 		protected override async void OnToolActivatingCore()
 		{
 			_feedback = new AdvancedReshapeFeedback();
@@ -131,7 +136,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_symbolizedSketch =
 				new SymbolizedSketchTypeBasedOnSelection(this);
-			_symbolizedSketch.SetSketchSymbolBasedOnSelection();
+			_symbolizedSketch.SetSketchAppearanceBasedOnSelection();
 
 			return base.OnToolActivatedCore(hasMapViewChanged);
 		}
@@ -139,7 +144,20 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected override void OnSelectionPhaseStarted()
 		{
 			base.OnSelectionPhaseStarted();
+			_symbolizedSketch?.ClearSketchSymbol();
 			_feedback?.Clear();
+		}
+
+		protected override void OnSketchPhaseStarted()
+		{
+			try
+			{
+				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); });
+			}
+			catch (Exception ex)
+			{
+				_msg.Error(ex.Message, ex);
+			}
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
@@ -262,10 +280,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		public bool CanSetConstructionSketchSymbol(GeometryType geometryType)
 		{
+			bool result;
 			switch (geometryType)
 			{
 				case GeometryType.Polyline:
-					return true;
+					result = true;
+					break;
 				case GeometryType.Point:
 				case GeometryType.Polygon:
 				case GeometryType.Unknown:
@@ -273,10 +293,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				case GeometryType.Multipoint:
 				case GeometryType.Multipatch:
 				case GeometryType.GeometryBag:
-					return false;
+					result = false;
+					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
 			}
+
+			return result && ! IsInSelectionPhaseAsync().Result;
 		}
 
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
