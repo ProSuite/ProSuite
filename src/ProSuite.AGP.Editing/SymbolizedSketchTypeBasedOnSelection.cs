@@ -49,7 +49,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		ClearSketchSymbol();
 	}
 
-	private void ClearSketchSymbol()
+	public void ClearSketchSymbol()
 	{
 		_tool.SetSketchSymbol(null);
 	}
@@ -57,7 +57,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	/// <summary>
 	/// Must be called on the MCT.
 	/// </summary>
-	public void SetSketchSymbolBasedOnSelection()
+	public void SetSketchAppearanceBasedOnSelection()
 	{
 		Gateway.LogEntry(_msg);
 
@@ -66,8 +66,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(MapView.Active.Map);
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
-			SetSketchSymbolBasedOnSelection(featureLayer, oids);
-			SetSketchType(featureLayer);
+			TrySetSketchAppearance(featureLayer, oids);
 		}
 		catch (Exception ex)
 		{
@@ -95,7 +94,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
 			// only set sketch symbol not sketch type!
-			SetSketchSymbolBasedOnSelection(featureLayer, oids);
+			TrySetSketchAppearance(featureLayer, oids);
 		}
 		catch (Exception ex)
 		{
@@ -118,9 +117,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			{
 				List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
-				SetSketchSymbolBasedOnSelection(featureLayer, oids);
-
-				SetSketchType(featureLayer);
+				TrySetSketchAppearance(featureLayer, oids);
 			});
 		}
 		catch (Exception ex)
@@ -129,8 +126,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		}
 	}
 
-	private void SetSketchSymbolBasedOnSelection([CanBeNull] FeatureLayer featureLayer,
-	                                             [CanBeNull] IList<long> oids)
+	private void TrySetSketchAppearance([CanBeNull] FeatureLayer featureLayer, [CanBeNull] IList<long> oids)
 	{
 		if (featureLayer == null || oids == null)
 		{
@@ -144,8 +140,8 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		{
 			if (_tool.CanSetConstructionSketchSymbol(geometryType))
 			{
-				_tool.SetSketchSymbol(
-					GetSymbolReference(featureLayer, oids.FirstOrDefault()));
+				SetSketchSymbol(GetSymbolReference(featureLayer, oids.FirstOrDefault()));
+				SetSketchType(featureLayer);
 			}
 			else
 			{
@@ -161,13 +157,13 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		}
 	}
 
-	private void SetSketchType([CanBeNull] BasicFeatureLayer featureLayer)
+	private void SetSketchSymbol(CIMSymbolReference symbolReference)
 	{
-		if (featureLayer == null)
-		{
-			return;
-		}
+		_tool.SetSketchSymbol(symbolReference);
+	}
 
+	private void SetSketchType([NotNull] BasicFeatureLayer featureLayer)
+	{
 		GeometryType geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
 		_tool.SetSketchType(GetApplicableSketchType(geometryType));
 	}
