@@ -113,7 +113,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		if (MapUtils.HasSelection(ActiveMapView))
 		{
 			await ViewUtils.TryAsync(
-				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchSymbolBasedOnSelection(); }),
+				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); }),
 				_msg);
 
 			bool selectionProcessed = await ViewUtils.TryAsync(ProcessSelectionAsync(), _msg);
