@@ -963,35 +963,23 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) builder.ToSegment();
 		}
 
-		public static void RemoveVertices( /*this*/ MultipartBuilderEx builder, int partIndex,
-		                                            int firstVertex, int lastVertex = -1)
+		public static void RemoveVertices(/*this*/ MultipartBuilderEx builder, int partIndex,
+		                                  int firstVertex, int lastVertex = -1)
 		{
-
-			switch( builder.GeometryType)
+			switch (builder)
 			{
-				case GeometryType.Polyline:
-					RemoveVertices((PolylineBuilderEx)builder, partIndex, firstVertex, lastVertex);
+				case null:
+					throw new ArgumentNullException(nameof(builder));
+				case PolylineBuilderEx polylineBuilder:
+					RemoveVertices(polylineBuilder, partIndex, firstVertex, lastVertex);
 					break;
-				case GeometryType.Polygon:
-					RemoveVertices((PolygonBuilderEx)builder, partIndex, firstVertex, lastVertex);
+				case PolygonBuilderEx polygonBuilder:
+					RemoveVertices(polygonBuilder, partIndex, firstVertex, lastVertex);
 					break;
-
-				//case GeometryType.Unknown:
-				//	break;
-				//case GeometryType.Point:
-				//	break;
-				//case GeometryType.Envelope:
-				//	break;
-				//case GeometryType.Multipoint:
-				//	break;
-				//case GeometryType.Multipatch:
-				//	break;
-				//case GeometryType.GeometryBag:
-				//	break;
 				default:
-					throw new ArgumentOutOfRangeException();
+					throw new ArgumentOutOfRangeException(nameof(builder),
+					                                      "neither Polyline nor Polygon builder");
 			}
-
 		}
 
 		/// <summary>
