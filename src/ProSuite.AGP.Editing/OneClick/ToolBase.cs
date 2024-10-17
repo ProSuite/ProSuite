@@ -38,7 +38,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	private readonly Latch _latch = new();
 
 	[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
-	[CanBeNull] private SelectionSketchTypeToggle _selectionSketchToggle;
+	[CanBeNull] private SelectionSketchTypeToggle _selectionSketchType;
 
 	protected ToolBase()
 	{
@@ -105,7 +105,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		_symbolizedSketch = GetSymbolizedSketch();
 
-		_selectionSketchToggle =
+		_selectionSketchType =
 			new SelectionSketchTypeToggle(this, GetDefaultSelectionSketchType());
 
 		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
@@ -113,7 +113,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		if (MapUtils.HasSelection(ActiveMapView))
 		{
 			await ViewUtils.TryAsync(
-				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchSymbolBasedOnSelection(); }),
+				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); }),
 				_msg);
 
 			bool selectionProcessed = await ViewUtils.TryAsync(ProcessSelectionAsync(), _msg);
@@ -267,7 +267,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	public virtual bool CanSetConstructionSketchSymbol(GeometryType geometryType)
 	{
-		return true;
+		return ! InConstructionPhase();
 	}
 
 	public void SetSketchSymbol(CIMSymbolReference symbolReference)
@@ -405,12 +405,13 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	private void SetupSelectionSketch()
 	{
-		_selectionSketchToggle?.Toggle(GetDefaultSelectionSketchType());
+		_symbolizedSketch?.ClearSketchSymbol();
+		_selectionSketchType?.Toggle(GetDefaultSelectionSketchType());
 	}
 
 	private void SetupPolygonSketch()
 	{
-		_selectionSketchToggle?.Toggle(SketchGeometryType.Polygon);
+		_selectionSketchType?.Toggle(SketchGeometryType.Polygon);
 
 		SetupPolygonSketchCore();
 	}
@@ -419,7 +420,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	private void SetupLassoSketch()
 	{
-		_selectionSketchToggle?.Toggle(SketchGeometryType.Lasso);
+		_selectionSketchType?.Toggle(SketchGeometryType.Lasso);
 
 		SetupLassoSketchCore();
 	}
