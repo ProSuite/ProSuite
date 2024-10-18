@@ -21,11 +21,10 @@ namespace ProSuite.AGP.Editing.Picker
 		                               Point pickerLocation)
 		{
 			SketchGeometry = sketchGeometry;
-			SelectionGeometry = sketchGeometry;
 			SelectionTolerance = selectionTolerance;
 			PickerLocation = pickerLocation;
 
-			IsSingleClick = PickerUtils.IsSingleClick(SelectionGeometry);
+			IsSingleClick = PickerUtils.IsSingleClick(sketchGeometry);
 
 			AreModifierKeysPressed();
 		}
@@ -34,10 +33,6 @@ namespace ProSuite.AGP.Editing.Picker
 		/// The original sketch geometry, without expansion or simplification.
 		/// </summary>
 		public Geometry SketchGeometry { get; set; }
-
-		[Obsolete(
-			"Use GetSelectionGeometry() which ensures that a single-pick is turned into a polygon")]
-		public Geometry SelectionGeometry { get; set; }
 
 		/// <summary>
 		/// Side-effect-free method that returns the geometry which can be used for spatial queries.
@@ -79,11 +74,6 @@ namespace ProSuite.AGP.Editing.Picker
 				PressedKeys.Add(Key.LeftShift);
 				PressedKeys.Add(Key.RightShift);
 			}
-		}
-
-		public void EnsureGeometryNonEmpty()
-		{
-			SelectionGeometry = PickerUtils.EnsureNonEmpty(SelectionGeometry, SelectionTolerance);
 		}
 
 		public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
@@ -155,7 +145,6 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public void Dispose()
 		{
-			SelectionGeometry = null;
 			SketchGeometry = null;
 			PressedKeys.Clear();
 		}
