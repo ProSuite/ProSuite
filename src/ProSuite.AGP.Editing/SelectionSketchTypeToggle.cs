@@ -39,7 +39,8 @@ public class SelectionSketchTypeToggle
 					       : sketchType;
 				break;
 			default:
-				return;
+				type = _currentSelectionSketchType;
+				break;
 		}
 
 		SetSketchType(_tool, type);
