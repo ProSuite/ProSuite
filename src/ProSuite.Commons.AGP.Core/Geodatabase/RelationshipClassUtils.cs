@@ -60,10 +60,15 @@ public static class RelationshipClassUtils
 
 	public static IEnumerable<string> GetDestinationClassNames([NotNull] Dataset originClass)
 	{
-		string name = originClass.GetName();
+		string originClassName = originClass.GetName();
 		using var geodatabase = (ArcGIS.Core.Data.Geodatabase) originClass.GetDatastore();
 
-		return GetDestinationClassNames(geodatabase, name);
+		// NOTE: Don't return IEnumerable<string>. It leads to exception because of the disposed geodatabase:
+		// System.InvalidOperationException: Could not get the definitions of type RelationshipClassDefinition. Please make sure a valid geodatabase or data store has been opened first.
+		foreach (string name in GetDestinationClassNames(geodatabase, originClassName))
+		{
+			yield return name;
+		}
 	}
 
 	public static IEnumerable<string> GetDestinationClassNames([NotNull] ArcGIS.Core.Data.Geodatabase geodatabase, string originClassName)
