@@ -39,8 +39,7 @@ public class SelectionSketchTypeToggle
 					       : sketchType;
 				break;
 			default:
-				type = _currentSelectionSketchType;
-				break;
+				return;
 		}
 
 		SetSketchType(_tool, type);
@@ -51,6 +50,6 @@ public class SelectionSketchTypeToggle
 		tool.SetSketchType(type);
 		_currentSelectionSketchType = type;
 
-		_msg.Debug($"{type} selection sketch");
+		_msg.Info($"{_tool.Caption}: {type} selection sketch");
 	}
 }
