@@ -5,4 +5,6 @@ namespace ProSuite.AGP.Editing;
 public interface ISketchTool
 {
 	void SetSketchType(SketchGeometryType? sketchType);
+
+	SketchGeometryType? GetSketchType();
 }

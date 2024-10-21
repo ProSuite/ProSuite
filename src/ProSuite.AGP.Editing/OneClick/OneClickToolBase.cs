@@ -903,5 +903,10 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SketchType = sketchType;
 		}
+
+		public SketchGeometryType? GetSketchType()
+		{
+			return SketchType;
+		}
 	}
 }
