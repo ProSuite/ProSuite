@@ -296,6 +296,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
+		[Obsolete($"use {nameof(RelationshipClassUtils)}")]
 		public static IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitions(
 			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
@@ -319,6 +320,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
+		[Obsolete($"use {nameof(RelationshipClassUtils)}")]
 		public static IEnumerable<RelationshipClass> GetRelationshipClasses(
 			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
@@ -333,6 +335,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
+		[Obsolete($"use {nameof(RelationshipClassUtils)}")]
 		public static RelationshipClass OpenRelationshipClass(
 			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 			[NotNull] string relClassName)
