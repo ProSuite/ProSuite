@@ -295,25 +295,18 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					if (IsInSketchMode)
 					{
-						// if sketch is empty, also remove selection and return to selection phase
+						// todo daro await
+						Geometry sketch = GetCurrentSketchAsync().Result;
 
-						if (! RequiresSelection)
+						if (sketch != null && ! sketch.IsEmpty)
 						{
-							// remain in sketch mode, just reset the sketch
 							ResetSketch();
 						}
 						else
 						{
-							// todo daro await
-							Geometry sketch = GetCurrentSketchAsync().Result;
-
-							if (sketch != null && ! sketch.IsEmpty)
+							ClearSelection();
+							if (RequiresSelection)
 							{
-								ResetSketch();
-							}
-							else
-							{
-								ClearSelection();
 								StartSelectionPhase();
 							}
 						}
@@ -402,16 +395,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			EditingTemplate editTemplate,
 			MapView activeView,
 			CancelableProgressor cancelableProgressor = null);
-
-		protected virtual CancelableProgressor GetSelectionProgressor()
-		{
-			return null;
-		}
-
-		protected virtual CancelableProgressor GetSketchCompleteProgressor()
-		{
-			return null;
-		}
 
 		protected virtual void OnSketchResetCore() { }
 

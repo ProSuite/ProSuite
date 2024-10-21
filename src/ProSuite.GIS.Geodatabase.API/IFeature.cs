@@ -4,6 +4,8 @@ namespace ProSuite.GIS.Geodatabase.API
 {
 	public interface IFeature : IObject
 	{
+		new IFeatureClass Class { get; }
+
 		IGeometry ShapeCopy { get; }
 
 		IGeometry Shape { get; set; }
@@ -11,5 +13,12 @@ namespace ProSuite.GIS.Geodatabase.API
 		IEnvelope Extent { get; }
 
 		//esriFeatureType FeatureType { get; }
+	}
+
+	public interface IFeatureChanges
+	{
+		bool ShapeChanged { get; }
+
+		IGeometry OriginalShape { get; }
 	}
 }

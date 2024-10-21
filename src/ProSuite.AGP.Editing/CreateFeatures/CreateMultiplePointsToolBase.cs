@@ -90,6 +90,13 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			return SketchGeometryType.Rectangle;
 		}
 
+		protected override CancelableProgressorSource GetProgressorSource()
+		{
+			// Disable the progressor because creating points is typically fast,
+			// and the users potentially want to continue working already.
+			return null;
+		}
+
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			EditingTemplate editTemplate,
@@ -141,18 +148,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			});
 
 			return success;
-		}
-
-		protected override CancelableProgressor GetSketchCompleteProgressor()
-		{
-			var sketchCompleteProgressorSource =
-				new CancelableProgressorSource("Creating multiple points from the sketch...",
-				                               "cancelled");
-
-			CancelableProgressor sketchCompleteProgressor =
-				sketchCompleteProgressorSource.Progressor;
-
-			return sketchCompleteProgressor;
 		}
 
 		#endregion

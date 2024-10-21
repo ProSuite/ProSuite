@@ -20,9 +20,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		#region Implementation of ISelectionSet
 
-		public IName FullName => new ArcName(ArcUtils.ToArcTable(_proTargetTable));
+		public IName FullName => new ArcName(ArcGeodatabaseUtils.ToArcTable(_proTargetTable));
 
-		public ITable Target => ArcUtils.ToArcTable(_proTargetTable);
+		public ITable Target => ArcGeodatabaseUtils.ToArcTable(_proTargetTable);
 
 		public void MakePermanent()
 		{
@@ -58,7 +58,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			RowCursor rowCursor = _proSelection.Search(aoQueryFilter, recycling);
 
-			result = ArcUtils.GetArcRows(rowCursor);
+			result = ArcGeodatabaseUtils.GetArcRows(rowCursor);
 		}
 
 		public ISelectionSet Select(IQueryFilter queryFilter, esriSelectionType selType,

@@ -1,5 +1,5 @@
-using ArcGIS.Core.Geometry;
 using ProSuite.GIS.Geometry.API;
+using Polyline = ArcGIS.Core.Geometry.Polyline;
 
 namespace ProSuite.GIS.Geometry.AGP
 {
@@ -11,5 +11,14 @@ namespace ProSuite.GIS.Geometry.AGP
 		{
 			_proPolyline = proPolyline;
 		}
+
+		#region Overrides of ArcGeometry
+
+		public override IGeometry Clone()
+		{
+			return new ArcPolyline((Polyline) _proPolyline.Clone());
+		}
+
+		#endregion
 	}
 }

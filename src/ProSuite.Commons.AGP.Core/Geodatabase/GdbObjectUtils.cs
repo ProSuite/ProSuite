@@ -125,6 +125,19 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return null;
 		}
 
+		public static void SetSubtypeCode([NotNull] Row row, int subTypeCode)
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
+			using Table table = row.GetTable();
+			string subtypeFieldName = DatasetUtils.GetSubtypeFieldName(table);
+
+			if (! string.IsNullOrEmpty(subtypeFieldName))
+			{
+				row[subtypeFieldName] = subTypeCode;
+			}
+		}
+
 		/// <summary>
 		/// Sets the values of the <see cref="RowBuffer"/> which are not yet initialized to the
 		/// default values defined in the Geodatabase.
@@ -141,7 +154,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				field =>
 				{
 					object currentValue = rowBuffer[field.Name];
-					if (currentValue != null && currentValue != DBNull.Value)
+
+					if (currentValue == null || currentValue == DBNull.Value)
 					{
 						rowBuffer[field.Name] = field.GetDefaultValue(subtype);
 					}
@@ -165,7 +179,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				{
 					// If the value has not been set (e.g. by the subclass), use the GDB default:
 					object currentValue = row[field.Name];
-					if (currentValue != null && currentValue != DBNull.Value)
+
+					if (currentValue == null || currentValue == DBNull.Value)
 					{
 						row[field.Name] = field.GetDefaultValue(subtype);
 					}

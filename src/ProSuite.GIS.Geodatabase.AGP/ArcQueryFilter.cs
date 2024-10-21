@@ -1,7 +1,9 @@
-using System;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.GIS.Geodatabase.API;
+using ProSuite.GIS.Geometry.AGP;
 using ProSuite.GIS.Geometry.API;
+using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
@@ -45,18 +47,61 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			set => _proQueryFilter.WhereClause = value;
 		}
 
+		public string PostfixClause
+		{
+			get => _proQueryFilter.PostfixClause;
+			set => _proQueryFilter.PostfixClause = value;
+		}
+
 		public ISpatialReference get_OutputSpatialReference(string fieldName)
 		{
-			throw new NotImplementedException();
-			//return _aoQueryFilter.get_OutputSpatialReference(fieldName);
+			return new ArcSpatialReference(_proQueryFilter.OutputSpatialReference);
 		}
 
 		public void set_OutputSpatialReference(
 			string fieldName,
 			ISpatialReference outputSpatialReference)
 		{
-			throw new NotImplementedException();
-			//_aoQueryFilter.set_OutputSpatialReference(fieldName, outputSpatialReference);
+			var arcSpatialReference = outputSpatialReference as ArcSpatialReference;
+
+			Assert.NotNull(arcSpatialReference);
+
+			_proQueryFilter.OutputSpatialReference =
+				arcSpatialReference.ProSpatialReference;
+		}
+
+		#endregion
+	}
+
+	public class ArcSpatialFilter : ArcQueryFilter, ISpatialFilter
+	{
+		private readonly SpatialQueryFilter _proSpatialFilter;
+
+		public ArcSpatialFilter(SpatialQueryFilter proSpatialFilter) : base(proSpatialFilter)
+		{
+			_proSpatialFilter = proSpatialFilter;
+		}
+
+		public SpatialQueryFilter ProSpatialFilter => _proSpatialFilter;
+
+		#region Implementation of ISpatialFilter
+
+		public esriSpatialRelEnum SpatialRel
+		{
+			get => (esriSpatialRelEnum) _proSpatialFilter.SpatialRelationship;
+			set => _proSpatialFilter.SpatialRelationship = (SpatialRelationship) value;
+		}
+
+		public IGeometry Geometry
+		{
+			get => ArcGeometry.Create(_proSpatialFilter.FilterGeometry);
+			set => _proSpatialFilter.FilterGeometry = ArcGeometryUtils.CreateProGeometry(value);
+		}
+
+		public string SpatialRelDescription
+		{
+			get => _proSpatialFilter.SpatialRelationshipDescription;
+			set => _proSpatialFilter.SpatialRelationshipDescription = value;
 		}
 
 		#endregion
