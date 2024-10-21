@@ -410,10 +410,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			_selectionSketchType.Toggle(GetSelectionSketchGeometryType());
 		}
 
-		private void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
-		                         bool useSnapping = false,
-		                         bool completeSketchOnMouseUp = true,
-		                         bool enforceSimpleSketch = false)
+		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
+		                           bool useSnapping = false,
+		                           bool completeSketchOnMouseUp = true,
+		                           bool enforceSimpleSketch = false)
 		{
 			_msg.VerboseDebug(
 				() =>
