@@ -11,8 +11,6 @@ public class SelectionSketchTypeToggle
 	[NotNull] private readonly ISketchTool _tool;
 	private readonly SketchGeometryType? _defaultSelectionSketchType;
 
-	private SketchGeometryType? _currentSelectionSketchType;
-
 	public SelectionSketchTypeToggle([NotNull] ISketchTool tool,
 	                                 SketchGeometryType defaultSelectionSketchType)
 	{
@@ -29,27 +27,36 @@ public class SelectionSketchTypeToggle
 		switch (sketchType)
 		{
 			case SketchGeometryType.Polygon:
-				type = _currentSelectionSketchType == SketchGeometryType.Polygon
+				type = _tool.GetSketchType() == SketchGeometryType.Polygon
 					       ? _defaultSelectionSketchType
 					       : sketchType;
 				break;
 			case SketchGeometryType.Lasso:
-				type = _currentSelectionSketchType == SketchGeometryType.Lasso
+				type = _tool.GetSketchType() == SketchGeometryType.Lasso
 					       ? _defaultSelectionSketchType
 					       : sketchType;
 				break;
 			default:
-				type = _currentSelectionSketchType;
+				type = sketchType;
 				break;
 		}
 
-		SetSketchType(_tool, type);
+		TrySetSketchType(_tool, type);
+	}
+
+	private void TrySetSketchType(ISketchTool tool, SketchGeometryType? type)
+	{
+		if (_tool.GetSketchType() == type)
+		{
+			return;
+		}
+
+		SetSketchType(tool, type);
 	}
 
 	private void SetSketchType(ISketchTool tool, SketchGeometryType? type)
 	{
 		tool.SetSketchType(type);
-		_currentSelectionSketchType = type;
 
 		_msg.Info($"{_tool.Caption}: {type} selection sketch");
 	}

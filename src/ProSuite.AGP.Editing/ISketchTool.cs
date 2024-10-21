@@ -7,4 +7,6 @@ public interface ISketchTool
 	string Caption { get; }
 
 	void SetSketchType(SketchGeometryType? sketchType);
+
+	SketchGeometryType? GetSketchType();
 }
