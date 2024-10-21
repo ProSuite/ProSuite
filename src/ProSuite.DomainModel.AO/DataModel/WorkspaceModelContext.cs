@@ -1,7 +1,6 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -41,7 +40,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return PrimaryWorkspaceContext.OpenObjectClass(dataset);
 		}
 
-		public ITopology OpenTopology(ITopologyDataset dataset)
+		public TopologyReference OpenTopology(ITopologyDataset dataset)
 		{
 			return PrimaryWorkspaceContext.OpenTopology(dataset);
 		}

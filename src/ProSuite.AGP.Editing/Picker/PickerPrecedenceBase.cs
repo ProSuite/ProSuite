@@ -16,24 +16,42 @@ namespace ProSuite.AGP.Editing.Picker
 		protected List<Key> PressedKeys { get; } = new();
 
 		[UsedImplicitly]
-		protected PickerPrecedenceBase(Geometry selectionGeometry,
+		protected PickerPrecedenceBase(Geometry sketchGeometry,
 		                               int selectionTolerance,
 		                               Point pickerLocation)
 		{
-			SelectionGeometry = selectionGeometry;
+			SketchGeometry = sketchGeometry;
 			SelectionTolerance = selectionTolerance;
 			PickerLocation = pickerLocation;
 
-			IsSingleClick = PickerUtils.IsSingleClick(SelectionGeometry);
+			IsSingleClick = PickerUtils.IsSingleClick(sketchGeometry);
 
 			AreModifierKeysPressed();
 		}
 
-		public Geometry SelectionGeometry { get; set; }
+		/// <summary>
+		/// The original sketch geometry, without expansion or simplification.
+		/// </summary>
+		public Geometry SketchGeometry { get; set; }
+
+		/// <summary>
+		/// Side-effect-free method that returns the geometry which can be used for spatial queries.
+		/// For single-click picks, it returns the geometry expanded by the <see cref="SelectionTolerance"/>. 
+		/// This method must be called on the CIM thread.
+		/// </summary>
+		/// <returns></returns>
+		public Geometry GetSelectionGeometry()
+		{
+			// TODO: Simplify polygons?
+			return PickerUtils.EnsureNonEmpty(SketchGeometry, SelectionTolerance);
+		}
 
 		public int SelectionTolerance { get; }
 
 		public bool IsSingleClick { get; }
+
+		public bool AggregateItems =>
+			PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl);
 
 		public Point PickerLocation { get; set; }
 
@@ -54,21 +72,15 @@ namespace ProSuite.AGP.Editing.Picker
 			if (KeyboardUtils.IsShiftDown())
 			{
 				PressedKeys.Add(Key.LeftShift);
-				PressedKeys.Add(Key.LeftShift);
+				PressedKeys.Add(Key.RightShift);
 			}
 		}
 
-		public void EnsureGeometryNonEmpty()
+		public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
 		{
-			SelectionGeometry = PickerUtils.EnsureNonEmpty(SelectionGeometry, SelectionTolerance);
-		}
-
-		public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
-		                                        bool areaSelect = false)
-		{
-			if (PressedKeys.Contains(Key.LeftShift) || PressedKeys.Contains(Key.RightShift))
+			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
 			{
-				return PickerMode.ShowPicker;
+				return PickerMode.PickAll;
 			}
 
 			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
@@ -76,13 +88,13 @@ namespace ProSuite.AGP.Editing.Picker
 				return PickerMode.ShowPicker;
 			}
 
-			areaSelect = ! IsSingleClick;
+			bool areaSelect = ! IsSingleClick;
 			if (areaSelect)
 			{
 				return PickerMode.PickAll;
 			}
 
-			if (CountLowestShapeDimensionFeatures(orderedSelection) > 1)
+			if (CountLowestShapeDimension(orderedSelection) > 1)
 			{
 				return PickerMode.ShowPicker;
 			}
@@ -90,7 +102,7 @@ namespace ProSuite.AGP.Editing.Picker
 			return PickerMode.PickBest;
 		}
 
-		public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
+		public virtual IEnumerable<T> Order<T>(IEnumerable<T> items) where T : IPickableItem
 		{
 			return items;
 		}
@@ -101,8 +113,8 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			return items.FirstOrDefault() as T;
 		}
-
-		protected static int CountLowestShapeDimensionFeatures(
+		
+		protected static int CountLowestShapeDimension(
 			IEnumerable<FeatureSelectionBase> layerSelection)
 		{
 			var count = 0;
@@ -133,7 +145,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public void Dispose()
 		{
-			SelectionGeometry = null;
+			SketchGeometry = null;
 			PressedKeys.Clear();
 		}
 	}

@@ -37,14 +37,20 @@ public class ProcessingDataset
 			throw new NotSupportedException($"{datasetName}: Layers with Joins are not supported");
 		}
 
-
 		//var definition = FeatureClass.GetDefinition(); // bombs on joined FC
-		var definition = ProProcessingUtils.GetBaseTable(FeatureClass).GetDefinition();
+		var  baseTable = ProProcessingUtils.GetBaseTable(FeatureClass);
+		using var definition = baseTable.GetDefinition();
 		ShapeType = definition.GetShapeType(); // MCT
 		ShapeFieldName = definition.GetShapeField(); // MCT
 		ShapeFieldIndex = definition.FindField(ShapeFieldName); // MCT
 		SpatialReference = definition.GetSpatialReference(); // MCT
 		XYTolerance = SpatialReference.XYTolerance;
+
+		// Dispose the baseTable (but not the FeatureClass that was passed in)
+		if (baseTable.Handle != FeatureClass.Handle)
+		{
+			baseTable.Dispose();
+		}
 	}
 
 	public int GetFieldIndex(string fieldName)

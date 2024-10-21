@@ -398,17 +398,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				TModel productionModel = project.ProductionModel;
 
-				var projectMsg =
-					new ProjectMsg
-					{
-						ProjectId = project.Id,
-						ModelId = productionModel.Id,
-						Name = project.Name,
-						ShortName = project.ShortName,
-						MinimumScaleDenominator = project.MinimumScaleDenominator,
-						ExcludeReadOnlyDatasetsFromProjectWorkspace =
-							project.ExcludeReadOnlyDatasetsFromProjectWorkspace
-					};
+				var projectMsg = ProtobufUtils.ToProjectMsg(project);
 
 				CallbackUtils.DoWithNonNull(
 					projectMsg.ToolConfigDirectory, s => project.ToolConfigDirectory = s);
@@ -417,7 +407,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				RepeatedField<DatasetMsg> responseDatasets = response.Datasets;
 
-				ModelMsg modelMsg = ToModelMsg(productionModel, responseDatasets);
+				ModelMsg modelMsg =
+					ToModelMsg(productionModel, responseDatasets);
 
 				response.Models.Add(modelMsg);
 			}
@@ -435,6 +426,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ModelMsg modelMsg =
 				ProtoDataQualityUtils.ToDdxModelMsg(productionModel, srWkId, referencedDatasetMsgs);
 
+			modelMsg.UserConnection =
+				ProtobufGdbUtils.ToConnectionMsg(productionModel.UserConnectionProvider);
 			// If necessary, return the list of referenced workspaces
 			// However, this is currently not needed anywhere and requires opening workpaces, which is slow!
 
@@ -583,9 +576,51 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 						response.Datasets.Add(datasetMsg);
 					}
+
+					IList<Association> associations =
+						verificationDataDictionary.GetAssociations(request.DatasetIds);
+
+					foreach (Association association in associations)
+					{
+						if (association.Deleted)
+						{
+							continue;
+						}
+
+						AssociationMsg associationMsg =
+							ProtoDataQualityUtils.ToAssociationMsg(association, true);
+
+						response.Associations.Add(associationMsg);
+
+						// And make sure all the referenced datasets are included in the response
+						EnsureDatasetAdded(association.End1.ObjectDataset, response.Datasets);
+						EnsureDatasetAdded(association.End2.ObjectDataset, response.Datasets);
+					}
 				});
 
 			return response;
+		}
+
+		private static void EnsureDatasetAdded([NotNull] ObjectDataset objectDataset,
+		                                       [NotNull]
+		                                       RepeatedField<DatasetMsg> toResponseDatasets)
+		{
+			if (toResponseDatasets.Any(rds => rds.DatasetId == objectDataset.Id))
+			{
+				return;
+			}
+
+			if (objectDataset.Deleted)
+			{
+				_msg.WarnFormat(
+					"Object dataset {0} has is marked as deleted and will not be included!",
+					objectDataset.Name);
+				return;
+			}
+
+			DatasetMsg datasetMsg = ProtoDataQualityUtils.ToDatasetMsg(objectDataset, true);
+
+			toResponseDatasets.Add(datasetMsg);
 		}
 
 		private async Task<bool> StartRequestAsync(string peerName, object request,

@@ -97,15 +97,21 @@ namespace ProSuite.DomainModel.AO.DataModel
 				                                           dataset);
 		}
 
-		public override ITopology OpenTopology(ITopologyDataset dataset)
+		public override TopologyReference OpenTopology(ITopologyDataset dataset)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
 			WorkspaceDataset workspaceDataset = GetWorkspaceDataset(dataset);
 
-			return workspaceDataset == null
-				       ? null
-				       : TopologyUtils.OpenTopology(FeatureWorkspace, workspaceDataset.Name);
+			if (workspaceDataset == null)
+			{
+				return null;
+			}
+
+			ITopology topology =
+				TopologyUtils.OpenTopology(FeatureWorkspace, workspaceDataset.Name);
+
+			return new TopologyReference(topology);
 		}
 
 		public override RasterDatasetReference OpenRasterDataset(IDdxRasterDataset dataset)

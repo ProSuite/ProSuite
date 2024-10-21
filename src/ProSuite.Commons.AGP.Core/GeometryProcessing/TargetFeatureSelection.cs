@@ -1,4 +1,4 @@
-namespace ProSuite.Commons.AGP.Carto
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing
 {
 	public enum TargetFeatureSelection
 	{

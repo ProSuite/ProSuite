@@ -22,8 +22,9 @@ namespace ProSuite.Processing.AGP.Core
 
 			try
 			{
-				var fieldNames = featureClass.GetDefinition().GetFields().Select(f => f.Name);
-				return instance.ValidateTargetFields(fieldNames);
+				using var definition = featureClass.GetDefinition();
+				var fields = definition.GetFields();
+				return instance.ValidateTargetFields(fields.Select(f => f.Name));
 			}
 			catch (Exception ex)
 			{

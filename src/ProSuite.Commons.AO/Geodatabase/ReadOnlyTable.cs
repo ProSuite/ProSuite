@@ -5,12 +5,11 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using FieldType = ProSuite.Commons.GeoDb.FieldType;
-using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.GeoDb;
+using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
@@ -260,8 +259,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				// TODO: If this is heavily used, wrap IFields in separate object.
 				return DatasetUtils.EnumFields(BaseTable.Fields)
-				                   .Select(
-					                   f => new TableField(f.Name, (FieldType) f.Type, f.Length))
+				                   .Select(FieldUtils.ToTableField)
 				                   .ToList();
 			}
 		}
