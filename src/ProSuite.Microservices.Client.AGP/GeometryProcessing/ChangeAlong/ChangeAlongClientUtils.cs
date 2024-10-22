@@ -2,9 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.UtilityNetwork.Trace;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.Geometry;
@@ -329,9 +331,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 				(Polyline) ProtobufConversionUtils.FromShapeMsg(
 					reshapeLineMsg.TargetSegmentAtTo, spatialReference);
 
-			var extraInsertPoints =
-				ProtobufConversionUtils.FromShapeMsg(reshapeLineMsg.ExtraTargetInsertPoints,
-				                                     spatialReference);
+			//var extraInsertPoints =
+			//	ProtobufConversionUtils.FromShapeMsg(reshapeLineMsg.ExtraTargetInsertPoints,spatialReference);
+
+			IList<MapPoint> extraInsertPoints = PointsFromShapeMsg(reshapeLineMsg.ExtraTargetInsertPoints);
 
 			var result = new CutSubcurve(Assert.NotNull(path),
 			                             reshapeLineMsg.CanReshape, reshapeLineMsg.IsCandidate,
@@ -339,6 +342,64 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			                             targetSegmentAtFrom, targetSegmentAtTo, extraInsertPoints);
 
 			return result;
+		}
+
+		[CanBeNull]
+		private static IList<MapPoint> PointsFromShapeMsg([CanBeNull] ShapeMsg shapeMsg)
+		{
+			var geometry = ProtobufConversionUtils.FromShapeMsg(shapeMsg);
+
+			if (geometry == null)
+			{
+				return null;
+			}
+
+			return GetPoints(geometry).ToList();
+		}
+
+
+		private static IEnumerable<MapPoint> GetPoints(Geometry geometry)
+		{
+			//if (geometry == null) yield break;
+
+			int geometryPointCount = geometry.PointCount;
+
+			ReadOnlyPointCollection points = null;
+
+			if (geometry is Multipoint multipoint)
+			{
+				points = multipoint.Points;
+			}
+			else if (geometry is Polyline polyline)
+			{
+				points = polyline.Points;
+			}
+			else if (geometry is Polygon polygon)
+			{
+				points = polygon.Points;
+			}
+			else if (geometry is Envelope envelope)
+			{
+				Polygon polygon1 = GeometryFactory.CreatePolygon(envelope);
+				points = polygon1.Points;
+			}
+			else if (geometry is Multipart multipart)
+			{
+				points = multipart.Points;
+			}
+
+			if (points != null)
+			{
+				foreach (MapPoint point in points)
+				{
+					yield return point;
+				}
+			}
+
+			if (geometry is MapPoint mapPoint)
+			{
+				yield return mapPoint;
+			}
 		}
 
 		private static ReshapeLineMsg ToReshapeLineMsg(CutSubcurve subcurve)
@@ -365,7 +426,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 				ProtobufConversionUtils.ToShapeMsg(subcurve.TargetSegmentAtToPoint);
 
 			result.ExtraTargetInsertPoints =
-				ProtobufConversionUtils.ToShapeMsg(subcurve.ExtraTargetInsertPoints);
+				ProtobufConversionUtils.ToShapeMsg(MultipointBuilderEx.CreateMultipoint(subcurve.ExtraTargetInsertPoints));
 
 			return result;
 		}

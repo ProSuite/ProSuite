@@ -43,11 +43,11 @@ namespace ProSuite.AGP.Editing.Picker
 			{
 				var candidates = precedence.Order(items).OfType<IPickableFeatureItem>();
 
-				viewModel = new PickerViewModel(candidates, precedence.SelectionGeometry);
+				viewModel = new PickerViewModel(candidates, precedence.GetSelectionGeometry());
 			}
 			else if (typeof(T) == typeof(IPickableFeatureClassItem))
 			{
-				viewModel = new PickerViewModel(items, precedence.SelectionGeometry);
+				viewModel = new PickerViewModel(items, precedence.GetSelectionGeometry());
 			}
 			else
 			{

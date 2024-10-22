@@ -21,11 +21,10 @@ namespace ProSuite.AGP.Editing.Picker
 		                               Point pickerLocation)
 		{
 			SketchGeometry = sketchGeometry;
-			SelectionGeometry = sketchGeometry;
 			SelectionTolerance = selectionTolerance;
 			PickerLocation = pickerLocation;
 
-			IsSingleClick = PickerUtils.IsSingleClick(SelectionGeometry);
+			IsSingleClick = PickerUtils.IsSingleClick(sketchGeometry);
 
 			AreModifierKeysPressed();
 		}
@@ -34,10 +33,6 @@ namespace ProSuite.AGP.Editing.Picker
 		/// The original sketch geometry, without expansion or simplification.
 		/// </summary>
 		public Geometry SketchGeometry { get; set; }
-
-		[Obsolete(
-			"Use GetSelectionGeometry() which ensures that a single-pick is turned into a polygon")]
-		public Geometry SelectionGeometry { get; set; }
 
 		/// <summary>
 		/// Side-effect-free method that returns the geometry which can be used for spatial queries.
@@ -81,13 +76,7 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 		}
 
-		public void EnsureGeometryNonEmpty()
-		{
-			SelectionGeometry = PickerUtils.EnsureNonEmpty(SelectionGeometry, SelectionTolerance);
-		}
-
-		public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
-		                                        bool areaSelect = false)
+		public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
 		{
 			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
 			{
@@ -99,13 +88,13 @@ namespace ProSuite.AGP.Editing.Picker
 				return PickerMode.ShowPicker;
 			}
 
-			areaSelect = ! IsSingleClick;
+			bool areaSelect = ! IsSingleClick;
 			if (areaSelect)
 			{
 				return PickerMode.PickAll;
 			}
 
-			if (CountLowestShapeDimensionFeatures(orderedSelection) > 1)
+			if (CountLowestShapeDimension(orderedSelection) > 1)
 			{
 				return PickerMode.ShowPicker;
 			}
@@ -113,7 +102,7 @@ namespace ProSuite.AGP.Editing.Picker
 			return PickerMode.PickBest;
 		}
 
-		public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
+		public virtual IEnumerable<T> Order<T>(IEnumerable<T> items) where T : IPickableItem
 		{
 			return items;
 		}
@@ -124,8 +113,8 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			return items.FirstOrDefault() as T;
 		}
-
-		protected static int CountLowestShapeDimensionFeatures(
+		
+		protected static int CountLowestShapeDimension(
 			IEnumerable<FeatureSelectionBase> layerSelection)
 		{
 			var count = 0;
@@ -156,7 +145,6 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public void Dispose()
 		{
-			SelectionGeometry = null;
 			SketchGeometry = null;
 			PressedKeys.Clear();
 		}

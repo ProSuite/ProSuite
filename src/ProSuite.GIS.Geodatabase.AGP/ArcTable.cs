@@ -2,6 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
+using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Text;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
@@ -46,6 +50,40 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			Commons.AGP.Core.Geodatabase.GdbObjectUtils.SetNullValuesToGdbDefault(
 				rowBuffer, ProTableDefinition, subtype);
+
+			if (ProTable is FeatureClass fc)
+			{
+				// TODO: Move to GeometryFactory
+				ArcGIS.Core.Geometry.Geometry geometry = null;
+				switch (fc.GetShapeType())
+				{
+					case GeometryType.Point:
+						geometry = new MapPointBuilder().ToGeometry();
+						break;
+					case GeometryType.Polyline:
+						geometry = new PolylineBuilder().ToGeometry();
+						break;
+					case GeometryType.Polygon:
+						geometry = new PolygonBuilder().ToGeometry();
+						break;
+					case GeometryType.Multipoint:
+						geometry = new MultipointBuilder().ToGeometry();
+						break;
+					case GeometryType.Multipatch:
+						geometry = new MultipatchBuilderEx().ToGeometry();
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				FeatureClassDefinition classDefinition = fc.GetDefinition();
+
+				geometry =
+					GeometryUtils.EnsureGeometrySchema(geometry, classDefinition.HasZ(),
+					                                   classDefinition.HasM());
+
+				rowBuffer[fc.GetDefinition().GetShapeField()] = geometry;
+			}
 
 			Row proRow = ProTable.CreateRow(rowBuffer);
 

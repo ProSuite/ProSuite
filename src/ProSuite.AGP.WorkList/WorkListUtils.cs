@@ -288,7 +288,8 @@ namespace ProSuite.AGP.WorkList
 			var layerParams = new FeatureLayerCreationParams(featureClass)
 			                  {
 				                  IsVisible = true,
-				                  Name = alias
+				                  Name = alias,
+				                  MapMemberPosition = MapMemberPosition.AddToTop
 			                  };
 
 			// todo daro: apply renderer here from template

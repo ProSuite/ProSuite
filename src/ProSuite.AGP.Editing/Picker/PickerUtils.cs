@@ -175,8 +175,9 @@ namespace ProSuite.AGP.Editing.Picker
 				// NOTE daro: passing in a delayed cancellable progressor in conjunction with
 				// picker window crashes Pro. A non-delayed progressor works fine.
 				const CancelableProgressor progressor = null;
-				List<FeatureSelectionBase> featureSelection =
-					getCandidates(selectionGeometry, spatialRelationship, progressor).ToList();
+				var featureSelection = getCandidates(selectionGeometry,
+				                                     spatialRelationship,
+				                                     progressor).ToList();
 
 				await SelectCandidates(precedence, featureSelection, selectionMethod, pickerMode);
 			});
@@ -251,7 +252,7 @@ namespace ProSuite.AGP.Editing.Picker
 		#endregion
 
 		private static async Task SelectCandidates(IPickerPrecedence precedence,
-		                                           List<FeatureSelectionBase> featureSelection,
+		                                           ICollection<FeatureSelectionBase> featureSelection,
 		                                           SelectionCombinationMethod selectionMethod)
 		{
 			if (! featureSelection.Any())
@@ -313,11 +314,11 @@ namespace ProSuite.AGP.Editing.Picker
 		}
 
 		private static async Task SelectCandidates(IPickerPrecedence precedence,
-		                                           List<FeatureSelectionBase> featureSelection,
+		                                           List<FeatureSelectionBase> orderedSelection,
 		                                           SelectionCombinationMethod selectionMethod,
 		                                           PickerMode pickerMode)
 		{
-			if (! featureSelection.Any())
+			if (! orderedSelection.Any())
 			{
 				if (selectionMethod == SelectionCombinationMethod.XOR)
 				{
@@ -335,8 +336,6 @@ namespace ProSuite.AGP.Editing.Picker
 			{
 				ClearSelection();
 			}
-
-			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
 
 			switch (pickerMode)
 			{
@@ -438,12 +437,12 @@ namespace ProSuite.AGP.Editing.Picker
 
 			await QueuedTaskUtils.Run(async () =>
 			{
-				precedence.EnsureGeometryNonEmpty();
+				Geometry selectionGeometry = precedence.GetSelectionGeometry();
 
 				// NOTE daro: passing in a delayed cancellable progressor in conjunction with
 				// picker window crashes Pro. A non-delayed progressor works fine.
 				const CancelableProgressor progressor = null;
-				var featureSelection = getCandidates(precedence.SelectionGeometry,
+				var featureSelection = getCandidates(precedence.GetSelectionGeometry(),
 													 spatialRelationship,
 													 progressor).ToList();
 
