@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
@@ -469,6 +470,57 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			throw UnexpectedResultFrom("GeometryEngine.Simplify()", typeof(T), simplified);
 		}
 
+		public static T SimplifyZ<T>(T geometry, double defaultZ = 0d) where T : Geometry
+		{
+			// TODO: Unittests for SimplifyZ
+			if (geometry == null) return null;
+
+			if (! geometry.HasZ)
+			{
+				// TODO: DropZs?! (Engine.DropMs exists, what about DropZs?)
+				return geometry;
+			}
+
+			if (geometry is MapPoint mapPoint)
+			{
+				return SimplifyZ<T>(mapPoint, defaultZ);
+			}
+
+			if (geometry is Multipart multipart)
+			{
+				return (T) (Geometry) Engine.CalculateNonSimpleZs(multipart, defaultZ);
+			}
+
+			if (geometry is Multipoint multipoint)
+			{
+				var mapPoints = new List<MapPoint>();
+
+				foreach (MapPoint point in multipoint.Points)
+				{
+					MapPoint simplePoint = SimplifyZ<MapPoint>(point, defaultZ);
+					mapPoints.Add(simplePoint);
+				}
+
+				return (T) (Geometry) MultipointBuilderEx.CreateMultipoint(
+					mapPoints, multipoint.GetAttributeFlags());
+			}
+
+			throw new NotImplementedException("The provided geometry type is not yet supported");
+		}
+
+		public static T SimplifyZ<T>(MapPoint mapPoint, double defaultZ = 0d) where T : Geometry
+		{
+			if (double.IsNaN(mapPoint.Z))
+			{
+				MapPointBuilder pointBuilder = new MapPointBuilder(mapPoint);
+				pointBuilder.Z = defaultZ;
+
+				return (T) (Geometry) pointBuilder.ToGeometry();
+			}
+
+			return (T) (Geometry) mapPoint;
+		}
+
 		/// <summary>
 		/// Return a polygon that consists of all exterior rings
 		/// of the given <paramref name="polygon"/> that are not
@@ -846,7 +898,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			    ! changeHasM &&
 			    ! changeHasID)
 			{
-				return inputGeometry;
+				return SimplifyZ(inputGeometry);
 			}
 
 			var builder = inputGeometry.ToBuilder();
@@ -855,8 +907,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			builder.HasM = hasM ?? inputGeometry.HasM;
 			builder.HasID = hasID ?? inputGeometry.HasID;
 
-			// TODO: SimplifyZ if aware, DropZs if un-aware to ensure simplify cleans up duplicate segments?
-			return builder.ToGeometry();
+			return SimplifyZ(builder.ToGeometry());
 		}
 
 		public static IGeometryEngine Engine
