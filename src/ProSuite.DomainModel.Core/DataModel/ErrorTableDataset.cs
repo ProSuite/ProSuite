@@ -21,5 +21,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 		#endregion
 
 		public override string TypeDescription => "Error Table";
+
+		public override DatasetImplementationType ImplementationType =>
+			DatasetImplementationType.ErrorTable;
 	}
 }
