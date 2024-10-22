@@ -153,21 +153,25 @@ namespace ProSuite.AGP.Editing.OneClick
 			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
-		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
+		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
 			if (! RequiresSelection)
 			{
-				return Task.FromResult(false);
+				return false;
 			}
 
 			if (shiftDown)
 			{
-				return Task.FromResult(true);
+				return true;
 			}
 
-			bool result = ! IsInSketchPhase;
+			bool result = await QueuedTask.Run(IsInSelectionPhaseQueued);
+			return result;
+		}
 
-			return Task.FromResult(result);
+		private bool IsInSelectionPhaseQueued()
+		{
+			return ! IsInSketchPhase;
 		}
 
 		protected override void LogUsingCurrentSelection()
@@ -303,19 +307,25 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					if (IsInSketchMode)
 					{
-						// todo daro await
-						Geometry sketch = GetCurrentSketchAsync().Result;
+						// if sketch is empty, also remove selection and return to selection phase
 
-						if (sketch != null && ! sketch.IsEmpty)
+						if (! RequiresSelection)
 						{
+							// remain in sketch mode, just reset the sketch
 							ResetSketch();
 						}
 						else
 						{
-							ClearSelection();
-							if (RequiresSelection)
+							// todo daro await
+							Geometry sketch = GetCurrentSketchAsync().Result;
+
+							if (sketch != null && ! sketch.IsEmpty)
 							{
-								StartSelectionPhase();
+								ResetSketch();
+							}
+							else
+							{
+								ClearSelection();
 							}
 						}
 					}
@@ -403,6 +413,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			EditingTemplate editTemplate,
 			MapView activeView,
 			CancelableProgressor cancelableProgressor = null);
+
+		protected virtual CancelableProgressor GetSelectionProgressor()
+		{
+			return null;
+		}
+
+		protected virtual CancelableProgressor GetSketchCompleteProgressor()
+		{
+			return null;
+		}
 
 		protected virtual void OnSketchResetCore() { }
 

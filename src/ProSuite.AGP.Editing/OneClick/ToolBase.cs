@@ -280,6 +280,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		SketchType = sketchType;
 	}
 
+	public SketchGeometryType? GetSketchType()
+	{
+		return SketchType;
+	}
+
 	protected virtual Task<bool> OnSketchModifiedCoreAsync()
 	{
 		return Task.FromResult(true);
