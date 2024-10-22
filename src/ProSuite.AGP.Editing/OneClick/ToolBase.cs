@@ -488,8 +488,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			return false; // startContructionPhase = false
 		}
 
-		Task<bool> task = ProcessSelectionCoreAsync(applicableSelection, progressor);
-		return await task;
+		_symbolizedSketch?.SetSketchType(applicableSelection.Keys.First());
+
+		return await ProcessSelectionCoreAsync(applicableSelection, progressor);
 	}
 
 	/// <returns><b>true</b>: selection successfully processed and start
