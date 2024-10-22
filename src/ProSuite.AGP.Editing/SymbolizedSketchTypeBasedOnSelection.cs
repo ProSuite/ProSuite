@@ -134,9 +134,6 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			return;
 		}
 
-		// set sketch independently from sketch symbol
-		SetSketchType(featureLayer);
-
 		GeometryType geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
 
 		if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology)
@@ -144,6 +141,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			if (_tool.CanSetConstructionSketchSymbol(geometryType))
 			{
 				SetSketchSymbol(GetSymbolReference(featureLayer, oids.FirstOrDefault()));
+				SetSketchType(featureLayer);
 			}
 			else
 			{
