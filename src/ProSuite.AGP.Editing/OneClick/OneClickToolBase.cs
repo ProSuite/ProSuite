@@ -319,12 +319,34 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.CompletedTask;
 		}
 
+		protected override void OnToolMouseDown(MapViewMouseButtonEventArgs args)
+		{
+			_msg.VerboseDebug(() => $"OnToolMouseDown ({Caption})");
+		   
+			ViewUtils.Try(() =>
+				{
+					OnToolMouseDownCore(args);
+				}, _msg, suppressErrorMessageBox: false);
+
+		}
+
+		protected virtual void OnToolMouseDownCore(MapViewMouseButtonEventArgs args)
+		{ }
+
 		protected override void OnToolMouseMove(MapViewMouseEventArgs args)
 		{
 			CurrentMousePosition = args.ClientPoint;
 
-			base.OnToolMouseMove(args);
+			_msg.VerboseDebug(() => $"OnToolMouseMove ({Caption})");
+
+			ViewUtils.Try(() =>
+			{
+				OnToolMouseMoveCore(args);
+			}, _msg, suppressErrorMessageBox: true);
 		}
+
+		protected virtual void OnToolMouseMoveCore(MapViewMouseEventArgs args)
+		{ }
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
 		{
