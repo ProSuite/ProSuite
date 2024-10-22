@@ -10,7 +10,6 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.AGP.Editing.Cracker;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
@@ -33,7 +32,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private const Key _keyShowOptionsPane = Key.O;
 		private const Key _keyPolygonDraw = Key.P;
 		private const Key _keyLassoDraw = Key.L;
-		private const Key _keyDisplayVertices = Key.T; 
+		private const Key _keyDisplayVertices = Key.T;
 
 		private int _updateErrorCounter;
 		private const int MaxUpdateErrors = 10;
@@ -148,7 +147,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				using var source = GetProgressorSource();
 				var progressor = source?.Progressor;
 
-				await QueuedTaskUtils.Run(() =>
+				await QueuedTaskUtils.Run(async () =>
 				{
 					OnToolActivatingCore();
 
@@ -157,7 +156,9 @@ namespace ProSuite.AGP.Editing.OneClick
 						ProcessSelection(progressor);
 					}
 
-					return OnToolActivatedCore(hasMapViewChanged);
+					// ReSharper disable once MethodHasAsyncOverload
+					return OnToolActivatedCore(hasMapViewChanged) &&
+					       await OnToolActivatedCoreAsync(hasMapViewChanged);
 				}, progressor);
 			}
 			catch (Exception ex)
@@ -248,9 +249,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected virtual void ToggleVertices()
-		{
-		}
+		protected virtual void ToggleVertices() { }
 
 		private void SetupLassoSketch()
 		{
@@ -494,10 +493,25 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// <remarks>Will be called on MCT</remarks>
 		protected virtual void OnToolActivatingCore() { }
 
-		/// <remarks>Will be called on MCT</remarks>
+		/// <summary>
+		/// Synchronous method called on the MCT after the tool has been activated.
+		/// </summary>
+		/// <param name="hasMapViewChanged"></param>
+		/// <returns></returns>
 		protected virtual bool OnToolActivatedCore(bool hasMapViewChanged)
 		{
 			return true;
+		}
+
+		/// <summary>
+		/// Async method called on the MCT after the tool has been activated.
+		/// </summary>
+		/// <param name="hasMapViewChanged"></param>
+		/// <returns></returns>
+		/// <remarks>Will be called on MCT</remarks>
+		protected virtual Task<bool> OnToolActivatedCoreAsync(bool hasMapViewChanged)
+		{
+			return Task.FromResult(true);
 		}
 
 		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
