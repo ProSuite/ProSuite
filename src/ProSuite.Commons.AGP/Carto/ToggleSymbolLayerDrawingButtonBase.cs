@@ -15,6 +15,7 @@ public abstract class ToggleSymbolLayerDrawingButtonBase : Button
 	private readonly BitmapImage _iconOff16 = GetImage("Images/SymbolLayerDrawingOff16.png");
 	private readonly BitmapImage _iconOn32 = GetImage("Images/SymbolLayerDrawingOn32.png");
 	private readonly BitmapImage _iconOff32 = GetImage("Images/SymbolLayerDrawingOff32.png");
+	private readonly BitmapImage _iconUnknown = GetImage("Images/SymbolLayerDrawingUnknown32.png");
 
 	private bool? _toggleState; // initially unknown
 
@@ -61,8 +62,16 @@ public abstract class ToggleSymbolLayerDrawingButtonBase : Button
 			TooltipHeading = "Toggle Symbol Layer Drawing (SLD)";
 		}
 
-		SmallImage = _toggleState == false ? _iconOff16 : _iconOn16;
-		LargeImage = _toggleState == false ? _iconOff32 : _iconOn32;
+		if (_toggleState.HasValue)
+		{
+			SmallImage = _toggleState.Value ? _iconOn16 : _iconOff16;
+			LargeImage = _toggleState.Value ? _iconOn32 : _iconOff32;
+		}
+		else
+		{
+			SmallImage = _iconUnknown;
+			LargeImage = _iconUnknown;
+		}
 	}
 
 	private void ToggleSymbolLayerDrawing(Map map, bool turnOn)

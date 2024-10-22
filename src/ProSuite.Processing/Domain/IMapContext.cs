@@ -9,7 +9,7 @@ namespace ProSuite.Processing.Domain
 
 		// TODO double CurrentScale { get; } in case no reference scale is set
 
-		// TODO int SRID { get; } Needed? Don't want SpatialReference here (dependencies)
+		// TODO int SRID { get; } Needed? Don't want SpatialReference here (dependencies) // AlignToGrid needs SRef
 
 		// TODO ColorModel: RGB, CMYK, WithSpotColors?
 

@@ -288,6 +288,16 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return 0.0;
 		}
 
+		public static double GetLength([CanBeNull] Multipart multipart, int partIndex)
+		{
+			if (multipart is null) return 0.0;
+			if (multipart.IsEmpty) return 0.0;
+			if (partIndex < 0 || partIndex >= multipart.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex, "no such part");
+			var path = multipart.Parts[partIndex];
+			return path.Sum(seg => seg.Length);
+		}
+
 		public static AttributeFlags GetAttributeFlags(this Geometry geometry)
 		{
 			var flags = AttributeFlags.None;
@@ -964,6 +974,130 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			}
 
 			return (T) builder.ToSegment();
+		}
+
+		/// <summary>
+		/// Given a global (shape-wide) vertex index, get the
+		/// part index and the part-local vertex index.
+		/// </summary>
+		public static int GetLocalVertexIndex(Geometry shape, int globalVertexIndex, out int partIndex)
+		{
+			if (shape is Multipoint multipoint)
+			{
+				// by convention (and consistent with the SDK's hit test),
+				// multipoints have partIndex == vertexIndex for all points
+
+				var pointCount = multipoint.PointCount;
+				if (globalVertexIndex < 0 || globalVertexIndex >= pointCount)
+					throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
+
+				partIndex = globalVertexIndex;
+				return globalVertexIndex;
+			}
+
+			if (shape is Multipart multipart)
+			{
+				int vertexIndex = globalVertexIndex;
+				int partCount = multipart.PartCount;
+				for (int k = 0; k < partCount; k++)
+				{
+					int segmentCount = multipart.Parts[k].Count;
+					int vertexCount = segmentCount + 1; // even for rings!
+
+					if (vertexIndex < vertexCount)
+					{
+						partIndex = k;
+						return vertexIndex;
+					}
+
+					vertexIndex -= vertexCount;
+				}
+
+				throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
+			}
+
+			if (shape is Multipatch multipatch)
+			{
+				throw new NotImplementedException("Multipatches are not yet implemented");
+			}
+
+			partIndex = 0;
+			return globalVertexIndex;
+		}
+
+		/// <summary>
+		/// Given a part index and a part-local vertex index,
+		/// get the global (shape-wide) vertex index.
+		/// </summary>
+		public static int GetGlobalVertexIndex(Geometry shape, int partIndex, int localVertexIndex)
+		{
+			if (shape is Multipoint multipoint)
+			{
+				// by convention (and consistent with the SDK's hit test),
+				// multipoints have partIndex == vertexIndex for all points
+
+				var pointCount = multipoint.PointCount;
+				if (localVertexIndex < 0 || localVertexIndex >= pointCount)
+					throw new ArgumentOutOfRangeException(nameof(localVertexIndex));
+
+				return localVertexIndex;
+			}
+
+			if (shape is Multipart multipart)
+			{
+				if (multipart.IsEmpty)
+					throw new InvalidOperationException("empty geometry");
+
+				int partCount = multipart.PartCount;
+				if (partIndex < 0 || partIndex >= partCount)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+
+				int k = 0;
+				int segmentCount;
+				int vertexCount;
+				int vertexTally = 0;
+
+				for (; k < partIndex; k++)
+				{
+					segmentCount = multipart.Parts[k].Count;
+					vertexCount = segmentCount + 1; // even for rings!
+					vertexTally += vertexCount;
+				}
+
+				segmentCount = multipart.Parts[k].Count;
+				vertexCount = segmentCount + 1;
+
+				if (localVertexIndex < 0 || localVertexIndex >= vertexCount)
+					throw new ArgumentOutOfRangeException(nameof(localVertexIndex));
+
+				return vertexTally + localVertexIndex;
+			}
+
+			if (shape is Multipatch multipatch)
+			{
+				throw new NotImplementedException("Multipatches are not yet implemented");
+			}
+
+			return localVertexIndex;
+		}
+
+		public static void RemoveVertices(/*this*/ MultipartBuilderEx builder, int partIndex,
+		                                  int firstVertex, int lastVertex = -1)
+		{
+			switch (builder)
+			{
+				case null:
+					throw new ArgumentNullException(nameof(builder));
+				case PolylineBuilderEx polylineBuilder:
+					RemoveVertices(polylineBuilder, partIndex, firstVertex, lastVertex);
+					break;
+				case PolygonBuilderEx polygonBuilder:
+					RemoveVertices(polygonBuilder, partIndex, firstVertex, lastVertex);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(builder),
+					                                      "neither Polyline nor Polygon builder");
+			}
 		}
 
 		/// <summary>

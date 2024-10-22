@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
@@ -59,7 +60,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 		                   bool isFiltered,
 		                   [CanBeNull] Polyline targetSegmentAtFrom,
 		                   [CanBeNull] Polyline targetSegmentAtTo,
-		                   [CanBeNull] Geometry extraTargetInsertPoints)
+		                   [CanBeNull] IEnumerable<MapPoint> extraTargetInsertPoints)
 		{
 			Path = path;
 			CanReshape = canReshape;
@@ -78,7 +79,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 				TargetSegmentAtToPoint = targetSegmentAtTo;
 			}
 
-			ExtraTargetInsertPoints = extraTargetInsertPoints;
+			ExtraTargetInsertPoints = extraTargetInsertPoints?.ToList();
 		}
 
 		#endregion
@@ -170,8 +171,13 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 
 		public Polyline Path { get; set; }
 
+		protected virtual MapPoint FromPointOnTarget => FromPoint;
+
+		protected virtual MapPoint ToPointOnTarget => ToPoint;
+
 		[CanBeNull]
-		public Geometry ExtraTargetInsertPoints { get; set; }
+		//public Geometry ExtraTargetInsertPoints { get; set; }
+		public List<MapPoint> ExtraTargetInsertPoints { get; set; }
 
 		public bool IsFiltered { get; set; }
 
@@ -293,14 +299,31 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 			return string.Format("CutSubcurve with {0}", pathInfo);
 		}
 
+		public IEnumerable<MapPoint> GetPotentialTargetInsertPoints()
+		{
+			yield return FromPointOnTarget;
+			yield return ToPointOnTarget;
+
+			if (ExtraTargetInsertPoints != null)
+			{
+				foreach (MapPoint point in ExtraTargetInsertPoints)
+				{
+					yield return point;
+				}
+			}
+		}
+
 		#region Private and protected members
 
-		//private void AddExtraPotentialTargetInsertPoint(MapPoint point)
-		//{
-		//	if (ExtraTargetInsertPoints == null) ExtraTargetInsertPoints = new List<MapPoint>();
+		private void AddExtraPotentialTargetInsertPoint(MapPoint point)
+		{
+			if (ExtraTargetInsertPoints == null)
+			{
+				ExtraTargetInsertPoints = new List<MapPoint>();
+			}
 
-		//	ExtraTargetInsertPoints.Add(point);
-		//}
+			ExtraTargetInsertPoints.Add(point);
+		}
 
 		#endregion
 

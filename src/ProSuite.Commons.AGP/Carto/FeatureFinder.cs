@@ -103,14 +103,15 @@ namespace ProSuite.Commons.AGP.Carto
 				QueryFilter filter =
 					GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
 
-				FeatureClass featureClass = basicFeatureLayer.GetFeatureClass();
+				using FeatureClass featureClass = basicFeatureLayer.GetFeatureClass();
 
 				Assert.NotNull(featureClass,
 				               $"Layer {basicFeatureLayer.Name} has null feature class");
 
 				if (DelayFeatureFetching)
 				{
-					filter.SubFields = featureClass.GetDefinition().GetObjectIDField();
+					using var definition = featureClass.GetDefinition();
+					filter.SubFields = definition.GetObjectIDField();
 
 					List<long> objectIds =
 						LayerUtils.SearchObjectIds(basicFeatureLayer, filter, featurePredicate)

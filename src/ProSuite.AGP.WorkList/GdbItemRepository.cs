@@ -74,6 +74,12 @@ namespace ProSuite.AGP.WorkList
 
 		public List<ISourceClass> SourceClasses { get; } = new();
 
+		public string WorkListDefinitionFilePath
+		{
+			get => WorkItemStateRepository.WorkListDefinitionFilePath;
+			set => WorkItemStateRepository.WorkListDefinitionFilePath = value;
+		}
+
 		public void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
 		{
 			TableSchema = tableSchemaInfo;

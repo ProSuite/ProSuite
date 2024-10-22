@@ -312,7 +312,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			}
 
 			Dictionary<int, IDdxDataset> datasetsById =
-				datasets.ToDictionary(d => d.Id, IDdxDataset (d) => d);
+				datasets.ToDictionary(d => d.Id, d => (IDdxDataset) d);
 
 			foreach (DatasetMsg datasetMsg in response.Datasets)
 			{

@@ -55,6 +55,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return table?.GetName();
 		}
 
+		[CanBeNull]
 		public static string GetAliasName(Table table)
 		{
 			if (table != null && table.IsJoinedTable())
@@ -211,17 +212,17 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return definition?.GetShapeType() ?? GeometryType.Unknown;
 		}
 
-		public static T GetDatasetDefinition<T>(Datastore datastore, string name)
+		public static T GetDatasetDefinition<T>(Datastore datastore, string datasetName)
 			where T : Definition
 		{
 			if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
 			{
-				return geodatabase.GetDefinition<T>(name);
+				return geodatabase.GetDefinition<T>(datasetName);
 			}
 
 			if (datastore is FileSystemDatastore fsDatastore)
 			{
-				return fsDatastore.GetDefinition<T>(name);
+				return fsDatastore.GetDefinition<T>(datasetName);
 			}
 
 			throw new ArgumentOutOfRangeException(
@@ -249,12 +250,13 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			catch (GeodatabaseTableException ex)
 			{
 				// dataset does not exist
-				_msg.Error(ex.Message, ex);
+				string displayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
+				_msg.Debug($"Failed to open {datasetName} from {displayText}: {ex.Message}", ex);
 				throw;
 			}
 
 			throw new ArgumentOutOfRangeException(
-				$"Unsupported datastore: {datastore.GetConnectionString()}");
+				$"Unsupported datastore type: {datastore.GetConnectionString()}");
 		}
 
 		public static bool TryOpenDataset<T>([NotNull] Datastore datastore,
@@ -299,21 +301,21 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
 		{
-			foreach (RelationshipClassDefinition relationshipClassDefinition in geodatabase
+			foreach (RelationshipClassDefinition definition in geodatabase
 				         .GetDefinitions<RelationshipClassDefinition>())
 			{
-				if (predicate is null || predicate(relationshipClassDefinition))
+				if (predicate is null || predicate(definition))
 				{
-					yield return relationshipClassDefinition;
+					yield return definition;
 				}
 			}
 
-			foreach (AttributedRelationshipClassDefinition relationshipClassDefinition in
+			foreach (AttributedRelationshipClassDefinition definition in
 			         geodatabase.GetDefinitions<AttributedRelationshipClassDefinition>())
 			{
-				if (predicate is null || predicate(relationshipClassDefinition))
+				if (predicate is null || predicate(definition))
 				{
-					yield return relationshipClassDefinition;
+					yield return definition;
 				}
 			}
 		}
@@ -322,12 +324,21 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
 		{
-			foreach (RelationshipClassDefinition relationshipClassDefinition in
+			foreach (RelationshipClassDefinition definition in
 			         GetRelationshipClassDefinitions(geodatabase, predicate))
 			{
 				yield return geodatabase.OpenDataset<RelationshipClass>(
-					relationshipClassDefinition.GetName());
+					definition.GetName());
+				
+				definition.Dispose();
 			}
+		}
+
+		public static RelationshipClass OpenRelationshipClass(
+			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+			[NotNull] string relClassName)
+		{
+			return OpenDataset<RelationshipClass>(geodatabase, relClassName);
 		}
 
 		public static bool IsSameTable(Table fc1, Table fc2)
