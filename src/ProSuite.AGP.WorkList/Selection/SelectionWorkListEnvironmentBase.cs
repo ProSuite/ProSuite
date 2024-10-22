@@ -15,6 +15,12 @@ namespace ProSuite.AGP.WorkList.Selection
 	{
 		public override string FileSuffix => ".swl";
 
+		protected override string SuggestWorkListName()
+		{
+			// TODO: Some more useful display name!
+			return null;
+		}
+
 		protected override T GetLayerContainerCore<T>()
 		{
 			return MapView.Active.Map as T;

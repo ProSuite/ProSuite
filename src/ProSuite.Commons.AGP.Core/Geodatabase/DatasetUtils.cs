@@ -55,6 +55,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return table?.GetName();
 		}
 
+		[CanBeNull]
 		public static string GetAliasName(Table table)
 		{
 			if (table != null && table.IsJoinedTable())
