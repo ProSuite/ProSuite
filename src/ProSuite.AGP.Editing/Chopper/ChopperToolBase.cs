@@ -200,7 +200,7 @@ namespace ProSuite.AGP.Editing.Chopper
 
 					             return true;
 				             },
-				             "Remove overlaps", datasets);
+				             "Chop Lines", datasets);
 
 			ToolUtils.SelectNewFeatures(newFeatures, activeMapView);
 
