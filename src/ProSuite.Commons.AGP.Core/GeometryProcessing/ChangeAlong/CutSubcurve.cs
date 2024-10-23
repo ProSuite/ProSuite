@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Geometry;
-using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
@@ -52,7 +51,6 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 		private SubcurveNode FromNode => _fromNode;
 
 		public SubcurveNode ToNode => _toNode;
-
 
 		public CutSubcurve([NotNull] Polyline path,
 		                   bool canReshape,
@@ -105,7 +103,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 					_lineAngleAtFrom = GetLineAngle(this, _fromNode);
 				}
 
-				return (double)_lineAngleAtFrom;
+				return (double) _lineAngleAtFrom;
 			}
 		}
 
@@ -118,7 +116,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 					_lineAngleAtTo = GetLineAngle(this, _toNode);
 				}
 
-				return (double)_lineAngleAtTo;
+				return (double) _lineAngleAtTo;
 			}
 		}
 
@@ -154,7 +152,8 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 			{
 				//line = new LineClass();
 				//segment.QueryTangent(esriSegmentExtension.esriNoExtension, 1, true, 10, line);
-				line = GeometryEngine.Instance.QueryTangent(segment, SegmentExtensionType.NoExtension, 1, AsRatioOrLength.AsRatio, 10);
+				line = GeometryEngine.Instance.QueryTangent(
+					segment, SegmentExtensionType.NoExtension, 1, AsRatioOrLength.AsRatio, 10);
 			}
 
 			double angle = line.Angle;
