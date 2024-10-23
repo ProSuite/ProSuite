@@ -424,8 +424,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			result.TargetSegmentAtTo =
 				ProtobufConversionUtils.ToShapeMsg(subcurve.TargetSegmentAtToPoint);
 
-			result.ExtraTargetInsertPoints =
-				ProtobufConversionUtils.ToShapeMsg(MultipointBuilderEx.CreateMultipoint(subcurve.ExtraTargetInsertPoints));
+			if (subcurve.ExtraTargetInsertPoints != null)
+			{
+				result.ExtraTargetInsertPoints =
+					ProtobufConversionUtils.ToShapeMsg(
+						MultipointBuilderEx.CreateMultipoint(subcurve.ExtraTargetInsertPoints));
+			}
 
 			return result;
 		}
