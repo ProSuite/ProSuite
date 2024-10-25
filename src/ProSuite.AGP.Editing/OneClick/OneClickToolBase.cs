@@ -407,7 +407,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SetupSketch();
 
-			_selectionSketchType?.Toggle(GetSelectionSketchGeometryType());
+			_selectionSketchType?.ResetOrDefault();
 		}
 
 		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,

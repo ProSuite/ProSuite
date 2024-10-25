@@ -394,7 +394,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	private void SetupSelectionSketch()
 	{
 		_symbolizedSketch?.ClearSketchSymbol();
-		_selectionSketchType?.Toggle(GetDefaultSelectionSketchType());
+		_selectionSketchType?.ResetOrDefault();
 	}
 
 	private void SetupPolygonSketch()
