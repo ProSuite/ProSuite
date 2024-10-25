@@ -50,6 +50,16 @@ namespace ProSuite.AGP.QA.WorkList
 
 		public Geometry AreaOfInterest { get; set; }
 
+		protected override string SuggestWorkListName()
+		{
+			return _workListItemDatastore.SuggestWorkListName();
+		}
+
+		protected override string SuggestWorkListLayerName()
+		{
+			return "Issue Work List";
+		}
+
 		protected override async Task<IList<Table>> PrepareReferencedTables()
 		{
 			IList<Table> dbTables = GetTablesCore().ToList();
@@ -84,20 +94,40 @@ namespace ProSuite.AGP.QA.WorkList
 
 		protected override T GetLayerContainerCore<T>()
 		{
-			var groupLayerName = "QA";
+			var qaGroupLayerName = "QA";
 
-			GroupLayer groupLayer = MapView.Active.Map.FindLayers(groupLayerName)
-			                               .OfType<GroupLayer>().FirstOrDefault();
+			GroupLayer qaGroupLayer = MapView.Active.Map.FindLayers(qaGroupLayerName)
+			                                 .OfType<GroupLayer>().FirstOrDefault();
 
-			if (groupLayer == null)
+			if (qaGroupLayer == null)
 			{
-				_msg.DebugFormat("Creating new group layer {0}", groupLayerName);
-				return
-					LayerFactory.Instance.CreateGroupLayer(
-						MapView.Active.Map, 0, groupLayerName) as T;
+				_msg.DebugFormat("Creating new group layer {0}", qaGroupLayerName);
+				qaGroupLayer = LayerFactory.Instance.CreateGroupLayer(
+					MapView.Active.Map, 0, qaGroupLayerName);
 			}
 
-			return groupLayer as T;
+			// Expected behaviour:
+			// - They should be re-nameable by the user.
+			// - They should be deletable by the user (in which case a new layer should be re-added)
+			// - If the layer is moved outside the group a new layer should be added. Only layers within the
+			//   sub-group are considered to be part of the work list.
+			string groupName = DisplayName; // _workListItemDatastore.SuggestWorkListGroupName();
+			if (groupName != null)
+			{
+				GroupLayer workListGroupLayer = qaGroupLayer.FindLayers(groupName)
+				                                            .OfType<GroupLayer>().FirstOrDefault();
+
+				if (workListGroupLayer == null)
+				{
+					_msg.DebugFormat("Creating new group layer {0}", groupName);
+					workListGroupLayer =
+						LayerFactory.Instance.CreateGroupLayer(qaGroupLayer, 0, groupName);
+				}
+
+				return workListGroupLayer as T;
+			}
+
+			return qaGroupLayer as T;
 		}
 
 		private void AddToMapCore(IEnumerable<Table> tables)
@@ -133,7 +163,8 @@ namespace ProSuite.AGP.QA.WorkList
 
 					// TODO: Support lyrx files as symbol layers.
 					// So far, just make the symbols red:
-					CIMSimpleRenderer renderer = featureLayer.GetRenderer() as CIMSimpleRenderer;
+					CIMSimpleRenderer renderer =
+						featureLayer.GetRenderer() as CIMSimpleRenderer;
 
 					if (renderer != null)
 					{
@@ -186,7 +217,7 @@ namespace ProSuite.AGP.QA.WorkList
 			[NotNull] GroupLayer groupLayer,
 			[NotNull] List<Table> associatedTables)
 		{
-			foreach (Layer layer in groupLayer.Layers)
+			foreach (Layer layer in groupLayer.GetLayersAsFlattenedList())
 			{
 				if (layer is not BasicFeatureLayer featureLayer)
 				{

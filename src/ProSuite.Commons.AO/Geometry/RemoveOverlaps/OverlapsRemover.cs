@@ -213,7 +213,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 
 			return _explodeMultipartResult && IsMultipart(intersection)
 				       ? GeometryUtils.Explode(intersection)
-				       : new List<IGeometry> {intersection};
+				       : new List<IGeometry> { intersection };
 		}
 
 		/// <summary>
@@ -249,6 +249,11 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			if (plane != null)
 			{
 				ChangeAlongZUtils.AssignZ((IPointCollection) rawResult, plane);
+			}
+
+			if (zSource == ChangeAlongZSource.InterpolatedSource)
+			{
+				GeometryUtils.TrySimplifyZ(rawResult);
 			}
 
 			int originalPartCount = GetRelevantPartCount(fromGeometry);
@@ -359,14 +364,14 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 				// merge the different parts into one:
 				if (result.Count > 1)
 				{
-					result = new List<IGeometry> {GeometryUtils.Union(result)};
+					result = new List<IGeometry> { GeometryUtils.Union(result) };
 				}
 
 				if (overlappingMultiPatches?.Count > 1)
 				{
 					overlappingMultiPatches =
 						new List<IGeometry>
-						{GeometryUtils.Union(overlappingMultiPatches)};
+						{ GeometryUtils.Union(overlappingMultiPatches) };
 				}
 			}
 

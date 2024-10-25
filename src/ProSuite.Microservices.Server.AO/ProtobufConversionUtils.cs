@@ -15,6 +15,7 @@ using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
+using ProSuite.Microservices.Client;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
@@ -371,7 +372,7 @@ namespace ProSuite.Microservices.Server.AO
 					xmlParameter = new XmlDatasetTestParameterValue()
 					               {
 						               TestParameterName = parameterMsg.Name,
-						               Value = parameterMsg.Value,
+						               Value = ProtobufGeomUtils.EmptyToNull(parameterMsg.Value),
 						               WorkspaceId = parameterMsg.WorkspaceId,
 						               WhereClause = parameterMsg.WhereClause
 					               };
@@ -381,7 +382,7 @@ namespace ProSuite.Microservices.Server.AO
 					xmlParameter = new XmlScalarTestParameterValue()
 					               {
 						               TestParameterName = parameterMsg.Name,
-						               Value = parameterMsg.Value
+						               Value = ProtobufGeomUtils.EmptyToNull(parameterMsg.Value)
 					               };
 				}
 
@@ -412,13 +413,20 @@ namespace ProSuite.Microservices.Server.AO
 		private static GdbFeature CreateGdbFeature(GdbObjectMsg gdbObjectMsg,
 		                                           GdbFeatureClass featureClass)
 		{
-			ISpatialReference classSpatialRef = DatasetUtils.GetSpatialReference(featureClass);
+			GdbFeature result = GdbFeature.Create((int) gdbObjectMsg.ObjectId, featureClass);
 
-			IGeometry shape =
-				ProtobufGeometryUtils.FromShapeMsg(gdbObjectMsg.Shape, classSpatialRef);
+			ShapeMsg shapeBuffer = gdbObjectMsg.Shape;
 
-			var result = GdbFeature.Create((int) gdbObjectMsg.ObjectId, featureClass);
-			result.Shape = shape;
+			if (shapeBuffer != null)
+			{
+				ISpatialReference classSpatialRef = DatasetUtils.GetSpatialReference(featureClass);
+
+				// NOTE: Setting the shape can be slow due to the Property-Set work-arounds
+				IGeometry shape =
+					ProtobufGeometryUtils.FromShapeMsg(shapeBuffer, classSpatialRef);
+
+				result.Shape = shape;
+			}
 
 			return result;
 		}

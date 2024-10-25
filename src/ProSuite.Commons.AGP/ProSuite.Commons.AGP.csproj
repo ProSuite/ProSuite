@@ -111,5 +111,8 @@
     <Resource Include="Images\SymbolLayerDrawingOn32.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Images\SymbolLayerDrawingUnknown32.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 </Project>

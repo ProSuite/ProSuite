@@ -15,6 +15,7 @@ using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
 using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
@@ -27,10 +28,13 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 
 	private DestroyAndRebuildFeedback _feedback;
 
-	protected DestroyAndRebuildToolBase() : base(SketchGeometryType.Rectangle) { }
-
 	protected override Cursor SelectionCursorCore =>
 		ToolUtils.GetCursor(Resources.DestroyAndRebuildToolCursor);
+
+	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
+	{
+		return new SymbolizedSketchTypeBasedOnSelection(this);
+	}
 
 	protected override bool AllowMultiSelection(out string reason)
 	{
@@ -85,6 +89,8 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
 		CancelableProgressor progressor = null)
 	{
+		Assert.ArgumentCondition(featuresByLayer.Count == 1, "selection count has to be 1");
+
 		(BasicFeatureLayer layer, List<Feature> features) = featuresByLayer.FirstOrDefault();
 
 		Feature feature = features?.FirstOrDefault();

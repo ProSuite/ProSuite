@@ -29,10 +29,10 @@ namespace ProSuite.AGP.Editing.Test.Picker
 
 		public int SelectionTolerance { get; set; }
 		public bool IsSingleClick { get; }
+		public bool AggregateItems { get; }
 		public Point PickerLocation { get; set; }
 
-		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
-		                                bool areaSelect = false)
+		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
 		{
 			return PickerMode.PickBest;
 		}
@@ -42,11 +42,23 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			throw new NotImplementedException();
 		}
 
+		public Geometry GetSelectionGeometry()
+		{
+			return SelectionGeometry;
+		}
+
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
 		{
 			return items.Take(_maxItems)
 			            .Select(item => SetScoreConsideringDistances(item, _selectionCentroid))
 			            .OrderBy(item => item, new PickableItemComparer());
+		}
+
+		public IEnumerable<T> Order<T>(IEnumerable<T> items) where T : IPickableItem
+		{
+			return items.Take(_maxItems)
+			            .Select(item => SetScoreConsideringDistances(item, _selectionCentroid))
+			            .OrderBy(item => item, new PickableItemComparer()).OfType<T>();
 		}
 
 		[CanBeNull]

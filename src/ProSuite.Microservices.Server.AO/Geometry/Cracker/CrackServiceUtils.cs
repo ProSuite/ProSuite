@@ -40,11 +40,11 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 			IGeometry calculationPerimeter = ProtobufGeometryUtils.FromShapeMsg(request.Perimeter);
 
 			double? snapTolerance = optionsMsg.SnapToTargetVertices
-				                        ? optionsMsg.SnapTolerance
+				                        ? (double?) optionsMsg.SnapTolerance
 				                        : null;
 
 			double? minimumSegmentLength = optionsMsg.RespectMinimumSegmentLength
-				                               ? optionsMsg.MinimumSegmentLength
+				                               ? (double?) optionsMsg.MinimumSegmentLength
 				                               : null;
 
 			bool useSourceZs = optionsMsg.UseSourceZs;
@@ -98,7 +98,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 
 			double? snapTolerance =
 				Assert.NotNull(options, "CrackOptions are null").SnapToTargetVertices
-					? options.SnapTolerance
+					? (double?) options.SnapTolerance
 					: null;
 
 			IList<IFeature> sourceFeatures = ProtobufConversionUtils.FromGdbObjectMsgList(

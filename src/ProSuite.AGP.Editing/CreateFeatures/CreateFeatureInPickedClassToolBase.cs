@@ -8,7 +8,9 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
+using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -16,7 +18,7 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Notifications;
+using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.CreateFeatures;
 
@@ -24,8 +26,16 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	protected CreateFeatureInPickedClassToolBase(SketchGeometryType sketchGeometryType) : base(
-		sketchGeometryType) { }
+	[CanBeNull]
+	protected virtual ICollection<string> GetExclusionFieldNames()
+	{
+		return null;
+	}
+
+	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
+	{
+		return new SymbolizedSketchTypeBasedOnSelection(this);
+	}
 
 	protected override Cursor SelectionCursorCore =>
 		ToolUtils.GetCursor(Resources.CreateFeatureInPickedClassCursor);
@@ -60,6 +70,8 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
 		CancelableProgressor progressor = null)
 	{
+		Assert.ArgumentCondition(featuresByLayer.Count == 1, "selection count has to be 1");
+
 		(BasicFeatureLayer layer, List<Feature> features) = featuresByLayer.FirstOrDefault();
 
 		Feature feature = features?.FirstOrDefault();
@@ -92,12 +104,13 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 			return true; // startSelectionPhase = true;
 		}
 
-		bool success = await QueuedTaskUtils.Run(async () =>
+		await QueuedTaskUtils.Run(async () =>
 		{
 			try
 			{
-				IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
-					GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
+				var applicableSelection =
+					SelectionUtils.GetApplicableSelectedFeatures(
+						selectionByLayer, CanSelectFromLayer);
 
 				List<Feature> selectedFeatures = applicableSelection.Values.FirstOrDefault();
 
@@ -107,9 +120,10 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 					return true;
 				}
 
+				BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
 				Feature originalFeature = selectedFeatures.First();
 
-				await StoreNewFeature(geometry, selectionByLayer, originalFeature);
+				await StoreNewFeature(featureLayer, originalFeature, geometry, GetExclusionFieldNames());
 
 				return false; // startSelectionPhase = false;
 			}
@@ -120,7 +134,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 			}
 		});
 
-		return false;
+		return false; // startSelectionPhase = false;
 	}
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)
@@ -153,16 +167,16 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		return layer is FeatureLayer;
 	}
 
-	private async Task StoreNewFeature([NotNull] Geometry sketchGeometry,
-	                                   IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-	                                   Feature originalFeature)
+	private async Task StoreNewFeature([NotNull] BasicFeatureLayer featureLayer,
+	                                   [NotNull] Feature originalFeature,
+	                                   [NotNull] Geometry sketchGeometry,
+	                                   [CanBeNull] ICollection<string> exclusionFieldNames)
 	{
 		// Prevent invalid Z values and other non-simple geometries:
 		Geometry simplifiedSketch =
 			Assert.NotNull(GeometryUtils.Simplify(sketchGeometry), "Geometry is null");
 
 		Subtype featureSubtype = GdbObjectUtils.GetSubtype(originalFeature);
-		BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
 
 		string subtypeName = featureSubtype != null
 			                     ? featureSubtype.GetName()
@@ -174,7 +188,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 				editContext =>
 				{
 					newFeature = GdbPersistenceUtils.InsertTx(
-						editContext, originalFeature, simplifiedSketch);
+						editContext, originalFeature, simplifiedSketch, exclusionFieldNames);
 
 					return true;
 				}, $"Create {subtypeName}",

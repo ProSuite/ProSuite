@@ -8,17 +8,25 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[UsedImplicitly] private VectorDataset _dataset;
 		[UsedImplicitly] private string _whereClause;
 		[UsedImplicitly] private bool _isDefaultJunction;
+		[UsedImplicitly] private bool _splitting;
 
 		public LinearNetworkDataset() { }
 
 		public LinearNetworkDataset(VectorDataset dataset)
 		{
 			_dataset = dataset;
+			_splitting = true;
 		}
 
+		/// <summary>
+		/// The dataset whose features participate in the linear network.
+		/// </summary>
 		[NotNull]
 		public VectorDataset Dataset => _dataset;
 
+		/// <summary>
+		/// An optional where clause that restricts the features of the dataset.
+		/// </summary>
 		[CanBeNull]
 		public string WhereClause
 		{
@@ -26,10 +34,25 @@ namespace ProSuite.DomainModel.Core.DataModel
 			set { _whereClause = value; }
 		}
 
+		/// <summary>
+		/// Whether this (point!) dataset represents the default junction class.
+		/// Default junctions are automatically created by the linear network edit agent
+		/// if no other junction exists at an edge's start or end point.
+		/// </summary>
 		public bool IsDefaultJunction
 		{
 			get { return _isDefaultJunction; }
 			set { _isDefaultJunction = value; }
+		}
+
+		/// <summary>
+		/// Whether a junction shall split or an edge is split in case a junction intersects an
+		/// edge's interior.
+		/// </summary>
+		public bool Splitting
+		{
+			get => _splitting;
+			set => _splitting = value;
 		}
 
 		public bool Equals(LinearNetworkDataset other)
