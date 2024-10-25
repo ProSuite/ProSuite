@@ -58,24 +58,26 @@ public static class RelationshipClassUtils
 	public static IEnumerable<Table> GetOriginClasses([NotNull] Dataset destinationClass)
 	{
 		string destinationClassName = destinationClass.GetName();
-		using var geodatabase = (ArcGIS.Core.Data.Geodatabase) destinationClass.GetDatastore();
-
-		Predicate<RelationshipClassDefinition> predicate =
-			relClass => string.Equals(relClass.GetDestinationClass(),
-			                          destinationClassName,
-			                          StringComparison.OrdinalIgnoreCase);
-
-		foreach (RelationshipClassDefinition definition in
-		         GetRelationshipClassDefinitions(geodatabase, predicate))
+		using (var geodatabase = (ArcGIS.Core.Data.Geodatabase) destinationClass.GetDatastore())
 		{
-			try
+
+			Predicate<RelationshipClassDefinition> predicate =
+				relClass => string.Equals(relClass.GetDestinationClass(),
+				                          destinationClassName,
+				                          StringComparison.OrdinalIgnoreCase);
+
+			foreach (RelationshipClassDefinition definition in
+			         GetRelationshipClassDefinitions(geodatabase, predicate))
 			{
-				yield return DatasetUtils.OpenDataset<Table>(geodatabase,
-				                                             definition.GetOriginClass());
-			}
-			finally
-			{
-				definition.Dispose();
+				try
+				{
+					yield return DatasetUtils.OpenDataset<Table>(geodatabase,
+					                                             definition.GetOriginClass());
+				}
+				finally
+				{
+					definition.Dispose();
+				}
 			}
 		}
 	}
@@ -83,13 +85,14 @@ public static class RelationshipClassUtils
 	public static IEnumerable<string> GetOriginClassNames([NotNull] Dataset destinationClass)
 	{
 		string destinationClassName = destinationClass.GetName();
-		using var geodatabase = (ArcGIS.Core.Data.Geodatabase) destinationClass.GetDatastore();
-
-		// NOTE: Don't return IEnumerable<string>. It leads to exception because of the disposed geodatabase:
-		// System.InvalidOperationException: Could not get the definitions of type RelationshipClassDefinition. Please make sure a valid geodatabase or data store has been opened first.
-		foreach (string name in GetOriginClassNames(geodatabase, destinationClassName))
+		using (var geodatabase = (ArcGIS.Core.Data.Geodatabase) destinationClass.GetDatastore())
 		{
-			yield return name;
+			// NOTE: Don't return IEnumerable<string>. It leads to exception because of the disposed geodatabase:
+			// System.InvalidOperationException: Could not get the definitions of type RelationshipClassDefinition. Please make sure a valid geodatabase or data store has been opened first.
+			foreach (string name in GetOriginClassNames(geodatabase, destinationClassName))
+			{
+				yield return name;
+			}
 		}
 	}
 
@@ -120,13 +123,15 @@ public static class RelationshipClassUtils
 	public static IEnumerable<string> GetDestinationClassNames([NotNull] Dataset originClass)
 	{
 		string originClassName = originClass.GetName();
-		using var geodatabase = (ArcGIS.Core.Data.Geodatabase) originClass.GetDatastore();
+		using (var geodatabase = (ArcGIS.Core.Data.Geodatabase) originClass.GetDatastore())
 
-		// NOTE: Don't return IEnumerable<string>. It leads to exception because of the disposed geodatabase:
-		// System.InvalidOperationException: Could not get the definitions of type RelationshipClassDefinition. Please make sure a valid geodatabase or data store has been opened first.
-		foreach (string name in GetDestinationClassNames(geodatabase, originClassName))
 		{
-			yield return name;
+			// NOTE: Don't return IEnumerable<string>. It leads to exception because of the disposed geodatabase:
+			// System.InvalidOperationException: Could not get the definitions of type RelationshipClassDefinition. Please make sure a valid geodatabase or data store has been opened first.
+			foreach (string name in GetDestinationClassNames(geodatabase, originClassName))
+			{
+				yield return name;
+			}
 		}
 	}
 
@@ -158,32 +163,33 @@ public static class RelationshipClassUtils
 	                                                    [NotNull] ICollection<long> oids)
 	{
 		string destinationDatasetName = dataset.GetName();
-		using var geodatabase = (ArcGIS.Core.Data.Geodatabase) dataset.GetDatastore();
-
-		Predicate<RelationshipClassDefinition> predicate =
-			relClass => string.Equals(relClass.GetDestinationClass(),
-			                          destinationDatasetName,
-			                          StringComparison.OrdinalIgnoreCase);
-
-		// NOTE: Don't return IEnumerable<Row> like this.
-		// It leads to ArcGIS.Core.ObjectDisconnectedException : This object has been previously disposed and cannot be manipulated
-		// of the geodatabase.
-		//return relationshipClasses.SelectMany(relClass =>
-		//										  relClass.GetRowsRelatedToDestinationRows(oids));
-
-		foreach (RelationshipClass relClass in GetRelationshipClasses(geodatabase, predicate))
+		using (var geodatabase = (ArcGIS.Core.Data.Geodatabase) dataset.GetDatastore())
 		{
-			// try finally in case an exception happens after yield return
-			try
+			Predicate<RelationshipClassDefinition> predicate =
+				relClass => string.Equals(relClass.GetDestinationClass(),
+				                          destinationDatasetName,
+				                          StringComparison.OrdinalIgnoreCase);
+
+			// NOTE: Don't return IEnumerable<Row> like this.
+			// It leads to ArcGIS.Core.ObjectDisconnectedException : This object has been previously disposed and cannot be manipulated
+			// of the geodatabase.
+			//return relationshipClasses.SelectMany(relClass =>
+			//										  relClass.GetRowsRelatedToDestinationRows(oids));
+
+			foreach (RelationshipClass relClass in GetRelationshipClasses(geodatabase, predicate))
 			{
-				foreach (Row row in relClass.GetRowsRelatedToDestinationRows(oids))
+				// try finally in case an exception happens after yield return
+				try
 				{
-					yield return row;
+					foreach (Row row in relClass.GetRowsRelatedToDestinationRows(oids))
+					{
+						yield return row;
+					}
 				}
-			}
-			finally
-			{
-				relClass.Dispose();
+				finally
+				{
+					relClass.Dispose();
+				}
 			}
 		}
 	}
