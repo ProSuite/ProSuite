@@ -747,18 +747,20 @@ namespace ProSuite.Commons.AGP.Carto
 			[NotNull] MapView mapView,
 			[NotNull] Geometry geometry,
 			CIMSymbolReference symbolReference,
-			int milliseconds = 400)
+			int milliseconds = 400,
+			bool useReferenceScale = false)
 		{
 			return await FlashGeometryAsync(mapView, new Overlay(geometry, symbolReference),
-			                                milliseconds);
+			                                milliseconds, useReferenceScale);
 		}
 
 		public static async Task<bool> FlashGeometryAsync(
 			[NotNull] MapView mapView,
 			[NotNull] Overlay overlay,
-			int milliseconds = 400)
+			int milliseconds = 400,
+			bool useReferenceScale = false)
 		{
-			using (await overlay.AddToMapAsync(mapView))
+			using (await overlay.AddToMapAsync(mapView, useReferenceScale))
 			{
 				await Task.Delay(milliseconds);
 			}
@@ -769,7 +771,8 @@ namespace ProSuite.Commons.AGP.Carto
 		public static async Task<bool> FlashGeometriesAsync(
 			[NotNull] MapView mapView,
 			IEnumerable<Overlay> overlays,
-			int milliseconds = 400)
+			int milliseconds = 400,
+			bool useReferenceScale = false)
 		{
 			List<IDisposable> disposables = new List<IDisposable>();
 
@@ -777,7 +780,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				foreach (Overlay overlay in overlays)
 				{
-					disposables.Add(await overlay.AddToMapAsync(mapView));
+					disposables.Add(await overlay.AddToMapAsync(mapView, useReferenceScale));
 				}
 
 				await Task.Delay(milliseconds);
@@ -796,7 +799,8 @@ namespace ProSuite.Commons.AGP.Carto
 		public static bool FlashGeometries(
 			[NotNull] MapView mapView,
 			IEnumerable<Overlay> overlays,
-			int milliseconds = 400)
+			int milliseconds = 400,
+			bool useReferenceScale = false)
 		{
 			List<IDisposable> disposables = new List<IDisposable>();
 
@@ -804,7 +808,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				foreach (Overlay overlay in overlays)
 				{
-					disposables.Add(overlay.AddToMap(mapView));
+					disposables.Add(overlay.AddToMap(mapView, useReferenceScale));
 				}
 
 				Thread.Sleep(milliseconds);
