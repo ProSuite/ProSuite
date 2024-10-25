@@ -111,6 +111,19 @@ namespace ProSuite.AGP.Editing.Picker
 			return ! (sketch.Extent.Width > 0 || sketch.Extent.Height > 0);
 		}
 
+		private static SpatialRelationship GetSpatialRelationship(
+			SketchGeometryType sketchGeometryType, IPickerPrecedence precedence)
+		{
+			if (precedence.IsSingleClick)
+			{
+				return SpatialRelationship.Intersects;
+			}
+
+			return sketchGeometryType is SketchGeometryType.Polygon or SketchGeometryType.Lasso
+				       ? SpatialRelationship.Contains
+				       : SpatialRelationship.Intersects;
+		}
+
 		#endregion
 
 		#region Show Picker
@@ -129,10 +142,7 @@ namespace ProSuite.AGP.Editing.Picker
 			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
 			SketchGeometryType sketchGeometryType = ToolUtils.GetSketchGeometryType();
 			SpatialRelationship spatialRelationship =
-				sketchGeometryType == SketchGeometryType.Polygon ||
-				sketchGeometryType == SketchGeometryType.Lasso
-					? SpatialRelationship.Contains
-					: SpatialRelationship.Intersects;
+				GetSpatialRelationship(sketchGeometryType, precedence);
 
 			await QueuedTaskUtils.Run(async () =>
 			{
@@ -163,10 +173,7 @@ namespace ProSuite.AGP.Editing.Picker
 			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
 			SketchGeometryType sketchGeometryType = ToolUtils.GetSketchGeometryType();
 			SpatialRelationship spatialRelationship =
-				sketchGeometryType == SketchGeometryType.Polygon ||
-				sketchGeometryType == SketchGeometryType.Lasso
-					? SpatialRelationship.Contains
-					: SpatialRelationship.Intersects;
+				GetSpatialRelationship(sketchGeometryType, precedence);
 
 			await QueuedTaskUtils.Run(async () =>
 			{
@@ -430,10 +437,7 @@ namespace ProSuite.AGP.Editing.Picker
 			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
 			SketchGeometryType sketchGeometryType = ToolUtils.GetSketchGeometryType();
 			SpatialRelationship spatialRelationship =
-				sketchGeometryType == SketchGeometryType.Polygon ||
-				sketchGeometryType == SketchGeometryType.Lasso
-					? SpatialRelationship.Contains
-					: SpatialRelationship.Intersects;
+				GetSpatialRelationship(sketchGeometryType, precedence);
 
 			await QueuedTaskUtils.Run(async () =>
 			{
@@ -442,7 +446,7 @@ namespace ProSuite.AGP.Editing.Picker
 				// NOTE daro: passing in a delayed cancellable progressor in conjunction with
 				// picker window crashes Pro. A non-delayed progressor works fine.
 				const CancelableProgressor progressor = null;
-				var featureSelection = getCandidates(precedence.GetSelectionGeometry(),
+				var featureSelection = getCandidates(selectionGeometry,
 													 spatialRelationship,
 													 progressor).ToList();
 
