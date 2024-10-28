@@ -92,9 +92,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
-		public static int GetDefaultSubtypeCode(Table table)
+		[CanBeNull]
+		public static int? GetDefaultSubtypeCode(Table table)
 		{
-			if (table is null) return -1;
+			if (table is null) return null;
 
 			using (var definition = table.GetDefinition())
 			{
@@ -102,19 +103,27 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
-		public static int GetDefaultSubtypeCode(TableDefinition definition)
+		[CanBeNull]
+		public static int? GetDefaultSubtypeCode(TableDefinition definition)
 		{
-			if (definition is null) return -1;
+			if (definition is null) return null;
 
 			try
 			{
 				// GetDefaultSubtypeCode() returns -1 if no subtypes
-				return definition.GetDefaultSubtypeCode();
+				int defaultSubtypeCode = definition.GetDefaultSubtypeCode();
+
+				if (defaultSubtypeCode < 0)
+				{
+					return null;
+				}
+
+				return defaultSubtypeCode;
 			}
 			catch (NotSupportedException)
 			{
 				// Shapefiles have no subtypes and throw NotSupportedException
-				return -1;
+				return null;
 			}
 		}
 
@@ -149,9 +158,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		[CanBeNull]
-		public static Subtype GetSubtype(TableDefinition definition, int subtypeCode)
+		public static Subtype GetSubtype(TableDefinition definition, int? subtypeCode)
 		{
 			if (definition is null) return null;
+			if (subtypeCode == null) return null;
 
 			try
 			{

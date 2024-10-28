@@ -41,14 +41,18 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			throw new NotImplementedException();
 		}
 
-		public IRow CreateRow()
+		public IRow CreateRow(int? subtypeCode = null)
 		{
-			var subtype =
-				Commons.AGP.Core.Geodatabase.DatasetUtils.GetDefaultSubtype(ProTableDefinition);
+			if (subtypeCode == null)
+			{
+				subtypeCode = DatasetUtils.GetDefaultSubtypeCode(ProTableDefinition);
+			}
+
+			Subtype subtype = DatasetUtils.GetSubtype(ProTableDefinition, subtypeCode);
 
 			RowBuffer rowBuffer = ProTable.CreateRowBuffer(subtype);
 
-			Commons.AGP.Core.Geodatabase.GdbObjectUtils.SetNullValuesToGdbDefault(
+			GdbObjectUtils.SetNullValuesToGdbDefault(
 				rowBuffer, ProTableDefinition, subtype);
 
 			if (ProTable is FeatureClass fc)
@@ -344,7 +348,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			Field field = GetExistingField(fieldName);
 
-			ArcGIS.Core.Data.Subtype subtype =
+			Subtype subtype =
 				ProTableDefinition.GetSubtypes()
 				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
@@ -360,7 +364,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			Field field = GetExistingField(fieldName);
 
-			ArcGIS.Core.Data.Subtype subtype =
+			Subtype subtype =
 				ProTableDefinition.GetSubtypes()
 				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
@@ -380,7 +384,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public string get_SubtypeName(int subtypeCode)
 		{
-			ArcGIS.Core.Data.Subtype subtype =
+			Subtype subtype =
 				ProTableDefinition.GetSubtypes()
 				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
