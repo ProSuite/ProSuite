@@ -1,4 +1,4 @@
-﻿namespace ProSuite.DomainModel.Core.DataModel
+namespace ProSuite.DomainModel.Core.DataModel
 {
 	public class ErrorMultiPatchDataset : ErrorVectorDataset
 	{
@@ -18,5 +18,8 @@
 		#endregion
 
 		public override string TypeDescription => "Error MultiPatches";
+
+		public override DatasetImplementationType ImplementationType =>
+			DatasetImplementationType.ErrorMultiPatch;
 	}
 }

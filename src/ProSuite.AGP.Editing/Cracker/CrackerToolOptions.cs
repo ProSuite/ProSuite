@@ -1,4 +1,3 @@
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -107,10 +106,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			get { return CentralizableUseSourceZs.CurrentValue; }
 		}
 
-		public bool RemoveUnnecessaryVertices
-		{
-			get { return CentralizableRemoveUnnecessaryVertices.CurrentValue; }
-		}
+		public bool ExcludeInteriorInteriorIntersections => false;
 
 		#endregion
 

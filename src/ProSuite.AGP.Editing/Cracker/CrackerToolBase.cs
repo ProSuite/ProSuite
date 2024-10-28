@@ -9,32 +9,28 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Editing.OneClick;
+using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
-using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
-	public abstract class CrackerToolBase : TwoPhaseEditToolBase
+	public abstract class CrackerToolBase : TopologicalCrackingToolBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private CrackerToolOptions _crackerToolOptions;
 		private OverridableSettingsProvider<PartialCrackerToolOptions> _settingsProvider;
-
 		private CrackerResult _resultCrackPoints;
 		private CrackerFeedback _feedback;
-		private IList<Feature> _overlappingFeatures;
 
 		protected CrackerToolBase()
 		{
@@ -52,8 +48,6 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		protected virtual string LocalConfigDir =>
 			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
-
-		protected abstract ICrackerService MicroserviceClient { get; }
 
 		protected override void OnUpdateCore()
 		{
@@ -76,9 +70,18 @@ namespace ProSuite.AGP.Editing.Cracker
 			_feedback = null;
 		}
 
+		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		{
+			bool result = base.OnMapSelectionChangedCore(args);
+
+			//_vertexLabels.UpdateLabels();
+
+			return result;
+		}
+
 		protected override void LogPromptForSelection()
 		{
-			_msg.Info(LocalizableStrings.RemoveOverlapsTool_LogPromptForSelection);
+			_msg.Info(LocalizableStrings.CrackerTool_LogPromptForSelection);
 		}
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
@@ -92,16 +95,18 @@ namespace ProSuite.AGP.Editing.Cracker
 		                                                   CancelableProgressor progressor)
 		{
 			IList<Feature> intersectingFeatures =
-				GetIntersectingFeatures(selectedFeatures, progressor);
+				GetIntersectingFeatures(selectedFeatures, _crackerToolOptions, progressor);
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
 				_msg.Warn("Calculation of crack points was cancelled.");
 				return;
 			}
-
+			
 			_resultCrackPoints =
-				CalculateCrackPoints(selectedFeatures, intersectingFeatures, progressor);
+				CalculateCrackPoints(selectedFeatures, intersectingFeatures, _crackerToolOptions,
+				                     IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				                     false, progressor);
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
@@ -115,12 +120,28 @@ namespace ProSuite.AGP.Editing.Cracker
 			//	                       ? intersectingFeatures
 			//	                       : null;
 
-			_feedback.Update(_resultCrackPoints);
+			_feedback.Update(_resultCrackPoints, selectedFeatures);
 		}
 
 		protected override bool CanUseDerivedGeometries()
 		{
 			return _resultCrackPoints != null && _resultCrackPoints.ResultsByFeature.Count > 0;
+		}
+
+		protected override void ToggleVertices()
+		{
+			base.ToggleVertices();
+
+			try
+			{
+				//_vertexLabels.Toggle();
+
+				//_vertexLabels.UpdateLabels();
+			}
+			catch (Exception ex)
+			{
+				_msg.Error($"Toggling Vertices Labels Error: {ex.Message}");
+			}
 		}
 
 		protected override async Task<bool> SelectAndProcessDerivedGeometry(
@@ -148,13 +169,13 @@ namespace ProSuite.AGP.Editing.Cracker
 				distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference).ToList();
 
 			IList<Feature> intersectingFeatures =
-				GetIntersectingFeatures(selectedFeatures, progressor);
+				GetIntersectingFeatures(selectedFeatures, _crackerToolOptions, progressor);
 
 			var result =
 				MicroserviceClient.ApplyCrackPoints(
 					selectedFeatures, crackPointsToApply, intersectingFeatures,
-					_crackerToolOptions,
-					progressor?.CancellationToken ?? new CancellationTokenSource().Token);
+					_crackerToolOptions, IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+					false, progressor?.CancellationToken ?? new CancellationTokenSource().Token);
 
 			var updates = new Dictionary<Feature, Geometry>();
 
@@ -192,6 +213,9 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			CalculateDerivedGeometries(currentSelection, progressor);
 
+			// TODO:
+			//_vertexLabels.UpdateLabels();
+
 			return saved;
 		}
 
@@ -217,72 +241,6 @@ namespace ProSuite.AGP.Editing.Cracker
 
 				_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
 			}
-		}
-
-		private CrackerResult CalculateCrackPoints(IList<Feature> selectedFeatures,
-		                                           IList<Feature> intersectingFeatures,
-		                                           CancelableProgressor progressor)
-		{
-			CrackerResult resultCrackPoints;
-
-			CancellationToken cancellationToken;
-
-			if (progressor != null)
-			{
-				cancellationToken = progressor.CancellationToken;
-			}
-			else
-			{
-				var cancellationTokenSource = new CancellationTokenSource();
-				cancellationToken = cancellationTokenSource.Token;
-			}
-
-			if (MicroserviceClient != null)
-			{
-				resultCrackPoints =
-					MicroserviceClient.CalculateCrackPoints(selectedFeatures, intersectingFeatures,
-					                                        _crackerToolOptions, cancellationToken);
-			}
-			else
-			{
-				throw new InvalidConfigurationException("Microservice has not been started.");
-			}
-
-			return resultCrackPoints;
-		}
-
-		private CrackerResult SelectCrackPointsToApply(CrackerResult crackerResultPoints,
-		                                               Geometry sketch)
-		{
-			CrackerResult result = new CrackerResult();
-
-			if (crackerResultPoints == null)
-			{
-				return result;
-			}
-
-			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
-			                                          out bool singlePick);
-
-			foreach (CrackedFeature crackedFeature in crackerResultPoints.ResultsByFeature)
-			{
-				CrackedFeature selectedPointsByFeature = new CrackedFeature(crackedFeature.Feature);
-
-				foreach (CrackPoint crackPoint in crackedFeature.CrackPoints)
-				{
-					if (ToolUtils.IsSelected(sketch, crackPoint.Point, singlePick))
-					{
-						selectedPointsByFeature.CrackPoints.Add(crackPoint);
-					}
-				}
-
-				if (selectedPointsByFeature.CrackPoints.Count > 0)
-				{
-					result.ResultsByFeature.Add(selectedPointsByFeature);
-				}
-			}
-
-			return result;
 		}
 
 		private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
@@ -345,70 +303,6 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		#region Search target features
-
-		[NotNull]
-		private IList<Feature> GetIntersectingFeatures(
-			[NotNull] ICollection<Feature> selectedFeatures,
-			[CanBeNull] CancelableProgressor cancellabelProgressor)
-		{
-			Dictionary<MapMember, List<long>> selection =
-				SelectionUtils.GetSelection(ActiveMapView.Map);
-
-			Envelope inExtent = ActiveMapView.Extent;
-
-			// todo daro To tool Options? See ChangeGeometryAlongToolBase.SelectTargetsAsync() as well.
-			TargetFeatureSelection targetFeatureSelection =
-				_crackerToolOptions.TargetFeatureSelection;
-
-			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
-
-			// They might be stored (insert target vertices):
-			featureFinder.ReturnUnJoinedFeatures = true;
-
-			// Options which are not directly passed to the Microservice via _crackerToolOptions
-			// Snap crack points within tolerance to target vertices
-			if (_crackerToolOptions.SnapToTargetVertices)
-			{
-				featureFinder.ExtraSearchTolerance = _crackerToolOptions.SnapTolerance;
-			}
-
-			// Set the feature classes to ignore
-			IEnumerable<FeatureSelectionBase> featureClassSelections =
-				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
-
-			if (cancellabelProgressor != null &&
-			    cancellabelProgressor.CancellationToken.IsCancellationRequested)
-			{
-				return new List<Feature>();
-			}
-
-			var foundFeatures = new List<Feature>();
-
-			foreach (var classSelection in featureClassSelections)
-			{
-				foundFeatures.AddRange(classSelection.GetFeatures());
-			}
-
-			// Remove the selected features from the set of overlapping features.
-			// This is also important to make sure the geometries don't get mixed up / reset 
-			// by inserting target vertices
-			foundFeatures.RemoveAll(
-				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
-
-			return foundFeatures;
-		}
-
-		private bool CanOverlapLayer(Layer layer)
-		{
-			var featureLayer = layer as FeatureLayer;
-
-			List<string>
-				ignoredClasses = new List<string>(); // RemoveOverlapsOptions.IgnoreFeatureClasses;
-
-			return CanOverlapGeometryType(featureLayer) &&
-			       (ignoredClasses == null || ! IgnoreLayer(layer, ignoredClasses));
-		}
 
 		private static bool CanOverlapGeometryType([CanBeNull] FeatureLayer featureLayer)
 		{

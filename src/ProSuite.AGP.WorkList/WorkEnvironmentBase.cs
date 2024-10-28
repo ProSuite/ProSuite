@@ -131,7 +131,7 @@ namespace ProSuite.AGP.WorkList
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		protected abstract T GetLayerContainerCore<T>() where T : class;
+		protected abstract T GetLayerContainerCore<T>() where T : class, ILayerContainerEdit;
 
 		protected virtual async Task<bool> TryPrepareSchemaCoreAsync()
 		{

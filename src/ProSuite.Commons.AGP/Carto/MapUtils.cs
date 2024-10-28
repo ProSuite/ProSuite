@@ -289,8 +289,8 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			if (map is null) return Enumerable.Empty<T>();
 			return map.GetLayersAsFlattenedList()
-			   .OfType<T>()
-			   .Where(l => layerPredicate is null || layerPredicate(l));
+			          .OfType<T>()
+			          .Where(l => layerPredicate is null || layerPredicate(l));
 		}
 
 		/// <summary>
@@ -491,11 +491,10 @@ namespace ProSuite.Commons.AGP.Carto
 		/// </summary>
 		/// <param name="map"></param>
 		/// <returns></returns>
-		public static IEnumerable<BasicFeatureLayer> GetEditableLayers(
-			[NotNull] Map map)
+		public static IEnumerable<T> GetEditableLayers<T>([NotNull] Map map)
+			where T : BasicFeatureLayer
 		{
-			IEnumerable<BasicFeatureLayer> editLayers =
-				GetFeatureLayers<BasicFeatureLayer>(map, bfl => bfl?.IsEditable == true);
+			IEnumerable<T> editLayers = GetFeatureLayers<T>(map, bfl => bfl?.IsEditable == true);
 
 			return editLayers;
 		}
@@ -570,6 +569,19 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <returns></returns>
 		public static MapPoint ToMapPoint(MapView mapView, Point screenPoint)
 		{
+			return mapView.ScreenToMap(screenPoint);
+		}
+
+		/// <summary>
+		/// Converts a client point to a map point.
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <param name="clientPoint">The global screen coordinates.</param>
+		/// <returns></returns>
+		public static MapPoint ClientToMapPoint(MapView mapView, Point clientPoint)
+		{
+			Point screenPoint = MapView.Active.ClientToScreen(clientPoint);
+
 			return mapView.ScreenToMap(screenPoint);
 		}
 

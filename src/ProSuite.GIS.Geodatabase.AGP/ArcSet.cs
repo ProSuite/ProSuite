@@ -77,14 +77,14 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				return null;
 			}
 
-			return ArcUtils.ToArcRow(found);
+			return ArcGeodatabaseUtils.ToArcRow(found);
 		}
 
 		public object Next()
 		{
 			return _currentIndex >= _proRowList.Count
 				       ? null
-				       : ArcUtils.ToArcRow(_proRowList[_currentIndex]);
+				       : ArcGeodatabaseUtils.ToArcRow(_proRowList[_currentIndex]);
 		}
 
 		public void Reset()

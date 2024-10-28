@@ -124,6 +124,15 @@
   <data name="AdvancedReshapeToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\AdvancedReshapeToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="ChopperToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\ChopperToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="ChopperToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\ChopperToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="ChopperToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\ChopperToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="CrackerToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\CrackerToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>

@@ -5,7 +5,7 @@ using ProSuite.GIS.Geodatabase.API;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
-	public static class ArcUtils
+	public static class ArcGeodatabaseUtils
 	{
 		internal static IEnumerable<IRow> GetArcRows(
 			RowCursor cursor, ITable sourceTable = null)
@@ -19,7 +19,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 		}
 
-		public static ArcTable ToArcTable([NotNull] Table proTable)
+		public static ArcTable ToArcTable(
+			[NotNull] Table proTable)
 		{
 			Table databaseTable =
 				Commons.AGP.Core.Geodatabase.DatasetUtils.GetDatabaseTable(proTable);

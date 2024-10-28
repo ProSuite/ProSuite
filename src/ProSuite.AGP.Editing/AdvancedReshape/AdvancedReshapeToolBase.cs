@@ -169,6 +169,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
+		protected override CancelableProgressorSource GetProgressorSource()
+		{
+			// Disable the progressor because reshaping is typically fast,
+			// and the users potentially want to continue working already.
+			return null;
+		}
+
 		protected override SketchGeometryType GetSketchGeometryType()
 		{
 			return SketchGeometryType.Line;

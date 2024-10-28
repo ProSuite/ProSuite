@@ -32,8 +32,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			string tableName;
 			try
 			{
-				using Table table = row.GetTable();
-				tableName = table.GetName();
+				using (Table table = row.GetTable())
+				{
+					tableName = table.GetName();
+				}
 			}
 			catch (Exception e)
 			{
@@ -45,10 +47,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static string GetDisplayValue(Row row)
 		{
-			using Table table = row.GetTable();
-			string className = DatasetUtils.GetAliasName(table);
+			using (Table table = row.GetTable())
+			{
+				string className = DatasetUtils.GetAliasName(table);
 
-			return GetDisplayValue(row, className);
+				return GetDisplayValue(row, className);
+			}
 		}
 
 		public static string GetDisplayValue(Row row, string className)
@@ -71,16 +75,18 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 
-			using Table table = row.GetTable();
-			string subtypeFieldName = DatasetUtils.GetSubtypeFieldName(table);
-
-			if (! string.IsNullOrEmpty(subtypeFieldName))
+			using (Table table = row.GetTable())
 			{
-				int subtypeFieldIndex = row.FindField(subtypeFieldName);
-				return GetSubtypeCode(row, subtypeFieldIndex);
-			}
+				string subtypeFieldName = DatasetUtils.GetSubtypeFieldName(table);
 
-			return null;
+				if (! string.IsNullOrEmpty(subtypeFieldName))
+				{
+					int subtypeFieldIndex = row.FindField(subtypeFieldName);
+					return GetSubtypeCode(row, subtypeFieldIndex);
+				}
+
+				return null;
+			}
 		}
 
 		public static int? GetSubtypeCode([NotNull] Row row, int subtypeFieldIndex)
@@ -112,10 +118,13 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 			try
 			{
-				using Table table = row.GetTable();
-				using TableDefinition definition = table.GetDefinition();
-
-				return DatasetUtils.GetSubtype(definition, subtypeCode.Value);
+				using (Table table = row.GetTable())
+				{
+					using (TableDefinition definition = table.GetDefinition())
+					{
+						return DatasetUtils.GetSubtype(definition, subtypeCode.Value);
+					}
+				}
 			}
 			catch (NotSupportedException notSupportedException)
 			{
@@ -124,6 +133,70 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			return null;
+		}
+
+		public static void SetSubtypeCode([NotNull] Row row, int subTypeCode)
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
+			using (Table table = row.GetTable())
+			{
+				string subtypeFieldName = DatasetUtils.GetSubtypeFieldName(table);
+
+				if (! string.IsNullOrEmpty(subtypeFieldName))
+				{
+					row[subtypeFieldName] = subTypeCode;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Sets the values of the <see cref="RowBuffer"/> which are not yet initialized to the
+		/// default values defined in the Geodatabase.
+		/// </summary>
+		/// <param name="rowBuffer"></param>
+		/// <param name="tableDefinition"></param>
+		/// <param name="subtype"></param>
+		public static void SetNullValuesToGdbDefault(
+			[NotNull] RowBuffer rowBuffer,
+			[NotNull] TableDefinition tableDefinition,
+			[CanBeNull] Subtype subtype)
+		{
+			DoForAllFields(
+				field =>
+				{
+					object currentValue = rowBuffer[field.Name];
+
+					if (currentValue == null || currentValue == DBNull.Value)
+					{
+						rowBuffer[field.Name] = field.GetDefaultValue(subtype);
+					}
+				}, tableDefinition);
+		}
+
+		/// <summary>
+		/// Sets the values of the <see cref="RowBuffer"/> which are not yet initialized to the
+		/// default values defined in the Geodatabase.
+		/// </summary>
+		/// <param name="row"></param>
+		/// <param name="tableDefinition"></param>
+		/// <param name="subtype"></param>
+		public static void SetNullValuesToGdbDefault(
+			[NotNull] Row row,
+			[NotNull] TableDefinition tableDefinition,
+			[CanBeNull] Subtype subtype)
+		{
+			DoForAllFields(
+				field =>
+				{
+					// If the value has not been set (e.g. by the subclass), use the GDB default:
+					object currentValue = row[field.Name];
+
+					if (currentValue == null || currentValue == DBNull.Value)
+					{
+						row[field.Name] = field.GetDefaultValue(subtype);
+					}
+				}, tableDefinition);
 		}
 
 		[NotNull]
@@ -418,6 +491,26 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			return null;
+		}
+
+		private static void DoForAllFields([NotNull] Action<Field> action,
+		                                   [NotNull] TableDefinition tableDefinition,
+		                                   bool exceptShape = true)
+		{
+			foreach (Field field in tableDefinition.GetFields())
+			{
+				if (!field.IsEditable)
+				{
+					continue;
+				}
+
+				if (exceptShape && field.FieldType == FieldType.Geometry)
+				{
+					continue;
+				}
+
+				action(field);
+			}
 		}
 	}
 }
