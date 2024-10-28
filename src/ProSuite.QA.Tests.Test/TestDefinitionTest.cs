@@ -3709,6 +3709,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(TrGeometryToPoints),
 				                             typeof(TrGetNodes),
 				                             typeof(TrIntersect),
+											 typeof(TrLineToPolygon),
 				                             typeof(TrMultilineToLine),
 				                             typeof(TrMultipolygonToPolygon),
 				                             typeof(TrPolygonToLine)
@@ -3808,6 +3809,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrDissolveCases(model, trCases);
 			AddTrGeometryToPointsCases(model, trCases);
 			AddTrGetNodesCases(model, trCases);
+			AddTrLineToPolygonCases(model, trCases);
 			AddTrMultilineToLineCases(model, trCases);
 			AddTrMultipolygonToPolygonCases(model, trCases);
 			AddTrPolygonToLineCases(model, trCases);
@@ -3970,6 +3972,22 @@ namespace ProSuite.QA.Tests.Test
 			                                 },
 			                                 optionalValues));
 		}
+
+		private static void AddTrLineToPolygonCases(TestDataModel model,
+		                                            ICollection<TrDefinitionCase> trCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+
+			optionalValues.Add("PolylineUsage", "AsPolygonIfClosedElseIgnore");
+
+			trCases.Add(new TrDefinitionCase(typeof(TrLineToPolygon), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetVectorDataset(),
+			                                 },
+			                                 optionalValues));
+		}
+
 
 		private static void AddTrMultilineToLineCases(TestDataModel model,
 		                                            ICollection<TrDefinitionCase>
