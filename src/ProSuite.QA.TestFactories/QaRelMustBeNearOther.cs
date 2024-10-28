@@ -4,6 +4,7 @@ using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
@@ -45,7 +46,7 @@ namespace ProSuite.QA.TestFactories
 				};
 			AddConstructorParameters(list, typeof(QaMustBeNearOther),
 			                         constructorIndex: 0,
-			                         ignoreParameters: new[] {0});
+			                         ignoreParameters: new[] { 0 });
 
 			AddOptionalTestParameters(
 				list, typeof(QaMustBeNearOther));

@@ -4,6 +4,7 @@ using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
@@ -51,7 +52,7 @@ namespace ProSuite.QA.TestFactories
 
 			AddOptionalTestParameters(
 				list, typeof(QaGroupConstraints),
-				new[] {nameof(QaGroupConstraints.ExistsRowGroupFilters)});
+				new[] { nameof(QaGroupConstraints.ExistsRowGroupFilters) });
 
 			return list.AsReadOnly();
 		}
@@ -126,7 +127,7 @@ namespace ProSuite.QA.TestFactories
 		{
 			if (testParameter.Name == _existsRowGroupFilterName)
 			{
-				((QaGroupConstraints) test).ExistsRowGroupFilters = new[] {(string) value};
+				((QaGroupConstraints) test).ExistsRowGroupFilters = new[] { (string) value };
 			}
 			else
 			{

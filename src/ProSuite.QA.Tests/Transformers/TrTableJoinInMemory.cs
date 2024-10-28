@@ -4,6 +4,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
@@ -52,6 +53,20 @@ namespace ProSuite.QA.Tests.Transformers
 			_rightTableKey = rightTableKey;
 
 			_joinType = joinType;
+		}
+
+		[InternallyUsedTest]
+		public TrTableJoinInMemory(
+			[NotNull] TrTableJoinInMemoryDefinition definition)
+			: this((IReadOnlyTable) definition.LeftTable,
+			       (IReadOnlyTable) definition.RightTable,
+			       definition.LeftTableKey,
+			       definition.RightTableKey,
+			       definition.JoinType)
+		{
+			ManyToManyTable = (IReadOnlyTable) definition.ManyToManyTable;
+			ManyToManyTableLeftKey = definition.ManyToManyTableLeftKey;
+			ManyToManyTableRightKey = definition.ManyToManyTableRightKey;
 		}
 
 		[TestParameter]

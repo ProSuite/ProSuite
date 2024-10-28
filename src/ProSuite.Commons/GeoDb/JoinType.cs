@@ -1,4 +1,4 @@
-namespace ProSuite.Commons.AO.Geodatabase
+namespace ProSuite.Commons.GeoDb
 {
 	public enum JoinType
 	{

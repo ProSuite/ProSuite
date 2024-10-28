@@ -6,6 +6,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
@@ -404,7 +405,10 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				{ Name = "bo", TransformerDescriptorName = xmlTdTrans.Name };
 			xmlTrans.ParameterValues.Add(
 				new XmlDatasetTestParameterValue
-				{ TestParameterName = "closedLineClass", Value = "borderFc", WorkspaceId = xmlWs.ID });
+				{
+					TestParameterName = "closedLineClass", Value = "borderFc",
+					WorkspaceId = xmlWs.ID
+				});
 
 			XmlQualityCondition xmlQc =
 				new XmlQualityCondition
@@ -465,7 +469,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		[Ignore("eqTrans is a non IReadOnlyTable-Transformer. Reactivate test when that's supported")]
+		[Ignore(
+			"eqTrans is a non IReadOnlyTable-Transformer. Reactivate test when that's supported")]
 		public void CanRunFromXmlWithTableJoin()
 		{
 			// Init

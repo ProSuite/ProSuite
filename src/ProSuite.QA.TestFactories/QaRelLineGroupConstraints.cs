@@ -4,6 +4,7 @@ using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
@@ -133,8 +134,8 @@ namespace ProSuite.QA.TestFactories
 		protected override ITest CreateTestInstance(object[] args)
 		{
 			var test = new QaLineGroupConstraints(
-				new[] {(IReadOnlyFeatureClass) args[0]}, (double) args[1], (double) args[2],
-				(double) args[3], new[] {(string) args[4]});
+				new[] { (IReadOnlyFeatureClass) args[0] }, (double) args[1], (double) args[2],
+				(double) args[3], new[] { (string) args[4] });
 
 			return test;
 		}
@@ -144,7 +145,7 @@ namespace ProSuite.QA.TestFactories
 		{
 			if (testParameter.Name == _groupConditionName)
 			{
-				((QaLineGroupConstraints) test).GroupConditions = new[] {(string) value};
+				((QaLineGroupConstraints) test).GroupConditions = new[] { (string) value };
 			}
 			else
 			{

@@ -6,6 +6,7 @@ using System.Reflection;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -3711,6 +3712,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(TrMultilineToLine),
 				                             typeof(TrMultipolygonToPolygon),
 				                             typeof(TrPolygonToLine)
+											 typeof(TrTableJoinInMemory)
 			                             };
 
 			foreach (Type transformerType in refactoredTypes)
@@ -3809,6 +3811,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrMultilineToLineCases(model, trCases);
 			AddTrMultipolygonToPolygonCases(model, trCases);
 			AddTrPolygonToLineCases(model, trCases);
+			AddTrTableJoinInMemoryCases(model, trCases);
 
 			foreach (TrDefinitionCase trCase in trCases)
 			{
@@ -4003,6 +4006,28 @@ namespace ProSuite.QA.Tests.Test
 			                                 {
 				                                 model.GetVectorDataset(),
 			                                 }));
+		}
+
+
+		private static void AddTrTableJoinInMemoryCases(TestDataModel model,
+		                                                    ICollection<TrDefinitionCase>
+			                                                    trCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ManyToManyTable", model.GetObjectDataset());
+			optionalValues.Add("ManyToManyTableLeftKey", "leftTableKey");
+			optionalValues.Add("ManyToManyTableRightKey", "rightTableKey");
+
+			trCases.Add(new TrDefinitionCase(typeof(TrTableJoinInMemory), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetObjectDataset(),
+				                                 model.GetObjectDataset(),
+												 "leftTableKey",
+												 "rightTableKey",
+												 JoinType.InnerJoin
+											 },
+			                                 optionalValues));
 		}
 
 		private static void AddParameterValue(string parameterName, object value,
