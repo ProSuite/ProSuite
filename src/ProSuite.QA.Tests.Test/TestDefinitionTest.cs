@@ -3713,6 +3713,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(TrMultilineToLine),
 				                             typeof(TrMultipolygonToPolygon),
 				                             typeof(TrPolygonToLine)
+											 typeof(TrTableJoin),
 											 typeof(TrTableJoinInMemory)
 			                             };
 
@@ -3800,6 +3801,7 @@ namespace ProSuite.QA.Tests.Test
 			// Transformer cases with automatic parameter value generation:
 			//trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrDissolve)));
 			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrIntersect)));
+			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrTableJoin)));
 
 			//
 			// Special Cases
