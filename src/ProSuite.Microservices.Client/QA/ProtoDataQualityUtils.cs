@@ -751,7 +751,8 @@ namespace ProSuite.Microservices.Client.QA
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(
-						nameof(geometryType), $"Unsupported geometry type: {geometryType}");
+						nameof(geometryType),
+						$"Unsupported geometry type: {geometryType} (Error dataset {name})");
 			}
 
 			result.SetCloneId(datasetId);
