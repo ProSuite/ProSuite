@@ -159,7 +159,12 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public double get_ZResolution(bool bStandardUnits)
 		{
-			return ProSpatialReference.ZScale;
+			if (ProSpatialReference.ZScale > 0)
+			{
+				return 1 / ProSpatialReference.ZScale;
+			}
+			
+			return double.NaN;
 		}
 
 		#endregion
