@@ -1327,20 +1327,41 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return false;
 			}
 
-			if (((IWorkspaceEdit) workspace).IsBeingEdited())
+			bool refreshed = false;
+
+			try
 			{
-				return false;
+				if (((IWorkspaceEdit) workspace).IsBeingEdited())
+				{
+					return false;
+				}
+
+				if (! IsVersionRedefined(version))
+				{
+					return false;
+				}
+
+				_msg.InfoFormat("Version {0} is redefined and will be refreshed",
+				                version.VersionName);
+				version.RefreshVersion();
+
+				refreshed = true;
+			}
+			catch (COMException e)
+			{
+				if (e.ErrorCode == (int) fdoError.FDO_E_SE_VERSION_NOEXIST &&
+				    IsMobileGeodatabase(workspace))
+				{
+					// Mobile geodatabases implement IVersionedWorkspace and IVersion,
+					// but everything else fails...
+				}
+				else
+				{
+					throw;
+				}
 			}
 
-			if (! IsVersionRedefined(version))
-			{
-				return false;
-			}
-
-			_msg.InfoFormat("Version {0} is redefined and will be refreshed",
-			                version.VersionName);
-			version.RefreshVersion();
-			return true;
+			return refreshed;
 		}
 
 		public static bool IsVersionRedefined([NotNull] IVersion version)

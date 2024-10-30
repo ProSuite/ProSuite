@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
@@ -143,6 +144,25 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			// Console.WriteLine(@"ConnectedDatabaseEx: {0}", connectionInfo.ConnectedDatabaseEx);
 			// - ConnectedDatabaseEx returns the database name (same as ConnectedDatabase)
+		}
+
+		[Test]
+		public void LearningTestMobileGdbWorkspace()
+		{
+			IWorkspace workspace =
+				WorkspaceUtils.OpenMobileGdbWorkspace(TestData.GetMobileGdbPath());
+
+			var versionedWorkspace = workspace as IVersionedWorkspace;
+			Console.WriteLine("Is versioneWorkspace: {0}",
+			                  versionedWorkspace != null ? "true" : "false");
+			var version = workspace as IVersion;
+			Console.WriteLine("Is version: {0}",
+			                  version != null ? "true" : "false");
+			Console.WriteLine("version name: {0}",
+			                  version.VersionName);
+
+			//everything else on version fails...
+			Assert.Catch<COMException>(() => { bool b = version.IsRedefined; });
 		}
 
 		[Test]
