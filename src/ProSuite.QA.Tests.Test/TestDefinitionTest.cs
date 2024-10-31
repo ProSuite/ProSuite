@@ -49,7 +49,8 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaConstraintsListFactory),
 											 typeof(QaDangleFactory),
 											 typeof(QaDatasetConstraintFactory),
-				                             typeof(QaGdbConstraintFactory)
+				                             typeof(QaGdbConstraintFactory),
+											 typeof(QaLineConnection)
 			                             };
 
 			foreach (Type factoryType in refactoredTypes)

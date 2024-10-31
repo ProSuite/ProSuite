@@ -17,7 +17,7 @@ namespace ProSuite.QA.TestFactories
 {
 	[UsedImplicitly]
 	[LinearNetworkTest]
-	public class QaLineConnection : TestFactory
+	public class QaLineConnection : QaFactoryBase
 	{
 		[NotNull]
 		[UsedImplicitly]
@@ -30,19 +30,19 @@ namespace ProSuite.QA.TestFactories
 
 		public override string TestDescription => DocStrings.QaLineConnection;
 
-		protected override IList<TestParameter> CreateParameters()
-		{
-			var list =
-				new List<TestParameter>
-				{
-					new TestParameter("featureClasses", typeof(IReadOnlyFeatureClass[]),
-					                  DocStrings.QaLineConnection_featureClasses),
-					new TestParameter("rules", typeof(string[]),
-					                  DocStrings.QaLineConnection_rules)
-				};
+		//protected override IList<TestParameter> CreateParameters()
+		//{
+		//	var list =
+		//		new List<TestParameter>
+		//		{
+		//			new TestParameter("featureClasses", typeof(IReadOnlyFeatureClass[]),
+		//							  DocStrings.QaLineConnection_featureClasses),
+		//			new TestParameter("rules", typeof(string[]),
+		//							  DocStrings.QaLineConnection_rules)
+		//		};
 
-			return list.AsReadOnly();
-		}
+		//	return list.AsReadOnly();
+		//}
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
