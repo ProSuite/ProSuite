@@ -106,6 +106,7 @@ namespace ProSuite.AGP.WorkList
 			worklistLayer.SetScaleSymbols(false);
 			worklistLayer.SetSelectable(false);
 			worklistLayer.SetSnappable(false);
+			worklistLayer.SetShowPopups(false);  //e.g. tell the Explore tool to ignore the WorkListLayer
 
 			//Set renderer based on symbology from template layer
 			LayerDocument templateLayer = GetWorkListSymbologyTemplateLayer();
@@ -175,7 +176,7 @@ namespace ProSuite.AGP.WorkList
 				Assert.NotNull(table);
 
 				string workListLayerName = SuggestWorkListLayerName() ?? worklist.DisplayName;
-
+				
 				return LayerFactory.Instance.CreateLayer<FeatureLayer>(
 					WorkListUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
 					layerContainer);
