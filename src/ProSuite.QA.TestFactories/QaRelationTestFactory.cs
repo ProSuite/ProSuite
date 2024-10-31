@@ -13,7 +13,7 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.QA.TestFactories
 {
-	public abstract class QaRelationTestFactory : TestFactory
+	public abstract class QaRelationTestFactory : QaFactoryBase
 	{
 		[NotNull]
 		protected static string CombineTableParameters(
