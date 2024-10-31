@@ -23,26 +23,7 @@ namespace ProSuite.QA.TestFactories
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaConnections.Codes;
 
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaConnections).Name;
-		}
-
 		public override string TestDescription => DocStrings.QaLineConnection;
-
-		//protected override IList<TestParameter> CreateParameters()
-		//{
-		//	var list =
-		//		new List<TestParameter>
-		//		{
-		//			new TestParameter("featureClasses", typeof(IReadOnlyFeatureClass[]),
-		//							  DocStrings.QaLineConnection_featureClasses),
-		//			new TestParameter("rules", typeof(string[]),
-		//							  DocStrings.QaLineConnection_rules)
-		//		};
-
-		//	return list.AsReadOnly();
-		//}
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,

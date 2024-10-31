@@ -28,11 +28,6 @@ namespace ProSuite.QA.TestFactories
 
 		public override string TestDescription => DocStrings.QaDatasetConstraintFactory;
 
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaConstraint).Name;
-		}
-
 		protected override object[] Args(
 			IOpenDataset datasetContext,
 			IList<TestParameter> testParameters,
