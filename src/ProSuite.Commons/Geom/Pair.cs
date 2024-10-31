@@ -70,6 +70,22 @@ namespace ProSuite.Commons.Geom
 			return dx * dx + dy * dy;
 		}
 
+		/// <summary>
+		/// Twice the signed area of the given triangle: positive
+		/// if the points are counterclockwise, negative otherwise.
+		/// </summary>
+		/// <remarks>Use this for a quick left-of test</remarks>
+		public static double Area2(Pair a, Pair b, Pair c)
+		{
+			// Compute the cross product (b-a)x(p-a), which is twice the
+			// signed area of the triangle defined by the three points.
+			// If this area is positive, c is left of the line ab, if zero
+			// c is on ab, otherwise c is right of ab.
+			return (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
+			// or equivalently: a.X*b.Y - b.X*a.Y + c.X*a.Y - a.X*c.Y + b.X*c.Y - c.X*b.Y
+
+		}
+
 		public static Pair operator +(Pair p, Pair q)
 		{
 			return new Pair(p.X + q.X, p.Y + q.Y);
