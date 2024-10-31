@@ -1,3 +1,4 @@
+using System;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -15,10 +16,10 @@ public class SelectionSketchTypeToggle
 	public SelectionSketchTypeToggle([NotNull] ISketchTool tool,
 	                                 SketchGeometryType defaultSelectionSketchType)
 	{
-		_tool = tool;
+		_tool = tool ?? throw new ArgumentNullException(nameof(tool));
 		_defaultSelectionSketchType = defaultSelectionSketchType;
 
-		SetSketchType(tool, defaultSelectionSketchType);
+		SetSketchType(defaultSelectionSketchType);
 	}
 
 	/// <summary>
@@ -29,17 +30,17 @@ public class SelectionSketchTypeToggle
 	{
 		if (_previousType == SketchGeometryType.Polygon)
 		{
-			TrySetSketchType(_tool, SketchGeometryType.Polygon);
+			TrySetSketchType(SketchGeometryType.Polygon);
 			return;
 		}
 
 		if (_previousType == SketchGeometryType.Lasso)
 		{
-			TrySetSketchType(_tool, SketchGeometryType.Lasso);
+			TrySetSketchType(SketchGeometryType.Lasso);
 			return;
 		}
 
-		TrySetSketchType(_tool, _defaultSelectionSketchType);
+		TrySetSketchType(_defaultSelectionSketchType);
 	}
 
 	public void Toggle(SketchGeometryType? sketchType)
@@ -63,22 +64,22 @@ public class SelectionSketchTypeToggle
 				break;
 		}
 
-		TrySetSketchType(_tool, type);
+		TrySetSketchType(type);
 	}
 
-	private void TrySetSketchType(ISketchTool tool, SketchGeometryType? type)
+	private void TrySetSketchType(SketchGeometryType? type)
 	{
 		if (_tool.GetSketchType() == type)
 		{
 			return;
 		}
 
-		SetSketchType(tool, type);
+		SetSketchType(type);
 	}
 
-	private void SetSketchType(ISketchTool tool, SketchGeometryType? type)
+	private void SetSketchType(SketchGeometryType? type)
 	{
-		tool.SetSketchType(type);
+		_tool.SetSketchType(type);
 
 		_msg.Info($"{_tool.Caption}: {type} selection sketch");
 
