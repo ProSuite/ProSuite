@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
@@ -35,14 +36,14 @@ namespace ProSuite.AGP.WorkList
 
 			DisplayName = SuggestWorkListName() ?? uniqueName;
 
+			string definitionFilePath = GetDefinitionFileFromProjectFolder();
+
 			if (! await TryPrepareSchemaCoreAsync())
 			{
 				return await Task.FromResult(default(IWorkList));
 			}
 
 			Stopwatch watch = Stopwatch.StartNew();
-
-			string definitionFilePath = GetDefinitionFileFromProjectFolder();
 
 			IWorkItemStateRepository stateRepository =
 				CreateStateRepositoryCore(definitionFilePath, uniqueName);
@@ -76,6 +77,23 @@ namespace ProSuite.AGP.WorkList
 		{
 			IList<Table> result = new List<Table>();
 			return Task.FromResult(result);
+		}
+
+		public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
+		{
+			definitionFile = null;
+			string suggestedName = SuggestWorkListName();
+
+			if (suggestedName == null)
+			{
+				return false;
+			}
+
+			DisplayName = suggestedName;
+
+			definitionFile = GetDefinitionFileFromProjectFolder();
+
+			return definitionFile != null && File.Exists(definitionFile);
 		}
 
 		public string GetDefinitionFileFromProjectFolder()
