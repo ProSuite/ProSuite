@@ -19,6 +19,9 @@ namespace ProSuite.QA.TestFactories
 	[AttributeTest]
 	public class QaDatasetConstraintFactory : QaFactoryBase
 	{
+		public static readonly string TableAttribute = "table";
+		public static readonly string ConstraintAttribute = "constraint";
+
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaConstraint.Codes;
