@@ -6,7 +6,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
@@ -21,42 +20,10 @@ namespace ProSuite.QA.TestFactories
 	[AttributeTest]
 	public class QaRelConstraint : QaRelationTestFactory
 	{
-		private const string _parameterNameApplyFilterInDatabase =
-			"ApplyFilterExpressionsInDatabase";
 
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaConstraint.Codes;
-
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaRelationConstraint).Name;
-		}
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			// relationTables is partly redundant with relation, but needed for following reasons: 
-			// - used to derive dataset constraints
-			// - needed to be displayed in Tests displayed by dataset !!
-
-			var list = new List<TestParameter>
-			           {
-				           new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
-				                             DocStrings.QaRelConstraint_relationTables),
-				           new TestParameter("relation", typeof(string),
-				                             DocStrings.QaRelConstraint_relation),
-				           new TestParameter("join", typeof(JoinType),
-				                             DocStrings.QaRelConstraint_join),
-				           new TestParameter("constraint", typeof(IList<string>),
-				                             DocStrings.QaRelConstraint_constraint),
-				           new TestParameter(
-					           _parameterNameApplyFilterInDatabase, typeof(bool),
-					           DocStrings.QaRelConstraint_ApplyFilterExpressionsInDatabase,
-					           isConstructorParameter: false) {DefaultValue = false}
-			           };
-
-			return list.AsReadOnly();
-		}
 
 		public override string TestDescription => DocStrings.QaRelConstraint;
 
@@ -104,9 +71,11 @@ namespace ProSuite.QA.TestFactories
 			var join = (JoinType) objParams[2];
 			var constraints = (IList<string>) objParams[3];
 
+			var factoryDef = (QaRelConstraintDefinition)FactoryDefinition;
+
 			bool applyFilterInDatabase = GetParameterValue<bool>(testParameters,
 			                                                     datasetContext,
-			                                                     _parameterNameApplyFilterInDatabase);
+			                                                     factoryDef.ParameterNameApplyFilterInDatabase);
 
 			IDictionary<string, string> replacements = GetTableNameReplacements(
 				Assert.NotNull(Condition).ParameterValues.OfType<DatasetTestParameterValue>(),
@@ -197,8 +166,9 @@ namespace ProSuite.QA.TestFactories
 		protected override void SetPropertyValue(object test, TestParameter testParameter,
 		                                         object value)
 		{
+			var factoryDef = (QaRelConstraintDefinition)FactoryDefinition;
 			if (string.Equals(testParameter.Name,
-			                  _parameterNameApplyFilterInDatabase,
+							   factoryDef.ParameterNameApplyFilterInDatabase,
 			                  StringComparison.OrdinalIgnoreCase))
 			{
 				return;

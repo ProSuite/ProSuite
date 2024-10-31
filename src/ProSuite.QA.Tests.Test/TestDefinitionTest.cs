@@ -51,6 +51,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaDatasetConstraintFactory),
 				                             typeof(QaGdbConstraintFactory),
 											 typeof(QaLineConnection),
+											 typeof(QaRelConstraint),
 											 typeof(QaTopoNotNearPolyFactory)
 			                             };
 
