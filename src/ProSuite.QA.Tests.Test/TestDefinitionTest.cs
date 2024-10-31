@@ -47,6 +47,7 @@ namespace ProSuite.QA.Tests.Test
 			List<Type> refactoredTypes = new List<Type>
 			                             {
 				                             typeof(QaConstraintsListFactory),
+											 typeof(QaDangleFactory),
 				                             typeof(QaGdbConstraintFactory)
 			                             };
 
@@ -3712,7 +3713,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(TrLineToPolygon),
 				                             typeof(TrMultilineToLine),
 				                             typeof(TrMultipolygonToPolygon),
-				                             typeof(TrPolygonToLine)
+				                             typeof(TrPolygonToLine),
 											 typeof(TrTableJoin),
 											 typeof(TrTableJoinInMemory)
 			                             };

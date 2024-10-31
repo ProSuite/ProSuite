@@ -14,29 +14,11 @@ namespace ProSuite.QA.TestFactories
 {
 	[UsedImplicitly]
 	[LinearNetworkTest]
-	public class QaDangleFactory : TestFactory
+	public class QaDangleFactory : QaFactoryBase
 	{
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaConnections.Codes;
-
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaConnections).Name;
-		}
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			var list = new List<TestParameter>
-			           {
-				           new TestParameter("polylineClasses", typeof(IReadOnlyFeatureClass[]),
-				                             DocStrings.QaDangleFactory_polylineClasses)
-			           };
-
-			return list.AsReadOnly();
-		}
-
-		public override string TestDescription => DocStrings.QaDangleFactory;
 
 		protected override object[] Args(
 			[NotNull] IOpenDataset datasetContext,
