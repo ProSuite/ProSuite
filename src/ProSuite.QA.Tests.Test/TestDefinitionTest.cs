@@ -48,6 +48,7 @@ namespace ProSuite.QA.Tests.Test
 			                             {
 				                             typeof(QaConstraintsListFactory),
 											 typeof(QaDangleFactory),
+											 typeof(QaDatasetConstraintFactory),
 				                             typeof(QaGdbConstraintFactory)
 			                             };
 
