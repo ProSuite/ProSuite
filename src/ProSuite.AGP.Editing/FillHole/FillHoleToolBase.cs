@@ -83,6 +83,13 @@ namespace ProSuite.AGP.Editing.FillHole
 			_feedback = null;
 		}
 
+		protected override CancelableProgressorSource GetProgressorSource()
+		{
+			// Disable the progressor because removing holes is typically fast,
+			// and the users potentially want to continue working already.
+			return null;
+		}
+
 		protected override void LogPromptForSelection()
 		{
 			_msg.Info(LocalizableStrings.FillHoleTool_LogPromptForSelection);
@@ -256,17 +263,6 @@ namespace ProSuite.AGP.Editing.FillHole
 		protected abstract bool CalculateHoles(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor,
 		                                       CancellationToken cancellationToken);
-
-		protected static CancelableProgressor GetHoleCalculationProgressor()
-		{
-			var overlapsCalculationProgressorSource = new CancelableProgressorSource(
-				"Calculating holes...", "cancelled", true);
-
-			CancelableProgressor selectionProgressor =
-				overlapsCalculationProgressorSource.Progressor;
-
-			return selectionProgressor;
-		}
 
 		protected abstract IList<Polygon> SelectHoles([CanBeNull] IList<Holes> holes,
 		                                              [NotNull] Geometry sketch);

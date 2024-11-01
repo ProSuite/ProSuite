@@ -1,23 +1,10 @@
+using System;
+using System.Collections.Generic;
+
 namespace ProSuite.GIS.Geometry.API
 {
-	public interface IPolycurve : IGeometry, IGeometryCollection
+	public interface IPolycurve : ICurve, IGeometryCollection
 	{
-		double Length { get; }
-
-		IPoint FromPoint { get; }
-
-		//void QueryFromPoint(IPoint from);
-
-		IPoint ToPoint { get; }
-
-		//void QueryToPoint(IPoint to);
-
-		//void QueryPoint(
-		//	esriSegmentExtension extension,
-		//	double DistanceAlongCurve,
-		//	bool asRatio,
-		//	IPoint outPoint);
-
 		//void QueryPointAndDistance(
 		//	esriSegmentExtension extension,
 		//	IPoint inPoint,
@@ -41,14 +28,6 @@ namespace ProSuite.GIS.Geometry.API
 		//	double Length,
 		//	ILine normal);
 
-		//void GetSubcurve(
-		//	double fromDistance,
-		//	double toDistance,
-		//	bool asRatio,
-		//	out ICurve outSubcurve);
-
-		bool IsClosed { get; }
-
 		//void SplitAtPoint(
 		//	IPoint splitPoint,
 		//	bool projectOnto,
@@ -65,6 +44,11 @@ namespace ProSuite.GIS.Geometry.API
 		//	out int newPartIndex,
 		//	out int newSegmentIndex);
 
-		//void SimplifyNetwork();
+		IEnumerable<KeyValuePair<int, ISegment>> FindSegments(
+			double xMin, double yMin, double xMax, double yMax,
+			double tolerance, bool allowIndexing = true,
+			Predicate<int> predicate = null);
+
+		bool HasNonLinearSegments();
 	}
 }

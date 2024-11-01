@@ -28,5 +28,14 @@ namespace ProSuite.GIS.Geometry.AGP
 		}
 
 		#endregion
+
+		#region Overrides of ArcGeometry
+
+		public override IGeometry Clone()
+		{
+			return new ArcPolygon((Polygon) _proPolygon.Clone());
+		}
+
+		#endregion
 	}
 }

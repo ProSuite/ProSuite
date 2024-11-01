@@ -287,6 +287,10 @@ namespace ProSuite.Microservices.Client.AGP
 			foreach (Feature feature in features)
 			{
 				FeatureClass featureClass = feature.GetTable();
+				if (featureClass == null)
+				{
+					_msg.Debug($"Feature is null {GdbObjectUtils.ToString(feature)}");
+				}
 				long uniqueClassId = GeometryProcessingUtils.GetUniqueClassId(featureClass);
 
 				Geometry shape = feature.GetShape();
@@ -356,7 +360,7 @@ namespace ProSuite.Microservices.Client.AGP
 				new ObjectClassMsg()
 				{
 					Name = name,
-					Alias = aliasName,
+					Alias = aliasName ?? string.Empty, 
 					ClassHandle = classHandle,
 					SpatialReference = ToSpatialReferenceMsg(
 						spatialRef, SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),

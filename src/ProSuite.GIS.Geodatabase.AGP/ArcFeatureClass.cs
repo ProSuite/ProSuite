@@ -7,6 +7,7 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.GIS.Geodatabase.API;
+using ProSuite.GIS.Geometry.AGP;
 using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geodatabase.AGP
@@ -24,6 +25,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			GeometryDefinition =
 				new ArcGeometryDef(new ShapeDescription(_proFeatureClassDefinition));
 		}
+
+		public IGeometryDef GeometryDefinition { get; }
 
 		#region Implementation of IClass
 
@@ -271,25 +274,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public IField AreaField => TryGetField(_proFeatureClassDefinition.GetAreaField());
 
-		private IField TryGetField(string fieldName)
-		{
-			if (string.IsNullOrEmpty(fieldName))
-			{
-				return null;
-			}
-
-			Field field =
-				_proFeatureClassDefinition.GetFields()
-				                          .FirstOrDefault(
-					                          f => f.Name.Equals(fieldName));
-			if (field == null)
-			{
-				return null;
-			}
-
-			return new ArcField(field);
-		}
-
 		public IField LengthField => TryGetField(_proFeatureClassDefinition.GetLengthField());
 
 		//public IFeatureDataset FeatureDataset => _proFeatureClass.FeatureDataset;
@@ -313,6 +297,32 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		#endregion
 
-		public IGeometryDef GeometryDefinition { get; }
+		#region Implementation of IGeoDataset
+
+		public ISpatialReference SpatialReference =>
+			new ArcSpatialReference(_proFeatureClassDefinition.GetSpatialReference());
+
+		public IEnvelope Extent => new ArcEnvelope(_proFeatureClassDefinition.GetExtent());
+
+		#endregion
+
+		private ArcField TryGetField(string fieldName)
+		{
+			if (string.IsNullOrEmpty(fieldName))
+			{
+				return null;
+			}
+
+			Field field =
+				_proFeatureClassDefinition.GetFields()
+				                          .FirstOrDefault(
+					                          f => f.Name.Equals(fieldName));
+			if (field == null)
+			{
+				return null;
+			}
+
+			return new ArcField(field);
+		}
 	}
 }

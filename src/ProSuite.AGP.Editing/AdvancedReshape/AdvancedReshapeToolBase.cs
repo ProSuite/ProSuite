@@ -120,6 +120,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			       geometryType == GeometryType.Polygon;
 		}
 
+		protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
+		{
+			return layer is FeatureLayer;
+		}
+
 		protected override async void OnToolActivatingCore()
 		{
 			_feedback = new AdvancedReshapeFeedback();
@@ -162,6 +167,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_feedback = null;
 
 			base.OnToolDeactivateCore(hasMapViewChanged);
+		}
+
+		protected override CancelableProgressorSource GetProgressorSource()
+		{
+			// Disable the progressor because reshaping is typically fast,
+			// and the users potentially want to continue working already.
+			return null;
 		}
 
 		protected override SketchGeometryType GetSketchGeometryType()

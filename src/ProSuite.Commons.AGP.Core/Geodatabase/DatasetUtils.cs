@@ -55,6 +55,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return table?.GetName();
 		}
 
+		[CanBeNull]
 		public static string GetAliasName(Table table)
 		{
 			if (table != null && table.IsJoinedTable())
@@ -62,8 +63,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				return StringUtils.Concatenate(GetDatabaseTables(table).Select(GetAliasName), "/");
 			}
 
-			using var definition = table?.GetDefinition();
-			return GetAliasName(definition);
+
+			using (var definition = table?.GetDefinition())
+			{
+				return GetAliasName(definition);
+			}
 		}
 
 		[CanBeNull]
@@ -92,8 +96,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			if (table is null) return -1;
 
-			using var definition = table.GetDefinition();
-			return GetDefaultSubtypeCode(definition);
+			using (var definition = table.GetDefinition())
+			{
+				return GetDefaultSubtypeCode(definition);
+			}
 		}
 
 		public static int GetDefaultSubtypeCode(TableDefinition definition)
@@ -117,8 +123,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			if (table is null) return null;
 
-			using var definition = table.GetDefinition();
-			return GetDefaultSubtype(definition);
+			using (var definition = table.GetDefinition())
+			{
+				return GetDefaultSubtype(definition);
+			}
 		}
 
 		[CanBeNull]
@@ -134,8 +142,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			if (table is null) return null;
 
-			using var definition = table.GetDefinition();
-			return GetSubtype(definition, subtypeCode);
+			using (TableDefinition definition = table.GetDefinition())
+			{
+				return GetSubtype(definition, subtypeCode);
+			}
 		}
 
 		[CanBeNull]
@@ -146,23 +156,14 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			try
 			{
 				// GetSubtypes() returns an empty list if no subtypes
-				foreach (Subtype subtype in definition.GetSubtypes())
-				{
-					if (subtype.GetCode() == subtypeCode)
-					{
-						return subtype;
-					}
-
-					subtype.Dispose();
-				}
+				var subtypes = definition.GetSubtypes();
+				return subtypes.FirstOrDefault(st => st.GetCode() == subtypeCode);
 			}
 			catch (NotSupportedException)
 			{
 				// Shapefiles have no subtypes and throw NotSupportedException
 				return null;
 			}
-
-			return null;
 		}
 
 		[NotNull]
@@ -211,17 +212,17 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return definition?.GetShapeType() ?? GeometryType.Unknown;
 		}
 
-		public static T GetDatasetDefinition<T>(Datastore datastore, string name)
+		public static T GetDatasetDefinition<T>(Datastore datastore, string datasetName)
 			where T : Definition
 		{
 			if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
 			{
-				return geodatabase.GetDefinition<T>(name);
+				return geodatabase.GetDefinition<T>(datasetName);
 			}
 
 			if (datastore is FileSystemDatastore fsDatastore)
 			{
-				return fsDatastore.GetDefinition<T>(name);
+				return fsDatastore.GetDefinition<T>(datasetName);
 			}
 
 			throw new ArgumentOutOfRangeException(
@@ -249,12 +250,13 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			catch (GeodatabaseTableException ex)
 			{
 				// dataset does not exist
-				_msg.Error(ex.Message, ex);
+				string displayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
+				_msg.Debug($"Failed to open {datasetName} from {displayText}: {ex.Message}", ex);
 				throw;
 			}
 
 			throw new ArgumentOutOfRangeException(
-				$"Unsupported datastore: {datastore.GetConnectionString()}");
+				$"Unsupported datastore type: {datastore.GetConnectionString()}");
 		}
 
 		public static bool TryOpenDataset<T>([NotNull] Datastore datastore,
@@ -295,6 +297,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
+		[Obsolete($"use {nameof(RelationshipClassUtils)}")]
 		public static IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitions(
 			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
@@ -318,6 +321,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
+		[Obsolete($"use {nameof(RelationshipClassUtils)}")]
 		public static IEnumerable<RelationshipClass> GetRelationshipClasses(
 			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
@@ -332,6 +336,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
+		[Obsolete($"use {nameof(RelationshipClassUtils)}")]
 		public static RelationshipClass OpenRelationshipClass(
 			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 			[NotNull] string relClassName)
@@ -380,7 +385,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			// Extract the shape's table name from the (fully qualified) shape field name:
-			using TableDefinition definition = tableWithJoin.GetDefinition();
+			TableDefinition definition = tableWithJoin.GetDefinition();
 
 			if (! definition.HasObjectID())
 			{
@@ -409,8 +414,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			// Extract the shape's table name from the (fully qualified) shape field name:
-			using FeatureClassDefinition definition = featureClassWithJoin.GetDefinition();
-			string shapeField = definition.GetShapeField();
+			string shapeField = featureClassWithJoin.GetDefinition().GetShapeField();
 
 			return GetGdbTableContainingField(featureClassWithJoin, shapeField);
 		}
@@ -429,16 +433,16 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				yield break;
 			}
 
-			using Join join = table.GetJoin();
+			Join join = table.GetJoin();
 
-			using Table originTable = join.GetOriginTable();
+			Table originTable = join.GetOriginTable();
 
 			foreach (Table sourceTable in GetDatabaseTables(originTable))
 			{
 				yield return sourceTable;
 			}
 
-			using Table destinationTable = join.GetDestinationTable();
+			Table destinationTable = join.GetDestinationTable();
 
 			foreach (Table sourceTable in GetDatabaseTables(destinationTable))
 			{
@@ -493,8 +497,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			if (featureClass is null) return null;
 
-			using var definition = featureClass.GetDefinition();
-			return GetLengthFieldName(definition);
+			using (var definition = featureClass.GetDefinition())
+			{
+				return GetLengthFieldName(definition);
+			}
 		}
 
 		public static string GetLengthFieldName(FeatureClassDefinition featureClassDefinition)
@@ -525,8 +531,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		[CanBeNull]
 		public static string GetSubtypeFieldName([NotNull] Table table)
 		{
-			using var definition = table.GetDefinition();
-			return GetSubtypeFieldName(definition);
+			using (var definition = table.GetDefinition())
+			{
+				return GetSubtypeFieldName(definition);
+			}
 		}
 
 		[CanBeNull]
@@ -663,8 +671,6 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				{
 					return dbClassTyped;
 				}
-
-				databaseTable.Dispose();
 			}
 
 			throw new InvalidOperationException(

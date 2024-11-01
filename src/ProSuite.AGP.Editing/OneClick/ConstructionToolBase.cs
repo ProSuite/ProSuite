@@ -171,13 +171,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			bool result = await QueuedTask.Run(IsInSelectionPhaseQueued);
-
 			return result;
 		}
 
 		private bool IsInSelectionPhaseQueued()
 		{
-			return ! CanUseSelection(ActiveMapView);
+			return ! IsInSketchPhase;
 		}
 
 		protected override void LogUsingCurrentSelection()

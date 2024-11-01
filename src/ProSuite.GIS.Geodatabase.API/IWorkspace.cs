@@ -94,6 +94,47 @@ namespace ProSuite.GIS.Geodatabase.API
 		bool IsSameDatabase(IFeatureWorkspace otherWorkspace);
 	}
 
+	public interface IVersionedWorkspace
+	{
+		IVersion DefaultVersion { get; }
+
+		IVersion FindVersion(string name);
+	}
+
+	public interface IVersion
+	{
+		IVersionInfo VersionInfo { get; }
+
+		string VersionName { get; }
+
+		string Description { get; }
+
+		bool HasParent();
+
+		void Delete();
+
+		void RefreshVersion();
+
+		IVersion CreateVersion(string newName);
+	}
+
+	public interface IVersionInfo
+	{
+		string VersionName { get; }
+
+		string Description { get; }
+
+		object Created { get; }
+
+		object Modified { get; }
+
+		IVersionInfo Parent { get; }
+
+		IEnumerable<IVersionInfo> Children { get; }
+
+		bool IsOwner();
+	}
+
 	public enum esriWorkspaceType
 	{
 		esriFileSystemWorkspace,

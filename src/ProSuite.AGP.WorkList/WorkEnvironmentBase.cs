@@ -11,6 +11,7 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
@@ -25,11 +26,14 @@ namespace ProSuite.AGP.WorkList
 
 		public abstract string FileSuffix { get; }
 
+		protected string DisplayName { get; private set; }
+
 		[NotNull]
-		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName,
-		                                                 [CanBeNull] string displayName = null)
+		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName)
 		{
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
+
+			DisplayName = SuggestWorkListName() ?? uniqueName;
 
 			if (! await TryPrepareSchemaCoreAsync())
 			{
@@ -38,9 +42,7 @@ namespace ProSuite.AGP.WorkList
 
 			Stopwatch watch = Stopwatch.StartNew();
 
-			string fileName = string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
-
-			string definitionFilePath = GetDefinitionFileFromProjectFolder(fileName);
+			string definitionFilePath = GetDefinitionFileFromProjectFolder();
 
 			IWorkItemStateRepository stateRepository =
 				CreateStateRepositoryCore(definitionFilePath, uniqueName);
@@ -55,11 +57,19 @@ namespace ProSuite.AGP.WorkList
 
 			IWorkList result = CreateWorkListCore(
 				CreateItemRepositoryCore(tables, stateRepository),
-				uniqueName, displayName);
+				uniqueName, DisplayName);
 
 			_msg.DebugFormat("Created work list {0}", uniqueName);
 
 			return result;
+		}
+
+		[CanBeNull]
+		protected abstract string SuggestWorkListName();
+
+		protected virtual string SuggestWorkListLayerName()
+		{
+			return null;
 		}
 
 		protected virtual Task<IList<Table>> PrepareReferencedTables()
@@ -68,12 +78,14 @@ namespace ProSuite.AGP.WorkList
 			return Task.FromResult(result);
 		}
 
-		public string GetDefinitionFileFromProjectFolder([NotNull] string worklistDisplayName)
+		public string GetDefinitionFileFromProjectFolder()
 		{
-			Assert.ArgumentNotNullOrEmpty(worklistDisplayName, nameof(worklistDisplayName));
+			Assert.ArgumentNotNullOrEmpty(DisplayName, nameof(DisplayName));
+
+			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(DisplayName, '_');
 
 			return WorkListUtils.GetDatasource(
-				Project.Current.HomeFolderPath, worklistDisplayName, FileSuffix);
+				Project.Current.HomeFolderPath, fileName, FileSuffix);
 		}
 
 		/// <summary>
@@ -94,6 +106,7 @@ namespace ProSuite.AGP.WorkList
 			worklistLayer.SetScaleSymbols(false);
 			worklistLayer.SetSelectable(false);
 			worklistLayer.SetSnappable(false);
+			worklistLayer.SetShowPopups(false);  //e.g. tell the Explore tool to ignore the WorkListLayer
 
 			//Set renderer based on symbology from template layer
 			LayerDocument templateLayer = GetWorkListSymbologyTemplateLayer();
@@ -119,7 +132,7 @@ namespace ProSuite.AGP.WorkList
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		protected abstract T GetLayerContainerCore<T>() where T : class;
+		protected abstract T GetLayerContainerCore<T>() where T : class, ILayerContainerEdit;
 
 		protected virtual async Task<bool> TryPrepareSchemaCoreAsync()
 		{
@@ -147,7 +160,7 @@ namespace ProSuite.AGP.WorkList
 		#region Private
 
 		[NotNull]
-		private static FeatureLayer CreateWorklistLayer(
+		private FeatureLayer CreateWorklistLayer(
 			[NotNull] IWorkList worklist,
 			[NotNull] string path,
 			[NotNull] ILayerContainerEdit layerContainer)
@@ -162,8 +175,10 @@ namespace ProSuite.AGP.WorkList
 				table = datastore.OpenTable(worklist.Name);
 				Assert.NotNull(table);
 
+				string workListLayerName = SuggestWorkListLayerName() ?? worklist.DisplayName;
+				
 				return LayerFactory.Instance.CreateLayer<FeatureLayer>(
-					WorkListUtils.CreateLayerParams((FeatureClass) table, worklist.DisplayName),
+					WorkListUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
 					layerContainer);
 			}
 			finally

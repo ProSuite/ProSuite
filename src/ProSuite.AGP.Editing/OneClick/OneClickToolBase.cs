@@ -32,6 +32,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private const Key _keyShowOptionsPane = Key.O;
 		private const Key _keyPolygonDraw = Key.P;
 		private const Key _keyLassoDraw = Key.L;
+		private const Key _keyDisplayVertices = Key.T;
 
 		private int _updateErrorCounter;
 		private const int MaxUpdateErrors = 10;
@@ -45,7 +46,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Point CurrentMousePosition;
 
-		private SelectionSketchTypeToggle _selectionSketchType;
+		[CanBeNull] private SelectionSketchTypeToggle _selectionSketchType;
 
 		protected OneClickToolBase()
 		{
@@ -56,6 +57,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			HandledKeys.Add(_keyLassoDraw);
 			HandledKeys.Add(_keyPolygonDraw);
 			HandledKeys.Add(_keyShowOptionsPane);
+			HandledKeys.Add(_keyDisplayVertices);
 		}
 
 		/// <summary>
@@ -145,7 +147,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				using var source = GetProgressorSource();
 				var progressor = source?.Progressor;
 
-				await QueuedTaskUtils.Run(() =>
+				await QueuedTaskUtils.Run(async () =>
 				{
 					OnToolActivatingCore();
 
@@ -154,7 +156,9 @@ namespace ProSuite.AGP.Editing.OneClick
 						ProcessSelection(progressor);
 					}
 
-					return OnToolActivatedCore(hasMapViewChanged);
+					// ReSharper disable once MethodHasAsyncOverload
+					return OnToolActivatedCore(hasMapViewChanged) &&
+					       await OnToolActivatedCoreAsync(hasMapViewChanged);
 				}, progressor);
 			}
 			catch (Exception ex)
@@ -219,6 +223,11 @@ namespace ProSuite.AGP.Editing.OneClick
 					await HandleEscapeAsync();
 				}
 
+				if (args.Key == _keyDisplayVertices)
+				{
+					ToggleVertices();
+				}
+
 				if (await IsInSelectionPhaseAsync())
 				{
 					if (args.Key == _keyPolygonDraw)
@@ -240,9 +249,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		protected virtual void ToggleVertices() { }
+
 		private void SetupLassoSketch()
 		{
-			_selectionSketchType.Toggle(SketchGeometryType.Lasso);
+			_selectionSketchType?.Toggle(SketchGeometryType.Lasso);
 
 			SetupLassoSketchCore();
 		}
@@ -251,7 +262,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void SetupPolygonSketch()
 		{
-			_selectionSketchType.Toggle(SketchGeometryType.Polygon);
+			_selectionSketchType?.Toggle(SketchGeometryType.Polygon);
 			// TODO: Sketch symbol: No vertices
 
 			SetupPolygonSketchCore();
@@ -308,12 +319,34 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.CompletedTask;
 		}
 
+		protected override void OnToolMouseDown(MapViewMouseButtonEventArgs args)
+		{
+			_msg.VerboseDebug(() => $"OnToolMouseDown ({Caption})");
+		   
+			ViewUtils.Try(() =>
+				{
+					OnToolMouseDownCore(args);
+				}, _msg, suppressErrorMessageBox: false);
+
+		}
+
+		protected virtual void OnToolMouseDownCore(MapViewMouseButtonEventArgs args)
+		{ }
+
 		protected override void OnToolMouseMove(MapViewMouseEventArgs args)
 		{
 			CurrentMousePosition = args.ClientPoint;
 
-			base.OnToolMouseMove(args);
+			_msg.VerboseDebug(() => $"OnToolMouseMove ({Caption})");
+
+			ViewUtils.Try(() =>
+			{
+				OnToolMouseMoveCore(args);
+			}, _msg, suppressErrorMessageBox: true);
 		}
+
+		protected virtual void OnToolMouseMoveCore(MapViewMouseEventArgs args)
+		{ }
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
 		{
@@ -407,13 +440,13 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SetupSketch();
 
-			_selectionSketchType.Toggle(GetSelectionSketchGeometryType());
+			_selectionSketchType?.ResetOrDefault();
 		}
 
-		private void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
-		                         bool useSnapping = false,
-		                         bool completeSketchOnMouseUp = true,
-		                         bool enforceSimpleSketch = false)
+		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
+		                           bool useSnapping = false,
+		                           bool completeSketchOnMouseUp = true,
+		                           bool enforceSimpleSketch = false)
 		{
 			_msg.VerboseDebug(
 				() =>
@@ -482,10 +515,25 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// <remarks>Will be called on MCT</remarks>
 		protected virtual void OnToolActivatingCore() { }
 
-		/// <remarks>Will be called on MCT</remarks>
+		/// <summary>
+		/// Synchronous method called on the MCT after the tool has been activated.
+		/// </summary>
+		/// <param name="hasMapViewChanged"></param>
+		/// <returns></returns>
 		protected virtual bool OnToolActivatedCore(bool hasMapViewChanged)
 		{
 			return true;
+		}
+
+		/// <summary>
+		/// Async method called on the MCT after the tool has been activated.
+		/// </summary>
+		/// <param name="hasMapViewChanged"></param>
+		/// <returns></returns>
+		/// <remarks>Will be called on MCT</remarks>
+		protected virtual Task<bool> OnToolActivatedCoreAsync(bool hasMapViewChanged)
+		{
+			return Task.FromResult(true);
 		}
 
 		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }

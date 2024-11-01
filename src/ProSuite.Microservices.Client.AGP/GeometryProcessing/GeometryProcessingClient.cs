@@ -247,6 +247,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			IList<Feature> selectedFeatures,
 			IList<Feature> targetFeatures,
 			ICrackerToolOptions crackerToolOptions,
+			IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsOnExistingVertices,
 			CancellationToken cancellationToken)
 		{
 			if (CrackClient == null)
@@ -254,14 +256,19 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return CrackerClientUtils.CalculateCrackPoints(CrackClient, selectedFeatures,
 			                                               targetFeatures,
-			                                               crackerToolOptions, cancellationToken);
+			                                               crackerToolOptions,
+			                                               intersectionPointOptions,
+			                                               addCrackPointsOnExistingVertices,
+			                                               cancellationToken);
 		}
 
 		public IList<ResultFeature> ApplyCrackPoints(
 			IEnumerable<Feature> selectedFeatures,
 			CrackerResult crackPointsToAdd,
 			IList<Feature> intersectingFeatures,
-			ICrackerToolOptions crackerToolOptions,
+			ICrackerToolOptions crackerOptions,
+			IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsOnExistingVertices,
 			CancellationToken cancellationToken)
 		{
 			if (CrackClient == null)
@@ -269,7 +276,25 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return CrackerClientUtils.ApplyCrackPoints(
 				CrackClient, selectedFeatures, crackPointsToAdd, intersectingFeatures,
-				crackerToolOptions, cancellationToken);
+				crackerOptions, intersectionPointOptions, addCrackPointsOnExistingVertices,
+				cancellationToken);
+		}
+
+		public IList<ResultFeature> ChopLines(
+			IEnumerable<Feature> selectedFeatures,
+			CrackerResult splitPoints,
+			IList<Feature> intersectingFeatures,
+			ICrackerToolOptions chopperOptions,
+			IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsOnExistingVertices,
+			CancellationToken cancellationToken)
+		{
+			if (CrackClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
+			return CrackerClientUtils.ChopLines(
+				CrackClient, selectedFeatures, splitPoints, intersectingFeatures, chopperOptions,
+				intersectionPointOptions, addCrackPointsOnExistingVertices, cancellationToken);
 		}
 	}
 }

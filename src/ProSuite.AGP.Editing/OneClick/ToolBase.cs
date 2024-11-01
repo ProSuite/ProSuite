@@ -411,7 +411,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	private void SetupSelectionSketch()
 	{
 		_symbolizedSketch?.ClearSketchSymbol();
-		_selectionSketchType?.Toggle(GetDefaultSelectionSketchType());
+		_selectionSketchType?.ResetOrDefault();
 	}
 
 	private void SetupPolygonSketch()
@@ -505,8 +505,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			return false; // startContructionPhase = false
 		}
 
-		Task<bool> task = ProcessSelectionCoreAsync(applicableSelection, progressor);
-		return await task;
+		_symbolizedSketch?.SetSketchType(applicableSelection.Keys.First());
+
+		return await ProcessSelectionCoreAsync(applicableSelection, progressor);
 	}
 
 	/// <returns><b>true</b>: selection successfully processed and start
@@ -534,7 +535,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		}
 		else if (args.Selection.Count > 0)
 		{
-			// Process selection not by this tool, e.g. select row in table, etc.
+			// Process selection made not by this tool, e.g. select row in table, etc.
 			// Do not react on selection made by this tool.
 			if (_latch.IsLatched)
 			{

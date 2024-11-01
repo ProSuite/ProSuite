@@ -85,7 +85,8 @@ namespace ProSuite.AGP.WorkList
 
 		protected override void UpdateStateRepositoryCore(string path)
 		{
-			((XmlWorkItemStateRepository) WorkItemStateRepository).FilePath = path;
+			((XmlWorkItemStateRepository) WorkItemStateRepository).WorkListDefinitionFilePath =
+				path;
 		}
 	}
 }

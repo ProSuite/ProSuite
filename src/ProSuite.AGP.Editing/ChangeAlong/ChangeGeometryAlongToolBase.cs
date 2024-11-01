@@ -365,6 +365,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			Cursor = TargetSelectionCursor;
 
+			SetupSketch();
+
 			SetSketchType(SketchGeometryType.Rectangle);
 		}
 

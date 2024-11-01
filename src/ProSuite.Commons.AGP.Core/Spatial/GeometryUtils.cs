@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
+using esriGeometryType = ArcGIS.Core.CIM.esriGeometryType;
 
 namespace ProSuite.Commons.AGP.Core.Spatial
 {
@@ -137,6 +139,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 					throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex,
 					                                      "Part index beyond number of parts");
 				}
+
 				return multipoint.Points[partIndex];
 			}
 
@@ -147,6 +150,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 					throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex,
 					                                      "Part index beyond number of parts");
 				}
+
 				var path = multipart.Parts[partIndex];
 				var flags = multipart.GetAttributeFlags();
 				var sref = multipart.SpatialReference;
@@ -271,6 +275,26 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return MapPointBuilderEx.CreateMapPoint(x, y, hasZ, z, hasM, m, hasId, id, sref);
 		}
 
+		[NotNull]
+		public static MapPoint GetLowerRight([NotNull] Envelope envelope)
+		{
+			double x = envelope.XMax;
+			double y = envelope.YMin;
+
+			bool hasZ = envelope.HasZ;
+			double z = hasZ ? envelope.ZMin : 0.0;
+
+			bool hasM = envelope.HasM;
+			double m = hasM ? envelope.MMin : double.NaN;
+
+			bool hasId = envelope.HasID;
+			int id = hasId ? envelope.IDMin : 0;
+
+			var sref = envelope.SpatialReference;
+
+			return MapPointBuilderEx.CreateMapPoint(x, y, hasZ, z, hasM, m, hasId, id, sref);
+		}
+
 		public static double GetArea([CanBeNull] Geometry geometry)
 		{
 			if (geometry is Polygon polygon) return polygon.Area;
@@ -283,6 +307,16 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			if (geometry is Multipart multipart) return multipart.Length;
 			if (geometry is Envelope envelope) return envelope.Length;
 			return 0.0;
+		}
+
+		public static double GetLength([CanBeNull] Multipart multipart, int partIndex)
+		{
+			if (multipart is null) return 0.0;
+			if (multipart.IsEmpty) return 0.0;
+			if (partIndex < 0 || partIndex >= multipart.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex, "no such part");
+			var path = multipart.Parts[partIndex];
+			return path.Sum(seg => seg.Length);
 		}
 
 		public static AttributeFlags GetAttributeFlags(this Geometry geometry)
@@ -454,6 +488,57 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			var simplified = Engine.SimplifyAsFeature(geometry, forceSimplify);
 			if (simplified is T result) return result;
 			throw UnexpectedResultFrom("GeometryEngine.Simplify()", typeof(T), simplified);
+		}
+
+		public static T SimplifyZ<T>(T geometry, double defaultZ = 0d) where T : Geometry
+		{
+			// TODO: Unittests for SimplifyZ
+			if (geometry == null) return null;
+
+			if (! geometry.HasZ)
+			{
+				// TODO: DropZs?! (Engine.DropMs exists, what about DropZs?)
+				return geometry;
+			}
+
+			if (geometry is MapPoint mapPoint)
+			{
+				return SimplifyZ<T>(mapPoint, defaultZ);
+			}
+
+			if (geometry is Multipart multipart)
+			{
+				return (T) (Geometry) Engine.CalculateNonSimpleZs(multipart, defaultZ);
+			}
+
+			if (geometry is Multipoint multipoint)
+			{
+				var mapPoints = new List<MapPoint>();
+
+				foreach (MapPoint point in multipoint.Points)
+				{
+					MapPoint simplePoint = SimplifyZ<MapPoint>(point, defaultZ);
+					mapPoints.Add(simplePoint);
+				}
+
+				return (T) (Geometry) MultipointBuilderEx.CreateMultipoint(
+					mapPoints, multipoint.GetAttributeFlags());
+			}
+
+			throw new NotImplementedException("The provided geometry type is not yet supported");
+		}
+
+		public static T SimplifyZ<T>(MapPoint mapPoint, double defaultZ = 0d) where T : Geometry
+		{
+			if (double.IsNaN(mapPoint.Z))
+			{
+				MapPointBuilder pointBuilder = new MapPointBuilder(mapPoint);
+				pointBuilder.Z = defaultZ;
+
+				return (T) (Geometry) pointBuilder.ToGeometry();
+			}
+
+			return (T) (Geometry) mapPoint;
 		}
 
 		/// <summary>
@@ -833,7 +918,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			    ! changeHasM &&
 			    ! changeHasID)
 			{
-				return inputGeometry;
+				return SimplifyZ(inputGeometry);
 			}
 
 			var builder = inputGeometry.ToBuilder();
@@ -842,8 +927,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			builder.HasM = hasM ?? inputGeometry.HasM;
 			builder.HasID = hasID ?? inputGeometry.HasID;
 
-			// TODO: SimplifyZ if aware, DropZs if un-aware to ensure simplify cleans up duplicate segments?
-			return builder.ToGeometry();
+			return SimplifyZ(builder.ToGeometry());
 		}
 
 		public static IGeometryEngine Engine
@@ -961,6 +1045,111 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			}
 
 			return (T) builder.ToSegment();
+		}
+
+		/// <summary>
+		/// Given a global (shape-wide) vertex index, get the
+		/// part index and the part-local vertex index.
+		/// </summary>
+		public static int GetLocalVertexIndex(Geometry shape, int globalVertexIndex, out int partIndex)
+		{
+			if (shape is Multipoint multipoint)
+			{
+				// by convention (and consistent with the SDK's hit test),
+				// multipoints have partIndex == vertexIndex for all points
+
+				var pointCount = multipoint.PointCount;
+				if (globalVertexIndex < 0 || globalVertexIndex >= pointCount)
+					throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
+
+				partIndex = globalVertexIndex;
+				return globalVertexIndex;
+			}
+
+			if (shape is Multipart multipart)
+			{
+				int vertexIndex = globalVertexIndex;
+				int partCount = multipart.PartCount;
+				for (int k = 0; k < partCount; k++)
+				{
+					int segmentCount = multipart.Parts[k].Count;
+					int vertexCount = segmentCount + 1; // even for rings!
+
+					if (vertexIndex < vertexCount)
+					{
+						partIndex = k;
+						return vertexIndex;
+					}
+
+					vertexIndex -= vertexCount;
+				}
+
+				throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
+			}
+
+			if (shape is Multipatch multipatch)
+			{
+				throw new NotImplementedException("Multipatches are not yet implemented");
+			}
+
+			partIndex = 0;
+			return globalVertexIndex;
+		}
+
+		/// <summary>
+		/// Given a part index and a part-local vertex index,
+		/// get the global (shape-wide) vertex index.
+		/// </summary>
+		public static int GetGlobalVertexIndex(Geometry shape, int partIndex, int localVertexIndex)
+		{
+			if (shape is Multipoint multipoint)
+			{
+				// by convention (and consistent with the SDK's hit test),
+				// multipoints have partIndex == vertexIndex for all points
+
+				var pointCount = multipoint.PointCount;
+				if (localVertexIndex < 0 || localVertexIndex >= pointCount)
+					throw new ArgumentOutOfRangeException(nameof(localVertexIndex));
+
+				return localVertexIndex;
+			}
+
+			if (shape is Multipart multipart)
+			{
+				if (multipart.IsEmpty)
+					throw new InvalidOperationException("empty geometry");
+
+				int partCount = multipart.PartCount;
+				if (partIndex < 0 || partIndex >= partCount)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+
+				int k = 0;
+				int segmentCount;
+				int vertexCount;
+				int vertexTally = 0;
+
+				for (; k < partIndex; k++)
+				{
+					segmentCount = multipart.Parts[k].Count;
+					vertexCount = segmentCount + 1; // even for rings!
+					vertexTally += vertexCount;
+				}
+
+				segmentCount = multipart.Parts[k].Count;
+				vertexCount = segmentCount + 1;
+
+				if (localVertexIndex < 0 || localVertexIndex >= vertexCount)
+					throw new ArgumentOutOfRangeException(nameof(localVertexIndex));
+
+				return vertexTally + localVertexIndex;
+			}
+
+			if (shape is Multipatch multipatch)
+			{
+				throw new NotImplementedException("Multipatches are not yet implemented");
+			}
+
+			return localVertexIndex;
 		}
 
 		public static void RemoveVertices(/*this*/ MultipartBuilderEx builder, int partIndex,
@@ -1103,7 +1292,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		#region Moving vertices of a multipart geometry builder
 
-		public static void MovePart(this MultipartBuilderEx builder, int partIndex, double dx, double dy)
+		public static void MovePart(this MultipartBuilderEx builder, int partIndex, double dx,
+		                            double dy)
 		{
 			if (builder is null)
 				throw new ArgumentNullException(nameof(builder));
@@ -1118,7 +1308,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			}
 		}
 
-		public static void MoveVertex(this MultipartBuilderEx builder, int partIndex, int vertexIndex, double dx, double dy)
+		public static void MoveVertex(this MultipartBuilderEx builder, int partIndex,
+		                              int vertexIndex, double dx, double dy)
 		{
 			if (builder is null)
 				throw new ArgumentNullException(nameof(builder));
@@ -1270,6 +1461,45 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			MapPoint upperRight = GetUpperRight(extent);
 
 			return $"{Format(lowerLeft, digits)}, {Format(upperRight, digits)}";
+		}
+
+		public static IEnumerable<MapPoint> GetVertices([NotNull] Feature feature)
+		{
+			return GetVertices(feature.GetShape());
+		}
+
+		public static IEnumerable<MapPoint> GetVertices([CanBeNull] Geometry geometry)
+		{
+			// Check the type of geometry
+			if (geometry is Polyline polyline)
+			{
+				// Access vertices of a polyline
+				foreach (var point in polyline.Points)
+				{
+					yield return point;
+				}
+			}
+			else if (geometry is Polygon polygon)
+			{
+				// Access vertices of a polygon
+				foreach (var point in polygon.Points)
+				{
+					yield return point;
+				}
+			}
+			else if (geometry is Multipoint multipoint)
+			{
+				// Access vertices of a multipoint
+				foreach (var point in multipoint.Points)
+				{
+					yield return point;
+				}
+			}
+			else if (geometry is MapPoint mapPoint)
+			{
+				// Single point geometry
+				yield return mapPoint;
+			}
 		}
 	}
 }
