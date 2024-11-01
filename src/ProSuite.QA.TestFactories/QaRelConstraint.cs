@@ -25,8 +25,6 @@ namespace ProSuite.QA.TestFactories
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaConstraint.Codes;
 
-		public override string TestDescription => DocStrings.QaRelConstraint;
-
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
 		                                 out List<TableConstraint> tableParameters)

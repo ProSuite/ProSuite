@@ -23,8 +23,6 @@ namespace ProSuite.QA.TestFactories
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaConnections.Codes;
 
-		public override string TestDescription => DocStrings.QaLineConnection;
-
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
 		                                 out List<TableConstraint> tableParameters)
