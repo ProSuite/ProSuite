@@ -23,46 +23,7 @@ namespace ProSuite.QA.TestFactories
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaGroupConnected.Codes;
-
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaRelGroupConnected).Name;
-		}
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			// redundant with relation, but needed for following reasons: 
-			// - used to derive dataset constraints
-			// - needed to be displayed in Tests displayed by dataset !!
-
-			var list =
-				new List<TestParameter>
-				{
-					new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
-					                  DocStrings.QaRelGroupConnected_relationTables),
-					new TestParameter("relation", typeof(string),
-					                  DocStrings.QaRelGroupConnected_relation),
-					new TestParameter("join", typeof(JoinType),
-					                  DocStrings.QaRelGroupConnected_join),
-					new TestParameter("groupBy", typeof(IList<string>),
-					                  DocStrings.QaRelGroupConnected_groupBy),
-					new TestParameter("allowedShape",
-					                  typeof(ShapeAllowed),
-					                  DocStrings.QaRelGroupConnected_allowedShape)
-				};
-
-			AddOptionalTestParameters(
-				list, typeof(QaGroupConnected),
-				additionalProperties: new[]
-				                      {
-					                      nameof(QaGroupConnected.ErrorReporting)
-				                      });
-
-			return list.AsReadOnly();
-		}
-
-		public override string TestDescription => DocStrings.QaRelGroupConnected;
-
+		
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
 		                                 out List<TableConstraint> tableParameters)

@@ -52,6 +52,10 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(QaGdbConstraintFactory),
 											 typeof(QaLineConnection),
 											 typeof(QaRelConstraint),
+											 typeof(QaRelGroupConnected),
+											 typeof(QaRelGroupConstraints),
+											 typeof(QaRelLineGroupConstraints),
+											 typeof(QaRelMustBeNearOther),
 											 typeof(QaTopoNotNearPolyFactory)
 			                             };
 

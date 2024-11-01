@@ -19,45 +19,9 @@ namespace ProSuite.QA.TestFactories
 	[AttributeTest]
 	public class QaRelGroupConstraints : QaRelationTestFactory
 	{
-		private const string _existsRowGroupFilterName = "ExistsRowGroupFilter";
-
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaGroupConstraints.Codes;
-
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaRelGroupConstraints).Name;
-		}
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			// redundant with relation, but needed for following reasons: 
-			// - used to derive dataset constraints
-			// - needed to be displayed in Tests displayed by dataset !!
-
-			var list =
-				new List<TestParameter>
-				{
-					new TestParameter("relationTables", typeof(IList<IReadOnlyTable>)),
-					new TestParameter("relation", typeof(string)),
-					new TestParameter("join", typeof(JoinType)),
-					new TestParameter("groupByExpression", typeof(string)),
-					new TestParameter("distinctExpression", typeof(string)),
-					new TestParameter("maxDistinctCount", typeof(int)),
-					new TestParameter("limitToTestedRows", typeof(bool)),
-					new TestParameter(_existsRowGroupFilterName, typeof(string),
-					                  isConstructorParameter: false)
-				};
-
-			AddOptionalTestParameters(
-				list, typeof(QaGroupConstraints),
-				new[] { nameof(QaGroupConstraints.ExistsRowGroupFilters) });
-
-			return list.AsReadOnly();
-		}
-
-		public override string TestDescription => DocStrings.QaRelGroupConstraints;
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
@@ -125,7 +89,8 @@ namespace ProSuite.QA.TestFactories
 		protected override void SetPropertyValue(object test, TestParameter testParameter,
 		                                         object value)
 		{
-			if (testParameter.Name == _existsRowGroupFilterName)
+			var factoryDef = (QaRelGroupConstraintsDefinition)FactoryDefinition;
+			if (testParameter.Name == factoryDef.ExistsRowGroupFilterName)
 			{
 				((QaGroupConstraints) test).ExistsRowGroupFilters = new[] { (string) value };
 			}
