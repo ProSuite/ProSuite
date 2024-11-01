@@ -78,8 +78,8 @@ namespace ProSuite.AGP.Editing.Picker
 			return ExpandGeometryByPixels(mapPoint, tolerancePixel);
 		}
 
-		private static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
-		                                               int selectionTolerancePixels)
+		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
+		                                              int selectionTolerancePixels)
 		{
 			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
 				MapView.Active, selectionTolerancePixels, sketchGeometry.Extent.Center);
