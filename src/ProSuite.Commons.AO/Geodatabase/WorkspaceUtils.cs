@@ -1047,6 +1047,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (versionedWorkspace1 == null && versionedWorkspace2 == null)
 			{
+				if (string.IsNullOrEmpty(workspace1.PathName) &&
+				    string.IsNullOrEmpty(workspace2.PathName))
+				{
+					// This could be a non-geodatabase Postgres database:
+					// Note: Even the same password results in a different encrypted string -> replace
+					string connectionString1 = GetConnectionString(workspace1, true);
+					string connectionString2 = GetConnectionString(workspace2, true);
+
+					return connectionString1.Equals(connectionString2,
+					                                StringComparison.OrdinalIgnoreCase);
+				}
+
 				// both are not versioned. Compare file paths
 				if (string.IsNullOrEmpty(workspace1.PathName) ||
 				    string.IsNullOrEmpty(workspace2.PathName))
