@@ -51,10 +51,7 @@ namespace ProSuite.AGP.Editing.YReshape
 		}
 
 		//Make sure this is always true (settings in AdvancedReshape not implemented yet, so no effect atm)
-		protected async Task<bool> UpdateOpenJawReplacedEndpointAsync() {
-		
-			return await Task.FromResult(true);
-		}
+		private bool allowOpenJawReshape = true;
 	}
 
 
