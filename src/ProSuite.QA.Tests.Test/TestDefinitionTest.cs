@@ -57,6 +57,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(QaRelLineGroupConstraints),
 											 typeof(QaRelMustBeNearOther),
 											 typeof(QaRelRegularExpression),
+											 typeof(QaRelUnique),
 											 typeof(QaTopoNotNearPolyFactory)
 			                             };
 

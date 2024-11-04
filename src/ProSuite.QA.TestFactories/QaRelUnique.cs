@@ -23,37 +23,6 @@ namespace ProSuite.QA.TestFactories
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaUnique.Codes;
 
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaRelUnique).Name;
-		}
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			// relationTables is redundant with relation, but needed for following reasons: 
-			// - used to derive dataset constraints
-			// - needed to be displayed in Tests displayed by dataset !!
-
-			var list =
-				new List<TestParameter>
-				{
-					new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
-					                  DocStrings.QaRelUnique_relationTables),
-					new TestParameter("relation", typeof(string),
-					                  DocStrings.QaRelUnique_relation),
-					new TestParameter("join", typeof(JoinType),
-					                  DocStrings.QaRelUnique_join),
-					new TestParameter("unique", typeof(string),
-					                  DocStrings.QaRelUnique_unique),
-					new TestParameter("maxRows", typeof(int),
-					                  DocStrings.QaRelUnique_maxRows)
-				};
-
-			return list.AsReadOnly();
-		}
-
-		public override string TestDescription => DocStrings.QaRelUnique;
-
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
 		                                 out List<TableConstraint> tableParameters)
