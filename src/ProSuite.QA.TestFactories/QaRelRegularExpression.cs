@@ -19,52 +19,10 @@ namespace ProSuite.QA.TestFactories
 	[AttributeTest]
 	public class QaRelRegularExpression : QaRelationTestFactory
 	{
-		private const string MatchIsErrorName = "MatchIsError";
-		private const string PatternDescriptionName = "PatternDescription";
-
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaRegularExpression.Codes;
 
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaRegularExpression).Name;
-		}
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			// relationTables is partly redundant with relation, but needed for following reasons: 
-			// - used to derive dataset constraints
-			// - needed to be displayed in Tests displayed by dataset !!
-
-			var list = new List<TestParameter>
-			           {
-				           new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
-				                             DocStrings.QaRelConstraint_relationTables),
-				           new TestParameter("relation", typeof(string),
-				                             DocStrings.QaRelConstraint_relation),
-				           new TestParameter("join", typeof(JoinType),
-				                             DocStrings.QaRelConstraint_join),
-				           new TestParameter("pattern", typeof(string),
-				                             Tests.Documentation.DocStrings
-				                                  .QaRegularExpression_pattern),
-				           new TestParameter("fieldNames", typeof(IList<string>),
-				                             Tests.Documentation.DocStrings
-				                                  .QaRegularExpression_fieldNames),
-				           new TestParameter(MatchIsErrorName, typeof(bool),
-				                             Tests.Documentation.DocStrings
-				                                  .QaRegularExpression_matchIsError,
-				                             isConstructorParameter: false),
-				           new TestParameter(PatternDescriptionName, typeof(string),
-				                             Tests.Documentation.DocStrings
-				                                  .QaRegularExpression_patternDescription,
-				                             isConstructorParameter: false)
-			           };
-
-			return list.AsReadOnly();
-		}
-
-		public override string TestDescription => DocStrings.QaRelConstraint;
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
@@ -129,14 +87,14 @@ namespace ProSuite.QA.TestFactories
 				{
 					continue;
 				}
-
-				if (parameter.Name.Equals(MatchIsErrorName,
+				var factoryDef = (QaRelRegularExpressionDefinition)FactoryDefinition;
+				if (parameter.Name.Equals(factoryDef.MatchIsErrorName,
 				                          StringComparison.CurrentCultureIgnoreCase))
 				{
 					matchIsError = (bool) value;
 				}
 
-				if (parameter.Name.Equals(PatternDescriptionName,
+				if (parameter.Name.Equals(factoryDef.PatternDescriptionName,
 				                          StringComparison.CurrentCultureIgnoreCase))
 				{
 					patternDescription = (string) value;
@@ -175,9 +133,10 @@ namespace ProSuite.QA.TestFactories
 		protected override void SetPropertyValue(object test, TestParameter parameter,
 		                                         object value)
 		{
-			if (parameter.Name.Equals(MatchIsErrorName,
+			var factoryDef = (QaRelRegularExpressionDefinition)FactoryDefinition;
+			if (parameter.Name.Equals(factoryDef.MatchIsErrorName,
 			                          StringComparison.CurrentCultureIgnoreCase) ||
-			    parameter.Name.Equals(PatternDescriptionName,
+			    parameter.Name.Equals(factoryDef.PatternDescriptionName,
 			                          StringComparison.CurrentCultureIgnoreCase))
 			{
 				return;
