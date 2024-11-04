@@ -2,25 +2,29 @@ using System;
 using ProSuite.AGP.Editing.AdvancedReshape;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.AGP.Editing.Selection;
-using ProSuite.Commons;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.YReshape
 {
 	public class YReshapeToolBase : AdvancedReshapeToolBase
 	{
-		private YReshapeToolOptions _yreshapeToolOptions;
-		private OverridableSettingsProvider<YReshapeToolOptions> _settingsProvider;
+		//protected string OptionsFileName => "YReshapeToolOptions.xml";
+		// TODO: adapt Options from AdvancedReshape as soon as implemented
 
-		protected string OptionsFileName => "YReshapeToolOptions.xml";
+		[CanBeNull] private YReshapeFeedback _feedback;
+		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
-		[CanBeNull]
-		protected virtual string CentralConfigDir => null;
+		protected YReshapeToolBase() {
+			FireSketchEvents = true;
 
-		protected virtual string LocalConfigDir =>
-			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
+			// This is our property:
+			RequiresSelection = true;
+
+			SelectionCursor = ToolUtils.GetCursor(Resources.YReshapeToolCursor);
+			SelectionCursorShift = ToolUtils.GetCursor(Resources.YReshapeToolCursorShift);
+
+		}
 
 		protected override SelectionSettings GetSelectionSettings()
 		{
@@ -28,20 +32,5 @@ namespace ProSuite.AGP.Editing.YReshape
 		}
 
 		protected override IAdvancedReshapeService MicroserviceClient { get; }
-
-		protected YReshapeToolBase()
-		{
-			SelectionCursor = ToolUtils.GetCursor(Resources.YReshapeToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.YReshapeToolCursorShift);
-		}
-
-		// TopGIS Code //
-
-		protected override void OptionsInitialized()
-		{
-			AdvancedReshapeOptions.OpenJawReshapePolicy = OpenJawReshapePolicy.Allow;
-
-			AdvancedReshapeOptions.ProtectOpenJawSettings();
-		}
 	}
 }
