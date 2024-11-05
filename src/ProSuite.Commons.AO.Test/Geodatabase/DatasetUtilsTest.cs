@@ -113,7 +113,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
 
-			IMosaicDataset dataset = DatasetUtils.OpenMosaicDataset(workspace,
+			IMosaicDataset dataset = MosaicUtils.OpenMosaicDataset(workspace,
 				"TOPGIS_TLM.TLM_DTM_MOSAIC");
 
 			Assert.NotNull(dataset);
@@ -126,7 +126,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
 
-			IMosaicDataset dataset = DatasetUtils.OpenMosaicDataset(workspace,
+			IMosaicDataset dataset = MosaicUtils.OpenMosaicDataset(workspace,
 				"TOPGIS_TLM.TLM_DTM_MOSAIC");
 
 			IRaster raster = ((IMosaicDataset3) dataset).GetRaster(string.Empty);
@@ -147,7 +147,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
 
-			IMosaicDataset mosaicDataset = DatasetUtils.OpenMosaicDataset(workspace,
+			IMosaicDataset mosaicDataset = MosaicUtils.OpenMosaicDataset(workspace,
 				"TOPGIS_TLM.TLM_DTM_MOSAIC");
 
 			IFeatureClass rasterCatalog = mosaicDataset.Catalog;
@@ -207,7 +207,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			// TODO: Correct GDAL native reference. Work-around: copy the x64 directory to the output dir
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
 
-			IMosaicDataset mosaicDataset = DatasetUtils.OpenMosaicDataset(workspace,
+			IMosaicDataset mosaicDataset = MosaicUtils.OpenMosaicDataset(workspace,
 				"TOPGIS_TLM.TLM_DTM_MOSAIC");
 
 			IFeatureClass rasterCatalog = mosaicDataset.Catalog;

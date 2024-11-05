@@ -1,9 +1,3 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ESRI.ArcGIS.DataSourcesRaster;
-using ESRI.ArcGIS.GeoDatabaseExtensions;
-#endif
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -2346,19 +2340,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return list;
-		}
-
-		[NotNull]
-		public static IMosaicDataset OpenMosaicDataset([NotNull] IWorkspace workspace,
-		                                               [NotNull] string name)
-		{
-			IMosaicWorkspaceExtensionHelper mosaicExtHelper =
-				new MosaicWorkspaceExtensionHelperClass();
-
-			IMosaicWorkspaceExtension mosaicExt = mosaicExtHelper.FindExtension(workspace);
-
-			// Use the extension to open the mosaic dataset.
-			return mosaicExt.OpenMosaicDataset(name);
 		}
 
 		[NotNull]
