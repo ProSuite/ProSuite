@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.GIS.Geodatabase.API;
 
@@ -10,10 +12,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		internal static IEnumerable<IRow> GetArcRows(
 			RowCursor cursor, ITable sourceTable = null)
 		{
-			Row row;
 			while (cursor.MoveNext())
 			{
-				row = cursor.Current;
+				Row row = cursor.Current;
 
 				yield return ToArcRow(row, sourceTable);
 			}
@@ -23,7 +24,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			[NotNull] Table proTable)
 		{
 			Table databaseTable =
-				Commons.AGP.Core.Geodatabase.DatasetUtils.GetDatabaseTable(proTable);
+				DatasetUtils.GetDatabaseTable(proTable);
 
 			ArcTable result = databaseTable is FeatureClass featureClass
 				                  ? new ArcFeatureClass(featureClass)
@@ -41,6 +42,21 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 
 			return ArcRow.Create(proRow, parent);
+		}
+
+		public static ArcDomain ToArcDomain(Domain domain)
+		{
+			if (domain is CodedValueDomain codedDomain)
+			{
+				return new ArcCodedValueDomain(codedDomain);
+			}
+
+			if (domain is RangeDomain rangeDomain)
+			{
+				return new ArcRangeDomain(rangeDomain);
+			}
+
+			throw new ArgumentOutOfRangeException("Unknown domain type");
 		}
 	}
 }
