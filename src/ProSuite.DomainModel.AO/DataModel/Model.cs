@@ -660,8 +660,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		// ReSharper disable once VirtualMemberNeverOverridden.Global
 
 		// ReSharper disable once VirtualMemberNeverOverridden.Global
-		protected virtual SpatialReferenceDescriptor
-			CreateDefaultSpatialReferenceDescriptor()
+		protected virtual SpatialReferenceDescriptor CreateDefaultSpatialReferenceDescriptor()
 		{
 			return null;
 		}
@@ -699,20 +698,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 		private IAttributeConfigurator GetAttributeConfigurator(
 			[CanBeNull] IEnumerable<AttributeType> existingAttributeTypes)
 		{
-			IAttributeConfigurator attributeConfigurator;
 			if (_attributeConfiguratorFactoryClassDescriptor == null)
 			{
-				attributeConfigurator = null;
+				return null;
 			}
-			else
-			{
-				var attributeConfiguratorFactory =
-					(IAttributeConfiguratorFactory)
-					_attributeConfiguratorFactoryClassDescriptor.CreateInstance();
 
-				attributeConfigurator =
-					attributeConfiguratorFactory.Create(existingAttributeTypes);
-			}
+			var factory = (IAttributeConfiguratorFactory)
+				_attributeConfiguratorFactoryClassDescriptor.CreateInstance();
+
+			IAttributeConfigurator attributeConfigurator = factory.Create(existingAttributeTypes);
 
 			return attributeConfigurator;
 		}
@@ -850,8 +844,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				_msg.VerboseDebug(() => $"Checking existing dataset {dataset.Name}");
 
 				string gdbDatasetName = ModelElementUtils.GetGdbElementName(dataset, workspace,
-					DefaultDatabaseName,
-					DefaultDatabaseSchemaOwner);
+					DefaultDatabaseName, DefaultDatabaseSchemaOwner);
 
 				bool datasetExists = gdbDatasetNames.Contains(gdbDatasetName);
 
