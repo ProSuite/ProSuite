@@ -594,7 +594,8 @@ namespace ProSuite.Microservices.Client.QA
 					Name = ProtobufGeomUtils.NullToEmpty(dataset.Name),
 					AliasName = ProtobufGeomUtils.NullToEmpty(dataset.AliasName),
 					GeometryType = geometryType,
-					DatasetType = (int) dataset.DatasetType
+					DatasetType = (int) dataset.DatasetType,
+					TypeCode = dataset.ImplementationType?.Id ?? 0
 				};
 
 			if (includeDetails)

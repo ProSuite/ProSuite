@@ -34,6 +34,27 @@ namespace ProSuite.Commons.UI
 			}
 		}
 
+		public static T Try<T>([NotNull] Func<T> func, [NotNull] IMsg msg,
+		                       bool suppressErrorMessageBox = false,
+		                       [CallerMemberName] string caller = null)
+		{
+			Assert.ArgumentNotNull(func, nameof(func));
+			Assert.ArgumentNotNull(msg, nameof(msg));
+
+			try
+			{
+				Log(msg, caller);
+
+				return func();
+			}
+			catch (Exception e)
+			{
+				HandleError(e, msg, suppressErrorMessageBox);
+			}
+
+			return default;
+		}
+
 		// todo daro revise method signature. Could be replaces with
 		// async Task TryAsync([NotNull] Task action, [NotNull] IMsg msg,[CallerMemberName] string caller = null)
 		// ??

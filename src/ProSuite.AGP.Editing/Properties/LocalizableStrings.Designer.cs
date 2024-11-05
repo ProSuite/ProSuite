@@ -91,6 +91,24 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select one or more line features to be chopped at intersections with other features. &lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
+        /// </summary>
+        internal static string ChopperTool_LogPromptForSelection {
+            get {
+                return ResourceManager.GetString("ChopperTool_LogPromptForSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select one or more line or polygon features to crack. The cracking process inserts vertices at intersections with other features for topological correctness.&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
+        /// </summary>
+        internal static string CrackerTool_LogPromptForSelection {
+            get {
+                return ResourceManager.GetString("CrackerTool_LogPromptForSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select one or more line or polygon features to cut along other feature(s).&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
         /// </summary>
         internal static string CutPolygonAlongTool_LogPromptForSelection {

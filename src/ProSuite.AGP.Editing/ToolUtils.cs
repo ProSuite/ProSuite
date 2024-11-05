@@ -228,7 +228,7 @@ namespace ProSuite.AGP.Editing
 			var editableClassHandles = new HashSet<long>();
 
 			IEnumerable<BasicFeatureLayer> editableFeatureLayers =
-				MapUtils.GetEditableLayers(mapView.Map);
+				MapUtils.GetEditableLayers<BasicFeatureLayer>(mapView.Map);
 
 			foreach (var featureLayer in editableFeatureLayers)
 			{

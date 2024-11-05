@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
@@ -12,7 +16,7 @@ namespace ProSuite.AGP.Editing.Cracker
 	{
 		private static CIMLineSymbol _overlapLineSymbol;
 		private readonly CIMPolygonSymbol _overlapPolygonSymbol;
-
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private static CIMSymbolReference _outlinedPointSymRef;
 		private readonly CIMSymbolReference redCircleMarker;
 		private readonly CIMSymbolReference greenCircleMarker;
@@ -22,16 +26,16 @@ namespace ProSuite.AGP.Editing.Cracker
 		private readonly CIMSymbolReference mintCircleMarker;
 		private readonly CIMSymbolReference greySquareMarker;
 
-		private readonly List<IDisposable> _overlays = new List<IDisposable>();
+		private readonly List<IDisposable> _overlays = new();
 
 		// Create a point symbol with an outline
 		private static CIMSymbolReference CreateOutlinedPointSymbol(
 			CIMColor fillColor, CIMColor strokeColor, double size, SymbolUtils.MarkerStyle style)
 		{
-			var stroke = SymbolUtils.CreateSolidStroke(strokeColor, size / 5);
+			var stroke = SymbolUtils.CreateSolidStroke(strokeColor, size / 2);
 			var polySym =
 				SymbolUtils.CreatePolygonSymbol(fillColor, SymbolUtils.FillStyle.Solid, stroke);
-			var marker = SymbolUtils.CreateMarker(SymbolUtils.MarkerStyle.Circle, polySym, size);
+			var marker = SymbolUtils.CreateMarker(style, polySym, size);
 			var symbol = SymbolUtils.CreatePointSymbol(marker);
 			_outlinedPointSymRef = symbol.MakeSymbolReference();
 
@@ -52,31 +56,48 @@ namespace ProSuite.AGP.Editing.Cracker
 			CIMColor white = ColorUtils.CreateRGB(255, 255, 255);
 
 			redCircleMarker =
-				CreateOutlinedPointSymbol(red, white, 10, SymbolUtils.MarkerStyle.Circle);
+				CreateOutlinedPointSymbol(red, white, 5, SymbolUtils.MarkerStyle.Circle);
 			greenCircleMarker =
-				CreateOutlinedPointSymbol(green, white, 10, SymbolUtils.MarkerStyle.Circle);
+				CreateOutlinedPointSymbol(green, white, 5, SymbolUtils.MarkerStyle.Circle);
 			greenSquareMarker =
-				CreateOutlinedPointSymbol(green, white, 10, SymbolUtils.MarkerStyle.Square);
+				CreateOutlinedPointSymbol(green, white, 5, SymbolUtils.MarkerStyle.Square);
 			mintCircleMarker =
-				CreateOutlinedPointSymbol(mint, white, 10, SymbolUtils.MarkerStyle.Circle);
+				CreateOutlinedPointSymbol(mint, white, 5, SymbolUtils.MarkerStyle.Circle);
 			redCrossMarker =
-				CreateOutlinedPointSymbol(red, white, 10, SymbolUtils.MarkerStyle.Cross);
+				CreateOutlinedPointSymbol(white, red, 7, SymbolUtils.MarkerStyle.Cross);
 			greySquareMarker =
-				CreateOutlinedPointSymbol(grey, white, 5, SymbolUtils.MarkerStyle.Square);
+				CreateOutlinedPointSymbol(grey, white, 3, SymbolUtils.MarkerStyle.Square);
 			redSquareMarker =
-				CreateOutlinedPointSymbol(red, white, 5, SymbolUtils.MarkerStyle.Square);
+				CreateOutlinedPointSymbol(red, white, 3, SymbolUtils.MarkerStyle.Square);
 			//TODO: remove segment line feature
 		}
 
-		public void Update([CanBeNull] CrackerResult crackerResult)
+		public void Update([CanBeNull] CrackerResult crackerResult, IList<Feature> selectedFeatures)
 		{
+			// clear any previous drawings
 			DisposeOverlays();
+
+			// get all vertices of selected features
+			foreach (var feature in selectedFeatures)
+			{
+				IEnumerable<MapPoint> vertices = GeometryUtils.GetVertices(feature);
+
+				// draw vertices before drawing crack points
+				foreach (var vertex in vertices)
+				{
+					IDisposable addedVertex =
+						MapView.Active.AddOverlay(vertex, greySquareMarker);
+					_overlays.Add(addedVertex);
+				}
+				
+			}
 
 			if (crackerResult == null)
 			{
 				return;
 			}
 
+			// draw crackpoints
 			foreach (var crackedFeature in crackerResult.ResultsByFeature)
 			{
 				foreach (CrackPoint crackPoint in crackedFeature.CrackPoints)
@@ -89,7 +110,8 @@ namespace ProSuite.AGP.Editing.Cracker
 						_overlays.Add(addedCrackPoint);
 					}
 
-					else if (crackPoint.TargetVertexOnlyDifferentInZ)
+					else if (crackPoint
+					         .TargetVertexOnlyDifferentInZ) //not implemented in server yet
 					{
 						IDisposable addedCrackPoint =
 							MapView.Active.AddOverlay(crackPoint.Point, mintCircleMarker);
@@ -98,6 +120,7 @@ namespace ProSuite.AGP.Editing.Cracker
 					}
 
 					else if (crackPoint.TargetVertexDifferentWithinTolerance)
+
 					{
 						IDisposable addedCrackPoint =
 							MapView.Active.AddOverlay(crackPoint.Point, greenSquareMarker);
@@ -125,5 +148,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			_overlays.Clear();
 		}
+
+
 	}
 }
