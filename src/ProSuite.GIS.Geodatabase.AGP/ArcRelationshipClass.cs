@@ -73,7 +73,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 				Table originClass = geodatabase.OpenDataset<Table>(originClassName);
 
-				return ArcUtils.ToArcTable(originClass);
+				return ArcGeodatabaseUtils.ToArcTable(originClass);
 			}
 		}
 
@@ -90,7 +90,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 				Table destinationClass = geodatabase.OpenDataset<Table>(destinationClassName);
 
-				return ArcUtils.ToArcTable(destinationClass);
+				return ArcGeodatabaseUtils.ToArcTable(destinationClass);
 			}
 		}
 
@@ -147,14 +147,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			IEnumerable<Row> relatedObjects = GetRelatedObjects(sourceOid, sourceClassName);
 
-			return relatedObjects.Select(o => ArcUtils.ToArcRow(o));
+			return relatedObjects.Select(o => ArcGeodatabaseUtils.ToArcRow(o));
 		}
 
 		public void DeleteRelationshipsForObject(IObject anObject)
 		{
-			//long sourceOid = anObject.OID;
-			//string sourceClassName = anObject.Class.Name;
-
 			ArcRow sourceRow = (ArcRow) anObject;
 
 			Row sourceRowProRow = sourceRow.ProRow;
@@ -199,7 +196,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			IEnumerable<Row> relatedObjects = GetRelatedObjects(objectIds, sourceClassName);
 
-			foreach (ArcRow related in relatedObjects.Select(o => ArcUtils.ToArcRow(o)))
+			foreach (ArcRow related in relatedObjects.Select(o => ArcGeodatabaseUtils.ToArcRow(o)))
 			{
 				yield return related;
 			}
@@ -282,24 +279,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public IEnumerable<IDataset> Subsets
 		{
-			get
-			{
-				throw new NotImplementedException();
-
-				//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IEnumDataset enumDataset =
-				//	_aoDataset.Subsets;
-
-				//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset dataset;
-				//while ((dataset = enumDataset.Next()) != null)
-				//{
-				//	yield return dataset is EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureClass
-				//		             ? new ArcFeatureClass((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFeatureClass)dataset)
-				//		             : new ArcTable((EsriGeodatabase::ESRI.ArcGIS.Geodatabase.ITable)dataset);
-				//}
-			}
+			get { throw new NotImplementedException(); }
 		}
 
-		public IWorkspace Workspace => new ArcWorkspace(
+		public IWorkspace Workspace => ArcWorkspace.Create(
 			(ArcGIS.Core.Data.Geodatabase) _proRelationshipClass.GetDatastore());
 
 		public bool CanCopy()

@@ -25,5 +25,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		                                       [NotNull] params Attributes[] attributes);
 
 		string SuggestWorkListName();
+
+		bool IsSameWorkListDefinition(string existingDefinitionFile);
 	}
 }

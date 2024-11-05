@@ -289,8 +289,8 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			if (map is null) return Enumerable.Empty<T>();
 			return map.GetLayersAsFlattenedList()
-			   .OfType<T>()
-			   .Where(l => layerPredicate is null || layerPredicate(l));
+			          .OfType<T>()
+			          .Where(l => layerPredicate is null || layerPredicate(l));
 		}
 
 		/// <summary>
@@ -491,11 +491,10 @@ namespace ProSuite.Commons.AGP.Carto
 		/// </summary>
 		/// <param name="map"></param>
 		/// <returns></returns>
-		public static IEnumerable<BasicFeatureLayer> GetEditableLayers(
-			[NotNull] Map map)
+		public static IEnumerable<T> GetEditableLayers<T>([NotNull] Map map)
+			where T : BasicFeatureLayer
 		{
-			IEnumerable<BasicFeatureLayer> editLayers =
-				GetFeatureLayers<BasicFeatureLayer>(map, bfl => bfl?.IsEditable == true);
+			IEnumerable<T> editLayers = GetFeatureLayers<T>(map, bfl => bfl?.IsEditable == true);
 
 			return editLayers;
 		}
@@ -570,6 +569,19 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <returns></returns>
 		public static MapPoint ToMapPoint(MapView mapView, Point screenPoint)
 		{
+			return mapView.ScreenToMap(screenPoint);
+		}
+
+		/// <summary>
+		/// Converts a client point to a map point.
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <param name="clientPoint">The global screen coordinates.</param>
+		/// <returns></returns>
+		public static MapPoint ClientToMapPoint(MapView mapView, Point clientPoint)
+		{
+			Point screenPoint = MapView.Active.ClientToScreen(clientPoint);
+
 			return mapView.ScreenToMap(screenPoint);
 		}
 
@@ -747,18 +759,20 @@ namespace ProSuite.Commons.AGP.Carto
 			[NotNull] MapView mapView,
 			[NotNull] Geometry geometry,
 			CIMSymbolReference symbolReference,
-			int milliseconds = 400)
+			int milliseconds = 400,
+			bool useReferenceScale = false)
 		{
 			return await FlashGeometryAsync(mapView, new Overlay(geometry, symbolReference),
-			                                milliseconds);
+			                                milliseconds, useReferenceScale);
 		}
 
 		public static async Task<bool> FlashGeometryAsync(
 			[NotNull] MapView mapView,
 			[NotNull] Overlay overlay,
-			int milliseconds = 400)
+			int milliseconds = 400,
+			bool useReferenceScale = false)
 		{
-			using (await overlay.AddToMapAsync(mapView))
+			using (await overlay.AddToMapAsync(mapView, useReferenceScale))
 			{
 				await Task.Delay(milliseconds);
 			}
@@ -769,7 +783,8 @@ namespace ProSuite.Commons.AGP.Carto
 		public static async Task<bool> FlashGeometriesAsync(
 			[NotNull] MapView mapView,
 			IEnumerable<Overlay> overlays,
-			int milliseconds = 400)
+			int milliseconds = 400,
+			bool useReferenceScale = false)
 		{
 			List<IDisposable> disposables = new List<IDisposable>();
 
@@ -777,7 +792,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				foreach (Overlay overlay in overlays)
 				{
-					disposables.Add(await overlay.AddToMapAsync(mapView));
+					disposables.Add(await overlay.AddToMapAsync(mapView, useReferenceScale));
 				}
 
 				await Task.Delay(milliseconds);
@@ -796,7 +811,8 @@ namespace ProSuite.Commons.AGP.Carto
 		public static bool FlashGeometries(
 			[NotNull] MapView mapView,
 			IEnumerable<Overlay> overlays,
-			int milliseconds = 400)
+			int milliseconds = 400,
+			bool useReferenceScale = false)
 		{
 			List<IDisposable> disposables = new List<IDisposable>();
 
@@ -804,7 +820,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				foreach (Overlay overlay in overlays)
 				{
-					disposables.Add(overlay.AddToMap(mapView));
+					disposables.Add(overlay.AddToMap(mapView, useReferenceScale));
 				}
 
 				Thread.Sleep(milliseconds);

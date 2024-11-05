@@ -22,5 +22,14 @@ namespace ProSuite.GIS.Geometry.AGP
 		}
 
 		#endregion
+
+		#region Overrides of ArcGeometry
+
+		public override IGeometry Clone()
+		{
+			return new ArcMultipoint((Multipoint) _proMultipoint.Clone());
+		}
+
+		#endregion
 	}
 }

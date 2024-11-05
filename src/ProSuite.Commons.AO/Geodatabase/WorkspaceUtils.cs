@@ -1,8 +1,3 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesGDB;
-#else
-using ESRI.ArcGIS.DataSourcesGDB;
-#endif
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,13 +12,19 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Properties;
 using ProSuite.Commons.Com;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Diagnostics;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
+#if Server
+using ESRI.ArcGIS.DatasourcesGDB;
+
+#else
+using ESRI.ArcGIS.DataSourcesGDB;
+#endif
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
@@ -1087,6 +1088,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (versionedWorkspace1 == null && versionedWorkspace2 == null)
 			{
+				if (string.IsNullOrEmpty(workspace1.PathName) &&
+				    string.IsNullOrEmpty(workspace2.PathName))
+				{
+					// This could be a non-geodatabase Postgres database:
+					// Note: Even the same password results in a different encrypted string -> replace
+					string connectionString1 = GetConnectionString(workspace1, true);
+					string connectionString2 = GetConnectionString(workspace2, true);
+
+					return connectionString1.Equals(connectionString2,
+					                                StringComparison.OrdinalIgnoreCase);
+				}
+
 				// both are not versioned. Compare file paths
 				if (string.IsNullOrEmpty(workspace1.PathName) ||
 				    string.IsNullOrEmpty(workspace2.PathName))
@@ -1847,8 +1860,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		[NotNull]
 		public static string GetConnectionString([NotNull] IWorkspaceName workspaceName,
 		                                         bool replacePassword = false,
-		                                         [CanBeNull] string passwordPadding =
-			                                         null)
+		                                         [CanBeNull] string passwordPadding = null)
 		{
 			Assert.ArgumentNotNull(workspaceName, nameof(workspaceName));
 
@@ -2013,15 +2025,42 @@ namespace ProSuite.Commons.AO.Geodatabase
 				passwordPadding = "**********";
 			}
 
-			string passwordKeyword;
-			int passwordKeywordIndex = GetPasswordKeywordIndex(workspaceConnectionString,
-			                                                   out passwordKeyword);
-
-			if (passwordKeywordIndex < 0)
+			var result = StringUtils.RemoveWhiteSpaceCharacters(workspaceConnectionString);
+			foreach (string passwordKeyword in GetPasswordKeywords())
 			{
-				return workspaceConnectionString;
+				string keyword = $"{passwordKeyword}=";
+
+				// NOTE: The various password keywords contain each other. We have to search
+				//       including the delimiters:
+				int keywordIndex;
+				if (result.StartsWith(keyword, StringComparison.OrdinalIgnoreCase))
+				{
+					keywordIndex = 0;
+				}
+				else
+				{
+					keyword = $";{keyword}";
+					keywordIndex = result.IndexOf(keyword, 0,
+					                              StringComparison.OrdinalIgnoreCase);
+				}
+
+				if (keywordIndex < 0)
+				{
+					continue;
+				}
+
+				result = ReplacePassword(result,
+				                         passwordPadding,
+				                         keywordIndex, passwordKeyword);
 			}
 
+			return result;
+		}
+
+		private static string ReplacePassword(string workspaceConnectionString,
+		                                      string passwordPadding,
+		                                      int passwordKeywordIndex, string passwordKeyword)
+		{
 			// there is a password in the string, replace it
 			int pwdSeparator1Index =
 				workspaceConnectionString.IndexOf("=",
@@ -3030,6 +3069,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			yield return "PASSWORD";
 			yield return "ENCRYPTED_PASSWORD";
+			yield return "ENCRYPTED_PASSWORD_UTF8";
 		}
 
 		[NotNull]

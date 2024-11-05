@@ -1,7 +1,7 @@
 using System;
 using ArcGIS.Core;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
@@ -10,7 +10,7 @@ using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
-	public class ArcRow : IObject
+	public class ArcRow : IObject, IRowSubtypes
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -27,6 +27,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			return result;
 		}
+
+		public static Func<ArcGIS.Core.Geometry.Geometry, IGeometry> GeometryFactory { get; set; } =
+			ArcGeometry.Create;
 
 		protected ArcRow(Row proRow, ITable parentTable)
 		{
@@ -70,8 +73,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public void Store()
 		{
+			OnStoring();
+
 			TryOrRefreshRow<Row>(r => r.Store());
 		}
+
+		protected virtual void OnStoring() { }
 
 		public void Delete()
 		{
@@ -129,35 +136,118 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				throw;
 			}
 		}
+
+		#region Implementation of IRowSubtypes
+
+		public int SubtypeCode
+		{
+			get
+			{
+				int? subtypeCode =
+					GdbObjectUtils.GetSubtypeCode(_proRow);
+
+				return subtypeCode ?? -1;
+			}
+			set => GdbObjectUtils.SetSubtypeCode(_proRow, value);
+		}
+
+		public void InitDefaultValues()
+		{
+			Subtype subtype =
+				GdbObjectUtils.GetSubtype(_proRow);
+
+			ArcTable arcTable = (ArcTable) _parentTable;
+
+			GdbObjectUtils.SetNullValuesToGdbDefault(
+				_proRow, arcTable.ProTableDefinition, subtype);
+		}
+
+		#endregion
+
+		#region Equality members
+
+		protected bool Equals(ArcRow other)
+		{
+			return Equals(_parentTable, other._parentTable) && OID == other.OID;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is null)
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != GetType())
+			{
+				return false;
+			}
+
+			return Equals((ArcRow) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(_parentTable, OID);
+		}
+
+		#endregion
 	}
 
-	public class ArcFeature : ArcRow, IFeature
+	public class ArcFeature : ArcRow, IFeature, IFeatureChanges
 	{
 		private readonly Feature _proFeature;
+		private readonly IFeatureClass _parentFeatureClass;
+		private IGeometry _mutableGeometry;
 
 		public ArcFeature(Feature proFeature, IFeatureClass parentClass)
 			: base(proFeature, parentClass as ITable)
 		{
 			_proFeature = proFeature;
+			_parentFeatureClass = parentClass;
 		}
 
-		protected virtual ArcGIS.Core.Geometry.Geometry GetProGeometry()
+		protected virtual ArcGIS.Core.Geometry.Geometry GetProGeometry(IGeometry fromShape)
 		{
 			ArcGIS.Core.Geometry.Geometry result = null;
 
-			TryOrRefreshRow<Feature>(r => result = r.GetShape());
+			if (fromShape is ArcGeometry arcGeometry)
+			{
+				result = arcGeometry.ProGeometry;
+			}
+			else if (fromShape is IMutableGeometry mutable)
+			{
+				result = (ArcGIS.Core.Geometry.Geometry) mutable.ToNativeImplementation();
+			}
+			else
+			{
+				result = ArcGeometryUtils.CreateProGeometry(fromShape);
+			}
 
 			return result;
 		}
 
 		#region Implementation of IFeature
 
+		public new IFeatureClass Class => (IFeatureClass) base.Class;
+
 		public IGeometry ShapeCopy
 		{
 			get
 			{
-				ArcGIS.Core.Geometry.Geometry clone = GetProGeometry().Clone();
-				return new ArcGeometry(clone);
+				if (_mutableGeometry != null)
+				{
+					return _mutableGeometry.Clone();
+				}
+
+				ArcGIS.Core.Geometry.Geometry proGeometry = GetProGeometry(Shape);
+				ArcGIS.Core.Geometry.Geometry clone = proGeometry.Clone();
+				return GeometryFactory(clone);
 			}
 		}
 
@@ -165,41 +255,34 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get
 			{
-				ArcGIS.Core.Geometry.Geometry proGeometry = GetProGeometry();
-
-				if (proGeometry is Polygon polygon)
+				if (_mutableGeometry != null)
 				{
-					return new ArcPolygon(polygon);
+					return _mutableGeometry;
 				}
 
-				if (proGeometry is Polyline polyline)
-				{
-					return new ArcPolycurve(polyline);
-				}
+				ArcGIS.Core.Geometry.Geometry proGeometry = null;
 
-				if (proGeometry is Multipoint multipoint)
-				{
-					return new ArcMultipoint(multipoint);
-				}
+				TryOrRefreshRow<Feature>(r => proGeometry = r.GetShape());
 
-				if (proGeometry is Multipatch multipatch)
-				{
-					return new ArcMultipatch(multipatch);
-				}
-
-				if (proGeometry is MapPoint point)
-				{
-					return new ArcPoint(point);
-				}
-
-				return new ArcGeometry(proGeometry);
+				return GeometryFactory(proGeometry);
 			}
 			set
 			{
-				ArcGIS.Core.Geometry.Geometry proGeometry =
-					((ArcGeometry) value).ProGeometry;
+				if (value is IMutableGeometry)
+				{
+					_mutableGeometry = value;
+				}
+				else if (value is ArcGeometry arcGeometry)
+				{
+					ArcGIS.Core.Geometry.Geometry proGeometry =
+						arcGeometry.ProGeometry;
 
-				TryOrRefreshRow<Feature>(r => r.SetShape(proGeometry));
+					TryOrRefreshRow<Feature>(r => r.SetShape(proGeometry));
+				}
+				else
+				{
+					throw new NotSupportedException("Unsupported geometry implementation");
+				}
 			}
 		}
 
@@ -212,6 +295,59 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				TryOrRefreshRow<Feature>(r => geometry = _proFeature.GetShape());
 
 				return new ArcEnvelope(geometry.Extent);
+			}
+		}
+
+		#endregion
+
+		#region Implementation of IFeatureChanges
+
+		public bool ShapeChanged
+		{
+			get
+			{
+				int shapeFieldIdx =
+					_parentFeatureClass.FindField(_parentFeatureClass.ShapeFieldName);
+
+				return _proFeature.HasValueChanged(shapeFieldIdx);
+			}
+		}
+
+		public IGeometry OriginalShape
+		{
+			get
+			{
+				int shapeFieldIdx =
+					_parentFeatureClass.FindField(_parentFeatureClass.ShapeFieldName);
+
+				ArcGIS.Core.Geometry.Geometry originalProGeometry =
+					(ArcGIS.Core.Geometry.Geometry) _proFeature.GetOriginalValue(shapeFieldIdx);
+
+				return GeometryFactory(originalProGeometry);
+			}
+		}
+
+		#endregion
+
+		#region Overrides of ArcRow
+
+		protected override void OnStoring()
+		{
+			if (_mutableGeometry != null)
+			{
+				ArcGIS.Core.Geometry.Geometry newGeometry = null;
+
+				if (_mutableGeometry is IMutableGeometry mutableImpl)
+				{
+					newGeometry =
+						(ArcGIS.Core.Geometry.Geometry) mutableImpl.ToNativeImplementation();
+				}
+				else
+				{
+					newGeometry = ArcGeometryUtils.CreateProGeometry(_mutableGeometry);
+				}
+
+				_proFeature.SetShape(newGeometry);
 			}
 		}
 

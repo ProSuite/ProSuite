@@ -26,4 +26,11 @@ namespace ProSuite.GIS.Geodatabase.API
 
 		IFields Fields { get; }
 	}
+
+	public interface IRowSubtypes
+	{
+		int SubtypeCode { get; set; }
+
+		void InitDefaultValues();
+	}
 }

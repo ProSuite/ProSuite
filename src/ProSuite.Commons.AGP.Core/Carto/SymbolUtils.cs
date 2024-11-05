@@ -451,6 +451,12 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				return GeometryEngine.Instance.Rotate(polygon, origin, Math.PI / 4);
 			}
 
+			if (style == MarkerStyle.Cross)
+			{
+				var line = GeometryFactory.CreatePolylineXY([-5,-5, 5,5, 0,0, -5,5, 5,-5]);
+				return line;
+			}
+			
 			throw new NotImplementedException(
 				"Sorry, this MarkerStyle is not yet implemented");
 		}
@@ -1485,10 +1491,11 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			                    out index);
 		}
 
+		// todo daro: to CollectionUtils?
 		/// <remarks>
 		/// Usage: <c>foo.Array = AddOne(foo.Array, item)</c>
 		/// </remarks>
-		private static T[] AddOne<T>([CanBeNull] T[] array, T item)
+		public static T[] AddOne<T>([CanBeNull] T[] array, T item)
 		{
 			if (item == null)
 				throw new ArgumentNullException(nameof(item));

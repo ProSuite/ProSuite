@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -106,6 +105,13 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
+		protected override CancelableProgressorSource GetProgressorSource()
+		{
+			// Disable the progressor because creating a new feature is typically fast,
+			// and it conflicts with the possible error message.
+			return null;
+		}
+
 		protected override EditingTemplate GetSketchTemplate()
 		{
 			return EditingTemplate.Current;
@@ -198,7 +204,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				FeatureClass newTargetClass = GetCurrentTargetClass(out _);
 
 				TargetClassChanged(newTargetClass);
-
 			}, _msg, true);
 		}
 
@@ -241,7 +246,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 						SetPredefinedFields(rowBuffer);
 
-						SetNullValuesToGdbDefault(rowBuffer, featureClassDef, subtype);
+						GdbObjectUtils.SetNullValuesToGdbDefault(
+							rowBuffer, featureClassDef, subtype);
 
 						Geometry projected =
 							MakeGeometryStorable(simplifiedSketch, featureClassDef);
@@ -293,38 +299,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			Geometry projected = GeometryUtils.EnsureSpatialReference(
 				geometryToStore, featureClassDef.GetSpatialReference());
 			return projected;
-		}
-
-		/// <summary>
-		/// Sets the values of the <see cref="RowBuffer"/> which are not yet initialized to the
-		/// default values defined in the Geodatabase.
-		/// </summary>
-		/// <param name="rowBuffer"></param>
-		/// <param name="featureClassDef"></param>
-		/// <param name="subtype"></param>
-		private static void SetNullValuesToGdbDefault(
-			[NotNull] RowBuffer rowBuffer,
-			[NotNull] FeatureClassDefinition featureClassDef,
-			[CanBeNull] Subtype subtype)
-		{
-			foreach (Field field in featureClassDef.GetFields())
-			{
-				if (! field.IsEditable)
-				{
-					continue;
-				}
-
-				if (field.FieldType == FieldType.Geometry)
-				{
-					continue;
-				}
-
-				// If the value has not been set (e.g. by the subclass), use the GDB default:
-				if (rowBuffer[field.Name] != null)
-				{
-					rowBuffer[field.Name] = field.GetDefaultValue(subtype);
-				}
-			}
 		}
 	}
 }

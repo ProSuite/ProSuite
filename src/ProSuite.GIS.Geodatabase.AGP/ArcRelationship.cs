@@ -43,7 +43,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 				Row row = _relationship.GetOriginRow();
 
-				return (IObject) ArcUtils.ToArcRow(row);
+				return (IObject) ArcGeodatabaseUtils.ToArcRow(row);
 			}
 		}
 
@@ -58,7 +58,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 				Row row = _relationship.GetDestinationRow();
 
-				return (IObject) ArcUtils.ToArcRow(row);
+				return (IObject) ArcGeodatabaseUtils.ToArcRow(row);
 			}
 		}
 

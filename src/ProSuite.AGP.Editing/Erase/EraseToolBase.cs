@@ -73,16 +73,6 @@ namespace ProSuite.AGP.Editing.Erase
 			return hasPolycurveSelection;
 		}
 
-		protected override CancelableProgressor GetSelectionProgressor()
-		{
-			var selectionCompleteProgressorSource = new CancelableProgressorSource(
-				"Selecting features bla bla...", "cancelled", true);
-
-			CancelableProgressor selectionProgressor = selectionCompleteProgressorSource.Progressor;
-
-			return selectionProgressor;
-		}
-
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			EditingTemplate editTemplate,

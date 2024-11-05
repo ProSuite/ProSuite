@@ -3,7 +3,7 @@ using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geodatabase.API
 {
-	public interface IFeatureClass : IObjectClass
+	public interface IFeatureClass : IObjectClass, IGeoDataset
 	{
 		esriGeometryType ShapeType { get; }
 
@@ -40,5 +40,12 @@ namespace ProSuite.GIS.Geodatabase.API
 			esriSelectionType selType,
 			esriSelectionOption selOption,
 			IWorkspace selectionContainer);
+	}
+
+	public interface IGeoDataset
+	{
+		ISpatialReference SpatialReference { get; }
+
+		IEnvelope Extent { get; }
 	}
 }

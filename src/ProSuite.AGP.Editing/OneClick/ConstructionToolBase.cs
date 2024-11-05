@@ -153,21 +153,25 @@ namespace ProSuite.AGP.Editing.OneClick
 			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
-		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
+		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
 			if (! RequiresSelection)
 			{
-				return Task.FromResult(false);
+				return false;
 			}
 
 			if (shiftDown)
 			{
-				return Task.FromResult(true);
+				return true;
 			}
 
-			bool result = ! IsInSketchPhase;
+			bool result = await QueuedTask.Run(IsInSelectionPhaseQueued);
+			return result;
+		}
 
-			return Task.FromResult(result);
+		private bool IsInSelectionPhaseQueued()
+		{
+			return ! IsInSketchPhase;
 		}
 
 		protected override void LogUsingCurrentSelection()
@@ -322,7 +326,6 @@ namespace ProSuite.AGP.Editing.OneClick
 							else
 							{
 								ClearSelection();
-								StartSelectionPhase();
 							}
 						}
 					}
