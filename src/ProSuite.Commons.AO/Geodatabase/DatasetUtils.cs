@@ -984,23 +984,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return objectClass.ObjectClassID >= 0;
 		}
 
-		public static string GetOwnerName([NotNull] IWorkspace workspace,
-		                                  [NotNull] string fullTableName)
-		{
-			string ownerName;
-
-			if (workspace is ISQLSyntax sqlSyntax)
-			{
-				sqlSyntax.ParseTableName(fullTableName, out _, out ownerName, out _);
-			}
-			else
-			{
-				ownerName = string.Empty;
-			}
-
-			return ownerName;
-		}
-
 		[NotNull]
 		public static string GetUnqualifiedName([NotNull] IDataset dataset)
 		{
@@ -1436,29 +1419,34 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <summary>
 		/// Gets the schema part of a dataset name
 		/// </summary>
-		/// <param name="workspace">The workspace.</param>
-		/// <param name="fullTableName">The fully qualified table name to get 
-		/// the owner part of.</param>
-		/// <returns></returns>
-		public static string GetOwnerName([NotNull] IFeatureWorkspace workspace,
+		public static string GetOwnerName([NotNull] IFeatureWorkspace featureWorkspace,
+		                                  [NotNull] string fullTableName)
+		{
+			var workspace = (IWorkspace) featureWorkspace;
+
+			return GetOwnerName(workspace, fullTableName);
+		}
+
+		public static string GetOwnerName([NotNull] IDatasetName datasetName)
+		{
+			Assert.ArgumentNotNull(datasetName, nameof(datasetName));
+
+			var workspace = (IWorkspace) ((IName) datasetName.WorkspaceName).Open();
+
+			return GetOwnerName(workspace, datasetName.Name);
+		}
+
+		public static string GetOwnerName([NotNull] IWorkspace workspace,
 		                                  [NotNull] string fullTableName)
 		{
 			if (workspace is ISQLSyntax sqlSyntax)
 			{
-				string ownerName;
-				sqlSyntax.ParseTableName(fullTableName, out _, out ownerName, out _);
+				sqlSyntax.ParseTableName(fullTableName, out _, out string ownerName, out _);
 
 				return ownerName;
 			}
 
 			return string.Empty;
-		}
-
-		public static string GetOwnerName([NotNull] IDatasetName datasetName)
-		{
-			var workspace = (IWorkspace) ((IName) datasetName.WorkspaceName).Open();
-
-			return GetOwnerName(workspace, datasetName.Name);
 		}
 
 		/// <summary>
