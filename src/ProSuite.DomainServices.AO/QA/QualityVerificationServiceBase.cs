@@ -35,7 +35,6 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly IGdbTransaction _gdbTransaction;
 		private readonly IDatasetLookup _datasetLookup;
 
 		[CanBeNull] private ILocationBasedQualitySpecification
@@ -61,12 +60,8 @@ namespace ProSuite.DomainServices.AO.QA
 
 		#region Constructors
 
-		protected QualityVerificationServiceBase([NotNull] IGdbTransaction gdbTransaction,
-		                                         [NotNull] IDatasetLookup datasetLookup)
+		protected QualityVerificationServiceBase([NotNull] IDatasetLookup datasetLookup)
 		{
-			Assert.ArgumentNotNull(gdbTransaction, nameof(gdbTransaction));
-
-			_gdbTransaction = gdbTransaction;
 			_datasetLookup = datasetLookup;
 		}
 
@@ -150,7 +145,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver);
 
 		[NotNull]
-		protected IGdbTransaction GdbTransaction => _gdbTransaction;
+		protected abstract IGdbTransaction CreateGdbTransaction();
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
 		                                [NotNull] Model model)
@@ -519,7 +514,9 @@ namespace ProSuite.DomainServices.AO.QA
 
 			if (UpdateErrorsInVerifiedModelContext)
 			{
-				_gdbTransaction.Execute(
+				var gdbTransaction = CreateGdbTransaction();
+
+				gdbTransaction.Execute(
 					_verificationContext.PrimaryWorkspaceContext.Workspace,
 					delegate
 					{

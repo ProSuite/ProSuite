@@ -68,6 +68,13 @@ namespace ProSuite.Commons.Text
 		}
 
 		[NotNull]
+		public static string RemoveWhiteSpaceCharacters([NotNull] string text)
+		{
+			return new string(text.Where(c => ! char.IsWhiteSpace(c))
+			                      .ToArray());
+		}
+
+		[NotNull]
 		public static string ConcatenateSorted(
 			[NotNull] IEnumerable list,
 			[CanBeNull] string separator,
@@ -784,7 +791,7 @@ namespace ProSuite.Commons.Text
 		public static string FormatNonScientific(double value,
 		                                         [NotNull] IFormatProvider formatProvider)
 		{
-			decimal decimalValue = (decimal)value;
+			decimal decimalValue = (decimal) value;
 			string result = string.Format(formatProvider, "{0:F99}", decimalValue).TrimEnd('0');
 
 			if (result.Length == 0)
@@ -802,7 +809,7 @@ namespace ProSuite.Commons.Text
 			double value,
 			[NotNull] IFormatProvider formatProvider)
 		{
-			decimal valueDecimal = (decimal)value;
+			decimal valueDecimal = (decimal) value;
 			string result = string.Format(formatProvider, "{0:F99}", valueDecimal)
 			                      .TrimEnd('0');
 

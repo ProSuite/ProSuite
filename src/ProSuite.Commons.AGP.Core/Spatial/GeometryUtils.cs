@@ -275,6 +275,26 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return MapPointBuilderEx.CreateMapPoint(x, y, hasZ, z, hasM, m, hasId, id, sref);
 		}
 
+		[NotNull]
+		public static MapPoint GetLowerRight([NotNull] Envelope envelope)
+		{
+			double x = envelope.XMax;
+			double y = envelope.YMin;
+
+			bool hasZ = envelope.HasZ;
+			double z = hasZ ? envelope.ZMin : 0.0;
+
+			bool hasM = envelope.HasM;
+			double m = hasM ? envelope.MMin : double.NaN;
+
+			bool hasId = envelope.HasID;
+			int id = hasId ? envelope.IDMin : 0;
+
+			var sref = envelope.SpatialReference;
+
+			return MapPointBuilderEx.CreateMapPoint(x, y, hasZ, z, hasM, m, hasId, id, sref);
+		}
+
 		public static double GetArea([CanBeNull] Geometry geometry)
 		{
 			if (geometry is Polygon polygon) return polygon.Area;

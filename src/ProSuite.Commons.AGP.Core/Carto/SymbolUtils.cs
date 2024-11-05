@@ -1491,10 +1491,11 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			                    out index);
 		}
 
+		// todo daro: to CollectionUtils?
 		/// <remarks>
 		/// Usage: <c>foo.Array = AddOne(foo.Array, item)</c>
 		/// </remarks>
-		private static T[] AddOne<T>([CanBeNull] T[] array, T item)
+		public static T[] AddOne<T>([CanBeNull] T[] array, T item)
 		{
 			if (item == null)
 				throw new ArgumentNullException(nameof(item));
