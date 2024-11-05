@@ -2912,7 +2912,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (! IsOleDbWorkspace(workspace))
 			{
-				return workspace.Type == esriWorkspaceType.esriRemoteDatabaseWorkspace;
+				return IsMobileGeodatabase(workspace) ||
+				       workspace.Type == esriWorkspaceType.esriRemoteDatabaseWorkspace;
 			}
 
 			// try to determine if workspace content uses qualified dataset names
