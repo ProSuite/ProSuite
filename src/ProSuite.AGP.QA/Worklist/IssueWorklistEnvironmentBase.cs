@@ -122,7 +122,7 @@ namespace ProSuite.AGP.QA.WorkList
 
 		public override bool IsSameWorkListDefinition(string existingDefinitionFile)
 		{
-			return _workListItemDatastore.IsSameWorkListDefinition(existingDefinitionFile);
+			return WorkListItemDatastore.IsSameWorkListDefinition(existingDefinitionFile);
 		}
 	}
 }
