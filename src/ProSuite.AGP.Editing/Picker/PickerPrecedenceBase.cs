@@ -130,7 +130,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		return PickerMode.PickBest;
 	}
 
-	public virtual IEnumerable<T> Order<T>(IEnumerable<T> items) where T : IPickableItem
+	public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
 	{
 		return items;
 	}

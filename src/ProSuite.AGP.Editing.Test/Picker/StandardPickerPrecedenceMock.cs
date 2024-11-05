@@ -74,13 +74,6 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			            .OrderBy(item => item, new PickableItemComparer());
 		}
 
-		public IEnumerable<T> Order<T>(IEnumerable<T> items) where T : IPickableItem
-		{
-			return items.Take(_maxItems)
-			            .Select(item => SetScoreConsideringDistances(item, _selectionCentroid))
-			            .OrderBy(item => item, new PickableItemComparer()).OfType<T>();
-		}
-
 		[CanBeNull]
 		public T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem
 		{
