@@ -245,7 +245,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception ex)
 			{
-				ViewUtils.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
@@ -310,7 +310,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception ex)
 			{
-				ViewUtils.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 

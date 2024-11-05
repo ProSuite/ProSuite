@@ -233,7 +233,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			catch (Exception ex)
 			{
-				ViewUtils.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
@@ -262,7 +262,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			catch (Exception ex)
 			{
-				ViewUtils.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
@@ -282,7 +282,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			catch (Exception ex)
 			{
-				ViewUtils.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
