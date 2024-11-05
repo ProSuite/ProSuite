@@ -34,9 +34,14 @@ namespace ProSuite.AGP.WorkList
 		{
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
 
-			DisplayName = SuggestWorkListName() ?? uniqueName;
+			if (string.IsNullOrEmpty(DisplayName))
+			{
+				DisplayName = SuggestWorkListName() ?? uniqueName;
+			}
 
 			string definitionFilePath = GetDefinitionFileFromProjectFolder();
+
+			if (File.Exists(definitionFilePath)) { }
 
 			if (! await TryPrepareSchemaCoreAsync())
 			{
@@ -215,5 +220,25 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		#endregion
+
+		public void EnsureUniqueDisplayName(string conflictingDefinitionFile)
+		{
+			Assert.NotNull(DisplayName);
+
+			string directory = Assert.NotNull(Path.GetDirectoryName(conflictingDefinitionFile));
+			string fileName = Path.GetFileNameWithoutExtension(conflictingDefinitionFile);
+			string suffix = Path.GetExtension(conflictingDefinitionFile);
+
+			int increment = 1;
+			string newFileName = fileName;
+			while (File.Exists(Path.Combine(directory, newFileName + suffix)))
+			{
+				newFileName = $"{fileName} {increment++}";
+			}
+
+			DisplayName = newFileName;
+		}
+
+		public abstract bool IsSameWorkListDefinition(string existingDefinitionFile);
 	}
 }

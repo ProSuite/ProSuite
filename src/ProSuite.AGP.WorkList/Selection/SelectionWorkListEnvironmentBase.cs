@@ -17,8 +17,7 @@ namespace ProSuite.AGP.WorkList.Selection
 
 		protected override string SuggestWorkListName()
 		{
-			// TODO: Some more useful display name!
-			return null;
+			return "Selection Work List";
 		}
 
 		protected override T GetLayerContainerCore<T>()
@@ -46,6 +45,13 @@ namespace ProSuite.AGP.WorkList.Selection
 
 			return new SelectionItemRepository(DatasetUtils.Distinct(selection.Keys),
 			                                   selection, stateRepository);
+		}
+
+		public override bool IsSameWorkListDefinition(string existingDefinitionFile)
+		{
+			// We currently cannot compare the current selection with the one in the file
+			// so for the time being, always make a new one.
+			return false;
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,

@@ -292,5 +292,10 @@ namespace ProSuite.AGP.QA.WorkList
 
 			return result;
 		}
+
+		public override bool IsSameWorkListDefinition(string existingDefinitionFile)
+		{
+			return _workListItemDatastore.IsSameWorkListDefinition(existingDefinitionFile);
+		}
 	}
 }
