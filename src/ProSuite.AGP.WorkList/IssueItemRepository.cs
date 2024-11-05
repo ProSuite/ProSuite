@@ -201,7 +201,7 @@ namespace ProSuite.AGP.WorkList
 				return default;
 			}
 
-			public void ReadAttributes(Row fromRow, IIssueItem forItem, ISourceClass source)
+			public void ReadAttributes(Row fromRow, IWorkItem forItem, ISourceClass source)
 			{
 				forItem.Status = ((DatabaseSourceClass) source).GetStatus(fromRow);
 			}

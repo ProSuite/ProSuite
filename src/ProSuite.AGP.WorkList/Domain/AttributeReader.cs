@@ -97,8 +97,10 @@ namespace ProSuite.AGP.WorkList.Domain
 				       : null;
 		}
 
-		public void ReadAttributes(Row fromRow, IIssueItem forItem, ISourceClass source)
+		public void ReadAttributes(Row fromRow, IWorkItem item, ISourceClass source)
 		{
+			IIssueItem forItem = (IIssueItem) item;
+
 			try
 			{
 				forItem.IssueCode = GetValue<string>(fromRow, Attributes.IssueCode);

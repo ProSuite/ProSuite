@@ -1,5 +1,4 @@
 using ArcGIS.Core.Data;
-using ProSuite.AGP.WorkList.Domain;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
@@ -7,6 +6,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 	{
 		T GetValue<T>(Row row, Attributes attribute);
 
-		void ReadAttributes(Row fromRow, IIssueItem forItem, ISourceClass source);
+		void ReadAttributes(Row fromRow, IWorkItem forItem, ISourceClass source);
 	}
 }
