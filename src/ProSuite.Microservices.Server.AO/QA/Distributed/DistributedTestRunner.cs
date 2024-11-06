@@ -615,7 +615,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				// Cancel the main verification but only on the second attempt.
 				if (subVerification.FailureCount >= _maxReTryCount)
 				{
-					QualityVerification.Cancelled = true;
+					CancelVerification(QualityVerification,
+					                   $"Sub-verification {subVerification} has failed more than {_maxReTryCount} times");
 				}
 
 				resultMessage =
@@ -633,6 +634,29 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			}
 
 			return resultMessage;
+		}
+
+		private void CancelVerification([CanBeNull] QualityVerification verification,
+		                                [NotNull] string message)
+		{
+			if (verification == null)
+			{
+				return;
+			}
+
+			verification.Cancelled = true;
+
+			_msg.WarnFormat("{0}. The verification will be marked as cancelled.", message);
+
+			if (CancellationMessage == null)
+			{
+				CancellationMessage = message;
+			}
+			else
+			{
+				CancellationMessage += Environment.NewLine;
+				CancellationMessage += message;
+			}
 		}
 
 		private IDictionary<IssueKey, IssueKey> _knownIssues;
@@ -817,7 +841,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			if (verificationMsg.Cancelled)
 			{
-				toOverallVerification.Cancelled = true;
+				CancelVerification(toOverallVerification,
+				                   $"Sub-verification {verificationMsg} was cancelled.");
 			}
 
 			foreach (var conditionVerificationMsg in verificationMsg.ConditionVerifications)
@@ -889,6 +914,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			if (Cancelled)
 			{
 				// Cancelled by caller (there is also the possibility that a worker has failed)
+				_msg.Info("The quality verification has likely been cancelled by the caller.");
 				qualityVerification.Cancelled = true;
 			}
 
