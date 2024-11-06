@@ -8,7 +8,6 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -17,7 +16,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.AGP.QA.WorkList;
+namespace ProSuite.AGP.WorkList;
 
 public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 {
@@ -72,7 +71,7 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		return IsSameWorkListDefinition(existingDefinitionFilePath, suggestedWorkListName);
 	}
 
-	private void AddToMapCore(IEnumerable<Table> tables)
+	protected void AddToMapCore(IEnumerable<Table> tables)
 	{
 		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>();
 
