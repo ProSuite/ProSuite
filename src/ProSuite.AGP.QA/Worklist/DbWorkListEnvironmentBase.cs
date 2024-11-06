@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.QA.WorkList;
@@ -61,6 +63,13 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 	public override void LoadAssociatedLayers()
 	{
 		AddToMapCore(GetTablesCore());
+	}
+
+	public override bool IsSameWorkListDefinition(string existingDefinitionFilePath)
+	{
+		string suggestedWorkListName = Assert.NotNull(SuggestWorkListName());
+
+		return IsSameWorkListDefinition(existingDefinitionFilePath, suggestedWorkListName);
 	}
 
 	private void AddToMapCore(IEnumerable<Table> tables)
@@ -193,5 +202,17 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		}
 
 		return WorkListItemDatastore.GetTables();
+	}
+
+	protected static bool IsSameWorkListDefinition(
+		[NotNull] string existingDefinitionFilePath,
+		[NotNull] string suggestedNewWorkListName)
+	{
+		string suggestedFileName =
+			FileSystemUtils.ReplaceInvalidFileNameChars(suggestedNewWorkListName, '_');
+
+		string existingFileName = Path.GetFileNameWithoutExtension(existingDefinitionFilePath);
+
+		return existingFileName.Equals(suggestedFileName);
 	}
 }
