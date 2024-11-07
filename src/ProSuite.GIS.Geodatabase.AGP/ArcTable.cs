@@ -58,7 +58,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			if (ProTable is FeatureClass fc)
 			{
 				// TODO: Move to GeometryFactory
-				ArcGIS.Core.Geometry.Geometry geometry = null;
+				ArcGIS.Core.Geometry.Geometry geometry;
 				switch (fc.GetShapeType())
 				{
 					case GeometryType.Point:
@@ -186,8 +186,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			IWorkspace selectionContainer)
 		{
 			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
-
-			ArcWorkspace arcWorkspace = (ArcWorkspace) selectionContainer;
 
 			Selection selectionSet = ProTable.Select(proQueryFilter,
 			                                         (SelectionType) selType,
@@ -370,7 +368,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			Domain proDomain = field.GetDomain(subtype);
 
-			return new ArcDomain(proDomain);
+			return ArcGeodatabaseUtils.ToArcDomain(proDomain);
 		}
 
 		public string SubtypeFieldName
@@ -455,7 +453,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		private static QueryFilter GetProQueryFilter(IQueryFilter queryFilter)
 		{
-			QueryFilter proQueryFilter = null;
+			QueryFilter proQueryFilter;
 
 			if (queryFilter is ArcQueryFilter arcQueryFilter)
 			{

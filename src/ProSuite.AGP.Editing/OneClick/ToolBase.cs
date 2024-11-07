@@ -394,7 +394,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	private void SetupSelectionSketch()
 	{
 		_symbolizedSketch?.ClearSketchSymbol();
-		_selectionSketchType?.Toggle(GetDefaultSelectionSketchType());
+		_selectionSketchType?.ResetOrDefault();
 	}
 
 	private void SetupPolygonSketch()
@@ -518,7 +518,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		}
 		else if (args.Selection.Count > 0)
 		{
-			// Process selection not by this tool, e.g. select row in table, etc.
+			// Process selection made not by this tool, e.g. select row in table, etc.
 			// Do not react on selection made by this tool.
 			if (_latch.IsLatched)
 			{

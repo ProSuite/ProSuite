@@ -532,8 +532,19 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		{
 			const string connectionString = "Blah = Blah ; Password = abc ; Bla = Bla";
 
-			Assert.AreEqual("Blah = Blah ; Password =****; Bla = Bla",
+			Assert.AreEqual("Blah=Blah;Password=****;Bla=Bla",
 			                WorkspaceUtils.ReplacePassword(connectionString, "****"));
+		}
+
+		[Test]
+		public void CanReplaceMultiplePasswords()
+		{
+			const string connectionString =
+				"ENCRYPTED_PASSWORD_UTF8= pa$$word8 ; Blah = Blah ; Password = abc ; encrypted_Password=pa$$word;Bla = Bla";
+
+			Assert.AreEqual(
+				"ENCRYPTED_PASSWORD_UTF8=****;Blah=Blah;Password=****;encrypted_Password=****;Bla=Bla",
+				WorkspaceUtils.ReplacePassword(connectionString, "****"));
 		}
 
 		[Test]

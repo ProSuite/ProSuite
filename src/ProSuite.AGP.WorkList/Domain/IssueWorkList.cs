@@ -4,7 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
-	public class IssueWorkList : WorkList
+	public class IssueWorkList : DbStatusWorkList
 	{
 		public IssueWorkList(IWorkItemRepository repository,
 		                     [NotNull] string name,

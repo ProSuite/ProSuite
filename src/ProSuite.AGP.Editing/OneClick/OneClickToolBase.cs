@@ -46,7 +46,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Point CurrentMousePosition;
 
-		private SelectionSketchTypeToggle _selectionSketchType;
+		[CanBeNull] private SelectionSketchTypeToggle _selectionSketchType;
 
 		protected OneClickToolBase()
 		{
@@ -253,7 +253,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void SetupLassoSketch()
 		{
-			_selectionSketchType.Toggle(SketchGeometryType.Lasso);
+			_selectionSketchType?.Toggle(SketchGeometryType.Lasso);
 
 			SetupLassoSketchCore();
 		}
@@ -262,7 +262,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void SetupPolygonSketch()
 		{
-			_selectionSketchType.Toggle(SketchGeometryType.Polygon);
+			_selectionSketchType?.Toggle(SketchGeometryType.Polygon);
 			// TODO: Sketch symbol: No vertices
 
 			SetupPolygonSketchCore();
@@ -440,7 +440,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SetupSketch();
 
-			_selectionSketchType.Toggle(GetSelectionSketchGeometryType());
+			_selectionSketchType?.ResetOrDefault();
 		}
 
 		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,

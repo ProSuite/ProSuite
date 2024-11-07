@@ -40,6 +40,8 @@ namespace ProSuite.AGP.WorkList
 		                           [CanBeNull] IWorkListItemDatastore tableSchema = null)
 			: base(tableWithDefinitionQuery, workItemStateRepository, tableSchema) { }
 
+		public Func<long,long,Row,IWorkItem> CreateItemFunc { get; set; }
+
 		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{
 			int fieldIndex;
@@ -89,9 +91,16 @@ namespace ProSuite.AGP.WorkList
 
 			IAttributeReader reader = source.AttributeReader;
 
-			IIssueItem item = new IssueItem(id, source.GetUniqueTableId(), row);
-
-			reader?.ReadAttributes(row, item, source);
+			IWorkItem item;
+			if (CreateItemFunc != null)
+			{
+				item = CreateItemFunc(id, source.GetUniqueTableId(), row);
+			}
+			else
+			{
+				item = new IssueItem(id, source.GetUniqueTableId(), row);
+				reader?.ReadAttributes(row, item, source);
+			}
 
 			return RefreshState(item);
 		}
@@ -201,7 +210,7 @@ namespace ProSuite.AGP.WorkList
 				return default;
 			}
 
-			public void ReadAttributes(Row fromRow, IIssueItem forItem, ISourceClass source)
+			public void ReadAttributes(Row fromRow, IWorkItem forItem, ISourceClass source)
 			{
 				forItem.Status = ((DatabaseSourceClass) source).GetStatus(fromRow);
 			}
