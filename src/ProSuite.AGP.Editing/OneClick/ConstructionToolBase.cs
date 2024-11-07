@@ -165,6 +165,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				return true;
 			}
 
+			if (IsInSketchPhase)
+			{
+				return false;
+			}
+
 			bool result = await QueuedTask.Run(IsInSelectionPhaseQueued);
 			return result;
 		}

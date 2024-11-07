@@ -102,9 +102,9 @@ public abstract class TopologicalCrackingToolBase : TwoPhaseEditToolBase
 
 		var foundFeatures = new List<Feature>();
 
-		foreach (var classSelection in featureClassSelections)
+		foreach (FeatureSelectionBase selectionBase in featureClassSelections)
 		{
-			foundFeatures.AddRange(classSelection.GetFeatures());
+			foundFeatures.AddRange(selectionBase.GetFeatures());
 		}
 
 		return foundFeatures;

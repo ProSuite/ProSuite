@@ -1,6 +1,6 @@
-using System;
+
 using System.Collections.Generic;
-using System.Linq;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
 using ProSuite.AGP.Editing.PickerUI;
@@ -20,45 +20,31 @@ namespace ProSuite.AGP.Editing.Picker
 
 	public class PickerService : IPickerService
 	{
-		public Task<T> Pick<T>(List<IPickableItem> items,
-		                       IPickerPrecedence precedence) where T : class, IPickableItem
+		private readonly IPickerPrecedence _precedence;
+
+		public PickerService(IPickerPrecedence precedence)
+		{
+			_precedence = precedence;
+		}
+
+		public Task<IPickableItem> Pick(List<IPickableItem> items, IPickerViewModel viewModel)
 		{
 			if (items.Count == 1)
 			{
-				return Task.FromResult(precedence.PickBest<T>(items));
+				return Task.FromResult(_precedence.PickBest(items));
 			}
 
-			return PickSingle<T>(items, precedence);
+			return PickSingle(items, viewModel);
 		}
 
-		// todo daro rename?
-		public Task<T> PickSingle<T>(IEnumerable<IPickableItem> items,
-		                             IPickerPrecedence precedence)
-			where T : class, IPickableItem
+		private Task<IPickableItem> PickSingle(IEnumerable<IPickableItem> items, IPickerViewModel viewModel)
 		{
-			// todo daro refactor. maybe add new dedicated method
-			PickerViewModel viewModel;
+			viewModel.Items = new ObservableCollection<IPickableItem>(_precedence.Order(items));
 
-			if (typeof(T) == typeof(IPickableFeatureItem))
-			{
-				var candidates = precedence.Order(items).OfType<IPickableFeatureItem>();
-
-				viewModel = new PickerViewModel(candidates, precedence.GetSelectionGeometry());
-			}
-			else if (typeof(T) == typeof(IPickableFeatureClassItem))
-			{
-				viewModel = new PickerViewModel(items, precedence.GetSelectionGeometry());
-			}
-			else
-			{
-				throw new ArgumentOutOfRangeException();
-			}
-
-			return ShowPickerControlAsync<T>(viewModel, precedence.PickerLocation);
+			return ShowPickerControlAsync(viewModel, _precedence.PickerLocation);
 		}
 
-		private static async Task<T> ShowPickerControlAsync<T>(PickerViewModel vm, Point location)
-			where T : class, IPickableItem
+		private static async Task<IPickableItem> ShowPickerControlAsync(IPickerViewModel vm, Point location)
 		{
 			var dispatcher = Application.Current.Dispatcher;
 
@@ -72,7 +58,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 				IPickableItem pickable = await window.Task;
 
-				return (T) pickable;
+				return pickable;
 			});
 		}
 
