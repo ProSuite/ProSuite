@@ -94,8 +94,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected HashSet<Key> PressedKeys { get; } = new();
 
-		protected Cursor SelectionCursor { get; set; }
-		protected Cursor SelectionCursorShift { get; set; }
+		protected virtual Cursor SelectionCursor { get; set; }
+		protected virtual Cursor SelectionCursorShift { get; set; }
 
 		/// <summary>
 		/// Flag to indicate that currently the selection is changed by the <see cref="OnSelectionSketchCompleteAsync"/> method.
@@ -734,16 +734,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				Application.Current.Dispatcher.Invoke(() => { Cursor = cursor; });
 			}
-		}
-
-		protected void SetSelectionCursor(byte[] bytes)
-		{
-			SelectionCursor = ToolUtils.GetCursor(bytes);
-		}
-
-		protected void SetSelectionCursorShift(byte[] bytes)
-		{
-			SelectionCursorShift = ToolUtils.GetCursor(bytes);
 		}
 
 		protected bool CanSelectFromLayer([CanBeNull] Layer layer,
