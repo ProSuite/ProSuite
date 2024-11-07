@@ -21,7 +21,6 @@ namespace ProSuite.AGP.Editing.YReshape
 		protected YReshapeToolBase() {
 			FireSketchEvents = true;
 
-			// This is our property:
 			RequiresSelection = true;
 
 			SelectionCursor = ToolUtils.GetCursor(Resources.YReshapeToolCursor);
