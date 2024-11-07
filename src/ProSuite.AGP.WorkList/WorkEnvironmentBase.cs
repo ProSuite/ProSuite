@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
@@ -33,7 +34,14 @@ namespace ProSuite.AGP.WorkList
 		{
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
 
-			DisplayName = SuggestWorkListName() ?? uniqueName;
+			if (string.IsNullOrEmpty(DisplayName))
+			{
+				DisplayName = SuggestWorkListName() ?? uniqueName;
+			}
+
+			string definitionFilePath = GetDefinitionFileFromProjectFolder();
+
+			if (File.Exists(definitionFilePath)) { }
 
 			if (! await TryPrepareSchemaCoreAsync())
 			{
@@ -41,8 +49,6 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			Stopwatch watch = Stopwatch.StartNew();
-
-			string definitionFilePath = GetDefinitionFileFromProjectFolder();
 
 			IWorkItemStateRepository stateRepository =
 				CreateStateRepositoryCore(definitionFilePath, uniqueName);
@@ -76,6 +82,23 @@ namespace ProSuite.AGP.WorkList
 		{
 			IList<Table> result = new List<Table>();
 			return Task.FromResult(result);
+		}
+
+		public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
+		{
+			definitionFile = null;
+			string suggestedName = SuggestWorkListName();
+
+			if (suggestedName == null)
+			{
+				return false;
+			}
+
+			DisplayName = suggestedName;
+
+			definitionFile = GetDefinitionFileFromProjectFolder();
+
+			return definitionFile != null && File.Exists(definitionFile);
 		}
 
 		public string GetDefinitionFileFromProjectFolder()
@@ -198,5 +221,25 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		#endregion
+
+		public void EnsureUniqueDisplayName(string conflictingDefinitionFile)
+		{
+			Assert.NotNull(DisplayName);
+
+			string directory = Assert.NotNull(Path.GetDirectoryName(conflictingDefinitionFile));
+			string fileName = Path.GetFileNameWithoutExtension(conflictingDefinitionFile);
+			string suffix = Path.GetExtension(conflictingDefinitionFile);
+
+			int increment = 1;
+			string newFileName = fileName;
+			while (File.Exists(Path.Combine(directory, newFileName + suffix)))
+			{
+				newFileName = $"{fileName} {increment++}";
+			}
+
+			DisplayName = newFileName;
+		}
+
+		public abstract bool IsSameWorkListDefinition(string existingDefinitionFile);
 	}
 }

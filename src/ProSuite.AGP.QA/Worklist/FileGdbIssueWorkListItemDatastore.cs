@@ -11,6 +11,7 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.Core.QA;
@@ -150,6 +151,17 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 	public string SuggestWorkListName()
 	{
 		return _initialWorkListName;
+	}
+
+	public bool IsSameWorkListDefinition(string existingDefinitionFile)
+	{
+		string suggestedDisplayName = SuggestWorkListName();
+		string suggestedFileName =
+			FileSystemUtils.ReplaceInvalidFileNameChars(suggestedDisplayName, '_');
+
+		string existingFileName = Path.GetFileNameWithoutExtension(existingDefinitionFile);
+
+		return existingFileName.Equals(suggestedFileName);
 	}
 
 	#endregion

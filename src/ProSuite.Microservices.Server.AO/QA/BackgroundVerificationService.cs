@@ -38,8 +38,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public BackgroundVerificationService(
 			[NotNull] IDomainTransactionManager domainTransactions,
-			[NotNull] IDatasetLookup datasetLookup) : base(
-			new GdbTransaction(), datasetLookup)
+			[NotNull] IDatasetLookup datasetLookup) : base(datasetLookup)
 		{
 			_domainTransactions = domainTransactions;
 		}
@@ -116,6 +115,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			// NOTE that the base datasets of a terrain must be included in the verified
 			// datasets of the background verification context. They are not added here.
+		}
+
+		protected override IGdbTransaction CreateGdbTransaction()
+		{
+			return _backgroundVerificationInputs.CreateGdbTransaction();
 		}
 
 		protected override QualityErrorRepositoryBase CreateQualityErrorRepository(
