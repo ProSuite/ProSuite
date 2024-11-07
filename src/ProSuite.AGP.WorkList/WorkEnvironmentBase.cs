@@ -19,8 +19,8 @@ using ProSuite.Commons.Logging;
 namespace ProSuite.AGP.WorkList
 {
 	/// <summary>
-	/// Encapsulates the state for a single work list instance, including the creation of
-	/// the work list.
+	/// Encapsulates the logic (but no volatile state) for a work list type, including the creation
+	/// of the work list.
 	/// </summary>
 	public abstract class WorkEnvironmentBase
 	{
@@ -160,6 +160,9 @@ namespace ProSuite.AGP.WorkList
 
 			// The explore tool should ignore the work list layer:
 			worklistLayer.SetShowPopups(false);
+
+			// Avoid incorrect features after changes in tables of DbStatusWorkLists
+			worklistLayer.SetCacheOptions(LayerCacheType.None);
 
 			//Set renderer based on symbology from template layer
 			LayerDocument templateLayer = GetWorkListSymbologyTemplateLayer();
