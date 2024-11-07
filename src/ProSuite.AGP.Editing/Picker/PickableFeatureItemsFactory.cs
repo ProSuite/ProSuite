@@ -16,7 +16,7 @@ public class PickableFeatureItemsFactory : IPickableItemsFactory
 	// NOTE: Hack! This cache doesn't invlidate if layer properties change.
 	private static readonly HashSet<string> _layersWithExpression = new();
 
-	public IEnumerable<IPickableItem> CreateItems(IEnumerable<TableSelection> candidates)
+	public IEnumerable<IPickableItem> CreateItems(IEnumerable<FeatureSelectionBase> candidates)
 	{
 		return candidates.OfType<FeatureSelectionBase>()
 		                 .SelectMany(CreatePickableFeatureItems);
@@ -62,7 +62,7 @@ public class PickableFeatureItemsFactory : IPickableItemsFactory
 
 		if (expressionExists)
 		{
-			foreach (var feature in GetFeatures(classSelection))
+			foreach (var feature in classSelection.GetFeatures())
 			{
 				long oid = feature.GetObjectID();
 				string expr = layer.GetDisplayExpressions(new[] { oid }).FirstOrDefault();
@@ -82,23 +82,12 @@ public class PickableFeatureItemsFactory : IPickableItemsFactory
 		}
 		else
 		{
-			foreach (var feature in GetFeatures(classSelection))
+			foreach (var feature in classSelection.GetFeatures())
 			{
 				yield return CreatePickableFeatureItem(layer, feature, feature.GetObjectID(),
 				                                       GdbObjectUtils.GetDisplayValue(feature),
 				                                       isAnnotation);
 			}
-		}
-	}
-
-	private static IEnumerable<Feature> GetFeatures(TableSelection classSelection)
-	{
-		using Table table = classSelection.Table;
-
-		foreach (var feature in GdbQueryUtils.GetFeatures(table, classSelection.GetOids(), null,
-		                                                  false))
-		{
-			yield return feature;
 		}
 	}
 

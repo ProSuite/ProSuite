@@ -411,11 +411,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 						       : Enumerable.Empty<Feature>();
 				}
 
-				return candidates.SelectMany(candidate =>
-				{
-					using Table table = candidate.Table;
-					return GdbQueryUtils.GetFeatures(table, candidate.GetOids(), null, false);
-				});
+				return candidates.SelectMany(c => c.GetFeatures());
 			}, progressor);
 
 			IEnumerable<Feature> targetFeatures = await ViewUtils.TryAsync(task, _msg);

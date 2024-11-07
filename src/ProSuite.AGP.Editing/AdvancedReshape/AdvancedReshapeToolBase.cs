@@ -517,11 +517,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			var foundFeatures = new List<Feature>();
 
-			foreach (FeatureSelectionBase selectionBase in featureClassSelections)
+			foreach (var keyValuePair in featureClassSelections)
 			{
-				using Table table = selectionBase.Table;
-				foundFeatures.AddRange(
-					GdbQueryUtils.GetFeatures(table, selectionBase.GetOids(), null, false));
+				foundFeatures.AddRange(keyValuePair.GetFeatures());
 			}
 
 			foundFeatures.RemoveAll(

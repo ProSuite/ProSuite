@@ -104,9 +104,7 @@ public abstract class TopologicalCrackingToolBase : TwoPhaseEditToolBase
 
 		foreach (FeatureSelectionBase selectionBase in featureClassSelections)
 		{
-			using Table table = selectionBase.Table;
-			foundFeatures.AddRange(
-				GdbQueryUtils.GetFeatures(table, selectionBase.GetOids(), null, false));
+			foundFeatures.AddRange(selectionBase.GetFeatures());
 		}
 
 		return foundFeatures;
