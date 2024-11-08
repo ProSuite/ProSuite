@@ -10,6 +10,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.AdvancedReshapeReshape;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
@@ -43,6 +44,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		[CanBeNull] private AdvancedReshapeFeedback _feedback;
 		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
+		private ReshapeToolOptions _advancedReshapeToolOptions;
 
 		private Task<bool> _updateFeedbackTask;
 
