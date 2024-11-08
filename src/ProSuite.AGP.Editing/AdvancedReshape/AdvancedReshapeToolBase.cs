@@ -21,6 +21,7 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI;
 
@@ -45,6 +46,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		[CanBeNull] private AdvancedReshapeFeedback _feedback;
 		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 		private ReshapeToolOptions _advancedReshapeToolOptions;
+		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
+		//TODO Feedback (Circles)
 
 		private Task<bool> _updateFeedbackTask;
 
