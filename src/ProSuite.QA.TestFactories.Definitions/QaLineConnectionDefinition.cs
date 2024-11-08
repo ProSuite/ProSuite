@@ -4,6 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -30,7 +31,7 @@ namespace ProSuite.QA.TestFactories
 		public override string GetTestTypeDescription()
 		{
 			return Assert.NotNull(
-				InstanceUtils.TryGetAlgorithmName(nameof(QaLineConnectionDefinition)));
+				InstanceUtils.TryGetAlgorithmName(nameof(QaConnectionsDefinition)));
 		}
 	}
 }

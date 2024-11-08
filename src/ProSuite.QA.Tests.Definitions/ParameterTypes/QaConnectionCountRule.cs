@@ -1,11 +1,11 @@
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
-namespace ProSuite.QA.Tests.Network
+namespace ProSuite.QA.Tests.ParameterTypes
 {
 	public class QaConnectionCountRule
 	{
-		public QaConnectionCountRule([NotNull] IReadOnlyTable table,
+		public QaConnectionCountRule([NotNull] ITableSchemaDef table,
 		                             [NotNull] string countSelectionExpression)
 		{
 			Table = table;
@@ -13,7 +13,7 @@ namespace ProSuite.QA.Tests.Network
 		}
 
 		[NotNull]
-		public IReadOnlyTable Table { get; }
+		public ITableSchemaDef Table { get; }
 
 		[NotNull]
 		public string CountSelectionExpression { get; }

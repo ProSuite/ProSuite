@@ -1,18 +1,18 @@
 using System.Collections.Generic;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
-namespace ProSuite.QA.Tests.Network
+namespace ProSuite.QA.Tests.ParameterTypes
 {
 	public class QaConnectionRule
 	{
 		private readonly IList<string> _selectionExpressions;
-		private readonly IList<IReadOnlyTable> _tables;
+		private readonly IList<ITableSchemaDef> _tables;
 		private string _constraint;
 		private Dictionary<string, QaConnectionCountRule> _countRulesByVariableName;
 
-		public QaConnectionRule([NotNull] IList<IReadOnlyTable> tables,
+		public QaConnectionRule([NotNull] IList<ITableSchemaDef> tables,
 		                        [NotNull] IList<string> tableRuleStrings)
 		{
 			Assert.ArgumentCondition(tableRuleStrings.Count == tables.Count,
@@ -76,11 +76,11 @@ namespace ProSuite.QA.Tests.Network
 			}
 		}
 
-		internal IList<IReadOnlyTable> TableList => _tables;
+		public IList<ITableSchemaDef> TableList => _tables;
 
-		internal IList<string> SelectionExpressions => _selectionExpressions;
+		public IList<string> SelectionExpressions => _selectionExpressions;
 
-		internal Dictionary<string, QaConnectionCountRule> CountRulesByVariableName =>
+		public Dictionary<string, QaConnectionCountRule> CountRulesByVariableName =>
 			_countRulesByVariableName;
 
 		public string Constraint
