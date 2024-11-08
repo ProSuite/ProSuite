@@ -7,7 +7,7 @@ namespace ProSuite.AGP.Editing.Picker;
 
 public interface IPickableItemsFactory
 {
-	IEnumerable<IPickableItem> CreateItems(IEnumerable<FeatureSelectionBase> candidates);
+	IEnumerable<IPickableItem> CreateItems(IEnumerable<TableSelection> candidates);
 
 	// todo daro to IPickerPrecedence?
 	IPickerViewModel CreateViewModel(Geometry selectionGeometry);

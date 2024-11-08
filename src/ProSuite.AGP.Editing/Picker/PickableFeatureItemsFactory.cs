@@ -16,7 +16,7 @@ public class PickableFeatureItemsFactory : IPickableItemsFactory
 	// NOTE: Hack! This cache doesn't invlidate if layer properties change.
 	private static readonly HashSet<string> _layersWithExpression = new();
 
-	public IEnumerable<IPickableItem> CreateItems(IEnumerable<FeatureSelectionBase> candidates)
+	public IEnumerable<IPickableItem> CreateItems(IEnumerable<TableSelection> candidates)
 	{
 		return candidates.OfType<FeatureSelectionBase>()
 		                 .SelectMany(CreatePickableFeatureItems);

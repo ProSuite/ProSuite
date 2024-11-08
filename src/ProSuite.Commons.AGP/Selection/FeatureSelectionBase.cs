@@ -9,30 +9,24 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Selection
 {
-	public abstract class FeatureSelectionBase
+	// todo daro rename to LayerSelection
+	public abstract class FeatureSelectionBase : TableSelection
 	{
-		protected FeatureSelectionBase([NotNull] BasicFeatureLayer basicFeatureLayer)
+		protected FeatureSelectionBase([NotNull] BasicFeatureLayer basicFeatureLayer) : base(basicFeatureLayer.GetFeatureClass())
 		{
 			BasicFeatureLayer = basicFeatureLayer ??
 			                    throw new ArgumentNullException(nameof(basicFeatureLayer));
-
-			FeatureClass featureClass = basicFeatureLayer.GetFeatureClass(); // TODO dispose when done (implement IDisposable)
-			FeatureClass = featureClass ?? throw new ArgumentNullException(nameof(featureClass));
 		}
 
 		[NotNull]
-		public FeatureClass FeatureClass { get; }
+		public FeatureClass FeatureClass => (FeatureClass) Table;
 
 		[NotNull]
 		public BasicFeatureLayer BasicFeatureLayer { get; }
 
 		public int ShapeDimension => GeometryUtils.GetShapeDimension(GetShapeType());
 
-		public abstract IEnumerable<long> GetOids();
-
 		public abstract IEnumerable<Feature> GetFeatures();
-
-		public abstract int GetCount();
 
 		private GeometryType GetShapeType()
 		{

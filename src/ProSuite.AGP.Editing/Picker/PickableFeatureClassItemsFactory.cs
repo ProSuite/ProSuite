@@ -11,7 +11,7 @@ namespace ProSuite.AGP.Editing.Picker;
 
 public class PickableFeatureClassItemsFactory : IPickableItemsFactory
 {
-	public IEnumerable<IPickableItem> CreateItems(IEnumerable<FeatureSelectionBase> candidates)
+	public IEnumerable<IPickableItem> CreateItems(IEnumerable<TableSelection> candidates)
 	{
 		return CreateFeatureClassItems(candidates.OfType<FeatureSelectionBase>());
 	}
