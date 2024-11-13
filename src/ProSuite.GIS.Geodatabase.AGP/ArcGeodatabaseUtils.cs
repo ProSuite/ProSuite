@@ -44,8 +44,14 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return ArcRow.Create(proRow, parent);
 		}
 
-		public static ArcDomain ToArcDomain(Domain domain)
+		[CanBeNull]
+		public static ArcDomain ToArcDomain([CanBeNull] Domain domain)
 		{
+			if (domain == null)
+			{
+				return null;
+			}
+
 			if (domain is CodedValueDomain codedDomain)
 			{
 				return new ArcCodedValueDomain(codedDomain);
