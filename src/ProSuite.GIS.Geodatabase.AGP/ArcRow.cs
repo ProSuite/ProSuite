@@ -49,7 +49,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			TryOrRefreshRow<Row>(r => result = r[index]);
 
-			return result;
+			return result ?? DBNull.Value;
 		}
 
 		public void set_Value(int index, object value)
