@@ -238,20 +238,23 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			foreach (var relClassDef in geodatabase.GetDefinitions<RelationshipClassDefinition>())
 			{
 				string relClassName = relClassDef.GetName();
+				string thisTableName = ProTableDefinition.GetName();
 
-				if (role == esriRelRole.esriRelRoleAny)
+				if (role == esriRelRole.esriRelRoleAny &&
+				    (relClassDef.GetOriginClass() == thisTableName ||
+				     relClassDef.GetDestinationClass() == thisTableName))
 				{
 					yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				}
 
 				if (role == esriRelRole.esriRelRoleOrigin &&
-				    relClassDef.GetOriginClass() == ProTableDefinition.GetName())
+				    relClassDef.GetOriginClass() == thisTableName)
 				{
 					yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				}
 
 				if (role == esriRelRole.esriRelRoleDestination &&
-				    relClassDef.GetDestinationClass() == ProTableDefinition.GetName())
+				    relClassDef.GetDestinationClass() == thisTableName)
 				{
 					yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				}
