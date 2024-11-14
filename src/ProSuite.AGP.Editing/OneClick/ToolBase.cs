@@ -358,12 +358,29 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	/// <b>false</b>: no selection.</returns>
 	protected virtual async Task<bool> OnSelectionSketchCompleteAsync([NotNull] Geometry geometry)
 	{
-		using var pickerPrecedence = CreatePickerPrecedence(geometry);
+		try
+		{
+			using IPickerPrecedence precedence = CreatePickerPrecedence(geometry);
 
-		await (AllowMultiSelection(out _)
-			       ? PickerUtils.ShowAsync(pickerPrecedence, FindFeatureSelection)
-			       : PickerUtils.ShowAsync<IPickableFeatureItem>(
-				       pickerPrecedence, FindFeatureSelection, PickerMode.ShowPicker));
+			await QueuedTaskUtils.Run(async () =>
+			{
+				IEnumerable<FeatureSelectionBase> candidates =
+					FindFeatureSelection(precedence.GetSelectionGeometry(),
+					                     precedence.SpatialRelationship);
+
+				List<IPickableItem> items =
+					await (AllowMultiSelection(out _)
+						       ? PickerUtils.GetItems(candidates, precedence)
+						       : PickerUtils.GetItems<IPickableFeatureItem>(
+							       candidates, precedence, PickerMode.ShowPicker));
+
+				PickerUtils.Select(items, precedence.SelectionCombinationMethod);
+			});
+		}
+		catch (Exception ex)
+		{
+			_msg.Error(ex.Message, ex);
+		}
 
 		return MapUtils.HasSelection(ActiveMapView);
 	}
