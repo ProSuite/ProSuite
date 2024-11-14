@@ -333,22 +333,24 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		protected override void OnStoring()
 		{
-			if (_mutableGeometry != null)
+			if (_mutableGeometry == null)
 			{
-				ArcGIS.Core.Geometry.Geometry newGeometry = null;
-
-				if (_mutableGeometry is IMutableGeometry mutableImpl)
-				{
-					newGeometry =
-						(ArcGIS.Core.Geometry.Geometry) mutableImpl.ToNativeImplementation();
-				}
-				else
-				{
-					newGeometry = ArcGeometryUtils.CreateProGeometry(_mutableGeometry);
-				}
-
-				_proFeature.SetShape(newGeometry);
+				return;
 			}
+
+			ArcGIS.Core.Geometry.Geometry newGeometry;
+
+			if (_mutableGeometry is IMutableGeometry mutableImpl)
+			{
+				newGeometry =
+					(ArcGIS.Core.Geometry.Geometry) mutableImpl.ToNativeImplementation();
+			}
+			else
+			{
+				newGeometry = ArcGeometryUtils.CreateProGeometry(_mutableGeometry);
+			}
+
+			TryOrRefreshRow<Feature>(f => { f.SetShape(newGeometry); });
 		}
 
 		#endregion
