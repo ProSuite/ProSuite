@@ -40,7 +40,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				return null;
 			}
 
-			return InstanceDescriptorUtils.GetInstanceInfo(instanceDescriptor);
+			return InstanceDescriptorUtils.GetInstanceInfo(instanceDescriptor, true);
 		}
 
 		protected override TestParameterValue CreateEmptyTestParameterValue<T>(
@@ -140,6 +140,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			string typeName = type.Name;
 
+			//ToDo: Use only typeof without legacy types
 			bool isDataset =
 				typeName == "IReadOnlyFeatureClass" ||
 				typeName == "IReadOnlyTable" ||
@@ -157,7 +158,13 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				typeName == "RasterDatasetReference" ||
 				typeName == "IMosaicLayer" ||
 				typeName == "ITerrain" ||
-				typeName == "IGeometricNetwork";
+				typeName == "IGeometricNetwork" ||
+				typeName == "IFeatureClassSchemaDef" ||
+				typeName == "ITableSchemaDef" ||
+				typeName == "ITopologyDef" ||
+				typeName == "IRasterDatasetDef" ||
+				typeName == "IMosaicRasterDatasetDef" ||
+				typeName == "ITerrainDef";
 
 			return isDataset;
 		}

@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -263,7 +264,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 		private static Type GetDefinitionType([NotNull] ClassDescriptor classDescriptor)
 		{
-			string assemblyName = GetDefinitionsAssemblyName(classDescriptor);
+			string assemblyName = GetDefinitionsAssemblyName(classDescriptor, true);
 
 			string typeName = GetDefinitionTypeName(classDescriptor);
 
@@ -289,12 +290,24 @@ namespace ProSuite.DomainModel.Core.QA
 			return InstanceUtils.GetAlgorithmDefinitionName(typeName);
 		}
 
-		private static string GetDefinitionsAssemblyName([NotNull] ClassDescriptor classDescriptor)
+		private static string GetDefinitionsAssemblyName([NotNull] ClassDescriptor classDescriptor,
+		                                                 bool fullName)
 		{
 			string assemblyName =
 				Assert.NotNullOrEmpty(classDescriptor.AssemblyName, "No assembly name");
 
-			return InstanceUtils.GetDefinitionsAssemblyName(assemblyName);
+			string definitionName = InstanceUtils.GetDefinitionsAssemblyName(assemblyName);
+
+			if (! fullName)
+			{
+				return definitionName;
+			}
+
+			AssemblyName resultAssemblyName = Assembly.GetExecutingAssembly().GetName();
+
+			resultAssemblyName.Name = definitionName;
+
+			return resultAssemblyName.FullName;
 		}
 	}
 }
