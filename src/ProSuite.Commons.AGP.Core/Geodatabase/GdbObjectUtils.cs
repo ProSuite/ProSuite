@@ -493,13 +493,133 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return null;
 		}
 
+		/// <summary>
+		/// Creates a matrix holding the target row field index as key and
+		/// the matching source row field index in the value. If none matching
+		/// source field is found for the target feature, the index will be -1.
+		/// </summary>
+		/// <param name="sourceTable">Source table</param>
+		/// <param name="targetTable">Target table</param>
+		/// <param name="includeReadOnlyFields">include readonly fields in matrix</param> 
+		/// <param name="searchJoinedFields">match fields in source table, that start with 
+		/// the table name of the target class</param>
+		/// <param name="includeTargetField">Predicate to determine the inclusion of a given 
+		/// target field (optional; field is included if null)</param>
+		/// <returns>Dictionary with the indices of the targetClass as key
+		/// and the matching index of the sourceClass as value (could be -1)</returns>
+		/// <param name="requireMatchingDomainNames"> Whether the name of the domain must match too.
+		/// Only the main domain of the field will be compared. Domains varying by subtype are ignored.
+		/// Domain names are also ignored when a <paramref name="searchJoinedFields"/> is true.</param>
+		[NotNull]
+		public static IDictionary<int, int> CreateMatchingIndexMatrix(
+			[NotNull] TableDefinition sourceTable,
+			[NotNull] TableDefinition targetTable,
+			bool includeReadOnlyFields = false,
+			bool searchJoinedFields = false,
+			[CanBeNull] Predicate<Field> includeTargetField = null,
+			bool requireMatchingDomainNames = true)
+		{
+			Assert.ArgumentNotNull(sourceTable, nameof(sourceTable));
+			Assert.ArgumentNotNull(targetTable, nameof(targetTable));
+
+			IReadOnlyList<Field> sourceFields = sourceTable.GetFields();
+			IReadOnlyList<Field> targetFields = targetTable.GetFields();
+
+			string targetTableName = null;
+
+			if (searchJoinedFields)
+			{
+				targetTableName = targetTable.GetName();
+			}
+
+			return CreateMatchingIndexMatrix(sourceFields, targetFields, includeReadOnlyFields,
+			                                 targetTableName, includeTargetField,
+			                                 requireMatchingDomainNames);
+		}
+
+		/// <summary>
+		/// Creates a matrix holding the target row field index as key and
+		/// the matching source row field index in the value. If none matching
+		/// source field is found for the target feature, the index will be -1.
+		/// </summary>
+		/// <param name="sourceFields">Source feature class</param>
+		/// <param name="targetFields">Target feature class</param>
+		/// <param name="includeReadOnlyFields">include readonly fields in matrix</param> 
+		/// <param name="targetTableName">match fields in source fields, that start with 
+		/// the specified table name of the target table.</param>
+		/// <param name="includeTargetField">Predicate to determine the inclusion of a given 
+		/// target field (optional; field is included if null)</param>
+		/// <returns>Dictionary with the indices of the targetClass as key
+		/// and the matching index of the sourceClass as value (could be -1)</returns>
+		/// <param name="requireMatchingDomainNames"> Whether the name of the domain must match too.
+		/// Only the main domain of the field will be compared. Domains varying by subtype are ignored.
+		/// Domain names are also ignored when a <paramref name="targetTableName"/> is provided.</param>
+		[NotNull]
+		public static IDictionary<int, int> CreateMatchingIndexMatrix(
+			[NotNull] IReadOnlyList<Field> sourceFields,
+			[NotNull] IReadOnlyList<Field> targetFields,
+			bool includeReadOnlyFields = false,
+			[CanBeNull] string targetTableName = null,
+			[CanBeNull] Predicate<Field> includeTargetField = null,
+			bool requireMatchingDomainNames = true)
+		{
+			var result = new Dictionary<int, int>();
+
+			int targetFieldCount = targetFields.Count;
+
+			for (var index = 0; index < targetFieldCount; index++)
+			{
+				Field targetField = targetFields[index];
+
+				if (! includeReadOnlyFields && ! targetField.IsEditable)
+				{
+					continue;
+				}
+
+				if (includeTargetField != null && ! includeTargetField(targetField))
+				{
+					continue;
+				}
+
+				int matchingSourceFieldIndex =
+					DatasetUtils.FindMatchingFieldIndex(
+						targetField, sourceFields, targetTableName, requireMatchingDomainNames);
+
+				if (matchingSourceFieldIndex < 0)
+				{
+					if (_msg.IsVerboseDebugEnabled)
+					{
+						_msg.DebugFormat(
+							"field not found: {0} (type: {1} table name: {2} compare domains: {3})",
+							targetField.Name, targetField.FieldType,
+							targetTableName ?? "<null>", requireMatchingDomainNames);
+
+						int fieldCount = sourceFields.Count;
+
+						for (var sourceFieldIndex = 0;
+						     sourceFieldIndex < fieldCount;
+						     sourceFieldIndex++)
+						{
+							Field sourceField = sourceFields[sourceFieldIndex];
+							_msg.DebugFormat("- {0}: {1}", sourceField.Name,
+							                 sourceField.FieldType);
+						}
+					}
+				}
+
+				result.Add(index, matchingSourceFieldIndex);
+			}
+
+			return result;
+		}
+
 		private static void DoForAllFields([NotNull] Action<Field> action,
 		                                   [NotNull] TableDefinition tableDefinition,
 		                                   bool exceptShape = true)
 		{
 			foreach (Field field in tableDefinition.GetFields())
 			{
-				if (!field.IsEditable)
+				if (! field.IsEditable)
 				{
 					continue;
 				}
