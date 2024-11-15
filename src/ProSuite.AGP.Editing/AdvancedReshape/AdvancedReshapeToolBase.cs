@@ -13,6 +13,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.AdvancedReshapeReshape;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
@@ -55,12 +56,20 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		private CancellationTokenSource _cancellationTokenSource;
 		private const Key _keyToggleNonDefaultSide = Key.S;
 
+		protected static string OptionsFileName => "AdvancedReshapeToolOptions.xml";
+
+		[CanBeNull]
+		protected virtual string CentralConfigDir => null;
+
+		protected abstract string LocalConfigDir { get; }
+
 		protected AdvancedReshapeToolBase()
 		{
 			FireSketchEvents = true;
 
-			// This is our property:
 			RequiresSelection = true;
+
+			InitializeOptions();
 
 			SelectionCursor = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursor);
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursorShift);
@@ -132,9 +141,22 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override async void OnToolActivatingCore()
 		{
+			InitializeOptions();
 			_feedback = new AdvancedReshapeFeedback();
 
 			base.OnToolActivatingCore();
+		}
+
+		private void InitializeOptions()
+		{
+			_settingsProvider = new OverridableSettingsProvider<PartialReshapeToolOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
+
+			PartialReshapeToolOptions localConfiguration, centralConfiguration;
+			_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
+
+			_advancedReshapeToolOptions =
+				new ReshapeToolOptions(centralConfiguration, localConfiguration);
 		}
 
 		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
@@ -615,7 +637,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				var cancellationTokenSource = new CancellationTokenSource(3000);
 
 				reshapeResult = MicroserviceClient.TryReshape(
-					polygonSelection, sketchPolyline, null, false, true,
+					polygonSelection, sketchPolyline, null,
+					_advancedReshapeToolOptions.AllowOpenJawReshape,
+					_advancedReshapeToolOptions.MultiReshapeAsUnion,
 					nonDefaultSide, cancellationTokenSource.Token);
 			}
 
