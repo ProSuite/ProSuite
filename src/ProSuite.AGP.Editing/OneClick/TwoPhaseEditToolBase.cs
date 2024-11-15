@@ -26,7 +26,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			IsSketchTool = true;
 		}
 
-		protected Cursor SecondPhaseCursor { get; set; }
+		protected Cursor SecondPhaseCursor { get; init; }
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{

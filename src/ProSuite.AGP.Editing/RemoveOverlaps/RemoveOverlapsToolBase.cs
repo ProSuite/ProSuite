@@ -44,7 +44,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			GeomIsSimpleAsFeature = false;
 
-			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Arrow, Resources.RemoveOverlapslOverlay, 10, 10);
+			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay, 10, 10);
 		}
 
 		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";

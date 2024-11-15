@@ -18,9 +18,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected ReshapeAlongToolBase()
 		{
 			TargetSelectionCursor =
-				ToolUtils.CreateCursor(Resources.Arrow, Resources.ReshapeAlongOverlay, 10, 10);
+				ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay, 10, 10);
 			TargetSelectionCursorShift = ToolUtils.CreateCursor(
-				Resources.Arrow, Resources.CutPolygonAlongOverlay, Resources.Shift, null, 10, 10);
+				Resources.Cross, Resources.ReshapeAlongOverlay, Resources.Shift, null, 10, 10);
 		}
 
 		protected override string EditOperationDescription => "Reshape along";

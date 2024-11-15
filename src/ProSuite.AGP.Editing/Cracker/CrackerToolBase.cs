@@ -37,7 +37,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		{
 			GeomIsSimpleAsFeature = false;
 
-			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Arrow, Resources.CrackerOverlay, 10, 10);
+			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.CrackerOverlay, 10, 10);
 		}
 
 		protected string OptionsFileName => "CrackerToolOptions.xml";

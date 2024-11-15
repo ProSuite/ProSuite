@@ -18,9 +18,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected CutAlongToolBase()
 		{
 			TargetSelectionCursor =
-				ToolUtils.CreateCursor(Resources.Arrow, Resources.CutPolygonAlongOverlay, 10, 10);
+				ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay, 10, 10);
 			TargetSelectionCursorShift = ToolUtils.CreateCursor(
-				Resources.Arrow, Resources.CutPolygonAlongOverlay, Resources.Shift, null, 10, 10);
+				Resources.Cross, Resources.CutPolygonAlongOverlay, Resources.Shift, null, 10, 10);
 			;
 
 			DisplayTargetLines = true;

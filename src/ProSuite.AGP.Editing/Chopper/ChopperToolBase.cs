@@ -36,7 +36,7 @@ namespace ProSuite.AGP.Editing.Chopper
 		{
 			GeomIsSimpleAsFeature = false;
 
-			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Arrow, Resources.ChopperOverlay, 10, 10);
+			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.ChopperOverlay, 10, 10);
 		}
 
 		protected string OptionsFileName => "ChopperToolOptions.xml";

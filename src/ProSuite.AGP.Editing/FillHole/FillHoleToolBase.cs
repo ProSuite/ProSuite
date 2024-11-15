@@ -41,7 +41,7 @@ namespace ProSuite.AGP.Editing.FillHole
 		{
 			GeomIsSimpleAsFeature = false;
 
-			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Arrow, Resources.FillHoleOverlay, 10, 10);
+			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.FillHoleOverlay, 10, 10);
 		}
 
 		protected FillHoleOptions FillHoleOptions { get; } = new FillHoleOptions();
