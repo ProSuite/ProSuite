@@ -21,6 +21,7 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
@@ -409,21 +410,16 @@ namespace ProSuite.AGP.Editing.OneClick
 				_lastSketch = sketchGeometry;
 				_lastSketchFinishedTime = DateTime.Now;
 
-				ViewUtils.Try(() =>
-				{
-					if (SketchType == SketchGeometryType.Polygon)
-					{
-						// Otherwise relational operators and spatial queries return the wrong result
-						sketchGeometry = GeometryUtils.Simplify(sketchGeometry);
-					}
-				}, _msg);
-
 				using var source = GetProgressorSource();
 				var progressor = source?.Progressor;
 
 				if (RequiresSelection && await IsInSelectionPhaseAsync())
 				{
-					return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
+					// Otherwise relational operators and spatial queries return the wrong result
+					Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
+					Assert.NotNull(simpleGeometry, "Geometry is null");
+					
+					return await OnSelectionSketchCompleteAsync(simpleGeometry, progressor);
 				}
 
 				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
