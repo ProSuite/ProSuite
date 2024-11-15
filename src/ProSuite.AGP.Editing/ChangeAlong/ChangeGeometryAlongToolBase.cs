@@ -228,7 +228,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				}
 				else
 				{
-					SetCursor(SelectionCursor);
+					SetCursor(GetSelectionCursor());
 				}
 			}
 			catch (Exception ex)
@@ -251,7 +251,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			try
 			{
-				if (SelectionCursorShift != null && HasReshapeCurves())
+				if (HasReshapeCurves())
 				{
 					SetCursor(TargetSelectionCursorShift);
 				}

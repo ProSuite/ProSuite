@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -43,9 +44,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			GeomIsSimpleAsFeature = false;
 
-			SelectionCursor = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursorShift);
-			SecondPhaseCursor = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursorProcess);
+			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Arrow, Resources.RemoveOverlapslOverlay, 10, 10);
 		}
 
 		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
@@ -490,5 +489,48 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		}
 
 		#endregion
+
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveOverlapslOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
+		}
 	}
 }
