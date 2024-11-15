@@ -233,7 +233,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			catch (Exception ex)
 			{
-				ViewUtils.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
@@ -262,7 +262,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			catch (Exception ex)
 			{
-				ViewUtils.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
@@ -282,7 +282,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			catch (Exception ex)
 			{
-				ViewUtils.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
@@ -402,16 +402,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					var orderedCandidates =
 					candidates.OrderBy(candidate => candidate.ShapeDimension);
 
-					var pickedItem =
-						await PickerUtils.ShowAsync<IPickableFeatureItem>(
+					IPickableItem item =
+						await PickerUtils.ShowPickerAsync<IPickableFeatureItem>(
 							pickerPrecedence, orderedCandidates);
 
-					if (pickedItem == null)
-					{
-						return Enumerable.Empty<Feature>();
-					}
-
-					return new List<Feature> { pickedItem.Feature };
+					return item is IPickableFeatureItem pickedItem
+						       ? new List<Feature> { pickedItem.Feature }
+						       : Enumerable.Empty<Feature>();
 				}
 
 				return candidates.SelectMany(c => c.GetFeatures());

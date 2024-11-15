@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
@@ -27,10 +29,18 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			}
 		}
 
+		public IPickableItem PickBest(IEnumerable<IPickableItem> items)
+		{
+			throw new NotImplementedException();
+		}
+
 		public int SelectionTolerance { get; set; }
 		public bool IsSingleClick { get; }
 		public bool AggregateItems { get; }
 		public Point PickerLocation { get; set; }
+
+		public SpatialRelationship SpatialRelationship { get; }
+		public SelectionCombinationMethod SelectionCombinationMethod { get; }
 
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
 		{
@@ -47,18 +57,21 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			return SelectionGeometry;
 		}
 
+		public IPickableItemsFactory CreateItemsFactory()
+		{
+			throw new NotImplementedException();
+		}
+
+		public IPickableItemsFactory CreateItemsFactory<T>() where T : IPickableItem
+		{
+			throw new NotImplementedException();
+		}
+
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
 		{
 			return items.Take(_maxItems)
 			            .Select(item => SetScoreConsideringDistances(item, _selectionCentroid))
 			            .OrderBy(item => item, new PickableItemComparer());
-		}
-
-		public IEnumerable<T> Order<T>(IEnumerable<T> items) where T : IPickableItem
-		{
-			return items.Take(_maxItems)
-			            .Select(item => SetScoreConsideringDistances(item, _selectionCentroid))
-			            .OrderBy(item => item, new PickableItemComparer()).OfType<T>();
 		}
 
 		[CanBeNull]

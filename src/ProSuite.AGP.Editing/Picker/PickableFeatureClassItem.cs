@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using Geometry = ArcGIS.Core.Geometry.Geometry;
 
 namespace ProSuite.AGP.Editing.Picker;
 
@@ -13,9 +13,9 @@ public class PickableFeatureClassItem : PickableFeatureClassItemBase
 {
 	private BitmapImage _image;
 
-	public PickableFeatureClassItem(Dataset dataset,
-	                                IReadOnlyList<Feature> features) :
-		base(dataset, features) { }
+	public PickableFeatureClassItem(string datasetName,
+	                                IReadOnlyList<long> oids, Geometry geometry) :
+		base(datasetName, oids, geometry) { }
 
 	[NotNull]
 	public override ImageSource ImageSource
