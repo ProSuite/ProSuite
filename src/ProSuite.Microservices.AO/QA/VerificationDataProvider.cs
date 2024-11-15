@@ -35,9 +35,9 @@ namespace ProSuite.Microservices.AO.QA
 			new ThreadLocal<IDictionary<RelationshipClassQuery, ITable>>(
 				() => new Dictionary<RelationshipClassQuery, ITable>());
 
-		private readonly ThreadLocal<IDictionary<ClassDef, IObjectClass>> _objectClassesByClassDef =
-			new ThreadLocal<IDictionary<ClassDef, IObjectClass>>(
-				() => new Dictionary<ClassDef, IObjectClass>());
+		private readonly ThreadLocal<IDictionary<ClassDef, ITable>> _tablesByClassDef =
+			new ThreadLocal<IDictionary<ClassDef, ITable>>(
+				() => new Dictionary<ClassDef, ITable>());
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="VerificationDataProvider"/> class.
@@ -194,6 +194,16 @@ namespace ProSuite.Microservices.AO.QA
 			relTableMsg.WorkspaceHandle = association.Model.Id;
 
 			result.RelclassDefinitions.Add(relTableMsg);
+
+			// If it also a table, also add it as a table:
+			bool isTable =
+				relationshipClass.IsAttributed ||
+				relationshipClass.Cardinality == esriRelCardinality.esriRelCardinalityManyToMany;
+
+			if (isTable)
+			{
+				AddTable(relTableMsg, (ITable) relationshipClass, result);
+			}
 		}
 
 		private static IEnumerable<Association> GetAssociations(
@@ -238,11 +248,15 @@ namespace ProSuite.Microservices.AO.QA
 			// The currency for workspace handles in QA is the model ID.
 			objectClassMsg.WorkspaceHandle = objectDataset.Model.Id;
 
-			// Remember class for subsequent data queries:
+			AddTable(objectClassMsg, (ITable) objectClass, result);
+		}
 
-			_objectClassesByClassDef.Value.Add(CreateClassDef(objectClassMsg), objectClass);
+		private void AddTable(ObjectClassMsg tableMsg, ITable table, SchemaMsg resultSchema)
+		{
+			resultSchema.ClassDefinitions.Add(tableMsg);
 
-			result.ClassDefinitions.Add(objectClassMsg);
+			// Also, remember the class for subsequent data queries:
+			_tablesByClassDef.Value.Add(CreateClassDef(tableMsg), table);
 		}
 
 		private static ClassDef CreateClassDef(ObjectClassMsg objectClassMsg)
@@ -260,22 +274,22 @@ namespace ProSuite.Microservices.AO.QA
 
 		private GdbData ProvideData(DataRequest dataRequest)
 		{
-			IObjectClass objectClass;
+			ITable table;
 			switch (dataRequest.TableCase)
 			{
 				case DataRequest.TableOneofCase.None:
 					throw new ArgumentException("No table type defined.");
 				case DataRequest.TableOneofCase.ClassDef:
-					objectClass = GetObjectClass(dataRequest.ClassDef);
+					table = GetObjectClass(dataRequest.ClassDef);
 					break;
 				case DataRequest.TableOneofCase.RelQueryDef:
-					objectClass = (IObjectClass) GetQueryTable(dataRequest.RelQueryDef);
+					table = GetQueryTable(dataRequest.RelQueryDef);
 					break;
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 
-			IQueryFilter filter = CreateFilter(objectClass, dataRequest.SubFields,
+			IQueryFilter filter = CreateFilter(table, dataRequest.SubFields,
 			                                   dataRequest.WhereClause, dataRequest.SearchGeometry);
 
 			GdbData featureData = new GdbData();
@@ -283,13 +297,13 @@ namespace ProSuite.Microservices.AO.QA
 			if (dataRequest.CountOnly)
 			{
 				filter.SubFields =
-					GetSubFieldForCounting(objectClass, dataRequest.RelQueryDef != null);
+					GetSubFieldForCounting(table, dataRequest.RelQueryDef != null);
 
-				featureData.GdbObjectCount = GdbQueryUtils.Count(objectClass, filter);
+				featureData.GdbObjectCount = GdbQueryUtils.Count(table, filter);
 			}
 			else
 			{
-				if (objectClass is IFeatureClass fc)
+				if (table is IFeatureClass fc)
 				{
 					_msg.VerboseDebug(
 						() => $"{DatasetUtils.GetName(fc)} shape field is {fc.ShapeFieldName}");
@@ -297,20 +311,32 @@ namespace ProSuite.Microservices.AO.QA
 						() => $"{DatasetUtils.GetName(fc)} object id field is {fc.OIDFieldName}");
 				}
 
-				foreach (var obj in GdbQueryUtils.GetObjects(objectClass, filter, true))
+				long classHandle = -1;
+				if (table is IObjectClass objectClass)
+				{
+					classHandle = objectClass.ObjectClassID;
+				}
+				else if (table is IRelationshipClass relClass)
+				{
+					classHandle = relClass.RelationshipClassID;
+				}
+
+				foreach (IRow row in GdbQueryUtils.GetRows(table, filter, true))
 				{
 					try
 					{
 						GdbObjectMsg objectMsg =
 							ProtobufGdbUtils.ToGdbObjectMsg(
-								obj, false, true, dataRequest.SubFields);
+								row, false, true, dataRequest.SubFields);
+
+						objectMsg.ClassHandle = classHandle;
 
 						featureData.GdbObjects.Add(objectMsg);
 					}
 					catch (Exception e)
 					{
 						_msg.Debug(
-							$"Error converting {GdbObjectUtils.ToString(obj)} to object message",
+							$"Error converting {GdbObjectUtils.ToString(row)} to object message",
 							e);
 						throw;
 					}
@@ -329,34 +355,36 @@ namespace ProSuite.Microservices.AO.QA
 				queryDef.RelationshipClassName, StringUtils.Concatenate(queryDef.Tables, ", "),
 				queryDef.JoinType, queryDef.WhereClause);
 
-			if (_relQueryTables.Value.ContainsKey(queryDef))
+			if (_relQueryTables.Value.TryGetValue(queryDef, out ITable table))
 			{
-				return _relQueryTables.Value[queryDef];
+				return table;
 			}
 
 			throw new InvalidOperationException(
 				$"Rel Query Table {queryDef.RelationshipClassName} in model {queryDef.WorkspaceHandle} is not part of the known schema.");
 		}
 
-		private IObjectClass GetObjectClass(ClassDef classDef)
+		private ITable GetObjectClass(ClassDef classDef)
 		{
 			_msg.DebugFormat("Handling data request for class ID {0} in workspace handle {1}",
 			                 classDef.ClassHandle, classDef.WorkspaceHandle);
 
-			if (_objectClassesByClassDef.Value.ContainsKey(classDef))
+			if (_tablesByClassDef.Value.TryGetValue(classDef, out ITable table))
 			{
-				return _objectClassesByClassDef.Value[classDef];
+				return table;
 			}
 
 			throw new InvalidOperationException(
 				$"Class {classDef.ClassHandle} in model {classDef.WorkspaceHandle} is not part of the known schema.");
 		}
 
-		private static IQueryFilter CreateFilter([NotNull] IObjectClass objectClass,
+		private static IQueryFilter CreateFilter([NotNull] ITable objectClass,
 		                                         [CanBeNull] string subFields,
 		                                         [CanBeNull] string whereClause,
 		                                         [CanBeNull] ShapeMsg searchGeometryMsg)
 		{
+			subFields = EnsureOIDFieldName(subFields, objectClass);
+
 			IFeatureClass featureClass = objectClass as IFeatureClass;
 
 			if (featureClass == null)
@@ -379,6 +407,26 @@ namespace ProSuite.Microservices.AO.QA
 			return result;
 		}
 
+		private static string EnsureOIDFieldName(string subFields, ITable objectClass)
+		{
+			if (string.IsNullOrEmpty(subFields))
+			{
+				return subFields;
+			}
+
+			if (subFields.Contains("*"))
+			{
+				return subFields;
+			}
+
+			if (objectClass.HasOID && ! subFields.Contains(objectClass.OIDFieldName))
+			{
+				return objectClass.OIDFieldName + "," + subFields;
+			}
+
+			return subFields;
+		}
+
 		private static IQueryFilter CreateFilter([CanBeNull] string subFields,
 		                                         [CanBeNull] string whereClause)
 		{
@@ -389,7 +437,7 @@ namespace ProSuite.Microservices.AO.QA
 			return result;
 		}
 
-		private static string GetSubFieldForCounting(IObjectClass objectClass,
+		private static string GetSubFieldForCounting(ITable objectClass,
 		                                             bool isRelQueryTable)
 		{
 			if (isRelQueryTable && objectClass is IFeatureClass featureClass)

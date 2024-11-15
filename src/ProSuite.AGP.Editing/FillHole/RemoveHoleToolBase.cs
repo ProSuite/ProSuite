@@ -42,7 +42,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected abstract ICalculateHolesService MicroserviceClient { get; }
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
 
@@ -59,6 +59,13 @@ namespace ProSuite.AGP.Editing.FillHole
 		{
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+		}
+
+		protected override CancelableProgressorSource GetProgressorSource()
+		{
+			// Disable the progressor because removing holes is typically fast,
+			// and the users potentially want to continue working already.
+			return null;
 		}
 
 		protected override void LogPromptForSelection()
@@ -242,7 +249,5 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected abstract IList<Holes> SelectHoles([CanBeNull] IList<Holes> holes,
 		                                            [NotNull] Geometry sketch);
-
-		protected abstract CancelableProgressor GetHoleCalculationProgressor();
 	}
 }

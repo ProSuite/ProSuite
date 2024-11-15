@@ -34,11 +34,13 @@ namespace ProSuite.AGP.WorkList
 		/// <param name="tableSchema">The known table schema. If null, a minimal, hard-coded schema will be
 		/// used that contains only the status and the geometry which is good enough for layer display but
 		/// not for the navigator! The table schema can be updated later (before the navigator is shown)
-		/// using <see cref="IWorkItemRepository.UpdateStateRepository"/></param>.
+		/// using <see cref="IWorkItemRepository.UpdateTableSchemaInfo"/></param>.
 		public IssueItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
 		                           IWorkItemStateRepository workItemStateRepository,
 		                           [CanBeNull] IWorkListItemDatastore tableSchema = null)
 			: base(tableWithDefinitionQuery, workItemStateRepository, tableSchema) { }
+
+		public Func<long,long,Row,IWorkItem> CreateItemFunc { get; set; }
 
 		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{
@@ -89,9 +91,16 @@ namespace ProSuite.AGP.WorkList
 
 			IAttributeReader reader = source.AttributeReader;
 
-			IIssueItem item = new IssueItem(id, source.GetUniqueTableId(), row);
-
-			reader?.ReadAttributes(row, item, source);
+			IWorkItem item;
+			if (CreateItemFunc != null)
+			{
+				item = CreateItemFunc(id, source.GetUniqueTableId(), row);
+			}
+			else
+			{
+				item = new IssueItem(id, source.GetUniqueTableId(), row);
+				reader?.ReadAttributes(row, item, source);
+			}
 
 			return RefreshState(item);
 		}
@@ -201,7 +210,7 @@ namespace ProSuite.AGP.WorkList
 				return default;
 			}
 
-			public void ReadAttributes(Row fromRow, IIssueItem forItem, ISourceClass source)
+			public void ReadAttributes(Row fromRow, IWorkItem forItem, ISourceClass source)
 			{
 				forItem.Status = ((DatabaseSourceClass) source).GetStatus(fromRow);
 			}

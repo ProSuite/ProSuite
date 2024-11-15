@@ -20,6 +20,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		{
 			Circle,
 			Square,
+			Diamond,
 			Cross
 		}
 
@@ -385,6 +386,11 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return hatchFill;
 		}
 
+		/// <remarks>
+		/// To have a Diamond marker appear the same size as a Square
+		/// marker, use a size that is sqrt 2 (about 1.414) times larger
+		/// for the Diamond than for the Square.
+		/// </remarks>
 		public static CIMMarker CreateMarker(CIMColor color, double size, MarkerStyle style)
 		{
 			var geometry = CreateMarkerGeometry(style);
@@ -426,19 +432,33 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		public static Geometry CreateMarkerGeometry(MarkerStyle style)
 		{
-			switch (style)
+			if (style == MarkerStyle.Circle)
 			{
-				case MarkerStyle.Circle:
-					return GeometryFactory.CreateBezierCircle(5);
-
-				case MarkerStyle.Square:
-					var envelope = GeometryFactory.CreateEnvelope(-5, -5, 5, 5);
-					return GeometryFactory.CreatePolygon(envelope);
-
-				default:
-					throw new NotImplementedException(
-						"Sorry, this MarkerStyle is not yet implemented");
+				return GeometryFactory.CreateBezierCircle(5);
 			}
+
+			if (style == MarkerStyle.Square)
+			{
+				var envelope = GeometryFactory.CreateEnvelope(-5, -5, 5, 5);
+				return GeometryFactory.CreatePolygon(envelope);
+			}
+
+			if (style == MarkerStyle.Diamond)
+			{
+				var envelope = GeometryFactory.CreateEnvelope(-5, -5, 5, 5);
+				var polygon = GeometryFactory.CreatePolygon(envelope);
+				var origin = MapPointBuilderEx.CreateMapPoint(0, 0);
+				return GeometryEngine.Instance.Rotate(polygon, origin, Math.PI / 4);
+			}
+
+			if (style == MarkerStyle.Cross)
+			{
+				var line = GeometryFactory.CreatePolylineXY([-5,-5, 5,5, 0,0, -5,5, 5,-5]);
+				return line;
+			}
+			
+			throw new NotImplementedException(
+				"Sorry, this MarkerStyle is not yet implemented");
 		}
 
 		#endregion
@@ -1236,7 +1256,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 					{
 						var expr = mapping.ValueExpressionInfo?.Expression ??
 								   mapping.Expression ?? "(n/a)";
-						throw new Exception(
+						_msg.Warn(
 							$"Cannot apply primitive override (primitive {mapping.PrimitiveName}, " +
 							$"property {mapping.PropertyName}, value {expr}): {ex.Message}");
 					}
@@ -1471,10 +1491,11 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			                    out index);
 		}
 
+		// todo daro: to CollectionUtils?
 		/// <remarks>
 		/// Usage: <c>foo.Array = AddOne(foo.Array, item)</c>
 		/// </remarks>
-		private static T[] AddOne<T>([CanBeNull] T[] array, T item)
+		public static T[] AddOne<T>([CanBeNull] T[] array, T item)
 		{
 			if (item == null)
 				throw new ArgumentNullException(nameof(item));

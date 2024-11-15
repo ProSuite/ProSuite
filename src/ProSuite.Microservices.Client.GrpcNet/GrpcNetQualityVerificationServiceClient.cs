@@ -45,7 +45,7 @@ namespace ProSuite.Microservices.Client.GrpcNet
 			int maxMessageLength)
 		{
 			ChannelBase channel = GrpcUtils.CreateChannel(
-				HostName, Port, credentials, maxMessageLength);
+				host, port, credentials, maxMessageLength);
 
 			return channel;
 		}

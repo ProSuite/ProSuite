@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -14,6 +15,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Notifications;
 
 namespace ProSuite.AGP.Editing.Erase
 {
@@ -54,19 +56,13 @@ namespace ProSuite.AGP.Editing.Erase
 			_msg.InfoFormat(LocalizableStrings.EraseTool_LogPromptForSelection);
 		}
 
-		protected override bool CanUseSelection(Dictionary<MapMember, List<long>> selection)
+		protected override bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection,
+		                                        NotificationCollection notifications = null)
 		{
 			bool hasPolycurveSelection = false;
 
-			foreach (MapMember mapMember in selection.Keys)
+			foreach (var layer in selection.Keys.OfType<FeatureLayer>())
 			{
-				var layer = mapMember as FeatureLayer;
-
-				if (layer == null)
-				{
-					continue;
-				}
-
 				if (layer.ShapeType == esriGeometryType.esriGeometryPolygon ||
 				    layer.ShapeType == esriGeometryType.esriGeometryPolyline)
 				{
@@ -75,16 +71,6 @@ namespace ProSuite.AGP.Editing.Erase
 			}
 
 			return hasPolycurveSelection;
-		}
-
-		protected override CancelableProgressor GetSelectionProgressor()
-		{
-			var selectionCompleteProgressorSource = new CancelableProgressorSource(
-				"Selecting features bla bla...", "cancelled", true);
-
-			CancelableProgressor selectionProgressor = selectionCompleteProgressorSource.Progressor;
-
-			return selectionProgressor;
 		}
 
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(

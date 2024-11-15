@@ -8,6 +8,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Cracking;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -40,14 +41,22 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 			IGeometry calculationPerimeter = ProtobufGeometryUtils.FromShapeMsg(request.Perimeter);
 
 			double? snapTolerance = optionsMsg.SnapToTargetVertices
-				                        ? optionsMsg.SnapTolerance
+				                        ? (double?) optionsMsg.SnapTolerance
 				                        : null;
 
 			double? minimumSegmentLength = optionsMsg.RespectMinimumSegmentLength
-				                               ? optionsMsg.MinimumSegmentLength
+				                               ? (double?) optionsMsg.MinimumSegmentLength
 				                               : null;
 
 			bool useSourceZs = optionsMsg.UseSourceZs;
+
+			IntersectionPointOptions intersectionPointOptions =
+				(IntersectionPointOptions) optionsMsg.IntersectionPointOptions;
+
+			bool addCrackPointsOnExistingVertices = optionsMsg.AddCrackPointsOnExistingVertices;
+
+			bool excludeInteriorInteriorIntersections =
+				optionsMsg.ExcludeInteriorInteriorIntersection;
 
 			bool onlyWithinSameClass = optionsMsg.CrackOnlyWithinSameClass;
 
@@ -56,7 +65,9 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 				                                    snapTolerance, minimumSegmentLength);
 
 			CrackPointCalculator crackPointCalculator = CreateCrackPointCalculator(
-				snapTolerance, minimumSegmentLength, useSourceZs, calculationPerimeter);
+				snapTolerance, minimumSegmentLength, useSourceZs,
+				excludeInteriorInteriorIntersections, intersectionPointOptions,
+				addCrackPointsOnExistingVertices, calculationPerimeter);
 
 			if (targetFeatures.Count == 0)
 			{
@@ -98,7 +109,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 
 			double? snapTolerance =
 				Assert.NotNull(options, "CrackOptions are null").SnapToTargetVertices
-					? options.SnapTolerance
+					? (double?) options.SnapTolerance
 					: null;
 
 			IList<IFeature> sourceFeatures = ProtobufConversionUtils.FromGdbObjectMsgList(
@@ -154,6 +165,105 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 					feature, newGeometry, feature.Class.ObjectClassID);
 
 				response.ResultFeatures.Add(resultObject);
+			}
+
+			return response;
+		}
+
+		public static ChopLinesResponse ChopLines(ApplyCrackPointsRequest request,
+		                                          ITrackCancel trackCancel)
+		{
+			// Unpack request
+			CrackOptionsMsg options = request.CrackOptions;
+
+			double? snapTolerance =
+				Assert.NotNull(options, "CrackOptions are null").SnapToTargetVertices
+					? (double?) options.SnapTolerance
+					: null;
+
+			IList<IFeature> sourceFeatures = ProtobufConversionUtils.FromGdbObjectMsgList(
+				Assert.NotNull(request.SourceFeatures, "SourceFeatures are null"),
+				Assert.NotNull(request.ClassDefinitions, "ClassDefinitions are null"));
+
+			Dictionary<GdbObjectReference, IFeature> featureByObjRef =
+				sourceFeatures.ToDictionary(s => new GdbObjectReference(s), s => s);
+
+			IDictionary<IFeature, IEnumerable<IPolyline>> splitLinesByFeature =
+				new Dictionary<IFeature, IEnumerable<IPolyline>>();
+
+			foreach (CrackPointsMsg chopPointsMsg in request.CrackPoints)
+			{
+				if (chopPointsMsg.CrackPoints.Count == 0)
+				{
+					continue;
+				}
+
+				// TODO: Class handle in GdbObjectReference: long!
+				GdbObjectReference gdbObjRef = new GdbObjectReference(
+					Convert.ToInt32(chopPointsMsg.OriginalFeatureRef.ClassHandle),
+					chopPointsMsg.OriginalFeatureRef.ObjectId);
+
+				IPointCollection splitPoints =
+					CreateCrackPointCollection(chopPointsMsg.CrackPoints);
+
+				IFeature feature = featureByObjRef[gdbObjRef];
+
+				IEnumerable<IPolyline> splitPolycurves =
+					CrackUtils.GetSplitPolycurves(feature, splitPoints, snapTolerance);
+
+				splitLinesByFeature.Add(feature, splitPolycurves);
+			}
+
+			ChopLinesResponse response = PackChopLinesResponse(splitLinesByFeature, trackCancel);
+
+			return response;
+		}
+
+		[NotNull]
+		private static ChopLinesResponse PackChopLinesResponse(
+			[NotNull] IDictionary<IFeature, IEnumerable<IPolyline>> splitLinesByFeature,
+			[CanBeNull] ITrackCancel trackCancel)
+		{
+			var response = new ChopLinesResponse();
+
+			foreach (var kvp in splitLinesByFeature)
+			{
+				IFeature originalFeature = kvp.Key;
+
+				ICollection<IPolyline> splitLines = CollectionUtils.GetCollection(kvp.Value);
+
+				IGeometry longestLine = GeometryUtils.GetLargestGeometry(splitLines);
+
+				foreach (IPolyline splitLine in splitLines)
+				{
+					if (trackCancel != null && ! trackCancel.Continue())
+					{
+						return response;
+					}
+
+					GdbObjectMsg resultFeature =
+						ProtobufGdbUtils.ToGdbObjectMsg(originalFeature, splitLine,
+						                                originalFeature.Class.ObjectClassID);
+
+					var resultObject = new ResultObjectMsg();
+
+					if (splitLine == longestLine)
+					{
+						resultObject.Update = resultFeature;
+					}
+					else
+					{
+						resultObject.Insert = new InsertedObjectMsg()
+						                      {
+							                      OriginalReference =
+								                      ProtobufGdbUtils.ToGdbObjRefMsg(
+									                      originalFeature),
+							                      InsertedObject = resultFeature
+						                      };
+					}
+
+					response.ResultFeatures.Add(resultObject);
+				}
 			}
 
 			return response;
@@ -248,13 +358,17 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 			double? snapTolerance,
 			double? minimumSegmentLength,
 			bool useSourceZs,
+			bool excludeInteriorInteriorIntersection,
+			IntersectionPointOptions intersectionPointOptions,
+			bool addCrackPointsOnExistingVertices,
 			[CanBeNull] IGeometry perimeter)
 		{
 			IEnvelope inExtent = perimeter?.Envelope;
 
 			var cracker = new CrackPointCalculator(
-				snapTolerance, minimumSegmentLength, addCrackPointsOnExistingVertices: false,
-				useSourceZs, IntersectionPointOptions.IncludeLinearIntersectionAllPoints, inExtent);
+				snapTolerance, minimumSegmentLength, addCrackPointsOnExistingVertices, useSourceZs, intersectionPointOptions, inExtent);
+
+			cracker.ExcludeInteriorInteriorIntersections = excludeInteriorInteriorIntersection;
 
 			// Special handling of multipatch targets:
 			cracker.TargetTransformation = CrackUtils.ExtractBoundariesForMultipatches;

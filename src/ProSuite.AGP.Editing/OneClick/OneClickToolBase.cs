@@ -27,11 +27,15 @@ using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
-	public abstract class OneClickToolBase : MapTool
+	public abstract class OneClickToolBase : MapTool, ISketchTool
 	{
 		private const Key _keyShowOptionsPane = Key.O;
 		private const Key _keyPolygonDraw = Key.P;
 		private const Key _keyLassoDraw = Key.L;
+		private const Key _keyDisplayVertices = Key.T;
+
+		private int _updateErrorCounter;
+		private const int MaxUpdateErrors = 10;
 
 		private readonly TimeSpan _sketchBlockingPeriod = TimeSpan.FromSeconds(1);
 
@@ -42,6 +46,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Point CurrentMousePosition;
 
+		[CanBeNull] private SelectionSketchTypeToggle _selectionSketchType;
+
 		protected OneClickToolBase()
 		{
 			ContextMenuID = "esri_mapping_selection2DContextMenu";
@@ -51,6 +57,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			HandledKeys.Add(_keyLassoDraw);
 			HandledKeys.Add(_keyPolygonDraw);
 			HandledKeys.Add(_keyShowOptionsPane);
+			HandledKeys.Add(_keyDisplayVertices);
 		}
 
 		/// <summary>
@@ -90,6 +97,38 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual Cursor SelectionCursor { get; set; }
 		protected virtual Cursor SelectionCursorShift { get; set; }
 
+		/// <summary>
+		/// Flag to indicate that currently the selection is changed by the <see cref="OnSelectionSketchCompleteAsync"/> method.
+		/// </summary>
+		protected bool IsCompletingSelectionSketch { get; set; }
+
+		#region Overrides of PlugIn
+
+		protected override void OnUpdate()
+		{
+			try
+			{
+				OnUpdateCore();
+			}
+			catch (Exception ex)
+			{
+				if (_updateErrorCounter < MaxUpdateErrors)
+				{
+					_msg.Error($"{GetType().Name}.{nameof(OnUpdate)}: {ex.Message}", ex);
+
+					_updateErrorCounter += 1;
+
+					if (_updateErrorCounter == MaxUpdateErrors)
+					{
+						_msg.Error("Will stop reporting errors here to avoid flooding the logs");
+					}
+				}
+				//else: silently ignore to avoid flooding the logs
+			}
+		}
+
+		#endregion
+
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
 			_msg.VerboseDebug(() => "OnToolActivateAsync");
@@ -100,12 +139,15 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			PressedKeys.Clear();
 
+			_selectionSketchType =
+				new SelectionSketchTypeToggle(this, GetSelectionSketchGeometryType());
+
 			try
 			{
 				using var source = GetProgressorSource();
 				var progressor = source?.Progressor;
 
-				await QueuedTaskUtils.Run(() =>
+				await QueuedTaskUtils.Run(async () =>
 				{
 					OnToolActivatingCore();
 
@@ -114,7 +156,9 @@ namespace ProSuite.AGP.Editing.OneClick
 						ProcessSelection(progressor);
 					}
 
-					return OnToolActivatedCore(hasMapViewChanged);
+					// ReSharper disable once MethodHasAsyncOverload
+					return OnToolActivatedCore(hasMapViewChanged) &&
+					       await OnToolActivatedCoreAsync(hasMapViewChanged);
 				}, progressor);
 			}
 			catch (Exception ex)
@@ -179,6 +223,11 @@ namespace ProSuite.AGP.Editing.OneClick
 					await HandleEscapeAsync();
 				}
 
+				if (args.Key == _keyDisplayVertices)
+				{
+					ToggleVertices();
+				}
+
 				if (await IsInSelectionPhaseAsync())
 				{
 					if (args.Key == _keyPolygonDraw)
@@ -196,13 +245,15 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception ex)
 			{
-				ViewUtils.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
+		protected virtual void ToggleVertices() { }
+
 		private void SetupLassoSketch()
 		{
-			SetupSketch(SketchGeometryType.Lasso, enforceSimpleSketch: true);
+			_selectionSketchType?.Toggle(SketchGeometryType.Lasso);
 
 			SetupLassoSketchCore();
 		}
@@ -211,8 +262,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void SetupPolygonSketch()
 		{
-			SetupSketch(SketchGeometryType.Polygon, enforceSimpleSketch: true);
-
+			_selectionSketchType?.Toggle(SketchGeometryType.Polygon);
 			// TODO: Sketch symbol: No vertices
 
 			SetupPolygonSketchCore();
@@ -256,24 +306,12 @@ namespace ProSuite.AGP.Editing.OneClick
 					await ShiftReleasedCoreAsync();
 				}
 
-				if (await IsInSelectionPhaseAsync() && args.Key is _keyPolygonDraw or _keyLassoDraw)
-				{
-					await ResetSketchAsync();
-				}
-
 				await HandleKeyUpCoreAsync(args);
 			}
 			catch (Exception ex)
 			{
-				ViewUtils.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
-		}
-
-		private async Task ResetSketchAsync()
-		{
-			SetupSketch(GetSelectionSketchGeometryType());
-
-			await ResetSketchCoreAsync();
 		}
 
 		protected virtual Task ResetSketchCoreAsync()
@@ -281,12 +319,34 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.CompletedTask;
 		}
 
+		protected override void OnToolMouseDown(MapViewMouseButtonEventArgs args)
+		{
+			_msg.VerboseDebug(() => $"OnToolMouseDown ({Caption})");
+		   
+			ViewUtils.Try(() =>
+				{
+					OnToolMouseDownCore(args);
+				}, _msg, suppressErrorMessageBox: false);
+
+		}
+
+		protected virtual void OnToolMouseDownCore(MapViewMouseButtonEventArgs args)
+		{ }
+
 		protected override void OnToolMouseMove(MapViewMouseEventArgs args)
 		{
 			CurrentMousePosition = args.ClientPoint;
 
-			base.OnToolMouseMove(args);
+			_msg.VerboseDebug(() => $"OnToolMouseMove ({Caption})");
+
+			ViewUtils.Try(() =>
+			{
+				OnToolMouseMoveCore(args);
+			}, _msg, suppressErrorMessageBox: true);
 		}
+
+		protected virtual void OnToolMouseMoveCore(MapViewMouseEventArgs args)
+		{ }
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
 		{
@@ -346,6 +406,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		protected virtual void OnUpdateCore() { }
+
 		protected virtual async Task ShiftPressedCoreAsync()
 		{
 			if (SelectionCursorShift != null && await IsInSelectionPhaseCoreAsync(true))
@@ -364,9 +426,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void StartSelectionPhase()
 		{
-			SelectionSettings settings = GetSelectionSettings();
-
-			SetupSketch(GetSelectionSketchGeometryType(), settings.SketchOutputMode);
+			SetupSelectionSketch();
 
 			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
 			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
@@ -376,27 +436,30 @@ namespace ProSuite.AGP.Editing.OneClick
 			OnSelectionPhaseStarted();
 		}
 
-		/// <summary>
-		/// Sets up the tool for a sketch that is typically used
-		/// to select things (features, graphics, etc.)
-		/// </summary>
-		protected void SetupRectangleSketch()
+		private void SetupSelectionSketch()
 		{
-			SetupSketch(SketchGeometryType.Rectangle);
+			SetupSketch();
+
+			_selectionSketchType?.ResetOrDefault();
 		}
 
-		protected void SetupSketch(SketchGeometryType? sketchType,
-		                           SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
+		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
 		                           bool useSnapping = false,
 		                           bool completeSketchOnMouseUp = true,
 		                           bool enforceSimpleSketch = false)
 		{
+			_msg.VerboseDebug(
+				() =>
+					$"Setting up sketch with type {SketchType}, output mode {sketchOutputMode}, " +
+					$"snapping: {useSnapping}, completeSketchOnMouseUp: {completeSketchOnMouseUp}, " +
+					$"enforceSimplifySketch: {enforceSimpleSketch}");
+
+			// screen coords are currently not supported and only relevant
+			// when selecting with the View being in 3D viewing mode
 			SketchOutputMode = sketchOutputMode;
 
 			// Note: set CompleteSketchOnMouseUp before SketchType, or it has no effect
 			CompleteSketchOnMouseUp = completeSketchOnMouseUp;
-
-			SketchType = sketchType;
 
 			UseSnapping = useSnapping;
 
@@ -409,8 +472,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
 		{
-			// TODO: Use async overload added at 3.0
+			_msg.VerboseDebug(() => $"OnMapSelectionChangedAsync ({Caption})");
+			// NOTE: This method is called repeatedly with different selection sets during the
+			//       OnSelectionSketchCompleteAsync method. Therefore, the flag is set to prevent
+			//       multiple calls to the AfterSelectionMethod with intermediate results!
+			//       The ProcessSelection method is called at the end of the sketch completion.
 			// Note: app crashes on uncaught exceptions here
+
+			if (IsCompletingSelectionSketch)
+			{
+				return;
+			}
 
 			Task<bool> task = QueuedTask.Run(() => OnMapSelectionChangedCore(args));
 
@@ -443,10 +515,25 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// <remarks>Will be called on MCT</remarks>
 		protected virtual void OnToolActivatingCore() { }
 
-		/// <remarks>Will be called on MCT</remarks>
+		/// <summary>
+		/// Synchronous method called on the MCT after the tool has been activated.
+		/// </summary>
+		/// <param name="hasMapViewChanged"></param>
+		/// <returns></returns>
 		protected virtual bool OnToolActivatedCore(bool hasMapViewChanged)
 		{
 			return true;
+		}
+
+		/// <summary>
+		/// Async method called on the MCT after the tool has been activated.
+		/// </summary>
+		/// <param name="hasMapViewChanged"></param>
+		/// <returns></returns>
+		/// <remarks>Will be called on MCT</remarks>
+		protected virtual Task<bool> OnToolActivatedCoreAsync(bool hasMapViewChanged)
+		{
+			return Task.FromResult(true);
 		}
 
 		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
@@ -481,13 +568,29 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Geometry sketchGeometry,
 			[CanBeNull] CancelableProgressor progressor)
 		{
-			using var pickerPrecedence =
-				CreatePickerPrecedence(sketchGeometry);
+			try
+			{
+				IsCompletingSelectionSketch = true;
 
-			await ViewUtils.TryAsync(
-				PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers), _msg);
+				using var precedence = CreatePickerPrecedence(sketchGeometry);
 
-			await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
+				await QueuedTaskUtils.Run(async () =>
+				{
+					IEnumerable<FeatureSelectionBase> candidates =
+						FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
+						                        precedence.SpatialRelationship);
+
+					List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
+
+					PickerUtils.Select(items, precedence.SelectionCombinationMethod);
+
+					ProcessSelection(progressor);
+				}, progressor);
+			}
+			finally
+			{
+				IsCompletingSelectionSketch = false;
+			}
 
 			return true;
 		}
@@ -633,8 +736,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		private bool CanSelectFromLayer([CanBeNull] Layer layer,
-		                                NotificationCollection notifications = null)
+		protected bool CanSelectFromLayer([CanBeNull] Layer layer,
+		                                  NotificationCollection notifications = null)
 		{
 			if (layer is not BasicFeatureLayer featureLayer)
 			{
@@ -693,17 +796,19 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (mapView is null)
 				throw new ArgumentNullException(nameof(mapView));
 
-			Dictionary<MapMember, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection(mapView.Map);
+			Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection<BasicFeatureLayer>(mapView.Map);
 
 			return CanUseSelection(selectionByLayer);
 		}
 
-		private bool CanUseSelection([NotNull] Dictionary<MapMember, List<long>> selectionByLayer)
+		protected virtual bool CanUseSelection(
+			[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+			[CanBeNull] NotificationCollection notifications = null)
 		{
 			return AllowNotApplicableFeaturesInSelection
-				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key as Layer))
-				       : selectionByLayer.All(l => CanSelectFromLayer(l.Key as Layer));
+				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key, notifications))
+				       : selectionByLayer.All(l => CanSelectFromLayer(l.Key, notifications));
 		}
 
 		protected IEnumerable<Feature> GetDistinctApplicableSelectedFeatures(
@@ -767,6 +872,57 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+
+		// todo daro drop!
+		[NotNull]
+		protected IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
+			[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+			bool unJoinedFeaturesForEditing = false,
+			[CanBeNull] NotificationCollection notifications = null)
+		{
+			var filteredCount = 0;
+			var selectionCount = 0;
+
+			var result = new Dictionary<BasicFeatureLayer, List<Feature>>(selectionByLayer.Count);
+
+			SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
+
+			foreach (KeyValuePair<BasicFeatureLayer, List<long>> oidsByLayer in selectionByLayer)
+			{
+				BasicFeatureLayer layer = oidsByLayer.Key;
+				List<long> oids = oidsByLayer.Value;
+
+				if (! CanSelectFromLayer(layer, notifications))
+				{
+					filteredCount += oidsByLayer.Value.Count;
+					continue;
+				}
+
+				var features = MapUtils
+				               .GetFeatures(layer, oids, unJoinedFeaturesForEditing,
+				                            recycling: false, mapSpatialReference).ToList();
+
+				result.Add(layer, features);
+				selectionCount++;
+			}
+
+			if (filteredCount == 1)
+			{
+				notifications?.Insert(
+					0, new Notification("The selected feature cannot be used by the tool."));
+			}
+
+			if (filteredCount > 1)
+			{
+				notifications?.Insert(
+					0,
+					new Notification(
+						$"{filteredCount} of {selectionCount + filteredCount} selected features cannot be used by the tool."));
+			}
+
+			return result;
+		}
+
 		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView mapView)
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
@@ -791,6 +947,16 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			var map = ActiveMapView?.Map;
 			map?.ClearSelection();
+		}
+
+		public void SetSketchType(SketchGeometryType? sketchType)
+		{
+			SketchType = sketchType;
+		}
+
+		public SketchGeometryType? GetSketchType()
+		{
+			return SketchType;
 		}
 	}
 }

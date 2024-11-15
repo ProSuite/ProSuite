@@ -78,9 +78,19 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			_datasetResolver = datasetResolver;
 			_qualityConditionRepository = qualityConditionRepository;
 
-			int gdbMajorRelease =
-				((IGeodatabaseRelease)
-					verificationContext.PrimaryWorkspaceContext.Workspace).MajorVersion + 7;
+			int gdbMajorRelease = 0;
+
+			try
+			{
+				gdbMajorRelease =
+					((IGeodatabaseRelease)
+						verificationContext.PrimaryWorkspaceContext.Workspace).MajorVersion + 7;
+			}
+			catch (NotImplementedException e)
+			{
+				_msg.Debug("GDB release version is not implemented. Assuming non-GDB/Pre-10.x.", e);
+			}
+
 			_isPre10Geodatabase = gdbMajorRelease < 10;
 		}
 

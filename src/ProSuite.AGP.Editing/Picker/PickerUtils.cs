@@ -5,23 +5,19 @@ using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.PickerUI;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.Picker
 {
 	public static class PickerUtils
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		#region move, refactor
 
 		public static Uri GetImagePath(esriGeometryType? geometryType)
@@ -82,8 +78,8 @@ namespace ProSuite.AGP.Editing.Picker
 			return ExpandGeometryByPixels(mapPoint, tolerancePixel);
 		}
 
-		private static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
-		                                               int selectionTolerancePixels)
+		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
+		                                              int selectionTolerancePixels)
 		{
 			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
 				MapView.Active, selectionTolerancePixels, sketchGeometry.Extent.Center);
@@ -114,295 +110,154 @@ namespace ProSuite.AGP.Editing.Picker
 			return ! (sketch.Extent.Width > 0 || sketch.Extent.Height > 0);
 		}
 
+		public static SpatialRelationship GetSpatialRelationship()
+		{
+			SketchGeometryType sketchGeometryType = ToolUtils.GetSketchGeometryType();
+			return sketchGeometryType == SketchGeometryType.Polygon ||
+			       sketchGeometryType == SketchGeometryType.Lasso
+				       ? SpatialRelationship.Contains
+				       : SpatialRelationship.Intersects;
+		}
+
+		public static SelectionCombinationMethod GetSelectionCombinationMethod()
+		{
+			return KeyboardUtils.IsShiftDown()
+				       ? SelectionCombinationMethod.XOR
+				       : SelectionCombinationMethod.New;
+		}
+
 		#endregion
 
 		#region Show Picker
 
-		// TODO daro: change signature to .. Func<IEnumerable<FeatureSelectionBase>> because CancelableProgressor should be null?
-		public static async Task ShowAsync(
-			[NotNull] IPickerPrecedence precedence,
-			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor, IEnumerable<FeatureSelectionBase>> getCandidates)
-		{
-			SelectionCombinationMethod selectionMethod =
-				KeyboardUtils.IsShiftDown()
-					? SelectionCombinationMethod.XOR
-					: SelectionCombinationMethod.New;
-
-			// Has to be on GUI thread
-			bool altDown = KeyboardUtils.IsAltDown();
-
-			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
-			SketchGeometryType sketchGeometryType = ToolUtils.GetSketchGeometryType();
-			SpatialRelationship spatialRelationship =
-				sketchGeometryType == SketchGeometryType.Polygon ||
-				sketchGeometryType == SketchGeometryType.Lasso
-					? SpatialRelationship.Contains
-					: SpatialRelationship.Intersects;
-
-			await QueuedTaskUtils.Run(async () =>
-			{
-				precedence.EnsureGeometryNonEmpty();
-
-				// NOTE daro: passing in a delayed cancellable progressor in conjunction with
-				// picker window crashes Pro. A non-delayed progressor works fine.
-				const CancelableProgressor progressor = null;
-				var featureSelection = getCandidates(precedence.SelectionGeometry,
-				                                     spatialRelationship,
-				                                     progressor).ToList();
-				if (altDown)
-				{
-					await SelectCandidates(precedence, featureSelection,
-					                       selectionMethod, PickerMode.PickAll);
-				}
-				else
-				{
-					await SelectCandidates(precedence, featureSelection, selectionMethod);
-				}
-			});
-		}
-
-		public static async Task ShowAsync(
-			[NotNull] IPickerPrecedence precedence,
-			[NotNull] Func<Geometry, SpatialRelationship, CancelableProgressor, IEnumerable<FeatureSelectionBase>> getCandidates,
-			PickerMode pickerMode)
-		{
-			SelectionCombinationMethod selectionMethod =
-				KeyboardUtils.IsShiftDown()
-					? SelectionCombinationMethod.XOR
-					: SelectionCombinationMethod.New;
-
-			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
-			SketchGeometryType sketchGeometryType = ToolUtils.GetSketchGeometryType();
-			SpatialRelationship spatialRelationship =
-				sketchGeometryType == SketchGeometryType.Polygon||
-				sketchGeometryType == SketchGeometryType.Lasso
-					? SpatialRelationship.Contains
-					: SpatialRelationship.Intersects;
-
-			await QueuedTaskUtils.Run(async () =>
-			{
-				precedence.EnsureGeometryNonEmpty();
-
-				// NOTE daro: passing in a delayed cancellable progressor in conjunction with
-				// picker window crashes Pro. A non-delayed progressor works fine.
-				const CancelableProgressor progressor = null;
-				var featureSelection = getCandidates(precedence.SelectionGeometry,
-				                                     spatialRelationship,
-				                                     progressor).ToList();
-
-				await SelectCandidates(precedence, featureSelection, selectionMethod, pickerMode);
-			});
-		}
-
-		/// <summary>
-		/// Shows the picker.
-		/// </summary>
-		/// <typeparam name="T">IPickableItem</typeparam>
-		/// <param name="precedence">Your picker precedence implementation.</param>
-		/// <param name="orderedSelection">Feature selection, can be ordered by dimension, e.g. points, lines, polygons.</param>
-		/// <returns>the picked item. Can be null if user hit ESC!</returns>
-		public static async Task<T> ShowAsync<T>(
-			IPickerPrecedence precedence,
-			IEnumerable<FeatureSelectionBase> orderedSelection)
-			where T : class, IPickableItem
-		{
-			var picker = new PickerService();
-
-			if (precedence.IsSingleClick)
-			{
-				var items = PickableItemsFactory
-				            .CreateFeatureItems(orderedSelection)
-				            .ToList();
-
-				return (T) await picker.Pick<IPickableFeatureItem>(items, precedence);
-			}
-			else
-			{
-				var items = PickableItemsFactory
-				            .CreateFeatureClassItems(orderedSelection)
-				            .ToList();
-
-				return (T) await picker.Pick<IPickableFeatureClassItem>(items, precedence);
-			}
-		}
-
-		/// <summary>
-		/// Shows the picker.
-		/// </summary>
-		/// <param name="precedence">Your picker precedence implementation.</param>
-		/// <param name="orderedSelection">Feature selection, can be ordered by dimension, e.g. points, lines, polygons.</param>
-		/// <returns>the picked item. Can be null if user hit ESC!</returns>
-		public static async Task<IPickableItem> ShowAsync(
+		public static async Task<IPickableItem> ShowPickerAsync(
 			IPickerPrecedence precedence,
 			IEnumerable<FeatureSelectionBase> orderedSelection)
 		{
-			if (precedence.IsSingleClick)
-			{
-				return await ShowAsync<IPickableFeatureItem>(precedence, orderedSelection);
-			}
-
-			return await ShowAsync<IPickableFeatureClassItem>(precedence, orderedSelection);
+			return await ShowPickerAsync(precedence, orderedSelection,
+			                             precedence.CreateItemsFactory());
 		}
 
-		#endregion
-
-		private static async Task SelectCandidates(IPickerPrecedence precedence,
-		                                           List<FeatureSelectionBase> featureSelection,
-		                                           SelectionCombinationMethod selectionMethod)
+		public static async Task<IPickableItem> ShowPickerAsync<T>(
+			IPickerPrecedence precedence,
+			IEnumerable<FeatureSelectionBase> orderedSelection)
+			where T : IPickableItem
 		{
-			if (! featureSelection.Any())
-			{
-				if (selectionMethod == SelectionCombinationMethod.XOR)
-				{
-					// No addition to and no removal from selection
-					return;
-				}
+			return await ShowPickerAsync(precedence, orderedSelection,
+			                             precedence.CreateItemsFactory<T>());
+		}
 
-				// No candidate (user clicked into empty space):
-				ClearSelection();
-				return;
-			}
+		private static async Task<IPickableItem> ShowPickerAsync(IPickerPrecedence precedence,
+		                                                         IEnumerable<FeatureSelectionBase>
+			                                                         orderedSelection,
+		                                                         IPickableItemsFactory factory)
+		{
+			var items = factory.CreateItems(orderedSelection).ToList();
+			IPickerViewModel vm = factory.CreateViewModel(precedence.GetSelectionGeometry());
 
-			// Clear the selection on the map level, NOT on the layer level
-			if (selectionMethod == SelectionCombinationMethod.New)
-			{
-				ClearSelection();
-			}
+			var picker = new PickerService(precedence);
 
-			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
+			return await picker.Pick(items, vm);
+		}
 
-			switch (precedence.GetPickerMode(orderedSelection))
+		public static async Task<List<IPickableItem>> GetItems(
+			IEnumerable<FeatureSelectionBase> candidates,
+			IPickerPrecedence precedence)
+		{
+			var ordered = OrderByGeometryDimension(candidates).ToList();
+
+			switch (GetPickerMode(precedence, ordered))
 			{
 				case PickerMode.ShowPicker:
-					
-					IPickableItem pickedItem = await ShowAsync(precedence, orderedSelection);
-
-					if (pickedItem is IPickableFeatureItem featureItem)
-					{
-						SelectFeature(featureItem, selectionMethod);
-					}
-					else if (pickedItem is IPickableFeatureClassItem featureClassItem)
-					{
-						SelectFeatures(featureClassItem, selectionMethod);
-					}
-					else if (pickedItem == null)
-					{
-						return;
-					}
-					else
-					{
-						throw new ArgumentOutOfRangeException(
-							$"Unkown pickable item type {pickedItem.GetType()}");
-					}
-
-					return;
+					IPickableItem pick = await ShowPickerAsync(precedence, ordered);
+					return new List<IPickableItem> { pick };
 
 				case PickerMode.PickAll:
-					SelectionUtils.SelectFeatures(orderedSelection, selectionMethod);
-					return;
+					return new PickableFeatureClassItemsFactory().CreateItems(ordered).ToList();
+
 				case PickerMode.PickBest:
-					SelectBestPick(precedence, orderedSelection, selectionMethod);
-					return;
+					IEnumerable<IPickableItem> items = precedence.CreateItemsFactory()
+					                                             .CreateItems(ordered);
+					return new List<IPickableItem> { precedence.PickBest(items) };
+
+				case null:
+					return new List<IPickableItem>(0);
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 		}
 
-		private static async Task SelectCandidates(IPickerPrecedence precedence,
-		                                           List<FeatureSelectionBase> featureSelection,
-		                                           SelectionCombinationMethod selectionMethod,
-		                                           PickerMode pickerMode)
+		public static async Task<List<IPickableItem>> GetItems<T>(
+			IEnumerable<FeatureSelectionBase> candidates,
+			IPickerPrecedence precedence, PickerMode? pickerMode)
+			where T : IPickableItem
 		{
-			if (! featureSelection.Any())
-			{
-				if (selectionMethod == SelectionCombinationMethod.XOR)
-				{
-					// No addition to and no removal from selection
-					return;
-				}
-
-				// No candidate (user clicked into empty space):
-				ClearSelection();
-				return;
-			}
-
-			// Clear the selection on the map level, NOT on the layer level
-			if (selectionMethod == SelectionCombinationMethod.New)
-			{
-				ClearSelection();
-			}
-
-			var orderedSelection = OrderByGeometryDimension(featureSelection).ToList();
+			var ordered = OrderByGeometryDimension(candidates).ToList();
 
 			switch (pickerMode)
 			{
 				case PickerMode.ShowPicker:
-
-					IPickableItem pickedItem = await ShowAsync(precedence, orderedSelection);
-
-					if (pickedItem is IPickableFeatureItem featureItem)
-					{
-						SelectFeature(featureItem, selectionMethod);
-					}
-					else if (pickedItem is IPickableFeatureClassItem featureClassItem)
-					{
-						SelectFeatures(featureClassItem, selectionMethod);
-					}
-					else if (pickedItem == null)
-					{
-						return;
-					}
-					else
-					{
-						throw new ArgumentOutOfRangeException(
-							$"Unkown pickable item type {pickedItem.GetType()}");
-					}
-
-					return;
+					IPickableItem pick = await ShowPickerAsync<T>(precedence, ordered);
+					return new List<IPickableItem> { pick };
 
 				case PickerMode.PickAll:
-					SelectionUtils.SelectFeatures(orderedSelection, selectionMethod);
-					return;
+					return new PickableFeatureClassItemsFactory().CreateItems(ordered).ToList();
+
 				case PickerMode.PickBest:
-					SelectBestPick(precedence, orderedSelection, selectionMethod);
-					return;
+					IEnumerable<IPickableItem> items = precedence.CreateItemsFactory()
+					                                             .CreateItems(ordered);
+					return new List<IPickableItem> { precedence.PickBest(items) };
+
+				case null:
+					return new List<IPickableItem>(0);
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 		}
 
-		private static void SelectBestPick(IPickerPrecedence precedence,
-		                                   IEnumerable<FeatureSelectionBase> orderedSelection,
-		                                   SelectionCombinationMethod selectionMethod)
-		{
-			var bestPick =
-				precedence.PickBest<IPickableFeatureItem>(
-					PickableItemsFactory.CreateFeatureItems(orderedSelection));
+		#endregion
 
-			SelectFeature(bestPick, selectionMethod);
+		public static void Select(List<IPickableItem> items,
+		                          SelectionCombinationMethod selectionMethod)
+		{
+			foreach (IPickableFeatureClassItem item in items.OfType<IPickableFeatureClassItem>())
+			{
+				SelectionUtils.SelectRows(item.Layers.First(),
+				                          selectionMethod, item.Oids);
+			}
+
+			foreach (IPickableFeatureItem item in items.OfType<IPickableFeatureItem>())
+			{
+				SelectionUtils.SelectRows(item.Layer,
+				                          selectionMethod, new[] { item.Oid });
+			}
 		}
 
-		private static void SelectFeature(IPickableFeatureItem pickedItem,
-		                                  SelectionCombinationMethod selectionMethod)
+		private static PickerMode? GetPickerMode(
+			[NotNull] IPickerPrecedence precedence, ICollection<FeatureSelectionBase> candidates)
 		{
-			SelectionUtils.SelectFeature(pickedItem.Layer,
-			                             selectionMethod,
-			                             pickedItem.Oid);
-		}
+			SelectionCombinationMethod selectionMethod = precedence.SelectionCombinationMethod;
 
-		private static void SelectFeatures(IPickableFeatureClassItem pickedItem,
-		                                   SelectionCombinationMethod selectionMethod)
-		{
-			var featureClassSelections =
-				pickedItem.Layers
-				          .Select(layer =>
-					                  new OidSelection(layer,
-					                                   pickedItem.Oids.ToList(),
-					                                   MapView.Active.Map.SpatialReference))
-				          .Cast<FeatureSelectionBase>()
-				          .ToList();
+			if (! candidates.Any() && selectionMethod == SelectionCombinationMethod.XOR)
+			{
+				// No addition to and no removal from selection
+				return null;
+			}
 
-			SelectionUtils.SelectFeatures(featureClassSelections, selectionMethod);
+			if (! candidates.Any())
+			{
+				// No candidate (user clicked into empty space):
+				ClearSelection();
+				return null;
+			}
+
+			// Clear the selection on the map level, NOT on the layer level
+			if (selectionMethod == SelectionCombinationMethod.New)
+			{
+				ClearSelection();
+			}
+
+			return precedence.GetPickerMode(candidates);
 		}
 
 		private static void ClearSelection()

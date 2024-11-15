@@ -97,11 +97,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				Assert.NotNull(transformedBackingDataset);
 
 				IEnvelope fcExtent = ((IGeoDataset) lineFc).Extent;
-				WKSEnvelope wksEnvelope = WksGeometryUtils.CreateWksEnvelope(
-					fcExtent.XMin, fcExtent.YMin,
-					fcExtent.XMax, fcExtent.YMax);
 
-				transformedBackingDataset.DataContainer = new UncachedDataContainer(wksEnvelope);
+				transformedBackingDataset.DataContainer = new UncachedDataContainer(fcExtent);
 
 				ITableFilter filter = new AoTableFilter
 				                      {
@@ -563,53 +560,5 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				FieldUtils.CreateFields(fields));
 			return fc;
 		}
-	}
-
-	public class UncachedDataContainer : IDataContainer
-	{
-		private readonly WKSEnvelope _extent;
-
-		public UncachedDataContainer(WKSEnvelope extent)
-		{
-			_extent = extent;
-		}
-
-		#region Implementation of ISearchable
-
-		public WKSEnvelope CurrentTileExtent => _extent;
-
-		public IEnvelope GetLoadedExtent(IReadOnlyTable table)
-		{
-			return GeometryFactory.CreateEnvelope(_extent);
-		}
-
-		public double GetSearchTolerance(IReadOnlyTable table)
-		{
-			throw new NotImplementedException();
-		}
-
-		public ISimpleSurface GetSimpleSurface(RasterReference rasterReference, IEnvelope envelope,
-			double? defaultValueForUnassignedZs = null,
-			UnassignedZValueHandling? unassignedZValueHandling = null)
-		{
-			return rasterReference.CreateSurface(envelope, defaultValueForUnassignedZs,
-			                                     unassignedZValueHandling);
-		}
-
-		public IEnumerable<IReadOnlyRow> Search(IReadOnlyTable table,
-		                                        ITableFilter queryFilter,
-		                                        QueryFilterHelper filterHelper)
-		{
-			return table.EnumRows(queryFilter, false);
-		}
-
-		public IUniqueIdProvider GetUniqueIdProvider(IReadOnlyTable table) => null;
-
-		public IEnumerable<Tile> EnumInvolvedTiles([NotNull] IGeometry geometry)
-		{
-			throw new NotImplementedException();
-		}
-
-		#endregion
 	}
 }

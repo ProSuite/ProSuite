@@ -9307,8 +9307,8 @@ namespace ProSuite.Commons.AO.Geometry
 				_msg.Debug("COM exception from ITopologicalOperator.Boundary", comException);
 
 				// this does not work with geometry errors:
-				//if (comException.ErrorCode == (int)esriGeometryError.E_GEOMETRY_NOTSIMPLE)
-				if (comException.ErrorCode == _esriGeometryErrorNotSimple)
+				if (comException.ErrorCode == (int) esriGeometryError.E_GEOMETRY_NOTSIMPLE ||
+				    comException.ErrorCode == _esriGeometryErrorNotSimple)
 				{
 					_msg.DebugFormat("Non-simple geometry: {0}", ToString(geometry));
 
@@ -9321,6 +9321,8 @@ namespace ProSuite.Commons.AO.Geometry
 				}
 				else
 				{
+					_msg.DebugFormat("Unknown COM-exception getting boundary from geometry: {0}",
+					                 ToString(geometry));
 					throw;
 				}
 			}

@@ -1,8 +1,6 @@
+using System;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ProSuite.QA.Container.TestContainer
 {
@@ -14,10 +12,14 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			Table = table;
 			HasGeotransformation = hasGeotransformation;
+			SubFields = new TableSubFields(table, false);
 		}
+
 		public IReadOnlyTable Table { get; }
 		public double SearchDistance { get; set; }
 		public IHasGeotransformation HasGeotransformation { get; }
+
+		internal TableSubFields SubFields { get; set; }
 
 		public override string ToString()
 		{
@@ -28,11 +30,16 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			if (otherGeotrans != HasGeotransformation)
 			{
-				throw new InvalidOperationException($"{Table.Name} has differing geotransformations");
+				throw new InvalidOperationException(
+					$"{Table.Name} has differing geotransformations");
 			}
 
 			return true;
 		}
-	}
 
+		public bool AdaptSubFields(string subFields, out string adaptedSubfields)
+		{
+			return SubFields.AdaptSubFields(subFields, out adaptedSubfields);
+		}
+	}
 }

@@ -7,9 +7,9 @@ namespace ProSuite.AGP.Editing.Picker
 	public class PickerPrecedence : PickerPrecedenceBase
 	{
 		[UsedImplicitly]
-		public PickerPrecedence(Geometry selectionGeometry,
+		public PickerPrecedence(Geometry sketchGeometry,
 		                        int selectionTolerance,
 		                        Point pickerLocation) : base(
-			selectionGeometry, selectionTolerance, pickerLocation) { }
+			sketchGeometry, selectionTolerance, pickerLocation) { }
 	}
 }

@@ -12,6 +12,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -48,7 +49,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected abstract ICalculateHolesService MicroserviceClient { get; }
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
 
@@ -80,6 +81,13 @@ namespace ProSuite.AGP.Editing.FillHole
 		{
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+		}
+
+		protected override CancelableProgressorSource GetProgressorSource()
+		{
+			// Disable the progressor because removing holes is typically fast,
+			// and the users potentially want to continue working already.
+			return null;
 		}
 
 		protected override void LogPromptForSelection()
@@ -144,22 +152,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 			MapView activeMapView = MapView.Active;
 
-			EditingTemplate editTemplate = EditingTemplate.Current;
-
-			FeatureClass currentTargetClass = ToolUtils.GetCurrentTargetFeatureClass(editTemplate);
-
-			if (currentTargetClass == null)
-			{
-				throw new Exception("No valid feature template selected to fill the hole with.");
-			}
-
-			// Un-wrap potential joins:
-			currentTargetClass = DatasetUtils.GetDatabaseFeatureClass(currentTargetClass);
-
-			if (currentTargetClass == null)
-			{
-				throw new Exception("No valid template selected");
-			}
+			FeatureClass currentTargetClass = GetCurrentTargetClass(out Subtype targetSubtype);
 
 			var datasets = new List<Dataset> { currentTargetClass };
 
@@ -172,27 +165,54 @@ namespace ProSuite.AGP.Editing.FillHole
 					                              holesToFill.Count);
 
 					             newFeatures = GdbPersistenceUtils.InsertTx(
-						             editContext, currentTargetClass,
-						             holesToFill.Cast<Geometry>().ToList(),
-						             editTemplate.Inspector);
+						             editContext, currentTargetClass, targetSubtype,
+						             holesToFill, GetFieldValue);
 
 					             _msg.InfoFormat("Successfully created {0} new {1} feature(s).",
-					                             newFeatures.Count, editTemplate.Name);
+					                             newFeatures.Count, currentTargetClass.GetName());
 
 					             return true;
 				             },
 				             "Fill hole(s)", datasets);
 
-			var targetLayer = (BasicFeatureLayer) editTemplate.Layer;
-			var objectIds = newFeatures.Select(f => f.GetObjectID()).ToList();
+			foreach (IDisplayTable displayTable in MapUtils
+				         .GetFeatureLayersForSelection<FeatureLayer>(
+					         MapView.Active.Map, currentTargetClass))
+			{
+				if (displayTable is FeatureLayer featureLayer)
+				{
+					var objectIds = newFeatures.Select(f => f.GetObjectID()).ToList();
 
-			SelectionUtils.SelectRows(targetLayer, SelectionCombinationMethod.Add, objectIds);
+					SelectionUtils.SelectRows(featureLayer, SelectionCombinationMethod.Add,
+					                          objectIds);
+				}
+			}
 
 			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
 
 			CalculateDerivedGeometries(currentSelection, progressor);
 
 			return saved;
+		}
+
+		protected virtual FeatureClass GetCurrentTargetClass(out Subtype subtype)
+		{
+			return ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
+		}
+
+		protected virtual object GetFieldValue([NotNull] Field field,
+		                                       [NotNull] FeatureClassDefinition featureClassDef,
+		                                       [CanBeNull] Subtype subtype)
+		{
+			// If there is an active template, use it:
+			if (GdbPersistenceUtils.TryGetFieldValueFromTemplate(
+				    field.Name, EditingTemplate.Current, out object result))
+			{
+				return result;
+			}
+
+			// Otherwise: Geodatabase default value:
+			return field.GetDefaultValue(subtype);
 		}
 
 		protected override void ResetDerivedGeometries()
@@ -243,17 +263,6 @@ namespace ProSuite.AGP.Editing.FillHole
 		protected abstract bool CalculateHoles(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor,
 		                                       CancellationToken cancellationToken);
-
-		protected static CancelableProgressor GetHoleCalculationProgressor()
-		{
-			var overlapsCalculationProgressorSource = new CancelableProgressorSource(
-				"Calculating holes...", "cancelled", true);
-
-			CancelableProgressor selectionProgressor =
-				overlapsCalculationProgressorSource.Progressor;
-
-			return selectionProgressor;
-		}
 
 		protected abstract IList<Polygon> SelectHoles([CanBeNull] IList<Holes> holes,
 		                                              [NotNull] Geometry sketch);

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.Commons.AGP.Carto;
 
@@ -16,21 +17,23 @@ public interface IWhiteSelection
 {
 	FeatureLayer Layer { get; }
 
-	bool IsEmpty { get; }
-
-	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
+	bool Add(long oid); // add just the oid/shape, don't select any vertices
 	bool Remove(long oid); // also removes oid's geom from cache
-	bool SetEmpty();
+	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
+	bool Clear(); // true iff changed, even if only an "empty oid" is removed; cache not cleared
 
-	bool HitTestVertex(MapPoint hitPoint, double tolerance);
+	int InvolvedFeatureCount { get; }
+	int SelectedVertexCount { get; }
 
-	IEnumerable<long> GetSelectedOIDs();
+	bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
+
+	IEnumerable<long> GetInvolvedOIDs();
+
+	IEnumerable<Geometry> GetInvolvedShapes();
 
 	IEnumerable<MapPoint> GetSelectedVertices();
 
 	IEnumerable<MapPoint> GetUnselectedVertices();
-
-	IEnumerable<Geometry> GetInvolvedFeatureShapes();
 
 	IShapeSelection GetShapeSelection(long oid);
 
@@ -38,6 +41,51 @@ public interface IWhiteSelection
 	Geometry GetGeometry(long oid);
 	void CacheGeometries(params long[] oid);
 	void ClearGeometryCache();
+
+	/// <summary>
+	/// Reload (given or all) geometries from data store.
+	/// If a geometry is no longer compatible with the current
+	/// shape selection, this shape is removed from the selection!
+	/// </summary>
+	/// <param name="oids">Optional list of OIDs (if missing: reload all)</param>
+	/// <returns>List updated (shape compatible with selection) and removed
+	/// (shape incompatible with selection) OIDs</returns>
+	List<RefreshInfo> RefreshGeometries(IEnumerable<long> oids = null);
+
+	public class RefreshInfo
+	{
+		public readonly long OID;
+		public readonly RefreshState State;
+		public readonly string OptionalDetails;
+
+		private RefreshInfo(long oid, RefreshState state, string details = null)
+		{
+			OID = oid;
+			State = state;
+			OptionalDetails = details;
+		}
+
+		public static RefreshInfo Retained(long oid)
+		{
+			return new RefreshInfo(oid, RefreshState.SelectionRetained);
+		}
+
+		public static RefreshInfo Modified(long oid, string details = null)
+		{
+			return new RefreshInfo(oid, RefreshState.SelectionModified, details);
+		}
+
+		public override string ToString()
+		{
+			return $"{State} OID {OID} (details: {OptionalDetails ?? "none"})";
+		}
+	}
+
+	public enum RefreshState
+	{
+		SelectionRetained, // new shape was compatible, selection retained
+		SelectionModified, // incompatible new shape, selection modified (usually cleared)
+	}
 }
 
 public class WhiteSelection : IWhiteSelection
@@ -52,7 +100,9 @@ public class WhiteSelection : IWhiteSelection
 
 	public FeatureLayer Layer { get; }
 
-	public bool IsEmpty => _shapes.Values.All(ss => ss.IsEmpty);
+	public int InvolvedFeatureCount => _shapes.Count;
+
+	public int SelectedVertexCount => _shapes.Values.Sum(ss => ss.SelectedVertexCount);
 
 	public bool Combine(long oid, int part, int vertex, SetCombineMethod method)
 	{
@@ -69,7 +119,8 @@ public class WhiteSelection : IWhiteSelection
 
 		if (!_shapes.TryGetValue(oid, out var selection))
 		{
-			selection = new ShapeSelection();
+			var shape = GetGeometry(oid);
+			selection = new ShapeSelection(shape);
 			_shapes.Add(oid, selection);
 		}
 
@@ -87,32 +138,88 @@ public class WhiteSelection : IWhiteSelection
 		return _shapes.Remove(oid);
 	}
 
-	public bool SetEmpty()
+	public bool Add(long oid)
 	{
-		var nonEmpty = _shapes.Values.Any(p => !p.IsEmpty);
-		_shapes.Clear();
-		return nonEmpty;
+		if (_shapes.ContainsKey(oid))
+		{
+			return false; // already in selection, nothing changed
+		}
+
+		var shape = GetGeometry(oid);
+		var selection = new ShapeSelection(shape);
+		_shapes.Add(oid, selection);
+		return true;
+
+		//var shape = GetGeometry(oid);
+
+		//if (! _shapes.TryGetValue(oid, out var selection))
+		//{
+		//	selection = new ShapeSelection(shape);
+		//	_shapes.Add(oid, selection);
+		//}
+
+		//bool changed = false;
+
+		//if (shape is MapPoint)
+		//{
+		//	changed = selection.CombineVertex(0, 0, SetCombineMethod.Add);
+		//}
+		//else if (shape is Multipoint multipoint)
+		//{
+		//	int vertexCount = multipoint.PointCount;
+		//	for (int i = 0; i < vertexCount; i++)
+		//	{
+		//		if (selection.CombineVertex(i, i, SetCombineMethod.Add))
+		//		{
+		//			changed = true;
+		//		}
+		//	}
+		//}
+		//else if (shape is Multipart multipart)
+		//{
+		//	int partCount = multipart.PartCount;
+		//	for (int k = 0; k < partCount; k++)
+		//	{
+		//		var part = multipart.Parts[k];
+		//		int vertexCount = part.Count;
+		//		if (multipart is Polyline) vertexCount += 1;
+		//		for (int i = 0; i < vertexCount; i++)
+		//		{
+		//			if (selection.CombineVertex(k, i, SetCombineMethod.Add))
+		//			{
+		//				changed = true;
+		//			}
+		//		}
+		//	}
+		//}
+
+		//return changed;
 	}
 
-	public bool HitTestVertex(MapPoint hitPoint, double tolerance)
+	public bool Clear()
+	{
+		var changed = _shapes.Count > 0;
+		_shapes.Clear();
+		return changed;
+	}
+
+	public bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex)
 	{
 		foreach (var pair in _shapes)
 		{
-			var oid = pair.Key;
 			var selection = pair.Value;
 
-			var shape = GetGeometry(oid);
-
-			if (selection.HitTestVertex(shape, hitPoint, tolerance))
+			if (selection.HitTestVertex(hitPoint, tolerance, out vertex))
 			{
 				return true;
 			}
 		}
 
+		vertex = null;
 		return false;
 	}
 
-	public IEnumerable<long> GetSelectedOIDs()
+	public IEnumerable<long> GetInvolvedOIDs()
 	{
 		return _shapes.Keys;
 	}
@@ -121,10 +228,9 @@ public class WhiteSelection : IWhiteSelection
 	{
 		foreach (var pair in _shapes)
 		{
-			var oid = pair.Key;
 			var selection = pair.Value;
-			var shape = GetGeometry(oid);
-			foreach (var vertex in selection.GetSelectedVertices(shape))
+
+			foreach (var vertex in selection.GetSelectedVertices())
 			{
 				yield return vertex;
 			}
@@ -135,24 +241,18 @@ public class WhiteSelection : IWhiteSelection
 	{
 		foreach (var pair in _shapes)
 		{
-			var oid = pair.Key;
 			var selection = pair.Value;
-			var shape = GetGeometry(oid);
-			foreach (var vertex in selection.GetUnselectedVertices(shape))
+
+			foreach (var vertex in selection.GetUnselectedVertices())
 			{
 				yield return vertex;
 			}
 		}
 	}
 
-	public IEnumerable<Geometry> GetInvolvedFeatureShapes()
+	public IEnumerable<Geometry> GetInvolvedShapes()
 	{
-		foreach (var pair in _shapes)
-		{
-			var oid = pair.Key;
-			var shape = GetGeometry(oid);
-			yield return shape;
-		}
+		return _shapes.Values.Select(sel => sel.Shape);
 	}
 
 	public IShapeSelection GetShapeSelection(long oid)
@@ -186,33 +286,80 @@ public class WhiteSelection : IWhiteSelection
 
 	public void CacheGeometries(params long[] oids)
 	{
-		using var fc = Layer.GetFeatureClass();
-		using var defn = fc.GetDefinition();
-		var shapeField = defn.GetShapeField();
-		var oidField = defn.GetObjectIDField();
-
-		var filter = new QueryFilter { SubFields = $"{oidField},{shapeField}" };
-
 		var missingOids = oids.Where(oid => !HasGeometry(oid)).ToList();
 		if (missingOids.Any())
 		{
-			filter.ObjectIDs = missingOids;
+			ReloadGeometries(missingOids);
+		}
+	}
 
-			using var cursor = Layer.Search(filter);
+	private void ReloadGeometries(IReadOnlyList<long> objectIDs)
+	{
+		if (objectIDs is null || objectIDs.Count < 1) return;
 
-			while (cursor.MoveNext())
-			{
-				using var feature = (Feature) cursor.Current;
-				var oid = feature.GetObjectID();
-				var shape = feature.GetShape();
-				_geometryCache[oid] = shape;
-			}
+		foreach (var oid in objectIDs)
+		{
+			_geometryCache.Remove(oid);
+		}
+
+		using var featureClass = Layer.GetFeatureClass();
+		if (featureClass is null) return; // layer invalid (during shutdown/map removal/etc)
+
+		using var definition = featureClass.GetDefinition();
+
+		var shapeField = definition.GetShapeField();
+		var oidField = definition.GetObjectIDField();
+
+		var filter = new QueryFilter { SubFields = $"{oidField},{shapeField}" };
+
+		filter.ObjectIDs = objectIDs;
+
+		using var cursor = featureClass.Search(filter);
+		if (cursor is null) return; // paranoia
+
+		while (cursor.MoveNext())
+		{
+			using var feature = (Feature)cursor.Current;
+			var oid = feature.GetObjectID();
+			var shape = feature.GetShape();
+			_geometryCache[oid] = shape;
 		}
 	}
 
 	public void ClearGeometryCache()
 	{
 		_geometryCache.Clear();
+	}
+
+	public List<IWhiteSelection.RefreshInfo> RefreshGeometries(IEnumerable<long> oids = null)
+	{
+		if (oids is null) oids = _shapes.Keys;
+		else oids = oids.Intersect(_shapes.Keys);
+
+		var list = oids.ToList();
+
+		// (re)load into geometry cache:
+
+		ReloadGeometries(list);
+
+		// update on IShapeSelection objects, if still compatible:
+
+		var result = new List<IWhiteSelection.RefreshInfo>();
+
+		foreach (var oid in list)
+		{
+			var newShape = GetGeometry(oid);
+			var selection = GetShapeSelection(oid) ??
+			                throw new AssertionException($"No shape selection for OID {oid}");
+
+			selection.UpdateShape(newShape, out bool cleared, out string reason);
+
+			result.Add(cleared
+				           ? IWhiteSelection.RefreshInfo.Modified(oid, reason)
+				           : IWhiteSelection.RefreshInfo.Retained(oid));
+		}
+
+		return result;
 	}
 
 	#endregion

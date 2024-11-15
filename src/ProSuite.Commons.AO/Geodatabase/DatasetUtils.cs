@@ -16,6 +16,7 @@ using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -949,6 +950,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			ITable table = ro.BaseTable;
 			if (table == null)
+			{
+				return false;
+			}
+
+			if (table is VirtualTable)
 			{
 				return false;
 			}
@@ -1949,9 +1955,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
 
-			var result = new Dictionary<int, string>();
-
 			var subtypes = objectClass as ISubtypes;
+
+			return GetSubtypeNamesByCode(subtypes);
+		}
+
+		public static IDictionary<int, string> GetSubtypeNamesByCode(
+			[CanBeNull] ISubtypes subtypes)
+		{
+			var result = new Dictionary<int, string>();
 
 			if (subtypes == null || ! subtypes.HasSubtype)
 			{
@@ -3268,8 +3280,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			int fieldCount = fields.FieldCount;
 
-			var result = new List<IField>(fieldCount);
-
 			for (var fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++)
 			{
 				IField field = fields.Field[fieldIndex];
@@ -4311,11 +4321,32 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			IQueryFilter filter = new QueryFilterClass { WhereClause = whereClause };
 
+			DeleteRowsByFilter(table, filter);
+		}
+
+		public static void DeleteRowsByFilter([NotNull] ITable table,
+		                                      [NotNull] IQueryFilter filter)
+		{
 			Stopwatch watch = _msg.DebugStartTiming(
 				"Deleting rows from {0} using where clause {1}",
-				GetName(table), whereClause);
+				GetName(table), filter.WhereClause);
 
-			table.DeleteSearchedRows(filter);
+			// In some situations for (unregistered) PostGIS tables the Search() method changes the SubFields
+			// to the full list of attributes in escaped quotations marks, which makes subsequent queries
+			// using the same filter queries fail. -> One-time filters would be better!
+			string subFieldsBefore = filter.SubFields;
+
+			try
+			{
+				table.DeleteSearchedRows(filter);
+			}
+			finally
+			{
+				if (subFieldsBefore != filter.SubFields)
+				{
+					filter.SubFields = subFieldsBefore;
+				}
+			}
 
 			_msg.DebugStopTiming(watch, "Rows deleted");
 		}

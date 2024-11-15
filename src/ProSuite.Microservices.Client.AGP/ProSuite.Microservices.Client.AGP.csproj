@@ -58,6 +58,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.AGP.Editing\ProSuite.AGP.Editing.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />

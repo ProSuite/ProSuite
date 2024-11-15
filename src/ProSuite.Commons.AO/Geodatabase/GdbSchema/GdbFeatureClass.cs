@@ -1,10 +1,9 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Geom.EsriShape;
-using FieldType = ProSuite.Commons.GeoDb.FieldType;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -128,10 +127,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		ProSuiteGeometryType IFeatureClassSchemaDef.ShapeType => (ProSuiteGeometryType) ShapeType;
 
 		ITableField IFeatureClassSchemaDef.AreaField =>
-			new TableField(AreaField.Name, FieldType.Double);
+			FieldUtils.ToTableField(AreaField);
 
 		ITableField IFeatureClassSchemaDef.LengthField =>
-			new TableField(LengthField.Name, FieldType.Double);
+			FieldUtils.ToTableField(LengthField);
 
 		#endregion
 	}

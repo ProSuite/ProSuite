@@ -31,6 +31,9 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ArcGIS.Desktop.Mapping">
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

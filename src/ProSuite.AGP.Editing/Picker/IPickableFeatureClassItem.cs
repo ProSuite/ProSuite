@@ -3,7 +3,7 @@ using ArcGIS.Desktop.Mapping;
 
 namespace ProSuite.AGP.Editing.Picker
 {
-	public interface IPickableFeatureClassItem: IPickableItem
+	public interface IPickableFeatureClassItem : IPickableItem
 	{
 		List<BasicFeatureLayer> Layers { get; }
 
