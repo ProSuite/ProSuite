@@ -28,12 +28,10 @@ namespace ProSuite.AGP.Editing.YReshape
 
 		}
 
-		protected string OptionsFileName => "YReshapeToolOptions.xml";
+		protected new static string OptionsFileName => "YReshapeToolOptions.xml";
+		
 
-		[CanBeNull]
-		protected virtual string CentralConfigDir => null;
-
-		protected virtual string LocalConfigDir =>
+		protected override string LocalConfigDir =>
 			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
 
 		protected override void OnUpdateCore() {
@@ -44,13 +42,11 @@ namespace ProSuite.AGP.Editing.YReshape
 		}
 
 		protected override void OnToolActivatingCore() {
-			//InitializeOptions();
-		   //TODO: implement Options in advanced reshape
+
 			_feedback = new YReshapeFeedback();
 		}
 
-		//Make sure this is always true (settings in AdvancedReshape not implemented yet, so no effect atm)
-		private bool allowOpenJawReshape = true;
+		
 	}
 
 
