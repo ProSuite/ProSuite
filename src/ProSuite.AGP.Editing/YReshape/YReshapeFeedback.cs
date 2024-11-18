@@ -24,25 +24,13 @@ namespace ProSuite.AGP.Editing.YReshape
 			_openJawReplaceEndSymbolMove = CreateHollowCircle(0, 255, 200);
 		}
 
-		public void UpdateOpenJawReplacedEndPoint([CanBeNull] MapPoint point, bool isMoving = true)
+		public override Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
 		{
 			_openJawReplacedEndPointOverlay?.Dispose();
-
-			if (point != null)
-			{
-				var symbol = isMoving ? _openJawReplaceEndSymbolMove : _openJawReplaceEndSymbol;
-				_openJawReplacedEndPointOverlay =
-					MapView.Active.AddOverlay(
-						point, symbol.MakeSymbolReference());
-			}
-		}
-
-		public async Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
-		{
+			
 			if (resultFeatures == null || resultFeatures.Count == 0)
 			{
-				Clear();
-				return false;
+				return Task.FromResult(false);
 			}
 
 			foreach (var resultFeature in resultFeatures)
@@ -56,7 +44,7 @@ namespace ProSuite.AGP.Editing.YReshape
 				}
 			}
 
-			return true;
+			return Task.FromResult(true);
 		}
 
 		public void Clear()

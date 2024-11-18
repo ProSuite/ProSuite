@@ -6,7 +6,6 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
-
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -22,15 +21,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		public AdvancedReshapeFeedback()
 		{
-
 			_addAreaSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
 			_removeAreaSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
 		}
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-
-		public Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
+		public virtual Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
 		{
 			_polygonPreviewOverlayAdd?.Dispose();
 			_polygonPreviewOverlayRemove?.Dispose();
