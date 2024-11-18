@@ -178,10 +178,7 @@
   <data name="ReshapeAlongOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\ReshapeAlongOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="YReshapeToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\YReshapeToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
-  <data name="YReshapeToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\YReshapeToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  <data name="YReshapeOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\YReshapeOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

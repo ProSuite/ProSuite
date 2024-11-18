@@ -87,11 +87,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Properties\Images\YReshapeToolCursor.cur" />
-    <None Remove="Properties\Images\YReshapeToolCursorShift.cur" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
     <Compile Update="Properties\LocalizableStrings.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -133,8 +128,6 @@
     <Resource Include="PickerUI\Images\PointGeometry.bmp" />
     <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />
     <Resource Include="PickerUI\Images\MultipatchGeometry.bmp" />
-    <Content Include="Properties\Images\YReshapeToolCursor.cur" />
-    <Content Include="Properties\Images\YReshapeToolCursorShift.cur" />
     <Content Include="Properties\Images\EditSketchCrosshair.cur" />
     <None Include="Properties\Images\PolygonDrawerCursor.cur" />
   </ItemGroup>
