@@ -3727,6 +3727,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(TrTableJoin),
 											 typeof(TrTableJoinInMemory)
 				                             typeof(TrProject),
+				                             typeof(TrSpatialJoin),
 			                             };
 
 			foreach (Type transformerType in refactoredTypes)
@@ -3828,6 +3829,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrMultipolygonToPolygonCases(model, trCases);
 			AddTrPolygonToLineCases(model, trCases);
 			AddTrProjectCases(model, trCases);
+			AddTrSpatialJoinCases(model, trCases);
 			AddTrTableJoinInMemoryCases(model, trCases);
 
 			foreach (TrDefinitionCase trCase in trCases)
@@ -4053,6 +4055,30 @@ namespace ProSuite.QA.Tests.Test
 			                                 }));
 		}
 
+		private static void AddTrSpatialJoinCases(TestDataModel model,
+		                                          ICollection<TrDefinitionCase>
+			                                          trCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("Constraint", "T0.Level = T1.Level");
+			optionalValues.Add("OuterJoin", false);
+			optionalValues.Add("NeighborSearchOption", SearchOption.Tile);
+			optionalValues.Add("Grouped", false);
+			optionalValues.Add("T0Attributes",
+			                   new List<string> { "TLM.TLM_GEWAESSER_LAUF.LAUF_NR AS T1_LAUF_NR" });
+			optionalValues.Add("T1Attributes",
+			                   new List<string> { "IIF(objecttype='x',1,0) AS X_VALUE" });
+			optionalValues.Add("T1CalcAttributes",
+			                   new List<string> { "IIF(objecttype='x',1,0) AS X_VALUE" });
+
+			trCases.Add(new TrDefinitionCase(typeof(TrSpatialJoin), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetVectorDataset(),
+				                                 model.GetVectorDataset()
+			                                 },
+			                                 optionalValues));
+		}
 
 		private static void AddTrTableJoinInMemoryCases(TestDataModel model,
 		                                                    ICollection<TrDefinitionCase>

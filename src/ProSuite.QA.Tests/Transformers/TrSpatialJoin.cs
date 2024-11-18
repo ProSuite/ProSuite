@@ -1,18 +1,17 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -20,12 +19,6 @@ namespace ProSuite.QA.Tests.Transformers
 	[TableTransformer]
 	public class TrSpatialJoin : TableTransformer<TransformedFeatureClass>
 	{
-		public enum SearchOption
-		{
-			Tile,
-			All
-		}
-
 		private const SearchOption _defaultSearchOption = SearchOption.Tile;
 
 		[DocTr(nameof(DocTrStrings.TrSpatialJoin_0))]
@@ -35,6 +28,20 @@ namespace ProSuite.QA.Tests.Transformers
 			[NotNull] [DocTr(nameof(DocTrStrings.TrSpatialJoin_t1))]
 			IReadOnlyFeatureClass t1)
 			: base(CastToTables(t0, t1)) { }
+
+		[InternallyUsedTest]
+		public TrSpatialJoin(
+			[NotNull] TrSpatialJoinDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.T0, (IReadOnlyFeatureClass) definition.T1)
+		{
+			Constraint = definition.Constraint;
+			OuterJoin = definition.OuterJoin;
+			NeighborSearchOption = (SearchOption) definition.NeighborSearchOption;
+			Grouped = definition.Grouped;
+			T0Attributes = definition.T0Attributes;
+			T1Attributes = definition.T1Attributes;
+			T1CalcAttributes = definition.T1CalcAttributes;
+		}
 
 		[TestParameter]
 		[DocTr(nameof(DocTrStrings.TrSpatialJoin_Constraint))]
@@ -139,7 +146,7 @@ namespace ProSuite.QA.Tests.Transformers
 					       new TrSpatialJoinDataset((TransformedFc) t, t0, t1),
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
-				InvolvedTables = new List<IReadOnlyTable> {t0, t1};
+				InvolvedTables = new List<IReadOnlyTable> { t0, t1 };
 			}
 
 			public IList<IReadOnlyTable> InvolvedTables { get; }
@@ -214,7 +221,7 @@ namespace ProSuite.QA.Tests.Transformers
 				foreach (var toJoin in DataSearchContainer.Search(
 					         _t0, filter ?? new AoTableFilter(), QueryHelpers[0]))
 				{
-					IGeometry joinFilterGeometry = ((IReadOnlyFeature)toJoin).Extent;
+					IGeometry joinFilterGeometry = ((IReadOnlyFeature) toJoin).Extent;
 					if (joinFilter == null)
 					{
 						joinFilter = new AoFeatureClassFilter(joinFilterGeometry);
@@ -246,7 +253,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						if (! Grouped)
 						{
-							var f = CreateFeature(toJoin, new[] {joined});
+							var f = CreateFeature(toJoin, new[] { joined });
 							//res.CreateFeature();
 							yield return f;
 						}
@@ -340,7 +347,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				if (sourceTableFields.CalculatedFields != null)
 				{
-					var sources = new List<IReadOnlyRow> {sourceRow};
+					var sources = new List<IReadOnlyRow> { sourceRow };
 
 					foreach (CalculatedValue calculatedValue in sourceTableFields
 						         .GetCalculatedValues(sources))

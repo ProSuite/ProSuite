@@ -493,7 +493,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrSpatialJoin trSj = new TrSpatialJoin(ge, gk);
 			trSj.Constraint = "t0.UUID = t1.TLM_GEBAEUDEEINHEIT_UUID";
 			trSj.OuterJoin = false;
-			trSj.NeighborSearchOption = TrSpatialJoin.SearchOption.All;
+			trSj.NeighborSearchOption = SearchOption.All;
 			trSj.Grouped = true;
 			trSj.T0Attributes = new [] { "UUID" };
 			trSj.T1Attributes = new []{ "SUM(GEBAEUDEKOERPER) AS ANZAHL_GEBAEUDEKOERPER" };

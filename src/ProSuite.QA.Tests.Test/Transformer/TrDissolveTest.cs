@@ -884,7 +884,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                     ReadOnlyTableFactory.Create(fcFg))
 			                     {
 				                     OuterJoin = true,
-				                     NeighborSearchOption = TrSpatialJoin.SearchOption.All,
+				                     NeighborSearchOption = SearchOption.All,
 				                     Grouped = true,
 				                     T1Attributes = new List<string>
 				                                    { "SUM(FGW_P) AS ANZAHL_FGW_P" },
@@ -896,7 +896,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			TrSpatialJoin sj = new TrSpatialJoin(dsSg.GetTransformed(), sjFg.GetTransformed())
 			                   {
-				                   NeighborSearchOption = TrSpatialJoin.SearchOption.All,
+				                   NeighborSearchOption = SearchOption.All,
 				                   Grouped = true,
 				                   T1Attributes = new List<string>
 				                                  {
@@ -1153,7 +1153,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrSpatialJoin trSjDisSgwGwk =
 				new TrSpatialJoin(roDisDjSgwFgw, roGwk)
 				{
-					NeighborSearchOption = TrSpatialJoin.SearchOption.All,
+					NeighborSearchOption = SearchOption.All,
 					Grouped = true,
 					T1Attributes =
 						new[]

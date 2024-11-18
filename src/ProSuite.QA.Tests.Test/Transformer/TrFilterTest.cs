@@ -768,7 +768,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new TrSpatialJoin(trDissolveDisjoint.GetTransformed(), gk)
 				{
 					OuterJoin = false,
-					NeighborSearchOption = TrSpatialJoin.SearchOption.All,
+					NeighborSearchOption = SearchOption.All,
 					Grouped = true,
 					T1Attributes = new List<string>
 					               {
