@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -40,9 +41,7 @@ namespace ProSuite.AGP.Editing.FillHole
 		{
 			GeomIsSimpleAsFeature = false;
 
-			SelectionCursor = ToolUtils.GetCursor(Resources.FillHoleToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.FillHoleToolCursorShift);
-			SecondPhaseCursor = ToolUtils.GetCursor(Resources.FillHoleToolCursorProcess);
+			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.FillHoleOverlay, 10, 10);
 		}
 
 		protected FillHoleOptions FillHoleOptions { get; } = new FillHoleOptions();
@@ -340,6 +339,49 @@ namespace ProSuite.AGP.Editing.FillHole
 			}
 
 			return selectedShapes;
+		}
+
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.FillHoleOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.FillHoleOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.FillHoleOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.FillHoleOverlay,
+			                              Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.FillHoleOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.FillHoleOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
 		}
 	}
 }

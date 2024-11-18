@@ -8,9 +8,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
-using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -18,7 +16,6 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.CreateFeatures;
 
@@ -37,8 +34,26 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		return new SymbolizedSketchTypeBasedOnSelection(this);
 	}
 
-	protected override Cursor SelectionCursorCore =>
-		ToolUtils.GetCursor(Resources.CreateFeatureInPickedClassCursor);
+	protected override Cursor GetSelectionCursor()
+	{
+		return ToolUtils.CreateCursor(Resources.Arrow,
+		                              Resources.CreateFeatureInPickedClassOverlay,
+									  null);
+	}
+
+	protected override Cursor GetSelectionCursorLasso()
+	{
+		return ToolUtils.CreateCursor(Resources.Arrow,
+		                              Resources.CreateFeatureInPickedClassOverlay,
+		                              Resources.Lasso);
+	}
+
+	protected override Cursor GetSelectionCursorPolygon()
+	{
+		return ToolUtils.CreateCursor(Resources.Arrow,
+		                              Resources.CreateFeatureInPickedClassOverlay,
+		                              Resources.Polygon);
+	}
 
 	protected override bool AllowMultiSelection(out string reason)
 	{

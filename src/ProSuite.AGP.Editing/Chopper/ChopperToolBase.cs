@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -35,9 +36,7 @@ namespace ProSuite.AGP.Editing.Chopper
 		{
 			GeomIsSimpleAsFeature = false;
 
-			SelectionCursor = ToolUtils.GetCursor(Resources.ChopperToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.ChopperToolCursorShift);
-			SecondPhaseCursor = ToolUtils.GetCursor(Resources.ChopperToolCursorProcess);
+			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.ChopperOverlay, 10, 10);
 		}
 
 		protected string OptionsFileName => "ChopperToolOptions.xml";
@@ -290,6 +289,49 @@ namespace ProSuite.AGP.Editing.Chopper
 			{
 				_msg.Info(optionsMessage);
 			}
+		}
+
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.ChopperOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.ChopperOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.ChopperOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.ChopperOverlay,
+			                              Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.ChopperOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.ChopperOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
 		}
 	}
 }
