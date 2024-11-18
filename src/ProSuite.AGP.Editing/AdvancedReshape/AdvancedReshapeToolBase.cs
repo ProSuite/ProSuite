@@ -13,7 +13,6 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.AdvancedReshapeReshape;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
@@ -494,12 +493,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 							GdbObjectUtils.Filter(selection, GeometryType.Polygon).ToList();
 
 						bool updated =
-							await UpdateOpenJawReplacedEndpointAsync(nonDefaultSide, sketchPolyline,
-								polylineSelection);
-
-						updated |= await UpdatePolygonResultPreviewAsync(
-							           nonDefaultSide, sketchPolyline,
-							           polygonSelection);
+							await UpdatePolygonResultPreviewAsync(
+								nonDefaultSide, sketchPolyline,
+								polygonSelection);
 
 						return updated;
 					});
@@ -602,26 +598,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				       "Advanced reshape", resultFeatures);
 		}
 
-		private async Task<bool> UpdateOpenJawReplacedEndpointAsync(
-			bool useNonDefaultReshapeSide,
-			[NotNull] Polyline sketchLine,
-			[NotNull] IList<Feature> polylineSelection)
-		{
-			// TODO: check options (allow/disallow)
-
-			MapPoint endPoint = null;
-
-			if (polylineSelection.Count == 1)
-			{
-				endPoint = await MicroserviceClient.GetOpenJawReplacementPointAsync(
-					           polylineSelection[0], sketchLine, useNonDefaultReshapeSide);
-			}
-
-			_feedback?.UpdateOpenJawReplacedEndPoint(endPoint);
-
-			return true;
-		}
-
 		private async Task<bool> UpdatePolygonResultPreviewAsync(
 			bool nonDefaultSide,
 			[NotNull] Polyline sketchPolyline,
@@ -633,8 +609,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			{
 				// Idea: ReshapeOperation class that contains the options to build the rpc, cancellation token, time out settings and logging.
 
-				// TODO: Keep this source and cancel in case finish sketch happens
-				var cancellationTokenSource = new CancellationTokenSource(3000);
+				// Increase timeout to allow feedback to complete
+				var cancellationTokenSource = new CancellationTokenSource(10000);
 
 				reshapeResult = MicroserviceClient.TryReshape(
 					polygonSelection, sketchPolyline, null,
