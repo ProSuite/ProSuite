@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.Editing.Properties;
@@ -16,12 +17,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected CutAlongToolBase()
 		{
-			SelectionCursor = ToolUtils.GetCursor(Resources.CutPolygonAlongToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.ReshapeAlongToolCursorShift);
-
-			TargetSelectionCursor = ToolUtils.GetCursor(Resources.CutPolygonAlongToolCursorProcess);
-			TargetSelectionCursorShift =
-				ToolUtils.GetCursor(Resources.CutPolygonAlongToolCursorShift);
+			TargetSelectionCursor =
+				ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay, 10, 10);
+			TargetSelectionCursorShift = ToolUtils.CreateCursor(
+				Resources.Cross, Resources.CutPolygonAlongOverlay, Resources.Shift, null, 10, 10);
+			;
 
 			DisplayTargetLines = true;
 		}
@@ -119,6 +119,49 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				selectedFeatures, targetFeatures, cancellationToken);
 
 			return result;
+		}
+
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.CutPolygonAlongOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.CutPolygonAlongOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.CutPolygonAlongOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.CutPolygonAlongOverlay,
+			                              Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.CutPolygonAlongOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.CutPolygonAlongOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
 		}
 	}
 }

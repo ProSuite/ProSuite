@@ -194,6 +194,11 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			var ordered = OrderByGeometryDimension(candidates).ToList();
 
+			if (! ordered.Any())
+			{
+				pickerMode = null;
+			}
+
 			switch (pickerMode)
 			{
 				case PickerMode.ShowPicker:

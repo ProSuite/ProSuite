@@ -20,6 +20,7 @@ public interface IWhiteSelection
 	bool Add(long oid); // add just the oid/shape, don't select any vertices
 	bool Remove(long oid); // also removes oid's geom from cache
 	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
+	bool Combine(long oid, SetCombineMethod method);
 	bool Clear(); // true iff changed, even if only an "empty oid" is removed; cache not cleared
 
 	int InvolvedFeatureCount { get; }
@@ -132,6 +133,18 @@ public class WhiteSelection : IWhiteSelection
 		return changed;
 	}
 
+	public bool Combine(long oid, SetCombineMethod method)
+	{
+		if (! _shapes.TryGetValue(oid, out var selection))
+		{
+			var shape = GetGeometry(oid);
+			selection = new ShapeSelection(shape);
+			_shapes.Add(oid, selection);
+		}
+
+		return selection.CombineShape(method);
+	}
+
 	public bool Remove(long oid)
 	{
 		_geometryCache.Remove(oid);
@@ -205,6 +218,7 @@ public class WhiteSelection : IWhiteSelection
 
 	public bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex)
 	{
+		// TODO This finds *first* in tolerance, should get *closest* instead
 		foreach (var pair in _shapes)
 		{
 			var selection = pair.Value;
@@ -218,6 +232,17 @@ public class WhiteSelection : IWhiteSelection
 		vertex = null;
 		return false;
 	}
+
+	//public MapPoint NearestVertex(MapPoint hitPoint, out int partIndex,
+	//                              out int vertexIndex, out bool selected)
+	//{
+	//	foreach (var pair in _shapes)
+	//	{
+	//		var selection = pair.Value;
+
+	//		selection.NearestVertex(hitPoint, out _, out partIndex, out vertexIndex, out selected);
+	//	}
+	//}
 
 	public IEnumerable<long> GetInvolvedOIDs()
 	{

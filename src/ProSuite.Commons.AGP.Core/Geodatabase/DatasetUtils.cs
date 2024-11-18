@@ -63,7 +63,6 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				return StringUtils.Concatenate(GetDatabaseTables(table).Select(GetAliasName), "/");
 			}
 
-
 			using (var definition = table?.GetDefinition())
 			{
 				return GetAliasName(definition);
@@ -341,7 +340,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			{
 				yield return geodatabase.OpenDataset<RelationshipClass>(
 					definition.GetName());
-				
+
 				definition.Dispose();
 			}
 		}
@@ -655,6 +654,109 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			{
 				DeleteRowsByOIDString(table, sb.ToString());
 			}
+		}
+
+		/// <summary>
+		/// Returns the index of the field in <paramref name="fields"/> matching the 
+		/// <paramref name="field"/> or -1 if no match was found.
+		/// </summary>
+		/// <param name="field">The field to match</param>
+		/// <param name="fields">The fields to search</param>
+		/// <param name="requireMatchingDomainNames"> Whether the name of the domain must match too.
+		/// Only the main domain of the field will be compared. Domains varying by subtype are ignored.</param>
+		/// <returns></returns>
+		public static int FindMatchingFieldIndex([NotNull] Field field,
+		                                         [NotNull] IReadOnlyList<Field> fields,
+		                                         bool requireMatchingDomainNames = true)
+		{
+			return FindMatchingFieldIndex(field, fields, string.Empty, requireMatchingDomainNames);
+		}
+
+		/// <summary>
+		/// Returns the index of the field in <paramref name="fields"/> matching the 
+		/// <paramref name="field"/> or -1 if no match was found.
+		/// </summary>
+		/// <param name="field">The field whose properties must match.</param>
+		/// <param name="fields">The fields in which the field is searched.</param>
+		/// <param name="tableName">Only match fields in the fields list, that start with the
+		/// specified table name.</param>
+		/// <param name="requireMatchingDomainNames"> Whether the name of the domain must match too.
+		/// Only the main domain of the field will be compared. Domains varying by subtype are
+		/// ignored.</param>
+		/// <returns></returns>
+		public static int FindMatchingFieldIndex([NotNull] Field field,
+		                                         [NotNull] IReadOnlyList<Field> fields,
+		                                         [CanBeNull] string tableName,
+		                                         bool requireMatchingDomainNames = true)
+		{
+			Assert.ArgumentNotNull(field, nameof(field));
+			Assert.ArgumentNotNull(fields, nameof(fields));
+
+			FieldType fieldType = field.FieldType;
+
+			string targetFieldName;
+			if (string.IsNullOrEmpty(tableName))
+			{
+				targetFieldName = field.Name;
+			}
+			else
+			{
+				targetFieldName = tableName + "." + field.Name;
+			}
+
+			int fieldCount = fields.Count;
+			for (var index = 0; index < fieldCount; index++)
+			{
+				Field sourceField = fields[index];
+
+				if (! targetFieldName.Equals(sourceField.Name,
+				                             StringComparison.OrdinalIgnoreCase))
+				{
+					// names don't match -> no match
+					continue;
+				}
+
+				if (fieldType != sourceField.FieldType)
+				{
+					if (string.IsNullOrEmpty(tableName))
+					{
+						// no join, types don't match --> no match
+						continue;
+					}
+
+					if (sourceField.FieldType == FieldType.OID &&
+					    fieldType == FieldType.Integer)
+					{
+						// consider as match
+					}
+					else
+					{
+						continue;
+					}
+				}
+
+				if (! requireMatchingDomainNames)
+				{
+					return index;
+				}
+
+				Domain fieldDomain = field.GetDomain();
+				Domain sourceFieldDomain = sourceField.GetDomain();
+
+				if (fieldDomain == null && sourceFieldDomain == null)
+				{
+					return index;
+				}
+
+				if (fieldDomain != null && sourceFieldDomain != null &&
+				    fieldDomain.GetName().Equals(sourceFieldDomain.GetName(),
+				                                 StringComparison.OrdinalIgnoreCase))
+				{
+					return index;
+				}
+			}
+
+			return -1;
 		}
 
 		private static T GetGdbTableContainingField<T>([NotNull] T joinedTable,

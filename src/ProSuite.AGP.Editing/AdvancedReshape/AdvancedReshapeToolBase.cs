@@ -68,11 +68,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			RequiresSelection = true;
 
-			InitializeOptions();
-
-			SelectionCursor = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursorShift);
-
 			HandledKeys.Add(_keyToggleNonDefaultSide);
 		}
 
@@ -632,6 +627,49 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		public void SetSketchSymbol(CIMSymbolReference symbolReference)
 		{
 			SketchSymbol = symbolReference;
+		}
+
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+										  Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
 		}
 	}
 }
