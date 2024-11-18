@@ -31,16 +31,13 @@ namespace ProSuite.AGP.Editing.YReshape
 		protected override string LocalConfigDir =>
 			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
 
-		protected override void OnUpdateCore() {
-			Enabled = MicroserviceClient != null;
 
-			if (MicroserviceClient == null)
-				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
-		}
+		protected override async void OnToolActivatingCore() {
 
-		protected override void OnToolActivatingCore() {
-
+			InitializeOptions();
 			_feedback = new YReshapeFeedback();
+
+			base.OnToolActivatingCore();
 		}
 
 		//Make sure this is always true (settings in AdvancedReshape not implemented yet, so no effect atm)

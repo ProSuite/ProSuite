@@ -39,7 +39,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			var addGeometries = new List<Geometry>(resultFeatures.Count);
 			var removeGeometries = new List<Geometry>(resultFeatures.Count);
-
+	
 			foreach (ResultFeature resultFeature in resultFeatures)
 			{
 				var sourcePoly = resultFeature.OriginalFeature.GetShape() as Polygon;
@@ -64,7 +64,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return Task.FromResult(true);
 		}
 
-		public void Clear()
+		public virtual void Clear()
 		{
 			_polygonPreviewOverlayAdd?.Dispose();
 			_polygonPreviewOverlayAdd = null;

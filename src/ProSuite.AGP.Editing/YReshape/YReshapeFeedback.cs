@@ -20,34 +20,39 @@ namespace ProSuite.AGP.Editing.YReshape
 
 		public YReshapeFeedback()
 		{
-			_openJawReplaceEndSymbol = CreateHollowCircle(0, 0, 200);
-			_openJawReplaceEndSymbolMove = CreateHollowCircle(0, 255, 200);
+			_openJawReplaceEndSymbol = CreateHollowCircle(0, 0, 200); // Azure Blue
+			_openJawReplaceEndSymbolMove = CreateHollowCircle(0, 255, 200); // Celest Blue
 		}
 
 		public override Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
 		{
 			_openJawReplacedEndPointOverlay?.Dispose();
-			
+
 			if (resultFeatures == null || resultFeatures.Count == 0)
 			{
 				return Task.FromResult(false);
 			}
 
+			var jawEndPoints = new List<Geometry>(resultFeatures.Count);
 			foreach (var resultFeature in resultFeatures)
 			{
-				var newGeometry = resultFeature.NewGeometry;
-				if (newGeometry != null)
-				{
-					_openJawReplacedEndPointOverlay?.Dispose();
-					_openJawReplacedEndPointOverlay =
-						AddOverlay(newGeometry, _openJawReplaceEndSymbol);
-				}
+				jawEndPoints.Add(resultFeature.NewGeometry);
+			}
+
+			if (resultFeatures.Count == 1)
+			{
+				_openJawReplacedEndPointOverlay =
+					AddOverlay(jawEndPoints[0], _openJawReplaceEndSymbol); //TODO: Switch between celest and azure
+			}
+			else
+			{
+				return null;
 			}
 
 			return Task.FromResult(true);
 		}
 
-		public void Clear()
+		public override void Clear()
 		{
 			_openJawReplacedEndPointOverlay?.Dispose();
 			_openJawReplacedEndPointOverlay = null;
