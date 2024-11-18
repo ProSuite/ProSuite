@@ -1087,7 +1087,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
 			}
 
-			if (shape is Multipatch multipatch)
+			if (shape is Multipatch)
 			{
 				throw new NotImplementedException("Multipatches are not yet implemented");
 			}
@@ -1144,7 +1144,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				return vertexTally + localVertexIndex;
 			}
 
-			if (shape is Multipatch multipatch)
+			if (shape is Multipatch)
 			{
 				throw new NotImplementedException("Multipatches are not yet implemented");
 			}
@@ -1152,8 +1152,105 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return localVertexIndex;
 		}
 
+		/// <summary>
+		/// This method ensures that either <paramref name="partIndex"/>
+		/// equals <paramref name="pointIndex"/>, or that either
+		/// <paramref name="partIndex"/> or <paramref name="pointIndex"/>
+		/// is zero or unspecified (negative).
+		/// </summary>
+		/// <remarks>By convention, a multipoint geometry reports its
+		/// constituent points as its points (addressed by point index)
+		/// and as its parts (addressed by part index).</remarks>
+		public static int GetMultipointIndex(int partIndex, int pointIndex)
+		{
+			// p == v | p > 0 and v <= 0 | v > 0 and p <= 0
+
+			if (partIndex == pointIndex)
+			{
+				return partIndex;
+			}
+
+			if (partIndex <= 0)
+			{
+				return pointIndex;
+			}
+
+			if (pointIndex <= 0)
+			{
+				return partIndex;
+			}
+
+			throw new ArgumentException("For a multipoint, part and vertex index must not be different");
+		}
+
+		/// <summary>
+		/// Remove the addressed vertex from the given geometry.
+		/// For a point geometry, both indices must be zero.
+		/// For a multipoint geometry, both indices should be the same.
+		/// </summary>
+		/// <returns>A new geometry instance, which may be an empty geometry
+		/// (if last vertex or segment was removed)</returns>
+		public static Geometry RemoveVertex(Geometry shape, int partIndex, int vertexIndex)
+		{
+			if (shape is null)
+				throw new ArgumentNullException(nameof(shape));
+
+			if (shape.IsEmpty)
+				throw new InvalidOperationException("Cannot remove vertex on an empty geometry");
+
+			if (shape is MapPoint mapPoint)
+			{
+				if (partIndex != 0)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+				if (vertexIndex != 0)
+					throw new ArgumentOutOfRangeException(nameof(vertexIndex));
+
+				var builder = new MapPointBuilderEx(mapPoint);
+				builder.SetEmpty();
+				return builder.ToGeometry();
+			}
+
+			if (shape is Multipoint multipoint)
+			{
+				int pointIndex = GetMultipointIndex(partIndex, vertexIndex);
+				if (pointIndex < 0 || pointIndex >= multipoint.PointCount)
+					throw new ArgumentOutOfRangeException(
+						"point index out of range for multipoint shape", (Exception) null);
+
+				var builder = new MultipointBuilderEx(multipoint);
+				builder.RemovePoint(pointIndex);
+				return builder.ToGeometry();
+			}
+
+			if (shape is Polyline polyline)
+			{
+				var builder = new PolylineBuilderEx(polyline);
+				RemoveVertices(builder, partIndex, vertexIndex);
+				return builder.ToGeometry();
+			}
+
+			if (shape is Polygon polygon)
+			{
+				var builder = polygon.ToBuilder();
+				RemoveVertices(builder, partIndex, vertexIndex);
+				return builder.ToGeometry();
+			}
+
+			if (shape is Multipatch)
+			{
+				throw new NotImplementedException();
+			}
+
+			if (shape is Envelope)
+			{
+				throw new NotSupportedException("Cannot remove vertex on an Envelope");
+			}
+
+			throw new NotSupportedException($"Geometry type {shape.GetType().Name} is not supported");
+		}
+
 		public static void RemoveVertices(/*this*/ MultipartBuilderEx builder, int partIndex,
-		                                  int firstVertex, int lastVertex = -1)
+		                                           int firstVertex, int lastVertex = -1)
 		{
 			switch (builder)
 			{
