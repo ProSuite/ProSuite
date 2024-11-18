@@ -1,14 +1,13 @@
 using System;
-using ESRI.ArcGIS.esriSystem;
+using System.Collections.Generic;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core.TestCategories;
-using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.GeoDb;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -18,10 +17,23 @@ namespace ProSuite.QA.Tests.Transformers
 	{
 		private readonly ISpatialReference _targetSpatialReference;
 
-		public TrProject(IReadOnlyFeatureClass featureClass, int targetSpatialReferenceId)
-			: this(featureClass, SpatialReferenceUtils.CreateSpatialReference(targetSpatialReferenceId))
-		{ }
-		private TrProject(IReadOnlyFeatureClass featureClass, ISpatialReference targetSpatialReference)
+		[DocTr(nameof(DocTrStrings.TrProject_0))]
+		public TrProject(
+			[NotNull][DocTr(nameof(DocTrStrings.TrProject_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[NotNull][DocTr(nameof(DocTrStrings.TrProject_targetSpatialReferenceId))]
+			int targetSpatialReferenceId)
+			: this(featureClass,
+			       SpatialReferenceUtils.CreateSpatialReference(targetSpatialReferenceId)) { }
+
+		[InternallyUsedTest]
+		public TrProject(
+			[NotNull] TrProjectDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.TargetSpatialReferenceId) { }
+
+		private TrProject(IReadOnlyFeatureClass featureClass,
+		                  ISpatialReference targetSpatialReference)
 			: base(featureClass, featureClass.ShapeType, targetSpatialReference)
 		{
 			_targetSpatialReference = targetSpatialReference;
@@ -31,8 +43,8 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			TransformedFeatureClass transformedClass = GetTransformed();
 			GdbFeature feature = sourceOid == null
-									 ? CreateFeature()
-									 : (GdbFeature)transformedClass.CreateObject(sourceOid.Value);
+				                     ? CreateFeature()
+				                     : (GdbFeature) transformedClass.CreateObject(sourceOid.Value);
 
 			IGeometry target = SpatialReferenceUtils.ProjectEx(source, _targetSpatialReference);
 
@@ -49,6 +61,7 @@ namespace ProSuite.QA.Tests.Transformers
 		protected class ProjectedFc : TransformedFc, IHasGeotransformation
 		{
 			private readonly TrProject _transformer;
+
 			public ProjectedFc(IReadOnlyFeatureClass fc, TrProject transformer, string name)
 				: base(fc, fc.ShapeType,
 				       (t) =>
@@ -64,7 +77,6 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			public new TrProject Transformer => _transformer;
-
 
 			public override IEnvelope Extent
 			{
@@ -111,7 +123,6 @@ namespace ProSuite.QA.Tests.Transformers
 
 		protected class ProjectedDataset : TransformedDataset
 		{
-
 			private readonly ProjectedFc _projectedFc;
 
 			public ProjectedDataset([NotNull] ProjectedFc projectedFc,

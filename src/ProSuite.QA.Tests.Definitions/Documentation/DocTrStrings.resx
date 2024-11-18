@@ -398,4 +398,13 @@ In the resulting feature class, only attributes defined in 'Attributes' can be u
   <data name="TrZAssign_ZAssignOption" xml:space="preserve">
     <value>whether the z-values shall be assigned to vertices within the current tile only or to all vertices (slower).</value>
   </data>
+  <data name="TrProject_0" xml:space="preserve">
+    <value>Transforms the geometries of the featureClass to a new spatial reference defined by the targetSpatialReferenceId. The transformed feature class retains the attributes of the original featureClass, which can be accessed using t0.&lt;fieldName&gt;.</value>
+  </data>
+  <data name="TrProject_featureClass" xml:space="preserve">
+    <value>The feature class containing the geometries to be transformed. The geometries in this feature class will be projected to the spatial reference defined by the targetSpatialReferenceId.</value>
+  </data>
+  <data name="TrProject_targetSpatialReferenceId" xml:space="preserve">
+    <value>The ID of the target spatial reference to which the geometries in the featureClass will be projected. This ID corresponds to a specific coordinate system or projection, such as WGS 84 or another predefined spatial reference system.</value>
+  </data>
 </root>

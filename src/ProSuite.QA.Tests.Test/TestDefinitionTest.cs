@@ -3726,6 +3726,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(TrPolygonToLine),
 											 typeof(TrTableJoin),
 											 typeof(TrTableJoinInMemory)
+				                             typeof(TrProject),
 			                             };
 
 			foreach (Type transformerType in refactoredTypes)
@@ -3826,6 +3827,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrMultilineToLineCases(model, trCases);
 			AddTrMultipolygonToPolygonCases(model, trCases);
 			AddTrPolygonToLineCases(model, trCases);
+			AddTrProjectCases(model, trCases);
 			AddTrTableJoinInMemoryCases(model, trCases);
 
 			foreach (TrDefinitionCase trCase in trCases)
@@ -4036,6 +4038,18 @@ namespace ProSuite.QA.Tests.Test
 			                                 new object[]
 			                                 {
 				                                 model.GetVectorDataset(),
+			                                 }));
+		}
+
+		private static void AddTrProjectCases(TestDataModel model,
+		                                            ICollection<TrDefinitionCase>
+			                                            trCases)
+		{
+			trCases.Add(new TrDefinitionCase(typeof(TrProject), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetVectorDataset(),
+												 4326
 			                                 }));
 		}
 
