@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema.RowValues;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.QA.Tests.Transformers
 {
