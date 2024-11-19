@@ -266,23 +266,19 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void ToggleVertices() { }
 
-		private void SetupLassoSketch()
+		protected virtual Task SetupLassoSketchAsync()
 		{
 			_selectionSketchType.Toggle(SketchGeometryType.Lasso);
 
-			SetupLassoSketchCore();
+			return Task.CompletedTask;
 		}
 
-		protected virtual void SetupLassoSketchCore() { }
-
-		private void SetupPolygonSketch()
+		protected virtual Task SetupPolygonSketchAsync()
 		{
 			_selectionSketchType.Toggle(SketchGeometryType.Polygon);
 
-			SetupPolygonSketchCore();
+			return Task.CompletedTask;
 		}
-
-		protected virtual void SetupPolygonSketchCore() { }
 
 		protected override void OnToolKeyUp(MapViewKeyEventArgs args)
 		{
@@ -315,17 +311,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			try
 			{
-				if (await IsInSelectionPhaseAsync())
+				if (args.Key == _keyPolygonDraw)
 				{
-					if (args.Key == _keyPolygonDraw)
-					{
-						SetupPolygonSketch();
-					}
+					SetupPolygonSketchAsync();
+				}
 
-					if (args.Key == _keyLassoDraw)
-					{
-						SetupLassoSketch();
-					}
+				if (args.Key == _keyLassoDraw)
+				{
+					SetupLassoSketchAsync();
 				}
 
 				if (KeyboardUtils.IsShiftKey(args.Key))

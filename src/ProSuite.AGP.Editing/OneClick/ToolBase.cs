@@ -814,8 +814,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		// don't snap anymore if you cannot use selection
 		UseSnapping = false;
-
-		_selectionSketchType.SetCursor(GetSketchType());
 	}
 
 	protected async void StartConstructionPhase()
