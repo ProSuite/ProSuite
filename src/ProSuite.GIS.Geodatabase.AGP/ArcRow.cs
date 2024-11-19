@@ -85,6 +85,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			TryOrRefreshRow<Row>(r => r.Delete());
 		}
 
+		public object NativeImplementation => _proRow;
+
 		#endregion
 
 		#region Implementation of IObject
