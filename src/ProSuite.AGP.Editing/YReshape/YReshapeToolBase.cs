@@ -1,48 +1,25 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ProSuite.AGP.Editing.AdvancedReshape;
 using ProSuite.AGP.Editing.Cracker;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.YReshape
 {
 	public abstract class YReshapeToolBase : AdvancedReshapeToolBase
 	{
-		//protected string OptionsFileName => "YReshapeToolOptions.xml";
-		// TODO: adapt Options from AdvancedReshape as soon as implemented
-
-		[CanBeNull] private YReshapeFeedback _feedback;
-		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
-
-		protected YReshapeToolBase() {
-			FireSketchEvents = true;
-
-			RequiresSelection = true;
-		}
-
-		protected new static string OptionsFileName => "YReshapeToolOptions.xml";
-		
-
-		protected override string LocalConfigDir =>
-			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
-
-
-		protected override async void OnToolActivatingCore() {
-
-			InitializeOptions();
-			_feedback = new YReshapeFeedback();
-
-			base.OnToolActivatingCore();
-		}
-
-		//Make sure this is always true (settings in AdvancedReshape not implemented yet, so no effect atm)
-		private bool allowOpenJawReshape = true;
-
+		private OverridableSettingsProvider<PartialYReshapeToolOptions> _settingsProvider; //The specific YReshape Settings
 
 		protected override Cursor GetSelectionCursor()
 		{
