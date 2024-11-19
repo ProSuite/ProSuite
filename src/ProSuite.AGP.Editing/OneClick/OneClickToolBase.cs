@@ -175,12 +175,15 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                 GetSelectionCursor(),
 				                                 GetSelectionCursorLasso(),
 				                                 GetSelectionCursorPolygon(),
-				                                 GetSelectionSketchGeometryType());
+				                                 GetSelectionSketchGeometryType(),
+				                                 DefaultSketchTypeOnFinishSketch);
 
 			_selectionSketchType.SetSelectionCursorShift(GetSelectionCursorShift());
 			_selectionSketchType.SetSelectionCursorLassoShift(GetSelectionCursorLassoShift());
 			_selectionSketchType.SetSelectionCursorPolygonShift(GetSelectionCursorPolygonShift());
 		}
+
+		protected abstract bool DefaultSketchTypeOnFinishSketch { get; }
 
 		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
 		{
@@ -440,7 +443,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (await IsInSelectionPhaseCoreAsync(true))
 			{
-				_selectionSketchType.SetCursor(GetSketchType());
+				_selectionSketchType.SetCursor(GetSketchType(), shiftDown: true);
 			}
 		}
 
@@ -448,7 +451,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (await IsInSelectionPhaseCoreAsync(true))
 			{
-				_selectionSketchType.SetCursor(GetSketchType());
+				_selectionSketchType.SetCursor(GetSketchType(), shiftDown: false);
 			}
 		}
 
@@ -464,7 +467,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			SetupSketch();
 			
 			_selectionSketchType.ResetOrDefault();
-			_selectionSketchType.SetCursor(GetSketchType());
 		}
 
 		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
@@ -491,6 +493,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		protected abstract SketchGeometryType GetSelectionSketchGeometryType();
+
+		public SketchGeometryType GetDefaultSelectionSketchType()
+		{
+			return GetSelectionSketchGeometryType();
+		}
 
 		protected virtual void OnSelectionPhaseStarted() { }
 
@@ -760,7 +767,6 @@ namespace ProSuite.AGP.Editing.OneClick
 				Application.Current.Dispatcher.Invoke(() => { Cursor = cursor; });
 			}
 		}
-		
 
 		protected bool CanSelectFromLayer([CanBeNull] Layer layer,
 		                                  NotificationCollection notifications = null)

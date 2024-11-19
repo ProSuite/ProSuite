@@ -162,12 +162,15 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			                                 GetSelectionCursor(),
 			                                 GetSelectionCursorLasso(),
 			                                 GetSelectionCursorPolygon(),
-			                                 GetDefaultSelectionSketchType());
+			                                 GetDefaultSelectionSketchType(),
+			                                 DefaultSketchTypeOnFinishSketch);
 
 		_selectionSketchType.SetSelectionCursorShift(GetSelectionCursorShift());
 		_selectionSketchType.SetSelectionCursorLassoShift(GetSelectionCursorLassoShift());
 		_selectionSketchType.SetSelectionCursorPolygonShift(GetSelectionCursorPolygonShift());
 	}
+
+	protected abstract bool DefaultSketchTypeOnFinishSketch { get; }
 
 	protected sealed override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
 	{
