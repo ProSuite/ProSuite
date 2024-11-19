@@ -143,7 +143,26 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 			// No *vertex* was within tolerance of the given clickPoint:
 			// make a 2nd round looking for the nearest *segment* instead:
 
-			// TODO
+			foreach (var ws in all)
+			{
+				foreach (var involvedOid in ws.GetInvolvedOIDs())
+				{
+					var ss = ws.GetShapeSelection(involvedOid) ?? throw new AssertionException();
+
+					var proximity = GeometryEngine.Instance.NearestPoint(ss.Shape, clickPoint);
+					if (proximity is null || ! (proximity.Distance <= tolerance)) continue;
+
+					if (proximity.Distance < minDistance)
+					{
+						minDistance = proximity.Distance;
+						minLayer = ws.Layer;
+						minOid = involvedOid;
+						minPartIndex = proximity.PartIndex;
+						minSegIndex = proximity.SegmentIndex ?? throw new AssertionException();
+						minPoint = proximity.Point;
+					}
+				}
+			}
 		}
 
 		layer = minLayer;
