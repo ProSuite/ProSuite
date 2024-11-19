@@ -23,13 +23,8 @@ namespace ProSuite.AGP.Editing.Selection
 		{
 			IsSketchTool = true;
 
-			SelectionCursor = ToolUtils.GetCursor(Resources.SelectionToolNormal);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.SelectionToolNormalShift);
-
 			SelectOnlyEditFeatures = false;
 			UnJoinedSelection = false;
-
-			SetCursor(SelectionCursor);
 		}
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)

@@ -6,18 +6,22 @@ using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.AGP.Editing.Properties;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
@@ -46,8 +50,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Point CurrentMousePosition;
 
-		[CanBeNull] private SelectionSketchTypeToggle _selectionSketchType;
+		[NotNull] private SelectionSketchTypeToggle _selectionSketchType;
 
+		// ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
 		protected OneClickToolBase()
 		{
 			ContextMenuID = "esri_mapping_selection2DContextMenu";
@@ -94,9 +99,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected HashSet<Key> PressedKeys { get; } = new();
 
-		protected virtual Cursor SelectionCursor { get; set; }
-		protected virtual Cursor SelectionCursorShift { get; set; }
-
 		/// <summary>
 		/// Flag to indicate that currently the selection is changed by the <see cref="OnSelectionSketchCompleteAsync"/> method.
 		/// </summary>
@@ -139,9 +141,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			PressedKeys.Clear();
 
-			_selectionSketchType =
-				new SelectionSketchTypeToggle(this, GetSelectionSketchGeometryType());
-
 			try
 			{
 				using var source = GetProgressorSource();
@@ -149,6 +148,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await QueuedTaskUtils.Run(async () =>
 				{
+					SetupCursors();
+
 					OnToolActivatingCore();
 
 					if (RequiresSelection)
@@ -165,6 +166,30 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				ErrorHandler.HandleError(ex, _msg);
 			}
+		}
+
+		private void SetupCursors()
+		{
+			_selectionSketchType =
+				SelectionSketchTypeToggle.Create(this,
+				                                 GetSelectionCursor(),
+				                                 GetSelectionCursorLasso(),
+				                                 GetSelectionCursorPolygon(),
+				                                 GetSelectionSketchGeometryType());
+
+			_selectionSketchType.SetSelectionCursorShift(GetSelectionCursorShift());
+			_selectionSketchType.SetSelectionCursorLassoShift(GetSelectionCursorLassoShift());
+			_selectionSketchType.SetSelectionCursorPolygonShift(GetSelectionCursorPolygonShift());
+		}
+
+		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
+		{
+			var options = new VertexSymbolOptions(vertexSymbolType)
+			              {
+				              Color = ColorUtils.CreateRGB(0, 0, 0, 0),
+				              OutlineColor = ColorUtils.CreateRGB(0, 0, 0, 0)
+			              };
+			SetSketchVertexSymbolOptions(vertexSymbolType, options);
 		}
 
 		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
@@ -212,7 +237,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				if (KeyboardUtils.IsShiftKey(args.Key))
 				{
-					// todo daro rename to SetShiftCursor?
+					// todo: daro rename to SetShiftCursor?
 					// This sets shift cursor. But don't do it in QueuedTask because
 					// tool cursor is not updated until mouse is moved for the first time.
 					await ShiftPressedCoreAsync();
@@ -228,19 +253,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					ToggleVertices();
 				}
 
-				if (await IsInSelectionPhaseAsync())
-				{
-					if (args.Key == _keyPolygonDraw)
-					{
-						SetupPolygonSketch();
-					}
-
-					if (args.Key == _keyLassoDraw)
-					{
-						SetupLassoSketch();
-					}
-				}
-
 				await HandleKeyDownCoreAsync(args);
 			}
 			catch (Exception ex)
@@ -253,7 +265,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void SetupLassoSketch()
 		{
-			_selectionSketchType?.Toggle(SketchGeometryType.Lasso);
+			_selectionSketchType.Toggle(SketchGeometryType.Lasso);
 
 			SetupLassoSketchCore();
 		}
@@ -262,8 +274,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void SetupPolygonSketch()
 		{
-			_selectionSketchType?.Toggle(SketchGeometryType.Polygon);
-			// TODO: Sketch symbol: No vertices
+			_selectionSketchType.Toggle(SketchGeometryType.Polygon);
 
 			SetupPolygonSketchCore();
 		}
@@ -301,6 +312,19 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			try
 			{
+				if (await IsInSelectionPhaseAsync())
+				{
+					if (args.Key == _keyPolygonDraw)
+					{
+						SetupPolygonSketch();
+					}
+
+					if (args.Key == _keyLassoDraw)
+					{
+						SetupLassoSketch();
+					}
+				}
+
 				if (KeyboardUtils.IsShiftKey(args.Key))
 				{
 					await ShiftReleasedCoreAsync();
@@ -314,6 +338,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		// todo: daro drop
 		protected virtual Task ResetSketchCoreAsync()
 		{
 			return Task.CompletedTask;
@@ -328,6 +353,14 @@ namespace ProSuite.AGP.Editing.OneClick
 					OnToolMouseDownCore(args);
 				}, _msg, suppressErrorMessageBox: false);
 
+		}
+
+		protected override async void OnToolDoubleClick(MapViewMouseButtonEventArgs args)
+		{
+			if (GetSketchType() == SketchGeometryType.Polygon && await IsInSelectionPhaseAsync())
+			{
+				await FinishSketchAsync();
+			}
 		}
 
 		protected virtual void OnToolMouseDownCore(MapViewMouseButtonEventArgs args)
@@ -377,21 +410,16 @@ namespace ProSuite.AGP.Editing.OneClick
 				_lastSketch = sketchGeometry;
 				_lastSketchFinishedTime = DateTime.Now;
 
-				ViewUtils.Try(() =>
-				{
-					if (SketchType == SketchGeometryType.Polygon)
-					{
-						// Otherwise relational operators and spatial queries return the wrong result
-						sketchGeometry = GeometryUtils.Simplify(sketchGeometry);
-					}
-				}, _msg);
-
 				using var source = GetProgressorSource();
 				var progressor = source?.Progressor;
 
 				if (RequiresSelection && await IsInSelectionPhaseAsync())
 				{
-					return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
+					// Otherwise relational operators and spatial queries return the wrong result
+					Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
+					Assert.NotNull(simpleGeometry, "Geometry is null");
+					
+					return await OnSelectionSketchCompleteAsync(simpleGeometry, progressor);
 				}
 
 				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
@@ -410,17 +438,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual async Task ShiftPressedCoreAsync()
 		{
-			if (SelectionCursorShift != null && await IsInSelectionPhaseCoreAsync(true))
+			if (await IsInSelectionPhaseCoreAsync(true))
 			{
-				SetCursor(SelectionCursorShift);
+				_selectionSketchType.SetCursor(GetSketchType());
 			}
 		}
 
 		protected virtual async Task ShiftReleasedCoreAsync()
 		{
-			if (SelectionCursor != null && await IsInSelectionPhaseCoreAsync(true))
+			if (await IsInSelectionPhaseCoreAsync(true))
 			{
-				SetCursor(SelectionCursor);
+				_selectionSketchType.SetCursor(GetSketchType());
 			}
 		}
 
@@ -428,19 +456,15 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SetupSelectionSketch();
 
-			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
-
-			SetCursor(shiftDown ? SelectionCursorShift : SelectionCursor);
-
 			OnSelectionPhaseStarted();
 		}
 
 		private void SetupSelectionSketch()
 		{
 			SetupSketch();
-
-			_selectionSketchType?.ResetOrDefault();
+			
+			_selectionSketchType.ResetOrDefault();
+			_selectionSketchType.SetCursor(GetSketchType());
 		}
 
 		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
@@ -719,7 +743,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected bool UnJoinedSelection { get; set; } = true;
 
-		protected void SetCursor([CanBeNull] Cursor cursor)
+		// todo daro to explicit implementation
+		public void SetCursor([CanBeNull] Cursor cursor)
 		{
 			if (cursor == null)
 			{
@@ -735,6 +760,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				Application.Current.Dispatcher.Invoke(() => { Cursor = cursor; });
 			}
 		}
+		
 
 		protected bool CanSelectFromLayer([CanBeNull] Layer layer,
 		                                  NotificationCollection notifications = null)
@@ -957,6 +983,47 @@ namespace ProSuite.AGP.Editing.OneClick
 		public SketchGeometryType? GetSketchType()
 		{
 			return SketchType;
+		}
+
+		protected virtual Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross,
+			                              Resources.SelectOverlay, 10, 10);
+		}
+
+		protected virtual Cursor GetSelectionCursorShift()
+		{
+			return
+				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
+				                       Resources.Shift, null, 10, 10);
+		}
+
+		protected virtual Cursor GetSelectionCursorLasso()
+		{
+			return
+				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
+				                       Resources.Lasso, null, 10, 10);
+		}
+
+		protected virtual Cursor GetSelectionCursorLassoShift()
+		{
+			return
+				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
+				                       Resources.Lasso, Resources.Shift, 10, 10);
+		}
+
+		protected virtual Cursor GetSelectionCursorPolygon()
+		{
+			return
+				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
+				                       Resources.Polygon, null, 10, 10);
+		}
+
+		protected virtual Cursor GetSelectionCursorPolygonShift()
+		{
+			return
+				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
+				                       Resources.Polygon, Resources.Shift, 10, 10);
 		}
 	}
 }

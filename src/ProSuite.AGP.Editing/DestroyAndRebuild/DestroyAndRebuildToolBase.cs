@@ -28,12 +28,30 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 
 	private DestroyAndRebuildFeedback _feedback;
 
-	protected override Cursor SelectionCursorCore =>
-		ToolUtils.GetCursor(Resources.DestroyAndRebuildToolCursor);
-
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
 		return new SymbolizedSketchTypeBasedOnSelection(this);
+	}
+
+	protected override Cursor GetSelectionCursor()
+	{
+		return ToolUtils.CreateCursor(Resources.Arrow,
+		                              Resources.DestroyAndRebuildOverlay,
+		                              null);
+	}
+
+	protected override Cursor GetSelectionCursorLasso()
+	{
+		return ToolUtils.CreateCursor(Resources.Arrow,
+		                              Resources.DestroyAndRebuildOverlay,
+		                              Resources.Lasso);
+	}
+
+	protected override Cursor GetSelectionCursorPolygon()
+	{
+		return ToolUtils.CreateCursor(Resources.Arrow,
+		                              Resources.DestroyAndRebuildOverlay,
+		                              Resources.Polygon);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)

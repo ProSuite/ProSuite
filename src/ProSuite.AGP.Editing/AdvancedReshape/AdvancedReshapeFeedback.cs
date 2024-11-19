@@ -6,43 +6,28 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
 	public class AdvancedReshapeFeedback
 	{
-		private IDisposable _openJawReplacedEndPointOverlay;
-
 		private IDisposable _polygonPreviewOverlayAdd;
 		private IDisposable _polygonPreviewOverlayRemove;
 
-		private readonly CIMPointSymbol _openJawReplaceEndSymbol;
 		private readonly CIMPolygonSymbol _addAreaSymbol;
 		private readonly CIMPolygonSymbol _removeAreaSymbol;
 
 		public AdvancedReshapeFeedback()
 		{
-			_openJawReplaceEndSymbol = CreateHollowCircle(0, 200, 255);
-
 			_addAreaSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
 			_removeAreaSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
 		}
 
-		public void UpdateOpenJawReplacedEndPoint([CanBeNull] MapPoint point)
-		{
-			_openJawReplacedEndPointOverlay?.Dispose();
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-			if (point != null)
-			{
-				_openJawReplacedEndPointOverlay =
-					MapView.Active.AddOverlay(
-						point, _openJawReplaceEndSymbol.MakeSymbolReference());
-			}
-		}
-
-		public Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
+		public virtual Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
 		{
 			_polygonPreviewOverlayAdd?.Dispose();
 			_polygonPreviewOverlayRemove?.Dispose();
@@ -81,9 +66,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		public void Clear()
 		{
-			_openJawReplacedEndPointOverlay?.Dispose();
-			_openJawReplacedEndPointOverlay = null;
-
 			_polygonPreviewOverlayAdd?.Dispose();
 			_polygonPreviewOverlayAdd = null;
 
@@ -92,8 +74,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		}
 
 		[CanBeNull]
-		private static IDisposable AddOverlay([CanBeNull] Geometry geometry,
-		                                      [NotNull] CIMSymbol cimSymbol)
+		protected static IDisposable AddOverlay([CanBeNull] Geometry geometry,
+		                                        [NotNull] CIMSymbol cimSymbol)
 		{
 			if (geometry == null || geometry.IsEmpty)
 			{
@@ -104,28 +86,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				geometry, cimSymbol.MakeSymbolReference());
 
 			return result;
-		}
-
-		private static CIMPointSymbol CreateHollowCircle(int red, int green, int blue)
-		{
-			CIMColor transparent = ColorFactory.Instance.CreateRGBColor(0d, 0d, 0d, 0d);
-			CIMColor color = ColorFactory.Instance.CreateRGBColor(red, green, blue);
-
-			CIMPointSymbol hollowCircle =
-				SymbolFactory.Instance.ConstructPointSymbol(transparent, 19,
-				                                            SimpleMarkerStyle.Circle);
-
-			var marker = hollowCircle.SymbolLayers[0] as CIMVectorMarker;
-			var polySymbol = Assert.NotNull(marker).MarkerGraphics[0].Symbol as CIMPolygonSymbol;
-
-			//Outline:
-			Assert.NotNull(polySymbol).SymbolLayers[0] =
-				SymbolFactory.Instance.ConstructStroke(color, 2, SimpleLineStyle.Solid);
-
-			// Fill:
-			polySymbol.SymbolLayers[1] = SymbolFactory.Instance.ConstructSolidFill(transparent);
-
-			return hollowCircle;
 		}
 	}
 }

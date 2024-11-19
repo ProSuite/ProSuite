@@ -12,15 +12,23 @@ namespace ProSuite.Commons.AGP.Carto;
 
 public interface IMapWhiteSelection
 {
-	Map Map { get; } // the map to which this white selection belongs
+	/// <summary>The map to which this white selection belongs</summary>
+	Map Map { get; }
 
-	bool IsEmpty { get; } // true iff no involved features (regardless of vertices)
+	/// <returns>true iff no involved features (regardless of vertices)</returns>
+	bool IsEmpty { get; }
+
 	bool Select(MapPoint clickPont, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates);
 	bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates);
 	int Remove(FeatureLayer layer, IEnumerable<long> oids);
 	bool SetEmpty();
 
-	bool HitTestVertex(MapPoint point, double tolerance, out MapPoint vertex);
+	bool HitTestVertex(MapPoint point, double tolerance, out MapPoint vertex); // TODO rename ~Selected~
+
+	MapPoint NearestPoint(MapPoint clickPoint, double tolerance,
+	                      out FeatureLayer layer, out long oid, out int partIndex,
+	                      out int? segmentIndex, out int? vertexIndex);
+
 	IEnumerable<IWhiteSelection> GetLayerSelections();
 	IWhiteSelection GetLayerSelection(FeatureLayer layer);
 
@@ -72,6 +80,86 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 
 		vertex = null;
 		return false;
+	}
+
+	//public MapPoint NearestVertex(MapPoint point,
+	//                          out int partIndex, out int vertexIndex, out bool isSelected)
+	//{
+	//	var all = GetLayerSelections();
+
+	//	foreach (var ws in all)
+	//	{
+	//		if (ws.HitTestVertex(point, tolerance, out vertex,
+	//		                     out partIndex, out vertexIndex, out isSelected))
+	//		{
+	//			return true;
+	//		}
+	//	}
+
+	//	vertex = null;
+
+	//}
+
+	public MapPoint NearestPoint(MapPoint clickPoint, double tolerance,
+	                             out FeatureLayer layer, out long oid, out int partIndex,
+	                             out int? segmentIndex, out int? vertexIndex)
+	{
+		var all = GetLayerSelections();
+
+		var minDistance = double.MaxValue;
+		FeatureLayer minLayer = null;
+		long minOid = -1;
+		int minPartIndex = -1;
+		int? minSegIndex = null;
+		int? minVertIndex = null;
+		MapPoint minPoint = null;
+
+		// - find the closest point within tolerance
+		// - vertex within tolerance wins over an even closer segment
+
+		foreach (var ws in all)
+		{
+			foreach (var involvedOid in ws.GetInvolvedOIDs())
+			{
+				var ss = ws.GetShapeSelection(involvedOid) ?? throw new AssertionException();
+
+				var proximity = GeometryEngine.Instance.NearestVertex(ss.Shape, clickPoint);
+				if (proximity is null || ! (proximity.Distance <= tolerance)) continue;
+
+				if (proximity.Distance < minDistance)
+				{
+					minDistance = proximity.Distance;
+					minLayer = ws.Layer;
+					minOid = involvedOid;
+					minPartIndex = proximity.PartIndex;
+					minVertIndex = proximity.PointIndex ?? throw new AssertionException();
+					minPoint = proximity.Point;
+				}
+			}
+		}
+
+		if (minPoint is null)
+		{
+			// No *vertex* was within tolerance of the given clickPoint:
+			// make a 2nd round looking for the nearest *segment* instead:
+
+			// TODO
+		}
+
+		layer = minLayer;
+		oid = minOid;
+		partIndex = minPartIndex;
+		segmentIndex = minSegIndex;
+		vertexIndex = minVertIndex;
+		return minPoint;
+	}
+
+	private static double DistanceSquared(MapPoint a, MapPoint b)
+	{
+		if (a is null || b is null) return double.NaN;
+		var dx = a.X - b.X;
+		var dy = a.Y - b.Y;
+		return dx * dx + dy * dy;
 	}
 
 	public IEnumerable<IWhiteSelection> GetLayerSelections()

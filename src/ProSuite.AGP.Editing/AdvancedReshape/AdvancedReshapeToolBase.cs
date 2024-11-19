@@ -55,15 +55,18 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		private CancellationTokenSource _cancellationTokenSource;
 		private const Key _keyToggleNonDefaultSide = Key.S;
 
+		protected static string OptionsFileName => "AdvancedReshapeToolOptions.xml";
+
+		[CanBeNull]
+		protected virtual string CentralConfigDir => null;
+
+		protected abstract string LocalConfigDir { get; }
+
 		protected AdvancedReshapeToolBase()
 		{
 			FireSketchEvents = true;
 
-			// This is our property:
 			RequiresSelection = true;
-
-			SelectionCursor = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursorShift);
 
 			HandledKeys.Add(_keyToggleNonDefaultSide);
 		}
@@ -132,9 +135,22 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override async void OnToolActivatingCore()
 		{
+			InitializeOptions();
 			_feedback = new AdvancedReshapeFeedback();
 
 			base.OnToolActivatingCore();
+		}
+
+		private void InitializeOptions()
+		{
+			_settingsProvider = new OverridableSettingsProvider<PartialReshapeToolOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
+
+			PartialReshapeToolOptions localConfiguration, centralConfiguration;
+			_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
+
+			_advancedReshapeToolOptions =
+				new ReshapeToolOptions(centralConfiguration, localConfiguration);
 		}
 
 		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
@@ -472,12 +488,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 							GdbObjectUtils.Filter(selection, GeometryType.Polygon).ToList();
 
 						bool updated =
-							await UpdateOpenJawReplacedEndpointAsync(nonDefaultSide, sketchPolyline,
-								polylineSelection);
-
-						updated |= await UpdatePolygonResultPreviewAsync(
-							           nonDefaultSide, sketchPolyline,
-							           polygonSelection);
+							await UpdatePolygonResultPreviewAsync(
+								nonDefaultSide, sketchPolyline,
+								polygonSelection);
 
 						return updated;
 					});
@@ -580,26 +593,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				       "Advanced reshape", resultFeatures);
 		}
 
-		private async Task<bool> UpdateOpenJawReplacedEndpointAsync(
-			bool useNonDefaultReshapeSide,
-			[NotNull] Polyline sketchLine,
-			[NotNull] IList<Feature> polylineSelection)
-		{
-			// TODO: check options (allow/disallow)
-
-			MapPoint endPoint = null;
-
-			if (polylineSelection.Count == 1)
-			{
-				endPoint = await MicroserviceClient.GetOpenJawReplacementPointAsync(
-					           polylineSelection[0], sketchLine, useNonDefaultReshapeSide);
-			}
-
-			_feedback?.UpdateOpenJawReplacedEndPoint(endPoint);
-
-			return true;
-		}
-
 		private async Task<bool> UpdatePolygonResultPreviewAsync(
 			bool nonDefaultSide,
 			[NotNull] Polyline sketchPolyline,
@@ -611,11 +604,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			{
 				// Idea: ReshapeOperation class that contains the options to build the rpc, cancellation token, time out settings and logging.
 
-				// TODO: Keep this source and cancel in case finish sketch happens
-				var cancellationTokenSource = new CancellationTokenSource(3000);
+				// Increase timeout to allow feedback to complete
+				var cancellationTokenSource = new CancellationTokenSource(10000);
 
 				reshapeResult = MicroserviceClient.TryReshape(
-					polygonSelection, sketchPolyline, null, false, true,
+					polygonSelection, sketchPolyline, null,
+					_advancedReshapeToolOptions.AllowOpenJawReshape,
+					_advancedReshapeToolOptions.MultiReshapeAsUnion,
 					nonDefaultSide, cancellationTokenSource.Token);
 			}
 
@@ -632,6 +627,49 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		public void SetSketchSymbol(CIMSymbolReference symbolReference)
 		{
 			SketchSymbol = symbolReference;
+		}
+
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+										  Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
 		}
 	}
 }

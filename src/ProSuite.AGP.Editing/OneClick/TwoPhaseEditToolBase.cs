@@ -26,7 +26,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			IsSketchTool = true;
 		}
 
-		protected Cursor SecondPhaseCursor { get; set; }
+		protected Cursor SecondPhaseCursor { get; init; }
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
@@ -156,7 +156,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (KeyboardUtils.IsShiftKey(args.Key))
 			{
 				Cursor = await ViewUtils.TryAsync(IsInSelectionPhaseCoreAsync(true), _msg)
-					         ? SelectionCursor
+					         ? GetSelectionCursor()
 					         : SecondPhaseCursor;
 			}
 		}

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -27,9 +28,6 @@ namespace ProSuite.AGP.Editing.Erase
 		{
 			// This is our property:
 			RequiresSelection = true;
-
-			SelectionCursor = ToolUtils.GetCursor(Resources.EraseToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.EraseToolCursorShift);
 		}
 
 		protected override SketchGeometryType GetSketchGeometryType()
@@ -207,6 +205,49 @@ namespace ProSuite.AGP.Editing.Erase
 			{
 				yield return feature.GetTable();
 			}
+		}
+
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.EraseOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.EraseOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.EraseOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.EraseOverlay,
+			                              Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.EraseOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.EraseOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
 		}
 	}
 }
