@@ -1,5 +1,7 @@
 using System;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geometry.AGP
@@ -10,8 +12,10 @@ namespace ProSuite.GIS.Geometry.AGP
 	{
 		private readonly SpatialReference _proSpatialReference;
 
-		public ArcSpatialReference(SpatialReference proSpatialReference)
+		public ArcSpatialReference([NotNull] SpatialReference proSpatialReference)
 		{
+			Assert.ArgumentNotNull(proSpatialReference, nameof(proSpatialReference));
+
 			_proSpatialReference = proSpatialReference;
 		}
 
@@ -163,7 +167,7 @@ namespace ProSuite.GIS.Geometry.AGP
 			{
 				return 1 / ProSpatialReference.ZScale;
 			}
-			
+
 			return double.NaN;
 		}
 

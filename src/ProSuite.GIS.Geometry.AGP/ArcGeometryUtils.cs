@@ -27,8 +27,10 @@ namespace ProSuite.GIS.Geometry.AGP
 			result.M = mapPoint.M;
 			result.ID = mapPoint.ID;
 
-			result.SpatialReference =
-				spatialReference ?? new ArcSpatialReference(mapPoint.SpatialReference);
+			result.SpatialReference = spatialReference ??
+			                          (mapPoint.SpatialReference == null
+				                           ? null
+				                           : new ArcSpatialReference(mapPoint.SpatialReference));
 		}
 
 		public static ArcGIS.Core.Geometry.Geometry CreateProGeometry(
