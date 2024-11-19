@@ -141,7 +141,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			base.OnToolActivatingCore();
 		}
 
-		private void InitializeOptions()
+		protected void InitializeOptions()
 		{
 			_settingsProvider = new OverridableSettingsProvider<PartialReshapeToolOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
