@@ -457,6 +457,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void SetupSelectionSketch()
 		{
+			ClearSketchAsync();
+
 			SetupSketch();
 			
 			_selectionSketchType.ResetOrDefault();
