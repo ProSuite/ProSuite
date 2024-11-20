@@ -7,6 +7,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -193,19 +194,6 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
-		/// Get tables only from feature layers with established
-		/// data source. If the data source of the feature layer
-		/// is broken FeatureLayer.GetTable() returns null.
-		/// </summary>
-		public static IEnumerable<Table> GetTables(
-			this IEnumerable<BasicFeatureLayer> layers)
-		{
-			return layers is null
-				       ? Enumerable.Empty<Table>()
-				       : layers.Select(fl => fl.GetTable()).Where(table => table != null);
-		}
-
-		/// <summary>
 		/// Gets the ObjectIDs of selected features from the given <paramref name="layer"/>.
 		/// </summary>
 		/// <remarks>
@@ -338,6 +326,52 @@ namespace ProSuite.Commons.AGP.Carto
 			return DatasetUtils.IsSameTable(featureClass1, featureClass2);
 		}
 
+		/// <summary>
+		/// Returns the feature class which is referenced by the specified layer. In case the
+		/// feature class is a joined table and the <see cref="unJoined"/> parameter is true,
+		/// the actual geodatabase feature class is returned.
+		/// </summary>
+		/// <param name="featureLayer"></param>
+		/// <param name="unJoined"></param>
+		/// <returns></returns>
+		public static FeatureClass GetFeatureClass(BasicFeatureLayer featureLayer,
+		                                           bool unJoined)
+		{
+			Assert.ArgumentNotNull(featureLayer, nameof(featureLayer));
+
+			FeatureClass featureClass = GetFeatureClass(featureLayer);
+
+			if (featureClass == null)
+			{
+				return null;
+			}
+
+			return unJoined ? DatasetUtils.GetDatabaseFeatureClass(featureClass) : featureClass;
+		}
+
+		/// <summary>
+		/// Returns the table referenced by the specified map member. In case the table is a joined
+		/// table and the <paramref name="unJoined"/> parameter is true, the actual geodatabase
+		/// table is returned.
+		/// </summary>
+		/// <param name="tableBasedMapMember"></param>
+		/// <param name="unJoined"></param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentException"></exception>
+		public static Table GetTable(IDisplayTable tableBasedMapMember, bool unJoined)
+		{
+			Assert.ArgumentNotNull(tableBasedMapMember, nameof(tableBasedMapMember));
+
+			Table table = tableBasedMapMember.GetTable();
+
+			if (table == null)
+			{
+				return null;
+			}
+
+			return unJoined ? DatasetUtils.GetDatabaseTable(table) : table;
+		}
+
 		[CanBeNull]
 		public static FeatureClass GetFeatureClass(this Layer layer)
 		{
@@ -414,7 +448,7 @@ namespace ProSuite.Commons.AGP.Carto
 			if (props is DatabaseConnectionProperties dcProps)
 			{
 				// Utility network FC only:
-				return !string.IsNullOrEmpty(dcProps.Branch);
+				return ! string.IsNullOrEmpty(dcProps.Branch);
 			}
 
 			return props is ServiceConnectionProperties;
@@ -426,7 +460,8 @@ namespace ProSuite.Commons.AGP.Carto
 			if (featureClass is null) return false;
 
 			using var workspace = featureClass.GetDatastore();
-			if (workspace is not Geodatabase geodatabase) return false; // TODO how about shapefiles?
+			if (workspace is not Geodatabase geodatabase)
+				return false; // TODO how about shapefiles?
 
 			var gdbType = geodatabase.GetGeodatabaseType();
 			if (gdbType == GeodatabaseType.FileSystem)

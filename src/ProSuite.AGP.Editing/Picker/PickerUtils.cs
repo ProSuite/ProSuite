@@ -60,24 +60,6 @@ namespace ProSuite.AGP.Editing.Picker
 			       .OrderBy(group => group.Key).SelectMany(fcs => fcs);
 		}
 
-		public static Geometry EnsureNonEmpty([NotNull] Geometry sketch, int tolerancePixel)
-		{
-			return IsSingleClick(sketch)
-				       ? CreateSinglePickGeometry(sketch, tolerancePixel)
-				       : sketch;
-		}
-
-		private static Geometry CreateSinglePickGeometry([NotNull] Geometry sketch,
-		                                                 int tolerancePixel)
-		{
-			MapPoint mapPoint =
-				GeometryFactory.CreatePoint(sketch.Extent.XMin,
-				                            sketch.Extent.YMin,
-				                            sketch.SpatialReference);
-
-			return ExpandGeometryByPixels(mapPoint, tolerancePixel);
-		}
-
 		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
 		                                              int selectionTolerancePixels)
 		{
