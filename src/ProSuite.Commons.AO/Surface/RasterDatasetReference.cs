@@ -17,13 +17,6 @@ namespace ProSuite.Commons.AO.Surface
 		[NotNull] private readonly IRasterDataset2 _rasterDataset;
 		[CanBeNull] private IRaster _fullRaster;
 
-		public RasterDatasetReference([NotNull] IRasterDatasetDef rasterDatasetDef)
-		{
-			Assert.ArgumentNotNull(rasterDatasetDef, nameof(rasterDatasetDef));
-
-			_rasterDataset = (IRasterDataset2) rasterDatasetDef;
-		}
-
 		public RasterDatasetReference([NotNull] IRasterDataset rasterDataset)
 		{
 			Assert.ArgumentNotNull(rasterDataset, nameof(rasterDataset));

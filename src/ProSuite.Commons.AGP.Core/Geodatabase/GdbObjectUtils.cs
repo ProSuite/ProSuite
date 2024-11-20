@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -31,7 +32,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			string tableName;
 			try
 			{
-				tableName = row.GetTable().GetName();
+				using (Table table = row.GetTable())
+				{
+					tableName = table.GetName();
+				}
 			}
 			catch (Exception e)
 			{
@@ -43,9 +47,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		public static string GetDisplayValue(Row row)
 		{
-			string className = DatasetUtils.GetAliasName(row.GetTable());
+			using (Table table = row.GetTable())
+			{
+				string className = DatasetUtils.GetAliasName(table);
 
-			return GetDisplayValue(row, className);
+				return GetDisplayValue(row, className);
+			}
 		}
 
 		public static string GetDisplayValue(Row row, string className)
@@ -68,17 +75,18 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 
-			Table table = row.GetTable();
-
-			string subtypeFieldName = DatasetUtils.GetSubtypeFieldName(table);
-
-			if (! string.IsNullOrEmpty(subtypeFieldName))
+			using (Table table = row.GetTable())
 			{
-				int subtypeFieldIndex = row.FindField(subtypeFieldName);
-				return GetSubtypeCode(row, subtypeFieldIndex);
-			}
+				string subtypeFieldName = DatasetUtils.GetSubtypeFieldName(table);
 
-			return null;
+				if (! string.IsNullOrEmpty(subtypeFieldName))
+				{
+					int subtypeFieldIndex = row.FindField(subtypeFieldName);
+					return GetSubtypeCode(row, subtypeFieldIndex);
+				}
+
+				return null;
+			}
 		}
 
 		public static int? GetSubtypeCode([NotNull] Row row, int subtypeFieldIndex)
@@ -108,11 +116,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				return null;
 			}
 
-			Subtype subtype = null;
 			try
 			{
-				subtype = row.GetTable().GetDefinition().GetSubtypes()
-				             ?.FirstOrDefault(st => st.GetCode() == subtypeCode.Value);
+				using (Table table = row.GetTable())
+				{
+					using (TableDefinition definition = table.GetDefinition())
+					{
+						return DatasetUtils.GetSubtype(definition, subtypeCode.Value);
+					}
+				}
 			}
 			catch (NotSupportedException notSupportedException)
 			{
@@ -120,7 +132,71 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				_msg.Debug("Subtypes not supported", notSupportedException);
 			}
 
-			return subtype;
+			return null;
+		}
+
+		public static void SetSubtypeCode([NotNull] Row row, int subTypeCode)
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
+
+			using (Table table = row.GetTable())
+			{
+				string subtypeFieldName = DatasetUtils.GetSubtypeFieldName(table);
+
+				if (! string.IsNullOrEmpty(subtypeFieldName))
+				{
+					row[subtypeFieldName] = subTypeCode;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Sets the values of the <see cref="RowBuffer"/> which are not yet initialized to the
+		/// default values defined in the Geodatabase.
+		/// </summary>
+		/// <param name="rowBuffer"></param>
+		/// <param name="tableDefinition"></param>
+		/// <param name="subtype"></param>
+		public static void SetNullValuesToGdbDefault(
+			[NotNull] RowBuffer rowBuffer,
+			[NotNull] TableDefinition tableDefinition,
+			[CanBeNull] Subtype subtype)
+		{
+			DoForAllFields(
+				field =>
+				{
+					object currentValue = rowBuffer[field.Name];
+
+					if (currentValue == null || currentValue == DBNull.Value)
+					{
+						rowBuffer[field.Name] = field.GetDefaultValue(subtype);
+					}
+				}, tableDefinition);
+		}
+
+		/// <summary>
+		/// Sets the values of the <see cref="RowBuffer"/> which are not yet initialized to the
+		/// default values defined in the Geodatabase.
+		/// </summary>
+		/// <param name="row"></param>
+		/// <param name="tableDefinition"></param>
+		/// <param name="subtype"></param>
+		public static void SetNullValuesToGdbDefault(
+			[NotNull] Row row,
+			[NotNull] TableDefinition tableDefinition,
+			[CanBeNull] Subtype subtype)
+		{
+			DoForAllFields(
+				field =>
+				{
+					// If the value has not been set (e.g. by the subclass), use the GDB default:
+					object currentValue = row[field.Name];
+
+					if (currentValue == null || currentValue == DBNull.Value)
+					{
+						row[field.Name] = field.GetDefaultValue(subtype);
+					}
+				}, tableDefinition);
 		}
 
 		[NotNull]
@@ -134,8 +210,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static IEnumerable<Feature> Filter([NotNull] IEnumerable<Feature> features,
 		                                          GeometryType byGeometryType)
 		{
-			return features.Where(
-				f => DatasetUtils.GetShapeType(f.GetTable()) == byGeometryType);
+			foreach (Feature feature in features)
+			{
+				using FeatureClass featureClass = feature.GetTable();
+
+				if (featureClass.GetShapeType() == byGeometryType)
+				{
+					yield return feature;
+				}
+			}
 		}
 
 		public static bool IsSameFeature(Feature feature1, Feature feature2)
@@ -273,6 +356,161 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			return false;
+		}
+
+		[CanBeNull]
+		public static CodedValueDomain GetCodedValueDomain([NotNull] Row row, int fieldIndex,
+		                                                   [CanBeNull] int? subtypeCode = null)
+		{
+			// todo daro using?
+			try
+			{
+				return (CodedValueDomain) GetDomain(row, fieldIndex, subtypeCode);
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug($"Not a coded value domain: {ex.Message}", ex);
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		public static CodedValueDomain GetCodedValueDomain([NotNull] Table table, int fieldIndex,
+		                                                   [CanBeNull] int? subtypeCode = null)
+		{
+			try
+			{
+				return (CodedValueDomain) GetDomain(table, fieldIndex, subtypeCode);
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug($"Not a coded value domain: {ex.Message}", ex);
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		public static CodedValueDomain GetCodedValueDomain([NotNull] TableDefinition definition,
+		                                                   int fieldIndex,
+		                                                   [CanBeNull] int? subtypeCode = null)
+		{
+			try
+			{
+				return (CodedValueDomain) GetDomain(definition, fieldIndex, subtypeCode);
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug($"Not a coded value domain: {ex.Message}", ex);
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		public static Domain GetDomain([NotNull] Row row, int fieldIndex,
+		                               [CanBeNull] int? subtypeCode = null)
+		{
+			// todo daro using?
+			try
+			{
+				Table table = row.GetTable();
+
+				return subtypeCode == null
+					       ? GetDomain(table, fieldIndex, GetSubtypeCode(row))
+					       : GetDomain(table, fieldIndex, subtypeCode);
+			}
+			catch (GeodatabaseException ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		public static Domain GetDomain([NotNull] Table table, int fieldIndex,
+		                               [CanBeNull] int? subtypeCode = null)
+		{
+			try
+			{
+				using TableDefinition definition = table.GetDefinition();
+
+				Field subtypeField = definition.GetFields()[fieldIndex];
+
+				Subtype subtype = null;
+				if (subtypeCode != null)
+				{
+					subtype = definition.GetSubtypes()
+					                    .FirstOrDefault(st => st.GetCode() == subtypeCode);
+				}
+
+				return subtypeField.GetDomain(subtype);
+			}
+			catch (GeodatabaseException ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		public static Domain GetDomain([NotNull] TableDefinition definition, int fieldIndex,
+		                               [CanBeNull] int? subtypeCode = null)
+		{
+			try
+			{
+				Field subtypeField = definition.GetFields()[fieldIndex];
+
+				Subtype subtype = null;
+				if (subtypeCode != null)
+				{
+					subtype = definition.GetSubtypes()
+					                    .FirstOrDefault(st => st.GetCode() == subtypeCode);
+				}
+
+				return subtypeField.GetDomain(subtype);
+			}
+			catch (GeodatabaseException ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return null;
+		}
+
+		private static void DoForAllFields([NotNull] Action<Field> action,
+		                                   [NotNull] TableDefinition tableDefinition,
+		                                   bool exceptShape = true)
+		{
+			foreach (Field field in tableDefinition.GetFields())
+			{
+				if (!field.IsEditable)
+				{
+					continue;
+				}
+
+				if (exceptShape && field.FieldType == FieldType.Geometry)
+				{
+					continue;
+				}
+
+				action(field);
+			}
 		}
 	}
 }

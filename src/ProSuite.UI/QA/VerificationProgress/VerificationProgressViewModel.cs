@@ -217,6 +217,9 @@ namespace ProSuite.UI.QA.VerificationProgress
 				{
 					Assert.NotNull(_currentTile);
 
+					//TODO TileInfoText could be improved
+					//  maybe add TileSize or display Width+Height of the current tile
+					//  maybe use EnvelopeXY.ToString(CultureInfo.CurrentCulture)
 					string format = _currentTile.XMax < 400
 						                ? "Verifying tile {0} of {1}, (extent: {2:N4}, {3:N4}, {4:N4}, {5:N4})"
 						                : "Verifying tile {0} of {1}, (extent: {2:N0}, {3:N0}, {4:N0}, {5:N0})";

@@ -11,7 +11,6 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Editing.Templates;
-using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -151,6 +150,8 @@ public class AddRemovePointsTool : MapTool
 		return new SelectionSettings();
 	}
 
+	protected virtual bool AllowEscapeToDefaultTool => false;
+
 	/// <remarks>Will be called on the MCT</remarks>
 	protected virtual void Activate()
 	{
@@ -260,7 +261,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.ReportError(ex, _msg);
+			Gateway.LogError(ex, _msg);
 		}
 
 		return Task.FromResult(0);
@@ -303,7 +304,8 @@ public class AddRemovePointsTool : MapTool
 			}
 			else if (args.Key is Key.Escape)
 			{
-				args.Handled = true; // abort (or clear selection)
+				var keepActivated = ! AllowEscapeToDefaultTool;
+				args.Handled = HasSketch || HasSelection || keepActivated;
 			}
 			else if (WantHandleKey(args))
 			{
@@ -316,9 +318,12 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.ReportError(ex, _msg);
+			Gateway.LogError(ex, _msg);
 		}
 	}
+
+	private bool HasSelection => (ActiveMapView?.Map?.SelectionCount ?? 0) > 0;
+	private bool HasSketch => _elements.Count > 0;
 
 	protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
 	{
@@ -334,27 +339,23 @@ public class AddRemovePointsTool : MapTool
 				// 2. clear selection
 				// 3. activate Explore Tool
 
-				if (_elements.Count > 0)
+				if (HasSketch)
 				{
 					await QueuedTask.Run(Abort);
 				}
-				else
+				else if (HasSelection)
 				{
-					var map = MapView.Active?.Map;
-					if (map is not null && map.SelectionCount > 0)
-					{
-						await QueuedTask.Run(() => map.ClearSelection());
-					}
-					else
-					{
-						// Activate Explore Tool...
-						// Note: null (instead of DAML ID) defaults to Explore Tool
-						const string ExploreToolID = "esri_mapping_exploreTool";
-						FrameworkApplication.SetCurrentToolAsync(ExploreToolID);
-						// Note: await on SetCurrentToolAsync() results in a deadlock! Others experience the same:
-						// https://community.esri.com/t5/arcgis-pro-sdk-questions/deactivate-a-map-tool-on-sketch-completed/td-p/878882
-					}
+					await QueuedTask.Run(ClearSelection);
 				}
+				//else if (AllowEscapeToDefaultTool)
+				//{
+				//	// Activate Explore Tool (better: configured Default Tool)
+				//	// SetCurrentToolAsync(null) activates the default tool
+				//	const string ExploreToolID = "esri_mapping_exploreTool";
+				//	FrameworkApplication.SetCurrentToolAsync(ExploreToolID);
+				//	// Beware: await on SetCurrentToolAsync() results in a deadlock! Others experience the same:
+				//	// https://community.esri.com/t5/arcgis-pro-sdk-questions/deactivate-a-map-tool-on-sketch-completed/td-p/878882
+				//}
 			}
 			else if (HandleKeyEvent(args))
 			{
@@ -390,7 +391,7 @@ public class AddRemovePointsTool : MapTool
 		}
 		catch (Exception ex)
 		{
-			Gateway.ReportError(ex, _msg);
+			Gateway.LogError(ex, _msg);
 		}
 		return null;
 	}
@@ -448,12 +449,19 @@ public class AddRemovePointsTool : MapTool
 
 	protected override void OnToolMouseMove(MapViewMouseEventArgs args)
 	{
-		if (_activated && _firstMove)
+		try
 		{
-			_firstMove = false;
-			var symbol = SketchSymbol;
-			SketchSymbol = null;
-			SketchSymbol = symbol;
+			if (_activated && _firstMove)
+			{
+				_firstMove = false;
+				var symbol = SketchSymbol;
+				SketchSymbol = null;
+				SketchSymbol = symbol;
+			}
+		}
+		catch (Exception ex)
+		{
+			Gateway.LogError(ex, _msg);
 		}
 	}
 
@@ -553,6 +561,13 @@ public class AddRemovePointsTool : MapTool
 		_elements.Clear();
 
 		SketchTip = GetSketchTip();
+	}
+
+	/// <remarks>Must call on MCT</remarks>
+	private void ClearSelection()
+	{
+		var map = ActiveMapView?.Map;
+		map?.ClearSelection();
 	}
 
 	/// <summary>

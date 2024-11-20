@@ -7,6 +7,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using Google.Protobuf;
+using Google.Protobuf.Collections;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -17,6 +18,7 @@ using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Geom.Wkb;
 using ProSuite.Commons.Logging;
+using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using Version = ArcGIS.Core.Data.Version;
 
@@ -222,7 +224,7 @@ namespace ProSuite.Microservices.Client.AGP
 			var result = new GdbObjRefMsg();
 
 			result.ClassHandle = GeometryProcessingUtils.GetUniqueClassId(row);
-			result.ObjectId = (int) row.GetObjectID();
+			result.ObjectId = row.GetObjectID();
 
 			return result;
 		}
@@ -248,7 +250,7 @@ namespace ProSuite.Microservices.Client.AGP
 			// Or use handle?
 			result.ClassHandle = objectClassHandle;
 
-			result.ObjectId = (int) feature.GetObjectID();
+			result.ObjectId = feature.GetObjectID();
 
 			result.Shape = ToShapeMsg(geometry, useSpatialRefWkId);
 
@@ -285,7 +287,11 @@ namespace ProSuite.Microservices.Client.AGP
 			foreach (Feature feature in features)
 			{
 				FeatureClass featureClass = feature.GetTable();
-				int uniqueClassId = GeometryProcessingUtils.GetUniqueClassId(featureClass);
+				if (featureClass == null)
+				{
+					_msg.Debug($"Feature is null {GdbObjectUtils.ToString(feature)}");
+				}
+				long uniqueClassId = GeometryProcessingUtils.GetUniqueClassId(featureClass);
 
 				Geometry shape = feature.GetShape();
 
@@ -330,14 +336,14 @@ namespace ProSuite.Microservices.Client.AGP
 		/// <returns></returns>
 		public static GdbObjectReference ToObjectReferenceWithUniqueClassId(Row row)
 		{
-			int uniqueClassId = GeometryProcessingUtils.GetUniqueClassId(row);
+			long uniqueClassId = GeometryProcessingUtils.GetUniqueClassId(row);
 
 			return new GdbObjectReference(uniqueClassId, row.GetObjectID());
 		}
 
 		public static ObjectClassMsg ToObjectClassMsg(
 			[NotNull] Table objectClass,
-			int classHandle,
+			long classHandle,
 			[CanBeNull] SpatialReference spatialRef = null)
 		{
 			esriGeometryType geometryType = TranslateAGPShapeType(objectClass);
@@ -354,7 +360,7 @@ namespace ProSuite.Microservices.Client.AGP
 				new ObjectClassMsg()
 				{
 					Name = name,
-					Alias = aliasName,
+					Alias = aliasName ?? string.Empty, 
 					ClassHandle = classHandle,
 					SpatialReference = ToSpatialReferenceMsg(
 						spatialRef, SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),

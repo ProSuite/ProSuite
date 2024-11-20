@@ -1,25 +1,32 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Selection;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.AGP.Editing.Picker;
+
+public interface IPickerPrecedence : IDisposable
 {
-	public interface IPickerPrecedence : IDisposable
-	{
-		IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items);
+	Point PickerLocation { get; set; }
+	SpatialRelationship SpatialRelationship { get; }
+	SelectionCombinationMethod SelectionCombinationMethod { get; }
+	IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items);
 
-		T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem;
+	IPickableItem PickBest(IEnumerable<IPickableItem> items);
 
-		Geometry SelectionGeometry { get; set; }
-		int SelectionTolerance { get; }
-		bool IsSingleClick { get; }
-		Point PickerLocation { get; set; }
+	PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection);
+	/// <summary>
+	/// Returns the geometry which can be used for spatial queries.
+	/// For single-click picks, it returns the geometry expanded by the <see cref="PickerPrecedenceBase.SelectionTolerance" />.
+	/// This method must be called on the CIM thread.
+	/// </summary>
+	/// <returns></returns>
+	Geometry GetSelectionGeometry();
 
-		PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
-		                         bool areaSelect = false);
+	IPickableItemsFactory CreateItemsFactory();
 
-		void EnsureGeometryNonEmpty();
-	}
+	IPickableItemsFactory CreateItemsFactory<T>() where T : IPickableItem;
 }

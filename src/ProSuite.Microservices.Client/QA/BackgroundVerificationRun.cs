@@ -228,14 +228,29 @@ namespace ProSuite.Microservices.Client.QA
 
 			try
 			{
-				if (arg.SchemaRequest != null)
+				try
 				{
-					result.Schema = verificationDataProvider.GetGdbSchema(arg.SchemaRequest);
+					if (arg.SchemaRequest != null)
+					{
+						result.Schema = verificationDataProvider.GetGdbSchema(arg.SchemaRequest);
+					}
+					else if (arg.DataRequest != null)
+					{
+						result.Data = verificationDataProvider
+						              .GetData(arg.DataRequest).FirstOrDefault();
+					}
 				}
-				else if (arg.DataRequest != null)
+				catch (Exception e)
 				{
-					result.Data = verificationDataProvider
-					              .GetData(arg.DataRequest).FirstOrDefault();
+					_msg.Debug("Error handling data request", e);
+
+					// Communicate the error to the server but do not throw here (it might just be
+					// a test whether a where clause is valid). The server shall decide whether it
+					// wants to continue or not.
+					result.ErrorMessage = e.Message;
+					callRequestStream.WriteAsync(result);
+
+					return false;
 				}
 
 				callRequestStream.WriteAsync(result);
@@ -345,30 +360,23 @@ namespace ProSuite.Microservices.Client.QA
 			serviceProgress.ProgressType = (VerificationProgressType) progressMsg.ProgressType;
 			serviceProgress.ProgressStep = (VerificationProgressStep) progressMsg.ProgressStep;
 
-			serviceProgress.ProcessingMessage =
-				progressMsg.ProcessingStepMessage;
+			serviceProgress.ProcessingMessage = progressMsg.ProcessingStepMessage;
 
 			if (progressMsg.OverallProgressTotalSteps > 0)
 			{
-				serviceProgress.OverallProgressTotalSteps =
-					progressMsg.OverallProgressTotalSteps;
+				serviceProgress.OverallProgressTotalSteps = progressMsg.OverallProgressTotalSteps;
 			}
 
-			serviceProgress.OverallProgressCurrentStep =
-				progressMsg.OverallProgressCurrentStep;
+			serviceProgress.OverallProgressCurrentStep = progressMsg.OverallProgressCurrentStep;
 
 			if (progressMsg.DetailedProgressTotalSteps > 0)
 			{
-				serviceProgress.DetailedProgressTotalSteps =
-					progressMsg.DetailedProgressTotalSteps;
+				serviceProgress.DetailedProgressTotalSteps = progressMsg.DetailedProgressTotalSteps;
 			}
 
-			serviceProgress.DetailedProgressCurrentStep =
-				progressMsg.DetailedProgressCurrentStep;
+			serviceProgress.DetailedProgressCurrentStep = progressMsg.DetailedProgressCurrentStep;
 
-			if (progressMsg.CurrentBox != null &&
-			    progressMsg.CurrentBox.XMax > 0 &&
-			    progressMsg.CurrentBox.YMax > 0)
+			if (progressMsg.CurrentBox != null)
 			{
 				serviceProgress.CurrentTile = new EnvelopeXY(
 					progressMsg.CurrentBox.XMin, progressMsg.CurrentBox.YMin,

@@ -25,7 +25,7 @@ using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
-	public abstract class AdvancedReshapeToolBase : ConstructionToolBase
+	public abstract class AdvancedReshapeToolBase : ConstructionToolBase, ISymbolizedSketchTool
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -41,7 +41,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		// - Connected lines reshape
 		// - Update feedback on toggle layer visibility
 
-		private AdvancedReshapeFeedback _feedback;
+		[CanBeNull] private AdvancedReshapeFeedback _feedback;
+		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
 		private Task<bool> _updateFeedbackTask;
 
@@ -51,18 +52,17 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected AdvancedReshapeToolBase()
 		{
+			FireSketchEvents = true;
+
 			// This is our property:
 			RequiresSelection = true;
-
-			SelectionCursor = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursorShift);
 
 			HandledKeys.Add(_keyToggleNonDefaultSide);
 		}
 
 		protected abstract IAdvancedReshapeService MicroserviceClient { get; }
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
 
@@ -117,19 +117,60 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			       geometryType == GeometryType.Polygon;
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
+		{
+			return layer is FeatureLayer;
+		}
+
+		protected override async void OnToolActivatingCore()
 		{
 			_feedback = new AdvancedReshapeFeedback();
 
 			base.OnToolActivatingCore();
 		}
 
+		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
+		{
+			_symbolizedSketch =
+				new SymbolizedSketchTypeBasedOnSelection(this);
+			_symbolizedSketch.SetSketchAppearanceBasedOnSelection();
+
+			return base.OnToolActivatedCore(hasMapViewChanged);
+		}
+
+		protected override void OnSelectionPhaseStarted()
+		{
+			base.OnSelectionPhaseStarted();
+			_symbolizedSketch?.ClearSketchSymbol();
+			_feedback?.Clear();
+		}
+
+		protected override void OnSketchPhaseStarted()
+		{
+			try
+			{
+				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); });
+			}
+			catch (Exception ex)
+			{
+				_msg.Error(ex.Message, ex);
+			}
+		}
+
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_symbolizedSketch?.Dispose();
 			_feedback?.Clear();
 			_feedback = null;
 
 			base.OnToolDeactivateCore(hasMapViewChanged);
+		}
+
+		protected override CancelableProgressorSource GetProgressorSource()
+		{
+			// Disable the progressor because reshaping is typically fast,
+			// and the users potentially want to continue working already.
+			return null;
 		}
 
 		protected override SketchGeometryType GetSketchGeometryType()
@@ -231,11 +272,45 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		//	}
 		//}
 
+		public bool CanSelectFromLayer(Layer layer)
+		{
+			return base.CanSelectFromLayer(layer);
+		}
+
+		public bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+		{
+			return base.CanUseSelection(selectionByLayer);
+		}
+
+		public bool CanSetConstructionSketchSymbol(GeometryType geometryType)
+		{
+			bool result;
+			switch (geometryType)
+			{
+				case GeometryType.Polyline:
+					result = true;
+					break;
+				case GeometryType.Point:
+				case GeometryType.Polygon:
+				case GeometryType.Unknown:
+				case GeometryType.Envelope:
+				case GeometryType.Multipoint:
+				case GeometryType.Multipatch:
+				case GeometryType.GeometryBag:
+					result = false;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
+			}
+
+			return result && ! IsInSelectionPhaseAsync().Result;
+		}
+
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
 			Geometry sketchGeometry, EditingTemplate editTemplate, MapView activeView,
 			CancelableProgressor cancelableProgressor = null)
 		{
-			_feedback.Clear();
+			_feedback?.Clear();
 
 			// TODO: cancel all running background tasks...
 
@@ -316,7 +391,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override void OnSketchResetCore()
 		{
-			_feedback.Clear();
+			_feedback?.Clear();
+
 			_nonDefaultSideMode = false;
 		}
 
@@ -543,6 +619,54 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			return await QueuedTaskUtils.Run(
 				       () => _feedback?.UpdatePreview(reshapeResult?.ResultFeatures));
+		}
+
+		public void SetSketchSymbol(CIMSymbolReference symbolReference)
+		{
+			SketchSymbol = symbolReference;
+		}
+
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+										  Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
 		}
 	}
 }

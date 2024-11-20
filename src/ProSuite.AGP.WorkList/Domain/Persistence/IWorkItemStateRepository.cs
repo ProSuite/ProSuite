@@ -11,6 +11,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 	/// </summary>
 	public interface IWorkItemStateRepository
 	{
+		string WorkListDefinitionFilePath { get; set; }
+
 		IWorkItem Refresh(IWorkItem item);
 
 		void Update(IWorkItem item);

@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.Logging;
@@ -24,13 +23,8 @@ namespace ProSuite.AGP.Editing.Selection
 		{
 			IsSketchTool = true;
 
-			SelectionCursor = ToolUtils.GetCursor(Resources.SelectionToolNormal);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.SelectionToolNormalShift);
-
 			SelectOnlyEditFeatures = false;
 			UnJoinedSelection = false;
-
-			SetCursor(SelectionCursor);
 		}
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
@@ -45,11 +39,6 @@ namespace ProSuite.AGP.Editing.Selection
 			SetCheckState(ConfigId_SelectionToolButton, false);
 
 			await base.OnToolDeactivateAsync(hasMapViewChanged);
-		}
-
-		protected override bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			return true;
 		}
 
 		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftIsPressed)
@@ -76,10 +65,7 @@ namespace ProSuite.AGP.Editing.Selection
 			await ViewUtils.TryAsync(task, _msg);
 		}
 
-		protected override void LogUsingCurrentSelection()
-		{
-			// throw new NotImplementedException();
-		}
+		protected override void LogUsingCurrentSelection() { }
 
 		protected override void LogPromptForSelection()
 		{

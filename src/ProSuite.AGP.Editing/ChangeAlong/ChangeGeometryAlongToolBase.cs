@@ -62,7 +62,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return SketchGeometryType.Rectangle;
 		}
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
 
@@ -218,61 +218,72 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			SetCursor(PolygonSketchCursor);
 		}
 
-		protected override void ResetSketchCore()
+		protected override async Task ResetSketchCoreAsync()
 		{
-			if (! IsInSelectionPhase())
+			try
 			{
-				SetCursor(TargetSelectionCursor);
+				if (! await IsInSelectionPhaseAsync())
+				{
+					SetCursor(TargetSelectionCursor);
+				}
+				else
+				{
+					SetCursor(GetSelectionCursor());
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				SetCursor(SelectionCursor);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
-		protected override void ShiftPressedCore()
+		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{
-			if (SelectionCursorShift != null && HasReshapeCurves())
+			if (await IsInSelectionPhaseAsync())
 			{
-				SetCursor(TargetSelectionCursorShift);
+				return;
 			}
-			else
+
+			SetCursor(TargetSelectionCursor);
+		}
+
+		protected override async Task ShiftPressedCoreAsync()
+		{
+			try
 			{
-				base.ShiftPressedCore();
+				if (HasReshapeCurves())
+				{
+					SetCursor(TargetSelectionCursorShift);
+				}
+				else
+				{
+					await base.ShiftPressedCoreAsync();
+				}
+			}
+			catch (Exception ex)
+			{
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
-		protected override void ShiftReleasedCore()
+		protected override async Task ShiftReleasedCoreAsync()
 		{
-			// From the subclass' point of view SHIFT is still pressed:
-			if (! IsInSelectionPhase())
+			try
 			{
-				SetCursor(TargetSelectionCursor);
+				// From the subclass' point of view SHIFT is still pressed:
+				if (! await IsInSelectionPhaseAsync())
+				{
+					SetCursor(TargetSelectionCursor);
+				}
+				else
+				{
+					await base.ShiftReleasedCoreAsync();
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				base.ShiftReleasedCore();
+				ViewUtils.ShowError(ex, _msg);
 			}
-		}
-
-		protected override bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			if (HasReshapeCurves())
-			{
-				return false;
-			}
-
-			// First or second phase:
-			if (shiftIsPressed)
-			{
-				// With reshape curves and shift it would mean we're in the target selection phase
-				return ! HasReshapeCurves();
-			}
-
-			var task = QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
-
-			// NOTE: In rare situations this can result in a dead-lock / hang of the application.
-			return task.Result;
 		}
 
 		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -289,7 +300,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return ! HasReshapeCurves();
 			}
 
-			return await QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
+			Task<bool> task = QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
+
+			return await ViewUtils.TryAsync(task, _msg);
 		}
 
 		private bool HasReshapeCurves()
@@ -352,7 +365,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			Cursor = TargetSelectionCursor;
 
-			SetupSketch(SketchGeometryType.Rectangle);
+			SetupSketch();
+
+			SetSketchType(SketchGeometryType.Rectangle);
 		}
 
 		private async Task<bool> SelectTargetsAsync(
@@ -370,12 +385,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					                     GetSelectionTolerancePixels(),
 					                     ActiveMapView.ClientToScreen(CurrentMousePosition));
 
-				pickerPrecedence.EnsureGeometryNonEmpty();
+				Geometry selectionGeometry = pickerPrecedence.GetSelectionGeometry();
 
 				List<FeatureSelectionBase> candidates =
-					FindTargetFeatureCandidates(pickerPrecedence.SelectionGeometry,
-					                            targetFeatureSelection, selectedFeatures,
-					                            progressor);
+					FindTargetFeatureCandidates(selectionGeometry, targetFeatureSelection,
+					                            selectedFeatures, progressor);
 
 				if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 				{
@@ -386,18 +400,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				if (pickerPrecedence.IsSingleClick && candidates.Count > 1)
 				{
 					var orderedCandidates =
-						PickerUtils.OrderByGeometryDimension(candidates).ToList();
+					candidates.OrderBy(candidate => candidate.ShapeDimension);
 
-					var pickedItem =
-						await PickerUtils.ShowAsync<IPickableFeatureItem>(
+					IPickableItem item =
+						await PickerUtils.ShowPickerAsync<IPickableFeatureItem>(
 							pickerPrecedence, orderedCandidates);
 
-					if (pickedItem == null)
-					{
-						return Enumerable.Empty<Feature>();
-					}
-
-					return new List<Feature> { pickedItem.Feature };
+					return item is IPickableFeatureItem pickedItem
+						       ? new List<Feature> { pickedItem.Feature }
+						       : Enumerable.Empty<Feature>();
 				}
 
 				return candidates.SelectMany(c => c.GetFeatures());

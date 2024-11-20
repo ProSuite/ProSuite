@@ -4,12 +4,14 @@ using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using Google.Protobuf.Collections;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.RemoveOverlaps;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.ManagedOptions;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
@@ -27,10 +29,9 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 		{
 			var watch = Stopwatch.StartNew();
 
-			GetFeatures(request.SourceFeatures, request.TargetFeatures,
-			            request.ClassDefinitions,
-			            out IList<IFeature> sourceFeatures,
-			            out IList<IFeature> targetFeatures);
+			GeometryProcessingUtils.GetFeatures(
+				request.SourceFeatures, request.TargetFeatures, request.ClassDefinitions,
+				out IList<IFeature> sourceFeatures, out IList<IFeature> targetFeatures);
 
 			_msg.DebugStopTiming(watch, "Unpacked feature lists from request params");
 
@@ -88,6 +89,21 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			bool explodeMultiparts = request.ExplodeMultipartResults;
 			bool storeOverlapsAsNewFeatures = request.StoreOverlapsAsNewFeatures;
 
+			int defaultZSourceValue =
+				request.DatasetSpecificZSources
+				       .FirstOrDefault(dsz => dsz.DatasetName == string.Empty)
+				       ?.ZSource ?? (int) ChangeAlongZSource.Target;
+
+			ChangeAlongZSource fallBack = (ChangeAlongZSource) defaultZSourceValue;
+			List<DatasetSpecificValue<ChangeAlongZSource>> zSourcesByDatasetName =
+				request.DatasetSpecificZSources
+				       .Select(dsz => new DatasetSpecificValue<ChangeAlongZSource>(
+					               dsz.DatasetName, (ChangeAlongZSource) dsz.ZSource)).ToList();
+
+			IFlexibleSettingProvider<ChangeAlongZSource> zSourceProvider =
+				new DatasetSpecificSettingProvider<ChangeAlongZSource>(
+					"Z values for changed vertices", fallBack, zSourcesByDatasetName);
+
 			//GdbTableContainer container = ProtobufConversionUtils.CreateGdbTableContainer(
 			//	request.ClassDefinitions, null, out _);
 
@@ -99,10 +115,10 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			//	ProtobufConversionUtils.FromGdbObjectMsgList(
 			//		request.UpdatableTargetFeatures, container);
 
-			GetFeatures(request.SourceFeatures, request.UpdatableTargetFeatures,
-			            request.ClassDefinitions,
-			            out IList<IFeature> selectedFeatureList,
-			            out IList<IFeature> targetFeaturesForVertexInsertion);
+			GeometryProcessingUtils.GetFeatures(
+				request.SourceFeatures, request.UpdatableTargetFeatures, request.ClassDefinitions,
+				out IList<IFeature> selectedFeatureList,
+				out IList<IFeature> targetFeaturesForVertexInsertion);
 
 			Overlaps overlaps = new Overlaps();
 
@@ -117,6 +133,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 						.Select(f => f.Class)
 						.First(c => c.ObjectClassID == gdbRef.ClassId) as IFeatureClass;
 
+				Assert.NotNull(fClass);
+
 				List<IGeometry> overlapGeometries =
 					ProtobufGeometryUtils.FromShapeMsgList<IGeometry>(
 						overlapMsg.Overlaps,
@@ -128,10 +146,10 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			// Remove overlaps
 			OverlapsRemover overlapsRemover = RemoveOverlaps(
 				selectedFeatureList, overlaps, targetFeaturesForVertexInsertion, explodeMultiparts,
-				storeOverlapsAsNewFeatures, trackCancel);
+				storeOverlapsAsNewFeatures, zSourceProvider, trackCancel);
 
 			// Pack response
-			var result = overlapsRemover.Result;
+			RemoveOverlapsResult result = overlapsRemover.Result;
 
 			var response = new RemoveOverlapsResponse();
 
@@ -160,36 +178,20 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			return response;
 		}
 
-		private static void GetFeatures([NotNull] RepeatedField<GdbObjectMsg> requestSourceFeatures,
-		                                [NotNull] RepeatedField<GdbObjectMsg> requestTargetFeatures,
-		                                [NotNull] RepeatedField<ObjectClassMsg> classDefinitions,
-		                                [NotNull] out IList<IFeature> sourceFeatures,
-		                                [NotNull] out IList<IFeature> targetFeatures)
-		{
-			Stopwatch watch = Stopwatch.StartNew();
-
-			sourceFeatures = ProtobufConversionUtils.FromGdbObjectMsgList(requestSourceFeatures,
-				classDefinitions);
-
-			targetFeatures = ProtobufConversionUtils.FromGdbObjectMsgList(requestTargetFeatures,
-				classDefinitions);
-
-			_msg.DebugStopTiming(
-				watch,
-				"GetFeatures: Unpacked {0} source and {1} target features from request params",
-				sourceFeatures.Count, targetFeatures.Count);
-		}
-
 		private static OverlapsRemover RemoveOverlaps(
 			[NotNull] IList<IFeature> selectedFeatureList,
 			[NotNull] Overlaps overlaps,
 			[NotNull] IList<IFeature> targetFeaturesForVertexInsertion,
 			bool explodeMultiparts,
 			bool storeOverlapsAsNewFeatures,
+			IFlexibleSettingProvider<ChangeAlongZSource> zSourceProvider,
 			[CanBeNull] ITrackCancel trackCancel)
 		{
 			var overlapsRemover =
-				new OverlapsRemover(explodeMultiparts, storeOverlapsAsNewFeatures);
+				new OverlapsRemover(explodeMultiparts, storeOverlapsAsNewFeatures)
+				{
+					ZSourceProvider = zSourceProvider
+				};
 
 			overlapsRemover.CalculateResults(
 				selectedFeatureList, overlaps, targetFeaturesForVertexInsertion, trackCancel);

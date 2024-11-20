@@ -479,14 +479,22 @@ Remark: IAttributeRule.Validate() is used to check the rows.</value>
     <value>table to check</value>
   </data>
   <data name="QaGdbTopology_0" xml:space="preserve">
-    <value>Finds all errors in 'topology' defined in a geodatabase
+    <value>Finds all geodatabase topology errors in 'topology'. Consider using the other constructor for better support. This constructor is for backward-compatibility only.
 
-Remark: ITopology.Validate() is used if the test is run while editing.
-Otherwise, the dirty areas are reported as errors.
-The reported errors are copies of the errorFeatures of the topology's errorFeatureContainer</value>
+Remark: If the topology has not been previously validated, the dirty areas are reported as issues.
+The reported issues are copies of the error features of the topology's error features.</value>
+  </data>
+  <data name="QaGdbTopology_1" xml:space="preserve">
+    <value>Finds all geodatabase topology errors in the topologies referenced by 'featureClasses'.
+
+Remark: If a topology has not been previously validated, the dirty areas are reported as issues.
+The reported issues are copies of the error features of the topology's error features.</value>
   </data>
   <data name="QaGdbTopology_topology" xml:space="preserve">
     <value>topology to check</value>
+  </data>
+  <data name="QaGdbTopology_featureClasses" xml:space="preserve">
+    <value>feature classes that participate in a geodatabase topology</value>
   </data>
   <data name="QaGraphicConflict_0" xml:space="preserve">
     <value>Finds all graphic conflicts between 'layer' and 'conflictLayer'.

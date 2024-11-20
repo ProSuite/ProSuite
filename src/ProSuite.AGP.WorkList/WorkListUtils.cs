@@ -221,14 +221,15 @@ namespace ProSuite.AGP.WorkList
 			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
 			List<XmlWorkListWorkspace> workspaces = definition.Workspaces;
 
-			Assert.True(workspaces.Count > 0, $"no workspaces in {worklistDefinitionFile}");
+			Assert.True(workspaces.Count > 0,
+			            $"No workspaces referenced in {worklistDefinitionFile}. The work list might be empty.");
 
 			string result = workspaces[0].ConnectionString;
 
-			if (workspaces.Count > 0)
+			if (workspaces.Count > 1)
 			{
 				_msg.Info(
-					$"There are many issue geodatabases in {worklistDefinitionFile} but only one is expected. Taking the first one {result}");
+					$"There are several issue geodatabases in {worklistDefinitionFile} but only one is expected. Taking the first one {result}");
 			}
 			else
 			{
@@ -288,7 +289,8 @@ namespace ProSuite.AGP.WorkList
 			var layerParams = new FeatureLayerCreationParams(featureClass)
 			                  {
 				                  IsVisible = true,
-				                  Name = alias
+				                  Name = alias,
+				                  MapMemberPosition = MapMemberPosition.AddToTop
 			                  };
 
 			// todo daro: apply renderer here from template

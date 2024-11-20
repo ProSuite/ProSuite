@@ -52,14 +52,13 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 
 		public SubcurveNode ToNode => _toNode;
 
-
 		public CutSubcurve([NotNull] Polyline path,
 		                   bool canReshape,
 		                   bool isCandidate,
 		                   bool isFiltered,
 		                   [CanBeNull] Polyline targetSegmentAtFrom,
 		                   [CanBeNull] Polyline targetSegmentAtTo,
-		                   [CanBeNull] Geometry extraTargetInsertPoints)
+		                   [CanBeNull] IEnumerable<MapPoint> extraTargetInsertPoints)
 		{
 			Path = path;
 			CanReshape = canReshape;
@@ -78,7 +77,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 				TargetSegmentAtToPoint = targetSegmentAtTo;
 			}
 
-			ExtraTargetInsertPoints = extraTargetInsertPoints;
+			ExtraTargetInsertPoints = extraTargetInsertPoints?.ToList();
 		}
 
 		#endregion
@@ -104,7 +103,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 					_lineAngleAtFrom = GetLineAngle(this, _fromNode);
 				}
 
-				return (double)_lineAngleAtFrom;
+				return (double) _lineAngleAtFrom;
 			}
 		}
 
@@ -117,7 +116,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 					_lineAngleAtTo = GetLineAngle(this, _toNode);
 				}
 
-				return (double)_lineAngleAtTo;
+				return (double) _lineAngleAtTo;
 			}
 		}
 
@@ -153,7 +152,8 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 			{
 				//line = new LineClass();
 				//segment.QueryTangent(esriSegmentExtension.esriNoExtension, 1, true, 10, line);
-				line = GeometryEngine.Instance.QueryTangent(segment, SegmentExtensionType.NoExtension, 1, AsRatioOrLength.AsRatio, 10);
+				line = GeometryEngine.Instance.QueryTangent(
+					segment, SegmentExtensionType.NoExtension, 1, AsRatioOrLength.AsRatio, 10);
 			}
 
 			double angle = line.Angle;
@@ -168,10 +168,15 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 			return angle;
 		}
 
-		public Polyline Path { get; }
+		public Polyline Path { get; set; }
+
+		protected virtual MapPoint FromPointOnTarget => FromPoint;
+
+		protected virtual MapPoint ToPointOnTarget => ToPoint;
 
 		[CanBeNull]
-		public Geometry ExtraTargetInsertPoints { get; set; }
+		//public Geometry ExtraTargetInsertPoints { get; set; }
+		public List<MapPoint> ExtraTargetInsertPoints { get; set; }
 
 		public bool IsFiltered { get; set; }
 
@@ -293,14 +298,31 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 			return string.Format("CutSubcurve with {0}", pathInfo);
 		}
 
+		public IEnumerable<MapPoint> GetPotentialTargetInsertPoints()
+		{
+			yield return FromPointOnTarget;
+			yield return ToPointOnTarget;
+
+			if (ExtraTargetInsertPoints != null)
+			{
+				foreach (MapPoint point in ExtraTargetInsertPoints)
+				{
+					yield return point;
+				}
+			}
+		}
+
 		#region Private and protected members
 
-		//private void AddExtraPotentialTargetInsertPoint(MapPoint point)
-		//{
-		//	if (ExtraTargetInsertPoints == null) ExtraTargetInsertPoints = new List<MapPoint>();
+		private void AddExtraPotentialTargetInsertPoint(MapPoint point)
+		{
+			if (ExtraTargetInsertPoints == null)
+			{
+				ExtraTargetInsertPoints = new List<MapPoint>();
+			}
 
-		//	ExtraTargetInsertPoints.Add(point);
-		//}
+			ExtraTargetInsertPoints.Add(point);
+		}
 
 		#endregion
 

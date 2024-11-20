@@ -16,6 +16,7 @@ using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -420,6 +421,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 				var ws = WorkspaceUtils.WorkspaceToString(workspace);
 				throw new InvalidOperationException(
 					$"Error opening table '{name}' from workspace {ws}: {e.Message}", e);
+			}
+		}
+
+		public static bool TryOpenTable([NotNull] IFeatureWorkspace workspace,
+		                                [NotNull] string name,
+		                                out ITable table)
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+
+			try
+			{
+				table = OpenTable(workspace, name);
+				return true;
+			}
+			catch (Exception e)
+			{
+				table = null;
+				return false;
 			}
 		}
 
@@ -934,6 +954,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return false;
 			}
 
+			if (table is VirtualTable)
+			{
+				return false;
+			}
+
 			return table is IObjectClass objectClass
 				       ? IsRegisteredAsObjectClass(objectClass)
 				       : IsRegisteredAsObjectClass(GetWorkspace(table), GetName(table));
@@ -1212,21 +1237,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return queryDescription;
 		}
 
-		public static ITable CreateQueryLayerClass([NotNull] ISqlWorkspace sqlWorksace,
+		public static ITable CreateQueryLayerClass([NotNull] ISqlWorkspace sqlWorkspace,
 		                                           [NotNull] IQueryDescription queryDescription,
 		                                           [NotNull] string name)
 		{
 			// NOTE: the unqualified name of a query class must start with a '%'
 			if (! IsQueryLayerClassName(name))
 			{
-				name = GetQueryLayerClassName((IFeatureWorkspace) sqlWorksace, name);
+				name = GetQueryLayerClassName((IFeatureWorkspace) sqlWorkspace, name);
 			}
 
 			_msg.DebugFormat(
 				"Opening query layer with name {0} using the following query description: {1}",
 				name, QueryDescriptionToString(queryDescription));
 
-			ITable queryClass = sqlWorksace.OpenQueryClass(name, queryDescription);
+			ITable queryClass = sqlWorkspace.OpenQueryClass(name, queryDescription);
 			return queryClass;
 		}
 
@@ -1930,9 +1955,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
 
-			var result = new Dictionary<int, string>();
-
 			var subtypes = objectClass as ISubtypes;
+
+			return GetSubtypeNamesByCode(subtypes);
+		}
+
+		public static IDictionary<int, string> GetSubtypeNamesByCode(
+			[CanBeNull] ISubtypes subtypes)
+		{
+			var result = new Dictionary<int, string>();
 
 			if (subtypes == null || ! subtypes.HasSubtype)
 			{
@@ -3249,8 +3280,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			int fieldCount = fields.FieldCount;
 
-			var result = new List<IField>(fieldCount);
-
 			for (var fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++)
 			{
 				IField field = fields.Field[fieldIndex];
@@ -3773,17 +3802,31 @@ namespace ProSuite.Commons.AO.Geodatabase
 					                   .ToList()
 					: null;
 
+			IList<IField> fields = GetFields(table);
+
 			List<IField> candidates =
-				GetFields(table)
-					.Where(f => f.Type == esriFieldType.esriFieldTypeInteger &&
-					            ! f.IsNullable &&
-					            (uniqueIndexes == null ||
-					             uniqueIndexes.Any(ix => ix.Fields.Field[0].Name == f.Name)))
-					.ToList();
+				fields.Where(f => f.Type == esriFieldType.esriFieldTypeInteger &&
+				                  ! f.IsNullable &&
+				                  (uniqueIndexes == null ||
+				                   uniqueIndexes.Any(ix => ix.Fields.Field[0].Name == f.Name)))
+				      .ToList();
 
 			if (candidates.Count == 0)
 			{
-				return null;
+				// Try again without the not-null constraint, because fields in views are always nullable
+				candidates = fields.Where(f => f.Type == esriFieldType.esriFieldTypeInteger &&
+				                               (uniqueIndexes == null ||
+				                                uniqueIndexes.Any(
+					                                ix => ix.Fields.Field[0].Name == f.Name)))
+				                   .ToList();
+
+				_msg.DebugFormat("{0}: Candidates with Nullable fields have been included.",
+				                 GetName(table));
+
+				if (candidates.Count == 0)
+				{
+					return null;
+				}
 			}
 
 			if (candidates.Count == 1)
@@ -3791,10 +3834,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return candidates[0];
 			}
 
+			_msg.DebugFormat(
+				"Table {0}: Found {1} integer fields that could serve as Object ID fields. " +
+				"Fields called OBJECTID, OID, FID or ID will take precedence.", GetName(table),
+				candidates.Count);
+
 			foreach (string preferredName in new[] { "OBJECTID", "OID", "FID", "ID" })
 			{
 				IField preferredField =
-					candidates.FirstOrDefault(field => field.Name == preferredName);
+					candidates.FirstOrDefault(field => field.Name.Equals(preferredName,
+						                          StringComparison.CurrentCultureIgnoreCase));
+
 				if (preferredField != null)
 				{
 					return preferredField;
@@ -4271,11 +4321,32 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			IQueryFilter filter = new QueryFilterClass { WhereClause = whereClause };
 
+			DeleteRowsByFilter(table, filter);
+		}
+
+		public static void DeleteRowsByFilter([NotNull] ITable table,
+		                                      [NotNull] IQueryFilter filter)
+		{
 			Stopwatch watch = _msg.DebugStartTiming(
 				"Deleting rows from {0} using where clause {1}",
-				GetName(table), whereClause);
+				GetName(table), filter.WhereClause);
 
-			table.DeleteSearchedRows(filter);
+			// In some situations for (unregistered) PostGIS tables the Search() method changes the SubFields
+			// to the full list of attributes in escaped quotations marks, which makes subsequent queries
+			// using the same filter queries fail. -> One-time filters would be better!
+			string subFieldsBefore = filter.SubFields;
+
+			try
+			{
+				table.DeleteSearchedRows(filter);
+			}
+			finally
+			{
+				if (subFieldsBefore != filter.SubFields)
+				{
+					filter.SubFields = subFieldsBefore;
+				}
+			}
 
 			_msg.DebugStopTiming(watch, "Rows deleted");
 		}

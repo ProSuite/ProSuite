@@ -15,6 +15,7 @@ using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
+using ProSuite.Microservices.Client;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
@@ -60,11 +61,21 @@ namespace ProSuite.Microservices.Server.AO
 		{
 			var result = new Dictionary<long, GdbFeatureClass>();
 
+			// Create minimal workspace (for equality comparisons)
+			var workspaces = new Dictionary<long, GdbWorkspace>();
+
 			foreach (ObjectClassMsg classMsg in objectClassMsgs)
 			{
+				if (! workspaces.TryGetValue(classMsg.WorkspaceHandle, out GdbWorkspace workspace))
+				{
+					workspace = GdbWorkspace.CreateEmptyWorkspace(classMsg.WorkspaceHandle);
+					workspaces.Add(classMsg.WorkspaceHandle, workspace);
+				}
+
 				if (! result.ContainsKey(classMsg.ClassHandle))
 				{
-					GdbFeatureClass gdbTable = (GdbFeatureClass) FromObjectClassMsg(classMsg, null);
+					GdbFeatureClass gdbTable =
+						(GdbFeatureClass) FromObjectClassMsg(classMsg, workspace);
 
 					result.Add(classMsg.ClassHandle, gdbTable);
 				}
@@ -262,6 +273,18 @@ namespace ProSuite.Microservices.Server.AO
 						         ProtobufGeometryUtils.FromSpatialReferenceMsg(
 							         objectClassMsg.SpatialReference)
 				         };
+
+				if (objectClassMsg.Fields == null || objectClassMsg.Fields.Count == 0)
+				{
+					// The shape field can be important to determine Z/M awareness, etc:
+					bool hasZ = result.SpatialReference.HasZPrecision();
+					bool hasM = result.SpatialReference.HasMPrecision();
+					IField shapeField = FieldUtils.CreateShapeField(
+						result.ShapeFieldName, geometryType, result.SpatialReference,
+						0d, hasZ, hasM);
+
+					result.AddField(shapeField);
+				}
 			}
 
 			AddFields(objectClassMsg, result, geometryType);
@@ -349,7 +372,7 @@ namespace ProSuite.Microservices.Server.AO
 					xmlParameter = new XmlDatasetTestParameterValue()
 					               {
 						               TestParameterName = parameterMsg.Name,
-						               Value = parameterMsg.Value,
+						               Value = ProtobufGeomUtils.EmptyToNull(parameterMsg.Value),
 						               WorkspaceId = parameterMsg.WorkspaceId,
 						               WhereClause = parameterMsg.WhereClause
 					               };
@@ -359,7 +382,7 @@ namespace ProSuite.Microservices.Server.AO
 					xmlParameter = new XmlScalarTestParameterValue()
 					               {
 						               TestParameterName = parameterMsg.Name,
-						               Value = parameterMsg.Value
+						               Value = ProtobufGeomUtils.EmptyToNull(parameterMsg.Value)
 					               };
 				}
 
@@ -390,13 +413,20 @@ namespace ProSuite.Microservices.Server.AO
 		private static GdbFeature CreateGdbFeature(GdbObjectMsg gdbObjectMsg,
 		                                           GdbFeatureClass featureClass)
 		{
-			ISpatialReference classSpatialRef = DatasetUtils.GetSpatialReference(featureClass);
+			GdbFeature result = GdbFeature.Create((int) gdbObjectMsg.ObjectId, featureClass);
 
-			IGeometry shape =
-				ProtobufGeometryUtils.FromShapeMsg(gdbObjectMsg.Shape, classSpatialRef);
+			ShapeMsg shapeBuffer = gdbObjectMsg.Shape;
 
-			var result = GdbFeature.Create((int) gdbObjectMsg.ObjectId, featureClass);
-			result.Shape = shape;
+			if (shapeBuffer != null)
+			{
+				ISpatialReference classSpatialRef = DatasetUtils.GetSpatialReference(featureClass);
+
+				// NOTE: Setting the shape can be slow due to the Property-Set work-arounds
+				IGeometry shape =
+					ProtobufGeometryUtils.FromShapeMsg(shapeBuffer, classSpatialRef);
+
+				result.Shape = shape;
+			}
 
 			return result;
 		}
@@ -474,10 +504,10 @@ namespace ProSuite.Microservices.Server.AO
 			}
 		}
 
-		private static DateTime? FromTicks(long ticks)
+		public static DateTime? FromTicks(long ticks)
 		{
 			DateTime? defaultCreationDate =
-				ticks == 0
+				ticks <= 0
 					? (DateTime?) null
 					: new DateTime(ticks);
 			return defaultCreationDate;

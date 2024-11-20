@@ -84,6 +84,11 @@ namespace ProSuite.QA.TestFactories
 					? new HashSet<string>(fieldsToCheck, StringComparer.InvariantCultureIgnoreCase)
 					: null;
 
+			if (! DatasetUtils.IsRegisteredAsObjectClass(table))
+			{
+				_msg.Warn("QaGdbConstraintFactory is limited to OID check for unregistered tables");
+			}
+
 			IList<ConstraintNode> nodes = GdbConstraintUtils.GetGdbConstraints(
 				table, allowNullValuesForCodedValueDomains,
 				allowNullValuesForRangeDomains, fieldsToCheckDict);
@@ -117,6 +122,27 @@ namespace ProSuite.QA.TestFactories
 			}
 
 			return result;
+		}
+
+		//Change to DefinitionVersion below once this derives from QaFactoryBase again
+		protected override void SetPropertyValue(object test, TestParameter testParameter,
+		                                         object value)
+		{
+			var ignoredParameters = new[]
+			                        {
+				                        _allowNullValuesForCodedValueDomains,
+				                        _allowNullValuesForRangeDomains,
+				                        _fields
+			                        };
+
+			if (ignoredParameters.Any(
+				    param => string.Equals(testParameter.Name, param,
+				                           StringComparison.OrdinalIgnoreCase)))
+			{
+				return;
+			}
+
+			base.SetPropertyValue(test, testParameter, value);
 		}
 
 		//protected override void SetPropertyValue(object test, TestParameter testParameter,

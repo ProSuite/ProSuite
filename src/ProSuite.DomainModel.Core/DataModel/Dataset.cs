@@ -85,6 +85,13 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		public abstract DatasetType DatasetType { get; }
 
+		/// <summary>
+		/// An optional type code indicating the actual dataset implementation in systems with
+		/// more branched dataset hierarchies.
+		/// </summary>
+		[CanBeNull]
+		public virtual DatasetImplementationType ImplementationType => null;
+
 		public bool Equals(IDatasetDef otherDataset)
 		{
 			if (otherDataset is Dataset otherObjectDataset)

@@ -26,7 +26,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			IsSketchTool = true;
 		}
 
-		protected Cursor SecondPhaseCursor { get; set; }
+		protected Cursor SecondPhaseCursor { get; init; }
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
@@ -124,19 +124,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return result;
 		}
 
-		protected override bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			if (shiftIsPressed)
-			{
-				return true;
-			}
-
-			var task = QueuedTask.Run(IsInSelectionPhaseQueued);
-
-			// This can dead-lock! Remove everywhere, use async overload
-			return task.Result;
-		}
-
 		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
 			if (shiftDown)
@@ -164,11 +151,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			await ViewUtils.TryAsync(task, _msg);
 		}
 
-		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
+		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{
-			if (KeyboardUtils.IsShiftKey(k.Key))
+			if (KeyboardUtils.IsShiftKey(args.Key))
 			{
-				Cursor = IsInSelectionPhase(true) ? SelectionCursor : SecondPhaseCursor;
+				Cursor = await ViewUtils.TryAsync(IsInSelectionPhaseCoreAsync(true), _msg)
+					         ? GetSelectionCursor()
+					         : SecondPhaseCursor;
 			}
 		}
 
@@ -240,7 +229,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Cursor = SecondPhaseCursor;
 
-			SetupSketch(SketchGeometryType.Rectangle);
+			SetupSketch();
+
+			SetSketchType(SketchGeometryType.Rectangle);
 		}
 	}
 }

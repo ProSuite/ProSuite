@@ -61,9 +61,8 @@ namespace ProSuite.DomainServices.AO.QA
 				ITable table = pair.Key;
 				DatasetUtils.DeleteRows(table, oids);
 
-				_msg.VerboseDebug(
-					() =>
-						$"Deleted from {DatasetUtils.GetName(table)}: {StringUtils.Concatenate(oids, ", ")}");
+				_msg.Debug($"Deleted allowed errors from {DatasetUtils.GetName(table)}: " +
+				           $"{StringUtils.Concatenate(oids, ", ")}");
 
 				_msg.DebugStopTiming(watch, "Deleted {0} allowed errors in {1}",
 				                     oids.Count, DatasetUtils.GetName(table));

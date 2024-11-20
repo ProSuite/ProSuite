@@ -5,6 +5,11 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
+	/// <summary>
+	/// Encapsulates the physical geodatabase schema of database-backed work list items, i.e. the
+	/// work list items from DbStatusWorkLists. This could be the FGDB issue schema or the
+	/// traditional Error-Datasets from the production models.
+	/// </summary>
 	public interface IWorkListItemDatastore
 	{
 		bool Validate(out string message);
@@ -18,5 +23,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		// TODO: Move this to another more dedicated interface IIssueTableSchema
 		IAttributeReader CreateAttributeReader([NotNull] TableDefinition definition,
 		                                       [NotNull] params Attributes[] attributes);
+
+		string SuggestWorkListName();
+
+		bool IsSameWorkListDefinition(string existingDefinitionFile);
 	}
 }

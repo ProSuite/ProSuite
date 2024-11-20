@@ -3,138 +3,191 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Input;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.AGP.Editing.Picker;
+
+public abstract class PickerPrecedenceBase : IPickerPrecedence
 {
-	// todo daro IDisposable not necessary?
-	public abstract class PickerPrecedenceBase : IPickerPrecedence, IDisposable
+	[UsedImplicitly]
+	protected PickerPrecedenceBase(Geometry sketchGeometry,
+	                               int selectionTolerance,
+	                               Point pickerLocation)
 	{
-		protected List<Key> PressedKeys { get; } = new();
+		SketchGeometry = sketchGeometry;
+		SelectionTolerance = selectionTolerance;
+		PickerLocation = pickerLocation;
 
-		[UsedImplicitly]
-		protected PickerPrecedenceBase(Geometry selectionGeometry,
-		                               int selectionTolerance,
-		                               Point pickerLocation)
+		IsSingleClick = PickerUtils.IsSingleClick(sketchGeometry);
+		SpatialRelationship = PickerUtils.GetSpatialRelationship();
+		SelectionCombinationMethod = PickerUtils.GetSelectionCombinationMethod();
+
+		AreModifierKeysPressed();
+	}
+
+	protected List<Key> PressedKeys { get; } = new();
+
+	/// <summary>
+	/// The original sketch geometry, without expansion or simplification.
+	/// </summary>
+	private Geometry SketchGeometry { get; set; }
+
+	public int SelectionTolerance { get; }
+
+	public bool IsSingleClick { get; }
+
+	public bool AggregateItems =>
+		PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl);
+
+	public SelectionCombinationMethod SelectionCombinationMethod { get; }
+
+	public SpatialRelationship SpatialRelationship { get; }
+
+	/// <summary>
+	/// Side-effect-free method that returns the geometry which can be used for spatial queries.
+	/// For single-click picks, it returns the geometry expanded by the <see cref="SelectionTolerance" />.
+	/// This method must be called on the CIM thread.
+	/// </summary>
+	/// <returns></returns>
+	public Geometry GetSelectionGeometry()
+	{
+		// TODO: Simplify polygons?
+		return PickerUtils.EnsureNonEmpty(SketchGeometry, SelectionTolerance);
+	}
+
+	public virtual IPickableItemsFactory CreateItemsFactory()
+	{
+		if (IsSingleClick)
 		{
-			SelectionGeometry = selectionGeometry;
-			SelectionTolerance = selectionTolerance;
-			PickerLocation = pickerLocation;
-
-			IsSingleClick = PickerUtils.IsSingleClick(SelectionGeometry);
-
-			AreModifierKeysPressed();
+			return CreateItemsFactory<IPickableFeatureItem>();
 		}
 
-		public Geometry SelectionGeometry { get; set; }
-
-		public int SelectionTolerance { get; }
-
-		public bool IsSingleClick { get; }
-
-		public Point PickerLocation { get; set; }
-
-		public void AreModifierKeysPressed()
+		if (AggregateItems)
 		{
-			if (KeyboardUtils.IsAltDown())
-			{
-				PressedKeys.Add(Key.LeftAlt);
-				PressedKeys.Add(Key.RightAlt);
-			}
-
-			if (KeyboardUtils.IsCtrlDown())
-			{
-				PressedKeys.Add(Key.LeftCtrl);
-				PressedKeys.Add(Key.RightCtrl);
-			}
-
-			if (KeyboardUtils.IsShiftDown())
-			{
-				PressedKeys.Add(Key.LeftShift);
-				PressedKeys.Add(Key.LeftShift);
-			}
+			return CreateItemsFactory<IPickableFeatureClassItem>();
 		}
 
-		public void EnsureGeometryNonEmpty()
+		return CreateItemsFactory<IPickableFeatureItem>();
+	}
+
+	public virtual IPickableItemsFactory CreateItemsFactory<T>() where T : IPickableItem
+	{
+		bool isRequestingFeatures =
+			typeof(IPickableFeatureItem).IsAssignableFrom(typeof(T));
+
+		bool isRequestingFeatureClasses =
+			typeof(IPickableFeatureClassItem).IsAssignableFrom(typeof(T));
+
+		if (isRequestingFeatures)
 		{
-			SelectionGeometry = PickerUtils.EnsureNonEmpty(SelectionGeometry, SelectionTolerance);
+			return new PickableFeatureItemsFactory();
 		}
 
-		public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
-		                                        bool areaSelect = false)
+		if (isRequestingFeatureClasses)
 		{
-			if (PressedKeys.Contains(Key.LeftShift) || PressedKeys.Contains(Key.RightShift))
-			{
-				return PickerMode.ShowPicker;
-			}
-
-			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
-			{
-				return PickerMode.ShowPicker;
-			}
-
-			areaSelect = ! IsSingleClick;
-			if (areaSelect)
-			{
-				return PickerMode.PickAll;
-			}
-
-			if (CountLowestShapeDimensionFeatures(orderedSelection) > 1)
-			{
-				return PickerMode.ShowPicker;
-			}
-
-			return PickerMode.PickBest;
+			return new PickableFeatureClassItemsFactory();
 		}
 
-		public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
+		throw new ArgumentOutOfRangeException($"Unkown type of {nameof(IPickableItem)}");
+	}
+
+	[CanBeNull]
+	public virtual IPickableItem PickBest(IEnumerable<IPickableItem> items)
+	{
+		return items.FirstOrDefault();
+	}
+
+	public Point PickerLocation { get; set; }
+
+	public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
+	{
+		if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
 		{
-			return items;
+			return PickerMode.PickAll;
 		}
 
-		[CanBeNull]
-		public virtual T PickBest<T>(IEnumerable<IPickableItem> items)
-			where T : class, IPickableItem
+		if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
 		{
-			return items.FirstOrDefault() as T;
+			return PickerMode.ShowPicker;
 		}
 
-		protected static int CountLowestShapeDimensionFeatures(
-			IEnumerable<FeatureSelectionBase> layerSelection)
+		bool areaSelect = ! IsSingleClick;
+		if (areaSelect)
 		{
-			var count = 0;
+			return PickerMode.PickAll;
+		}
 
-			int? lastShapeDimension = null;
+		if (CountLowestShapeDimension(orderedSelection) > 1)
+		{
+			return PickerMode.ShowPicker;
+		}
 
-			foreach (FeatureSelectionBase selection in layerSelection)
+		return PickerMode.PickBest;
+	}
+
+	public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
+	{
+		return items;
+	}
+
+	public void Dispose()
+	{
+		SketchGeometry = null;
+		PressedKeys.Clear();
+	}
+
+	private void AreModifierKeysPressed()
+	{
+		if (KeyboardUtils.IsAltDown())
+		{
+			PressedKeys.Add(Key.LeftAlt);
+			PressedKeys.Add(Key.RightAlt);
+		}
+
+		if (KeyboardUtils.IsCtrlDown())
+		{
+			PressedKeys.Add(Key.LeftCtrl);
+			PressedKeys.Add(Key.RightCtrl);
+		}
+
+		if (KeyboardUtils.IsShiftDown())
+		{
+			PressedKeys.Add(Key.LeftShift);
+			PressedKeys.Add(Key.RightShift);
+		}
+	}
+
+	protected static int CountLowestShapeDimension(
+		IEnumerable<FeatureSelectionBase> layerSelection)
+	{
+		var count = 0;
+
+		int? lastShapeDimension = null;
+
+		foreach (FeatureSelectionBase selection in layerSelection)
+		{
+			if (lastShapeDimension == null)
 			{
-				if (lastShapeDimension == null)
-				{
-					lastShapeDimension = selection.ShapeDimension;
-
-					count += selection.GetCount();
-
-					continue;
-				}
-
-				if (lastShapeDimension < selection.ShapeDimension)
-				{
-					continue;
-				}
+				lastShapeDimension = selection.ShapeDimension;
 
 				count += selection.GetCount();
+
+				continue;
 			}
 
-			return count;
+			if (lastShapeDimension < selection.ShapeDimension)
+			{
+				continue;
+			}
+
+			count += selection.GetCount();
 		}
 
-		public void Dispose()
-		{
-			SelectionGeometry = null;
-			PressedKeys.Clear();
-		}
+		return count;
 	}
 }

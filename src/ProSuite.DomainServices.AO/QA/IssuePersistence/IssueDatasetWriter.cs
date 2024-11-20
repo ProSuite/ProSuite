@@ -327,12 +327,9 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		{
 			Assert.ArgumentNotNull(filter, nameof(filter));
 
-			Stopwatch watch = _msg.DebugStartTiming();
-
 			IQueryFilter tableSpecificFilter = AdaptFilterToErrorTable(filter);
-			Table.DeleteSearchedRows(tableSpecificFilter);
 
-			_msg.DebugStopTiming(watch, "Errors deleted in {0}", DatasetName);
+			DatasetUtils.DeleteRowsByFilter(Table, tableSpecificFilter);
 		}
 
 		public void DeleteErrorObjects(

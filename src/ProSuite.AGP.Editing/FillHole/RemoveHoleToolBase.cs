@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -33,16 +34,14 @@ namespace ProSuite.AGP.Editing.FillHole
 		{
 			GeomIsSimpleAsFeature = false;
 
-			SelectionCursor = ToolUtils.GetCursor(Resources.RemoveHoleToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.RemoveHoleToolCursorShift);
-			SecondPhaseCursor = ToolUtils.GetCursor(Resources.RemoveHoleToolCursorProcess);
+			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveHoleOverlay, 10, 10);
 		}
 
 		protected FillHoleOptions RemoveHoleOptions { get; } = new FillHoleOptions();
 
 		protected abstract ICalculateHolesService MicroserviceClient { get; }
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
 
@@ -59,6 +58,13 @@ namespace ProSuite.AGP.Editing.FillHole
 		{
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+		}
+
+		protected override CancelableProgressorSource GetProgressorSource()
+		{
+			// Disable the progressor because removing holes is typically fast,
+			// and the users potentially want to continue working already.
+			return null;
 		}
 
 		protected override void LogPromptForSelection()
@@ -243,6 +249,47 @@ namespace ProSuite.AGP.Editing.FillHole
 		protected abstract IList<Holes> SelectHoles([CanBeNull] IList<Holes> holes,
 		                                            [NotNull] Geometry sketch);
 
-		protected abstract CancelableProgressor GetHoleCalculationProgressor();
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
+		}
 	}
 }

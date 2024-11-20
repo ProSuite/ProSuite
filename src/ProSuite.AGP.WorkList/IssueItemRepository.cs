@@ -34,7 +34,7 @@ namespace ProSuite.AGP.WorkList
 		/// <param name="tableSchema">The known table schema. If null, a minimal, hard-coded schema will be
 		/// used that contains only the status and the geometry which is good enough for layer display but
 		/// not for the navigator! The table schema can be updated later (before the navigator is shown)
-		/// using <see cref="IWorkItemRepository.UpdateStateRepository"/></param>.
+		/// using <see cref="IWorkItemRepository.UpdateTableSchemaInfo"/></param>.
 		public IssueItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
 		                           IWorkItemStateRepository workItemStateRepository,
 		                           [CanBeNull] IWorkListItemDatastore tableSchema = null)
