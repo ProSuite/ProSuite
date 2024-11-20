@@ -253,6 +253,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					_msg.Info("Toggle MoveOpenJawEndJunction");
 					_advancedReshapeToolOptions.MoveOpenJawEndJunction =
 						! _advancedReshapeToolOptions.MoveOpenJawEndJunction;
+
+					_updateFeedbackTask = UpdateFeedbackAsync(_nonDefaultSideMode);
+
+					await _updateFeedbackTask;
+
+
 				}
 			}
 			catch (Exception e)
@@ -612,7 +618,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			[NotNull] Polyline sketchLine,
 			[NotNull] IList<Feature> polylineSelection)
 		{
-			// TODO: check options (allow/disallow)
 
 			MapPoint endPoint = null;
 
