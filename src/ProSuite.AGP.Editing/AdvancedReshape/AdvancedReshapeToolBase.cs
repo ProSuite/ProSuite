@@ -378,7 +378,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					_cancellationTokenSource = new CancellationTokenSource(timeout);
 
 					ReshapeResult result = MicroserviceClient.Reshape(
-						selection, polyline, potentiallyAffectedFeatures, true, true,
+						selection, polyline, potentiallyAffectedFeatures, _advancedReshapeToolOptions.MoveOpenJawEndJunction, true,
 						_nonDefaultSideMode, _cancellationTokenSource.Token);
 
 					if (result == null)
