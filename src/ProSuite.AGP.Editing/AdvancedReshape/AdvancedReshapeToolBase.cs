@@ -46,7 +46,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		[CanBeNull] private AdvancedReshapeFeedback _feedback;
 		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
-		private ReshapeToolOptions _advancedReshapeToolOptions;
+		protected ReshapeToolOptions _advancedReshapeToolOptions;
 		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
 
 		private Task<bool> _updateFeedbackTask;
@@ -378,8 +378,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					_cancellationTokenSource = new CancellationTokenSource(timeout);
 
 					ReshapeResult result = MicroserviceClient.Reshape(
-						selection, polyline, potentiallyAffectedFeatures, _advancedReshapeToolOptions.MoveOpenJawEndJunction, true,
-						_nonDefaultSideMode, _cancellationTokenSource.Token);
+						selection, polyline, potentiallyAffectedFeatures, true, true,
+						_nonDefaultSideMode, _cancellationTokenSource.Token,
+						_advancedReshapeToolOptions.MoveOpenJawEndJunction);
 
 					if (result == null)
 					{

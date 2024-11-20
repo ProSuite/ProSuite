@@ -36,7 +36,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_openJawReplacedEndPointOverlay?.Dispose();
 
 			// Make openJawEndSymbol azure or celest blue, depending  on state of MoveOpenJawEndJunction
-			_openJawEndSymbol = _advancedReshapeToolOptions.MoveOpenJawEndJunction ? CreateHollowCircle(0, 0, 200) : CreateHollowCircle(0, 200, 255);
+			_openJawEndSymbol = _advancedReshapeToolOptions.MoveOpenJawEndJunction ? CreateHollowCircle(0, 200, 255) : CreateHollowCircle(0, 0, 200);
 
 			if (point != null)
 			{
