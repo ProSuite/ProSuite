@@ -6,13 +6,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 	{
 		#region Overridable Settings
 
-		public OverridableSetting<bool> AllowOpenJawReshape { get; set; }
+		public OverridableSetting<bool> ShowPreview { get; set; }
 
-		public OverridableSetting<bool> MultiReshapeAsUnion { get; set; }
+		public OverridableSetting<bool> MoveOpenJawEndJunction { get; set; }
 
-		public OverridableSetting<bool> TryReshapeNonDefault { get; set; }
+		public OverridableSetting<bool> RemainInSketchMode { get; set; }
 
-		public OverridableSetting<bool> UseNonDefaultReshapeSide { get; set; }
+		public OverridableSetting<bool> UseTopologyTypeSelection { get; set; }
 
 		#endregion
 
@@ -20,10 +20,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			var result = new PartialReshapeToolOptions
 			             {
-				             AllowOpenJawReshape = TryClone(AllowOpenJawReshape), // YReshape
-				             MultiReshapeAsUnion = TryClone(MultiReshapeAsUnion), // "N" Key (N is already used by AGP)
-				             TryReshapeNonDefault = TryClone(TryReshapeNonDefault), // M Key
-				             UseNonDefaultReshapeSide = TryClone(UseNonDefaultReshapeSide) // S Key
+				             ShowPreview = TryClone(ShowPreview), 
+				             MoveOpenJawEndJunction = TryClone(MoveOpenJawEndJunction), 
+				             RemainInSketchMode = TryClone(RemainInSketchMode), 
+				             UseTopologyTypeSelection = TryClone(UseTopologyTypeSelection)
 			             };
 			return result;
 		}

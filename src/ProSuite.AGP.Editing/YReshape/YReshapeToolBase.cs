@@ -19,8 +19,9 @@ namespace ProSuite.AGP.Editing.YReshape
 {
 	public abstract class YReshapeToolBase : AdvancedReshapeToolBase
 	{
-		private OverridableSettingsProvider<PartialYReshapeToolOptions> _settingsProvider; //The specific YReshape Settings
+		protected override string OptionsFileName => "YReshapeToolOptions.xml";
 
+		
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
