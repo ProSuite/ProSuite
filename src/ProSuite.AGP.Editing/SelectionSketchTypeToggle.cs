@@ -1,12 +1,10 @@
 using System;
-using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing;
 
@@ -14,6 +12,7 @@ public class SelectionSketchTypeToggle
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	// todo: daro rename to _cursor, _shiftCursor, _lassoCursor, (_cursorLasso), _polygonCursor
 	[NotNull] private readonly ISketchTool _tool;
 	[NotNull] private readonly Cursor _selectionCursor;
 	[NotNull] private readonly Cursor _selectionCursorLasso;
@@ -33,10 +32,14 @@ public class SelectionSketchTypeToggle
 	                                               [NotNull] Cursor cursor,
 	                                               [NotNull] Cursor lassoCursor,
 	                                               [NotNull] Cursor polygonCursor,
-	                                               SketchGeometryType defaultSelectionSketchType)
+	                                               SketchGeometryType defaultSelectionSketchType,
+	                                               bool defaultSketchTypeOnFinishSketch = false)
 	{
 		return new SelectionSketchTypeToggle(tool, cursor, lassoCursor,
-		                                     polygonCursor, defaultSelectionSketchType);
+		                                     polygonCursor, defaultSelectionSketchType)
+		       {
+			       DefaultSketchTypeOnFinishSketch = defaultSketchTypeOnFinishSketch
+		       };
 	}
 
 	private SelectionSketchTypeToggle([NotNull] ISketchTool tool,
@@ -51,8 +54,6 @@ public class SelectionSketchTypeToggle
 		_selectionCursorPolygon = polygonCursor ?? throw new ArgumentNullException(nameof(polygonCursor));
 
 		_defaultSelectionSketchType = defaultSelectionSketchType;
-
-		SetSketchType(defaultSelectionSketchType);
 
 		_tool.SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
 		_tool.SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
@@ -79,20 +80,28 @@ public class SelectionSketchTypeToggle
 	/// </summary>
 	public void ResetOrDefault()
 	{
-		if (_previousType == SketchGeometryType.Polygon)
+		if (! DefaultSketchTypeOnFinishSketch)
 		{
-			TrySetSketchType(SketchGeometryType.Polygon);
-			return;
-		}
+			if (_previousType == SketchGeometryType.Polygon)
+			{
+				TrySetSketchType(SketchGeometryType.Polygon);
+				SetCursor(SketchGeometryType.Polygon);
+				return;
+			}
 
-		if (_previousType == SketchGeometryType.Lasso)
-		{
-			TrySetSketchType(SketchGeometryType.Lasso);
-			return;
+			if (_previousType == SketchGeometryType.Lasso)
+			{
+				TrySetSketchType(SketchGeometryType.Lasso);
+				SetCursor(SketchGeometryType.Lasso);
+				return;
+			}
 		}
 
 		TrySetSketchType(_defaultSelectionSketchType);
+		SetCursor(_defaultSelectionSketchType);
 	}
+
+	public bool DefaultSketchTypeOnFinishSketch { get; set; }
 
 	public void Toggle(SketchGeometryType? sketchType)
 	{
@@ -118,17 +127,12 @@ public class SelectionSketchTypeToggle
 			}
 
 			TrySetSketchType(type);
+			SetCursor(type);
 		}
 		catch (Exception ex)
 		{
 			Gateway.LogError(ex, _msg);
 		}
-	}
-
-	private static bool ShiftDown()
-	{
-		return KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-		       KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
 	}
 
 	private void TrySetSketchType(SketchGeometryType? type)
@@ -145,33 +149,19 @@ public class SelectionSketchTypeToggle
 	{
 		_tool.SetSketchType(type);
 
-		SetCursor(type);
-
-		_msg.Debug($"{_tool.Caption}: {type} selection sketch");
-
+		_msg.Debug($"{_tool.Caption}: {type} sketch");
 		_previousType = type;
 	}
 
-	public void SetCursor(SketchGeometryType? type)
+	public void SetCursor(SketchGeometryType? type, bool shiftDown = false)
 	{
-		Cursor cursor = GetCursor(type);
+		Cursor cursor = GetCursor(type, shiftDown);
 
 		_tool.SetCursor(cursor);
 	}
 
-	private Cursor GetCursor(SketchGeometryType? geometryType)
+	private Cursor GetCursor(SketchGeometryType? geometryType, bool shiftDown)
 	{
-		bool shiftDown = false;
-
-		if (Application.Current.Dispatcher.CheckAccess())
-		{
-			shiftDown = ShiftDown();
-		}
-		else
-		{
-			Application.Current.Dispatcher.Invoke(() => { shiftDown = ShiftDown(); });
-		}
-
 		switch (geometryType)
 		{
 			case SketchGeometryType.Rectangle:

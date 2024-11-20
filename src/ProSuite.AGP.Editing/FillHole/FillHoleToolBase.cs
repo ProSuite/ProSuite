@@ -40,8 +40,6 @@ namespace ProSuite.AGP.Editing.FillHole
 		protected FillHoleToolBase()
 		{
 			GeomIsSimpleAsFeature = false;
-
-			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.FillHoleOverlay, 10, 10);
 		}
 
 		protected FillHoleOptions FillHoleOptions { get; } = new FillHoleOptions();
@@ -341,6 +339,8 @@ namespace ProSuite.AGP.Editing.FillHole
 			return selectedShapes;
 		}
 
+		#region selection cursors
+
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
@@ -383,5 +383,28 @@ namespace ProSuite.AGP.Editing.FillHole
 			                              Resources.Polygon,
 			                              Resources.Shift);
 		}
+
+		#endregion
+
+		#region second phase cursors
+
+		protected override Cursor GetSecondPhaseCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.FillHoleOverlay, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.FillHoleOverlay,
+			                              Resources.Lasso, null, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.FillHoleOverlay,
+			                              Resources.Polygon, null, 10, 10);
+		}
+
+		#endregion
 	}
 }

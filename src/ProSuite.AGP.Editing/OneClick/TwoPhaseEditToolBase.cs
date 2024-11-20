@@ -9,16 +9,17 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
-using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
 	public abstract class TwoPhaseEditToolBase : OneClickToolBase
 	{
+		private SelectionSketchTypeToggle _sketchType;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected TwoPhaseEditToolBase()
@@ -26,7 +27,29 @@ namespace ProSuite.AGP.Editing.OneClick
 			IsSketchTool = true;
 		}
 
-		protected Cursor SecondPhaseCursor { get; init; }
+		protected override async Task<bool> OnToolActivatedCoreAsync(bool hasMapViewChanged)
+		{
+			return await QueuedTaskUtils.Run(() =>
+			{
+				_sketchType =
+					SelectionSketchTypeToggle.Create(this,
+					                                 GetSecondPhaseCursor(),
+					                                 GetSecondPhaseCursorLasso(),
+					                                 GetSecondPhaseCursorPolygon(),
+					                                 GetSelectionSketchGeometryType(),
+					                                 DefaultSketchTypeOnFinishSketch);
+
+				// NOTE daro: no shift cursors for second phase.
+
+				return true;
+			});
+		}
+
+		protected abstract Cursor GetSecondPhaseCursor();
+
+		protected abstract Cursor GetSecondPhaseCursorLasso();
+
+		protected abstract Cursor GetSecondPhaseCursorPolygon();
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
@@ -121,6 +144,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				return SelectAndProcessDerivedGeometry(selection, sketchGeometry, progressor);
 			});
 
+			StartSecondPhase();
+
 			return result;
 		}
 
@@ -151,13 +176,39 @@ namespace ProSuite.AGP.Editing.OneClick
 			await ViewUtils.TryAsync(task, _msg);
 		}
 
-		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
+		protected override async Task ShiftReleasedCoreAsync()
 		{
-			if (KeyboardUtils.IsShiftKey(args.Key))
+			if (await QueuedTask.Run(IsInSelectionPhaseQueued))
 			{
-				Cursor = await ViewUtils.TryAsync(IsInSelectionPhaseCoreAsync(true), _msg)
-					         ? GetSelectionCursor()
-					         : SecondPhaseCursor;
+				await base.ShiftReleasedCoreAsync();
+			}
+			else
+			{
+				_sketchType.SetCursor(GetSketchType(), shiftDown: false);
+			}
+		}
+
+		protected override async Task SetupLassoSketchAsync()
+		{
+			if (await IsInSelectionPhaseCoreAsync(shiftDown: false))
+			{
+				await base.SetupLassoSketchAsync();
+			}
+			else
+			{
+				_sketchType.Toggle(SketchGeometryType.Lasso);
+			}
+		}
+
+		protected override async Task SetupPolygonSketchAsync()
+		{
+			if (await IsInSelectionPhaseCoreAsync(shiftDown: false))
+			{
+				await base.SetupPolygonSketchAsync();
+			}
+			else
+			{
+				_sketchType.Toggle(SketchGeometryType.Polygon);
 			}
 		}
 
@@ -227,11 +278,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void StartSecondPhase()
 		{
-			Cursor = SecondPhaseCursor;
-
 			SetupSketch();
 
-			SetSketchType(SketchGeometryType.Rectangle);
+			_sketchType.ResetOrDefault();
 		}
 	}
 }

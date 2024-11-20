@@ -14,7 +14,6 @@ using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Picker;
-using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
@@ -43,15 +42,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			IsSketchTool = true;
 
 			GeomIsSimpleAsFeature = false;
-
-			PolygonSketchCursor = ToolUtils.GetCursor(Resources.PolygonDrawerCursor);
 		}
 
 		protected Cursor TargetSelectionCursor { get; set; }
 		protected Cursor TargetSelectionCursorShift { get; set; }
 
 		protected bool DisplayTargetLines { get; set; }
-		protected Cursor PolygonSketchCursor { get; set; }
 
 		protected abstract string EditOperationDescription { get; }
 
@@ -206,16 +202,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 
 			return await QueuedTask.Run(() => UpdateFeatures(selection, cutSubcurves, progressor));
-		}
-
-		protected override void SetupPolygonSketchCore()
-		{
-			SetCursor(PolygonSketchCursor);
-		}
-
-		protected override void SetupLassoSketchCore()
-		{
-			SetCursor(PolygonSketchCursor);
 		}
 
 		protected override async Task ResetSketchCoreAsync()
