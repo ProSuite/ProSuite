@@ -19,6 +19,7 @@ namespace ProSuite.AGP.Editing.OneClick
 {
 	public abstract class TwoPhaseEditToolBase : OneClickToolBase
 	{
+		// todo: daro rename
 		private SelectionSketchTypeToggle _sketchType;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -40,7 +41,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					                                 DefaultSketchTypeOnFinishSketch);
 
 				// NOTE daro: no shift cursors for second phase.
-
 				return true;
 			});
 		}
@@ -167,6 +167,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				() =>
 				{
 					ClearSelection();
+
+					// todo: daro Do not reset feedback if in polygon sketch mode: Esc
+					// should only clear sketch not the feedback.
 
 					ResetDerivedGeometries();
 

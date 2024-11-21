@@ -468,6 +468,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			UseSnapping = true;
 			CompleteSketchOnMouseUp = false;
+
 			SetSketchType(GetSketchGeometryType());
 
 			SetCursor(SketchCursor);
@@ -552,6 +553,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return CanStartSketchPhaseCore(selectedFeatures);
 		}
 
+		// todo: daro drop
 		private async Task ResetSketchAsync()
 		{
 			Geometry currentSketch = await GetCurrentSketchAsync();

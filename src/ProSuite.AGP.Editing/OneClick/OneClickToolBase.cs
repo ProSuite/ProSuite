@@ -187,6 +187,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
 		{
+			
 			var options = new VertexSymbolOptions(vertexSymbolType)
 			              {
 				              Color = ColorUtils.CreateRGB(0, 0, 0, 0),
@@ -313,12 +314,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				if (args.Key == _keyPolygonDraw)
 				{
-					SetupPolygonSketchAsync();
+					await SetupPolygonSketchAsync();
 				}
 
 				if (args.Key == _keyLassoDraw)
 				{
-					SetupLassoSketchAsync();
+					await SetupLassoSketchAsync();
 				}
 
 				if (KeyboardUtils.IsShiftKey(args.Key))
@@ -434,7 +435,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual async Task ShiftPressedCoreAsync()
 		{
-			if (await IsInSelectionPhaseCoreAsync(true))
+			if (await IsInSelectionPhaseAsync())
 			{
 				_selectionSketchType.SetCursor(GetSketchType(), shiftDown: true);
 			}
@@ -442,7 +443,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual async Task ShiftReleasedCoreAsync()
 		{
-			if (await IsInSelectionPhaseCoreAsync(true))
+			if (await IsInSelectionPhaseAsync())
 			{
 				_selectionSketchType.SetCursor(GetSketchType(), shiftDown: false);
 			}
@@ -659,6 +660,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return ViewUtils.TryAsync(IsInSelectionPhaseCoreAsync(shiftDown), _msg);
 		}
 
+		// todo: daro revise shift down
 		protected virtual Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
 			return Task.FromResult(false);
