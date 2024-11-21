@@ -133,6 +133,20 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnSelectionPhaseStarted()
 		{
+			if (QueuedTask.OnWorker)
+			{
+				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+			}
+			else
+			{
+				QueuedTask.Run(() =>
+				{
+					SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+					SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+				});
+			}
+
 			IsInSketchPhase = false;
 		}
 
@@ -438,6 +452,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			SetSketchType(GetSketchGeometryType());
 
 			SetCursor(SketchCursor);
+
+			// todo: daro to Utils?
+			if (QueuedTask.OnWorker)
+			{
+				ResetSketchVertexSymbolOptions();
+			}
+			else
+			{
+				QueuedTask.Run(ResetSketchVertexSymbolOptions);
+			}
 
 			EditingTemplate relevanteTemplate = GetSketchTemplate();
 
