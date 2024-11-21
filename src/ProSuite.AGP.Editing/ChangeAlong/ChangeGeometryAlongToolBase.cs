@@ -36,6 +36,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected ChangeAlongCurves ChangeAlongCurves { get; private set; }
 
 		private ChangeAlongFeedback _feedback;
+		private SelectionSketchTypeToggle _targetSketchType;
 
 		protected ChangeGeometryAlongToolBase()
 		{
@@ -43,9 +44,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			GeomIsSimpleAsFeature = false;
 		}
-
-		protected Cursor TargetSelectionCursor { get; set; }
-		protected Cursor TargetSelectionCursorShift { get; set; }
 
 		protected bool DisplayTargetLines { get; set; }
 
@@ -92,6 +90,38 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				            ShowTargetLines = DisplayTargetLines
 			            };
 		}
+
+		protected override async Task<bool> OnToolActivatedCoreAsync(bool hasMapViewChanged)
+		{
+			return await QueuedTaskUtils.Run(() =>
+			{
+				_targetSketchType =
+					SelectionSketchTypeToggle.Create(this,
+													 GetTargetSelectionCursor(),
+													 GetTargetSelectionCursorLasso(),
+													 GetTargetSelectionCursorPolygon(),
+					                                 GetSelectionSketchGeometryType(),
+					                                 DefaultSketchTypeOnFinishSketch);
+
+				_targetSketchType.SetSelectionCursorShift(GetTargetSelectionCursorShift());
+				_targetSketchType.SetSelectionCursorLassoShift(GetTargetSelectionCursorLassoShift());
+				_targetSketchType.SetSelectionCursorPolygonShift(GetTargetSelectionCursorPolygonShift());
+
+				return true;
+			});
+		}
+
+		protected abstract Cursor GetTargetSelectionCursor();
+
+		protected abstract Cursor GetTargetSelectionCursorShift();
+
+		protected abstract Cursor GetTargetSelectionCursorLasso();
+
+		protected abstract Cursor GetTargetSelectionCursorLassoShift();
+
+		protected abstract Cursor GetTargetSelectionCursorPolygon();
+
+		protected abstract Cursor GetTargetSelectionCursorPolygonShift();
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
@@ -210,11 +240,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			{
 				if (! await IsInSelectionPhaseAsync())
 				{
-					SetCursor(TargetSelectionCursor);
+					_targetSketchType.ResetOrDefault();
 				}
 				else
 				{
-					SetCursor(GetSelectionCursor());
+					SetupSelectionSketch();
 				}
 			}
 			catch (Exception ex)
@@ -223,23 +253,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
-		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
-		{
-			if (await IsInSelectionPhaseAsync())
-			{
-				return;
-			}
-
-			SetCursor(TargetSelectionCursor);
-		}
-
 		protected override async Task ShiftPressedCoreAsync()
 		{
 			try
 			{
 				if (HasReshapeCurves())
 				{
-					SetCursor(TargetSelectionCursorShift);
+					_targetSketchType.SetCursor(GetSketchType(), shiftDown: true);
 				}
 				else
 				{
@@ -254,21 +274,46 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override async Task ShiftReleasedCoreAsync()
 		{
+			// TODO: try catch not necessary
 			try
 			{
 				// From the subclass' point of view SHIFT is still pressed:
-				if (! await IsInSelectionPhaseAsync())
+				if (await IsInSelectionPhaseAsync())
 				{
-					SetCursor(TargetSelectionCursor);
+					await base.ShiftReleasedCoreAsync();
 				}
 				else
 				{
-					await base.ShiftReleasedCoreAsync();
+					_targetSketchType.SetCursor(GetSketchType(), shiftDown: false);
 				}
 			}
 			catch (Exception ex)
 			{
 				ViewUtils.ShowError(ex, _msg);
+			}
+		}
+
+		protected override async Task SetupLassoSketchAsync()
+		{
+			if (await IsInSelectionPhaseCoreAsync(shiftDown: false))
+			{
+				await base.SetupLassoSketchAsync();
+			}
+			else
+			{
+				_targetSketchType.Toggle(SketchGeometryType.Lasso);
+			}
+		}
+
+		protected override async Task SetupPolygonSketchAsync()
+		{
+			if (await IsInSelectionPhaseCoreAsync(shiftDown: false))
+			{
+				await base.SetupPolygonSketchAsync();
+			}
+			else
+			{
+				_targetSketchType.Toggle(SketchGeometryType.Polygon);
 			}
 		}
 
@@ -349,11 +394,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private void StartTargetSelectionPhase()
 		{
-			Cursor = TargetSelectionCursor;
-
 			SetupSketch();
 
-			SetSketchType(SketchGeometryType.Rectangle);
+			_targetSketchType.ResetOrDefault();
 		}
 
 		private async Task<bool> SelectTargetsAsync(

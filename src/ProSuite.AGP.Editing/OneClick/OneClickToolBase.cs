@@ -455,7 +455,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			OnSelectionPhaseStarted();
 		}
 
-		private void SetupSelectionSketch()
+		protected void SetupSelectionSketch()
 		{
 			ClearSketchAsync();
 

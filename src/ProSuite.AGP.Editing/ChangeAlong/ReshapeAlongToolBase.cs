@@ -15,14 +15,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected ReshapeAlongToolBase()
-		{
-			TargetSelectionCursor =
-				ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay, 10, 10);
-			TargetSelectionCursorShift = ToolUtils.CreateCursor(
-				Resources.Cross, Resources.ReshapeAlongOverlay, Resources.Shift, null, 10, 10);
-		}
-
 		protected override string EditOperationDescription => "Reshape along";
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
@@ -125,6 +117,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return result;
 		}
 
+		#region first phase selection cursor
+
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
@@ -167,5 +161,46 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			                              Resources.Polygon,
 			                              Resources.Shift);
 		}
+
+		#endregion
+
+		#region second phase target selection cursor
+
+		protected override Cursor GetTargetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay, 10, 10);
+		}
+
+		protected override Cursor GetTargetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay,
+			                              Resources.Shift, null, 10, 10);
+		}
+
+		protected override Cursor GetTargetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay,
+			                              Resources.Lasso, null, 10, 10);
+		}
+
+		protected override Cursor GetTargetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay,
+			                              Resources.Lasso, Resources.Shift, 10, 10);
+		}
+
+		protected override Cursor GetTargetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay,
+			                              Resources.Polygon, null, 10, 10);
+		}
+
+		protected override Cursor GetTargetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay,
+			                              Resources.Polygon, Resources.Shift, 10, 10);
+		}
+
+		#endregion
 	}
 }
