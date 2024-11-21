@@ -55,6 +55,7 @@ public class SelectionSketchTypeToggle
 
 		_defaultSelectionSketchType = defaultSelectionSketchType;
 
+		// todo: daro not here? This class is not only for selection sketch anymore.
 		_tool.SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
 		_tool.SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
 	}

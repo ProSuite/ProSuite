@@ -250,7 +250,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task SetupLassoSketchAsync()
 		{
-			if (await IsInSelectionPhaseCoreAsync(shiftDown: false))
+			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
 				await base.SetupLassoSketchAsync();
 			}
@@ -259,7 +259,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task SetupPolygonSketchAsync()
 		{
-			if (await IsInSelectionPhaseCoreAsync(shiftDown: false))
+			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
 				await base.SetupPolygonSketchAsync();
 			}
