@@ -245,6 +245,24 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		protected override async Task SetupLassoSketchAsync()
+		{
+			if (await IsInSelectionPhaseCoreAsync(shiftDown: false))
+			{
+				await base.SetupLassoSketchAsync();
+			}
+			// Else do nothing: no lasso in construction sketch phase.
+		}
+
+		protected override async Task SetupPolygonSketchAsync()
+		{
+			if (await IsInSelectionPhaseCoreAsync(shiftDown: false))
+			{
+				await base.SetupPolygonSketchAsync();
+			}
+			// Else do nothing: no polygon sketch cursor in construction sketch phase.
+		}
+
 		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{
 			// todo daro more ViewUtils
