@@ -142,7 +142,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 			if (selectionProcessed)
 			{
-				StartConstructionPhase();
+				await StartConstructionPhaseAsync();
 			}
 			else
 			{
@@ -388,7 +388,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 					return true; // sketchCompleteEventHandled = true;
 				}
 
-				StartConstructionPhase();
+				await StartConstructionPhaseAsync();
 				return true; // sketchCompleteEventHandled = true;
 			}
 		}
@@ -410,7 +410,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 				if (selectionProcessed)
 				{
-					StartConstructionPhase();
+					StartConstructionPhaseAsync();
 				}
 				else
 				{
@@ -627,7 +627,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 			if (selectionProcessed)
 			{
-				StartConstructionPhase();
+				await StartConstructionPhaseAsync();
 			}
 			else
 			{
@@ -806,7 +806,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	#endregion
 
-	protected void StartSelectionPhase()
+	private void StartSelectionPhase()
 	{
 		SetupSelectionSketch();
 
@@ -816,7 +816,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		UseSnapping = false;
 	}
 
-	protected async void StartConstructionPhase()
+	private async Task StartConstructionPhaseAsync()
 	{
 		StartConstructionPhaseCore();
 
