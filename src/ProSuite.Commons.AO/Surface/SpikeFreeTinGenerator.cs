@@ -18,13 +18,13 @@ namespace ProSuite.Commons.AO.Surface
 	{
 		private readonly double _freezeDistance;
 		private readonly double _insertionBuffer;
-		[CanBeNull] private readonly IEnumerable<IPolygon> _areasWithSpikes;
+		[CanBeNull] private readonly IEnumerable<IGeometry> _areasWithSpikes;
 		private const int TagValue = 0;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private const int FrozenTag = 42;
 
 
-		public SpikeFreeTinGenerator([NotNull] SimpleTerrain simpleTerrain, double freezeDistance, double insertionBuffer, double? tinBufferDistance, [CanBeNull] IEnumerable<IPolygon> areasWithSpikes)
+		public SpikeFreeTinGenerator([NotNull] SimpleTerrain simpleTerrain, double freezeDistance, double insertionBuffer, double? tinBufferDistance, [CanBeNull] IEnumerable<IGeometry> areasWithSpikes)
 			: base(simpleTerrain, tinBufferDistance)
 		{
 			_freezeDistance = freezeDistance;
@@ -53,23 +53,20 @@ namespace ProSuite.Commons.AO.Surface
 
 			if(_areasWithSpikes != null)
 			{
-				var geometriesWithSpikes = new List<IGeometry>();
-				foreach (var geometry in geometries)
-				{
-					if(_areasWithSpikes.Any(area => GeometryUtils.Intersects(area, geometry)))
-					{
-						geometriesWithSpikes.Add(geometry);
-					}
-					else
-					{
-						CoordinateTransformer?.Transform(geometry);
+				_msg.Info("Areas with spikes active");
+				AddGeometriesToTin(tin, geometries.Where(g => _areasWithSpikes.Any(area => GeometryUtils.Intersects(area, g))));
 
-						tin.AddShapeZ(geometry, surfaceType, 0, ref useShapeZ);
-					}
+				foreach (var geometry in geometries.Where(g => !_areasWithSpikes.Any(area => GeometryUtils.Intersects(area, g))))
+				{
+					CoordinateTransformer?.Transform(geometry);
+					tin.AddShapeZ(geometry, surfaceType, 0, ref useShapeZ);
+					
 				}
+
 			}
 			else
 			{
+				_msg.Info("Areas with spikes not active");
 				AddGeometriesToTin(tin, geometries);
 			}
 
