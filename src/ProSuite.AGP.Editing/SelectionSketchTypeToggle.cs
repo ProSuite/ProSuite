@@ -103,7 +103,7 @@ public class SelectionSketchTypeToggle
 
 	public bool DefaultSketchTypeOnFinishSketch { get; set; }
 
-	public void Toggle(SketchGeometryType? sketchType)
+	public void Toggle(SketchGeometryType? sketchType, bool shiftDown = false)
 	{
 		try
 		{
@@ -127,7 +127,7 @@ public class SelectionSketchTypeToggle
 			}
 
 			TrySetSketchType(type);
-			SetCursor(type);
+			SetCursor(type, shiftDown);
 		}
 		catch (Exception ex)
 		{

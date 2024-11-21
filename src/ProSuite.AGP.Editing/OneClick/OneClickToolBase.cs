@@ -268,14 +268,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual Task SetupLassoSketchAsync()
 		{
-			_selectionSketchType.Toggle(SketchGeometryType.Lasso);
+			_selectionSketchType.Toggle(SketchGeometryType.Lasso, KeyboardUtils.IsShiftDown());
 
 			return Task.CompletedTask;
 		}
 
 		protected virtual Task SetupPolygonSketchAsync()
 		{
-			_selectionSketchType.Toggle(SketchGeometryType.Polygon);
+			_selectionSketchType.Toggle(SketchGeometryType.Polygon, KeyboardUtils.IsShiftDown());
 
 			return Task.CompletedTask;
 		}
