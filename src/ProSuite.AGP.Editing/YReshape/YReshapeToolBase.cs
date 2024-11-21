@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -20,12 +19,7 @@ namespace ProSuite.AGP.Editing.YReshape
 	public abstract class YReshapeToolBase : AdvancedReshapeToolBase
 	{
 		protected override string OptionsFileName => "YReshapeToolOptions.xml";
-		protected override Task OnToolActivatingCoreAsync() {
 
-			return base.OnToolActivatingCoreAsync();
-		}
-
-		
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,

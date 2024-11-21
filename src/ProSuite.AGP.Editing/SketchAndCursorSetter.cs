@@ -8,7 +8,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing;
 
-public class SelectionSketchTypeToggle
+public class SketchAndCursorSetter
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -28,21 +28,21 @@ public class SelectionSketchTypeToggle
 	/// <summary>
 	/// Must be called on the MCT.
 	/// </summary>
-	public static SelectionSketchTypeToggle Create([NotNull] ISketchTool tool,
+	public static SketchAndCursorSetter Create([NotNull] ISketchTool tool,
 	                                               [NotNull] Cursor cursor,
 	                                               [NotNull] Cursor lassoCursor,
 	                                               [NotNull] Cursor polygonCursor,
 	                                               SketchGeometryType defaultSelectionSketchType,
 	                                               bool defaultSketchTypeOnFinishSketch = false)
 	{
-		return new SelectionSketchTypeToggle(tool, cursor, lassoCursor,
+		return new SketchAndCursorSetter(tool, cursor, lassoCursor,
 		                                     polygonCursor, defaultSelectionSketchType)
 		       {
 			       DefaultSketchTypeOnFinishSketch = defaultSketchTypeOnFinishSketch
 		       };
 	}
 
-	private SelectionSketchTypeToggle([NotNull] ISketchTool tool,
+	private SketchAndCursorSetter([NotNull] ISketchTool tool,
 	                                  [NotNull] Cursor cursor,
 	                                  [NotNull] Cursor lassoCursor,
 	                                  [NotNull] Cursor polygonCursor,

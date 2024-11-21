@@ -50,7 +50,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Point CurrentMousePosition;
 
-		[NotNull] private SelectionSketchTypeToggle _selectionSketchType;
+		[NotNull] private SketchAndCursorSetter _selectionSketchCursor;
 
 		// ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
 		protected OneClickToolBase()
@@ -170,17 +170,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void SetupCursors()
 		{
-			_selectionSketchType =
-				SelectionSketchTypeToggle.Create(this,
-				                                 GetSelectionCursor(),
-				                                 GetSelectionCursorLasso(),
-				                                 GetSelectionCursorPolygon(),
-				                                 GetSelectionSketchGeometryType(),
-				                                 DefaultSketchTypeOnFinishSketch);
+			_selectionSketchCursor =
+				SketchAndCursorSetter.Create(this,
+				                             GetSelectionCursor(),
+				                             GetSelectionCursorLasso(),
+				                             GetSelectionCursorPolygon(),
+				                             GetSelectionSketchGeometryType(),
+				                             DefaultSketchTypeOnFinishSketch);
 
-			_selectionSketchType.SetSelectionCursorShift(GetSelectionCursorShift());
-			_selectionSketchType.SetSelectionCursorLassoShift(GetSelectionCursorLassoShift());
-			_selectionSketchType.SetSelectionCursorPolygonShift(GetSelectionCursorPolygonShift());
+			_selectionSketchCursor.SetSelectionCursorShift(GetSelectionCursorShift());
+			_selectionSketchCursor.SetSelectionCursorLassoShift(GetSelectionCursorLassoShift());
+			_selectionSketchCursor.SetSelectionCursorPolygonShift(GetSelectionCursorPolygonShift());
 		}
 
 		protected abstract bool DefaultSketchTypeOnFinishSketch { get; }
@@ -269,14 +269,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual Task SetupLassoSketchAsync()
 		{
-			_selectionSketchType.Toggle(SketchGeometryType.Lasso, KeyboardUtils.IsShiftDown());
+			_selectionSketchCursor.Toggle(SketchGeometryType.Lasso, KeyboardUtils.IsShiftDown());
 
 			return Task.CompletedTask;
 		}
 
 		protected virtual Task SetupPolygonSketchAsync()
 		{
-			_selectionSketchType.Toggle(SketchGeometryType.Polygon, KeyboardUtils.IsShiftDown());
+			_selectionSketchCursor.Toggle(SketchGeometryType.Polygon, KeyboardUtils.IsShiftDown());
 
 			return Task.CompletedTask;
 		}
@@ -437,7 +437,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				_selectionSketchType.SetCursor(GetSketchType(), shiftDown: true);
+				_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
 			}
 		}
 
@@ -445,7 +445,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				_selectionSketchType.SetCursor(GetSketchType(), shiftDown: false);
+				_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
 			}
 		}
 
@@ -462,7 +462,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			SetupSketch();
 			
-			_selectionSketchType.ResetOrDefault();
+			_selectionSketchCursor.ResetOrDefault();
 		}
 
 		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,

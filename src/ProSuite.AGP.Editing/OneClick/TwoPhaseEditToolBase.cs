@@ -21,7 +21,7 @@ namespace ProSuite.AGP.Editing.OneClick
 	public abstract class TwoPhaseEditToolBase : OneClickToolBase
 	{
 		// todo: daro rename
-		private SelectionSketchTypeToggle _sketchType;
+		private SketchAndCursorSetter _secondPhaseSketchCursor;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected TwoPhaseEditToolBase()
@@ -33,13 +33,13 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			await QueuedTaskUtils.Run(() =>
 			{
-				_sketchType =
-					SelectionSketchTypeToggle.Create(this,
-					                                 GetSecondPhaseCursor(),
-					                                 GetSecondPhaseCursorLasso(),
-					                                 GetSecondPhaseCursorPolygon(),
-					                                 GetSelectionSketchGeometryType(),
-					                                 DefaultSketchTypeOnFinishSketch);
+				_secondPhaseSketchCursor =
+					SketchAndCursorSetter.Create(this,
+					                             GetSecondPhaseCursor(),
+					                             GetSecondPhaseCursorLasso(),
+					                             GetSecondPhaseCursorPolygon(),
+					                             GetSelectionSketchGeometryType(),
+					                             DefaultSketchTypeOnFinishSketch);
 
 				// NOTE daro: no shift cursors for second phase.
 			});
@@ -187,7 +187,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			else
 			{
-				_sketchType.SetCursor(GetSketchType(), shiftDown: false);
+				_secondPhaseSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
 			}
 		}
 
@@ -199,7 +199,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			else
 			{
-				_sketchType.Toggle(SketchGeometryType.Lasso);
+				_secondPhaseSketchCursor.Toggle(SketchGeometryType.Lasso);
 			}
 		}
 
@@ -211,7 +211,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			else
 			{
-				_sketchType.Toggle(SketchGeometryType.Polygon);
+				_secondPhaseSketchCursor.Toggle(SketchGeometryType.Polygon);
 			}
 		}
 
@@ -283,7 +283,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SetupSketch();
 
-			_sketchType.ResetOrDefault();
+			_secondPhaseSketchCursor.ResetOrDefault();
 		}
 	}
 }

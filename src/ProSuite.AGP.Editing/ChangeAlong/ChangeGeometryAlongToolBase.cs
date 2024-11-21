@@ -36,7 +36,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected ChangeAlongCurves ChangeAlongCurves { get; private set; }
 
 		private ChangeAlongFeedback _feedback;
-		private SelectionSketchTypeToggle _targetSketchType;
+		private SketchAndCursorSetter _targetSketchCursor;
 
 		protected ChangeGeometryAlongToolBase()
 		{
@@ -92,17 +92,17 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			await QueuedTaskUtils.Run(() =>
 			{
-				_targetSketchType =
-					SelectionSketchTypeToggle.Create(this,
-					                                 GetTargetSelectionCursor(),
-					                                 GetTargetSelectionCursorLasso(),
-					                                 GetTargetSelectionCursorPolygon(),
-					                                 GetSelectionSketchGeometryType(),
-					                                 DefaultSketchTypeOnFinishSketch);
+				_targetSketchCursor =
+					SketchAndCursorSetter.Create(this,
+					                             GetTargetSelectionCursor(),
+					                             GetTargetSelectionCursorLasso(),
+					                             GetTargetSelectionCursorPolygon(),
+					                             GetSelectionSketchGeometryType(),
+					                             DefaultSketchTypeOnFinishSketch);
 
-				_targetSketchType.SetSelectionCursorShift(GetTargetSelectionCursorShift());
-				_targetSketchType.SetSelectionCursorLassoShift(GetTargetSelectionCursorLassoShift());
-				_targetSketchType.SetSelectionCursorPolygonShift(GetTargetSelectionCursorPolygonShift());
+				_targetSketchCursor.SetSelectionCursorShift(GetTargetSelectionCursorShift());
+				_targetSketchCursor.SetSelectionCursorLassoShift(GetTargetSelectionCursorLassoShift());
+				_targetSketchCursor.SetSelectionCursorPolygonShift(GetTargetSelectionCursorPolygonShift());
 			});
 		}
 
@@ -235,7 +235,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			{
 				if (! await IsInSelectionPhaseAsync())
 				{
-					_targetSketchType.ResetOrDefault();
+					_targetSketchCursor.ResetOrDefault();
 				}
 				else
 				{
@@ -254,7 +254,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			{
 				if (HasReshapeCurves())
 				{
-					//_targetSketchType.SetCursor(GetSketchType(), shiftDown: true);
+					//_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
 				}
 				else
 				{
@@ -279,7 +279,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				}
 				else
 				{
-					_targetSketchType.SetCursor(GetSketchType(), shiftDown: false);
+					_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
 				}
 			}
 			catch (Exception ex)
@@ -296,7 +296,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
-				_targetSketchType.Toggle(SketchGeometryType.Lasso);
+				_targetSketchCursor.Toggle(SketchGeometryType.Lasso);
 			}
 		}
 
@@ -308,7 +308,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
-				_targetSketchType.Toggle(SketchGeometryType.Polygon);
+				_targetSketchCursor.Toggle(SketchGeometryType.Polygon);
 			}
 		}
 
@@ -391,7 +391,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			SetupSketch();
 
-			_targetSketchType.ResetOrDefault();
+			_targetSketchCursor.ResetOrDefault();
 		}
 
 		private async Task<bool> SelectTargetsAsync(
