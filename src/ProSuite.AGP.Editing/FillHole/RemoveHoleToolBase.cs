@@ -47,9 +47,11 @@ namespace ProSuite.AGP.Editing.FillHole
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			_feedback = new HoleFeedback();
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)

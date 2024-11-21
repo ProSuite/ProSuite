@@ -151,14 +151,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			IsInSketchPhase = false;
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
-			_msg.VerboseDebug(() => "OnToolActivatingCore");
+			_msg.VerboseDebug(() => "OnToolActivatingCoreAsync");
 
 			if (! RequiresSelection)
 			{
 				StartSketchPhase();
 			}
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)

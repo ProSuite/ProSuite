@@ -83,31 +83,26 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			await ViewUtils.TryAsync(task, _msg);
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override async Task OnToolActivatingCoreAsync()
 		{
 			_feedback = new ChangeAlongFeedback()
 			            {
 				            ShowTargetLines = DisplayTargetLines
 			            };
-		}
 
-		protected override async Task<bool> OnToolActivatedCoreAsync(bool hasMapViewChanged)
-		{
-			return await QueuedTaskUtils.Run(() =>
+			await QueuedTaskUtils.Run(() =>
 			{
 				_targetSketchType =
 					SelectionSketchTypeToggle.Create(this,
-													 GetTargetSelectionCursor(),
-													 GetTargetSelectionCursorLasso(),
-													 GetTargetSelectionCursorPolygon(),
+					                                 GetTargetSelectionCursor(),
+					                                 GetTargetSelectionCursorLasso(),
+					                                 GetTargetSelectionCursorPolygon(),
 					                                 GetSelectionSketchGeometryType(),
 					                                 DefaultSketchTypeOnFinishSketch);
 
 				_targetSketchType.SetSelectionCursorShift(GetTargetSelectionCursorShift());
 				_targetSketchType.SetSelectionCursorLassoShift(GetTargetSelectionCursorLassoShift());
 				_targetSketchType.SetSelectionCursorPolygonShift(GetTargetSelectionCursorPolygonShift());
-
-				return true;
 			});
 		}
 

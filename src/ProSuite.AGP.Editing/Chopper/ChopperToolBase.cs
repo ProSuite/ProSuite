@@ -53,11 +53,13 @@ namespace ProSuite.AGP.Editing.Chopper
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			InitializeOptions();
 
 			_feedback = new CrackerFeedback();
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)

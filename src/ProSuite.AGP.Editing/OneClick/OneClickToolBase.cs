@@ -150,7 +150,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					SetupCursors();
 
-					OnToolActivatingCore();
+					await OnToolActivatingCoreAsync();
 
 					if (RequiresSelection)
 					{
@@ -540,7 +540,10 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		/// <remarks>Will be called on MCT</remarks>
-		protected virtual void OnToolActivatingCore() { }
+		protected virtual Task OnToolActivatingCoreAsync()
+		{
+			return Task.CompletedTask;
+		}
 
 		/// <summary>
 		/// Synchronous method called on the MCT after the tool has been activated.

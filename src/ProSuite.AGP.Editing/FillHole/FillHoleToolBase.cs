@@ -54,7 +54,7 @@ namespace ProSuite.AGP.Editing.FillHole
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			_feedback = new HoleFeedback();
 
@@ -72,6 +72,8 @@ namespace ProSuite.AGP.Editing.FillHole
 					"template in the 'Create Feature' Pane. This will determine the type of new features created to fill holes.",
 					EditingTemplate.Current.Name);
 			}
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)

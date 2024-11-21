@@ -90,13 +90,13 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			return SketchGeometryType.Rectangle;
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			_targetFeatureClass = GetCurrentTargetClass(out _);
 
 			ActiveTemplateChangedEvent.Subscribe(OnActiveTemplateChanged);
 
-			base.OnToolActivatingCore();
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)

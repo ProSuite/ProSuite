@@ -28,9 +28,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			IsSketchTool = true;
 		}
 
-		protected override async Task<bool> OnToolActivatedCoreAsync(bool hasMapViewChanged)
+		protected override async Task OnToolActivatingCoreAsync()
 		{
-			return await QueuedTaskUtils.Run(() =>
+			await QueuedTaskUtils.Run(() =>
 			{
 				_sketchType =
 					SelectionSketchTypeToggle.Create(this,
@@ -41,7 +41,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					                                 DefaultSketchTypeOnFinishSketch);
 
 				// NOTE daro: no shift cursors for second phase.
-				return true;
 			});
 		}
 

@@ -133,12 +133,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return layer is FeatureLayer;
 		}
 
-		protected override async void OnToolActivatingCore()
+		protected override async Task OnToolActivatingCoreAsync()
 		{
 			InitializeOptions();
 			_feedback = new AdvancedReshapeFeedback();
 
-			base.OnToolActivatingCore();
+			base.OnToolActivatingCoreAsync();
 		}
 
 		private void InitializeOptions()

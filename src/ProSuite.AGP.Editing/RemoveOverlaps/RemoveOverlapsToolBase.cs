@@ -63,11 +63,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			InitializeOptions();
 
 			_feedback = new RemoveOverlapsFeedback();
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)

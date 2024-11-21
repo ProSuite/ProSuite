@@ -38,9 +38,11 @@ namespace ProSuite.AGP.Editing.YReshape
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override void OnToolActivatingCore() {
+		protected override Task OnToolActivatingCoreAsync() {
 
 			_feedback = new YReshapeFeedback();
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		//Make sure this is always true (settings in AdvancedReshape not implemented yet, so no effect atm)
