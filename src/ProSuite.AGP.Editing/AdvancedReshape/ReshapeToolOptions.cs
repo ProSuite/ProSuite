@@ -13,29 +13,28 @@ namespace ProSuite.AGP.Editing.AdvancedReshapeReshape
 		{
 			CentralOptions = centralOptions;
 			LocalOptions = localOptions ?? new PartialReshapeToolOptions();
-			CentralizableAllowOpenJawReshape =
+			CentralizableShowPreview =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.AllowOpenJawReshape), true);
-			CentralizableMultiReshapeAsUnion =
+					ReflectionUtils.GetProperty(() => LocalOptions.ShowPreview), true);
+			CentralizableRemainInSketchMode =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.MultiReshapeAsUnion), false);
-			CentralizableTryReshapeNonDefault =
+					ReflectionUtils.GetProperty(() => LocalOptions.RemainInSketchMode), false);
+			CentralizableMoveOpenJawEndJunction =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.TryReshapeNonDefault), false);
-			CentralizableUseNonDefaultReshapeSide =
+					ReflectionUtils.GetProperty(() => LocalOptions.MoveOpenJawEndJunction), false);
+			CentralizableUseTopologyTypeSelection =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.UseNonDefaultReshapeSide),
+					ReflectionUtils.GetProperty(() => LocalOptions.UseTopologyTypeSelection),
 					false);
 		}
 
 		#region Centralizable Properties
 
-		public CentralizableSetting<bool> CentralizableAllowOpenJawReshape { get; private set; }
-		public CentralizableSetting<bool> CentralizableMultiReshapeAsUnion { get; private set; }
-		public CentralizableSetting<bool> CentralizableTryReshapeNonDefault { get; private set; }
+		public CentralizableSetting<bool> CentralizableShowPreview { get; private set; }
+		public CentralizableSetting<bool> CentralizableRemainInSketchMode { get; private set; }
+		public CentralizableSetting<bool> CentralizableMoveOpenJawEndJunction { get; private set; }
 
-		public CentralizableSetting<bool> CentralizableUseNonDefaultReshapeSide
-		{
+		public CentralizableSetting<bool> CentralizableUseTopologyTypeSelection {
 			get;
 			private set;
 		}
@@ -44,44 +43,50 @@ namespace ProSuite.AGP.Editing.AdvancedReshapeReshape
 
 		#region Current Values
 
-		public bool AllowOpenJawReshape => CentralizableAllowOpenJawReshape.CurrentValue;
-		public bool MultiReshapeAsUnion => CentralizableMultiReshapeAsUnion.CurrentValue;
-		public bool TryReshapeNonDefault => CentralizableTryReshapeNonDefault.CurrentValue;
-		public bool UseNonDefaultReshapeSide => CentralizableUseNonDefaultReshapeSide.CurrentValue;
+		public bool ShowPreview => CentralizableShowPreview.CurrentValue;
+		public bool RemainInSketchMode => CentralizableRemainInSketchMode.CurrentValue;
+		public bool MoveOpenJawEndJunction
+		{
+			get { return CentralizableMoveOpenJawEndJunction.CurrentValue; }
+			set { CentralizableMoveOpenJawEndJunction.CurrentValue = value; }
+		}
+
+		public bool UseTopologyTypeSelection => CentralizableUseTopologyTypeSelection.CurrentValue;
 
 		#endregion
 
 		public override void RevertToDefaults()
 		{
-			CentralizableAllowOpenJawReshape.RevertToDefault();
-			CentralizableMultiReshapeAsUnion.RevertToDefault();
-			CentralizableTryReshapeNonDefault.RevertToDefault();
-			CentralizableUseNonDefaultReshapeSide.RevertToDefault();
+			CentralizableShowPreview.RevertToDefault();
+			CentralizableRemainInSketchMode.RevertToDefault();
+			CentralizableMoveOpenJawEndJunction.RevertToDefault();
+			CentralizableUseTopologyTypeSelection.RevertToDefault();
 		}
 
 		public override bool HasLocalOverrides(NotificationCollection notifications)
 		{
 			bool result = false;
-			if (HasLocalOverride(CentralizableAllowOpenJawReshape, "Allow open-jaw reshape",
+			
+			if (HasLocalOverride(CentralizableShowPreview, "Show the reshape preview",
 			                     notifications))
 			{
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableMultiReshapeAsUnion, "Multi-reshape as union",
+			if (HasLocalOverride(CentralizableRemainInSketchMode, "Remain in sketch mode after reshape operation",
 			                     notifications))
 			{
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableTryReshapeNonDefault, "Try reshape non-default",
+			if (HasLocalOverride(CentralizableMoveOpenJawEndJunction, "Move the end junction",
 			                     notifications))
 			{
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableUseNonDefaultReshapeSide,
-			                     "Use non-default reshape side", notifications))
+			if (HasLocalOverride(CentralizableUseTopologyTypeSelection,
+			                     "Enable topology type selection", notifications))
 			{
 				result = true;
 			}

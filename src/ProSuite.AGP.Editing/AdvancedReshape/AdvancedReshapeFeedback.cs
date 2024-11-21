@@ -4,30 +4,49 @@ using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.AdvancedReshapeReshape;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
 	public class AdvancedReshapeFeedback
 	{
+		private IDisposable _openJawReplacedEndPointOverlay;
+
 		private IDisposable _polygonPreviewOverlayAdd;
 		private IDisposable _polygonPreviewOverlayRemove;
 
+		private CIMPointSymbol _openJawEndSymbol;
 		private readonly CIMPolygonSymbol _addAreaSymbol;
 		private readonly CIMPolygonSymbol _removeAreaSymbol;
+		private readonly ReshapeToolOptions _advancedReshapeToolOptions;
 
-		public AdvancedReshapeFeedback()
+		public AdvancedReshapeFeedback(ReshapeToolOptions advancedReshapeToolOptions)
 		{
+			_advancedReshapeToolOptions = advancedReshapeToolOptions;
 			_addAreaSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
 			_removeAreaSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
 		}
 
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		public void UpdateOpenJawReplacedEndPoint([CanBeNull] MapPoint point)
+		{
+			_openJawReplacedEndPointOverlay?.Dispose();
 
-		public virtual Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
+			// Make openJawEndSymbol azure or celest blue, depending  on state of MoveOpenJawEndJunction
+			_openJawEndSymbol = _advancedReshapeToolOptions.MoveOpenJawEndJunction ? CreateHollowCircle(0, 200, 255) : CreateHollowCircle(0, 0, 200);
+
+			if (point != null)
+			{
+				_openJawReplacedEndPointOverlay =
+					MapView.Active.AddOverlay(
+						point, _openJawEndSymbol.MakeSymbolReference());
+			}
+		}
+
+		public Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
 		{
 			_polygonPreviewOverlayAdd?.Dispose();
 			_polygonPreviewOverlayRemove?.Dispose();
@@ -66,6 +85,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		public void Clear()
 		{
+			_openJawReplacedEndPointOverlay?.Dispose();
+			_openJawReplacedEndPointOverlay = null;
+
 			_polygonPreviewOverlayAdd?.Dispose();
 			_polygonPreviewOverlayAdd = null;
 
@@ -74,8 +96,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		}
 
 		[CanBeNull]
-		protected static IDisposable AddOverlay([CanBeNull] Geometry geometry,
-		                                        [NotNull] CIMSymbol cimSymbol)
+		private static IDisposable AddOverlay([CanBeNull] Geometry geometry,
+		                                      [NotNull] CIMSymbol cimSymbol)
 		{
 			if (geometry == null || geometry.IsEmpty)
 			{
@@ -86,6 +108,28 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				geometry, cimSymbol.MakeSymbolReference());
 
 			return result;
+		}
+
+		private static CIMPointSymbol CreateHollowCircle(int red, int green, int blue)
+		{
+			CIMColor transparent = ColorFactory.Instance.CreateRGBColor(0d, 0d, 0d, 0d);
+			CIMColor color = ColorFactory.Instance.CreateRGBColor(red, green, blue);
+
+			CIMPointSymbol hollowCircle =
+				SymbolFactory.Instance.ConstructPointSymbol(transparent, 19,
+				                                            SimpleMarkerStyle.Circle);
+
+			var marker = hollowCircle.SymbolLayers[0] as CIMVectorMarker;
+			var polySymbol = Assert.NotNull(marker).MarkerGraphics[0].Symbol as CIMPolygonSymbol;
+
+			//Outline:
+			Assert.NotNull(polySymbol).SymbolLayers[0] =
+				SymbolFactory.Instance.ConstructStroke(color, 2, SimpleLineStyle.Solid);
+
+			// Fill:
+			polySymbol.SymbolLayers[1] = SymbolFactory.Instance.ConstructSolidFill(transparent);
+
+			return hollowCircle;
 		}
 	}
 }

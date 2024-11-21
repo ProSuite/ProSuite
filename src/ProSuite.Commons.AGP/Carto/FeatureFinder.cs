@@ -176,7 +176,7 @@ namespace ProSuite.Commons.AGP.Carto
 			[CanBeNull] CancelableProgressor cancelableProgressor)
 		{
 			IEnumerable<IGrouping<IntPtr, BasicFeatureLayer>> layersGroupedByClass =
-				featureLayers.GroupBy(fl => fl.GetTable().Handle);
+				featureLayers.GroupBy(fl => LayerUtils.GetFeatureClass(fl, true).Handle);
 
 			SpatialReference outputSpatialReference = _mapView.Map.SpatialReference;
 

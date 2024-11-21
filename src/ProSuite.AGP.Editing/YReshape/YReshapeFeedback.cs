@@ -5,6 +5,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.AdvancedReshape;
+using ProSuite.AGP.Editing.AdvancedReshapeReshape;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -13,66 +14,6 @@ namespace ProSuite.AGP.Editing.YReshape
 {
 	public class YReshapeFeedback : AdvancedReshapeFeedback
 	{
-		private IDisposable _openJawReplacedEndPointOverlay;
-
-		private readonly CIMPointSymbol _openJawReplaceEndSymbol;
-		private readonly CIMPointSymbol _openJawReplaceEndSymbolMove;
-
-		public YReshapeFeedback()
-		{
-			_openJawReplaceEndSymbol = CreateHollowCircle(0, 0, 200);
-			_openJawReplaceEndSymbolMove = CreateHollowCircle(0, 255, 200);
-		}
-
-		public override Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
-		{
-			_openJawReplacedEndPointOverlay?.Dispose();
-			
-			if (resultFeatures == null || resultFeatures.Count == 0)
-			{
-				return Task.FromResult(false);
-			}
-
-			foreach (var resultFeature in resultFeatures)
-			{
-				var newGeometry = resultFeature.NewGeometry;
-				if (newGeometry != null)
-				{
-					_openJawReplacedEndPointOverlay?.Dispose();
-					_openJawReplacedEndPointOverlay =
-						AddOverlay(newGeometry, _openJawReplaceEndSymbol);
-				}
-			}
-
-			return Task.FromResult(true);
-		}
-
-		public void Clear()
-		{
-			_openJawReplacedEndPointOverlay?.Dispose();
-			_openJawReplacedEndPointOverlay = null;
-		}
-
-		private static CIMPointSymbol CreateHollowCircle(int red, int green, int blue)
-		{
-			CIMColor transparent = ColorFactory.Instance.CreateRGBColor(0d, 0d, 0d, 0d);
-			CIMColor color = ColorFactory.Instance.CreateRGBColor(red, green, blue);
-
-			CIMPointSymbol hollowCircle =
-				SymbolFactory.Instance.ConstructPointSymbol(color, 19,
-				                                            SimpleMarkerStyle.Circle);
-
-			var marker = hollowCircle.SymbolLayers[0] as CIMVectorMarker;
-			var polySymbol = Assert.NotNull(marker).MarkerGraphics[0].Symbol as CIMPolygonSymbol;
-
-			//Outline:
-			Assert.NotNull(polySymbol).SymbolLayers[0] =
-				SymbolFactory.Instance.ConstructStroke(color, 2, SimpleLineStyle.Solid);
-
-			// Fill:
-			polySymbol.SymbolLayers[1] = SymbolFactory.Instance.ConstructSolidFill(transparent);
-
-			return hollowCircle;
-		}
+		public YReshapeFeedback(ReshapeToolOptions advancedReshapeToolOptions) : base(advancedReshapeToolOptions) { }
 	}
 }

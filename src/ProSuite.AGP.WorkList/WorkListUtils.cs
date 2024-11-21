@@ -402,6 +402,11 @@ namespace ProSuite.AGP.WorkList
 				                                   itemStateRepository);
 			}
 
+			// TODO (EMA):
+			_msg.Warn($"Unknown work list type: {type.Name}. Using Issue work list");
+			return new IssueItemRepository(new List<Tuple<Table, string>>(0),
+			                               itemStateRepository);
+
 			throw new ArgumentException($"Unknown work list type: {type.Name}");
 		}
 

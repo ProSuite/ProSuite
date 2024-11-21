@@ -37,7 +37,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		// - Make sure feedback microservices are called only once
 		// - Move to OnKeyUp in reshape side toggle
 		// - Options
-		// - Circumcision dialog
+		// - Circumcision dialog6
 		// - Reshape size change logging - use abbreviations for display units
 		// - R(estore) sketch
 		// - Connected lines reshape
@@ -45,17 +45,18 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		[CanBeNull] private AdvancedReshapeFeedback _feedback;
 		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
-		private ReshapeToolOptions _advancedReshapeToolOptions;
+
+		protected ReshapeToolOptions _advancedReshapeToolOptions;
 		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
-		//TODO Feedback (Circles)
 
 		private Task<bool> _updateFeedbackTask;
 
 		private bool _nonDefaultSideMode;
 		private CancellationTokenSource _cancellationTokenSource;
 		private const Key _keyToggleNonDefaultSide = Key.S;
+		private const Key _keyToggleMoveEndJunction = Key.M; //Is this needed?
 
-		protected static string OptionsFileName => "AdvancedReshapeToolOptions.xml";
+		protected virtual string OptionsFileName => "AdvancedReshapeToolOptions.xml";
 
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
@@ -69,6 +70,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			RequiresSelection = true;
 
 			HandledKeys.Add(_keyToggleNonDefaultSide);
+			HandledKeys.Add(_keyToggleMoveEndJunction);
 		}
 
 		protected abstract IAdvancedReshapeService MicroserviceClient { get; }
@@ -136,12 +138,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected override async Task OnToolActivatingCoreAsync()
 		{
 			InitializeOptions();
-			_feedback = new AdvancedReshapeFeedback();
+			_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
 
 			base.OnToolActivatingCoreAsync();
 		}
 
-		private void InitializeOptions()
+		protected void InitializeOptions()
 		{
 			_settingsProvider = new OverridableSettingsProvider<PartialReshapeToolOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
@@ -183,6 +185,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_settingsProvider.StoreLocalConfiguration(_advancedReshapeToolOptions.LocalOptions);
+
 			_symbolizedSketch?.Dispose();
 			_feedback?.Clear();
 			_feedback = null;
@@ -242,6 +246,19 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					_updateFeedbackTask = UpdateFeedbackAsync(_nonDefaultSideMode);
 
 					await _updateFeedbackTask;
+				}
+
+				if (args.Key == _keyToggleMoveEndJunction)
+				{
+					_msg.Info("Toggle MoveOpenJawEndJunction");
+					_advancedReshapeToolOptions.MoveOpenJawEndJunction =
+						! _advancedReshapeToolOptions.MoveOpenJawEndJunction;
+
+					_updateFeedbackTask = UpdateFeedbackAsync(_nonDefaultSideMode);
+
+					await _updateFeedbackTask;
+
+
 				}
 			}
 			catch (Exception e)
@@ -362,7 +379,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 					ReshapeResult result = MicroserviceClient.Reshape(
 						selection, polyline, potentiallyAffectedFeatures, true, true,
-						_nonDefaultSideMode, _cancellationTokenSource.Token);
+						_nonDefaultSideMode, _cancellationTokenSource.Token,
+						_advancedReshapeToolOptions.MoveOpenJawEndJunction);
 
 					if (result == null)
 					{
@@ -488,9 +506,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 							GdbObjectUtils.Filter(selection, GeometryType.Polygon).ToList();
 
 						bool updated =
-							await UpdatePolygonResultPreviewAsync(
-								nonDefaultSide, sketchPolyline,
-								polygonSelection);
+							await UpdateOpenJawReplacedEndpointAsync(nonDefaultSide, sketchPolyline,
+								polylineSelection);
+
+						updated |= await UpdatePolygonResultPreviewAsync(
+							           nonDefaultSide, sketchPolyline,
+							           polygonSelection);
 
 						return updated;
 					});
@@ -593,6 +614,25 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				       "Advanced reshape", resultFeatures);
 		}
 
+		private async Task<bool> UpdateOpenJawReplacedEndpointAsync(
+			bool useNonDefaultReshapeSide,
+			[NotNull] Polyline sketchLine,
+			[NotNull] IList<Feature> polylineSelection)
+		{
+
+			MapPoint endPoint = null;
+
+			if (polylineSelection.Count == 1)
+			{
+				endPoint = await MicroserviceClient.GetOpenJawReplacementPointAsync(
+					           polylineSelection[0], sketchLine, useNonDefaultReshapeSide);
+			}
+
+			_feedback?.UpdateOpenJawReplacedEndPoint(endPoint);
+
+			return true;
+		}
+
 		private async Task<bool> UpdatePolygonResultPreviewAsync(
 			bool nonDefaultSide,
 			[NotNull] Polyline sketchPolyline,
@@ -604,13 +644,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			{
 				// Idea: ReshapeOperation class that contains the options to build the rpc, cancellation token, time out settings and logging.
 
-				// Increase timeout to allow feedback to complete
-				var cancellationTokenSource = new CancellationTokenSource(10000);
+				// TODO: Keep this source and cancel in case finish sketch happens
+				var cancellationTokenSource = new CancellationTokenSource(3000);
 
 				reshapeResult = MicroserviceClient.TryReshape(
-					polygonSelection, sketchPolyline, null,
-					_advancedReshapeToolOptions.AllowOpenJawReshape,
-					_advancedReshapeToolOptions.MultiReshapeAsUnion,
+					polygonSelection, sketchPolyline, null, false, true,
 					nonDefaultSide, cancellationTokenSource.Token);
 			}
 
@@ -653,7 +691,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
 			                              Resources.AdvancedReshapeOverlay,
-										  Resources.Lasso,
+			                              Resources.Lasso,
 			                              Resources.Shift);
 		}
 
