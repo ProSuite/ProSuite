@@ -1,6 +1,7 @@
 using System;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -8,7 +9,7 @@ namespace ProSuite.AGP.WorkList
 {
 	public abstract class SourceClass : ISourceClass
 	{
-		private GdbTableIdentity _identity;
+		private readonly GdbTableIdentity _identity;
 
 		protected SourceClass(GdbTableIdentity identity,
 		                      IAttributeReader attributeReader)
@@ -30,9 +31,9 @@ namespace ProSuite.AGP.WorkList
 
 		public string DefinitionQuery { get; protected set; }
 
-		public bool Uses(GdbTableIdentity table)
+		public bool Uses(ITableReference tableReference)
 		{
-			return _identity.Equals(table);
+			return tableReference.ReferencesTable(_identity.Id, _identity.Name);
 		}
 
 		public T OpenDataset<T>() where T : Table

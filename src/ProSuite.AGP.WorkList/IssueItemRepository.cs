@@ -144,7 +144,7 @@ namespace ProSuite.AGP.WorkList
 
 				string description = GetOperationDescription(item);
 
-				_msg.Info($"{description}, {item.Proxy}");
+				_msg.Info($"{description}, {item.GdbRowProxy}");
 
 				var operation = new EditOperation { Name = description };
 				operation.Callback(context =>
@@ -164,7 +164,7 @@ namespace ProSuite.AGP.WorkList
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error set status of work item {item.OID}, {item.Proxy}", e);
+				_msg.Error($"Error set status of work item {item.OID}, {item.GdbRowProxy}", e);
 				throw;
 			}
 			finally

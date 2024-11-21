@@ -160,14 +160,14 @@ namespace ProSuite.AGP.WorkList
 
 		public void Refresh(IWorkItem item)
 		{
-			GdbTableIdentity tableId = item.Proxy.Table;
+			ITableReference tableId = item.GdbRowProxy.Table;
 
 			// todo daro: log message
 			ISourceClass source =
 				SourceClasses.FirstOrDefault(sc => sc.Uses(tableId));
 			Assert.NotNull(source);
 
-			Row row = GetRow(source, item.Proxy.ObjectId);
+			Row row = GetRow(source, item.ObjectID);
 			Assert.NotNull(row);
 
 			if (row is Feature feature)
@@ -201,7 +201,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			item.Status = status;
 
-			GdbTableIdentity tableId = item.Proxy.Table;
+			GdbTableIdentity tableId = item.GdbRowProxy.Table;
 
 			ISourceClass source =
 				SourceClasses.FirstOrDefault(s => s.Uses(tableId));
