@@ -109,8 +109,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					                             DefaultSketchTypeOnFinishSketch);
 
 				_targetSketchCursor.SetSelectionCursorShift(GetTargetSelectionCursorShift());
-				_targetSketchCursor.SetSelectionCursorLassoShift(GetTargetSelectionCursorLassoShift());
-				_targetSketchCursor.SetSelectionCursorPolygonShift(GetTargetSelectionCursorPolygonShift());
+				_targetSketchCursor.SetSelectionCursorLassoShift(
+					GetTargetSelectionCursorLassoShift());
+				_targetSketchCursor.SetSelectionCursorPolygonShift(
+					GetTargetSelectionCursorPolygonShift());
 			});
 		}
 
@@ -416,7 +418,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				if (pickerPrecedence.IsSingleClick && candidates.Count > 1)
 				{
 					var orderedCandidates =
-					candidates.OrderBy(candidate => candidate.ShapeDimension);
+						candidates.OrderBy(candidate => candidate.ShapeDimension);
 
 					IPickableItem item =
 						await PickerUtils.ShowPickerAsync<IPickableFeatureItem>(
@@ -487,17 +489,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			if (actualTargetFeatures.Count == 0)
 			{
-				_msg.Info("No target feature selected. Select one or more target features " +
-				          "to align with. Press [ESC] to select a different feature.");
-
-				return new ChangeAlongCurves(new List<CutSubcurve>(),
-				                             ReshapeAlongCurveUsability.NoTarget);
+				ChangeAlongCurves = new ChangeAlongCurves(new List<CutSubcurve>(),
+				                                          ReshapeAlongCurveUsability.NoTarget);
 			}
+			else
+			{
+				ChangeAlongCurves =
+					RefreshChangeAlongCurves(selectedFeatures, actualTargetFeatures, progressor);
 
-			ChangeAlongCurves =
-				RefreshChangeAlongCurves(selectedFeatures, actualTargetFeatures, progressor);
-
-			ChangeAlongCurves.LogTargetSelection();
+				ChangeAlongCurves.LogTargetSelection();
+			}
 
 			LogAfterPickTarget(ChangeAlongCurves.CurveUsability);
 
