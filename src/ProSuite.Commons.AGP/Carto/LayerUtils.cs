@@ -6,12 +6,16 @@ using System.Threading;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto
 {
 	public static class LayerUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// Given a layer, find the map to which it belongs.
 		/// </summary>
@@ -31,9 +35,9 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
-		/// Returns the Rows or features found by the layer search. Honors definition queries,
-		/// layer time, etc. defined on the layer. According to the documentation, valid rows returned
-		/// by a cursor should be disposed.
+		/// Returns the Rows or features found by the layer/standalone table search. Honors
+		/// definition queries, layer time, etc. defined on the layer. According to the
+		/// documentation, valid rows returned by a cursor should be disposed.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="layer"></param>
@@ -41,7 +45,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="predicate"></param>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
-		public static IEnumerable<T> SearchRows<T>([NotNull] BasicFeatureLayer layer,
+		public static IEnumerable<T> SearchRows<T>([NotNull] IDisplayTable layer,
 		                                           [CanBeNull] QueryFilter filter = null,
 		                                           [CanBeNull] Predicate<T> predicate = null,
 		                                           CancellationToken cancellationToken = default)
@@ -55,31 +59,35 @@ namespace ProSuite.Commons.AGP.Carto
 				predicate = _ => true;
 			}
 
-			using (RowCursor cursor = layer.Search(filter))
+			// NOTE: An invalid filter (e.g. subfields "*,OBJECTID") can crash the application.
+			_msg.VerboseDebug(() => $"Querying layer {((MapMember) layer).Name} using filter: " +
+			                        $"{GdbQueryUtils.FilterPropertiesToString(filter)}");
+
+			using RowCursor cursor = layer.Search(filter);
+			if (cursor is null) yield break; // no valid data source
+
+			while (cursor.MoveNext())
 			{
-				while (cursor.MoveNext())
+				if (cancellationToken.IsCancellationRequested)
 				{
-					if (cancellationToken.IsCancellationRequested)
-					{
-						yield break;
-					}
+					yield break;
+				}
 
-					T currentRow = (T) cursor.Current;
+				T currentRow = (T) cursor.Current;
 
-					if (predicate(currentRow))
-					{
-						yield return currentRow;
-					}
+				if (predicate(currentRow))
+				{
+					yield return currentRow;
 				}
 			}
 		}
 
 		/// <summary>
-		/// Returns the Object IDs of features found by the layer search.
+		/// Returns the Object IDs of features found by the layer / standalone table search.
 		/// Honors definition queries, layer time, etc. defined on the layer.
 		/// </summary>
 		public static IEnumerable<long> SearchObjectIds(
-			[NotNull] BasicFeatureLayer layer,
+			[NotNull] IDisplayTable layer,
 			[CanBeNull] QueryFilter filter = null,
 			[CanBeNull] Predicate<Feature> predicate = null,
 			CancellationToken cancellationToken = default)
@@ -97,18 +105,10 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				filter = new QueryFilter { SubFields = oidField };
 			}
-			else if (string.IsNullOrEmpty(filter.SubFields))
+			else if (GdbQueryUtils.EnsureSubField(filter.SubFields, oidField,
+			                                      out string newSubFields))
 			{
-				filter.SubFields = oidField;
-			}
-			else
-			{
-				// ensure OID field is in SubFields:
-				if (! filter.SubFields.Split(',').Select(fn => fn.Trim())
-				            .Contains(oidField, StringComparer.OrdinalIgnoreCase))
-				{
-					filter.SubFields = string.Concat(filter.SubFields, ",", oidField);
-				}
+				filter.SubFields = newSubFields;
 			}
 
 			foreach (Feature row in SearchRows(layer, filter, predicate))
@@ -275,6 +275,69 @@ namespace ProSuite.Commons.AGP.Carto
 			return table != null;
 		}
 
+		/// <summary>
+		/// Determines whether the specified layer uses the specified feature class.
+		/// </summary>
+		/// <param name="layer"></param>
+		/// <param name="featureClass"></param>
+		/// <returns></returns>
+		public static bool LayerUsesFeatureClass([NotNull] FeatureLayer layer,
+		                                         [NotNull] FeatureClass featureClass)
+		{
+			FeatureClass layerFeatureClass = layer.GetFeatureClass();
+
+			return ReferencesSameGdbFeatureClass(layerFeatureClass, featureClass);
+		}
+
+		/// <summary>
+		/// Determines if the specified layers use the same feature class. One or both layers might
+		/// have joins. The actual geodatabase feature classes are compared. 
+		/// </summary>
+		/// <param name="layer1"></param>
+		/// <param name="layer2"></param>
+		/// <returns></returns>
+		public static bool LayersUseSameFeatureClass([NotNull] FeatureLayer layer1,
+		                                             [NotNull] FeatureLayer layer2)
+		{
+			FeatureClass featureClass1 = layer1.GetFeatureClass();
+			FeatureClass featureClass2 = layer2.GetFeatureClass();
+
+			return ReferencesSameGdbFeatureClass(featureClass1, featureClass2);
+		}
+
+		/// <summary>
+		/// Determines if the specified feature classes are the same or, in case one or both
+		/// feature classes are joined, the actual geodatabase feature classes are compared. 
+		/// </summary>
+		/// <param name="featureClass1"></param>
+		/// <param name="featureClass2"></param>
+		/// <returns></returns>
+		private static bool ReferencesSameGdbFeatureClass(FeatureClass featureClass1,
+		                                                  FeatureClass featureClass2)
+		{
+			if (ReferenceEquals(featureClass1, featureClass2))
+			{
+				return true;
+			}
+
+			if (featureClass1 == null || featureClass2 == null)
+			{
+				return false;
+			}
+
+			if (featureClass1.IsJoinedTable())
+			{
+				featureClass1 = DatasetUtils.GetDatabaseFeatureClass(featureClass1);
+			}
+
+			if (featureClass2.IsJoinedTable())
+			{
+				featureClass2 = DatasetUtils.GetDatabaseFeatureClass(featureClass2);
+			}
+
+			return DatasetUtils.IsSameTable(featureClass1, featureClass2);
+		}
+
 		[CanBeNull]
 		public static FeatureClass GetFeatureClass(this Layer layer)
 		{
@@ -300,5 +363,93 @@ namespace ProSuite.Commons.AGP.Carto
 
 			return null;
 		}
+
+		#region Underlying dataset properties
+
+		// Roughly following the "ArcGIS Pro SDK for .NET: Advanced Editing and Edit Operations"
+		// from a DevSummit tech session recording at https://youtu.be/U4vcNDEkj1w?t=2729
+
+		/// <summary>
+		/// Get how the given layer's dataset is registered with the geodatabase:
+		/// non-versioned, versioned, or versioned with the option to move edits to base.
+		/// </summary>
+		public static RegistrationType GetRegistrationType(this FeatureLayer featureLayer)
+		{
+			using var featureClass = featureLayer.GetFeatureClass();
+			if (featureClass is null) return RegistrationType.Nonversioned;
+			return featureClass.GetRegistrationType();
+		}
+
+		public static GeodatabaseType? GetGeodatabaseType(this FeatureLayer featureLayer)
+		{
+			using var featureClass = featureLayer.GetFeatureClass();
+			using var workspace = featureClass?.GetDatastore();
+
+			if (workspace is Geodatabase geodatabase)
+			{
+				return geodatabase.GetGeodatabaseType();
+			}
+
+			return null;
+		}
+
+		public static bool IsVersioned(this FeatureLayer featureLayer)
+		{
+			return featureLayer.GetRegistrationType() != RegistrationType.Nonversioned;
+		}
+
+		public static bool IsBranchVersioned(this FeatureLayer featureLayer)
+		{
+			using var featureClass = featureLayer.GetFeatureClass();
+			if (featureClass is null) return false;
+			using var workspace = featureClass.GetDatastore();
+			return IsBranchVersioned(workspace);
+		}
+
+		private static bool IsBranchVersioned(Datastore workspace)
+		{
+			if (workspace is not Geodatabase geodatabase) return false;
+			if (! geodatabase.IsVersioningSupported()) return false;
+			var props = geodatabase.GetConnector();
+			if (props is DatabaseConnectionProperties dcProps)
+			{
+				// Utility network FC only:
+				return !string.IsNullOrEmpty(dcProps.Branch);
+			}
+
+			return props is ServiceConnectionProperties;
+		}
+
+		public static bool SupportsUndoRedo(this FeatureLayer featureLayer)
+		{
+			using var featureClass = featureLayer.GetFeatureClass();
+			if (featureClass is null) return false;
+
+			using var workspace = featureClass.GetDatastore();
+			if (workspace is not Geodatabase geodatabase) return false; // TODO how about shapefiles?
+
+			var gdbType = geodatabase.GetGeodatabaseType();
+			if (gdbType == GeodatabaseType.FileSystem)
+				return true; // shapefiles
+			if (gdbType == GeodatabaseType.LocalDatabase)
+				return true; // file gdbs support undo/redo
+
+			var regType = featureClass.GetRegistrationType();
+			var isVersioned = regType != RegistrationType.Nonversioned;
+			if (gdbType == GeodatabaseType.RemoteDatabase && isVersioned)
+				return true;
+
+			if (IsBranchVersioned(workspace))
+			{
+				// Special case branch versioned: all versions except DEFAULT (no parent)
+				var vmgr = geodatabase.GetVersionManager();
+				var currentVersion = vmgr.GetCurrentVersion();
+				return currentVersion.GetParent() != null;
+			}
+
+			return false;
+		}
+
+		#endregion
 	}
 }

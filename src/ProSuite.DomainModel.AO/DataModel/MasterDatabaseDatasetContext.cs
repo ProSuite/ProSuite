@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.DomainModel.Core.DataModel;
 
@@ -27,7 +28,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
 		}
 
-		public ITopology OpenTopology(ITopologyDataset dataset)
+		public TopologyReference OpenTopology(ITopologyDataset dataset)
 		{
 			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
 		}

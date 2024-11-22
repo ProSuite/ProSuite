@@ -9,11 +9,13 @@ using Grpc.Net.Client;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Microservices.Client.GrpcNet;
@@ -24,10 +26,13 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 	public class GeometryProcessingClient : MicroserviceClientBase,
 	                                        IAdvancedReshapeService,
 	                                        IRemoveOverlapsService,
+	                                        ICrackerService,
 	                                        ICalculateHolesService,
 	                                        IChangeAlongService
+
 	{
 		private RemoveOverlapsGrpc.RemoveOverlapsGrpcClient RemoveOverlapsClient { get; set; }
+		private CrackGrpc.CrackGrpcClient CrackClient { get; set; }
 		private ChangeAlongGrpc.ChangeAlongGrpcClient ChangeAlongClient { get; set; }
 		private ReshapeGrpc.ReshapeGrpcClient ReshapeClient { get; set; }
 		private FillHolesGrpc.FillHolesGrpcClient RemoveHolesClient { get; set; }
@@ -46,6 +51,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		protected override void ChannelOpenedCore(ChannelBase channel)
 		{
 			RemoveOverlapsClient = new RemoveOverlapsGrpc.RemoveOverlapsGrpcClient(channel);
+			CrackClient = new CrackGrpc.CrackGrpcClient(channel);
 			ChangeAlongClient = new ChangeAlongGrpc.ChangeAlongGrpcClient(channel);
 			ReshapeClient = new ReshapeGrpc.ReshapeGrpcClient(channel);
 			RemoveHolesClient = new FillHolesGrpc.FillHolesGrpcClient(channel);
@@ -97,6 +103,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		public RemoveOverlapsResult RemoveOverlaps(IEnumerable<Feature> selectedFeatures,
 		                                           Overlaps overlapsToRemove,
 		                                           IList<Feature> overlappingFeatures,
+		                                           RemoveOverlapsOptions options,
 		                                           CancellationToken cancellationToken)
 		{
 			if (RemoveOverlapsClient == null)
@@ -104,7 +111,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return RemoveOverlapsClientUtils.RemoveOverlaps(
 				RemoveOverlapsClient, selectedFeatures, overlapsToRemove, overlappingFeatures,
-				cancellationToken);
+				options, cancellationToken);
 		}
 
 		[CanBeNull]
@@ -234,6 +241,35 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return await AdvancedReshapeClientUtils.GetOpenJawReplacementPointAsync(
 				       ReshapeClient, polylineFeature, reshapeLine, useNonDefaultReshapeSide);
+		}
+
+		public CrackerResult CalculateCrackPoints(
+			IList<Feature> selectedFeatures,
+			IList<Feature> targetFeatures,
+			ICrackerToolOptions crackerToolOptions,
+			CancellationToken cancellationToken)
+		{
+			if (CrackClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
+			return CrackerClientUtils.CalculateCrackPoints(CrackClient, selectedFeatures,
+			                                               targetFeatures,
+			                                               crackerToolOptions, cancellationToken);
+		}
+
+		public IList<ResultFeature> ApplyCrackPoints(
+			IEnumerable<Feature> selectedFeatures,
+			CrackerResult crackPointsToAdd,
+			IList<Feature> intersectingFeatures,
+			ICrackerToolOptions crackerToolOptions,
+			CancellationToken cancellationToken)
+		{
+			if (CrackClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
+			return CrackerClientUtils.ApplyCrackPoints(
+				CrackClient, selectedFeatures, crackPointsToAdd, intersectingFeatures,
+				crackerToolOptions, cancellationToken);
 		}
 	}
 }

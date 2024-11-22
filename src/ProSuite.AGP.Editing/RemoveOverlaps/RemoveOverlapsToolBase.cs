@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,8 +11,10 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
@@ -19,13 +22,18 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Text;
+using static System.Environment;
 
 namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
 	public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private RemoveOverlapsOptions _removeOverlapsToolOptions;
+		private OverridableSettingsProvider<PartialRemoveOverlapsOptions> _settingsProvider;
 
 		private Overlaps _overlaps;
 		private RemoveOverlapsFeedback _feedback;
@@ -40,9 +48,17 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			SecondPhaseCursor = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursorProcess);
 		}
 
+		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
+
+		[CanBeNull]
+		protected virtual string CentralConfigDir => null;
+
+		protected virtual string LocalConfigDir =>
+			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
+
 		protected abstract IRemoveOverlapsService MicroserviceClient { get; }
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
 
@@ -52,6 +68,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override void OnToolActivatingCore()
 		{
+			InitializeOptions();
+
 			_feedback = new RemoveOverlapsFeedback();
 		}
 
@@ -134,6 +152,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			RemoveOverlapsResult result =
 				MicroserviceClient.RemoveOverlaps(
 					selectedFeatures, overlapsToRemove, _overlappingFeatures,
+					_removeOverlapsToolOptions,
 					progressor?.CancellationToken ?? new CancellationTokenSource().Token);
 
 			var updates = new Dictionary<Feature, Geometry>();
@@ -222,7 +241,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			if (_overlaps != null && _overlaps.Notifications.Count > 0)
 			{
-				_msg.Info(_overlaps.Notifications.Concatenate(Environment.NewLine));
+				_msg.Info(_overlaps.Notifications.Concatenate(NewLine));
 
 				if (! _overlaps.HasOverlaps())
 				{
@@ -346,6 +365,38 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			return true;
 		}
 
+		private RemoveOverlapsOptions InitializeOptions()
+		{
+			Stopwatch watch = _msg.DebugStartTiming();
+
+			string currentCentralConfigDir = CentralConfigDir;
+			string currentLocalConfigDir = LocalConfigDir;
+
+			// For the time being, we always reload the options because they could have been updated in ArcMap
+			_settingsProvider =
+				new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(
+					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+
+			PartialRemoveOverlapsOptions localConfiguration, centralConfiguration;
+
+			_settingsProvider.GetConfigurations(out localConfiguration,
+			                                    out centralConfiguration);
+
+			_removeOverlapsToolOptions = new RemoveOverlapsOptions(centralConfiguration,
+				localConfiguration);
+
+			_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
+
+			string optionsMessage = _removeOverlapsToolOptions.GetLocalOverridesMessage();
+
+			if (! string.IsNullOrEmpty(optionsMessage))
+			{
+				_msg.Info(optionsMessage);
+			}
+
+			return _removeOverlapsToolOptions;
+		}
+
 		#region Search target features
 
 		[NotNull]
@@ -358,15 +409,17 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			Envelope inExtent = ActiveMapView.Extent;
 
-			// todo daro To tool Options? See ChangeGeometryAlongToolBase.SelectTargetsAsync() as well.
-			const TargetFeatureSelection targetFeatureSelection =
-				TargetFeatureSelection.VisibleSelectableFeatures;
+			TargetFeatureSelection targetFeatureSelection =
+				_removeOverlapsToolOptions.TargetFeatureSelection;
 
 			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
 
+			// They might be stored (insert target vertices):
+			featureFinder.ReturnUnJoinedFeatures = true;
+
 			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, true, CanOverlapLayer, inExtent, cancellabelProgressor);
+					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&
 			    cancellabelProgressor.CancellationToken.IsCancellationRequested)

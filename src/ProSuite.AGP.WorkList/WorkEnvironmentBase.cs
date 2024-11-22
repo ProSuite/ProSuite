@@ -15,6 +15,10 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
 {
+	/// <summary>
+	/// Encapsulates the state for a single work list instance, including the creation of
+	/// the work list.
+	/// </summary>
 	public abstract class WorkEnvironmentBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -36,7 +40,7 @@ namespace ProSuite.AGP.WorkList
 
 			string fileName = string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
 
-			string definitionFilePath = GetDefinitionFile(fileName);
+			string definitionFilePath = GetDefinitionFileFromProjectFolder(fileName);
 
 			IWorkItemStateRepository stateRepository =
 				CreateStateRepositoryCore(definitionFilePath, uniqueName);
@@ -64,11 +68,27 @@ namespace ProSuite.AGP.WorkList
 			return Task.FromResult(result);
 		}
 
-		public void AddLayer([NotNull] IWorkList worklist, string path)
+		public string GetDefinitionFileFromProjectFolder([NotNull] string worklistDisplayName)
+		{
+			Assert.ArgumentNotNullOrEmpty(worklistDisplayName, nameof(worklistDisplayName));
+
+			return WorkListUtils.GetDatasource(
+				Project.Current.HomeFolderPath, worklistDisplayName, FileSuffix);
+		}
+
+		/// <summary>
+		/// Loads the work list layer, containing the navigable items based on the plugin
+		/// datasource, into the map.
+		/// </summary>
+		/// <param name="worklist"></param>
+		/// <param name="workListDefinitionFilePath"></param>
+		public void LoadWorkListLayer([NotNull] IWorkList worklist,
+		                              [NotNull] string workListDefinitionFilePath)
 		{
 			//Create the work list layer with basic properties and connect to datasource
 			FeatureLayer worklistLayer =
-				CreateWorklistLayer(worklist, path, GetContainerCore<ILayerContainerEdit>());
+				CreateWorklistLayer(worklist, workListDefinitionFilePath,
+				                    GetLayerContainerCore<ILayerContainerEdit>());
 
 			//Set some hard-coded properties
 			worklistLayer.SetScaleSymbols(false);
@@ -85,22 +105,21 @@ namespace ProSuite.AGP.WorkList
 			//else: no compatible renderer found in layer file
 		}
 
-		public string GetDefinitionFile([NotNull] string worklistDisplayName)
-		{
-			Assert.ArgumentNotNullOrEmpty(worklistDisplayName, nameof(worklistDisplayName));
-
-			return WorkListUtils.GetDatasource(
-				Project.Current.HomeFolderPath, worklistDisplayName, FileSuffix);
-		}
-
 		/// <summary>
-		/// Loads associated layers if there are any.
+		/// Loads associated layers of the work list layer into the map, if there are any.
+		/// Typically, associated layers come with DB-status work lists, such as the layers of
+		/// the issue feature classes.
 		/// </summary>
 		public virtual void LoadAssociatedLayers() { }
 
 		public virtual void RemoveAssociatedLayers() { }
 
-		protected abstract T GetContainerCore<T>() where T : class;
+		/// <summary>
+		/// Returns the layer container (group layer or map) for the work list layer(s)
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
+		protected abstract T GetLayerContainerCore<T>() where T : class;
 
 		protected virtual async Task<bool> TryPrepareSchemaCoreAsync()
 		{

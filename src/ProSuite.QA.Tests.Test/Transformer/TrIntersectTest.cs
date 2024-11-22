@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -8,6 +9,8 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
@@ -22,6 +25,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
+			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
 			TestUtils.InitializeLicense();
 		}
 
@@ -304,6 +308,120 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
+		}
+
+		[Test]
+		public void CanHandleOutOfTileRequests()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+
+			IFeatureClass featureClass =
+				CreateFeatureClass(
+					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("Nr") });
+
+			ReadOnlyFeatureClass roPolyFc = ReadOnlyTableFactory.Create(featureClass);
+
+			double tileSize = 100;
+			double x = 2600000;
+			double y = 1200000;
+
+			// Left of first tile, NOT within search distance
+			IFeature leftOfFirst = CreateFeature(featureClass, x - 20, y + 30, x - 15, y + 40);
+			IFeature leftOfFirstIntersect =
+				CreateFeature(featureClass, x - 20, y + 30, x - 15, y + 40);
+
+			// Inside first tile:
+			IFeature insideFirst = CreateFeature(featureClass, x, y, x + 10, y + 10);
+			IFeature insideFirstIntersect = CreateFeature(featureClass, x, y, x + 10, y + 10);
+
+			// Right of first tile, NOT within search distance
+			IFeature rightOfFirst =
+				CreateFeature(featureClass, x + tileSize + 15, y + 30, x + tileSize + 20, y + 40);
+			IFeature rightOfFirstIntersect =
+				CreateFeature(featureClass, x + tileSize + 15, y + 30, x + tileSize + 20, y + 40);
+
+			// Left of second tile, NOT within the search distance:
+			IFeature leftOfSecond =
+				CreateFeature(featureClass, x + tileSize - 20, y, x + tileSize - 15, y + 10);
+			IFeature leftOfSecondIntersect =
+				CreateFeature(featureClass, x + tileSize - 20, y, x + tileSize - 15, y + 10);
+
+			TrIntersect tr = new TrIntersect(roPolyFc, roPolyFc);
+
+			TransformedFeatureClass transformedClass = tr.GetTransformed();
+			WriteFieldNames(transformedClass);
+
+			var test =
+				new ContainerOutOfTileDataAccessTest(transformedClass)
+				{
+					SearchDistanceIntoNeighbourTiles = 50
+				};
+
+			test.TileProcessed = (tile, outsideTileFeatures) =>
+			{
+				if (tile.CurrentEnvelope.XMin == x && tile.CurrentEnvelope.YMin == y)
+				{
+					// first tile: the leftOfFirst and rightOfFirst
+					Assert.AreEqual(2, outsideTileFeatures.Count);
+
+					foreach (IReadOnlyRow outsideTileFeature in outsideTileFeatures)
+					{
+						Assert.True(InvolvedRowUtils.GetInvolvedRows(outsideTileFeature).All(
+							            r => r.OID == leftOfFirst.OID ||
+							                 r.OID == leftOfFirstIntersect.OID ||
+							                 r.OID == rightOfFirst.OID ||
+							                 r.OID == rightOfFirstIntersect.OID));
+					}
+				}
+
+				if (tile.CurrentEnvelope.XMin == x + tileSize && tile.CurrentEnvelope.YMin == y)
+				{
+					// second tile: leftOfSecond, found twice because it intersects 2 tiles!
+					Assert.AreEqual(2, outsideTileFeatures.Count);
+
+					foreach (IReadOnlyRow outsideTileFeature in outsideTileFeatures)
+					{
+						Assert.True(InvolvedRowUtils.GetInvolvedRows(outsideTileFeature).All(
+							            r => r.OID == leftOfSecond.OID ||
+							                 r.OID == leftOfSecondIntersect.OID));
+					}
+				}
+
+				return 0;
+			};
+
+			test.SetSearchDistance(10);
+
+			var container = new TestContainer { TileSize = tileSize };
+
+			container.AddTest(test);
+
+			ISpatialReference sr = DatasetUtils.GetSpatialReference(featureClass);
+
+			IEnvelope aoi = GeometryFactory.CreateEnvelope(
+				2600000, 1200000.00, 2600000 + 2 * tileSize, 1200000.00 + tileSize, sr);
+
+			// First, using FullGeometrySearch:
+			test.UseFullGeometrySearch = true;
+			container.Execute(aoi);
+
+			// Now simulate full tile loading:
+			test.UseFullGeometrySearch = false;
+			test.UseTileEnvelope = true;
+			container.Execute(aoi);
+		}
+
+		private static IFeature CreateFeature(IFeatureClass featureClass,
+		                                      double xMin, double yMin,
+		                                      double xMax, double yMax)
+		{
+			ISpatialReference sr = DatasetUtils.GetSpatialReference(featureClass);
+
+			IFeature row = featureClass.CreateFeature();
+			row.Shape = GeometryFactory.CreatePolygon(xMin, yMin, xMax, yMax, sr);
+			row.Store();
+			return row;
 		}
 
 		private static void WriteFieldNames(GdbTable targetTable)

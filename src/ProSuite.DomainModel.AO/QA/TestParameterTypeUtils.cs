@@ -70,6 +70,8 @@ namespace ProSuite.DomainModel.AO.QA
 				return TestParameterType.RasterDataset;
 			if (typeof(ITerrainDef).IsAssignableFrom(dataType))
 				return TestParameterType.TerrainDataset;
+			if (typeof(ITopologyDef).IsAssignableFrom(dataType))
+				return TestParameterType.TopologyDataset;
 
 			if (typeof(IReadOnlyFeatureClass).IsAssignableFrom(dataType))
 				return TestParameterType.VectorDataset;
@@ -91,6 +93,8 @@ namespace ProSuite.DomainModel.AO.QA
 				return TestParameterType.RasterMosaicDataset;
 			if (typeof(TerrainReference).IsAssignableFrom(dataType))
 				return TestParameterType.TerrainDataset;
+			if (typeof(TopologyReference).IsAssignableFrom(dataType))
+				return TestParameterType.TopologyDataset;
 
 			// The following types cannot be loaded in the Enterprise SDK:
 			if (dataType.Name == "IMosaicLayer")
@@ -141,7 +145,8 @@ namespace ProSuite.DomainModel.AO.QA
 			if (typeof(IFeatureClassSchemaDef).IsAssignableFrom(type) ||
 			    typeof(ITableSchemaDef).IsAssignableFrom(type) ||
 			    typeof(IRasterDatasetDef).IsAssignableFrom(type) ||
-			    typeof(ITerrainDef).IsAssignableFrom(type))
+			    typeof(ITerrainDef).IsAssignableFrom(type) ||
+			    typeof(ITopologyDef).IsAssignableFrom(type))
 			{
 				return true;
 			}
@@ -164,7 +169,8 @@ namespace ProSuite.DomainModel.AO.QA
 			       type.Name == "IGeometricNetwork" ||
 #endif
 			       typeof(TerrainReference).IsAssignableFrom(type) ||
-			       typeof(SimpleRasterMosaic).IsAssignableFrom(type);
+			       typeof(SimpleRasterMosaic).IsAssignableFrom(type) ||
+			       typeof(TopologyReference).IsAssignableFrom(type);
 		}
 
 		public static bool IsValidDataset(TestParameterType parameterType,

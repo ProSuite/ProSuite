@@ -1,13 +1,18 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
+using ArcGIS.Desktop.Internal.Mapping;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
@@ -53,7 +58,8 @@ namespace ProSuite.AGP.Editing
 			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
 				MapView.Active, selectionTolerancePixels, sketchGeometry.Extent.Center);
 
-			_msg.VerboseDebug(() => $"Selection tolerance in map units: {selectionToleranceMapUnits}");
+			_msg.VerboseDebug(
+				() => $"Selection tolerance in map units: {selectionToleranceMapUnits}");
 
 			return sketchGeometry.Extent.Width <= selectionToleranceMapUnits &&
 			       sketchGeometry.Extent.Height <= selectionToleranceMapUnits;
@@ -79,6 +85,42 @@ namespace ProSuite.AGP.Editing
 			}
 
 			return sketch;
+		}
+
+		/// <summary>
+		/// Make the given sketch geometry into a polygon suitable for searching.
+		/// If the sketch geometry comes from a "point click", create an envelope
+		/// around this point (width=height=2*tolerance); otherwise return the
+		/// sketch geometry unmodified.
+		/// </summary>
+		public static Geometry SketchToSearchGeometry(Geometry sketch, double tolerance,
+		                                              out bool isPointClick)
+		{
+			var extent = sketch.Extent;
+			isPointClick = extent.Width <= tolerance && extent.Height <= tolerance;
+
+			if (isPointClick)
+			{
+				var clickPoint = sketch.Extent.Center;
+
+				var delta = tolerance * 2;
+
+				// Expand the envelope of the clicked point by tolerance on all sides,
+				// then make it a Polygon to have a high-level geometry:
+
+				var clickExtent = clickPoint.Extent;
+				sketch = GeometryFactory.CreatePolygon(
+					clickExtent.Expand(delta, delta, false),
+					clickExtent.SpatialReference);
+			}
+
+			return sketch;
+		}
+
+		public static double ConvertScreenPixelToMapLength(MapView mapView, int pixels,
+		                                                   MapPoint atPoint)
+		{
+			return MapUtils.ConvertScreenPixelToMapLength(mapView, pixels, atPoint);
 		}
 
 		/// <summary>
@@ -127,7 +169,7 @@ namespace ProSuite.AGP.Editing
 		{
 			double bufferDistance =
 				MapUtils.ConvertScreenPixelToMapLength(
-				MapView.Active, pixelBufferDistance, sketchGeometry.Extent.Center);
+					MapView.Active, pixelBufferDistance, sketchGeometry.Extent.Center);
 
 			double envelopeExpansion = bufferDistance * 2;
 
@@ -140,7 +182,14 @@ namespace ProSuite.AGP.Editing
 			//	GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
 
 			// Just expand the envelope
-			return envelope.Expand(envelopeExpansion, envelopeExpansion, false);
+			// .. but PickerViewModel needs a polygon to display selection geometry (press space).
+
+			// HasZ, HasM and HasID are inherited from input geometry. Thereßss no need
+			// for GeometryUtils.EnsureGeometrySchema()
+
+			return GeometryFactory.CreatePolygon(
+				envelope.Expand(envelopeExpansion, envelopeExpansion, false),
+				envelope.SpatialReference);
 		}
 
 		public static async Task<bool> FlashResultPolygonsAsync(
@@ -176,24 +225,85 @@ namespace ProSuite.AGP.Editing
 
 		public static HashSet<long> GetEditableClassHandles([NotNull] MapView mapView)
 		{
-			IEnumerable<BasicFeatureLayer> basicFeatureLayers =
+			var editableClassHandles = new HashSet<long>();
+
+			IEnumerable<BasicFeatureLayer> editableFeatureLayers =
 				MapUtils.GetFeatureLayers<BasicFeatureLayer>(
 					mapView.Map, bfl => bfl?.IsEditable == true);
 
-			HashSet<long> editableClassHandles = basicFeatureLayers
-			                                     .Select(l => l.GetTable().Handle.ToInt64())
-			                                     .ToHashSet();
+			foreach (var featureLayer in editableFeatureLayers)
+			{
+				FeatureClass featureClass = featureLayer.GetFeatureClass();
+
+				if (featureClass == null)
+				{
+					continue;
+				}
+
+				featureClass = DatasetUtils.GetDatabaseFeatureClass(featureClass);
+
+				editableClassHandles.Add(featureClass.Handle.ToInt64());
+			}
 
 			return editableClassHandles;
 		}
 
+		[CanBeNull]
 		public static FeatureClass GetCurrentTargetFeatureClass(
-			[CanBeNull] EditingTemplate editTemplate)
+			[CanBeNull] EditingTemplate editTemplate,
+			bool unwrapJoins = true)
 		{
-			// TODO: Notifications
 			FeatureLayer featureLayer = CurrentTargetLayer(editTemplate);
 
-			return featureLayer?.GetFeatureClass();
+			var layerFeatureClass = featureLayer?.GetFeatureClass();
+
+			if (layerFeatureClass == null)
+			{
+				return null;
+			}
+
+			return unwrapJoins
+				       ? DatasetUtils.GetDatabaseFeatureClass(layerFeatureClass)
+				       : layerFeatureClass;
+		}
+
+		[NotNull]
+		public static FeatureClass GetCurrentTargetFeatureClass(bool unwrapJoins,
+		                                                        [CanBeNull] out Subtype subtype)
+		{
+			EditingTemplate editingTemplate = EditingTemplate.Current;
+			subtype = null;
+
+			if (editingTemplate == null)
+			{
+				throw new InvalidOperationException("No current template");
+			}
+
+			FeatureClass currentTargetClass =
+				GetCurrentTargetFeatureClass(editingTemplate, unwrapJoins);
+
+			if (currentTargetClass == null)
+			{
+				throw new InvalidOperationException("No current target feature class");
+			}
+
+			FeatureClassDefinition classDefinition = currentTargetClass.GetDefinition();
+
+			string subtypeField = classDefinition.GetSubtypeField();
+
+			if (! string.IsNullOrEmpty(subtypeField))
+			{
+				object subtypeValue = editingTemplate.Inspector[subtypeField];
+
+				if (subtypeValue != null && subtypeValue != DBNull.Value)
+				{
+					int subtypeCode = (int) subtypeValue;
+					subtype = classDefinition.GetSubtypes()
+					                         .FirstOrDefault(s => s.GetCode() == subtypeCode);
+				}
+			}
+
+			return currentTargetClass;
 		}
 
 		[CanBeNull]
@@ -202,6 +312,36 @@ namespace ProSuite.AGP.Editing
 			var featureLayer = editTemplate?.Layer as FeatureLayer;
 
 			return featureLayer;
+		}
+
+		public static SketchGeometryType GetSketchGeometryType()
+		{
+			return MapView.Active?.GetSketchType() ?? SketchGeometryType.None;
+		}
+
+		/// <summary>
+		/// Get the current selection color (or the default Cyan RGB
+		/// if anything goes wrong).
+		/// </summary>
+		[NotNull]
+		public static CIMColor GetSelectionColor()
+		{
+			var defaultColor = ColorUtils.CyanRGB;
+
+			try
+			{
+				using var settings = SelectionSettings.CreateFromUserProfile();
+				var xml = settings.DefaultSelectionColor;
+				if (string.IsNullOrEmpty(xml))
+					return defaultColor;
+				var color = CIMColor.GetColorObject(xml);
+				return color ?? defaultColor;
+			}
+			catch (Exception ex)
+			{
+				_msg.Error($"Error getting user profile selection color: {ex.Message}", ex);
+				return defaultColor;
+			}
 		}
 	}
 }

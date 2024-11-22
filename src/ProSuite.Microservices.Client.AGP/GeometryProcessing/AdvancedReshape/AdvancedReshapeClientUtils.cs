@@ -64,7 +64,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 		{
 			var allInputFeatures = new Dictionary<GdbObjectReference, Feature>();
 
-			AddInputFeatures(selectedFeatures, allInputFeatures);
+			FeatureProcessingUtils.AddInputFeatures(selectedFeatures, allInputFeatures);
 
 			var request = CreateReshapeRequest(
 				selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
@@ -123,10 +123,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 		{
 			var allInputFeatures = new Dictionary<GdbObjectReference, Feature>();
 
-			AddInputFeatures(selectedFeatures, allInputFeatures);
+			FeatureProcessingUtils.AddInputFeatures(selectedFeatures, allInputFeatures);
 
 			if (adjacentFeatures != null)
-				AddInputFeatures(adjacentFeatures, allInputFeatures);
+				FeatureProcessingUtils.AddInputFeatures(adjacentFeatures, allInputFeatures);
 
 			AdvancedReshapeRequest request = CreateReshapeRequest(
 				selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
@@ -178,18 +178,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 			return result;
 		}
 
-		private static void AddInputFeatures(
-			[NotNull] IEnumerable<Feature> features,
-			[NotNull] IDictionary<GdbObjectReference, Feature> toDictionary)
-		{
-			foreach (Feature selectedFeature in features)
-			{
-				GdbObjectReference objectReference =
-					ProtobufConversionUtils.ToObjectReferenceWithUniqueClassId(selectedFeature);
-
-				toDictionary.Add(objectReference, selectedFeature);
-			}
-		}
 
 		private static AdvancedReshapeRequest CreateReshapeRequest(
 			[NotNull] IList<Feature> selectedFeatures,

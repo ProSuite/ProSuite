@@ -78,9 +78,11 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			}
 
 			message.AppendLine(".").AppendLine();
-			message.Append("Beware that the Symbology dock pane may not reflect ");
-			message.Append("your changes and holds on the old state. ");
-			message.Append("Consider closing (and re-opening) the map.");
+			message.Append("The Symbology pane may not reflect the latest changes but ");
+			message.Append("show the old state. Refresh by closing and re-opening the map.");
+
+			//The Symbology pane may not reflect the latest changes but show the old state.
+			// Refresh by closing and re-opening the map.
 
 			// Just for reference: the Symbology dockpane has DAML ID "esri_mapping_symbologyDockPane"
 			// To get it: FrameworkApplication.DockPaneManager.Find("esri_mapping_symbologyDockPane");

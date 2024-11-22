@@ -14,6 +14,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) prototype.Clone();
 		}
 
+		/// <summary>
+		/// Return the given <paramref name="builder"/> with HasZ, HasM, HasID,
+		/// and SpatialReference set from the given <paramref name="template"/>.
+		/// </summary>
 		public static T Configure<T>(this T builder, Geometry template) where T : GeometryBuilderEx
 		{
 			if (builder is null) return null;
@@ -25,6 +29,58 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			builder.SpatialReference = template.SpatialReference;
 
 			return builder;
+		}
+
+		/// <summary>
+		/// Return a new segment builder initialized from the given segment.
+		/// </summary>
+		public static SegmentBuilderEx ToBuilder(this Segment segment)
+		{
+			if (segment is null)
+				throw new ArgumentNullException(nameof(segment));
+
+			switch (segment)
+			{
+				case LineSegment line: return new LineBuilderEx(line);
+				case EllipticArcSegment arc: return new EllipticArcBuilderEx(arc);
+				case CubicBezierSegment cubic: return new CubicBezierBuilderEx(cubic);
+			}
+
+			throw new NotSupportedException($"Unknown segment type: {segment.GetType().Name}");
+		}
+
+		public static PolylineBuilderEx ToBuilder(this Polyline polyline)
+		{
+			if (polyline is null)
+				throw new ArgumentNullException(nameof(polyline));
+
+			return new PolylineBuilderEx(polyline);
+		}
+
+		public static PolygonBuilderEx ToBuilder(this Polygon polygon)
+		{
+			if (polygon is null)
+				throw new ArgumentNullException(nameof(polygon));
+
+			return new PolygonBuilderEx(polygon);
+		}
+
+		/// <summary>
+		/// Return a new multipart builder initialized from the given
+		/// multipart geometry (Polyline or Polygon).
+		/// </summary>
+		public static MultipartBuilderEx ToBuilder(this Multipart multipart)
+		{
+			if (multipart is null)
+				throw new ArgumentNullException(nameof(multipart));
+
+			switch (multipart)
+			{
+				case Polyline polyline: return new PolylineBuilderEx(polyline);
+				case Polygon polygon: return new PolygonBuilderEx(polygon);
+			}
+
+			throw new NotSupportedException($"Unknown geometry type: {multipart.GetType().Name}");
 		}
 
 		public static GeometryBuilderEx ToBuilder(this Geometry geometry)
@@ -132,6 +188,109 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			yield return new Coordinate2D(envelope.XMax, envelope.YMax);
 			yield return new Coordinate2D(envelope.XMax, envelope.YMin);
 			yield return new Coordinate2D(envelope.XMin, envelope.YMin);
+		}
+
+		/// <summary>
+		/// Create a multipoint from the given array of alternating X and Y
+		/// coordinate values (the last value is ignored if the array has
+		/// an odd number of values).
+		/// </summary>
+		public static Multipoint CreateMultipointXY(params double[] xys)
+		{
+			var builder = new MultipointBuilderEx();
+			builder.HasZ = builder.HasM = builder.HasID = false;
+			for (int i = 0; i < xys.Length - 1; i += 2)
+			{
+				builder.AddPoint(new Coordinate2D(xys[i], xys[i + 1]));
+			}
+			return builder.ToGeometry();
+		}
+
+		/// <summary>
+		/// Create a polyline from the given array of alternating X and Y
+		/// coordinate values. A value of NaN in the array starts a new part.
+		/// </summary>
+		public static Polyline CreatePolylineXY(params double[] xys)
+		{
+			var builder = new PolylineBuilderEx();
+			builder.HasZ = builder.HasM = builder.HasID = false;
+
+			var coords = new double[4];
+			int j = 0; // index into coords
+			bool startNewPart = true;
+
+			foreach (double value in xys)
+			{
+				if (double.IsNaN(value))
+				{
+					startNewPart = true;
+					j = 0; // flush coords
+				}
+				else
+				{
+					coords[j++] = value;
+
+					if (j == 4)
+					{
+						var p0 = new Coordinate2D(coords[0], coords[1]);
+						var p1 = new Coordinate2D(coords[2], coords[3]);
+						var seg = LineBuilderEx.CreateLineSegment(p0, p1);
+						builder.AddSegment(seg, startNewPart);
+						startNewPart = false;
+						// 2nd coord pair becomes 1st pair
+						coords[0] = coords[2];
+						coords[1] = coords[3];
+						// prepare for another coord pair:
+						j = 2;
+					}
+				}
+			}
+
+			return builder.ToGeometry();
+		}
+
+		/// <summary>
+		/// Create a polygon from the given array of alternating X and Y
+		/// coordinate values. A value of NaN in the array starts a new part.
+		/// The last coordinate pair of each ring should equal the first pair.
+		/// </summary>
+		public static Polygon CreatePolygonXY(params double[] xys)
+		{
+			var builder = new PolygonBuilderEx();
+			builder.HasZ = builder.HasM = builder.HasID = false;
+
+			var coords = new double[4];
+			int j = 0; // index into coords
+			bool startNewPart = true;
+
+			foreach (double value in xys)
+			{
+				if (double.IsNaN(value))
+				{
+					startNewPart = true;
+					j = 0; // flush coords
+				}
+				else
+				{
+					coords[j++] = value;
+
+					if (j == 4)
+					{
+						var p0 = new Coordinate2D(coords[0], coords[1]);
+						var p1 = new Coordinate2D(coords[2], coords[3]);
+						var seg = LineBuilderEx.CreateLineSegment(p0, p1);
+						builder.AddSegment(seg, startNewPart);
+						startNewPart = false;
+						// 2nd coord pair becomes 1st pair
+						coords[0] = coords[2];
+						coords[1] = coords[3];
+						// prepare for another coord pair:
+						j = 2;
+					}
+				}
+			}
+
+			return builder.ToGeometry();
 		}
 
 		public static Polygon CreateBezierCircle(double radius = 1, MapPoint center = null)

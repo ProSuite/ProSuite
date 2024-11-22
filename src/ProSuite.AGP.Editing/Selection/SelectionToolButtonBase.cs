@@ -49,7 +49,7 @@ namespace ProSuite.AGP.Editing.Selection
 			}
 			catch (Exception ex)
 			{
-				Gateway.HandleError(ex, _msg);
+				Gateway.ShowError(ex, _msg);
 			}
 		}
 

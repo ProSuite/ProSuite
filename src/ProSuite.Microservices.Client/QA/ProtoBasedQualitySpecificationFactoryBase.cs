@@ -299,7 +299,7 @@ namespace ProSuite.Microservices.Client.QA
 				}
 				else
 				{
-					parameterValue.StringValue = parameterMsg.Value;
+					parameterValue.StringValue = ProtobufGeomUtils.EmptyToNull(parameterMsg.Value);
 				}
 
 				// Or better add with null-dataset?

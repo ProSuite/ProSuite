@@ -34,6 +34,31 @@ namespace ProSuite.DomainModel.Core.DataModel
 			_networkDatasets = networkDatasets.ToList();
 		}
 
+		private int _cloneId = -1;
+
+		/// <summary>
+		/// The clone Id can be set if this instance is a (remote) clone of a persistent LinearNetwork.
+		/// </summary>
+		/// <param name="id"></param>
+		public void SetCloneId(int id)
+		{
+			Assert.True(base.Id < 0, "Persistent entity or already initialized clone.");
+			_cloneId = id;
+		}
+
+		public new int Id
+		{
+			get
+			{
+				if (base.Id < 0 && _cloneId != -1)
+				{
+					return _cloneId;
+				}
+
+				return base.Id;
+			}
+		}
+
 		[Required]
 		public string Name
 		{

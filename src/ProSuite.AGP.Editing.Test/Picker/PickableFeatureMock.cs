@@ -13,6 +13,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 		public Geometry Geometry { get; set; }
 		public ImageSource ImageSource { get; }
 		public double Score { get; set; }
+		public int ShapeDimension { get; }
 		public bool Disjoint { get; set; }
 	}
 }

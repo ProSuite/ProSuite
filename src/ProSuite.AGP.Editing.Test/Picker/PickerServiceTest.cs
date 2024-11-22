@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using NUnit.Framework;
@@ -55,11 +54,11 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			var pickerPrecedence = new StandardPickerPrecedenceMock();
 			pickerPrecedence.SelectionGeometry = referenceGeometry;
 
-			Func<Task<IPickableItem>> pickSingle =
-				picker.PickSingle<IPickableItem>(items, new Point(42, 99),
+			Task<IPickableItem> pickSingle =
+				picker.PickSingle<IPickableItem>(items,
 				                                 pickerPrecedence);
 
-			IPickableItem pickedItem = await pickSingle();
+			IPickableItem pickedItem = await pickSingle;
 
 			Assert.AreEqual(shortPolyline, pickedItem.Geometry);
 		}

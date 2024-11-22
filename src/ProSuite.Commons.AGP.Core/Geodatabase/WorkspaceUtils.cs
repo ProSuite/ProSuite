@@ -1,7 +1,9 @@
 using System;
+using System.Text;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
+using ProSuite.Commons.Ado;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -131,6 +133,73 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return null;
 		}
 
+		public static DatabaseConnectionProperties GetConnectionProperties(
+			[NotNull] string connectionString)
+		{
+			Assert.ArgumentNotNullOrEmpty(connectionString, nameof(connectionString));
+
+			var builder = new ConnectionStringBuilder(connectionString);
+
+			Assert.True(
+				Enum.TryParse(builder["dbclient"], ignoreCase: true,
+				              out EnterpriseDatabaseType databaseType),
+				$"Cannot parse {nameof(EnterpriseDatabaseType)} from connection string {connectionString}");
+
+			Assert.True(
+				Enum.TryParse(builder["authentication_mode"], ignoreCase: true,
+				              out AuthenticationMode authMode),
+				$"Cannot parse {nameof(AuthenticationMode)} from connection string {connectionString}");
+
+			string instance = builder["instance"];
+
+			// Real-world examples for instance:
+			// Oracle:
+			// - "sde:oracle11g:TOPGIST:SDE"
+			// - "sde:oracle$sde:oracle11g:gdzh"
+
+			// PostgreSQL:
+			// sde:postgresql:localhost
+
+			// NOTE: Sometimes the DB_CONNECTION_PROPERTIES contains the single instance name,
+			//       but it can also contain the colon-separated components.
+
+			string database = string.IsNullOrEmpty(builder["server"])
+				                  ? builder["database"]
+				                  : builder["server"];
+
+			string[] strings = instance?.Split(':');
+
+			if (strings?.Length > 1)
+			{
+				string lastItem = strings[^1];
+
+				if (lastItem.Equals("SDE", StringComparison.OrdinalIgnoreCase))
+				{
+					// Take the second last item
+					instance = strings[^2];
+				}
+				else
+				{
+					instance = lastItem;
+				}
+			}
+
+			var connectionProperties =
+				new DatabaseConnectionProperties(databaseType)
+				{
+					AuthenticationMode = authMode,
+					ProjectInstance = builder["project_instance"],
+					Database = database,
+					Instance = instance,
+					Version = builder["version"],
+					Branch = builder["branch"],
+					Password = builder["encrypted_password"],
+					User = builder["user"]
+				};
+
+			return connectionProperties;
+		}
+
 		/// <summary>
 		/// Gets a displayable text describing a given workspace.
 		/// </summary>
@@ -214,9 +283,26 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			string instance = dbConnectionProps.Instance;
 
 			return string.IsNullOrEmpty(databaseName)
-				       ? string.Format("{0} - {1}", instance, versionName)
-				       : string.Format("{0} ({1}) - {2}", databaseName,
-				                       instance, versionName);
+				       ? $"{instance} - {versionName}"
+				       : $"{databaseName} ({instance}) - {versionName}";
+		}
+
+		public static string ConnectionPropertiesToString(
+			[NotNull] DatabaseConnectionProperties dbConnectionProps)
+		{
+			var sb = new StringBuilder();
+
+			sb.Append("DBMS: ").AppendLine(dbConnectionProps.DBMS.ToString());
+			sb.Append("Database: ").AppendLine(dbConnectionProps.Database);
+			sb.Append("Instance: ").AppendLine(dbConnectionProps.Instance);
+			sb.Append("Authentication Mode: ")
+			  .AppendLine(dbConnectionProps.AuthenticationMode.ToString());
+			sb.Append("User: ").AppendLine(dbConnectionProps.User);
+			sb.Append("Version: ").AppendLine(dbConnectionProps.Version);
+			sb.Append("Branch: ").AppendLine(dbConnectionProps.Branch);
+			sb.Append("Project Instance: ").Append(dbConnectionProps.ProjectInstance);
+
+			return sb.ToString();
 		}
 	}
 }

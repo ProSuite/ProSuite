@@ -13,5 +13,8 @@ namespace ProSuite.DomainModel.Core.DataModel.Repositories
 		[NotNull]
 		IList<T> Get<T>([NotNull] IDdxDataset dataset)
 			where T : ObjectCategoryAttributeConstraint;
+
+		IList<T> Get<T>(DdxModel model)
+			where T : ObjectCategoryAttributeConstraint;
 	}
 }

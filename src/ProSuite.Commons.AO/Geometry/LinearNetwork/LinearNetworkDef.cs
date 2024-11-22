@@ -120,6 +120,13 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 			return false;
 		}
 
+		/// <summary>
+		/// Determines if the specified feature is a junction in the linear network. This requires
+		/// not just being part of a network feature class but also conforming to a potential where
+		/// clause.
+		/// </summary>
+		/// <param name="feature"></param>
+		/// <returns></returns>
 		public bool IsJunctionFeature([NotNull] IFeature feature)
 		{
 			if (DatasetUtils.GetShapeType(feature.Class) != esriGeometryType.esriGeometryPoint)
@@ -135,7 +142,60 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 					continue;
 				}
 
-				return junctionClassDef.IsInLinearNetworkClass(feature);
+				if (junctionClassDef.IsInLinearNetworkClass(feature))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		public bool IsSplittingJunction(IFeature feature)
+		{
+			if (DatasetUtils.GetShapeType(feature.Class) != esriGeometryType.esriGeometryPoint)
+			{
+				return false;
+			}
+
+			foreach (LinearNetworkClassDef junctionClassDef in NetworkClassDefinitions.Where(
+				         nc => nc.GeometryType == esriGeometryType.esriGeometryPoint))
+			{
+				if (! junctionClassDef.Splitting)
+				{
+					continue;
+				}
+
+				// The junction is splitting, if it really is part of the network definition
+				if (IsFeatureInNetworkClass(feature, junctionClassDef))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		public bool IsSplittingEdge(IFeature feature)
+		{
+			if (DatasetUtils.GetShapeType(feature.Class) != esriGeometryType.esriGeometryPolyline)
+			{
+				return false;
+			}
+
+			foreach (LinearNetworkClassDef edgeClassDef in NetworkClassDefinitions.Where(
+				         nc => nc.GeometryType == esriGeometryType.esriGeometryPolyline))
+			{
+				if (! edgeClassDef.Splitting)
+				{
+					continue;
+				}
+
+				// The edge is split, if it really is part of the network definition
+				if (IsFeatureInNetworkClass(feature, edgeClassDef))
+				{
+					return true;
+				}
 			}
 
 			return false;
