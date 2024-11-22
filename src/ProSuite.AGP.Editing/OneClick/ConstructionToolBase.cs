@@ -237,7 +237,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				// By backing up and re-setting the edit sketch the individual operations that made up the 
 				// sketch are lost.
-				// todo daro await
+				// todo: daro await
 				_editSketchBackup = GetCurrentSketchAsync().Result;
 
 				// TODO: Only clear the sketch and switch to selection phase if REALLY required
@@ -268,7 +268,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{
-			// todo daro more ViewUtils
 			_msg.VerboseDebug(() => $"HandleKeyUpCoreAsync ({Caption})");
 
 			if (KeyboardUtils.IsShiftKey(args.Key))
@@ -525,24 +524,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			return true;
 		}
-
-		//// todo daro drop
-		///// <summary>
-		///// Determines whether the provided selection can be used by this tool.
-		///// </summary>
-		///// <param name="selection"></param>
-		///// <returns></returns>
-		//private bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection)
-		//{
-		//	var mapMemberDictionary = new Dictionary<MapMember, List<long>>(selection.Count);
-
-		//	foreach (var keyValuePair in selection)
-		//	{
-		//		mapMemberDictionary.Add(keyValuePair.Key, keyValuePair.Value);
-		//	}
-
-		//	return CanUseSelection(mapMemberDictionary);
-		//}
 
 		private bool CanStartSketchPhase(IList<Feature> selectedFeatures)
 		{

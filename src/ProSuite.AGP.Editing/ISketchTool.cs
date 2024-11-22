@@ -4,7 +4,6 @@ using ArcGIS.Desktop.Mapping;
 
 namespace ProSuite.AGP.Editing;
 
-// todo daro rename to ISelectionSketchTool
 public interface ISketchTool
 {
 	string Caption { get; }

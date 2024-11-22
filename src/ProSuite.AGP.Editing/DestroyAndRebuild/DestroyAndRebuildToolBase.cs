@@ -177,7 +177,7 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 				                SelectModifiedFeatures = true
 			                };
 
-			// todo daro move to base? make utils?
+			// todo: daro move to base? make utils?
 			operation.Modify(inspector);
 
 			if (operation.IsEmpty)

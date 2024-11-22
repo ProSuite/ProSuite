@@ -240,9 +240,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				if (KeyboardUtils.IsShiftKey(args.Key))
 				{
-					// todo: daro rename to SetShiftCursor?
-					// This sets shift cursor. But don't do it in QueuedTask because
-					// tool cursor is not updated until mouse is moved for the first time.
 					await ShiftPressedCoreAsync();
 				}
 
@@ -332,12 +329,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				ViewUtils.ShowError(ex, _msg);
 			}
-		}
-
-		// todo: daro drop
-		protected virtual Task ResetSketchCoreAsync()
-		{
-			return Task.CompletedTask;
 		}
 
 		protected override void OnToolMouseDown(MapViewMouseButtonEventArgs args)
@@ -662,7 +653,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return ViewUtils.TryAsync(IsInSelectionPhaseCoreAsync(shiftDown), _msg);
 		}
 
-		// todo: daro revise shift down
 		protected virtual Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
 			return Task.FromResult(false);
@@ -749,7 +739,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected bool UnJoinedSelection { get; set; } = true;
 
-		// todo daro to explicit implementation
 		public void SetCursor([CanBeNull] Cursor cursor)
 		{
 			if (cursor == null)
@@ -904,7 +893,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 
-		// todo daro drop!
+		// todo: daro drop!
 		[NotNull]
 		protected IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
 			[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,

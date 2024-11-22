@@ -14,15 +14,14 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
-using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
 	public abstract class TwoPhaseEditToolBase : OneClickToolBase
 	{
-		// todo: daro rename
-		private SketchAndCursorSetter _secondPhaseSketchCursor;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private SketchAndCursorSetter _secondPhaseSketchCursor;
 
 		protected TwoPhaseEditToolBase()
 		{
@@ -181,7 +180,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task ShiftReleasedCoreAsync()
 		{
-			if (await QueuedTask.Run(IsInSelectionPhaseQueued))
+			if (await IsInSelectionPhaseAsync())
 			{
 				await base.ShiftReleasedCoreAsync();
 			}
@@ -193,7 +192,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task SetupLassoSketchAsync()
 		{
-			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
+			if (await IsInSelectionPhaseAsync())
 			{
 				await base.SetupLassoSketchAsync();
 			}
@@ -205,7 +204,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task SetupPolygonSketchAsync()
 		{
-			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
+			if (await IsInSelectionPhaseAsync())
 			{
 				await base.SetupPolygonSketchAsync();
 			}

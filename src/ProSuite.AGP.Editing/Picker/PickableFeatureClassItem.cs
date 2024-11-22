@@ -29,7 +29,7 @@ public class PickableFeatureClassItem : PickableFeatureClassItemBase
 				return _image;
 			}
 
-			// todo daro refactor, unkown image
+			// todo: daro refactor, unkown image
 			BasicFeatureLayer layer = Assert.NotNull(Layers.FirstOrDefault());
 
 			_image = new BitmapImage(PickerUtils.GetImagePath(layer.ShapeType));

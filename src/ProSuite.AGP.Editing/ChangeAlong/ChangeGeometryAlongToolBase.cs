@@ -229,7 +229,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return await QueuedTask.Run(() => UpdateFeatures(selection, cutSubcurves, progressor));
 		}
 
-		protected override async Task ResetSketchCoreAsync()
+		protected virtual async Task ResetSketchCoreAsync()
 		{
 			try
 			{
@@ -250,41 +250,25 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override async Task ShiftPressedCoreAsync()
 		{
-			try
+			if (await IsInSelectionPhaseAsync())
 			{
-				if (HasReshapeCurves())
-				{
-					//_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
-				}
-				else
-				{
-					await base.ShiftPressedCoreAsync();
-				}
+				await base.ShiftPressedCoreAsync();
 			}
-			catch (Exception ex)
+			else
 			{
-				ViewUtils.ShowError(ex, _msg);
+				_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
 			}
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()
 		{
-			// TODO: try catch not necessary
-			try
+			if (await IsInSelectionPhaseAsync())
 			{
-				// From the subclass' point of view SHIFT is still pressed:
-				if (await IsInSelectionPhaseAsync())
-				{
-					await base.ShiftReleasedCoreAsync();
-				}
-				else
-				{
-					_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
-				}
+				await base.ShiftReleasedCoreAsync();
 			}
-			catch (Exception ex)
+			else
 			{
-				ViewUtils.ShowError(ex, _msg);
+				_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
 			}
 		}
 
@@ -327,8 +311,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 
 			Task<bool> task = QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
-
-			return await ViewUtils.TryAsync(task, _msg);
+			bool result = await ViewUtils.TryAsync(task, _msg);
+			return result;
 		}
 
 		private bool HasReshapeCurves()

@@ -22,7 +22,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public static Uri GetImagePath(esriGeometryType? geometryType)
 		{
-			// todo daro introduce image for unkown type
+			// todo: daro introduce image for unkown type
 			//if (geometryType == null)
 			//{
 			//}
