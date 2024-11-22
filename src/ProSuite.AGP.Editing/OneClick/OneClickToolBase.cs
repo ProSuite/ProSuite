@@ -344,9 +344,16 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async void OnToolDoubleClick(MapViewMouseButtonEventArgs args)
 		{
-			if (GetSketchType() == SketchGeometryType.Polygon && await IsInSelectionPhaseAsync())
+			try
 			{
-				await FinishSketchAsync();
+				if (SketchType == SketchGeometryType.Polygon && await IsInSelectionPhaseAsync())
+				{
+					await FinishSketchAsync();
+				}
+			}
+			catch (Exception ex)
+			{
+				Gateway.ShowError(ex, _msg);
 			}
 		}
 
