@@ -12,6 +12,12 @@ namespace ProSuite.AGP.WorkList.Contracts
 	/// </summary>
 	public interface IWorkListItemDatastore
 	{
+		/// <summary>
+		/// Validates the datastore and returns a message if the validation fails. Must be called
+		/// on the MCT.
+		/// </summary>
+		/// <param name="message"></param>
+		/// <returns></returns>
 		bool Validate(out string message);
 
 		IEnumerable<Table> GetTables();

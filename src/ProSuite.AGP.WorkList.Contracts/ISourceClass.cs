@@ -1,4 +1,5 @@
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -15,7 +16,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		string DefinitionQuery { get; }
 
-		bool Uses(GdbTableIdentity table);
+		bool Uses(ITableReference tableReference);
 
 		T OpenDataset<T>() where T : Table;
 

@@ -12,16 +12,15 @@ namespace ProSuite.AGP.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private WorkListStatusSchema _statusSchema;
+		private readonly WorkListStatusSchema _statusSchema;
 
 		public DatabaseSourceClass(GdbTableIdentity identity,
 		                           [NotNull] WorkListStatusSchema statusSchema,
-		                           [NotNull] IAttributeReader attributeReader,
+		                           [CanBeNull] IAttributeReader attributeReader,
 		                           [CanBeNull] string definitionQuery)
 			: base(identity, attributeReader)
 		{
 			Assert.ArgumentNotNull(statusSchema, nameof(statusSchema));
-			Assert.ArgumentNotNull(attributeReader, nameof(attributeReader));
 
 			_statusSchema = statusSchema;
 			DefinitionQuery = definitionQuery;
@@ -47,14 +46,6 @@ namespace ProSuite.AGP.WorkList
 
 				return WorkItemStatus.Todo;
 			}
-		}
-
-		public void UpdateStatusSchema(object todoValue, object doneValue)
-		{
-			// TODO: Via constructor
-			_statusSchema = new WorkListStatusSchema(_statusSchema.FieldName,
-			                                         _statusSchema.FieldIndex, todoValue,
-			                                         doneValue);
 		}
 
 		public WorkItemStatus GetStatus([CanBeNull] object value)
