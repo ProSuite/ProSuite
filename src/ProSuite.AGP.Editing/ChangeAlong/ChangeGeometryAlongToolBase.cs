@@ -296,7 +296,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
-				_targetSketchCursor.Toggle(SketchGeometryType.Lasso);
+				_targetSketchCursor.Toggle(SketchGeometryType.Lasso, KeyboardUtils.IsShiftDown());
 			}
 		}
 
@@ -308,7 +308,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
-				_targetSketchCursor.Toggle(SketchGeometryType.Polygon);
+				_targetSketchCursor.Toggle(SketchGeometryType.Polygon, KeyboardUtils.IsShiftDown());
 			}
 		}
 
