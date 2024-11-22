@@ -129,31 +129,33 @@ namespace ProSuite.Processing.Test
 				toList.Add(edge);
 			}
 
-			public bool RemoveNode(TNode node)
-			{
-				if (node is null) return false;
-				var removed = _nodes.Remove(node,out var edges);
-				if (! removed) return false; // was not in our graph
-				// Must also remove all edges incident to the removed node:
-				foreach (var edge in edges)
-				{
-					_edges.Remove(edge);
-				}
-				return true;
-			}
+			//TODO: Does not compile in .Net48
+			//public bool RemoveNode(TNode node)
+			//{
+			//	if (node is null) return false;
+			//	var removed = _nodes.Remove(node,out var edges);
+			//	if (! removed) return false; // was not in our graph
+			//	// Must also remove all edges incident to the removed node:
+			//	foreach (var edge in edges)
+			//	{
+			//		_edges.Remove(edge);
+			//	}
+			//	return true;
+			//}
 
-			public bool RemoveEdge(TEdge edge)
-			{
-				if (edge is null) return false;
-				ValueTuple<TNode, TNode> pair;
-				var removed = _edges.Remove(edge, out pair);
-				if (! removed) return false; // was not in our graph
-				// Must also remove edge from node incidence lists:
-				TNode fromNode = pair.Item1, toNode = pair.Item2;
-				_nodes.GetValueOrDefault(fromNode)?.Remove(edge);
-				_nodes.GetValueOrDefault(toNode)?.Remove(edge);
-				return true;
-			}
+			//TODO: Does not compile in .Net48
+			//public bool RemoveEdge(TEdge edge)
+			//{
+			//	if (edge is null) return false;
+			//	ValueTuple<TNode, TNode> pair;
+			//	var removed = _edges.Remove(edge, out pair);
+			//	if (! removed) return false; // was not in our graph
+			//	// Must also remove edge from node incidence lists:
+			//	TNode fromNode = pair.Item1, toNode = pair.Item2;
+			//	_nodes.GetValueOrDefault(fromNode)?.Remove(edge);
+			//	_nodes.GetValueOrDefault(toNode)?.Remove(edge);
+			//	return true;
+			//}
 
 			public IEnumerable<(TEdge, TNode)> GetIncidentEdges(TNode node)
 			{
