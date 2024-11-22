@@ -210,6 +210,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		// TODO: use ShiftPressedCoreAsync
 		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
 		{
 			_msg.VerboseDebug(() => "OnKeyDownCore");
