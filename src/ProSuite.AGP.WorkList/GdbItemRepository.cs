@@ -67,6 +67,22 @@ namespace ProSuite.AGP.WorkList
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
+		protected GdbItemRepository(
+			IEnumerable<DbStatusSourceClassDefinition> sourceClassDefinitions,
+			IWorkItemStateRepository workItemStateRepository)
+		{
+			foreach (DbStatusSourceClassDefinition sourceDefinition in sourceClassDefinitions)
+			{
+				ISourceClass sourceClass = new DatabaseSourceClass(
+					new GdbTableIdentity(sourceDefinition.Table), sourceDefinition.StatusSchema,
+					null, sourceDefinition.DefinitionQuery);
+
+				SourceClasses.Add(sourceClass);
+			}
+
+			WorkItemStateRepository = workItemStateRepository;
+		}
+
 		protected IWorkItemStateRepository WorkItemStateRepository { get; }
 
 		[CanBeNull]
@@ -248,6 +264,14 @@ namespace ProSuite.AGP.WorkList
 			return WorkItemStateRepository.CurrentIndex ?? -1;
 		}
 
+		// TODO: Workspace property, the source class references the table
+		public Row GetGdbItemRow(IWorkItem workItem)
+		{
+			Geodatabase workspace = workItem.GdbRowProxy.Table.Workspace.OpenGeodatabase();
+
+			return workItem.GdbRowProxy.GetRow(workspace);
+		}
+
 		protected abstract void AdaptSourceFilter([NotNull] QueryFilter filter,
 		                                          [NotNull] ISourceClass sourceClass);
 
@@ -301,7 +325,8 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[NotNull]
-		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row, ISourceClass source);
+		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row,
+		                                                [NotNull] ISourceClass sourceClass);
 
 		[NotNull]
 		protected abstract ISourceClass CreateSourceClassCore(

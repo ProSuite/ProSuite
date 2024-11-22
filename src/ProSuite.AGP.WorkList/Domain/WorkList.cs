@@ -335,7 +335,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		public virtual void GoNearest(Geometry reference,
-		                              Predicate<IWorkItem> match,
+		                              Predicate<IWorkItem> match = null,
 		                              params Polygon[] contextPerimeters)
 		{
 			Assert.ArgumentNotNull(reference, nameof(reference));
