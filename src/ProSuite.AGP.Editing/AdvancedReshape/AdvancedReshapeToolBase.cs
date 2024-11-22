@@ -47,7 +47,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
 		protected ReshapeToolOptions _advancedReshapeToolOptions;
-		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
+		[CanBeNull] private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
 
 		private Task<bool> _updateFeedbackTask;
 
@@ -185,7 +185,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
-			_settingsProvider.StoreLocalConfiguration(_advancedReshapeToolOptions.LocalOptions);
+			_settingsProvider?.StoreLocalConfiguration(_advancedReshapeToolOptions.LocalOptions);
 
 			_symbolizedSketch?.Dispose();
 			_feedback?.Clear();
