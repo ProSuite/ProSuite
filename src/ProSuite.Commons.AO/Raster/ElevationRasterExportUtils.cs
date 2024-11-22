@@ -4,8 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+#if Server
 using ESRI.ArcGIS.DatasourcesRaster;
-using ESRI.ArcGIS.esriSystem;
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface.Raster;
