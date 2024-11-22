@@ -140,7 +140,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			InitializeOptions();
 			_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
 
-			base.OnToolActivatingCoreAsync();
+			await base.OnToolActivatingCoreAsync();
 		}
 
 		protected void InitializeOptions()

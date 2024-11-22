@@ -12,15 +12,14 @@ public class SketchAndCursorSetter
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	// todo: daro rename to _cursor, _shiftCursor, _lassoCursor, (_cursorLasso), _polygonCursor
 	[NotNull] private readonly ISketchTool _tool;
-	[NotNull] private readonly Cursor _selectionCursor;
-	[NotNull] private readonly Cursor _selectionCursorLasso;
-	[NotNull] private readonly Cursor _selectionCursorPolygon;
+	[NotNull] private readonly Cursor _cursor;
+	[NotNull] private readonly Cursor _lassoCursor;
+	[NotNull] private readonly Cursor _polygonCursor;
 
-	[CanBeNull] private Cursor _selectionCursorShift;
-	[CanBeNull] private Cursor _selectionCursorLassoShift;
-	[CanBeNull] private Cursor _selectionCursorPolygonShift;
+	[CanBeNull] private Cursor _cursorShift;
+	[CanBeNull] private Cursor _lassoCursorShift;
+	[CanBeNull] private Cursor _polygonCursorShift;
 
 	private readonly SketchGeometryType? _defaultSelectionSketchType;
 	private SketchGeometryType? _previousType;
@@ -29,29 +28,29 @@ public class SketchAndCursorSetter
 	/// Must be called on the MCT.
 	/// </summary>
 	public static SketchAndCursorSetter Create([NotNull] ISketchTool tool,
-	                                               [NotNull] Cursor cursor,
-	                                               [NotNull] Cursor lassoCursor,
-	                                               [NotNull] Cursor polygonCursor,
-	                                               SketchGeometryType defaultSelectionSketchType,
-	                                               bool defaultSketchTypeOnFinishSketch = false)
+	                                           [NotNull] Cursor cursor,
+	                                           [NotNull] Cursor lassoCursor,
+	                                           [NotNull] Cursor polygonCursor,
+	                                           SketchGeometryType defaultSelectionSketchType,
+	                                           bool defaultSketchTypeOnFinishSketch = false)
 	{
 		return new SketchAndCursorSetter(tool, cursor, lassoCursor,
-		                                     polygonCursor, defaultSelectionSketchType)
+		                                 polygonCursor, defaultSelectionSketchType)
 		       {
 			       DefaultSketchTypeOnFinishSketch = defaultSketchTypeOnFinishSketch
 		       };
 	}
 
 	private SketchAndCursorSetter([NotNull] ISketchTool tool,
-	                                  [NotNull] Cursor cursor,
-	                                  [NotNull] Cursor lassoCursor,
-	                                  [NotNull] Cursor polygonCursor,
-	                                  SketchGeometryType defaultSelectionSketchType)
+	                              [NotNull] Cursor cursor,
+	                              [NotNull] Cursor lassoCursor,
+	                              [NotNull] Cursor polygonCursor,
+	                              SketchGeometryType defaultSelectionSketchType)
 	{
 		_tool = tool ?? throw new ArgumentNullException(nameof(tool));
-		_selectionCursor = cursor ?? throw new ArgumentNullException(nameof(cursor));
-		_selectionCursorLasso = lassoCursor ?? throw new ArgumentNullException(nameof(lassoCursor));
-		_selectionCursorPolygon = polygonCursor ?? throw new ArgumentNullException(nameof(polygonCursor));
+		_cursor = cursor ?? throw new ArgumentNullException(nameof(cursor));
+		_lassoCursor = lassoCursor ?? throw new ArgumentNullException(nameof(lassoCursor));
+		_polygonCursor = polygonCursor ?? throw new ArgumentNullException(nameof(polygonCursor));
 
 		_defaultSelectionSketchType = defaultSelectionSketchType;
 
@@ -62,17 +61,17 @@ public class SketchAndCursorSetter
 
 	public void SetSelectionCursorShift(Cursor cursor)
 	{
-		_selectionCursorShift ??= cursor;
+		_cursorShift ??= cursor;
 	}
 
 	public void SetSelectionCursorLassoShift(Cursor cursor)
 	{
-		_selectionCursorLassoShift ??= cursor;
+		_lassoCursorShift ??= cursor;
 	}
 
 	public void SetSelectionCursorPolygonShift(Cursor cursor)
 	{
-		_selectionCursorPolygonShift ??= cursor;
+		_polygonCursorShift ??= cursor;
 	}
 
 	/// <summary>
@@ -166,21 +165,21 @@ public class SketchAndCursorSetter
 		switch (geometryType)
 		{
 			case SketchGeometryType.Rectangle:
-				return shiftDown && _selectionCursorShift != null
-					       ? _selectionCursorShift
-					       : _selectionCursor;
+				return shiftDown && _cursorShift != null
+					       ? _cursorShift
+					       : _cursor;
 			case SketchGeometryType.Polygon:
-				return shiftDown && _selectionCursorPolygonShift != null
-					       ? _selectionCursorPolygonShift
-					       : _selectionCursorPolygon;
+				return shiftDown && _polygonCursorShift != null
+					       ? _polygonCursorShift
+					       : _polygonCursor;
 			case SketchGeometryType.Lasso:
-				return shiftDown && _selectionCursorLassoShift != null
-					       ? _selectionCursorLassoShift
-					       : _selectionCursorLasso;
+				return shiftDown && _lassoCursorShift != null
+					       ? _lassoCursorShift
+					       : _lassoCursor;
 			default:
-				return shiftDown && _selectionCursorShift != null
-					       ? _selectionCursorShift
-					       : _selectionCursor;
+				return shiftDown && _cursorShift != null
+					       ? _cursorShift
+					       : _cursor;
 		}
 	}
 }
