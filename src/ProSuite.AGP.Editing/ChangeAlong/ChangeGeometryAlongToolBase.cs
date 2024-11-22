@@ -66,6 +66,14 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override async Task HandleEscapeAsync()
 		{
+			// Do not reset feedback in polygon sketch mode: Esc
+			// should only clear sketch not the feedback.
+			if (await NonEmptyPolygonSketchAsync())
+			{
+				await ClearSketchAsync();
+				return;
+			}
+
 			Task task = QueuedTask.Run(
 				() =>
 				{

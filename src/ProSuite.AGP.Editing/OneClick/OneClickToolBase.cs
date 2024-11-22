@@ -1026,5 +1026,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
 				                       Resources.Polygon, Resources.Shift, 10, 10);
 		}
+
+		protected async Task<bool> NonEmptyPolygonSketchAsync()
+		{
+			return SketchType == SketchGeometryType.Polygon &&
+			       ! (await GetCurrentSketchAsync()).IsEmpty;
+		}
 	}
 }

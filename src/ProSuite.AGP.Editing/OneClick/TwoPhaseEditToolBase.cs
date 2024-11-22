@@ -164,9 +164,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			// Do not reset feedback in polygon sketch mode: Esc
 			// should only clear sketch not the feedback.
-			if (SketchType == SketchGeometryType.Polygon &&
-			    ! await IsInSelectionPhaseAsync() &&
-			    ! (await GetCurrentSketchAsync()).IsEmpty)
+			if (await NonEmptyPolygonSketchAsync() &&
+			    ! await IsInSelectionPhaseAsync())
 			{
 				await ClearSketchAsync();
 				return;
