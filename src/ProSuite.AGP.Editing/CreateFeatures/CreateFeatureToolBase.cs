@@ -133,6 +133,27 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			// Don't intermit construction sketch: nothing to do here
 		}
 
+		protected override async Task HandleEscapeAsync()
+		{
+			try
+			{
+				Geometry sketch = await GetCurrentSketchAsync();
+
+				if (sketch is { IsEmpty: true } && MapUtils.HasSelection(ActiveMapView))
+				{
+					await QueuedTask.Run(ClearSelection);
+				}
+				else
+				{
+					await ClearSketchAsync();
+				}
+			}
+			catch (Exception ex)
+			{
+				Gateway.ShowError(ex, _msg);
+			}
+		}
+
 		#region Overrides of ConstructionToolBase
 
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
