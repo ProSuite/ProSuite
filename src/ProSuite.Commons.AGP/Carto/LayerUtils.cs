@@ -358,7 +358,9 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="unJoined"></param>
 		/// <returns></returns>
 		/// <exception cref="ArgumentException"></exception>
-		public static Table GetTable(IDisplayTable tableBasedMapMember, bool unJoined)
+		[CanBeNull]
+		public static Table GetTable([NotNull] IDisplayTable tableBasedMapMember,
+		                             bool unJoined)
 		{
 			Assert.ArgumentNotNull(tableBasedMapMember, nameof(tableBasedMapMember));
 

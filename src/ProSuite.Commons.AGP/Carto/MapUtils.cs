@@ -125,13 +125,15 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		public static Table GetTable([NotNull] MapMember mapMember)
+		private static Table GetTable([NotNull] MapMember mapMember,
+		                              bool unJoined = false)
 		{
 			Assert.ArgumentNotNull(mapMember, nameof(mapMember));
 
 			if (mapMember is IDisplayTable displayTable)
 			{
-				Table table = displayTable.GetTable();
+				Table table = LayerUtils.GetTable(displayTable, unJoined);
+
 				if (table == null)
 				{
 					throw new InvalidOperationException(
