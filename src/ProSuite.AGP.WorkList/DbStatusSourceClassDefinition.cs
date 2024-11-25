@@ -1,5 +1,6 @@
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList
 {
@@ -9,16 +10,25 @@ namespace ProSuite.AGP.WorkList
 	/// </summary>
 	public class DbStatusSourceClassDefinition
 	{
-		public DbStatusSourceClassDefinition(Table table, string definitionQuery,
-		                                     WorkListStatusSchema statusSchema)
+		public DbStatusSourceClassDefinition([NotNull] Table table,
+		                                     [CanBeNull] string definitionQuery,
+		                                     [NotNull] WorkListStatusSchema statusSchema)
 		{
 			Table = table;
 			DefinitionQuery = definitionQuery;
 			StatusSchema = statusSchema;
 		}
 
-		public Table Table { get; init; }
-		public string DefinitionQuery { get; init; }
-		public WorkListStatusSchema StatusSchema { get; init; }
+		[NotNull]
+		public Table Table { get; }
+
+		[NotNull]
+		public WorkListStatusSchema StatusSchema { get; }
+
+		[CanBeNull]
+		public string DefinitionQuery { get; }
+
+		[CanBeNull]
+		public IAttributeReader AttributeReader { get; set; }
 	}
 }

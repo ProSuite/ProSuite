@@ -15,6 +15,7 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.WorkList
 {
+	[Obsolete("Use DbStatusWorkItemRepository")]
 	public class IssueItemRepository : GdbItemRepository
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -213,6 +214,11 @@ namespace ProSuite.AGP.WorkList
 			public void ReadAttributes(Row fromRow, IWorkItem forItem, ISourceClass source)
 			{
 				forItem.Status = ((DatabaseSourceClass) source).GetStatus(fromRow);
+			}
+
+			public IList<InvolvedTable> ParseInvolved(string involvedString, bool hasGeometry)
+			{
+				throw new NotImplementedException();
 			}
 
 			#endregion

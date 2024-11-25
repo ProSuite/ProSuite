@@ -1,6 +1,8 @@
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain;
 
@@ -22,5 +24,13 @@ public abstract class DbStatusWorkList : WorkList
 		var gdbRepository = (GdbItemRepository) Repository;
 
 		return gdbRepository.GetGdbItemRow(currentItem);
+	}
+
+	[CanBeNull]
+	public IAttributeReader GetAttributeReader(long forSourceClassId)
+	{
+		return Repository.SourceClasses
+		                 .FirstOrDefault(sc => sc.GetUniqueTableId() == forSourceClassId)
+		                 ?.AttributeReader;
 	}
 }

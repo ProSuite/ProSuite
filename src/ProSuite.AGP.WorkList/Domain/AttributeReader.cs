@@ -167,6 +167,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		public IList<InvolvedTable> ParseInvolved(string involvedString, bool hasGeometry)
+		{
+			return IssueUtils.ParseInvolvedTables(involvedString, hasGeometry);
+		}
+
 		[CanBeNull]
 		public T GetValue<T>([NotNull] Row row, Attributes attribute)
 		{

@@ -75,7 +75,7 @@ namespace ProSuite.AGP.WorkList
 			{
 				ISourceClass sourceClass = new DatabaseSourceClass(
 					new GdbTableIdentity(sourceDefinition.Table), sourceDefinition.StatusSchema,
-					null, sourceDefinition.DefinitionQuery);
+					sourceDefinition.AttributeReader, sourceDefinition.DefinitionQuery);
 
 				SourceClasses.Add(sourceClass);
 			}
@@ -321,7 +321,18 @@ namespace ProSuite.AGP.WorkList
 			[NotNull] TableDefinition definition,
 			[CanBeNull] IWorkListItemDatastore tableSchema)
 		{
-			return null;
+			// TODO: Make independent of attribute list, use standard AttributeRoles
+			Attributes[] attributes = new[]
+			                          {
+				                          Attributes.QualityConditionName,
+				                          Attributes.IssueCodeDescription,
+				                          Attributes.InvolvedObjects,
+				                          Attributes.IssueSeverity,
+				                          Attributes.IssueCode,
+				                          Attributes.IssueDescription
+			                          };
+
+			return tableSchema?.CreateAttributeReader(definition, attributes);
 		}
 
 		[NotNull]
