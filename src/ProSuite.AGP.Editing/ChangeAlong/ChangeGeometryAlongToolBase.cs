@@ -210,33 +210,42 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
-			List<Feature> selection =
-				await QueuedTask.Run(
-					() => GetApplicableSelectedFeatures(ActiveMapView).ToList());
-
-			if (! IsInSubcurveSelectionPhase())
+			try
 			{
-				// 2. Phase: target selection:
-				return await SelectTargetsAsync(selection, sketchGeometry, progressor);
+				List<Feature> selection =
+					await QueuedTask.Run(
+						() => GetApplicableSelectedFeatures(ActiveMapView).ToList());
+
+				if (! IsInSubcurveSelectionPhase())
+				{
+					// 2. Phase: target selection:
+					return await SelectTargetsAsync(selection, sketchGeometry, progressor);
+				}
+
+				// 3. Phase: reshape/cut line selection:
+				List<CutSubcurve> cutSubcurves =
+					await QueuedTask.Run(() => GetSelectedCutSubcurves(sketchGeometry));
+
+				if (cutSubcurves.Count == 0)
+				{
+					// No subcurve hit, try target selection instead
+					return await SelectTargetsAsync(selection, sketchGeometry, progressor);
+				}
+
+				if (selection.Count == 0)
+				{
+					_msg.Warn("No usable selected features.");
+					return false;
+				}
+
+				return await QueuedTask.Run(
+					       () => UpdateFeatures(selection, cutSubcurves, progressor));
 			}
-
-			// 3. Phase: reshape/cut line selection:
-			List<CutSubcurve> cutSubcurves =
-				await QueuedTask.Run(() => GetSelectedCutSubcurves(sketchGeometry));
-
-			if (cutSubcurves.Count == 0)
+			finally
 			{
-				// No subcurve hit, try target selection instead
-				return await SelectTargetsAsync(selection, sketchGeometry, progressor);
+				// reset after 2. phase
+				_targetSketchCursor.ResetOrDefault();
 			}
-
-			if (selection.Count == 0)
-			{
-				_msg.Warn("No usable selected features.");
-				return false;
-			}
-
-			return await QueuedTask.Run(() => UpdateFeatures(selection, cutSubcurves, progressor));
 		}
 
 		protected virtual async Task ResetSketchCoreAsync()
