@@ -20,7 +20,7 @@ public static class ControlPointUtils
 	/// For a multipoint, pass the point index as both part and vertex index.
 	/// </summary>
 	/// <returns>The point ID or zero of there is no point ID</returns>
-	public static int GetPointID(Geometry shape, int partIndex, int vertexIndex) // TODO move to ControlPointUtils
+	public static int GetPointID(Geometry shape, int partIndex, int vertexIndex)
 	{
 		const int noID = 0;
 
