@@ -9,8 +9,10 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
@@ -140,7 +142,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				var selection = SelectionUtils.GetSelection(ActiveMapView.Map);
 
-				return SelectAndProcessDerivedGeometry(selection, sketchGeometry, progressor);
+				Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
+				Assert.NotNull(simpleGeometry, "Geometry is null");
+
+				return SelectAndProcessDerivedGeometry(selection, simpleGeometry, progressor);
 			});
 
 			StartSecondPhase();

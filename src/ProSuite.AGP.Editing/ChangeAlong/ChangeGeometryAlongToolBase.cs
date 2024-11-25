@@ -18,6 +18,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
@@ -224,7 +225,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 				// 3. Phase: reshape/cut line selection:
 				List<CutSubcurve> cutSubcurves =
-					await QueuedTask.Run(() => GetSelectedCutSubcurves(sketchGeometry));
+					await QueuedTask.Run(() =>
+					{
+						Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
+						Assert.NotNull(simpleGeometry, "Geometry is null");
+
+						return GetSelectedCutSubcurves(simpleGeometry);
+					});
 
 				if (cutSubcurves.Count == 0)
 				{
