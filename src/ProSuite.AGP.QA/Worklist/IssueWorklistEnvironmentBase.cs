@@ -12,12 +12,15 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.QA.WorkList
 {
 	public abstract class IssueWorkListEnvironmentBase : DbWorkListEnvironmentBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private const string _statusFieldName = "STATUS";
 
 		protected IssueWorkListEnvironmentBase(
 			[CanBeNull] IWorkListItemDatastore workListItemDatastore)
@@ -103,26 +106,70 @@ namespace ProSuite.AGP.QA.WorkList
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			var sourceClasses = new List<Tuple<Table, string>>();
+			var sourceClassDefinitions = new List<DbStatusSourceClassDefinition>();
+
+			// TODO: Make attribute reader more generic, use AttributeRoles
+			Attributes[] attributes = new[]
+			                          {
+				                          Attributes.QualityConditionName,
+				                          Attributes.IssueCodeDescription,
+				                          Attributes.InvolvedObjects,
+				                          Attributes.IssueSeverity,
+				                          Attributes.IssueCode,
+				                          Attributes.IssueDescription
+			                          };
 
 			foreach (Table table in tables)
 			{
 				string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
 
-				sourceClasses.Add(Tuple.Create(table, defaultDefinitionQuery));
+				TableDefinition tableDefinition = table.GetDefinition();
+
+				WorkListStatusSchema statusSchema = CreateStatusSchema(tableDefinition);
+
+				IAttributeReader attributeReader =
+					WorkListItemDatastore.CreateAttributeReader(tableDefinition, attributes);
+
+				var sourceClassDef =
+					new DbStatusSourceClassDefinition(table, defaultDefinitionQuery, statusSchema)
+					{
+						AttributeReader = attributeReader
+					};
+
+				sourceClassDefinitions.Add(
+					sourceClassDef);
 			}
 
-			var result =
-				new IssueItemRepository(sourceClasses, stateRepository, WorkListItemDatastore);
+			var result = new DbStatusWorkItemRepository(sourceClassDefinitions, stateRepository);
 
-			_msg.DebugStopTiming(watch, "Created issue work item repository");
+			_msg.DebugStopTiming(watch, "Created revision work item repository");
 
 			return result;
 		}
 
-		public override bool IsSameWorkListDefinition(string existingDefinitionFile)
+		protected static WorkListStatusSchema CreateStatusSchema(TableDefinition definition)
 		{
-			return WorkListItemDatastore.IsSameWorkListDefinition(existingDefinitionFile);
+			int fieldIndex;
+
+			try
+			{
+				fieldIndex = definition.FindField(_statusFieldName);
+
+				if (fieldIndex < 0)
+				{
+					throw new ArgumentException($"No field {_statusFieldName}");
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error find field {_statusFieldName} in {definition.GetName()}", e);
+				throw;
+			}
+
+			// The status schema is the same for production model datasets and Issue Geodatabase tables.
+			return new WorkListStatusSchema(_statusFieldName, fieldIndex,
+			                                (int) IssueCorrectionStatus.NotCorrected,
+			                                (int) IssueCorrectionStatus.Corrected);
 		}
 	}
 }

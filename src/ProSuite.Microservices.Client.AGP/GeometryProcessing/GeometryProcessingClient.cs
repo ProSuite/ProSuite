@@ -221,14 +221,14 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			bool allowOpenJawReshape,
 			bool multiReshapeAsUnion,
 			bool tryReshapeNonDefault,
-			CancellationToken cancellationToken)
+			CancellationToken cancellationToken, bool moveOpenJawEndJunction)
 		{
 			if (ReshapeClient == null)
 				throw new InvalidOperationException("No microservice available.");
 
 			return AdvancedReshapeClientUtils.Reshape(
 				ReshapeClient, selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
-				multiReshapeAsUnion, tryReshapeNonDefault, cancellationToken);
+				multiReshapeAsUnion, tryReshapeNonDefault, cancellationToken, moveOpenJawEndJunction);
 		}
 
 		public async Task<MapPoint> GetOpenJawReplacementPointAsync(

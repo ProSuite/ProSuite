@@ -17,7 +17,7 @@ namespace ProSuite.GIS.Geodatabase.API
 
 		//IFeatureDataset FeatureDataset { get; }
 
-		IFeature CreateFeature();
+		IFeature CreateFeature(int? subtype = null);
 
 		IFeature GetFeature(long id);
 

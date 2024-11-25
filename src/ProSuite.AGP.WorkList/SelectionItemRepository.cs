@@ -46,11 +46,11 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
+		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
 		{
 			long rowId = GetNextOid(row);
 
-			long tableId = source.GetUniqueTableId();
+			long tableId = sourceClass.GetUniqueTableId();
 
 			return RefreshState(new SelectionItem(rowId, tableId, row));
 		}

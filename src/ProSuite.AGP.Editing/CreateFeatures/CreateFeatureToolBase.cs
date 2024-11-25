@@ -90,13 +90,13 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			return SketchGeometryType.Rectangle;
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			_targetFeatureClass = GetCurrentTargetClass(out _);
 
 			ActiveTemplateChangedEvent.Subscribe(OnActiveTemplateChanged);
 
-			base.OnToolActivatingCore();
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
@@ -124,6 +124,34 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			_msg.InfoFormat(
 				"Draw one or more points. Finish the sketch to create the individual point features in '{0}'.",
 				layerName);
+		}
+
+		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
+		{
+			// TODO: THis tool doesn't need a selection > RequiresSelection = false. Handle it in ConstructionToolBase
+			// for tools that need selection?
+			// Don't intermit construction sketch: nothing to do here
+		}
+
+		protected override async Task HandleEscapeAsync()
+		{
+			try
+			{
+				Geometry sketch = await GetCurrentSketchAsync();
+
+				if (sketch is { IsEmpty: true } && MapUtils.HasSelection(ActiveMapView))
+				{
+					await QueuedTask.Run(ClearSelection);
+				}
+				else
+				{
+					await ClearSketchAsync();
+				}
+			}
+			catch (Exception ex)
+			{
+				Gateway.ShowError(ex, _msg);
+			}
 		}
 
 		#region Overrides of ConstructionToolBase

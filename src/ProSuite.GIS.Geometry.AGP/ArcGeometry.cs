@@ -61,7 +61,9 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public ISpatialReference SpatialReference
 		{
-			get => new ArcSpatialReference(ProGeometry.SpatialReference);
+			get => ProGeometry.SpatialReference == null
+				       ? null
+				       : new ArcSpatialReference(ProGeometry.SpatialReference);
 			set => throw new NotImplementedException();
 		}
 
