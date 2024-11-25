@@ -217,26 +217,23 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					await QueuedTask.Run(
 						() => GetApplicableSelectedFeatures(ActiveMapView).ToList());
 
+				Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
+				Assert.NotNull(simpleGeometry, "Geometry is null");
+
 				if (! IsInSubcurveSelectionPhase())
 				{
 					// 2. Phase: target selection:
-					return await SelectTargetsAsync(selection, sketchGeometry, progressor);
+					return await SelectTargetsAsync(selection, simpleGeometry, progressor);
 				}
 
 				// 3. Phase: reshape/cut line selection:
 				List<CutSubcurve> cutSubcurves =
-					await QueuedTask.Run(() =>
-					{
-						Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
-						Assert.NotNull(simpleGeometry, "Geometry is null");
-
-						return GetSelectedCutSubcurves(simpleGeometry);
-					});
+					await QueuedTask.Run(() => GetSelectedCutSubcurves(simpleGeometry));
 
 				if (cutSubcurves.Count == 0)
 				{
 					// No subcurve hit, try target selection instead
-					return await SelectTargetsAsync(selection, sketchGeometry, progressor);
+					return await SelectTargetsAsync(selection, simpleGeometry, progressor);
 				}
 
 				if (selection.Count == 0)
