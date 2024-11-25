@@ -103,7 +103,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return await QueuedTaskUtils.Run(OnSketchModifiedCore);
 		}
 
-		protected override Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
+		protected override async Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
 		{
 			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
 			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
@@ -117,15 +117,22 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (_intermittentSelectionPhase) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
 			{
-				return Task.FromResult(true);
+				return;
+			}
+
+			Geometry sketch = await GetCurrentSketchAsync();
+
+			if (sketch != null && ! sketch.IsEmpty)
+			{
+				// Most likely the selection was changed while sketching (e.g. with Shift).
+				// The sketch restoration logic already starts the sketch phase.
+				return;
 			}
 
 			if (CanUseSelection(SelectionUtils.GetSelection<BasicFeatureLayer>(e.Selection)))
 			{
 				StartSketchPhase();
 			}
-
-			return Task.FromResult(true);
 		}
 
 		#endregion
@@ -342,41 +349,39 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task HandleEscapeAsync()
 		{
-			Task task = QueuedTask.Run(
-				() =>
-				{
-					if (IsInSketchMode)
+			await ViewUtils.TryAsync(
+				QueuedTask.Run(
+					async () =>
 					{
-						// if sketch is empty, also remove selection and return to selection phase
-
-						if (! RequiresSelection)
+						if (IsInSketchMode)
 						{
-							// remain in sketch mode, just reset the sketch
-							ResetSketch();
-						}
-						else
-						{
-							// todo daro await
-							Geometry sketch = GetCurrentSketchAsync().Result;
+							// if sketch is empty, also remove selection and return to selection phase
 
-							if (sketch != null && ! sketch.IsEmpty)
+							if (! RequiresSelection)
 							{
-								ResetSketch();
+								// remain in sketch mode, just reset the sketch
+								await ResetSketchAsync();
 							}
 							else
 							{
-								ClearSelection();
+								Geometry sketch = await GetCurrentSketchAsync();
+
+								if (sketch != null && ! sketch.IsEmpty)
+								{
+									await ResetSketchAsync();
+								}
+								else
+								{
+									ClearSelection();
+								}
 							}
 						}
-					}
-					else
-					{
-						ClearSketchAsync();
-						ClearSelection();
-					}
-				});
-
-			await ViewUtils.TryAsync(task, _msg);
+						else
+						{
+							await ClearSketchAsync();
+							ClearSelection();
+						}
+					}), _msg);
 		}
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
@@ -537,14 +542,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			return CanStartSketchPhaseCore(selectedFeatures);
 		}
 
-		// todo: daro drop
 		private async Task ResetSketchAsync()
 		{
 			Geometry currentSketch = await GetCurrentSketchAsync();
 
 			if (currentSketch != null && ! currentSketch.IsEmpty)
 			{
+				RememberSketch();
+
 				await ClearSketchAsync();
+
 				OnSketchModifiedCore();
 			}
 
