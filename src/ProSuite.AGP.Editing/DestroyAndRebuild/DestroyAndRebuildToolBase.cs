@@ -34,8 +34,6 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		return new SymbolizedSketchTypeBasedOnSelection(this);
 	}
 
-	protected override bool DefaultSketchTypeOnFinishSketch { get; }
-
 	protected override Cursor GetSelectionCursor()
 	{
 		return ToolUtils.CreateCursor(Resources.Arrow,
