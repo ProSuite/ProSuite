@@ -172,8 +172,8 @@
   <data name="RemoveHoleOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\RemoveHoleOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="RemoveOverlapslOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\RemoveOverlapslOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="RemoveOverlapsOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\RemoveOverlapsOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="ReshapeAlongOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\ReshapeAlongOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

@@ -223,9 +223,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] RemoveOverlapslOverlay {
+        internal static byte[] RemoveOverlapsOverlay {
             get {
-                object obj = ResourceManager.GetObject("RemoveOverlapslOverlay", resourceCulture);
+                object obj = ResourceManager.GetObject("RemoveOverlapsOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }

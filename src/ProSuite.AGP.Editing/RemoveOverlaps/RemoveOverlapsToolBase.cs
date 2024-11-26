@@ -44,7 +44,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			GeomIsSimpleAsFeature = false;
 
-			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay, 10, 10);
+			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay, 10, 10);
 		}
 
 		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
@@ -434,7 +434,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			}
 
 			// Remove the selected features from the set of overlapping features.
-			// This is also important to make sure the geometries don't get mixed up / reset 
+			// This is also important to make sure the geometries don't get mixed up / reset
 			// by inserting target vertices
 			foundFeatures.RemoveAll(
 				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
@@ -493,20 +493,20 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay, null);
+			                              Resources.RemoveOverlapsOverlay, null);
 		}
 
 		protected override Cursor GetSelectionCursorShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Shift);
 		}
 
 		protected override Cursor GetSelectionCursorLasso()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Lasso);
 		}
 
