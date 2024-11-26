@@ -806,7 +806,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	#endregion
 
-	private void StartSelectionPhase()
+	protected void StartSelectionPhase()
 	{
 		SetupSelectionSketch();
 
