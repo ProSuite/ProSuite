@@ -67,6 +67,22 @@ namespace ProSuite.AGP.WorkList
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
+		protected GdbItemRepository(
+			IEnumerable<DbStatusSourceClassDefinition> sourceClassDefinitions,
+			IWorkItemStateRepository workItemStateRepository)
+		{
+			foreach (DbStatusSourceClassDefinition sourceDefinition in sourceClassDefinitions)
+			{
+				ISourceClass sourceClass = new DatabaseSourceClass(
+					new GdbTableIdentity(sourceDefinition.Table), sourceDefinition.StatusSchema,
+					sourceDefinition.AttributeReader, sourceDefinition.DefinitionQuery);
+
+				SourceClasses.Add(sourceClass);
+			}
+
+			WorkItemStateRepository = workItemStateRepository;
+		}
+
 		protected IWorkItemStateRepository WorkItemStateRepository { get; }
 
 		[CanBeNull]
@@ -160,14 +176,14 @@ namespace ProSuite.AGP.WorkList
 
 		public void Refresh(IWorkItem item)
 		{
-			GdbTableIdentity tableId = item.Proxy.Table;
+			ITableReference tableId = item.GdbRowProxy.Table;
 
 			// todo daro: log message
 			ISourceClass source =
 				SourceClasses.FirstOrDefault(sc => sc.Uses(tableId));
 			Assert.NotNull(source);
 
-			Row row = GetRow(source, item.Proxy.ObjectId);
+			Row row = GetRow(source, item.ObjectID);
 			Assert.NotNull(row);
 
 			if (row is Feature feature)
@@ -201,7 +217,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			item.Status = status;
 
-			GdbTableIdentity tableId = item.Proxy.Table;
+			GdbTableIdentity tableId = item.GdbRowProxy.Table;
 
 			ISourceClass source =
 				SourceClasses.FirstOrDefault(s => s.Uses(tableId));
@@ -246,6 +262,14 @@ namespace ProSuite.AGP.WorkList
 		public int GetCurrentIndex()
 		{
 			return WorkItemStateRepository.CurrentIndex ?? -1;
+		}
+
+		// TODO: Workspace property, the source class references the table
+		public Row GetGdbItemRow(IWorkItem workItem)
+		{
+			Geodatabase workspace = workItem.GdbRowProxy.Table.Workspace.OpenGeodatabase();
+
+			return workItem.GdbRowProxy.GetRow(workspace);
 		}
 
 		protected abstract void AdaptSourceFilter([NotNull] QueryFilter filter,
@@ -297,11 +321,23 @@ namespace ProSuite.AGP.WorkList
 			[NotNull] TableDefinition definition,
 			[CanBeNull] IWorkListItemDatastore tableSchema)
 		{
-			return null;
+			// TODO: Make independent of attribute list, use standard AttributeRoles
+			Attributes[] attributes = new[]
+			                          {
+				                          Attributes.QualityConditionName,
+				                          Attributes.IssueCodeDescription,
+				                          Attributes.InvolvedObjects,
+				                          Attributes.IssueSeverity,
+				                          Attributes.IssueCode,
+				                          Attributes.IssueDescription
+			                          };
+
+			return tableSchema?.CreateAttributeReader(definition, attributes);
 		}
 
 		[NotNull]
-		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row, ISourceClass source);
+		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row,
+		                                                [NotNull] ISourceClass sourceClass);
 
 		[NotNull]
 		protected abstract ISourceClass CreateSourceClassCore(

@@ -15,6 +15,7 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.WorkList
 {
+	[Obsolete("Use DbStatusWorkItemRepository")]
 	public class IssueItemRepository : GdbItemRepository
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -39,6 +40,8 @@ namespace ProSuite.AGP.WorkList
 		                           IWorkItemStateRepository workItemStateRepository,
 		                           [CanBeNull] IWorkListItemDatastore tableSchema = null)
 			: base(tableWithDefinitionQuery, workItemStateRepository, tableSchema) { }
+
+		public Func<long, long, Row, IWorkItem> CreateItemFunc { get; set; }
 
 		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{
@@ -83,15 +86,22 @@ namespace ProSuite.AGP.WorkList
 				       : new StatusOnlyAttributeReader(definition);
 		}
 
-		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
+		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
 		{
 			long id = GetNextOid(row);
 
-			IAttributeReader reader = source.AttributeReader;
+			IAttributeReader reader = sourceClass.AttributeReader;
 
-			IIssueItem item = new IssueItem(id, source.GetUniqueTableId(), row);
-
-			reader?.ReadAttributes(row, item, source);
+			IWorkItem item;
+			if (CreateItemFunc != null)
+			{
+				item = CreateItemFunc(id, sourceClass.GetUniqueTableId(), row);
+			}
+			else
+			{
+				item = new IssueItem(id, sourceClass.GetUniqueTableId(), row);
+				reader?.ReadAttributes(row, item, sourceClass);
+			}
 
 			return RefreshState(item);
 		}
@@ -135,7 +145,7 @@ namespace ProSuite.AGP.WorkList
 
 				string description = GetOperationDescription(item);
 
-				_msg.Info($"{description}, {item.Proxy}");
+				_msg.Info($"{description}, {item.GdbRowProxy}");
 
 				var operation = new EditOperation { Name = description };
 				operation.Callback(context =>
@@ -155,7 +165,7 @@ namespace ProSuite.AGP.WorkList
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error set status of work item {item.OID}, {item.Proxy}", e);
+				_msg.Error($"Error set status of work item {item.OID}, {item.GdbRowProxy}", e);
 				throw;
 			}
 			finally
@@ -201,9 +211,14 @@ namespace ProSuite.AGP.WorkList
 				return default;
 			}
 
-			public void ReadAttributes(Row fromRow, IIssueItem forItem, ISourceClass source)
+			public void ReadAttributes(Row fromRow, IWorkItem forItem, ISourceClass source)
 			{
 				forItem.Status = ((DatabaseSourceClass) source).GetStatus(fromRow);
+			}
+
+			public IList<InvolvedTable> ParseInvolved(string involvedString, bool hasGeometry)
+			{
+				throw new NotImplementedException();
 			}
 
 			#endregion

@@ -259,5 +259,15 @@ namespace ProSuite.AGP.Editing.Properties {
                 return ((byte[])(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] YReshapeOverlay {
+            get {
+                object obj = ResourceManager.GetObject("YReshapeOverlay", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

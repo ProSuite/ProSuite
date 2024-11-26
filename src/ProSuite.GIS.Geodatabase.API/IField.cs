@@ -1,3 +1,5 @@
+using ProSuite.Commons.Essentials.CodeAnnotations;
+
 namespace ProSuite.GIS.Geodatabase.API
 {
 	public interface IField
@@ -8,6 +10,7 @@ namespace ProSuite.GIS.Geodatabase.API
 
 		esriFieldType Type { get; }
 
+		[CanBeNull]
 		IDomain Domain { get; }
 
 		object DefaultValue { get; }

@@ -164,8 +164,9 @@ namespace ProSuite.Commons.AGP.Carto
 		/// fine-granular determination of the layers to be searched.
 		/// </param>
 		/// <param name="featurePredicate">
-		/// An extra feature predicate that allows to determine
-		/// criteria on the feature level.
+		/// An extra feature predicate that allows to determine criteria on the feature level.
+		/// Note that the predicate is applied first to the features of the joined table, then to
+		/// the un-joined features. Make sure the predicate can handle both cases.
 		/// </param>
 		/// <param name="cancelableProgressor"></param>
 		/// <returns></returns>
@@ -176,7 +177,7 @@ namespace ProSuite.Commons.AGP.Carto
 			[CanBeNull] CancelableProgressor cancelableProgressor)
 		{
 			IEnumerable<IGrouping<IntPtr, BasicFeatureLayer>> layersGroupedByClass =
-				featureLayers.GroupBy(fl => fl.GetTable().Handle);
+				featureLayers.GroupBy(fl => LayerUtils.GetFeatureClass(fl, true).Handle);
 
 			SpatialReference outputSpatialReference = _mapView.Map.SpatialReference;
 
@@ -226,9 +227,14 @@ namespace ProSuite.Commons.AGP.Carto
 						if (oids.Count > 0)
 						{
 							filter.SubFields = string.Empty;
-							features.AddRange(
-								MapUtils.GetFeatures(featureClass, oids, true, false,
-								                     outputSpatialReference));
+
+							// NOTE: Apply the predicate again to the unjoined features to allow
+							//       comparing with other un-joined features (such as selected features).
+							IEnumerable<Feature> unJoinedFeatures = MapUtils.GetFeatures(
+									featureClass, oids, true, false, outputSpatialReference)
+								.Where(f => featurePredicate == null || featurePredicate(f));
+
+							features.AddRange(unJoinedFeatures);
 						}
 					}
 					else

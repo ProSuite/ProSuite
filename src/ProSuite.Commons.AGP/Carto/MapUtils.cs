@@ -125,13 +125,15 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		public static Table GetTable([NotNull] MapMember mapMember)
+		private static Table GetTable([NotNull] MapMember mapMember,
+		                              bool unJoined = false)
 		{
 			Assert.ArgumentNotNull(mapMember, nameof(mapMember));
 
 			if (mapMember is IDisplayTable displayTable)
 			{
-				Table table = displayTable.GetTable();
+				Table table = LayerUtils.GetTable(displayTable, unJoined);
+
 				if (table == null)
 				{
 					throw new InvalidOperationException(
@@ -145,27 +147,14 @@ namespace ProSuite.Commons.AGP.Carto
 				$"{nameof(mapMember)} is not of type BasicFeatureLayer nor StandaloneTable");
 		}
 
-		public static IEnumerable<Table> GetTables(IEnumerable<MapMember> mapMembers)
+		public static IEnumerable<Table> GetTables(IEnumerable<MapMember> mapMembers,
+		                                           bool unJoined)
 		{
 			foreach (MapMember mapMember in mapMembers)
 			{
-				if (mapMember is BasicFeatureLayer basicFeatureLayer)
+				if (mapMember is IDisplayTable tableBasedMapMember)
 				{
-					//Note: Invalid layers have null tables
-					Table table = basicFeatureLayer.GetTable();
-					if (table != null)
-					{
-						yield return table;
-					}
-				}
-
-				if (mapMember is StandaloneTable standaloneTable)
-				{
-					Table table = standaloneTable.GetTable();
-					if (table != null)
-					{
-						yield return table;
-					}
+					yield return LayerUtils.GetTable(tableBasedMapMember, unJoined);
 				}
 			}
 		}

@@ -31,7 +31,7 @@ public class PickableFeatureClassItemsFactory : IPickableItemsFactory
 			BasicFeatureLayer layer = selection.BasicFeatureLayer;
 			bool isAnnotation = layer is AnnotationLayer;
 
-			// todo daro: use layer.Name > FeatureSelectionBase is
+			// todo: daro use layer.Name > FeatureSelectionBase is
 			// is it IPickableFeatureClassItem or IPickableLayerItem?
 			// if later change IPickableFeatureClassItem.Layers to Layer
 			string name = selection.FeatureClass.GetName();

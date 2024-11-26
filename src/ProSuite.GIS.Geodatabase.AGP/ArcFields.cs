@@ -56,42 +56,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			return -1;
 		}
-
-		///// <summary>
-		///// Gets the fields.
-		///// </summary>
-		///// <param name="fields">The fields.</param>
-		///// <returns></returns>
-		//[NotNull]
-		//public static IList<IField> GetFields([NotNull] EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFields fields)
-		//{
-		//	Assert.ArgumentNotNull(fields, nameof(fields));
-
-		//	int fieldCount = fields.FieldCount;
-
-		//	var result = new List<IField>(fieldCount);
-
-		//	result.AddRange(EnumFields(fields).Select(f => new ArcField(f)));
-
-		//	return result;
-		//}
-
-		//[NotNull]
-		//public static IEnumerable<EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField> EnumFields([NotNull] EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IFields fields)
-		//{
-		//	Assert.ArgumentNotNull(fields, nameof(fields));
-
-		//	int fieldCount = fields.FieldCount;
-
-		//	var result = new List<IField>(fieldCount);
-
-		//	for (var fieldIndex = 0; fieldIndex < fieldCount; fieldIndex++)
-		//	{
-		//		EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField field = fields.Field[fieldIndex];
-
-		//		yield return field;
-		//	}
-		//}
 	}
 
 	public class ArcField : IField
@@ -115,7 +79,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public esriFieldType Type => (esriFieldType) _proField.FieldType;
 
-		public IDomain Domain => new ArcDomain(_proField.GetDomain());
+		public IDomain Domain => ArcGeodatabaseUtils.ToArcDomain(_proField.GetDomain());
 
 		public object DefaultValue =>
 			_proField.HasDefaultValue ? _proField.GetDefaultValue() : null;
@@ -146,11 +110,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		#endregion
 	}
 
-	public class ArcDomain : IDomain
+	public abstract class ArcDomain : IDomain
 	{
 		private readonly Domain _proDomain;
 
-		public ArcDomain(Domain proDomain)
+		protected ArcDomain(Domain proDomain)
 		{
 			_proDomain = proDomain;
 		}
@@ -209,6 +173,65 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			throw new NotImplementedException();
 			//return _proDomain.MemberOf(value);
+		}
+
+		#endregion
+	}
+
+	public class ArcCodedValueDomain : ArcDomain, ICodedValueDomain
+	{
+		private readonly CodedValueDomain _proCodedDomain;
+
+		private SortedList<object, string> _codedValuePairs;
+
+		public ArcCodedValueDomain(CodedValueDomain proDomain)
+			: base(proDomain)
+		{
+			_proCodedDomain = proDomain;
+		}
+
+		private SortedList<object, string> CodedValuePairs
+		{
+			get { return _codedValuePairs ??= _proCodedDomain.GetCodedValuePairs(); }
+		}
+
+		#region Implementation of ICodedValueDomain
+
+		public int CodeCount => _proCodedDomain.GetCount();
+
+		public string get_Name(int index)
+		{
+			return CodedValuePairs.Values[index];
+		}
+
+		public object get_Value(int index)
+		{
+			return CodedValuePairs.Keys[index];
+		}
+
+		#endregion
+	}
+
+	public class ArcRangeDomain : ArcDomain, IRangeDomain
+	{
+		private readonly RangeDomain _proRangeDomain;
+
+		public ArcRangeDomain(RangeDomain proDomain)
+			: base(proDomain)
+		{
+			_proRangeDomain = proDomain;
+		}
+
+		#region Implementation of IRangeDomain
+
+		public object MinValue
+		{
+			get => _proRangeDomain.GetMinValue();
+		}
+
+		public object MaxValue
+		{
+			get => _proRangeDomain.GetMaxValue();
 		}
 
 		#endregion

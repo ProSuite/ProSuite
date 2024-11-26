@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
@@ -180,6 +181,35 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 	protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
 	{
 		return layer is FeatureLayer;
+	}
+
+	protected override void StartConstructionPhaseCore()
+	{
+		if (QueuedTask.OnWorker)
+		{
+			ResetSketchVertexSymbolOptions();
+		}
+		else
+		{
+			QueuedTask.Run(ResetSketchVertexSymbolOptions);
+		}
+	}
+
+	protected override void StartSelectionPhaseCore()
+	{
+		if (QueuedTask.OnWorker)
+		{
+			SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+			SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+		}
+		else
+		{
+			QueuedTask.Run(() =>
+			{
+				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+			});
+		}
 	}
 
 	private async Task StoreNewFeature([NotNull] BasicFeatureLayer featureLayer,

@@ -16,12 +16,11 @@ namespace ProSuite.AGP.WorkList
 
 		public DatabaseSourceClass(GdbTableIdentity identity,
 		                           [NotNull] WorkListStatusSchema statusSchema,
-		                           [NotNull] IAttributeReader attributeReader,
+		                           [CanBeNull] IAttributeReader attributeReader,
 		                           [CanBeNull] string definitionQuery)
 			: base(identity, attributeReader)
 		{
 			Assert.ArgumentNotNull(statusSchema, nameof(statusSchema));
-			Assert.ArgumentNotNull(attributeReader, nameof(attributeReader));
 
 			_statusSchema = statusSchema;
 			DefinitionQuery = definitionQuery;

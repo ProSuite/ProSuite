@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Editing.Attributes;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -176,7 +177,7 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 				                SelectModifiedFeatures = true
 			                };
 
-			// todo daro move to base? make utils?
+			// todo: daro move to base? make utils?
 			operation.Modify(inspector);
 
 			if (operation.IsEmpty)
@@ -246,5 +247,34 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 	protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
 	{
 		return layer is FeatureLayer;
+	}
+
+	protected override void StartConstructionPhaseCore()
+	{
+		if (QueuedTask.OnWorker)
+		{
+			ResetSketchVertexSymbolOptions();
+		}
+		else
+		{
+			QueuedTask.Run(ResetSketchVertexSymbolOptions);
+		}
+	}
+
+	protected override void StartSelectionPhaseCore()
+	{
+		if (QueuedTask.OnWorker)
+		{
+			SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+			SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+		}
+		else
+		{
+			QueuedTask.Run(() =>
+			{
+				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+			});
+		}
 	}
 }
