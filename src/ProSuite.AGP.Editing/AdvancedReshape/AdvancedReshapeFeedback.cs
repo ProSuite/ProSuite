@@ -22,9 +22,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		private CIMPointSymbol _openJawEndSymbol;
 		private readonly CIMPolygonSymbol _addAreaSymbol;
 		private readonly CIMPolygonSymbol _removeAreaSymbol;
-		private readonly ReshapeToolOptions _advancedReshapeToolOptions;
+		[CanBeNull] private readonly ReshapeToolOptions _advancedReshapeToolOptions;
 
-		public AdvancedReshapeFeedback(ReshapeToolOptions advancedReshapeToolOptions)
+		public AdvancedReshapeFeedback(ReshapeToolOptions advancedReshapeToolOptions = null)
 		{
 			_advancedReshapeToolOptions = advancedReshapeToolOptions;
 			_addAreaSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
@@ -36,7 +36,14 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_openJawReplacedEndPointOverlay?.Dispose();
 
 			// Make openJawEndSymbol azure or celest blue, depending  on state of MoveOpenJawEndJunction
-			_openJawEndSymbol = _advancedReshapeToolOptions.MoveOpenJawEndJunction ? CreateHollowCircle(0, 200, 255) : CreateHollowCircle(0, 0, 200);
+			if (_advancedReshapeToolOptions is not { MoveOpenJawEndJunction: true })
+			{
+				_openJawEndSymbol = CreateHollowCircle(0, 0, 200);
+			}
+			else
+			{
+				_openJawEndSymbol = CreateHollowCircle(0, 200, 255);
+			}
 
 			if (point != null)
 			{
