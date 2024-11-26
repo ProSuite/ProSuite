@@ -18,5 +18,11 @@ namespace ProSuite.AGP.Editing.Selection
 		/// Will be applied to points only
 		/// </summary>
 		public int SelectionTolerancePixels { get; set; }
+
+		/// <summary>
+		/// If true, the default selection sketch will be a rectangle even if in the previous
+		/// selection a polygon or lasso was used.
+		/// </summary>
+		public bool PreferRectangleSelectionSketch { get; set; } = true;
 	}
 }
