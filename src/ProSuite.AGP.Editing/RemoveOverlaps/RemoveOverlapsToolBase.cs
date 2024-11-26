@@ -513,7 +513,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursorLassoShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Lasso,
 			                              Resources.Shift);
 		}
@@ -521,14 +521,14 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursorPolygon()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Polygon);
 		}
 
 		protected override Cursor GetSelectionCursorPolygonShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Polygon,
 			                              Resources.Shift);
 		}
@@ -537,18 +537,18 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override Cursor GetSecondPhaseCursor()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay, 10, 10);
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay, 10, 10);
 		}
 
 		protected override Cursor GetSecondPhaseCursorLasso()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay,
 			                              Resources.Lasso, null, 10, 10);
 		}
 
 		protected override Cursor GetSecondPhaseCursorPolygon()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay,
 			                              Resources.Polygon, null, 10, 10);
 		}
 

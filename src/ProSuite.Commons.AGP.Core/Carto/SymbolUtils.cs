@@ -453,7 +453,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			if (style == MarkerStyle.Cross)
 			{
-				var line = GeometryFactory.CreatePolylineXY(-5,-5, 5,5, 0,0, -5,5, 5,-5);
+				var line = GeometryFactory.CreatePolylineXY([-5,-5, 5,5, 0,0, -5,5, 5,-5]);
 				return line;
 			}
 			
