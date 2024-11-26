@@ -126,13 +126,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				layerName);
 		}
 
-		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
-		{
-			// TODO: THis tool doesn't need a selection > RequiresSelection = false. Handle it in ConstructionToolBase
-			// for tools that need selection?
-			// Don't intermit construction sketch: nothing to do here
-		}
-
 		protected override async Task HandleEscapeAsync()
 		{
 			try
