@@ -105,10 +105,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
 		{
-			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
-			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
-			// NOTE daro: Pro 3.3 this method is called e.g. on 'Clear Selection' or select row in attribute table. So the above
-			//			  note is not correct anymore.
+			// NOTE: This method is called e.g. on 'Clear Selection' (globally or on the layer) or select row in attribute table.
 
 			// This method is presumably called in the following situation only:
 			// MapTool.UseSelection is true and your MapTool does sketching (i.e. i used SketchType = SketchGeometryType.Line)
