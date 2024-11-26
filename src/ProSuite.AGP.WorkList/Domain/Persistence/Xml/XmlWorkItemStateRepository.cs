@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Xml;
@@ -125,12 +125,12 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		protected override XmlWorkItemState CreateState(IWorkItem item)
 		{
 			// Persist the unique and stable table ID instead of the standard TableId.
-			var xmlGdbRowIdentity = new XmlGdbRowIdentity(item.Proxy, item.UniqueTableId);
+			var xmlGdbRowIdentity = new XmlGdbRowIdentity(item.GdbRowProxy, item.UniqueTableId);
 
 			var state = new XmlWorkItemState(item.OID, item.Visited, WorkItemStatus.Unknown,
 			                                 xmlGdbRowIdentity);
 
-			state.ConnectionString = item.Proxy.Table.Workspace.ConnectionString;
+			state.ConnectionString = item.GdbRowProxy.Table.Workspace.ConnectionString;
 
 			return state;
 		}

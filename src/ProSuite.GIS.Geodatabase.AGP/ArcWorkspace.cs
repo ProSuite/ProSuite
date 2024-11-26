@@ -265,7 +265,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public IEnumerable<IDomain> Domains()
 		{
-			return Geodatabase.GetDomains().Select(d => new ArcDomain(d));
+			return Geodatabase.GetDomains().Select(ArcGeodatabaseUtils.ToArcDomain);
 		}
 
 		public IDomain get_DomainByName(string domainName)
@@ -273,7 +273,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return (from proDomain in Geodatabase.GetDomains()
 			        where proDomain.GetName()
 			                       .Equals(domainName, StringComparison.InvariantCultureIgnoreCase)
-			        select new ArcDomain(proDomain)).FirstOrDefault();
+			        select ArcGeodatabaseUtils.ToArcDomain(proDomain)).FirstOrDefault();
 		}
 
 		public bool IsSameDatabase(IFeatureWorkspace otherWorkspace)

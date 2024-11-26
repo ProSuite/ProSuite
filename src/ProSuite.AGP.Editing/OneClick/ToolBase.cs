@@ -40,7 +40,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	private readonly Latch _latch = new();
 
 	[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
-	[NotNull] private SelectionSketchTypeToggle _selectionSketchType;
+	[NotNull] private SketchAndCursorSetter _selectionSketchCursor;
 
 	// ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
 	protected ToolBase()
@@ -142,7 +142,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 			if (selectionProcessed)
 			{
-				StartConstructionPhase();
+				await StartConstructionPhaseAsync();
 			}
 			else
 			{
@@ -157,17 +157,20 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	private void SetupCursors()
 	{
-		_selectionSketchType =
-			SelectionSketchTypeToggle.Create(this,
-			                                 GetSelectionCursor(),
-			                                 GetSelectionCursorLasso(),
-			                                 GetSelectionCursorPolygon(),
-			                                 GetDefaultSelectionSketchType());
+		_selectionSketchCursor =
+			SketchAndCursorSetter.Create(this,
+			                             GetSelectionCursor(),
+			                             GetSelectionCursorLasso(),
+			                             GetSelectionCursorPolygon(),
+			                             GetDefaultSelectionSketchType(),
+			                             DefaultSketchTypeOnFinishSketch);
 
-		_selectionSketchType.SetSelectionCursorShift(GetSelectionCursorShift());
-		_selectionSketchType.SetSelectionCursorLassoShift(GetSelectionCursorLassoShift());
-		_selectionSketchType.SetSelectionCursorPolygonShift(GetSelectionCursorPolygonShift());
+		_selectionSketchCursor.SetSelectionCursorShift(GetSelectionCursorShift());
+		_selectionSketchCursor.SetSelectionCursorLassoShift(GetSelectionCursorLassoShift());
+		_selectionSketchCursor.SetSelectionCursorPolygonShift(GetSelectionCursorPolygonShift());
 	}
+
+	protected abstract bool DefaultSketchTypeOnFinishSketch { get; }
 
 	protected sealed override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
 	{
@@ -385,7 +388,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 					return true; // sketchCompleteEventHandled = true;
 				}
 
-				StartConstructionPhase();
+				await StartConstructionPhaseAsync();
 				return true; // sketchCompleteEventHandled = true;
 			}
 		}
@@ -407,7 +410,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 				if (selectionProcessed)
 				{
-					StartConstructionPhase();
+					StartConstructionPhaseAsync();
 				}
 				else
 				{
@@ -486,12 +489,12 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	private void SetupSelectionSketch()
 	{
 		_symbolizedSketch?.ClearSketchSymbol();
-		_selectionSketchType.ResetOrDefault();
+		_selectionSketchCursor.ResetOrDefault();
 	}
 
 	private void SetupPolygonSketch()
 	{
-		_selectionSketchType.Toggle(SketchGeometryType.Polygon);
+		_selectionSketchCursor.Toggle(SketchGeometryType.Polygon);
 
 		SetupPolygonSketchCore();
 	}
@@ -500,7 +503,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	private void SetupLassoSketch()
 	{
-		_selectionSketchType.Toggle(SketchGeometryType.Lasso);
+		_selectionSketchCursor.Toggle(SketchGeometryType.Lasso);
 
 		SetupLassoSketchCore();
 	}
@@ -624,7 +627,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 			if (selectionProcessed)
 			{
-				StartConstructionPhase();
+				await StartConstructionPhaseAsync();
 			}
 			else
 			{
@@ -803,7 +806,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	#endregion
 
-	protected void StartSelectionPhase()
+	private void StartSelectionPhase()
 	{
 		SetupSelectionSketch();
 
@@ -811,11 +814,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		// don't snap anymore if you cannot use selection
 		UseSnapping = false;
-
-		_selectionSketchType.SetCursor(GetSketchType());
 	}
 
-	protected async void StartConstructionPhase()
+	private async Task StartConstructionPhaseAsync()
 	{
 		StartConstructionPhaseCore();
 

@@ -120,8 +120,16 @@ namespace ProSuite.Commons.AGP.Selection
 
 				List<long> objectIds = featuresByClassHandle.Select(f => f.GetObjectID()).ToList();
 
+				// Get the layer's DB table and compare to the class handle of the features to be selected:
 				foreach (var layer in inLayers.Where(
-					         fl => fl.GetTable().Handle.ToInt64() == classHandle))
+					         fl =>
+					         {
+						         FeatureClass layerFeatureClass =
+							         LayerUtils.GetFeatureClass(fl, true);
+
+						         return layerFeatureClass != null &&
+						                layerFeatureClass.Handle.ToInt64() == classHandle;
+					         }))
 				{
 					if (progressor is { CancellationToken.IsCancellationRequested: true })
 					{

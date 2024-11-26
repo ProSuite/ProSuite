@@ -28,7 +28,7 @@ public interface IAdvancedReshapeService
 		bool allowOpenJawReshape,
 		bool multiReshapeAsUnion,
 		bool tryReshapeNonDefault,
-		CancellationToken cancellationToken);
+		CancellationToken cancellationToken, bool moveOpenJawEndJunction);
 
 	Task<MapPoint> GetOpenJawReplacementPointAsync(
 		[NotNull] Feature polylineFeature,

@@ -9,6 +9,6 @@ public interface IPickableItemsFactory
 {
 	IEnumerable<IPickableItem> CreateItems(IEnumerable<FeatureSelectionBase> candidates);
 
-	// todo daro to IPickerPrecedence?
+	// todo: daro to IPickerPrecedence?
 	IPickerViewModel CreateViewModel(Geometry selectionGeometry);
 }

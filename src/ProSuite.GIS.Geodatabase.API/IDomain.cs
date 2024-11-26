@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace ProSuite.GIS.Geodatabase.API
 {
 	public interface IDomain
@@ -23,24 +21,20 @@ namespace ProSuite.GIS.Geodatabase.API
 		bool MemberOf(object value);
 	}
 
-	public interface ICodedValueDomain
+	public interface ICodedValueDomain : IDomain
 	{
 		int CodeCount { get; }
 
-		string get_Name([In] int index);
+		string get_Name(int index);
 
-		object get_Value([In] int index);
-
-		void AddCode(object value, string name);
-
-		void DeleteCode(object value);
+		object get_Value(int index);
 	}
 
-	public interface IRangeDomain
+	public interface IRangeDomain : IDomain
 	{
-		object MinValue { get; set; }
+		object MinValue { get; }
 
-		object MaxValue { get; set; }
+		object MaxValue { get; }
 	}
 
 	public enum esriMergePolicyType

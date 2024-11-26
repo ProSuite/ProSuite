@@ -43,8 +43,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected RemoveOverlapsToolBase()
 		{
 			GeomIsSimpleAsFeature = false;
-
-			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay, 10, 10);
 		}
 
 		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
@@ -65,11 +63,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			InitializeOptions();
 
 			_feedback = new RemoveOverlapsFeedback();
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
@@ -513,7 +513,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursorLassoShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveHoleOverlay,
+			                              Resources.RemoveOverlapslOverlay,
 			                              Resources.Lasso,
 			                              Resources.Shift);
 		}
@@ -521,16 +521,37 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursorPolygon()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveHoleOverlay,
+			                              Resources.RemoveOverlapslOverlay,
 			                              Resources.Polygon);
 		}
 
 		protected override Cursor GetSelectionCursorPolygonShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveHoleOverlay,
+			                              Resources.RemoveOverlapslOverlay,
 			                              Resources.Polygon,
 			                              Resources.Shift);
 		}
+
+		#region second phase cursors
+
+		protected override Cursor GetSecondPhaseCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			                              Resources.Lasso, null, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			                              Resources.Polygon, null, 10, 10);
+		}
+
+		#endregion
 	}
 }

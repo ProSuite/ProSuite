@@ -16,6 +16,8 @@ namespace ProSuite.GIS.Geodatabase.API
 		void Store();
 
 		void Delete();
+
+		object NativeImplementation { get; }
 	}
 
 	public interface IRowBuffer

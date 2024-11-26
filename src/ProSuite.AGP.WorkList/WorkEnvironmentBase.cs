@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
@@ -18,8 +19,8 @@ using ProSuite.Commons.Logging;
 namespace ProSuite.AGP.WorkList
 {
 	/// <summary>
-	/// Encapsulates the state for a single work list instance, including the creation of
-	/// the work list.
+	/// Encapsulates the logic (but no volatile state) for a work list type, including the creation
+	/// of the work list.
 	/// </summary>
 	public abstract class WorkEnvironmentBase
 	{
@@ -27,7 +28,17 @@ namespace ProSuite.AGP.WorkList
 
 		public abstract string FileSuffix { get; }
 
-		protected string DisplayName { get; private set; }
+		/// <summary>
+		/// The display name of the work list, used by the layer or navigator.
+		/// </summary>
+		protected string DisplayName { get; set; }
+
+		/// <summary>
+		/// The unique name of the work list that corresponds to the file name in
+		/// the Worklists folder of the project.
+		/// TODO: Implement and use for all DbStatusWorkLists and Selection worklist
+		/// </summary>
+		protected string UniqueName { get; set; }
 
 		[NotNull]
 		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName)
@@ -41,7 +52,24 @@ namespace ProSuite.AGP.WorkList
 
 			string definitionFilePath = GetDefinitionFileFromProjectFolder();
 
-			if (File.Exists(definitionFilePath)) { }
+			if (File.Exists(definitionFilePath))
+			{
+				_msg.DebugFormat("Work list definition file {0} already exists",
+				                 definitionFilePath);
+				// Special handling (e.g. message box notifying the user) must have happened before.
+				// TODO: Check that the state from the definition file is actually used.
+				// NOTE: In case of DB Status work lists with changing table content the visited
+				// state of the work list definition file is probably irrelevant or even incorrect
+				// because the items (issues, revision points, etc.) regularly change in the
+				// underlying DB table. In case a different extent / work unit has been loaded the
+				// original items might not event be present any more.
+
+				// TODO:
+				// We should probably delete the definition file when the layer is unloaded
+				// because a new load could be in a completely different area (work unit).
+				// Or design a simplified definition file that just contains the connection to the
+				// underlying table(s), ideally along with the relevant status schema?
+			}
 
 			if (! await TryPrepareSchemaCoreAsync())
 			{
@@ -129,7 +157,12 @@ namespace ProSuite.AGP.WorkList
 			worklistLayer.SetScaleSymbols(false);
 			worklistLayer.SetSelectable(false);
 			worklistLayer.SetSnappable(false);
-			worklistLayer.SetShowPopups(false);  //e.g. tell the Explore tool to ignore the WorkListLayer
+
+			// The explore tool should ignore the work list layer:
+			worklistLayer.SetShowPopups(false);
+
+			// Avoid incorrect features after changes in tables of DbStatusWorkLists
+			worklistLayer.SetCacheOptions(LayerCacheType.None);
 
 			//Set renderer based on symbology from template layer
 			LayerDocument templateLayer = GetWorkListSymbologyTemplateLayer();
@@ -169,7 +202,6 @@ namespace ProSuite.AGP.WorkList
 		protected abstract IWorkItemStateRepository CreateStateRepositoryCore(
 			string path, string workListName);
 
-		// todo daro to IEnumerable<Table>
 		protected abstract IWorkItemRepository CreateItemRepositoryCore(
 			IList<Table> tables, IWorkItemStateRepository stateRepository);
 
@@ -199,7 +231,7 @@ namespace ProSuite.AGP.WorkList
 				Assert.NotNull(table);
 
 				string workListLayerName = SuggestWorkListLayerName() ?? worklist.DisplayName;
-				
+
 				return LayerFactory.Instance.CreateLayer<FeatureLayer>(
 					WorkListUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
 					layerContainer);
@@ -222,7 +254,7 @@ namespace ProSuite.AGP.WorkList
 
 		#endregion
 
-		public void EnsureUniqueDisplayName(string conflictingDefinitionFile)
+		public void EnsureUniqueName(string conflictingDefinitionFile)
 		{
 			Assert.NotNull(DisplayName);
 
@@ -238,8 +270,36 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			DisplayName = newFileName;
+			UniqueName = newFileName;
 		}
 
 		public abstract bool IsSameWorkListDefinition(string existingDefinitionFile);
+
+		public IEnumerable<BasicFeatureLayer> FindWorkListLayers(Map map)
+		{
+			if (! DefinitionFileExistsInProjectFolder(out string definitionFile))
+			{
+				yield break;
+			}
+
+			// TODO: Consider making the folder the data store and the file the work list name?
+			//       Currently, the data store is the work list file and the name is probably
+			//       irrelevant for opening the work list (except that it must be unique for the
+			//       work list registry, which could also use the full file path or some kind of
+			//       name moniker similar to IFeatureClassName). 
+			string workListName =
+				UniqueName ?? WorkListUtils.GetWorklistName(definitionFile)?.ToLower();
+			var datastore =
+				WorkListUtils.GetPluginDatastore(new Uri(definitionFile, UriKind.Absolute));
+
+			Table table = datastore.OpenTable(workListName);
+			Assert.NotNull(table);
+
+			foreach (FeatureLayer featureLayer in MapUtils.GetFeatureLayers<FeatureLayer>(
+				         map, l => DatasetUtils.IsSameTable(table, l.GetTable())))
+			{
+				yield return featureLayer;
+			}
+		}
 	}
 }
