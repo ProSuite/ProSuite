@@ -9,10 +9,13 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
+using Envelope = ArcGIS.Core.Geometry.Envelope;
+using Geometry = ArcGIS.Core.Geometry.Geometry;
+using Polygon = ArcGIS.Core.Geometry.Polygon;
 
 namespace ProSuite.AGP.Editing.PickerUI;
 
-public class FlashService : IDisposable/*, IFlashService*/
+public class FlashService : IDisposable /*, IFlashService*/
 {
 	private readonly Dictionary<string, IFlashSymbol> _symbols;
 	private readonly List<IDisposable> _overlays = new();
@@ -48,9 +51,8 @@ public class FlashService : IDisposable/*, IFlashService*/
 		_symbols = symbols;
 	}
 
-	public FlashService(params IFlashSymbol[] symbols) : this(symbols.ToDictionary(s => s.Name, s => s))
-	{
-	}
+	public FlashService(params IFlashSymbol[] symbols) : this(
+		symbols.ToDictionary(s => s.Name, s => s)) { }
 
 	public FlashService Flash(Geometry geometry)
 	{
@@ -93,7 +95,7 @@ public class FlashService : IDisposable/*, IFlashService*/
 		try
 		{
 			Geometry flashGeometry = null;
-			CIMSymbol symbol = _symbols[symbolName].GetSymbol();
+			CIMSymbol symbol = _symbols[symbolName].GetSymbol(geometry.GeometryType);
 
 			switch (geometry.GeometryType)
 			{
@@ -118,10 +120,7 @@ public class FlashService : IDisposable/*, IFlashService*/
 
 			QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
 		}
-		catch (Exception exc)
-		{
-			
-		}
+		catch (Exception) { }
 
 		return this;
 	}
@@ -171,65 +170,74 @@ public class FlashService : IDisposable/*, IFlashService*/
 public interface IFlashSymbol
 {
 	string Name { get; set; }
-	CIMSymbol GetSymbol();
+
+	CIMSymbol GetSymbol(GeometryType type);
 }
 
-public class BluePolygonSymbol : IFlashSymbol
+public class ColoredPolygonSymbol : IFlashSymbol
 {
+	private readonly CIMColor _color;
+
+	public ColoredPolygonSymbol(string name, double R, double G, double B)
+		: this(R, G, B)
+	{
+		Name = name;
+	}
+
+	public ColoredPolygonSymbol(double R, double G, double B)
+	{
+		_color = ColorFactory.Instance.CreateRGBColor(R, G, B);
+	}
+
 	public string Name { get; set; }
 
-	public CIMSymbol GetSymbol()
+	public CIMSymbol GetSymbol(GeometryType type)
 	{
-		CIMColor blue = ColorFactory.Instance.CreateRGBColor(0, 100, 255);
+		switch (type)
+		{
+			case GeometryType.Point:
+			case GeometryType.Multipoint:
+			{
+				return SymbolFactory.Instance.ConstructPointSymbol(_color, 6);
+			}
+			case GeometryType.Polyline:
+			{
+				return SymbolFactory.Instance.ConstructLineSymbol(_color, 4);
+			}
+			case GeometryType.Polygon:
+			{
+				CIMStroke outline =
+					SymbolFactory.Instance.ConstructStroke(_color, 4, SimpleLineStyle.Solid);
 
-		CIMStroke outline =
-			SymbolFactory.Instance.ConstructStroke(blue, 4, SimpleLineStyle.Solid);
-
-		return SymbolFactory.Instance.ConstructPolygonSymbol(
-			blue, SimpleFillStyle.Null, outline);
+				return SymbolFactory.Instance.ConstructPolygonSymbol(
+					_color, SimpleFillStyle.Null, outline);
+			}
+			case GeometryType.Unknown:
+			case GeometryType.Envelope:
+			case GeometryType.Multipatch:
+			case GeometryType.GeometryBag:
+			default:
+				return null;
+		}
 	}
 }
 
-public class GreenPolygonSymbol : IFlashSymbol
+public class BlueSymbol : ColoredPolygonSymbol
 {
-	public string Name { get; set; }
-
-	public CIMSymbol GetSymbol()
-	{
-		CIMColor green = ColorFactory.Instance.CreateRGBColor(0, 255, 0);
-
-		CIMStroke outline =
-			SymbolFactory.Instance.ConstructStroke(green, 4, SimpleLineStyle.Solid);
-
-		return SymbolFactory.Instance.ConstructPolygonSymbol(
-			green, SimpleFillStyle.Null, outline);
-	}
+	public BlueSymbol(string name) : base(name, 0, 100, 255) { }
 }
 
-public class MagentaPolygonSymbol : IFlashSymbol
+public class GreenSymbol : ColoredPolygonSymbol
 {
-	public string Name { get; set; }
-
-	public CIMSymbol GetSymbol()
-	{
-		CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
-
-		CIMStroke outline =
-			SymbolFactory.Instance.ConstructStroke(magenta, 4, SimpleLineStyle.Solid);
-
-		return SymbolFactory.Instance.ConstructPolygonSymbol(
-			magenta, SimpleFillStyle.Null, outline);
-	}
+	public GreenSymbol(string name) : base(name, 0, 255, 0) { }
 }
 
-public class MagentaLineSymbol : IFlashSymbol
+public class MagentaSymbol : ColoredPolygonSymbol
 {
-	public string Name { get; set; }
+	public MagentaSymbol(string name) : base(name, 255, 0, 255) { }
+}
 
-	public CIMSymbol GetSymbol()
-	{
-		CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
-
-		return SymbolFactory.Instance.ConstructLineSymbol(magenta, 4);
-	}
+public class RedSymbol : ColoredPolygonSymbol
+{
+	public RedSymbol(string name) : base(name, 255, 0, 0) { }
 }
