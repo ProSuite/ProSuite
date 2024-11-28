@@ -50,8 +50,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
-		protected virtual string LocalConfigDir =>
-			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
+		/// <summary>
+		/// By default, the local configuration directory shall be in
+		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// </summary>
+		protected virtual string LocalConfigDir
+			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				AppDataFolder.Roaming, "ToolDefaults");
 
 		protected abstract IRemoveOverlapsService MicroserviceClient { get; }
 
