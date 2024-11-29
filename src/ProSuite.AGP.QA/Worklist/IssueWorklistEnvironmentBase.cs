@@ -12,15 +12,12 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.QA.WorkList
 {
 	public abstract class IssueWorkListEnvironmentBase : DbWorkListEnvironmentBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-		private const string _statusFieldName = "STATUS";
 
 		protected IssueWorkListEnvironmentBase(
 			[CanBeNull] IWorkListItemDatastore workListItemDatastore)
@@ -125,7 +122,8 @@ namespace ProSuite.AGP.QA.WorkList
 
 				TableDefinition tableDefinition = table.GetDefinition();
 
-				WorkListStatusSchema statusSchema = CreateStatusSchema(tableDefinition);
+				WorkListStatusSchema statusSchema =
+					WorkListItemDatastore.CreateStatusSchema(tableDefinition);
 
 				IAttributeReader attributeReader =
 					WorkListItemDatastore.CreateAttributeReader(tableDefinition, attributes);
@@ -136,8 +134,7 @@ namespace ProSuite.AGP.QA.WorkList
 						AttributeReader = attributeReader
 					};
 
-				sourceClassDefinitions.Add(
-					sourceClassDef);
+				sourceClassDefinitions.Add(sourceClassDef);
 			}
 
 			var result = new DbStatusWorkItemRepository(sourceClassDefinitions, stateRepository);
@@ -145,31 +142,6 @@ namespace ProSuite.AGP.QA.WorkList
 			_msg.DebugStopTiming(watch, "Created revision work item repository");
 
 			return result;
-		}
-
-		protected static WorkListStatusSchema CreateStatusSchema(TableDefinition definition)
-		{
-			int fieldIndex;
-
-			try
-			{
-				fieldIndex = definition.FindField(_statusFieldName);
-
-				if (fieldIndex < 0)
-				{
-					throw new ArgumentException($"No field {_statusFieldName}");
-				}
-			}
-			catch (Exception e)
-			{
-				_msg.Error($"Error find field {_statusFieldName} in {definition.GetName()}", e);
-				throw;
-			}
-
-			// The status schema is the same for production model datasets and Issue Geodatabase tables.
-			return new WorkListStatusSchema(_statusFieldName, fieldIndex,
-			                                (int) IssueCorrectionStatus.NotCorrected,
-			                                (int) IssueCorrectionStatus.Corrected);
 		}
 	}
 }

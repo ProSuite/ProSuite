@@ -21,7 +21,8 @@ namespace ProSuite.AGP.WorkList
 			if (CanUseProductionModelIssueSchema() &&
 			    ! KeyboardUtils.IsModifierPressed(Keys.Control, true))
 			{
-				environment = await ViewUtils.TryAsync(CreateProductionModelIssueList(), _msg);
+				environment =
+					await ViewUtils.TryAsync(CreateProductionModelIssueWorkEnvironment(), _msg);
 			}
 			else
 			{
@@ -48,7 +49,7 @@ namespace ProSuite.AGP.WorkList
 			return true;
 		}
 
-		protected virtual Task<WorkEnvironmentBase> CreateProductionModelIssueList()
+		protected virtual Task<WorkEnvironmentBase> CreateProductionModelIssueWorkEnvironment()
 		{
 			return null;
 		}

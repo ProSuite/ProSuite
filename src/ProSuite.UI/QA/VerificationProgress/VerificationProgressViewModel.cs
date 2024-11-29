@@ -39,7 +39,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		private ICommand _cancelCommand;
 		private ICommand _showReportCommand;
-		private ICommand _saveErrorsCommand;
+		private RelayCommand<VerificationProgressViewModel> _saveErrorsCommand;
 		private string _statusText;
 		private Brush _statusTextColor = Brushes.Black;
 		private string _tileInfoText;
@@ -447,8 +447,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 				if (_openWorkListCommand == null)
 				{
 					_openWorkListCommand = new RelayCommand<VerificationProgressViewModel>(
-						vm => ApplicationController.OpenWorkList(
-							Assert.NotNull(VerificationResult), false),
+						vm => OpenWorkList(),
 						vm => CanOpenWorkList());
 				}
 
@@ -661,14 +660,34 @@ namespace ProSuite.UI.QA.VerificationProgress
 		private bool CanOpenWorkList()
 		{
 			string reason = null;
+			bool result = false;
+			try
+			{
+				result =
+					ApplicationController?.CanOpenWorkList(ProgressTracker.RemoteCallStatus,
+					                                       VerificationResult, out reason) ?? false;
 
-			bool result =
-				ApplicationController?.CanOpenWorkList(ProgressTracker.RemoteCallStatus,
-				                                       VerificationResult, out reason) ?? false;
-
-			OpenWorkListToolTip = reason ?? "Open Issue Work List";
+				OpenWorkListToolTip = reason ?? "Open Issue Work List";
+			}
+			catch (Exception e)
+			{
+				_msg.Error(e);
+			}
 
 			return result;
+		}
+
+		private async Task OpenWorkList()
+		{
+			try
+			{
+				await ApplicationController.OpenWorkList(
+					Assert.NotNull(VerificationResult), false);
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
 		}
 
 		private void CancelOrClose()
@@ -737,6 +756,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 				    ApplicationController?.SaveIssues(Assert.NotNull(VerificationResult),
 				                                      UpdateOptions.ErrorDeletionType,
 				                                      ! UpdateOptions.KeepPreviousIssues);
+
+				    _saveErrorsCommand?.RaiseCanExecuteChanged();
 			    });
 		}
 

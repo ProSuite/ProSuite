@@ -167,9 +167,27 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		public async Task OpenWorkList(IQualityVerificationResult verificationResult,
 		                               bool replaceExisting)
 		{
-			await ViewUtils.TryAsync(
-				_workListOpener.OpenIssueWorkListAsync(verificationResult.IssuesGdbPath,
-				                                       replaceExisting), _msg);
+			if (_workListOpener.CanUseProductionModelIssueSchema())
+			{
+				IBoundedXY bnds = verificationResult.VerifiedEnvelope;
+
+				Envelope envelope = bnds == null
+					                    ? null
+					                    : GeometryFactory.CreateEnvelope(
+						                    bnds.XMin, bnds.YMin, bnds.XMax, bnds.YMax);
+
+				_msg.Info("Opening production model issue work list...");
+
+				await _workListOpener.OpenProductionModelIssueWorkEnvironmentAsync(envelope);
+			}
+			else
+			{
+				_msg.InfoFormat("Opening issue geodatabase ({0}) work list...",
+				                verificationResult.IssuesGdbPath);
+				await ViewUtils.TryAsync(
+					_workListOpener.OpenFileGdbIssueWorkListAsync(verificationResult.IssuesGdbPath,
+						replaceExisting), _msg);
+			}
 		}
 
 		public bool CanOpenWorkList(ServiceCallStatus? currentProgressStep,
@@ -193,6 +211,19 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return false;
 			}
 
+			if (! verificationResult.HasIssues)
+			{
+				reason = "No issues";
+				return false;
+			}
+
+			if (_workListOpener.CanUseProductionModelIssueSchema())
+			{
+				reason = null;
+				return true;
+			}
+
+			// No production model issue schema, use IssueGdb:
 			if (string.IsNullOrEmpty(verificationResult.IssuesGdbPath))
 			{
 				reason = "No issue File Geodatabase has been created";
@@ -205,12 +236,6 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				reason =
 					$"Issue File Geodatabase at {verificationResult.IssuesGdbPath} does not exist or cannot be accessed";
 
-				return false;
-			}
-
-			if (! verificationResult.HasIssues)
-			{
-				reason = "No issues";
 				return false;
 			}
 
@@ -274,7 +299,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			SaveAction?.Invoke(verificationResult, errorDeletion,
 			                   updateLatestTestDate);
 
-			_issuesSaved = true;
+			_issuesSaved = verificationResult.IssuesSaved >= 0;
 		}
 
 		public bool CanSaveIssues(IQualityVerificationResult verificationResult, out string reason)

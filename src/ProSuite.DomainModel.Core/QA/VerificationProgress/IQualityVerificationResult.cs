@@ -26,6 +26,8 @@ namespace ProSuite.DomainModel.Core.QA.VerificationProgress
 
 		bool CanSaveIssues { get; }
 
+		int IssuesSaved { get; }
+
 		int SaveIssues(ErrorDeletionInPerimeter errorDeletion =
 			               ErrorDeletionInPerimeter.VerifiedQualityConditions);
 
