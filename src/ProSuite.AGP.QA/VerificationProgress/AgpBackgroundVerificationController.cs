@@ -169,12 +169,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		{
 			if (_workListOpener.CanUseProductionModelIssueSchema())
 			{
-				IBoundedXY bnds = verificationResult.VerifiedEnvelope;
-
-				Envelope envelope = bnds == null
-					                    ? null
-					                    : GeometryFactory.CreateEnvelope(
-						                    bnds.XMin, bnds.YMin, bnds.XMax, bnds.YMax);
+				Envelope envelope = null;
 
 				_msg.Info("Opening production model issue work list...");
 
