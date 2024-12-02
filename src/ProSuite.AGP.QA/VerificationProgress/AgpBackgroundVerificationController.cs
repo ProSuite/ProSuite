@@ -214,7 +214,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 			if (_workListOpener.CanUseProductionModelIssueSchema())
 			{
-				reason = null;
+				reason =
+					"Open Issue Work List from project workspace using traditional error datasets";
 				return true;
 			}
 
@@ -234,7 +235,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return false;
 			}
 
-			reason = null;
+			reason = $"Open Issue Work List using {verificationResult.IssuesGdbPath}";
 			return true;
 		}
 
