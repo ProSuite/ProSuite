@@ -1,6 +1,5 @@
 using System;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.Commons.AGP.Core.Spatial;
@@ -201,18 +200,33 @@ public static class ControlPointUtils
 	{
 		if (segment is null) return null;
 
-		if (! startPointID.HasValue && ! endPointID.HasValue)
+		switch (segment)
+		{
+			case LineSegment line:
+				return (T) (Segment) SetPointID(line, startPointID, endPointID);
+
+			case CubicBezierSegment bezier:
+				return (T) (Segment) SetPointID(bezier, startPointID, endPointID);
+
+			case EllipticArcSegment arc:
+				return (T) (Segment) SetPointID(arc, startPointID, endPointID);
+
+			default:
+				throw new ArgumentException("Unknown segment type", nameof(segment));
+		}
+	}
+
+	public static LineSegment SetPointID(
+		LineSegment segment, int? startPointID, int? endPointID)
+	{
+		if (segment is null) return null;
+
+		if (!startPointID.HasValue && !endPointID.HasValue)
 		{
 			return segment; // nothing to update
 		}
 
-		SegmentBuilderEx builder = segment switch
-		{
-			LineSegment line => new LineBuilderEx(line),
-			EllipticArcSegment arc => new EllipticArcBuilderEx(arc),
-			CubicBezierSegment cubic => new CubicBezierBuilderEx(cubic),
-			_ => throw new ArgumentException(@"Unknown segment type", nameof(segment))
-		};
+		var builder = new LineBuilderEx(segment);
 
 		if (startPointID.HasValue)
 		{
@@ -224,7 +238,125 @@ public static class ControlPointUtils
 			builder.EndPoint = SetPointID(segment.EndPoint, endPointID.Value);
 		}
 
-		return (T) builder.ToSegment();
+		return builder.ToSegment();
+	}
+
+	public static CubicBezierSegment SetPointID(
+		CubicBezierSegment segment, int? startPointID, int? endPointID)
+	{
+		if (segment is null) return null;
+
+		if (!startPointID.HasValue && !endPointID.HasValue)
+		{
+			return segment; // nothing to update
+		}
+
+		var builder = new CubicBezierBuilderEx(segment);
+
+		if (startPointID.HasValue)
+		{
+			builder.StartPoint = SetPointID(segment.StartPoint, startPointID.Value);
+		}
+
+		if (endPointID.HasValue)
+		{
+			builder.EndPoint = SetPointID(segment.EndPoint, endPointID.Value);
+		}
+
+		return builder.ToSegment();
+	}
+
+	public static EllipticArcSegment SetPointID(
+		EllipticArcSegment segment, int? startPointID, int? endPointID)
+	{
+		if (segment is null) return null;
+
+		if (!startPointID.HasValue && !endPointID.HasValue)
+		{
+			return segment; // nothing to update
+		}
+
+		try
+		{
+			// The obvious approach here fails with "The point is not on
+			// the arc", probably due to floating-point round-off troubles,
+			// in many cases (it seems to work for full circles/ellipses):
+
+			var builder = new EllipticArcBuilderEx(segment);
+
+			if (startPointID.HasValue)
+			{
+				//bool check = IsPointOnCircle(builder.StartPoint, segment);
+
+				builder.StartPoint = SetPointID(builder.StartPoint, startPointID.Value);
+			}
+
+			if (endPointID.HasValue)
+			{
+
+				//bool check = IsPointOnCircle(builder.StartPoint, segment);
+
+				builder.EndPoint = SetPointID(builder.EndPoint, endPointID.Value);
+			}
+
+			return builder.ToSegment();
+		}
+		catch (Exception ignore)
+		{
+			// Alternative approach: recreate segment using an
+			// appropriate utility method on the builder class:
+
+			EllipticArcSegment updated;
+
+			var startPoint = startPointID.HasValue
+				                 ? SetPointID(segment.StartPoint, startPointID.Value)
+				                 : segment.StartPoint;
+			var endPoint = endPointID.HasValue
+				               ? SetPointID(segment.EndPoint, endPointID.Value)
+				               : segment.EndPoint;
+
+			var orientation = segment.IsCounterClockwise
+				                  ? ArcOrientation.ArcCounterClockwise
+				                  : ArcOrientation.ArcClockwise;
+
+			var sref = segment.SpatialReference;
+
+			if (segment.IsCircular)
+			{
+				// seems to even work on full circles
+				updated = EllipticArcBuilderEx.CreateCircularArc(
+					startPoint, endPoint, segment.CenterPoint, orientation, sref);
+			}
+			else
+			{
+				var minor = segment.IsMinor
+					            ? MinorOrMajor.Minor
+					            : MinorOrMajor.Major;
+
+				// Note: fails if startPoint==endPoint (full ellipse), but then the "obvious approach" seems to work
+				updated = EllipticArcBuilderEx.CreateEllipticArcSegment(
+					startPoint, endPoint, segment.SemiMajorAxis, segment.MinorMajorRatio,
+					segment.RotationAngle, minor, orientation, sref);
+			}
+
+			return updated;
+		}
+	}
+
+	private static bool IsPointOnCircle(MapPoint point, EllipticArcSegment arc)
+	{
+		// The assignment EllipticArcBuilderEx.StartPoint = point calls
+		// code like the one here and throws on false (point not on arc).
+		// With my test data (LV95 coords) this is false even when the XY
+		// coords are exactly the same.
+
+		double x1 = point.X;
+		double y1 = point.Y;
+		double x2 = arc.CenterPoint.X;
+		double y2 = arc.CenterPoint.Y;
+		double radius = arc.SemiMajorAxis;
+		double dist = Math.Abs((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) - radius * radius);
+		return dist < 1E-12;
 	}
 
 	public static MapPoint SetPointID(MapPoint point, int id)

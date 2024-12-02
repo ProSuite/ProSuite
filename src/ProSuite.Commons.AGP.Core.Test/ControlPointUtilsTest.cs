@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Hosting;
 using System.Linq;
@@ -15,6 +16,51 @@ public class ControlPointUtilsTest
 	public void OneTimeSetUp()
 	{
 		CoreHostProxy.Initialize();
+	}
+
+	[Test]
+	public void CanCreateCircularArc()
+	{
+		// Due to the immutable geometries, setting a control point
+		// on a polygon or polyline means we have to recreate two
+		// segments. 
+		MapPoint right = MapPointBuilderEx.CreateMapPoint(1, 0);
+		MapPoint up = MapPointBuilderEx.CreateMapPoint(0, 1);
+		MapPoint left = MapPointBuilderEx.CreateMapPoint(-1, 0);
+		MapPoint down = MapPointBuilderEx.CreateMapPoint(0, -1);
+		Coordinate2D origin = new Coordinate2D(0, 0);
+		const ArcOrientation ccw = ArcOrientation.ArcCounterClockwise;
+
+		// quarter circle:
+
+		var arc = EllipticArcBuilderEx.CreateCircularArc(right, up, origin, ccw);
+
+		Assert.True(arc.IsCircular);
+		Assert.True(arc.IsMinor);
+
+		// half circle: considered major because central angle >= pi
+
+		arc = EllipticArcBuilderEx.CreateCircularArc(right, left, origin, ccw);
+
+		Assert.True(arc.IsCircular);
+		Assert.False(arc.IsMinor);
+		Assert.AreEqual(Math.PI, arc.CentralAngle, 1E-7);
+
+		// 3/4 circle:
+
+		arc = EllipticArcBuilderEx.CreateCircularArc(right, down, origin, ccw);
+
+		Assert.True(arc.IsCircular);
+		Assert.False(arc.IsMinor);
+		Assert.AreEqual(1.5 * Math.PI, arc.CentralAngle, 1E-7);
+
+		// full circle:
+
+		arc = EllipticArcBuilderEx.CreateCircularArc(right, right, origin, ccw);
+
+		Assert.True(arc.IsCircular);
+		Assert.False(arc.IsMinor);
+		Assert.AreEqual(2 * Math.PI, arc.CentralAngle, 1E-7);
 	}
 
 	[Test]
