@@ -173,14 +173,23 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 					{
 						xmlTableReference.Id = sourceClass.GetUniqueTableId();
 						xmlTableReference.DefinitionQuery = sourceClass.DefinitionQuery;
+
+						if (sourceClass is DatabaseSourceClass dbStatusSourceClass)
+						{
+							WorkListStatusSchema statusSchema = dbStatusSourceClass.StatusSchema;
+
+							xmlTableReference.StatusFieldName = statusSchema.FieldName;
+							xmlTableReference.StatusValueTodo = (int) statusSchema.TodoValue;
+							xmlTableReference.StatusValueDone = (int) statusSchema.DoneValue;
+						}
+
+						xmlTables.Add(xmlTableReference);
 					}
 
-					xmlTables.Add(xmlTableReference);
+					xmlWorkspace.Tables = xmlTables;
+
+					list.Add(xmlWorkspace);
 				}
-
-				xmlWorkspace.Tables = xmlTables;
-
-				list.Add(xmlWorkspace);
 			}
 		}
 	}

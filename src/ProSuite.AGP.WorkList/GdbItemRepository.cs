@@ -265,6 +265,7 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		// TODO: Workspace property, the source class references the table
+		[CanBeNull]
 		public Row GetGdbItemRow(IWorkItem workItem)
 		{
 			Geodatabase workspace = workItem.GdbRowProxy.Table.Workspace.OpenGeodatabase();

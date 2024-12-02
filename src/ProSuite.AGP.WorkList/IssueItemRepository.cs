@@ -156,7 +156,7 @@ namespace ProSuite.AGP.WorkList
 				}, table);
 
 				// todo daro CancelMessage, AbortMessage
-				string fieldName = databaseSourceClass.StatusFieldName;
+				string fieldName = databaseSourceClass.StatusSchema.FieldName;
 				object value = databaseSourceClass.GetValue(item.Status);
 
 				operation.Modify(table, item.ObjectID, fieldName, value);

@@ -18,6 +18,7 @@ public abstract class DbStatusWorkList : WorkList
 	/// </summary>
 	/// <param name="currentItem"></param>
 	/// <returns></returns>
+	[CanBeNull]
 	public Row GetDbRow(DbStatusWorkItem currentItem)
 	{
 		// Consider pulling up to interface

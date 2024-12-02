@@ -12,8 +12,6 @@ namespace ProSuite.AGP.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly WorkListStatusSchema _statusSchema;
-
 		public DatabaseSourceClass(GdbTableIdentity identity,
 		                           [NotNull] WorkListStatusSchema statusSchema,
 		                           [CanBeNull] IAttributeReader attributeReader,
@@ -22,12 +20,11 @@ namespace ProSuite.AGP.WorkList
 		{
 			Assert.ArgumentNotNull(statusSchema, nameof(statusSchema));
 
-			_statusSchema = statusSchema;
+			StatusSchema = statusSchema;
 			DefinitionQuery = definitionQuery;
 		}
 
-		[NotNull]
-		public string StatusFieldName => _statusSchema.FieldName;
+		public WorkListStatusSchema StatusSchema { get; }
 
 		public WorkItemStatus GetStatus([NotNull] Row row)
 		{
@@ -35,13 +32,13 @@ namespace ProSuite.AGP.WorkList
 
 			try
 			{
-				object value = row[_statusSchema.FieldIndex];
+				object value = row[StatusSchema.FieldIndex];
 
 				return GetStatus(value);
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error get value from row {row} with index {_statusSchema.FieldIndex}",
+				_msg.Error($"Error get value from row {row} with index {StatusSchema.FieldIndex}",
 				           e);
 
 				return WorkItemStatus.Todo;
@@ -50,12 +47,12 @@ namespace ProSuite.AGP.WorkList
 
 		public WorkItemStatus GetStatus([CanBeNull] object value)
 		{
-			if (_statusSchema.TodoValue.Equals(value))
+			if (StatusSchema.TodoValue.Equals(value))
 			{
 				return WorkItemStatus.Todo;
 			}
 
-			if (_statusSchema.DoneValue.Equals(value))
+			if (StatusSchema.DoneValue.Equals(value))
 			{
 				return WorkItemStatus.Done;
 			}
@@ -71,10 +68,10 @@ namespace ProSuite.AGP.WorkList
 			switch (status)
 			{
 				case WorkItemStatus.Done:
-					return _statusSchema.DoneValue;
+					return StatusSchema.DoneValue;
 
 				case WorkItemStatus.Todo:
-					return _statusSchema.TodoValue;
+					return StatusSchema.TodoValue;
 
 				case WorkItemStatus.Unknown:
 					return DBNull.Value;
@@ -101,7 +98,7 @@ namespace ProSuite.AGP.WorkList
 
 			if (statusFilter != null)
 			{
-				result = $"{StatusFieldName} = {GetValue(statusFilter.Value)}";
+				result = $"{StatusSchema.FieldName} = {GetValue(statusFilter.Value)}";
 			}
 
 			if (DefinitionQuery != null)
