@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 
 namespace ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker
 {

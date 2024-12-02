@@ -636,6 +636,23 @@ public class GeometryUtilsTest
 			() => GeometryUtils.GetGlobalVertexIndex(polygon, 1, 6));
 	}
 
+	[Test]
+	public void CanGetMultipointIndex()
+	{
+		// first point:
+		Assert.AreEqual(0, GeometryUtils.GetMultipointIndex(0, 0));
+
+		// second point (index 1, either as part or as point):
+		Assert.AreEqual(1, GeometryUtils.GetMultipointIndex(1, 0));
+		Assert.AreEqual(1, GeometryUtils.GetMultipointIndex(0, 1));
+		Assert.AreEqual(1, GeometryUtils.GetMultipointIndex(-1, 1));
+		Assert.AreEqual(1, GeometryUtils.GetMultipointIndex(1, -1));
+		Assert.AreEqual(1, GeometryUtils.GetMultipointIndex(1, 1));
+
+		// part and point index must not be different:
+		Assert.Catch<ArgumentException>(() => GeometryUtils.GetMultipointIndex(1, 2));
+	}
+
 	#region Creating test geometries
 
 	private static MapPoint Pt(double x, double y)

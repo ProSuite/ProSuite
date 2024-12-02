@@ -18,18 +18,12 @@ namespace ProSuite.AGP.Editing.Selection
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		// todo daro refactor
 		protected SelectionToolBase()
 		{
 			IsSketchTool = true;
 
-			SelectionCursor = ToolUtils.GetCursor(Resources.SelectionToolNormal);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.SelectionToolNormalShift);
-
 			SelectOnlyEditFeatures = false;
 			UnJoinedSelection = false;
-
-			SetCursor(SelectionCursor);
 		}
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
@@ -77,7 +71,7 @@ namespace ProSuite.AGP.Editing.Selection
 			_msg.InfoFormat(LocalizableStrings.SelectionTool_LogPromptForSelection);
 		}
 
-		// todo daro: to DamlUtils?
+		// todo: daro to DamlUtils?
 		private static void SetCheckState(string damlId, bool isChecked)
 		{
 			IPlugInWrapper plugin =

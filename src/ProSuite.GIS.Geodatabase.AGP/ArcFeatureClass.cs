@@ -153,9 +153,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		//	return _aoTable.FindField(Name);
 		//}
 
-		public IFeature CreateFeature()
+		public IFeature CreateFeature(int? subtype = null)
 		{
-			return (IFeature) CreateRow();
+			return (IFeature) CreateRow(subtype);
 		}
 
 		public IFeature GetFeature(long id)

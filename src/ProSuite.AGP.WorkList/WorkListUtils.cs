@@ -103,7 +103,7 @@ namespace ProSuite.AGP.WorkList
 
 			var sourceClasses = new List<Tuple<Table, string>>();
 
-			if (type == typeof(IssueWorkList))
+			if (typeof(DbStatusWorkList).IsAssignableFrom(type))
 			{
 				// Issue source classes: table/definition query pairs
 				foreach (XmlWorkListWorkspace xmlWorkspace in xmlWorkListDefinition.Workspaces)
@@ -373,7 +373,7 @@ namespace ProSuite.AGP.WorkList
 			string filePath = xmlWorkListDefinition.Path;
 			int currentIndex = xmlWorkListDefinition.CurrentIndex;
 
-			if (type == typeof(IssueWorkList))
+			if (typeof(DbStatusWorkList).IsAssignableFrom(type))
 			{
 				return new XmlWorkItemStateRepository(filePath, name, type, currentIndex);
 			}
@@ -401,6 +401,11 @@ namespace ProSuite.AGP.WorkList
 				                                   new Dictionary<Table, List<long>>(),
 				                                   itemStateRepository);
 			}
+
+			// TODO (EMA):
+			_msg.Warn($"Unknown work list type: {type.Name}. Using Issue work list");
+			return new IssueItemRepository(new List<Tuple<Table, string>>(0),
+			                               itemStateRepository);
 
 			throw new ArgumentException($"Unknown work list type: {type.Name}");
 		}

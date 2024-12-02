@@ -41,20 +41,24 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			throw new NotImplementedException();
 		}
 
-		public IRow CreateRow()
+		public IRow CreateRow(int? subtypeCode = null)
 		{
-			var subtype =
-				Commons.AGP.Core.Geodatabase.DatasetUtils.GetDefaultSubtype(ProTableDefinition);
+			if (subtypeCode == null)
+			{
+				subtypeCode = DatasetUtils.GetDefaultSubtypeCode(ProTableDefinition);
+			}
+
+			Subtype subtype = DatasetUtils.GetSubtype(ProTableDefinition, subtypeCode);
 
 			RowBuffer rowBuffer = ProTable.CreateRowBuffer(subtype);
 
-			Commons.AGP.Core.Geodatabase.GdbObjectUtils.SetNullValuesToGdbDefault(
+			GdbObjectUtils.SetNullValuesToGdbDefault(
 				rowBuffer, ProTableDefinition, subtype);
 
 			if (ProTable is FeatureClass fc)
 			{
 				// TODO: Move to GeometryFactory
-				ArcGIS.Core.Geometry.Geometry geometry = null;
+				ArcGIS.Core.Geometry.Geometry geometry;
 				switch (fc.GetShapeType())
 				{
 					case GeometryType.Point:
@@ -183,8 +187,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
 
-			ArcWorkspace arcWorkspace = (ArcWorkspace) selectionContainer;
-
 			Selection selectionSet = ProTable.Select(proQueryFilter,
 			                                         (SelectionType) selType,
 			                                         (SelectionOption) selOption);
@@ -236,20 +238,23 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			foreach (var relClassDef in geodatabase.GetDefinitions<RelationshipClassDefinition>())
 			{
 				string relClassName = relClassDef.GetName();
+				string thisTableName = ProTableDefinition.GetName();
 
-				if (role == esriRelRole.esriRelRoleAny)
+				if (role == esriRelRole.esriRelRoleAny &&
+				    (relClassDef.GetOriginClass() == thisTableName ||
+				     relClassDef.GetDestinationClass() == thisTableName))
 				{
 					yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				}
 
 				if (role == esriRelRole.esriRelRoleOrigin &&
-				    relClassDef.GetOriginClass() == ProTableDefinition.GetName())
+				    relClassDef.GetOriginClass() == thisTableName)
 				{
 					yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				}
 
 				if (role == esriRelRole.esriRelRoleDestination &&
-				    relClassDef.GetDestinationClass() == ProTableDefinition.GetName())
+				    relClassDef.GetDestinationClass() == thisTableName)
 				{
 					yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				}
@@ -344,7 +349,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			Field field = GetExistingField(fieldName);
 
-			ArcGIS.Core.Data.Subtype subtype =
+			Subtype subtype =
 				ProTableDefinition.GetSubtypes()
 				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
@@ -360,13 +365,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			Field field = GetExistingField(fieldName);
 
-			ArcGIS.Core.Data.Subtype subtype =
+			Subtype subtype =
 				ProTableDefinition.GetSubtypes()
 				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
 			Domain proDomain = field.GetDomain(subtype);
 
-			return new ArcDomain(proDomain);
+			return ArcGeodatabaseUtils.ToArcDomain(proDomain);
 		}
 
 		public string SubtypeFieldName
@@ -380,7 +385,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public string get_SubtypeName(int subtypeCode)
 		{
-			ArcGIS.Core.Data.Subtype subtype =
+			Subtype subtype =
 				ProTableDefinition.GetSubtypes()
 				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
@@ -451,7 +456,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		private static QueryFilter GetProQueryFilter(IQueryFilter queryFilter)
 		{
-			QueryFilter proQueryFilter = null;
+			QueryFilter proQueryFilter;
 
 			if (queryFilter is ArcQueryFilter arcQueryFilter)
 			{

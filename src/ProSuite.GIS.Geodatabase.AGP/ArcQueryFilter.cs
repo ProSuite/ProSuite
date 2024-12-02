@@ -55,6 +55,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public ISpatialReference get_OutputSpatialReference(string fieldName)
 		{
+			if (_proQueryFilter.OutputSpatialReference == null)
+			{
+				return null;
+			}
+
 			return new ArcSpatialReference(_proQueryFilter.OutputSpatialReference);
 		}
 

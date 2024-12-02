@@ -1,5 +1,6 @@
 using System;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.Commons.AGP.Core.Spatial;
@@ -13,6 +14,132 @@ namespace ProSuite.Commons.AGP.Core.Spatial;
 /// </summary>
 public static class ControlPointUtils
 {
+	/// <summary>
+	/// Get the point ID at the addressed vertex of the given shape.
+	/// For a point geometry, pass zero as part and vertex index.
+	/// For a multipoint, pass the point index as both part and vertex index.
+	/// </summary>
+	/// <returns>The point ID or zero of there is no point ID</returns>
+	public static int GetPointID(Geometry shape, int partIndex, int vertexIndex)
+	{
+		const int noID = 0;
+
+		if (shape is null || shape.IsEmpty)
+		{
+			return noID;
+		}
+
+		if (shape is MapPoint mapPoint)
+		{
+			if (partIndex != 0)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			if (vertexIndex != 0)
+				throw new ArgumentOutOfRangeException(nameof(vertexIndex));
+
+			return mapPoint.HasID ? mapPoint.ID : noID;
+		}
+
+		if (shape is Multipoint multipoint)
+		{
+			int pointIndex = GeometryUtils.GetMultipointIndex(partIndex, vertexIndex);
+			if (pointIndex < 0 || pointIndex >= multipoint.PointCount)
+				throw new ArgumentOutOfRangeException(
+					"point index out of range for multipoint shape", (Exception)null);
+
+			var point = multipoint.Points[vertexIndex];
+			return multipoint.HasID ? point.ID : noID;
+		}
+
+		if (shape is Multipart multipart)
+		{
+			// Here GetGlobalVertexIndex validates the index arguments:
+			var globalIndex = GeometryUtils.GetGlobalVertexIndex(multipart, partIndex, vertexIndex);
+			var point = multipart.Points[globalIndex];
+			return multipart.HasID ? point.ID : noID;
+		}
+
+		if (shape is Multipatch)
+		{
+			throw new NotImplementedException();
+		}
+
+		if (shape is Envelope)
+		{
+			return noID; // has no vertices and thus no control points
+		}
+
+		throw new NotSupportedException($"Geometry type {shape.GetType().Name} is not supported");
+	}
+
+	/// <summary>
+	/// Set the point ID at the addressed vertex to the given value.
+	/// For a point geometry, pass zero as part and vertex index.
+	/// For a multipoint, pass the point index as both part and vertex index.
+	/// </summary>
+	/// <returns>A new geometry instance with the point ID set</returns>
+	public static Geometry SetPointID(
+		int value, Geometry shape, int partIndex, int vertexIndex)
+	{
+		if (shape is null || shape.IsEmpty)
+		{
+			return shape;
+		}
+
+		if (shape is MapPoint mapPoint)
+		{
+			if (partIndex != 0)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			if (vertexIndex != 0)
+				throw new ArgumentOutOfRangeException(nameof(vertexIndex));
+
+			var builder = new MapPointBuilder(mapPoint);
+			builder.HasID = true;
+			builder.ID = value;
+			return builder.ToGeometry();
+		}
+
+		if (shape is Multipoint multipoint)
+		{
+			int pointIndex = GeometryUtils.GetMultipointIndex(partIndex, vertexIndex);
+			if (pointIndex < 0 || pointIndex >= multipoint.PointCount)
+				throw new ArgumentOutOfRangeException(
+					"point index out of range for multipoint shape", (Exception)null);
+
+			var builder = new MultipointBuilderEx(multipoint);
+			builder.HasID = true;
+			builder.IDs[vertexIndex] = value;
+			return builder.ToGeometry();
+		}
+
+		if (shape is Polyline polyline)
+		{
+			// Index arguments are validated by SetPointID()
+			var builder = new PolylineBuilderEx(polyline);
+			builder.SetPointID(partIndex, vertexIndex, value);
+			return builder.ToGeometry();
+		}
+
+		if (shape is Polygon polygon)
+		{
+			// Index arguments are validated by SetPointID()
+			var builder = new PolygonBuilderEx(polygon);
+			builder.SetPointID(partIndex, vertexIndex, value);
+			return builder.ToGeometry();
+		}
+
+		if (shape is Multipatch)
+		{
+			throw new NotImplementedException();
+		}
+
+		if (shape is Envelope)
+		{
+			throw new NotSupportedException("Cannot set control points on an Envelope");
+		}
+
+		throw new NotSupportedException($"Geometry type {shape.GetType().Name} is not supported");
+	}
+
 	public static void SetPointID(this MultipartBuilderEx builder,
 	                              int partIndex, int pointIndex, int pointID)
 	{
