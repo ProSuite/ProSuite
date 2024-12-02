@@ -92,10 +92,7 @@ public static class ControlPointUtils
 			if (vertexIndex != 0)
 				throw new ArgumentOutOfRangeException(nameof(vertexIndex));
 
-			var builder = new MapPointBuilder(mapPoint);
-			builder.HasID = true;
-			builder.ID = value;
-			return builder.ToGeometry();
+			return SetPointID(mapPoint, value);
 		}
 
 		if (shape is Multipoint multipoint)
@@ -217,23 +214,29 @@ public static class ControlPointUtils
 			_ => throw new ArgumentException(@"Unknown segment type", nameof(segment))
 		};
 
-		builder.StartPoint = SetPointID(builder.StartPoint, startPointID);
-		builder.EndPoint = SetPointID(builder.EndPoint, endPointID);
+		if (startPointID.HasValue)
+		{
+			builder.StartPoint = SetPointID(segment.StartPoint, startPointID.Value);
+		}
+
+		if (endPointID.HasValue)
+		{
+			builder.EndPoint = SetPointID(segment.EndPoint, endPointID.Value);
+		}
 
 		return (T) builder.ToSegment();
 	}
 
-	public static MapPoint SetPointID(MapPoint point, int? pointID)
+	public static MapPoint SetPointID(MapPoint point, int id)
 	{
 		if (point is null) return null;
 
-		if (! pointID.HasValue)
-		{
-			return point; // nothing to update
-		}
-
-		var builder = new MapPointBuilderEx(point)
-		              { HasID = true, ID = pointID.Value };
+		var builder = new MapPointBuilderEx(point);
+		// Do NOT use object initializer:
+		// we want control over assignment ordering
+		builder.HasID = true;
+		builder.ID = id;
+		builder.HasID = id != 0;
 
 		return builder.ToGeometry();
 	}

@@ -27,20 +27,17 @@ public class ControlPointUtilsTest
 		var point0 = ControlPointUtils.SetPointID(null, 42);
 		Assert.IsNull(point0);
 
-		var point1 = ControlPointUtils.SetPointID(point, null);
-		Assert.AreSame(point, point1);
+		var point1 = ControlPointUtils.SetPointID(point, 1);
+		Assert.IsTrue(point1.HasID);
+		Assert.AreEqual(1, point1.ID);
 
-		var point2 = ControlPointUtils.SetPointID(point, 1);
+		var point2 = ControlPointUtils.SetPointID(point, 123);
 		Assert.IsTrue(point2.HasID);
-		Assert.AreEqual(1, point2.ID);
+		Assert.AreEqual(123, point2.ID);
 
-		var point3 = ControlPointUtils.SetPointID(point, 123);
-		Assert.IsTrue(point3.HasID);
-		Assert.AreEqual(123, point3.ID);
-
-		var point4 = ControlPointUtils.SetPointID(point, 0);
-		Assert.IsTrue(point4.HasID);
-		Assert.AreEqual(0, point4.ID);
+		var point3 = ControlPointUtils.SetPointID(point, 0);
+		Assert.IsFalse(point3.HasID); // setting ID to zero clears HasID
+		Assert.AreEqual(0, point3.ID);
 	}
 
 	[Test]
