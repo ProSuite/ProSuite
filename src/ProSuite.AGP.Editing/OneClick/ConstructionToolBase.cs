@@ -562,18 +562,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			await StartSketchAsync();
 		}
 
-		private void ResetSketch()
-		{
-			RememberSketch();
-
-			ClearSketchAsync();
-			OnSketchModifiedCore();
-
-			OnSketchResetCore();
-
-			StartSketchAsync();
-		}
-
 		protected void RememberSketch(Geometry knownSketch = null)
 		{
 			if (! SupportRestoreLastSketch)
@@ -641,16 +629,15 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		private async Task<bool> LogLastSketchVertexZ()
+		private async Task LogLastSketchVertexZ()
 		{
 			Geometry sketch = await GetCurrentSketchAsync();
 
 			if (! sketch.HasZ)
 			{
-				return false;
+				return;
 			}
 
-			bool result = false;
 			await QueuedTaskUtils.Run(() =>
 			{
 				MapPoint lastPoint = GetLastPoint(sketch);
@@ -658,17 +645,14 @@ namespace ProSuite.AGP.Editing.OneClick
 				if (lastPoint != null)
 				{
 					_msg.InfoFormat("Vertex added, Z={0:N2}", lastPoint.Z);
-					result = true;
 				}
 			});
-
-			return result;
 		}
 
 		private static MapPoint GetLastPoint(Geometry sketch)
 		{
 			MapPoint lastPoint = null;
-			;
+
 			if (sketch is Multipart multipart)
 			{
 				ReadOnlyPointCollection points = multipart.Points;
