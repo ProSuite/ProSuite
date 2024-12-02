@@ -185,11 +185,10 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 						xmlTables.Add(xmlTableReference);
 					}
-
-					xmlWorkspace.Tables = xmlTables;
-
-					list.Add(xmlWorkspace);
 				}
+
+				xmlWorkspace.Tables = xmlTables;
+				list.Add(xmlWorkspace);
 			}
 		}
 	}
