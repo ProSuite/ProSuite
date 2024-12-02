@@ -174,17 +174,17 @@ public interface IFlashSymbol
 	CIMSymbol GetSymbol(GeometryType type);
 }
 
-public class ColoredPolygonSymbol : IFlashSymbol
+public class ColoredSymbol : IFlashSymbol
 {
 	private readonly CIMColor _color;
 
-	public ColoredPolygonSymbol(string name, double R, double G, double B)
+	public ColoredSymbol(string name, double R, double G, double B)
 		: this(R, G, B)
 	{
 		Name = name;
 	}
 
-	public ColoredPolygonSymbol(double R, double G, double B)
+	public ColoredSymbol(double R, double G, double B)
 	{
 		_color = ColorFactory.Instance.CreateRGBColor(R, G, B);
 	}
@@ -222,22 +222,22 @@ public class ColoredPolygonSymbol : IFlashSymbol
 	}
 }
 
-public class BlueSymbol : ColoredPolygonSymbol
+public class BlueSymbol : ColoredSymbol
 {
 	public BlueSymbol(string name) : base(name, 0, 100, 255) { }
 }
 
-public class GreenSymbol : ColoredPolygonSymbol
+public class GreenSymbol : ColoredSymbol
 {
 	public GreenSymbol(string name) : base(name, 0, 255, 0) { }
 }
 
-public class MagentaSymbol : ColoredPolygonSymbol
+public class MagentaSymbol : ColoredSymbol
 {
 	public MagentaSymbol(string name) : base(name, 255, 0, 255) { }
 }
 
-public class RedSymbol : ColoredPolygonSymbol
+public class RedSymbol : ColoredSymbol
 {
 	public RedSymbol(string name) : base(name, 255, 0, 0) { }
 }
