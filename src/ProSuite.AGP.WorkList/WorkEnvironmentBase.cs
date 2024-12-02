@@ -87,8 +87,6 @@ namespace ProSuite.AGP.WorkList
 			// todo daro: dispose feature classes?
 			IList<Table> tables = await PrepareReferencedTables();
 
-			LoadAssociatedLayers();
-
 			IWorkList result = CreateWorkListCore(
 				CreateItemRepositoryCore(tables, stateRepository),
 				uniqueName, DisplayName);
