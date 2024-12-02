@@ -240,7 +240,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				if (KeyboardUtils.IsShiftKey(args.Key))
 				{
-					await ShiftPressedCoreAsync();
+					await ShiftPressedAsync();
 				}
 
 				if (args.Key == Key.Escape)
@@ -320,7 +320,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (KeyboardUtils.IsShiftKey(args.Key))
 				{
-					await ShiftReleasedCoreAsync();
+					await ShiftReleasedAsync();
 				}
 
 				await HandleKeyUpCoreAsync(args);
@@ -430,20 +430,34 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnUpdateCore() { }
 
-		protected virtual async Task ShiftPressedCoreAsync()
+		private async Task ShiftPressedAsync()
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
 				_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
 			}
+
+			await ShiftPressedCoreAsync();
 		}
 
-		protected virtual async Task ShiftReleasedCoreAsync()
+		protected virtual Task ShiftPressedCoreAsync()
+		{
+			return Task.CompletedTask;
+		}
+
+		private async Task ShiftReleasedAsync()
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
 				_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
 			}
+
+			await ShiftReleasedCoreAsync();
+		}
+
+		protected virtual Task ShiftReleasedCoreAsync()
+		{
+			return Task.CompletedTask;
 		}
 
 		protected void StartSelectionPhase()

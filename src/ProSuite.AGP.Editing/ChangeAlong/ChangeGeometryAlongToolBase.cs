@@ -271,16 +271,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
-		protected override async Task ShiftPressedCoreAsync()
+		protected override Task ShiftPressedCoreAsync()
 		{
-			if (await IsInSelectionPhaseAsync())
-			{
-				await base.ShiftPressedCoreAsync();
-			}
-			else
-			{
-				_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
-			}
+			_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+
+			return base.ShiftPressedCoreAsync();
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()
