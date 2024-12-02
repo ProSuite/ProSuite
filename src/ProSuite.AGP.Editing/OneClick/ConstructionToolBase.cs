@@ -170,8 +170,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			RememberSketch();
-
-			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
 		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -242,8 +240,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				// But whether we can make them work when actually executed requires more tests.. and this is probably not the good way to do it!
 				_sketchOperations =
 					operationManager.FindUndoOperations(operation =>
-						                                    operation.Category ==
-						                                    "SketchOperations");
+															operation.Category ==
+															"SketchOperations");
 
 				// By backing up and re-setting the edit sketch the individual operations that made up the 
 				// sketch are lost.
@@ -368,7 +366,7 @@ namespace ProSuite.AGP.Editing.OneClick
 							{
 								Geometry sketch = await GetCurrentSketchAsync();
 
-								if (sketch != null && ! sketch.IsEmpty)
+								if (sketch is { IsEmpty: false })
 								{
 									await ResetSketchAsync();
 								}
@@ -548,7 +546,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Geometry currentSketch = await GetCurrentSketchAsync();
 
-			if (currentSketch != null && ! currentSketch.IsEmpty)
+			if (currentSketch is { IsEmpty: false })
 			{
 				RememberSketch();
 
@@ -583,7 +581,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			var sketch = knownSketch ?? GetCurrentSketchAsync().Result;
 
-			if (sketch != null && ! sketch.IsEmpty)
+			if (sketch is { IsEmpty: false })
 			{
 				_previousSketch = sketch;
 			}

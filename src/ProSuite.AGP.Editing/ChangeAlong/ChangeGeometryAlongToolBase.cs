@@ -208,7 +208,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		protected override async Task<bool> OnSketchCompleteCoreAsync(
-			Geometry sketchGeometry,
+			Geometry sketchGeometry,	
 			CancelableProgressor progressor)
 		{
 			try

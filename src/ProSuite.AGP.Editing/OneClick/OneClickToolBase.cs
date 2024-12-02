@@ -487,11 +487,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract SketchGeometryType GetSelectionSketchGeometryType();
 
-		public SketchGeometryType GetDefaultSelectionSketchType()
-		{
-			return GetSelectionSketchGeometryType();
-		}
-
 		protected virtual void OnSelectionPhaseStarted() { }
 
 		private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
@@ -712,10 +707,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
 
 			var notifications = new NotificationCollection();
-			List<Feature> applicableSelection =
+			var applicableSelection =
 				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection,
-				                                      notifications)
-					.ToList();
+				                                      notifications).ToList();
 
 			int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
 
@@ -1027,10 +1021,14 @@ namespace ProSuite.AGP.Editing.OneClick
 				                       Resources.Polygon, Resources.Shift, 10, 10);
 		}
 
+		protected async Task<bool> NonEmptySketchAsync()
+		{
+			return await GetCurrentSketchAsync() is { IsEmpty: false };
+		}
+
 		protected async Task<bool> NonEmptyPolygonSketchAsync()
 		{
-			return SketchType == SketchGeometryType.Polygon &&
-			       ! (await GetCurrentSketchAsync()).IsEmpty;
+			return SketchType == SketchGeometryType.Polygon && await NonEmptySketchAsync();
 		}
 	}
 }
