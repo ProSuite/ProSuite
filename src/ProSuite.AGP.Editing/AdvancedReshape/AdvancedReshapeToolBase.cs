@@ -252,11 +252,22 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 				if (args.Key == _keyToggleMoveEndJunction)
 				{
-					_msg.Info("Toggle MoveOpenJawEndJunction");
 					_advancedReshapeToolOptions.MoveOpenJawEndJunction =
 						! _advancedReshapeToolOptions.MoveOpenJawEndJunction;
 
 					_updateFeedbackTask = UpdateFeedbackAsync(_nonDefaultSideMode);
+
+					bool currentState = _advancedReshapeToolOptions.MoveOpenJawEndJunction;
+					if (currentState)
+					{
+						_msg.Info("Enabled move end junction option for Y-Reshape");
+					}
+					else
+					{
+						_msg.Info("Disabled move end junction option for Y-Reshape");
+					}
+
+
 
 					await _updateFeedbackTask;
 				}
