@@ -59,7 +59,9 @@ namespace ProSuite.AGP.QA.WorkList
 					MapView.Active.Map, 0, qaGroupLayerName);
 			}
 
+#if ARCGISPRO_GREATER_3_2
 			qaGroupLayer.SetShowLayerAtAllScales(true);
+#endif
 
 			// Expected behaviour:
 			// - They should be re-nameable by the user.
@@ -78,7 +80,9 @@ namespace ProSuite.AGP.QA.WorkList
 					workListGroupLayer =
 						LayerFactory.Instance.CreateGroupLayer(qaGroupLayer, 0, groupName);
 
+#if ARCGISPRO_GREATER_3_2
 					workListGroupLayer.SetShowLayerAtAllScales(true);
+#endif
 				}
 
 				return workListGroupLayer as T;

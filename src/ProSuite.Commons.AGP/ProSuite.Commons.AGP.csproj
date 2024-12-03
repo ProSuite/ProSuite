@@ -34,7 +34,7 @@
   </PropertyGroup>
 
   <!-- Exclude file from legacy ArcGIS Pro versions. -->
-  <ItemGroup Condition=" '$(ArcGISProVersion)' &lt; 3.2 ">
+  <ItemGroup Condition=" '$(ArcGISProVersion)' &lt; 3.3 ">
     <Compile Remove="Framework\Controls\ToolStripCommandWrapperButton.cs" />
     <Compile Remove="Framework\Controls\ToolStripCommandWrapperButton.Designer.cs" />
   </ItemGroup>
