@@ -155,6 +155,7 @@ namespace ProSuite.AGP.WorkList
 			worklistLayer.SetScaleSymbols(false);
 			worklistLayer.SetSelectable(false);
 			worklistLayer.SetSnappable(false);
+			worklistLayer.SetShowLayerAtAllScales(true);
 
 			// The explore tool should ignore the work list layer:
 			worklistLayer.SetShowPopups(false);

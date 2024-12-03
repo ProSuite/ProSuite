@@ -101,6 +101,7 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 				featureLayer.SetExpanded(false);
 				featureLayer.SetVisibility(false);
 				featureLayer.SetDefinitionQuery(GetDefaultDefinitionQuery(table));
+				featureLayer.SetShowLayerAtAllScales(true);
 
 				// TODO: Support lyrx files as symbol layers.
 				// So far, just make the symbols red:

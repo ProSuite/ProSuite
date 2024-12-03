@@ -59,6 +59,8 @@ namespace ProSuite.AGP.QA.WorkList
 					MapView.Active.Map, 0, qaGroupLayerName);
 			}
 
+			qaGroupLayer.SetShowLayerAtAllScales(true);
+
 			// Expected behaviour:
 			// - They should be re-nameable by the user.
 			// - They should be deletable by the user (in which case a new layer should be re-added)
@@ -75,6 +77,8 @@ namespace ProSuite.AGP.QA.WorkList
 					_msg.DebugFormat("Creating new group layer {0}", groupName);
 					workListGroupLayer =
 						LayerFactory.Instance.CreateGroupLayer(qaGroupLayer, 0, groupName);
+
+					workListGroupLayer.SetShowLayerAtAllScales(true);
 				}
 
 				return workListGroupLayer as T;
