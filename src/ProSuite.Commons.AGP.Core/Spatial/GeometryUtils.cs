@@ -1516,9 +1516,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			MultipartBuilderEx builder, int partIndex, int segmentIndex, double dx, double dy)
 		{
 			var segment = builder.GetSegment(partIndex, segmentIndex);
-			var segbldr = segment.ToBuilder();
-			segbldr.StartPoint = segbldr.StartPoint.Shifted(dx, dy);
-			var moved = segbldr.ToSegment();
+
+			var startPoint = segment.StartPoint.Shifted(dx, dy);
+			Segment moved = UpdateEndpoints(segment, startPoint, null);
+
 			builder.ReplaceSegment(partIndex, segmentIndex, moved);
 		}
 
@@ -1526,10 +1527,124 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			MultipartBuilderEx builder, int partIndex, int segmentIndex, double dx, double dy)
 		{
 			var segment = builder.GetSegment(partIndex, segmentIndex);
-			var segbldr = segment.ToBuilder();
-			segbldr.EndPoint = segbldr.EndPoint.Shifted(dx, dy);
-			var moved = segbldr.ToSegment();
+
+			var endPoint = segment.EndPoint.Shifted(dx, dy);
+			Segment moved = UpdateEndpoints(segment, null, endPoint);
+
 			builder.ReplaceSegment(partIndex, segmentIndex, moved);
+		}
+
+		/// <summary>
+		/// Update either or both endpoints of the given segment.
+		/// For a line segment, this is trivial. For a cubic Bézier
+		/// segment, move the control point(s) accordingly. For a
+		/// circular or elliptic arc, move the center decently.
+		/// </summary>
+		public static T UpdateEndpoints<T>([NotNull] T segment, MapPoint startPoint, MapPoint endPoint)
+			where T : Segment
+		{
+			if (segment is null)
+				throw new ArgumentNullException(nameof(segment));
+
+			if (segment is CubicBezierSegment bezier)
+			{
+				return (T) (Segment) UpdateEndpoints(bezier, startPoint, endPoint);
+			}
+
+			if (segment is EllipticArcSegment arc)
+			{
+				return (T) (Segment) UpdateEndpoints(arc, startPoint, endPoint);
+			}
+
+			var builder = segment.ToBuilder();
+			builder.StartPoint = startPoint ?? segment.StartPoint;
+			builder.EndPoint = endPoint ?? builder.EndPoint;
+			return (T) builder.ToSegment();
+		}
+
+		private static CubicBezierSegment UpdateEndpoints(
+			CubicBezierSegment bezier, MapPoint startPoint, MapPoint endPoint)
+		{
+			if (startPoint is null && endPoint is null)
+			{
+				// no endpoint changed: nothing to do
+				return bezier;
+			}
+
+			// Move CP1 same as startPoint, and CP2 same as endPoint:
+
+			var controlPoint1 = bezier.ControlPoint1;
+			var controlPoint2 = bezier.ControlPoint2;
+
+			if (startPoint is not null)
+			{
+				controlPoint1.Move(startPoint.X - bezier.StartPoint.X,
+				         startPoint.Y - bezier.StartPoint.Y);
+			}
+
+			if (endPoint is not null)
+			{
+				controlPoint2.Move(endPoint.X - bezier.EndPoint.X,
+				         endPoint.Y - bezier.EndPoint.Y);
+			}
+
+			var sref = bezier.SpatialReference;
+
+			return CubicBezierBuilderEx.CreateCubicBezierSegment(
+				startPoint ?? bezier.StartPoint, controlPoint1,
+				controlPoint2, endPoint ?? bezier.EndPoint, sref);
+		}
+
+		private static EllipticArcSegment UpdateEndpoints(
+			EllipticArcSegment arc, MapPoint startPoint, MapPoint endPoint)
+		{
+			if (startPoint is null && endPoint is null)
+			{
+				// no endpoint changed: nothing to do
+				return arc;
+			}
+
+			// Cannot just update arc.StartPoint and arc.EndPoint:
+			// must recreate the circular/elliptic arc segment:
+
+			EllipticArcSegment updated;
+
+			var orientation = arc.IsCounterClockwise
+				                  ? ArcOrientation.ArcCounterClockwise
+				                  : ArcOrientation.ArcClockwise;
+
+			var sref = arc.SpatialReference;
+
+			if (arc.IsCircular)
+			{
+
+				var ds = startPoint is null
+					         ? new Coordinate2D(0, 0)
+					         : new Coordinate2D(startPoint) - new Coordinate2D(arc.StartPoint);
+
+				var de = endPoint is null
+					         ? new Coordinate2D(0, 0)
+					         : new Coordinate2D(endPoint) - new Coordinate2D(arc.EndPoint);
+
+				var dc = 0.5 * (ds + de);
+				var centerPt = arc.CenterPoint.Shifted(dc.X, dc.Y);
+
+				updated = EllipticArcBuilderEx.CreateCircularArc(
+					startPoint ?? arc.StartPoint, endPoint ?? arc.EndPoint, centerPt, orientation, sref);
+			}
+			else
+			{
+				var minor = arc.IsMinor
+					            ? MinorOrMajor.Minor
+					            : MinorOrMajor.Major;
+
+				updated = EllipticArcBuilderEx.CreateEllipticArcSegment(
+					startPoint ?? arc.StartPoint, endPoint ?? arc.EndPoint,
+					arc.SemiMajorAxis, arc.MinorMajorRatio,
+					arc.RotationAngle, minor, orientation, sref);
+			}
+
+			return updated;
 		}
 
 		#endregion
