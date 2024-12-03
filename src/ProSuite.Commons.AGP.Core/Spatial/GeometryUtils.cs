@@ -1183,6 +1183,77 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			throw new ArgumentException("For a multipoint, part and vertex index must not be different");
 		}
 
+		public static Geometry AddVertex(Geometry shape, MapPoint point)
+		{
+			return AddVertex(shape, point, out _, out _);
+		}
+
+		/// <summary>
+		/// Add a vertex to the given <paramref name="shape"/>
+		/// (a Polyline, Polygon, or a Multipoint) at or near the
+		/// given <paramref name="point"/> (it will be projected
+		/// onto the Polyline or Polygon boundary).
+		/// </summary>
+		/// <returns>A new geometry with the vertex added</returns>
+		/// <remarks>For multipoints, just append the point, for polylines
+		/// and polygons, use <see cref="IGeometryEngine.SplitAtPoint"/></remarks>
+		public static Geometry AddVertex(Geometry shape, MapPoint point, out int partIndex, out int vertexIndex)
+		{
+			if (shape is null)
+				throw new ArgumentNullException(nameof(shape));
+			if (point is null)
+				throw new ArgumentNullException(nameof(point));
+
+			// Multipoint: add point at clickPoint
+			// Multipart: split line at clickPoint
+			// MultiPatch: not implemented
+			// otherwise: error (UI should not call AddVertex)
+
+			if (shape is Multipoint multipoint)
+			{
+				point = EnsureSpatialReference(point, multipoint.SpatialReference);
+				var builder = new MultipointBuilderEx(multipoint);
+				builder.AddPoint(point);
+				partIndex = vertexIndex = builder.PointCount - 1;
+				return builder.ToGeometry();
+			}
+
+			if (shape is Multipart multipart)
+			{
+				if (multipart.IsEmpty)
+				{
+					// cannot add a (single) vertex to an empty polyline/polygon
+					partIndex = -1;
+					vertexIndex = -1;
+					return multipart;
+				}
+
+				const bool projectOnto = true;
+				point = EnsureSpatialReference(point, multipart.SpatialReference);
+				Geometry newShape = GeometryEngine.Instance.SplitAtPoint(
+					multipart, point, projectOnto, false,
+					out bool splitOccurred, out partIndex, out int segmentIndex);
+				if (!splitOccurred)
+					throw new Exception($"Could not add vertex to {multipart.GeometryType}: " +
+					                    $"{nameof(GeometryEngine.Instance.SplitAtPoint)} says no split occurred");
+				// Returned partIndex and segmentIndex are for the segment *after* the
+				// split point, thus segmentIndex is the vertexIndex of the inserted vertex:
+				vertexIndex = segmentIndex;
+				// SplitAtPoint interpolates Z and M attributes (good), but also seems to
+				// inherit the ID from neighbouring vertices (not so good): manually clear:
+				newShape = ControlPointUtils.SetPointID(0, newShape, partIndex, segmentIndex);
+				return newShape;
+			}
+
+			if (shape is Multipatch)
+			{
+				throw new NotImplementedException("Add Vertex is not implemented for MultiPatch geometries");
+			}
+
+			throw new NotSupportedException(
+				$"Cannot Add Vertex on a geometry of type {shape.GetType().Name}");
+		}
+
 		/// <summary>
 		/// Remove the addressed vertex from the given geometry.
 		/// For a point geometry, both indices must be zero.

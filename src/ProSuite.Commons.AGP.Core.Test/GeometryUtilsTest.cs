@@ -400,6 +400,40 @@ public class GeometryUtilsTest
 	}
 
 	[Test]
+	public void CanAddVertex()
+	{
+		var emptyPolyline = CreatePolygonXY();
+		Assert.True(emptyPolyline.IsEmpty);
+		Assert.AreSame(emptyPolyline, GeometryUtils.AddVertex(emptyPolyline, Pt(0, 0)));
+		Assert.True(emptyPolyline.IsEmpty);
+
+		var polyline = CreatePolylineXY(0, 0, 2, 0, double.NaN, 1, 1, 3, 3);
+		Assert.AreEqual(4, polyline.PointCount);
+		var updatedPolyline = (Polyline) GeometryUtils.AddVertex(
+			polyline, Pt(2, 2), out int partIndex, out int vertexIndex);
+		Assert.AreEqual(5, updatedPolyline.PointCount);
+		Assert.AreEqual(2, updatedPolyline.PartCount);
+		Assert.AreEqual(1, partIndex);
+		Assert.AreEqual(1, vertexIndex);
+
+		var emptyMultipoint = CreateMultipointXY();
+		Assert.True(emptyMultipoint.IsEmpty);
+		var updatedMultipoint = (Multipoint) GeometryUtils.AddVertex(
+			emptyMultipoint, Pt(0, 0), out partIndex, out vertexIndex);
+		Assert.AreEqual(1, updatedMultipoint.PointCount);
+		Assert.AreEqual(0, partIndex);
+		Assert.AreEqual(0, vertexIndex);
+
+		var multipoint = CreateMultipointXY(1, 1, 2, 2);
+		Assert.AreEqual(2, multipoint.PointCount);
+		updatedMultipoint = (Multipoint) GeometryUtils.AddVertex(
+			multipoint, Pt(0, 0), out partIndex, out vertexIndex);
+		Assert.AreEqual(3, updatedMultipoint.PointCount);
+		Assert.AreEqual(2, partIndex);
+		Assert.AreEqual(2, vertexIndex);
+	}
+
+	[Test]
 	public void CanRemoveVertices_Polyline()
 	{
 		// Cannot remove anything from an empty builder:
