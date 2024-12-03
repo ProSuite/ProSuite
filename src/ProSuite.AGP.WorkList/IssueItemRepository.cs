@@ -124,6 +124,11 @@ namespace ProSuite.AGP.WorkList
 			// sourceClass.CreateWhereClause(statusFilter).
 		}
 
+		public override bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
+		{
+			throw new NotImplementedException();
+		}
+
 		protected override void RefreshCore(IWorkItem item,
 		                                    ISourceClass sourceClass,
 		                                    Row row)
@@ -222,6 +227,27 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			#endregion
+		}
+
+		public override void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
+		{
+			TableSchema = tableSchemaInfo;
+
+			foreach (ISourceClass sourceClass in SourceClasses)
+			{
+				Table table = OpenTable(sourceClass);
+
+				if (table != null)
+				{
+					sourceClass.AttributeReader = CreateAttributeReaderCore(
+						table.GetDefinition(), tableSchemaInfo);
+				}
+				else
+				{
+					_msg.Warn(
+						$"Cannot prepare table schema due to missing source table {sourceClass.Name}");
+				}
+			}
 		}
 	}
 }
