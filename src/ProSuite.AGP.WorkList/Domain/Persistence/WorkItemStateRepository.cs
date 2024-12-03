@@ -19,8 +19,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		protected string Name { get; }
 		protected Type Type { get; }
 
-		private IDictionary<GdbObjectReference, TState> _statesByRow =
-			new Dictionary<GdbObjectReference, TState>();
+		private IDictionary<GdbObjectReference, TState> _statesByRow;
 
 		private readonly IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>
 			_workspaces = new Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>();
