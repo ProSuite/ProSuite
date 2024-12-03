@@ -1379,12 +1379,23 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public static bool IsVersionRedefined([NotNull] IVersion version)
 		{
+			try
+			{
 #if Server11
-			var version2 = version;
+				var version2 = version;
 #else
-			var version2 = (IVersion2) version;
+				var version2 = (IVersion2) version;
 #endif
-			return version2.IsRedefined;
+				return version2.IsRedefined;
+			}
+			catch (Exception e)
+			{
+				// IVersion2.IsRedefined is likely failing in PostGIS:
+				// System.Runtime.InteropServices.COMException (0x80041538): Underlying DBMS error [no connection to the server ::SQLSTATE=Þ] [sde.DEFAULT]
+				_msg.Debug("Error while determining whether the version is re-defined.", e);
+
+				return false;
+			}
 		}
 
 		public static bool IsVersionRedefined(IFeatureWorkspace workspace)
@@ -2672,7 +2683,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			string workspacePath = GetWorkspacePath(workspace);
 
 			return workspacePath != null &&
-				   workspacePath.EndsWith(".geodatabase", StringComparison.OrdinalIgnoreCase);
+			       workspacePath.EndsWith(".geodatabase", StringComparison.OrdinalIgnoreCase);
 
 			// Original implementation which fails for GdbWorkspace implementations:
 
@@ -2959,10 +2970,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 					{
 						return WorkspaceDbType.FileGeodatabase;
 					}
+
 					if (IsPersonalGeodatabase(workspace))
 					{
 						return WorkspaceDbType.PersonalGeodatabase;
 					}
+
 					if (IsMobileGeodatabase(workspace))
 					{
 						return WorkspaceDbType.MobileGeodatabase;
