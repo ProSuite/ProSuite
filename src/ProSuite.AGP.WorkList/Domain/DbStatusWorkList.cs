@@ -1,6 +1,7 @@
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -33,5 +34,10 @@ public abstract class DbStatusWorkList : WorkList
 		return Repository.SourceClasses
 		                 .FirstOrDefault(sc => sc.GetUniqueTableId() == forSourceClassId)
 		                 ?.AttributeReader;
+	}
+
+	protected override bool CanSetStatusCore()
+	{
+		return Project.Current?.IsEditingEnabled == true;
 	}
 }
