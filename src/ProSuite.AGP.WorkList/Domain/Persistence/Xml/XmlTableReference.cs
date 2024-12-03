@@ -12,7 +12,6 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			Name = name;
 		}
 
-		// todo daro: could be non distinct, we need smth more robust
 		[XmlAttribute("tableId")]
 		public long Id { get; set; }
 
@@ -21,5 +20,14 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 		[XmlAttribute("definitionQuery")]
 		public string DefinitionQuery { get; set; }
+
+		[XmlAttribute("statusFieldName")]
+		public string StatusFieldName { get; set; }
+
+		[XmlAttribute("statusValueTodo")]
+		public int StatusValueTodo { get; set; }
+
+		[XmlAttribute("statusValueDone")]
+		public int StatusValueDone { get; set; }
 	}
 }

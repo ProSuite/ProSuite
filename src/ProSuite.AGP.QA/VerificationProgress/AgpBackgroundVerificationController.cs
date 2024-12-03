@@ -167,9 +167,22 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		public async Task OpenWorkList(IQualityVerificationResult verificationResult,
 		                               bool replaceExisting)
 		{
-			await ViewUtils.TryAsync(
-				_workListOpener.OpenIssueWorkListAsync(verificationResult.IssuesGdbPath,
-				                                       replaceExisting), _msg);
+			if (_workListOpener.CanUseProductionModelIssueSchema())
+			{
+				Envelope envelope = null;
+
+				_msg.Info("Opening production model issue work list...");
+
+				await _workListOpener.OpenProductionModelIssueWorkEnvironmentAsync(envelope);
+			}
+			else
+			{
+				_msg.InfoFormat("Opening issue geodatabase ({0}) work list...",
+				                verificationResult.IssuesGdbPath);
+				await ViewUtils.TryAsync(
+					_workListOpener.OpenFileGdbIssueWorkListAsync(verificationResult.IssuesGdbPath,
+						replaceExisting), _msg);
+			}
 		}
 
 		public bool CanOpenWorkList(ServiceCallStatus? currentProgressStep,
@@ -193,6 +206,20 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return false;
 			}
 
+			if (! verificationResult.HasIssues)
+			{
+				reason = "No issues";
+				return false;
+			}
+
+			if (_workListOpener.CanUseProductionModelIssueSchema())
+			{
+				reason =
+					"Open Issue Work List from project workspace using traditional error datasets";
+				return true;
+			}
+
+			// No production model issue schema, use IssueGdb:
 			if (string.IsNullOrEmpty(verificationResult.IssuesGdbPath))
 			{
 				reason = "No issue File Geodatabase has been created";
@@ -208,13 +235,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return false;
 			}
 
-			if (! verificationResult.HasIssues)
-			{
-				reason = "No issues";
-				return false;
-			}
-
-			reason = null;
+			reason = $"Open Issue Work List using {verificationResult.IssuesGdbPath}";
 			return true;
 		}
 
@@ -274,7 +295,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			SaveAction?.Invoke(verificationResult, errorDeletion,
 			                   updateLatestTestDate);
 
-			_issuesSaved = true;
+			_issuesSaved = verificationResult.IssuesSaved >= 0;
 		}
 
 		public bool CanSaveIssues(IQualityVerificationResult verificationResult, out string reason)

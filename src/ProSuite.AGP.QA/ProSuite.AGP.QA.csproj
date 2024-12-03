@@ -9,6 +9,8 @@
     <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
 
+    <ArcGISProVersion Condition=" '$(ArcGISProVersion)' == '' ">3.0</ArcGISProVersion>
+
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -18,6 +20,11 @@
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
   </PropertyGroup>
+
+	<PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.2 ">
+    <DefineConstants>DEBUG;TRACE;ARCGISPRO_GREATER_3_2</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
   </PropertyGroup>

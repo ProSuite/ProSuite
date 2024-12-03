@@ -43,11 +43,10 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps
 
 			CentralizableExplodeMultipartResults = InitializeSetting<bool>(
 				ReflectionUtils.GetProperty(() => LocalOptions.ExplodeMultipartResults),
-				false);
+				true);
 
 			CentralizableInsertVerticesInTarget = InitializeSetting<bool>(
-				ReflectionUtils.GetProperty(() => LocalOptions.InsertVerticesInTarget),
-				false);
+				ReflectionUtils.GetProperty(() => LocalOptions.InsertVerticesInTarget), true);
 
 			CentralizableZSource =
 				InitializeSetting<ChangeAlongZSource>(

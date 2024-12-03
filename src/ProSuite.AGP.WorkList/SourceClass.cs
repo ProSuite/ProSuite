@@ -9,23 +9,23 @@ namespace ProSuite.AGP.WorkList
 {
 	public abstract class SourceClass : ISourceClass
 	{
-		private readonly GdbTableIdentity _identity;
+		private readonly GdbTableIdentity _tableIdentity;
 
-		protected SourceClass(GdbTableIdentity identity,
+		protected SourceClass(GdbTableIdentity tableIdentity,
 		                      IAttributeReader attributeReader)
 		{
-			_identity = identity;
+			_tableIdentity = tableIdentity;
 			AttributeReader = attributeReader;
 		}
 
-		protected GdbTableIdentity Identity => _identity;
+		public GdbTableIdentity TableIdentity => _tableIdentity;
 
-		public bool HasGeometry => _identity.HasGeometry;
+		public bool HasGeometry => _tableIdentity.HasGeometry;
 
-		public long ArcGISTableId => _identity.Id;
+		public long ArcGISTableId => _tableIdentity.Id;
 
 		[NotNull]
-		public string Name => _identity.Name;
+		public string Name => _tableIdentity.Name;
 
 		public IAttributeReader AttributeReader { get; set; }
 
@@ -33,23 +33,23 @@ namespace ProSuite.AGP.WorkList
 
 		public bool Uses(ITableReference tableReference)
 		{
-			return tableReference.ReferencesTable(_identity.Id, _identity.Name);
+			return tableReference.ReferencesTable(_tableIdentity.Id, _tableIdentity.Name);
 		}
 
 		public T OpenDataset<T>() where T : Table
 		{
-			GdbWorkspaceIdentity workspaceIdentity = _identity.Workspace;
+			GdbWorkspaceIdentity workspaceIdentity = _tableIdentity.Workspace;
 
 			using (Datastore datastore = workspaceIdentity.OpenDatastore())
 			{
 				if (datastore is Geodatabase geodatabase)
 				{
-					return geodatabase.OpenDataset<T>(_identity.Name);
+					return geodatabase.OpenDataset<T>(_tableIdentity.Name);
 				}
 
 				if (datastore is FileSystemDatastore fsDatastore)
 				{
-					return fsDatastore.OpenDataset<T>(_identity.Name);
+					return fsDatastore.OpenDataset<T>(_tableIdentity.Name);
 				}
 
 				throw new NotSupportedException(
