@@ -178,6 +178,14 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		return _initialWorkListName;
 	}
 
+	public bool ContainsSourceClass(ISourceClass sourceClass)
+	{
+		// TODO: Consider also checking field names?
+
+		return IssueGdbSchema.IssueFeatureClassNames.Any(
+			n => n.Equals(sourceClass.Name, StringComparison.InvariantCultureIgnoreCase));
+	}
+
 	#endregion
 
 	private static bool ContainsValidIssueGdbPath([NotNull] string iwlFilePath,

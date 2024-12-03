@@ -24,6 +24,24 @@ namespace ProSuite.AGP.WorkList
 			[NotNull] IWorkItemStateRepository workItemStateRepository)
 			: base(sourceClassDefinitions, workItemStateRepository) { }
 
+		public override bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
+		{
+			if (workListItemSchema == null)
+			{
+				return false;
+			}
+
+			foreach (ISourceClass sourceClass in SourceClasses)
+			{
+				if (workListItemSchema.ContainsSourceClass(sourceClass))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		protected override void AdaptSourceFilter(QueryFilter filter, ISourceClass sourceClass)
 		{
 			// Consider doing this using definition expressions in the source classes
@@ -111,6 +129,27 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return operationDescription;
+		}
+
+		public override void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
+		{
+			TableSchema = tableSchemaInfo;
+
+			foreach (ISourceClass sourceClass in SourceClasses)
+			{
+				Table table = OpenTable(sourceClass);
+
+				if (table != null)
+				{
+					sourceClass.AttributeReader = CreateAttributeReaderCore(
+						table.GetDefinition(), tableSchemaInfo);
+				}
+				else
+				{
+					_msg.Warn(
+						$"Cannot prepare table schema due to missing source table {sourceClass.Name}");
+				}
+			}
 		}
 	}
 }
