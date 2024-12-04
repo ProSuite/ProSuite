@@ -35,7 +35,7 @@ public interface IShapeSelection
 	IEnumerable<MapPoint> GetSelectedVertices();
 	IEnumerable<MapPoint> GetUnselectedVertices();
 
-	bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
+	bool SelectedVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
 
 	/// <param name="hitPoint">where the user clicked</param>
 	/// <param name="distance">distance to vertex found or undefined</param>
@@ -219,7 +219,7 @@ public class ShapeSelection : IShapeSelection
 		return _blocks.Clear();
 	}
 
-	public bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex)
+	public bool SelectedVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex)
 	{
 		if (hitPoint is null || hitPoint.IsEmpty)
 		{
@@ -284,7 +284,7 @@ public class ShapeSelection : IShapeSelection
 		return minVertex;
 	}
 
-	// Yield tuples (point,part,vertex,selected)
+	/// <returns>Yield tuples (point,part,vertex,selected)</returns>
 	private IEnumerable<ValueTuple<MapPoint, int, int, bool>> GetVertices()
 	{
 		var shape = Shape;
@@ -443,12 +443,6 @@ public class ShapeSelection : IShapeSelection
 			return false;
 		}
 
-		if (shape.PointCount != Shape.PointCount)
-		{
-			message = $"Number of points differ: {shape.PointCount} (requested) vs. {Shape.PointCount} (in selection)";
-			return false;
-		}
-
 		if (shape is Multipart yourMultipart && Shape is Multipart myMultipart)
 		{
 			int m = yourMultipart.PartCount;
@@ -470,34 +464,14 @@ public class ShapeSelection : IShapeSelection
 			}
 		}
 
+		if (shape.PointCount != Shape.PointCount)
+		{
+			message = $"Number of points differ: {shape.PointCount} (requested) vs. {Shape.PointCount} (in selection)";
+			return false;
+		}
+
 		message = string.Empty;
 		return true;
-
-		//int numParts = GetPartCount(shape);
-
-		//var block = _blocks.MaxBy(b => b.Part);
-		//if (block.Part >= numParts)
-		//{
-		//	message =
-		//		$"Selection refers to part {block.Part} but shape's max part index is {numParts - 1}";
-		//	return false;
-		//}
-
-		//var groups = _blocks.GroupBy(b => b.Part);
-		//foreach (var group in groups)
-		//{
-		//	int numVertices = GetVertexCount(shape, group.Key);
-		//	int maxIndex = group.Max(b => b.First + b.Count - 1);
-		//	if (! (maxIndex < numVertices))
-		//	{
-		//		message =
-		//			$"Selection refers to vertex {maxIndex} but max vertex index is {numVertices - 1} (in part {group.Key})";
-		//		return false;
-		//	}
-		//}
-
-		//message = string.Empty;
-		//return true;
 	}
 
 	public void UpdateShape(Geometry newShape, out bool selectionCleared, out string selectionClearedReason)
@@ -685,30 +659,6 @@ public class ShapeSelection : IShapeSelection
 		}
 	}
 
-	private static MapPoint GetPoint(Geometry shape, int partIndex, int vertexIndex = -1)
-	{
-		if (shape is null)
-			throw new ArgumentNullException(nameof(shape));
-
-		if (shape is MapPoint point)
-		{
-			return point;
-		}
-
-		if (shape is Multipoint multipoint)
-		{
-			// by convention, the points of a multipoint ar its parts:
-			return multipoint.Points[partIndex];
-		}
-
-		if (shape is Multipart multipart)
-		{
-			return GetPoint(multipart, partIndex, vertexIndex);
-		}
-
-		throw new NotSupportedException($"Shape of type {shape.GetType().Name} is not supported");
-	}
-
 	private static MapPoint GetPoint(Multipart multipart, int partIndex, int vertexIndex)
 	{
 		var part = multipart.Parts[partIndex];
@@ -877,8 +827,6 @@ public class BlockList : IEnumerable<BlockList.Block>
 
 		return true;
 	}
-
-	// TODO Toggle(partIndex, vertexIndex): efficient implementation of this frequent XOR operation (for now: if (Contains) Remove else Add)
 
 	public bool Clear()
 	{
