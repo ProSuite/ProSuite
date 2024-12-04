@@ -157,14 +157,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return true;
 		}
 
-		protected override CancelableProgressorSource GetProgressorSource()
-		{
-			// Disable the progressor because it crashes the application when the picker is shown.
-			// In the target selection phase we have a real probability that the picker must be
-			// shown!
-			return null;
-		}
-
 		protected override Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
 		{
 			bool requiresRecalculate = args.CompletedType == EditCompletedType.Discard ||

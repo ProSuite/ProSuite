@@ -50,8 +50,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
-		protected virtual string LocalConfigDir =>
-			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
+		/// <summary>
+		/// By default, the local configuration directory shall be in
+		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// </summary>
+		protected virtual string LocalConfigDir
+			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				AppDataFolder.Roaming, "ToolDefaults");
 
 		protected abstract IRemoveOverlapsService MicroserviceClient { get; }
 
@@ -384,7 +389,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			_removeOverlapsToolOptions = new RemoveOverlapsOptions(centralConfiguration,
 				localConfiguration);
 
-			_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
+			_msg.DebugStopTiming(watch, "Remove Overlap Tool Options validated / initialized");
 
 			string optionsMessage = _removeOverlapsToolOptions.GetLocalOverridesMessage();
 
@@ -472,6 +477,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			if (featureClass == null)
 			{
+				return true;
+			}
+
+			if (featureClass.GetDataConnection() is CIMStandardDataConnection connection &&
+			    connection.WorkspaceFactory == WorkspaceFactory.Custom)
+			{
+				// Exclude Plug-in data sources:
 				return true;
 			}
 

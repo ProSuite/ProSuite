@@ -13,6 +13,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.AdvancedReshapeReshape;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
@@ -47,7 +48,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
 		protected ReshapeToolOptions _advancedReshapeToolOptions;
-		[CanBeNull] private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
+
+		[CanBeNull]
+		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
 
 		private Task<bool> _updateFeedbackTask;
 
@@ -61,7 +64,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
-		protected abstract string LocalConfigDir { get; }
+		/// <summary>
+		/// By default, the local configuration directory shall be in
+		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// </summary>
+		protected virtual string LocalConfigDir
+			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				AppDataFolder.Roaming, "ToolDefaults");
 
 		protected AdvancedReshapeToolBase()
 		{
@@ -194,13 +203,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
-		protected override CancelableProgressorSource GetProgressorSource()
-		{
-			// Disable the progressor because reshaping is typically fast,
-			// and the users potentially want to continue working already.
-			return null;
-		}
-
 		protected override SketchGeometryType GetSketchGeometryType()
 		{
 			return SketchGeometryType.Line;
@@ -250,15 +252,24 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 				if (args.Key == _keyToggleMoveEndJunction)
 				{
-					_msg.Info("Toggle MoveOpenJawEndJunction");
 					_advancedReshapeToolOptions.MoveOpenJawEndJunction =
 						! _advancedReshapeToolOptions.MoveOpenJawEndJunction;
 
 					_updateFeedbackTask = UpdateFeedbackAsync(_nonDefaultSideMode);
 
+					bool currentState = _advancedReshapeToolOptions.MoveOpenJawEndJunction;
+					if (currentState)
+					{
+						_msg.Info("Enabled move end junction option for Y-Reshape");
+					}
+					else
+					{
+						_msg.Info("Disabled move end junction option for Y-Reshape");
+					}
+
+
+
 					await _updateFeedbackTask;
-
-
 				}
 			}
 			catch (Exception e)
@@ -619,7 +630,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			[NotNull] Polyline sketchLine,
 			[NotNull] IList<Feature> polylineSelection)
 		{
-
 			MapPoint endPoint = null;
 
 			if (polylineSelection.Count == 1)

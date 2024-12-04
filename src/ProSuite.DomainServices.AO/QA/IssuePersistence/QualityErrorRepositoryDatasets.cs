@@ -19,7 +19,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 	/// </summary>
 	public class QualityErrorRepositoryDatasets
 	{
-		private readonly IVerificationContext _verificationContext;
+		[NotNull] private readonly IVerificationContext _verificationContext;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -34,7 +34,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 		private IFieldIndexCache _fieldIndexCache;
 
-		public QualityErrorRepositoryDatasets(IVerificationContext verificationContext)
+		public QualityErrorRepositoryDatasets([NotNull] IVerificationContext verificationContext)
 		{
 			_verificationContext = verificationContext;
 		}
@@ -208,10 +208,8 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 				                                              AttributeRole.ErrorConditionId));
 
 		[NotNull]
-		public ISpatialReference SpatialReference => _spatialReference ??
-		                                             (_spatialReference =
-			                                              GetUniqueErrorFeatureClassSpatialReference
-				                                              ());
+		public ISpatialReference SpatialReference =>
+			_spatialReference ?? (_spatialReference = GetUniqueErrorFeatureClassSpatialReference());
 
 		[NotNull]
 		internal string GetFieldName([NotNull] AttributeRole attributeRole)
@@ -280,12 +278,18 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 			if (! GetIssueWriters().Any())
 			{
-				throw new InvalidOperationException(
+				_msg.Warn(
 					"No issue feature classes could be loaded. Make sure the project has issue datasets.");
 			}
+			else
+			{
+				// DPS #216: Likely only the error table has been harvested.
+				_msg.Warn("The issue datasets in the project have no spatial reference.");
+			}
 
-			throw new InvalidOperationException(
-				"The issue datasets in the project have no spatial reference.");
+			_msg.Warn("Using spatial reference of the verification context...");
+
+			return _verificationContext.SpatialReferenceDescriptor.SpatialReference;
 		}
 
 		#endregion

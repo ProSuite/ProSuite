@@ -102,6 +102,9 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 				featureLayer.SetVisibility(false);
 				featureLayer.SetDefinitionQuery(GetDefaultDefinitionQuery(table));
 
+#if ARCGISPRO_GREATER_3_2
+				featureLayer.SetShowLayerAtAllScales(true);
+#endif
 				// TODO: Support lyrx files as symbol layers.
 				// So far, just make the symbols red:
 				CIMSimpleRenderer renderer =

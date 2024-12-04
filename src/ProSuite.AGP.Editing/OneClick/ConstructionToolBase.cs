@@ -230,6 +230,11 @@ namespace ProSuite.AGP.Editing.OneClick
 					return;
 				}
 
+				if (! RequiresSelection)
+				{
+					return;
+				}
+
 				_intermittentSelectionPhase = true;
 
 				// TODO: How can we not destroy the undo stack?
