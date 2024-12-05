@@ -3725,7 +3725,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(TrMultipolygonToPolygon),
 				                             typeof(TrPolygonToLine),
 											 typeof(TrTableJoin),
-											 typeof(TrTableJoinInMemory)
+											 typeof(TrTableJoinInMemory),
 				                             typeof(TrProject),
 				                             typeof(TrSpatialJoin),
 			                             };
