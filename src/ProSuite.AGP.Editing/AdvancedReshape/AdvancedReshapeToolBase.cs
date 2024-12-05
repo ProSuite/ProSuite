@@ -211,16 +211,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return SketchGeometryType.Rectangle;
 		}
 
-		protected override async Task<bool> OnSketchModifiedAsync()
+		protected override async Task<bool> OnSketchModifiedAsyncCore()
 		{
-			_msg.VerboseDebug(() => "OnSketchModifiedAsync");
+			_msg.VerboseDebug(() => "OnSketchModifiedAsyncCore");
 
-			// Does it make any difference what the return value is?
-			bool result = await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
-
-			result &= await base.OnSketchModifiedAsync();
-
-			return result;
+			return await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
 		}
 
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)

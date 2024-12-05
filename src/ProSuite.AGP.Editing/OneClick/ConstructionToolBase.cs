@@ -100,7 +100,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				await LogLastSketchVertexZ();
 			}
 
-			return await QueuedTaskUtils.Run(OnSketchModifiedCore);
+			// Does it make any difference what the return value is?
+			return await OnSketchModifiedAsyncCore();
 		}
 
 		#endregion
@@ -437,9 +438,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			return null;
 		}
 
-		protected virtual bool OnSketchModifiedCore()
+		protected virtual Task<bool> OnSketchModifiedAsyncCore()
 		{
-			return true;
+			return Task.FromResult(true);
 		}
 
 		protected virtual bool CanStartSketchPhaseCore(IList<Feature> selectedFeatures)
@@ -554,7 +555,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await ClearSketchAsync();
 
-				OnSketchModifiedCore();
+				await OnSketchModifiedAsyncCore();
 			}
 
 			OnSketchResetCore();
