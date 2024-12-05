@@ -68,6 +68,12 @@ namespace ProSuite.AGP.WorkList
 			await Task.Run(() => WorkItemStateRepository.Update(item));
 		}
 
+		public override bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
+		{
+			// We can use anything, no schema dependency:
+			return true;
+		}
+
 		protected override void AdaptSourceFilter(QueryFilter filter,
 		                                          ISourceClass sourceClass)
 		{
@@ -85,8 +91,14 @@ namespace ProSuite.AGP.WorkList
 
 		protected override void UpdateStateRepositoryCore(string path)
 		{
-			((XmlWorkItemStateRepository) WorkItemStateRepository).WorkListDefinitionFilePath =
-				path;
+			var xmlStateRepo = (XmlWorkItemStateRepository) WorkItemStateRepository;
+			xmlStateRepo.WorkListDefinitionFilePath = path;
+		}
+
+		public override void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
+		{
+			// No specific schema info is necessary/available
+			return;
 		}
 	}
 }

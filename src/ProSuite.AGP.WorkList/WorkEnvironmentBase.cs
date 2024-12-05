@@ -87,8 +87,6 @@ namespace ProSuite.AGP.WorkList
 			// todo daro: dispose feature classes?
 			IList<Table> tables = await PrepareReferencedTables();
 
-			LoadAssociatedLayers();
-
 			IWorkList result = CreateWorkListCore(
 				CreateItemRepositoryCore(tables, stateRepository),
 				uniqueName, DisplayName);
@@ -157,6 +155,10 @@ namespace ProSuite.AGP.WorkList
 			worklistLayer.SetScaleSymbols(false);
 			worklistLayer.SetSelectable(false);
 			worklistLayer.SetSnappable(false);
+
+#if ARCGISPRO_GREATER_3_2
+			worklistLayer.SetShowLayerAtAllScales(true);
+#endif
 
 			// The explore tool should ignore the work list layer:
 			worklistLayer.SetShowPopups(false);

@@ -86,7 +86,7 @@ namespace ProSuite.AGP.WorkList
 		protected IWorkItemStateRepository WorkItemStateRepository { get; }
 
 		[CanBeNull]
-		public IWorkListItemDatastore TableSchema { get; private set; }
+		public IWorkListItemDatastore TableSchema { get; protected set; }
 
 		public List<ISourceClass> SourceClasses { get; } = new();
 
@@ -96,26 +96,10 @@ namespace ProSuite.AGP.WorkList
 			set => WorkItemStateRepository.WorkListDefinitionFilePath = value;
 		}
 
-		public void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
-		{
-			TableSchema = tableSchemaInfo;
+		public abstract void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
 
-			foreach (ISourceClass sourceClass in SourceClasses)
-			{
-				Table table = OpenTable(sourceClass);
-
-				if (table != null)
-				{
-					sourceClass.AttributeReader = CreateAttributeReaderCore(
-						table.GetDefinition(), tableSchemaInfo);
-				}
-				else
-				{
-					_msg.Warn(
-						$"Cannot prepare table schema due to missing source table {sourceClass.Name}");
-				}
-			}
-		}
+		public abstract bool CanUseTableSchema(
+			[CanBeNull] IWorkListItemDatastore workListItemSchema);
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
@@ -265,6 +249,7 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		// TODO: Workspace property, the source class references the table
+		[CanBeNull]
 		public Row GetGdbItemRow(IWorkItem workItem)
 		{
 			Geodatabase workspace = workItem.GdbRowProxy.Table.Workspace.OpenGeodatabase();

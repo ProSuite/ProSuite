@@ -101,6 +101,11 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
+		public bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
+		{
+			throw new NotImplementedException();
+		}
+
 		public void Dispose() { }
 	}
 }

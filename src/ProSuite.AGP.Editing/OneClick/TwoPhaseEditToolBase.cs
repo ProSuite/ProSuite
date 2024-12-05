@@ -293,7 +293,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SetupSketch();
 
-			_secondPhaseSketchCursor.ResetOrDefault();
+			_secondPhaseSketchCursor?.ResetOrDefault();
 		}
 	}
 }

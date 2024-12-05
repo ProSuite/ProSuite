@@ -105,13 +105,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
-		protected override CancelableProgressorSource GetProgressorSource()
-		{
-			// Disable the progressor because creating a new feature is typically fast,
-			// and it conflicts with the possible error message.
-			return null;
-		}
-
 		protected override EditingTemplate GetSketchTemplate()
 		{
 			return EditingTemplate.Current;

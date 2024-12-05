@@ -61,13 +61,6 @@ namespace ProSuite.AGP.Editing.FillHole
 			_feedback = null;
 		}
 
-		protected override CancelableProgressorSource GetProgressorSource()
-		{
-			// Disable the progressor because removing holes is typically fast,
-			// and the users potentially want to continue working already.
-			return null;
-		}
-
 		protected override void LogPromptForSelection()
 		{
 			_msg.Info(LocalizableStrings.RemoveHoleTool_LogPromptForSelection);

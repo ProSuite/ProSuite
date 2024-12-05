@@ -6,9 +6,9 @@ namespace ProSuite.AGP.WorkList
 {
 	public class SelectionSourceClass : SourceClass
 	{
-		public SelectionSourceClass(GdbTableIdentity identity,
+		public SelectionSourceClass(GdbTableIdentity tableIdentity,
 		                            [CanBeNull] IAttributeReader attributeReader = null)
-			: base(identity, attributeReader) { }
+			: base(tableIdentity, attributeReader) { }
 
 		#region Overrides of SourceClass
 
@@ -18,7 +18,7 @@ namespace ProSuite.AGP.WorkList
 			// - un-registered tables, such as shape files
 			// - tables from different geodatabases
 
-			return WorkListUtils.GetUniqueTableIdAcrossWorkspaces(Identity);
+			return WorkListUtils.GetUniqueTableIdAcrossWorkspaces(TableIdentity);
 		}
 
 		#endregion
