@@ -28,7 +28,10 @@ namespace ProSuite.QA.Tests.IssueFilters
 		public IfInvolvedRows([NotNull] IfInvolvedRowsDefinition definition)
 			: this(definition.Constraint)
 		{
-			Tables = definition.Tables.Cast<IReadOnlyTable>().ToList();
+			if (definition.Tables?.Count > 0)
+			{
+				Tables = definition.Tables.Cast<IReadOnlyTable>().ToList();
+			}
 		}
 
 		[TestParameter]

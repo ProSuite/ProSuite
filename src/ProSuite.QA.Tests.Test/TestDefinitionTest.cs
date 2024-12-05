@@ -3556,7 +3556,7 @@ namespace ProSuite.QA.Tests.Test
 			// difficult assertions:
 			AddIfAllCases(model, ifCases);
 			//ToDo: Find correct special case for IfInvolvedRows ...
-			//AddIfInvolvedRowsCases(model, ifCases);
+			AddIfInvolvedRowsCases(model, ifCases);
 
 			return ifCases;
 		}
@@ -3694,19 +3694,14 @@ namespace ProSuite.QA.Tests.Test
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add(
-				"Tables", new object[] { model.GetVectorDataset(), model.GetVectorDataset() });
+				"Tables", new object[] {model.GetVectorDataset()});
 
 			ifCases.Add(new IfDefinitionCase(typeof(IfInvolvedRows), 0,
-											  new object[]
-											  {
-												  //new[]
-												  //{
-													  //model.GetVectorDataset(),
-													  //model.GetVectorDataset(),
-												  //},
-												  "Constraint"
-											  },
-											  optionalValues));
+			                                 new object[]
+			                                 {
+				                                 "Constraint"
+			                                 },
+			                                 optionalValues));
 		}
 
 		#endregion
