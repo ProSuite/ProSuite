@@ -3694,7 +3694,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			var optionalValues = new Dictionary<string, object>();
 			optionalValues.Add(
-				"Tables", new object[] {model.GetVectorDataset()});
+				"Tables", new object[] {});
 
 			ifCases.Add(new IfDefinitionCase(typeof(IfInvolvedRows), 0,
 			                                 new object[]
