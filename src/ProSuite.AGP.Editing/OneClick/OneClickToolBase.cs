@@ -182,11 +182,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			_selectionSketchCursor.SetSelectionCursorPolygonShift(GetSelectionCursorPolygonShift());
 		}
 
-		protected abstract bool DefaultSketchTypeOnFinishSketch { get; }
+		protected virtual bool DefaultSketchTypeOnFinishSketch =>
+			GetSelectionSettings().PreferRectangleSelectionSketch;
 
 		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
 		{
-			
 			var options = new VertexSymbolOptions(vertexSymbolType)
 			              {
 				              Color = ColorUtils.CreateRGB(0, 0, 0, 0),
@@ -334,12 +334,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override void OnToolMouseDown(MapViewMouseButtonEventArgs args)
 		{
 			_msg.VerboseDebug(() => $"OnToolMouseDown ({Caption})");
-		   
-			ViewUtils.Try(() =>
-				{
-					OnToolMouseDownCore(args);
-				}, _msg, suppressErrorMessageBox: false);
 
+			ViewUtils.Try(() => { OnToolMouseDownCore(args); }, _msg,
+			              suppressErrorMessageBox: false);
 		}
 
 		protected override async void OnToolDoubleClick(MapViewMouseButtonEventArgs args)
@@ -357,8 +354,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected virtual void OnToolMouseDownCore(MapViewMouseButtonEventArgs args)
-		{ }
+		protected virtual void OnToolMouseDownCore(MapViewMouseButtonEventArgs args) { }
 
 		protected override void OnToolMouseMove(MapViewMouseEventArgs args)
 		{
@@ -366,14 +362,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			_msg.VerboseDebug(() => $"OnToolMouseMove ({Caption})");
 
-			ViewUtils.Try(() =>
-			{
-				OnToolMouseMoveCore(args);
-			}, _msg, suppressErrorMessageBox: true);
+			ViewUtils.Try(() => { OnToolMouseMoveCore(args); }, _msg,
+			              suppressErrorMessageBox: true);
 		}
 
-		protected virtual void OnToolMouseMoveCore(MapViewMouseEventArgs args)
-		{ }
+		protected virtual void OnToolMouseMoveCore(MapViewMouseEventArgs args) { }
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
 		{
@@ -412,7 +405,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					// Otherwise relational operators and spatial queries return the wrong result
 					Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
 					Assert.NotNull(simpleGeometry, "Geometry is null");
-					
+
 					return await OnSelectionSketchCompleteAsync(simpleGeometry, progressor);
 				}
 
@@ -458,7 +451,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			ClearSketchAsync();
 
 			SetupSketch();
-			
+
 			_selectionSketchCursor.ResetOrDefault();
 		}
 
@@ -574,9 +567,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		[CanBeNull]
 		protected virtual CancelableProgressorSource GetProgressorSource()
 		{
-			var message = Caption ?? string.Empty;
-			const bool delayedShow = true;
-			return new CancelableProgressorSource(message, "Cancelling", delayedShow);
+			// NOTE: Tools that support thea picker are currently not compatible with a progressor
+			//       ArcGIS Pro crashes, whenever the picker and the progress window are both open.
+
+			// Subclasses shall individually configure the progressor source
+			return null;
 		}
 
 		protected virtual Task<bool> OnSketchCompleteCoreAsync(
@@ -898,7 +893,6 @@ namespace ProSuite.AGP.Editing.OneClick
 						$"{filteredCount} of {selectionCount + filteredCount} selected features cannot be used by the tool."));
 			}
 		}
-
 
 		// todo: daro drop!
 		[NotNull]

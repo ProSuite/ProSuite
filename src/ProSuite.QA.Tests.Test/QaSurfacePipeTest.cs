@@ -120,7 +120,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IWorkspace workspace = TestDataUtils.OpenTopgisAlti();
 
-			IMosaicDataset mosaicDataset = DatasetUtils.OpenMosaicDataset(workspace,
+			IMosaicDataset mosaicDataset = MosaicUtils.OpenMosaicDataset(workspace,
 				_mosaicDatasetName);
 
 			var test = new QaSurfacePipe(

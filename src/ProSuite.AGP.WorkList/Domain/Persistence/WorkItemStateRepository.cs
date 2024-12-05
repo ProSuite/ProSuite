@@ -19,8 +19,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		protected string Name { get; }
 		protected Type Type { get; }
 
-		private IDictionary<GdbObjectReference, TState> _statesByRow =
-			new Dictionary<GdbObjectReference, TState>();
+		private IDictionary<GdbObjectReference, TState> _statesByRow;
 
 		private readonly IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>
 			_workspaces = new Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>();
@@ -90,6 +89,11 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 		public void UpdateVolatileState(IEnumerable<IWorkItem> items)
 		{
+			// Ensure StatesByRow is initialized!
+			// TODO: Create the item repository based on the XML/JSON definition to ensure it is
+			// only read once. We don't gain anything by delaying the reading of the file.
+			IDictionary<GdbObjectReference, TState> statesByRow = StatesByRow;
+
 			foreach (IWorkItem item in items)
 			{
 				Update(item);

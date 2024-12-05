@@ -105,13 +105,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
-		protected override CancelableProgressorSource GetProgressorSource()
-		{
-			// Disable the progressor because creating a new feature is typically fast,
-			// and it conflicts with the possible error message.
-			return null;
-		}
-
 		protected override EditingTemplate GetSketchTemplate()
 		{
 			return EditingTemplate.Current;
@@ -124,13 +117,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			_msg.InfoFormat(
 				"Draw one or more points. Finish the sketch to create the individual point features in '{0}'.",
 				layerName);
-		}
-
-		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
-		{
-			// TODO: THis tool doesn't need a selection > RequiresSelection = false. Handle it in ConstructionToolBase
-			// for tools that need selection?
-			// Don't intermit construction sketch: nothing to do here
 		}
 
 		protected override async Task HandleEscapeAsync()

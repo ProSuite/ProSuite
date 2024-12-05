@@ -487,6 +487,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 	/// </summary>
 	/// <returns>number of shape selections retained unchanged
 	/// and modified (presently: cleared)</returns>
+	/// <remarks>Must call on MCT</remarks>
 	public ValueTuple<int,int> RefreshGeometries()
 	{
 		int retained = 0;
@@ -511,6 +512,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 	/// </summary>
 	/// <returns>number of shape selections retained unchanged
 	/// and modified (presently: cleared)</returns>
+	/// <remarks>Must call on MCT</remarks>
 	public ValueTuple<int,int> RefreshGeometries(FeatureLayer layer, IEnumerable<long> oids)
 	{
 		if (!_layerSelections.TryGetValue(layer.URI, out var ws))

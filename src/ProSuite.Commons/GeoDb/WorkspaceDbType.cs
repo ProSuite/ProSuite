@@ -6,6 +6,7 @@ namespace ProSuite.Commons.GeoDb
 		FileSystem,
 		FileGeodatabase,
 		PersonalGeodatabase,
+		MobileGeodatabase,
 		ArcSDE,
 		ArcSDESqlServer,
 		ArcSDEOracle,
