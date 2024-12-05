@@ -331,11 +331,19 @@ public class WhiteSelection : IWhiteSelection
 			var selection = GetShapeSelection(oid) ??
 			                throw new AssertionException($"No shape selection for OID {oid}");
 
-			selection.UpdateShape(newShape, out bool cleared, out string reason);
+			bool compatible = selection.IsCompatible(newShape, out string reason);
 
-			result.Add(cleared
-				           ? IWhiteSelection.RefreshInfo.Modified(oid, reason)
-				           : IWhiteSelection.RefreshInfo.Retained(oid));
+			selection.UpdateShape(newShape);
+
+			if (compatible)
+			{
+				result.Add(IWhiteSelection.RefreshInfo.Retained(oid));
+			}
+			else
+			{
+				selection.Clear();
+				result.Add(IWhiteSelection.RefreshInfo.Modified(oid, reason));
+			}
 		}
 
 		return result;

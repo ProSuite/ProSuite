@@ -47,9 +47,26 @@ public interface IShapeSelection
 	MapPoint NearestVertex(MapPoint hitPoint, out double distance,
 	                   out int partIndex, out int vertexIndex, out bool selected);
 
-	/// <remarks>If the new shape is not compatible (type, part count, vertex
-	/// count) with the current shape, the selection is first cleared.</remarks>
-	void UpdateShape(Geometry newShape, out bool selectionCleared, out string selectionClearedReason);
+	/// <summary>
+	/// Notify this shape selection that the <see cref="Shape"/> has
+	/// a new vertex. The new vertex will be unselected. The internal
+	/// representation will be adjusted accordingly.
+	/// </summary>
+	void VertexAdded(int partIndex, int vertexIndex);
+
+	/// <summary>
+	/// Notify this shape selection that a vertex was removed from the
+	/// <see cref="Shape"/>. The internal representation will be adjusted
+	/// accordingly.
+	/// </summary>
+	void VertexRemoved(int partIndex, int vertexIndex);
+
+	/// <summary>
+	/// Replace <see cref="Shape"/> with the given <paramref name="newShape"/>,
+	/// even if it is not compatible (see <see cref="IsCompatible"/>) with the
+	/// current shape/selection.
+	/// </summary>
+	void UpdateShape(Geometry newShape);
 
 	/// <returns>true iff given shape is compatible with this selection</returns>
 	/// <remarks>shape and selection are compatible if part and vertex counts are in range</remarks>
@@ -474,27 +491,35 @@ public class ShapeSelection : IShapeSelection
 		return true;
 	}
 
-	public void UpdateShape(Geometry newShape, out bool selectionCleared, out string selectionClearedReason)
+	public void UpdateShape(Geometry newShape)
 	{
-		if (newShape is null)
-			throw new ArgumentNullException(nameof(newShape));
+		Shape = newShape ?? throw new ArgumentNullException(nameof(newShape));
+	}
 
-		bool compatible = IsCompatible(newShape, out string message);
-
-		if (compatible)
+	public void VertexAdded(int partIndex, int vertexIndex)
+	{
+		if (Shape is Multipoint)
 		{
-			selectionCleared = false;
-			selectionClearedReason = null;
-		}
-		else
-		{
-			Clear();
-
-			selectionCleared = true;
-			selectionClearedReason = message;
+			// outside world: a multipoint's points are its parts
+			// inside representation: all points in part 0 (for efficiency)
+			vertexIndex = partIndex;
+			partIndex = 0;
 		}
 
-		Shape = newShape;
+		_blocks.AdjustForAddition(partIndex, vertexIndex);
+	}
+
+	public void VertexRemoved(int partIndex, int vertexIndex)
+	{
+		if (Shape is Multipoint)
+		{
+			// outside world: a multipoint's points are its parts
+			// inside representation: all points in part 0 (for efficiency)
+			vertexIndex = partIndex;
+			partIndex = 0;
+		}
+
+		_blocks.AdjustForRemoval(partIndex, vertexIndex);
 	}
 
 	#region Private methods
@@ -740,6 +765,7 @@ public class ShapeSelection : IShapeSelection
 /// Linked list of blocks of sequences of contiguous vertices,
 /// always ordered by (part, first vertex). A new part always
 /// starts a new block. Blocks never overlap (such blocks are merged).
+/// Represents selected vertices of a shape/geometry.
 /// </summary>
 public class BlockList : IEnumerable<BlockList.Block>
 {
@@ -750,7 +776,7 @@ public class BlockList : IEnumerable<BlockList.Block>
 
 	public bool IsEmpty => _head.Next is null;
 
-	public bool Add(int part, int vertex, int count = 1)
+	public bool Add(int part, int vertex, int count = 1) // TODO rename Select?
 	{
 		// if vertex is in existing block: grow this block and merge down the list
 		// otherwise: append new block to before and merge down the list
@@ -782,7 +808,7 @@ public class BlockList : IEnumerable<BlockList.Block>
 		return true;
 	}
 
-	public bool Remove(int part, int vertex)
+	public bool Remove(int part, int vertex) // TODO rename Unselect?
 	{
 		var node = Find(part, vertex, out Node before);
 
@@ -849,13 +875,13 @@ public class BlockList : IEnumerable<BlockList.Block>
 		return ! wasEmpty;
 	}
 
-	public bool ContainsVertex(int part, int vertex)
+	public bool ContainsVertex(int part, int vertex) // TODO rename IsSelected?
 	{
 		var node = Find(part, vertex, out Node _);
 		return node is not null;
 	}
 
-	public int CountVertices(int part = -1)
+	public int CountVertices(int part = -1) // TODO rename CountSelected?
 	{
 		int count = 0;
 
@@ -867,6 +893,108 @@ public class BlockList : IEnumerable<BlockList.Block>
 		}
 
 		return count;
+	}
+
+	public void AdjustForAddition(int part, int vertex) // TODO rename VertexAdded
+	{
+		// Have ordered list of blocks b=(p,f,c)
+		// See where given (p,v) falls into this list:
+		// - if selected (ie, in a block b with b.p==p and b.f <= v < b.f+b.c):
+		//   - set b.c += 1 on block (new vertex will be selected)
+		//   - for remaining blocks in same part: set b.f += 1
+		// - otherwise (ie, unselected):
+		//   - for all blocks b (b.p==p, b.f > v): set b.f += 1
+		//   - new vertex will be unselected
+
+		var node = Find(part, vertex, out var before);
+
+		if (node is not null)
+		{
+			// (p,v) is in a block (adjacent to or within selected vertices):
+			// enlarge this block and shift up all following blocks in same part
+
+			node.Count += 1;
+
+			node = node.Next;
+			while (node is not null && node.Part == part)
+			{
+				node.First += 1;
+				node = node.Next;
+			}
+		}
+		else
+		{
+			// (p,v) is not in a block:
+			// shift up all blocks b with b.p==p and b.f > v
+
+			node = before?.Next;
+			while (node is not null && node.Part == part)
+			{
+				node.First += 1;
+				node = node.Next;
+			}
+		}
+	}
+
+	public void AdjustForRemoval(int part, int vertex) // TODO rename VertexRemoved
+	{
+		// Have ordered list of blocks b=(p,f,c)
+		// See where given (p,v) falls into this list:
+		// - if selected, i.e., in a block b (b.p==p and b.f <= v < b.f+b.c):
+		//   - set b.c -= 1 on block (and remove if empty)
+		//   - set b.f -= 1 in all remaining blocks in same part
+		// - otherwise (i.e., unselected):
+		//   - for all blocks b (b.p==p, b.f > v): set b.f -= 1
+
+		var node = Find(part, vertex, out var before);
+
+		if (node is not null)
+		{
+			// (p,v) is selected, thus in a block:
+			// shorten this block and shift down all following blocks in same part
+
+			Assert.NotNull(before, "before must not be null");
+			Assert.True(node.Part == part, "unexpected part index");
+
+			// Shorten (and remember) the containing block:
+
+			node.Count -= 1;
+			Node container = node;
+
+			// Shift down all following blocks in same part:
+
+			node = node.Next;
+			while (node is not null && node.Part == part)
+			{
+				node.First -= 1;
+				node = node.Next;
+			}
+
+			// Remove containing block if it became empty:
+
+			if (container.Count <= 0)
+			{
+				before.Next = container.Next;
+				FreeNode(container);
+			}
+		}
+		else
+		{
+			// (p,v) is not in a block:
+			// shift down all blocks b in same part with b.f > v
+
+			node = before?.Next;
+			while (node is not null && node.Part == part)
+			{
+				Assert.True(node.First > vertex, "unexpected first vertex");
+				node.First -= 1;
+				node = node.Next;
+			}
+
+			// Shifting might have brought blocks adjacent:
+
+			MergeBlocks(before);
+		}
 	}
 
 	[MustDisposeResource]
