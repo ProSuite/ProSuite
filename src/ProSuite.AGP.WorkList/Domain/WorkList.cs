@@ -109,7 +109,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public bool CanSetStatus()
 		{
-			return HasCurrentItem;
+			return HasCurrentItem && CanSetStatusCore();
 		}
 
 		public void SetStatus(IWorkItem item, WorkItemStatus status)
@@ -266,6 +266,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				return GetItems(filter, ignoreListSettings).Count();
 			}
+		}
+
+		protected virtual bool CanSetStatusCore()
+		{
+			return true;
 		}
 
 		#region Navigation public

@@ -101,10 +101,10 @@ namespace ProSuite.AGP.WorkList
 
 			IWorkItemRepository repository;
 
-			var sourceClasses = new List<Tuple<Table, string>>();
-
 			if (typeof(DbStatusWorkList).IsAssignableFrom(type))
 			{
+				var dbSourceClassDefinitions = new List<DbStatusSourceClassDefinition>();
+
 				// Issue source classes: table/definition query pairs
 				foreach (XmlWorkListWorkspace xmlWorkspace in xmlWorkListDefinition.Workspaces)
 				{
@@ -118,14 +118,38 @@ namespace ProSuite.AGP.WorkList
 							continue;
 						}
 
-						// TODO: Get Status Schema from XML too
-						sourceClasses.Add(
-							new Tuple<Table, string>(table, tableReference.DefinitionQuery));
+						string statusField = tableReference.StatusFieldName;
+						int todoValue = tableReference.StatusValueTodo;
+						int doneValue = tableReference.StatusValueDone;
+
+						if (string.IsNullOrEmpty(statusField))
+						{
+							// Issue-FileGdb uses hard-coded status field name,
+							// but other models do not.
+							const string legacyStatusField = "STATUS";
+							statusField = legacyStatusField;
+						}
+
+						int statusFieldIndex = table.GetDefinition().FindField(statusField);
+
+						if (statusFieldIndex == -1)
+						{
+							_msg.WarnFormat("Status field {0} not found in {1}", statusField,
+							                table.GetName());
+						}
+
+						WorkListStatusSchema statusSchema = new WorkListStatusSchema(
+							statusField, statusFieldIndex, todoValue, doneValue);
+
+						var sourceClassDefinition = new DbStatusSourceClassDefinition(
+							table, tableReference.DefinitionQuery, statusSchema);
+
+						dbSourceClassDefinitions.Add(sourceClassDefinition);
 					}
 				}
 
 				repository =
-					new IssueItemRepository(sourceClasses, stateRepository);
+					new DbStatusWorkItemRepository(dbSourceClassDefinitions, stateRepository);
 			}
 			else if (type == typeof(SelectionWorkList))
 			{

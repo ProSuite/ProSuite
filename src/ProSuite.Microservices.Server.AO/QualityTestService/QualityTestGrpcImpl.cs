@@ -158,6 +158,11 @@ namespace ProSuite.Microservices.Server.AO.QualityTestService
 				return WorkspaceUtils.GetFileGdbWorkspaceFactory();
 			}
 
+			if (workspaceType == WorkspaceDbType.MobileGeodatabase)
+			{
+				return WorkspaceUtils.GetSqliteWorkspaceFactory();
+			}
+
 			if (workspaceType == WorkspaceDbType.FileSystem)
 			{
 				return WorkspaceUtils.GetShapefileWorkspaceFactory();

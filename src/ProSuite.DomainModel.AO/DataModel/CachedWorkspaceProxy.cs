@@ -102,7 +102,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			IMosaicDataset dataset;
 			if (! _mosaicDatasetsByName.TryGetValue(name, out dataset))
 			{
-				dataset = DatasetUtils.OpenMosaicDataset((IWorkspace) FeatureWorkspace, name);
+				dataset = MosaicUtils.OpenMosaicDataset((IWorkspace) FeatureWorkspace, name);
 				_mosaicDatasetsByName.Add(name, dataset);
 			}
 

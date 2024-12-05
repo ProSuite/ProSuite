@@ -43,8 +43,13 @@ namespace ProSuite.AGP.Editing.Cracker
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
-		protected virtual string LocalConfigDir =>
-			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
+		/// <summary>
+		/// By default, the local configuration directory shall be in
+		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// </summary>
+		protected virtual string LocalConfigDir
+			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				AppDataFolder.Roaming, "ToolDefaults");
 
 		protected override void OnUpdateCore()
 		{

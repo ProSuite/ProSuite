@@ -7,9 +7,11 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Client.QA;
@@ -87,7 +89,9 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			List<GdbObjectReference> objectsToVerify = null;
 			List<Dataset> referencedIssueTables = null;
 
-			await QueuedTask.Run(() =>
+			bool success = false;
+
+			await QueuedTask.Run(async () =>
 			{
 				objectsToVerify = VerifiedRows?.Select(row => new GdbObjectReference(
 					                                       row.GetTable().GetID(),
@@ -97,20 +101,20 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				referencedIssueTables = _issueStore
 				                        .GetReferencedIssueTables(_issueMessages)
 				                        .ToList();
+
+				Assert.NotNull(referencedIssueTables, "Error getting issue FeatureClasses");
+
+				EditorTransaction transaction = new EditorTransaction(new EditOperation());
+
+				success = await transaction.ExecuteAsync(
+					          editContext =>
+					          {
+						          savedIssueCount =
+							          UpdateIssuesTx(editContext, objectsToVerify,
+							                         verifiedConditionIds);
+					          },
+					          "Update issues", referencedIssueTables);
 			});
-
-			Assert.NotNull(referencedIssueTables, "Error getting issue FeatureClasses");
-
-			EditorTransaction transaction = new EditorTransaction(new EditOperation());
-
-			bool success = await transaction.ExecuteAsync(
-				               editContext =>
-				               {
-					               savedIssueCount =
-						               UpdateIssuesTx(editContext, objectsToVerify,
-						                              verifiedConditionIds);
-				               },
-				               "Update issues", referencedIssueTables);
 
 			return success ? savedIssueCount : 0;
 		}
