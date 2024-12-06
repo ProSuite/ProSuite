@@ -672,6 +672,47 @@ namespace ProSuite.Commons.Text
 		}
 
 		/// <summary>
+		/// Replaces special characters in the given text with underscores.
+		/// If no special character predicate is given, all characters that are not letters or
+		/// digits are considered special.
+		/// </summary>
+		/// <param name="text"></param>
+		/// <param name="isSpecialCharacter">The special character predicate.</param>
+		/// <param name="maxLength">The optional max length.</param>
+		/// <returns></returns>
+		public static string ReplaceSpecialCharacters(
+			[NotNull] string text,
+			[CanBeNull] Predicate<char> isSpecialCharacter = null,
+			int maxLength = int.MaxValue)
+		{
+			var sb = new StringBuilder();
+
+			if (isSpecialCharacter == null)
+			{
+				isSpecialCharacter = c => ! char.IsLetterOrDigit(c);
+			}
+
+			foreach (char c in text)
+			{
+				if (sb.Length >= maxLength)
+				{
+					break;
+				}
+
+				if (! isSpecialCharacter(c))
+				{
+					sb.Append(c);
+				}
+				else
+				{
+					sb.Append('_');
+				}
+			}
+
+			return sb.ToString();
+		}
+
+		/// <summary>
 		/// Join the given strings into one string, separated by the
 		/// given separator string. 
 		/// </summary>
@@ -784,7 +825,7 @@ namespace ProSuite.Commons.Text
 		public static string FormatNonScientific(double value,
 		                                         [NotNull] IFormatProvider formatProvider)
 		{
-			decimal decimalValue = (decimal)value;
+			decimal decimalValue = (decimal) value;
 			string result = string.Format(formatProvider, "{0:F99}", decimalValue).TrimEnd('0');
 
 			if (result.Length == 0)
@@ -802,7 +843,7 @@ namespace ProSuite.Commons.Text
 			double value,
 			[NotNull] IFormatProvider formatProvider)
 		{
-			decimal valueDecimal = (decimal)value;
+			decimal valueDecimal = (decimal) value;
 			string result = string.Format(formatProvider, "{0:F99}", valueDecimal)
 			                      .TrimEnd('0');
 
