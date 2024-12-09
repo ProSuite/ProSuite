@@ -3723,6 +3723,7 @@ namespace ProSuite.QA.Tests.Test
 											 typeof(TrTableJoinInMemory),
 				                             typeof(TrProject),
 				                             typeof(TrSpatialJoin),
+											 typeof(TrZAssign)
 			                             };
 
 			foreach (Type transformerType in refactoredTypes)
@@ -3826,6 +3827,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrProjectCases(model, trCases);
 			AddTrSpatialJoinCases(model, trCases);
 			AddTrTableJoinInMemoryCases(model, trCases);
+			AddTrZAssignCases(model, trCases);
 
 			foreach (TrDefinitionCase trCase in trCases)
 			{
@@ -4093,6 +4095,29 @@ namespace ProSuite.QA.Tests.Test
 												 "rightTableKey",
 												 JoinType.InnerJoin
 											 },
+			                                 optionalValues));
+		}
+
+		private static void AddTrZAssignCases(TestDataModel model,
+		                                                ICollection<TrDefinitionCase>
+			                                                trCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("ZAssignOption", AssignOption.Tile);
+
+			trCases.Add(new TrDefinitionCase(typeof(TrZAssign), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetVectorDataset(),
+				                                 model.GetRasterDataset()
+			                                 },
+			                                 optionalValues));
+			trCases.Add(new TrDefinitionCase(typeof(TrZAssign), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetVectorDataset(),
+				                                 model.GetRasterDataset()
+			                                 },
 			                                 optionalValues));
 		}
 
