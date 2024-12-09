@@ -23,13 +23,13 @@ public interface IMapWhiteSelection
 	int Remove(FeatureLayer layer, IEnumerable<long> oids);
 	bool SetEmpty();
 
-	bool HitTestVertex(MapPoint point, double tolerance, out MapPoint vertex); // TODO rename ~Selected~
+	bool SelectedVertex(MapPoint point, double tolerance, out MapPoint vertex);
 
 	MapPoint NearestPoint(MapPoint clickPoint, double tolerance,
 	                      out FeatureLayer layer, out long oid, out int partIndex,
 	                      out int? segmentIndex, out int? vertexIndex);
 
-	IEnumerable<IWhiteSelection> GetLayerSelections();
+	ICollection<IWhiteSelection> GetLayerSelections();
 	IWhiteSelection GetLayerSelection(FeatureLayer layer);
 
 	ValueTuple<int, int> RefreshGeometries(); // all in mws; remove from sel where incompatible
@@ -44,7 +44,8 @@ public interface IMapWhiteSelection
 /// <summary>
 /// The white selection over all layers in a given map (we need a MapView,
 /// not just the map, to have the MapView.GetFeatures() function available).
-/// Maintains a collection of <see cref="IWhiteSelection"/> instances.
+/// Maintains one <see cref="IWhiteSelection"/> instance per layer, which
+/// in turn maintains one <see cref="IShapeSelection"/> per involved feature.
 /// </summary>
 public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 {
@@ -65,14 +66,14 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 
 	/// <returns>true iff <paramref name="point"/> is within
 	/// <paramref name="tolerance"/> of a selected vertex</returns>
-	public bool HitTestVertex(MapPoint point, double tolerance, out MapPoint vertex)
+	public bool SelectedVertex(MapPoint point, double tolerance, out MapPoint vertex)
 	{
 		var all = GetLayerSelections();
 
 		// TODO either find closest hit or first in layer order?!
 		foreach (var ws in all)
 		{
-			if (ws.HitTestVertex(point, tolerance, out vertex))
+			if (ws.SelectedVertex(point, tolerance, out vertex))
 			{
 				return true;
 			}
@@ -81,24 +82,6 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		vertex = null;
 		return false;
 	}
-
-	//public MapPoint NearestVertex(MapPoint point,
-	//                          out int partIndex, out int vertexIndex, out bool isSelected)
-	//{
-	//	var all = GetLayerSelections();
-
-	//	foreach (var ws in all)
-	//	{
-	//		if (ws.HitTestVertex(point, tolerance, out vertex,
-	//		                     out partIndex, out vertexIndex, out isSelected))
-	//		{
-	//			return true;
-	//		}
-	//	}
-
-	//	vertex = null;
-
-	//}
 
 	public MapPoint NearestPoint(MapPoint clickPoint, double tolerance,
 	                             out FeatureLayer layer, out long oid, out int partIndex,
@@ -173,15 +156,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		return minPoint;
 	}
 
-	private static double DistanceSquared(MapPoint a, MapPoint b)
-	{
-		if (a is null || b is null) return double.NaN;
-		var dx = a.X - b.X;
-		var dy = a.Y - b.Y;
-		return dx * dx + dy * dy;
-	}
-
-	public IEnumerable<IWhiteSelection> GetLayerSelections()
+	public ICollection<IWhiteSelection> GetLayerSelections()
 	{
 		return _layerSelections.Values;
 	}

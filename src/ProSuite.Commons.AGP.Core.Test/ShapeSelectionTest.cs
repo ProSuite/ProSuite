@@ -34,7 +34,7 @@ public class ShapeSelectionTest
 	public void CanCombineVertices()
 	{
 		var shape = CreatePolylineXY(0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6);
-		var selection = new ShapeSelection(shape);
+		IShapeSelection selection = new ShapeSelection(shape);
 
 		Assert.True(selection.CombineVertex(0, 2, SetCombineMethod.New)); // (0,2)
 		Assert.True(selection.IsVertexSelected(0, 2));
@@ -42,6 +42,7 @@ public class ShapeSelectionTest
 		Assert.True(selection.CombineVertex(0, 3, SetCombineMethod.Add)); // (0,2) (0,3)
 		Assert.True(selection.IsVertexSelected(0, 2));
 		Assert.True(selection.IsVertexSelected(0, 3));
+		Assert.AreEqual(ShapeSelectionState.Partially, selection.IsShapeSelected());
 
 		Assert.True(selection.CombineVertex(0, 4, SetCombineMethod.New)); // (0,4)
 		Assert.False(selection.IsVertexSelected(0, 2));
@@ -67,6 +68,7 @@ public class ShapeSelectionTest
 
 		Assert.True(selection.IsEmpty);
 		Assert.False(selection.IsFully);
+		Assert.AreEqual(ShapeSelectionState.Not, selection.IsShapeSelected());
 	}
 
 	[Test]
@@ -134,9 +136,9 @@ public class ShapeSelectionTest
 		var tolerance = 0.15; // a little more than pyth(hitPoint)
 
 		selection.CombineVertex(0, 0, SetCombineMethod.New);
-		Assert.True(selection.HitTestVertex(hitPoint, tolerance, out var vertex));
+		Assert.True(selection.SelectedVertex(hitPoint, tolerance, out var vertex));
 		Assert.NotNull(vertex);
-		Assert.False(selection.HitTestVertex(hitPoint, tolerance / 2, out vertex));
+		Assert.False(selection.SelectedVertex(hitPoint, tolerance / 2, out vertex));
 		Assert.Null(vertex);
 
 		// other geometry types... but since HitTestVertex is implemented

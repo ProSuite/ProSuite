@@ -78,7 +78,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			TryOrRefreshRow<Row>(r => r.Store());
 		}
 
-		protected virtual void OnStoring() { }
+		public virtual void OnStoring() { }
 
 		public void Delete()
 		{
@@ -333,7 +333,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		#region Overrides of ArcRow
 
-		protected override void OnStoring()
+		public override void OnStoring()
 		{
 			if (_mutableGeometry == null)
 			{

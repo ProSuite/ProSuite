@@ -44,6 +44,7 @@ public abstract class EditSymbolToolBase : MapTool
 	private const Key ToggleLassoSelectKey = Key.L;
 	private const Key TogglePolygonSelectKey = Key.P;
 	private const SketchGeometryType DefaultSketchType = SketchGeometryType.Rectangle;
+	private SketchGeometryType _selectModeSketchType = DefaultSketchType;
 	// Sketch type transitions: (Lasso) <---'L'---> (Rectangle) <---'P'---> (Polygon)
 	//                             ^----------------'P'--/--'L'-----------------^
 
@@ -411,7 +412,7 @@ public abstract class EditSymbolToolBase : MapTool
 			case ToolMode.Select:
 				SketchOutputMode = SketchOutputMode.Map;
 				CompleteSketchOnMouseUp = true; // set before SketchType!?
-				SketchType = DefaultSketchType;
+				SketchType = _selectModeSketchType;
 				GeomIsSimpleAsFeature = false; // so just a click gives a non-empty polygon/extent
 				SetupSelectMode();
 				break;
@@ -453,12 +454,12 @@ public abstract class EditSymbolToolBase : MapTool
 
 		if (SketchType == SketchGeometryType.Lasso)
 		{
-			SketchType = DefaultSketchType;
+			SketchType = _selectModeSketchType = DefaultSketchType;
 			_msg.Info($"{Caption}: Select vertices using a rectangle sketch");
 		}
 		else
 		{
-			SketchType = SketchGeometryType.Lasso;
+			SketchType = _selectModeSketchType = SketchGeometryType.Lasso;
 			_msg.Info($"{Caption}: Select vertices using a lasso sketch");
 		}
 	}
@@ -469,12 +470,12 @@ public abstract class EditSymbolToolBase : MapTool
 
 		if (SketchType == SketchGeometryType.Polygon)
 		{
-			SketchType = DefaultSketchType;
+			SketchType = _selectModeSketchType = DefaultSketchType;
 			_msg.Info($"{Caption}: Select vertices using a rectangle sketch");
 		}
 		else
 		{
-			SketchType = SketchGeometryType.Polygon;
+			SketchType = _selectModeSketchType = SketchGeometryType.Polygon;
 			_msg.Info($"{Caption}: Select vertices using a polygon sketch");
 		}
 	}
