@@ -12,17 +12,7 @@ namespace ProSuite.QA.Tests.Transformers
 	[GeometryTransformer]
 	public class TrMultipolygonToPolygonDefinition : TrGeometryTransformDefinition
 	{
-		public IFeatureClassSchemaDef FeatureClass { get; }
-
-		public const string AttrOuterRingIndex = "OuterRingIndex";
-		public const string AttrInnerRingIndex = "InnerRingIndex";
-
-		public const int OuterRing = -1;
-		public const int SinglePolygon = -2;
-
 		private const PolygonPart _defaultPolygonPart = PolygonPart.SinglePolygons;
-		private int? _iAttrOuterRing;
-		private int? _iAttrInnerRing;
 
 		[DocTr(nameof(DocTrStrings.TrMultipolygonToPolygon_0))]
 		public TrMultipolygonToPolygonDefinition(

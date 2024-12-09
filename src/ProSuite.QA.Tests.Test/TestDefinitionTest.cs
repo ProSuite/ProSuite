@@ -3716,6 +3716,7 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(TrGetNodes),
 				                             typeof(TrIntersect),
 											 typeof(TrLineToPolygon),
+											 typeof(TrMakeTable),
 				                             typeof(TrMultilineToLine),
 				                             typeof(TrMultipolygonToPolygon),
 				                             typeof(TrPolygonToLine),
@@ -3809,7 +3810,6 @@ namespace ProSuite.QA.Tests.Test
 			var trCases = new List<TrDefinitionCase>();
 
 			// Transformer cases with automatic parameter value generation:
-			//trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrDissolve)));
 			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrIntersect)));
 			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrTableJoin)));
 
@@ -3822,6 +3822,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrGeometryToPointsCases(model, trCases);
 			AddTrGetNodesCases(model, trCases);
 			AddTrLineToPolygonCases(model, trCases);
+			AddTrMakeTableCases(model, trCases);
 			AddTrMultilineToLineCases(model, trCases);
 			AddTrMultipolygonToPolygonCases(model, trCases);
 			AddTrPolygonToLineCases(model, trCases);
@@ -4004,6 +4005,18 @@ namespace ProSuite.QA.Tests.Test
 			                                 optionalValues));
 		}
 
+		private static void AddTrMakeTableCases(TestDataModel model,
+		                                            ICollection<TrDefinitionCase> trCases)
+		{
+			trCases.Add(new TrDefinitionCase(typeof(TrMakeTable), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetObjectDataset(),
+												 "Table"
+											 }));
+
+			// NOTE: that neither in-memory nor file GDB workspaces implement ISQLWorkspace.
+		}
 
 		private static void AddTrMultilineToLineCases(TestDataModel model,
 		                                            ICollection<TrDefinitionCase>
