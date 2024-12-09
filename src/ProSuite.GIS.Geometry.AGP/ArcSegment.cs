@@ -53,6 +53,8 @@ public abstract class ArcSegment : ISegment
 
 	public abstract IGeometry Clone();
 
+	public object NativeImplementation => ProSegment;
+
 	#region Implementation of ISegment
 
 	public double Length => ProSegment.Length;

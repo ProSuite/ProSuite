@@ -99,6 +99,8 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public abstract IGeometry Clone();
 
+		public object NativeImplementation => ProGeometry;
+
 		#endregion
 
 		#region Implementation of IZAware

@@ -28,6 +28,8 @@ namespace ProSuite.GIS.Geometry.API
 		IGeometry Clone();
 
 		// TODO: ZAware, MAware, PointIDAware
+
+		object NativeImplementation { get; }
 	}
 
 	public interface IMutableGeometry //<T> where T : class

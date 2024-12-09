@@ -76,6 +76,8 @@ namespace ProSuite.GIS.Geometry.AGP
 			return new ArcEnvelope(clone);
 		}
 
+		public object NativeImplementation => ProEnvelope;
+
 		#endregion
 
 		#region Implementation of IEnvelope
