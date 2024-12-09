@@ -7,7 +7,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.AGP.Editing.Symbolization;
+namespace ProSuite.Commons.AGP.Carto;
 
 /// <summary>
 /// Draw feature previews using Pro SDK “overlays” on the active map view.
