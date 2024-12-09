@@ -3706,29 +3706,36 @@ namespace ProSuite.QA.Tests.Test
 
 		#endregion
 
+		private static List<Type> TrRefactoredTypes
+		{
+			get
+			{
+				List<Type> trRefactoredTypes = new List<Type>
+				                               {
+					                               typeof(TrDissolve),
+					                               typeof(TrGeometryToPoints),
+					                               typeof(TrGetNodes),
+					                               typeof(TrIntersect),
+					                               typeof(TrLineToPolygon),
+					                               typeof(TrMakeTable),
+					                               typeof(TrMultilineToLine),
+					                               typeof(TrMultipolygonToPolygon),
+					                               typeof(TrPolygonToLine),
+					                               typeof(TrProject),
+					                               typeof(TrSpatialJoin),
+					                               typeof(TrTableAppend),
+					                               typeof(TrTableJoin),
+					                               typeof(TrTableJoinInMemory),
+					                               typeof(TrZAssign)
+				                               };
+				return trRefactoredTypes;
+			}
+		}
+
 		[Test]
 		public void CanCreateTransformers()
 		{
-			List<Type> refactoredTypes = new List<Type>
-			                             {
-				                             typeof(TrDissolve),
-											 typeof(TrGeometryToPoints),
-				                             typeof(TrGetNodes),
-				                             typeof(TrIntersect),
-											 typeof(TrLineToPolygon),
-											 typeof(TrMakeTable),
-				                             typeof(TrMultilineToLine),
-				                             typeof(TrMultipolygonToPolygon),
-				                             typeof(TrPolygonToLine),
-											 typeof(TrProject),
-											 typeof(TrSpatialJoin),
-											 typeof(TrTableAppend),
-											 typeof(TrTableJoin),
-											 typeof(TrTableJoinInMemory),
-											 typeof(TrZAssign)
-			                             };
-
-			foreach (Type transformerType in refactoredTypes)
+			foreach (Type transformerType in TrRefactoredTypes)
 			{
 				Assert.IsFalse(InstanceUtils.HasInternallyUsedAttribute(transformerType),
 				               "Internally used transformer");
@@ -3802,13 +3809,9 @@ namespace ProSuite.QA.Tests.Test
 			object[] ConstructorValues = null,
 			Dictionary<string, object> OptionalParamValues = null);
 
-		[Test]
-		public void AreTransformerParametersEqual()
+		private static List<TrDefinitionCase> DefineTrCases(TestDataModel model)
 		{
-			var model = new TestDataModel("simple model");
-
 			var trCases = new List<TrDefinitionCase>();
-
 			// Transformer cases with automatic parameter value generation:
 			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrIntersect)));
 			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrTableJoin)));
@@ -3831,6 +3834,16 @@ namespace ProSuite.QA.Tests.Test
 			AddTrTableAppendCases(model, trCases);
 			AddTrTableJoinInMemoryCases(model, trCases);
 			AddTrZAssignCases(model, trCases);
+
+			return trCases;
+		}
+
+		[Test]
+		public void AreTransformerParametersEqual()
+		{
+			var model = new TestDataModel("simple model");
+
+			List<TrDefinitionCase> trCases = DefineTrCases(model);
 
 			foreach (TrDefinitionCase trCase in trCases)
 			{
@@ -3938,6 +3951,7 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
+		#region Methods to add special transformer definition cases
 		private static void AddTrDissolveCases(TestDataModel model,
 		                                       ICollection<TrDefinitionCase>
 			                                       trCases)
@@ -4147,6 +4161,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 },
 			                                 optionalValues));
 		}
+
+		#endregion
 
 		private static void AddParameterValue(string parameterName, object value,
 		                                      QualityCondition testCondition,
@@ -4778,119 +4794,123 @@ namespace ProSuite.QA.Tests.Test
 			                                 constructorIndex);
 		}
 
-		[Test]
-		public static void CheckCompletenessCanCreateTest()
+		public static void CheckCompleteness(
+			Type typeFromAssembly,
+			string namespaceSuffix,
+			List<Type> refactoredTypes,
+			string methodName)
 		{
-			Type typeFromTestAssembly = typeof(Qa3dConstantZ);
-			Assembly testAssembly = typeFromTestAssembly.Assembly;
+			Assembly testAssembly = typeFromAssembly.Assembly;
+			string assemblyName = testAssembly.GetName().Name;
+			string desiredNamespace = ! string.IsNullOrEmpty(namespaceSuffix)
+				                          ? $"{assemblyName}.{namespaceSuffix}"
+				                          : null;
 
-			List<Assembly> assemblies = new List<Assembly> { testAssembly };
-
-			List<Type> testTypes = CollectTestTypes(assemblies);
+			List<Type> typesToCheck = desiredNamespace != null
+				                          ? testAssembly.GetTypes()
+				                                        .Where(t => t.Namespace == desiredNamespace &&
+					                                               t.IsPublic)
+				                                        .ToList()
+				                          : CollectTestTypes(new List<Assembly> { testAssembly });
 
 			List<Type> missingCanCreateTypes =
-				FindMissingCanCreateTypes(testTypes, RefactoredTypes);
+				FindMissingCanCreateTypes(typesToCheck, refactoredTypes);
 
 			if (missingCanCreateTypes.Any())
 			{
 				foreach (var missingCanCreateType in missingCanCreateTypes)
 				{
-					Console.WriteLine("Not implemented in method CanCreateTest: " +
+					Console.WriteLine($"Not implemented in method {methodName}: " +
 					                  missingCanCreateType.Name);
 				}
 
-				throw new AssertionException(
-					"One or more types missing in method CanCreateTest()");
+				throw new AssertionException($"One or more types missing in method {methodName}()");
 			}
 			else
 			{
 				Console.WriteLine(
-					"All types are present in the RefactoredTypes in method CanCreateTest().");
+					$"All types are present in the refactored types in method {methodName}().");
 			}
 		}
 
 		[Test]
-		public static void CheckCompletenessAreParametersEqual()
+		public static void CheckCompletenessCanCreateTest()
 		{
-			List<Type> missingAreParametersEqualTypes =
-				FindMissingAreParametersEqualTypes(RefactoredTypes);
-
-			if (missingAreParametersEqualTypes.Any())
-			{
-				foreach (var missingAreParametersEqualType in missingAreParametersEqualTypes)
-				{
-					Console.WriteLine("Not implemented in method AreParametersEqual: " +
-					                  missingAreParametersEqualType.Name);
-				}
-
-				throw new AssertionException(
-					"One or more types missing in method AreParametersEqual()");
-			}
-
-			else
-			{
-				Console.WriteLine(
-					"All types are present in testCases in method AreParametersEqual().");
-			}
+			CheckCompleteness(
+				typeFromAssembly: typeof(Qa3dConstantZ),
+				namespaceSuffix: null,
+				refactoredTypes: RefactoredTypes,
+				methodName: "CanCreateTest");
 		}
 
 		[Test]
 		public static void CheckCompletenessCanCreateIssueFilter()
 		{
-			Type typeFromTestAssembly = typeof(IfAll);
+			CheckCompleteness(
+				typeFromAssembly: typeof(IfAll),
+				namespaceSuffix: "IssueFilters",
+				refactoredTypes: IfRefactoredTypes,
+				methodName: "CanCreateIssueFilters");
+		}
 
-			Assembly testAssembly = typeFromTestAssembly.Assembly;
-			string assemblyName = testAssembly.GetName().Name;
-			string desiredNamespace = $"{assemblyName}.IssueFilters";
-			var issueFilterTypes = testAssembly.GetTypes()
-			                                   .Where(t => t.Namespace == desiredNamespace &&
-			                                               t.IsPublic == true)
-			                                   .ToList();
+		[Test]
+		public static void CheckCompletenessCanCreateTransformer()
+		{
+			CheckCompleteness(
+				typeFromAssembly: typeof(TrDissolve),
+				namespaceSuffix: "Transformer",
+				refactoredTypes: TrRefactoredTypes,
+				methodName: "CanCreateTransformers");
+		}
 
-			List<Type> missingCanCreateTypes =
-				FindMissingCanCreateTypes(issueFilterTypes, IfRefactoredTypes);
+		public static void CheckCompletenessAreParametersEqual(
+			Func<List<Type>, List<Type>> findMissingTypesFunc,
+			List<Type> refactoredTypes,
+			string methodName)
+		{
+			List<Type> missingTypes = findMissingTypesFunc(refactoredTypes);
 
-			if (missingCanCreateTypes.Any())
+			if (missingTypes.Any())
 			{
-				foreach (var missingCanCreateType in missingCanCreateTypes)
+				foreach (var missingType in missingTypes)
 				{
-					Console.WriteLine("Not implemented in method CanCreateIssueFilters: " +
-					                  missingCanCreateType.Name);
+					Console.WriteLine(
+						$"Not implemented in method {methodName}: {missingType.Name}");
 				}
 
-				throw new AssertionException(
-					"One or more types missing in method CanCreateIssueFilters()");
+				throw new AssertionException($"One or more types missing in method {methodName}()");
 			}
 			else
 			{
-				Console.WriteLine(
-					"All types are present in the IfRefactoredTypes in method CanCreateIssueFilters().");
+				Console.WriteLine($"All types are present in {methodName}().");
 			}
+		}
+
+		[Test]
+		public static void CheckCompletenessAreTestParametersEqual()
+		{
+			CheckCompletenessAreParametersEqual(
+				findMissingTypesFunc: FindMissingAreTestParametersEqualTypes,
+				refactoredTypes: RefactoredTypes,
+				methodName: "AreParametersEqual");
 		}
 
 		[Test]
 		public static void CheckCompletenessAreIssueFilterParametersEqual()
 		{
-			List<Type> missingAreParametersEqualTypes =
-				FindMissingAreIssueFilterParametersEqualTypes(IfRefactoredTypes);
+			CheckCompletenessAreParametersEqual(
+				findMissingTypesFunc: FindMissingAreIssueFilterParametersEqualTypes,
+				refactoredTypes: IfRefactoredTypes,
+				methodName: "AreIssueFilterParametersEqual");
+		}
 
-			if (missingAreParametersEqualTypes.Any())
-			{
-				foreach (var missingAreParametersEqualType in missingAreParametersEqualTypes)
-				{
-					Console.WriteLine("Not implemented in method AreIssueFilterParametersEqual: " +
-					                  missingAreParametersEqualType.Name);
-				}
-
-				throw new AssertionException(
-					"One or more types missing in method AreIssueFilterParametersEqual()");
-			}
-
-			else
-			{
-				Console.WriteLine(
-					"All types are present in ifCases in method AreIssueFilterParametersEqual().");
-			}
+		[Test]
+		public static void CheckCompletenessAreTransformerParametersEqual()
+		{
+			CheckCompletenessAreParametersEqual(
+				findMissingTypesFunc: FindMissingAreTransformerParametersEqualTypes,
+				refactoredTypes: TrRefactoredTypes,
+				methodName: "AreTransformerParametersEqual");
 		}
 
 		private static List<Type> CollectTestTypes(IEnumerable<Assembly> assemblies)
@@ -4919,36 +4939,42 @@ namespace ProSuite.QA.Tests.Test
 			return testassemblyTypes.Except(canCreateTypes).ToList();
 		}
 
-		static List<Type> FindMissingAreParametersEqualTypes(List<Type> testassemblyTypes)
+		static List<Type> FindMissingAreParametersEqualTypes<TCase>(
+			List<Type> assemblyTypes,
+			Func<TestDataModel, List<TCase>> defineCasesFunc,
+			Func<TCase, Type> extractTypeFunc)
 		{
 			var model = new TestDataModel("simple model");
 
-			List<TestDefinitionCase> testCases = DefineTestCases(model);
+			List<TCase> cases = defineCasesFunc(model);
 
-			List<Type> testDefinitionTypes = new List<Type>();
+			List<Type> definedTypes = cases.Select(extractTypeFunc).ToList();
 
-			foreach (TestDefinitionCase testCase in testCases)
-			{
-				testDefinitionTypes.Add(testCase.TestType);
-			}
+			return assemblyTypes.Except(definedTypes).ToList();
+		}
 
-			return testassemblyTypes.Except(testDefinitionTypes).ToList();
+		static List<Type> FindMissingAreTestParametersEqualTypes(List<Type> testAssemblyTypes)
+		{
+			return FindMissingAreParametersEqualTypes(
+				assemblyTypes: testAssemblyTypes,
+				defineCasesFunc: DefineTestCases,
+				extractTypeFunc: testCase => testCase.TestType);
 		}
 
 		static List<Type> FindMissingAreIssueFilterParametersEqualTypes(List<Type> issueFilterTypes)
 		{
-			var model = new TestDataModel("simple model");
+			return FindMissingAreParametersEqualTypes(
+				assemblyTypes: issueFilterTypes,
+				defineCasesFunc: DefineIfCases,
+				extractTypeFunc: ifCase => ifCase.IssueFilterType);
+		}
 
-			List<IfDefinitionCase> ifCases = DefineIfCases(model);
-
-			List<Type> ifDefinitionTypes = new List<Type>();
-
-			foreach (IfDefinitionCase ifCase in ifCases)
-			{
-				ifDefinitionTypes.Add(ifCase.IssueFilterType);
-			}
-
-			return issueFilterTypes.Except(ifDefinitionTypes).ToList();
+		static List<Type> FindMissingAreTransformerParametersEqualTypes(List<Type> transformerTypes)
+		{
+			return FindMissingAreParametersEqualTypes(
+				assemblyTypes: transformerTypes,
+				defineCasesFunc: DefineTrCases,
+				extractTypeFunc: trCase => trCase.TransformerType);
 		}
 	}
 
