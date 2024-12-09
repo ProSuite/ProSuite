@@ -407,4 +407,10 @@ In the resulting feature class, only attributes defined in 'Attributes' can be u
   <data name="TrProject_targetSpatialReferenceId" xml:space="preserve">
     <value>The ID of the target spatial reference to which the geometries in the featureClass will be projected. This ID corresponds to a specific coordinate system or projection, such as WGS 84 or another predefined spatial reference system.</value>
   </data>
+  <data name="TrTableAppend_0" xml:space="preserve">
+    <value>Appends tables</value>
+  </data>
+  <data name="TrTableAppend_tables" xml:space="preserve">
+    <value>tables to append</value>
+  </data>
 </root>

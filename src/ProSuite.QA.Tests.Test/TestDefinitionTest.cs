@@ -3719,10 +3719,11 @@ namespace ProSuite.QA.Tests.Test
 				                             typeof(TrMultilineToLine),
 				                             typeof(TrMultipolygonToPolygon),
 				                             typeof(TrPolygonToLine),
+											 typeof(TrProject),
+											 typeof(TrSpatialJoin),
+											 typeof(TrTableAppend),
 											 typeof(TrTableJoin),
 											 typeof(TrTableJoinInMemory),
-				                             typeof(TrProject),
-				                             typeof(TrSpatialJoin),
 											 typeof(TrZAssign)
 			                             };
 
@@ -3826,6 +3827,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrPolygonToLineCases(model, trCases);
 			AddTrProjectCases(model, trCases);
 			AddTrSpatialJoinCases(model, trCases);
+			AddTrTableAppendCases(model, trCases);
 			AddTrTableJoinInMemoryCases(model, trCases);
 			AddTrZAssignCases(model, trCases);
 
@@ -4075,6 +4077,18 @@ namespace ProSuite.QA.Tests.Test
 				                                 model.GetVectorDataset()
 			                                 },
 			                                 optionalValues));
+		}
+
+		private static void AddTrTableAppendCases(TestDataModel model,
+		                                          ICollection<TrDefinitionCase>
+			                                          trCases)
+		{
+			trCases.Add(new TrDefinitionCase(typeof(TrSpatialJoin), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetPolygonDataset(),
+				                                 model.GetPolygonDataset()
+											 }));
 		}
 
 		private static void AddTrTableJoinInMemoryCases(TestDataModel model,

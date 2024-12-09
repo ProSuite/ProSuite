@@ -676,6 +676,24 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Appends tables.
+        /// </summary>
+        public static string TrTableAppend_0 {
+            get {
+                return ResourceManager.GetString("TrTableAppend_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to tables to append.
+        /// </summary>
+        public static string TrTableAppend_tables {
+            get {
+                return ResourceManager.GetString("TrTableAppend_tables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transforms table &apos;t0&apos; and table &apos;t1&apos;, which must be related by &apos;relationName&apos;, to a joined table.
         /// </summary>
         public static string TrTableJoin_0 {
