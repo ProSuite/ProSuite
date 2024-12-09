@@ -244,7 +244,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			IWorkspace rws = WorkspaceUtils.OpenWorkspace(_simpleGdbPath);
 
-			IMosaicDataset mosaic = DatasetUtils.OpenMosaicDataset(rws, "DHM200_Mosaic");
+			IMosaicDataset mosaic = MosaicUtils.OpenMosaicDataset(rws, "DHM200_Mosaic");
 			var simpleRasterMosaic = new SimpleRasterMosaic(mosaic);
 			var mosaicReference = new MosaicRasterReference(simpleRasterMosaic);
 

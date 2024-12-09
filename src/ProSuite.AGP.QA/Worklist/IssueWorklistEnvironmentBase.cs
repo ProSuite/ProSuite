@@ -59,6 +59,10 @@ namespace ProSuite.AGP.QA.WorkList
 					MapView.Active.Map, 0, qaGroupLayerName);
 			}
 
+#if ARCGISPRO_GREATER_3_2
+			qaGroupLayer.SetShowLayerAtAllScales(true);
+#endif
+
 			// Expected behaviour:
 			// - They should be re-nameable by the user.
 			// - They should be deletable by the user (in which case a new layer should be re-added)
@@ -75,6 +79,10 @@ namespace ProSuite.AGP.QA.WorkList
 					_msg.DebugFormat("Creating new group layer {0}", groupName);
 					workListGroupLayer =
 						LayerFactory.Instance.CreateGroupLayer(qaGroupLayer, 0, groupName);
+
+#if ARCGISPRO_GREATER_3_2
+					workListGroupLayer.SetShowLayerAtAllScales(true);
+#endif
 				}
 
 				return workListGroupLayer as T;
@@ -103,19 +111,44 @@ namespace ProSuite.AGP.QA.WorkList
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			var sourceClasses = new List<Tuple<Table, string>>();
+			var sourceClassDefinitions = new List<DbStatusSourceClassDefinition>();
+
+			// TODO: Make attribute reader more generic, use AttributeRoles
+			Attributes[] attributes = new[]
+			                          {
+				                          Attributes.QualityConditionName,
+				                          Attributes.IssueCodeDescription,
+				                          Attributes.InvolvedObjects,
+				                          Attributes.IssueSeverity,
+				                          Attributes.IssueCode,
+				                          Attributes.IssueDescription,
+										  Attributes.IssueType
+			                          };
 
 			foreach (Table table in tables)
 			{
 				string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
 
-				sourceClasses.Add(Tuple.Create(table, defaultDefinitionQuery));
+				TableDefinition tableDefinition = table.GetDefinition();
+
+				WorkListStatusSchema statusSchema =
+					WorkListItemDatastore.CreateStatusSchema(tableDefinition);
+
+				IAttributeReader attributeReader =
+					WorkListItemDatastore.CreateAttributeReader(tableDefinition, attributes);
+
+				var sourceClassDef =
+					new DbStatusSourceClassDefinition(table, defaultDefinitionQuery, statusSchema)
+					{
+						AttributeReader = attributeReader
+					};
+
+				sourceClassDefinitions.Add(sourceClassDef);
 			}
 
-			var result =
-				new IssueItemRepository(sourceClasses, stateRepository, WorkListItemDatastore);
+			var result = new DbStatusWorkItemRepository(sourceClassDefinitions, stateRepository);
 
-			_msg.DebugStopTiming(watch, "Created issue work item repository");
+			_msg.DebugStopTiming(watch, "Created revision work item repository");
 
 			return result;
 		}

@@ -22,7 +22,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public static Uri GetImagePath(esriGeometryType? geometryType)
 		{
-			// todo daro introduce image for unkown type
+			// todo: daro introduce image for unkown type
 			//if (geometryType == null)
 			//{
 			//}
@@ -58,24 +58,6 @@ namespace ProSuite.AGP.Editing.Picker
 			return selection
 			       .GroupBy(classSelection => classSelection.ShapeDimension)
 			       .OrderBy(group => group.Key).SelectMany(fcs => fcs);
-		}
-
-		public static Geometry EnsureNonEmpty([NotNull] Geometry sketch, int tolerancePixel)
-		{
-			return IsSingleClick(sketch)
-				       ? CreateSinglePickGeometry(sketch, tolerancePixel)
-				       : sketch;
-		}
-
-		private static Geometry CreateSinglePickGeometry([NotNull] Geometry sketch,
-		                                                 int tolerancePixel)
-		{
-			MapPoint mapPoint =
-				GeometryFactory.CreatePoint(sketch.Extent.XMin,
-				                            sketch.Extent.YMin,
-				                            sketch.SpatialReference);
-
-			return ExpandGeometryByPixels(mapPoint, tolerancePixel);
 		}
 
 		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
@@ -193,6 +175,11 @@ namespace ProSuite.AGP.Editing.Picker
 			where T : IPickableItem
 		{
 			var ordered = OrderByGeometryDimension(candidates).ToList();
+
+			if (! ordered.Any())
+			{
+				pickerMode = null;
+			}
 
 			switch (pickerMode)
 			{

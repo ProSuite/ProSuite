@@ -1,8 +1,8 @@
-using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 
 namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 {

@@ -95,7 +95,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			await QueuedTask.Run(() =>
 			{
 				isSingleClickSketch =
-					ToolUtils.IsSingleClickSketch(sketchGeometry, GetSelectionTolerancePixels());
+					ToolUtils.IsSingleClickSketch(sketchGeometry);
 			});
 
 			if (isSingleClickSketch)

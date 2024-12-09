@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 

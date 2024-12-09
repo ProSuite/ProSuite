@@ -343,13 +343,17 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 			Stopwatch watch = _msg.DebugStartTiming();
 
+			string subFieldsBefore = filter.SubFields;
+
 			IQueryFilter tableSpecificFilter = AdaptFilterToErrorTable(filter);
 
 			var count = 0;
 			const bool recycle = true;
-			ICursor cursor = Table.Update(tableSpecificFilter, recycle);
+			ICursor cursor = null;
 			try
 			{
+				cursor = Table.Update(tableSpecificFilter, recycle);
+
 				for (IRow row = cursor.NextRow();
 				     row != null;
 				     row = cursor.NextRow())
@@ -383,7 +387,16 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			}
 			finally
 			{
-				ComUtils.ReleaseComObject(cursor);
+				if (cursor != null)
+				{
+					Marshal.ReleaseComObject(cursor);
+				}
+
+				// Side effect: For PostGIS tables the Search() method can change the SubFields
+				if (filter.SubFields != subFieldsBefore)
+				{
+					filter.SubFields = subFieldsBefore;
+				}
 			}
 
 			_msg.DebugStopTiming(watch,
@@ -400,15 +413,19 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			Stopwatch watch = _msg.DebugStartTiming("Deleting orphaned errors in {0}",
 			                                        DatasetName);
 
+			string subFieldsBefore = filter.SubFields;
+
 			IQueryFilter tableSpecificFilter = AdaptFilterToErrorTable(filter);
 
 			int fieldIndex = GetFieldIndex(AttributeRole.ErrorConditionId);
 
 			var count = 0;
 			const bool recycle = true;
-			ICursor cursor = Table.Update(tableSpecificFilter, recycle);
+			ICursor cursor = null;
 			try
 			{
+				cursor = Table.Update(tableSpecificFilter, recycle);
+
 				for (IRow row = cursor.NextRow();
 				     row != null;
 				     row = cursor.NextRow())
@@ -429,7 +446,16 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			}
 			finally
 			{
-				ComUtils.ReleaseComObject(cursor);
+				if (cursor != null)
+				{
+					ComUtils.ReleaseComObject(cursor);
+				}
+
+				// Side effect: For PostGIS tables the Search() method can change the SubFields
+				if (filter.SubFields != subFieldsBefore)
+				{
+					filter.SubFields = subFieldsBefore;
+				}
 			}
 
 			_msg.DebugStopTiming(watch, "Deleted {0} error(s)", count);

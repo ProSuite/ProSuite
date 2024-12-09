@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
-using ArcGIS.Desktop.Editing.Attributes;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
@@ -14,11 +14,12 @@ using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
-using Attribute = ArcGIS.Desktop.Editing.Attributes.Attribute;
 
 namespace ProSuite.AGP.Editing.DestroyAndRebuild;
 
@@ -28,12 +29,30 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 
 	private DestroyAndRebuildFeedback _feedback;
 
-	protected override Cursor SelectionCursorCore =>
-		ToolUtils.GetCursor(Resources.DestroyAndRebuildToolCursor);
-
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
 		return new SymbolizedSketchTypeBasedOnSelection(this);
+	}
+
+	protected override Cursor GetSelectionCursor()
+	{
+		return ToolUtils.CreateCursor(Resources.Arrow,
+		                              Resources.DestroyAndRebuildOverlay,
+		                              null);
+	}
+
+	protected override Cursor GetSelectionCursorLasso()
+	{
+		return ToolUtils.CreateCursor(Resources.Arrow,
+		                              Resources.DestroyAndRebuildOverlay,
+		                              Resources.Lasso);
+	}
+
+	protected override Cursor GetSelectionCursorPolygon()
+	{
+		return ToolUtils.CreateCursor(Resources.Arrow,
+		                              Resources.DestroyAndRebuildOverlay,
+		                              Resources.Polygon);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)
@@ -127,76 +146,94 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 			return true; // startSelectionPhase = true;
 		}
 
-		(BasicFeatureLayer layer, List<long> oids) = selectionByLayer.FirstOrDefault();
-
-		if (oids.Count == 0)
+		await QueuedTaskUtils.Run(async () =>
 		{
-			_msg.Debug("no selection");
-			_feedback.Clear();
-
-			return true; // startSelectionPhase = true;
-		}
-
-		long selectedOid = oids.FirstOrDefault();
-
-		try
-		{
-			Inspector inspector = new Inspector();
-			await inspector.LoadAsync(layer, selectedOid);
-			inspector.Shape = GeometryUtils.Simplify(geometry);
-
-			Attribute subtype = inspector.SubtypeAttribute;
-
-			string subtypeName = subtype?.CurrentSubtype != null
-				                     ? subtype.CurrentSubtype.Name
-				                     : layer.Name;
-
-			// note: TooltipHeading is null here.
-			var operation = new EditOperation
-			                {
-				                Name = $"Destroy and Rebuild {subtypeName}",
-				                SelectModifiedFeatures = true
-			                };
-
-			// todo daro move to base? make utils?
-			operation.Modify(inspector);
-
-			if (operation.IsEmpty)
-			{
-				_msg.Debug($"{Caption}: edit operation is empty");
-				return false;
-			}
-
-			bool succeed = false;
 			try
 			{
-				succeed = await operation.ExecuteAsync();
-			}
-			catch (Exception e)
-			{
-				_msg.Debug($"{Caption}: edit operation threw an exception", e);
-			}
-			finally
-			{
-				if (succeed)
-				{
-					_msg.Info($"Updated feature in {layer.Name} ({subtypeName}) ID: {selectedOid}");
-				}
-				else
-				{
-					_msg.Debug($"{Caption}: edit operation failed");
-				}
-			}
+				var applicableSelection =
+					SelectionUtils.GetApplicableSelectedFeatures(
+						selectionByLayer, CanSelectFromLayer);
 
-			_feedback.Clear();
+				List<Feature> selectedFeatures = applicableSelection.Values.FirstOrDefault();
 
-			LogPromptForSelection();
-			return true; // startSelectionPhase = true;
-		}
-		catch (Exception ex)
+				if (selectedFeatures == null || selectedFeatures.Count == 0)
+				{
+					_msg.Debug("no applicable selection");
+					_feedback.Clear();
+
+					return true; // startSelectionPhase = true;
+				}
+
+				BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
+				Feature originalFeature = selectedFeatures.First();
+
+				await StoreUpdatedFeature(featureLayer, originalFeature, geometry);
+
+				_feedback.Clear();
+
+				LogPromptForSelection();
+				return true; // startSelectionPhase = true;
+			}
+			catch (Exception ex)
+			{
+				_msg.Error(ex.Message, ex);
+				return true; // startSelectionPhase = true;
+			}
+		});
+
+		return true; // startSelectionPhase = true;
+	}
+
+	private async Task StoreUpdatedFeature([NotNull] BasicFeatureLayer featureLayer,
+	                                       [NotNull] Feature originalFeature,
+	                                       [NotNull] Geometry sketchGeometry)
+	{
+		// Prevent invalid Z values and other non-simple geometries:
+		Geometry simplifiedSketch =
+			Assert.NotNull(GeometryUtils.Simplify(sketchGeometry), "Geometry is null");
+
+		Subtype featureSubtype = GdbObjectUtils.GetSubtype(originalFeature);
+
+		string subtypeName = featureSubtype != null
+			                     ? featureSubtype.GetName()
+			                     : featureLayer.Name;
+
+		// note: TooltipHeading is null here.
+		var operation = new EditOperation
+		                {
+			                Name = $"Destroy and Rebuild {subtypeName}",
+			                SelectModifiedFeatures = true
+		                };
+
+		// todo: daro move to base? make utils?
+		operation.Modify(featureLayer, originalFeature.GetObjectID(), simplifiedSketch);
+
+		if (operation.IsEmpty)
 		{
-			_msg.Error(ex.Message, ex);
-			return true; // startSelectionPhase = true;
+			_msg.Debug($"{Caption}: edit operation is empty");
+			return;
+		}
+
+		bool succeed = false;
+		try
+		{
+			succeed = await operation.ExecuteAsync();
+		}
+		catch (Exception e)
+		{
+			_msg.Debug($"{Caption}: edit operation threw an exception", e);
+		}
+		finally
+		{
+			if (succeed)
+			{
+				_msg.Info(
+					$"Updated feature in {featureLayer.Name} ({subtypeName}) ID: {originalFeature.GetObjectID()}");
+			}
+			else
+			{
+				_msg.Debug($"{Caption}: edit operation failed");
+			}
 		}
 	}
 
@@ -228,5 +265,34 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 	protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
 	{
 		return layer is FeatureLayer;
+	}
+
+	protected override void StartConstructionPhaseCore()
+	{
+		if (QueuedTask.OnWorker)
+		{
+			ResetSketchVertexSymbolOptions();
+		}
+		else
+		{
+			QueuedTask.Run(ResetSketchVertexSymbolOptions);
+		}
+	}
+
+	protected override void StartSelectionPhaseCore()
+	{
+		if (QueuedTask.OnWorker)
+		{
+			SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+			SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+		}
+		else
+		{
+			QueuedTask.Run(() =>
+			{
+				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+			});
+		}
 	}
 }

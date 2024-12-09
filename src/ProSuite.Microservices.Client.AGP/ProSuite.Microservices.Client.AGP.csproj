@@ -66,6 +66,7 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.AGP\ProSuite.DomainModel.AGP.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
+    <ProjectReference Include="..\ProSuite.GIS.Geometry.AGP\ProSuite.GIS.Geometry.AGP.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.Client.GrpcNet\ProSuite.Microservices.Client.GrpcNet.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
   </ItemGroup>

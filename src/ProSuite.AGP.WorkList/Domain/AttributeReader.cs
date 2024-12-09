@@ -89,8 +89,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		[CanBeNull]
-		private string GetName(Attributes attribute)
+		public string GetName(Attributes attribute)
 		{
 			return _fieldNameByIssueAttribute.TryGetValue(attribute, out string fieldName)
 				       ? fieldName
@@ -165,6 +164,11 @@ namespace ProSuite.AGP.WorkList.Domain
 						$"An error occurred parsing involved tables from issue item {forItem}", e);
 				}
 			}
+		}
+
+		public IList<InvolvedTable> ParseInvolved(string involvedString, bool hasGeometry)
+		{
+			return IssueUtils.ParseInvolvedTables(involvedString, hasGeometry);
 		}
 
 		[CanBeNull]

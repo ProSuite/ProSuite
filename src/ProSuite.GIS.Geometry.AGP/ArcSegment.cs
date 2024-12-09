@@ -17,7 +17,7 @@ public abstract class ArcSegment : ISegment
 	{
 		ProSegment = proSegment;
 
-		if (arcSpatialReference == null)
+		if (arcSpatialReference == null && proSegment.SpatialReference != null)
 		{
 			arcSpatialReference = new ArcSpatialReference(proSegment.SpatialReference);
 		}

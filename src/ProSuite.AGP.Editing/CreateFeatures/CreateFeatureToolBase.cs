@@ -90,26 +90,19 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			return SketchGeometryType.Rectangle;
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			_targetFeatureClass = GetCurrentTargetClass(out _);
 
 			ActiveTemplateChangedEvent.Subscribe(OnActiveTemplateChanged);
 
-			base.OnToolActivatingCore();
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			ActiveTemplateChangedEvent.Unsubscribe(OnActiveTemplateChanged);
 			base.OnToolDeactivateCore(hasMapViewChanged);
-		}
-
-		protected override CancelableProgressorSource GetProgressorSource()
-		{
-			// Disable the progressor because creating a new feature is typically fast,
-			// and it conflicts with the possible error message.
-			return null;
 		}
 
 		protected override EditingTemplate GetSketchTemplate()
@@ -124,6 +117,27 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			_msg.InfoFormat(
 				"Draw one or more points. Finish the sketch to create the individual point features in '{0}'.",
 				layerName);
+		}
+
+		protected override async Task HandleEscapeAsync()
+		{
+			try
+			{
+				Geometry sketch = await GetCurrentSketchAsync();
+
+				if (sketch is { IsEmpty: true } && MapUtils.HasSelection(ActiveMapView))
+				{
+					await QueuedTask.Run(ClearSelection);
+				}
+				else
+				{
+					await ClearSketchAsync();
+				}
+			}
+			catch (Exception ex)
+			{
+				Gateway.ShowError(ex, _msg);
+			}
 		}
 
 		#region Overrides of ConstructionToolBase

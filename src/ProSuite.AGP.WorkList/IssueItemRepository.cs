@@ -15,6 +15,7 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.WorkList
 {
+	[Obsolete("Use DbStatusWorkItemRepository")]
 	public class IssueItemRepository : GdbItemRepository
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -40,7 +41,7 @@ namespace ProSuite.AGP.WorkList
 		                           [CanBeNull] IWorkListItemDatastore tableSchema = null)
 			: base(tableWithDefinitionQuery, workItemStateRepository, tableSchema) { }
 
-		public Func<long,long,Row,IWorkItem> CreateItemFunc { get; set; }
+		public Func<long, long, Row, IWorkItem> CreateItemFunc { get; set; }
 
 		protected override WorkListStatusSchema CreateStatusSchemaCore(TableDefinition definition)
 		{
@@ -85,21 +86,21 @@ namespace ProSuite.AGP.WorkList
 				       : new StatusOnlyAttributeReader(definition);
 		}
 
-		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
+		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
 		{
 			long id = GetNextOid(row);
 
-			IAttributeReader reader = source.AttributeReader;
+			IAttributeReader reader = sourceClass.AttributeReader;
 
 			IWorkItem item;
 			if (CreateItemFunc != null)
 			{
-				item = CreateItemFunc(id, source.GetUniqueTableId(), row);
+				item = CreateItemFunc(id, sourceClass.GetUniqueTableId(), row);
 			}
 			else
 			{
-				item = new IssueItem(id, source.GetUniqueTableId(), row);
-				reader?.ReadAttributes(row, item, source);
+				item = new IssueItem(id, sourceClass.GetUniqueTableId(), row);
+				reader?.ReadAttributes(row, item, sourceClass);
 			}
 
 			return RefreshState(item);
@@ -123,6 +124,11 @@ namespace ProSuite.AGP.WorkList
 			// sourceClass.CreateWhereClause(statusFilter).
 		}
 
+		public override bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
+		{
+			throw new NotImplementedException();
+		}
+
 		protected override void RefreshCore(IWorkItem item,
 		                                    ISourceClass sourceClass,
 		                                    Row row)
@@ -144,7 +150,7 @@ namespace ProSuite.AGP.WorkList
 
 				string description = GetOperationDescription(item);
 
-				_msg.Info($"{description}, {item.Proxy}");
+				_msg.Info($"{description}, {item.GdbRowProxy}");
 
 				var operation = new EditOperation { Name = description };
 				operation.Callback(context =>
@@ -155,7 +161,7 @@ namespace ProSuite.AGP.WorkList
 				}, table);
 
 				// todo daro CancelMessage, AbortMessage
-				string fieldName = databaseSourceClass.StatusFieldName;
+				string fieldName = databaseSourceClass.StatusSchema.FieldName;
 				object value = databaseSourceClass.GetValue(item.Status);
 
 				operation.Modify(table, item.ObjectID, fieldName, value);
@@ -164,7 +170,7 @@ namespace ProSuite.AGP.WorkList
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error set status of work item {item.OID}, {item.Proxy}", e);
+				_msg.Error($"Error set status of work item {item.OID}, {item.GdbRowProxy}", e);
 				throw;
 			}
 			finally
@@ -215,7 +221,38 @@ namespace ProSuite.AGP.WorkList
 				forItem.Status = ((DatabaseSourceClass) source).GetStatus(fromRow);
 			}
 
+			public IList<InvolvedTable> ParseInvolved(string involvedString, bool hasGeometry)
+			{
+				throw new NotImplementedException();
+			}
+
+			public string GetName(Attributes attribute)
+			{
+				throw new NotImplementedException();
+			}
+
 			#endregion
+		}
+
+		public override void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
+		{
+			TableSchema = tableSchemaInfo;
+
+			foreach (ISourceClass sourceClass in SourceClasses)
+			{
+				Table table = OpenTable(sourceClass);
+
+				if (table != null)
+				{
+					sourceClass.AttributeReader = CreateAttributeReaderCore(
+						table.GetDefinition(), tableSchemaInfo);
+				}
+				else
+				{
+					_msg.Warn(
+						$"Cannot prepare table schema due to missing source table {sourceClass.Name}");
+				}
+			}
 		}
 	}
 }

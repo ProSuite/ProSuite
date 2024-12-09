@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -13,7 +14,7 @@ using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Input;
@@ -32,7 +33,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private List<Operation> _sketchOperations;
 
-		private bool _intermittentSelectionPhase;
+		private readonly IntermittentSelectionPhase _intermittentSelectionPhase = new();
 
 		protected ConstructionToolBase()
 		{
@@ -99,32 +100,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				await LogLastSketchVertexZ();
 			}
 
-			return await QueuedTaskUtils.Run(OnSketchModifiedCore);
-		}
-
-		protected override Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
-		{
-			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
-			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
-			// NOTE daro: Pro 3.3 this method is called e.g. on 'Clear Selection' or select row in attribute table. So the above
-			//			  note is not correct anymore.
-
-			// This method is presumably called in the following situation only:
-			// MapTool.UseSelection is true and your MapTool does sketching (i.e. i used SketchType = SketchGeometryType.Line)
-			// After start sketching and shift is pressed to change the selection and then the selection is changed:
-			// https://community.esri.com/t5/arcgis-pro-sdk-questions/maptool-onselectionchangedasync-not-triggered/td-p/1199664
-
-			if (_intermittentSelectionPhase) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
-			{
-				return Task.FromResult(true);
-			}
-
-			if (CanUseSelection(SelectionUtils.GetSelection<BasicFeatureLayer>(e.Selection)))
-			{
-				StartSketchPhase();
-			}
-
-			return Task.FromResult(true);
+			// Does it make any difference what the return value is?
+			return await OnSketchModifiedAsyncCore();
 		}
 
 		#endregion
@@ -133,24 +110,40 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnSelectionPhaseStarted()
 		{
+			if (QueuedTask.OnWorker)
+			{
+				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+			}
+			else
+			{
+				QueuedTask.Run(() =>
+				{
+					SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+					SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+				});
+			}
+
 			IsInSketchPhase = false;
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
-			_msg.VerboseDebug(() => "OnToolActivatingCore");
+			_msg.VerboseDebug(() => "OnToolActivatingCoreAsync");
+
+			_intermittentSelectionPhase.Reset();
 
 			if (! RequiresSelection)
 			{
 				StartSketchPhase();
 			}
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			RememberSketch();
-
-			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
 		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -184,91 +177,133 @@ namespace ProSuite.AGP.Editing.OneClick
 			// log is written in LogEnteringSketchMode
 		}
 
-		protected override void AfterSelection(IList<Feature> selectedFeatures,
-		                                       CancelableProgressor progressor)
+		protected override async void AfterSelection(IList<Feature> selectedFeatures,
+		                                             CancelableProgressor progressor)
 		{
-			if (CanStartSketchPhase(selectedFeatures))
+			// Release latch. The tool might not get the shift released when the sift key was
+			// released while picker window was visible.
+			if (_intermittentSelectionPhase.Running && ! KeyboardUtils.IsShiftDown())
+			{
+				_intermittentSelectionPhase.Stop();
+			}
+
+			if (await CanStartSketchPhaseAsync(selectedFeatures))
 			{
 				StartSketchPhase();
+
+				if (await TryApplySketch(_editSketchBackup))
+				{
+					_editSketchBackup = null;
+				}
 			}
 		}
 
-		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
+		protected override async Task ShiftPressedCoreAsync()
 		{
-			_msg.VerboseDebug(() => "OnKeyDownCore");
-
-			if (KeyboardUtils.IsShiftKey(k.Key))
+			if (! RequiresSelection)
 			{
-				if (_intermittentSelectionPhase)
-				{
-					// This is called repeatedly while keeping the shift key pressed
-					return;
-				}
+				return;
+			}
 
-				_intermittentSelectionPhase = true;
+			// This is called repeatedly while keeping the shift key pressed.
+			// Return if intermittent selection phase is running.
+			if (_intermittentSelectionPhase.Running)
+			{
+				return;
+			}
 
+			try
+			{
 				// TODO: How can we not destroy the undo stack?
-
 				OperationManager operationManager = ActiveMapView.Map.OperationManager;
 
 				// It is technically possible to put back the operations by calling operationManager.AddUndoOperation(). 
 				// But whether we can make them work when actually executed requires more tests.. and this is probably not the good way to do it!
 				_sketchOperations =
 					operationManager.FindUndoOperations(operation =>
-						                                    operation.Category ==
-						                                    "SketchOperations");
+															operation.Category ==
+															"SketchOperations");
 
 				// By backing up and re-setting the edit sketch the individual operations that made up the 
 				// sketch are lost.
-				// todo daro await
-				_editSketchBackup = GetCurrentSketchAsync().Result;
+				_editSketchBackup = await GetCurrentSketchAsync();
 
 				// TODO: Only clear the sketch and switch to selection phase if REALLY required
 				// (i.e. because a rectangle sketch must be drawn on MouseMove)
-				ClearSketchAsync();
+				await ClearSketchAsync();
 
 				StartSelectionPhase();
 			}
+			finally
+			{
+				_intermittentSelectionPhase.Start();
+			}
+		}
+
+		protected override async Task SetupLassoSketchAsync()
+		{
+			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
+			{
+				await base.SetupLassoSketchAsync();
+			}
+			// Else do nothing: no lasso in construction sketch phase.
+		}
+
+		protected override async Task SetupPolygonSketchAsync()
+		{
+			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
+			{
+				await base.SetupPolygonSketchAsync();
+			}
+			// Else do nothing: no polygon sketch cursor in construction sketch phase.
+		}
+
+		protected override async Task ShiftReleasedCoreAsync()
+		{
+			_intermittentSelectionPhase.Stop();
+
+			// todo: daro Use CanStartSketchPhase?
+			if (await ViewUtils.TryAsync(QueuedTask.Run(() => CanUseSelection(ActiveMapView)), _msg,
+			                             suppressErrorMessageBox: true))
+			{
+				StartSketchPhase();
+
+				if (await TryApplySketch(_editSketchBackup))
+				{
+					_editSketchBackup = null;
+				}
+			}
+		}
+
+		private async Task<bool> TryApplySketch(Geometry sketch)
+		{
+			if (sketch is not { IsEmpty: false } || ! CanSetSketch(sketch))
+			{
+				return false;
+			}
+
+			await SetCurrentSketchAsync(sketch);
+
+			// This puts back the edit operations in the undo stack, but when clicking on the top one, the sketch 
+			// is cleared and undoing any previous operation has no effect any more.
+			ActiveMapView.Map.OperationManager.ClearUndoCategory("SketchOperations");
+
+			if (_sketchOperations == null)
+			{
+				return true;
+			}
+
+			foreach (Operation operation in _sketchOperations)
+			{
+				ActiveMapView.Map.OperationManager.AddUndoOperation(operation);
+			}
+
+			return true;
 		}
 
 		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{
-			// todo daro more ViewUtils
 			_msg.VerboseDebug(() => $"HandleKeyUpCoreAsync ({Caption})");
-
-			if (KeyboardUtils.IsShiftKey(args.Key))
-			{
-				_intermittentSelectionPhase = false;
-
-				Task<bool> task = QueuedTask.Run(() => CanUseSelection(ActiveMapView));
-
-				bool canUseSelection =
-					await ViewUtils.TryAsync(task, _msg, suppressErrorMessageBox: true);
-
-				if (canUseSelection)
-				{
-					StartSketchPhase();
-
-					if (_editSketchBackup != null && CanSetSketch(_editSketchBackup))
-					{
-						await ActiveMapView.SetCurrentSketchAsync(_editSketchBackup);
-
-						// This puts back the edit operations in the undo stack, but when clicking on the top one, the sketch 
-						// is cleared and undoing any previous operation has no effect any more.
-						ActiveMapView.Map.OperationManager.ClearUndoCategory("SketchOperations");
-
-						if (_sketchOperations != null)
-						{
-							foreach (Operation operation in _sketchOperations)
-							{
-								ActiveMapView.Map.OperationManager.AddUndoOperation(operation);
-							}
-						}
-					}
-				}
-
-				_editSketchBackup = null;
-			}
 
 			if (args.Key == _keyFinishSketch)
 			{
@@ -307,41 +342,39 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task HandleEscapeAsync()
 		{
-			Task task = QueuedTask.Run(
-				() =>
-				{
-					if (IsInSketchMode)
+			await ViewUtils.TryAsync(
+				QueuedTask.Run(
+					async () =>
 					{
-						// if sketch is empty, also remove selection and return to selection phase
-
-						if (! RequiresSelection)
+						if (IsInSketchMode)
 						{
-							// remain in sketch mode, just reset the sketch
-							ResetSketch();
-						}
-						else
-						{
-							// todo daro await
-							Geometry sketch = GetCurrentSketchAsync().Result;
+							// if sketch is empty, also remove selection and return to selection phase
 
-							if (sketch != null && ! sketch.IsEmpty)
+							if (! RequiresSelection)
 							{
-								ResetSketch();
+								// remain in sketch mode, just reset the sketch
+								await ResetSketchAsync();
 							}
 							else
 							{
-								ClearSelection();
+								Geometry sketch = await GetCurrentSketchAsync();
+
+								if (sketch is { IsEmpty: false })
+								{
+									await ResetSketchAsync();
+								}
+								else
+								{
+									ClearSelection();
+								}
 							}
 						}
-					}
-					else
-					{
-						ClearSketchAsync();
-						ClearSelection();
-					}
-				});
-
-			await ViewUtils.TryAsync(task, _msg);
+						else
+						{
+							await ClearSketchAsync();
+							ClearSelection();
+						}
+					}), _msg);
 		}
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
@@ -357,6 +390,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				//LogPromptForSelection();
 				StartSelectionPhase();
+			}
+			else
+			{
+				StartSketchPhase();
 			}
 
 			// TODO: virtual RefreshFeedbackCoreAsync(), override in AdvancedReshape
@@ -401,9 +438,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			return null;
 		}
 
-		protected virtual bool OnSketchModifiedCore()
+		protected virtual Task<bool> OnSketchModifiedAsyncCore()
 		{
-			return true;
+			return Task.FromResult(true);
 		}
 
 		protected virtual bool CanStartSketchPhaseCore(IList<Feature> selectedFeatures)
@@ -435,9 +472,20 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			UseSnapping = true;
 			CompleteSketchOnMouseUp = false;
+
 			SetSketchType(GetSketchGeometryType());
 
 			SetCursor(SketchCursor);
+
+			// todo: daro to Utils?
+			if (QueuedTask.OnWorker)
+			{
+				ResetSketchVertexSymbolOptions();
+			}
+			else
+			{
+				QueuedTask.Run(ResetSketchVertexSymbolOptions);
+			}
 
 			EditingTemplate relevanteTemplate = GetSketchTemplate();
 
@@ -480,28 +528,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		//// todo daro drop
-		///// <summary>
-		///// Determines whether the provided selection can be used by this tool.
-		///// </summary>
-		///// <param name="selection"></param>
-		///// <returns></returns>
-		//private bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection)
-		//{
-		//	var mapMemberDictionary = new Dictionary<MapMember, List<long>>(selection.Count);
-
-		//	foreach (var keyValuePair in selection)
-		//	{
-		//		mapMemberDictionary.Add(keyValuePair.Key, keyValuePair.Value);
-		//	}
-
-		//	return CanUseSelection(mapMemberDictionary);
-		//}
-
-		private bool CanStartSketchPhase(IList<Feature> selectedFeatures)
+		private async Task<bool> CanStartSketchPhaseAsync(IList<Feature> selectedFeatures)
 		{
 			if (KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
 			    KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true))
+			{
+				return false;
+			}
+
+			if (! await ViewUtils.TryAsync(QueuedTask.Run(() => CanUseSelection(ActiveMapView)), _msg,
+			                               suppressErrorMessageBox: true))
 			{
 				return false;
 			}
@@ -513,27 +549,18 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Geometry currentSketch = await GetCurrentSketchAsync();
 
-			if (currentSketch != null && ! currentSketch.IsEmpty)
+			if (currentSketch is { IsEmpty: false })
 			{
+				RememberSketch();
+
 				await ClearSketchAsync();
-				OnSketchModifiedCore();
+
+				await OnSketchModifiedAsyncCore();
 			}
 
 			OnSketchResetCore();
 
 			await StartSketchAsync();
-		}
-
-		private void ResetSketch()
-		{
-			RememberSketch();
-
-			ClearSketchAsync();
-			OnSketchModifiedCore();
-
-			OnSketchResetCore();
-
-			StartSketchAsync();
 		}
 
 		protected void RememberSketch(Geometry knownSketch = null)
@@ -545,7 +572,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			var sketch = knownSketch ?? GetCurrentSketchAsync().Result;
 
-			if (sketch != null && ! sketch.IsEmpty)
+			if (sketch is { IsEmpty: false })
 			{
 				_previousSketch = sketch;
 			}
@@ -603,16 +630,15 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		private async Task<bool> LogLastSketchVertexZ()
+		private async Task LogLastSketchVertexZ()
 		{
 			Geometry sketch = await GetCurrentSketchAsync();
 
 			if (! sketch.HasZ)
 			{
-				return false;
+				return;
 			}
 
-			bool result = false;
 			await QueuedTaskUtils.Run(() =>
 			{
 				MapPoint lastPoint = GetLastPoint(sketch);
@@ -620,17 +646,14 @@ namespace ProSuite.AGP.Editing.OneClick
 				if (lastPoint != null)
 				{
 					_msg.InfoFormat("Vertex added, Z={0:N2}", lastPoint.Z);
-					result = true;
 				}
 			});
-
-			return result;
 		}
 
 		private static MapPoint GetLastPoint(Geometry sketch)
 		{
 			MapPoint lastPoint = null;
-			;
+
 			if (sketch is Multipart multipart)
 			{
 				ReadOnlyPointCollection points = multipart.Points;
@@ -655,6 +678,28 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			return lastPoint;
+		}
+
+		private class IntermittentSelectionPhase
+		{
+			public bool Running { get; private set; }
+
+			public void Start()
+			{
+				Assert.False(Running, "intermittent selection phase is already running.");
+				Running = true;
+			}
+
+			public void Stop()
+			{
+				Assert.True(Running, "intermittent selection phase has not been started.");
+				Running = false;
+			}
+
+			public void Reset()
+			{
+				Running = false;
+			}
 		}
 	}
 }

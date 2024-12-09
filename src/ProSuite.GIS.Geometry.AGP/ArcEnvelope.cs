@@ -24,7 +24,9 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public ISpatialReference SpatialReference
 		{
-			get => new ArcSpatialReference(_proEnvelope.SpatialReference);
+			get => _proEnvelope.SpatialReference == null
+				       ? null
+				       : new ArcSpatialReference(_proEnvelope.SpatialReference);
 			set => throw new NotImplementedException();
 		}
 

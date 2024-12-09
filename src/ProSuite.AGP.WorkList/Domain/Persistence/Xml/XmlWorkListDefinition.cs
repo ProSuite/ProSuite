@@ -17,6 +17,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		[XmlElement("XmlFile")]
 		public string Path { get; set; }
 
+		// TODO: AreaOfInterest: Polygon (and move to JSON)
+
 		[XmlArray("Workspaces")]
 		[XmlArrayItem(typeof(XmlWorkListWorkspace), ElementName = "Workspace")]
 		public List<XmlWorkListWorkspace> Workspaces { get; set; }

@@ -13,6 +13,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.AdvancedReshapeReshape;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
@@ -37,7 +38,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		// - Make sure feedback microservices are called only once
 		// - Move to OnKeyUp in reshape side toggle
 		// - Options
-		// - Circumcision dialog
+		// - Circumcision dialog6
 		// - Reshape size change logging - use abbreviations for display units
 		// - R(estore) sketch
 		// - Connected lines reshape
@@ -45,27 +46,40 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		[CanBeNull] private AdvancedReshapeFeedback _feedback;
 		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
-		private ReshapeToolOptions _advancedReshapeToolOptions;
+
+		protected ReshapeToolOptions _advancedReshapeToolOptions;
+
+		[CanBeNull]
 		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
-		//TODO Feedback (Circles)
 
 		private Task<bool> _updateFeedbackTask;
 
 		private bool _nonDefaultSideMode;
 		private CancellationTokenSource _cancellationTokenSource;
 		private const Key _keyToggleNonDefaultSide = Key.S;
+		private const Key _keyToggleMoveEndJunction = Key.M; //Is this needed?
+
+		protected virtual string OptionsFileName => "AdvancedReshapeToolOptions.xml";
+
+		[CanBeNull]
+		protected virtual string CentralConfigDir => null;
+
+		/// <summary>
+		/// By default, the local configuration directory shall be in
+		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// </summary>
+		protected virtual string LocalConfigDir
+			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				AppDataFolder.Roaming, "ToolDefaults");
 
 		protected AdvancedReshapeToolBase()
 		{
 			FireSketchEvents = true;
 
-			// This is our property:
 			RequiresSelection = true;
 
-			SelectionCursor = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursorShift);
-
 			HandledKeys.Add(_keyToggleNonDefaultSide);
+			HandledKeys.Add(_keyToggleMoveEndJunction);
 		}
 
 		protected abstract IAdvancedReshapeService MicroserviceClient { get; }
@@ -130,11 +144,24 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return layer is FeatureLayer;
 		}
 
-		protected override async void OnToolActivatingCore()
+		protected override async Task OnToolActivatingCoreAsync()
 		{
-			_feedback = new AdvancedReshapeFeedback();
+			InitializeOptions();
+			_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
 
-			base.OnToolActivatingCore();
+			await base.OnToolActivatingCoreAsync();
+		}
+
+		protected void InitializeOptions()
+		{
+			_settingsProvider = new OverridableSettingsProvider<PartialReshapeToolOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
+
+			PartialReshapeToolOptions localConfiguration, centralConfiguration;
+			_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
+
+			_advancedReshapeToolOptions =
+				new ReshapeToolOptions(centralConfiguration, localConfiguration);
 		}
 
 		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
@@ -167,18 +194,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_settingsProvider?.StoreLocalConfiguration(_advancedReshapeToolOptions.LocalOptions);
+
 			_symbolizedSketch?.Dispose();
 			_feedback?.Clear();
 			_feedback = null;
 
 			base.OnToolDeactivateCore(hasMapViewChanged);
-		}
-
-		protected override CancelableProgressorSource GetProgressorSource()
-		{
-			// Disable the progressor because reshaping is typically fast,
-			// and the users potentially want to continue working already.
-			return null;
 		}
 
 		protected override SketchGeometryType GetSketchGeometryType()
@@ -191,16 +213,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return SketchGeometryType.Rectangle;
 		}
 
-		protected override async Task<bool> OnSketchModifiedAsync()
+		protected override async Task<bool> OnSketchModifiedAsyncCore()
 		{
-			_msg.VerboseDebug(() => "OnSketchModifiedAsync");
+			_msg.VerboseDebug(() => "OnSketchModifiedAsyncCore");
 
-			// Does it make any difference what the return value is?
-			bool result = await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
-
-			result &= await base.OnSketchModifiedAsync();
-
-			return result;
+			return await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
 		}
 
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
@@ -224,6 +241,28 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					}
 
 					_updateFeedbackTask = UpdateFeedbackAsync(_nonDefaultSideMode);
+
+					await _updateFeedbackTask;
+				}
+
+				if (args.Key == _keyToggleMoveEndJunction)
+				{
+					_advancedReshapeToolOptions.MoveOpenJawEndJunction =
+						! _advancedReshapeToolOptions.MoveOpenJawEndJunction;
+
+					_updateFeedbackTask = UpdateFeedbackAsync(_nonDefaultSideMode);
+
+					bool currentState = _advancedReshapeToolOptions.MoveOpenJawEndJunction;
+					if (currentState)
+					{
+						_msg.Info("Enabled move end junction option for Y-Reshape");
+					}
+					else
+					{
+						_msg.Info("Disabled move end junction option for Y-Reshape");
+					}
+
+
 
 					await _updateFeedbackTask;
 				}
@@ -346,7 +385,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 					ReshapeResult result = MicroserviceClient.Reshape(
 						selection, polyline, potentiallyAffectedFeatures, true, true,
-						_nonDefaultSideMode, _cancellationTokenSource.Token);
+						_nonDefaultSideMode, _cancellationTokenSource.Token,
+						_advancedReshapeToolOptions.MoveOpenJawEndJunction);
 
 					if (result == null)
 					{
@@ -585,8 +625,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			[NotNull] Polyline sketchLine,
 			[NotNull] IList<Feature> polylineSelection)
 		{
-			// TODO: check options (allow/disallow)
-
 			MapPoint endPoint = null;
 
 			if (polylineSelection.Count == 1)
@@ -632,6 +670,49 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		public void SetSketchSymbol(CIMSymbolReference symbolReference)
 		{
 			SketchSymbol = symbolReference;
+		}
+
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
 		}
 	}
 }
