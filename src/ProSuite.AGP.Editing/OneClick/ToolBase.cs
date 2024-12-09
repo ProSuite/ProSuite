@@ -71,6 +71,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected virtual bool AllowNoSelection => false;
 
+	/// Whether the required selection can only contain selectable features.
+	protected bool SelectOnlySelectableFeatures { get; init; } = true;
+
 	#region abstract
 	
 	protected abstract void LogPromptForSelection();
@@ -724,7 +727,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			return false;
 		}
 
-		if (! layer.IsSelectable)
+		if (SelectOnlySelectableFeatures && ! layer.IsSelectable)
 		{
 			NotificationUtils.Add(notifications, $"Layer {layerName} not selectable");
 			return false;

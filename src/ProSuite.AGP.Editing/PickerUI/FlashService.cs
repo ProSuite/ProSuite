@@ -15,7 +15,7 @@ using Polygon = ArcGIS.Core.Geometry.Polygon;
 
 namespace ProSuite.AGP.Editing.PickerUI;
 
-public class FlashService : IDisposable /*, IFlashService*/
+public class FlashService : IDisposable
 {
 	private readonly Dictionary<string, IFlashSymbol> _symbols;
 	private readonly List<IDisposable> _overlays = new();
