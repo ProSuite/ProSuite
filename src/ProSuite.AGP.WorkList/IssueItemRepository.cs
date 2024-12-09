@@ -226,6 +226,11 @@ namespace ProSuite.AGP.WorkList
 				throw new NotImplementedException();
 			}
 
+			public string GetName(Attributes attribute)
+			{
+				throw new NotImplementedException();
+			}
+
 			#endregion
 		}
 
