@@ -4110,11 +4110,11 @@ namespace ProSuite.QA.Tests.Test
 		                                          ICollection<TrDefinitionCase>
 			                                          trCases)
 		{
-			trCases.Add(new TrDefinitionCase(typeof(TrSpatialJoin), 0,
+			trCases.Add(new TrDefinitionCase(typeof(TrTableAppend), 0,
 			                                 new object[]
-			                                 {
+			                                 {new object[]{
 				                                 model.GetPolygonDataset(),
-				                                 model.GetPolygonDataset()
+				                                 model.GetPolygonDataset()}
 											 }));
 		}
 
