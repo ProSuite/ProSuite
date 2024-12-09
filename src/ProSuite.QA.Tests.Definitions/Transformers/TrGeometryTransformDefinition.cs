@@ -10,15 +10,21 @@ namespace ProSuite.QA.Tests.Transformers
 	[UsedImplicitly]
 	public abstract class TrGeometryTransformDefinition : AlgorithmDefinition
 	{
-		protected TrGeometryTransformDefinition([NotNull] IFeatureClassSchemaDef fc,
+		[NotNull]
+		public IFeatureClassSchemaDef FeatureClass { get; }
+
+		public ProSuiteGeometryType DerivedShapeType { get; }
+		public ISpatialReferenceDef DerivedSpatialReference { get; }
+
+		protected TrGeometryTransformDefinition([NotNull] IFeatureClassSchemaDef featureClass,
 		                                        ProSuiteGeometryType derivedShapeType,
 		                                        ISpatialReferenceDef derivedSpatialReference = null)
-			: base(new List<ITableSchemaDef> { fc })
+			: base(new List<ITableSchemaDef> { featureClass })
 		{
-			GeometryType = derivedShapeType;
+			FeatureClass = featureClass;
+			DerivedShapeType = derivedShapeType;
+			DerivedSpatialReference = derivedSpatialReference;
 		}
-
-		public ProSuiteGeometryType GeometryType { get; }
 
 		[TestParameter]
 		[DocTr(nameof(DocTrStrings.TrGeometryTransform_Attributes))]
