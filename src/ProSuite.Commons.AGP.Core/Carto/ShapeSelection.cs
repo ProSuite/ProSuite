@@ -101,7 +101,7 @@ public class ShapeSelection : IShapeSelection
 			partIndex = 0;
 		}
 
-		return _blocks.ContainsVertex(partIndex, vertexIndex);
+		return _blocks.IsSelected(partIndex, vertexIndex);
 	}
 
 	public ShapeSelectionState IsPartSelected(int partIndex)
@@ -116,13 +116,13 @@ public class ShapeSelection : IShapeSelection
 		{
 			// outside world: a multipoint's points are its parts
 			// inside representation: all points in part 0 (for efficiency)
-			return _blocks.ContainsVertex(0, partIndex)
+			return _blocks.IsSelected(0, partIndex)
 				       ? ShapeSelectionState.Entirely
 				       : ShapeSelectionState.Not;
 		}
 
 		int partVertexCount = GetVertexCount(Shape, partIndex);
-		int selectedVertexCount = _blocks.CountVertices(partIndex);
+		int selectedVertexCount = _blocks.CountSelected(partIndex);
 
 		var result = ShapeSelectionState.Partially;
 		if (selectedVertexCount >= partVertexCount)
@@ -136,7 +136,7 @@ public class ShapeSelection : IShapeSelection
 	public ShapeSelectionState IsShapeSelected()
 	{
 		int totalVertexCount = GetVertexCount(Shape);
-		int selectedVertexCount = _blocks.CountVertices();
+		int selectedVertexCount = _blocks.CountSelected();
 
 		var result = ShapeSelectionState.Partially;
 		if (selectedVertexCount >= totalVertexCount)
@@ -167,32 +167,32 @@ public class ShapeSelection : IShapeSelection
 
 		if (method == SetCombineMethod.Add)
 		{
-			var added = _blocks.Add(partIndex, vertexIndex);
+			var added = _blocks.Select(partIndex, vertexIndex);
 			return changed || added;
 		}
 
 		if (method == SetCombineMethod.Remove)
 		{
-			var removed = _blocks.Remove(partIndex, vertexIndex);
+			var removed = _blocks.Unselect(partIndex, vertexIndex);
 			return changed || removed;
 		}
 
 		if (method == SetCombineMethod.And)
 		{
 			// remove all but the given vertex:
-			var contained = _blocks.ContainsVertex(partIndex, vertexIndex);
-			if (contained && _blocks.CountVertices() == 1) return false;
+			var contained = _blocks.IsSelected(partIndex, vertexIndex);
+			if (contained && _blocks.CountSelected() == 1) return false;
 			Clear();
-			if (contained) _blocks.Add(partIndex, vertexIndex);
+			if (contained) _blocks.Select(partIndex, vertexIndex);
 			return true;
 		}
 
 		if (method == SetCombineMethod.Xor)
 		{
-			var contained = _blocks.ContainsVertex(partIndex, vertexIndex);
+			var contained = _blocks.IsSelected(partIndex, vertexIndex);
 			if (contained)
-				_blocks.Remove(partIndex, vertexIndex);
-			else _blocks.Add(partIndex, vertexIndex);
+				_blocks.Unselect(partIndex, vertexIndex);
+			else _blocks.Select(partIndex, vertexIndex);
 			return true;
 		}
 
@@ -308,7 +308,7 @@ public class ShapeSelection : IShapeSelection
 
 		if (shape is MapPoint mapPoint)
 		{
-			bool selected = _blocks.ContainsVertex(0, 0);
+			bool selected = _blocks.IsSelected(0, 0);
 			yield return (mapPoint, 0, 0, selected);
 		}
 		else if (shape is Multipoint multipoint)
@@ -496,6 +496,10 @@ public class ShapeSelection : IShapeSelection
 		Shape = newShape ?? throw new ArgumentNullException(nameof(newShape));
 	}
 
+	/// <summary>
+	/// Call after a vertex has been added to the shape.
+	/// For Multipoints, let partIndex=vertexIndex=point's index.
+	/// </summary>
 	public void VertexAdded(int partIndex, int vertexIndex)
 	{
 		if (Shape is Multipoint)
@@ -506,9 +510,13 @@ public class ShapeSelection : IShapeSelection
 			partIndex = 0;
 		}
 
-		_blocks.AdjustForAddition(partIndex, vertexIndex);
+		_blocks.VertexAdded(partIndex, vertexIndex);
 	}
 
+	/// <summary>
+	/// Call after a vertex has been removed from the shape.
+	/// For Multipoints, let partIndex=vertexIndex=point's index.
+	/// </summary>
 	public void VertexRemoved(int partIndex, int vertexIndex)
 	{
 		if (Shape is Multipoint)
@@ -519,7 +527,7 @@ public class ShapeSelection : IShapeSelection
 			partIndex = 0;
 		}
 
-		_blocks.AdjustForRemoval(partIndex, vertexIndex);
+		_blocks.VertexRemoved(partIndex, vertexIndex);
 	}
 
 	#region Private methods
@@ -703,19 +711,19 @@ public class ShapeSelection : IShapeSelection
 
 		if (shape.IsEmpty) return false;
 
-		var selected = blocks.CountVertices();
+		var selected = blocks.CountSelected();
 		var total = GeometryUtils.GetPointCount(shape);
 		var changed = selected != total; // not already entirely selected
 
 		if (shape is MapPoint)
 		{
 			blocks.Clear();
-			blocks.Add(0, 0);
+			blocks.Select(0, 0);
 		}
 		else if (shape is Multipoint multipoint)
 		{
 			blocks.Clear();
-			blocks.Add(0, 0, multipoint.PointCount);
+			blocks.Select(0, 0, multipoint.PointCount);
 		}
 		else if (shape is Multipart multipart)
 		{
@@ -726,7 +734,7 @@ public class ShapeSelection : IShapeSelection
 				var part = multipart.Parts[k];
 				var segmentCount = part.Count;
 				var vertexCount = multipart is Polygon ? segmentCount : segmentCount + 1;
-				blocks.Add(k, 0, vertexCount);
+				blocks.Select(k, 0, vertexCount);
 			}
 		}
 		else
@@ -752,7 +760,7 @@ public class ShapeSelection : IShapeSelection
 
 		foreach (var block in inverted)
 		{
-			blocks.Add(block.Part, block.First, block.Count);
+			blocks.Select(block.Part, block.First, block.Count);
 		}
 
 		return true;
@@ -776,7 +784,7 @@ public class BlockList : IEnumerable<BlockList.Block>
 
 	public bool IsEmpty => _head.Next is null;
 
-	public bool Add(int part, int vertex, int count = 1) // TODO rename Select?
+	public bool Select(int part, int vertex, int count = 1)
 	{
 		// if vertex is in existing block: grow this block and merge down the list
 		// otherwise: append new block to before and merge down the list
@@ -808,7 +816,7 @@ public class BlockList : IEnumerable<BlockList.Block>
 		return true;
 	}
 
-	public bool Remove(int part, int vertex) // TODO rename Unselect?
+	public bool Unselect(int part, int vertex)
 	{
 		var node = Find(part, vertex, out Node before);
 
@@ -875,13 +883,13 @@ public class BlockList : IEnumerable<BlockList.Block>
 		return ! wasEmpty;
 	}
 
-	public bool ContainsVertex(int part, int vertex) // TODO rename IsSelected?
+	public bool IsSelected(int part, int vertex)
 	{
 		var node = Find(part, vertex, out Node _);
 		return node is not null;
 	}
 
-	public int CountVertices(int part = -1) // TODO rename CountSelected?
+	public int CountSelected(int part = -1)
 	{
 		int count = 0;
 
@@ -895,7 +903,10 @@ public class BlockList : IEnumerable<BlockList.Block>
 		return count;
 	}
 
-	public void AdjustForAddition(int part, int vertex) // TODO rename VertexAdded
+	/// <summary>
+	/// Adjust the selection after a vertex has been added to the shape
+	/// </summary>
+	public void VertexAdded(int part, int vertex)
 	{
 		// Have ordered list of blocks b=(p,f,c)
 		// See where given (p,v) falls into this list:
@@ -936,7 +947,10 @@ public class BlockList : IEnumerable<BlockList.Block>
 		}
 	}
 
-	public void AdjustForRemoval(int part, int vertex) // TODO rename VertexRemoved
+	/// <summary>
+	/// Adjust the selection after a vertex has been removed from the shape
+	/// </summary>
+	public void VertexRemoved(int part, int vertex)
 	{
 		// Have ordered list of blocks b=(p,f,c)
 		// See where given (p,v) falls into this list:
