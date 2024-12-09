@@ -15,13 +15,13 @@ namespace ProSuite.QA.Tests.Transformers
 	[TableTransformer]
 	public class TrMakeTable : ITableTransformer<IReadOnlyTable>
 	{
-		[NotNull] private readonly IReadOnlyTable _baseTable;
+		[NotNull] private IReadOnlyTable _baseTable;
 
-		private readonly string _viewOrTableName;
+		private string _viewOrTableName;
 
-		private readonly IQueryDescription _queryDescription;
+		private IQueryDescription _queryDescription;
 
-		private readonly List<IReadOnlyTable> _involvedTables;
+		private List<IReadOnlyTable> _involvedTables;
 
 		[DocTr(nameof(DocTrStrings.TrMakeTable_0))]
 		public TrMakeTable(
@@ -30,9 +30,7 @@ namespace ProSuite.QA.Tests.Transformers
 			[NotNull] [DocTr(nameof(DocTrStrings.TrMakeTable_viewOrTableName))]
 			string viewOrTableName)
 		{
-			_baseTable = baseTable;
-			_viewOrTableName = viewOrTableName;
-			_involvedTables = new List<IReadOnlyTable> {baseTable};
+			InitializeViewOrTableName(baseTable, viewOrTableName);
 		}
 
 		[DocTr(nameof(DocTrStrings.TrMakeTable_1))]
@@ -43,6 +41,40 @@ namespace ProSuite.QA.Tests.Transformers
 			string sql,
 			[NotNull] [DocTr(nameof(DocTrStrings.TrMakeTable_objectIdField))]
 			string objectIdField)
+		{
+			InitializeSqlQuery(baseTable, sql, objectIdField);
+		}
+
+		[InternallyUsedTest]
+		public TrMakeTable(
+			[NotNull] TrMakeTableDefinition definition)
+
+		{
+			if (definition.Sql != null && definition.ObjectIdField != null)
+			{
+				InitializeSqlQuery((IReadOnlyTable) definition.BaseTable, definition.Sql,
+				                   definition.ObjectIdField);
+			}
+			else if (definition.ViewOrTableName != null)
+			{
+				InitializeViewOrTableName((IReadOnlyTable) definition.BaseTable,
+				                          definition.ViewOrTableName);
+			}
+			else
+			{
+				throw new ArgumentException(
+					"Invalid parameter combination either sql and ObjectIdField must not be null or ViewOrTableName must not be null.");
+			}
+		}
+
+		private void InitializeViewOrTableName(IReadOnlyTable baseTable, string viewOrTableName)
+		{
+			_baseTable = baseTable;
+			_viewOrTableName = viewOrTableName;
+			_involvedTables = new List<IReadOnlyTable> { baseTable };
+		}
+
+		private void InitializeSqlQuery(IReadOnlyTable baseTable, string sql, string objectIdField)
 		{
 			_baseTable = baseTable;
 
@@ -57,7 +89,7 @@ namespace ProSuite.QA.Tests.Transformers
 			_queryDescription =
 				DatasetUtils.CreateQueryDescription(sqlWorkspace, sql, objectIdField);
 
-			_involvedTables = new List<IReadOnlyTable> {baseTable};
+			_involvedTables = new List<IReadOnlyTable> { baseTable };
 		}
 
 		#region Implementation of IInvolvesTables
