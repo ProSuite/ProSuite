@@ -46,6 +46,11 @@ public abstract class ArcSegment : ISegment
 
 	public abstract IEnvelope Envelope { get; }
 
+	public IGeometry Project(ISpatialReference outputSpatialReference)
+	{
+		throw new NotImplementedException();
+	}
+
 	public void SnapToSpatialReference()
 	{
 		throw new NotImplementedException();

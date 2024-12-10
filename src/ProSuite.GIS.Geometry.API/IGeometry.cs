@@ -16,7 +16,8 @@ namespace ProSuite.GIS.Geometry.API
 
 		IEnvelope Envelope { get; }
 
-		//void Project(ISpatialReference newReferenceSystem);
+		// TODO: T Project<T>() where T : IGeometry
+		IGeometry Project(ISpatialReference outputSpatialReference);
 
 		void SnapToSpatialReference();
 
@@ -24,7 +25,7 @@ namespace ProSuite.GIS.Geometry.API
 
 		//void GeoNormalizeFromLongitude(double Longitude);
 
-		// TODO: Clone<T>()
+		// TODO: T Clone<T>()
 		IGeometry Clone();
 
 		// TODO: ZAware, MAware, PointIDAware

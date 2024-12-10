@@ -92,6 +92,19 @@ namespace ProSuite.GIS.Geometry.AGP
 			outEnvelope.SpatialReference = SpatialReference;
 		}
 
+		public IGeometry Project(ISpatialReference outputSpatialReference)
+		{
+			var arcSpatialReference = outputSpatialReference as ArcSpatialReference;
+
+			SpatialReference proSpatialReference = arcSpatialReference?.ProSpatialReference;
+
+			Assert.NotNull(proSpatialReference, "New spatial reference is null or unknown type.");
+
+			var proResult = GeometryEngine.Instance.Project(ProGeometry, proSpatialReference);
+
+			return Create(proResult);
+		}
+
 		public void SnapToSpatialReference()
 		{
 			throw new NotImplementedException();
