@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using Microsoft.Xaml.Behaviors.Core;
 using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.PickerUI;
+using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -19,7 +19,7 @@ using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Editing.PickerUI;
 
-public abstract class PickerViewModelBase<T> : PropertyChangedBase, IPickerViewModel where T : IPickableItem
+public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPickerViewModel where T : IPickableItem
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -81,7 +81,7 @@ public abstract class PickerViewModelBase<T> : PropertyChangedBase, IPickerViewM
 		set
 		{
 			_items = value;
-			SetProperty(ref _items, value, () => Items);
+			SetProperty(ref _items, value);
 		}
 	}
 
