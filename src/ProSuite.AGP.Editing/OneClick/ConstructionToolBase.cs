@@ -7,14 +7,13 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing.Templates;
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Input;
@@ -28,12 +27,10 @@ namespace ProSuite.AGP.Editing.OneClick
 		private const Key _keyFinishSketch = Key.F2;
 		private const Key _keyRestorePrevious = Key.R;
 
-		private Geometry _editSketchBackup;
 		private Geometry _previousSketch;
 
-		private List<Operation> _sketchOperations;
-
-		private readonly IntermittentSelectionPhase _intermittentSelectionPhase = new();
+		[CanBeNull] private IntermittentSelectionPhase _intermittentSelectionPhase;
+		[CanBeNull] private SketchRecorder _sketchRecorder;
 
 		protected ConstructionToolBase()
 		{
@@ -127,22 +124,27 @@ namespace ProSuite.AGP.Editing.OneClick
 			IsInSketchPhase = false;
 		}
 
-		protected override Task OnToolActivatingCoreAsync()
+		protected override async Task OnToolActivatingCoreAsync()
 		{
 			_msg.VerboseDebug(() => "OnToolActivatingCoreAsync");
-
-			_intermittentSelectionPhase.Reset();
 
 			if (! RequiresSelection)
 			{
 				StartSketchPhase();
 			}
+			else
+			{
+				_intermittentSelectionPhase = new IntermittentSelectionPhase();
+				_intermittentSelectionPhase.Reset();
 
-			return base.OnToolActivatingCoreAsync();
+				_sketchRecorder = new SketchRecorder();
+				await _sketchRecorder.RecordAsync();
+			}
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_sketchRecorder?.Reset();
 			RememberSketch();
 		}
 
@@ -182,7 +184,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			// Release latch. The tool might not get the shift released when the sift key was
 			// released while picker window was visible.
-			if (_intermittentSelectionPhase.Running && ! KeyboardUtils.IsShiftDown())
+			if (_intermittentSelectionPhase is { Running: true } && ! KeyboardUtils.IsShiftDown())
 			{
 				_intermittentSelectionPhase.Stop();
 			}
@@ -190,11 +192,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (await CanStartSketchPhaseAsync(selectedFeatures))
 			{
 				StartSketchPhase();
-
-				if (await TryApplySketch(_editSketchBackup))
-				{
-					_editSketchBackup = null;
-				}
 			}
 		}
 
@@ -207,6 +204,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			// This is called repeatedly while keeping the shift key pressed.
 			// Return if intermittent selection phase is running.
+			Assert.NotNull(_intermittentSelectionPhase);
 			if (_intermittentSelectionPhase.Running)
 			{
 				return;
@@ -214,22 +212,10 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			try
 			{
-				// TODO: How can we not destroy the undo stack?
-				OperationManager operationManager = ActiveMapView.Map.OperationManager;
+				// must not be null because of entrance guard RequiresSelection
+				Assert.NotNull(_sketchRecorder);
+				await _sketchRecorder.SuspendAsync();
 
-				// It is technically possible to put back the operations by calling operationManager.AddUndoOperation(). 
-				// But whether we can make them work when actually executed requires more tests.. and this is probably not the good way to do it!
-				_sketchOperations =
-					operationManager.FindUndoOperations(operation =>
-															operation.Category ==
-															"SketchOperations");
-
-				// By backing up and re-setting the edit sketch the individual operations that made up the 
-				// sketch are lost.
-				_editSketchBackup = await GetCurrentSketchAsync();
-
-				// TODO: Only clear the sketch and switch to selection phase if REALLY required
-				// (i.e. because a rectangle sketch must be drawn on MouseMove)
 				await ClearSketchAsync();
 
 				StartSelectionPhase();
@@ -260,6 +246,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task ShiftReleasedCoreAsync()
 		{
+			if (! RequiresSelection)
+			{
+				return;
+			}
+
+			Assert.NotNull(_intermittentSelectionPhase);
 			_intermittentSelectionPhase.Stop();
 
 			// todo: daro Use CanStartSketchPhase?
@@ -268,37 +260,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				StartSketchPhase();
 
-				if (await TryApplySketch(_editSketchBackup))
-				{
-					_editSketchBackup = null;
-				}
+				Assert.NotNull(_sketchRecorder);
+				await _sketchRecorder.SetSketchesAsync();
+				_sketchRecorder.Resume();
 			}
-		}
-
-		private async Task<bool> TryApplySketch(Geometry sketch)
-		{
-			if (sketch is not { IsEmpty: false } || ! CanSetSketch(sketch))
-			{
-				return false;
-			}
-
-			await SetCurrentSketchAsync(sketch);
-
-			// This puts back the edit operations in the undo stack, but when clicking on the top one, the sketch 
-			// is cleared and undoing any previous operation has no effect any more.
-			ActiveMapView.Map.OperationManager.ClearUndoCategory("SketchOperations");
-
-			if (_sketchOperations == null)
-			{
-				return true;
-			}
-
-			foreach (Operation operation in _sketchOperations)
-			{
-				ActiveMapView.Map.OperationManager.AddUndoOperation(operation);
-			}
-
-			return true;
 		}
 
 		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
@@ -323,23 +288,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		private bool CanSetSketch(Geometry geometry)
-		{
-			GeometryType geometryType = geometry.GeometryType;
-
-			switch (GetSketchGeometryType())
-			{
-				case SketchGeometryType.Point:
-					return geometryType == GeometryType.Point;
-				case SketchGeometryType.Line:
-					return geometryType == GeometryType.Polyline;
-				case SketchGeometryType.Polygon:
-					return geometryType == GeometryType.Polygon;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-		}
-
 		protected override async Task HandleEscapeAsync()
 		{
 			await ViewUtils.TryAsync(
@@ -348,8 +296,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					{
 						if (IsInSketchMode)
 						{
-							// if sketch is empty, also remove selection and return to selection phase
-
 							if (! RequiresSelection)
 							{
 								// remain in sketch mode, just reset the sketch
@@ -359,6 +305,7 @@ namespace ProSuite.AGP.Editing.OneClick
 							{
 								Geometry sketch = await GetCurrentSketchAsync();
 
+								// if sketch is empty, also remove selection and return to selection phase
 								if (sketch is { IsEmpty: false })
 								{
 									await ResetSketchAsync();
