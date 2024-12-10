@@ -11,9 +11,6 @@ namespace ProSuite.AGP.Editing.Picker
 	{
 		private BitmapImage _image;
 
-		/// <summary>
-		/// Has to be called on MCT
-		/// </summary>
 		public PickableFeatureItem(BasicFeatureLayer layer, Feature feature,
 		                           Geometry geometry, long oid, string displayValue) : base(
 			layer, feature, geometry, oid, displayValue) { }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ProSuite.Commons.AGP.Picker;
 
 namespace ProSuite.AGP.Editing.Picker
 {

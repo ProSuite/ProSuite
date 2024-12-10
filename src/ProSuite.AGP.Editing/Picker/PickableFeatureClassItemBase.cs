@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Windows.Media;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
@@ -13,9 +14,6 @@ namespace ProSuite.AGP.Editing.Picker
 		private readonly string _datasetName;
 		private bool _selected;
 		
-		/// <summary>
-		/// Has to be called on MCT
-		/// </summary>
 		protected PickableFeatureClassItemBase([NotNull] string datasetName,
 		                                       [NotNull] IReadOnlyList<long> oids, Geometry geometry)
 		{

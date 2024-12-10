@@ -4,6 +4,8 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.PickerUI;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Picker;
+using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -36,19 +38,13 @@ public class PickableFeatureClassItemsFactory : IPickableItemsFactory
 			// if later change IPickableFeatureClassItem.Layers to Layer
 			string name = selection.FeatureClass.GetName();
 
-			if (itemsByName.ContainsKey(name))
+			if (! itemsByName.TryGetValue(name, out IPickableFeatureClassItem item))
 			{
-				IPickableFeatureClassItem item = itemsByName[name];
-				item.Layers.Add(layer);
-			}
-			else
-			{
-				IPickableFeatureClassItem item =
-					CreatePickableClassItem(selection, isAnnotation);
-				item.Layers.Add(layer);
-
+				item = CreatePickableClassItem(selection, isAnnotation);
 				itemsByName.Add(name, item);
 			}
+
+			item.Layers.Add(layer);
 		}
 
 		return itemsByName.Values;

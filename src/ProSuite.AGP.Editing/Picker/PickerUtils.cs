@@ -6,9 +6,10 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Editing.PickerUI;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Picker;
+using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -22,7 +23,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public static Uri GetImagePath(esriGeometryType? geometryType)
 		{
-			// todo: daro introduce image for unkown type
+			// todo: daro introduce image for unknown type
 			//if (geometryType == null)
 			//{
 			//}
@@ -55,9 +56,15 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			Assert.ArgumentNotNull(selection, nameof(selection));
 
-			return selection
-			       .GroupBy(classSelection => classSelection.ShapeDimension)
-			       .OrderBy(group => group.Key).SelectMany(fcs => fcs);
+			return selection.OrderBy(fcs => fcs.ShapeDimension);
+
+			// According to documentation, Enumerable.OrderBy uses a stable sort algorithm:
+			// https://learn.microsoft.com/dotnet/api/system.linq.enumerable.orderby
+			// Therefore, the above should be equivalent to the original code below:
+			//return selection
+			//       .GroupBy(classSelection => classSelection.ShapeDimension)
+			//       .OrderBy(group => group.Key)
+			//       .SelectMany(fcs => fcs);
 		}
 
 		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,

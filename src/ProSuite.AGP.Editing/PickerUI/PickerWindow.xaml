@@ -8,7 +8,9 @@
                     xmlns:pickerUi="clr-namespace:ProSuite.AGP.Editing.PickerUI"
                     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
                     xmlns:picker="clr-namespace:ProSuite.AGP.Editing.Picker"
-                    d:DataContext="{d:DesignInstance Type=pickerUi:IPickerViewModel}"
+                    xmlns:picker1="clr-namespace:ProSuite.Commons.AGP.Picker;assembly=ProSuite.Commons.AGP"
+                    xmlns:pickerUi1="clr-namespace:ProSuite.Commons.AGP.PickerUI;assembly=ProSuite.Commons.AGP"
+                    d:DataContext="{d:DesignInstance Type=pickerUi1:IPickerViewModel}"
                     mc:Ignorable="d"
                     ShowTitleBar="false"
                     TitlebarHeight="0"
@@ -60,7 +62,7 @@
 				<Setter Property="Margin" Value="2" />
 			</Style>
 
-			<DataTemplate x:Key="SinglePickTemplate" DataType="{x:Type picker:IPickableItem}">
+			<DataTemplate x:Key="SinglePickTemplate" DataType="{x:Type picker1:IPickableItem}">
 				<DockPanel>
 					<behaviors:Interaction.Triggers>
 						<behaviors:EventTrigger EventName="MouseEnter">

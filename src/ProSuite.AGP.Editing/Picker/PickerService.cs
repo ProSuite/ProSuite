@@ -1,9 +1,11 @@
-
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
 using ProSuite.AGP.Editing.PickerUI;
+using ProSuite.Commons.AGP.Picker;
+using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.UI.WPF;
 
@@ -24,7 +26,7 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public PickerService(IPickerPrecedence precedence)
 		{
-			_precedence = precedence;
+			_precedence = precedence ?? throw new ArgumentNullException(nameof(precedence));
 		}
 
 		public Task<IPickableItem> Pick(List<IPickableItem> items, IPickerViewModel viewModel)

@@ -6,6 +6,8 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.PickerUI;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Picker;
+using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -13,7 +15,7 @@ namespace ProSuite.AGP.Editing.Picker;
 
 public class PickableFeatureItemsFactory : IPickableItemsFactory
 {
-	// NOTE: Hack! This cache doesn't invlidate if layer properties change.
+	// NOTE: Hack! This cache doesn't invalidate if layer properties change.
 	private static readonly HashSet<string> _layersWithExpression = new();
 
 	public IEnumerable<IPickableItem> CreateItems(IEnumerable<FeatureSelectionBase> candidates)

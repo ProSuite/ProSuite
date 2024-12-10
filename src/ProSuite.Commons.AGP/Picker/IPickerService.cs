@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ProSuite.AGP.Editing.PickerUI;
+using ProSuite.Commons.AGP.PickerUI;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.Commons.AGP.Picker
 {
 	public interface IPickerService
 	{

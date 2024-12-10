@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
-using ProSuite.AGP.Editing.PickerUI;
+using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.AGP.Selection;
 
-namespace ProSuite.AGP.Editing.Picker;
+namespace ProSuite.Commons.AGP.Picker;
 
 public interface IPickableItemsFactory
 {

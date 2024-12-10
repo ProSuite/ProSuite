@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using ArcGIS.Desktop.Mapping;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.Commons.AGP.Picker
 {
 	public interface IPickableFeatureClassItem : IPickableItem
 	{

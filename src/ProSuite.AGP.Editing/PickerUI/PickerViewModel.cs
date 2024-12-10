@@ -1,5 +1,5 @@
 using ArcGIS.Core.Geometry;
-using ProSuite.AGP.Editing.Picker;
+using ProSuite.Commons.AGP.Picker;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
