@@ -193,29 +193,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] MoveSymbolCursor {
-            get {
-                object obj = ResourceManager.GetObject("MoveSymbolCursor", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
         internal static byte[] Polygon {
             get {
                 object obj = ResourceManager.GetObject("Polygon", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] PolygonDrawerCursor {
-            get {
-                object obj = ResourceManager.GetObject("PolygonDrawerCursor", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -246,16 +226,6 @@ namespace ProSuite.AGP.Editing.Properties {
         internal static byte[] ReshapeAlongOverlay {
             get {
                 object obj = ResourceManager.GetObject("ReshapeAlongOverlay", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] RotateSymbolCursor {
-            get {
-                object obj = ResourceManager.GetObject("RotateSymbolCursor", resourceCulture);
                 return ((byte[])(obj));
             }
         }
