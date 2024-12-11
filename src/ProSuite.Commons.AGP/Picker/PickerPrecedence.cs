@@ -2,7 +2,7 @@ using System.Windows;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.Commons.AGP.Picker
 {
 	public class PickerPrecedence : PickerPrecedenceBase
 	{

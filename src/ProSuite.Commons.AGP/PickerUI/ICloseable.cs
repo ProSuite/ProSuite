@@ -1,4 +1,4 @@
-namespace ProSuite.AGP.Editing.PickerUI
+namespace ProSuite.Commons.AGP.PickerUI
 {
 	public interface ICloseable
 	{

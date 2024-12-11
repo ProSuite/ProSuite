@@ -8,8 +8,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using Microsoft.Xaml.Behaviors.Core;
 using ProSuite.Commons.AGP.Picker;
-using ProSuite.Commons.AGP.PickerUI;
-using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -17,7 +15,7 @@ using ProSuite.Commons.Misc;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.WPF;
 
-namespace ProSuite.AGP.Editing.PickerUI;
+namespace ProSuite.Commons.AGP.PickerUI;
 
 public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPickerViewModel where T : IPickableItem
 {

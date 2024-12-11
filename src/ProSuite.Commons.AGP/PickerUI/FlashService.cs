@@ -13,7 +13,7 @@ using Envelope = ArcGIS.Core.Geometry.Envelope;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 using Polygon = ArcGIS.Core.Geometry.Polygon;
 
-namespace ProSuite.AGP.Editing.PickerUI;
+namespace ProSuite.Commons.AGP.PickerUI;
 
 public class FlashService : IDisposable
 {

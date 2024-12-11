@@ -4,14 +4,12 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Editing.PickerUI;
 using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.Editing.Picker;
+namespace ProSuite.Commons.AGP.Picker;
 
 public class PickableFeatureItemsFactory : IPickableItemsFactory
 {

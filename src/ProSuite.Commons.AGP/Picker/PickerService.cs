@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
-using ProSuite.AGP.Editing.PickerUI;
-using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.UI.WPF;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.Commons.AGP.Picker
 {
 	// TODOs:
 	// - Consider tool tip for pickable items with all attributes
@@ -50,7 +48,7 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			var dispatcher = Application.Current.Dispatcher;
 
-			return await dispatcher.Invoke(async () =>
+			return await dispatcher.Invoke<Task<IPickableItem>>(async () =>
 			{
 				using var window = new PickerWindow(vm);
 

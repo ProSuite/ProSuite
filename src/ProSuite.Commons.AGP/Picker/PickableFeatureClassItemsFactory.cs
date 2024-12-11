@@ -2,14 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Editing.PickerUI;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.Editing.Picker;
+namespace ProSuite.Commons.AGP.Picker;
 
 public class PickableFeatureClassItemsFactory : IPickableItemsFactory
 {

@@ -5,7 +5,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.Commons.AGP.Picker
 {
 	public class PickableFeatureItem : PickableFeatureItemBase
 	{

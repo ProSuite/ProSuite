@@ -8,14 +8,13 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Input;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.Commons.AGP.Picker
 {
 	public static class PickerUtils
 	{
@@ -32,18 +31,18 @@ namespace ProSuite.AGP.Editing.Picker
 				case esriGeometryType.esriGeometryPoint:
 				case esriGeometryType.esriGeometryMultipoint:
 					return new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
+						@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PointGeometry.bmp");
 				case esriGeometryType.esriGeometryLine:
 				case esriGeometryType.esriGeometryPolyline:
 					return new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/LineGeometry.bmp");
+						@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/LineGeometry.bmp");
 				case esriGeometryType.esriGeometryPolygon:
 					return new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp",
+						@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PolygonGeometry.bmp",
 						UriKind.Absolute);
 				case esriGeometryType.esriGeometryMultiPatch:
 					return new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/MultipatchGeometry.bmp");
+						@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/MultipatchGeometry.bmp");
 				default:
 					throw new ArgumentOutOfRangeException(
 						$"Unsupported geometry type: {geometryType}");
@@ -86,8 +85,8 @@ namespace ProSuite.AGP.Editing.Picker
 			// Just expand the envelope
 			// .. but PickerViewModel needs a polygon to display selection geometry (press space).
 
-			// HasZ, HasM and HasID are inherited from input geometry. Thereßss no need
-			// for GeometryUtils.EnsureGeometrySchema()
+			// HasZ, HasM and HasID are inherited from input geometry.
+			// There is no need for GeometryUtils.EnsureGeometrySchema()
 
 			return GeometryFactory.CreatePolygon(
 				envelope.Expand(envelopeExpansion, envelopeExpansion, false),
@@ -101,9 +100,8 @@ namespace ProSuite.AGP.Editing.Picker
 
 		public static SpatialRelationship GetSpatialRelationship()
 		{
-			SketchGeometryType sketchGeometryType = ToolUtils.GetSketchGeometryType();
-			return sketchGeometryType == SketchGeometryType.Polygon ||
-			       sketchGeometryType == SketchGeometryType.Lasso
+			var sketchGeometryType = MapView.Active?.GetSketchType() ?? SketchGeometryType.None;
+			return sketchGeometryType is SketchGeometryType.Polygon or SketchGeometryType.Lasso
 				       ? SpatialRelationship.Contains
 				       : SpatialRelationship.Intersects;
 		}

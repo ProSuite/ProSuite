@@ -6,12 +6,11 @@ using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Input;
 
-namespace ProSuite.AGP.Editing.Picker;
+namespace ProSuite.Commons.AGP.Picker;
 
 public abstract class PickerPrecedenceBase : IPickerPrecedence
 {

@@ -1,16 +1,14 @@
-<controls:ProWindow x:Class="ProSuite.AGP.Editing.PickerUI.PickerWindow"
+<controls:ProWindow x:Class="ProSuite.Commons.AGP.PickerUI.PickerWindow"
                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
                     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
-                    xmlns:pickerUi="clr-namespace:ProSuite.AGP.Editing.PickerUI"
                     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
-                    xmlns:picker="clr-namespace:ProSuite.AGP.Editing.Picker"
-                    xmlns:picker1="clr-namespace:ProSuite.Commons.AGP.Picker;assembly=ProSuite.Commons.AGP"
-                    xmlns:pickerUi1="clr-namespace:ProSuite.Commons.AGP.PickerUI;assembly=ProSuite.Commons.AGP"
-                    d:DataContext="{d:DesignInstance Type=pickerUi1:IPickerViewModel}"
+                    xmlns:picker="clr-namespace:ProSuite.Commons.AGP.Picker"
+                    xmlns:pickerUi="clr-namespace:ProSuite.Commons.AGP.PickerUI"
+                    d:DataContext="{d:DesignInstance Type=pickerUi:IPickerViewModel}"
                     mc:Ignorable="d"
                     ShowTitleBar="false"
                     TitlebarHeight="0"
@@ -62,7 +60,7 @@
 				<Setter Property="Margin" Value="2" />
 			</Style>
 
-			<DataTemplate x:Key="SinglePickTemplate" DataType="{x:Type picker1:IPickableItem}">
+			<DataTemplate x:Key="SinglePickTemplate" DataType="{x:Type picker:IPickableItem}">
 				<DockPanel>
 					<behaviors:Interaction.Triggers>
 						<behaviors:EventTrigger EventName="MouseEnter">

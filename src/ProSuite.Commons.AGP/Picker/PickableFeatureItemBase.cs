@@ -2,11 +2,10 @@ using System.Windows.Media;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.Commons.AGP.Picker
 {
 	public abstract class PickableFeatureItemBase : PropertyChangedBase, IPickableFeatureItem
 	{
