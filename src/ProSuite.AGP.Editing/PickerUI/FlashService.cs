@@ -92,35 +92,31 @@ public class FlashService : IDisposable
 
 	public FlashService Flash(string symbolName, Geometry geometry)
 	{
-		try
+		Geometry flashGeometry = null;
+		CIMSymbol symbol = _symbols[symbolName].GetSymbol(geometry.GeometryType);
+
+		switch (geometry.GeometryType)
 		{
-			Geometry flashGeometry = null;
-			CIMSymbol symbol = _symbols[symbolName].GetSymbol(geometry.GeometryType);
-
-			switch (geometry.GeometryType)
-			{
-				case GeometryType.Point:
-				case GeometryType.Multipoint:
-					flashGeometry = geometry;
-					break;
-				case GeometryType.Polyline:
-					flashGeometry = geometry;
-					break;
-				case GeometryType.Polygon:
-					flashGeometry = GetPolygonGeometry(geometry);
-					break;
-				case GeometryType.Unknown:
-				case GeometryType.Envelope:
-				case GeometryType.Multipatch:
-				case GeometryType.GeometryBag:
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-
-			QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
+			case GeometryType.Point:
+			case GeometryType.Multipoint:
+				flashGeometry = geometry;
+				break;
+			case GeometryType.Polyline:
+				flashGeometry = geometry;
+				break;
+			case GeometryType.Polygon:
+				flashGeometry = GetPolygonGeometry(geometry);
+				break;
+			case GeometryType.Unknown:
+			case GeometryType.Envelope:
+			case GeometryType.Multipatch:
+			case GeometryType.GeometryBag:
+				break;
+			default:
+				throw new ArgumentOutOfRangeException();
 		}
-		catch (Exception) { }
+
+		QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
 
 		return this;
 	}
@@ -177,15 +173,17 @@ public interface IFlashSymbol
 public class ColoredSymbol : IFlashSymbol
 {
 	private readonly CIMColor _color;
+	private readonly double _width;
 
-	public ColoredSymbol(string name, double R, double G, double B)
-		: this(R, G, B)
+	public ColoredSymbol(string name, double R, double G, double B, double width = 4)
+		: this(R, G, B, width)
 	{
 		Name = name;
 	}
 
-	public ColoredSymbol(double R, double G, double B)
+	public ColoredSymbol(double R, double G, double B, double width = 4)
 	{
+		_width = width;
 		_color = ColorFactory.Instance.CreateRGBColor(R, G, B);
 	}
 
@@ -198,16 +196,16 @@ public class ColoredSymbol : IFlashSymbol
 			case GeometryType.Point:
 			case GeometryType.Multipoint:
 			{
-				return SymbolFactory.Instance.ConstructPointSymbol(_color, 6);
+				return SymbolFactory.Instance.ConstructPointSymbol(_color, _width * 1.5);
 			}
 			case GeometryType.Polyline:
 			{
-				return SymbolFactory.Instance.ConstructLineSymbol(_color, 4);
+				return SymbolFactory.Instance.ConstructLineSymbol(_color, _width);
 			}
 			case GeometryType.Polygon:
 			{
 				CIMStroke outline =
-					SymbolFactory.Instance.ConstructStroke(_color, 4, SimpleLineStyle.Solid);
+					SymbolFactory.Instance.ConstructStroke(_color, _width, SimpleLineStyle.Solid);
 
 				return SymbolFactory.Instance.ConstructPolygonSymbol(
 					_color, SimpleFillStyle.Null, outline);
@@ -220,24 +218,4 @@ public class ColoredSymbol : IFlashSymbol
 				return null;
 		}
 	}
-}
-
-public class BlueSymbol : ColoredSymbol
-{
-	public BlueSymbol(string name) : base(name, 0, 100, 255) { }
-}
-
-public class GreenSymbol : ColoredSymbol
-{
-	public GreenSymbol(string name) : base(name, 0, 255, 0) { }
-}
-
-public class MagentaSymbol : ColoredSymbol
-{
-	public MagentaSymbol(string name) : base(name, 255, 0, 255) { }
-}
-
-public class RedSymbol : ColoredSymbol
-{
-	public RedSymbol(string name) : base(name, 255, 0, 0) { }
 }
