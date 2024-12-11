@@ -22,6 +22,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.AGP.Windows;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -30,7 +31,7 @@ using ProSuite.Commons.UI.Input;
 namespace ProSuite.AGP.Editing.Symbolization;
 
 /// <summary>
-/// Common base class for RotateSymbol and MoveSymbol tools
+/// Common base class for Rotate Symbol and Move Symbol tools
 /// </summary>
 public abstract class EditSymbolToolBase : MapTool
 {
@@ -40,14 +41,22 @@ public abstract class EditSymbolToolBase : MapTool
 	private ToolMode _mode = ToolMode.Select;
 	private readonly EditSymbolFeedback _feedback;
 	private readonly FeaturePreview _preview;
-	private Point _currentMousePosition;
+	private Point _lastMousePosition;
+
+	private readonly Cursor _selectCursor;
+	private readonly Cursor _selectCursorShift;
+	private readonly Cursor _selectLassoCursor;
+	private readonly Cursor _selectLassoCursorShift;
+	private readonly Cursor _selectPolygonCursor;
+	private readonly Cursor _selectPolygonCursorShift;
 
 	private const Key ToggleLassoSelectKey = Key.L;
 	private const Key TogglePolygonSelectKey = Key.P;
 	private const SketchGeometryType DefaultSketchType = SketchGeometryType.Rectangle;
 	private SketchGeometryType _selectModeSketchType = DefaultSketchType;
-	// Sketch type transitions: (Lasso) <---'L'---> (Rectangle) <---'P'---> (Polygon)
-	//                             ^----------------'P'--/--'L'-----------------^
+	// Sketch type          tool activate ----v
+	// transitions:  (Lasso) <---'L'---> (Rectangle) <---'P'---> (Polygon)
+	//                  ^----------------'P'--/--'L'-----------------^
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -67,8 +76,28 @@ public abstract class EditSymbolToolBase : MapTool
 
 		ContextMenuID = "esri_mapping_selection2DContextMenu";
 
+		byte[] cursorBase = Properties.Resources.Arrow;
+		byte[] shiftOverlay = Properties.Resources.Shift;
+		byte[] lassoOverlay = Properties.Resources.Lasso;
+		byte[] polygonOverlay = Properties.Resources.Polygon;
+
+		_selectCursor = MakeCursor(cursorBase);
+		_selectCursorShift = MakeCursor(cursorBase, shiftOverlay);
+		_selectLassoCursor = MakeCursor(cursorBase, lassoOverlay);
+		_selectLassoCursorShift = MakeCursor(cursorBase, lassoOverlay, shiftOverlay);
+		_selectPolygonCursor = MakeCursor(cursorBase, polygonOverlay);
+		_selectPolygonCursorShift = MakeCursor(cursorBase, polygonOverlay, shiftOverlay);
+
 		_feedback = feedback ?? throw new ArgumentNullException(nameof(feedback));
 		_preview = new FeaturePreview { TransparencyPercent = 33 };
+	}
+
+	private static Cursor MakeCursor(
+		byte[] baseImage, byte[] overlayImage1 = null, byte[] overlayImage2 = null,
+		int hotSpotX = 0, int hotSpotY = 0)
+	{
+		return CursorUtils.CreateCursor(baseImage, overlayImage1, overlayImage2, null,
+		                                hotSpotX, hotSpotY);
 	}
 
 	protected ToolMode Mode => _mode;
@@ -124,6 +153,9 @@ public abstract class EditSymbolToolBase : MapTool
 
 			EditCompletedEvent.Unsubscribe(OnEditCompletedAsync); // in case we missed OnToolDeactivate
 			EditCompletedEvent.Subscribe(OnEditCompletedAsync);
+
+			// Upon tool activation, always start with default sketch type (not Lasso/Polygon):
+			_selectModeSketchType = DefaultSketchType;
 
 			EnterMode(ToolMode.Select);
 
@@ -188,6 +220,10 @@ public abstract class EditSymbolToolBase : MapTool
 					CancelAction();
 					EnterMode(ToolMode.Select);
 				}
+				else
+				{
+					UpdateMouseCursor();
+				}
 			}
 			else if (args.Key == Key.Escape)
 			{
@@ -240,6 +276,8 @@ public abstract class EditSymbolToolBase : MapTool
 			{
 				_isShiftDown = false;
 				args.Handled = false;
+
+				UpdateMouseCursor();
 
 				if (_mode == ToolMode.Select && HasSelection)
 				{
@@ -338,7 +376,7 @@ public abstract class EditSymbolToolBase : MapTool
 	{
 		try
 		{
-			_currentMousePosition = args.ClientPoint;
+			_lastMousePosition = args.ClientPoint;
 
 			// notice there's no HandleMouseMoveAsync(), so do the magic here!
 			if (_mode != ToolMode.Act) return;
@@ -429,6 +467,8 @@ public abstract class EditSymbolToolBase : MapTool
 		}
 
 		_mode = mode;
+
+		UpdateMouseCursor();
 	}
 
 	protected virtual void SetupSelectMode() { }
@@ -449,6 +489,8 @@ public abstract class EditSymbolToolBase : MapTool
 
 	protected abstract void CancelAction();
 
+	protected abstract Cursor ActionModeCursor { get; }
+
 	private void ToggleLassoSelect()
 	{
 		if (_mode != ToolMode.Select) return;
@@ -463,6 +505,8 @@ public abstract class EditSymbolToolBase : MapTool
 			SketchType = _selectModeSketchType = SketchGeometryType.Lasso;
 			_msg.Info($"{Caption}: Select vertices using a lasso sketch");
 		}
+
+		UpdateMouseCursor();
 	}
 
 	private void TogglePolygonSelect()
@@ -478,6 +522,46 @@ public abstract class EditSymbolToolBase : MapTool
 		{
 			SketchType = _selectModeSketchType = SketchGeometryType.Polygon;
 			_msg.Info($"{Caption}: Select vertices using a polygon sketch");
+		}
+
+		UpdateMouseCursor();
+	}
+
+	private void UpdateMouseCursor()
+	{
+		Cursor cursor;
+
+		if (_mode == ToolMode.Act)
+		{
+			cursor = ActionModeCursor;
+		}
+		else if (SketchType == SketchGeometryType.Lasso)
+		{
+			cursor = _isShiftDown ? _selectLassoCursorShift : _selectLassoCursor;
+		}
+		else if (SketchType == SketchGeometryType.Polygon)
+		{
+			cursor = _isShiftDown ? _selectPolygonCursorShift : _selectPolygonCursor;
+		}
+		else
+		{
+			cursor = _isShiftDown ? _selectCursorShift : _selectCursor;
+		}
+
+		// Avoid any overhead if the cursor did not change:
+
+		if (cursor == Cursor) return;
+
+		// Update on UI thread... not strictly required, but some report
+		// that only then the cursor updates before a mouse move occurs:
+
+		if (Application.Current.Dispatcher.CheckAccess())
+		{
+			Cursor = cursor;
+		}
+		else
+		{
+			Application.Current.Dispatcher.Invoke<Cursor>(() => Cursor = cursor);
 		}
 	}
 
@@ -610,7 +694,7 @@ public abstract class EditSymbolToolBase : MapTool
 
 	private async Task PerformSelection(Geometry sketchGeometry)
 	{
-		Point screenPosition = ActiveMapView.ClientToScreen(_currentMousePosition);
+		Point screenPosition = ActiveMapView.ClientToScreen(_lastMousePosition);
 		using var pickerPrecedence = CreatePickerPrecedence(sketchGeometry, screenPosition);
 
 		IEnumerable<FeatureSelectionBase> candidates =

@@ -9,6 +9,7 @@ using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Windows;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.Symbolization;
@@ -34,16 +35,12 @@ public abstract class RotateSymbolToolBase : EditSymbolToolBase
 {
 	private MapPoint _startPoint;
 	private Candidates _candidates;
-	private readonly Cursor _selectCursor;
-	private readonly Cursor _rotateCursor;
+	private Cursor _rotateCursor; // cache
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	protected RotateSymbolToolBase() : base(new RotateSymbolFeedback())
 	{
-		_rotateCursor = ToolUtils.GetCursor(Properties.Resources.RotateSymbolCursor);
-		_selectCursor = Cursors.Arrow; // TODO use SelectionTool's cursor?
-
 		RotationKind = SymbolRotationKind.Additive;
 	}
 
@@ -86,6 +83,9 @@ public abstract class RotateSymbolToolBase : EditSymbolToolBase
 	}
 
 	#endregion
+
+	protected override Cursor ActionModeCursor =>
+		_rotateCursor ??= CursorUtils.GetCursor(Properties.Resources.RotateSymbolCursor);
 
 	protected override bool IsInAction => _startPoint is not null && _candidates is not null;
 
@@ -149,13 +149,11 @@ public abstract class RotateSymbolToolBase : EditSymbolToolBase
 	{
 		_startPoint = null;
 		SketchTip = "Select “rotatable” symbol";
-		Cursor = _selectCursor;
 	}
 
 	protected override void SetupActionMode()
 	{
 		SketchTip = "Click+drag to rotate";
-		Cursor = _rotateCursor;
 	}
 
 	protected override string ActionVerb => "rotate";

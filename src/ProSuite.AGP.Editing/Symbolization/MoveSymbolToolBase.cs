@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Windows;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.Symbolization;
@@ -34,16 +35,12 @@ public abstract class MoveSymbolToolBase : EditSymbolToolBase
 {
 	private MapPoint _startPoint;
 	private Candidates _candidates;
-	private readonly Cursor _selectCursor;
-	private readonly Cursor _moveCursor;
+	private Cursor _moveCursor; // cache
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	protected MoveSymbolToolBase() : base(new MoveSymbolFeedback())
-	{
-		_moveCursor = ToolUtils.GetCursor(Properties.Resources.MoveSymbolCursor);
-		_selectCursor = Cursors.Arrow; // TODO use SelectionTool's cursor?
-	}
+	{ }
 
 	private new MoveSymbolFeedback DisplayFeedback =>
 		(MoveSymbolFeedback) base.DisplayFeedback;
@@ -75,6 +72,9 @@ public abstract class MoveSymbolToolBase : EditSymbolToolBase
 	}
 
 	#endregion
+
+	protected override Cursor ActionModeCursor =>
+		_moveCursor ??= CursorUtils.GetCursor(Properties.Resources.MoveSymbolCursor);
 
 	protected override bool IsInAction => _startPoint is not null && _candidates is not null;
 
@@ -112,13 +112,11 @@ public abstract class MoveSymbolToolBase : EditSymbolToolBase
 	{
 		_startPoint = null;
 		SketchTip = "Select “movable” symbol";
-		Cursor = _selectCursor;
 	}
 
 	protected override void SetupActionMode()
 	{
 		SketchTip = "Click+drag to move";
-		Cursor = _moveCursor;
 	}
 
 	protected override string ActionVerb => "move";
