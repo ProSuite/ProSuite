@@ -25,6 +25,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.UI;
+using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick;
 
@@ -223,6 +224,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 				await FinishSketchAsync();
 			}
 
+			if (KeyboardUtils.IsShiftKey(args.Key))
+			{
+				await ShiftPressedAsync();
+			}
+
 			if (args.Key == Key.Escape)
 			{
 				if (await HasSketchAsync())
@@ -245,6 +251,21 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		}
 	}
 
+	private async Task ShiftPressedAsync()
+	{
+		if (! InConstructionPhase())
+		{
+			_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+		}
+
+		await ShiftPressedCoreAsync();
+	}
+
+	protected virtual Task ShiftPressedCoreAsync()
+	{
+		return Task.CompletedTask;
+	}
+
 	protected override void OnToolKeyUp(MapViewKeyEventArgs args)
 	{
 		if (HandledKeys.Contains(args.Key))
@@ -257,6 +278,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	{
 		try
 		{
+			if (KeyboardUtils.IsShiftKey(args.Key))
+			{
+				await ShiftReleasedAsync();
+			}
+
 			if (! InConstructionPhase())
 			{
 				if (args.Key == _keyPolygonDraw)
@@ -276,6 +302,21 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		{
 			Gateway.ShowError(ex, _msg);
 		}
+	}
+
+	private async Task ShiftReleasedAsync()
+	{
+		if (! InConstructionPhase())
+		{
+			_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
+		}
+
+		await ShiftReleasedCoreAsync();
+	}
+
+	protected virtual Task ShiftReleasedCoreAsync()
+	{
+		return Task.CompletedTask;
 	}
 
 	protected override void OnToolMouseMove(MapViewMouseEventArgs args)
