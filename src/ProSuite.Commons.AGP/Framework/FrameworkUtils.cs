@@ -17,7 +17,7 @@ public static class FrameworkUtils
 		if (_msg.IsVerboseDebugEnabled)
 		{
 			var action = activate ? "Activate" : "Deactivate";
-			_msg.VerboseDebug($"{action} state {stateId}");
+			_msg.VerboseDebug(() => $"{action} state {stateId}");
 		}
 
 		if (activate)

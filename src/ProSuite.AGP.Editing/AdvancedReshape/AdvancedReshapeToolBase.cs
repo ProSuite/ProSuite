@@ -74,6 +74,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected AdvancedReshapeToolBase()
 		{
+			// important for SketchRecorder in base class
 			FireSketchEvents = true;
 
 			RequiresSelection = true;

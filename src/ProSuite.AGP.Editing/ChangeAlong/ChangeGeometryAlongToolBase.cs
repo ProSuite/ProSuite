@@ -110,10 +110,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					                             DefaultSketchTypeOnFinishSketch);
 
 				_targetSketchCursor.SetSelectionCursorShift(GetTargetSelectionCursorShift());
-				_targetSketchCursor.SetSelectionCursorLassoShift(
-					GetTargetSelectionCursorLassoShift());
-				_targetSketchCursor.SetSelectionCursorPolygonShift(
-					GetTargetSelectionCursorPolygonShift());
+				_targetSketchCursor.SetSelectionCursorLassoShift(GetTargetSelectionCursorLassoShift());
+				_targetSketchCursor.SetSelectionCursorPolygonShift(GetTargetSelectionCursorPolygonShift());
 			});
 		}
 

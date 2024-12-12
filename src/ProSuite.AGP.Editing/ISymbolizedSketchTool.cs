@@ -14,5 +14,5 @@ public interface ISymbolizedSketchTool : ISketchTool
 
 	bool CanSelectFromLayer([CanBeNull] Layer layer);
 	
-	public bool CanUseSelection([NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer);
+	bool CanUseSelection([NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer);
 }
