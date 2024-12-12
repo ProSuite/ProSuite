@@ -74,6 +74,10 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	/// Whether the required selection can only contain selectable features.
 	protected bool SelectOnlySelectableFeatures { get; init; } = true;
 
+	protected bool CanSelectOnlyEditFeatures { get; init; } = true;
+
+	protected bool ToolHasConstructionPhase { get; init; } = true;
+
 	#region abstract
 	
 	protected abstract void LogPromptForSelection();
@@ -135,7 +139,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
 
-		if (MapUtils.HasSelection(ActiveMapView))
+		if (ToolHasConstructionPhase && MapUtils.HasSelection(ActiveMapView))
 		{
 			await ViewUtils.TryAsync(
 				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); }),
@@ -409,7 +413,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 				// change it. You would have to move the mouse to trigger cursor change.
 				//StartContructionPhase();
 
-				bool selectionProcessed = await ProcessSelectionAsync();
+				bool selectionProcessed = ToolHasConstructionPhase && await ProcessSelectionAsync();
 
 				if (selectionProcessed)
 				{
@@ -608,7 +612,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			_toolActivateLatch.Decrement();
 		}
 
-		if (args.Selection.Count == 0)
+		if (!ToolHasConstructionPhase || args.Selection.Count == 0)
 		{
 			LogPromptForSelection();
 			StartSelectionPhase();
@@ -644,11 +648,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	protected virtual bool CanUseSelectionCore(
 		[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 		[CanBeNull] NotificationCollection notifications = null)
-	{
-		return true;
-	}
-
-	protected virtual bool CanSelectOnlyEditFeatures()
 	{
 		return true;
 	}
@@ -733,7 +732,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			return false;
 		}
 
-		if (CanSelectOnlyEditFeatures() && ! layer.IsEditable)
+		if (CanSelectOnlyEditFeatures && ! layer.IsEditable)
 		{
 			NotificationUtils.Add(notifications, $"Layer {layerName} not editable");
 			return false;

@@ -93,7 +93,8 @@ public class FlashService : IDisposable
 	public FlashService Flash(string symbolName, Geometry geometry)
 	{
 		Geometry flashGeometry = null;
-		CIMSymbol symbol = _symbols[symbolName].GetSymbol(geometry.GeometryType);
+		var flashSymbol = _symbols[symbolName];
+		CIMSymbol symbol = flashSymbol.GetSymbol(geometry.GeometryType);
 
 		switch (geometry.GeometryType)
 		{
@@ -116,7 +117,7 @@ public class FlashService : IDisposable
 				throw new ArgumentOutOfRangeException();
 		}
 
-		QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
+		QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol, flashSymbol.UseRealWorldUnits); });
 
 		return this;
 	}
@@ -140,11 +141,12 @@ public class FlashService : IDisposable
 		return GeometryUtils.GetClippedPolygon((Polygon) geometry, clipExtent, mapRotation);
 	}
 
-	private void AddOverlay(Geometry geometry, CIMSymbol symbol)
+	private void AddOverlay(Geometry geometry, CIMSymbol symbol, bool useRealWorldUnits = false)
 	{
 		MapView.Active.NotNullCallback(mv =>
 		{
-			IDisposable overlay = mv.AddOverlay(geometry, symbol.MakeSymbolReference());
+			double referenceScale = useRealWorldUnits ? 1000 : -1;
+			IDisposable overlay = mv.AddOverlay(geometry, symbol.MakeSymbolReference(), referenceScale);
 
 			_overlays.Add(Assert.NotNull(overlay));
 		});
@@ -166,6 +168,7 @@ public class FlashService : IDisposable
 public interface IFlashSymbol
 {
 	string Name { get; set; }
+	bool UseRealWorldUnits { get; set; }
 
 	CIMSymbol GetSymbol(GeometryType type);
 }
@@ -175,19 +178,23 @@ public class ColoredSymbol : IFlashSymbol
 	private readonly CIMColor _color;
 	private readonly double _width;
 
-	public ColoredSymbol(string name, double R, double G, double B, double width = 4)
-		: this(R, G, B, width)
+	public ColoredSymbol(string name, double R, double G, double B, double width = 4, bool useRealWorldUnits = false)
+		: this(R, G, B, width, useRealWorldUnits)
 	{
 		Name = name;
 	}
 
-	public ColoredSymbol(double R, double G, double B, double width = 4)
+	public ColoredSymbol(double R, double G, double B, double width = 4, bool useRealWorldUnits = false)
 	{
+		UseRealWorldUnits = useRealWorldUnits;
+
 		_width = width;
 		_color = ColorFactory.Instance.CreateRGBColor(R, G, B);
 	}
 
 	public string Name { get; set; }
+
+	public bool UseRealWorldUnits { get; set; }
 
 	public CIMSymbol GetSymbol(GeometryType type)
 	{
@@ -196,19 +203,25 @@ public class ColoredSymbol : IFlashSymbol
 			case GeometryType.Point:
 			case GeometryType.Multipoint:
 			{
-				return SymbolFactory.Instance.ConstructPointSymbol(_color, _width * 1.5);
+				var symbol =  SymbolFactory.Instance.ConstructPointSymbol(_color, _width * 1.5);
+				symbol.UseRealWorldSymbolSizes = UseRealWorldUnits;
+				return symbol;
 			}
 			case GeometryType.Polyline:
 			{
-				return SymbolFactory.Instance.ConstructLineSymbol(_color, _width);
+				var symbol = SymbolFactory.Instance.ConstructLineSymbol(_color, _width);
+				symbol.UseRealWorldSymbolSizes = UseRealWorldUnits;
+				return symbol;
 			}
 			case GeometryType.Polygon:
 			{
 				CIMStroke outline =
 					SymbolFactory.Instance.ConstructStroke(_color, _width, SimpleLineStyle.Solid);
-
-				return SymbolFactory.Instance.ConstructPolygonSymbol(
+					
+				var symbol = SymbolFactory.Instance.ConstructPolygonSymbol(
 					_color, SimpleFillStyle.Null, outline);
+				symbol.UseRealWorldSymbolSizes = UseRealWorldUnits;
+				return symbol;
 			}
 			case GeometryType.Unknown:
 			case GeometryType.Envelope:
