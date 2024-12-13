@@ -77,8 +77,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected bool CanSelectOnlyEditFeatures { get; init; } = true;
 
-	protected bool ToolHasConstructionPhase { get; init; } = true;
-
 	#region abstract
 	
 	protected abstract void LogPromptForSelection();
@@ -140,7 +138,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
 
-		if (ToolHasConstructionPhase && MapUtils.HasSelection(ActiveMapView))
+		if (MapUtils.HasSelection(ActiveMapView))
 		{
 			await ViewUtils.TryAsync(
 				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); }),
@@ -454,7 +452,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 				// change it. You would have to move the mouse to trigger cursor change.
 				//StartContructionPhase();
 
-				bool selectionProcessed = ToolHasConstructionPhase && await ProcessSelectionAsync();
+				bool selectionProcessed = await ProcessSelectionAsync();
 
 				if (selectionProcessed)
 				{
@@ -653,7 +651,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			_toolActivateLatch.Decrement();
 		}
 
-		if (!ToolHasConstructionPhase || args.Selection.Count == 0)
+		if (args.Selection.Count == 0)
 		{
 			LogPromptForSelection();
 			StartSelectionPhase();
