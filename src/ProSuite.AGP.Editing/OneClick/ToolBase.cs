@@ -124,40 +124,45 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected sealed override async Task OnToolActivateAsync(bool hasMapViewChanged)
 	{
-		_msg.Debug($"Activate {Caption}");
-
-		// After on tool activate OnSelectionChangedAsync is fired. But ToolBase just needs
-		// OnSelectionChangedAsync when selection is cleared or to react when a selection
-		// is made but not by the tool itself, e.g. select row in table. In all other cases
-		// we want OnSelectionChangedAsync to be latched. Especially when the tool is activated.
-		_toolActivateLatch.Increment();
-
-		_symbolizedSketch = GetSymbolizedSketch();
-
-		await ViewUtils.TryAsync(QueuedTask.Run(SetupCursors), _msg);
-
-		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
-
-		if (MapUtils.HasSelection(ActiveMapView))
+		try
 		{
-			await ViewUtils.TryAsync(
-				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); }),
-				_msg);
+			// After on tool activate OnSelectionChangedAsync is fired. But ToolBase just needs
+			// OnSelectionChangedAsync when selection is cleared or to react when a selection
+			// is made but not by the tool itself, e.g. select row in table. In all other cases
+			// we want OnSelectionChangedAsync to be latched. Especially when the tool is activated.
+			_toolActivateLatch.Increment();
 
-			bool selectionProcessed = await ViewUtils.TryAsync(ProcessSelectionAsync(), _msg);
+			_symbolizedSketch = GetSymbolizedSketch();
 
-			if (selectionProcessed)
+			await ViewUtils.TryAsync(QueuedTask.Run(SetupCursors), _msg);
+
+			await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
+
+			if (MapUtils.HasSelection(ActiveMapView))
 			{
-				await StartConstructionPhaseAsync();
+				await ViewUtils.TryAsync(
+					QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); }),
+					_msg);
+
+				bool selectionProcessed = await ViewUtils.TryAsync(ProcessSelectionAsync(), _msg);
+
+				if (selectionProcessed)
+				{
+					await StartConstructionPhaseAsync();
+				}
+				else
+				{
+					StartSelectionPhase();
+				}
 			}
 			else
 			{
 				StartSelectionPhase();
 			}
 		}
-		else
+		catch (Exception ex)
 		{
-			StartSelectionPhase();
+			Gateway.ShowError(ex, _msg);
 		}
 	}
 
@@ -413,60 +418,68 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	private async Task<bool> OnSketchCompleteCoreAsync(Geometry geometry)
 	{
-		if (geometry == null || geometry.IsEmpty)
-		{
-			_msg.Debug("Sketch is null or empty");
-			return await Task.FromResult(false);
-		}
-
-		if (MapUtils.HasSelection(ActiveMapView) && InConstructionPhase())
-		{
-			Dictionary<BasicFeatureLayer, List<long>> selection =
-				await GetApplicableSelection<BasicFeatureLayer>();
-
-			if (CanUseSelection(selection, new NotificationCollection()))
-			{
-				bool constructionProcessed = await OnConstructionSketchCompleteAsync(geometry, selection);
-
-				if (constructionProcessed)
-				{
-					StartSelectionPhase();
-					return true; // sketchCompleteEventHandled = true;
-				}
-
-				await StartConstructionPhaseAsync();
-				return true; // sketchCompleteEventHandled = true;
-			}
-		}
-
 		try
 		{
-			// We don't want OnSelectionChangedCoreAsync to react on our selection
-			_latch.Increment();
-			bool validSelection = await OnSelectionSketchCompleteAsync(geometry);
-
-			if (validSelection)
+			if (geometry == null || geometry.IsEmpty)
 			{
-				// OnSketchCompleteAsync is on the GUI thread. Here is the right place to change the cursor.
-				// OnSelectionCompleteAsync is on QueuedTask/MCT thread. Changing cursor there doesn't immediately
-				// change it. You would have to move the mouse to trigger cursor change.
-				//StartContructionPhase();
+				_msg.Debug("Sketch is null or empty");
+				return await Task.FromResult(false);
+			}
 
-				bool selectionProcessed = await ProcessSelectionAsync();
+			if (MapUtils.HasSelection(ActiveMapView) && InConstructionPhase())
+			{
+				Dictionary<BasicFeatureLayer, List<long>> selection =
+					await GetApplicableSelection<BasicFeatureLayer>();
 
-				if (selectionProcessed)
+				if (CanUseSelection(selection, new NotificationCollection()))
 				{
-					StartConstructionPhaseAsync();
-				}
-				else
-				{
-					StartSelectionPhase();
+					bool constructionProcessed =
+						await OnConstructionSketchCompleteAsync(geometry, selection);
+
+					if (constructionProcessed)
+					{
+						StartSelectionPhase();
+						return true; // sketchCompleteEventHandled = true;
+					}
+
+					await StartConstructionPhaseAsync();
+					return true; // sketchCompleteEventHandled = true;
 				}
 			}
+
+			try
+			{
+				// We don't want OnSelectionChangedCoreAsync to react on our selection
+				_latch.Increment();
+				bool validSelection = await OnSelectionSketchCompleteAsync(geometry);
+
+				if (validSelection)
+				{
+					// OnSketchCompleteAsync is on the GUI thread. Here is the right place to change the cursor.
+					// OnSelectionCompleteAsync is on QueuedTask/MCT thread. Changing cursor there doesn't immediately
+					// change it. You would have to move the mouse to trigger cursor change.
+					//StartContructionPhase();
+
+					bool selectionProcessed = await ProcessSelectionAsync();
+
+					if (selectionProcessed)
+					{
+						await StartConstructionPhaseAsync();
+					}
+					else
+					{
+						StartSelectionPhase();
+					}
+				}
+			}
+			finally
+			{
+				_latch.Decrement();
+			}
 		}
-		finally
+		catch (Exception ex)
 		{
-			_latch.Decrement();
+			Gateway.ShowError(ex, _msg);
 		}
 
 		return true; // sketchCompleteEventHandled = true;
@@ -566,38 +579,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	#region selection
 
-	// todo daro refactoring
-
-	/// <returns><b>true</b>: selection processed and start construction phase,
-	/// <b>false</b>: stay in selection phase.</returns>
-	//private async Task<bool> ProcessSelectionAsync()
-	//{
-	//	using var source = GetProgressorSource();
-	//	var progressor = source?.Progressor;
-
-	//	Task<bool> task = QueuedTaskUtils.Run(() =>
-	//	{
-	//		Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
-	//			SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
-
-	//		if (! CanUseSelection(selectionByLayer, new NotificationCollection()))
-	//		{
-	//			return Task.FromResult(false); // startContructionPhase = false
-	//		}
-
-	//		IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
-	//			GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
-
-	//		if (applicableSelection.Count == 0)
-	//		{
-	//			return Task.FromResult(false);
-	//		}
-
-	//		return ProcessSelectionCoreAsync(applicableSelection, progressor);
-	//	}, progressor);
-
-	//	return await ViewUtils.TryAsync(task, _msg);
-	//}
 	protected async Task<bool> ProcessSelectionAsync()
 	{
 		using var source = GetProgressorSource();
