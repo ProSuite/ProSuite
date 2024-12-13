@@ -19,6 +19,9 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using Path = System.IO.Path;
+#if !Server
+using ESRI.ArcGIS.GeoDatabaseExtensions;
+#endif
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
