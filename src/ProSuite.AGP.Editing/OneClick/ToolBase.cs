@@ -506,7 +506,12 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			_msg.Error(ex.Message, ex);
 		}
 
-		return MapUtils.HasSelection(ActiveMapView);
+		return await OnSelectionSketchCompleteCoreAsync(geometry);
+	}
+
+	protected virtual Task<bool> OnSelectionSketchCompleteCoreAsync(Geometry geometry)
+	{
+		return Task.FromResult(MapUtils.HasSelection(ActiveMapView));
 	}
 
 	protected virtual IPickerPrecedence CreatePickerPrecedence(Geometry sketchGeometry)
@@ -593,8 +598,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	//	return await ViewUtils.TryAsync(task, _msg);
 	//}
-
-	private async Task<bool> ProcessSelectionAsync()
+	protected async Task<bool> ProcessSelectionAsync()
 	{
 		using var source = GetProgressorSource();
 		var progressor = source?.Progressor;
