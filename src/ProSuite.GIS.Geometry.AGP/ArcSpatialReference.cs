@@ -1,15 +1,21 @@
 using System;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geometry.AGP
 {
-	public class ArcSpatialReference : ISpatialReference
+	public class ArcSpatialReference : ISpatialReference,
+	                                   ISpatialReferenceResolution,
+	                                   ISpatialReferenceTolerance
 	{
 		private readonly SpatialReference _proSpatialReference;
 
-		public ArcSpatialReference(SpatialReference proSpatialReference)
+		public ArcSpatialReference([NotNull] SpatialReference proSpatialReference)
 		{
+			Assert.ArgumentNotNull(proSpatialReference, nameof(proSpatialReference));
+
 			_proSpatialReference = proSpatialReference;
 		}
 
@@ -143,6 +149,75 @@ namespace ProSuite.GIS.Geometry.AGP
 		public void Changed()
 		{
 			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		#region Implementation of ISpatialReferenceResolution
+
+		public double get_XYResolution(bool bStandardUnits)
+		{
+			// TODO: Probably not the same any more!
+			return ProSpatialReference.XYResolution;
+		}
+
+		public double get_ZResolution(bool bStandardUnits)
+		{
+			if (ProSpatialReference.ZScale > 0)
+			{
+				return 1 / ProSpatialReference.ZScale;
+			}
+
+			return double.NaN;
+		}
+
+		#endregion
+
+		#region Implementation of ISpatialReferenceTolerance
+
+		public double XYTolerance => ProSpatialReference.XYTolerance;
+		public double ZTolerance => ProSpatialReference.ZTolerance;
+		public double MTolerance => ProSpatialReference.MTolerance;
+
+		#endregion
+
+		#region Equality members
+
+		protected bool Equals(ArcSpatialReference other)
+		{
+			return SpatialReference.AreEqual(_proSpatialReference, other._proSpatialReference,
+			                                 false, true);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is null)
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != GetType())
+			{
+				return false;
+			}
+
+			return Equals((ArcSpatialReference) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			if (_proSpatialReference == null)
+			{
+				return 0;
+			}
+
+			return HashCode.Combine(_proSpatialReference.LatestWkid,
+			                        _proSpatialReference.VcsWkid);
 		}
 
 		#endregion

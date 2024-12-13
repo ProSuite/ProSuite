@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
@@ -27,13 +29,20 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			}
 		}
 
+		public IPickableItem PickBest(IEnumerable<IPickableItem> items)
+		{
+			throw new NotImplementedException();
+		}
+
 		public int SelectionTolerance { get; set; }
 		public bool IsSingleClick { get; }
 		public bool AggregateItems { get; }
 		public Point PickerLocation { get; set; }
 
-		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
-		                                bool areaSelect = false)
+		public SpatialRelationship SpatialRelationship { get; }
+		public SelectionCombinationMethod SelectionCombinationMethod { get; }
+
+		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
 		{
 			return PickerMode.PickBest;
 		}
@@ -46,6 +55,16 @@ namespace ProSuite.AGP.Editing.Test.Picker
 		public Geometry GetSelectionGeometry()
 		{
 			return SelectionGeometry;
+		}
+
+		public IPickableItemsFactory CreateItemsFactory()
+		{
+			throw new NotImplementedException();
+		}
+
+		public IPickableItemsFactory CreateItemsFactory<T>() where T : IPickableItem
+		{
+			throw new NotImplementedException();
 		}
 
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)

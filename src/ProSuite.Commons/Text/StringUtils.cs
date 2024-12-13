@@ -68,6 +68,13 @@ namespace ProSuite.Commons.Text
 		}
 
 		[NotNull]
+		public static string RemoveWhiteSpaceCharacters([NotNull] string text)
+		{
+			return new string(text.Where(c => ! char.IsWhiteSpace(c))
+			                      .ToArray());
+		}
+
+		[NotNull]
 		public static string ConcatenateSorted(
 			[NotNull] IEnumerable list,
 			[CanBeNull] string separator,

@@ -6,18 +6,21 @@ using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.AGP.Editing.Properties;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
@@ -27,11 +30,12 @@ using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
-	public abstract class OneClickToolBase : MapTool
+	public abstract class OneClickToolBase : MapTool, ISketchTool
 	{
 		private const Key _keyShowOptionsPane = Key.O;
 		private const Key _keyPolygonDraw = Key.P;
 		private const Key _keyLassoDraw = Key.L;
+		private const Key _keyDisplayVertices = Key.T;
 
 		private int _updateErrorCounter;
 		private const int MaxUpdateErrors = 10;
@@ -45,6 +49,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Point CurrentMousePosition;
 
+		[NotNull] private SketchAndCursorSetter _selectionSketchCursor;
+
+		// ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
 		protected OneClickToolBase()
 		{
 			ContextMenuID = "esri_mapping_selection2DContextMenu";
@@ -54,6 +61,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			HandledKeys.Add(_keyLassoDraw);
 			HandledKeys.Add(_keyPolygonDraw);
 			HandledKeys.Add(_keyShowOptionsPane);
+			HandledKeys.Add(_keyDisplayVertices);
 		}
 
 		/// <summary>
@@ -89,9 +97,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// The currently pressed keys.
 		/// </summary>
 		protected HashSet<Key> PressedKeys { get; } = new();
-
-		protected virtual Cursor SelectionCursor { get; set; }
-		protected virtual Cursor SelectionCursorShift { get; set; }
 
 		/// <summary>
 		/// Flag to indicate that currently the selection is changed by the <see cref="OnSelectionSketchCompleteAsync"/> method.
@@ -140,22 +145,54 @@ namespace ProSuite.AGP.Editing.OneClick
 				using var source = GetProgressorSource();
 				var progressor = source?.Progressor;
 
-				await QueuedTaskUtils.Run(() =>
+				await QueuedTaskUtils.Run(async () =>
 				{
-					OnToolActivatingCore();
+					SetupCursors();
+
+					await OnToolActivatingCoreAsync();
 
 					if (RequiresSelection)
 					{
 						ProcessSelection(progressor);
 					}
 
-					return OnToolActivatedCore(hasMapViewChanged);
+					// ReSharper disable once MethodHasAsyncOverload
+					return OnToolActivatedCore(hasMapViewChanged) &&
+					       await OnToolActivatedCoreAsync(hasMapViewChanged);
 				}, progressor);
 			}
 			catch (Exception ex)
 			{
 				ErrorHandler.HandleError(ex, _msg);
 			}
+		}
+
+		private void SetupCursors()
+		{
+			_selectionSketchCursor =
+				SketchAndCursorSetter.Create(this,
+				                             GetSelectionCursor(),
+				                             GetSelectionCursorLasso(),
+				                             GetSelectionCursorPolygon(),
+				                             GetSelectionSketchGeometryType(),
+				                             DefaultSketchTypeOnFinishSketch);
+
+			_selectionSketchCursor.SetSelectionCursorShift(GetSelectionCursorShift());
+			_selectionSketchCursor.SetSelectionCursorLassoShift(GetSelectionCursorLassoShift());
+			_selectionSketchCursor.SetSelectionCursorPolygonShift(GetSelectionCursorPolygonShift());
+		}
+
+		protected virtual bool DefaultSketchTypeOnFinishSketch =>
+			GetSelectionSettings().PreferRectangleSelectionSketch;
+
+		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
+		{
+			var options = new VertexSymbolOptions(vertexSymbolType)
+			              {
+				              Color = ColorUtils.CreateRGB(0, 0, 0, 0),
+				              OutlineColor = ColorUtils.CreateRGB(0, 0, 0, 0)
+			              };
+			SetSketchVertexSymbolOptions(vertexSymbolType, options);
 		}
 
 		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
@@ -203,9 +240,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				if (KeyboardUtils.IsShiftKey(args.Key))
 				{
-					// todo daro rename to SetShiftCursor?
-					// This sets shift cursor. But don't do it in QueuedTask because
-					// tool cursor is not updated until mouse is moved for the first time.
 					await ShiftPressedCoreAsync();
 				}
 
@@ -214,46 +248,34 @@ namespace ProSuite.AGP.Editing.OneClick
 					await HandleEscapeAsync();
 				}
 
-				if (await IsInSelectionPhaseAsync())
+				if (args.Key == _keyDisplayVertices)
 				{
-					if (args.Key == _keyPolygonDraw)
-					{
-						SetupPolygonSketch();
-					}
-
-					if (args.Key == _keyLassoDraw)
-					{
-						SetupLassoSketch();
-					}
+					ToggleVertices();
 				}
 
 				await HandleKeyDownCoreAsync(args);
 			}
 			catch (Exception ex)
 			{
-				ViewUtils.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
-		private void SetupLassoSketch()
-		{
-			SetupSketch(SketchGeometryType.Lasso, enforceSimpleSketch: true);
+		protected virtual void ToggleVertices() { }
 
-			SetupLassoSketchCore();
+		protected virtual Task SetupLassoSketchAsync()
+		{
+			_selectionSketchCursor.Toggle(SketchGeometryType.Lasso, KeyboardUtils.IsShiftDown());
+
+			return Task.CompletedTask;
 		}
 
-		protected virtual void SetupLassoSketchCore() { }
-
-		private void SetupPolygonSketch()
+		protected virtual Task SetupPolygonSketchAsync()
 		{
-			SetupSketch(SketchGeometryType.Polygon, enforceSimpleSketch: true);
+			_selectionSketchCursor.Toggle(SketchGeometryType.Polygon, KeyboardUtils.IsShiftDown());
 
-			// TODO: Sketch symbol: No vertices
-
-			SetupPolygonSketchCore();
+			return Task.CompletedTask;
 		}
-
-		protected virtual void SetupPolygonSketchCore() { }
 
 		protected override void OnToolKeyUp(MapViewKeyEventArgs args)
 		{
@@ -286,42 +308,65 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			try
 			{
+				if (args.Key == _keyPolygonDraw)
+				{
+					await SetupPolygonSketchAsync();
+				}
+
+				if (args.Key == _keyLassoDraw)
+				{
+					await SetupLassoSketchAsync();
+				}
+
 				if (KeyboardUtils.IsShiftKey(args.Key))
 				{
 					await ShiftReleasedCoreAsync();
-				}
-
-				if (await IsInSelectionPhaseAsync() && args.Key is _keyPolygonDraw or _keyLassoDraw)
-				{
-					await ResetSelectionSketchAsync();
 				}
 
 				await HandleKeyUpCoreAsync(args);
 			}
 			catch (Exception ex)
 			{
-				ViewUtils.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
-		private async Task ResetSelectionSketchAsync()
+		protected override void OnToolMouseDown(MapViewMouseButtonEventArgs args)
 		{
-			SetupSketch(GetSelectionSketchGeometryType());
+			_msg.VerboseDebug(() => $"OnToolMouseDown ({Caption})");
 
-			await ResetSketchCoreAsync();
+			ViewUtils.Try(() => { OnToolMouseDownCore(args); }, _msg,
+			              suppressErrorMessageBox: false);
 		}
 
-		protected virtual Task ResetSketchCoreAsync()
+		protected override async void OnToolDoubleClick(MapViewMouseButtonEventArgs args)
 		{
-			return Task.CompletedTask;
+			try
+			{
+				if (SketchType == SketchGeometryType.Polygon && await IsInSelectionPhaseAsync())
+				{
+					await FinishSketchAsync();
+				}
+			}
+			catch (Exception ex)
+			{
+				Gateway.ShowError(ex, _msg);
+			}
 		}
+
+		protected virtual void OnToolMouseDownCore(MapViewMouseButtonEventArgs args) { }
 
 		protected override void OnToolMouseMove(MapViewMouseEventArgs args)
 		{
 			CurrentMousePosition = args.ClientPoint;
 
-			base.OnToolMouseMove(args);
+			_msg.VerboseDebug(() => $"OnToolMouseMove ({Caption})");
+
+			ViewUtils.Try(() => { OnToolMouseMoveCore(args); }, _msg,
+			              suppressErrorMessageBox: true);
 		}
+
+		protected virtual void OnToolMouseMoveCore(MapViewMouseEventArgs args) { }
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
 		{
@@ -352,21 +397,16 @@ namespace ProSuite.AGP.Editing.OneClick
 				_lastSketch = sketchGeometry;
 				_lastSketchFinishedTime = DateTime.Now;
 
-				ViewUtils.Try(() =>
-				{
-					if (SketchType == SketchGeometryType.Polygon)
-					{
-						// Otherwise relational operators and spatial queries return the wrong result
-						sketchGeometry = GeometryUtils.Simplify(sketchGeometry);
-					}
-				}, _msg);
-
 				using var source = GetProgressorSource();
 				var progressor = source?.Progressor;
 
 				if (RequiresSelection && await IsInSelectionPhaseAsync())
 				{
-					return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
+					// Otherwise relational operators and spatial queries return the wrong result
+					Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
+					Assert.NotNull(simpleGeometry, "Geometry is null");
+
+					return await OnSelectionSketchCompleteAsync(simpleGeometry, progressor);
 				}
 
 				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
@@ -385,61 +425,53 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual async Task ShiftPressedCoreAsync()
 		{
-			if (SelectionCursorShift != null && await IsInSelectionPhaseCoreAsync(true))
+			if (await IsInSelectionPhaseAsync())
 			{
-				SetCursor(SelectionCursorShift);
+				_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
 			}
 		}
 
 		protected virtual async Task ShiftReleasedCoreAsync()
 		{
-			if (SelectionCursor != null && await IsInSelectionPhaseCoreAsync(true))
+			if (await IsInSelectionPhaseAsync())
 			{
-				SetCursor(SelectionCursor);
+				_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
 			}
 		}
 
 		protected void StartSelectionPhase()
 		{
-			SelectionSettings settings = GetSelectionSettings();
-
-			SetupSketch(GetSelectionSketchGeometryType(), settings.SketchOutputMode);
-
-			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
-
-			SetCursor(shiftDown ? SelectionCursorShift : SelectionCursor);
+			SetupSelectionSketch();
 
 			OnSelectionPhaseStarted();
 		}
 
-		/// <summary>
-		/// Sets up the tool for a sketch that is typically used
-		/// to select things (features, graphics, etc.)
-		/// </summary>
-		protected void SetupRectangleSketch()
+		protected void SetupSelectionSketch()
 		{
-			SetupSketch(SketchGeometryType.Rectangle);
+			ClearSketchAsync();
+
+			SetupSketch();
+
+			_selectionSketchCursor.ResetOrDefault();
 		}
 
-		protected void SetupSketch(SketchGeometryType? sketchType,
-		                           SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
+		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
 		                           bool useSnapping = false,
 		                           bool completeSketchOnMouseUp = true,
 		                           bool enforceSimpleSketch = false)
 		{
 			_msg.VerboseDebug(
 				() =>
-					$"Setting up sketch with type {sketchType}, output mode {sketchOutputMode}, " +
+					$"Setting up sketch with type {SketchType}, output mode {sketchOutputMode}, " +
 					$"snapping: {useSnapping}, completeSketchOnMouseUp: {completeSketchOnMouseUp}, " +
 					$"enforceSimplifySketch: {enforceSimpleSketch}");
 
+			// screen coords are currently not supported and only relevant
+			// when selecting with the View being in 3D viewing mode
 			SketchOutputMode = sketchOutputMode;
 
 			// Note: set CompleteSketchOnMouseUp before SketchType, or it has no effect
 			CompleteSketchOnMouseUp = completeSketchOnMouseUp;
-
-			SketchType = sketchType;
 
 			UseSnapping = useSnapping;
 
@@ -447,6 +479,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		protected abstract SketchGeometryType GetSelectionSketchGeometryType();
+
+		public SketchGeometryType GetDefaultSelectionSketchType()
+		{
+			return GetSelectionSketchGeometryType();
+		}
 
 		protected virtual void OnSelectionPhaseStarted() { }
 
@@ -493,12 +530,30 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		/// <remarks>Will be called on MCT</remarks>
-		protected virtual void OnToolActivatingCore() { }
+		protected virtual Task OnToolActivatingCoreAsync()
+		{
+			return Task.CompletedTask;
+		}
 
-		/// <remarks>Will be called on MCT</remarks>
+		/// <summary>
+		/// Synchronous method called on the MCT after the tool has been activated.
+		/// </summary>
+		/// <param name="hasMapViewChanged"></param>
+		/// <returns></returns>
 		protected virtual bool OnToolActivatedCore(bool hasMapViewChanged)
 		{
 			return true;
+		}
+
+		/// <summary>
+		/// Async method called on the MCT after the tool has been activated.
+		/// </summary>
+		/// <param name="hasMapViewChanged"></param>
+		/// <returns></returns>
+		/// <remarks>Will be called on MCT</remarks>
+		protected virtual Task<bool> OnToolActivatedCoreAsync(bool hasMapViewChanged)
+		{
+			return Task.FromResult(true);
 		}
 
 		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
@@ -512,9 +567,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		[CanBeNull]
 		protected virtual CancelableProgressorSource GetProgressorSource()
 		{
-			var message = Caption ?? string.Empty;
-			const bool delayedShow = true;
-			return new CancelableProgressorSource(message, "Cancelling", delayedShow);
+			// NOTE: Tools that support thea picker are currently not compatible with a progressor
+			//       ArcGIS Pro crashes, whenever the picker and the progress window are both open.
+
+			// Subclasses shall individually configure the progressor source
+			return null;
 		}
 
 		protected virtual Task<bool> OnSketchCompleteCoreAsync(
@@ -537,11 +594,20 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				IsCompletingSelectionSketch = true;
 
-				using var pickerPrecedence = CreatePickerPrecedence(sketchGeometry);
+				using var precedence = CreatePickerPrecedence(sketchGeometry);
 
-				await PickerUtils.ShowAsync(pickerPrecedence, FindFeaturesOfAllLayers);
+				await QueuedTaskUtils.Run(async () =>
+				{
+					IEnumerable<FeatureSelectionBase> candidates =
+						FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
+						                        precedence.SpatialRelationship);
 
-				await QueuedTaskUtils.Run(() => ProcessSelection(progressor), progressor);
+					List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
+
+					PickerUtils.Select(items, precedence.SelectionCombinationMethod);
+
+					ProcessSelection(progressor);
+				}, progressor);
 			}
 			finally
 			{
@@ -675,7 +741,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected bool UnJoinedSelection { get; set; } = true;
 
-		protected void SetCursor([CanBeNull] Cursor cursor)
+		public void SetCursor([CanBeNull] Cursor cursor)
 		{
 			if (cursor == null)
 			{
@@ -828,6 +894,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		// todo: daro drop!
 		[NotNull]
 		protected IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
 			[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
@@ -901,6 +968,63 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			var map = ActiveMapView?.Map;
 			map?.ClearSelection();
+		}
+
+		public void SetSketchType(SketchGeometryType? sketchType)
+		{
+			SketchType = sketchType;
+		}
+
+		public SketchGeometryType? GetSketchType()
+		{
+			return SketchType;
+		}
+
+		protected virtual Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross,
+			                              Resources.SelectOverlay, 10, 10);
+		}
+
+		protected virtual Cursor GetSelectionCursorShift()
+		{
+			return
+				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
+				                       Resources.Shift, null, 10, 10);
+		}
+
+		protected virtual Cursor GetSelectionCursorLasso()
+		{
+			return
+				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
+				                       Resources.Lasso, null, 10, 10);
+		}
+
+		protected virtual Cursor GetSelectionCursorLassoShift()
+		{
+			return
+				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
+				                       Resources.Lasso, Resources.Shift, 10, 10);
+		}
+
+		protected virtual Cursor GetSelectionCursorPolygon()
+		{
+			return
+				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
+				                       Resources.Polygon, null, 10, 10);
+		}
+
+		protected virtual Cursor GetSelectionCursorPolygonShift()
+		{
+			return
+				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
+				                       Resources.Polygon, Resources.Shift, 10, 10);
+		}
+
+		protected async Task<bool> NonEmptyPolygonSketchAsync()
+		{
+			return SketchType == SketchGeometryType.Polygon &&
+			       ! (await GetCurrentSketchAsync()).IsEmpty;
 		}
 	}
 }

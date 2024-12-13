@@ -9,7 +9,8 @@ namespace ProSuite.Commons.AGP.Gdb
 	/// <summary>
 	///     Represents a lightweight reference to a geodatabase object.
 	/// </summary>
-	public struct GdbRowIdentity : IEquatable<GdbRowIdentity>, IComparable<GdbRowIdentity>
+	public struct GdbRowIdentity : IEquatable<GdbRowIdentity>, IComparable<GdbRowIdentity>,
+	                               IRowReference
 	{
 		public GdbRowIdentity([NotNull] Row row)
 		{
@@ -63,22 +64,23 @@ namespace ProSuite.Commons.AGP.Gdb
 			}
 		}
 
-		//[Pure]
-		//public bool References([NotNull] Row row)
-		//{
-		//	Assert.ArgumentNotNull(row, nameof(row));
+		#region Implementation of IRowReference
 
-		//	return Equals(new GdbRowIdentity(row));
-		//}
+		public bool References(Row row)
+		{
+			return ObjectId == row.GetObjectID() &&
+			       Table.ReferencesTable(row.GetTable());
+		}
 
-		//[Pure]
-		//public bool References([NotNull] Table table)
-		//{
-		//	Assert.ArgumentNotNull(table, nameof(table));
+		public bool References(Table table, long objectId)
+		{
+			return ObjectId == objectId &&
+			       Table.ReferencesTable(table);
+		}
 
-		//	var other = new GdbWorkspaceIdentity(table.GetDatastore());
-		//	return Equals(Workspace, other);
-		//}
+		public ITableReference TableReference => Table;
+
+		#endregion
 
 		public override string ToString()
 		{

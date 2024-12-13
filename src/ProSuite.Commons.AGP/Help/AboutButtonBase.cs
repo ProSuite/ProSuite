@@ -4,8 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -13,7 +13,7 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Help;
 
-public abstract class AboutButtonBase : Button
+public abstract class AboutButtonBase : ButtonCommandBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -27,27 +27,20 @@ public abstract class AboutButtonBase : Button
 		_caption = caption;
 	}
 
-	protected override void OnClick()
+	protected override Task<bool> OnClickCore()
 	{
-		Gateway.LogEntry(_msg);
+		var configFileSearcher = GetConfigFileSearcher();
 
-		try
-		{
-			var configFileSearcher = GetConfigFileSearcher();
+		var items = new List<AboutItem>();
+		CollectInformation(items, configFileSearcher);
 
-			var items = new List<AboutItem>();
-			CollectInformation(items, configFileSearcher);
+		var message = AboutItem.GetPlainText(items);
 
-			var message = AboutItem.GetPlainText(items);
+		_msg.Info(message);
 
-			_msg.Info(message);
+		Gateway.ShowDialog<AboutWindow>(_caption, items);
 
-			Gateway.ShowDialog<AboutWindow>(_caption, items);
-		}
-		catch (Exception ex)
-		{
-			Gateway.ShowError(ex, _msg);
-		}
+		return Task.FromResult(true);
 	}
 
 	[CanBeNull]

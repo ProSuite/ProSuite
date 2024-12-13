@@ -1,8 +1,3 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesGDB;
-#else
-using ESRI.ArcGIS.DataSourcesGDB;
-#endif
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,13 +12,19 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Properties;
 using ProSuite.Commons.Com;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Diagnostics;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
+#if Server
+using ESRI.ArcGIS.DatasourcesGDB;
+
+#else
+using ESRI.ArcGIS.DataSourcesGDB;
+#endif
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
@@ -353,6 +354,41 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static IFeatureWorkspace OpenPgdbFeatureWorkspace([NotNull] string path)
 		{
 			return (IFeatureWorkspace) OpenPgdbWorkspace(path);
+		}
+
+		/// <summary>
+		/// Opens a mobile geodatabase workspace.
+		/// </summary>
+		/// <param name="path">The path to the mobile geodatabase file (*.geodatabase).</param>
+		/// <returns></returns>
+		[NotNull]
+		public static IWorkspace OpenMobileGdbWorkspace([NotNull] string path)
+		{
+			Assert.ArgumentNotNullOrEmpty(path, nameof(path));
+
+			string connectionString = string.Format("DATABASE={0}", path);
+			return OpenMobileGdbWorkspaceFromString(connectionString);
+		}
+
+		[NotNull]
+		public static IWorkspace OpenMobileGdbWorkspaceFromString(
+			[NotNull] string connectionString)
+		{
+			Assert.ArgumentNotNullOrEmpty(connectionString, nameof(connectionString));
+
+			var factory = (IWorkspaceFactory2) GetSqliteWorkspaceFactory();
+
+			_msg.VerboseDebug(
+				() =>
+					$"Opening mobile geodatabase workspace using connection string {connectionString}");
+
+			return OpenWorkspace(factory, connectionString);
+		}
+
+		[NotNull]
+		public static IFeatureWorkspace OpenMobileGdbFeatureWorkspace([NotNull] string path)
+		{
+			return (IFeatureWorkspace) OpenMobileGdbWorkspace(path);
 		}
 
 		[NotNull]
@@ -891,6 +927,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 					return OpenPgdbWorkspace(catalogPath);
 				}
 
+				if (catalogPath.EndsWith(".geodatabase",
+				                         StringComparison.InvariantCultureIgnoreCase))
+				{
+					return OpenMobileGdbWorkspace(catalogPath);
+				}
+
 				if (Directory.Exists(catalogPath))
 				{
 					return (IWorkspace) OpenShapefileWorkspace(catalogPath);
@@ -1046,6 +1088,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (versionedWorkspace1 == null && versionedWorkspace2 == null)
 			{
+				if (string.IsNullOrEmpty(workspace1.PathName) &&
+				    string.IsNullOrEmpty(workspace2.PathName))
+				{
+					// This could be a non-geodatabase Postgres database:
+					// Note: Even the same password results in a different encrypted string -> replace
+					string connectionString1 = GetConnectionString(workspace1, true);
+					string connectionString2 = GetConnectionString(workspace2, true);
+
+					return connectionString1.Equals(connectionString2,
+					                                StringComparison.OrdinalIgnoreCase);
+				}
+
 				// both are not versioned. Compare file paths
 				if (string.IsNullOrEmpty(workspace1.PathName) ||
 				    string.IsNullOrEmpty(workspace2.PathName))
@@ -1286,30 +1340,62 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return false;
 			}
 
-			if (((IWorkspaceEdit) workspace).IsBeingEdited())
+			bool refreshed = false;
+
+			try
 			{
-				return false;
+				if (((IWorkspaceEdit) workspace).IsBeingEdited())
+				{
+					return false;
+				}
+
+				if (! IsVersionRedefined(version))
+				{
+					return false;
+				}
+
+				_msg.InfoFormat("Version {0} is redefined and will be refreshed",
+				                version.VersionName);
+				version.RefreshVersion();
+
+				refreshed = true;
+			}
+			catch (COMException e)
+			{
+				if (e.ErrorCode == (int) fdoError.FDO_E_SE_VERSION_NOEXIST &&
+				    IsMobileGeodatabase(workspace))
+				{
+					// Mobile geodatabases implement IVersionedWorkspace and IVersion,
+					// but everything else fails...
+				}
+				else
+				{
+					throw;
+				}
 			}
 
-			if (! IsVersionRedefined(version))
-			{
-				return false;
-			}
-
-			_msg.InfoFormat("Version {0} is redefined and will be refreshed",
-			                version.VersionName);
-			version.RefreshVersion();
-			return true;
+			return refreshed;
 		}
 
 		public static bool IsVersionRedefined([NotNull] IVersion version)
 		{
+			try
+			{
 #if Server11
-			var version2 = version;
+				var version2 = version;
 #else
-			var version2 = (IVersion2) version;
+				var version2 = (IVersion2) version;
 #endif
-			return version2.IsRedefined;
+				return version2.IsRedefined;
+			}
+			catch (Exception e)
+			{
+				// IVersion2.IsRedefined is likely failing in PostGIS:
+				// System.Runtime.InteropServices.COMException (0x80041538): Underlying DBMS error [no connection to the server ::SQLSTATE=Þ] [sde.DEFAULT]
+				_msg.Debug("Error while determining whether the version is re-defined.", e);
+
+				return false;
+			}
 		}
 
 		public static bool IsVersionRedefined(IFeatureWorkspace workspace)
@@ -1785,8 +1871,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		[NotNull]
 		public static string GetConnectionString([NotNull] IWorkspaceName workspaceName,
 		                                         bool replacePassword = false,
-		                                         [CanBeNull] string passwordPadding =
-			                                         null)
+		                                         [CanBeNull] string passwordPadding = null)
 		{
 			Assert.ArgumentNotNull(workspaceName, nameof(workspaceName));
 
@@ -1951,15 +2036,42 @@ namespace ProSuite.Commons.AO.Geodatabase
 				passwordPadding = "**********";
 			}
 
-			string passwordKeyword;
-			int passwordKeywordIndex = GetPasswordKeywordIndex(workspaceConnectionString,
-			                                                   out passwordKeyword);
-
-			if (passwordKeywordIndex < 0)
+			var result = StringUtils.RemoveWhiteSpaceCharacters(workspaceConnectionString);
+			foreach (string passwordKeyword in GetPasswordKeywords())
 			{
-				return workspaceConnectionString;
+				string keyword = $"{passwordKeyword}=";
+
+				// NOTE: The various password keywords contain each other. We have to search
+				//       including the delimiters:
+				int keywordIndex;
+				if (result.StartsWith(keyword, StringComparison.OrdinalIgnoreCase))
+				{
+					keywordIndex = 0;
+				}
+				else
+				{
+					keyword = $";{keyword}";
+					keywordIndex = result.IndexOf(keyword, 0,
+					                              StringComparison.OrdinalIgnoreCase);
+				}
+
+				if (keywordIndex < 0)
+				{
+					continue;
+				}
+
+				result = ReplacePassword(result,
+				                         passwordPadding,
+				                         keywordIndex, passwordKeyword);
 			}
 
+			return result;
+		}
+
+		private static string ReplacePassword(string workspaceConnectionString,
+		                                      string passwordPadding,
+		                                      int passwordKeywordIndex, string passwordKeyword)
+		{
 			// there is a password in the string, replace it
 			int pwdSeparator1Index =
 				workspaceConnectionString.IndexOf("=",
@@ -2566,6 +2678,24 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//                          StringComparison.OrdinalIgnoreCase);
 		}
 
+		public static bool IsMobileGeodatabase([NotNull] IWorkspace workspace)
+		{
+			string workspacePath = GetWorkspacePath(workspace);
+
+			return workspacePath != null &&
+			       workspacePath.EndsWith(".geodatabase", StringComparison.OrdinalIgnoreCase);
+
+			// Original implementation which fails for GdbWorkspace implementations:
+
+			//Assert.ArgumentNotNull(workspace, nameof(workspace));
+
+			//const string mobileGdbClassId = "{DEB394DD-6F72-4C2C-AB4D-4C4E04CBBF9F}";
+
+			//return workspace.Type == esriWorkspaceType.esriLocalDatabaseWorkspace &&
+			//       mobileGdbClassId.Equals(GetWorkspaceFactoryClassID(workspace),
+			//                               StringComparison.OrdinalIgnoreCase);
+		}
+
 		/// <summary>
 		/// Determines whether the specified workspace is an SDE workspace.
 		/// DO NOT USE with custom workspace implementations.
@@ -2793,7 +2923,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (! IsOleDbWorkspace(workspace))
 			{
-				return workspace.Type == esriWorkspaceType.esriRemoteDatabaseWorkspace;
+				return IsMobileGeodatabase(workspace) ||
+				       workspace.Type == esriWorkspaceType.esriRemoteDatabaseWorkspace;
 			}
 
 			// try to determine if workspace content uses qualified dataset names
@@ -2839,9 +2970,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 					{
 						return WorkspaceDbType.FileGeodatabase;
 					}
-					else if (IsPersonalGeodatabase(workspace))
+
+					if (IsPersonalGeodatabase(workspace))
 					{
 						return WorkspaceDbType.PersonalGeodatabase;
+					}
+
+					if (IsMobileGeodatabase(workspace))
+					{
+						return WorkspaceDbType.MobileGeodatabase;
 					}
 
 					break;
@@ -2895,6 +3032,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				case WorkspaceDbType.FileGeodatabase:
 				case WorkspaceDbType.PersonalGeodatabase:
+				case WorkspaceDbType.MobileGeodatabase:
 					return esriWorkspaceType.esriLocalDatabaseWorkspace;
 				case WorkspaceDbType.ArcSDE:
 				case WorkspaceDbType.ArcSDESqlServer:
@@ -2945,6 +3083,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			yield return "PASSWORD";
 			yield return "ENCRYPTED_PASSWORD";
+			yield return "ENCRYPTED_PASSWORD_UTF8";
 		}
 
 		[NotNull]
@@ -3055,6 +3194,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static IWorkspaceFactory GetAccessWorkspaceFactory()
 		{
 			return GetWorkspaceFactory("esriDataSourcesGDB.AccessWorkspaceFactory");
+		}
+
+		[NotNull]
+		public static IWorkspaceFactory GetSqliteWorkspaceFactory()
+		{
+			return GetWorkspaceFactory("esriDataSourcesGDB.SqliteWorkspaceFactory");
 		}
 
 		[NotNull]

@@ -275,14 +275,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return modelElement.Name;
 			}
 
-			// TODO check if workspace required database name part, and add assertion?
+			Assert.False(string.IsNullOrWhiteSpace(databaseName) &&
+			             string.IsNullOrWhiteSpace(schemaOwner),
+			             "Neither databaseName nor schemaOwner: Cannot qualify name for unqualified dataset {0}",
+			             modelElement.Name);
 
-			Assert.NotNullOrEmpty(schemaOwner,
-			                      $"Unknown schema owner, cannot qualify name for unqualified dataset {modelElement.Name}");
+			// TODO check if workspace requires databaseName and/or schemaOwner part, and add assertion?
 
 			return DatasetUtils.QualifyTableName(workspace,
-			                                     databaseName,
-			                                     schemaOwner,
+			                                     databaseName, schemaOwner,
 			                                     modelElement.Name);
 		}
 

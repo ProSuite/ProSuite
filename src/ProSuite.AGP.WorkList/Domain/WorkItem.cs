@@ -45,7 +45,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			OID = itemId;
 			UniqueTableId = uniqueTableId;
-			Proxy = identity;
+			GdbRowProxy = identity;
 			Status = WorkItemStatus.Todo;
 		}
 
@@ -55,11 +55,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region IWorkItem
 
-		public long OID { get; set; }
+		public long OID { get; }
 
 		public long UniqueTableId { get; }
 
-		public long ObjectID => Proxy.ObjectId;
+		public long ObjectID => GdbRowProxy.ObjectId;
 
 		public bool Visited
 		{
@@ -73,7 +73,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			set { _status = value; }
 		}
 
-		public GdbRowIdentity Proxy { get; }
+		public GdbRowIdentity GdbRowProxy { get; }
 
 		public Envelope Extent { get; private set; }
 
@@ -107,7 +107,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public override string ToString()
 		{
-			return $"{Proxy}: {Status}, {Visited}";
+			return $"{GdbRowProxy}: {Status}, {Visited}";
 		}
 
 		[NotNull]
@@ -142,7 +142,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		[CanBeNull]
 		private Row GetRow()
 		{
-			return Proxy.GetRow();
+			return GdbRowProxy.GetRow();
 		}
 
 		public void SetGeometryFromFeature([CanBeNull] Feature feature)

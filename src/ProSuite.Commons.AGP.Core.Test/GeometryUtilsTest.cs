@@ -578,6 +578,64 @@ public class GeometryUtilsTest
 		GeometryUtils.RemoveVertices(builder, 0, 99);
 	}
 
+	[Test]
+	public void CanGetLocalVertexIndex()
+	{
+		int part;
+		var polygon = CreateMultiPolygon();
+
+		// This polygon has 7 parts, each having 5 vertices, 35 in total:
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 1, out part));
+		Assert.AreEqual(0, part);
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 6, out part));
+		Assert.AreEqual(1, part);
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 11, out part));
+		Assert.AreEqual(2, part);
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 16, out part));
+		Assert.AreEqual(3, part);
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 21, out part));
+		Assert.AreEqual(4, part);
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 26, out part));
+		Assert.AreEqual(5, part);
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 31, out part));
+		Assert.AreEqual(6, part);
+
+		// Can catch global index out of range:
+		Assert.Throws<ArgumentOutOfRangeException>(
+			() => GeometryUtils.GetLocalVertexIndex(polygon, 35, out part));
+	}
+
+	[Test]
+	public void CanGetGlobalVertexIndex()
+	{
+		var polygon = CreateMultiPolygon();
+
+		// This polygon has 7 parts, each having 5 vertices, 35 in total:
+
+		Assert.AreEqual(1, GeometryUtils.GetGlobalVertexIndex(polygon, 0, 1));
+		Assert.AreEqual(6, GeometryUtils.GetGlobalVertexIndex(polygon, 1, 1));
+		Assert.AreEqual(11, GeometryUtils.GetGlobalVertexIndex(polygon, 2, 1));
+		Assert.AreEqual(16, GeometryUtils.GetGlobalVertexIndex(polygon, 3, 1));
+		Assert.AreEqual(21, GeometryUtils.GetGlobalVertexIndex(polygon, 4, 1));
+		Assert.AreEqual(26, GeometryUtils.GetGlobalVertexIndex(polygon, 5, 1));
+		Assert.AreEqual(31, GeometryUtils.GetGlobalVertexIndex(polygon, 6, 1));
+
+		// Can catch part index out of range:
+		Assert.Throws<ArgumentOutOfRangeException>(
+			() => GeometryUtils.GetGlobalVertexIndex(polygon, 7, 1));
+
+		// Can catch local index out of range:
+		Assert.Throws<ArgumentOutOfRangeException>(
+			() => GeometryUtils.GetGlobalVertexIndex(polygon, 1, 6));
+	}
+
 	#region Creating test geometries
 
 	private static MapPoint Pt(double x, double y)
@@ -599,6 +657,10 @@ public class GeometryUtilsTest
 		return builder.ToGeometry();
 	}
 
+	/// <summary>
+	/// Create a polygon of 7 parts, each having 5 vertices, 35 in total.
+	/// The parts are arranged as shown in the sketch within the method.
+	/// </summary>
 	private static Polygon CreateMultiPolygon()
 	{
 		// 5 . . . . . # # # # # # # . . .

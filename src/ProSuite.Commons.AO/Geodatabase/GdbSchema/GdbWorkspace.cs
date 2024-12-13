@@ -574,6 +574,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				case WorkspaceDbType.FileSystem:
 				case WorkspaceDbType.FileGeodatabase:
 				case WorkspaceDbType.PersonalGeodatabase:
+				case WorkspaceDbType.MobileGeodatabase:
 					return esriConnectionDBMS.esriDBMS_Unknown;
 				case WorkspaceDbType.ArcSDE:
 					return esriConnectionDBMS.esriDBMS_Unknown;

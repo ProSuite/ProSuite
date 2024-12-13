@@ -20,6 +20,7 @@ public interface IWhiteSelection
 	bool Add(long oid); // add just the oid/shape, don't select any vertices
 	bool Remove(long oid); // also removes oid's geom from cache
 	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
+	bool Combine(long oid, SetCombineMethod method);
 	bool Clear(); // true iff changed, even if only an "empty oid" is removed; cache not cleared
 
 	int InvolvedFeatureCount { get; }
@@ -38,7 +39,7 @@ public interface IWhiteSelection
 	IShapeSelection GetShapeSelection(long oid);
 
 	// Implementation has a cache oid => Geometry
-	Geometry GetGeometry(long oid); // TODO drop from iface (now that we have IShapeSelection.Shape)
+	Geometry GetGeometry(long oid);
 	void CacheGeometries(params long[] oid);
 	void ClearGeometryCache();
 
@@ -132,6 +133,18 @@ public class WhiteSelection : IWhiteSelection
 		return changed;
 	}
 
+	public bool Combine(long oid, SetCombineMethod method)
+	{
+		if (! _shapes.TryGetValue(oid, out var selection))
+		{
+			var shape = GetGeometry(oid);
+			selection = new ShapeSelection(shape);
+			_shapes.Add(oid, selection);
+		}
+
+		return selection.CombineShape(method);
+	}
+
 	public bool Remove(long oid)
 	{
 		_geometryCache.Remove(oid);
@@ -205,6 +218,7 @@ public class WhiteSelection : IWhiteSelection
 
 	public bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex)
 	{
+		// TODO This finds *first* in tolerance, should get *closest* instead
 		foreach (var pair in _shapes)
 		{
 			var selection = pair.Value;
@@ -218,6 +232,17 @@ public class WhiteSelection : IWhiteSelection
 		vertex = null;
 		return false;
 	}
+
+	//public MapPoint NearestVertex(MapPoint hitPoint, out int partIndex,
+	//                              out int vertexIndex, out bool selected)
+	//{
+	//	foreach (var pair in _shapes)
+	//	{
+	//		var selection = pair.Value;
+
+	//		selection.NearestVertex(hitPoint, out _, out partIndex, out vertexIndex, out selected);
+	//	}
+	//}
 
 	public IEnumerable<long> GetInvolvedOIDs()
 	{
@@ -297,18 +322,25 @@ public class WhiteSelection : IWhiteSelection
 	{
 		if (objectIDs is null || objectIDs.Count < 1) return;
 
-		using var fc = Layer.GetFeatureClass();
-		using var defn = fc.GetDefinition();
+		foreach (var oid in objectIDs)
+		{
+			_geometryCache.Remove(oid);
+		}
 
-		var shapeField = defn.GetShapeField();
-		var oidField = defn.GetObjectIDField();
+		using var featureClass = Layer.GetFeatureClass();
+		if (featureClass is null) return; // layer invalid (during shutdown/map removal/etc)
+
+		using var definition = featureClass.GetDefinition();
+
+		var shapeField = definition.GetShapeField();
+		var oidField = definition.GetObjectIDField();
 
 		var filter = new QueryFilter { SubFields = $"{oidField},{shapeField}" };
 
 		filter.ObjectIDs = objectIDs;
 
-		using var cursor = Layer.Search(filter);
-		if (cursor is null) return; // no valid data source
+		using var cursor = featureClass.Search(filter);
+		if (cursor is null) return; // paranoia
 
 		while (cursor.MoveNext())
 		{
@@ -350,20 +382,6 @@ public class WhiteSelection : IWhiteSelection
 			result.Add(cleared
 				           ? IWhiteSelection.RefreshInfo.Modified(oid, reason)
 				           : IWhiteSelection.RefreshInfo.Retained(oid));
-
-			//if (selection.IsCompatible(newShape, out var message))
-			//{
-			//	// new and previous shape are compatible: set and keep vertex selection
-			//	selection.SetShape(newShape);
-			//	result.Add(IWhiteSelection.RefreshInfo.Updated(oid));
-			//}
-			//else
-			//{
-			//	// new shape is incompatible (type, parts, vertex count): set and clear selection
-			//	selection.Clear();
-			//	selection.SetShape(newShape);
-			//	result.Add(IWhiteSelection.RefreshInfo.Removed(oid, message));
-			//}
 		}
 
 		return result;

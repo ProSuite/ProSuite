@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
 using Version = ArcGIS.Core.Data.Version;
@@ -12,16 +13,21 @@ namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcWorkspace : IFeatureWorkspace
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-		private readonly ArcGIS.Core.Data.Geodatabase _geodatabase;
-
-		public ArcWorkspace(ArcGIS.Core.Data.Geodatabase geodatabase)
+		public static ArcWorkspace Create(ArcGIS.Core.Data.Geodatabase geodatabase)
 		{
-			_geodatabase = geodatabase;
+			return geodatabase.IsVersioningSupported()
+				       ? new ArcVersionedWorkspace(geodatabase)
+				       : new ArcWorkspace(geodatabase);
 		}
 
-		public ArcGIS.Core.Data.Geodatabase Geodatabase => _geodatabase;
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		public ArcGIS.Core.Data.Geodatabase Geodatabase { get; }
+
+		protected ArcWorkspace(ArcGIS.Core.Data.Geodatabase geodatabase)
+		{
+			Geodatabase = geodatabase;
+		}
 
 		#region Implementation of IWorkspace
 
@@ -34,7 +40,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			switch (datasetType)
 			{
 				case esriDatasetType.esriDTFeatureClass:
-					foreach (FeatureClassDefinition definition in _geodatabase
+					foreach (FeatureClassDefinition definition in Geodatabase
 						         .GetDefinitions<FeatureClassDefinition>())
 					{
 						yield return Open(definition);
@@ -42,7 +48,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 					break;
 				case esriDatasetType.esriDTTable:
-					foreach (TableDefinition definition in _geodatabase
+					foreach (TableDefinition definition in Geodatabase
 						         .GetDefinitions<TableDefinition>())
 					{
 						yield return Open(definition);
@@ -50,7 +56,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 					break;
 				case esriDatasetType.esriDTRelationshipClass:
-					foreach (RelationshipClassDefinition definition in _geodatabase
+					foreach (RelationshipClassDefinition definition in Geodatabase
 						         .GetDefinitions<RelationshipClassDefinition>())
 					{
 						yield return Open(definition);
@@ -97,20 +103,20 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			if (definition is FeatureClassDefinition)
 			{
 				FeatureClass proTable =
-					_geodatabase.OpenDataset<FeatureClass>(definition.GetName());
-				return ArcUtils.ToArcTable(proTable);
+					Geodatabase.OpenDataset<FeatureClass>(definition.GetName());
+				return ArcGeodatabaseUtils.ToArcTable(proTable);
 			}
 
 			if (definition is TableDefinition)
 			{
-				Table proTable = _geodatabase.OpenDataset<Table>(definition.GetName());
-				return ArcUtils.ToArcTable(proTable);
+				Table proTable = Geodatabase.OpenDataset<Table>(definition.GetName());
+				return ArcGeodatabaseUtils.ToArcTable(proTable);
 			}
 
 			if (definition is RelationshipClassDefinition)
 			{
 				RelationshipClass proRelClass =
-					_geodatabase.OpenDataset<RelationshipClass>(definition.GetName());
+					Geodatabase.OpenDataset<RelationshipClass>(definition.GetName());
 				return new ArcRelationshipClass(proRelClass);
 			}
 
@@ -144,13 +150,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			//}
 		}
 
-		public string PathName => _geodatabase.GetPath().AbsolutePath;
+		public string PathName => Geodatabase.GetPath().AbsolutePath;
 
-		public esriWorkspaceType Type => (esriWorkspaceType) _geodatabase.GetGeodatabaseType();
+		public esriWorkspaceType Type => (esriWorkspaceType) Geodatabase.GetGeodatabaseType();
 
 		public bool IsDirectory()
 		{
-			GeodatabaseType geodatabaseType = _geodatabase.GetGeodatabaseType();
+			GeodatabaseType geodatabaseType = Geodatabase.GetGeodatabaseType();
 
 			return geodatabaseType == GeodatabaseType.FileSystem ||
 			       geodatabaseType == GeodatabaseType.LocalDatabase;
@@ -158,26 +164,26 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public bool Exists()
 		{
-			Uri uri = _geodatabase.GetPath();
+			Uri uri = Geodatabase.GetPath();
 
 			return Directory.Exists(uri.LocalPath);
 		}
 
 		public void ExecuteSql(string sqlStmt)
 		{
-			DatabaseClient.ExecuteStatement(_geodatabase, sqlStmt);
+			DatabaseClient.ExecuteStatement(Geodatabase, sqlStmt);
 		}
 
 		public esriConnectionDBMS DbmsType
 		{
 			get
 			{
-				if (_geodatabase.GetGeodatabaseType() != GeodatabaseType.RemoteDatabase)
+				if (Geodatabase.GetGeodatabaseType() != GeodatabaseType.RemoteDatabase)
 				{
 					return esriConnectionDBMS.esriDBMS_Unknown;
 				}
 
-				var connectionProps = _geodatabase.GetConnector() as DatabaseConnectionProperties;
+				var connectionProps = Geodatabase.GetConnector() as DatabaseConnectionProperties;
 
 				if (connectionProps == null)
 				{
@@ -199,59 +205,20 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public ITable OpenTable(string name)
 		{
-			return ArcUtils.ToArcTable(_geodatabase.OpenDataset<Table>(name));
+			return ArcGeodatabaseUtils.ToArcTable(Geodatabase.OpenDataset<Table>(name));
 		}
-
-		//public ITable CreateTable(string Name, IFields Fields, UID CLSID, UID EXTCLSID, string ConfigKeyword)
-		//{
-		//	return _aoFeatureWorkspace.CreateTable(Name, Fields, CLSID, EXTCLSID, ConfigKeyword);
-		//}
 
 		public IFeatureClass OpenFeatureClass(string name)
 		{
 			return (IFeatureClass) OpenTable(name);
 		}
 
-		//public IFeatureClass CreateFeatureClass(string Name, IFields Fields, UID CLSID, UID EXTCLSID, esriFeatureType FeatureType,
-		//	string ShapeFieldName, string ConfigKeyword)
-		//{
-		//	return _aoFeatureWorkspace.CreateFeatureClass(Name, Fields, CLSID, EXTCLSID, FeatureType, ShapeFieldName, ConfigKeyword);
-		//}
-
-		//public IFeatureDataset OpenFeatureDataset(string name)
-		//{
-		//	return _geodatabase.OpenDataset<FeatureDataset>(name);
-		//}
-
-		//public IFeatureDataset CreateFeatureDataset(string name, ISpatialReference spatialReference)
-		//{
-		//	return _aoFeatureWorkspace.CreateFeatureDataset(name, spatialReference);
-		//}
-
-		//public IQueryDef CreateQueryDef()
-		//{
-		//	return _aoFeatureWorkspace.CreateQueryDef();
-		//}
-
-		//public IFeatureDataset OpenFeatureQuery(string queryName, IQueryDef queryDef)
-		//{
-		//	return _aoFeatureWorkspace.OpenFeatureQuery(queryName, queryDef);
-		//}
-
 		public IRelationshipClass OpenRelationshipClass(string name)
 		{
-			var proRelClass = _geodatabase.OpenDataset<RelationshipClass>(name);
+			var proRelClass = Geodatabase.OpenDataset<RelationshipClass>(name);
 
 			return new ArcRelationshipClass(proRelClass);
 		}
-
-		//public IRelationshipClass CreateRelationshipClass(string relClassName, IObjectClass OriginClass, IObjectClass DestinationClass,
-		//	string ForwardLabel, string BackwardLabel, esriRelCardinality Cardinality, esriRelNotification Notification,
-		//	bool IsComposite, bool IsAttributed, IFields relAttrFields, string OriginPrimaryKey, string destPrimaryKey,
-		//	string OriginForeignKey, string destForeignKey)
-		//{
-		//	return _aoFeatureWorkspace.CreateRelationshipClass(relClassName, OriginClass, DestinationClass, ForwardLabel, BackwardLabel, Cardinality, Notification, IsComposite, IsAttributed, relAttrFields, OriginPrimaryKey, destPrimaryKey, OriginForeignKey, destForeignKey);
-		//}
 
 		public ITable OpenRelationshipQuery(
 			IRelationshipClass relClass,
@@ -298,15 +265,15 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public IEnumerable<IDomain> Domains()
 		{
-			return _geodatabase.GetDomains().Select(d => new ArcDomain(d));
+			return Geodatabase.GetDomains().Select(ArcGeodatabaseUtils.ToArcDomain);
 		}
 
 		public IDomain get_DomainByName(string domainName)
 		{
-			return (from proDomain in _geodatabase.GetDomains()
+			return (from proDomain in Geodatabase.GetDomains()
 			        where proDomain.GetName()
 			                       .Equals(domainName, StringComparison.InvariantCultureIgnoreCase)
-			        select new ArcDomain(proDomain)).FirstOrDefault();
+			        select ArcGeodatabaseUtils.ToArcDomain(proDomain)).FirstOrDefault();
 		}
 
 		public bool IsSameDatabase(IFeatureWorkspace otherWorkspace)
@@ -321,18 +288,18 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				return false;
 			}
 
-			if (otherArcWorkspace.Geodatabase.Handle == _geodatabase.Handle)
+			if (otherArcWorkspace.Geodatabase.Handle == Geodatabase.Handle)
 			{
 				return true;
 			}
 
-			if (_geodatabase.IsVersioningSupported() !=
+			if (Geodatabase.IsVersioningSupported() !=
 			    otherArcWorkspace.Geodatabase.IsVersioningSupported())
 			{
 				return false;
 			}
 
-			if (! _geodatabase.IsVersioningSupported())
+			if (! Geodatabase.IsVersioningSupported())
 			{
 				// both are not versioned. Compare file paths
 				if (string.IsNullOrEmpty(PathName) ||
@@ -349,7 +316,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 
 			// Both are versioned. Compare creation date of default version.
-			VersionManager thisVersionManager = _geodatabase.GetVersionManager();
+			VersionManager thisVersionManager = Geodatabase.GetVersionManager();
 			VersionManager otherVersionManager = otherArcWorkspace.Geodatabase.GetVersionManager();
 
 			if (thisVersionManager == null || otherVersionManager == null)
@@ -395,6 +362,102 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 
 			return Equals(thisModifyDate, otherModifyDate);
+		}
+
+		#endregion
+	}
+
+	public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
+	{
+		private VersionManager VersionManager { get; }
+		private Version Version { get; }
+
+		public ArcVersionedWorkspace(ArcGIS.Core.Data.Geodatabase geodatabase, string versionName)
+			: this(geodatabase, geodatabase.GetVersionManager().GetVersion(versionName)) { }
+
+		public ArcVersionedWorkspace(ArcGIS.Core.Data.Geodatabase geodatabase,
+		                             Version version = null) : base(geodatabase)
+		{
+			Assert.True(geodatabase.IsVersioningSupported(),
+			            "This geodatabase cannot be used as versioned workspace.");
+			VersionManager = Assert.NotNull(geodatabase.GetVersionManager());
+
+			Version = version ?? VersionManager.GetDefaultVersion();
+		}
+
+		#region Implementation of IVersion
+
+		public IVersionInfo VersionInfo => new VersionInfo(Version);
+
+		public string VersionName => Version.GetName();
+
+		public string Description => Version.GetDescription();
+
+		public bool HasParent()
+		{
+			return Version.GetParent() != null;
+		}
+
+		public void Delete()
+		{
+			throw new NotImplementedException();
+		}
+
+		public void RefreshVersion()
+		{
+			Version.Refresh();
+		}
+
+		public IVersion CreateVersion(string newName)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		#region Implementation of IVersionedWorkspace
+
+		//public IEnumerable<IVersionInfo> Versions =>
+		//	VersionManager.GetVersions().Select(v => new VersionInfo(v));
+
+		public IVersion DefaultVersion =>
+			new ArcVersionedWorkspace(Geodatabase, VersionManager.GetDefaultVersion());
+
+		public IVersion FindVersion(string Name)
+		{
+			Version proVersion = VersionManager.GetVersion(Name);
+
+			return new ArcVersionedWorkspace(Geodatabase, proVersion);
+		}
+
+		#endregion
+	}
+
+	public class VersionInfo : IVersionInfo
+	{
+		private readonly Version _version;
+
+		public VersionInfo(Version version)
+		{
+			_version = version;
+		}
+
+		#region Implementation of IVersionInfo
+
+		public string VersionName => _version.GetName();
+		public string Description => _version.GetDescription();
+		public object Created => _version.GetCreatedDate();
+		public object Modified => _version.GetModifiedDate();
+
+		public IVersionInfo Parent =>
+			_version.GetParent() != null ? new VersionInfo(_version.GetParent()) : null;
+
+		public IEnumerable<IVersionInfo> Children =>
+			_version.GetChildren().Select(c => new VersionInfo(c));
+
+		public bool IsOwner()
+		{
+			return _version.IsOwner();
 		}
 
 		#endregion

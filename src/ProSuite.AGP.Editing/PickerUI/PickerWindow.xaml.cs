@@ -6,9 +6,9 @@ namespace ProSuite.AGP.Editing.PickerUI
 {
 	public partial class PickerWindow : IDisposable, ICloseable
 	{
-		private readonly PickerViewModel _viewModel;
+		private readonly IPickerViewModel _viewModel;
 
-		public PickerWindow(PickerViewModel viewModel)
+		public PickerWindow(IPickerViewModel viewModel)
 		{
 			InitializeComponent();
 

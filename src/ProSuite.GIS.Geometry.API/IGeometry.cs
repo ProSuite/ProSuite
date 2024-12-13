@@ -16,15 +16,41 @@ namespace ProSuite.GIS.Geometry.API
 
 		IEnvelope Envelope { get; }
 
-		void Project(ISpatialReference newReferenceSystem);
+		//void Project(ISpatialReference newReferenceSystem);
 
 		void SnapToSpatialReference();
 
-		void GeoNormalize();
+		//void GeoNormalize();
 
-		void GeoNormalizeFromLongitude(double Longitude);
+		//void GeoNormalizeFromLongitude(double Longitude);
 
+		// TODO: Clone<T>()
 		IGeometry Clone();
+
+		// TODO: ZAware, MAware, PointIDAware
+	}
+
+	public interface IMutableGeometry //<T> where T : class
+	{
+		object ToNativeImplementation();
+	}
+
+	public interface IZAware
+	{
+		bool ZAware { get; set; }
+
+		bool ZSimple { get; }
+
+		//void DropZs();
+	}
+
+	public interface IMAware
+	{
+		bool MAware { get; set; }
+
+		bool MSimple { get; }
+
+		//void DropMs();
 	}
 
 	public enum esriGeometryDimension

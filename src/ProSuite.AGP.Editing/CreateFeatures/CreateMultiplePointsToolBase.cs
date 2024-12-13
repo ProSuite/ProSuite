@@ -143,18 +143,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			return success;
 		}
 
-		protected override CancelableProgressor GetSketchCompleteProgressor()
-		{
-			var sketchCompleteProgressorSource =
-				new CancelableProgressorSource("Creating multiple points from the sketch...",
-				                               "cancelled");
-
-			CancelableProgressor sketchCompleteProgressor =
-				sketchCompleteProgressorSource.Progressor;
-
-			return sketchCompleteProgressor;
-		}
-
 		#endregion
 
 		#region Virtual members

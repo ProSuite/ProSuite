@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -35,6 +36,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			get { return _statesByRow ??= ReadStatesByRow(); }
 		}
 
+		public string WorkListDefinitionFilePath { get; set; }
+
 		public int? CurrentIndex { get; set; }
 
 		public IWorkItem Refresh(IWorkItem item)
@@ -62,12 +65,12 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 				state = CreateState(item);
 
 				var gdbObjectReference =
-					new GdbObjectReference(item.UniqueTableId, item.Proxy.ObjectId);
+					new GdbObjectReference(item.UniqueTableId, item.ObjectID);
 
 				StatesByRow.Add(gdbObjectReference, state);
 			}
 
-			GdbTableIdentity table = item.Proxy.Table;
+			GdbTableIdentity table = item.GdbRowProxy.Table;
 			GdbWorkspaceIdentity workspace = table.Workspace;
 
 			if (_workspaces.TryGetValue(workspace, out SimpleSet<GdbTableIdentity> tables))
@@ -86,6 +89,11 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 		public void UpdateVolatileState(IEnumerable<IWorkItem> items)
 		{
+			// Ensure StatesByRow is initialized!
+			// TODO: Create the item repository based on the XML/JSON definition to ensure it is
+			// only read once. We don't gain anything by delaying the reading of the file.
+			IDictionary<GdbObjectReference, TState> statesByRow = StatesByRow;
+
 			foreach (IWorkItem item in items)
 			{
 				Update(item);
@@ -94,25 +102,12 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 		public void Commit(IList<ISourceClass> sourceClasses)
 		{
-			// could be an empty work list > don't store definition file
-			if (_statesByRow == null)
-			{
-				_msg.Debug(
-					"Work item states have never been read, failed to read or have already been discarded.");
-				return;
-			}
+			Assert.NotNull(_statesByRow,
+			               "Work item states have never been read, failed to read or have already been discarded");
 
-			if (_workspaces.Count == 0)
+			if (_workspaces.Count == 0 && _statesByRow.Count > 0)
 			{
-				if (_statesByRow.Count == 0)
-				{
-					_msg.Debug("No workspaces and no work item states");
-				}
-				else
-				{
-					_msg.Warn($"{Name}: Invalid work list will not be stored.");
-				}
-
+				_msg.Warn($"{Name}: Invalid work list will not be stored.");
 				return;
 			}
 

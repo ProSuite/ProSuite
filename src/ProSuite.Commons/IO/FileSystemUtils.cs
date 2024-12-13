@@ -321,6 +321,17 @@ namespace ProSuite.Commons.IO
 			}
 		}
 
+		public static void AppendToTextFile(string s, string filePath,
+		                                    Encoding encoding = null)
+		{
+			if (encoding == null)
+			{
+				encoding = Encoding.Unicode;
+			}
+
+			File.AppendAllText(filePath, s + Environment.NewLine, encoding);
+		}
+
 		[NotNull]
 		public static string ExpandPathVariables([NotNull] string path)
 		{

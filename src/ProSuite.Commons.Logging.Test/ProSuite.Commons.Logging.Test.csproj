@@ -27,7 +27,9 @@
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.15" />
+    <!-- DPS/#217: Allow other components in the same process to use a different log4net version.
+		     Example: X-Tools Add-in. -->
+		<PackageReference Include="log4net" Version="[2.0.12,2.0.17]" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
     <PackageReference Include="NSubstitute" Version="4.4.0" />
     <PackageReference Include="NUnit" Version="3.13.3" />

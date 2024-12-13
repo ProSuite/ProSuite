@@ -1,25 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
+using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Text;
 using ProSuite.GIS.Geodatabase.API;
+using ProSuite.GIS.Geometry.AGP;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcTable : ITable, IObjectClass, ISubtypes
 	{
-		//private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObjectClass _aoObjectClass;
-		//private readonly EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset _aoDataset;
-
 		public ArcTable(Table proTable)
 		{
 			ProTable = proTable;
 			ProTableDefinition = proTable.GetDefinition();
-
-			//_aoObjectClass = (EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IObjectClass)table;
-			//_aoDataset = (EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDataset)table;
 		}
 
 		public Table ProTable { get; }
@@ -35,41 +33,65 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		void IClass.AddField(IField field)
 		{
-			throw new AbandonedMutexException();
-			//ArcField arcField = (ArcField)field;
-
-			//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField aoField = arcField.ProField;
-			//_table.AddField(aoField);
+			throw new NotImplementedException();
 		}
 
 		void IClass.DeleteField(IField field)
 		{
-			throw new AbandonedMutexException();
-			//ArcField arcField = (ArcField)field;
-			//_table.DeleteField(arcField.ProField);
+			throw new NotImplementedException();
 		}
 
-		//public void AddIndex(IIndex Index)
-		//{
-		//	_aoObjectClass.AddIndex(Index);
-		//}
-
-		//public void DeleteIndex(IIndex Index)
-		//{
-		//	_aoObjectClass.DeleteIndex(Index);
-		//}
-
-		//public int FindField(string Name)
-		//{
-		//	return _aoObjectClass.FindField(Name);
-		//}
-
-		public IRow CreateRow()
+		public IRow CreateRow(int? subtypeCode = null)
 		{
-			RowBuffer rowBuffer = ProTable.CreateRowBuffer();
+			if (subtypeCode == null)
+			{
+				subtypeCode = DatasetUtils.GetDefaultSubtypeCode(ProTableDefinition);
+			}
+
+			Subtype subtype = DatasetUtils.GetSubtype(ProTableDefinition, subtypeCode);
+
+			RowBuffer rowBuffer = ProTable.CreateRowBuffer(subtype);
+
+			GdbObjectUtils.SetNullValuesToGdbDefault(
+				rowBuffer, ProTableDefinition, subtype);
+
+			if (ProTable is FeatureClass fc)
+			{
+				// TODO: Move to GeometryFactory
+				ArcGIS.Core.Geometry.Geometry geometry;
+				switch (fc.GetShapeType())
+				{
+					case GeometryType.Point:
+						geometry = new MapPointBuilder().ToGeometry();
+						break;
+					case GeometryType.Polyline:
+						geometry = new PolylineBuilder().ToGeometry();
+						break;
+					case GeometryType.Polygon:
+						geometry = new PolygonBuilder().ToGeometry();
+						break;
+					case GeometryType.Multipoint:
+						geometry = new MultipointBuilder().ToGeometry();
+						break;
+					case GeometryType.Multipatch:
+						geometry = new MultipatchBuilderEx().ToGeometry();
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				FeatureClassDefinition classDefinition = fc.GetDefinition();
+
+				geometry =
+					GeometryUtils.EnsureGeometrySchema(geometry, classDefinition.HasZ(),
+					                                   classDefinition.HasM());
+
+				rowBuffer[fc.GetDefinition().GetShapeField()] = geometry;
+			}
+
 			Row proRow = ProTable.CreateRow(rowBuffer);
 
-			return ArcUtils.ToArcRow(proRow);
+			return ArcGeodatabaseUtils.ToArcRow(proRow);
 		}
 
 		public IRow GetRow(long oid)
@@ -86,7 +108,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				while (rowCursor.MoveNext())
 				{
-					return ArcUtils.ToArcRow(rowCursor.Current);
+					return ArcGeodatabaseUtils.ToArcRow(rowCursor.Current);
 				}
 			}
 
@@ -111,7 +133,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				while (rowCursor.MoveNext())
 				{
-					yield return ArcUtils.ToArcRow(rowCursor.Current, this);
+					yield return ArcGeodatabaseUtils.ToArcRow(rowCursor.Current, this);
 				}
 			}
 		}
@@ -119,22 +141,16 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		public IRowBuffer CreateRowBuffer()
 		{
 			throw new NotImplementedException();
-			//return _aoTable.CreateRowBuffer();
 		}
 
 		public void UpdateSearchedRows(IQueryFilter queryFilter, IRowBuffer buffer)
 		{
 			throw new NotImplementedException();
-			//var arcQueryFilter = (ArcQueryFilter) queryFilter;
-			//var arcRow = (ArcRow) buffer;
-			//_proTable.UpdateSearchedRows(arcQueryFilter.ProQueryFilter, arcRow.ProRow);
 		}
 
 		public void DeleteSearchedRows(IQueryFilter queryFilter)
 		{
 			throw new NotImplementedException();
-			//var arcQueryFilter = (ArcQueryFilter) queryFilter;
-			//_proTable.DeleteSearchedRows(arcQueryFilter.ProQueryFilter);
 		}
 
 		public long RowCount(IQueryFilter queryFilter)
@@ -144,72 +160,23 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return ProTable.GetCount(proQueryFilter);
 		}
 
-		private static QueryFilter GetProQueryFilter(IQueryFilter queryFilter)
-		{
-			QueryFilter proQueryFilter;
-
-			if (queryFilter is ArcQueryFilter arcQueryFilter)
-			{
-				proQueryFilter = arcQueryFilter.ProQueryFilter;
-			}
-			else if (queryFilter is TableFilter tableFilter)
-			{
-				proQueryFilter = new QueryFilter()
-				                 {
-					                 SubFields = tableFilter.SubFields,
-					                 WhereClause = tableFilter.WhereClause,
-					                 PostfixClause = tableFilter.PostfixClause,
-					                 //OutputSpatialReference = tableFilter.OutputSpatialReference
-				                 };
-			}
-			else
-			{
-				throw new ArgumentException("Unknown filter type");
-			}
-
-			return proQueryFilter;
-		}
-
-		//public IEnumerable<IRow> EnumRows(IQueryFilter queryFilter, bool recycle)
-		//{
-		//	foreach (var row in new EnumCursor(this, queryFilter, recycle))
-		//	{
-		//		yield return row;
-		//	}
-		//}
-
 		public IEnumerable<IRow> Search(IQueryFilter queryFilter, bool recycling)
 		{
 			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
 
 			RowCursor cursor = ProTable.Search(proQueryFilter, recycling);
 
-			return ArcUtils.GetArcRows(cursor, this);
-			//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IRow row;
-
-			//while ((row = cursor.NextRow()) != null)
-			//{
-			//	yield return ToArcObject(row);
-			//}
+			return ArcGeodatabaseUtils.GetArcRows(cursor, this);
 		}
 
 		public IEnumerable<IRow> Update(IQueryFilter queryFilter, bool recycling)
 		{
 			throw new NotImplementedException();
-			//var arcQueryFilter = (ArcQueryFilter) queryFilter;
-
-			//ICursor cursor = _proTable.Update(arcQueryFilter.AoQueryFilter, recycling);
-
-			//return ArcUtils.GetArcRows(cursor);
 		}
 
 		public IEnumerable<IRow> Insert(bool useBuffering)
 		{
 			throw new NotImplementedException();
-
-			//ICursor cursor = _proTable.Insert(useBuffering);
-
-			//return ArcUtils.GetArcRows(cursor);
 		}
 
 		public ISelectionSet Select(
@@ -220,8 +187,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
 
-			ArcWorkspace arcWorkspace = (ArcWorkspace) selectionContainer;
-
 			Selection selectionSet = ProTable.Select(proQueryFilter,
 			                                         (SelectionType) selType,
 			                                         (SelectionOption) selOption);
@@ -231,50 +196,14 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public object NativeImplementation => ProTable;
 
-		//void IClass.AddField(IField field)
-		//{
-		//	ArcField arcField = (ArcField)field;
-
-		//	EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField aoField = arcField.AoField;
-
-		//	_aoTable.AddField(aoField);
-		//}
-
-		//void IClass.DeleteField(IField field)
-		//{
-		//	ArcField arcField = (ArcField)field;
-
-		//	EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IField aoField = arcField.AoField;
-
-		//	_aoTable.DeleteField(aoField);
-		//}
-
-		//void IClass.AddIndex(IIndex Index)
-		//{
-		//	_aoTable.AddIndex(Index);
-		//}
-
-		//void IClass.DeleteIndex(IIndex Index)
-		//{
-		//	_aoTable.DeleteIndex(Index);
-		//}
-
 		public IFields Fields => new ArcFields(ProTableDefinition.GetFields(),
 		                                       this is ArcFeatureClass fc
 			                                       ? fc.GeometryDefinition
 			                                       : null);
 
-		//public IIndexes Indexes => ((IClass)_aoTable).Indexes;
-
 		public bool HasOID => ProTableDefinition.HasObjectID();
 
 		public string OIDFieldName => ProTableDefinition.GetObjectIDField();
-
-		//public UID CLSID => _aoTable.CLSID;
-
-		//public UID EXTCLSID => _aoTable.EXTCLSID;
-
-		//public object Extension => _aoTable.Extension;
 
 		public long ObjectClassID => ProTable.GetID();
 
@@ -309,20 +238,23 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			foreach (var relClassDef in geodatabase.GetDefinitions<RelationshipClassDefinition>())
 			{
 				string relClassName = relClassDef.GetName();
+				string thisTableName = ProTableDefinition.GetName();
 
-				if (role == esriRelRole.esriRelRoleAny)
+				if (role == esriRelRole.esriRelRoleAny &&
+				    (relClassDef.GetOriginClass() == thisTableName ||
+				     relClassDef.GetDestinationClass() == thisTableName))
 				{
 					yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				}
 
 				if (role == esriRelRole.esriRelRoleOrigin &&
-				    relClassDef.GetOriginClass() == ProTableDefinition.GetName())
+				    relClassDef.GetOriginClass() == thisTableName)
 				{
 					yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				}
 
 				if (role == esriRelRole.esriRelRoleDestination &&
-				    relClassDef.GetDestinationClass() == ProTableDefinition.GetName())
+				    relClassDef.GetDestinationClass() == thisTableName)
 				{
 					yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				}
@@ -337,8 +269,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			return new ArcRelationshipClass(relClass);
 		}
-
-		//public IPropertySet ExtensionProperties => _aoTable.ExtensionProperties;
 
 		#endregion
 
@@ -379,7 +309,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			set => throw new NotImplementedException();
 		}
 
-		public esriDatasetType Type => (esriDatasetType) esriDatasetType.esriDTTable;
+		public esriDatasetType Type => esriDatasetType.esriDTTable;
 
 		public string Category => throw new NotImplementedException();
 
@@ -399,17 +329,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					return null;
 				}
 
-				return new ArcWorkspace(geodatabase);
+				return ArcWorkspace.Create(geodatabase);
 			}
 		}
-		//public IWorkspace Workspace => new ArcWorkspace(_aoDataset.Workspace);
-
-		//public IPropertySet PropertySet => _aoDataset.PropertySet;
-
-		//public IDataset Copy(string copyName, IWorkspace copyWorkspace)
-		//{
-		//	return _aoDataset.Copy(copyName, copyWorkspace);
-		//}
 
 		#endregion
 
@@ -427,7 +349,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			Field field = GetExistingField(fieldName);
 
-			ArcGIS.Core.Data.Subtype subtype =
+			Subtype subtype =
 				ProTableDefinition.GetSubtypes()
 				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
@@ -443,19 +365,14 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			Field field = GetExistingField(fieldName);
 
-			ArcGIS.Core.Data.Subtype subtype =
+			Subtype subtype =
 				ProTableDefinition.GetSubtypes()
 				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
 			Domain proDomain = field.GetDomain(subtype);
 
-			return new ArcDomain(proDomain);
+			return ArcGeodatabaseUtils.ToArcDomain(proDomain);
 		}
-
-		//public void set_Domain(int SubtypeCode, string FieldName, IDomain Domain)
-		//{
-		//	_aoSubtypes.set_Domain(SubtypeCode, FieldName, Domain);
-		//}
 
 		public string SubtypeFieldName
 		{
@@ -468,7 +385,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public string get_SubtypeName(int subtypeCode)
 		{
-			ArcGIS.Core.Data.Subtype subtype =
+			Subtype subtype =
 				ProTableDefinition.GetSubtypes()
 				                  .FirstOrDefault(s => s.GetCode() == subtypeCode);
 
@@ -536,6 +453,44 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		#endregion
+
+		private static QueryFilter GetProQueryFilter(IQueryFilter queryFilter)
+		{
+			QueryFilter proQueryFilter;
+
+			if (queryFilter is ArcQueryFilter arcQueryFilter)
+			{
+				// Wrapper only:
+				return arcQueryFilter.ProQueryFilter;
+			}
+
+			if (queryFilter is ISpatialFilter fcFilter)
+			{
+				proQueryFilter = new SpatialQueryFilter()
+				                 {
+					                 SpatialRelationship =
+						                 (SpatialRelationship) fcFilter.SpatialRel,
+					                 FilterGeometry =
+						                 ArcGeometryUtils.CreateProGeometry(fcFilter.Geometry),
+					                 SpatialRelationshipDescription = fcFilter.SpatialRelDescription
+				                 };
+			}
+			else
+			{
+				proQueryFilter = new QueryFilter();
+			}
+
+			proQueryFilter.SubFields = queryFilter.SubFields;
+			proQueryFilter.WhereClause = queryFilter.WhereClause;
+			proQueryFilter.PostfixClause = queryFilter.PostfixClause;
+
+			if (proQueryFilter == null)
+			{
+				throw new ArgumentException("Unknown filter type");
+			}
+
+			return proQueryFilter;
+		}
 
 		private Field GetExistingField(string fieldName)
 		{

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -10,6 +11,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -32,10 +34,6 @@ namespace ProSuite.AGP.Editing.FillHole
 		protected RemoveHoleToolBase()
 		{
 			GeomIsSimpleAsFeature = false;
-
-			SelectionCursor = ToolUtils.GetCursor(Resources.RemoveHoleToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.RemoveHoleToolCursorShift);
-			SecondPhaseCursor = ToolUtils.GetCursor(Resources.RemoveHoleToolCursorProcess);
 		}
 
 		protected FillHoleOptions RemoveHoleOptions { get; } = new FillHoleOptions();
@@ -50,9 +48,11 @@ namespace ProSuite.AGP.Editing.FillHole
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			_feedback = new HoleFeedback();
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
@@ -243,6 +243,68 @@ namespace ProSuite.AGP.Editing.FillHole
 		protected abstract IList<Holes> SelectHoles([CanBeNull] IList<Holes> holes,
 		                                            [NotNull] Geometry sketch);
 
-		protected abstract CancelableProgressor GetHoleCalculationProgressor();
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveHoleOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
+		}
+
+		#region second phase cursors
+
+		protected override Cursor GetSecondPhaseCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveHoleOverlay, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveHoleOverlay,
+			                              Resources.Lasso, null, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveHoleOverlay,
+			                              Resources.Polygon, null, 10, 10);
+		}
+
+		#endregion
 	}
 }

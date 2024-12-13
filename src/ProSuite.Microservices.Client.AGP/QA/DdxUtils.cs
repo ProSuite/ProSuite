@@ -9,6 +9,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using Google.Protobuf.Collections;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Logging;
@@ -311,7 +312,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			}
 
 			Dictionary<int, IDdxDataset> datasetsById =
-				datasets.ToDictionary(d => d.Id, IDdxDataset (d) => d);
+				datasets.ToDictionary(d => d.Id, d => (IDdxDataset) d);
 
 			foreach (DatasetMsg datasetMsg in response.Datasets)
 			{
@@ -356,6 +357,53 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			}
 
 			_msg.DebugFormat("Added details to {0} datasets.", response.Datasets.Count);
+		}
+
+		public static IList<LinearNetwork> CreateLinearNetworks(
+			[NotNull] IEnumerable<LinearNetworkMsg> linearNetworkMsgs,
+			[NotNull] ICollection<VectorDataset> vectorDatasets)
+		{
+			var result = new List<LinearNetwork>();
+			foreach (LinearNetworkMsg linearNetworkMsg in linearNetworkMsgs)
+			{
+				result.Add(FromLinearNetworkMsg(linearNetworkMsg, vectorDatasets));
+			}
+
+			return result;
+		}
+
+		private static LinearNetwork FromLinearNetworkMsg(
+			[NotNull] LinearNetworkMsg linearNetworkMsg,
+			[NotNull] ICollection<VectorDataset> vectorDatasets)
+		{
+			var networkDatasets = new List<LinearNetworkDataset>();
+
+			foreach (NetworkDatasetMsg networkDatasetMsg in linearNetworkMsg.NetworkDatasets)
+			{
+				VectorDataset vectorDataset = vectorDatasets.FirstOrDefault(
+					vd => vd.Id == networkDatasetMsg.DatasetId);
+
+				Assert.NotNull(
+					$"Vector dataset <id> {networkDatasetMsg.DatasetId} not found in provided datasets");
+
+				var networkDataset = new LinearNetworkDataset(vectorDataset);
+				networkDataset.WhereClause = networkDatasetMsg.WhereClause;
+				networkDataset.IsDefaultJunction = networkDatasetMsg.IsDefaultJunction;
+				networkDataset.Splitting = networkDatasetMsg.IsSplitting;
+
+				networkDatasets.Add(networkDataset);
+			}
+
+			var result = new LinearNetwork(linearNetworkMsg.Name,
+			                               networkDatasets);
+
+			result.SetCloneId(linearNetworkMsg.LinearNetworkId);
+
+			//result.Description = linearNetworkMsg.Description;
+			result.CustomTolerance = linearNetworkMsg.CustomTolerance;
+			result.EnforceFlowDirection = linearNetworkMsg.EnforceFlowDirection;
+
+			return result;
 		}
 
 		private static InstanceDescriptor GetInstanceDescriptor(
@@ -688,16 +736,40 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			[NotNull] IEnumerable<Table> tables,
 			[NotNull] IDictionary<long, Datastore> datastoresByHandle)
 		{
-			foreach (Datastore datastore in tables.Select(table => table?.GetDatastore())
-			                                      .Where(datastore => datastore != null))
+			// NOTE: 'This object has been previously disposed and cannot be manipulated'
+			//       happens sometimes and the problem in these cases are, that we cannot even
+			//       access the table name.
+			foreach (Table table in tables)
 			{
-				var handle = datastore.Handle.ToInt64();
-
-				if (! datastoresByHandle.ContainsKey(handle))
+				try
 				{
-					datastoresByHandle.Add(handle, datastore);
+					Datastore datastore = table?.GetDatastore();
+
+					_msg.DebugFormat("Successfully extracted datastore from table {0}",
+					                 table?.GetName());
+
+					if (datastore != null)
+					{
+						var handle = datastore.Handle.ToInt64();
+						datastoresByHandle.TryAdd(handle, datastore);
+					}
+				}
+				catch (Exception e)
+				{
+					_msg.Warn("Error getting workspace from table", e);
 				}
 			}
+
+			//foreach (Datastore datastore in tables.Select(table => table?.GetDatastore())
+			//                                      .Where(datastore => datastore != null))
+			//{
+			//	var handle = datastore.Handle.ToInt64();
+
+			//	if (! datastoresByHandle.ContainsKey(handle))
+			//	{
+			//		datastoresByHandle.Add(handle, datastore);
+			//	}
+			//}
 		}
 
 		private static void AddSpatialReferences(

@@ -94,7 +94,14 @@ namespace ProSuite.AGP.WorkList.Test
 
 		public List<ISourceClass> SourceClasses { get; }
 
+		public string WorkListDefinitionFilePath { get; set; }
+
 		public void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
 		{
 			throw new NotImplementedException();
 		}

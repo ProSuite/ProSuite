@@ -23,12 +23,12 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static CrackPointCalculator CreateChopPointCalculator(
-			[NotNull] ICrackingOptions crackingOptions,
+			[NotNull] ICrackingOptions choppingOptions,
 			bool excludeInteriorInteriorIntersections,
 			[CanBeNull] IEnvelope inExtent = null)
 		{
 			var cracker = new CrackPointCalculator(
-				              crackingOptions,
+				              choppingOptions,
 				              IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
 				              inExtent)
 			              {
@@ -36,15 +36,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				              AddCrackPointsOnExistingVertices = true
 			              };
 
-			if (excludeInteriorInteriorIntersections)
-			{
-				// only use line end points as intersection targets
-				cracker.TargetTransformation =
-					originalTarget =>
-						originalTarget.Dimension == esriGeometryDimension.esriGeometry1Dimension
-							? GeometryUtils.GetBoundary(originalTarget)
-							: null;
-			}
+			cracker.ExcludeInteriorInteriorIntersections = excludeInteriorInteriorIntersections;
 
 			return cracker;
 		}
@@ -1724,7 +1716,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return result;
 		}
 
-		private static IEnumerable<IPolyline> GetSplitPolycurves(
+		public static IEnumerable<IPolyline> GetSplitPolycurves(
 			[NotNull] IFeature lineFeature,
 			[NotNull] IPointCollection splitPoints,
 			double? maxSplitPointDistanceToLine)

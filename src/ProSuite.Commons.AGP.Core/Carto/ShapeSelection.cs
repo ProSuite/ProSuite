@@ -2,6 +2,7 @@ using ArcGIS.Core.Geometry;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
@@ -34,12 +35,17 @@ public interface IShapeSelection
 	IEnumerable<MapPoint> GetSelectedVertices();
 	IEnumerable<MapPoint> GetUnselectedVertices();
 
-	/// <param name="hitPoint">where the user clicked</param>
-	/// <param name="tolerance">maximum allowed distance</param>
-	/// <param name="vertex">the actual vertex found or null</param>
-	/// <returns>true iff any selected vertex is within
-	/// <paramref name="tolerance"/> of <paramref name="hitPoint"/></returns>
 	bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
+
+	/// <param name="hitPoint">where the user clicked</param>
+	/// <param name="distance">distance to vertex found or undefined</param>
+	/// <param name="partIndex">part index of vertex found or undefined</param>
+	/// <param name="vertexIndex">vertex index of vertex found or undefined</param>
+	/// <param name="selected">whether the vertex found is selected</param>
+	/// <returns>the vertex found within <paramref name="distance"/>
+	/// of <paramref name="hitPoint"/> or null</returns>
+	MapPoint NearestVertex(MapPoint hitPoint, out double distance,
+	                   out int partIndex, out int vertexIndex, out bool selected);
 
 	/// <remarks>If the new shape is not compatible (type, part count, vertex
 	/// count) with the current shape, the selection is first cleared.</remarks>
@@ -237,6 +243,125 @@ public class ShapeSelection : IShapeSelection
 
 		vertex = null;
 		return false;
+	}
+
+	public MapPoint NearestVertex(MapPoint hitPoint, out double distance,
+	                              out int partIndex, out int vertexIndex, out bool selected)
+	{
+		distance = double.NaN;
+		partIndex = vertexIndex = -1;
+		selected = false;
+
+		if (hitPoint is null || hitPoint.IsEmpty)
+		{
+			return null;
+		}
+
+		MapPoint minVertex = null;
+		var minDistSquared = double.MaxValue;
+
+		foreach (var tuple in GetVertices())
+		{
+			MapPoint candidate = tuple.Item1;
+			var dx = candidate.X - hitPoint.X;
+			var dy = candidate.Y - hitPoint.Y;
+			var dd = dx * dx + dy * dy;
+			if (dd < minDistSquared)
+			{
+				minDistSquared = dd;
+				minVertex = candidate;
+				partIndex = tuple.Item2;
+				vertexIndex = tuple.Item3;
+				selected = tuple.Item4;
+			}
+		}
+
+		if (minVertex is not null)
+		{
+			distance = Math.Sqrt(minDistSquared);
+		}
+
+		return minVertex;
+	}
+
+	// Yield tuples (point,part,vertex,selected)
+	private IEnumerable<ValueTuple<MapPoint, int, int, bool>> GetVertices()
+	{
+		var shape = Shape;
+
+		if (shape is MapPoint mapPoint)
+		{
+			bool selected = _blocks.ContainsVertex(0, 0);
+			yield return (mapPoint, 0, 0, selected);
+		}
+		else if (shape is Multipoint multipoint)
+		{
+			var pointCount = multipoint.PointCount;
+			int i = 0;
+			foreach (var block in _blocks)
+			{
+				for (; i < block.First; i++)
+				{
+					yield return (multipoint.Points[i], i, i, false);
+				}
+
+				Debug.Assert(i == block.First);
+
+				for (; i < block.First + block.Count; i++)
+				{
+					yield return (multipoint.Points[i], i, i, true);
+				}
+			}
+
+			for (; i < pointCount; i++)
+			{
+				yield return (multipoint.Points[i], i, i, false);
+			}
+		}
+		else if (shape is Multipart multipart)
+		{
+			int k = 0, i = 0;
+			foreach (var block in _blocks)
+			{
+				// whole parts before current block:
+				for (; k < block.Part; k++, i=0)
+				{
+					int vertexCount = GetVertexCount(multipart, k);
+					if (multipart is Polygon) vertexCount -= 1;
+					for (; i < vertexCount; i++)
+					{
+						var point = GetPoint(multipart, k, i);
+						yield return (point, k, i, false);
+					}
+				}
+				Debug.Assert(k == block.Part);
+				// vertices before current block:
+				for (; i < block.First; i++)
+				{
+					var point = GetPoint(multipart, k, i);
+					yield return (point, k, i, false);
+				}
+				Debug.Assert(i == block.First);
+				// vertices in current block:
+				for (; i < block.First + block.Count; i++)
+				{
+					var point = GetPoint(multipart, k, i);
+					yield return (point, k, i, true);
+				}
+			}
+			// vertices after last block:
+			int partCount = GetPartCount(multipart);
+			for (; k < partCount; k++)
+			{
+				int vertexCount = GetVertexCount(multipart, k);
+				if (multipart is Polygon) vertexCount -= 1;
+				for (; i < vertexCount; i++)
+				{
+					var point = GetPoint(multipart, k, i);
+					yield return (point, k, i, false);
+				}
+			}
+		}
 	}
 
 	public IEnumerable<MapPoint> GetSelectedVertices()
@@ -578,15 +703,20 @@ public class ShapeSelection : IShapeSelection
 
 		if (shape is Multipart multipart)
 		{
-			var part = multipart.Parts[partIndex];
-			var segmentCount = part.Count;
-
-			return vertexIndex == segmentCount
-				       ? part[vertexIndex - 1].EndPoint
-				       : part[vertexIndex].StartPoint;
+			return GetPoint(multipart, partIndex, vertexIndex);
 		}
 
 		throw new NotSupportedException($"Shape of type {shape.GetType().Name} is not supported");
+	}
+
+	private static MapPoint GetPoint(Multipart multipart, int partIndex, int vertexIndex)
+	{
+		var part = multipart.Parts[partIndex];
+		var segmentCount = part.Count;
+
+		return vertexIndex == segmentCount
+			       ? part[vertexIndex - 1].EndPoint
+			       : part[vertexIndex].StartPoint;
 	}
 
 	private static bool AddShape(Geometry shape, BlockList blocks)

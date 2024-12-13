@@ -16,7 +16,7 @@ namespace ProSuite.Commons.AGP.Selection
 			BasicFeatureLayer = basicFeatureLayer ??
 			                    throw new ArgumentNullException(nameof(basicFeatureLayer));
 
-			FeatureClass featureClass = basicFeatureLayer.GetFeatureClass();
+			FeatureClass featureClass = basicFeatureLayer.GetFeatureClass(); // TODO dispose when done (implement IDisposable)
 			FeatureClass = featureClass ?? throw new ArgumentNullException(nameof(featureClass));
 		}
 

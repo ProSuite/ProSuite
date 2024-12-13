@@ -140,7 +140,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
-			IMosaicDataset mosaic = DatasetUtils.OpenMosaicDataset(Workspace, dataset.Name);
+			IMosaicDataset mosaic = MosaicUtils.OpenMosaicDataset(Workspace, dataset.Name);
 
 			var simpleRasterMosaic = new SimpleRasterMosaic(mosaic);
 
