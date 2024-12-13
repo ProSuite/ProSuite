@@ -26,10 +26,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		//	pane.Activate();
 		//}
 
-		//internal static DockpaneAdvancedReshapeViewModelBase GetInstance()
-		//{
-		//	return FrameworkApplication.DockPaneManager.Find(DockPaneDamlID) as DockpaneAdvancedReshapeViewModelBase;
-		//}
 
 		/// <summary>
 		/// Text shown near the top of the DockPane.
