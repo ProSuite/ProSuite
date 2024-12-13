@@ -1,10 +1,9 @@
-using ProSuite.AGP.Editing.AdvancedReshape;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
 
-namespace ProSuite.AGP.Editing.AdvancedReshapeReshape
+namespace ProSuite.AGP.Editing.AdvancedReshape
 {
 	public class ReshapeToolOptions : OptionsBase<PartialReshapeToolOptions>
 	{
