@@ -505,11 +505,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 					FindFeatureSelection(precedence.GetSelectionGeometry(),
 					                     precedence.SpatialRelationship);
 
-				List<IPickableItem> items =
-					await (AllowMultiSelection(out _)
-						       ? PickerUtils.GetItems(candidates, precedence)
-						       : PickerUtils.GetItems<IPickableFeatureItem>(
-							       candidates, precedence, PickerMode.ShowPicker));
+				List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
 
 				PickerUtils.Select(items, precedence.SelectionCombinationMethod);
 			});
