@@ -378,7 +378,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	public virtual bool CanSetConstructionSketchSymbol(GeometryType geometryType)
 	{
-		return ! InConstructionPhase();
+		return true;
 	}
 
 	public void SetSketchSymbol(CIMSymbolReference symbolReference)
