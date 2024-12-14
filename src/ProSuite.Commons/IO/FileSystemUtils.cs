@@ -248,13 +248,19 @@ namespace ProSuite.Commons.IO
 		}
 
 		[NotNull]
-		public static string ReadTextFile([NotNull] string filePath)
+		public static string ReadTextFile([NotNull] string filePath,
+		                                  Encoding encoding = null)
 		{
 			Assert.ArgumentNotNullOrEmpty(filePath, nameof(filePath));
 			Assert.ArgumentCondition(File.Exists(filePath),
 			                         $"File does not exist: {filePath}", filePath);
 
-			using (var reader = new StreamReader(filePath))
+			if (encoding == null)
+			{
+				encoding = Encoding.Default;
+			}
+
+			using (var reader = new StreamReader(filePath, encoding))
 			{
 				return reader.ReadToEnd();
 			}

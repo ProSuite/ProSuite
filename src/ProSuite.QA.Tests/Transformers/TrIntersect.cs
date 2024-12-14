@@ -4,8 +4,8 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -25,7 +25,7 @@ namespace ProSuite.QA.Tests.Transformers
 			IReadOnlyFeatureClass intersected,
 			[NotNull, DocTr(nameof(DocTrStrings.TrIntersect_intersecting))]
 			IReadOnlyFeatureClass intersecting)
-			: base(new List<IReadOnlyTable> {intersected, intersecting})
+			: base(new List<IReadOnlyTable> { intersected, intersecting })
 		{
 			_intersected = intersected;
 			_intersecting = intersecting;
@@ -48,7 +48,7 @@ namespace ProSuite.QA.Tests.Transformers
 					       new TransformedDataset((TransformedFc) t, intersected, intersecting),
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
-				InvolvedTables = new List<IReadOnlyTable> {intersected, intersecting};
+				InvolvedTables = new List<IReadOnlyTable> { intersected, intersecting };
 			}
 
 			public IList<IReadOnlyTable> InvolvedTables { get; }
@@ -114,8 +114,10 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				filter = filter ?? new AoTableFilter();
 
-				IFeatureClassFilter intersectingFilter = new AoFeatureClassFilter();
-				intersectingFilter.SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				// Important: Include the TileExtent in the filter to avoid searching in empty areas of the main tile cache!
+				IFeatureClassFilter intersectingFilter = (IFeatureClassFilter) filter.Clone();
+				intersectingFilter.SpatialRelationship =
+					esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 
 				bool sameFeatureClass = _intersected.Equals(_intersecting);
 				foreach (var toIntersect in DataContainer.Search(
@@ -162,7 +164,7 @@ namespace ProSuite.QA.Tests.Transformers
 				var rowValues = new MultiListValues();
 
 				List<IReadOnlyRow> baseRows = new List<IReadOnlyRow>
-				                              {intersectedFeature, intersectingFeature};
+				                              { intersectedFeature, intersectingFeature };
 
 				List<CalculatedValue> extraValues = new List<CalculatedValue>();
 

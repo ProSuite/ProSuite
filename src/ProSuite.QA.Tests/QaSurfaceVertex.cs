@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
@@ -399,10 +400,10 @@ namespace ProSuite.QA.Tests
 		{
 			var errorCount = 0;
 
-			if (baseGeometry is IPolycurve)
+			if (baseGeometry is IPolycurve polycurve)
 			{
 				SegmentPartList error = GetSegments((IPolycurve) baseGeometry, errorPoints);
-				IEnumerable<IPolyline> parts = error.GetParts();
+				IEnumerable<IPolyline> parts = error.GetParts(polycurve.SpatialReference);
 
 				foreach (IPolyline part in parts)
 				{
@@ -429,10 +430,10 @@ namespace ProSuite.QA.Tests
 		private static IMultipoint CreateMultipoint([NotNull] IPointCollection baseGeometry,
 		                                            [NotNull] IEnumerable<PartVertex> points)
 		{
-			IPointCollection multi = new MultipointClass();
-			((IZAware) multi).ZAware = true;
-			object missing = Type.Missing;
+			IPointCollection multi = (IPointCollection) GeometryFactory.CreateEmptyMultipoint(
+				((IGeometry) baseGeometry));
 
+			object missing = Type.Missing;
 			IEnumVertex vList = baseGeometry.EnumVertices;
 
 			foreach (PartVertex point in points)

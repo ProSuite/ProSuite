@@ -20,6 +20,9 @@ using Pnt = ProSuite.Commons.Geom.Pnt;
 
 namespace ProSuite.QA.Container.TestContainer
 {
+	/// <summary>
+	/// The tile data for all tables in a single tile extent.
+	/// </summary>
 	internal class TileCache
 	{
 		private readonly IList<IReadOnlyTable> _cachedTables;
@@ -386,10 +389,10 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		/// <summary>
-		/// Gets the number of cached rows for the current tile
+		/// Gets the total number of cached rows for all tables of the current tile.
 		/// </summary>
 		/// <returns></returns>
-		public int GetTablesRowCount()
+		public int GetCachedRowCount()
 		{
 			var result = 0;
 
@@ -399,6 +402,17 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 
 			return result;
+		}
+
+		/// <summary>
+		/// Gets the number of cached rows for the specified table in the current tile.
+		/// </summary>
+		/// <returns></returns>
+		public int GetCachedRowCount(IReadOnlyTable forTable)
+		{
+			return ! _rowBoxTrees.TryGetValue(forTable, out RowBoxTree rowBoxTree)
+				       ? 0
+				       : rowBoxTree.Count;
 		}
 
 		[CanBeNull]
@@ -453,8 +467,9 @@ namespace ProSuite.QA.Container.TestContainer
 			return Math.Max(GetXYTolerance(table), tolerance);
 		}
 
-		public void CreateBoxTree(IReadOnlyTable table, [NotNull] IEnumerable<CachedRow> cachedRows,
-		                          [CanBeNull] IBox allBox, IEnvelope loadedEnvelope)
+		private void CreateBoxTree(IReadOnlyTable table,
+		                           [NotNull] IEnumerable<CachedRow> cachedRows,
+		                           [CanBeNull] IBox allBox, IEnvelope loadedEnvelope)
 		{
 			_rowBoxTrees[table] = CreateBoxTree(cachedRows, allBox);
 			_loadedExtents[table] = loadedEnvelope;
@@ -480,7 +495,7 @@ namespace ProSuite.QA.Container.TestContainer
 			return rowBoxTree;
 		}
 
-		public IList<CachedRow> TransferCachedRows(
+		internal IList<CachedRow> TransferCachedRows(
 			TileCache target, IReadOnlyTable table)
 		{
 			if (! _rowBoxTrees.TryGetValue(table, out var sourceTree))

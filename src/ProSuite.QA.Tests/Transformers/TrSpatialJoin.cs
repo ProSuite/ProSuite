@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
@@ -139,7 +137,7 @@ namespace ProSuite.QA.Tests.Transformers
 					       new TrSpatialJoinDataset((TransformedFc) t, t0, t1),
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
-				InvolvedTables = new List<IReadOnlyTable> {t0, t1};
+				InvolvedTables = new List<IReadOnlyTable> { t0, t1 };
 			}
 
 			public IList<IReadOnlyTable> InvolvedTables { get; }
@@ -209,20 +207,16 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 			{
-				IFeatureClassFilter joinFilter = null;
+				// For correct out-of tile searches, clone the provided filter!
+				IFeatureClassFilter joinFilter =
+					(IFeatureClassFilter) filter?.Clone() ?? new AoFeatureClassFilter();
 
 				foreach (var toJoin in DataSearchContainer.Search(
 					         _t0, filter ?? new AoTableFilter(), QueryHelpers[0]))
 				{
-					IGeometry joinFilterGeometry = ((IReadOnlyFeature)toJoin).Extent;
-					if (joinFilter == null)
-					{
-						joinFilter = new AoFeatureClassFilter(joinFilterGeometry);
-					}
-					else
-					{
-						joinFilter.FilterGeometry = joinFilterGeometry;
-					}
+					IGeometry joinFilterGeometry = ((IReadOnlyFeature) toJoin).Extent;
+
+					joinFilter.FilterGeometry = joinFilterGeometry;
 
 					var op = (IRelationalOperator) ((IReadOnlyFeature) toJoin).Shape;
 
@@ -246,7 +240,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						if (! Grouped)
 						{
-							var f = CreateFeature(toJoin, new[] {joined});
+							var f = CreateFeature(toJoin, new[] { joined });
 							//res.CreateFeature();
 							yield return f;
 						}
@@ -340,7 +334,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				if (sourceTableFields.CalculatedFields != null)
 				{
-					var sources = new List<IReadOnlyRow> {sourceRow};
+					var sources = new List<IReadOnlyRow> { sourceRow };
 
 					foreach (CalculatedValue calculatedValue in sourceTableFields
 						         .GetCalculatedValues(sources))
