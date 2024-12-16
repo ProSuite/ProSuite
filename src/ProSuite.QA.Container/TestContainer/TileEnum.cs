@@ -321,11 +321,16 @@ namespace ProSuite.QA.Container.TestContainer
 
 		internal IEnumerable<Tile> EnumTiles(IGeometry geometry)
 		{
-			if (!SpatialReferenceUtils.AreEqual(SpatialReference, geometry.SpatialReference))
+			if (! SpatialReferenceUtils.AreEqual(SpatialReference, geometry.SpatialReference))
 			{
 				throw new InvalidOperationException(
-					"Spatial reference of geometry <> Tile Enum SpatialReference");
+					"Spatial reference of search geometry is different from Tile Enumerator." +
+					Environment.NewLine +
+					$"Search geometry: {SpatialReferenceUtils.ToString(geometry.SpatialReference)}." +
+					Environment.NewLine +
+					$"Tile Enumerator: {SpatialReferenceUtils.ToString(SpatialReference)}");
 			}
+
 			IEnvelope geomEnv = geometry.Envelope;
 			geomEnv.QueryWKSCoords(out WKSEnvelope wksEnv);
 			int ixMin = (int) Math.Floor(GetXIndex(wksEnv.XMin));

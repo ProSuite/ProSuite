@@ -48,7 +48,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		public override IMosaicDataset OpenMosaicDataset(string name)
 		{
-			return DatasetUtils.OpenMosaicDataset(Workspace, name);
+			return MosaicUtils.OpenMosaicDataset(Workspace, name);
 		}
 
 		public override IRasterDataset OpenRasterDataset(string name)

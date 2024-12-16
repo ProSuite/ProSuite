@@ -1,4 +1,4 @@
-namespace ProSuite.Commons.AO.Geodatabase.GdbSchema.RowValues
+namespace ProSuite.Commons.GeoDb
 {
 	/// <summary>
 	/// The most basic value list implementation with no regards to COM interop.

@@ -43,8 +43,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected RemoveOverlapsToolBase()
 		{
 			GeomIsSimpleAsFeature = false;
-
-			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay, 10, 10);
 		}
 
 		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
@@ -52,8 +50,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
-		protected virtual string LocalConfigDir =>
-			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
+		/// <summary>
+		/// By default, the local configuration directory shall be in
+		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// </summary>
+		protected virtual string LocalConfigDir
+			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				AppDataFolder.Roaming, "ToolDefaults");
 
 		protected abstract IRemoveOverlapsService MicroserviceClient { get; }
 
@@ -65,11 +68,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			InitializeOptions();
 
 			_feedback = new RemoveOverlapsFeedback();
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
@@ -384,7 +389,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			_removeOverlapsToolOptions = new RemoveOverlapsOptions(centralConfiguration,
 				localConfiguration);
 
-			_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
+			_msg.DebugStopTiming(watch, "Remove Overlap Tool Options validated / initialized");
 
 			string optionsMessage = _removeOverlapsToolOptions.GetLocalOverridesMessage();
 
@@ -475,6 +480,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				return true;
 			}
 
+			if (featureClass.GetDataConnection() is CIMStandardDataConnection connection &&
+			    connection.WorkspaceFactory == WorkspaceFactory.Custom)
+			{
+				// Exclude Plug-in data sources:
+				return true;
+			}
+
 			string className = featureClass.GetName();
 
 			foreach (string ignoredClass in ignoredClasses)
@@ -513,7 +525,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursorLassoShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveHoleOverlay,
+			                              Resources.RemoveOverlapslOverlay,
 			                              Resources.Lasso,
 			                              Resources.Shift);
 		}
@@ -521,16 +533,37 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursorPolygon()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveHoleOverlay,
+			                              Resources.RemoveOverlapslOverlay,
 			                              Resources.Polygon);
 		}
 
 		protected override Cursor GetSelectionCursorPolygonShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveHoleOverlay,
+			                              Resources.RemoveOverlapslOverlay,
 			                              Resources.Polygon,
 			                              Resources.Shift);
 		}
+
+		#region second phase cursors
+
+		protected override Cursor GetSecondPhaseCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			                              Resources.Lasso, null, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			                              Resources.Polygon, null, 10, 10);
+		}
+
+		#endregion
 	}
 }

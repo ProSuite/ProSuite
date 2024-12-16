@@ -35,8 +35,6 @@ namespace ProSuite.AGP.Editing.Chopper
 		protected ChopperToolBase()
 		{
 			GeomIsSimpleAsFeature = false;
-
-			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.ChopperOverlay, 10, 10);
 		}
 
 		protected string OptionsFileName => "ChopperToolOptions.xml";
@@ -44,8 +42,13 @@ namespace ProSuite.AGP.Editing.Chopper
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
-		protected virtual string LocalConfigDir =>
-			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
+		/// <summary>
+		/// By default, the local configuration directory shall be in
+		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// </summary>
+		protected virtual string LocalConfigDir
+			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				AppDataFolder.Roaming, "ToolDefaults");
 
 		protected override void OnUpdateCore()
 		{
@@ -55,11 +58,13 @@ namespace ProSuite.AGP.Editing.Chopper
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			InitializeOptions();
 
 			_feedback = new CrackerFeedback();
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
@@ -333,5 +338,27 @@ namespace ProSuite.AGP.Editing.Chopper
 			                              Resources.Polygon,
 			                              Resources.Shift);
 		}
+
+
+		#region second phase cursors
+
+		protected override Cursor GetSecondPhaseCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.ChopperOverlay, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.ChopperOverlay,
+			                              Resources.Lasso, null, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.ChopperOverlay,
+			                              Resources.Polygon, null, 10, 10);
+		}
+
+		#endregion
 	}
 }

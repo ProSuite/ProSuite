@@ -101,8 +101,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		public esriRelCardinality Cardinality =>
 			(esriRelCardinality) _proRelationshipClassDefinition.GetCardinality();
 
-		public bool IsAttributed =>
-			_proRelationshipClassDefinition is AttributedRelationshipClassDefinition;
+		public bool IsAttributed => _proRelationshipClass is AttributedRelationshipClass;
 
 		public bool IsComposite => _proRelationshipClassDefinition.IsComposite();
 

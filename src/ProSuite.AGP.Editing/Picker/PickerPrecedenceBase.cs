@@ -56,8 +56,13 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	/// <returns></returns>
 	public Geometry GetSelectionGeometry()
 	{
-		// TODO: Simplify polygons?
-		return PickerUtils.EnsureNonEmpty(SketchGeometry, SelectionTolerance);
+		if (! IsSingleClick)
+		{
+			return SketchGeometry;
+		}
+
+		Geometry geometry = MapView.Active.ScreenToMap(PickerLocation);
+		return PickerUtils.ExpandGeometryByPixels(geometry, SelectionTolerance);
 	}
 
 	public virtual IPickableItemsFactory CreateItemsFactory()

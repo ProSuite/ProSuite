@@ -1,4 +1,5 @@
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 
 namespace ProSuite.Commons.AGP.Core.GeometryProcessing
 {
@@ -11,8 +12,12 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing
 
 		public static long GetUniqueClassId(Table table)
 		{
-			// TEST:
-			return table.GetID();
+			if (! table.IsJoinedTable())
+			{
+				return table.GetID();
+			}
+
+			return DatasetUtils.GetDatabaseTable(table).GetID();
 
 			// TODO: long is now supported everywhere, remove this method.
 			// NOTE: We cannot use the table handle because it is a 64-bit integer!

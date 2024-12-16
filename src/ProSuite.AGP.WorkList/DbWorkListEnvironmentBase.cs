@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,15 +8,15 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.AGP.QA.WorkList;
+namespace ProSuite.AGP.WorkList;
 
 public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 {
@@ -63,7 +64,14 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		AddToMapCore(GetTablesCore());
 	}
 
-	private void AddToMapCore(IEnumerable<Table> tables)
+	public override bool IsSameWorkListDefinition(string existingDefinitionFilePath)
+	{
+		string suggestedWorkListName = Assert.NotNull(SuggestWorkListName());
+
+		return IsSameWorkListDefinition(existingDefinitionFilePath, suggestedWorkListName);
+	}
+
+	protected void AddToMapCore(IEnumerable<Table> tables)
 	{
 		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>();
 
@@ -94,6 +102,9 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 				featureLayer.SetVisibility(false);
 				featureLayer.SetDefinitionQuery(GetDefaultDefinitionQuery(table));
 
+#if ARCGISPRO_GREATER_3_2
+				featureLayer.SetShowLayerAtAllScales(true);
+#endif
 				// TODO: Support lyrx files as symbol layers.
 				// So far, just make the symbols red:
 				CIMSimpleRenderer renderer =
@@ -193,5 +204,17 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		}
 
 		return WorkListItemDatastore.GetTables();
+	}
+
+	protected static bool IsSameWorkListDefinition(
+		[NotNull] string existingDefinitionFilePath,
+		[NotNull] string suggestedNewWorkListName)
+	{
+		string suggestedFileName =
+			FileSystemUtils.ReplaceInvalidFileNameChars(suggestedNewWorkListName, '_');
+
+		string existingFileName = Path.GetFileNameWithoutExtension(existingDefinitionFilePath);
+
+		return existingFileName.Equals(suggestedFileName);
 	}
 }

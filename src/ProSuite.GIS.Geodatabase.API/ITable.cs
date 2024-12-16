@@ -4,7 +4,7 @@ namespace ProSuite.GIS.Geodatabase.API
 {
 	public interface ITable : IClass
 	{
-		IRow CreateRow();
+		IRow CreateRow(int? subtypeCode = null);
 
 		IRow GetRow(long oid);
 

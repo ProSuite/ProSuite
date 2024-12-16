@@ -67,10 +67,26 @@ namespace ProSuite.AGP.WorkList
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
+		protected GdbItemRepository(
+			IEnumerable<DbStatusSourceClassDefinition> sourceClassDefinitions,
+			IWorkItemStateRepository workItemStateRepository)
+		{
+			foreach (DbStatusSourceClassDefinition sourceDefinition in sourceClassDefinitions)
+			{
+				ISourceClass sourceClass = new DatabaseSourceClass(
+					new GdbTableIdentity(sourceDefinition.Table), sourceDefinition.StatusSchema,
+					sourceDefinition.AttributeReader, sourceDefinition.DefinitionQuery);
+
+				SourceClasses.Add(sourceClass);
+			}
+
+			WorkItemStateRepository = workItemStateRepository;
+		}
+
 		protected IWorkItemStateRepository WorkItemStateRepository { get; }
 
 		[CanBeNull]
-		public IWorkListItemDatastore TableSchema { get; private set; }
+		public IWorkListItemDatastore TableSchema { get; protected set; }
 
 		public List<ISourceClass> SourceClasses { get; } = new();
 
@@ -80,26 +96,10 @@ namespace ProSuite.AGP.WorkList
 			set => WorkItemStateRepository.WorkListDefinitionFilePath = value;
 		}
 
-		public void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
-		{
-			TableSchema = tableSchemaInfo;
+		public abstract void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
 
-			foreach (ISourceClass sourceClass in SourceClasses)
-			{
-				Table table = OpenTable(sourceClass);
-
-				if (table != null)
-				{
-					sourceClass.AttributeReader = CreateAttributeReaderCore(
-						table.GetDefinition(), tableSchemaInfo);
-				}
-				else
-				{
-					_msg.Warn(
-						$"Cannot prepare table schema due to missing source table {sourceClass.Name}");
-				}
-			}
-		}
+		public abstract bool CanUseTableSchema(
+			[CanBeNull] IWorkListItemDatastore workListItemSchema);
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
@@ -160,14 +160,14 @@ namespace ProSuite.AGP.WorkList
 
 		public void Refresh(IWorkItem item)
 		{
-			GdbTableIdentity tableId = item.Proxy.Table;
+			ITableReference tableId = item.GdbRowProxy.Table;
 
 			// todo daro: log message
 			ISourceClass source =
 				SourceClasses.FirstOrDefault(sc => sc.Uses(tableId));
 			Assert.NotNull(source);
 
-			Row row = GetRow(source, item.Proxy.ObjectId);
+			Row row = GetRow(source, item.ObjectID);
 			Assert.NotNull(row);
 
 			if (row is Feature feature)
@@ -201,7 +201,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			item.Status = status;
 
-			GdbTableIdentity tableId = item.Proxy.Table;
+			GdbTableIdentity tableId = item.GdbRowProxy.Table;
 
 			ISourceClass source =
 				SourceClasses.FirstOrDefault(s => s.Uses(tableId));
@@ -246,6 +246,15 @@ namespace ProSuite.AGP.WorkList
 		public int GetCurrentIndex()
 		{
 			return WorkItemStateRepository.CurrentIndex ?? -1;
+		}
+
+		// TODO: Workspace property, the source class references the table
+		[CanBeNull]
+		public Row GetGdbItemRow(IWorkItem workItem)
+		{
+			Geodatabase workspace = workItem.GdbRowProxy.Table.Workspace.OpenGeodatabase();
+
+			return workItem.GdbRowProxy.GetRow(workspace);
 		}
 
 		protected abstract void AdaptSourceFilter([NotNull] QueryFilter filter,
@@ -297,11 +306,23 @@ namespace ProSuite.AGP.WorkList
 			[NotNull] TableDefinition definition,
 			[CanBeNull] IWorkListItemDatastore tableSchema)
 		{
-			return null;
+			// TODO: Make independent of attribute list, use standard AttributeRoles
+			Attributes[] attributes = new[]
+			                          {
+				                          Attributes.QualityConditionName,
+				                          Attributes.IssueCodeDescription,
+				                          Attributes.InvolvedObjects,
+				                          Attributes.IssueSeverity,
+				                          Attributes.IssueCode,
+				                          Attributes.IssueDescription
+			                          };
+
+			return tableSchema?.CreateAttributeReader(definition, attributes);
 		}
 
 		[NotNull]
-		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row, ISourceClass source);
+		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row,
+		                                                [NotNull] ISourceClass sourceClass);
 
 		[NotNull]
 		protected abstract ISourceClass CreateSourceClassCore(

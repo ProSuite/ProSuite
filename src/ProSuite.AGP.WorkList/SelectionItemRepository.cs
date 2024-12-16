@@ -46,11 +46,11 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
+		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
 		{
 			long rowId = GetNextOid(row);
 
-			long tableId = source.GetUniqueTableId();
+			long tableId = sourceClass.GetUniqueTableId();
 
 			return RefreshState(new SelectionItem(rowId, tableId, row));
 		}
@@ -66,6 +66,12 @@ namespace ProSuite.AGP.WorkList
 		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
 		{
 			await Task.Run(() => WorkItemStateRepository.Update(item));
+		}
+
+		public override bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
+		{
+			// We can use anything, no schema dependency:
+			return true;
 		}
 
 		protected override void AdaptSourceFilter(QueryFilter filter,
@@ -85,8 +91,14 @@ namespace ProSuite.AGP.WorkList
 
 		protected override void UpdateStateRepositoryCore(string path)
 		{
-			((XmlWorkItemStateRepository) WorkItemStateRepository).WorkListDefinitionFilePath =
-				path;
+			var xmlStateRepo = (XmlWorkItemStateRepository) WorkItemStateRepository;
+			xmlStateRepo.WorkListDefinitionFilePath = path;
+		}
+
+		public override void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
+		{
+			// No specific schema info is necessary/available
+			return;
 		}
 	}
 }

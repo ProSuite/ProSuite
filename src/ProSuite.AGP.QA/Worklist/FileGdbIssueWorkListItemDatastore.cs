@@ -11,7 +11,6 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.Core.QA;
@@ -25,6 +24,7 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	private const string _statusFieldName = "STATUS";
 	private readonly string _domainName = "CORRECTION_STATUS_CD";
 
 	private string _issueGdbPath;
@@ -148,20 +148,42 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		return new AttributeReader(definition, attributes);
 	}
 
+	public WorkListStatusSchema CreateStatusSchema(TableDefinition tableDefinition)
+	{
+		int fieldIndex;
+
+		try
+		{
+			fieldIndex = tableDefinition.FindField(_statusFieldName);
+
+			if (fieldIndex < 0)
+			{
+				throw new ArgumentException($"No field {_statusFieldName}");
+			}
+		}
+		catch (Exception e)
+		{
+			_msg.Error($"Error find field {_statusFieldName} in {tableDefinition.GetName()}", e);
+			throw;
+		}
+
+		// The status schema is the same for production model datasets and Issue Geodatabase tables.
+		return new WorkListStatusSchema(_statusFieldName, fieldIndex,
+		                                (int) IssueCorrectionStatus.NotCorrected,
+		                                (int) IssueCorrectionStatus.Corrected);
+	}
+
 	public string SuggestWorkListName()
 	{
 		return _initialWorkListName;
 	}
 
-	public bool IsSameWorkListDefinition(string existingDefinitionFile)
+	public bool ContainsSourceClass(ISourceClass sourceClass)
 	{
-		string suggestedDisplayName = SuggestWorkListName();
-		string suggestedFileName =
-			FileSystemUtils.ReplaceInvalidFileNameChars(suggestedDisplayName, '_');
+		// TODO: Consider also checking field names?
 
-		string existingFileName = Path.GetFileNameWithoutExtension(existingDefinitionFile);
-
-		return existingFileName.Equals(suggestedFileName);
+		return IssueGdbSchema.IssueFeatureClassNames.Any(
+			n => n.Equals(sourceClass.Name, StringComparison.InvariantCultureIgnoreCase));
 	}
 
 	#endregion
@@ -185,8 +207,6 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 	private async Task<Table> EnsureStatusFieldCoreAsync(Table table)
 	{
-		const string fieldName = "STATUS";
-
 		Stopwatch watch = Stopwatch.StartNew();
 
 		string path = table.GetPath().LocalPath;
@@ -195,15 +215,15 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		// But it still takes hell of a long time...
 		TableDefinition tableDefinition = table.GetDefinition();
 
-		if (tableDefinition.FindField(fieldName) < 0)
+		if (tableDefinition.FindField(_statusFieldName) < 0)
 		{
 			Task<bool> addField =
-				GeoprocessingUtils.AddFieldAsync(path, fieldName, "Status",
+				GeoprocessingUtils.AddFieldAsync(path, _statusFieldName, "Status",
 				                                 FieldType.Integer, null, null,
 				                                 null, true, false, _domainName);
 
 			Task<bool> assignDefaultValue =
-				GeoprocessingUtils.AssignDefaultToFieldAsync(path, fieldName, 100);
+				GeoprocessingUtils.AssignDefaultToFieldAsync(path, _statusFieldName, 100);
 
 			await Task.WhenAll(addField, assignDefaultValue);
 

@@ -1,7 +1,12 @@
+using System;
 using System.Drawing;
+using System.Windows;
 using System.Windows.Forms;
+using System.Windows.Interop;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using IWin32Window = System.Windows.Forms.IWin32Window;
+using Point = System.Drawing.Point;
 
 namespace ProSuite.Commons.UI.WinForms
 {
@@ -260,6 +265,11 @@ namespace ProSuite.Commons.UI.WinForms
 			}
 		}
 
+		public static IWin32Window GetWin32Window(Window wpfWindow)
+		{
+			return new WpfWin32Window(wpfWindow);
+		}
+
 		#region Non-public members
 
 		private static void FocusNextControl([NotNull] Control control, bool forward)
@@ -324,5 +334,17 @@ namespace ProSuite.Commons.UI.WinForms
 		}
 
 		#endregion
+
+		private class WpfWin32Window : IWin32Window
+		{
+			private readonly WindowInteropHelper _interopHelper;
+
+			public WpfWin32Window(Window window)
+			{
+				_interopHelper = new WindowInteropHelper(window);
+			}
+
+			public IntPtr Handle => _interopHelper.Handle;
+		}
 	}
 }

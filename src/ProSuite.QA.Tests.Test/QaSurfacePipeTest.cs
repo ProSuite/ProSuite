@@ -49,35 +49,35 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		/*
- * Raster Testing
- * 
- * Nach dem Erzeugen einer Surface (RasterSurfaceClass) konnte ich keinen Memory-Anstieg mehr feststellen, 
- * unabhängig davon, wo und wieviele Punkte abgefragt wurden. Dies widerspricht den Beobachtungen von Mäni
- * 
- * Für die Performance ist jedoch sehr stark davon abhängen, wie nahe die abgefragten Punkte liegen. 
- * Je näher beieinander desto schneller. Dies deutet darauf hin, dass ISurface im Hintergrund Pixelblöck(e) cacht und 
- * jeweils wieder freigibt, wenn andere benötigt werden.
- * 
- * Verhalten für Testcontainer/ QaTests
- * Um eine vernünftige Performance zu erhalten ist es nötig, dass ein Pixelblock möglichst nur einmal geladen wird.
- * Dazu drängt sich die class RasterRow auf
- * 
- */
+		 * Raster Testing
+		 *
+		 * Nach dem Erzeugen einer Surface (RasterSurfaceClass) konnte ich keinen Memory-Anstieg mehr feststellen,
+		 * unabhängig davon, wo und wieviele Punkte abgefragt wurden. Dies widerspricht den Beobachtungen von Mäni
+		 *
+		 * Für die Performance ist jedoch sehr stark davon abhängen, wie nahe die abgefragten Punkte liegen.
+		 * Je näher beieinander desto schneller. Dies deutet darauf hin, dass ISurface im Hintergrund Pixelblöck(e) cacht und
+		 * jeweils wieder freigibt, wenn andere benötigt werden.
+		 *
+		 * Verhalten für Testcontainer/ QaTests
+		 * Um eine vernünftige Performance zu erhalten ist es nötig, dass ein Pixelblock möglichst nur einmal geladen wird.
+		 * Dazu drängt sich die class RasterRow auf
+		 *
+		 */
 
 		/*
- *  Der TestContainer erstellt die RasterRow-Instanzen und übergibt sie an die Tests via ExecuteCore(IRow row, int tableIndex)
- *  Es soll darauf geachtet werden, dass alle Raster/Surfaces zur gleichen Zeit im gleichen Gebiet gecacht sind, 
- *  damit eine gegenseitige Abfrage möglichst performant ist.
- *  
- *  Via RasterSurfaceClass() kann aus einem Raster einfach eine Surface erstellt werden, allerdings ist das caching in der Surface 
- *  nicht über den Benutzer steuerbar.
- *  
- *  Via IPixelBlock hat man das Caching im Griff, jedoch fehlt einem die ganze Funktionalität von ISurface.
- *  Vielleicht gibt es einen einfachen Weg um von IPixelBlock zu ISurface zu gelangen.
- *  
- *  Als DummyTest soll ein Qa-Test "FeatureBetweenRasters" implementiert werden. 
- *  Dadurch sollten alle wesentlichen Aspekte untersucht werden können.
- */
+		 *  Der TestContainer erstellt die RasterRow-Instanzen und übergibt sie an die Tests via ExecuteCore(IRow row, int tableIndex)
+		 *  Es soll darauf geachtet werden, dass alle Raster/Surfaces zur gleichen Zeit im gleichen Gebiet gecacht sind,
+		 *  damit eine gegenseitige Abfrage möglichst performant ist.
+		 *
+		 *  Via RasterSurfaceClass() kann aus einem Raster einfach eine Surface erstellt werden, allerdings ist das caching in der Surface
+		 *  nicht über den Benutzer steuerbar.
+		 *
+		 *  Via IPixelBlock hat man das Caching im Griff, jedoch fehlt einem die ganze Funktionalität von ISurface.
+		 *  Vielleicht gibt es einen einfachen Weg um von IPixelBlock zu ISurface zu gelangen.
+		 *
+		 *  Als DummyTest soll ein Qa-Test "FeatureBetweenRasters" implementiert werden.
+		 *  Dadurch sollten alle wesentlichen Aspekte untersucht werden können.
+		 */
 
 		[Test]
 		[Category(TestCategory.Sde)]
@@ -120,15 +120,23 @@ namespace ProSuite.QA.Tests.Test
 
 			IWorkspace workspace = TestDataUtils.OpenTopgisAlti();
 
-			IMosaicDataset mosaicDataset = DatasetUtils.OpenMosaicDataset(workspace,
+			IMosaicDataset mosaicDataset = MosaicUtils.OpenMosaicDataset(workspace,
 				_mosaicDatasetName);
 
 			var test = new QaSurfacePipe(
-				ReadOnlyTableFactory.Create(fc), new MosaicRasterReference(new SimpleRasterMosaic(mosaicDataset)), 4);
+				ReadOnlyTableFactory.Create(fc),
+				new MosaicRasterReference(new SimpleRasterMosaic(mosaicDataset)), 4);
 
-			var runner = new QaContainerTestRunner(10000, test);
+			var runner = new QaContainerTestRunner(10000, test)
+			             {
+				             KeepGeometry = true
+			             };
 			runner.Execute();
 			Assert.AreEqual(2, runner.Errors.Count);
+
+			// TOP-5914: Null spatial reference results in downstream exception in issue filter!
+			Assert.NotNull(runner.Errors[0].Geometry?.SpatialReference);
+			Assert.NotNull(runner.Errors[1].Geometry?.SpatialReference);
 		}
 
 		[Test]

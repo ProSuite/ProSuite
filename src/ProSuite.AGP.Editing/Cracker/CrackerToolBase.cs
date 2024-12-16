@@ -36,8 +36,6 @@ namespace ProSuite.AGP.Editing.Cracker
 		protected CrackerToolBase()
 		{
 			GeomIsSimpleAsFeature = false;
-
-			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.CrackerOverlay, 10, 10);
 		}
 
 		protected string OptionsFileName => "CrackerToolOptions.xml";
@@ -45,8 +43,13 @@ namespace ProSuite.AGP.Editing.Cracker
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
-		protected virtual string LocalConfigDir =>
-			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
+		/// <summary>
+		/// By default, the local configuration directory shall be in
+		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// </summary>
+		protected virtual string LocalConfigDir
+			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				AppDataFolder.Roaming, "ToolDefaults");
 
 		protected override void OnUpdateCore()
 		{
@@ -56,11 +59,13 @@ namespace ProSuite.AGP.Editing.Cracker
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			InitializeOptions();
 
 			_feedback = new CrackerFeedback();
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
@@ -384,5 +389,26 @@ namespace ProSuite.AGP.Editing.Cracker
 			                              Resources.Polygon,
 			                              Resources.Shift);
 		}
+
+		#region second phase cursors
+
+		protected override Cursor GetSecondPhaseCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.CrackerOverlay, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.CrackerOverlay,
+			                              Resources.Lasso, null, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.CrackerOverlay,
+			                              Resources.Polygon, null, 10, 10);
+		}
+
+		#endregion
 	}
 }

@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Xml;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
@@ -58,7 +59,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 			var xmlWorkspaces = new List<XmlWorkListWorkspace>(tablesByWorkspace.Count);
 
-			Populate(tablesByWorkspace, xmlWorkspaces, sourceClasses);
+			PopulateXmlWorkspaceList(xmlWorkspaces, sourceClasses);
 
 			// NOTE: During upgrade from 1.2.x to 1.3.x, there can be duplicate OIDs of which one
 			// has an invalid TableId.
@@ -125,12 +126,12 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		protected override XmlWorkItemState CreateState(IWorkItem item)
 		{
 			// Persist the unique and stable table ID instead of the standard TableId.
-			var xmlGdbRowIdentity = new XmlGdbRowIdentity(item.Proxy, item.UniqueTableId);
+			var xmlGdbRowIdentity = new XmlGdbRowIdentity(item.GdbRowProxy, item.UniqueTableId);
 
 			var state = new XmlWorkItemState(item.OID, item.Visited, WorkItemStatus.Unknown,
 			                                 xmlGdbRowIdentity);
 
-			state.ConnectionString = item.Proxy.Table.Workspace.ConnectionString;
+			state.ConnectionString = item.GdbRowProxy.Table.Workspace.ConnectionString;
 
 			return state;
 		}
@@ -145,43 +146,64 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			state.Status = item.Status;
 		}
 
-		private static void Populate(
-			IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
-			ICollection<XmlWorkListWorkspace> list, IList<ISourceClass> sourceClasses)
+		private static void PopulateXmlWorkspaceList(
+			[NotNull] ICollection<XmlWorkListWorkspace> resultList,
+			[NotNull] IList<ISourceClass> sourceClasses)
 		{
-			foreach (KeyValuePair<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> pair in
-			         tablesByWorkspace)
+			var tablesByWorkspace =
+				new Dictionary<GdbWorkspaceIdentity, SimpleSet<XmlTableReference>>();
+
+			foreach (ISourceClass sourceClass in sourceClasses)
+			{
+				GdbTableIdentity tableIdentity = sourceClass.TableIdentity;
+				GdbWorkspaceIdentity workspaceIdentity = tableIdentity.Workspace;
+
+				if (! tablesByWorkspace.TryGetValue(workspaceIdentity,
+				                                    out SimpleSet<XmlTableReference> tables))
+				{
+					tables = new SimpleSet<XmlTableReference>();
+					tablesByWorkspace.Add(workspaceIdentity, tables);
+				}
+
+				XmlTableReference xmlTableReference =
+					CreateXmlTableReference(tableIdentity, sourceClass);
+
+				tables.TryAdd(xmlTableReference);
+			}
+
+			foreach (var pair in tablesByWorkspace)
 			{
 				GdbWorkspaceIdentity workspace = pair.Key;
-				SimpleSet<GdbTableIdentity> tables = pair.Value;
+				SimpleSet<XmlTableReference> tables = pair.Value;
 
 				var xmlWorkspace = new XmlWorkListWorkspace();
 				xmlWorkspace.ConnectionString = workspace.ConnectionString;
 				xmlWorkspace.WorkspaceFactory = workspace.WorkspaceFactory.ToString();
 
-				var xmlTables = new List<XmlTableReference>(tables.Count);
-
-				foreach (GdbTableIdentity tableIdentity in tables)
-				{
-					ISourceClass sourceClass =
-						sourceClasses.FirstOrDefault(s => s.Uses(tableIdentity));
-
-					var xmlTableReference =
-						new XmlTableReference(tableIdentity.Id, tableIdentity.Name);
-
-					if (sourceClass != null)
-					{
-						xmlTableReference.Id = sourceClass.GetUniqueTableId();
-						xmlTableReference.DefinitionQuery = sourceClass.DefinitionQuery;
-					}
-
-					xmlTables.Add(xmlTableReference);
-				}
-
-				xmlWorkspace.Tables = xmlTables;
-
-				list.Add(xmlWorkspace);
+				xmlWorkspace.Tables = tables.ToList();
+				resultList.Add(xmlWorkspace);
 			}
+		}
+
+		private static XmlTableReference CreateXmlTableReference(GdbTableIdentity tableIdentity,
+		                                                         ISourceClass sourceClass)
+		{
+			var xmlTableReference =
+				new XmlTableReference(tableIdentity.Id, tableIdentity.Name);
+
+			xmlTableReference.Id = sourceClass.GetUniqueTableId();
+			xmlTableReference.DefinitionQuery = sourceClass.DefinitionQuery;
+
+			if (sourceClass is DatabaseSourceClass dbStatusSourceClass)
+			{
+				WorkListStatusSchema statusSchema = dbStatusSourceClass.StatusSchema;
+
+				xmlTableReference.StatusFieldName = statusSchema.FieldName;
+				xmlTableReference.StatusValueTodo = (int) statusSchema.TodoValue;
+				xmlTableReference.StatusValueDone = (int) statusSchema.DoneValue;
+			}
+
+			return xmlTableReference;
 		}
 	}
 }

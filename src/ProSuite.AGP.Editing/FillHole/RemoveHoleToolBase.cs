@@ -11,6 +11,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -33,8 +34,6 @@ namespace ProSuite.AGP.Editing.FillHole
 		protected RemoveHoleToolBase()
 		{
 			GeomIsSimpleAsFeature = false;
-
-			SecondPhaseCursor = ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveHoleOverlay, 10, 10);
 		}
 
 		protected FillHoleOptions RemoveHoleOptions { get; } = new FillHoleOptions();
@@ -49,22 +48,17 @@ namespace ProSuite.AGP.Editing.FillHole
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			_feedback = new HoleFeedback();
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			_feedback?.DisposeOverlays();
 			_feedback = null;
-		}
-
-		protected override CancelableProgressorSource GetProgressorSource()
-		{
-			// Disable the progressor because removing holes is typically fast,
-			// and the users potentially want to continue working already.
-			return null;
 		}
 
 		protected override void LogPromptForSelection()
@@ -291,5 +285,26 @@ namespace ProSuite.AGP.Editing.FillHole
 			                              Resources.Polygon,
 			                              Resources.Shift);
 		}
+
+		#region second phase cursors
+
+		protected override Cursor GetSecondPhaseCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveHoleOverlay, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveHoleOverlay,
+			                              Resources.Lasso, null, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveHoleOverlay,
+			                              Resources.Polygon, null, 10, 10);
+		}
+
+		#endregion
 	}
 }
