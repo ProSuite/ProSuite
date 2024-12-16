@@ -279,6 +279,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			}
 		}
 
+#region Tool Options Dockpane
+
+		
 		private DockpaneAdvancedReshapeViewModelBase GetAdvancedReshapeViewModel()
 		{
 			var viewModel = FrameworkApplication.DockPaneManager.Find(
@@ -304,6 +307,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			var viewModel = GetAdvancedReshapeViewModel();
 			viewModel?.Hide();
 		}
+#endregion
 
 		//protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		//{
