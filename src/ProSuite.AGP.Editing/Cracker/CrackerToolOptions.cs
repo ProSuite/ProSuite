@@ -10,38 +10,41 @@ namespace ProSuite.AGP.Editing.Cracker
 	public class CrackerToolOptions : OptionsBase<PartialCrackerToolOptions>, ICrackerToolOptions
 	{
 		public CrackerToolOptions([CanBeNull] PartialCrackerToolOptions centralOptions,
+			
 		                          [CanBeNull] PartialCrackerToolOptions localOptions)
 		{
 			CentralOptions = centralOptions;
 
 			LocalOptions = localOptions ??
 			               new PartialCrackerToolOptions();
-
+			//TODO: Radio
 			CentralizableTargetFeatureSelection =
 				InitializeSetting<TargetFeatureSelection>(
 					ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
 					TargetFeatureSelection.VisibleFeatures);
-
+		   //Checkbox
 			CentralizableRespectMinimumSegmentLength =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.RespectMinimumSegmentLength),
 					false);
+			//TODO: Numeric Up Down
 			CentralizableMinimumSegmentLength =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.MinimumSegmentLength), 0.0);
-
+		   // Checkbox
 			CentralizableSnapToTargetVertices =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.SnapToTargetVertices), false);
+			//TODO: Numeric Up Down
 			CentralizableSnapTolerance =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.SnapTolerance), 0.0);
-
+			// Checkbox
 			CentralizableRemoveUnnecessaryVertices =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.RemoveUnnecessaryVertices),
 					false);
-
+			// Checkbox
 			CentralizableUseSourceZs =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.UseSourceZs), false);

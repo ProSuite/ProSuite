@@ -12,4 +12,20 @@
                   ToolTip="{Binding ToolTip}" 
                   Margin="6"/>
     </ControlTemplate>
+
+    <!--<ControlTemplate TargetType="RadioButton" x:Key="CentralizableSettingRadioButton">
+        <RadioButton DataContext="{TemplateBinding DataContext}"
+                     Content="Visible Editable Features" 
+                     IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={Binding Path="Tag" RelativeSource={RelativeSource Mode=Self}"
+                     FontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" 
+                     IsEnabled="{Binding CanOverrideLocally}"
+                     ToolTipService.ShowOnDisabled="True"
+                     ToolTip="{Binding ToolTip}" 
+                     Margin="6"/>
+
+    </ControlTemplate>-->
 </ResourceDictionary>
+
+
+
+
