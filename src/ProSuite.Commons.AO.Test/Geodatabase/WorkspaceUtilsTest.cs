@@ -162,7 +162,10 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			                  version.VersionName);
 
 			//everything else on version fails...
-			Assert.Catch<COMException>(() => { bool b = version.IsRedefined; });
+			Assert.Catch<COMException>(() =>
+			{
+				bool b = WorkspaceUtils.IsVersionRedefined(version);
+			});
 		}
 
 		[Test]

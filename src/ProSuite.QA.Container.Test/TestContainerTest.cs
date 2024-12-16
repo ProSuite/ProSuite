@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -17,6 +19,7 @@ namespace ProSuite.QA.Container.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
+			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
 			Commons.AO.Test.TestUtils.InitializeLicense();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("TestContainerTest");
@@ -47,10 +50,10 @@ namespace ProSuite.QA.Container.Test
 			helper.ExpectedMaximumRowCountPerTile = 1;
 
 			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
-			{
-				OnExecuteCore = helper.ExecuteRow,
-				OnCompleteTile = helper.CompleteTile
-			};
+			           {
+				           OnExecuteCore = helper.ExecuteRow,
+				           OnCompleteTile = helper.CompleteTile
+			           };
 			test.SetSearchDistance(10);
 
 			var container = new TestContainer.TestContainer { TileSize = 600 };
@@ -60,6 +63,175 @@ namespace ProSuite.QA.Container.Test
 
 			Assert.AreEqual(4 + 1, helper.CompleteTileCount); // + 1 : wegen initialem Tile
 			Assert.AreEqual(4, helper.ExecuteRowCount); // 1 feature x 4 intersected tiles
+		}
+
+		[Test]
+		public void CanFindOutOfTileFeaturesWithinSearchDistance()
+		{
+			IFeatureClass featureClass =
+				CreatePolygonFeatureClass("CanFindOutOfTileFeaturesWithinSearchDistance", 0.01);
+
+			double tileSize = 100;
+
+			// Create features
+
+			double x = 2600000;
+			double y = 1200000;
+
+			// Left of first tile, within search distance
+			IFeature leftOfFirst = CreateFeature(featureClass, x - 10, y, x - 1, y + 10);
+
+			// Inside first tile:
+			IFeature insideFirst = CreateFeature(featureClass, x, y, x + 10, y + 10);
+
+			// Right of first tile but within search distance
+			IFeature rightOfFirst =
+				CreateFeature(featureClass, x + tileSize + 1, y, x + tileSize + 10, y + 10);
+
+			// Left of second tile:
+			IFeature leftOfSecond =
+				CreateFeature(featureClass, x + tileSize - 10, y, x + tileSize - 1, y + 10);
+
+			var helper = new CanExecuteContainerHelper();
+			helper.ExpectedMaximumRowCountPerTile = 1;
+
+			var test =
+				new ContainerOutOfTileDataAccessTest(ReadOnlyTableFactory.Create(featureClass))
+				{
+					SearchDistanceIntoNeighbourTiles = 10
+				};
+
+			test.TileProcessed = (tile, outsideTileFeatures) =>
+			{
+				if (tile.CurrentEnvelope.XMin == x && tile.CurrentEnvelope.YMin == y)
+				{
+					// first tile
+					Assert.AreEqual(2, outsideTileFeatures.Count);
+
+					Assert.True(outsideTileFeatures.Any(f => f.OID == leftOfFirst.OID));
+					Assert.True(outsideTileFeatures.Any(f => f.OID == rightOfFirst.OID));
+				}
+
+				if (tile.CurrentEnvelope.XMin == x + tileSize && tile.CurrentEnvelope.YMin == y)
+				{
+					// second tile
+					Assert.AreEqual(1, outsideTileFeatures.Count);
+					Assert.True(outsideTileFeatures.Any(f => f.OID == leftOfSecond.OID));
+				}
+
+				return 0;
+			};
+
+			test.SetSearchDistance(10);
+
+			var container = new TestContainer.TestContainer { TileSize = 100 };
+
+			container.AddTest(test);
+
+			IEnvelope aoi = GeometryFactory.CreateEnvelope(
+				2600000, 1200000.00, 2600000 + 2 * tileSize, 1200000.00 + tileSize);
+
+			// First, using FullGeometrySearch:
+			test.UseFullGeometrySearch = true;
+			container.Execute(aoi);
+
+			// Now simulate full tile loading:
+			test.UseFullGeometrySearch = false;
+			test.UseTileEnvelope = true;
+			container.Execute(aoi);
+		}
+
+		[Test]
+		public void CanFindOutOfTileFeaturesFurtherThanSearchDistance()
+		{
+			IFeatureClass featureClass =
+				CreatePolygonFeatureClass("CanFindOutOfTileFeaturesFurtherThanSearchDistance",
+				                          0.01);
+
+			double tileSize = 100;
+
+			// Create features
+
+			double x = 2600000;
+			double y = 1200000;
+
+			// Left of first tile, NOT within search distance
+			IFeature leftOfFirst = CreateFeature(featureClass, x - 20, y, x - 15, y + 10);
+
+			// Inside first tile:
+			IFeature insideFirst = CreateFeature(featureClass, x, y, x + 10, y + 10);
+
+			// Right of first tile, NOT within search distance
+			IFeature rightOfFirst =
+				CreateFeature(featureClass, x + tileSize + 1, y, x + tileSize + 15, y + 20);
+
+			// Left of second tile:
+			IFeature leftOfSecond =
+				CreateFeature(featureClass, x + tileSize - 10, y, x + tileSize - 1, y + 10);
+
+			var helper = new CanExecuteContainerHelper();
+			helper.ExpectedMaximumRowCountPerTile = 1;
+
+			var test =
+				new ContainerOutOfTileDataAccessTest(ReadOnlyTableFactory.Create(featureClass))
+				{
+					SearchDistanceIntoNeighbourTiles = 50
+				};
+
+			test.TileProcessed = (tile, outsideTileFeatures) =>
+			{
+				if (tile.CurrentEnvelope.XMin == x && tile.CurrentEnvelope.YMin == y)
+				{
+					// first tile
+					Assert.AreEqual(2, outsideTileFeatures.Count);
+
+					Assert.True(outsideTileFeatures.Any(f => f.OID == leftOfFirst.OID));
+					Assert.True(outsideTileFeatures.Any(f => f.OID == rightOfFirst.OID));
+				}
+
+				if (tile.CurrentEnvelope.XMin == x + tileSize && tile.CurrentEnvelope.YMin == y)
+				{
+					// second tile
+					Assert.AreEqual(1, outsideTileFeatures.Count);
+					Assert.True(outsideTileFeatures.Any(f => f.OID == leftOfSecond.OID));
+				}
+
+				return 0;
+			};
+
+			test.SetSearchDistance(10);
+
+			test.UseFullGeometrySearch = true;
+
+			var container = new TestContainer.TestContainer { TileSize = tileSize };
+
+			container.AddTest(test);
+
+			ISpatialReference sr = DatasetUtils.GetSpatialReference(featureClass);
+
+			IEnvelope aoi = GeometryFactory.CreateEnvelope(
+				2600000, 1200000.00, 2600000 + 2 * tileSize, 1200000.00 + tileSize, sr);
+
+			// First, using FullGeometrySearch:
+			test.UseFullGeometrySearch = true;
+			container.Execute(aoi);
+
+			// Now simulate full tile loading:
+			test.UseFullGeometrySearch = false;
+			test.UseTileEnvelope = true;
+			container.Execute(aoi);
+		}
+
+		private static IFeature CreateFeature(IFeatureClass featureClass,
+		                                      double xMin, double yMin,
+		                                      double xMax, double yMax)
+		{
+			ISpatialReference sr = DatasetUtils.GetSpatialReference(featureClass);
+
+			IFeature row = featureClass.CreateFeature();
+			row.Shape = GeometryFactory.CreatePolygon(xMin, yMin, xMax, yMax, sr);
+			row.Store();
+			return row;
 		}
 
 		[Test]
@@ -87,10 +259,10 @@ namespace ProSuite.QA.Container.Test
 			helper.ExpectedMaximumRowCountPerTile = 1;
 
 			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
-			{
-				OnExecuteCore = helper.ExecuteRow,
-				OnCompleteTile = helper.CompleteTile
-			};
+			           {
+				           OnExecuteCore = helper.ExecuteRow,
+				           OnCompleteTile = helper.CompleteTile
+			           };
 			test.SetSearchDistance(10);
 
 			var container = new TestContainer.TestContainer { TileSize = 600 };
@@ -134,11 +306,11 @@ namespace ProSuite.QA.Container.Test
 			helper.ExpectedMaximumRowCountPerTile = 2;
 
 			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
-			{
-				OnExecuteCore = helper.ExecuteRow,
-				OnCompleteTile = helper.CompleteTile,
-				OnCachedRow = helper.CachedRow
-			};
+			           {
+				           OnExecuteCore = helper.ExecuteRow,
+				           OnCompleteTile = helper.CompleteTile,
+				           OnCachedRow = helper.CachedRow
+			           };
 			test.SetSearchDistance(2);
 
 			var container = new TestContainer.TestContainer { TileSize = 600 };
@@ -172,10 +344,10 @@ namespace ProSuite.QA.Container.Test
 			helper.ExpectedMaximumRowCountPerTile = 1;
 
 			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
-			{
-				OnExecuteCore = helper.ExecuteRow,
-				OnCompleteTile = helper.CompleteTile
-			};
+			           {
+				           OnExecuteCore = helper.ExecuteRow,
+				           OnCompleteTile = helper.CompleteTile
+			           };
 			test.SetSearchDistance(0.5);
 
 			var container = new TestContainer.TestContainer { TileSize = 600 };
@@ -233,18 +405,18 @@ namespace ProSuite.QA.Container.Test
 
 			var helper = new CanHandleCachedPointCountHelper();
 			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
-			{
-				OnExecuteCore = helper.HandleRows,
-				OnCompleteTile = helper.HandleTiles
-			};
+			           {
+				           OnExecuteCore = helper.HandleRows,
+				           OnCompleteTile = helper.HandleTiles
+			           };
 			test.SetSearchDistance(10);
 
 			// Unlimited Cache
 			var container1 = new TestContainer.TestContainer
-			{
-				TileSize = 600,
-				MaxCachedPointCount = -1
-			};
+			                 {
+				                 TileSize = 600,
+				                 MaxCachedPointCount = -1
+			                 };
 			// Assert.IsTrue(container1.MaxCachedPointCount < 0);
 
 			helper.Reset();
@@ -255,10 +427,10 @@ namespace ProSuite.QA.Container.Test
 
 			// Very large Cache
 			var container2 = new TestContainer.TestContainer
-			{
-				MaxCachedPointCount = int.MaxValue,
-				TileSize = 600
-			};
+			                 {
+				                 MaxCachedPointCount = int.MaxValue,
+				                 TileSize = 600
+			                 };
 
 			helper.Reset();
 			helper.Container = container2;
@@ -268,10 +440,10 @@ namespace ProSuite.QA.Container.Test
 
 			// small feature Cache
 			var container3 = new TestContainer.TestContainer
-			{
-				MaxCachedPointCount = 10,
-				TileSize = 600
-			};
+			                 {
+				                 MaxCachedPointCount = 10,
+				                 TileSize = 600
+			                 };
 
 			helper.Reset();
 			helper.Container = container3;
@@ -282,10 +454,10 @@ namespace ProSuite.QA.Container.Test
 
 			// very small feature Cache
 			var container4 = new TestContainer.TestContainer
-			{
-				MaxCachedPointCount = 4,
-				TileSize = 600
-			};
+			                 {
+				                 MaxCachedPointCount = 4,
+				                 TileSize = 600
+			                 };
 
 			helper.Reset();
 			helper.Container = container4;
@@ -296,10 +468,10 @@ namespace ProSuite.QA.Container.Test
 			container4.Execute(GeometryFactory.CreateEnvelope(x, y, x + 1500, y + 1500));
 			// no feature Cache
 			var container5 = new TestContainer.TestContainer
-			{
-				MaxCachedPointCount = 0,
-				TileSize = 600
-			};
+			                 {
+				                 MaxCachedPointCount = 0,
+				                 TileSize = 600
+			                 };
 
 			helper.Reset();
 			helper.Container = container5;
@@ -334,23 +506,31 @@ namespace ProSuite.QA.Container.Test
 
 		[NotNull]
 		private IFeatureClass CreatePolylineFeatureClass([NotNull] string name,
-														 double tolerance)
+		                                                 double tolerance)
 		{
 			return TestWorkspaceUtils.CreateSimpleFeatureClass(
 				_testWs, name, esriGeometryType.esriGeometryPolyline, xyTolerance: tolerance);
 		}
 
 		[NotNull]
+		private IFeatureClass CreatePolygonFeatureClass([NotNull] string name,
+		                                                double tolerance)
+		{
+			return TestWorkspaceUtils.CreateSimpleFeatureClass(
+				_testWs, name, esriGeometryType.esriGeometryPolygon, xyTolerance: tolerance);
+		}
+
+		[NotNull]
 		private IFeatureClass CreatePointFeatureClass([NotNull] string name,
-													  double tolerance)
+		                                              double tolerance)
 		{
 			return TestWorkspaceUtils.CreateSimpleFeatureClass(
 				_testWs, name, esriGeometryType.esriGeometryPoint, xyTolerance: tolerance);
 		}
 
 		private static void AddPointFeature([NotNull] IFeatureClass featureClass,
-											double x,
-											double y)
+		                                    double x,
+		                                    double y)
 		{
 			IFeature feature = featureClass.CreateFeature();
 			feature.Shape = GeometryFactory.CreatePoint(x, y);
@@ -360,7 +540,7 @@ namespace ProSuite.QA.Container.Test
 		private class CacheTest : ContainerTest
 		{
 			public CacheTest(IReadOnlyFeatureClass dummy)
-				: base((IReadOnlyTable)dummy) { }
+				: base((IReadOnlyTable) dummy) { }
 
 			public override bool IsQueriedTable(int tableIndex)
 			{
@@ -375,6 +555,8 @@ namespace ProSuite.QA.Container.Test
 
 		private class CanExecuteContainerHelper
 		{
+			private int _tileCount;
+
 			private int _rowTileCount;
 
 			public int CompleteTileCount { get; private set; }
@@ -387,7 +569,11 @@ namespace ProSuite.QA.Container.Test
 
 			public int CompleteTile(TileInfo args)
 			{
-				Assert.IsTrue(_rowTileCount <= ExpectedMaximumRowCountPerTile);
+				Console.WriteLine(
+					$"Row count for tile {_tileCount++} / {GeometryUtils.ToString(args.CurrentEnvelope, true)}" +
+					$"{_rowTileCount}");
+
+				Assert.LessOrEqual(_rowTileCount, ExpectedMaximumRowCountPerTile);
 				_rowTileCount = 0;
 				CompleteTileCount++;
 				return 0;
