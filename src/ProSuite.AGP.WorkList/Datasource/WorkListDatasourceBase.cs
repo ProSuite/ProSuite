@@ -105,12 +105,17 @@ namespace ProSuite.AGP.WorkList.Datasource
 				    }
 				    else
 				    {
-					    var message = $"Cannot find data source of work list: {name}";
+					    // TODO: Can we just auto-register?
+					    string fileName = Path.GetFileName(_path);
+					    var message =
+						    $"Cannot find data source of work list {fileName}. It is likely not part of the Work List project items.";
 
 					    // The exception is not going to crash Pro. Or is it?
 					    // It might depend on the application state.
 					    // It results in a broken data source of the work list layer.
 					    _msg.Warn(message);
+					    _msg.DebugFormat("File location: {0}. Work list unique name: {1}",
+					                     _path, name);
 				    }
 			    }, $"Error opening work list {name}");
 
