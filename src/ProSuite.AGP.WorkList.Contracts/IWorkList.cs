@@ -76,5 +76,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void RefreshItems();
 
 		bool IsValid(out string message);
+
+		IAttributeReader GetAttributeReader(long forSourceClassId);
 	}
 }

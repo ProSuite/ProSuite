@@ -179,6 +179,14 @@ namespace ProSuite.AGP.WorkList.Domain
 			Repository.Commit();
 		}
 
+		[CanBeNull]
+		public IAttributeReader GetAttributeReader(long forSourceClassId)
+		{
+			return Repository.SourceClasses
+			                 .FirstOrDefault(sc => sc.GetUniqueTableId() == forSourceClassId)
+			                 ?.AttributeReader;
+		}
+
 		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null,
 		                                               bool ignoreListSettings = false,
 		                                               int startIndex = -1)
