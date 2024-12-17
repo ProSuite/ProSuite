@@ -1,6 +1,7 @@
 using ProSuite.Commons.AGP.Framework;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
+using System.ComponentModel;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
@@ -20,13 +21,13 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		public string Heading
 		{
-			get { return _heading; }
+			get => _heading;
 			set { SetProperty(ref _heading, value, () => Heading); }
 		}
 
 		public CrackerToolOptions Options
 		{
-			get { return _options; }
+			get => _options;
 			set
 			{
 				SetProperty(ref _options, value);
@@ -39,11 +40,16 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
 
-		public double SpinnerValue { get; set; }
-
-		// Add a command to trigger RevertToDefaults
 		public ICommand RevertToDefaultsCommand { get; }
-	
+
+		public bool IsButtonEnabled => _options?.CentralOptions != null;
+
+		public event PropertyChangedEventHandler PropertyChanged;
+		protected virtual void OnPropertyChanged(string propertyName) {
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		}
+
+
 		private void RevertToDefaults() {
 			Options?.RevertToDefaults();
 		}
