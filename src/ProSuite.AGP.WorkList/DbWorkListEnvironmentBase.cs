@@ -215,7 +215,7 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		return WorkListItemDatastore.GetTables();
 	}
 
-	protected static bool IsSameWorkListDefinition(
+	private static bool IsSameWorkListDefinition(
 		[NotNull] string existingDefinitionFilePath,
 		[NotNull] string suggestedNewWorkListName)
 	{

@@ -626,7 +626,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		protected virtual IPickerPrecedence CreatePickerPrecedence(Geometry sketchGeometry)
+		protected virtual IPickerPrecedence CreatePickerPrecedence([NotNull] Geometry sketchGeometry)
 		{
 			return new PickerPrecedence(sketchGeometry,
 			                            GetSelectionTolerancePixels(),

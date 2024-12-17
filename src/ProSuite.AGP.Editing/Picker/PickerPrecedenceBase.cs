@@ -15,9 +15,9 @@ namespace ProSuite.AGP.Editing.Picker;
 public abstract class PickerPrecedenceBase : IPickerPrecedence
 {
 	[UsedImplicitly]
-	protected PickerPrecedenceBase(Geometry sketchGeometry,
-	                               int selectionTolerance,
-	                               Point pickerLocation)
+	protected PickerPrecedenceBase([NotNull] Geometry sketchGeometry,
+	                                int selectionTolerance,
+	                                Point pickerLocation)
 	{
 		SketchGeometry = sketchGeometry;
 		SelectionTolerance = selectionTolerance;
@@ -65,6 +65,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		return PickerUtils.ExpandGeometryByPixels(geometry, SelectionTolerance);
 	}
 
+	[NotNull]
 	public virtual IPickableItemsFactory CreateItemsFactory()
 	{
 		if (IsSingleClick)
@@ -80,6 +81,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		return CreateItemsFactory<IPickableFeatureItem>();
 	}
 
+	[NotNull]
 	public virtual IPickableItemsFactory CreateItemsFactory<T>() where T : IPickableItem
 	{
 		bool isRequestingFeatures =

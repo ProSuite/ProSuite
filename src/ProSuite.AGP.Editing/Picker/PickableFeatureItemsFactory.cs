@@ -18,8 +18,7 @@ public class PickableFeatureItemsFactory : IPickableItemsFactory
 
 	public IEnumerable<IPickableItem> CreateItems(IEnumerable<FeatureSelectionBase> candidates)
 	{
-		return candidates.OfType<FeatureSelectionBase>()
-		                 .SelectMany(CreatePickableFeatureItems);
+		return candidates.SelectMany(CreatePickableFeatureItems);
 	}
 
 	public IPickerViewModel CreateViewModel(Geometry selectionGeometry)
