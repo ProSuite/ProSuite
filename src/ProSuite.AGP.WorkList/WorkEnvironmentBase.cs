@@ -181,7 +181,7 @@ namespace ProSuite.AGP.WorkList
 		/// Typically, associated layers come with DB-status work lists, such as the layers of
 		/// the issue feature classes.
 		/// </summary>
-		public virtual void LoadAssociatedLayers() { }
+		public virtual void LoadAssociatedLayers(IWorkList worklist) { }
 
 		public virtual void RemoveAssociatedLayers() { }
 
