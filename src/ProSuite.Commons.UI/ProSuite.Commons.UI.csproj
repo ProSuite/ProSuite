@@ -44,9 +44,6 @@
     <Reference Include="WindowsBase" />
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
-  <ItemGroup>
-    <None Remove="Licenses\Stopbyte.MIT.WPF-Numeric-Spinner-NumericUpDown.licence.txt.lnk" />
-  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
@@ -241,7 +238,8 @@
       <Link>Licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Licenses\Stopbyte.MIT.WPF-Numeric-Spinner-NumericUpDown.licence.txt.lnk">
+    <Content Include="..\..\lib\licenses\Stopbyte.MIT.WPF-Numeric-Spinner-NumericUpDown.licence.txt" 
+						             Link="Licenses\Stopbyte.MIT.WPF-Numeric-Spinner-NumericUpDown.licence.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Properties\Images\Browse.png" />
