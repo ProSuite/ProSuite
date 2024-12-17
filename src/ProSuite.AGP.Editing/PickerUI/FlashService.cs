@@ -70,12 +70,12 @@ public class FlashService : IDisposable/*, IFlashService*/
 				flashGeometry = geometry;
 				symbol = _lineSymbol;
 				break;
+			case GeometryType.Envelope:
 			case GeometryType.Polygon:
 				flashGeometry = GetPolygonGeometry(geometry);
 				symbol = _polygonSymbol;
 				break;
 			case GeometryType.Unknown:
-			case GeometryType.Envelope:
 			case GeometryType.Multipatch:
 			case GeometryType.GeometryBag:
 				break;
@@ -142,7 +142,7 @@ public class FlashService : IDisposable/*, IFlashService*/
 
 		double mapRotation = MapView.Active.NotNullCallback(mv => mv.Camera.Heading);
 
-		return GeometryUtils.GetClippedPolygon((Polygon) geometry, clipExtent, mapRotation);
+		return GeometryUtils.GetClippedGeometry(geometry, clipExtent, mapRotation);
 	}
 
 	private void AddOverlay(Geometry geometry, CIMSymbol symbol)
