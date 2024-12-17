@@ -1,3 +1,5 @@
+using System.Windows.Input;
+using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
@@ -8,7 +10,23 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected abstract string DockPaneDamlID { get; }
 
-		protected DockpaneAdvancedReshapeViewModelBase() : base(new DockpaneAdvancedReshape()) { }
+		protected DockpaneAdvancedReshapeViewModelBase() : base(new DockpaneAdvancedReshape())
+		{
+			RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
+		}
+		#region RestoreDefaultsButton
+		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
+
+
+		public ICommand RevertToDefaultsCommand { get; }
+
+		public bool IsButtonEnabled => _options?.CentralOptions != null;
+
+		private void RevertToDefaults() {
+			Options?.RevertToDefaults();
+		}
+		#endregion
+
 
 		/// <summary>
 		/// Show the DockPane.
@@ -41,6 +59,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			set { SetProperty(ref _options, value); }
 		}
 
-		public bool IsButtonEnabled => _options?.CentralOptions != null;
+
 	}
 }
