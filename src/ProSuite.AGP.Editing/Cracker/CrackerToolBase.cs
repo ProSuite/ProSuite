@@ -71,6 +71,8 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_settingsProvider?.StoreLocalConfiguration(_crackerToolOptions.LocalOptions);
+			
 			_feedback?.DisposeOverlays();
 			_feedback = null;
 
