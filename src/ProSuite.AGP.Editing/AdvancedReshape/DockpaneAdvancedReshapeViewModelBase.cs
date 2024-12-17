@@ -1,18 +1,32 @@
+using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.AGP.LoggerUI;
-using System;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
-	public abstract class DockpaneAdvancedReshapeViewModelBase :  DockPaneViewModelBase
+	public abstract class DockpaneAdvancedReshapeViewModelBase : DockPaneViewModelBase
 	{
 		//private const string _dockPaneID = "Swisstopo_GoTop_AddIn_EditTools_AdvancedReshape";
 
 		protected abstract string DockPaneDamlID { get; }
 
-		protected DockpaneAdvancedReshapeViewModelBase() : base(new DockpaneAdvancedReshape()) { }
+		protected DockpaneAdvancedReshapeViewModelBase() : base(new DockpaneAdvancedReshape())
+		{
+			RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
+		}
+		#region RestoreDefaultsButton
+		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
+
+
+		public ICommand RevertToDefaultsCommand { get; }
+
+		public bool IsButtonEnabled => _options?.CentralOptions != null;
+
+		private void RevertToDefaults() {
+			Options?.RevertToDefaults();
+		}
+		#endregion
+
 
 		/// <summary>
 		/// Show the DockPane.
@@ -26,7 +40,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		//	pane.Activate();
 		//}
 
-
 		/// <summary>
 		/// Text shown near the top of the DockPane.
 		/// </summary>
@@ -37,10 +50,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		public string Heading
 		{
 			get { return _heading; }
-			set
-			{
-				SetProperty(ref _heading, value, () => Heading);
-			}
+			set { SetProperty(ref _heading, value, () => Heading); }
 		}
 
 		public ReshapeToolOptions Options
@@ -49,15 +59,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			set { SetProperty(ref _options, value); }
 		}
 
-	}
 
-	/// <summary>
-	/// Button implementation for the button on the menu of the burger button.
-	/// </summary>
-	internal class Dockpane1_MenuButton : Button
-	{
-		protected override void OnClick()
-		{
-		}
 	}
 }

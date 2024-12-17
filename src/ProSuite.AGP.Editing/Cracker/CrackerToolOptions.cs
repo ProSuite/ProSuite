@@ -4,14 +4,19 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
+using System.Windows.Input;
+using ArcGIS.Desktop.Framework;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
 	public class CrackerToolOptions : OptionsBase<PartialCrackerToolOptions>, ICrackerToolOptions
 	{
+		public ICommand RevertToDefaultsCommand { get; }
 		public CrackerToolOptions([CanBeNull] PartialCrackerToolOptions centralOptions,
 		                          [CanBeNull] PartialCrackerToolOptions localOptions)
 		{
+			RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
+			
 			CentralOptions = centralOptions;
 
 			LocalOptions = localOptions ??

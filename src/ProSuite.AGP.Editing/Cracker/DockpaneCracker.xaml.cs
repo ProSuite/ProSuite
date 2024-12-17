@@ -9,5 +9,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		{
 			InitializeComponent();
 		}
-	}
-}
+
+        }
+    }
+
