@@ -9,8 +9,8 @@
              xmlns:editing="clr-namespace:ProSuite.AGP.Editing"
              xmlns:geometryProcessing="clr-namespace:ProSuite.Commons.AGP.Core.GeometryProcessing;assembly=ProSuite.Commons.AGP.Core"
              mc:Ignorable="d"
-             d:DesignHeight="379.508" d:DesignWidth="300"
-             d:DataContext="{d:DesignInstance Type=cracker:DockpaneCrackerViewModelBase}">
+             d:DesignHeight="379.508"
+             d:DataContext="{d:DesignInstance Type=cracker:DockpaneCrackerViewModelBase}" Width="411">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -26,29 +26,66 @@
 
     </UserControl.Resources>
 
-    <Grid>
+        <StackPanel>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <Grid.Margin>15</Grid.Margin>
-        <StackPanel Grid.Row="1">
-
-            <!-- Snapping and minimum segment length (TODO: Add Numeric Up Down) -->
-            <!-- TODO: Spinner Up Down -->
+            <!-- Snapping and minimum segment length -->
             <Label FontWeight="Medium" Content="Snapping and minimum segment length"/>
-            <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-                Content="Snap crack points within tolerance of"
-                DataContext="{Binding Options.CentralizableSnapToTargetVertices}" />
+            <Grid HorizontalAlignment="Left" Width="Auto">
 
-            <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-                Content="Respect a minimum segment length"
-                DataContext="{Binding Options.CentralizableRespectMinimumSegmentLength}"  />
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <CheckBox Grid.Row="0" Grid.Column="0"
+                          Template="{StaticResource CentralizableSettingCheckbox}"
+                          Content="Snap crack points within tolerance of"
+                          DataContext="{Binding Options.CentralizableSnapToTargetVertices}" />
+                
+                <Grid Grid.Row="0"  Grid.Column="1" >
+
+                    <ContentControl 
+                        Template="{StaticResource CentralizableSettingsSpinner}"
+                        DataContext="{Binding Options.CentralizableSnapTolerance}" 
+                    />
+                    
+                </Grid>
+                
+                <Grid Grid.Row="0" Grid.Column="2">
+                <ContentControl 
+                    Template="{StaticResource CentralizableSettingsLabel}"
+                    DataContext="{Binding Options.CentralizableSnapTolerance}" 
+                      />
+                </Grid>
+
+
+                <CheckBox Grid.Row="1"  Grid.Column="0"  Template="{StaticResource CentralizableSettingCheckbox}"
+                          Content="Respect a minimum segment length"
+                          DataContext="{Binding Options.CentralizableRespectMinimumSegmentLength}"  />
+
+                <Grid Grid.Row="1"  Grid.Column="1" >
+                    <ContentControl 
+                        Template="{StaticResource CentralizableSettingsSpinner}"
+                        DataContext="{Binding Options.CentralizableMinimumSegmentLength}" 
+                    />
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="2">
+                    <ContentControl 
+                        Template="{StaticResource CentralizableSettingsLabel}"
+                        DataContext="{Binding Options.CentralizableMinimumSegmentLength}" 
+                    />
+                </Grid>
+
+            </Grid>
 
 
             <!-- Calculate crack points at intersections with other -->
-            <!-- TODO: Radio Buttons -->
             <Label FontWeight="Medium" Content="Calculate crack points at intersections with other"/>
             <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" HorizontalAlignment="Left" />
 
@@ -66,7 +103,7 @@
                       Content="Delete unnecessary vertices"
                       DataContext="{Binding Options.CentralizableRemoveUnnecessaryVertices}" />
 
-           
+
             <!--<RadioButton Template="{StaticResource CentralizableSettingRadioButton}"
                          IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.VisibleEditableFeatures}}"
                          Content="Visible "
@@ -78,5 +115,5 @@
                          DataContext="{Binding Options.CentralizableTargetFeatureSelection}" />-->
 
         </StackPanel>
-    </Grid>
+
 </UserControl>

@@ -33,5 +33,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
+
+		public double SpinnerValue { get; set; }
 	}
 }
