@@ -10,8 +10,6 @@ namespace ProSuite.AGP.Editing.Cracker
 			InitializeComponent();
 		}
 
-		private void NumericSpinner_Loaded(object sender, System.Windows.RoutedEventArgs e) {
-
         }
     }
-}
+

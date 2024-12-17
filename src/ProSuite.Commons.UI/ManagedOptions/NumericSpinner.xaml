@@ -52,14 +52,18 @@
                      Grid.Column="0" Grid.RowSpan="2" 
                      Text="0" 
                      FontStyle="Normal"/>
-            <Button x:Name="cmdUp" x:FieldModifier="private" Grid.Column="1" Grid.Row="0" Width="auto" Height="auto" Click="cmdUp_Click">
+            <Button x:Name="cmdUp" x:FieldModifier="private" Grid.Column="1" Grid.Row="0" Width="Auto" Height="Auto" Click="cmdUp_Click">
                 <Button.Content>
-                    <Path HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Black" Data="M4,0 L0,4 L8,4 z"/>
+                    <Grid Background="Transparent" Width="18" Height="10">
+                        <Path HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Black" Data="M4,0 L0,4 L8,4 z" />
+                    </Grid>
                 </Button.Content>
             </Button>
-            <Button x:Name="cmdDown" x:FieldModifier="private" Grid.Column="1" Grid.Row="1" Width="auto" Height="auto" Click="cmdDown_Click">
-                <Button.Content>
-                    <Path HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Black" Data="M0,0 L8,0 L4,4 z"/>
+            <Button x:Name="cmdDown" x:FieldModifier="private" Grid.Column="1" Grid.Row="1" Width="Auto" Height="Auto" Click="cmdDown_Click" Padding="10, 5">
+                <Button.Content >
+                    <Grid Background="Transparent" Width="18" Height="10">
+                        <Path  HorizontalAlignment="Center" VerticalAlignment="Center"  Fill="Black" Data="M0,0 L8,0 L4,4 z"/>
+                    </Grid>
                 </Button.Content>
             </Button>
             <Border BorderBrush="Gray" IsHitTestVisible="False" BorderThickness="1" CornerRadius="4" Grid.RowSpan="2" 
