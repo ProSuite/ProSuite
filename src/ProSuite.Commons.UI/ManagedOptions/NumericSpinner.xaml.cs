@@ -31,10 +31,22 @@ public partial class NumericSpinner : UserControl
 	{
 		InitializeComponent();
 
-		tb_main.SetBinding(TextBox.TextProperty, new Binding("Value")
+		grid.SetBinding(Grid.IsEnabledProperty, new Binding("IsEnabled") {
+			                                        ElementName = "root_numeric_spinner",
+			                                        Mode = BindingMode.OneWay,
+			                                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+		                                        });
+		
+		textBox.SetBinding(TextBox.TextProperty, new Binding("Value")
 		                                         {
 			                                         ElementName = "root_numeric_spinner",
 			                                         Mode = BindingMode.TwoWay,
+			                                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+		                                         });
+
+		textBox.SetBinding(TextBox.FontStyleProperty, new Binding("TextFontStyle") {
+			                                         ElementName = "root_numeric_spinner",
+			                                         Mode = BindingMode.OneWay,
 			                                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
 		                                         });
 
@@ -43,6 +55,8 @@ public partial class NumericSpinner : UserControl
 		DependencyPropertyDescriptor.FromProperty(DecimalsProperty, typeof(NumericSpinner)).AddValueChanged(this, PropertyChanged);
 		DependencyPropertyDescriptor.FromProperty(MinValueProperty, typeof(NumericSpinner)).AddValueChanged(this, PropertyChanged);
 		DependencyPropertyDescriptor.FromProperty(MaxValueProperty, typeof(NumericSpinner)).AddValueChanged(this, PropertyChanged);
+	   DependencyPropertyDescriptor.FromProperty(FontStyleProperty, typeof(NumericSpinner)).AddValueChanged(this, PropertyChanged);
+	   DependencyPropertyDescriptor.FromProperty(IsEnabledProperty, typeof(NumericSpinner)).AddValueChanged(this, PropertyChanged);
 
 		PropertyChanged += (x, y) => validate();
 	}
@@ -50,11 +64,19 @@ public partial class NumericSpinner : UserControl
 
 	#region ValueProperty
 
-	public readonly static DependencyProperty ValueProperty = DependencyProperty.Register(
+	public static readonly DependencyProperty ValueProperty = DependencyProperty.Register(
 		"Value",
 		typeof(decimal),
 		typeof(NumericSpinner),
-		new PropertyMetadata(new decimal(0)));
+		new PropertyMetadata(new decimal(0.01)));
+
+	public static readonly DependencyProperty TextFontStyleProperty = DependencyProperty.Register(
+		"TextFontStyle", typeof(FontStyle), typeof(NumericSpinner),
+		new PropertyMetadata(new FontStyle()));
+
+	public static readonly DependencyProperty IsEnabledProperty = DependencyProperty.Register(
+		"IsEnabled", typeof(bool), typeof(NumericSpinner),
+		new PropertyMetadata(new bool()));
 
 	public decimal Value
 	{
@@ -66,20 +88,34 @@ public partial class NumericSpinner : UserControl
 			if (value > MaxValue)
 				value = MaxValue;
 			SetValue(ValueProperty, value);
-			ValueChanged(this,new EventArgs());
+			ValueChanged?.Invoke(this, new EventArgs());
 		}
 	}
 
+	public FontStyle TextFontStyle
+	{
+		get { return (FontStyle) GetValue(TextFontStyleProperty); }
+		set
+		{
+			SetValue(TextFontStyleProperty, value);
+		}
+	}
+
+	public new bool IsEnabled
+	{
+		get => (bool) GetValue(IsEnabledProperty);
+		set => SetValue(IsEnabledProperty, value);
+	}
 
 	#endregion
 
 	#region StepProperty
 
-	public readonly static DependencyProperty StepProperty = DependencyProperty.Register(
+	public static readonly DependencyProperty StepProperty = DependencyProperty.Register(
 		"Step",
 		typeof(decimal),
 		typeof(NumericSpinner),
-		new PropertyMetadata(new decimal(0.1))); 
+		new PropertyMetadata(new decimal(0.01))); 
 
 	public decimal Step
 	{
@@ -94,7 +130,7 @@ public partial class NumericSpinner : UserControl
 
 	#region DecimalsProperty
 
-	public readonly static DependencyProperty DecimalsProperty = DependencyProperty.Register(
+	public static readonly DependencyProperty DecimalsProperty = DependencyProperty.Register(
 		"Decimals",
 		typeof(int),
 		typeof(NumericSpinner),
@@ -113,7 +149,7 @@ public partial class NumericSpinner : UserControl
 
 	#region MinValueProperty
 
-	public readonly static DependencyProperty MinValueProperty = DependencyProperty.Register(
+	public static readonly DependencyProperty MinValueProperty = DependencyProperty.Register(
 		"MinValue",
 		typeof(decimal),
 		typeof(NumericSpinner),
@@ -134,7 +170,7 @@ public partial class NumericSpinner : UserControl
 
 	#region MaxValueProperty
 
-	public readonly static DependencyProperty MaxValueProperty = DependencyProperty.Register(
+	public static readonly DependencyProperty MaxValueProperty = DependencyProperty.Register(
 		"MaxValue",
 		typeof(decimal),
 		typeof(NumericSpinner),

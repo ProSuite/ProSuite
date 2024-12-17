@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ProSuite.Commons.UI.ManagedOptions"
              mc:Ignorable="d" x:Name="root_numeric_spinner"
-             d:DesignHeight="32" d:DesignWidth="100">
+             d:DesignHeight="20" d:DesignWidth="50">
     <UserControl.Resources>
         <ControlTemplate x:Key="updown_button_style" TargetType="Button">
             <Border x:Name="br" BorderThickness="0" BorderBrush="{DynamicResource ThemeBrushDark}" 
@@ -39,17 +39,19 @@
                 </VisualBrush.Visual>
             </VisualBrush>
         </Border.OpacityMask>
-        <Grid>
+        <Grid x:Name="grid">
             <Grid.RowDefinitions>
                 <RowDefinition />
                 <RowDefinition />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
-                <ColumnDefinition Width="22" />
+                <ColumnDefinition Width="18" />
             </Grid.ColumnDefinitions>
-            <TextBox x:Name="tb_main" x:FieldModifier="private" FontWeight="Medium" FontSize="14" VerticalContentAlignment="Center" Padding="5,1" 
-                     Grid.Column="0" Grid.RowSpan="2" Text="0" />
+            <TextBox x:Name="textBox" x:FieldModifier="private" FontWeight="Regular"  VerticalContentAlignment="Center" Padding="5,0" 
+                     Grid.Column="0" Grid.RowSpan="2" 
+                     Text="0" 
+                     FontStyle="Normal"/>
             <Button x:Name="cmdUp" x:FieldModifier="private" Grid.Column="1" Grid.Row="0" Width="auto" Height="auto" Click="cmdUp_Click">
                 <Button.Content>
                     <Path HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Black" Data="M4,0 L0,4 L8,4 z"/>
