@@ -10,19 +10,21 @@ namespace ProSuite.AGP.Editing.Cracker
 	public class CrackerToolOptions : OptionsBase<PartialCrackerToolOptions>, ICrackerToolOptions
 	{
 		public CrackerToolOptions([CanBeNull] PartialCrackerToolOptions centralOptions,
-			
 		                          [CanBeNull] PartialCrackerToolOptions localOptions)
 		{
 			CentralOptions = centralOptions;
 
 			LocalOptions = localOptions ??
 			               new PartialCrackerToolOptions();
-			//TODO: Radio
-			CentralizableTargetFeatureSelection =
-				InitializeSetting<TargetFeatureSelection>(
-					ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
-					TargetFeatureSelection.VisibleFeatures);
-		   //Checkbox
+			// Checkbox Snap
+			CentralizableSnapToTargetVertices =
+				InitializeSetting<bool>(
+					ReflectionUtils.GetProperty(() => LocalOptions.SnapToTargetVertices), false);
+			//TODO: Numeric Up Down
+			CentralizableSnapTolerance =
+				InitializeSetting<double>(
+					ReflectionUtils.GetProperty(() => LocalOptions.SnapTolerance), 0.0);
+			// Checkbox Minimum Segment
 			CentralizableRespectMinimumSegmentLength =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.RespectMinimumSegmentLength),
@@ -31,23 +33,20 @@ namespace ProSuite.AGP.Editing.Cracker
 			CentralizableMinimumSegmentLength =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.MinimumSegmentLength), 0.0);
-		   // Checkbox
-			CentralizableSnapToTargetVertices =
+			// Radio Intersect with
+			CentralizableTargetFeatureSelection =
+				InitializeSetting<TargetFeatureSelection>(
+					ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
+					TargetFeatureSelection.VisibleFeatures);
+			// Checkbox Z values
+			CentralizableUseSourceZs =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.SnapToTargetVertices), false);
-			//TODO: Numeric Up Down
-			CentralizableSnapTolerance =
-				InitializeSetting<double>(
-					ReflectionUtils.GetProperty(() => LocalOptions.SnapTolerance), 0.0);
-			// Checkbox
+					ReflectionUtils.GetProperty(() => LocalOptions.UseSourceZs), false);
+			// Checkbox Clean up
 			CentralizableRemoveUnnecessaryVertices =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.RemoveUnnecessaryVertices),
 					false);
-			// Checkbox
-			CentralizableUseSourceZs =
-				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.UseSourceZs), false);
 		}
 
 		#region Centralizable Properties
