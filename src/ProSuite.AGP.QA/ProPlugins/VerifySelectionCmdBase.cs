@@ -48,7 +48,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 		protected virtual Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool>
 			SaveAction => null;
 
-		protected override async Task<bool> OnClickCore()
+		protected override async Task<bool> OnClickAsyncCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
 			{
