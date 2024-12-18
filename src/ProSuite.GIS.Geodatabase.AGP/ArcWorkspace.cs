@@ -382,7 +382,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			            "This geodatabase cannot be used as versioned workspace.");
 			VersionManager = Assert.NotNull(geodatabase.GetVersionManager());
 
-			Version = version ?? VersionManager.GetDefaultVersion();
+			Version = version ?? VersionManager.GetCurrentVersion();
 		}
 
 		#region Implementation of IVersion

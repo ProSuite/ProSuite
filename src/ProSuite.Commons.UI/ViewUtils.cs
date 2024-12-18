@@ -184,7 +184,7 @@ namespace ProSuite.Commons.UI
 			}
 			catch (Exception e)
 			{
-				_msg.Error("Error running action on UI thread", e);
+				_msg.Error($"Error running action on UI thread: {e.Message}", e);
 			}
 		}
 

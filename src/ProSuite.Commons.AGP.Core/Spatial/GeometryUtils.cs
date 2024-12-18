@@ -194,6 +194,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return first.StartPoint;
 		}
 
+		[CanBeNull]
 		public static MapPoint GetEndPoint([CanBeNull] Multipart multipart)
 		{
 			var points = multipart?.Points;

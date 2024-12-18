@@ -89,8 +89,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		[CanBeNull]
-		private string GetName(Attributes attribute)
+		public string GetName(Attributes attribute)
 		{
 			return _fieldNameByIssueAttribute.TryGetValue(attribute, out string fieldName)
 				       ? fieldName

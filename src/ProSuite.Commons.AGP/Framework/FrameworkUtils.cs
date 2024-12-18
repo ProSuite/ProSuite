@@ -1,5 +1,6 @@
 using System;
 using ArcGIS.Desktop.Framework;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Framework;
@@ -16,7 +17,7 @@ public static class FrameworkUtils
 		if (_msg.IsVerboseDebugEnabled)
 		{
 			var action = activate ? "Activate" : "Deactivate";
-			_msg.VerboseDebug($"{action} state {stateId}");
+			_msg.VerboseDebug(() => $"{action} state {stateId}");
 		}
 
 		if (activate)
@@ -27,5 +28,29 @@ public static class FrameworkUtils
 		{
 			FrameworkApplication.State.Deactivate(stateId);
 		}
+	}
+
+	public static void Activate([NotNull] string stateId)
+	{
+		if (string.IsNullOrEmpty(stateId))
+			throw new ArgumentNullException(nameof(stateId));
+
+		FrameworkApplication.State.Activate(stateId);
+	}
+
+	public static void Deactivate([NotNull] string stateId)
+	{
+		if (string.IsNullOrEmpty(stateId))
+			throw new ArgumentNullException(nameof(stateId));
+
+		FrameworkApplication.State.Deactivate(stateId);
+	}
+
+	public static bool IsStateActive([NotNull] string stateId)
+	{
+		if (string.IsNullOrEmpty(stateId))
+			throw new ArgumentNullException(nameof(stateId));
+
+		return FrameworkApplication.State.Contains(stateId);
 	}
 }
