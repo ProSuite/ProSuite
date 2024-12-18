@@ -15,7 +15,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		public CrackerToolOptions([CanBeNull] PartialCrackerToolOptions centralOptions,
 		                          [CanBeNull] PartialCrackerToolOptions localOptions)
 		{
-			RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
+			//RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 			
 			CentralOptions = centralOptions;
 
@@ -25,7 +25,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			CentralizableSnapToTargetVertices =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.SnapToTargetVertices), false);
-			//TODO: Numeric Up Down
+			// Numeric Spinner Tolerance
 			CentralizableSnapTolerance =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.SnapTolerance), 0.0);
@@ -34,7 +34,7 @@ namespace ProSuite.AGP.Editing.Cracker
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.RespectMinimumSegmentLength),
 					false);
-			//TODO: Numeric Up Down
+			// Numeric Spinner Length
 			CentralizableMinimumSegmentLength =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.MinimumSegmentLength), 0.0);
