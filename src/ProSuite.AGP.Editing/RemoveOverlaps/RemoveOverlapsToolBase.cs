@@ -26,7 +26,6 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Text;
-using static System.Environment;
 
 namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
@@ -246,7 +245,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			if (_overlaps != null && _overlaps.Notifications.Count > 0)
 			{
-				_msg.Info(_overlaps.Notifications.Concatenate(NewLine));
+				_msg.Info(_overlaps.Notifications.Concatenate(Environment.NewLine));
 
 				if (! _overlaps.HasOverlaps())
 				{
