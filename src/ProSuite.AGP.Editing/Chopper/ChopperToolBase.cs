@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Cracker;
@@ -295,7 +296,30 @@ namespace ProSuite.AGP.Editing.Chopper
 				_msg.Info(optionsMessage);
 			}
 		}
+		#region Tool Options Dockpane
 
+		private DockpaneChopperViewModelBase GetChopperViewModel() {
+			var viewModel = FrameworkApplication.DockPaneManager.Find(
+					                "Swisstopo_GoTop_AddIn_EditTools_Chopper") as
+				                DockpaneChopperViewModelBase;
+			Assert.NotNull(viewModel);
+			return viewModel;
+		}
+		protected override void ShowOptionsPane() {
+			var viewModel = GetChopperViewModel();
+
+			Assert.NotNull(viewModel);
+
+			viewModel.Options = _chopperToolOptions;
+
+			viewModel.Activate(true);
+		}
+
+		protected override void HideOptionsPane() {
+			var viewModel = GetChopperViewModel();
+			viewModel?.Hide();
+		}
+		#endregion
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
