@@ -81,6 +81,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+
+			_settingsProvider?.StoreLocalConfiguration(_removeOverlapsToolOptions.LocalOptions);
+			HideOptionsPane();
 		}
 
 		protected override void LogPromptForSelection()
