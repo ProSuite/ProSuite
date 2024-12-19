@@ -16,31 +16,30 @@
                     Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
 
                 <ResourceDictionary Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
-                
+
             </ResourceDictionary.MergedDictionaries>
 
         </ResourceDictionary>
-
-
     </UserControl.Resources>
 
-    <Grid>
+    <StackPanel
+        HorizontalAlignment="Left"
+        VerticalAlignment="Top" Width="Auto">
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <Grid.Margin>15</Grid.Margin>
-        <StackPanel Grid.Row="1">
-                      <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-                      Content="Remain in sketch mode after finishing a reshape"
-                      DataContext="{Binding Path=Options.CentralizableRemainInSketchMode}" />
-            <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+        <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+                        Content="Remain in sketch mode after finishing a reshape"
+                        DataContext="{Binding Path=Options.CentralizableRemainInSketchMode}" />
+        <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
                       Content="Show preview for polygon reshapes"
                       DataContext="{Binding Path=Options.CentralizableShowPreview}" />
-            <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-                      Content="Move end junction in linear networks"
+        <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+                      Content="Move end junction in linear networks (M)"
                       DataContext="{Binding Path=Options.CentralizableMoveOpenJawEndJunction}" />
-        </StackPanel>
-    </Grid>
+
+        <!-- Restore Defaults -->
+        <Button Template="{StaticResource RestoreDefaultsButton}"
+             />
+
+    </StackPanel>
+
 </UserControl>

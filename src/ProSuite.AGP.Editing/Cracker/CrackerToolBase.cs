@@ -8,6 +8,7 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
@@ -70,8 +71,12 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_settingsProvider?.StoreLocalConfiguration(_crackerToolOptions.LocalOptions);
+			
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+
+			HideOptionsPane();
 		}
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
@@ -306,6 +311,31 @@ namespace ProSuite.AGP.Editing.Cracker
 			return _crackerToolOptions;
 		}
 
+		#region Tool Options Dockpane
+
+		private DockpaneCrackerViewModelBase GetCrackerViewModel() {
+			var viewModel = FrameworkApplication.DockPaneManager.Find(
+					                "Swisstopo_GoTop_AddIn_EditTools_Cracker") as
+				                DockpaneCrackerViewModelBase;
+			Assert.NotNull(viewModel);
+			return viewModel;
+		}
+		protected override void ShowOptionsPane() {
+			var viewModel = GetCrackerViewModel();
+
+			Assert.NotNull(viewModel);
+
+			viewModel.Options = _crackerToolOptions;
+
+			viewModel.Activate(true);
+		}
+
+		protected override void HideOptionsPane() {
+			var viewModel = GetCrackerViewModel();
+			viewModel?.Hide();
+		}
+		#endregion 
+		
 		#region Search target features
 
 		private static bool CanOverlapGeometryType([CanBeNull] FeatureLayer featureLayer)
