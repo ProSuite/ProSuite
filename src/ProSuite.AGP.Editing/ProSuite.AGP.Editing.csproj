@@ -125,4 +125,13 @@
   <ItemGroup>
     <Content Include="Properties\Images\EditSketchCrosshair.cur" />
   </ItemGroup>
+  <ItemGroup>
+    <Page Update="Chopper\DockpaneChopper.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Cracker\DockpaneCracker.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="RemoveOverlaps\DockpaneRemoveOverlaps.xaml"/>
+  </ItemGroup>
 </Project>

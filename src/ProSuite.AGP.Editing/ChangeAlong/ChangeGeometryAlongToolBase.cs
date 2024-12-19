@@ -110,10 +110,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					                             DefaultSketchTypeOnFinishSketch);
 
 				_targetSketchCursor.SetSelectionCursorShift(GetTargetSelectionCursorShift());
-				_targetSketchCursor.SetSelectionCursorLassoShift(
-					GetTargetSelectionCursorLassoShift());
-				_targetSketchCursor.SetSelectionCursorPolygonShift(
-					GetTargetSelectionCursorPolygonShift());
+				_targetSketchCursor.SetSelectionCursorLassoShift(GetTargetSelectionCursorLassoShift());
+				_targetSketchCursor.SetSelectionCursorPolygonShift(GetTargetSelectionCursorPolygonShift());
 			});
 		}
 
@@ -200,7 +198,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		protected override async Task<bool> OnSketchCompleteCoreAsync(
-			Geometry sketchGeometry,
+			Geometry sketchGeometry,	
 			CancelableProgressor progressor)
 		{
 			try
@@ -263,16 +261,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
-		protected override async Task ShiftPressedCoreAsync()
+		protected override Task ShiftPressedCoreAsync()
 		{
-			if (await IsInSelectionPhaseAsync())
-			{
-				await base.ShiftPressedCoreAsync();
-			}
-			else
-			{
-				_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
-			}
+			_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+
+			return base.ShiftPressedCoreAsync();
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()

@@ -26,6 +26,9 @@ namespace ProSuite.AGP.Editing.Erase
 
 		protected EraseToolBase()
 		{
+			// important for SketchRecorder in base class
+			FireSketchEvents = true;
+
 			// This is our property:
 			RequiresSelection = true;
 		}

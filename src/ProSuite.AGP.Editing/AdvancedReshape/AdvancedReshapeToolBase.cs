@@ -8,9 +8,9 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Editing.AdvancedReshapeReshape;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
@@ -20,6 +20,7 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
@@ -57,7 +58,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		private bool _nonDefaultSideMode;
 		private CancellationTokenSource _cancellationTokenSource;
 		private const Key _keyToggleNonDefaultSide = Key.S;
-		private const Key _keyToggleMoveEndJunction = Key.M; //Is this needed?
+		private const Key _keyToggleMoveEndJunction = Key.M;
 
 		protected virtual string OptionsFileName => "AdvancedReshapeToolOptions.xml";
 
@@ -74,6 +75,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected AdvancedReshapeToolBase()
 		{
+			// important for SketchRecorder in base class
 			FireSketchEvents = true;
 
 			RequiresSelection = true;
@@ -201,6 +203,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_feedback = null;
 
 			base.OnToolDeactivateCore(hasMapViewChanged);
+
+			HideOptionsPane();
 		}
 
 		protected override SketchGeometryType GetSketchGeometryType()
@@ -213,16 +217,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return SketchGeometryType.Rectangle;
 		}
 
-		protected override async Task<bool> OnSketchModifiedAsync()
+		protected override async Task<bool> OnSketchModifiedAsyncCore()
 		{
-			_msg.VerboseDebug(() => "OnSketchModifiedAsync");
+			_msg.VerboseDebug(() => "OnSketchModifiedAsyncCore");
 
-			// Does it make any difference what the return value is?
-			bool result = await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
-
-			result &= await base.OnSketchModifiedAsync();
-
-			return result;
+			return await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
 		}
 
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
@@ -267,8 +266,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 						_msg.Info("Disabled move end junction option for Y-Reshape");
 					}
 
-
-
 					await _updateFeedbackTask;
 				}
 			}
@@ -281,6 +278,36 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				_updateFeedbackTask = null;
 			}
 		}
+
+#region Tool Options Dockpane
+
+		
+		private DockpaneAdvancedReshapeViewModelBase GetAdvancedReshapeViewModel()
+		{
+			var viewModel = FrameworkApplication.DockPaneManager.Find(
+					                "Swisstopo_GoTop_AddIn_EditTools_AdvancedReshape") as
+				                DockpaneAdvancedReshapeViewModelBase;
+			Assert.NotNull(viewModel);
+			return viewModel;
+		}
+
+		protected override void ShowOptionsPane()
+		{
+			var viewModel = GetAdvancedReshapeViewModel();
+
+			Assert.NotNull(viewModel);
+
+			viewModel.Options = _advancedReshapeToolOptions;
+
+			viewModel.Activate(true);
+		}
+
+		protected override void HideOptionsPane()
+		{
+			var viewModel = GetAdvancedReshapeViewModel();
+			viewModel?.Hide();
+		}
+#endregion
 
 		//protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		//{

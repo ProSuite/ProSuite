@@ -8,6 +8,7 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
@@ -25,7 +26,6 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Text;
-using static System.Environment;
 
 namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
@@ -81,6 +81,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+
+			_settingsProvider?.StoreLocalConfiguration(_removeOverlapsToolOptions.LocalOptions);
+			HideOptionsPane();
 		}
 
 		protected override void LogPromptForSelection()
@@ -245,7 +248,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			if (_overlaps != null && _overlaps.Notifications.Count > 0)
 			{
-				_msg.Info(_overlaps.Notifications.Concatenate(NewLine));
+				_msg.Info(_overlaps.Notifications.Concatenate(Environment.NewLine));
 
 				if (! _overlaps.HasOverlaps())
 				{
@@ -401,6 +404,36 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			return _removeOverlapsToolOptions;
 		}
 
+		#region Tool Options Dockpane
+
+		private DockpaneRemoveOverlapsViewModelBase GetViewViewModel()
+		{
+			var viewModel = FrameworkApplication.DockPaneManager.Find(
+					                "Swisstopo_GoTop_AddIn_EditTools_RemoveOverlaps") as
+				                DockpaneRemoveOverlapsViewModelBase;
+
+			return Assert.NotNull(viewModel);
+		}
+
+		protected override void ShowOptionsPane()
+		{
+			DockpaneRemoveOverlapsViewModelBase viewModel = GetViewViewModel();
+
+			Assert.NotNull(viewModel);
+
+			viewModel.Options = _removeOverlapsToolOptions;
+
+			viewModel.Activate(true);
+		}
+
+		protected override void HideOptionsPane()
+		{
+			DockpaneRemoveOverlapsViewModelBase viewModel = GetViewViewModel();
+			viewModel?.Hide();
+		}
+
+		#endregion
+
 		#region Search target features
 
 		[NotNull]
@@ -439,7 +472,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			}
 
 			// Remove the selected features from the set of overlapping features.
-			// This is also important to make sure the geometries don't get mixed up / reset
+			// This is also important to make sure the geometries don't get mixed up / reset 
 			// by inserting target vertices
 			foundFeatures.RemoveAll(
 				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
@@ -505,27 +538,27 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapsOverlay, null);
+			                              Resources.RemoveOverlapslOverlay, null);
 		}
 
 		protected override Cursor GetSelectionCursorShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapsOverlay,
+			                              Resources.RemoveOverlapslOverlay,
 			                              Resources.Shift);
 		}
 
 		protected override Cursor GetSelectionCursorLasso()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapsOverlay,
+			                              Resources.RemoveOverlapslOverlay,
 			                              Resources.Lasso);
 		}
 
 		protected override Cursor GetSelectionCursorLassoShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapsOverlay,
+			                              Resources.RemoveOverlapslOverlay,
 			                              Resources.Lasso,
 			                              Resources.Shift);
 		}
@@ -533,14 +566,14 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursorPolygon()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapsOverlay,
+			                              Resources.RemoveOverlapslOverlay,
 			                              Resources.Polygon);
 		}
 
 		protected override Cursor GetSelectionCursorPolygonShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapsOverlay,
+			                              Resources.RemoveOverlapslOverlay,
 			                              Resources.Polygon,
 			                              Resources.Shift);
 		}
@@ -549,18 +582,19 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override Cursor GetSecondPhaseCursor()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay, 10, 10);
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay, 10,
+			                              10);
 		}
 
 		protected override Cursor GetSecondPhaseCursorLasso()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay,
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
 			                              Resources.Lasso, null, 10, 10);
 		}
 
 		protected override Cursor GetSecondPhaseCursorPolygon()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay,
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
 			                              Resources.Polygon, null, 10, 10);
 		}
 

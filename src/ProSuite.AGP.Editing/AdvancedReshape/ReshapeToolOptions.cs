@@ -1,12 +1,13 @@
-using ProSuite.AGP.Editing.AdvancedReshape;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
 
-namespace ProSuite.AGP.Editing.AdvancedReshapeReshape
+namespace ProSuite.AGP.Editing.AdvancedReshape
 {
-	public class ReshapeToolOptions : OptionsBase<PartialReshapeToolOptions>
+	public class ReshapeToolOptions : OptionsBase<PartialReshapeToolOptions>, INotifyPropertyChanged
 	{
 		public ReshapeToolOptions([CanBeNull] PartialReshapeToolOptions centralOptions,
 		                          [CanBeNull] PartialReshapeToolOptions localOptions)
@@ -26,6 +27,15 @@ namespace ProSuite.AGP.Editing.AdvancedReshapeReshape
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.UseTopologyTypeSelection),
 					false);
+
+			CentralizableShowPreview.PropertyChanged += (_, _) =>
+				OnPropertyChanged(nameof(ShowPreview));
+			CentralizableRemainInSketchMode.PropertyChanged += (_, _) =>
+				OnPropertyChanged(nameof(RemainInSketchMode));
+			CentralizableMoveOpenJawEndJunction.PropertyChanged += (_, _) =>
+				OnPropertyChanged(nameof(MoveOpenJawEndJunction));
+			CentralizableUseTopologyTypeSelection.PropertyChanged += (_, _) =>
+				OnPropertyChanged(nameof(UseTopologyTypeSelection));
 		}
 
 		#region Centralizable Properties
@@ -34,7 +44,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshapeReshape
 		public CentralizableSetting<bool> CentralizableRemainInSketchMode { get; private set; }
 		public CentralizableSetting<bool> CentralizableMoveOpenJawEndJunction { get; private set; }
 
-		public CentralizableSetting<bool> CentralizableUseTopologyTypeSelection {
+		public CentralizableSetting<bool> CentralizableUseTopologyTypeSelection
+		{
 			get;
 			private set;
 		}
@@ -45,10 +56,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshapeReshape
 
 		public bool ShowPreview => CentralizableShowPreview.CurrentValue;
 		public bool RemainInSketchMode => CentralizableRemainInSketchMode.CurrentValue;
+
 		public bool MoveOpenJawEndJunction
 		{
-			get { return CentralizableMoveOpenJawEndJunction.CurrentValue; }
-			set { CentralizableMoveOpenJawEndJunction.CurrentValue = value; }
+			get => CentralizableMoveOpenJawEndJunction.CurrentValue;
+			set => CentralizableMoveOpenJawEndJunction.CurrentValue = value;
 		}
 
 		public bool UseTopologyTypeSelection => CentralizableUseTopologyTypeSelection.CurrentValue;
@@ -66,14 +78,15 @@ namespace ProSuite.AGP.Editing.AdvancedReshapeReshape
 		public override bool HasLocalOverrides(NotificationCollection notifications)
 		{
 			bool result = false;
-			
+
 			if (HasLocalOverride(CentralizableShowPreview, "Show the reshape preview",
 			                     notifications))
 			{
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableRemainInSketchMode, "Remain in sketch mode after reshape operation",
+			if (HasLocalOverride(CentralizableRemainInSketchMode,
+			                     "Remain in sketch mode after reshape operation",
 			                     notifications))
 			{
 				result = true;
@@ -98,6 +111,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshapeReshape
 		{
 			const string optionsName = "Reshape Tool Options";
 			return GetLocalOverridesMessage(optionsName);
+		}
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 	}
 }

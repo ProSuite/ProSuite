@@ -52,6 +52,8 @@ public class SketchAndCursorSetter
 		_lassoCursor = lassoCursor ?? throw new ArgumentNullException(nameof(lassoCursor));
 		_polygonCursor = polygonCursor ?? throw new ArgumentNullException(nameof(polygonCursor));
 
+		
+
 		_defaultSelectionSketchType = defaultSelectionSketchType;
 
 		// todo: daro not here? This class is not only for selection sketch anymore.

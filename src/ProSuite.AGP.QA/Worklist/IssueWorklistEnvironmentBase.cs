@@ -121,7 +121,8 @@ namespace ProSuite.AGP.QA.WorkList
 				                          Attributes.InvolvedObjects,
 				                          Attributes.IssueSeverity,
 				                          Attributes.IssueCode,
-				                          Attributes.IssueDescription
+				                          Attributes.IssueDescription,
+										  Attributes.IssueType
 			                          };
 
 			foreach (Table table in tables)
