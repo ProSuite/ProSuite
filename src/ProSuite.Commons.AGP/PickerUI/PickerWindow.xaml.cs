@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using ProSuite.AGP.Editing.Picker;
+using ProSuite.Commons.AGP.Picker;
 
-namespace ProSuite.AGP.Editing.PickerUI
+namespace ProSuite.Commons.AGP.PickerUI
 {
 	public partial class PickerWindow : IDisposable, ICloseable
 	{

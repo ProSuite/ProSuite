@@ -1,8 +1,8 @@
 using ArcGIS.Core.Geometry;
-using ProSuite.AGP.Editing.Picker;
+using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.Editing.PickerUI
+namespace ProSuite.Commons.AGP.PickerUI
 {
 	public class PickerViewModel : PickerViewModelBase<IPickableItem>
 	{

@@ -1111,7 +1111,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
 			}
 
-			if (shape is Multipatch multipatch)
+			if (shape is Multipatch)
 			{
 				throw new NotImplementedException("Multipatches are not yet implemented");
 			}
@@ -1168,7 +1168,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				return vertexTally + localVertexIndex;
 			}
 
-			if (shape is Multipatch multipatch)
+			if (shape is Multipatch)
 			{
 				throw new NotImplementedException("Multipatches are not yet implemented");
 			}
@@ -1176,8 +1176,176 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return localVertexIndex;
 		}
 
+		/// <summary>
+		/// This method ensures that either <paramref name="partIndex"/>
+		/// equals <paramref name="pointIndex"/>, or that either
+		/// <paramref name="partIndex"/> or <paramref name="pointIndex"/>
+		/// is zero or unspecified (negative).
+		/// </summary>
+		/// <remarks>By convention, a multipoint geometry reports its
+		/// constituent points as its points (addressed by point index)
+		/// and as its parts (addressed by part index).</remarks>
+		public static int GetMultipointIndex(int partIndex, int pointIndex)
+		{
+			// p == v | p > 0 and v <= 0 | v > 0 and p <= 0
+
+			if (partIndex == pointIndex)
+			{
+				return partIndex;
+			}
+
+			if (partIndex <= 0)
+			{
+				return pointIndex;
+			}
+
+			if (pointIndex <= 0)
+			{
+				return partIndex;
+			}
+
+			throw new ArgumentException("For a multipoint, part and vertex index must not be different");
+		}
+
+		public static Geometry AddVertex(Geometry shape, MapPoint point)
+		{
+			return AddVertex(shape, point, out _, out _);
+		}
+
+		/// <summary>
+		/// Add a vertex to the given <paramref name="shape"/>
+		/// (a Polyline, Polygon, or a Multipoint) at or near the
+		/// given <paramref name="point"/> (it will be projected
+		/// onto the Polyline or Polygon boundary).
+		/// </summary>
+		/// <returns>A new geometry with the vertex added</returns>
+		/// <remarks>For multipoints, just append the point, for polylines
+		/// and polygons, use <see cref="IGeometryEngine.SplitAtPoint"/></remarks>
+		public static Geometry AddVertex(Geometry shape, MapPoint point, out int partIndex, out int vertexIndex)
+		{
+			if (shape is null)
+				throw new ArgumentNullException(nameof(shape));
+			if (point is null)
+				throw new ArgumentNullException(nameof(point));
+
+			// Multipoint: add point at clickPoint
+			// Multipart: split line at clickPoint
+			// MultiPatch: not implemented
+			// otherwise: error (UI should not call AddVertex)
+
+			if (shape is Multipoint multipoint)
+			{
+				point = EnsureSpatialReference(point, multipoint.SpatialReference);
+				var builder = new MultipointBuilderEx(multipoint);
+				builder.AddPoint(point);
+				partIndex = vertexIndex = builder.PointCount - 1;
+				return builder.ToGeometry();
+			}
+
+			if (shape is Multipart multipart)
+			{
+				if (multipart.IsEmpty)
+				{
+					// cannot add a (single) vertex to an empty polyline/polygon
+					partIndex = -1;
+					vertexIndex = -1;
+					return multipart;
+				}
+
+				const bool projectOnto = true;
+				point = EnsureSpatialReference(point, multipart.SpatialReference);
+				Geometry newShape = GeometryEngine.Instance.SplitAtPoint(
+					multipart, point, projectOnto, false,
+					out bool splitOccurred, out partIndex, out int segmentIndex);
+				if (!splitOccurred)
+					throw new Exception($"Could not add vertex to {multipart.GeometryType}: " +
+					                    $"{nameof(GeometryEngine.Instance.SplitAtPoint)} says no split occurred");
+				// Returned partIndex and segmentIndex are for the segment *after* the
+				// split point, thus segmentIndex is the vertexIndex of the inserted vertex:
+				vertexIndex = segmentIndex;
+				// SplitAtPoint interpolates Z and M attributes (good), but also seems to
+				// inherit the ID from neighbouring vertices (not so good): manually clear:
+				newShape = ControlPointUtils.SetPointID(0, newShape, partIndex, segmentIndex);
+				return newShape;
+			}
+
+			if (shape is Multipatch)
+			{
+				throw new NotImplementedException("Add Vertex is not implemented for MultiPatch geometries");
+			}
+
+			throw new NotSupportedException(
+				$"Cannot Add Vertex on a geometry of type {shape.GetType().Name}");
+		}
+
+		/// <summary>
+		/// Remove the addressed vertex from the given geometry.
+		/// For a point geometry, both indices must be zero.
+		/// For a multipoint geometry, both indices should be the same.
+		/// </summary>
+		/// <returns>A new geometry instance, which may be an empty geometry
+		/// (if last vertex or segment was removed)</returns>
+		public static Geometry RemoveVertex(Geometry shape, int partIndex, int vertexIndex)
+		{
+			if (shape is null)
+				throw new ArgumentNullException(nameof(shape));
+
+			if (shape.IsEmpty)
+				throw new InvalidOperationException("Cannot remove vertex on an empty geometry");
+
+			if (shape is MapPoint mapPoint)
+			{
+				if (partIndex != 0)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+				if (vertexIndex != 0)
+					throw new ArgumentOutOfRangeException(nameof(vertexIndex));
+
+				var builder = new MapPointBuilderEx(mapPoint);
+				builder.SetEmpty();
+				return builder.ToGeometry();
+			}
+
+			if (shape is Multipoint multipoint)
+			{
+				int pointIndex = GetMultipointIndex(partIndex, vertexIndex);
+				if (pointIndex < 0 || pointIndex >= multipoint.PointCount)
+					throw new ArgumentOutOfRangeException(
+						"point index out of range for multipoint shape", (Exception) null);
+
+				var builder = new MultipointBuilderEx(multipoint);
+				builder.RemovePoint(pointIndex);
+				return builder.ToGeometry();
+			}
+
+			if (shape is Polyline polyline)
+			{
+				var builder = new PolylineBuilderEx(polyline);
+				RemoveVertices(builder, partIndex, vertexIndex);
+				return builder.ToGeometry();
+			}
+
+			if (shape is Polygon polygon)
+			{
+				var builder = polygon.ToBuilder();
+				RemoveVertices(builder, partIndex, vertexIndex);
+				return builder.ToGeometry();
+			}
+
+			if (shape is Multipatch)
+			{
+				throw new NotImplementedException();
+			}
+
+			if (shape is Envelope)
+			{
+				throw new NotSupportedException("Cannot remove vertex on an Envelope");
+			}
+
+			throw new NotSupportedException($"Geometry type {shape.GetType().Name} is not supported");
+		}
+
 		public static void RemoveVertices(/*this*/ MultipartBuilderEx builder, int partIndex,
-		                                  int firstVertex, int lastVertex = -1)
+		                                           int firstVertex, int lastVertex = -1)
 		{
 			switch (builder)
 			{
@@ -1372,9 +1540,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			MultipartBuilderEx builder, int partIndex, int segmentIndex, double dx, double dy)
 		{
 			var segment = builder.GetSegment(partIndex, segmentIndex);
-			var segbldr = segment.ToBuilder();
-			segbldr.StartPoint = segbldr.StartPoint.Shifted(dx, dy);
-			var moved = segbldr.ToSegment();
+
+			var startPoint = segment.StartPoint.Shifted(dx, dy);
+			Segment moved = UpdateEndpoints(segment, startPoint, null);
+
 			builder.ReplaceSegment(partIndex, segmentIndex, moved);
 		}
 
@@ -1382,10 +1551,124 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			MultipartBuilderEx builder, int partIndex, int segmentIndex, double dx, double dy)
 		{
 			var segment = builder.GetSegment(partIndex, segmentIndex);
-			var segbldr = segment.ToBuilder();
-			segbldr.EndPoint = segbldr.EndPoint.Shifted(dx, dy);
-			var moved = segbldr.ToSegment();
+
+			var endPoint = segment.EndPoint.Shifted(dx, dy);
+			Segment moved = UpdateEndpoints(segment, null, endPoint);
+
 			builder.ReplaceSegment(partIndex, segmentIndex, moved);
+		}
+
+		/// <summary>
+		/// Update either or both endpoints of the given segment.
+		/// For a line segment, this is trivial. For a cubic Bézier
+		/// segment, move the control point(s) accordingly. For a
+		/// circular or elliptic arc, move the center decently.
+		/// </summary>
+		public static T UpdateEndpoints<T>([NotNull] T segment, MapPoint startPoint, MapPoint endPoint)
+			where T : Segment
+		{
+			if (segment is null)
+				throw new ArgumentNullException(nameof(segment));
+
+			if (segment is CubicBezierSegment bezier)
+			{
+				return (T) (Segment) UpdateEndpoints(bezier, startPoint, endPoint);
+			}
+
+			if (segment is EllipticArcSegment arc)
+			{
+				return (T) (Segment) UpdateEndpoints(arc, startPoint, endPoint);
+			}
+
+			var builder = segment.ToBuilder();
+			builder.StartPoint = startPoint ?? segment.StartPoint;
+			builder.EndPoint = endPoint ?? builder.EndPoint;
+			return (T) builder.ToSegment();
+		}
+
+		private static CubicBezierSegment UpdateEndpoints(
+			CubicBezierSegment bezier, MapPoint startPoint, MapPoint endPoint)
+		{
+			if (startPoint is null && endPoint is null)
+			{
+				// no endpoint changed: nothing to do
+				return bezier;
+			}
+
+			// Move CP1 same as startPoint, and CP2 same as endPoint:
+
+			var controlPoint1 = bezier.ControlPoint1;
+			var controlPoint2 = bezier.ControlPoint2;
+
+			if (startPoint is not null)
+			{
+				controlPoint1.Move(startPoint.X - bezier.StartPoint.X,
+				         startPoint.Y - bezier.StartPoint.Y);
+			}
+
+			if (endPoint is not null)
+			{
+				controlPoint2.Move(endPoint.X - bezier.EndPoint.X,
+				         endPoint.Y - bezier.EndPoint.Y);
+			}
+
+			var sref = bezier.SpatialReference;
+
+			return CubicBezierBuilderEx.CreateCubicBezierSegment(
+				startPoint ?? bezier.StartPoint, controlPoint1,
+				controlPoint2, endPoint ?? bezier.EndPoint, sref);
+		}
+
+		private static EllipticArcSegment UpdateEndpoints(
+			EllipticArcSegment arc, MapPoint startPoint, MapPoint endPoint)
+		{
+			if (startPoint is null && endPoint is null)
+			{
+				// no endpoint changed: nothing to do
+				return arc;
+			}
+
+			// Cannot just update arc.StartPoint and arc.EndPoint:
+			// must recreate the circular/elliptic arc segment:
+
+			EllipticArcSegment updated;
+
+			var orientation = arc.IsCounterClockwise
+				                  ? ArcOrientation.ArcCounterClockwise
+				                  : ArcOrientation.ArcClockwise;
+
+			var sref = arc.SpatialReference;
+
+			if (arc.IsCircular)
+			{
+
+				var ds = startPoint is null
+					         ? new Coordinate2D(0, 0)
+					         : new Coordinate2D(startPoint) - new Coordinate2D(arc.StartPoint);
+
+				var de = endPoint is null
+					         ? new Coordinate2D(0, 0)
+					         : new Coordinate2D(endPoint) - new Coordinate2D(arc.EndPoint);
+
+				var dc = 0.5 * (ds + de);
+				var centerPt = arc.CenterPoint.Shifted(dc.X, dc.Y);
+
+				updated = EllipticArcBuilderEx.CreateCircularArc(
+					startPoint ?? arc.StartPoint, endPoint ?? arc.EndPoint, centerPt, orientation, sref);
+			}
+			else
+			{
+				var minor = arc.IsMinor
+					            ? MinorOrMajor.Minor
+					            : MinorOrMajor.Major;
+
+				updated = EllipticArcBuilderEx.CreateEllipticArcSegment(
+					startPoint ?? arc.StartPoint, endPoint ?? arc.EndPoint,
+					arc.SemiMajorAxis, arc.MinorMajorRatio,
+					arc.RotationAngle, minor, orientation, sref);
+			}
+
+			return updated;
 		}
 
 		#endregion

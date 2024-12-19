@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.Commons.AGP.Picker
 {
 	public class PickableItemComparer : IComparer<IPickableItem>
 	{

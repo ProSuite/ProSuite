@@ -52,7 +52,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures;
 /// click on empty space: schedule for creation
 /// enter/esc to commit/abort (2nd esc clears selection).
 /// This base class operates on the current template;
-/// subclasses operate on any layer.
+/// subclasses may operate on any layer.
 /// </summary>
 [UsedImplicitly]
 public class AddRemovePointsTool : MapTool
@@ -82,6 +82,8 @@ public class AddRemovePointsTool : MapTool
 		_elements = new List<Element>();
 		CurrentValues = new Dictionary<string, object>();
 	}
+
+	#region Customizable
 
 	protected override void OnUpdate()
 	{
@@ -201,6 +203,8 @@ public class AddRemovePointsTool : MapTool
 	{
 		return null; // use default symbol; subclass may override
 	}
+
+	#endregion
 
 	#region Base overrides
 

@@ -5,15 +5,12 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.Commons.AGP.Picker
 {
 	public class PickableFeatureItem : PickableFeatureItemBase
 	{
 		private BitmapImage _image;
 
-		/// <summary>
-		/// Has to be called on MCT
-		/// </summary>
 		public PickableFeatureItem(BasicFeatureLayer layer, Feature feature,
 		                           Geometry geometry, long oid, string displayValue) : base(
 			layer, feature, geometry, oid, displayValue) { }

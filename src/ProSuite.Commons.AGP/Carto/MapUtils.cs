@@ -125,8 +125,8 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		private static Table GetTable([NotNull] MapMember mapMember,
-		                              bool unJoined = false)
+		public static Table GetTable([NotNull] MapMember mapMember,
+		                             bool unJoined = false)
 		{
 			Assert.ArgumentNotNull(mapMember, nameof(mapMember));
 

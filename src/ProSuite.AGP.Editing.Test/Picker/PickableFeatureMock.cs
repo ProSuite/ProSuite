@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Windows.Media;
-using ProSuite.AGP.Editing.Picker;
+using ProSuite.Commons.AGP.Picker;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
 namespace ProSuite.AGP.Editing.Test.Picker

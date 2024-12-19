@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ProSuite.AGP.Editing.Picker;
-using ProSuite.AGP.Editing.PickerUI;
+using ProSuite.Commons.AGP.Picker;
+using ProSuite.Commons.AGP.PickerUI;
 
 namespace ProSuite.AGP.Editing.Test.Picker
 {

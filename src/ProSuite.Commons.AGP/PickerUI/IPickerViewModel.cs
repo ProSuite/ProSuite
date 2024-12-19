@@ -2,9 +2,9 @@ using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using ProSuite.AGP.Editing.Picker;
+using ProSuite.Commons.AGP.Picker;
 
-namespace ProSuite.AGP.Editing.PickerUI;
+namespace ProSuite.Commons.AGP.PickerUI;
 
 public interface IPickerViewModel : IDisposable
 {

@@ -9,10 +9,13 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
+using Envelope = ArcGIS.Core.Geometry.Envelope;
+using Geometry = ArcGIS.Core.Geometry.Geometry;
+using Polygon = ArcGIS.Core.Geometry.Polygon;
 
-namespace ProSuite.AGP.Editing.PickerUI;
+namespace ProSuite.Commons.AGP.PickerUI;
 
-public class FlashService : IDisposable/*, IFlashService*/
+public class FlashService : IDisposable
 {
 	private readonly Dictionary<string, IFlashSymbol> _symbols;
 	private readonly List<IDisposable> _overlays = new();
@@ -48,9 +51,8 @@ public class FlashService : IDisposable/*, IFlashService*/
 		_symbols = symbols;
 	}
 
-	public FlashService(params IFlashSymbol[] symbols) : this(symbols.ToDictionary(s => s.Name, s => s))
-	{
-	}
+	public FlashService(params IFlashSymbol[] symbols) : this(
+		symbols.ToDictionary(s => s.Name, s => s)) { }
 
 	public FlashService Flash(Geometry geometry)
 	{
@@ -90,38 +92,32 @@ public class FlashService : IDisposable/*, IFlashService*/
 
 	public FlashService Flash(string symbolName, Geometry geometry)
 	{
-		try
-		{
-			Geometry flashGeometry = null;
-			CIMSymbol symbol = _symbols[symbolName].GetSymbol();
+		Geometry flashGeometry = null;
+		var flashSymbol = _symbols[symbolName];
+		CIMSymbol symbol = flashSymbol.GetSymbol(geometry.GeometryType);
 
-			switch (geometry.GeometryType)
-			{
-				case GeometryType.Point:
-				case GeometryType.Multipoint:
-					flashGeometry = geometry;
-					break;
-				case GeometryType.Polyline:
-					flashGeometry = geometry;
-					break;
-				case GeometryType.Polygon:
-					flashGeometry = GetPolygonGeometry(geometry);
-					break;
-				case GeometryType.Unknown:
-				case GeometryType.Envelope:
-				case GeometryType.Multipatch:
-				case GeometryType.GeometryBag:
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-
-			QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
-		}
-		catch (Exception exc)
+		switch (geometry.GeometryType)
 		{
-			
+			case GeometryType.Point:
+			case GeometryType.Multipoint:
+				flashGeometry = geometry;
+				break;
+			case GeometryType.Polyline:
+				flashGeometry = geometry;
+				break;
+			case GeometryType.Polygon:
+				flashGeometry = GetPolygonGeometry(geometry);
+				break;
+			case GeometryType.Unknown:
+			case GeometryType.Envelope:
+			case GeometryType.Multipatch:
+			case GeometryType.GeometryBag:
+				break;
+			default:
+				throw new ArgumentOutOfRangeException();
 		}
+
+		QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol, flashSymbol.UseRealWorldUnits); });
 
 		return this;
 	}
@@ -145,11 +141,12 @@ public class FlashService : IDisposable/*, IFlashService*/
 		return GeometryUtils.GetClippedGeometry(geometry, clipExtent, mapRotation);
 	}
 
-	private void AddOverlay(Geometry geometry, CIMSymbol symbol)
+	private void AddOverlay(Geometry geometry, CIMSymbol symbol, bool useRealWorldUnits = false)
 	{
 		MapView.Active.NotNullCallback(mv =>
 		{
-			IDisposable overlay = mv.AddOverlay(geometry, symbol.MakeSymbolReference());
+			double referenceScale = useRealWorldUnits ? 1000 : -1;
+			IDisposable overlay = mv.AddOverlay(geometry, symbol.MakeSymbolReference(), referenceScale);
 
 			_overlays.Add(Assert.NotNull(overlay));
 		});
@@ -171,65 +168,67 @@ public class FlashService : IDisposable/*, IFlashService*/
 public interface IFlashSymbol
 {
 	string Name { get; set; }
-	CIMSymbol GetSymbol();
+	bool UseRealWorldUnits { get; set; }
+
+	CIMSymbol GetSymbol(GeometryType type);
 }
 
-public class BluePolygonSymbol : IFlashSymbol
+public class ColoredSymbol : IFlashSymbol
 {
-	public string Name { get; set; }
+	private readonly CIMColor _color;
+	private readonly double _width;
 
-	public CIMSymbol GetSymbol()
+	public ColoredSymbol(string name, double R, double G, double B, double width = 4, bool useRealWorldUnits = false)
+		: this(R, G, B, width, useRealWorldUnits)
 	{
-		CIMColor blue = ColorFactory.Instance.CreateRGBColor(0, 100, 255);
-
-		CIMStroke outline =
-			SymbolFactory.Instance.ConstructStroke(blue, 4, SimpleLineStyle.Solid);
-
-		return SymbolFactory.Instance.ConstructPolygonSymbol(
-			blue, SimpleFillStyle.Null, outline);
+		Name = name;
 	}
-}
 
-public class GreenPolygonSymbol : IFlashSymbol
-{
-	public string Name { get; set; }
-
-	public CIMSymbol GetSymbol()
+	public ColoredSymbol(double R, double G, double B, double width = 4, bool useRealWorldUnits = false)
 	{
-		CIMColor green = ColorFactory.Instance.CreateRGBColor(0, 255, 0);
+		UseRealWorldUnits = useRealWorldUnits;
 
-		CIMStroke outline =
-			SymbolFactory.Instance.ConstructStroke(green, 4, SimpleLineStyle.Solid);
-
-		return SymbolFactory.Instance.ConstructPolygonSymbol(
-			green, SimpleFillStyle.Null, outline);
+		_width = width;
+		_color = ColorFactory.Instance.CreateRGBColor(R, G, B);
 	}
-}
 
-public class MagentaPolygonSymbol : IFlashSymbol
-{
 	public string Name { get; set; }
 
-	public CIMSymbol GetSymbol()
+	public bool UseRealWorldUnits { get; set; }
+
+	public CIMSymbol GetSymbol(GeometryType type)
 	{
-		CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
-
-		CIMStroke outline =
-			SymbolFactory.Instance.ConstructStroke(magenta, 4, SimpleLineStyle.Solid);
-
-		return SymbolFactory.Instance.ConstructPolygonSymbol(
-			magenta, SimpleFillStyle.Null, outline);
-	}
-}
-
-public class MagentaLineSymbol : IFlashSymbol
-{
-	public string Name { get; set; }
-
-	public CIMSymbol GetSymbol()
-	{
-		CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
-
-		return SymbolFactory.Instance.ConstructLineSymbol(magenta, 4);
+		switch (type)
+		{
+			case GeometryType.Point:
+			case GeometryType.Multipoint:
+			{
+				var symbol =  SymbolFactory.Instance.ConstructPointSymbol(_color, _width * 1.5);
+				symbol.UseRealWorldSymbolSizes = UseRealWorldUnits;
+				return symbol;
+			}
+			case GeometryType.Polyline:
+			{
+				var symbol = SymbolFactory.Instance.ConstructLineSymbol(_color, _width);
+				symbol.UseRealWorldSymbolSizes = UseRealWorldUnits;
+				return symbol;
+			}
+			case GeometryType.Polygon:
+			{
+				CIMStroke outline =
+					SymbolFactory.Instance.ConstructStroke(_color, _width, SimpleLineStyle.Solid);
+					
+				var symbol = SymbolFactory.Instance.ConstructPolygonSymbol(
+					_color, SimpleFillStyle.Null, outline);
+				symbol.UseRealWorldSymbolSizes = UseRealWorldUnits;
+				return symbol;
+			}
+			case GeometryType.Unknown:
+			case GeometryType.Envelope:
+			case GeometryType.Multipatch:
+			case GeometryType.GeometryBag:
+			default:
+				return null;
+		}
 	}
 }
