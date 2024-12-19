@@ -356,6 +356,9 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static bool IsSameTable(Table fc1, Table fc2)
 		{
 			if (ReferenceEquals(fc1, fc2)) return true;
+
+			if (fc1 == null || fc2 == null) return false;
+
 			if (Equals(fc1.Handle, fc2.Handle)) return true;
 
 			var id1 = fc1.GetID();

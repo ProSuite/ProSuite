@@ -385,8 +385,8 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
-		private static bool
-			LayerUsesFeatureClass(BasicFeatureLayer featureLayer, FeatureClass featureClass)
+		private static bool LayerUsesFeatureClass([NotNull] BasicFeatureLayer featureLayer,
+		                                          [NotNull] FeatureClass featureClass)
 		{
 			var layerClass = featureLayer.GetTable() as FeatureClass;
 
