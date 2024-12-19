@@ -52,10 +52,10 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 
 			if (canUseDataContainer)
 			{
-				if (filter is AoFeatureClassFilter)
+				if (filter is AoFeatureClassFilter aoFeatureClassFilter)
 				{
-					AoFeatureClassFilter aoFeatureClassFilter = (AoFeatureClassFilter) filter;
-					((AoFeatureClassFilter)IntersectingFeatureFilter).TileExtent = aoFeatureClassFilter.TileExtent;
+					((AoFeatureClassFilter) IntersectingFeatureFilter).TileExtent =
+						aoFeatureClassFilter.TileExtent;
 				}
 
 				IFeatureClassFilter featureClassFilter = (IFeatureClassFilter) filter;
