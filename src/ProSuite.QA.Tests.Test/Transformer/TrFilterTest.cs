@@ -1276,8 +1276,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					// NOTE: The search logic should work correctly even if search option is Tile! (e.g. due to downstream transformers)
 					//NeighborSearchOption = TrSpatialJoin.SearchOption.All
 				};
+
 			TrCombinedFilter tr =
-				new TrCombinedFilter(roPolyFc, [trIntersecting.GetTransformed()], null);
+				new TrCombinedFilter(
+					roPolyFc, new List<IReadOnlyFeatureClass> { trIntersecting.GetTransformed() },
+					null);
 
 			var transformedClass = tr.GetTransformed();
 			WriteFieldNames(transformedClass);
