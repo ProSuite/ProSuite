@@ -488,5 +488,29 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		#endregion
+
+		public static string GetMeaningfulDisplayExpression([NotNull] Feature feature,
+		                                                    [CanBeNull] string expression)
+		{
+			if (string.IsNullOrEmpty(expression) || string.IsNullOrWhiteSpace(expression))
+			{
+				return GdbObjectUtils.GetDisplayValue(feature);
+			}
+
+			long oid = feature.GetObjectID();
+
+			// GetDisplayExpressions() returns
+			// 1) the OIDs if the display field value is null
+			// 2) 0 if the display expression string is null
+			bool fieldValueIsNull = long.TryParse(expression, out long oid1) && oid1 == oid;
+			bool displayExpressionIsNull = long.TryParse(expression, out long oid2) && oid2 == 0;
+
+			if (fieldValueIsNull || displayExpressionIsNull)
+			{
+				return GdbObjectUtils.GetDisplayValue(feature);
+			}
+
+			return expression;
+		}
 	}
 }
