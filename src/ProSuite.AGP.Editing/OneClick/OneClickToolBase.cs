@@ -613,7 +613,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
 
-					PickerUtils.Select(items, precedence.SelectionCombinationMethod);
+					await OnItemsPickedAsync(items, precedence);
 
 					ProcessSelection(progressor);
 				}, progressor);
@@ -624,6 +624,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			return true;
+		}
+
+		protected virtual Task OnItemsPickedAsync([NotNull] List<IPickableItem> items,
+		                                          [NotNull] IPickerPrecedence precedence)
+		{
+			PickerUtils.Select(items, precedence.SelectionCombinationMethod);
+
+			return Task.CompletedTask;
 		}
 
 		protected virtual IPickerPrecedence CreatePickerPrecedence([NotNull] Geometry sketchGeometry)
@@ -818,7 +826,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			return CanSelectFromLayerCore(featureLayer);
+			return CanSelectFromLayerCore(featureLayer, notifications);
 		}
 
 		protected bool CanUseSelection([NotNull] MapView mapView)
@@ -965,7 +973,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		protected virtual bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer basicFeatureLayer)
+		protected virtual bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer basicFeatureLayer,
+		                                              [CanBeNull] NotificationCollection notifications)
 		{
 			return true;
 		}

@@ -24,6 +24,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI;
 
@@ -141,7 +142,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			       geometryType == GeometryType.Polygon;
 		}
 
-		protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
+		protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer,
+		                                               NotificationCollection notifications)
 		{
 			return layer is FeatureLayer;
 		}
