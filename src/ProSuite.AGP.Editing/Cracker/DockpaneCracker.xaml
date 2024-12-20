@@ -1,4 +1,4 @@
-<UserControl x:Class="ProSuite.AGP.Editing.Cracker.DockpaneCracker"
+<UserControl x:Class="ProSuite.AGP.Editing.Cracker.DockPaneCracker"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,7 +9,7 @@
              xmlns:editing="clr-namespace:ProSuite.AGP.Editing"
              xmlns:geometryProcessing="clr-namespace:ProSuite.Commons.AGP.Core.GeometryProcessing;assembly=ProSuite.Commons.AGP.Core"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=cracker:DockpaneCrackerViewModelBase}" Width="378" Height="453" HorizontalAlignment="Left"
+             d:DataContext="{d:DesignInstance Type=cracker:DockPaneCrackerViewModelBase}" Width="378" Height="453" HorizontalAlignment="Left"
              VerticalAlignment="Top">
     <UserControl.Resources>
         <ResourceDictionary>

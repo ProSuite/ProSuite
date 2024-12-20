@@ -5,9 +5,9 @@ using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.Editing.Chopper
 {
-	public abstract class DockpaneChopperViewModelBase : DockPaneViewModelBase
+	public abstract class DockPaneChopperViewModelBase : DockPaneViewModelBase
 	{
-		protected DockpaneChopperViewModelBase() : base(new DockpaneChopper())
+		protected DockPaneChopperViewModelBase() : base(new DockPaneChopper())
 		{
 			RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 		}
@@ -27,10 +27,8 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		#endregion
 
-		protected abstract string DockPaneDamlID { get; }
-
 		/// Text shown near the top of the DockPane.
-		private string _heading = "Cracker Options";
+		private string _heading = "Chopper Options";
 
 		private ChopperToolOptions _options;
 
