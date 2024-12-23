@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.Core.Workflow;
 using Dataset = ProSuite.DomainModel.Core.DataModel.Dataset;
 
 namespace ProSuite.DomainModel.AGP.Workflow
@@ -14,6 +15,12 @@ namespace ProSuite.DomainModel.AGP.Workflow
 		/// Whether the data dictionary can be accessed or not (by the microservices).
 		/// </summary>
 		bool DdxAccessDisabled { get; }
+
+		///// <summary>
+		///// The currently active edit context / work unit.
+		///// </summary>
+		[CanBeNull]
+		IEditContext EditContext { get; }
 
 		/// <summary>
 		/// The currently active project workspace.
