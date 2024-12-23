@@ -135,19 +135,65 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public IEnumerable<IName> get_DatasetNames(esriDatasetType datasetType)
 		{
-			foreach (IDataset dataset in get_Datasets(datasetType))
+			switch (datasetType)
 			{
-				yield return new ArcName(dataset);
+				case esriDatasetType.esriDTFeatureClass:
+					foreach (FeatureClassDefinition definition in Geodatabase
+						         .GetDefinitions<FeatureClassDefinition>())
+					{
+						yield return new ArcTableDefinitionName(definition, this);
+					}
+
+					break;
+				case esriDatasetType.esriDTTable:
+					foreach (TableDefinition definition in Geodatabase
+						         .GetDefinitions<TableDefinition>())
+					{
+						yield return new ArcTableDefinitionName(definition, this);
+					}
+
+					break;
+				case esriDatasetType.esriDTRelationshipClass:
+					foreach (RelationshipClassDefinition definition in Geodatabase
+						         .GetDefinitions<RelationshipClassDefinition>())
+					{
+						yield return new ArcRelationshipClassDefinitionName(definition, this);
+					}
+
+					break;
+
+				case esriDatasetType.esriDTAny:
+				case esriDatasetType.esriDTContainer:
+				case esriDatasetType.esriDTGeo:
+				case esriDatasetType.esriDTFeatureDataset:
+				case esriDatasetType.esriDTPlanarGraph:
+				case esriDatasetType.esriDTGeometricNetwork:
+				case esriDatasetType.esriDTTopology:
+				case esriDatasetType.esriDTText:
+				case esriDatasetType.esriDTRasterDataset:
+				case esriDatasetType.esriDTRasterBand:
+				case esriDatasetType.esriDTTin:
+				case esriDatasetType.esriDTCadDrawing:
+				case esriDatasetType.esriDTRasterCatalog:
+				case esriDatasetType.esriDTToolbox:
+				case esriDatasetType.esriDTTool:
+				case esriDatasetType.esriDTNetworkDataset:
+				case esriDatasetType.esriDTTerrain:
+				case esriDatasetType.esriDTRepresentationClass:
+				case esriDatasetType.esriDTCadastralFabric:
+				case esriDatasetType.esriDTSchematicDataset:
+				case esriDatasetType.esriDTLocator:
+				case esriDatasetType.esriDTMap:
+				case esriDatasetType.esriDTLayer:
+				case esriDatasetType.esriDTStyle:
+				case esriDatasetType.esriDTMosaicDataset:
+				case esriDatasetType.esriDTLasDataset:
+
+					throw new NotImplementedException();
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(datasetType), datasetType, null);
 			}
-
-			//_geodatabase.GetDefinitions<Definition>();
-
-			//EsriGeodatabase::ESRI.ArcGIS.Geodatabase.IDatasetName datasetName;
-
-			//while ((datasetName = enumDatasetName.Next()) != null)
-			//{
-			//	yield return new ArcName((EsriSystem::ESRI.ArcGIS.esriSystem.IName) datasetName);
-			//}
 		}
 
 		public string PathName => Geodatabase.GetPath().AbsolutePath;
@@ -178,8 +224,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get
 			{
-				if (Geodatabase.GetGeodatabaseType() != GeodatabaseType.RemoteDatabase)
+				GeodatabaseType geodatabaseType = Geodatabase.GetGeodatabaseType();
+
+				if (geodatabaseType != GeodatabaseType.RemoteDatabase)
 				{
+					// TODO: Mobile, FGDB, Shapefiles, etc.
 					return esriConnectionDBMS.esriDBMS_Unknown;
 				}
 
