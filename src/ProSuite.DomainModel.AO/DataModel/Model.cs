@@ -25,7 +25,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		#region Fields
 
-		[UsedImplicitly] private bool _useDefaultDatabaseOnlyForSchema;
 		[UsedImplicitly] private bool _harvestQualifiedElementNames;
 		[UsedImplicitly] private DateTime? _lastHarvestedDate;
 		[UsedImplicitly] private string _lastHarvestedByUser;
@@ -78,22 +77,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		protected Model(string name) : base(name) { }
 
 		#endregion
-
-		/// <summary>
-		/// Gets or sets a value indicating whether the master database should be used only for schema information.
-		/// If <c>true</c>, the master database is never accessed as a fallback data source when a dataset is not 
-		/// present in the local workspace context.
-		/// </summary>
-		/// <value>
-		/// 	<c>true</c> if the master database should only be used for schema information; 
-		/// otherwise (the database contains useful data ancd, <c>false</c>.
-		/// </value>
-		[UsedImplicitly]
-		public bool UseDefaultDatabaseOnlyForSchema
-		{
-			get { return _useDefaultDatabaseOnlyForSchema; }
-			set { _useDefaultDatabaseOnlyForSchema = value; }
-		}
 
 		[UsedImplicitly]
 		public bool HarvestQualifiedElementNames
