@@ -40,7 +40,7 @@ namespace ProSuite.AGP.WorkList
 		/// </summary>
 		protected string UniqueName { get; set; }
 
-		[NotNull]
+		[ItemCanBeNull]
 		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName)
 		{
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
@@ -73,6 +73,7 @@ namespace ProSuite.AGP.WorkList
 
 			if (! await TryPrepareSchemaCoreAsync())
 			{
+				// null work list
 				return await Task.FromResult(default(IWorkList));
 			}
 

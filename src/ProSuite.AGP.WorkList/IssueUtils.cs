@@ -9,7 +9,7 @@ namespace ProSuite.AGP.WorkList
 	public static class IssueUtils
 	{
 		// should this be un IssueUtils or IssueAttributeReader ?
-		private static readonly string[] _idValueSeparator = {"||"};
+		private static readonly string[] _idValueSeparator = { "||" };
 
 		//public IList<InvolvedTable> ParseInvolvedTables( string involvedTablesString,
 		//	  IAlternateKeyConverter alternateKeyConverter = null)
@@ -24,7 +24,7 @@ namespace ProSuite.AGP.WorkList
 			const char fieldNameSeparator = ':';
 
 			string[] tableStrings = involvedTablesString.Split(
-				new[] {tableStringSeparator}, StringSplitOptions.RemoveEmptyEntries);
+				new[] { tableStringSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
 			var result = new List<InvolvedTable>(tableStrings.Length);
 

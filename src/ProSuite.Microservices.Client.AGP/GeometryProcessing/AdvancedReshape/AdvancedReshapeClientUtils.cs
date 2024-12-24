@@ -178,7 +178,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 			return result;
 		}
 
-
 		private static AdvancedReshapeRequest CreateReshapeRequest(
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] Polyline reshapePath,
