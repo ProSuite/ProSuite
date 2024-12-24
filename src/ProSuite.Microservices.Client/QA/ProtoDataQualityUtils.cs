@@ -507,12 +507,14 @@ namespace ProSuite.Microservices.Client.QA
 			{
 				modelMsg.DatasetIds.Add(dataset.Id);
 
-				if (dataset is IErrorDataset)
+				bool isErrorDataset = dataset is IErrorDataset;
+
+				if (isErrorDataset)
 				{
 					modelMsg.ErrorDatasetIds.Add(dataset.Id);
 				}
 
-				DatasetMsg datasetMsg = ToDatasetMsg(dataset);
+				DatasetMsg datasetMsg = ToDatasetMsg(dataset, isErrorDataset);
 
 				referencedDatasetMsgs.Add(datasetMsg);
 			}
@@ -805,6 +807,10 @@ namespace ProSuite.Microservices.Client.QA
 					objectSubtype.AddCriterion(criterionMsg.AttributeName, attributeValue);
 				}
 			}
+
+			_msg.DebugFormat("Added {0} attributes and {1} object types to dataset {2}",
+			                 detailedDatasetMsg.Attributes.Count,
+			                 detailedDatasetMsg.ObjectCategories.Count, objectDataset.Name);
 		}
 
 		private static IEnumerable<ObjectCategoryMsg> ToObjectCategoryMsg(ObjectType objectType)
