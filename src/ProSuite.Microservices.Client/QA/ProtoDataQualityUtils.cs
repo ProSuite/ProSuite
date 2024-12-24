@@ -526,6 +526,9 @@ namespace ProSuite.Microservices.Client.QA
 			modelMsg.DefaultDatabaseSchemaOwner =
 				ProtobufGeomUtils.NullToEmpty(productionModel.DefaultDatabaseSchemaOwner);
 
+			modelMsg.UseDefaultDatabaseOnlyForSchema =
+				productionModel.UseDefaultDatabaseOnlyForSchema;
+
 			return modelMsg;
 		}
 

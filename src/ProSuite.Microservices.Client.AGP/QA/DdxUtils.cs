@@ -641,6 +641,16 @@ namespace ProSuite.Microservices.Client.AGP.QA
 						                       projectWorkspaceMsg.IsMasterDatabaseWorkspace
 				                       };
 
+				projectWorkspace.ExcludeReadOnlyDatasetsFromProjectWorkspace =
+					projectMsg.ExcludeReadOnlyDatasetsFromProjectWorkspace;
+
+				projectWorkspace.MinimumScaleDenominator =
+					projectMsg.MinimumScaleDenominator;
+
+				projectWorkspace.ToolConfigDirectory = projectMsg.ToolConfigDirectory;
+				projectWorkspace.WorkListConfigDir = projectMsg.WorkListConfigDir;
+				projectWorkspace.AttributeEditorConfigDir = projectMsg.AttributeEditorConfigDir;
+
 				result.Add(projectWorkspace);
 			}
 
