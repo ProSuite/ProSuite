@@ -48,6 +48,16 @@ namespace ProSuite.DomainModel.AGP.Workflow
 
 		public bool IsMasterDatabaseWorkspace { get; set; }
 
+		public bool ExcludeReadOnlyDatasetsFromProjectWorkspace { get; set; }
+
+		public double MinimumScaleDenominator { get; set; }
+
+		public string ToolConfigDirectory { get; set; }
+
+		public string WorkListConfigDir { get; set; }
+
+		public string AttributeEditorConfigDir { get; set; }
+
 		public string GetVersionName()
 		{
 			return WorkspaceUtils.GetCurrentVersion(Datastore)?.GetName();
