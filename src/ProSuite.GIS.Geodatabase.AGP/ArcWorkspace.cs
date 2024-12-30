@@ -29,6 +29,40 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			Geodatabase = geodatabase;
 		}
 
+		#region Equality members
+
+		protected bool Equals(ArcWorkspace other)
+		{
+			return Equals(Geodatabase.Handle, other.Geodatabase.Handle);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is null)
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != GetType())
+			{
+				return false;
+			}
+
+			return Equals((ArcWorkspace) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			return Geodatabase != null ? Geodatabase.Handle.GetHashCode() : 0;
+		}
+
+		#endregion
+
 		#region Implementation of IWorkspace
 
 		//public IPropertySet ConnectionProperties => _aoWorkspace.ConnectionProperties;
@@ -433,6 +467,40 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			Version = version ?? VersionManager.GetCurrentVersion();
 		}
+
+		#region Equality members
+
+		protected bool Equals(ArcVersionedWorkspace other)
+		{
+			return base.Equals(other) && Equals(Version.Handle, other.Version.Handle);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is null)
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != GetType())
+			{
+				return false;
+			}
+
+			return Equals((ArcVersionedWorkspace) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(base.GetHashCode(), Version.Handle.GetHashCode());
+		}
+
+		#endregion
 
 		#region Implementation of IVersion
 
