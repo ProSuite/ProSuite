@@ -36,24 +36,29 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return Equals(Geodatabase.Handle, other.Geodatabase.Handle);
 		}
 
-		public override bool Equals(object obj)
+		/// <summary>
+		/// Determines whether this workspace is the same instance as the provided other workspace.
+		/// </summary>
+		/// <param name="other"></param>
+		/// <returns></returns>
+		public override bool Equals(object other)
 		{
-			if (obj is null)
+			if (other is null)
 			{
 				return false;
 			}
 
-			if (ReferenceEquals(this, obj))
+			if (ReferenceEquals(this, other))
 			{
 				return true;
 			}
 
-			if (obj.GetType() != GetType())
+			if (other.GetType() != GetType())
 			{
 				return false;
 			}
 
-			return Equals((ArcWorkspace) obj);
+			return Equals((ArcWorkspace) other);
 		}
 
 		public override int GetHashCode()
@@ -475,24 +480,29 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return base.Equals(other) && Equals(Version.Handle, other.Version.Handle);
 		}
 
-		public override bool Equals(object obj)
+		/// <summary>
+		/// Determines whether this workspace is the same instance as the provided other workspace.
+		/// </summary>
+		/// <param name="other"></param>
+		/// <returns></returns>
+		public override bool Equals(object other)
 		{
-			if (obj is null)
+			if (other is null)
 			{
 				return false;
 			}
 
-			if (ReferenceEquals(this, obj))
+			if (ReferenceEquals(this, other))
 			{
 				return true;
 			}
 
-			if (obj.GetType() != GetType())
+			if (other.GetType() != GetType())
 			{
 				return false;
 			}
 
-			return Equals((ArcVersionedWorkspace) obj);
+			return Equals((ArcVersionedWorkspace) other);
 		}
 
 		public override int GetHashCode()
