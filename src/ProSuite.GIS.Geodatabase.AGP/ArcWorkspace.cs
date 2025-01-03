@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
 using Version = ArcGIS.Core.Data.Version;
@@ -364,30 +366,39 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			        select ArcGeodatabaseUtils.ToArcDomain(proDomain)).FirstOrDefault();
 		}
 
-		public bool IsSameDatabase(IFeatureWorkspace otherWorkspace)
+		public bool IsSameDatabase(IWorkspace otherWorkspace)
 		{
 			if (otherWorkspace == null)
 			{
 				return false;
 			}
 
-			if (otherWorkspace is not ArcWorkspace otherArcWorkspace)
+			if (Equals(otherWorkspace))
 			{
-				return false;
-			}
-
-			if (otherArcWorkspace.Geodatabase.Handle == Geodatabase.Handle)
-			{
+				// Same instance
 				return true;
 			}
 
-			if (Geodatabase.IsVersioningSupported() !=
-			    otherArcWorkspace.Geodatabase.IsVersioningSupported())
+			if (otherWorkspace is ArcWorkspace otherArcWorkspace)
 			{
-				return false;
+				// Comparing connection properties is less prone to disconnection issues
+				DatastoreName thisGdbName = new DatastoreName(Geodatabase.GetConnector());
+				DatastoreName otherGdbName =
+					new DatastoreName(otherArcWorkspace.Geodatabase.GetConnector());
+
+				if (thisGdbName.Equals(otherGdbName))
+				{
+					// Same connection properties
+					return true;
+				}
 			}
 
-			if (! Geodatabase.IsVersioningSupported())
+			// Both are un-versioned workspaces, compare the path:
+
+			var versionedWorkspace1 = this as IVersionedWorkspace;
+			var versionedWorkspace2 = otherWorkspace as IVersionedWorkspace;
+
+			if (versionedWorkspace1 == null && versionedWorkspace2 == null)
 			{
 				// both are not versioned. Compare file paths
 				if (string.IsNullOrEmpty(PathName) ||
@@ -403,61 +414,91 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				return Equals(new Uri(PathName), new Uri(otherWorkspace.PathName));
 			}
 
-			// Both are versioned. Compare creation date of default version.
-			VersionManager thisVersionManager = Geodatabase.GetVersionManager();
-			VersionManager otherVersionManager = otherArcWorkspace.Geodatabase.GetVersionManager();
+			return IsSameDatabase(versionedWorkspace1, versionedWorkspace2);
+		}
 
-			if (thisVersionManager == null || otherVersionManager == null)
+		#endregion
+
+		protected static bool IsSameDatabase([CanBeNull] IVersionedWorkspace versionedWorkspace1,
+		                                     [CanBeNull] IVersionedWorkspace versionedWorkspace2)
+		{
+			if (versionedWorkspace1 == null || versionedWorkspace2 == null)
 			{
+				// One is versioned, the other not.
 				return false;
 			}
 
-			Version thisDefaultVersion = thisVersionManager.GetDefaultVersion();
-			Version otherDefaultVersion = otherVersionManager.GetDefaultVersion();
+			// Both are versioned. 
+
+			IVersion defaultVersion1 = versionedWorkspace1.DefaultVersion;
+			IVersion defaultVersion2 = versionedWorkspace2.DefaultVersion;
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.Debug("Compare default version instances");
+			}
+
+			if (defaultVersion1.Equals(defaultVersion2))
+			{
+				// the same default version (only equal if same credentials also)
+				return true;
+			}
+
+			string defaultVersionName1 = defaultVersion1.VersionName ??
+			                             string.Empty;
+			string defaultVersionName2 = defaultVersion2.VersionName ??
+			                             string.Empty;
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
 				_msg.DebugFormat("Compare default version names ({0}, {1})",
-				                 thisDefaultVersion.GetName(), otherDefaultVersion.GetName());
+				                 defaultVersionName1, defaultVersionName2);
 			}
 
-			if (! thisDefaultVersion.GetName().Equals(otherDefaultVersion.GetName()))
+			if (! defaultVersionName1.Equals(defaultVersionName2,
+			                                 StringComparison.OrdinalIgnoreCase))
 			{
 				return false;
 			}
 
-			DateTime thisCreationDate = thisDefaultVersion.GetCreatedDate();
-			DateTime otherCreationDate = otherDefaultVersion.GetCreatedDate();
+			// not the same default version. might still be the same database,
+			// but different credentials. Compare creation date of the default version.
+
+			IVersionInfo default1Info = defaultVersion1.VersionInfo;
+			IVersionInfo default2Info = defaultVersion2.VersionInfo;
+
+			string creationDate1 = default1Info.Created.ToString();
+			string creationDate2 = default2Info.Created.ToString();
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
 				_msg.DebugFormat("Compare default version creation date: {0},{1}",
-				                 thisCreationDate, otherCreationDate);
+				                 creationDate1, creationDate2);
 			}
 
-			if (! Equals(thisCreationDate, otherCreationDate))
+			if (! Equals(creationDate1, creationDate2))
 			{
 				return false;
 			}
 
-			DateTime thisModifyDate = thisDefaultVersion.GetModifiedDate();
-			DateTime otherModifyDate = otherDefaultVersion.GetModifiedDate();
+			string modifyDate1 = default1Info.Modified.ToString();
+			string modifyDate2 = default2Info.Modified.ToString();
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
 				_msg.DebugFormat("Compare default version last modified date: {0},{1}",
-				                 thisModifyDate, otherModifyDate);
+				                 modifyDate1, modifyDate2);
 			}
 
-			return Equals(thisModifyDate, otherModifyDate);
+			return Equals(modifyDate1, modifyDate2);
 		}
-
-		#endregion
 	}
 
 	public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 	{
-		private VersionManager VersionManager { get; }
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private VersionManager VersionManager { get; set; }
 		private Version Version { get; }
 
 		public ArcVersionedWorkspace(ArcGIS.Core.Data.Geodatabase geodatabase, string versionName)
