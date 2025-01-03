@@ -240,7 +240,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					return GetConnectionDisplayText(dbConnectionProps);
 
 				case FileGeodatabaseConnectionPath fileGdbConnection:
-					return $"File Geodatabase {fileGdbConnection.Path}";
+					return $"File Geodatabase {fileGdbConnection.Path.AbsolutePath}";
 
 				case FileSystemConnectionPath fileSystemConnection:
 					return $"{fileSystemConnection.Type} datastore {fileSystemConnection.Path}";
