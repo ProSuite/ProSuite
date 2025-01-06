@@ -29,8 +29,7 @@ namespace ProSuite.AGP.QA
 
 		public bool CanGetSpecifications()
 		{
-			return _sessionContext.ProjectWorkspace != null &&
-			       ! _sessionContext.DdxAccessDisabled;
+			return _sessionContext.ProjectWorkspace != null;
 		}
 
 		public async Task<IList<IQualitySpecificationReference>> GetQualitySpecifications()

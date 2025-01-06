@@ -7,11 +7,6 @@ namespace ProSuite.DomainModel.AGP.Workflow
 	public interface ISessionContext
 	{
 		/// <summary>
-		/// Whether the data dictionary can be accessed or not (by the microservices).
-		/// </summary>
-		bool DdxAccessDisabled { get; }
-
-		/// <summary>
 		/// The currently active project workspace.
 		/// </summary>
 		ProjectWorkspace ProjectWorkspace { get; }
