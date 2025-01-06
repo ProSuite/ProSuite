@@ -33,7 +33,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			VerificationPlugInController.GetInstance(SessionContext).Register(this);
 		}
 
-		protected abstract IMapBasedSessionContext SessionContext { get; }
+		protected abstract ISessionContext SessionContext { get; }
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
 

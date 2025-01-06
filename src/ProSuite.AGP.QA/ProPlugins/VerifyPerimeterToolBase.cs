@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -48,7 +47,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			VerificationPlugInController.GetInstance(SessionContext).Register(this);
 		}
 
-		protected abstract IMapBasedSessionContext SessionContext { get; }
+		protected abstract ISessionContext SessionContext { get; }
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
 
