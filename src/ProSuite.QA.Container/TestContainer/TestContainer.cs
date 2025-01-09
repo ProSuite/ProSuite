@@ -521,16 +521,16 @@ namespace ProSuite.QA.Container.TestContainer
 			InvolvedRow involvedRow = null;
 			IGeometry errorGeometry = null;
 
-			IReadOnlyRow row = null;
 			if (dataReference is RowReference rowReference)
 			{
-				row = rowReference.Row;
-			}
+				IReadOnlyRow row = rowReference.Row;
 
-			if (row != null)
-			{
 				involvedRow = new InvolvedRow(row);
 				errorGeometry = TestUtils.GetShapeCopy(row);
+			}
+			else if (dataReference is ISurfaceRow surfaceRow)
+			{
+				errorGeometry = GeometryFactory.CreatePolygon(surfaceRow.Extent);
 			}
 
 			ReportErrorForFailedTest(test, message, involvedRow, errorGeometry);
@@ -591,12 +591,14 @@ namespace ProSuite.QA.Container.TestContainer
 					ReportErrorForFailedTest(exp.Test, null,
 					                         $"Test execution failed: {exp.Message}");
 				}
-				catch (TestRowException exp)
+				catch (TestDataException testDataException)
 				{
-					_msg.Error($"Non-container test execution failed for row: {exp.Message}", exp);
+					_msg.Error(
+						$"Non-container test execution failed for row: {testDataException.Message}",
+						testDataException);
 
-					ReportErrorForFailedTest(exp.Test, new RowReference(exp.Row, recycled: false),
-					                         $"Test execution failed: {exp.Message}");
+					ReportErrorForFailedTest(nonContainerTest, testDataException.DataReference,
+					                         $"Test execution failed: {testDataException.Message}");
 				}
 				catch (DataAccessException dataAccessException)
 				{
@@ -685,7 +687,7 @@ namespace ProSuite.QA.Container.TestContainer
 				                                       e.Message));
 				return 0;
 			}
-			catch (TestRowException e)
+			catch (TestDataException e)
 			{
 				_msg.Error(string.Format("Container test execution failed: {0}",
 				                         e.Message), e);

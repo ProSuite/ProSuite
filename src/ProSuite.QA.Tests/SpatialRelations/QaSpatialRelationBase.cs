@@ -127,7 +127,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 					$"Error testing row {GdbObjectUtils.ToString(feature)} against {otherRowMsg}: {e.Message}";
 
 				_msg.Debug(msg, e);
-				throw new TestRowException(this, feature, msg);
+				throw new TestDataException(msg, feature);
 			}
 
 			return errorCount;
