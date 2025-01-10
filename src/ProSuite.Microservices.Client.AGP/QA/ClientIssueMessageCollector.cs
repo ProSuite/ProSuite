@@ -110,6 +110,13 @@ namespace ProSuite.Microservices.Client.AGP.QA
 						          savedIssueCount =
 							          UpdateIssuesTx(editContext, objectsToVerify,
 							                         verifiedConditionIds);
+
+								  // Deleting issues can be pretty undiscriminating, we don't even
+								  // know if there were deletes or not:
+						          foreach (Dataset issueTable in referencedIssueTables)
+						          {
+							          editContext.Invalidate(issueTable);
+						          }
 					          },
 					          "Update issues", referencedIssueTables);
 			});
