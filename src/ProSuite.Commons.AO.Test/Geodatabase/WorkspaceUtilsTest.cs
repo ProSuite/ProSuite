@@ -164,7 +164,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			//everything else on version fails...
 			Assert.Catch<COMException>(() =>
 			{
-				bool b = WorkspaceUtils.IsVersionRedefined(version);
+				bool b = version.IsRedefined;
 			});
 		}
 
