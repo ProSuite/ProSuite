@@ -113,6 +113,27 @@ namespace ProSuite.AGP.WorkList.Domain
 			return HasCurrentItem && CanSetStatusCore();
 		}
 
+		[CanBeNull]
+		public Row GetCurrentItemSourceRow()
+		{
+			if (Current == null)
+			{
+				return null;
+			}
+
+			ITableReference tableReference = Current.GdbRowProxy.Table;
+
+			ISourceClass sourceClass =
+				Repository.SourceClasses.FirstOrDefault(s => s.Uses(tableReference));
+
+			if (sourceClass == null)
+			{
+				return null;
+			}
+
+			return Repository.GetSourceRow(sourceClass, Current.ObjectID);
+		}
+
 		public void SetStatus(IWorkItem item, WorkItemStatus status)
 		{
 			Repository.SetStatus(item, status);

@@ -29,6 +29,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		IWorkItem Current { get; }
 
 		int CurrentIndex { get; set; }
+
 		IWorkItemRepository Repository { get; }
 
 		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
@@ -78,5 +79,12 @@ namespace ProSuite.AGP.WorkList.Contracts
 		bool IsValid(out string message);
 
 		IAttributeReader GetAttributeReader(long forSourceClassId);
+
+		/// <summary>
+		/// Gets the current item's source row.
+		/// </summary>
+		/// <returns></returns>
+		[CanBeNull]
+		Row GetCurrentItemSourceRow();
 	}
 }

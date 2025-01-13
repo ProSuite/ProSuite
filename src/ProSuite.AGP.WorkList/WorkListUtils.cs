@@ -373,19 +373,6 @@ namespace ProSuite.AGP.WorkList
 			return result;
 		}
 
-		/// <summary>
-		/// Gets the source row from the database.
-		/// </summary>
-		/// <param name="workItem"></param>
-		/// <returns></returns>
-		[CanBeNull]
-		public static Row GetDbRow([NotNull] IWorkItem workItem)
-		{
-			Geodatabase workspace = workItem.GdbRowProxy.Table.Workspace.OpenGeodatabase();
-
-			return workItem.GdbRowProxy.GetRow(workspace);
-		}
-
 		private static long HashString([NotNull] string text)
 		{
 			unchecked

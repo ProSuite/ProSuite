@@ -190,7 +190,7 @@ namespace ProSuite.AGP.WorkList
 				SourceClasses.FirstOrDefault(sc => sc.Uses(tableId));
 			Assert.NotNull(source);
 
-			Row row = GetRow(source, item.ObjectID);
+			Row row = GetSourceRow(source, item.ObjectID);
 			Assert.NotNull(row);
 
 			if (row is Feature feature)
@@ -201,14 +201,12 @@ namespace ProSuite.AGP.WorkList
 			RefreshCore(item, source, row);
 		}
 
-		// todo daro reorder members
 		[CanBeNull]
-		private Row GetRow([NotNull] ISourceClass sourceClass, long oid)
+		public Row GetSourceRow(ISourceClass sourceClass, long oid)
 		{
 			var filter = new QueryFilter { ObjectIDs = new List<long> { oid } };
 
-			// todo daro: log message
-			return GetRowsCore(sourceClass, filter, recycle: true).FirstOrDefault();
+			return GetRowsCore(sourceClass, filter, recycle: false).FirstOrDefault();
 		}
 
 		protected virtual void RefreshCore([NotNull] IWorkItem item,
