@@ -1138,6 +1138,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			RefreshItems();
 
+			if (! HasCurrentItem)
+			{
+				GoNearest(MapView.Active.Extent);
+			}
+
 			OnWorkListChanged();
 		}
 
@@ -1168,6 +1173,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			foreach (var update in updates)
 			{
 				ProcessUpdates(update.Key, update.Value);
+			}
+
+			if (! HasCurrentItem)
+			{
+				GoNearest(MapView.Active.Extent);
 			}
 
 			// If a item visibility changes to Done the item is not part
