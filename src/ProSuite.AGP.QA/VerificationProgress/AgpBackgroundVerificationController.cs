@@ -309,19 +309,21 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 			if (SaveAction == null)
 			{
-				reason = "Saving is not supported";
+				reason = "Storing issues in the model's issue datasets is not supported";
 				return false;
 			}
 
 			if (_issuesSaved)
 			{
-				reason = "Issues have already been saved";
+				reason = "Issues have already been updated in the model's issue datasets";
 				return false;
 			}
 
 			bool result = verificationResult.CanSaveIssues;
 
-			reason = result ? null : "No issues have been collected";
+			reason = result
+				         ? "Replace existing issues in the model's issue datasets with the new issues found by this verification"
+				         : "No issues have been collected";
 
 			return result;
 		}
