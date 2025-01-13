@@ -255,7 +255,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (InvalidOperationException ex)
 			{
 				if (finalStatus == ServiceCallStatus.Cancelled ||
-				    cancelTracker?.Continue() == false)
+				    cancelTracker?.Continue() == false ||
+				    ex.Message == "Already finished.")
 				{
 					// Typically: System.InvalidOperationException: Already finished.
 					_msg.Debug(
