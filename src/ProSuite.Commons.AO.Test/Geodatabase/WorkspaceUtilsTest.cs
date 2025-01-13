@@ -161,11 +161,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Console.WriteLine("version name: {0}",
 			                  version.VersionName);
 
+#if !NETFRAMEWORK
 			//everything else on version fails...
 			Assert.Catch<COMException>(() =>
 			{
 				bool b = version.IsRedefined;
 			});
+#endif
 		}
 
 		[Test]
