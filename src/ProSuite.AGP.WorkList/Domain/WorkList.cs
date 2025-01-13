@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -126,19 +127,12 @@ namespace ProSuite.AGP.WorkList.Domain
 		public void RefreshItems()
 		{
 			List<IWorkItem> newItems = new List<IWorkItem>(_items.Count);
+			_rowMap.Clear();
 
 			foreach (IWorkItem item in Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo))
 			{
 				newItems.Add(item);
-
-				if (! _rowMap.ContainsKey(item.GdbRowProxy))
-				{
-					_rowMap.Add(item.GdbRowProxy, item);
-				}
-				else
-				{
-					// todo daro: warn
-				}
+				_rowMap[item.GdbRowProxy] = item;
 			}
 
 			_msg.DebugFormat("Added {0} items to work list", newItems.Count);
@@ -1142,7 +1136,16 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			_msg.Debug("Invalidate");
 
+			RefreshItems();
+
 			OnWorkListChanged();
+		}
+
+		public void Invalidate(IEnumerable<Table> tables)
+		{
+			// TODO: More fine-granular invalidation, consider separate row cache containing
+			// _rowMap, _items.
+			Invalidate();
 		}
 
 		public void ProcessChanges(Dictionary<Table, List<long>> inserts,
@@ -1172,6 +1175,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			// does not return the Done-item anymore. Therefor use the item's Extent
 			// to invalidate the work list layer.
 			OnWorkListChanged();
+		}
+
+		public bool CanContain(Table table)
+		{
+			return Repository.SourceClasses.Any(s => s.TableIdentity.ReferencesTable(table));
 		}
 
 		private void ProcessInserts(Table table, IReadOnlyList<long> oids)
