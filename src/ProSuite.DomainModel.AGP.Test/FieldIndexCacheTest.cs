@@ -13,8 +13,6 @@ namespace ProSuite.DomainModel.AGP.Test
 	[TestFixture]
 	public class FieldIndexCacheTest
 	{
-		private const int NumberOfRuns = 30;
-		private const int NumberOfRepetitionsPerRun = 25;
 		private const int RandomSeed = 3;
 
 		[OneTimeSetUp]
@@ -24,20 +22,51 @@ namespace ProSuite.DomainModel.AGP.Test
 		}
 
 		[Test]
-		public void PerformanceTest()
+		public void PerformanceTestFGDB()
 		{
+			const int numberOfRuns = 30;
+			const int numberOfRepetitionsPerRun = 25;
+
 			// Test with file gdb
 			const string gdbPath = @"C:\data\swisstopo\k2\WU226_Rapperswil\WU226_Rapperswil.gdb";
 			using var gdb = WorkspaceUtils.OpenFileGeodatabase(gdbPath);
-			executePerformanceTest(gdb, "FGDB \"Rapperswil\"","DKM50_STRASSE");
-			executePerformanceTest(gdb, "FGDB \"Rapperswil\"","DKM50_GEBAEUDE");
-
-			// TODO phwi: What is SDE and how do I test on such a database?
+			ExecutePerformanceTest(gdb, "FGDB \"Rapperswil\"", "DKM50_STRASSE", numberOfRuns,
+			                       numberOfRepetitionsPerRun);
+			ExecutePerformanceTest(gdb, "FGDB \"Rapperswil\"", "DKM50_GEBAEUDE", numberOfRuns,
+			                       numberOfRepetitionsPerRun);
 		}
 
-		private void executePerformanceTest(Geodatabase gdb, string gdbName, string datasetName)
+		[Test]
+		public void PerformanceTestSDE()
+		{
+			const int numberOfRuns = 15;
+			const int numberOfRepetitionsPerRun = 1;
+
+			// Test with local SDE database
+			DatabaseConnectionProperties connectionProperties =
+				new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
+				{
+					AuthenticationMode = AuthenticationMode.OSA,
+					Instance = "dkm50k2",
+					User = "dkm50k2_manager",
+					Password = "dkm50k2_manager",
+					Database = "dkm50k2"
+				};
+			using var gdb = (Geodatabase) WorkspaceUtils.OpenDatastore(connectionProperties);
+
+			ExecutePerformanceTest(gdb, "Local Oracle SDE", "DKM50K2_MANAGER.DKM50_STRASSE",
+			                       numberOfRuns, numberOfRepetitionsPerRun);
+			ExecutePerformanceTest(gdb, "Local Oracle SDE", "DKM50K2_MANAGER.DKM50_GEBAEUDE",
+			                       numberOfRuns, numberOfRepetitionsPerRun);
+		}
+
+		private void ExecutePerformanceTest(Geodatabase gdb, string gdbName, string datasetName,
+		                                    int numberOfRuns, int numberOfRepetitionsPerRun)
 		{
 			Console.Out.WriteLine($"Testing {gdbName} with dataset \"{datasetName}\"");
+
+			var watchTotalTime = new Stopwatch();
+			watchTotalTime.Start();
 
 			using var featureClass = gdb.OpenDataset<FeatureClass>(datasetName);
 
@@ -55,11 +84,11 @@ namespace ProSuite.DomainModel.AGP.Test
 
 			Console.Out.WriteLine(
 				"Number of index calls: {0} rows repeated {1} times -> {2} index queries",
-				rows.Count, NumberOfRepetitionsPerRun, NumberOfRepetitionsPerRun * rows.Count);
+				rows.Count, numberOfRepetitionsPerRun, numberOfRepetitionsPerRun * rows.Count);
 
 			List<List<string>> results = [];
 			Dictionary<string, List<long>> durations = [];
-			for (int j = 0; j < NumberOfRuns; ++j)
+			for (int j = 0; j < numberOfRuns; ++j)
 			{
 				foreach (var pair in testFunctions)
 				{
@@ -69,7 +98,7 @@ namespace ProSuite.DomainModel.AGP.Test
 
 					var watch = new Stopwatch();
 					watch.Start();
-					for (int i = 0; i < NumberOfRepetitionsPerRun; ++i)
+					for (int i = 0; i < numberOfRepetitionsPerRun; ++i)
 					{
 						pair.Value(featureClass, rows, fields, random, result);
 					}
@@ -96,9 +125,14 @@ namespace ProSuite.DomainModel.AGP.Test
 
 			foreach (var pair in durations)
 			{
-				Console.Out.WriteLine("Test {0}: Average {1:F1} ms over {2} runs with standard deviation {3:F1}", pair.Key,
-				                      pair.Value.Average(), NumberOfRuns, GetStandardDeviation(pair.Value));
+				Console.Out.WriteLine(
+					"Test {0}: Average {1:F1} ms over {2} runs with standard deviation {3:F1}",
+					pair.Key,
+					pair.Value.Average(), numberOfRuns, GetStandardDeviation(pair.Value));
 			}
+
+			watchTotalTime.Stop();
+			Console.Out.Write("Total time: {0} ms", watchTotalTime.ElapsedMilliseconds);
 
 			Console.Out.Write("\n");
 		}
@@ -107,12 +141,12 @@ namespace ProSuite.DomainModel.AGP.Test
 		{
 			double standardDeviation = 0;
 
-			if (values.Count > 0) 
-			{ 
+			if (values.Count > 0)
+			{
 				double avg = values.Average();
 				double sum = values.Sum(d => Math.Pow(d - avg, 2));
-				standardDeviation = Math.Sqrt((sum) / values.Count);   
-			}  
+				standardDeviation = Math.Sqrt((sum) / values.Count);
+			}
 
 			return standardDeviation;
 		}
@@ -158,9 +192,10 @@ namespace ProSuite.DomainModel.AGP.Test
 			List<string> results)
 		{
 			Dictionary<string, int> indices = [];
+			Row firstRow = rows.First();
 			foreach (var field in fields)
 			{
-				indices[field.Name] = rows.First().FindField(field.Name);
+				indices[field.Name] = firstRow.FindField(field.Name);
 			}
 
 			foreach (var row in rows)
