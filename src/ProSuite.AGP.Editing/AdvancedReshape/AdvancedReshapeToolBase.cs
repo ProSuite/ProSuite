@@ -264,11 +264,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					bool currentState = _advancedReshapeToolOptions.MoveOpenJawEndJunction;
 					if (currentState)
 					{
-						_msg.Info("Enabled move end junction option for Y-Reshape");
+						_msg.Info(
+							"Enabled move end junction option for Y-Reshape and reshapes in linear networks");
 					}
 					else
 					{
-						_msg.Info("Disabled move end junction option for Y-Reshape");
+						_msg.Info(
+							"Disabled move end junction option for Y-Reshape and reshapes in linear networks");
 					}
 
 					await _updateFeedbackTask;
