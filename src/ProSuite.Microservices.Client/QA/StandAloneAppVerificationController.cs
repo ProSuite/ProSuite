@@ -118,6 +118,13 @@ namespace ProSuite.Microservices.Client.QA
 			_issuesSaved = true;
 		}
 
+		public Task<int> SaveIssuesAsync(IQualityVerificationResult verificationResult,
+		                                 ErrorDeletionInPerimeter errorDeletion,
+		                                 bool updateLatestTestDate)
+		{
+			throw new NotImplementedException();
+		}
+
 		public bool CanSaveIssues(IQualityVerificationResult verificationResult, out string reason)
 		{
 			if (SaveAction == null)

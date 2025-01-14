@@ -748,17 +748,29 @@ namespace ProSuite.UI.QA.VerificationProgress
 			return result;
 		}
 
-		private void SaveIssues()
+		private async void SaveIssues()
 		{
-			Try(nameof(SaveIssues),
-			    () =>
-			    {
-				    ApplicationController?.SaveIssues(Assert.NotNull(VerificationResult),
-				                                      UpdateOptions.ErrorDeletionType,
-				                                      ! UpdateOptions.KeepPreviousIssues);
+			{
+				_msg.VerboseDebug(() => $"VerificationProgressViewModel.{nameof(SaveIssues)}");
+			}
 
-				    _saveErrorsCommand?.RaiseCanExecuteChanged();
-			    });
+			try
+			{
+				if (ApplicationController == null)
+				{
+					return;
+				}
+
+				await ApplicationController.SaveIssuesAsync(Assert.NotNull(VerificationResult),
+				                                            UpdateOptions.ErrorDeletionType,
+				                                            ! UpdateOptions.KeepPreviousIssues);
+
+				_saveErrorsCommand?.RaiseCanExecuteChanged();
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
 		}
 
 		private void ShowReport()
