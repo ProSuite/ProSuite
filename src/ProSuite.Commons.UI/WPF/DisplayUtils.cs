@@ -44,5 +44,37 @@ namespace ProSuite.Commons.UI.WPF
 
 			return new Point(left, top);
 		}
+
+		/// <summary>
+		/// Converts the specified device rect to a device-independent rectangle (96 DPI)
+		/// for the application's main window.
+		/// </summary>
+		/// <param name="deviceRect">Input rectangle in device pixels.</param>
+		/// <returns></returns>
+		public static Rect ToDeviceIndependentPixels(Rect deviceRect)
+		{
+			Window ownerWindow = Assert.NotNull(Application.Current.MainWindow);
+
+			return ToDeviceIndependentPixels(deviceRect, ownerWindow);
+		}
+
+		/// <summary>
+		/// Converts the specified device rect to a device-independent rectangle (96 DPI)
+		/// for the application's main window.
+		/// </summary>
+		/// <param name="deviceRect">Input rectangle in device pixels.</param>
+		/// <returns></returns>
+		public static Rect ToDeviceIndependentPixels(Rect deviceRect,
+		                                             [NotNull] Visual visual)
+		{
+			var topLeft =
+				ToDeviceIndependentPixels(deviceRect.TopLeft,
+				                          visual);
+			var bottomRight =
+				ToDeviceIndependentPixels(deviceRect.BottomRight,
+				                          visual);
+
+			return new Rect(topLeft, bottomRight);
+		}
 	}
 }
