@@ -32,6 +32,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private readonly object _syncLock = new object();
 
+		[CanBeNull] private EditEventsRowCacheSynchronizer _rowCacheSynchronizer;
+
 		[NotNull]
 		public IWorkItemRepository Repository { get; }
 
@@ -1151,6 +1153,22 @@ namespace ProSuite.AGP.WorkList.Domain
 		                               [CanBeNull] List<long> oids = null)
 		{
 			WorkListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
+		}
+
+		public void EnsureRowCacheSynchronized()
+		{
+			if (_rowCacheSynchronizer != null)
+			{
+				return;
+			}
+
+			_rowCacheSynchronizer = new EditEventsRowCacheSynchronizer(this);
+		}
+
+		public void DeactivateRowCacheSynchronization()
+		{
+			_rowCacheSynchronizer?.Dispose();
+			_rowCacheSynchronizer = null;
 		}
 
 		public void Invalidate()

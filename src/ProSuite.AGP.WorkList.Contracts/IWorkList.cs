@@ -86,5 +86,17 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <returns></returns>
 		[CanBeNull]
 		Row GetCurrentItemSourceRow();
+
+		/// <summary>
+		/// Ensures that the work list's row cache is synchronized with the underlying data store.
+		/// Edits to the associated source tables will be reflected in the row cache.
+		/// This is required for both the work list layer and the navigator to show the correct data.
+		/// </summary>
+		void EnsureRowCacheSynchronized();
+
+		/// <summary>
+		/// Deactivate the synchronization of the work list's row cache with the underlying data store.
+		/// </summary>
+		void DeactivateRowCacheSynchronization();
 	}
 }
