@@ -329,6 +329,15 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return false;
 			}
 
+			bool canUseProductionModelIssues = _workListOpener.CanUseProductionModelIssueSchema();
+
+			if (! canUseProductionModelIssues)
+			{
+				reason =
+					"Storing issues in the model's issue datasets is not enabled or the issue datasets are not registered in the data dictionary.";
+				return false;
+			}
+
 			if (_issuesSaved)
 			{
 				reason = "Issues have already been updated in the model's issue datasets";
