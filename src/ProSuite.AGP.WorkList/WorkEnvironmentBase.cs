@@ -210,7 +210,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected abstract string GetWorkListSymbologyTemplateLayerPath();
 
-		protected static Type GetWorkListTypeCore<T>() where T : IWorkList
+		protected virtual Type GetWorkListTypeCore<T>() where T : IWorkList
 		{
 			return typeof(T);
 		}
@@ -241,9 +241,11 @@ namespace ProSuite.AGP.WorkList
 
 				if (result == null)
 				{
-					_msg.WarnFormat("Failed to create work list layer for {0}. Trying one more time...", worklist.Name);
+					_msg.WarnFormat(
+						"Failed to create work list layer for {0}. Trying one more time...",
+						worklist.Name);
 					result = LayerFactory.Instance.CreateLayer<FeatureLayer>(
-						WorkListUtils.CreateLayerParams((FeatureClass)table, workListLayerName),
+						WorkListUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
 						layerContainer);
 				}
 
