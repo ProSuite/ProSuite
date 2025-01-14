@@ -42,7 +42,7 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 			                                out string message))
 			{
 				throw new InvalidOperationException(
-					$"The issue work list {workListFileOrIssueGdbPath} references a geodatabase that does not exist.");
+					$"Cannot open FileGeodatabase Issue Datastore from {workListFileOrIssueGdbPath}: {message}.");
 			}
 
 			_msg.DebugFormat("Extracted issue gdb path from {0}: {1}", workListFileOrIssueGdbPath,
@@ -192,7 +192,7 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 	                                              out string gdbPath,
 	                                              out string message)
 	{
-		gdbPath = WorkListUtils.GetIssueGeodatabasePath(iwlFilePath);
+		gdbPath = WorkListUtils.GetIssueGeodatabasePath(iwlFilePath, out message);
 		message = null;
 
 		if (gdbPath == null)
