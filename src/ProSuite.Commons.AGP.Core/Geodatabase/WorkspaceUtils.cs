@@ -162,10 +162,18 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 			// NOTE: Sometimes the DB_CONNECTION_PROPERTIES contains the single instance name,
 			//       but it can also contain the colon-separated components.
-
-			string database = string.IsNullOrEmpty(builder["server"])
-				                  ? builder["database"]
-				                  : builder["server"];
+			// TODO: Test with other connections!
+			string database = builder["database"];
+			//if (databaseType == EnterpriseDatabaseType.PostgreSQL)
+			//{
+			//	database = builder["database"];
+			//}
+			//else
+			//{
+			//	database = string.IsNullOrEmpty(builder["server"])
+			//		           ? builder["database"]
+			//		           : builder["server"];
+			//}
 
 			string[] strings = instance?.Split(':');
 
