@@ -38,7 +38,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
 
-		protected virtual Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool>
+		protected virtual Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
 			SaveAction => null;
 
 		protected override Task<bool> OnClickAsyncCore()

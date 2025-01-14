@@ -49,7 +49,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			[CanBeNull] Geometry verifiedPerimeter,
 			[CanBeNull] SpatialReference verificationSpatialReference,
 			[CanBeNull]
-			Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> saveAction = null)
+			Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>> saveAction =
+				null)
 		{
 			Assert.ArgumentNotNull(workListOpener, nameof(workListOpener));
 			Assert.ArgumentNotNull(mapView, nameof(mapView));
@@ -63,10 +64,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		}
 
 		[CanBeNull]
-		private Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> SaveAction
-		{
-			get;
-		}
+		private Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
+			SaveAction { get; }
 
 		public void FlashProgress(IList<EnvelopeXY> tiles,
 		                          ServiceCallStatus currentProgressStep)
@@ -296,6 +295,23 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			                   updateLatestTestDate);
 
 			_issuesSaved = verificationResult.IssuesSaved >= 0;
+		}
+
+		public async Task<int> SaveIssuesAsync(IQualityVerificationResult verificationResult,
+		                                       ErrorDeletionInPerimeter errorDeletion,
+		                                       bool updateLatestTestDate)
+		{
+			if (SaveAction == null)
+			{
+				return -1;
+			}
+
+			int savedIssueCount =
+				await SaveAction(verificationResult, errorDeletion, updateLatestTestDate);
+
+			_issuesSaved = savedIssueCount >= 0;
+
+			return savedIssueCount;
 		}
 
 		public bool CanSaveIssues(IQualityVerificationResult verificationResult, out string reason)

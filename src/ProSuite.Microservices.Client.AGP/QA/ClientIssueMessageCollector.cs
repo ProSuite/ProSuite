@@ -87,9 +87,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			List<GdbObjectReference> objectsToVerify = null;
 			List<Dataset> referencedIssueTables = null;
 
-			bool success = false;
-
-			await QueuedTask.Run(async () =>
+			await QueuedTask.Run(() =>
 			{
 				objectsToVerify = VerifiedRows?.Select(row => new GdbObjectReference(
 					                                       row.GetTable().GetID(),
@@ -102,24 +100,29 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 				Assert.NotNull(referencedIssueTables, "Error getting issue FeatureClasses");
 
-				EditorTransaction transaction = new EditorTransaction(new EditOperation());
-
-				success = await transaction.ExecuteAsync(
-					          editContext =>
-					          {
-						          savedIssueCount =
-							          UpdateIssuesTx(editContext, objectsToVerify,
-							                         verifiedConditionIds);
-
-								  // Deleting issues can be pretty undiscriminating, we don't even
-								  // know if there were deletes or not:
-						          foreach (Dataset issueTable in referencedIssueTables)
-						          {
-							          editContext.Invalidate(issueTable);
-						          }
-					          },
-					          "Update issues", referencedIssueTables);
+				return Task.CompletedTask;
 			});
+
+			// NOTE: Do not call transaction inside QueuedTask.Run or the EditingCompleted event
+			// will fire twice!
+			EditorTransaction transaction = new EditorTransaction(new EditOperation());
+
+			bool success = await transaction.ExecuteAsync(
+				               editContext =>
+				               {
+					               savedIssueCount =
+						               UpdateIssuesTx(editContext, objectsToVerify,
+						                              verifiedConditionIds);
+
+					               // Deleting issues can be pretty undiscriminating, we don't even
+					               // know if there were deletes or not.
+					               // TODO: Only invalidate the updated tables
+					               foreach (Dataset issueTable in referencedIssueTables)
+					               {
+						               editContext.Invalidate(issueTable);
+					               }
+				               },
+				               "Update issues", referencedIssueTables);
 
 			return success ? savedIssueCount : 0;
 		}
