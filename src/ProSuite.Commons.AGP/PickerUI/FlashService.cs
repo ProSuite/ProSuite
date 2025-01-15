@@ -203,7 +203,7 @@ public class ColoredSymbol : IFlashSymbol
 			case GeometryType.Point:
 			case GeometryType.Multipoint:
 			{
-				var symbol =  SymbolFactory.Instance.ConstructPointSymbol(_color, _width * 1.5);
+				var symbol = SymbolUtils.CreatePointSymbol(_color, _width * 1.5);
 				symbol.UseRealWorldSymbolSizes = UseRealWorldUnits;
 				return symbol;
 			}
