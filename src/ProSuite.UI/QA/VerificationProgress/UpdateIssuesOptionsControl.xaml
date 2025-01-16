@@ -7,9 +7,9 @@
              xmlns:commonswpf="clr-namespace:ProSuite.Commons.UI.WPF;assembly=ProSuite.Commons.UI"
              d:DataContext="{d:DesignInstance Type=local:UpdateIssuesOptionsViewModel}"
              mc:Ignorable="d"
-             d:DesignHeight="200" d:DesignWidth="400">
+             d:DesignHeight="215" d:DesignWidth="400">
 
-    <DockPanel LastChildFill="False" Background="GhostWhite" Height="200" Width="400">
+    <DockPanel LastChildFill="False" Background="GhostWhite" Height="215" Width="400">
         <Grid DockPanel.Dock="Top" Margin="6">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
