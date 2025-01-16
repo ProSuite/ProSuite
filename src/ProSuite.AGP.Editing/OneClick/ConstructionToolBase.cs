@@ -28,7 +28,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private const Key _keyRestorePrevious = Key.R;
 
 		private Geometry _previousSketch;
-  
+
 		private bool _isIntermittentSelectionPhaseActive;
 		[CanBeNull] private SketchRecorder _sketchRecorder;
 
@@ -99,6 +99,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			// Does it make any difference what the return value is?
 			return await OnSketchModifiedAsyncCore();
+		}
+
+		protected override async Task<bool> OnSketchCanceledAsync()
+		{
+			if (! _isIntermittentSelectionPhaseActive)
+			{
+				// In case we did not register the shift-up, reset the sketch state history.
+				_sketchRecorder?.ResetSketchStates();
+			}
+
+			return await OnSketchCanceledAsyncCore();
 		}
 
 		#endregion
@@ -210,17 +221,18 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			try
 			{
+				_isIntermittentSelectionPhaseActive = true;
+
 				// must not be null because of entrance guard RequiresSelection
 				Assert.NotNull(_sketchRecorder);
 				await _sketchRecorder.SuspendAsync();
 
-				await ClearSketchAsync();
-
 				StartSelectionPhase();
 			}
-			finally
+			catch (Exception e)
 			{
-				_isIntermittentSelectionPhaseActive = true;
+				_sketchRecorder?.ResetSketchStates();
+				_isIntermittentSelectionPhaseActive = false;
 			}
 		}
 
@@ -297,8 +309,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task HandleEscapeAsync()
 		{
-			await ViewUtils.TryAsync(
-				QueuedTask.Run(
+			_msg.VerboseDebug(() => $"{nameof(HandleEscapeAsync)}");
+
+			try
+			{
+				// In case we did not register the shift-up and the overlay is still lying around:
+				_sketchRecorder?.ResetSketchStates();
+
+				await QueuedTask.Run(
 					async () =>
 					{
 						if (IsInSketchMode)
@@ -313,7 +331,7 @@ namespace ProSuite.AGP.Editing.OneClick
 								Geometry sketch = await GetCurrentSketchAsync();
 
 								// if sketch is empty, also remove selection and return to selection phase
-								if (sketch is { IsEmpty: false })
+								if (sketch?.IsEmpty == false)
 								{
 									await ResetSketchAsync();
 								}
@@ -328,7 +346,12 @@ namespace ProSuite.AGP.Editing.OneClick
 							await ClearSketchAsync();
 							ClearSelection();
 						}
-					}), _msg);
+					});
+			}
+			catch (Exception e)
+			{
+				ViewUtils.ShowError(e, _msg, false);
+			}
 		}
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
@@ -393,6 +416,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		protected virtual Task<bool> OnSketchModifiedAsyncCore()
+		{
+			return Task.FromResult(true);
+		}
+
+		protected virtual Task<bool> OnSketchCanceledAsyncCore()
 		{
 			return Task.FromResult(true);
 		}
