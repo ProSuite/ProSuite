@@ -677,8 +677,8 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 			catch (TestException e)
 			{
-				_msg.Error(string.Format("Container test execution failed: {0}",
-				                         e.Message), e);
+				_msg.Warn(string.Format("Container test execution failed: {0}",
+				                        e.Message), e);
 
 				failedTests.Add(containerTest);
 
@@ -689,8 +689,8 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 			catch (TestDataException e)
 			{
-				_msg.Error(string.Format("Container test execution failed: {0}",
-				                         e.Message), e);
+				_msg.Warn(string.Format("Container test execution failed: {0}",
+				                        e.Message), e);
 
 				ReportErrorForFailedTest(containerTest, dataReference,
 				                         string.Format("Test failed for row: {0}",
