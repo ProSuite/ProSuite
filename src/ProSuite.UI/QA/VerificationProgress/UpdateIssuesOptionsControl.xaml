@@ -41,6 +41,7 @@
                 <CheckBox
                     Height="Auto" HorizontalAlignment="Left" Margin="4, 8"
                     IsChecked="{Binding Path=KeepPreviousIssues, Mode=TwoWay}"
+                    IsEnabled="{Binding Path= KeepPreviousIssuesEnabled}"
                     ToolTip="Determines filter date of 'Latest test' filter">
                     <TextBox
                         Text="Keep the issues from the previous test run and add newly found issues to the work list. By default the work list is filtered to the issues found by latest saved verification."

@@ -71,6 +71,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 			CancelButtonText = "Cancel";
 			DetailProgressVisible = Visibility.Hidden;
 			OverallProgressVisible = Visibility.Hidden;
+
+			UpdateOptions = new UpdateIssuesOptionsViewModel();
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -335,8 +337,13 @@ namespace ProSuite.UI.QA.VerificationProgress
 			}
 		}
 
-		public UpdateIssuesOptionsViewModel UpdateOptions { get; } =
-			new UpdateIssuesOptionsViewModel();
+		public bool KeepPreviousIssuesDisabled
+		{
+			get => UpdateOptions.KeepPreviousIssuesEnabled;
+			set => UpdateOptions.KeepPreviousIssuesEnabled = ! value;
+		}
+
+		public UpdateIssuesOptionsViewModel UpdateOptions { get; }
 
 		#endregion
 
