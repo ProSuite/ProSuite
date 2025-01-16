@@ -28,8 +28,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		private const Key _keyRestorePrevious = Key.R;
 
 		private Geometry _previousSketch;
-
-		[CanBeNull] private IntermittentSelectionPhase _intermittentSelectionPhase;
+  
+		private bool _isIntermittentSelectionPhaseActive;
 		[CanBeNull] private SketchRecorder _sketchRecorder;
 
 		protected ConstructionToolBase()
@@ -134,8 +134,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			else
 			{
-				_intermittentSelectionPhase = new IntermittentSelectionPhase();
-				_intermittentSelectionPhase.Reset();
+				_isIntermittentSelectionPhaseActive = false;
 
 				_sketchRecorder = new SketchRecorder();
 				await _sketchRecorder.RecordAsync();
@@ -144,7 +143,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
-			_sketchRecorder?.Reset();
+			_sketchRecorder?.Deactivate();
 			RememberSketch();
 		}
 
@@ -184,9 +183,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			// Release latch. The tool might not get the shift released when the sift key was
 			// released while picker window was visible.
-			if (_intermittentSelectionPhase is { Running: true } && ! KeyboardUtils.IsShiftDown())
+			if (_isIntermittentSelectionPhaseActive && ! KeyboardUtils.IsShiftDown())
 			{
-				_intermittentSelectionPhase.Stop();
+				_isIntermittentSelectionPhaseActive = false;
 			}
 
 			if (await CanStartSketchPhaseAsync(selectedFeatures))
@@ -204,8 +203,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			// This is called repeatedly while keeping the shift key pressed.
 			// Return if intermittent selection phase is running.
-			Assert.NotNull(_intermittentSelectionPhase);
-			if (_intermittentSelectionPhase.Running)
+			if (_isIntermittentSelectionPhaseActive)
 			{
 				return;
 			}
@@ -222,7 +220,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			finally
 			{
-				_intermittentSelectionPhase.Start();
+				_isIntermittentSelectionPhaseActive = true;
 			}
 		}
 
@@ -251,8 +249,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
-			Assert.NotNull(_intermittentSelectionPhase);
-			_intermittentSelectionPhase.Stop();
+			bool isInIntermittentSelection = _isIntermittentSelectionPhaseActive;
+
+			_isIntermittentSelectionPhaseActive = false;
 
 			// todo: daro Use CanStartSketchPhase?
 			if (await ViewUtils.TryAsync(QueuedTask.Run(() => CanUseSelection(ActiveMapView)), _msg,
@@ -260,9 +259,17 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				StartSketchPhase();
 
-				Assert.NotNull(_sketchRecorder);
-				await _sketchRecorder.SetSketchesAsync();
-				_sketchRecorder.Resume();
+				if (isInIntermittentSelection)
+				{
+					Assert.NotNull(_sketchRecorder);
+					await _sketchRecorder.SetSketchesAsync();
+					_sketchRecorder.Resume();
+				}
+			}
+
+			if (isInIntermittentSelection)
+			{
+				_sketchRecorder?.ResetSketchStates();
 			}
 		}
 
@@ -483,7 +490,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			if (! await ViewUtils.TryAsync(QueuedTask.Run(() => CanUseSelection(ActiveMapView)), _msg,
+			if (! await ViewUtils.TryAsync(QueuedTask.Run(() => CanUseSelection(ActiveMapView)),
+			                               _msg,
 			                               suppressErrorMessageBox: true))
 			{
 				return false;
@@ -625,28 +633,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			return lastPoint;
-		}
-
-		private class IntermittentSelectionPhase
-		{
-			public bool Running { get; private set; }
-
-			public void Start()
-			{
-				Assert.False(Running, "intermittent selection phase is already running.");
-				Running = true;
-			}
-
-			public void Stop()
-			{
-				Assert.True(Running, "intermittent selection phase has not been started.");
-				Running = false;
-			}
-
-			public void Reset()
-			{
-				Running = false;
-			}
 		}
 	}
 }

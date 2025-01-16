@@ -174,17 +174,11 @@ public class SketchRecorder
 		_overlays.Clear();
 	}
 
-	public void Reset()
+	public void ResetSketchStates()
 	{
-		Assert.True(_recording, "Not recording");
-
-		UnwireEvents();
-
-		_recording = false;
-		_suspended = false;
 		_sketches.Clear();
 		_latch.Reset();
-
+		_suspended = false;
 		if (_overlays == null) return;
 
 		foreach (IDisposable overlay in _overlays)
@@ -193,6 +187,17 @@ public class SketchRecorder
 		}
 
 		_overlays.Clear();
+	}
+
+	public void Deactivate()
+	{
+		Assert.True(_recording, "Not recording");
+
+		UnwireEvents();
+
+		_recording = false;
+
+		ResetSketchStates();
 	}
 
 	private void TryPush(Geometry sketch, [CallerMemberName] string caller = null)
@@ -220,11 +225,12 @@ public class SketchRecorder
 				Assert.True(_latch.Count >= 0, "Sketch stack isn't in sync with latch");
 				return;
 			}
-			
+
 			if (args.IsUndo)
 			{
 				Assert.NotNull(_sketches.Pop());
-				_msg.VerboseDebug(() => $"{nameof(OnSketchModified)} pop: {_sketches.Count} sketches");
+				_msg.VerboseDebug(
+					() => $"{nameof(OnSketchModified)} pop: {_sketches.Count} sketches");
 
 				if (_sketches.Count == 1)
 				{

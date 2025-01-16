@@ -433,11 +433,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			await ShiftPressedCoreAsync();
 		}
 
-		protected virtual Task ShiftPressedCoreAsync()
-		{
-			return Task.CompletedTask;
-		}
-
 		private async Task ShiftReleasedAsync()
 		{
 			if (await IsInSelectionPhaseAsync())
@@ -448,6 +443,21 @@ namespace ProSuite.AGP.Editing.OneClick
 			await ShiftReleasedCoreAsync();
 		}
 
+		/// <summary>
+		/// Allows implementors to start tasks when the shift key is pressed.
+		/// NOTE: ShiftPressedCoreAsync and ShiftReleasedAsync are not necessarily symmetrical!
+		/// </summary>
+		/// <returns></returns>
+		protected virtual Task ShiftPressedCoreAsync()
+		{
+			return Task.CompletedTask;
+		}
+
+		/// <summary>
+		/// Allows implementors to start tasks when the shift key is released. Do not Assume that
+		/// ShiftPressedCoreAsync has been called before!
+		/// </summary>
+		/// <returns></returns>
 		protected virtual Task ShiftReleasedCoreAsync()
 		{
 			return Task.CompletedTask;
@@ -634,7 +644,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.CompletedTask;
 		}
 
-		protected virtual IPickerPrecedence CreatePickerPrecedence([NotNull] Geometry sketchGeometry)
+		protected virtual IPickerPrecedence CreatePickerPrecedence(
+			[NotNull] Geometry sketchGeometry)
 		{
 			return new PickerPrecedence(sketchGeometry,
 			                            GetSelectionTolerancePixels(),
@@ -973,8 +984,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		protected virtual bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer basicFeatureLayer,
-		                                              [CanBeNull] NotificationCollection notifications)
+		protected virtual bool CanSelectFromLayerCore(
+			[NotNull] BasicFeatureLayer basicFeatureLayer,
+			[CanBeNull] NotificationCollection notifications)
 		{
 			return true;
 		}
