@@ -207,7 +207,19 @@ namespace ProSuite.AGP.Editing.OneClick
 			// released while picker window was visible.
 			if (_isIntermittentSelectionPhaseActive && ! KeyboardUtils.IsShiftDown())
 			{
-				_isIntermittentSelectionPhaseActive = false;
+				if (await CanStartSketchPhaseAsync(selectedFeatures))
+				{
+					StartSketchPhase();
+					_isIntermittentSelectionPhaseActive = false;
+					await Assert.NotNull(_sketchStateHistory).StopIntermittentSelectionAsync();
+				}
+				else
+				{
+					_isIntermittentSelectionPhaseActive = false;
+					Assert.NotNull(_sketchStateHistory).ResetSketchStates();
+				}
+
+				return;
 			}
 
 			if (await CanStartSketchPhaseAsync(selectedFeatures))
