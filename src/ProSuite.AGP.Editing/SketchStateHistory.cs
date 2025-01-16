@@ -241,7 +241,7 @@ public class SketchStateHistory
 				return;
 			}
 
-			if (args.IsUndo)
+			if (args.IsUndo && _sketches.Count != 0)
 			{
 				Assert.NotNull(_sketches.Pop());
 				_msg.VerboseDebug(
