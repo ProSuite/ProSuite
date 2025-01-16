@@ -265,22 +265,21 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			bool isInIntermittentSelection = _isIntermittentSelectionPhaseActive;
 
-			_isIntermittentSelectionPhaseActive = false;
-
 			// todo: daro Use CanStartSketchPhase?
 			if (await ViewUtils.TryAsync(QueuedTask.Run(() => CanUseSelection(ActiveMapView)), _msg,
 			                             suppressErrorMessageBox: true))
 			{
+				// The sketch phase must be restarted 
 				StartSketchPhase();
 
 				if (isInIntermittentSelection)
 				{
+					_isIntermittentSelectionPhaseActive = false;
 					Assert.NotNull(_sketchStateHistory);
 					await _sketchStateHistory.StopIntermittentSelectionAsync();
 				}
 			}
-
-			if (isInIntermittentSelection)
+			else if (isInIntermittentSelection)
 			{
 				_sketchStateHistory?.ResetSketchStates();
 			}
