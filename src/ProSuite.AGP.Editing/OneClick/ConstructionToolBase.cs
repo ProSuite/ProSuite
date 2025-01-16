@@ -29,8 +29,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private Geometry _previousSketch;
 
+		// TODO: Absorb this flag into the SketchStateHistory for better encapsulation
 		private bool _isIntermittentSelectionPhaseActive;
-		[CanBeNull] private SketchRecorder _sketchRecorder;
+		[CanBeNull] private SketchStateHistory _sketchStateHistory;
 
 		protected ConstructionToolBase()
 		{
@@ -106,7 +107,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (! _isIntermittentSelectionPhaseActive)
 			{
 				// In case we did not register the shift-up, reset the sketch state history.
-				_sketchRecorder?.ResetSketchStates();
+				_sketchStateHistory?.ResetSketchStates();
 			}
 
 			return await OnSketchCanceledAsyncCore();
@@ -147,14 +148,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				_isIntermittentSelectionPhaseActive = false;
 
-				_sketchRecorder = new SketchRecorder();
-				await _sketchRecorder.RecordAsync();
+				_sketchStateHistory = new SketchStateHistory();
+				await _sketchStateHistory.ActivateAsync();
 			}
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
-			_sketchRecorder?.Deactivate();
+			_sketchStateHistory?.Deactivate();
 			RememberSketch();
 		}
 
@@ -224,14 +225,15 @@ namespace ProSuite.AGP.Editing.OneClick
 				_isIntermittentSelectionPhaseActive = true;
 
 				// must not be null because of entrance guard RequiresSelection
-				Assert.NotNull(_sketchRecorder);
-				await _sketchRecorder.SuspendAsync();
+				Assert.NotNull(_sketchStateHistory);
+				await _sketchStateHistory.StartIntermittentSelection();
 
+				// During start selection phase the edit sketch is cleared:
 				StartSelectionPhase();
 			}
 			catch (Exception e)
 			{
-				_sketchRecorder?.ResetSketchStates();
+				_sketchStateHistory?.ResetSketchStates();
 				_isIntermittentSelectionPhaseActive = false;
 			}
 		}
@@ -273,15 +275,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (isInIntermittentSelection)
 				{
-					Assert.NotNull(_sketchRecorder);
-					await _sketchRecorder.SetSketchesAsync();
-					_sketchRecorder.Resume();
+					Assert.NotNull(_sketchStateHistory);
+					await _sketchStateHistory.StopIntermittentSelectionAsync();
 				}
 			}
 
 			if (isInIntermittentSelection)
 			{
-				_sketchRecorder?.ResetSketchStates();
+				_sketchStateHistory?.ResetSketchStates();
 			}
 		}
 
@@ -314,7 +315,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			try
 			{
 				// In case we did not register the shift-up and the overlay is still lying around:
-				_sketchRecorder?.ResetSketchStates();
+				_sketchStateHistory?.ResetSketchStates();
 
 				await QueuedTask.Run(
 					async () =>
