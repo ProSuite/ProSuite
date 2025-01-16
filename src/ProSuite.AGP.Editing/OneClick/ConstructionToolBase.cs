@@ -39,7 +39,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			IsSketchTool = true;
 
-			UseSelection = true;
+			// NOTE: If UseSelection is true, ins some cases the standard selection phase is
+			// activated instead of our 'intermittent selection phase', which can result in a
+			// mix-up of the selection phase and the edit sketch phase. Symptoms are
+			// - InvalidCastExceptions when the edit sketch is a line (and the selection sketch is treated as edit sketch)
+			// - Erase areas that are selection rectangles in the Erase tool.
+			// Other problems include the standard selection cursor suddenly appearing.
+			// Apparently, OnSelectionChangedAsync will not be called if UseSelection is true, but
+			// this is not used in the OneClickToolBase hierarchy. Instead, we rely on the event
+			// OnMapSelectionChangedAsync
+			UseSelection = false;
+
 			GeomIsSimpleAsFeature = false;
 
 			SketchCursor = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
