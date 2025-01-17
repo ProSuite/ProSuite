@@ -341,10 +341,16 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async void OnToolDoubleClick(MapViewMouseButtonEventArgs args)
 		{
+			_msg.VerboseDebug(() => $"{nameof(OnToolDoubleClick)} ({Caption})");
+
 			try
 			{
-				if (SketchType == SketchGeometryType.Polygon && await IsInSelectionPhaseAsync())
+				// Typically, shift is pressed which prevents the standard finish-sketch.
+				// We want to override this in specific situations, such as in intermittent
+				// selection phases with polygon sketches.
+				if (await FinishSketchOnDoubleClick())
 				{
+					_msg.VerboseDebug(() => "Calling finish sketch due to double-click...");
 					await FinishSketchAsync();
 				}
 			}
@@ -352,6 +358,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				Gateway.ShowError(ex, _msg);
 			}
+		}
+
+		/// <summary>
+		/// During the selection phase or some other (target selection) phase FinishSketch is not
+		/// always automatically called when double-clicking (typically Shift prevents this).
+		/// This method allows for defining whether the current double click shall result
+		/// in a call to FinishSketchAsync()
+		/// </summary>
+		/// <returns></returns>
+		protected virtual async Task<bool> FinishSketchOnDoubleClick()
+		{
+			return SketchType == SketchGeometryType.Polygon && await IsInSelectionPhaseAsync();
 		}
 
 		protected virtual void OnToolMouseDownCore(MapViewMouseButtonEventArgs args) { }
