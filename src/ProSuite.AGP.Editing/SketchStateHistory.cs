@@ -228,6 +228,12 @@ public class SketchStateHistory
 
 	private void OnSketchModified(SketchModifiedEventArgs args)
 	{
+		if (IsInIntermittentSelectionPhase)
+		{
+			// Do not record sketch states for the selection sketch!
+			return;
+		}
+
 		try
 		{
 			_msg.VerboseDebug(() => $"{args.SketchOperationType}");
