@@ -71,7 +71,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 
 			// 3. Phase: works already, Shift is not supported.
-
 			return false;
 		}
 
@@ -281,11 +280,21 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
-		protected override Task ShiftPressedCoreAsync()
+		protected override async Task ShiftPressedCoreAsync()
 		{
-			_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+			if (await IsInSelectionPhaseAsync())
+			{
+				// Handled by base class
+				return;
+			}
 
-			return base.ShiftPressedCoreAsync();
+			if (! IsInSubcurveSelectionPhase())
+			{
+				// 2. Phase: target selection:
+				_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+			}
+
+			// 3. Phase: Shift is not supported.
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()
