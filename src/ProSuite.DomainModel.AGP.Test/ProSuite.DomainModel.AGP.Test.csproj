@@ -43,8 +43,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.AGP.Hosting\ProSuite.Commons.AGP.Hosting.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.AGP\ProSuite.DomainModel.AGP.csproj" />
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AGP.Hosting\ProSuite.Commons.AGP.Hosting.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
