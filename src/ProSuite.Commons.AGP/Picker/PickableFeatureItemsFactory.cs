@@ -66,7 +66,7 @@ public class PickableFeatureItemsFactory : IPickableItemsFactory
 			foreach (var feature in classSelection.GetFeatures())
 			{
 				long oid = feature.GetObjectID();
-				string expr = layer.GetDisplayExpressions([oid]).FirstOrDefault();
+				string expr = layer.GetDisplayExpressions(new List<long> { oid }).FirstOrDefault();
 
 				string displayValue = LayerUtils.GetMeaningfulDisplayExpression(feature, expr);
 

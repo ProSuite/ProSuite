@@ -324,7 +324,7 @@ public class SketchStateHistory
 		var whiteStroke = SymbolUtils.CreateSolidStroke(ColorUtils.WhiteRGB, width);
 		var blackStroke = SymbolUtils.CreateSolidStroke(ColorUtils.BlackRGB, width)
 		                             .AddDashes(dashPattern, LineDashEnding.HalfPattern);
-		return [blackStroke, whiteStroke];
+		return new[] { blackStroke, whiteStroke };
 	}
 
 	private static CIMPointSymbol CreateSketchVertexSymbol(CIMRGBColor color)
