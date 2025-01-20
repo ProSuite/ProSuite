@@ -203,7 +203,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[CanBeNull] QualityVerification verification,
 			[CanBeNull] string qaServiceCancellationMessage,
 			IEnumerable<GdbObjRefMsg> deletableAllowedErrors,
-			[CanBeNull] IEnvelope verifiedPerimeter,
+			[CanBeNull] IGeometry verifiedPerimeter,
 			[CanBeNull] ITrackCancel cancelTracker)
 		{
 			IList<IssueMsg> issuesToSend = DeQueuePendingIssues();

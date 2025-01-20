@@ -491,7 +491,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(
 				verification, cancelMessage, deletableAllowedErrorRefs,
-				qaService?.VerifiedPerimeter, trackCancel);
+				qaService?.GetVerifiedPerimeter(), trackCancel);
 
 			return result;
 		}
@@ -590,7 +590,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
 				cancellationMessage ?? qaService?.CancellationMessage, deletableAllowedErrorRefs,
-				qaService?.VerifiedPerimeter, trackCancel);
+				qaService?.GetVerifiedPerimeter(), trackCancel);
 
 			return result;
 		}

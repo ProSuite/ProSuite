@@ -35,6 +35,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			_issueStore = issueStore;
 		}
 
+		[CanBeNull]
 		private Geometry VerifiedPerimeter { get; set; }
 
 		private IList<Row> VerifiedRows { get; set; }
@@ -214,7 +215,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		}
 
 		private void DeleteErrors([CanBeNull] IList<GdbObjectReference> objectSelection,
-		                          IEnumerable<int> verifiedConditionIds)
+		                          IList<int> verifiedConditionIds)
 		{
 			_msg.Debug("Deleting existing issues in verification perimeter...");
 
