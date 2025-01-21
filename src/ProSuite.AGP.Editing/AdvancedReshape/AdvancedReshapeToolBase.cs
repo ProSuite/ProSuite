@@ -422,12 +422,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			{
 				_nonDefaultSideMode = false;
 
-				if (! _advancedReshapeToolOptions.RemainInSketchMode)
+				if (success && ! _advancedReshapeToolOptions.RemainInSketchMode)
 				{
 					StartSelectionPhase();
 				}
 				else
 				{
+					await ClearSketchAsync();
 					StartSketchPhase();
 				}
 			}
