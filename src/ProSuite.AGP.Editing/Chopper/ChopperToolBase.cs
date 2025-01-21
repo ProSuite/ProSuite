@@ -73,6 +73,8 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_settingsProvider?.StoreLocalConfiguration(_chopperToolOptions.LocalOptions);
+			
 			_feedback?.DisposeOverlays();
 			_feedback = null;
 		}
