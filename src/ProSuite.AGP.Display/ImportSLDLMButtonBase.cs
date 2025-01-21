@@ -32,7 +32,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 	// Remembered options (in session only):
 	private readonly ImportSLDLMOptions _options = new(ValidateConfig);
 
-	protected override async Task<bool> OnClickCore()
+	protected override async Task<bool> OnClickAsyncCore()
 	{
 		var map = MapView.Active?.Map;
 		if (map is null) return false;

@@ -3,9 +3,9 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons;
-using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.AGP.DataModel;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -18,6 +18,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 {
 	public static class QAUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// Creates the verification request for an extent verification.
 		/// </summary>
@@ -148,25 +150,30 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				return;
 			}
 
-			DatasetLookup datasetLookup = projectWorkspace.GetDatasetLookup();
-
-			Assert.NotNull(datasetLookup, nameof(datasetLookup));
-
 			foreach (Row objToVerify in objectsToVerify)
 			{
+				Table table = DatasetUtils.GetDatabaseTable(objToVerify.GetTable());
+
+				if (table.GetDatastore().Handle != projectWorkspace.Datastore.Handle)
+				{
+					_msg.VerboseDebug(() => $"The object {GdbObjectUtils.ToString(objToVerify)} " +
+					                        $"is not part of the project workspace");
+					continue;
+				}
+
 				Geometry geometry = null;
 				if (objToVerify is Feature feature)
 				{
 					geometry = feature.GetShape();
 				}
 
-				IDdxDataset objectDatset = datasetLookup.GetDataset(objToVerify.GetTable());
+				IDdxDataset objectDataset = projectWorkspace.GetDataset(table.GetName());
 
-				if (objectDatset != null)
+				if (objectDataset != null)
 				{
 					request.Features.Add(
 						ProtobufConversionUtils.ToGdbObjectMsg(
-							objToVerify, geometry, objectDatset.Id, false));
+							objToVerify, geometry, objectDataset.Id, false));
 				}
 			}
 		}

@@ -105,5 +105,10 @@ namespace ProSuite.DomainModel.AGP.QA
 			IQualityVerificationResult verificationResult,
 			ErrorDeletionInPerimeter errorDeletion,
 			bool updateLatestTestDate);
+
+		/// <summary>
+		/// Disable the current environment. All specifications are cleared.
+		/// </summary>
+		void Disable();
 	}
 }

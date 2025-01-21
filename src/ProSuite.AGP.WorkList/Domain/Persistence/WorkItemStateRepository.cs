@@ -107,7 +107,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 			if (_workspaces.Count == 0 && _statesByRow.Count > 0)
 			{
-				_msg.Warn($"{Name}: Invalid work list will not be stored.");
+				_msg.Debug($"{Name}: Invalid work list (one or more referenced tables could not be loaded) will not be stored.");
 				return;
 			}
 

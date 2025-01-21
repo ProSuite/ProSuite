@@ -57,6 +57,23 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return SketchGeometryType.Rectangle;
 		}
 
+		protected override async Task<bool> FinishSketchOnDoubleClick()
+		{
+			if (await IsInSelectionPhaseAsync())
+			{
+				return await base.FinishSketchOnDoubleClick();
+			}
+
+			if (! IsInSubcurveSelectionPhase())
+			{
+				// 2. Phase: target selection:
+				return SketchType == SketchGeometryType.Polygon;
+			}
+
+			// 3. Phase: works already, Shift is not supported.
+			return false;
+		}
+
 		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
@@ -110,8 +127,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					                             DefaultSketchTypeOnFinishSketch);
 
 				_targetSketchCursor.SetSelectionCursorShift(GetTargetSelectionCursorShift());
-				_targetSketchCursor.SetSelectionCursorLassoShift(GetTargetSelectionCursorLassoShift());
-				_targetSketchCursor.SetSelectionCursorPolygonShift(GetTargetSelectionCursorPolygonShift());
+				_targetSketchCursor.SetSelectionCursorLassoShift(
+					GetTargetSelectionCursorLassoShift());
+				_targetSketchCursor.SetSelectionCursorPolygonShift(
+					GetTargetSelectionCursorPolygonShift());
 			});
 		}
 
@@ -198,7 +217,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		protected override async Task<bool> OnSketchCompleteCoreAsync(
-			Geometry sketchGeometry,	
+			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
 			try
@@ -261,11 +280,21 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
-		protected override Task ShiftPressedCoreAsync()
+		protected override async Task ShiftPressedCoreAsync()
 		{
-			_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+			if (await IsInSelectionPhaseAsync())
+			{
+				// Handled by base class
+				return;
+			}
 
-			return base.ShiftPressedCoreAsync();
+			if (! IsInSubcurveSelectionPhase())
+			{
+				// 2. Phase: target selection:
+				_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+			}
+
+			// 3. Phase: Shift is not supported.
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()

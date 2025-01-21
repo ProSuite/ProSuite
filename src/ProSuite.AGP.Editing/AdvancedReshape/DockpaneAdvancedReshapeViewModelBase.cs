@@ -4,13 +4,9 @@ using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
-	public abstract class DockpaneAdvancedReshapeViewModelBase : DockPaneViewModelBase
+	public abstract class DockPaneAdvancedReshapeViewModelBase : DockPaneViewModelBase
 	{
-		//private const string _dockPaneID = "Swisstopo_GoTop_AddIn_EditTools_AdvancedReshape";
-
-		protected abstract string DockPaneDamlID { get; }
-
-		protected DockpaneAdvancedReshapeViewModelBase() : base(new DockpaneAdvancedReshape())
+		protected DockPaneAdvancedReshapeViewModelBase() : base(new DockPaneAdvancedReshape())
 		{
 			RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 		}

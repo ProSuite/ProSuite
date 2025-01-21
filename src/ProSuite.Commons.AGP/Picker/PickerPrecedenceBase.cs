@@ -14,9 +14,11 @@ namespace ProSuite.Commons.AGP.Picker;
 
 public abstract class PickerPrecedenceBase : IPickerPrecedence
 {
+	[UsedImplicitly]
 	protected PickerPrecedenceBase([NotNull] Geometry sketchGeometry,
-	                                int selectionTolerance,
-	                                Point pickerLocation)
+								   int selectionTolerance,
+								   Point pickerLocation,
+								   SelectionCombinationMethod? selectionMethod = null)
 	{
 		SketchGeometry = sketchGeometry;
 		SelectionTolerance = selectionTolerance;
@@ -24,7 +26,8 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 		IsSingleClick = PickerUtils.IsSingleClick(sketchGeometry);
 		SpatialRelationship = PickerUtils.GetSpatialRelationship();
-		SelectionCombinationMethod = PickerUtils.GetSelectionCombinationMethod();
+
+		SelectionCombinationMethod = selectionMethod ?? PickerUtils.GetSelectionCombinationMethod();
 
 		AreModifierKeysPressed();
 	}
