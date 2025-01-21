@@ -407,82 +407,32 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_feedback?.Clear();
 
-			// TODO: cancel all running background tasks...
-
 			var polyline = (Polyline) sketchGeometry;
 
-			bool success = await QueuedTaskUtils.Run(async () =>
+			SetCursor(Cursors.Wait);
+
+			bool success = false;
+			try
 			{
-				try
-				{
-					SetCursor(Cursors.Wait);
-
-					Dictionary<MapMember, List<long>> selectionByLayer =
-						SelectionUtils.GetSelection(activeView.Map);
-
-					List<Feature> selection =
-						GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
-							.ToList();
-
-					var potentiallyAffectedFeatures =
-						GetAdjacentFeatures(selection, cancelableProgressor);
-
-					// This timeout should be enough even in extreme circumstances:
-					int timeout = selection.Count * 10000;
-					_cancellationTokenSource = new CancellationTokenSource(timeout);
-
-					ReshapeResult result = MicroserviceClient.Reshape(
-						selection, polyline, potentiallyAffectedFeatures, true, true,
-						_nonDefaultSideMode, _cancellationTokenSource.Token,
-						_advancedReshapeToolOptions.MoveOpenJawEndJunction);
-
-					if (result == null)
-					{
-						return false;
-					}
-
-					if (result.ResultFeatures.Count == 0)
-					{
-						if (! string.IsNullOrEmpty(result.FailureMessage))
-						{
-							_msg.Warn(result.FailureMessage);
-							return false;
-						}
-					}
-
-					HashSet<long> editableClassHandles =
-						ToolUtils.GetEditableClassHandles(activeView);
-
-					Dictionary<Feature, Geometry> resultFeatures =
-						result.ResultFeatures
-						      .Where(r => GdbPersistenceUtils.CanChange(
-							             r, editableClassHandles, RowChangeType.Update))
-						      .ToDictionary(r => r.OriginalFeature, r => r.NewGeometry);
-
-					success = await SaveAsync(resultFeatures);
-
-					LogReshapeResults(result, selection.Count);
-
-					// At some point, hopefully, read-only operations on the CIM model can run in parallel
-					await ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures);
-
-					return success;
-				}
-				finally
-				{
-					// Anything but the Wait cursor
-					SetCursor(Cursors.Arrow);
-				}
-			});
-
-			_nonDefaultSideMode = false;
-
-			//if (!_advancedReshapeOptions.RemainInSketchMode)
+				success = await QueuedTaskUtils.Run(
+					          async () =>
+						          await Reshape(polyline, activeView, cancelableProgressor));
+			}
+			finally
 			{
-				StartSelectionPhase();
+				_nonDefaultSideMode = false;
+
+				if (! _advancedReshapeToolOptions.RemainInSketchMode)
+				{
+					StartSelectionPhase();
+				}
+				else
+				{
+					StartSketchPhase();
+				}
 			}
 
-			return success; // taskSave.Result;
+			return success;
 		}
 
 		protected override void OnSketchResetCore()
@@ -490,6 +440,63 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_feedback?.Clear();
 
 			_nonDefaultSideMode = false;
+		}
+
+		private async Task<bool> Reshape(Polyline sketchLine, MapView activeView,
+		                                 CancelableProgressor cancelableProgressor)
+		{
+			Dictionary<MapMember, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection(activeView.Map);
+
+			List<Feature> selection =
+				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+					.ToList();
+
+			var potentiallyAffectedFeatures =
+				GetAdjacentFeatures(selection, cancelableProgressor);
+
+			// This timeout should be enough even in extreme circumstances:
+			int timeout = selection.Count * 10000;
+			_cancellationTokenSource = new CancellationTokenSource(timeout);
+
+			ReshapeResult result = MicroserviceClient.Reshape(
+				selection, sketchLine, potentiallyAffectedFeatures, true, true,
+				_nonDefaultSideMode, _cancellationTokenSource.Token,
+				_advancedReshapeToolOptions.MoveOpenJawEndJunction);
+
+			if (result == null)
+			{
+				return false;
+			}
+
+			if (result.ResultFeatures.Count == 0)
+			{
+				if (! string.IsNullOrEmpty(result.FailureMessage))
+				{
+					_msg.Warn(result.FailureMessage);
+					{
+						return false;
+					}
+				}
+			}
+
+			HashSet<long> editableClassHandles =
+				ToolUtils.GetEditableClassHandles(activeView);
+
+			Dictionary<Feature, Geometry> resultFeatures =
+				result.ResultFeatures
+				      .Where(r => GdbPersistenceUtils.CanChange(
+					             r, editableClassHandles, RowChangeType.Update))
+				      .ToDictionary(r => r.OriginalFeature, r => r.NewGeometry);
+
+			bool success = await SaveAsync(resultFeatures);
+
+			LogReshapeResults(result, selection.Count);
+
+			// At some point, hopefully, read-only operations on the CIM model can run in parallel
+			await ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures);
+
+			return success;
 		}
 
 		private async Task<bool> TryUpdateFeedbackAsync()
