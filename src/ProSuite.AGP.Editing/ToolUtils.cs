@@ -7,11 +7,13 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Internal.Mapping;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
@@ -325,6 +327,58 @@ namespace ProSuite.AGP.Editing
 		public static SketchGeometryType GetSketchGeometryType()
 		{
 			return MapView.Active?.GetSketchType() ?? SketchGeometryType.None;
+		}
+
+		/// <summary>
+		/// Finds the features that intersect the specified selection.
+		/// </summary>
+		/// <param name="selection"></param>
+		/// <param name="activeMapView"></param>
+		/// <param name="targetFeatureSelection"></param>
+		/// <param name="extraTargetSearchTolerance"></param>
+		/// <param name="cancellabelProgressor"></param>
+		/// <returns></returns>
+		[NotNull]
+		public static IList<Feature> GetIntersectingFeatures(
+			[NotNull] IDictionary<MapMember, List<long>> selection,
+			MapView activeMapView,
+			TargetFeatureSelection targetFeatureSelection,
+			double extraTargetSearchTolerance,
+			[CanBeNull] CancelableProgressor cancellabelProgressor)
+		{
+			Envelope inExtent = activeMapView.Extent;
+
+			if (targetFeatureSelection == TargetFeatureSelection.SelectedFeatures)
+			{
+				// NOTE: cracking within selection is signalled to the server by an empty target list.
+				return new List<Feature>();
+			}
+
+			var featureFinder = new FeatureFinder(activeMapView, targetFeatureSelection);
+
+			// They might be stored (insert target vertices):
+			featureFinder.ReturnUnJoinedFeatures = true;
+			featureFinder.ExtraSearchTolerance = extraTargetSearchTolerance;
+
+			// Set the feature classes to ignore
+			IEnumerable<FeatureSelectionBase> featureClassSelections =
+				featureFinder.FindIntersectingFeaturesByFeatureClass(
+					selection, null, inExtent, cancellabelProgressor);
+
+			if (cancellabelProgressor != null &&
+			    cancellabelProgressor.CancellationToken.IsCancellationRequested)
+			{
+				return new List<Feature>();
+			}
+
+			var foundFeatures = new List<Feature>();
+
+			foreach (FeatureSelectionBase selectionBase in featureClassSelections)
+			{
+				foundFeatures.AddRange(selectionBase.GetFeatures());
+			}
+
+			return foundFeatures;
 		}
 
 		/// <summary>
