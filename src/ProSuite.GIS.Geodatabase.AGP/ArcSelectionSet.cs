@@ -20,7 +20,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		#region Implementation of ISelectionSet
 
-		public IName FullName => new ArcName(ArcGeodatabaseUtils.ToArcTable(_proTargetTable));
+		public IName FullName => new ArcDatasetName(ArcGeodatabaseUtils.ToArcTable(_proTargetTable));
 
 		public ITable Target => ArcGeodatabaseUtils.ToArcTable(_proTargetTable);
 

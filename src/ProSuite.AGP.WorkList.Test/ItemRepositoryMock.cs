@@ -106,6 +106,11 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
+		public Row GetSourceRow(ISourceClass sourceClass, long oid)
+		{
+			throw new NotImplementedException();
+		}
+
 		public void Dispose() { }
 	}
 }

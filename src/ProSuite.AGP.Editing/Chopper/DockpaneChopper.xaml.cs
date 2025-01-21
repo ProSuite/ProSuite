@@ -3,9 +3,9 @@ using System.Windows.Controls;
 namespace ProSuite.AGP.Editing.Chopper
 {
 
-	public partial class DockpaneChopper: UserControl
+	public partial class DockPaneChopper: UserControl
 	{
-		public DockpaneChopper()
+		public DockPaneChopper()
 		{
 			InitializeComponent();
 		}

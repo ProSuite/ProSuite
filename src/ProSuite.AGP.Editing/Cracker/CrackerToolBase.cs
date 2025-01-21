@@ -43,6 +43,9 @@ namespace ProSuite.AGP.Editing.Cracker
 		protected string OptionsFileName => "CrackerToolOptions.xml";
 
 		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+
+		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
 		/// <summary>
@@ -311,29 +314,44 @@ namespace ProSuite.AGP.Editing.Cracker
 			return _crackerToolOptions;
 		}
 
-		#region Tool Options Dockpane
+		#region Tool Options DockPane
 
-		private DockpaneCrackerViewModelBase GetCrackerViewModel() {
-			var viewModel = FrameworkApplication.DockPaneManager.Find(
-					                "Swisstopo_GoTop_AddIn_EditTools_Cracker") as
-				                DockpaneCrackerViewModelBase;
-			Assert.NotNull(viewModel);
-			return viewModel;
+		[CanBeNull]
+		private DockPaneCrackerViewModelBase GetCrackerViewModel()
+		{
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
+
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneCrackerViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+			                      OptionsDockPaneID);
 		}
-		protected override void ShowOptionsPane() {
+
+		protected override void ShowOptionsPane()
+		{
 			var viewModel = GetCrackerViewModel();
 
-			Assert.NotNull(viewModel);
+			if (viewModel == null)
+			{
+				return;
+			}
 
 			viewModel.Options = _crackerToolOptions;
 
 			viewModel.Activate(true);
 		}
 
-		protected override void HideOptionsPane() {
+		protected override void HideOptionsPane()
+		{
 			var viewModel = GetCrackerViewModel();
 			viewModel?.Hide();
 		}
+
 		#endregion 
 		
 		#region Search target features

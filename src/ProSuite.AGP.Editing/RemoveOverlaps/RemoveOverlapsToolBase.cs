@@ -49,6 +49,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
 
 		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+		
+		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
 		/// <summary>
@@ -405,22 +408,31 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			return _removeOverlapsToolOptions;
 		}
 
-		#region Tool Options Dockpane
+		#region Tool Options DockPane
 
-		private DockpaneRemoveOverlapsViewModelBase GetViewViewModel()
+		[CanBeNull]
+		private DockPaneRemoveOverlapsViewModelBase GetRemoveOverlapsViewModel()
 		{
-			var viewModel = FrameworkApplication.DockPaneManager.Find(
-					                "Swisstopo_GoTop_AddIn_EditTools_RemoveOverlaps") as
-				                DockpaneRemoveOverlapsViewModelBase;
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
 
-			return Assert.NotNull(viewModel);
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneRemoveOverlapsViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found", OptionsDockPaneID);
 		}
 
 		protected override void ShowOptionsPane()
 		{
-			DockpaneRemoveOverlapsViewModelBase viewModel = GetViewViewModel();
+			var viewModel = GetRemoveOverlapsViewModel();
 
-			Assert.NotNull(viewModel);
+			if (viewModel == null)
+			{
+				return;
+			}
 
 			viewModel.Options = _removeOverlapsToolOptions;
 
@@ -429,7 +441,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override void HideOptionsPane()
 		{
-			DockpaneRemoveOverlapsViewModelBase viewModel = GetViewViewModel();
+			var viewModel = GetRemoveOverlapsViewModel();
 			viewModel?.Hide();
 		}
 

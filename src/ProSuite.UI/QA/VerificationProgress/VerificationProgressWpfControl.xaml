@@ -172,13 +172,13 @@
 
                     <!-- Save issues button -->
                     <Button x:Name="saveErrors"
-                            Margin="8, 8, 0, 8" Width="80" Height="22" Command="{Binding SaveErrorsCommand}"
+                            Margin="8, 8, 0, 8" Width="100" Height="22" Command="{Binding SaveErrorsCommand}"
                             CommandParameter="{Binding Mode=OneWay}"
                             ToolTip="{Binding SaveErrorsToolTip}"
                             ToolTipService.ShowOnDisabled="True">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                             <!-- <Image Source="/ProSuite.UI;component/Properties/Images/Save.png" Stretch="None" /> -->
-                            <Label Padding="0, 0, 0, 0" Foreground="Black">Save Issues</Label>
+                            <Label Padding="0, 0, 0, 0" Foreground="Black">Update Issues</Label>
                         </StackPanel>
                     </Button>
 

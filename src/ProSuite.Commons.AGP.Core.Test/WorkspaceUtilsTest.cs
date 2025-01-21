@@ -50,5 +50,27 @@ namespace ProSuite.Commons.AGP.Core.Test
 			Assert.AreEqual("sde.DEFAULT", properties.Version);
 			Assert.AreEqual(string.Empty, properties.ProjectInstance);
 		}
+
+		[Test]
+		public void CanConvertConnectionStringToPropertiesPostgresUserPwWithServerKeyword()
+		{
+			string connectionString =
+				"ENCRYPTED_PASSWORD_UTF8=00022e6876704339396a386449396c674d494537513850704e78544b33447335644f774b627153615a3166473938553d2a00;" +
+				"ENCRYPTED_PASSWORD=00022e687856674c45514f2b6f4d6268443148435a522f4f6a7a636e44674c6358656848654d482f423234624d75733d2a00;" +
+				"SERVER=localhost;INSTANCE=sde:postgresql:localhost;DBCLIENT=postgresql;DB_CONNECTION_PROPERTIES=localhost;" +
+				"DATABASE=data_osm;USER=osm;VERSION=sde.DEFAULT;AUTHENTICATION_MODE=DBMS";
+			
+			var properties = WorkspaceUtils.GetConnectionProperties(connectionString);
+
+			Console.WriteLine(WorkspaceUtils.ConnectionPropertiesToString(properties));
+
+			Assert.AreEqual(EnterpriseDatabaseType.PostgreSQL, properties.DBMS);
+			Assert.AreEqual(AuthenticationMode.DBMS, properties.AuthenticationMode);
+			Assert.AreEqual("localhost", properties.Instance);
+			Assert.AreEqual("data_osm", properties.Database);
+			Assert.AreEqual("osm", properties.User);
+			Assert.AreEqual("sde.DEFAULT", properties.Version);
+			Assert.AreEqual(string.Empty, properties.ProjectInstance);
+		}
 	}
 }

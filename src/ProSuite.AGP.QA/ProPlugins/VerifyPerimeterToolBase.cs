@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -48,11 +47,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 			VerificationPlugInController.GetInstance(SessionContext).Register(this);
 		}
 
-		protected abstract IMapBasedSessionContext SessionContext { get; }
+		protected abstract ISessionContext SessionContext { get; }
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
 
-		protected virtual Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool>
+		protected virtual Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
 			SaveAction => null;
 
 		protected override Task OnToolActivateAsync(bool active)
@@ -139,7 +138,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 				{
 					ProgressTracker = progressTracker,
 					VerificationAction = () => Verify(sketchGeometry, progressTracker, resultsPath),
-					ApplicationController = appController
+					ApplicationController = appController,
+					KeepPreviousIssuesDisabled = true
 				};
 
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);

@@ -264,7 +264,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public string Name => _proRelationshipClassDefinition.GetName();
 
-		public IName FullName => new ArcName(this);
+		public IName FullName => new ArcDatasetName(this);
 
 		public string BrowseName
 		{
