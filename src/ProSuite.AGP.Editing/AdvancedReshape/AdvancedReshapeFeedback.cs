@@ -101,6 +101,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_openJawReplacedEndPointOverlay?.Dispose();
 			_openJawReplacedEndPointOverlay = null;
+			_lastDrawnOpenJawPoint = null;
 
 			_polygonPreviewOverlayAdd?.Dispose();
 			_polygonPreviewOverlayAdd = null;
