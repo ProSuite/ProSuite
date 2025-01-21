@@ -9,6 +9,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.AdvancedReshape;
 using ProSuite.AGP.Editing.Cracker;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
@@ -276,10 +277,10 @@ namespace ProSuite.AGP.Editing.Chopper
 			string currentCentralConfigDir = CentralConfigDir;
 			string currentLocalConfigDir = LocalConfigDir;
 
-			// For the time being, we always reload the options because they could have been updated in ArcMap
-			_settingsProvider =
-				new OverridableSettingsProvider<PartialChopperToolOptions>(
-					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			_settingsProvider ??= new OverridableSettingsProvider<PartialChopperToolOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
+
 
 			PartialChopperToolOptions localConfiguration, centralConfiguration;
 

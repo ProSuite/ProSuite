@@ -156,7 +156,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected void InitializeOptions()
 		{
-			_settingsProvider = new OverridableSettingsProvider<PartialReshapeToolOptions>(
+			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeToolOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
 			PartialReshapeToolOptions localConfiguration, centralConfiguration;
