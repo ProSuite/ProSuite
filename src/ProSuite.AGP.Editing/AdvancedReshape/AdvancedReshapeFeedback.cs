@@ -35,6 +35,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				{
 					QueuedTask.Run(() => UpdateOpenJawReplacedEndPoint(_lastDrawnOpenJawPoint));
 				}
+
+				if (args.PropertyName == nameof(ReshapeToolOptions.ShowPreview))
+				{
+					QueuedTask.Run(() => UpdatePreview(null));
+				}
 			};
 
 			_addAreaSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
@@ -62,6 +67,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		public Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
 		{
+			
 			_polygonPreviewOverlayAdd?.Dispose();
 			_polygonPreviewOverlayRemove?.Dispose();
 
@@ -70,29 +76,32 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				return Task.FromResult(false);
 			}
 
-			var addGeometries = new List<Geometry>(resultFeatures.Count);
-			var removeGeometries = new List<Geometry>(resultFeatures.Count);
-
-			foreach (ResultFeature resultFeature in resultFeatures)
+			if (_advancedReshapeToolOptions.ShowPreview)
 			{
-				var sourcePoly = resultFeature.OriginalFeature.GetShape() as Polygon;
+				var addGeometries = new List<Geometry>(resultFeatures.Count);
+				var removeGeometries = new List<Geometry>(resultFeatures.Count);
 
-				if (sourcePoly == null || sourcePoly.IsEmpty)
+				foreach (ResultFeature resultFeature in resultFeatures)
 				{
-					continue;
+					var sourcePoly = resultFeature.OriginalFeature.GetShape() as Polygon;
+
+					if (sourcePoly == null || sourcePoly.IsEmpty)
+					{
+						continue;
+					}
+
+					var reshapedPoly = (Polygon) resultFeature.NewGeometry;
+
+					addGeometries.Add(GeometryEngine.Instance.Difference(reshapedPoly, sourcePoly));
+					removeGeometries.Add(GeometryEngine.Instance.Difference(sourcePoly, reshapedPoly));
 				}
 
-				var reshapedPoly = (Polygon) resultFeature.NewGeometry;
+				Polygon polygonAddArea = GeometryEngine.Instance.Union(addGeometries) as Polygon;
+				Polygon polygonRemoveArea = GeometryEngine.Instance.Union(removeGeometries) as Polygon;
 
-				addGeometries.Add(GeometryEngine.Instance.Difference(reshapedPoly, sourcePoly));
-				removeGeometries.Add(GeometryEngine.Instance.Difference(sourcePoly, reshapedPoly));
+				_polygonPreviewOverlayAdd = AddOverlay(polygonAddArea, _addAreaSymbol);
+				_polygonPreviewOverlayRemove = AddOverlay(polygonRemoveArea, _removeAreaSymbol);
 			}
-
-			Polygon polygonAddArea = GeometryEngine.Instance.Union(addGeometries) as Polygon;
-			Polygon polygonRemoveArea = GeometryEngine.Instance.Union(removeGeometries) as Polygon;
-
-			_polygonPreviewOverlayAdd = AddOverlay(polygonAddArea, _addAreaSymbol);
-			_polygonPreviewOverlayRemove = AddOverlay(polygonRemoveArea, _removeAreaSymbol);
 
 			return Task.FromResult(true);
 		}
