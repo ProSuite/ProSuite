@@ -46,6 +46,9 @@ namespace ProSuite.AGP.Editing.Generalize
 		protected string OptionsFileName => "AdvancedGeneralizeToolOptions.xml";
 
 		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+
+		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
 		/// <summary>
@@ -439,6 +442,45 @@ namespace ProSuite.AGP.Editing.Generalize
 
 			return result;
 		}
+
+		#region Tool Options Dockpane
+
+		[CanBeNull]
+		private DockPaneGeneralizeViewModelBase GetOptionsViewModel()
+		{
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
+
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneGeneralizeViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+			                      OptionsDockPaneID);
+		}
+
+		protected override void ShowOptionsPane()
+		{
+			DockPaneGeneralizeViewModelBase viewModel = GetOptionsViewModel();
+
+			Assert.NotNull(viewModel);
+
+			viewModel.Options = _generalizeToolOptions;
+
+			viewModel.Activate(true);
+		}
+
+		protected override void HideOptionsPane()
+		{
+			DockPaneGeneralizeViewModelBase viewModel = GetOptionsViewModel();
+
+			viewModel?.Hide();
+		}
+
+		#endregion
+
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
