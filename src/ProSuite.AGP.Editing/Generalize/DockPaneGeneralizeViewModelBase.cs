@@ -13,7 +13,11 @@ namespace ProSuite.AGP.Editing.Generalize
 
 		#region RestoreDefaultsButton
 
-		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
+		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
+		{
+			get => _targetFeatureSelectionVm;
+			private set => SetProperty(ref _targetFeatureSelectionVm, value);
+		}
 
 		public ICommand RevertToDefaultsCommand { get; }
 
@@ -30,6 +34,7 @@ namespace ProSuite.AGP.Editing.Generalize
 		private string _heading = "Generalization Options";
 
 		private AdvancedGeneralizeOptions _options;
+		private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 
 		public string Heading
 		{
