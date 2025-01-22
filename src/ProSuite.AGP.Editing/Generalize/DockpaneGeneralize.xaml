@@ -4,13 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
-             xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
-             xmlns:managedOptions="clr-namespace:ProSuite.Commons.UI.ManagedOptions;assembly=ProSuite.Commons.UI" 
              xmlns:cracker="clr-namespace:ProSuite.AGP.Editing.Generalize"
              xmlns:editing="clr-namespace:ProSuite.AGP.Editing"
-             xmlns:geometryProcessing="clr-namespace:ProSuite.Commons.AGP.Core.GeometryProcessing;assembly=ProSuite.Commons.AGP.Core"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=cracker:DockPaneGeneralizeViewModelBase}" Width="465" Height="480" HorizontalAlignment="Left"
+             d:DataContext="{d:DesignInstance Type=cracker:DockPaneGeneralizeViewModelBase}" Width="475" Height="480" HorizontalAlignment="Left"
              VerticalAlignment="Top">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -60,16 +57,16 @@
                     DataContext="{Binding Options.CentralizableWeedTolerance}" />
             </Grid>
 
-            <CheckBox Grid.Row="1" Grid.Column="0"  Template="{StaticResource CentralizableSettingCheckbox}"
+            <CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Template="{StaticResource CentralizableSettingCheckbox}"
                       Content="Include non-linear segments (all segments are linearized)"
                       DataContext="{Binding Options.CentralizableWeedNonLinearSegments}" 
                       Margin="20, 0, 0, 0"/>
 
-            <CheckBox Grid.Row="2"  Grid.Column="0"  Template="{StaticResource CentralizableSettingCheckbox}"
+            <CheckBox Grid.Row="2" Grid.Column="0"  Template="{StaticResource CentralizableSettingCheckbox}"
                           Content="Respect a minimum segment length"
                           DataContext="{Binding Options.CentralizableEnforceMinimumSegmentLength}"  />
 
-            <Grid Grid.Row="2"  Grid.Column="1" >
+            <Grid Grid.Row="2" Grid.Column="1" >
                 <ContentControl 
                         Template="{StaticResource CentralizableSettingsSpinner}"
                         DataContext="{Binding Options.CentralizableMinimumSegmentLength}" />
@@ -81,7 +78,7 @@
                     />
             </Grid>
 
-            <CheckBox Grid.Row="3"  Grid.Column="0"  Template="{StaticResource CentralizableSettingCheckbox}"
+            <CheckBox Grid.Row="3"  Grid.Column="0" Grid.ColumnSpan="3" Template="{StaticResource CentralizableSettingCheckbox}"
                       Content="Use 2D distance for generalization also for geometries with Z"
                       DataContext="{Binding Options.CentralizableOnly2D}"  />
 
