@@ -1,3 +1,4 @@
+using System;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
@@ -274,6 +275,20 @@ namespace ProSuite.AGP.Editing.Generalize
 			const string optionsName = "Advanced Generalize Options";
 
 			return GetLocalOverridesMessage(optionsName);
+		}
+
+		#endregion
+
+		#region Overrides of Object
+
+		public override string ToString()
+		{
+			return $"Generalization options: {Environment.NewLine}" +
+			       $"Generalize: {Weed} (Tolerance {WeedTolerance}), including non-linear segments: {WeedNonLinearSegments}{Environment.NewLine}" +
+			       $"Remove short segments: {EnforceMinimumSegmentLength} (Tolerance {MinimumSegmentLength}){Environment.NewLine}" +
+			       $"Use 2D length: {Only2D}{Environment.NewLine}" +
+			       $"Protect topologically shared vertices: {ProtectTopologicalVertices} with targets {VertexProtectingFeatureSelection}{Environment.NewLine}" +
+			       $"Restricted to visible extent: {LimitToVisibleExtent}";
 		}
 
 		#endregion

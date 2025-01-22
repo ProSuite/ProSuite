@@ -339,6 +339,9 @@ namespace ProSuite.AGP.Editing.Generalize
 				cancellationToken = cancellationTokenSource.Token;
 			}
 
+			_msg.DebugFormat("Calculating removable segments with the following options: {0}",
+			                 generalizeOptions);
+
 			if (MicroserviceClient != null)
 			{
 				double? weedTolerance =
