@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
@@ -49,13 +48,6 @@ namespace ProSuite.AGP.Editing.Generalize
 					new TargetFeatureSelectionViewModel(
 						_options.CentralizableVertexProtectingFeatureSelection);
 			}
-		}
-
-		public event PropertyChangedEventHandler PropertyChanged;
-
-		protected virtual void OnPropertyChanged(string propertyName)
-		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 	}
 }
