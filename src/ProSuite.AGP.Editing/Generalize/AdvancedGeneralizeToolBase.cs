@@ -78,8 +78,12 @@ namespace ProSuite.AGP.Editing.Generalize
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_settingsProvider?.StoreLocalConfiguration(_generalizeToolOptions.LocalOptions);
+
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+
+			HideOptionsPane();
 		}
 
 		protected override void LogPromptForSelection()
