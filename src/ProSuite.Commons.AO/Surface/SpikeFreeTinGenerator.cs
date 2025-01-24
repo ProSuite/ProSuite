@@ -18,13 +18,13 @@ namespace ProSuite.Commons.AO.Surface
 	{
 		private readonly double _freezeDistance;
 		private readonly double _insertionBuffer;
-		[CanBeNull] private readonly IEnumerable<IGeometry> _areasWithSpikes;
+		[CanBeNull] private readonly IFeatureClass _areasWithSpikes;
 		private const int TagValue = 0;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private const int FrozenTag = 42;
 
 
-		public SpikeFreeTinGenerator([NotNull] SimpleTerrain simpleTerrain, double freezeDistance, double insertionBuffer, double? tinBufferDistance, [CanBeNull] IEnumerable<IGeometry> areasWithSpikes)
+		public SpikeFreeTinGenerator([NotNull] SimpleTerrain simpleTerrain, double freezeDistance, double insertionBuffer, double? tinBufferDistance, [CanBeNull] IFeatureClass areasWithSpikes)
 			: base(simpleTerrain, tinBufferDistance)
 		{
 			_freezeDistance = freezeDistance;
@@ -53,26 +53,40 @@ namespace ProSuite.Commons.AO.Surface
 
 			if(_areasWithSpikes != null)
 			{
-				_msg.Info("Areas with spikes active");
-				AddGeometriesToTin(tin, geometries.Where(g => _areasWithSpikes.Any(area => GeometryUtils.Intersects(area, g))));
+				_msg.Info("SpikeFree algorithm is only applied to specified areas");
+				var areasWithSpikes =
+					GdbQueryUtils.GetFeatures(_areasWithSpikes, filter, true)
+					             .Select(f => f.Shape)
+					             .ToList();
 
-				foreach (var geometry in geometries.Where(g => !_areasWithSpikes.Any(area => GeometryUtils.Intersects(area, g))))
+				var pointInSpikeFreeAreas = new List<(double x, double y, double z)>();
+
+
+				foreach (var geometry in geometries)
 				{
-					CoordinateTransformer?.Transform(geometry);
-					tin.AddShapeZ(geometry, surfaceType, 0, ref useShapeZ);
-					
+					if (areasWithSpikes.Any(area => GeometryUtils.Intersects(area, geometry)))
+					{
+						pointInSpikeFreeAreas.AddRange(ExpandToCoodinates(geometry));
+					}
+					else
+					{
+						// Not Spike Free
+						CoordinateTransformer?.Transform(geometry);
+						tin.AddShapeZ(geometry, surfaceType, 0, ref useShapeZ);
+					}
 				}
 
+				AddPointsToTinUsingSpikeFree(tin, pointInSpikeFreeAreas);
 			}
 			else
 			{
-				_msg.Info("Areas with spikes not active");
-				AddGeometriesToTin(tin, geometries);
+				_msg.Info("SpikeFree algorithm is applied to entire area.");
+				AddPointsToTinUsingSpikeFree(tin, geometries.SelectMany(ExpandToCoodinates));
 			}
 
 		}
 
-		public void AddGeometriesToTin(ITinEdit tin, IEnumerable<IGeometry> geometries)
+		public void AddPointsToTinUsingSpikeFree(ITinEdit tin, IEnumerable<(double x, double y, double z)> points)
 		{
 			// Unfortunately some of the methods we required for the spike free tin are in the ITinEdit and some are in the ITinAdvancade interface.
 			// However, to avoid having to use the actual class we use two variables both pointing at the same object here.
@@ -80,8 +94,7 @@ namespace ProSuite.Commons.AO.Surface
 
 			Assert.ArgumentNotNull(advancedTin);
 
-			var coordinates = geometries
-			             .SelectMany(ExpandToCoodinates)
+			var coordinates = points
 			             .OrderByDescending(p => p.z);
 			
 			int addedPoints = 0;
