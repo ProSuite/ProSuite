@@ -720,6 +720,29 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return Engine.Disjoint(geometry1, geometry2);
 		}
 
+		public static Geometry GetClippedGeometry([NotNull] Geometry polygon,
+		                                          [NotNull] Envelope clipExtent,
+		                                          double clipExtentRotationDeg = 0)
+		{
+			if (clipExtentRotationDeg == 0)
+			{
+				Envelope clipExtentSref =
+					EnsureSpatialReference(clipExtent, polygon.SpatialReference);
+
+				return Engine.Clip(polygon, clipExtentSref);
+			}
+
+			// It's a polygon:
+			Polygon envelopeAsPoly =
+				GeometryFactory.CreatePolygon(clipExtent, polygon.SpatialReference);
+
+			double rotationInRadians = MathUtils.ToRadians(clipExtentRotationDeg);
+
+			Geometry rotated = Engine.Rotate(envelopeAsPoly, clipExtent.Center, rotationInRadians);
+
+			return Engine.Intersection(polygon, rotated);
+		}
+
 		/// <summary>
 		/// Clips the polygon using the provided envelope. The envelope can be rotated
 		/// by the specified degrees before the clip is applied. This is useful for rotated
@@ -730,7 +753,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// <param name="clipExtentRotationDeg">The rotation to be applied to the clip extent before
 		/// clipping. The unit is degrees.</param>
 		/// <returns></returns>
-		public static Polygon GetClippedPolygon([NotNull] Polygon polygon,
+		public static Polygon GetClippedPolygon([NotNull] Geometry polygon,
 		                                        [NotNull] Envelope clipExtent,
 		                                        double clipExtentRotationDeg = 0)
 		{

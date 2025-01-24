@@ -5,9 +5,9 @@ using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
-	public abstract class DockpaneRemoveOverlapsViewModelBase : DockPaneViewModelBase
+	public abstract class DockPaneRemoveOverlapsViewModelBase : DockPaneViewModelBase
 	{
-		protected DockpaneRemoveOverlapsViewModelBase() : base(new DockpaneRemoveOverlaps())
+		protected DockPaneRemoveOverlapsViewModelBase() : base(new DockPaneRemoveOverlaps())
 		{
 			RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 		}
@@ -26,8 +26,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		}
 
 		#endregion
-
-		protected abstract string DockPaneDamlID { get; }
 
 		/// Text shown near the top of the DockPane.
 		private string _heading = "Remove Overlaps Options";

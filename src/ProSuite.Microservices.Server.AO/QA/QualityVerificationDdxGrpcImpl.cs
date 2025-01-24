@@ -354,14 +354,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces = null;
 
+			GetProjectWorkspacesResponse response = null;
 			_domainTransactions.UseTransaction(
 				() =>
 				{
 					projectWorkspaces =
 						verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
-				});
 
-			GetProjectWorkspacesResponse response = PackProjectWorkspaceResponse(projectWorkspaces);
+					response = PackProjectWorkspaceResponse(projectWorkspaces);
+				});
 
 			return response;
 		}

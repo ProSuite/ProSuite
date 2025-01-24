@@ -14,9 +14,11 @@ namespace ProSuite.Commons.AGP.Picker;
 
 public abstract class PickerPrecedenceBase : IPickerPrecedence
 {
-	protected PickerPrecedenceBase(Geometry sketchGeometry,
-	                               int selectionTolerance,
-	                               Point pickerLocation)
+	[UsedImplicitly]
+	protected PickerPrecedenceBase([NotNull] Geometry sketchGeometry,
+								   int selectionTolerance,
+								   Point pickerLocation,
+								   SelectionCombinationMethod? selectionMethod = null)
 	{
 		SketchGeometry = sketchGeometry;
 		SelectionTolerance = selectionTolerance;
@@ -24,7 +26,8 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 		IsSingleClick = PickerUtils.IsSingleClick(sketchGeometry);
 		SpatialRelationship = PickerUtils.GetSpatialRelationship();
-		SelectionCombinationMethod = PickerUtils.GetSelectionCombinationMethod();
+
+		SelectionCombinationMethod = selectionMethod ?? PickerUtils.GetSelectionCombinationMethod();
 
 		AreModifierKeysPressed();
 	}
@@ -64,6 +67,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		return PickerUtils.ExpandGeometryByPixels(geometry, SelectionTolerance);
 	}
 
+	[NotNull]
 	public virtual IPickableItemsFactory CreateItemsFactory()
 	{
 		if (IsSingleClick)
@@ -79,6 +83,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		return CreateItemsFactory<IPickableFeatureItem>();
 	}
 
+	[NotNull]
 	public virtual IPickableItemsFactory CreateItemsFactory<T>() where T : IPickableItem
 	{
 		bool isRequestingFeatures =

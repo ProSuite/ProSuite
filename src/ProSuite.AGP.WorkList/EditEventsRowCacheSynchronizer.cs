@@ -60,6 +60,7 @@ namespace ProSuite.AGP.WorkList
 						await QueuedTask.Run(() => { ProcessChanges(e); });
 						break;
 					case EditCompletedType.Reconcile:
+						await QueuedTask.Run(() => { _rowCache.Invalidate(); });
 						break;
 					case EditCompletedType.Post:
 						break;
@@ -85,6 +86,28 @@ namespace ProSuite.AGP.WorkList
 			//{
 			//	return;
 			//}
+
+			var fullTableInvalidations = new List<Table>();
+
+			// TODO: Try prevent too many calls
+			foreach (MapMember mapMember in args.InvalidateAllMembers)
+			{
+				if (mapMember is BasicFeatureLayer featureLayer)
+				{
+					// Test if the layer is still in the map?
+					Table table = featureLayer.GetTable();
+
+					if (_rowCache.CanContain(table))
+					{
+						fullTableInvalidations.Add(table);
+					}
+				}
+			}
+
+			if (fullTableInvalidations.Count > 0)
+			{
+				_rowCache.Invalidate(fullTableInvalidations);
+			}
 
 			// Note This event is fired (to) many times!
 			// Add work list to map -> it fires 6 times. There are
@@ -124,7 +147,7 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		private static Dictionary<Table, List<long>> GetOidsByTable(
+		private Dictionary<Table, List<long>> GetOidsByTable(
 			Dictionary<MapMember, List<long>> oidsByMapMember)
 		{
 			var result = new Dictionary<Table, List<long>>(oidsByMapMember.Count);
@@ -144,6 +167,11 @@ namespace ProSuite.AGP.WorkList
 				}
 
 				Table table = featureLayer.GetTable();
+
+				if (! _rowCache.CanContain(table))
+				{
+					continue;
+				}
 
 				if (oidsByHandle.ContainsKey(table.Handle))
 				{

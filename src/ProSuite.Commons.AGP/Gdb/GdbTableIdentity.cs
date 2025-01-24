@@ -50,15 +50,18 @@ namespace ProSuite.Commons.AGP.Gdb
 
 		public bool ReferencesTable(Table table)
 		{
-			if (! Workspace.References(table.GetDatastore()))
+			using (Datastore datastore = table.GetDatastore())
 			{
-				return false;
+				if (! Workspace.References(datastore))
+				{
+					return false;
+				}
+
+				long tableId = table.GetID();
+				string tableName = table.GetName();
+
+				return ReferencesTable(tableId, tableName);
 			}
-
-			long tableId = table.GetID();
-			string tableName = table.GetName();
-
-			return ReferencesTable(tableId, tableName);
 		}
 
 		public bool ReferencesTable(long otherTableId, string otherTableName)

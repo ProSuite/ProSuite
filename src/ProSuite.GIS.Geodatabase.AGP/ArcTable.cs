@@ -301,7 +301,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public string Name => ProTableDefinition.GetName();
 
-		public IName FullName => new ArcName(this);
+		public IName FullName => new ArcDatasetName(this);
 
 		public string BrowseName
 		{
@@ -507,11 +507,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 	}
 
-	public class ArcName : IName
+	public class ArcDatasetName : IDatasetName
 	{
 		private readonly IDataset _dataset;
 
-		public ArcName(IDataset dataset)
+		public ArcDatasetName(IDataset dataset)
 		{
 			_dataset = dataset;
 		}
@@ -528,6 +528,95 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			return _dataset;
 		}
+
+		#endregion
+
+		#region Implementation of IDatasetName
+
+		public string Name => _dataset.Name;
+
+		public esriDatasetType Type => _dataset.Type;
+
+		public IWorkspaceName WorkspaceName =>
+			new ArcWorkspaceName((ArcWorkspace) _dataset.Workspace);
+
+		#endregion
+	}
+
+	public class ArcTableDefinitionName : IDatasetName
+	{
+		private readonly TableDefinition _tableDefinition;
+		private readonly IFeatureWorkspace _workspace;
+
+		public ArcTableDefinitionName(TableDefinition tableDefinition,
+		                              IFeatureWorkspace workspace)
+		{
+			_tableDefinition = tableDefinition;
+			_workspace = workspace;
+		}
+
+		#region Implementation of IName
+
+		public string NameString
+		{
+			get => Name;
+			set => throw new NotImplementedException();
+		}
+
+		public object Open()
+		{
+			return _workspace.OpenFeatureClass(Name);
+		}
+
+		#endregion
+
+		#region Implementation of IDatasetName
+
+		public string Name => _tableDefinition.GetName();
+
+		public esriDatasetType Type => _tableDefinition is FeatureClassDefinition
+			                               ? esriDatasetType.esriDTFeatureClass
+			                               : esriDatasetType.esriDTTable;
+
+		public IWorkspaceName WorkspaceName => _workspace.GetWorkspaceName();
+
+		#endregion
+	}
+
+	public class ArcRelationshipClassDefinitionName : IDatasetName
+	{
+		private readonly RelationshipClassDefinition _relClassDef;
+		private readonly IFeatureWorkspace _workspace;
+
+		public ArcRelationshipClassDefinitionName(RelationshipClassDefinition relClassDef,
+		                                          IFeatureWorkspace workspace)
+		{
+			_relClassDef = relClassDef;
+			_workspace = workspace;
+		}
+
+		#region Implementation of IName
+
+		public string NameString
+		{
+			get => Name;
+			set => throw new NotImplementedException();
+		}
+
+		public object Open()
+		{
+			return _workspace.OpenRelationshipClass(Name);
+		}
+
+		#endregion
+
+		#region Implementation of IDatasetName
+
+		public string Name => _relClassDef.GetName();
+
+		public esriDatasetType Type => esriDatasetType.esriDTRelationshipClass;
+
+		public IWorkspaceName WorkspaceName => _workspace.GetWorkspaceName();
 
 		#endregion
 	}

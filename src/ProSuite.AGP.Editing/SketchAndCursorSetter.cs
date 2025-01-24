@@ -21,7 +21,7 @@ public class SketchAndCursorSetter
 	[CanBeNull] private Cursor _lassoCursorShift;
 	[CanBeNull] private Cursor _polygonCursorShift;
 
-	private readonly SketchGeometryType? _defaultSelectionSketchType;
+	private readonly SketchGeometryType? _defaultSketchType;
 	private SketchGeometryType? _previousType;
 
 	/// <summary>
@@ -45,18 +45,15 @@ public class SketchAndCursorSetter
 	                              [NotNull] Cursor cursor,
 	                              [NotNull] Cursor lassoCursor,
 	                              [NotNull] Cursor polygonCursor,
-	                              SketchGeometryType defaultSelectionSketchType)
+	                              SketchGeometryType defaultSketchType)
 	{
 		_tool = tool ?? throw new ArgumentNullException(nameof(tool));
 		_cursor = cursor ?? throw new ArgumentNullException(nameof(cursor));
 		_lassoCursor = lassoCursor ?? throw new ArgumentNullException(nameof(lassoCursor));
 		_polygonCursor = polygonCursor ?? throw new ArgumentNullException(nameof(polygonCursor));
 
-		
+		_defaultSketchType = defaultSketchType;
 
-		_defaultSelectionSketchType = defaultSelectionSketchType;
-
-		// todo: daro not here? This class is not only for selection sketch anymore.
 		_tool.SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
 		_tool.SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
 	}
@@ -99,8 +96,8 @@ public class SketchAndCursorSetter
 			}
 		}
 
-		TrySetSketchType(_defaultSelectionSketchType);
-		SetCursor(_defaultSelectionSketchType);
+		TrySetSketchType(_defaultSketchType);
+		SetCursor(_defaultSketchType);
 	}
 
 	public bool DefaultSketchTypeOnFinishSketch { get; set; }
@@ -115,12 +112,12 @@ public class SketchAndCursorSetter
 			{
 				case SketchGeometryType.Polygon:
 					type = _tool.GetSketchType() == SketchGeometryType.Polygon
-						       ? _defaultSelectionSketchType
+						       ? _defaultSketchType
 						       : sketchType;
 					break;
 				case SketchGeometryType.Lasso:
 					type = _tool.GetSketchType() == SketchGeometryType.Lasso
-						       ? _defaultSelectionSketchType
+						       ? _defaultSketchType
 						       : sketchType;
 					break;
 				default:

@@ -18,8 +18,8 @@ public interface IIssueStore
 	/// <param name="deleteForConditionIds"></param>
 	/// <param name="verifiedPerimeter"></param>
 	/// <param name="verifiedObjects"></param>
-	void DeleteErrors([CanBeNull] IEnumerable<int> deleteForConditionIds,
-	                  [NotNull] Geometry verifiedPerimeter,
+	void DeleteErrors([CanBeNull] IList<int> deleteForConditionIds,
+	                  [CanBeNull] Geometry verifiedPerimeter,
 	                  [CanBeNull] IList<GdbObjectReference> verifiedObjects);
 
 	/// <summary>

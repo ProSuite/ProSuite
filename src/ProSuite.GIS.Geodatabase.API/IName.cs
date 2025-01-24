@@ -6,4 +6,13 @@ namespace ProSuite.GIS.Geodatabase.API
 
 		object Open();
 	}
+
+	public interface IDatasetName : IName
+	{
+		string Name { get; }
+
+		esriDatasetType Type { get; }
+
+		IWorkspaceName WorkspaceName { get; }
+	}
 }

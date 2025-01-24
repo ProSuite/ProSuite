@@ -20,6 +20,6 @@ namespace ProSuite.Commons.AGP.Picker
 			_image ??=
 				new BitmapImage(
 					new Uri(
-						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/Annotation.png"));
+						@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/Annotation.png"));
 	}
 }

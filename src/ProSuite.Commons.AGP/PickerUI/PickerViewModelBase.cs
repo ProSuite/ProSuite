@@ -41,22 +41,12 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 		PressSpaceCommand = new ActionCommand(OnPressSpace);
 	}
 
-	protected PickerViewModelBase(Geometry selectionGeometry) : this()
+	protected PickerViewModelBase([NotNull] Geometry selectionGeometry) : this()
 	{
 		_selectionGeometry = selectionGeometry;
 	}
 
-	public FlashService FlashService
-	{
-		get
-		{
-			if (_flashService == null)
-			{
-				_flashService = CreateFlashService();
-			}
-			return _flashService;
-		}
-	}
+	public FlashService FlashService => _flashService ??= CreateFlashService();
 
 	protected abstract FlashService CreateFlashService();
 

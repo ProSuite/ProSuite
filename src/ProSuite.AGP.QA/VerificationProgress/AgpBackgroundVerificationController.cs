@@ -49,7 +49,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			[CanBeNull] Geometry verifiedPerimeter,
 			[CanBeNull] SpatialReference verificationSpatialReference,
 			[CanBeNull]
-			Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> saveAction = null)
+			Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>> saveAction =
+				null)
 		{
 			Assert.ArgumentNotNull(workListOpener, nameof(workListOpener));
 			Assert.ArgumentNotNull(mapView, nameof(mapView));
@@ -63,10 +64,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		}
 
 		[CanBeNull]
-		private Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> SaveAction
-		{
-			get;
-		}
+		private Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
+			SaveAction { get; }
 
 		public void FlashProgress(IList<EnvelopeXY> tiles,
 		                          ServiceCallStatus currentProgressStep)
@@ -298,6 +297,23 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			_issuesSaved = verificationResult.IssuesSaved >= 0;
 		}
 
+		public async Task<int> SaveIssuesAsync(IQualityVerificationResult verificationResult,
+		                                       ErrorDeletionInPerimeter errorDeletion,
+		                                       bool updateLatestTestDate)
+		{
+			if (SaveAction == null)
+			{
+				return -1;
+			}
+
+			int savedIssueCount =
+				await SaveAction(verificationResult, errorDeletion, updateLatestTestDate);
+
+			_issuesSaved = savedIssueCount >= 0;
+
+			return savedIssueCount;
+		}
+
 		public bool CanSaveIssues(IQualityVerificationResult verificationResult, out string reason)
 		{
 			if (verificationResult == null)
@@ -309,19 +325,30 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 			if (SaveAction == null)
 			{
-				reason = "Saving is not supported";
+				reason = "Storing issues in the model's issue datasets is not supported";
+				return false;
+			}
+
+			bool canUseProductionModelIssues = _workListOpener.CanUseProductionModelIssueSchema();
+
+			if (! canUseProductionModelIssues)
+			{
+				reason =
+					"Storing issues in the model's issue datasets is not enabled or the issue datasets are not registered in the data dictionary.";
 				return false;
 			}
 
 			if (_issuesSaved)
 			{
-				reason = "Issues have already been saved";
+				reason = "Issues have already been updated in the model's issue datasets";
 				return false;
 			}
 
 			bool result = verificationResult.CanSaveIssues;
 
-			reason = result ? null : "No issues have been collected";
+			reason = result
+				         ? "Replace existing issues in the model's issue datasets with the new issues found by this verification"
+				         : "No issues have been collected";
 
 			return result;
 		}

@@ -59,9 +59,9 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		return await WorkListItemDatastore.TryPrepareSchema();
 	}
 
-	public override void LoadAssociatedLayers()
+	public override void LoadAssociatedLayers(IWorkList worklist)
 	{
-		AddToMapCore(GetTablesCore());
+		AddToMapCore(GetTablesCore(), worklist);
 	}
 
 	public override bool IsSameWorkListDefinition(string existingDefinitionFilePath)
@@ -71,7 +71,7 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		return IsSameWorkListDefinition(existingDefinitionFilePath, suggestedWorkListName);
 	}
 
-	protected void AddToMapCore(IEnumerable<Table> tables)
+	protected void AddToMapCore(IEnumerable<Table> tables, IWorkList worklist)
 	{
 		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>();
 
@@ -116,6 +116,15 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 					symbol.Symbol.SetColor(new CIMRGBColor() { R = 250 });
 					featureLayer.SetRenderer(renderer);
 				}
+
+				// NOTE: Currently the tables are supposed to all reside in the same
+				//       workspace (which is certainly the case for Issue Worklists).
+				//       Therefore, we can use the table ID as a unique identifier.
+				IAttributeReader attributeReader = worklist.GetAttributeReader(table.GetID());
+
+				// NOTE: SetDisplyField is slow. In future the pr-prepared layers are stored and used.
+				//       They are not going to be created by code.
+				SetDisplayField(featureLayer, attributeReader.GetName(Attributes.IssueDescription));
 
 				continue;
 			}
@@ -206,7 +215,7 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		return WorkListItemDatastore.GetTables();
 	}
 
-	protected static bool IsSameWorkListDefinition(
+	private static bool IsSameWorkListDefinition(
 		[NotNull] string existingDefinitionFilePath,
 		[NotNull] string suggestedNewWorkListName)
 	{
@@ -216,5 +225,14 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		string existingFileName = Path.GetFileNameWithoutExtension(existingDefinitionFilePath);
 
 		return existingFileName.Equals(suggestedFileName);
+	}
+
+	private static void SetDisplayField(FeatureLayer layer, string name)
+	{
+		var definition = (CIMBasicFeatureLayer) layer.GetDefinition();
+
+		definition.FeatureTable.DisplayField = name;
+
+		layer.SetDefinition(definition);
 	}
 }
