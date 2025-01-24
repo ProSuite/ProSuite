@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
@@ -18,13 +19,23 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		private IDisposable _polygonPreviewOverlayAdd;
 		private IDisposable _polygonPreviewOverlayRemove;
 
-		private readonly CIMPointSymbol _openJawReplaceEndSymbol;
+		private CIMPointSymbol _openJawEndSymbol;
 		private readonly CIMPolygonSymbol _addAreaSymbol;
 		private readonly CIMPolygonSymbol _removeAreaSymbol;
+		private readonly ReshapeToolOptions _advancedReshapeToolOptions;
 
-		public AdvancedReshapeFeedback()
+		private MapPoint _lastDrawnOpenJawPoint;
+
+		public AdvancedReshapeFeedback(ReshapeToolOptions advancedReshapeToolOptions)
 		{
-			_openJawReplaceEndSymbol = CreateHollowCircle(0, 200, 255);
+			_advancedReshapeToolOptions = advancedReshapeToolOptions;
+			_advancedReshapeToolOptions.PropertyChanged += (sender, args) =>
+			{
+				if (args.PropertyName == nameof(ReshapeToolOptions.MoveOpenJawEndJunction))
+				{
+					QueuedTask.Run(() => UpdateOpenJawReplacedEndPoint(_lastDrawnOpenJawPoint));
+				}
+			};
 
 			_addAreaSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
 			_removeAreaSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
@@ -34,12 +45,19 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_openJawReplacedEndPointOverlay?.Dispose();
 
+			// Make openJawEndSymbol azure or celest blue, depending  on state of MoveOpenJawEndJunction
+			_openJawEndSymbol = _advancedReshapeToolOptions.MoveOpenJawEndJunction
+				                    ? CreateHollowCircle(0, 200, 255)
+				                    : CreateHollowCircle(0, 0, 200);
+
 			if (point != null)
 			{
 				_openJawReplacedEndPointOverlay =
 					MapView.Active.AddOverlay(
-						point, _openJawReplaceEndSymbol.MakeSymbolReference());
+						point, _openJawEndSymbol.MakeSymbolReference());
 			}
+
+			_lastDrawnOpenJawPoint = point;
 		}
 
 		public Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)

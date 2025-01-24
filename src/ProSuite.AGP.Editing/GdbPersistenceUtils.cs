@@ -122,9 +122,12 @@ namespace ProSuite.AGP.Editing
 		                               [NotNull] Geometry newGeometry,
 		                               [CanBeNull] ICollection<string> excludeFields = null)
 		{
-			using var featureClass = originalFeature.GetTable();
+			FeatureClass featureClass = originalFeature.GetTable();
 
-			RowBuffer rowBuffer = DuplicateRow(originalFeature, excludeFields);
+			// Un-join to prevent NotImplementedException:
+			FeatureClass targetTable = DatasetUtils.GetDatabaseFeatureClass(featureClass);
+
+			RowBuffer rowBuffer = CopyRow(originalFeature, targetTable, excludeFields);
 
 			using var classDefinition = featureClass.GetDefinition();
 			bool classHasZ = classDefinition.HasZ();
@@ -138,7 +141,7 @@ namespace ProSuite.AGP.Editing
 
 			SetShape(rowBuffer, projected, featureClass);
 
-			Feature newFeature = featureClass.CreateRow(rowBuffer);
+			Feature newFeature = targetTable.CreateRow(rowBuffer);
 
 			StoreShape(newFeature, projected, editContext);
 
@@ -504,42 +507,55 @@ namespace ProSuite.AGP.Editing
 			}
 		}
 
-		private static RowBuffer DuplicateRow(Row row, ICollection<string> excludeFields = null,
-		                                      bool includeShape = false)
+		private static RowBuffer CopyRow([NotNull] Row sourceRow,
+		                                 [NotNull] Table targetTable,
+		                                 [CanBeNull] ICollection<string> excludeFields = null,
+		                                 bool includeShape = false)
 		{
-			RowBuffer rowBuffer = row.GetTable().CreateRowBuffer();
+			Table sourceTable = sourceRow.GetTable();
 
-			CopyValues(row, rowBuffer, excludeFields, includeShape);
+			RowBuffer rowBuffer = sourceTable.CreateRowBuffer();
+
+			TableDefinition sourceTableDefinition = sourceTable.GetDefinition();
+
+			const bool includeReadOnlyFields = false;
+			bool searchJoinedFields = sourceTable.IsJoinedTable();
+
+			Predicate<Field> includeTargetField = f => excludeFields?.Contains(f.Name) != true;
+
+			IDictionary<int, int> copyIndexMatrix =
+				GdbObjectUtils.CreateMatchingIndexMatrix(
+					sourceTableDefinition, targetTable.GetDefinition(),
+					includeReadOnlyFields, searchJoinedFields,
+					includeTargetField);
+
+			CopyValues(sourceRow, rowBuffer, copyIndexMatrix, includeShape);
 
 			return rowBuffer;
 		}
 
-		private static void CopyValues(Row fromRow, RowBuffer toRowBuffer,
-									   ICollection<string> excludeFields = null,
-									   bool includeShape = false)
+		private static void CopyValues([NotNull] Row fromRow,
+		                               [NotNull] RowBuffer toRowBuffer,
+		                               [NotNull] IDictionary<int, int> copyIndexMatrix,
+		                               bool includeShape = false)
 		{
-			IReadOnlyList<Field> fields = fromRow.GetFields();
+			IReadOnlyList<Field> sourceFields = includeShape ? null : fromRow.GetFields();
 
-			for (int i = 0; i < fields.Count; i++)
+			foreach (int targetIndex in copyIndexMatrix.Keys)
 			{
-				Field field = fields[i];
+				int sourceIndex = copyIndexMatrix[targetIndex];
 
-				if (! field.IsEditable)
+				if (sourceIndex < 0)
 				{
 					continue;
 				}
 
-				if (field.FieldType == FieldType.Geometry && ! includeShape)
+				if (sourceFields?[sourceIndex].FieldType == FieldType.Geometry)
 				{
 					continue;
 				}
 
-				if (excludeFields != null && excludeFields.Contains(field.Name))
-				{
-					continue;
-				}
-
-				toRowBuffer[i] = fromRow[i];
+				toRowBuffer[targetIndex] = fromRow[sourceIndex];
 			}
 		}
 

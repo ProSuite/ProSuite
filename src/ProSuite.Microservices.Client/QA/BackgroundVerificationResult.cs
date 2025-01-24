@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
@@ -57,6 +58,8 @@ namespace ProSuite.Microservices.Client.QA
 
 		public bool CanSaveIssues => _resultIssueCollector != null && VerificationMsg != null;
 
+		public int IssuesSaved { get; private set; } = -1;
+
 		public int SaveIssues(ErrorDeletionInPerimeter errorDeletion)
 		{
 			Assert.NotNull(_resultIssueCollector).ErrorDeletionInPerimeter = errorDeletion;
@@ -85,6 +88,8 @@ namespace ProSuite.Microservices.Client.QA
 			int issueCount = await _resultIssueCollector.SaveIssuesAsync(verifiedConditions);
 
 			_msg.DebugStopTiming(watch, "Updated issues in verified context");
+
+			IssuesSaved = issueCount;
 
 			return issueCount;
 		}

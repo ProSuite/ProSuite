@@ -87,6 +87,8 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 		public string DdxEnvironmentName { get; protected set; }
 
+		public string DdxSchemaName => DefaultSchema;
+
 		/// <summary>
 		/// Builds the Configuration object from the specified configuration
 		/// </summary>

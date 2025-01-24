@@ -1,15 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Interop;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Internal.Mapping;
 using ArcGIS.Desktop.Mapping;
+using Microsoft.Win32.SafeHandles;
+using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -18,6 +24,8 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Input;
+using Point = System.Windows.Point;
 
 namespace ProSuite.AGP.Editing
 {
@@ -26,12 +34,103 @@ namespace ProSuite.AGP.Editing
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		// todo daro rename CreateCursor
 		[NotNull]
 		public static Cursor GetCursor([NotNull] byte[] bytes)
 		{
 			Assert.ArgumentNotNull(bytes, nameof(bytes));
 
 			return new Cursor(new MemoryStream(bytes));
+		}
+
+		public static Cursor CreateCursor(byte[] baseImage,
+		                                  byte[] overlay1 = null,
+		                                  int xHotspot = 0,
+		                                  int yHotspot = 0)
+		{
+			return CreateCursor(baseImage, overlay1, overlay2: null, overlay3: null, xHotspot, yHotspot);
+		}
+
+		public static Cursor CreateCursor(byte[] baseImage,
+		                                  byte[] overlay1 = null,
+		                                  byte[] overlay2 = null,
+		                                  byte[] overlay3 = null,
+		                                  int xHotspot = 0,
+		                                  int yHotspot = 0)
+		{
+			var result = new Bitmap(32, 32);
+			var destinationRectangle = new Rectangle(0, 0, 32, 32);
+
+			using (var graphic = Graphics.FromImage(result))
+			{
+				graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
+
+				graphic.DrawImage(CreateImage(baseImage), destinationRectangle);
+
+				if (overlay1 != null)
+				{
+					graphic.DrawImage(CreateImage(overlay1), destinationRectangle);
+				}
+
+				if (overlay2 != null)
+				{
+					graphic.DrawImage(CreateImage(overlay2), destinationRectangle);
+				}
+
+				if (overlay3 != null)
+				{
+					graphic.DrawImage(CreateImage(overlay3), destinationRectangle);
+				}
+			}
+
+			var icon = new IconInfo();
+			GetIconInfo(result.GetHicon(), ref icon);
+			icon.xHotspot = xHotspot;
+			icon.yHotspot = yHotspot;
+			icon.fIcon = false;
+
+			nint ptr = CreateIconIndirect(ref icon);
+
+			return CursorInteropHelper.Create(new SafeIconHandle(ptr, true));
+		}
+
+		private static Image CreateImage(byte[] resource)
+		{
+			using var stream = new MemoryStream(resource);
+			return Image.FromStream(stream);
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		private struct IconInfo
+		{
+			public bool fIcon;
+			public int xHotspot;
+			public int yHotspot;
+			public readonly nint hbmMask;
+			public readonly nint hbmColor;
+		}
+
+		[DllImport("user32.dll")]
+		private static extern nint CreateIconIndirect(ref IconInfo icon);
+
+		[DllImport("user32.dll")]
+		private static extern bool GetIconInfo(nint handle, ref IconInfo pIconInfo);
+
+		private class SafeIconHandle : SafeHandleZeroOrMinusOneIsInvalid
+		{
+			public SafeIconHandle(nint hIcon, bool ownsHandle) : base(ownsHandle)
+			{
+				SetHandle(hIcon);
+			}
+
+			[DllImport("user32.dll", SetLastError = true)]
+			[return: MarshalAs(UnmanagedType.Bool)]
+			private static extern bool DestroyIcon([In] nint hIcon);
+
+			protected override bool ReleaseHandle()
+			{
+				return DestroyIcon(handle);
+			}
 		}
 
 		public static string GetDisabledReasonNoGeometryMicroservice()
@@ -44,25 +143,10 @@ namespace ProSuite.AGP.Editing
 		/// Determines whether the sketch geometry is a single click.
 		/// </summary>
 		/// <param name="sketchGeometry">The sketch geometry</param>
-		/// <param name="selectionTolerancePixels">The selection tolerance. If the provided sketch
-		/// geometry (envelope) is smaller than this value, it is assumed to be a single click.
-		/// NOTE: Newer laptops have probably such a high pixel density, that the selection settings
-		/// should not be a fixed pixel count but specified in mm and then calculated.</param>
 		/// <returns></returns>
-		public static bool IsSingleClickSketch([NotNull] Geometry sketchGeometry,
-		                                       int selectionTolerancePixels)
+		public static bool IsSingleClickSketch([NotNull] Geometry sketchGeometry)
 		{
-			_msg.VerboseDebug(() => $"Sketch width: {sketchGeometry.Extent.Width}, " +
-			                        $"sketch height: {sketchGeometry.Extent.Height}");
-
-			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
-				MapView.Active, selectionTolerancePixels, sketchGeometry.Extent.Center);
-
-			_msg.VerboseDebug(
-				() => $"Selection tolerance in map units: {selectionToleranceMapUnits}");
-
-			return sketchGeometry.Extent.Width <= selectionToleranceMapUnits &&
-			       sketchGeometry.Extent.Height <= selectionToleranceMapUnits;
+			return PickerUtils.IsSingleClick(sketchGeometry);
 		}
 
 		public static Geometry GetSinglePickSelectionArea([NotNull] Geometry sketchGeometry,
@@ -77,11 +161,14 @@ namespace ProSuite.AGP.Editing
 		                                              int selectionTolerancePixels,
 		                                              out bool singleClick)
 		{
-			singleClick = IsSingleClickSketch(sketch, selectionTolerancePixels);
+			singleClick = IsSingleClickSketch(sketch);
 
 			if (singleClick)
 			{
-				sketch = GetSinglePickSelectionArea(sketch, selectionTolerancePixels);
+				Assert.True(sketch.IsEmpty, "no simple single click sketch");
+				Point mouseScreenPosition = MouseUtils.GetMouseScreenPosition();
+				MapPoint mouseMapPosition = MapView.Active.ScreenToMap(mouseScreenPosition);
+				sketch = GetSinglePickSelectionArea(mouseMapPosition, selectionTolerancePixels);
 			}
 
 			return sketch;
@@ -228,8 +315,7 @@ namespace ProSuite.AGP.Editing
 			var editableClassHandles = new HashSet<long>();
 
 			IEnumerable<BasicFeatureLayer> editableFeatureLayers =
-				MapUtils.GetFeatureLayers<BasicFeatureLayer>(
-					mapView.Map, bfl => bfl?.IsEditable == true);
+				MapUtils.GetEditableLayers<BasicFeatureLayer>(mapView.Map);
 
 			foreach (var featureLayer in editableFeatureLayers)
 			{

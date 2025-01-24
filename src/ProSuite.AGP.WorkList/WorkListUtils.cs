@@ -101,10 +101,10 @@ namespace ProSuite.AGP.WorkList
 
 			IWorkItemRepository repository;
 
-			var sourceClasses = new List<Tuple<Table, string>>();
-
-			if (type == typeof(IssueWorkList))
+			if (typeof(DbStatusWorkList).IsAssignableFrom(type))
 			{
+				var dbSourceClassDefinitions = new List<DbStatusSourceClassDefinition>();
+
 				// Issue source classes: table/definition query pairs
 				foreach (XmlWorkListWorkspace xmlWorkspace in xmlWorkListDefinition.Workspaces)
 				{
@@ -118,14 +118,38 @@ namespace ProSuite.AGP.WorkList
 							continue;
 						}
 
-						// TODO: Get Status Schema from XML too
-						sourceClasses.Add(
-							new Tuple<Table, string>(table, tableReference.DefinitionQuery));
+						string statusField = tableReference.StatusFieldName;
+						int todoValue = tableReference.StatusValueTodo;
+						int doneValue = tableReference.StatusValueDone;
+
+						if (string.IsNullOrEmpty(statusField))
+						{
+							// Issue-FileGdb uses hard-coded status field name,
+							// but other models do not.
+							const string legacyStatusField = "STATUS";
+							statusField = legacyStatusField;
+						}
+
+						int statusFieldIndex = table.GetDefinition().FindField(statusField);
+
+						if (statusFieldIndex == -1)
+						{
+							_msg.WarnFormat("Status field {0} not found in {1}", statusField,
+							                table.GetName());
+						}
+
+						WorkListStatusSchema statusSchema = new WorkListStatusSchema(
+							statusField, statusFieldIndex, todoValue, doneValue);
+
+						var sourceClassDefinition = new DbStatusSourceClassDefinition(
+							table, tableReference.DefinitionQuery, statusSchema);
+
+						dbSourceClassDefinitions.Add(sourceClassDefinition);
 					}
 				}
 
 				repository =
-					new IssueItemRepository(sourceClasses, stateRepository);
+					new DbStatusWorkItemRepository(dbSourceClassDefinitions, stateRepository);
 			}
 			else if (type == typeof(SelectionWorkList))
 			{
@@ -221,7 +245,8 @@ namespace ProSuite.AGP.WorkList
 			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
 			List<XmlWorkListWorkspace> workspaces = definition.Workspaces;
 
-			Assert.True(workspaces.Count > 0, $"no workspaces in {worklistDefinitionFile}");
+			Assert.True(workspaces.Count > 0,
+			            $"No workspaces referenced in {worklistDefinitionFile}. The work list might be empty.");
 
 			string result = workspaces[0].ConnectionString;
 
@@ -288,7 +313,8 @@ namespace ProSuite.AGP.WorkList
 			var layerParams = new FeatureLayerCreationParams(featureClass)
 			                  {
 				                  IsVisible = true,
-				                  Name = alias
+				                  Name = alias,
+				                  MapMemberPosition = MapMemberPosition.AddToTop
 			                  };
 
 			// todo daro: apply renderer here from template
@@ -371,7 +397,7 @@ namespace ProSuite.AGP.WorkList
 			string filePath = xmlWorkListDefinition.Path;
 			int currentIndex = xmlWorkListDefinition.CurrentIndex;
 
-			if (type == typeof(IssueWorkList))
+			if (typeof(DbStatusWorkList).IsAssignableFrom(type))
 			{
 				return new XmlWorkItemStateRepository(filePath, name, type, currentIndex);
 			}
@@ -399,6 +425,11 @@ namespace ProSuite.AGP.WorkList
 				                                   new Dictionary<Table, List<long>>(),
 				                                   itemStateRepository);
 			}
+
+			// TODO (EMA):
+			_msg.Warn($"Unknown work list type: {type.Name}. Using Issue work list");
+			return new IssueItemRepository(new List<Tuple<Table, string>>(0),
+			                               itemStateRepository);
 
 			throw new ArgumentException($"Unknown work list type: {type.Name}");
 		}

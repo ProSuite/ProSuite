@@ -265,6 +265,27 @@ namespace ProSuite.DomainModel.Core.QA
 
 			domainTransactions.Reattach(attachableDatasets);
 
+			foreach (IDatasetCollection collectionDataset in attachableDatasets.Where(
+				         d => d is IDatasetCollection).Cast<IDatasetCollection>())
+			{
+				foreach (var containedDataset in collectionDataset.ContainedDatasets)
+				{
+					Dataset dataset = containedDataset as Dataset;
+
+					DatasetType? datasetType = dataset?.DatasetType;
+					if (datasetType != null && datasetType != DatasetType.Null)
+					{
+						domainTransactions.Reattach(dataset);
+
+						if (dataset is ObjectDataset objectDataset)
+						{
+							// Prevent LazyInitializationException when accessing Attributes to get OID field:
+							domainTransactions.Initialize(objectDataset.Attributes);
+						}
+					}
+				}
+			}
+
 			_msg.DebugStopTiming(
 				watch, "Conditions with {0} datasets loaded and reattached ({1} datasets(s))",
 				datasets.Count, attachableDatasets.Count);

@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -61,7 +62,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
 		{
-			SetupRectangleSketch();
+			SetupSketch();
+
+			SketchType = SketchGeometryType.Rectangle;
 
 			return base.OnToolActivatedCore(hasMapViewChanged);
 		}
@@ -92,7 +95,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			await QueuedTask.Run(() =>
 			{
 				isSingleClickSketch =
-					ToolUtils.IsSingleClickSketch(sketchGeometry, GetSelectionTolerancePixels());
+					ToolUtils.IsSingleClickSketch(sketchGeometry);
 			});
 
 			if (isSingleClickSketch)

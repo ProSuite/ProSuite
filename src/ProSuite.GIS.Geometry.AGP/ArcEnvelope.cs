@@ -1,6 +1,7 @@
 using System;
 using ArcGIS.Core.Geometry;
 using ProSuite.GIS.Geometry.API;
+using Envelope = ArcGIS.Core.Geometry.Envelope;
 
 namespace ProSuite.GIS.Geometry.AGP
 {
@@ -23,7 +24,9 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public ISpatialReference SpatialReference
 		{
-			get => new ArcSpatialReference(_proEnvelope.SpatialReference);
+			get => _proEnvelope.SpatialReference == null
+				       ? null
+				       : new ArcSpatialReference(_proEnvelope.SpatialReference);
 			set => throw new NotImplementedException();
 		}
 
@@ -44,11 +47,13 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public IEnvelope Envelope => new ArcEnvelope(_proEnvelope.Extent);
 
-		public void Project(ISpatialReference newReferenceSystem)
+		public IGeometry Project(ISpatialReference newReferenceSystem)
 		{
 			var newProSpatialRef = ((ArcSpatialReference) newReferenceSystem).ProSpatialReference;
+			var proResultEnvelope =
+				(Envelope) GeometryEngine.Instance.Project(_proEnvelope, newProSpatialRef);
 
-			GeometryEngine.Instance.Project(_proEnvelope, newProSpatialRef);
+			return new ArcEnvelope(proResultEnvelope);
 		}
 
 		public void SnapToSpatialReference()
@@ -71,6 +76,8 @@ namespace ProSuite.GIS.Geometry.AGP
 			Envelope clone = (Envelope) _proEnvelope.Clone();
 			return new ArcEnvelope(clone);
 		}
+
+		public object NativeImplementation => ProEnvelope;
 
 		#endregion
 
@@ -96,6 +103,7 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public IPoint LowerLeft
 		{
+			// TODO: Z/M?
 			get => new ArcPoint(MapPointBuilderEx.CreateMapPoint(
 				                    _proEnvelope.XMin, _proEnvelope.YMin,
 				                    _proEnvelope.SpatialReference));
@@ -174,9 +182,9 @@ namespace ProSuite.GIS.Geometry.AGP
 			set => throw new NotImplementedException();
 		}
 
-		public void Union(IEnvelope inEnvelope)
+		public void Union(IEnvelope other)
 		{
-			var aoEnvelope = ((ArcEnvelope) inEnvelope).ProEnvelope;
+			var aoEnvelope = ((ArcEnvelope) other).ProEnvelope;
 
 			Envelope result = _proEnvelope.Union(aoEnvelope);
 

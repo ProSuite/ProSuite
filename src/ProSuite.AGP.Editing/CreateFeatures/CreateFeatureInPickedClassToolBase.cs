@@ -5,12 +5,11 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
-using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -18,7 +17,6 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.CreateFeatures;
 
@@ -32,17 +30,31 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		return null;
 	}
 
-	protected CreateFeatureInPickedClassToolBase(SketchGeometryType selectionSketchGeometryType) : base(
-		selectionSketchGeometryType) { }
-
-	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch(
-		SketchGeometryType selectionSketchGeometryType)
+	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
-		return new SymbolizedSketchTypeBasedOnSelection(this, selectionSketchGeometryType);
+		return new SymbolizedSketchTypeBasedOnSelection(this);
 	}
 
-	protected override Cursor SelectionCursorCore =>
-		ToolUtils.GetCursor(Resources.CreateFeatureInPickedClassCursor);
+	protected override Cursor GetSelectionCursor()
+	{
+		return ToolUtils.CreateCursor(Resources.Arrow,
+		                              Resources.CreateFeatureInPickedClassOverlay,
+									  null);
+	}
+
+	protected override Cursor GetSelectionCursorLasso()
+	{
+		return ToolUtils.CreateCursor(Resources.Arrow,
+		                              Resources.CreateFeatureInPickedClassOverlay,
+		                              Resources.Lasso);
+	}
+
+	protected override Cursor GetSelectionCursorPolygon()
+	{
+		return ToolUtils.CreateCursor(Resources.Arrow,
+		                              Resources.CreateFeatureInPickedClassOverlay,
+		                              Resources.Polygon);
+	}
 
 	protected override bool AllowMultiSelection(out string reason)
 	{
@@ -169,6 +181,35 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 	protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
 	{
 		return layer is FeatureLayer;
+	}
+
+	protected override void StartConstructionPhaseCore()
+	{
+		if (QueuedTask.OnWorker)
+		{
+			ResetSketchVertexSymbolOptions();
+		}
+		else
+		{
+			QueuedTask.Run(ResetSketchVertexSymbolOptions);
+		}
+	}
+
+	protected override void StartSelectionPhaseCore()
+	{
+		if (QueuedTask.OnWorker)
+		{
+			SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+			SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+		}
+		else
+		{
+			QueuedTask.Run(() =>
+			{
+				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+			});
+		}
 	}
 
 	private async Task StoreNewFeature([NotNull] BasicFeatureLayer featureLayer,

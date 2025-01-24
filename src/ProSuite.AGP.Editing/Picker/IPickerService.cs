@@ -1,16 +1,11 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ProSuite.AGP.Editing.PickerUI;
 
 namespace ProSuite.AGP.Editing.Picker
 {
 	public interface IPickerService
 	{
-		Task<T> Pick<T>(List<IPickableItem> items,
-		                IPickerPrecedence precedence)
-			where T : class, IPickableItem;
-
-		Task<T> PickSingle<T>(IEnumerable<IPickableItem> items,
-		                      IPickerPrecedence precedence)
-			where T : class, IPickableItem;
+		Task<IPickableItem> Pick(List<IPickableItem> items, IPickerViewModel viewModel);
 	}
 }

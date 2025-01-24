@@ -22,6 +22,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private string _path;
 		private IWorkList _workList;
 		private IReadOnlyList<string> _tableNames;
 
@@ -38,19 +39,19 @@ namespace ProSuite.AGP.WorkList.Datasource
 				// prepended with the project file's directory path and
 				// two times URL encoded (e.g., ' ' => %20 => %2520)!
 
-				var path = connectionPath.IsAbsoluteUri
-					           ? connectionPath.LocalPath
-					           : connectionPath.ToString();
+				_path = connectionPath.IsAbsoluteUri
+					        ? connectionPath.LocalPath
+					        : connectionPath.ToString();
 
-				path = HttpUtility.UrlDecode(path);
-				path = HttpUtility.UrlDecode(path);
+				_path = HttpUtility.UrlDecode(_path);
+				_path = HttpUtility.UrlDecode(_path);
 
-				if (! File.Exists(path))
+				if (! File.Exists(_path))
 				{
-					_msg.Debug($"{path} does not exists");
+					_msg.Debug($"{_path} does not exists");
 				}
 
-				string name = WorkListUtils.GetWorklistName(path);
+				string name = WorkListUtils.GetWorklistName(_path);
 
 				// the following situation: when work list layer is already in TOC
 				// and its data source (work list definition file) is renamed
@@ -79,30 +80,44 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			WorkItemTable result = null;
 			Try(() =>
-			{
-				Assert.ArgumentNotNull(name, nameof(name));
+			    {
+				    Assert.ArgumentNotNull(name, nameof(name));
 
-				// The given name is one of those returned by GetTableNames()
-				_msg.Debug($"Open table '{name}'");
+				    // The given name is one of those returned by GetTableNames()
+				    _msg.Debug($"Open table '{name}'");
 
-				ParseTableName(name, out string listName);
+				    ParseTableName(name, out string listName);
 
-				_workList = WorkListRegistry.Instance.Get(name);
+				    _workList = WorkListRegistry.Instance.Get(name);
 
-				if (_workList != null)
-				{
-					result = new WorkItemTable(_workList, listName);
-				}
-				else
-				{
-					var message = $"Cannot find data source of work list: {name}";
+				    if (_workList == null &&
+				        ! _path.EndsWith("swl") && ! _path.EndsWith("iwl"))
+				    {
+					    // Work lists not registered as project items. Auto-register (consider always?):
+					    var xmlBasedWorkListFactory = new XmlBasedWorkListFactory(_path, name);
+					    WorkListRegistry.Instance.TryAdd(xmlBasedWorkListFactory);
+					    _workList = xmlBasedWorkListFactory.Get();
+				    }
 
-					// The exception is not going to crash Pro. Or is it?
-					// It might depend on the application state.
-					// It results in a broken data source of the work list layer.
-					_msg.Warn(message);
-				}
-			}, $"Error opening work list {name}");
+				    if (_workList != null)
+				    {
+					    result = new WorkItemTable(_workList, listName);
+				    }
+				    else
+				    {
+					    // TODO: Can we just auto-register?
+					    string fileName = Path.GetFileName(_path);
+					    var message =
+						    $"Cannot find data source of work list {fileName}. It is likely not part of the Work List project items.";
+
+					    // The exception is not going to crash Pro. Or is it?
+					    // It might depend on the application state.
+					    // It results in a broken data source of the work list layer.
+					    _msg.Warn(message);
+					    _msg.DebugFormat("File location: {0}. Work list unique name: {1}",
+					                     _path, name);
+				    }
+			    }, $"Error opening work list {name}");
 
 			return result;
 		}

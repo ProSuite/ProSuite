@@ -74,6 +74,12 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
+		<Reference Include="ArcGIS.Desktop.Layouts">
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Layouts\ArcGIS.Desktop.Layouts.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+
   </ItemGroup>
 
   <ItemGroup>
@@ -122,25 +128,15 @@
     <Resource Include="PickerUI\Images\PointGeometry.bmp" />
     <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />
     <Resource Include="PickerUI\Images\MultipatchGeometry.bmp" />
-    <None Include="Properties\Images\AdvancedReshapeToolCursor.cur" />
-    <None Include="Properties\Images\AdvancedReshapeToolCursorShift.cur" />
-    <None Include="Properties\Images\CutPolygonAlongToolCursor.cur" />
-    <None Include="Properties\Images\CutPolygonAlongToolCursorProcess.cur" />
-    <None Include="Properties\Images\CutPolygonAlongToolCursorShift.cur" />
     <Content Include="Properties\Images\EditSketchCrosshair.cur" />
-    <None Include="Properties\Images\PolygonDrawerCursor.cur" />
-    <Content Include="Properties\Images\RemoveOverlapsToolCursor.cur" />
-    <Content Include="Properties\Images\RemoveOverlapsToolCursorProcess.cur" />
-    <Content Include="Properties\Images\RemoveOverlapsToolCursorShift.cur" />
-    <None Include="Properties\Images\ReshapeAlongToolCursor.cur" />
-    <None Include="Properties\Images\ReshapeAlongToolCursorProcess.cur" />
-    <None Include="Properties\Images\ReshapeAlongToolCursorShift.cur" />
-    <None Include="Properties\Images\ReshapeAlongToolCursorProcessShift.cur" />
-    <Content Include="Properties\Images\SelectionToolNormal.cur" />
-    <Content Include="Properties\Images\SelectionToolNormalShift.cur" />
-    <Content Include="Properties\Images\SelectionToolOriginal.cur" />
-    <Content Include="Properties\Images\SelectionToolOriginalShift.cur" />
-    <Content Include="Properties\Images\SelectionToolUser.cur" />
-    <Content Include="Properties\Images\SelectionToolUserShift.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Chopper\DockpaneChopper.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Cracker\DockpaneCracker.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="RemoveOverlaps\DockpaneRemoveOverlaps.xaml"/>
   </ItemGroup>
 </Project>

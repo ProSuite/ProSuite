@@ -8,6 +8,8 @@
     <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
 
+		<ArcGISProVersion Condition=" '$(ArcGISProVersion)' == '' ">3.0</ArcGISProVersion>
+
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -24,10 +26,18 @@
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
+    <DefineConstants>DEBUG;TRACE;$(ArcGISProVersion)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
+    <DefineConstants>DEBUG;TRACE;$(ArcGISProVersion)</DefineConstants>
   </PropertyGroup>
+
+  <!-- Exclude file from legacy ArcGIS Pro versions. -->
+  <ItemGroup Condition=" '$(ArcGISProVersion)' &lt; 3.3 ">
+    <Compile Remove="Framework\Controls\ToolStripCommandWrapperButton.cs" />
+    <Compile Remove="Framework\Controls\ToolStripCommandWrapperButton.Designer.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="ArcGIS.Core">
@@ -74,6 +84,8 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
   </ItemGroup>
 
+
+
   <ItemGroup>
     <Resource Include="Images\LayerMaskingOff16.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -109,6 +121,9 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\SymbolLayerDrawingOn32.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\SymbolLayerDrawingUnknown32.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

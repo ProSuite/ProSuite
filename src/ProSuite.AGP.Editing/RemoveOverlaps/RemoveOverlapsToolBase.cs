@@ -4,9 +4,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
@@ -24,7 +26,6 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Text;
-using static System.Environment;
 
 namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
@@ -42,10 +43,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected RemoveOverlapsToolBase()
 		{
 			GeomIsSimpleAsFeature = false;
-
-			SelectionCursor = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursorShift);
-			SecondPhaseCursor = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursorProcess);
 		}
 
 		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
@@ -53,8 +50,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
-		protected virtual string LocalConfigDir =>
-			EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(AppDataFolder.Roaming);
+		/// <summary>
+		/// By default, the local configuration directory shall be in
+		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// </summary>
+		protected virtual string LocalConfigDir
+			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				AppDataFolder.Roaming, "ToolDefaults");
 
 		protected abstract IRemoveOverlapsService MicroserviceClient { get; }
 
@@ -66,17 +68,22 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			InitializeOptions();
 
 			_feedback = new RemoveOverlapsFeedback();
+
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+
+			_settingsProvider?.StoreLocalConfiguration(_removeOverlapsToolOptions.LocalOptions);
+			HideOptionsPane();
 		}
 
 		protected override void LogPromptForSelection()
@@ -241,7 +248,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			if (_overlaps != null && _overlaps.Notifications.Count > 0)
 			{
-				_msg.Info(_overlaps.Notifications.Concatenate(NewLine));
+				_msg.Info(_overlaps.Notifications.Concatenate(Environment.NewLine));
 
 				if (! _overlaps.HasOverlaps())
 				{
@@ -385,7 +392,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			_removeOverlapsToolOptions = new RemoveOverlapsOptions(centralConfiguration,
 				localConfiguration);
 
-			_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
+			_msg.DebugStopTiming(watch, "Remove Overlap Tool Options validated / initialized");
 
 			string optionsMessage = _removeOverlapsToolOptions.GetLocalOverridesMessage();
 
@@ -396,6 +403,36 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			return _removeOverlapsToolOptions;
 		}
+
+		#region Tool Options Dockpane
+
+		private DockpaneRemoveOverlapsViewModelBase GetViewViewModel()
+		{
+			var viewModel = FrameworkApplication.DockPaneManager.Find(
+					                "Swisstopo_GoTop_AddIn_EditTools_RemoveOverlaps") as
+				                DockpaneRemoveOverlapsViewModelBase;
+
+			return Assert.NotNull(viewModel);
+		}
+
+		protected override void ShowOptionsPane()
+		{
+			DockpaneRemoveOverlapsViewModelBase viewModel = GetViewViewModel();
+
+			Assert.NotNull(viewModel);
+
+			viewModel.Options = _removeOverlapsToolOptions;
+
+			viewModel.Activate(true);
+		}
+
+		protected override void HideOptionsPane()
+		{
+			DockpaneRemoveOverlapsViewModelBase viewModel = GetViewViewModel();
+			viewModel?.Hide();
+		}
+
+		#endregion
 
 		#region Search target features
 
@@ -476,6 +513,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				return true;
 			}
 
+			if (featureClass.GetDataConnection() is CIMStandardDataConnection connection &&
+			    connection.WorkspaceFactory == WorkspaceFactory.Custom)
+			{
+				// Exclude Plug-in data sources:
+				return true;
+			}
+
 			string className = featureClass.GetName();
 
 			foreach (string ignoredClass in ignoredClasses)
@@ -487,6 +531,71 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			}
 
 			return false;
+		}
+
+		#endregion
+
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveOverlapslOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
+		}
+
+		#region second phase cursors
+
+		protected override Cursor GetSecondPhaseCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay, 10,
+			                              10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			                              Resources.Lasso, null, 10, 10);
+		}
+
+		protected override Cursor GetSecondPhaseCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			                              Resources.Polygon, null, 10, 10);
 		}
 
 		#endregion

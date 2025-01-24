@@ -4,6 +4,7 @@ using System.Linq;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -11,15 +12,23 @@ namespace ProSuite.Commons.AGP.Carto;
 
 public interface IMapWhiteSelection
 {
-	Map Map { get; } // the map to which this white selection belongs
+	/// <summary>The map to which this white selection belongs</summary>
+	Map Map { get; }
 
-	bool IsEmpty { get; } // true iff no involved features (regardless of vertices)
-	bool Select(MapPoint clickPont, double tolerance, SetCombineMethod method);
-	bool Select(Geometry geometry, SetCombineMethod method);
+	/// <returns>true iff no involved features (regardless of vertices)</returns>
+	bool IsEmpty { get; }
+
+	bool Select(MapPoint clickPont, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates);
+	bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates);
 	int Remove(FeatureLayer layer, IEnumerable<long> oids);
 	bool SetEmpty();
 
-	bool HitTestVertex(MapPoint point, double tolerance, out MapPoint vertex);
+	bool HitTestVertex(MapPoint point, double tolerance, out MapPoint vertex); // TODO rename ~Selected~
+
+	MapPoint NearestPoint(MapPoint clickPoint, double tolerance,
+	                      out FeatureLayer layer, out long oid, out int partIndex,
+	                      out int? segmentIndex, out int? vertexIndex);
+
 	IEnumerable<IWhiteSelection> GetLayerSelections();
 	IWhiteSelection GetLayerSelection(FeatureLayer layer);
 
@@ -73,6 +82,86 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		return false;
 	}
 
+	//public MapPoint NearestVertex(MapPoint point,
+	//                          out int partIndex, out int vertexIndex, out bool isSelected)
+	//{
+	//	var all = GetLayerSelections();
+
+	//	foreach (var ws in all)
+	//	{
+	//		if (ws.HitTestVertex(point, tolerance, out vertex,
+	//		                     out partIndex, out vertexIndex, out isSelected))
+	//		{
+	//			return true;
+	//		}
+	//	}
+
+	//	vertex = null;
+
+	//}
+
+	public MapPoint NearestPoint(MapPoint clickPoint, double tolerance,
+	                             out FeatureLayer layer, out long oid, out int partIndex,
+	                             out int? segmentIndex, out int? vertexIndex)
+	{
+		var all = GetLayerSelections();
+
+		var minDistance = double.MaxValue;
+		FeatureLayer minLayer = null;
+		long minOid = -1;
+		int minPartIndex = -1;
+		int? minSegIndex = null;
+		int? minVertIndex = null;
+		MapPoint minPoint = null;
+
+		// - find the closest point within tolerance
+		// - vertex within tolerance wins over an even closer segment
+
+		foreach (var ws in all)
+		{
+			foreach (var involvedOid in ws.GetInvolvedOIDs())
+			{
+				var ss = ws.GetShapeSelection(involvedOid) ?? throw new AssertionException();
+
+				var proximity = GeometryEngine.Instance.NearestVertex(ss.Shape, clickPoint);
+				if (proximity is null || ! (proximity.Distance <= tolerance)) continue;
+
+				if (proximity.Distance < minDistance)
+				{
+					minDistance = proximity.Distance;
+					minLayer = ws.Layer;
+					minOid = involvedOid;
+					minPartIndex = proximity.PartIndex;
+					minVertIndex = proximity.PointIndex ?? throw new AssertionException();
+					minPoint = proximity.Point;
+				}
+			}
+		}
+
+		if (minPoint is null)
+		{
+			// No *vertex* was within tolerance of the given clickPoint:
+			// make a 2nd round looking for the nearest *segment* instead:
+
+			// TODO
+		}
+
+		layer = minLayer;
+		oid = minOid;
+		partIndex = minPartIndex;
+		segmentIndex = minSegIndex;
+		vertexIndex = minVertIndex;
+		return minPoint;
+	}
+
+	private static double DistanceSquared(MapPoint a, MapPoint b)
+	{
+		if (a is null || b is null) return double.NaN;
+		var dx = a.X - b.X;
+		var dy = a.Y - b.Y;
+		return dx * dx + dy * dy;
+	}
+
 	public IEnumerable<IWhiteSelection> GetLayerSelections()
 	{
 		return _layerSelections.Values;
@@ -123,10 +212,12 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 	}
 
 	/// <returns>true iff the selection changed</returns>
-	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
-	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method)
+	/// <remarks>Must call on MCT</remarks>
+	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
 	{
-		// TODO Consider new behavior: if click on vertex of involved feature, operate on this vertex alone; otherwise behave as below:
+		//var extent = clickPoint.Extent.Expand(tolerance, tolerance, false);
+		//var dict = GetFeatures(extent);
+		var dict = candidates;
 
 		var changed = false;
 
@@ -135,10 +226,6 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 			changed = SetEmpty();
 			method = SetCombineMethod.Add;
 		}
-
-		var extent = clickPoint.Extent.Expand(tolerance, tolerance, false);
-
-		var dict = GetFeatures(_mapView, extent);
 
 		foreach (var pair in dict)
 		{
@@ -187,9 +274,12 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		{
 			vertexTouched = true;
 
-			var vertexIndex = proximity.PointIndex ??
+			var globalIndex = proximity.PointIndex ??
 			                  throw new InvalidOperationException(
 				                  "NearestVertex() must return non-null PointIndex");
+
+			var localIndex = GeometryUtils.GetLocalVertexIndex(shape, globalIndex, out _);
+			// assert: proximity.PartIndex == partIndex (out param from GetLocalVertexIndex)
 
 			if (shape is Multipoint)
 			{
@@ -198,7 +288,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 				                "Expect partIndex == vertexIndex for multipoint");
 			}
 
-			return selection.Combine(oid, proximity.PartIndex, vertexIndex, method);
+			return selection.Combine(oid, proximity.PartIndex, localIndex, method);
 		}
 
 		vertexTouched = false;
@@ -207,8 +297,11 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
-	public bool Select(Geometry geometry, SetCombineMethod method)
+	public bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
 	{
+		//var dict = GetFeatures(geometry);
+		var dict = candidates;
+
 		var changed = false;
 
 		if (method == SetCombineMethod.New)
@@ -216,8 +309,6 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 			changed = SetEmpty();
 			method = SetCombineMethod.Add;
 		}
-
-		var dict = GetFeatures(_mapView, geometry);
 
 		foreach (var pair in dict)
 		{
@@ -330,10 +421,9 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		return changed;
 	}
 
-	private Dictionary<FeatureLayer, List<long>> GetFeatures(MapView mapView, Geometry geometry)
+	/// <remarks>Must call on MCT</remarks>
+	private Dictionary<FeatureLayer, List<long>> GetFeatures(Geometry geometry)
 	{
-		if (mapView is null)
-			throw new ArgumentNullException(nameof(mapView));
 		if (geometry is null || geometry.IsEmpty)
 			return new Dictionary<FeatureLayer, List<long>>(0);
 
@@ -347,24 +437,9 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		// - Could use our own code to select (see SelectionTool)
 		// - Bug: does not find all features if the symbol has an Offset effect (K2#38)
 
-		var selectionSet = mapView.GetFeatures(geometry);
+		var selectionSet = _mapView.GetFeatures(geometry);
 		//var selectionSet = mapView.GetFeaturesEx(geometry);
 		return selectionSet.ToDictionary<FeatureLayer>();
-	}
-
-	/// <remarks>Must call on MCT</remarks>
-	private static void UpdateRegularSelection(IWhiteSelection selection, long[] involvedOids)
-	{
-		var selectedOids = involvedOids.Where(oid => ! (selection.GetShapeSelection(oid)?.IsEmpty ?? true));
-		var unselectedOids = involvedOids.Where(oid => selection.GetShapeSelection(oid)?.IsEmpty ?? false);
-
-		var regular = selection.Layer.GetSelection();
-
-		regular.Add(selectedOids);
-		regular.Remove(unselectedOids);
-
-		// The above has no effect on the map until we layer.SetSelection():
-		selection.Layer.SetSelection(regular);
 	}
 
 	/// <returns>true iff the selection changed (was not already empty)</returns>
@@ -446,6 +521,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 	/// Select on the Map exactly those features that are involved
 	/// in this white selection (regardless of selected vertices).
 	/// </summary>
+	/// <remarks>Must call on MCT</remarks>
 	public void UpdateRegularSelection()
 	{
 		var dict = GetLayerSelections()

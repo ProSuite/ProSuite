@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -91,13 +90,13 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			return SketchGeometryType.Rectangle;
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override Task OnToolActivatingCoreAsync()
 		{
 			_targetFeatureClass = GetCurrentTargetClass(out _);
 
 			ActiveTemplateChangedEvent.Subscribe(OnActiveTemplateChanged);
 
-			base.OnToolActivatingCore();
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
@@ -118,6 +117,27 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			_msg.InfoFormat(
 				"Draw one or more points. Finish the sketch to create the individual point features in '{0}'.",
 				layerName);
+		}
+
+		protected override async Task HandleEscapeAsync()
+		{
+			try
+			{
+				Geometry sketch = await GetCurrentSketchAsync();
+
+				if (sketch is { IsEmpty: true } && MapUtils.HasSelection(ActiveMapView))
+				{
+					await QueuedTask.Run(ClearSelection);
+				}
+				else
+				{
+					await ClearSketchAsync();
+				}
+			}
+			catch (Exception ex)
+			{
+				Gateway.ShowError(ex, _msg);
+			}
 		}
 
 		#region Overrides of ConstructionToolBase
@@ -198,7 +218,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				FeatureClass newTargetClass = GetCurrentTargetClass(out _);
 
 				TargetClassChanged(newTargetClass);
-
 			}, _msg, true);
 		}
 
@@ -241,7 +260,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 						SetPredefinedFields(rowBuffer);
 
-						SetNullValuesToGdbDefault(rowBuffer, featureClassDef, subtype);
+						GdbObjectUtils.SetNullValuesToGdbDefault(
+							rowBuffer, featureClassDef, subtype);
 
 						Geometry projected =
 							MakeGeometryStorable(simplifiedSketch, featureClassDef);
@@ -293,38 +313,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			Geometry projected = GeometryUtils.EnsureSpatialReference(
 				geometryToStore, featureClassDef.GetSpatialReference());
 			return projected;
-		}
-
-		/// <summary>
-		/// Sets the values of the <see cref="RowBuffer"/> which are not yet initialized to the
-		/// default values defined in the Geodatabase.
-		/// </summary>
-		/// <param name="rowBuffer"></param>
-		/// <param name="featureClassDef"></param>
-		/// <param name="subtype"></param>
-		private static void SetNullValuesToGdbDefault(
-			[NotNull] RowBuffer rowBuffer,
-			[NotNull] FeatureClassDefinition featureClassDef,
-			[CanBeNull] Subtype subtype)
-		{
-			foreach (Field field in featureClassDef.GetFields())
-			{
-				if (! field.IsEditable)
-				{
-					continue;
-				}
-
-				if (field.FieldType == FieldType.Geometry)
-				{
-					continue;
-				}
-
-				// If the value has not been set (e.g. by the subclass), use the GDB default:
-				if (rowBuffer[field.Name] != null)
-				{
-					rowBuffer[field.Name] = field.GetDefaultValue(subtype);
-				}
-			}
 		}
 	}
 }

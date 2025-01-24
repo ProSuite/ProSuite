@@ -14,6 +14,9 @@ namespace ProSuite.DomainModel.Core.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		// Issue #215: The 1.0 schema version of the DDX has a not-null constraint on the QualityVerification.Description
+		private const string _emptySpecificationDescription = "<No description>";
+
 		[UsedImplicitly] private readonly string _specificationName;
 		[UsedImplicitly] private readonly int _specificationId;
 		[UsedImplicitly] private readonly string _specificationDescription;
@@ -53,7 +56,8 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			_specificationId = qualitySpecificationId;
 			_specificationName = qualitySpecificationName;
-			_specificationDescription = qualitySpecificationDescription;
+			_specificationDescription =
+				qualitySpecificationDescription ?? _emptySpecificationDescription;
 
 			_operator = userDisplayName;
 
@@ -97,7 +101,8 @@ namespace ProSuite.DomainModel.Core.QA
 				                   ? qualitySpecification.Id
 				                   : -1;
 
-			_specificationDescription = qualitySpecification.Description;
+			_specificationDescription =
+				qualitySpecification.Description ?? _emptySpecificationDescription;
 
 			var datasets = new HashSet<Dataset>();
 

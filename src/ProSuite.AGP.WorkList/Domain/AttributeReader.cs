@@ -89,16 +89,17 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		[CanBeNull]
-		private string GetName(Attributes attribute)
+		public string GetName(Attributes attribute)
 		{
 			return _fieldNameByIssueAttribute.TryGetValue(attribute, out string fieldName)
 				       ? fieldName
 				       : null;
 		}
 
-		public void ReadAttributes(Row fromRow, IIssueItem forItem, ISourceClass source)
+		public void ReadAttributes(Row fromRow, IWorkItem item, ISourceClass source)
 		{
+			IIssueItem forItem = (IIssueItem) item;
+
 			try
 			{
 				forItem.IssueCode = GetValue<string>(fromRow, Attributes.IssueCode);
@@ -163,6 +164,11 @@ namespace ProSuite.AGP.WorkList.Domain
 						$"An error occurred parsing involved tables from issue item {forItem}", e);
 				}
 			}
+		}
+
+		public IList<InvolvedTable> ParseInvolved(string involvedString, bool hasGeometry)
+		{
+			return IssueUtils.ParseInvolvedTables(involvedString, hasGeometry);
 		}
 
 		[CanBeNull]

@@ -18,10 +18,16 @@ namespace ProSuite.Commons.AO.Test.Surface
 		[OneTimeSetUp]
 		public void Setup()
 		{
-			ArcGISLicenseUtils.EnsureArcGISLicense(true);
+			TestUtils.InitializeLicense();
 
 			_spatialReference = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
+		}
+
+		[OneTimeTearDown]
+		public void TearDown()
+		{
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -110,7 +116,7 @@ namespace ProSuite.Commons.AO.Test.Surface
 
 			var envelope =
 				GeometryFactory.CreateEnvelope(0, 0, 100, 100, 0, 100, _spatialReference);
-			var tin = tinGenerator.GenerateTin(envelope);
+			ITin tin = tinGenerator.GenerateTin(envelope);
 			Assert.AreEqual(tin.DataNodeCount, 4);
 			Assert.AreEqual(tin.Extent.ZMin, spike.Z);
 		}

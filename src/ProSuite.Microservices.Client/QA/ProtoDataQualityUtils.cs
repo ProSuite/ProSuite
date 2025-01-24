@@ -594,7 +594,8 @@ namespace ProSuite.Microservices.Client.QA
 					Name = ProtobufGeomUtils.NullToEmpty(dataset.Name),
 					AliasName = ProtobufGeomUtils.NullToEmpty(dataset.AliasName),
 					GeometryType = geometryType,
-					DatasetType = (int) dataset.DatasetType
+					DatasetType = (int) dataset.DatasetType,
+					TypeCode = dataset.ImplementationType?.Id ?? 0
 				};
 
 			if (includeDetails)
@@ -751,7 +752,8 @@ namespace ProSuite.Microservices.Client.QA
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(
-						nameof(geometryType), $"Unsupported geometry type: {geometryType}");
+						nameof(geometryType),
+						$"Unsupported geometry type: {geometryType} (Error dataset {name})");
 			}
 
 			result.SetCloneId(datasetId);

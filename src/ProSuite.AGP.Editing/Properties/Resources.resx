@@ -118,106 +118,64 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="AdvancedReshapeToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\AdvancedReshapeToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="AdvancedReshapeToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\AdvancedReshapeToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="CrackerToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\CrackerToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="CrackerToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\CrackerToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="CrackerToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\CrackerToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="CreateFeatureInPickedClassCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\CreateFeatureInPickedClassCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="CutPolygonAlongTool" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\CutPolygonAlongTool.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="CutPolygonAlongToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\CutPolygonAlongToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="CutPolygonAlongToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\CutPolygonAlongToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="CutPolygonAlongToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\CutPolygonAlongToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="DestroyAndRebuildToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\DestroyAndRebuildToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="EditSketchCrosshair" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\EditSketchCrosshair.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="EraseToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\EraseToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="Polygon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\Polygon.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="EraseToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\EraseToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="Lasso" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\Lasso.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="FillHoleToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\FillHoleToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="Arrow" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\Arrow.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="FillHoleToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\FillHoleToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="CreateFeatureInPickedClassOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\CreateFeatureInPickedClassOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="FillHoleToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\FillHoleToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="DestroyAndRebuildOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\DestroyAndRebuildOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="PolygonDrawerCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\PolygonDrawerCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="SelectOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\SelectOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="RemoveHoleToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\RemoveHoleToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="AdvancedReshapeOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\AdvancedReshapeOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="RemoveHoleToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\RemoveHoleToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="Cross" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\Cross.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="RemoveHoleToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\RemoveHoleToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="Shift" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\Shift.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="RemoveOverlapsToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\RemoveOverlapsToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="ChopperOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\ChopperOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="RemoveOverlapsToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\RemoveOverlapsToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="CrackerOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\CrackerOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="RemoveOverlapsToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\RemoveOverlapsToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="CutPolygonAlongOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\CutPolygonAlongOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="ReshapeAlongToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\ReshapeAlongToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="EraseOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\EraseOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="ReshapeAlongToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\ReshapeAlongToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="FillHoleOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\FillHoleOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="ReshapeAlongToolCursorProcessShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\ReshapeAlongToolCursorProcessShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="RemoveHoleOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\RemoveHoleOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="ReshapeAlongToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\ReshapeAlongToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="RemoveOverlapslOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\RemoveOverlapslOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="SelectionToolNormal" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\SelectionToolNormal.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="ReshapeAlongOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\ReshapeAlongOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="SelectionToolNormalShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\SelectionToolNormalShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="SelectionToolOriginal" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\SelectionToolOriginal.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="SelectionToolOriginalShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\SelectionToolOriginalShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="SelectionToolUser" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\SelectionToolUser.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="SelectionToolUserShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\SelectionToolUserShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="YReshapeOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\YReshapeOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

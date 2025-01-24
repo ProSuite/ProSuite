@@ -17,7 +17,6 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.QA.WorkList;
 
-
 /// <summary>
 /// Implements the <see cref="IWorkListItemDatastore"/> for the issue file geodatabase schema.
 /// </summary>
@@ -25,9 +24,11 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	private const string _statusFieldName = "STATUS";
 	private readonly string _domainName = "CORRECTION_STATUS_CD";
 
 	private string _issueGdbPath;
+	private readonly string _initialWorkListName;
 
 	public FileGdbIssueWorkListItemDatastore(string workListFileOrIssueGdbPath)
 	{
@@ -46,11 +47,16 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 			_msg.DebugFormat("Extracted issue gdb path from {0}: {1}", workListFileOrIssueGdbPath,
 			                 gdbPath);
+
+			_initialWorkListName = Path.GetFileNameWithoutExtension(workListFileOrIssueGdbPath);
 		}
 		else
 		{
 			// Assume it is already an issue.gdb path:
 			gdbPath = workListFileOrIssueGdbPath;
+
+			string directoryName = Path.GetDirectoryName(workListFileOrIssueGdbPath);
+			_initialWorkListName = Path.GetFileName(directoryName);
 		}
 
 		_issueGdbPath = gdbPath;
@@ -106,8 +112,7 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 		using (Geodatabase geodatabase =
 		       new Geodatabase(
-			       new FileGeodatabaseConnectionPath(new Uri(_issueGdbPath, UriKind.Absolute)))
-		      )
+			       new FileGeodatabaseConnectionPath(new Uri(_issueGdbPath, UriKind.Absolute))))
 		{
 			if (geodatabase.GetDomains()
 			               .Any(domain => string.Equals(_domainName, domain.GetName())))
@@ -143,11 +148,42 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		return new AttributeReader(definition, attributes);
 	}
 
-	public string SuggestWorkListGroupName()
+	public WorkListStatusSchema CreateStatusSchema(TableDefinition tableDefinition)
 	{
-		string directoryName = Path.GetDirectoryName(_issueGdbPath);
+		int fieldIndex;
 
-		return Path.GetFileName(directoryName);
+		try
+		{
+			fieldIndex = tableDefinition.FindField(_statusFieldName);
+
+			if (fieldIndex < 0)
+			{
+				throw new ArgumentException($"No field {_statusFieldName}");
+			}
+		}
+		catch (Exception e)
+		{
+			_msg.Error($"Error find field {_statusFieldName} in {tableDefinition.GetName()}", e);
+			throw;
+		}
+
+		// The status schema is the same for production model datasets and Issue Geodatabase tables.
+		return new WorkListStatusSchema(_statusFieldName, fieldIndex,
+		                                (int) IssueCorrectionStatus.NotCorrected,
+		                                (int) IssueCorrectionStatus.Corrected);
+	}
+
+	public string SuggestWorkListName()
+	{
+		return _initialWorkListName;
+	}
+
+	public bool ContainsSourceClass(ISourceClass sourceClass)
+	{
+		// TODO: Consider also checking field names?
+
+		return IssueGdbSchema.IssueFeatureClassNames.Any(
+			n => n.Equals(sourceClass.Name, StringComparison.InvariantCultureIgnoreCase));
 	}
 
 	#endregion
@@ -171,8 +207,6 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 	private async Task<Table> EnsureStatusFieldCoreAsync(Table table)
 	{
-		const string fieldName = "STATUS";
-
 		Stopwatch watch = Stopwatch.StartNew();
 
 		string path = table.GetPath().LocalPath;
@@ -181,15 +215,15 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		// But it still takes hell of a long time...
 		TableDefinition tableDefinition = table.GetDefinition();
 
-		if (tableDefinition.FindField(fieldName) < 0)
+		if (tableDefinition.FindField(_statusFieldName) < 0)
 		{
 			Task<bool> addField =
-				GeoprocessingUtils.AddFieldAsync(path, fieldName, "Status",
+				GeoprocessingUtils.AddFieldAsync(path, _statusFieldName, "Status",
 				                                 FieldType.Integer, null, null,
 				                                 null, true, false, _domainName);
 
 			Task<bool> assignDefaultValue =
-				GeoprocessingUtils.AssignDefaultToFieldAsync(path, fieldName, 100);
+				GeoprocessingUtils.AssignDefaultToFieldAsync(path, _statusFieldName, 100);
 
 			await Task.WhenAll(addField, assignDefaultValue);
 

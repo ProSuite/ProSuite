@@ -1,51 +1,57 @@
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
+using System.Windows.Input;
+using ArcGIS.Desktop.Framework;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
 	public class CrackerToolOptions : OptionsBase<PartialCrackerToolOptions>, ICrackerToolOptions
 	{
+		public ICommand RevertToDefaultsCommand { get; }
 		public CrackerToolOptions([CanBeNull] PartialCrackerToolOptions centralOptions,
 		                          [CanBeNull] PartialCrackerToolOptions localOptions)
 		{
+			//RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
+			
 			CentralOptions = centralOptions;
 
 			LocalOptions = localOptions ??
 			               new PartialCrackerToolOptions();
-
-			CentralizableTargetFeatureSelection =
-				InitializeSetting<TargetFeatureSelection>(
-					ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
-					TargetFeatureSelection.VisibleFeatures);
-
+			// Checkbox Snap
+			CentralizableSnapToTargetVertices =
+				InitializeSetting<bool>(
+					ReflectionUtils.GetProperty(() => LocalOptions.SnapToTargetVertices), false);
+			// Numeric Spinner Tolerance
+			CentralizableSnapTolerance =
+				InitializeSetting<double>(
+					ReflectionUtils.GetProperty(() => LocalOptions.SnapTolerance), 0.0);
+			// Checkbox Minimum Segment
 			CentralizableRespectMinimumSegmentLength =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.RespectMinimumSegmentLength),
 					false);
+			// Numeric Spinner Length
 			CentralizableMinimumSegmentLength =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.MinimumSegmentLength), 0.0);
-
-			CentralizableSnapToTargetVertices =
+			// Radio Intersect with
+			CentralizableTargetFeatureSelection =
+				InitializeSetting<TargetFeatureSelection>(
+					ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
+					TargetFeatureSelection.VisibleFeatures);
+			// Checkbox Z values
+			CentralizableUseSourceZs =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.SnapToTargetVertices), false);
-			CentralizableSnapTolerance =
-				InitializeSetting<double>(
-					ReflectionUtils.GetProperty(() => LocalOptions.SnapTolerance), 0.0);
-
+					ReflectionUtils.GetProperty(() => LocalOptions.UseSourceZs), false);
+			// Checkbox Clean up
 			CentralizableRemoveUnnecessaryVertices =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.RemoveUnnecessaryVertices),
 					false);
-
-			CentralizableUseSourceZs =
-				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.UseSourceZs), false);
 		}
 
 		#region Centralizable Properties
@@ -107,10 +113,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			get { return CentralizableUseSourceZs.CurrentValue; }
 		}
 
-		public bool RemoveUnnecessaryVertices
-		{
-			get { return CentralizableRemoveUnnecessaryVertices.CurrentValue; }
-		}
+		public bool ExcludeInteriorInteriorIntersections => false;
 
 		#endregion
 

@@ -109,7 +109,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public bool CanSetStatus()
 		{
-			return HasCurrentItem;
+			return HasCurrentItem && CanSetStatusCore();
 		}
 
 		public void SetStatus(IWorkItem item, WorkItemStatus status)
@@ -131,9 +131,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				newItems.Add(item);
 
-				if (! _rowMap.ContainsKey(item.Proxy))
+				if (! _rowMap.ContainsKey(item.GdbRowProxy))
 				{
-					_rowMap.Add(item.Proxy, item);
+					_rowMap.Add(item.GdbRowProxy, item);
 				}
 				else
 				{
@@ -268,6 +268,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		protected virtual bool CanSetStatusCore()
+		{
+			return true;
+		}
+
 		#region Navigation public
 
 		public virtual bool CanGoFirst()
@@ -335,7 +340,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		public virtual void GoNearest(Geometry reference,
-		                              Predicate<IWorkItem> match,
+		                              Predicate<IWorkItem> match = null,
 		                              params Polygon[] contextPerimeters)
 		{
 			Assert.ArgumentNotNull(reference, nameof(reference));
@@ -1191,7 +1196,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				var rowId = new GdbRowIdentity(oid, new GdbTableIdentity(table));
 
-				if (Current != null && Current.Proxy.Equals(rowId))
+				if (Current != null && Current.GdbRowProxy.Equals(rowId))
 				{
 					Assert.True(HasCurrentItem, $"{nameof(HasCurrentItem)} is false");
 

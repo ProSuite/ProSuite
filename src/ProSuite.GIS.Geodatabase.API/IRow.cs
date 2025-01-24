@@ -16,6 +16,8 @@ namespace ProSuite.GIS.Geodatabase.API
 		void Store();
 
 		void Delete();
+
+		object NativeImplementation { get; }
 	}
 
 	public interface IRowBuffer
@@ -25,5 +27,12 @@ namespace ProSuite.GIS.Geodatabase.API
 		void set_Value(int index, object value);
 
 		IFields Fields { get; }
+	}
+
+	public interface IRowSubtypes
+	{
+		int SubtypeCode { get; set; }
+
+		void InitDefaultValues();
 	}
 }
