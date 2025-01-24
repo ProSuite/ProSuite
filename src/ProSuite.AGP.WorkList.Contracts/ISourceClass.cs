@@ -20,6 +20,13 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool Uses(ITableReference tableReference);
 
+		/// <summary>
+		/// Opens the dataset for the table.
+		/// NOTE: This could be a stale instance of the table, do not use if the geodatabase is
+		/// being edited!
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
 		T OpenDataset<T>() where T : Table;
 
 		string CreateWhereClause(WorkItemStatus? statusFilter);

@@ -41,6 +41,9 @@ namespace ProSuite.AGP.Editing.Chopper
 		protected string OptionsFileName => "ChopperToolOptions.xml";
 
 		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+
+		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
 		/// <summary>
@@ -296,30 +299,47 @@ namespace ProSuite.AGP.Editing.Chopper
 				_msg.Info(optionsMessage);
 			}
 		}
-		#region Tool Options Dockpane
 
-		private DockpaneChopperViewModelBase GetChopperViewModel() {
-			var viewModel = FrameworkApplication.DockPaneManager.Find(
-					                "Swisstopo_GoTop_AddIn_EditTools_Chopper") as
-				                DockpaneChopperViewModelBase;
-			Assert.NotNull(viewModel);
-			return viewModel;
+		#region Tool Options DockPane
+
+		[CanBeNull]
+		private DockPaneChopperViewModelBase GetChopperViewModel()
+		{
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
+
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneChopperViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+			                      OptionsDockPaneID);
 		}
-		protected override void ShowOptionsPane() {
+
+		protected override void ShowOptionsPane()
+		{
 			var viewModel = GetChopperViewModel();
 
-			Assert.NotNull(viewModel);
+			if (viewModel == null)
+			{
+				return;
+			}
 
 			viewModel.Options = _chopperToolOptions;
 
 			viewModel.Activate(true);
 		}
 
-		protected override void HideOptionsPane() {
+		protected override void HideOptionsPane()
+		{
 			var viewModel = GetChopperViewModel();
 			viewModel?.Hide();
 		}
+
 		#endregion
+
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,

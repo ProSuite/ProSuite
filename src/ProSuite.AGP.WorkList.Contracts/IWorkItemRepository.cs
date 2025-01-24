@@ -55,5 +55,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
 
 		bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema);
+
+		Row GetSourceRow([NotNull] ISourceClass sourceClass, long oid);
 	}
 }

@@ -228,7 +228,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return AdvancedReshapeClientUtils.Reshape(
 				ReshapeClient, selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
-				multiReshapeAsUnion, tryReshapeNonDefault, cancellationToken, moveOpenJawEndJunction);
+				multiReshapeAsUnion, tryReshapeNonDefault, cancellationToken,
+				moveOpenJawEndJunction);
 		}
 
 		public async Task<MapPoint> GetOpenJawReplacementPointAsync(

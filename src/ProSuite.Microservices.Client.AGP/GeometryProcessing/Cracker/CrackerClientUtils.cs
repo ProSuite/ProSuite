@@ -136,7 +136,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			                                           request.ClassDefinitions);
 
 			request.CrackOptions = ToCrackerToolOptionsMsg(crackerToolOptions,
-														   intersectionPointOptions,
+			                                               intersectionPointOptions,
 			                                               addCrackPointsOnExistingVertices);
 
 			return request;
@@ -405,7 +405,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 			}
 
 			request.CrackOptions = ToCrackerToolOptionsMsg(crackerToolOptions,
-														   intersectionPointOptions,
+			                                               intersectionPointOptions,
 			                                               addCrackPointsOnExistingVertices);
 
 			return request;

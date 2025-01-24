@@ -16,18 +16,18 @@ namespace ProSuite.AGP.QA.ProPlugins
 	{
 		private static VerificationPlugInController _instance;
 
-		private readonly IMapBasedSessionContext _sessionContext;
+		private readonly ISessionContext _sessionContext;
 
 		private readonly List<PlugIn> _verificationPlugins = new List<PlugIn>();
 
-		public VerificationPlugInController([NotNull] IMapBasedSessionContext sessionContext)
+		public VerificationPlugInController([NotNull] ISessionContext sessionContext)
 		{
 			_sessionContext = sessionContext;
 			WireEvent();
 		}
 
 		public static VerificationPlugInController GetInstance(
-			[NotNull] IMapBasedSessionContext sessionContext)
+			[NotNull] ISessionContext sessionContext)
 		{
 			if (_instance == null)
 			{

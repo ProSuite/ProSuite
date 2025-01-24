@@ -15,25 +15,27 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing;
 
-public class SketchRecorder
+/// <summary>
+/// Records and maintains the history of the intermediate states of an edit sketch during its
+/// creation. The sketching can be suspended while the current sketch is displayed as an overlay.
+/// After the sketch is restored, this history allows correct undo/redo stack for all the previous
+/// states of this edit sketch.
+/// </summary>
+public class SketchStateHistory
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	private readonly Stack<Geometry> _sketches = new();
 	private readonly SketchLatch _latch = new();
 	[CanBeNull] private List<IDisposable> _overlays;
-	private bool _recording;
-	private bool _suspended;
+	private bool _active;
+
+	public bool IsInIntermittentSelectionPhase { get; private set; }
 
 	private CIMLineSymbol _lineSymbol;
 	private CIMPolygonSymbol _polygonSymbol;
 	private CIMPointSymbol _regularUnselectedSymbol;
 	private CIMPointSymbol _currentUnselectedSymbol;
-
-	public SketchRecorder()
-	{
-		WireEvents();
-	}
 
 	public CIMLineSymbol LineSymbol
 	{
@@ -59,21 +61,28 @@ public class SketchRecorder
 		set => _currentUnselectedSymbol = value;
 	}
 
-	public async Task RecordAsync()
+	public async Task ActivateAsync()
 	{
-		Assert.False(_recording, "Already recording");
-		_recording = true;
+		Assert.False(_active, "Already recording");
+
+		WireEvents();
+
+		_active = true;
 
 		Geometry sketch = await MapView.Active.GetCurrentSketchAsync();
 
 		TryPush(sketch);
 	}
 
-	public async Task SuspendAsync()
+	/// <summary>
+	/// Draws the current sketch as an overlay and enters the 'intermittent selection phase'.
+	/// </summary>
+	/// <returns></returns>
+	public async Task StartIntermittentSelection()
 	{
-		Assert.False(_suspended, "Already suspended");
-		Assert.True(_recording, "Not recording");
-		_suspended = true;
+		Assert.False(IsInIntermittentSelectionPhase, "Already suspended");
+		Assert.True(_active, "Not recording");
+		IsInIntermittentSelectionPhase = true;
 
 		var mapView = MapView.Active;
 		if (mapView is null)
@@ -138,12 +147,18 @@ public class SketchRecorder
 		}
 	}
 
-	public async Task SetSketchesAsync()
+	/// <summary>
+	/// Stops the intermittent selection phase, restores the last sketch state and clears the overlays.
+	/// </summary>
+	/// <returns></returns>
+	public async Task StopIntermittentSelectionAsync()
 	{
 		try
 		{
-			Assert.True(_suspended, "Not suspended");
-			Assert.True(_recording, "Not recording");
+			Assert.True(IsInIntermittentSelectionPhase, "Not suspended");
+			Assert.True(_active, "Not recording");
+
+			IsInIntermittentSelectionPhase = false;
 
 			_msg.VerboseDebug(() => $"Replay: {_sketches.Count} sketches");
 
@@ -157,34 +172,39 @@ public class SketchRecorder
 		{
 			_msg.Error($"Error setting current sketch: {e.Message}", e);
 		}
+
+		ClearOverlays();
 	}
 
-	public void Resume()
+	/// <summary>
+	/// Resets the recorded sketch states and aborts the intermittent selection phase, in case ist is active.
+	/// </summary>
+	public void ResetSketchStates()
 	{
-		Assert.True(_suspended, "Not suspended");
-		_suspended = false;
-
-		if (_overlays == null) return;
-
-		foreach (IDisposable overlay in _overlays)
-		{
-			overlay.Dispose();
-		}
-
-		_overlays.Clear();
-	}
-
-	public void Reset()
-	{
-		Assert.True(_recording, "Not recording");
-
-		UnwireEvents();
-
-		_recording = false;
-		_suspended = false;
 		_sketches.Clear();
 		_latch.Reset();
 
+		IsInIntermittentSelectionPhase = false;
+
+		ClearOverlays();
+	}
+
+	/// <summary>
+	/// Deactivates the sketch state history entirely.
+	/// </summary>
+	public void Deactivate()
+	{
+		Assert.True(_active, "Not recording");
+
+		UnwireEvents();
+
+		_active = false;
+
+		ResetSketchStates();
+	}
+
+	private void ClearOverlays()
+	{
 		if (_overlays == null) return;
 
 		foreach (IDisposable overlay in _overlays)
@@ -208,11 +228,17 @@ public class SketchRecorder
 
 	private void OnSketchModified(SketchModifiedEventArgs args)
 	{
+		if (IsInIntermittentSelectionPhase)
+		{
+			// Do not record sketch states for the selection sketch!
+			return;
+		}
+
 		try
 		{
 			_msg.VerboseDebug(() => $"{args.SketchOperationType}");
 
-			Assert.True(_recording, "not recording");
+			Assert.True(_active, "not recording");
 
 			if (_latch.IsLatched)
 			{
@@ -220,11 +246,12 @@ public class SketchRecorder
 				Assert.True(_latch.Count >= 0, "Sketch stack isn't in sync with latch");
 				return;
 			}
-			
-			if (args.IsUndo)
+
+			if (args.IsUndo && _sketches.Count != 0)
 			{
 				Assert.NotNull(_sketches.Pop());
-				_msg.VerboseDebug(() => $"{nameof(OnSketchModified)} pop: {_sketches.Count} sketches");
+				_msg.VerboseDebug(
+					() => $"{nameof(OnSketchModified)} pop: {_sketches.Count} sketches");
 
 				if (_sketches.Count == 1)
 				{
@@ -245,9 +272,9 @@ public class SketchRecorder
 
 	private void OnSketchCompleted(SketchCompletedEventArgs args)
 	{
-		Assert.True(_recording, "not recording");
+		Assert.True(_active, "not recording");
 
-		if (_suspended)
+		if (IsInIntermittentSelectionPhase)
 		{
 			return;
 		}
@@ -297,7 +324,7 @@ public class SketchRecorder
 		var whiteStroke = SymbolUtils.CreateSolidStroke(ColorUtils.WhiteRGB, width);
 		var blackStroke = SymbolUtils.CreateSolidStroke(ColorUtils.BlackRGB, width)
 		                             .AddDashes(dashPattern, LineDashEnding.HalfPattern);
-		return [blackStroke, whiteStroke];
+		return new[] { blackStroke, whiteStroke };
 	}
 
 	private static CIMPointSymbol CreateSketchVertexSymbol(CIMRGBColor color)

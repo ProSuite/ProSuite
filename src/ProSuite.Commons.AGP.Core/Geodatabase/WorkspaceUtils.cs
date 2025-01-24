@@ -162,10 +162,18 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 			// NOTE: Sometimes the DB_CONNECTION_PROPERTIES contains the single instance name,
 			//       but it can also contain the colon-separated components.
-
-			string database = string.IsNullOrEmpty(builder["server"])
-				                  ? builder["database"]
-				                  : builder["server"];
+			// TODO: Test with other connections!
+			string database = builder["database"];
+			//if (databaseType == EnterpriseDatabaseType.PostgreSQL)
+			//{
+			//	database = builder["database"];
+			//}
+			//else
+			//{
+			//	database = string.IsNullOrEmpty(builder["server"])
+			//		           ? builder["database"]
+			//		           : builder["server"];
+			//}
 
 			string[] strings = instance?.Split(':');
 
@@ -240,7 +248,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					return GetConnectionDisplayText(dbConnectionProps);
 
 				case FileGeodatabaseConnectionPath fileGdbConnection:
-					return $"File Geodatabase {fileGdbConnection.Path}";
+					return $"File Geodatabase {fileGdbConnection.Path.AbsolutePath}";
 
 				case FileSystemConnectionPath fileSystemConnection:
 					return $"{fileSystemConnection.Type} datastore {fileSystemConnection.Path}";
