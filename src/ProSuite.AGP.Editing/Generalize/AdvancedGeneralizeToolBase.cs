@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -16,6 +17,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Generalize;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -295,6 +297,9 @@ namespace ProSuite.AGP.Editing.Generalize
 			_generalizeToolOptions =
 				new AdvancedGeneralizeOptions(centralConfiguration, localConfiguration);
 
+			_generalizeToolOptions.PropertyChanged += OptionsPropertyChanged;
+			_generalizeToolOptions.PropertyChanged += OptionsPropertyChanged;
+
 			_msg.DebugStopTiming(watch, "Advanced Generalize Tool Options validated / initialized");
 
 			string optionsMessage = _generalizeToolOptions.GetLocalOverridesMessage();
@@ -305,13 +310,31 @@ namespace ProSuite.AGP.Editing.Generalize
 			}
 		}
 
+		private void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args)
+		{
+			try
+			{
+				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating crack points: {e.Message}", e);
+			}
+		}
+
+		[CanBeNull]
 		private IList<Feature> GetTargetFeatures(CancelableProgressor progressor)
 		{
-			Dictionary<MapMember, List<long>> selection =
-				SelectionUtils.GetSelection(ActiveMapView.Map);
+			if (! _generalizeToolOptions.ProtectTopologicalVertices)
+			{
+				return null;
+			}
 
 			TargetFeatureSelection targetFeatureSelection =
 				_generalizeToolOptions.VertexProtectingFeatureSelection;
+
+			Dictionary<MapMember, List<long>> selection =
+				SelectionUtils.GetSelection(ActiveMapView.Map);
 
 			IList<Feature> intersectingFeatures =
 				ToolUtils.GetIntersectingFeatures(selection, MapView.Active, targetFeatureSelection,
