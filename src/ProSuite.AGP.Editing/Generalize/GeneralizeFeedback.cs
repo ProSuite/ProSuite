@@ -52,14 +52,27 @@ namespace ProSuite.AGP.Editing.Generalize
 			// get all vertices of selected features
 			foreach (var feature in selectedFeatures)
 			{
-				IEnumerable<MapPoint> vertices = GeometryUtils.GetVertices(feature);
+				Geometry geometry = feature.GetShape();
 
-				// draw vertices before drawing the rest
-				foreach (var vertex in vertices)
+				if (geometry is Multipart multipart)
 				{
+					Multipoint multipoint = MultipointBuilderEx.CreateMultipoint(multipart);
+
 					IDisposable addedVertex =
-						MapView.Active.AddOverlay(vertex, _greySquareMarker);
+						MapView.Active.AddOverlay(multipoint, _greySquareMarker);
 					_overlays.Add(addedVertex);
+				}
+				else
+				{
+					IEnumerable<MapPoint> vertices = GeometryUtils.GetVertices(feature);
+
+					// draw vertices before drawing the rest
+					foreach (var vertex in vertices)
+					{
+						IDisposable addedVertex =
+							MapView.Active.AddOverlay(vertex, _greySquareMarker);
+						_overlays.Add(addedVertex);
+					}
 				}
 			}
 
@@ -77,13 +90,11 @@ namespace ProSuite.AGP.Editing.Generalize
 			{
 				if (generalizedFeature.DeletablePoints != null)
 				{
-					foreach (MapPoint point in generalizedFeature.DeletablePoints.Points)
-					{
-						IDisposable addedDeletePoint =
-							MapView.Active.AddOverlay(point, _redCrossMarker);
+					IDisposable addedDeletePoints =
+						MapView.Active.AddOverlay(generalizedFeature.DeletablePoints,
+						                          _redCrossMarker);
 
-						_overlays.Add(addedDeletePoint);
-					}
+					_overlays.Add(addedDeletePoints);
 				}
 
 				if (generalizedFeature.ProtectedPoints != null)
