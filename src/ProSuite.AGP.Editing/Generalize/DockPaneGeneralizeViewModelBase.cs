@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
@@ -51,7 +52,10 @@ namespace ProSuite.AGP.Editing.Generalize
 
 				TargetFeatureSelectionVM =
 					new TargetFeatureSelectionViewModel(
-						_options.CentralizableVertexProtectingFeatureSelection);
+						_options.CentralizableVertexProtectingFeatureSelection)
+					{
+						SelectedFeaturesVisibility = Visibility.Collapsed
+					};
 			}
 		}
 	}

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.ManagedOptions;
 
@@ -7,6 +8,8 @@ namespace ProSuite.AGP.Editing
 {
 	public class TargetFeatureSelectionViewModel : INotifyPropertyChanged
 	{
+		private Visibility _selectedFeaturesVisibility;
+
 		public TargetFeatureSelectionViewModel(
 			CentralizableSetting<TargetFeatureSelection> centralizableSetting)
 		{
@@ -28,6 +31,16 @@ namespace ProSuite.AGP.Editing
 			set
 			{
 				CentralizableSetting.CurrentValue = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public Visibility SelectedFeaturesVisibility
+		{
+			get => _selectedFeaturesVisibility;
+			set
+			{
+				_selectedFeaturesVisibility = value;
 				OnPropertyChanged();
 			}
 		}
