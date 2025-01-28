@@ -1,11 +1,11 @@
 using System;
 using System.Windows.Media.Imaging;
+using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Logging;
-using Button = ArcGIS.Desktop.Framework.Contracts.Button;
 
 namespace ProSuite.Commons.AGP.Carto;
 
@@ -21,30 +21,40 @@ public abstract class ToggleLayerMaskingButtonBase : Button
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	protected virtual ISymbolLayerDisplay Manager => SymbolLayerDisplayManager.Instance;
+
 	protected ToggleLayerMaskingButtonBase()
 	{
+		MapViewInitializedEvent.Subscribe(OnMapViewInitialized);
 		ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
 
 		Initialize();
 	}
 
+	private void OnMapViewInitialized(MapViewEventArgs args)
+	{
+		Initialize(args.MapView?.Map);
+	}
+
 	private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs args)
 	{
 		// empirical: may get this twice, once for the old and once for the new active map
-		Initialize();
+		Initialize(args.IncomingView?.Map);
 	}
 
-	/// <remarks>Must call on MCT</remarks>
-	private async void Initialize()
+	private async void Initialize(Map map = null)
 	{
 		try
 		{
-			var map = MapView.Active?.Map;
-			_toggleState = await QueuedTask.Run(() => DisplayUtils.UsesLayerMasking(map));
+			map ??= MapView.Active?.Map;
+			if (map is null) return;
+
+			const bool uncached = true;
+			_toggleState = await QueuedTask.Run(() => Manager.UsesLM(map, uncached));
 		}
 		catch (Exception ex)
 		{
-			_msg.Error($"{GetType().Name}: {ex.Message}", ex);
+			Gateway.LogError(ex, _msg);
 		}
 	}
 
@@ -57,15 +67,16 @@ public abstract class ToggleLayerMaskingButtonBase : Button
 			var map = MapView.Active?.Map;
 			if (map is null) return;
 
-			var desiredState = GetToggledState(_toggleState, false);
+			//var desiredState = GetToggledState(_toggleState, false);
 
-			_msg.DebugFormat(
-				"Toggle Layer Masking (LM): current state is {0}, desired state is {1}",
-				Format(_toggleState), Format(desiredState));
+			//_msg.DebugFormat(
+			//	"Toggle Layer Masking (LM): current state is {0}, desired state is {1}",
+			//	Format(_toggleState), Format(desiredState));
 
-			await QueuedTask.Run(() => ToggleLayerMasking(map, desiredState));
+			//await QueuedTask.Run(() => ToggleLayerMasking(map, desiredState));
+			await QueuedTask.Run(() => ToggleLM(map));
 
-			_toggleState = desiredState;
+			//_toggleState = desiredState;
 		}
 		catch (Exception ex)
 		{
@@ -75,25 +86,37 @@ public abstract class ToggleLayerMaskingButtonBase : Button
 
 	protected override void OnUpdate()
 	{
-		Enabled = MapView.Active != null;
+		var map = MapView.Active?.Map;
 
+		Enabled = map != null;
 		IsChecked = false;
 
-		if (_toggleState.HasValue)
+		var state = Manager.QuickUsesLM(map);
+
+		if (state.HasValue)
 		{
-			bool isOn = _toggleState.Value;
-			TooltipHeading = isOn ? "Turn off LM" : "Turn on LM";
+			if (state.Value)
+			{
+				LargeImage = _iconOn32;
+				SmallImage = _iconOn16;
+				TooltipHeading = "Turn SLM off";
+			}
+			else
+			{
+				LargeImage = _iconOff32;
+				SmallImage = _iconOff16;
+				TooltipHeading = "Turn SLM on";
+			}
 		}
 		else
 		{
-			TooltipHeading = "Toggle Layer Masking (LM)";
+			LargeImage = _iconOn32; // have no "unknown" icon
+			SmallImage = _iconOn16; // have no "unknown" icon
+			TooltipHeading = "Toggle Layer Masking (SLM)";
 		}
-
-		SmallImage = _toggleState == false ? _iconOff16 : _iconOn16;
-		LargeImage = _toggleState == false ? _iconOff32 : _iconOn32;
 	}
 
-	private void ToggleLayerMasking(Map map, bool turnOn)
+	private void ToggleLM(Map map)
 	{
 		if (map is null)
 			throw new ArgumentNullException(nameof(map));
@@ -102,28 +125,47 @@ public abstract class ToggleLayerMaskingButtonBase : Button
 		if (undoStack is null)
 			throw new InvalidOperationException("Map's undo/redo stack is null");
 
-		var name = Caption; // use command's caption as operation name
-		if (string.IsNullOrEmpty(name))
-		{
-			name = $"Turn LM {(turnOn ? "on" : "off")}";
-		}
+		const bool uncached = true;
+		bool turnOn = ! Manager.UsesLM(map, uncached);
+		var name = turnOn ? "Turn SLM on" : "Turn SLM off";
 
 		Gateway.CompositeOperation(
-			undoStack, name,
-			() => DisplayUtils.ToggleLayerMasking(map, turnOn));
+			undoStack, name, () => Manager.ToggleLM(map, turnOn));
+
+		_toggleState = turnOn;
 	}
 
-	private static bool GetToggledState(bool? state, bool firstState)
-	{
-		if (!state.HasValue) return firstState;
-		return !state.Value;
-	}
+	//private void ToggleLayerMasking(Map map, bool turnOn)
+	//{
+	//	if (map is null)
+	//		throw new ArgumentNullException(nameof(map));
 
-	private static string Format(bool? flag)
-	{
-		if (!flag.HasValue) return "unknown";
-		return flag.Value ? "on" : "off";
-	}
+	//	var undoStack = map.OperationManager;
+	//	if (undoStack is null)
+	//		throw new InvalidOperationException("Map's undo/redo stack is null");
+
+	//	var name = Caption; // use command's caption as operation name
+	//	if (string.IsNullOrEmpty(name))
+	//	{
+	//		name = $"Turn LM {(turnOn ? "on" : "off")}";
+	//	}
+
+	//	Gateway.CompositeOperation(
+	//		undoStack, name,
+	//		() => DisplayUtils.ToggleLayerMasking(map, turnOn));
+	//}
+
+	//private static bool GetToggledState(bool? state, bool firstState)
+	//{
+	//	if (!state.HasValue) return firstState;
+	//	return !state.Value;
+	//}
+
+	//private static string Format(bool? flag)
+	//{
+	//	if (!flag.HasValue) return "unknown";
+	//	return flag.Value ? "on" : "off";
+	//}
 
 	private static BitmapImage GetImage(string fileName)
 	{

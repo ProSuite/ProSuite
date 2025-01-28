@@ -1,10 +1,11 @@
 using System;
 using System.Windows.Media.Imaging;
-using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Logging;
+using Button = ArcGIS.Desktop.Framework.Contracts.Button;
 
 namespace ProSuite.Commons.AGP.Carto;
 
@@ -21,6 +22,43 @@ public abstract class ToggleSymbolLayerDrawingButtonBase : Button
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	protected virtual ISymbolLayerDisplay Manager => SymbolLayerDisplayManager.Instance;
+
+	protected ToggleSymbolLayerDrawingButtonBase()
+	{
+		MapViewInitializedEvent.Subscribe(OnMapViewInitialized);
+		ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
+
+		Initialize();
+	}
+
+	private void OnMapViewInitialized(MapViewEventArgs args)
+	{
+		Initialize(args.MapView?.Map);
+	}
+
+	private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs args)
+	{
+		// empirical: may get this twice, once for the old and once for the new active map
+		Initialize(args.IncomingView?.Map);
+	}
+
+	private async void Initialize(Map map = null)
+	{
+		try
+		{
+			map ??= MapView.Active?.Map;
+			if (map is null) return;
+
+			const bool uncached = true;
+			_toggleState = await QueuedTask.Run(() => Manager.UsesSLD(map, uncached));
+		}
+		catch (Exception ex)
+		{
+			Gateway.LogError(ex, _msg);
+		}
+	}
+
 	protected override async void OnClick()
 	{
 		Gateway.LogEntry(_msg);
@@ -30,15 +68,16 @@ public abstract class ToggleSymbolLayerDrawingButtonBase : Button
 			var map = MapView.Active?.Map;
 			if (map is null) return;
 
-			var desiredState = GetToggledState(_toggleState, false);
+			//var desiredState = GetToggledState(_toggleState, false);
 
-			_msg.DebugFormat(
-				"Toggle Symbol Layer Drawing (SLD): current state is {0}, desired state is {1}",
-				Format(_toggleState), Format(desiredState));
+			//_msg.DebugFormat(
+			//	"Toggle Symbol Layer Drawing (SLD): current state is {0}, desired state is {1}",
+			//	Format(_toggleState), Format(desiredState));
 
-			await QueuedTask.Run(() => ToggleSymbolLayerDrawing(map, desiredState));
+			//await QueuedTask.Run(() => ToggleSymbolLayerDrawing(map, desiredState));
+			await QueuedTask.Run(() => ToggleSLD(map));
 
-			_toggleState = desiredState;
+			//_toggleState = desiredState;
 		}
 		catch (Exception ex)
 		{
@@ -48,33 +87,37 @@ public abstract class ToggleSymbolLayerDrawingButtonBase : Button
 
 	protected override void OnUpdate()
 	{
-		Enabled = MapView.Active != null;
+		var map = MapView.Active?.Map;
 
+		Enabled = map != null;
 		IsChecked = false;
 
-		if (_toggleState.HasValue)
-		{
-			bool isOn = _toggleState.Value;
-			TooltipHeading = isOn ? "Turn off SLD" : "Turn on SLD";
-		}
-		else
-		{
-			TooltipHeading = "Toggle Symbol Layer Drawing (SLD)";
-		}
+		var state = Manager.QuickUsesSLD(map);
 
-		if (_toggleState.HasValue)
+		if (state.HasValue)
 		{
-			SmallImage = _toggleState.Value ? _iconOn16 : _iconOff16;
-			LargeImage = _toggleState.Value ? _iconOn32 : _iconOff32;
+			if (state.Value)
+			{
+				LargeImage = _iconOn32;
+				SmallImage = _iconOn16;
+				TooltipHeading = "Turn SLD off";
+			}
+			else
+			{
+				LargeImage = _iconOff32;
+				SmallImage = _iconOff16;
+				TooltipHeading = "Turn SLD on";
+			}
 		}
 		else
 		{
-			SmallImage = _iconUnknown;
 			LargeImage = _iconUnknown;
+			SmallImage = _iconUnknown;
+			TooltipHeading = "Toggle Symbol Layer Drawing (SLD)";
 		}
 	}
 
-	private void ToggleSymbolLayerDrawing(Map map, bool turnOn)
+	private void ToggleSLD(Map map)
 	{
 		if (map is null)
 			throw new ArgumentNullException(nameof(map));
@@ -83,28 +126,47 @@ public abstract class ToggleSymbolLayerDrawingButtonBase : Button
 		if (undoStack is null)
 			throw new InvalidOperationException("Map's undo/redo stack is null");
 
-		var name = Caption; // use command's caption as operation name
-		if (string.IsNullOrEmpty(name))
-		{
-			name = $"Turn SLD {(turnOn ? "on" : "off")}";
-		}
+		const bool uncached = true;
+		bool turnOn = ! Manager.UsesSLD(map, uncached);
+		var name = turnOn ? "Turn SLD on" : "Turn SLD off";
 
 		Gateway.CompositeOperation(
-			undoStack, name,
-			() => DisplayUtils.ToggleSymbolLayerDrawing(map, turnOn));
+			undoStack, name, () => Manager.ToggleSLD(map, turnOn));
+
+		_toggleState = turnOn;
 	}
 
-	private static bool GetToggledState(bool? state, bool firstState)
-	{
-		if (!state.HasValue) return firstState;
-		return !state.Value;
-	}
+	//private void ToggleSymbolLayerDrawing(Map map, bool turnOn)
+	//{
+	//	if (map is null)
+	//		throw new ArgumentNullException(nameof(map));
 
-	private static string Format(bool? flag)
-	{
-		if (!flag.HasValue) return "unknown";
-		return flag.Value ? "on" : "off";
-	}
+	//	var undoStack = map.OperationManager;
+	//	if (undoStack is null)
+	//		throw new InvalidOperationException("Map's undo/redo stack is null");
+
+	//	var name = Caption; // use command's caption as operation name
+	//	if (string.IsNullOrEmpty(name))
+	//	{
+	//		name = $"Turn SLD {(turnOn ? "on" : "off")}";
+	//	}
+
+	//	Gateway.CompositeOperation(
+	//		undoStack, name,
+	//		() => DisplayUtils.ToggleSymbolLayerDrawing(map, turnOn));
+	//}
+
+	//private static bool GetToggledState(bool? state, bool firstState)
+	//{
+	//	if (!state.HasValue) return firstState;
+	//	return !state.Value;
+	//}
+
+	//private static string Format(bool? flag)
+	//{
+	//	if (!flag.HasValue) return "unknown";
+	//	return flag.Value ? "on" : "off";
+	//}
 
 	private static BitmapImage GetImage(string fileName)
 	{
