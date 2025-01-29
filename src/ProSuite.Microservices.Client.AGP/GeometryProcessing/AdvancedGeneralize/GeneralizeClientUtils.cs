@@ -35,7 +35,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedGeneraliz
 				selectedFeatures, intersectingFeatures, protectVerticesWithinSameClassOnly,
 				weedTolerance, weedNonLinearSegments, minimumSegmentLength, use2DLength, perimeter);
 
-			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
+			// In case there are non-linear segments, the calculation can take longer:
+			const int extraFactor = 5;
+			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count *
+			               extraFactor;
 
 			CalculateRemovableSegmentsResponse response = GrpcClientUtils.Try(
 				o => generalizeClient.CalculateRemovableSegments(request, o), cancellationToken,
