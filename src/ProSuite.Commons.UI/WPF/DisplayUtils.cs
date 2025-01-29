@@ -63,6 +63,7 @@ namespace ProSuite.Commons.UI.WPF
 		/// for the application's main window.
 		/// </summary>
 		/// <param name="deviceRect">Input rectangle in device pixels.</param>
+		/// <param name="visual">The rendering visual</param>
 		/// <returns></returns>
 		public static Rect ToDeviceIndependentPixels(Rect deviceRect,
 		                                             [NotNull] Visual visual)

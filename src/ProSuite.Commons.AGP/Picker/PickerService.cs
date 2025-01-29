@@ -63,7 +63,7 @@ namespace ProSuite.Commons.AGP.Picker
 
 				SetWindowLocation(window, location);
 
-				positioner.SetWindow(window, new Point(window.Left, window.Top));
+				positioner.SetWindow(window, location);
 
 				window.Show();
 
