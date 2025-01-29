@@ -43,11 +43,11 @@ public class WindowPositioner : IWindowPositioner
 
 	public WindowPositioner([NotNull] Feature featureToAvoid, [NotNull] Layer layer,
 	                        PreferredPlacement placement,
-	                        EvaluationMethod method)
+	                        EvaluationMethod method, int minimalLineOffset = 25)
 	{
 		_method = method;
 		Rect mapViewArea = GetMapViewScreenRect();
-		var boundingRects = GetBoundingRectsScreen(featureToAvoid, layer as FeatureLayer);
+		var boundingRects = GetBoundingRectsScreen(featureToAvoid, layer as FeatureLayer, minimalLineOffset);
 		foreach (Rect rect in boundingRects)
 		{
 			// Restrict geometries to MapView area
@@ -516,8 +516,11 @@ public class WindowPositioner : IWindowPositioner
 	// Returns the bounding rects in screen coordinates of the given feature. If layer is not null,
 	// then the extent of the symbolization is taken into account as well. Line geometries are split
 	// if they are longer than maxRectLengthForLines, i.e. they are then approximated by multiple
-	// rectangles. Each envelope rectangle of a line geometry is enlarged by lineOffset.
+	// rectangles. Each envelope rectangle of a line geometry is enlarged by an offset corresponding
+	// to the symbol size at the current map scale. Additionally, the minimal offset can be set for
+	// cases with additional fixed sized overlays.
 	private static List<Rect> GetBoundingRectsScreen(Feature feature, FeatureLayer layer,
+													 int minimalLineOffset,
 	                                                 int maxRectLengthForLines = 25)
 	{
 		Geometry geometry = feature.GetShape();
@@ -532,7 +535,7 @@ public class WindowPositioner : IWindowPositioner
 
 		var symbol = layer.LookupSymbol(feature.GetObjectID(), MapView.Active);
 		double size = symbol.GetSize();
-		double offset = size / (MapView.Active.Camera.Scale / MapView.Active.Map.ReferenceScale);
+		double offset = Math.Max(minimalLineOffset, size / (MapView.Active.Camera.Scale / MapView.Active.Map.ReferenceScale));
 
 		return boundingRects.Select(r =>
 		{
