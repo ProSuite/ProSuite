@@ -33,8 +33,6 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 				request.SourceFeatures, request.TargetFeatures, request.ClassDefinitions,
 				out IList<IFeature> sourceFeatures, out IList<IFeature> targetFeatures);
 
-			_msg.DebugStopTiming(watch, "Unpacked feature lists from request params");
-
 			Overlaps selectableOverlaps = RemoveOverlapsUtils.GetSelectableOverlaps(
 				sourceFeatures, targetFeatures, trackCancel);
 

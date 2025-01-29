@@ -36,8 +36,6 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedGeneralize
 				request.SourceFeatures, request.TargetFeatures, request.ClassDefinitions,
 				out IList<IFeature> sourceFeatures, out IList<IFeature> targetFeatures);
 
-			_msg.DebugStopTiming(watch, "Unpacked feature lists from request params");
-
 			IGeometry perimeter = ProtobufGeometryUtils.FromShapeMsg(request.Perimeter);
 
 			AdvancedGeneralizeOptions options = new AdvancedGeneralizeOptions(
