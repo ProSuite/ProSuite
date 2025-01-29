@@ -147,7 +147,7 @@ If not specified, all involved rows are check for the constraint</value>
 if false: filter no issues</value>
   </data>
   <data name="IfNear_0" xml:space="preserve">
-    <value>Filters issues that are completey near any feature of 'featureClass'</value>
+    <value>Filters issues that are completely near any feature of 'featureClass'</value>
   </data>
   <data name="IfNear_featureClass" xml:space="preserve">
     <value>Polyline or polygon feature class</value>

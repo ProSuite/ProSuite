@@ -126,7 +126,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Filters issues that are completey near any feature of &apos;featureClass&apos;.
+        ///   Looks up a localized string similar to Filters issues that are completely near any feature of &apos;featureClass&apos;.
         /// </summary>
         public static string IfNear_0 {
             get {
