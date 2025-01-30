@@ -41,13 +41,14 @@ public class WindowPositioner : IWindowPositioner
 		DistanceToRect
 	}
 
-	public WindowPositioner([NotNull] Feature featureToAvoid, [NotNull] Layer layer,
+	public WindowPositioner([NotNull] Feature featureToAvoid, FeatureLayer layer,
 	                        PreferredPlacement placement,
 	                        EvaluationMethod method, int minimalLineOffset = 25)
 	{
 		_method = method;
 		Rect mapViewArea = GetMapViewScreenRect();
-		var boundingRects = GetBoundingRectsScreen(featureToAvoid, layer as FeatureLayer, minimalLineOffset);
+		var boundingRects =
+			GetBoundingRectsScreen(featureToAvoid, layer, minimalLineOffset);
 		foreach (Rect rect in boundingRects)
 		{
 			// Restrict geometries to MapView area
@@ -132,7 +133,7 @@ public class WindowPositioner : IWindowPositioner
 		if (ownerWindow != null)
 		{
 			desiredPosition = DisplayUtils.ToDeviceIndependentPixels(desiredPosition, ownerWindow);
-			
+
 			var monitors = GetMonitorExtends(desiredPosition);
 			monitorsDeviceIndependent.AddRange(
 				monitors.Select(
@@ -520,7 +521,7 @@ public class WindowPositioner : IWindowPositioner
 	// to the symbol size at the current map scale. Additionally, the minimal offset can be set for
 	// cases with additional fixed sized overlays.
 	private static List<Rect> GetBoundingRectsScreen(Feature feature, FeatureLayer layer,
-													 int minimalLineOffset,
+	                                                 int minimalLineOffset,
 	                                                 int maxRectLengthForLines = 25)
 	{
 		Geometry geometry = feature.GetShape();
@@ -535,7 +536,9 @@ public class WindowPositioner : IWindowPositioner
 
 		var symbol = layer.LookupSymbol(feature.GetObjectID(), MapView.Active);
 		double size = symbol.GetSize();
-		double offset = Math.Max(minimalLineOffset, size / (MapView.Active.Camera.Scale / MapView.Active.Map.ReferenceScale));
+		double offset = Math.Max(minimalLineOffset,
+		                         size / (MapView.Active.Camera.Scale /
+		                                 MapView.Active.Map.ReferenceScale));
 
 		return boundingRects.Select(r =>
 		{
