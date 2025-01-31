@@ -5,16 +5,20 @@ using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
-	public abstract class DockpaneCrackerViewModelBase : DockPaneViewModelBase
+	public abstract class DockPaneCrackerViewModelBase : DockPaneViewModelBase
 	{
-		protected DockpaneCrackerViewModelBase() : base(new DockpaneCracker())
+		protected DockPaneCrackerViewModelBase() : base(new DockPaneCracker())
 		{
 			RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 		}
 
 		#region RestoreDefaultsButton
 
-		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
+		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
+		{
+			get => _targetFeatureSelectionVm;
+			private set => SetProperty(ref _targetFeatureSelectionVm, value);
+		}
 
 		public ICommand RevertToDefaultsCommand { get; }
 
@@ -27,12 +31,11 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		#endregion
 
-		protected abstract string DockPaneDamlID { get; }
-
 		/// Text shown near the top of the DockPane.
 		private string _heading = "Cracker Options";
 
 		private CrackerToolOptions _options;
+		private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 
 		public string Heading
 		{

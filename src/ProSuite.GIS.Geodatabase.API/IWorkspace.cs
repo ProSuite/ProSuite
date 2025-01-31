@@ -28,6 +28,8 @@ namespace ProSuite.GIS.Geodatabase.API
 		esriConnectionDBMS DbmsType { get; }
 
 		IWorkspaceName GetWorkspaceName();
+
+		bool IsSameDatabase(IWorkspace otherWorkspace);
 	}
 
 	public interface IFeatureWorkspace : IWorkspace
@@ -90,8 +92,6 @@ namespace ProSuite.GIS.Geodatabase.API
 		IEnumerable<IDomain> Domains();
 
 		IDomain get_DomainByName(string domainName);
-
-		bool IsSameDatabase(IFeatureWorkspace otherWorkspace);
 	}
 
 	public interface IVersionedWorkspace

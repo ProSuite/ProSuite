@@ -7,7 +7,6 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using Google.Protobuf;
-using Google.Protobuf.Collections;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -18,7 +17,6 @@ using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Geom.Wkb;
 using ProSuite.Commons.Logging;
-using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using Version = ArcGIS.Core.Data.Version;
 
@@ -291,6 +289,7 @@ namespace ProSuite.Microservices.Client.AGP
 				{
 					_msg.Debug($"Feature is null {GdbObjectUtils.ToString(feature)}");
 				}
+
 				long uniqueClassId = GeometryProcessingUtils.GetUniqueClassId(featureClass);
 
 				Geometry shape = feature.GetShape();
@@ -360,7 +359,7 @@ namespace ProSuite.Microservices.Client.AGP
 				new ObjectClassMsg()
 				{
 					Name = name,
-					Alias = aliasName ?? string.Empty, 
+					Alias = aliasName ?? string.Empty,
 					ClassHandle = classHandle,
 					SpatialReference = ToSpatialReferenceMsg(
 						spatialRef, SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),

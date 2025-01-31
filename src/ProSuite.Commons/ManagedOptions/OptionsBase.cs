@@ -1,12 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.ManagedOptions
 {
-	public abstract class OptionsBase<TPartialOptions>
+	public abstract class OptionsBase<TPartialOptions> : INotifyPropertyChanged
 		where TPartialOptions : PartialOptionsBase
 	{
 		[CanBeNull]
@@ -57,6 +59,11 @@ namespace ProSuite.Commons.ManagedOptions
 
 			var result = new CentralizableSetting<T>(centralSetting, localSetting,
 			                                         factoryDefault);
+
+			// Re-direct the property changed event from the centralizable setting to the option's
+			// property changed event:
+			result.PropertyChanged += (sender, eventArgs) =>
+				OnPropertyChanged(overridableSettingPropertyInfo.Name);
 
 			return result;
 		}
@@ -115,5 +122,16 @@ namespace ProSuite.Commons.ManagedOptions
 
 			return result;
 		}
+
+		#region INotifyPropertyChanged implementation
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		}
+
+		#endregion
 	}
 }

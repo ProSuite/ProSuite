@@ -9,6 +9,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.AdvancedReshape;
 using ProSuite.AGP.Editing.Cracker;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
@@ -41,6 +42,9 @@ namespace ProSuite.AGP.Editing.Chopper
 		protected string OptionsFileName => "ChopperToolOptions.xml";
 
 		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+
+		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
 		/// <summary>
@@ -70,6 +74,8 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_settingsProvider?.StoreLocalConfiguration(_chopperToolOptions.LocalOptions);
+			
 			_feedback?.DisposeOverlays();
 			_feedback = null;
 		}
@@ -274,10 +280,10 @@ namespace ProSuite.AGP.Editing.Chopper
 			string currentCentralConfigDir = CentralConfigDir;
 			string currentLocalConfigDir = LocalConfigDir;
 
-			// For the time being, we always reload the options because they could have been updated in ArcMap
-			_settingsProvider =
-				new OverridableSettingsProvider<PartialChopperToolOptions>(
-					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			_settingsProvider ??= new OverridableSettingsProvider<PartialChopperToolOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
+
 
 			PartialChopperToolOptions localConfiguration, centralConfiguration;
 
@@ -296,30 +302,47 @@ namespace ProSuite.AGP.Editing.Chopper
 				_msg.Info(optionsMessage);
 			}
 		}
-		#region Tool Options Dockpane
 
-		private DockpaneChopperViewModelBase GetChopperViewModel() {
-			var viewModel = FrameworkApplication.DockPaneManager.Find(
-					                "Swisstopo_GoTop_AddIn_EditTools_Chopper") as
-				                DockpaneChopperViewModelBase;
-			Assert.NotNull(viewModel);
-			return viewModel;
+		#region Tool Options DockPane
+
+		[CanBeNull]
+		private DockPaneChopperViewModelBase GetChopperViewModel()
+		{
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
+
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneChopperViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+			                      OptionsDockPaneID);
 		}
-		protected override void ShowOptionsPane() {
+
+		protected override void ShowOptionsPane()
+		{
 			var viewModel = GetChopperViewModel();
 
-			Assert.NotNull(viewModel);
+			if (viewModel == null)
+			{
+				return;
+			}
 
 			viewModel.Options = _chopperToolOptions;
 
 			viewModel.Activate(true);
 		}
 
-		protected override void HideOptionsPane() {
+		protected override void HideOptionsPane()
+		{
 			var viewModel = GetChopperViewModel();
 			viewModel?.Hide();
 		}
+
 		#endregion
+
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,

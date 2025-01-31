@@ -232,13 +232,15 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[CanBeNull]
-		public static string GetIssueGeodatabasePath([NotNull] string worklistDefinitionFile)
+		public static string GetIssueGeodatabasePath([NotNull] string worklistDefinitionFile,
+		                                             out string message)
 		{
 			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
 
 			if (! File.Exists(worklistDefinitionFile))
 			{
-				_msg.Debug($"{worklistDefinitionFile} does not exist");
+				message = $"{worklistDefinitionFile} does not exist";
+				_msg.Debug(message);
 				return null;
 			}
 
@@ -246,7 +248,8 @@ namespace ProSuite.AGP.WorkList
 
 			if (! string.Equals(extension, ".iwl"))
 			{
-				_msg.Debug($"{worklistDefinitionFile} is no issue work list");
+				message = $"{worklistDefinitionFile} is no issue work list";
+				_msg.Debug(message);
 				return null;
 			}
 
@@ -265,11 +268,19 @@ namespace ProSuite.AGP.WorkList
 				_msg.Info(
 					$"There are several issue geodatabases in {worklistDefinitionFile} but only one is expected. Taking the first one {result}");
 			}
+			else if (result != null &&
+			         ! result.EndsWith(".gdb", StringComparison.InvariantCultureIgnoreCase))
+			{
+				message = $"{result} is no issue FileGeodatabase";
+				_msg.Debug(message);
+				return null;
+			}
 			else
 			{
 				_msg.Debug($"Found issue geodatabase {result} in {worklistDefinitionFile}");
 			}
 
+			message = null;
 			return result;
 		}
 
@@ -381,19 +392,6 @@ namespace ProSuite.AGP.WorkList
 			result = result * 31 + tableIdentity.Id;
 
 			return result;
-		}
-
-		/// <summary>
-		/// Gets the source row from the database.
-		/// </summary>
-		/// <param name="workItem"></param>
-		/// <returns></returns>
-		[CanBeNull]
-		public static Row GetDbRow([NotNull] IWorkItem workItem)
-		{
-			Geodatabase workspace = workItem.GdbRowProxy.Table.Workspace.OpenGeodatabase();
-
-			return workItem.GdbRowProxy.GetRow(workspace);
 		}
 
 		private static long HashString([NotNull] string text)

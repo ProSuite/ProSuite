@@ -11,6 +11,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.AdvancedReshape;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
@@ -47,6 +48,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
 
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+		
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
@@ -379,10 +383,10 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			string currentCentralConfigDir = CentralConfigDir;
 			string currentLocalConfigDir = LocalConfigDir;
 
-			// For the time being, we always reload the options because they could have been updated in ArcMap
-			_settingsProvider =
-				new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(
-					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			_settingsProvider ??= new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
+
 
 			PartialRemoveOverlapsOptions localConfiguration, centralConfiguration;
 
@@ -404,22 +408,31 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			return _removeOverlapsToolOptions;
 		}
 
-		#region Tool Options Dockpane
+		#region Tool Options DockPane
 
-		private DockpaneRemoveOverlapsViewModelBase GetViewViewModel()
+		[CanBeNull]
+		private DockPaneRemoveOverlapsViewModelBase GetRemoveOverlapsViewModel()
 		{
-			var viewModel = FrameworkApplication.DockPaneManager.Find(
-					                "Swisstopo_GoTop_AddIn_EditTools_RemoveOverlaps") as
-				                DockpaneRemoveOverlapsViewModelBase;
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
 
-			return Assert.NotNull(viewModel);
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneRemoveOverlapsViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found", OptionsDockPaneID);
 		}
 
 		protected override void ShowOptionsPane()
 		{
-			DockpaneRemoveOverlapsViewModelBase viewModel = GetViewViewModel();
+			var viewModel = GetRemoveOverlapsViewModel();
 
-			Assert.NotNull(viewModel);
+			if (viewModel == null)
+			{
+				return;
+			}
 
 			viewModel.Options = _removeOverlapsToolOptions;
 
@@ -428,7 +441,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override void HideOptionsPane()
 		{
-			DockpaneRemoveOverlapsViewModelBase viewModel = GetViewViewModel();
+			var viewModel = GetRemoveOverlapsViewModel();
 			viewModel?.Hide();
 		}
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -18,6 +19,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -40,6 +42,9 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		protected string OptionsFileName => "CrackerToolOptions.xml";
+
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
 
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
@@ -72,7 +77,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			_settingsProvider?.StoreLocalConfiguration(_crackerToolOptions.LocalOptions);
-			
+
 			_feedback?.DisposeOverlays();
 			_feedback = null;
 
@@ -111,7 +116,7 @@ namespace ProSuite.AGP.Editing.Cracker
 				_msg.Warn("Calculation of crack points was cancelled.");
 				return;
 			}
-			
+
 			_resultCrackPoints =
 				CalculateCrackPoints(selectedFeatures, intersectingFeatures, _crackerToolOptions,
 				                     IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
@@ -183,7 +188,8 @@ namespace ProSuite.AGP.Editing.Cracker
 			var result =
 				MicroserviceClient.ApplyCrackPoints(
 					selectedFeatures, crackPointsToApply, intersectingFeatures,
-					_crackerToolOptions, IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+					_crackerToolOptions,
+					IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
 					false, progressor?.CancellationToken ?? new CancellationTokenSource().Token);
 
 			var updates = new Dictionary<Feature, Geometry>();
@@ -286,10 +292,9 @@ namespace ProSuite.AGP.Editing.Cracker
 			string currentCentralConfigDir = CentralConfigDir;
 			string currentLocalConfigDir = LocalConfigDir;
 
-			// For the time being, we always reload the options because they could have been updated in ArcMap
-			_settingsProvider =
-				new OverridableSettingsProvider<PartialCrackerToolOptions>(
-					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			_settingsProvider ??= new OverridableSettingsProvider<PartialCrackerToolOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
 			PartialCrackerToolOptions localConfiguration, centralConfiguration;
 
@@ -298,6 +303,8 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			_crackerToolOptions = new CrackerToolOptions(centralConfiguration,
 			                                             localConfiguration);
+
+			_crackerToolOptions.PropertyChanged += _crackerToolOptions_PropertyChanged;
 
 			_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
 
@@ -311,31 +318,59 @@ namespace ProSuite.AGP.Editing.Cracker
 			return _crackerToolOptions;
 		}
 
-		#region Tool Options Dockpane
-
-		private DockpaneCrackerViewModelBase GetCrackerViewModel() {
-			var viewModel = FrameworkApplication.DockPaneManager.Find(
-					                "Swisstopo_GoTop_AddIn_EditTools_Cracker") as
-				                DockpaneCrackerViewModelBase;
-			Assert.NotNull(viewModel);
-			return viewModel;
+		private void _crackerToolOptions_PropertyChanged(object sender,
+		                                                 PropertyChangedEventArgs eventArgs)
+		{
+			try
+			{
+				QueuedTaskUtils.Run(() => ProcessSelection());
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating crack points: {e.Message}", e);
+			}
 		}
-		protected override void ShowOptionsPane() {
+
+		#region Tool Options DockPane
+
+		[CanBeNull]
+		private DockPaneCrackerViewModelBase GetCrackerViewModel()
+		{
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
+
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneCrackerViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+			                      OptionsDockPaneID);
+		}
+
+		protected override void ShowOptionsPane()
+		{
 			var viewModel = GetCrackerViewModel();
 
-			Assert.NotNull(viewModel);
+			if (viewModel == null)
+			{
+				return;
+			}
 
 			viewModel.Options = _crackerToolOptions;
 
 			viewModel.Activate(true);
 		}
 
-		protected override void HideOptionsPane() {
+		protected override void HideOptionsPane()
+		{
 			var viewModel = GetCrackerViewModel();
 			viewModel?.Hide();
 		}
-		#endregion 
-		
+
+		#endregion
+
 		#region Search target features
 
 		private static bool CanOverlapGeometryType([CanBeNull] FeatureLayer featureLayer)
@@ -375,7 +410,6 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		#endregion
-
 
 		protected override Cursor GetSelectionCursor()
 		{
