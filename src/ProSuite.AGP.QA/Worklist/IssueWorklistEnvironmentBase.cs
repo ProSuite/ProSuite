@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
@@ -106,12 +107,14 @@ namespace ProSuite.AGP.QA.WorkList
 			return new XmlWorkItemStateRepository(path, workListName, type);
 		}
 
-		protected override IWorkItemRepository CreateItemRepositoryCore(
-			IList<Table> tables, IWorkItemStateRepository stateRepository)
+		protected override async Task<IWorkItemRepository> CreateItemRepositoryCore(
+			IWorkItemStateRepository stateRepository)
 		{
-			Stopwatch watch = Stopwatch.StartNew();
+			var tables = await PrepareReferencedTables();
 
-			var sourceClassDefinitions = new List<DbStatusSourceClassDefinition>();
+			var sourceClassDefinitions = new List<DbStatusSourceClassDefinition>(tables.Count);
+
+			Stopwatch watch = Stopwatch.StartNew();
 
 			// TODO: Make attribute reader more generic, use AttributeRoles
 			Attributes[] attributes = new[]

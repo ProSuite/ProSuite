@@ -40,8 +40,9 @@ namespace ProSuite.AGP.WorkList
 		/// </summary>
 		protected string UniqueName { get; set; }
 
-		[NotNull]
-		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName)
+		[ItemCanBeNull]
+		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName,
+		                                                 string workListFilePath = null)
 		{
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
 
@@ -71,6 +72,11 @@ namespace ProSuite.AGP.WorkList
 				// underlying table(s), ideally along with the relevant status schema?
 			}
 
+			if (File.Exists(workListFilePath))
+			{
+				definitionFilePath = workListFilePath;
+			}
+
 			if (! await TryPrepareSchemaCoreAsync())
 			{
 				return await Task.FromResult(default(IWorkList));
@@ -84,12 +90,15 @@ namespace ProSuite.AGP.WorkList
 			_msg.DebugStopTiming(watch, "Created work list state repository in {0}",
 			                     definitionFilePath);
 
-			// todo daro: dispose feature classes?
-			IList<Table> tables = await PrepareReferencedTables();
+			IWorkItemRepository itemRepository =
+				await CreateItemRepositoryCore(stateRepository);
 
-			IWorkList result = CreateWorkListCore(
-				CreateItemRepositoryCore(tables, stateRepository),
-				uniqueName, DisplayName);
+			if (itemRepository == null)
+			{
+				return await Task.FromResult<IWorkList>(null);
+			}
+
+			IWorkList result = CreateWorkListCore(itemRepository, uniqueName, DisplayName);
 
 			_msg.DebugFormat("Created work list {0}", uniqueName);
 
@@ -102,12 +111,6 @@ namespace ProSuite.AGP.WorkList
 		protected virtual string SuggestWorkListLayerName()
 		{
 			return null;
-		}
-
-		protected virtual Task<IList<Table>> PrepareReferencedTables()
-		{
-			IList<Table> result = new List<Table>();
-			return Task.FromResult(result);
 		}
 
 		public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
@@ -204,8 +207,9 @@ namespace ProSuite.AGP.WorkList
 		protected abstract IWorkItemStateRepository CreateStateRepositoryCore(
 			string path, string workListName);
 
-		protected abstract IWorkItemRepository CreateItemRepositoryCore(
-			IList<Table> tables, IWorkItemStateRepository stateRepository);
+		[ItemCanBeNull]
+		protected abstract Task<IWorkItemRepository> CreateItemRepositoryCore(
+			IWorkItemStateRepository stateRepository);
 
 		protected abstract string GetWorkListSymbologyTemplateLayerPath();
 
