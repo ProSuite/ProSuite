@@ -11,6 +11,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 	{
 		private readonly string _constraint;
 		private Dictionary<IReadOnlyTable, TableView> _tableViews;
+		private IList<IReadOnlyTable> _tables;
 
 		[DocIf(nameof(DocIfStrings.IfInvolvedRows_0))]
 		public IfInvolvedRows(
@@ -23,7 +24,22 @@ namespace ProSuite.QA.Tests.IssueFilters
 
 		[TestParameter]
 		[DocIf(nameof(DocIfStrings.IfInvolvedRows_Tables))]
-		public IList<IReadOnlyTable> Tables { get; set; }
+		public IList<IReadOnlyTable> Tables
+		{
+			get => _tables;
+			set
+			{
+				_tables = value;
+
+				if (_tables?.Count > 0)
+				{
+					foreach (IReadOnlyTable additionalTable in _tables)
+					{
+						AddInvolvedTable(additionalTable, null, false, true);
+					}
+				}
+			}
+		}
 
 		public override bool Check(QaErrorEventArgs error)
 		{
