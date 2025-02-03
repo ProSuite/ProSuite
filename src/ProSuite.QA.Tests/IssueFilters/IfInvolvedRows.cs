@@ -51,20 +51,37 @@ namespace ProSuite.QA.Tests.IssueFilters
 			foreach (IReadOnlyRow row in error.TestedRows)
 			{
 				_tableViews = _tableViews ?? new Dictionary<IReadOnlyTable, TableView>();
-				if (! _tableViews.TryGetValue(row.Table, out TableView helper))
+
+				IReadOnlyTable table = row.Table;
+
+				if (! _tableViews.TryGetValue(table, out TableView tableView))
 				{
-					IReadOnlyTable table = row.Table;
 					if (! (Tables?.Count > 0) || Tables.Contains(table))
 					{
-						helper = TableViewFactory.Create(
-							row.Table, _constraint, useAsConstraint: true,
-							caseSensitive: false); // TODO;
+						string resultConstraint;
+						string tableConstraint = GetConstraint(table);
+
+						if (string.IsNullOrEmpty(tableConstraint))
+						{
+							resultConstraint = _constraint;
+						}
+						else
+						{
+							resultConstraint =
+								string.IsNullOrEmpty(_constraint)
+									? tableConstraint
+									: $"{_constraint} AND {tableConstraint}";
+						}
+
+						tableView = TableViewFactory.Create(
+							table, resultConstraint, useAsConstraint: true,
+							caseSensitive: false);
 					}
 
-					_tableViews.Add(row.Table, helper);
+					_tableViews.Add(row.Table, tableView);
 				}
 
-				if (helper?.MatchesConstraint(row) == true)
+				if (tableView?.MatchesConstraint(row) == true)
 				{
 					return true;
 				}
