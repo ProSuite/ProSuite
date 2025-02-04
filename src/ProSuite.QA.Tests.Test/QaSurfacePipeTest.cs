@@ -263,7 +263,14 @@ namespace ProSuite.QA.Tests.Test
 			box.Expand(1.1, 1.1, true);
 			runner.Execute(box);
 
-			Assert.IsTrue(runner.Errors.Count == 1);
+			// If in SimpleTerrain
+			// tinGenerator.AllowIncompleteInterpolationDomainAtBoundary = true;
+			//  -> 2 errors (Terrain is missing)
+			// tinGenerator.AllowIncompleteInterpolationDomainAtBoundary = false;
+			//  -> 1 error (missing terrain) The extent [Envelope]
+			// XMin: 2’429’949.21 YMin: 1’249’930.17 XMax: 2’430’109.21 YMax: 1’250’090.17
+			//  is not sufficiently covered by terrain data
+			Assert.IsTrue(runner.Errors.Count == 2);
 			IEnvelope errorEnvelope = runner.ErrorGeometries[0].Envelope;
 
 			Assert.IsTrue(GeometryUtils.Contains(errorEnvelope, row1.Shape));
