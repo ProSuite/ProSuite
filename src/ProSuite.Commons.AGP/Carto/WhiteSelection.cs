@@ -10,14 +10,14 @@ using ProSuite.Commons.Essentials.Assertions;
 namespace ProSuite.Commons.AGP.Carto;
 
 /// <summary>
-/// A selection of vertices (not entire features) in a feature layer.
+/// A selection of vertices from involved features in a feature layer.
 /// The name "white selection" is for historical reasons (ArcMap).
 /// </summary>
 public interface IWhiteSelection
 {
 	FeatureLayer Layer { get; }
 
-	bool Add(long oid); // add just the oid/shape, don't select any vertices
+	bool Add(long oid, bool selectVertices = false); // add involved feature, optionally select all vertices
 	bool Remove(long oid); // also removes oid's geom from cache
 	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
 	bool Combine(long oid, SetCombineMethod method);
@@ -26,7 +26,7 @@ public interface IWhiteSelection
 	int InvolvedFeatureCount { get; }
 	int SelectedVertexCount { get; }
 
-	bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
+	bool SelectedVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
 
 	IEnumerable<long> GetInvolvedOIDs();
 
@@ -151,62 +151,27 @@ public class WhiteSelection : IWhiteSelection
 		return _shapes.Remove(oid);
 	}
 
-	public bool Add(long oid)
+	public bool Add(long oid, bool selectVertices = false)
 	{
-		if (_shapes.ContainsKey(oid))
+		bool changed = false;
+
+		if (! _shapes.TryGetValue(oid, out var selection))
 		{
-			return false; // already in selection, nothing changed
+			var shape = GetGeometry(oid);
+			selection = new ShapeSelection(shape);
+			_shapes.Add(oid, selection);
+			changed = true;
 		}
 
-		var shape = GetGeometry(oid);
-		var selection = new ShapeSelection(shape);
-		_shapes.Add(oid, selection);
-		return true;
+		if (selectVertices)
+		{
+			if (selection.CombineShape(SetCombineMethod.Add))
+			{
+				changed = true;
+			}
+		}
 
-		//var shape = GetGeometry(oid);
-
-		//if (! _shapes.TryGetValue(oid, out var selection))
-		//{
-		//	selection = new ShapeSelection(shape);
-		//	_shapes.Add(oid, selection);
-		//}
-
-		//bool changed = false;
-
-		//if (shape is MapPoint)
-		//{
-		//	changed = selection.CombineVertex(0, 0, SetCombineMethod.Add);
-		//}
-		//else if (shape is Multipoint multipoint)
-		//{
-		//	int vertexCount = multipoint.PointCount;
-		//	for (int i = 0; i < vertexCount; i++)
-		//	{
-		//		if (selection.CombineVertex(i, i, SetCombineMethod.Add))
-		//		{
-		//			changed = true;
-		//		}
-		//	}
-		//}
-		//else if (shape is Multipart multipart)
-		//{
-		//	int partCount = multipart.PartCount;
-		//	for (int k = 0; k < partCount; k++)
-		//	{
-		//		var part = multipart.Parts[k];
-		//		int vertexCount = part.Count;
-		//		if (multipart is Polyline) vertexCount += 1;
-		//		for (int i = 0; i < vertexCount; i++)
-		//		{
-		//			if (selection.CombineVertex(k, i, SetCombineMethod.Add))
-		//			{
-		//				changed = true;
-		//			}
-		//		}
-		//	}
-		//}
-
-		//return changed;
+		return changed;
 	}
 
 	public bool Clear()
@@ -216,14 +181,14 @@ public class WhiteSelection : IWhiteSelection
 		return changed;
 	}
 
-	public bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex)
+	public bool SelectedVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex)
 	{
 		// TODO This finds *first* in tolerance, should get *closest* instead
 		foreach (var pair in _shapes)
 		{
 			var selection = pair.Value;
 
-			if (selection.HitTestVertex(hitPoint, tolerance, out vertex))
+			if (selection.SelectedVertex(hitPoint, tolerance, out vertex))
 			{
 				return true;
 			}
@@ -232,17 +197,6 @@ public class WhiteSelection : IWhiteSelection
 		vertex = null;
 		return false;
 	}
-
-	//public MapPoint NearestVertex(MapPoint hitPoint, out int partIndex,
-	//                              out int vertexIndex, out bool selected)
-	//{
-	//	foreach (var pair in _shapes)
-	//	{
-	//		var selection = pair.Value;
-
-	//		selection.NearestVertex(hitPoint, out _, out partIndex, out vertexIndex, out selected);
-	//	}
-	//}
 
 	public IEnumerable<long> GetInvolvedOIDs()
 	{
@@ -377,11 +331,19 @@ public class WhiteSelection : IWhiteSelection
 			var selection = GetShapeSelection(oid) ??
 			                throw new AssertionException($"No shape selection for OID {oid}");
 
-			selection.UpdateShape(newShape, out bool cleared, out string reason);
+			bool compatible = selection.IsCompatible(newShape, out string reason);
 
-			result.Add(cleared
-				           ? IWhiteSelection.RefreshInfo.Modified(oid, reason)
-				           : IWhiteSelection.RefreshInfo.Retained(oid));
+			selection.UpdateShape(newShape);
+
+			if (compatible)
+			{
+				result.Add(IWhiteSelection.RefreshInfo.Retained(oid));
+			}
+			else
+			{
+				selection.Clear();
+				result.Add(IWhiteSelection.RefreshInfo.Modified(oid, reason));
+			}
 		}
 
 		return result;

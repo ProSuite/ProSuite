@@ -84,8 +84,6 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
   </ItemGroup>
 
-
-
   <ItemGroup>
     <Resource Include="Images\LayerMaskingOff16.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -126,5 +124,10 @@
     <Resource Include="Images\SymbolLayerDrawingUnknown32.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="PickerUI\Images\Annotation.png" />
+    <Resource Include="PickerUI\Images\LineGeometry.bmp" />
+    <Resource Include="PickerUI\Images\MultipatchGeometry.bmp" />
+    <Resource Include="PickerUI\Images\PointGeometry.bmp" />
+    <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />
   </ItemGroup>
 </Project>

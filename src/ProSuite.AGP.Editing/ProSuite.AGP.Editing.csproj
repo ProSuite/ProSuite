@@ -123,20 +123,15 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="PickerUI\Images\Annotation.png" />
-    <Resource Include="PickerUI\Images\LineGeometry.bmp" />
-    <Resource Include="PickerUI\Images\PointGeometry.bmp" />
-    <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />
-    <Resource Include="PickerUI\Images\MultipatchGeometry.bmp" />
     <Content Include="Properties\Images\EditSketchCrosshair.cur" />
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Chopper\DockpaneChopper.xaml">
+    <Page Update="Chopper\DockPaneChopper.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Cracker\DockpaneCracker.xaml">
+    <Page Update="Cracker\DockPaneCracker.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="RemoveOverlaps\DockpaneRemoveOverlaps.xaml"/>
+    <Page Update="RemoveOverlaps\DockpaneRemoveOverlaps.xaml" />
   </ItemGroup>
 </Project>

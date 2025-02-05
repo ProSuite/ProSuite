@@ -13,13 +13,13 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
-using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -55,6 +55,23 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
 		{
 			return SketchGeometryType.Rectangle;
+		}
+
+		protected override async Task<bool> FinishSketchOnDoubleClick()
+		{
+			if (await IsInSelectionPhaseAsync())
+			{
+				return await base.FinishSketchOnDoubleClick();
+			}
+
+			if (! IsInSubcurveSelectionPhase())
+			{
+				// 2. Phase: target selection:
+				return SketchType == SketchGeometryType.Polygon;
+			}
+
+			// 3. Phase: works already, Shift is not supported.
+			return false;
 		}
 
 		protected override void OnUpdateCore()
@@ -110,8 +127,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					                             DefaultSketchTypeOnFinishSketch);
 
 				_targetSketchCursor.SetSelectionCursorShift(GetTargetSelectionCursorShift());
-				_targetSketchCursor.SetSelectionCursorLassoShift(GetTargetSelectionCursorLassoShift());
-				_targetSketchCursor.SetSelectionCursorPolygonShift(GetTargetSelectionCursorPolygonShift());
+				_targetSketchCursor.SetSelectionCursorLassoShift(
+					GetTargetSelectionCursorLassoShift());
+				_targetSketchCursor.SetSelectionCursorPolygonShift(
+					GetTargetSelectionCursorPolygonShift());
 			});
 		}
 
@@ -198,7 +217,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		protected override async Task<bool> OnSketchCompleteCoreAsync(
-			Geometry sketchGeometry,	
+			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
 			try
@@ -261,11 +280,21 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
-		protected override Task ShiftPressedCoreAsync()
+		protected override async Task ShiftPressedCoreAsync()
 		{
-			_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+			if (await IsInSelectionPhaseAsync())
+			{
+				// Handled by base class
+				return;
+			}
 
-			return base.ShiftPressedCoreAsync();
+			if (! IsInSubcurveSelectionPhase())
+			{
+				// 2. Phase: target selection:
+				_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+			}
+
+			// 3. Phase: Shift is not supported.
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()

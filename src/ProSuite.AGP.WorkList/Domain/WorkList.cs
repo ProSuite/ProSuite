@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -30,6 +31,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		private const int _initialCapacity = 1000;
 
 		private readonly object _syncLock = new object();
+
+		[CanBeNull] private EditEventsRowCacheSynchronizer _rowCacheSynchronizer;
 
 		[NotNull]
 		public IWorkItemRepository Repository { get; }
@@ -112,6 +115,27 @@ namespace ProSuite.AGP.WorkList.Domain
 			return HasCurrentItem && CanSetStatusCore();
 		}
 
+		[CanBeNull]
+		public Row GetCurrentItemSourceRow()
+		{
+			if (Current == null)
+			{
+				return null;
+			}
+
+			ITableReference tableReference = Current.GdbRowProxy.Table;
+
+			ISourceClass sourceClass =
+				Repository.SourceClasses.FirstOrDefault(s => s.Uses(tableReference));
+
+			if (sourceClass == null)
+			{
+				return null;
+			}
+
+			return Repository.GetSourceRow(sourceClass, Current.ObjectID);
+		}
+
 		public void SetStatus(IWorkItem item, WorkItemStatus status)
 		{
 			Repository.SetStatus(item, status);
@@ -126,19 +150,12 @@ namespace ProSuite.AGP.WorkList.Domain
 		public void RefreshItems()
 		{
 			List<IWorkItem> newItems = new List<IWorkItem>(_items.Count);
+			_rowMap.Clear();
 
 			foreach (IWorkItem item in Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo))
 			{
 				newItems.Add(item);
-
-				if (! _rowMap.ContainsKey(item.GdbRowProxy))
-				{
-					_rowMap.Add(item.GdbRowProxy, item);
-				}
-				else
-				{
-					// todo daro: warn
-				}
+				_rowMap[item.GdbRowProxy] = item;
 			}
 
 			_msg.DebugFormat("Added {0} items to work list", newItems.Count);
@@ -177,6 +194,14 @@ namespace ProSuite.AGP.WorkList.Domain
 		public void Commit()
 		{
 			Repository.Commit();
+		}
+
+		[CanBeNull]
+		public IAttributeReader GetAttributeReader(long forSourceClassId)
+		{
+			return Repository.SourceClasses
+			                 .FirstOrDefault(sc => sc.GetUniqueTableId() == forSourceClassId)
+			                 ?.AttributeReader;
 		}
 
 		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null,
@@ -1130,11 +1155,41 @@ namespace ProSuite.AGP.WorkList.Domain
 			WorkListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
 		}
 
+		public void EnsureRowCacheSynchronized()
+		{
+			if (_rowCacheSynchronizer != null)
+			{
+				return;
+			}
+
+			_rowCacheSynchronizer = new EditEventsRowCacheSynchronizer(this);
+		}
+
+		public void DeactivateRowCacheSynchronization()
+		{
+			_rowCacheSynchronizer?.Dispose();
+			_rowCacheSynchronizer = null;
+		}
+
 		public void Invalidate()
 		{
 			_msg.Debug("Invalidate");
 
+			RefreshItems();
+
+			if (! HasCurrentItem)
+			{
+				GoNearest(MapView.Active.Extent);
+			}
+
 			OnWorkListChanged();
+		}
+
+		public void Invalidate(IEnumerable<Table> tables)
+		{
+			// TODO: More fine-granular invalidation, consider separate row cache containing
+			// _rowMap, _items.
+			Invalidate();
 		}
 
 		public void ProcessChanges(Dictionary<Table, List<long>> inserts,
@@ -1159,11 +1214,21 @@ namespace ProSuite.AGP.WorkList.Domain
 				ProcessUpdates(update.Key, update.Value);
 			}
 
+			if (! HasCurrentItem)
+			{
+				GoNearest(MapView.Active.Extent);
+			}
+
 			// If a item visibility changes to Done the item is not part
 			// of the work list anymore, respectively GetItems(QuerFilter, bool, int)
 			// does not return the Done-item anymore. Therefor use the item's Extent
 			// to invalidate the work list layer.
 			OnWorkListChanged();
+		}
+
+		public bool CanContain(Table table)
+		{
+			return Repository.SourceClasses.Any(s => s.TableIdentity.ReferencesTable(table));
 		}
 
 		private void ProcessInserts(Table table, IReadOnlyList<long> oids)

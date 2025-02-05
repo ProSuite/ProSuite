@@ -22,6 +22,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[UsedImplicitly] private bool _elementNamesAreQualified;
 		[UsedImplicitly] private string _defaultDatabaseName;
 		[UsedImplicitly] private string _defaultDatabaseSchemaOwner;
+		[UsedImplicitly] private bool _useDefaultDatabaseOnlyForSchema;
+
 		[UsedImplicitly] private readonly IList<Dataset> _datasets = new List<Dataset>();
 
 		[UsedImplicitly]
@@ -160,6 +162,22 @@ namespace ProSuite.DomainModel.Core.DataModel
 		{
 			get { return _sqlCaseSensitivity; }
 			set { _sqlCaseSensitivity = value; }
+		}
+
+		/// <summary>
+		/// Gets or sets a value indicating whether the master database should be used only for schema information.
+		/// If <c>true</c>, the master database is never accessed as a fallback data source when a dataset is not 
+		/// present in the local workspace context.
+		/// </summary>
+		/// <value>
+		/// 	<c>true</c> if the master database should only be used for schema information; 
+		/// otherwise (the database contains useful data ancd, <c>false</c>.
+		/// </value>
+		[UsedImplicitly]
+		public bool UseDefaultDatabaseOnlyForSchema
+		{
+			get { return _useDefaultDatabaseOnlyForSchema; }
+			set { _useDefaultDatabaseOnlyForSchema = value; }
 		}
 
 		/// <summary>

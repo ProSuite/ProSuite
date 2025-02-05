@@ -1,4 +1,5 @@
 using System;
+using System.Data.Common;
 using System.Text;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
@@ -24,6 +25,35 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			var connectionPath = new FileGeodatabaseConnectionPath(new Uri(path));
 
 			return (ArcGIS.Core.Data.Geodatabase) OpenDatastore(connectionPath);
+		}
+
+		/// <summary>
+		/// Opens a geodatabase using the provided catalog path. This method must be run on the MCT.
+		/// Use QueuedTask.Run.
+		/// </summary>
+		/// <param name="catalogPath"></param>
+		/// <returns></returns>
+		public static ArcGIS.Core.Data.Geodatabase OpenGeodatabase(string catalogPath)
+		{
+			
+			if (System.IO.Path.GetExtension(catalogPath)
+			          .Equals(".sde", StringComparison.InvariantCultureIgnoreCase))
+			{
+				DatabaseConnectionFile connector = new DatabaseConnectionFile(new Uri(catalogPath));
+				
+				return new ArcGIS.Core.Data.Geodatabase(connector);
+			}
+
+			if (System.IO.Path.GetExtension(catalogPath)
+			          .Equals(".gdb", StringComparison.InvariantCultureIgnoreCase)) {
+				var connector = new FileGeodatabaseConnectionPath(new Uri(catalogPath));
+
+				return new ArcGIS.Core.Data.Geodatabase(connector);
+			}
+		   
+			// TODO: SQLite, Mobile, other?
+
+			return null;
 		}
 
 		/// <summary>
@@ -162,10 +192,18 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 			// NOTE: Sometimes the DB_CONNECTION_PROPERTIES contains the single instance name,
 			//       but it can also contain the colon-separated components.
-
-			string database = string.IsNullOrEmpty(builder["server"])
-				                  ? builder["database"]
-				                  : builder["server"];
+			// TODO: Test with other connections!
+			string database = builder["database"];
+			//if (databaseType == EnterpriseDatabaseType.PostgreSQL)
+			//{
+			//	database = builder["database"];
+			//}
+			//else
+			//{
+			//	database = string.IsNullOrEmpty(builder["server"])
+			//		           ? builder["database"]
+			//		           : builder["server"];
+			//}
 
 			string[] strings = instance?.Split(':');
 
@@ -240,7 +278,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					return GetConnectionDisplayText(dbConnectionProps);
 
 				case FileGeodatabaseConnectionPath fileGdbConnection:
-					return $"File Geodatabase {fileGdbConnection.Path}";
+					return $"File Geodatabase {fileGdbConnection.Path.AbsolutePath}";
 
 				case FileSystemConnectionPath fileSystemConnection:
 					return $"{fileSystemConnection.Type} datastore {fileSystemConnection.Path}";

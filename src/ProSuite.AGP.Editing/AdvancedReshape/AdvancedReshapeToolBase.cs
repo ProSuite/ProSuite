@@ -24,6 +24,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI;
 
@@ -61,6 +62,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		private const Key _keyToggleMoveEndJunction = Key.M;
 
 		protected virtual string OptionsFileName => "AdvancedReshapeToolOptions.xml";
+
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
 
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
@@ -141,7 +145,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			       geometryType == GeometryType.Polygon;
 		}
 
-		protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
+		protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer,
+		                                               NotificationCollection notifications)
 		{
 			return layer is FeatureLayer;
 		}
@@ -279,23 +284,32 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			}
 		}
 
-#region Tool Options Dockpane
+		#region Tool Options DockPane
 
-		
-		private DockpaneAdvancedReshapeViewModelBase GetAdvancedReshapeViewModel()
+		[CanBeNull]
+		private DockPaneAdvancedReshapeViewModelBase GetAdvancedReshapeViewModel()
 		{
-			var viewModel = FrameworkApplication.DockPaneManager.Find(
-					                "Swisstopo_GoTop_AddIn_EditTools_AdvancedReshape") as
-				                DockpaneAdvancedReshapeViewModelBase;
-			Assert.NotNull(viewModel);
-			return viewModel;
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
+
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneAdvancedReshapeViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+			                      OptionsDockPaneID);
 		}
 
 		protected override void ShowOptionsPane()
 		{
 			var viewModel = GetAdvancedReshapeViewModel();
 
-			Assert.NotNull(viewModel);
+			if (viewModel == null)
+			{
+				return;
+			}
 
 			viewModel.Options = _advancedReshapeToolOptions;
 
@@ -307,7 +321,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			var viewModel = GetAdvancedReshapeViewModel();
 			viewModel?.Hide();
 		}
-#endregion
+
+		#endregion
 
 		//protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		//{

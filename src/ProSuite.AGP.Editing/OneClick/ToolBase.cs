@@ -11,13 +11,13 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -25,6 +25,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.UI;
+using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick;
 
@@ -70,6 +71,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	protected virtual Cursor ConstructionCursorCore { get; }
 
 	protected virtual bool AllowNoSelection => false;
+
+	/// Whether the required selection can only contain selectable features.
+	protected bool SelectOnlySelectableFeatures { get; init; } = true;
+
+	protected bool CanSelectOnlyEditFeatures { get; init; } = true;
 
 	#region abstract
 	
@@ -118,40 +124,45 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected sealed override async Task OnToolActivateAsync(bool hasMapViewChanged)
 	{
-		_msg.Debug($"Activate {Caption}");
-
-		// After on tool activate OnSelectionChangedAsync is fired. But ToolBase just needs
-		// OnSelectionChangedAsync when selection is cleared or to react when a selection
-		// is made but not by the tool itself, e.g. select row in table. In all other cases
-		// we want OnSelectionChangedAsync to be latched. Especially when the tool is activated.
-		_toolActivateLatch.Increment();
-
-		_symbolizedSketch = GetSymbolizedSketch();
-
-		await ViewUtils.TryAsync(QueuedTask.Run(SetupCursors), _msg);
-
-		await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
-
-		if (MapUtils.HasSelection(ActiveMapView))
+		try
 		{
-			await ViewUtils.TryAsync(
-				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); }),
-				_msg);
+			// After on tool activate OnSelectionChangedAsync is fired. But ToolBase just needs
+			// OnSelectionChangedAsync when selection is cleared or to react when a selection
+			// is made but not by the tool itself, e.g. select row in table. In all other cases
+			// we want OnSelectionChangedAsync to be latched. Especially when the tool is activated.
+			_toolActivateLatch.Increment();
 
-			bool selectionProcessed = await ViewUtils.TryAsync(ProcessSelectionAsync(), _msg);
+			_symbolizedSketch = GetSymbolizedSketch();
 
-			if (selectionProcessed)
+			await ViewUtils.TryAsync(QueuedTask.Run(SetupCursors), _msg);
+
+			await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
+
+			if (MapUtils.HasSelection(ActiveMapView))
 			{
-				await StartConstructionPhaseAsync();
+				await ViewUtils.TryAsync(
+					QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); }),
+					_msg);
+
+				bool selectionProcessed = await ViewUtils.TryAsync(ProcessSelectionAsync(), _msg);
+
+				if (selectionProcessed)
+				{
+					await StartConstructionPhaseAsync();
+				}
+				else
+				{
+					StartSelectionPhase();
+				}
 			}
 			else
 			{
 				StartSelectionPhase();
 			}
 		}
-		else
+		catch (Exception ex)
 		{
-			StartSelectionPhase();
+			Gateway.ShowError(ex, _msg);
 		}
 	}
 
@@ -216,6 +227,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 				await FinishSketchAsync();
 			}
 
+			if (KeyboardUtils.IsShiftKey(args.Key))
+			{
+				await ShiftPressedAsync();
+			}
+
 			if (args.Key == Key.Escape)
 			{
 				if (await HasSketchAsync())
@@ -238,6 +254,21 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		}
 	}
 
+	private async Task ShiftPressedAsync()
+	{
+		if (! InConstructionPhase())
+		{
+			_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+		}
+
+		await ShiftPressedCoreAsync();
+	}
+
+	protected virtual Task ShiftPressedCoreAsync()
+	{
+		return Task.CompletedTask;
+	}
+
 	protected override void OnToolKeyUp(MapViewKeyEventArgs args)
 	{
 		if (HandledKeys.Contains(args.Key))
@@ -250,6 +281,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	{
 		try
 		{
+			if (KeyboardUtils.IsShiftKey(args.Key))
+			{
+				await ShiftReleasedAsync();
+			}
+
 			if (! InConstructionPhase())
 			{
 				if (args.Key == _keyPolygonDraw)
@@ -269,6 +305,21 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		{
 			Gateway.ShowError(ex, _msg);
 		}
+	}
+
+	private async Task ShiftReleasedAsync()
+	{
+		if (! InConstructionPhase())
+		{
+			_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
+		}
+
+		await ShiftReleasedCoreAsync();
+	}
+
+	protected virtual Task ShiftReleasedCoreAsync()
+	{
+		return Task.CompletedTask;
 	}
 
 	protected override void OnToolMouseMove(MapViewMouseEventArgs args)
@@ -327,7 +378,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	public virtual bool CanSetConstructionSketchSymbol(GeometryType geometryType)
 	{
-		return ! InConstructionPhase();
+		return true;
 	}
 
 	public void SetSketchSymbol(CIMSymbolReference symbolReference)
@@ -367,60 +418,68 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	private async Task<bool> OnSketchCompleteCoreAsync(Geometry geometry)
 	{
-		if (geometry == null || geometry.IsEmpty)
-		{
-			_msg.Debug("Sketch is null or empty");
-			return await Task.FromResult(false);
-		}
-
-		if (MapUtils.HasSelection(ActiveMapView) && InConstructionPhase())
-		{
-			Dictionary<BasicFeatureLayer, List<long>> selection =
-				await GetApplicableSelection<BasicFeatureLayer>();
-
-			if (CanUseSelection(selection, new NotificationCollection()))
-			{
-				bool constructionProcessed = await OnConstructionSketchCompleteAsync(geometry, selection);
-
-				if (constructionProcessed)
-				{
-					StartSelectionPhase();
-					return true; // sketchCompleteEventHandled = true;
-				}
-
-				await StartConstructionPhaseAsync();
-				return true; // sketchCompleteEventHandled = true;
-			}
-		}
-
 		try
 		{
-			// We don't want OnSelectionChangedCoreAsync to react on our selection
-			_latch.Increment();
-			bool validSelection = await OnSelectionSketchCompleteAsync(geometry);
-
-			if (validSelection)
+			if (geometry == null || geometry.IsEmpty)
 			{
-				// OnSketchCompleteAsync is on the GUI thread. Here is the right place to change the cursor.
-				// OnSelectionCompleteAsync is on QueuedTask/MCT thread. Changing cursor there doesn't immediately
-				// change it. You would have to move the mouse to trigger cursor change.
-				//StartContructionPhase();
+				_msg.Debug("Sketch is null or empty");
+				return await Task.FromResult(false);
+			}
 
-				bool selectionProcessed = await ProcessSelectionAsync();
+			if (MapUtils.HasSelection(ActiveMapView) && InConstructionPhase())
+			{
+				Dictionary<BasicFeatureLayer, List<long>> selection =
+					await GetApplicableSelection<BasicFeatureLayer>();
 
-				if (selectionProcessed)
+				if (CanUseSelection(selection, new NotificationCollection()))
 				{
-					StartConstructionPhaseAsync();
-				}
-				else
-				{
-					StartSelectionPhase();
+					bool constructionProcessed =
+						await OnConstructionSketchCompleteAsync(geometry, selection);
+
+					if (constructionProcessed)
+					{
+						StartSelectionPhase();
+						return true; // sketchCompleteEventHandled = true;
+					}
+
+					await StartConstructionPhaseAsync();
+					return true; // sketchCompleteEventHandled = true;
 				}
 			}
+
+			try
+			{
+				// We don't want OnSelectionChangedCoreAsync to react on our selection
+				_latch.Increment();
+				bool validSelection = await OnSelectionSketchCompleteAsync(geometry);
+
+				if (validSelection)
+				{
+					// OnSketchCompleteAsync is on the GUI thread. Here is the right place to change the cursor.
+					// OnSelectionCompleteAsync is on QueuedTask/MCT thread. Changing cursor there doesn't immediately
+					// change it. You would have to move the mouse to trigger cursor change.
+					//StartContructionPhase();
+
+					bool selectionProcessed = await ProcessSelectionAsync();
+
+					if (selectionProcessed)
+					{
+						await StartConstructionPhaseAsync();
+					}
+					else
+					{
+						StartSelectionPhase();
+					}
+				}
+			}
+			finally
+			{
+				_latch.Decrement();
+			}
 		}
-		finally
+		catch (Exception ex)
 		{
-			_latch.Decrement();
+			Gateway.ShowError(ex, _msg);
 		}
 
 		return true; // sketchCompleteEventHandled = true;
@@ -446,11 +505,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 					FindFeatureSelection(precedence.GetSelectionGeometry(),
 					                     precedence.SpatialRelationship);
 
-				List<IPickableItem> items =
-					await (AllowMultiSelection(out _)
-						       ? PickerUtils.GetItems(candidates, precedence)
-						       : PickerUtils.GetItems<IPickableFeatureItem>(
-							       candidates, precedence, PickerMode.ShowPicker));
+				List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
 
 				PickerUtils.Select(items, precedence.SelectionCombinationMethod);
 			});
@@ -460,7 +515,12 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			_msg.Error(ex.Message, ex);
 		}
 
-		return MapUtils.HasSelection(ActiveMapView);
+		return await OnSelectionSketchCompleteCoreAsync(geometry);
+	}
+
+	protected virtual Task<bool> OnSelectionSketchCompleteCoreAsync(Geometry geometry)
+	{
+		return Task.FromResult(MapUtils.HasSelection(ActiveMapView));
 	}
 
 	protected virtual IPickerPrecedence CreatePickerPrecedence(Geometry sketchGeometry)
@@ -515,40 +575,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	#region selection
 
-	// todo daro refactoring
-
-	/// <returns><b>true</b>: selection processed and start construction phase,
-	/// <b>false</b>: stay in selection phase.</returns>
-	//private async Task<bool> ProcessSelectionAsync()
-	//{
-	//	using var source = GetProgressorSource();
-	//	var progressor = source?.Progressor;
-
-	//	Task<bool> task = QueuedTaskUtils.Run(() =>
-	//	{
-	//		Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
-	//			SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
-
-	//		if (! CanUseSelection(selectionByLayer, new NotificationCollection()))
-	//		{
-	//			return Task.FromResult(false); // startContructionPhase = false
-	//		}
-
-	//		IDictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
-	//			GetApplicableSelectedFeatures(selectionByLayer, new NotificationCollection());
-
-	//		if (applicableSelection.Count == 0)
-	//		{
-	//			return Task.FromResult(false);
-	//		}
-
-	//		return ProcessSelectionCoreAsync(applicableSelection, progressor);
-	//	}, progressor);
-
-	//	return await ViewUtils.TryAsync(task, _msg);
-	//}
-
-	private async Task<bool> ProcessSelectionAsync()
+	protected async Task<bool> ProcessSelectionAsync()
 	{
 		using var source = GetProgressorSource();
 		var progressor = source?.Progressor;
@@ -645,11 +672,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		return true;
 	}
 
-	protected virtual bool CanSelectOnlyEditFeatures()
-	{
-		return true;
-	}
-
 	protected virtual bool CanSelectGeometryType(GeometryType geometryType)
 	{
 		return true;
@@ -724,13 +746,13 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			return false;
 		}
 
-		if (! layer.IsSelectable)
+		if (SelectOnlySelectableFeatures && ! layer.IsSelectable)
 		{
 			NotificationUtils.Add(notifications, $"Layer {layerName} not selectable");
 			return false;
 		}
 
-		if (CanSelectOnlyEditFeatures() && ! layer.IsEditable)
+		if (CanSelectOnlyEditFeatures && ! layer.IsEditable)
 		{
 			NotificationUtils.Add(notifications, $"Layer {layerName} not editable");
 			return false;
@@ -806,7 +828,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	#endregion
 
-	private void StartSelectionPhase()
+	protected void StartSelectionPhase()
 	{
 		SetupSelectionSketch();
 

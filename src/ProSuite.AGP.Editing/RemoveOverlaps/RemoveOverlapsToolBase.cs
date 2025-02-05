@@ -48,6 +48,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
 
 		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+		
+		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
 		/// <summary>
@@ -404,22 +407,31 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			return _removeOverlapsToolOptions;
 		}
 
-		#region Tool Options Dockpane
+		#region Tool Options DockPane
 
-		private DockpaneRemoveOverlapsViewModelBase GetViewViewModel()
+		[CanBeNull]
+		private DockPaneRemoveOverlapsViewModelBase GetRemoveOverlapsViewModel()
 		{
-			var viewModel = FrameworkApplication.DockPaneManager.Find(
-					                "Swisstopo_GoTop_AddIn_EditTools_RemoveOverlaps") as
-				                DockpaneRemoveOverlapsViewModelBase;
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
 
-			return Assert.NotNull(viewModel);
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneRemoveOverlapsViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found", OptionsDockPaneID);
 		}
 
 		protected override void ShowOptionsPane()
 		{
-			DockpaneRemoveOverlapsViewModelBase viewModel = GetViewViewModel();
+			var viewModel = GetRemoveOverlapsViewModel();
 
-			Assert.NotNull(viewModel);
+			if (viewModel == null)
+			{
+				return;
+			}
 
 			viewModel.Options = _removeOverlapsToolOptions;
 
@@ -428,7 +440,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override void HideOptionsPane()
 		{
-			DockpaneRemoveOverlapsViewModelBase viewModel = GetViewViewModel();
+			var viewModel = GetRemoveOverlapsViewModel();
 			viewModel?.Hide();
 		}
 
@@ -538,27 +550,27 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay, null);
+			                              Resources.RemoveOverlapsOverlay, null);
 		}
 
 		protected override Cursor GetSelectionCursorShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Shift);
 		}
 
 		protected override Cursor GetSelectionCursorLasso()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Lasso);
 		}
 
 		protected override Cursor GetSelectionCursorLassoShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Lasso,
 			                              Resources.Shift);
 		}
@@ -566,14 +578,14 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursorPolygon()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Polygon);
 		}
 
 		protected override Cursor GetSelectionCursorPolygonShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Polygon,
 			                              Resources.Shift);
 		}
@@ -582,19 +594,19 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override Cursor GetSecondPhaseCursor()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay, 10,
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay, 10,
 			                              10);
 		}
 
 		protected override Cursor GetSecondPhaseCursorLasso()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay,
 			                              Resources.Lasso, null, 10, 10);
 		}
 
 		protected override Cursor GetSecondPhaseCursorPolygon()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay,
 			                              Resources.Polygon, null, 10, 10);
 		}
 

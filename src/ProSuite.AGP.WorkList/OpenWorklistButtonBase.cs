@@ -13,7 +13,7 @@ namespace ProSuite.AGP.WorkList
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// TODO: Separate base tools with helper methods where necessary
-		protected override async Task<bool> OnClickCore()
+		protected override async Task<bool> OnClickAsyncCore()
 		{
 			string path = null;
 			WorkEnvironmentBase environment = null;
