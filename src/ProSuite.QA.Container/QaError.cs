@@ -187,5 +187,20 @@ namespace ProSuite.QA.Container
 			return InvolvedExtent.Value.XMax < xMax &&
 			       InvolvedExtent.Value.YMax < yMax;
 		}
+
+		/// <summary>
+		/// Sets the error geometry in the spatial reference of the target (error) feature classes
+		/// of the model referenced by the verification context.
+		/// </summary>
+		/// <param name="projectedGeometry"></param>
+		public void SetGeometryInModelSpatialReference(IGeometry projectedGeometry)
+		{
+			_errorGeometry.SetGeometryInModelSpatialReference(projectedGeometry);
+		}
+
+		public IGeometry GetGeometryInModelSpatialRef()
+		{
+			return _errorGeometry.GetGeometryInModelSpatialRef();
+		}
 	}
 }

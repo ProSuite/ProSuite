@@ -19,6 +19,7 @@ namespace ProSuite.QA.Container
 		private double _yMax;
 		private double _yMin;
 		private double _xyTolerance;
+		private IGeometry _geometryInModelSpatialRef;
 
 		public QaErrorGeometry([CanBeNull] IGeometry geometry)
 		{
@@ -44,6 +45,11 @@ namespace ProSuite.QA.Container
 
 				return _geometry;
 			}
+		}
+
+		public IGeometry GetGeometryInModelSpatialRef()
+		{
+			return _geometryInModelSpatialRef ?? _geometry;
 		}
 
 		public WKSEnvelope? GetEnvelope()
@@ -194,6 +200,11 @@ namespace ProSuite.QA.Container
 			double difference = Math.Abs(v0 - v1);
 
 			return MathUtils.IsWithinTolerance(difference, _xyTolerance, epsilon);
+		}
+
+		public void SetGeometryInModelSpatialReference(IGeometry projectedGeometry)
+		{
+			_geometryInModelSpatialRef = projectedGeometry;
 		}
 	}
 }
