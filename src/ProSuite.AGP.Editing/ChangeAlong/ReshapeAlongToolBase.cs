@@ -4,18 +4,25 @@ using System.Threading;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
-	public abstract class ReshapeAlongToolBase : ChangeGeometryAlongToolBase
+	public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		protected ReshapeAlongToolOptions _reshapeAlongToolOptions;
+
 		protected override string EditOperationDescription => "Reshape along";
+
+		protected string OptionsFileName => "ReshapeAlongToolOptions.xml";
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
 		{
@@ -202,5 +209,47 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		#endregion
+
+		#region Tool Options DockPane
+
+		[CanBeNull]
+		private DockPaneReshapeAlongViewModelBase GetReshapeAlongViewModel()
+		{
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
+
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneReshapeAlongViewModelBase;
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+			                      OptionsDockPaneID);
+		}
+
+		protected override void ShowOptionsPane()
+		{
+			var viewModel = GetReshapeAlongViewModel();
+			if (viewModel == null)
+			{
+				return;
+			}
+
+			viewModel.Options = _reshapeAlongToolOptions;
+			viewModel.Activate(true);
+		}
+
+		protected override void HideOptionsPane()
+		{
+			var viewModel = GetReshapeAlongViewModel();
+			viewModel?.Hide();
+		}
+
+		#endregion
+
+		public void Dispose()
+		{
+			
+		}
 	}
 }
