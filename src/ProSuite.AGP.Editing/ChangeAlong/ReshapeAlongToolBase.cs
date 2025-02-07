@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Threading;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
@@ -11,6 +12,7 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
@@ -19,6 +21,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected ReshapeAlongToolOptions _reshapeAlongToolOptions;
+
+		[CanBeNull]
+		private OverridableSettingsProvider<PartialChangeAlongToolOptions> _settingsProvider;
 
 		protected override string EditOperationDescription => "Reshape along";
 
@@ -122,6 +127,24 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				selectedFeatures, targetFeatures, cancellationToken);
 
 			return result;
+		}
+
+		protected void InitializeOptions() {
+			// Create a new instance only if it doesn't exist yet
+			_settingsProvider ??= new OverridableSettingsProvider<PartialChangeAlongToolOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
+
+			PartialChangeAlongToolOptions localConfiguration, centralConfiguration;
+			_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
+
+			_reshapeAlongToolOptions =
+				new ReshapeAlongToolOptions(centralConfiguration, localConfiguration);
+
+			// Update the view model with the options
+			var viewModel = GetReshapeAlongViewModel();
+			if (viewModel != null) {
+				viewModel.Options = _reshapeAlongToolOptions;
+			}
 		}
 
 		#region first phase selection cursor

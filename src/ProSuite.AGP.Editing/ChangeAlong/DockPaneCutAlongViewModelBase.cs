@@ -37,6 +37,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				NotifyPropertyChanged();
 				if (value != null)
 				{
+					TargetFeatureSelectionVM = new TargetFeatureSelectionViewModel(value.CentralizableTargetFeatureSelection);
 					ZValueSourceSelectionVM = new ZValueSourceSelectionViewModel(value.CentralizableZValueSource);
 				}
 			}

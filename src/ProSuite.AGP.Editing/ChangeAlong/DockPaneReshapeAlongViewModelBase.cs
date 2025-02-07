@@ -38,6 +38,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			{
 				SetProperty(ref _options, value, () => Options);
 				NotifyPropertyChanged();
+				if (value != null)
+				{
+					TargetFeatureSelectionVM = new TargetFeatureSelectionViewModel(value.CentralizableTargetFeatureSelection);
+				}
 			}
 		}
 	}

@@ -144,7 +144,18 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override async Task OnToolActivatingCoreAsync()
 		{
-			InitializeOptions();
+			// Make sure options are initialized
+			if (_cutAlongToolOptions == null)
+			{
+				InitializeOptions();
+			}
+
+			// Update the view model again to ensure it has the options
+			var viewModel = GetCutAlongViewModel();
+			if (viewModel != null)
+			{
+				viewModel.Options = _cutAlongToolOptions;
+			}
 
 			await base.OnToolActivatingCoreAsync();
 		}
@@ -262,6 +273,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return;
 			}
 
+			// Ensure options are set before activating
+			if (_cutAlongToolOptions == null)
+			{
+				InitializeOptions();
+			}
+			
 			viewModel.Options = _cutAlongToolOptions;
 			viewModel.Activate(true);
 		}

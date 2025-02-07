@@ -2,6 +2,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
@@ -78,6 +79,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CentralizableZValueSource =
 				InitializeSetting<ZValueSource>(
 					ReflectionUtils.GetProperty(() => LocalOptions.ZValueSource), ZValueSource.Target);
+
+			// Target Selection
+			CentralizableTargetFeatureSelection =
+				InitializeSetting<TargetFeatureSelection>(
+					ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection), 
+					TargetFeatureSelection.SameClass);
 		}
 
 		#region Centralizable Properties
@@ -110,6 +117,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		// Z Value settings
 		public CentralizableSetting<ZValueSource> CentralizableZValueSource { get; private set; }
+
+		// Target Selection
+		public CentralizableSetting<TargetFeatureSelection> CentralizableTargetFeatureSelection { get; private set; }
 
 		#endregion
 
@@ -144,6 +154,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		// Z Value settings
 		public ZValueSource ZValueSource => CentralizableZValueSource.CurrentValue;
 
+		// Target Selection
+		public TargetFeatureSelection TargetFeatureSelection => CentralizableTargetFeatureSelection.CurrentValue;
+
 		#endregion
 
 		public override void RevertToDefaults()
@@ -176,6 +189,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			// Z Value settings
 			CentralizableZValueSource.RevertToDefault();
+
+			// Target Selection
+			CentralizableTargetFeatureSelection.RevertToDefault();
 		}
 
 		public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -283,6 +299,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 
 			if (HasLocalOverride(CentralizableZValueSource, "Z Value Source", notifications))
+			{
+				result = true;
+			}
+
+			// Target Selection
+			if (HasLocalOverride(CentralizableTargetFeatureSelection, "Target Feature Selection",
+			                     notifications))
 			{
 				result = true;
 			}

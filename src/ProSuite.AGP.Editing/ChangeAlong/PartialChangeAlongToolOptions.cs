@@ -1,10 +1,14 @@
 using ProSuite.Commons.ManagedOptions;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
 	public class PartialChangeAlongToolOptions : PartialOptionsBase
 	{
 		#region Overridable Settings
+
+		// Target Selection
+		public OverridableSetting<TargetFeatureSelection> TargetFeatureSelection { get; set; }
 
 		public OverridableSetting<bool> InsertVertices { get; set; }
 		public OverridableSetting<bool> ExcludeCutLines { get; set; }
@@ -41,6 +45,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			var result = new PartialChangeAlongToolOptions
 			{
+				TargetFeatureSelection = TryClone(TargetFeatureSelection),
 				InsertVertices = TryClone(InsertVertices),
 				ExcludeCutLines = TryClone(ExcludeCutLines),
 				
