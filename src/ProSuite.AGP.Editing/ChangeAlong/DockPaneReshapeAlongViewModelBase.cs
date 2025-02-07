@@ -1,20 +1,36 @@
+using ProSuite.AGP.Editing.AdvancedReshape;
+using ProSuite.Commons.AGP.Framework;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
-using ProSuite.Commons.AGP.Framework;
-using ArcGIS.Desktop.Framework.Controls;
-using ProSuite.Commons.UI.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
-	public abstract class DockPaneReshapeAlongViewModelBase : DockPane
+	public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 	{
+		protected DockPaneReshapeAlongViewModelBase() : base(new DockPaneReshapeAlong()) {
+			RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
+		}
+		#region RestoreDefaultsButton
+		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
+
+
+		public ICommand RevertToDefaultsCommand { get; }
+
+		public bool IsButtonEnabled => _options?.CentralOptions != null;
+
+		private void RevertToDefaults() {
+			Options?.RevertToDefaults();
+		}
+		#endregion
+
+		private string _heading = "Reshape Along Options";
+		
 		private ReshapeAlongToolOptions _options;
 
-		public DockPaneReshapeAlongViewModelBase() : base()
-		{
+		public string Heading {
+			get { return _heading; }
+			set { SetProperty(ref _heading, value, () => Heading); }
 		}
-
 		public ReshapeAlongToolOptions Options
 		{
 			get => _options;

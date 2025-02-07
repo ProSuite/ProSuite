@@ -16,7 +16,8 @@
                 <extensions:DesignOnlyResourceDictionary
                     Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
 
-                <ResourceDictionary Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
+                <ResourceDictionary 
+                    Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
 
             </ResourceDictionary.MergedDictionaries>
 
