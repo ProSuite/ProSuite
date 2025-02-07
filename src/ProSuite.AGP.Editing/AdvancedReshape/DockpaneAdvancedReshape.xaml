@@ -5,7 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
              xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
-             xmlns:managedOptions="clr-namespace:ProSuite.Commons.UI.ManagedOptions;assembly=ProSuite.Commons.UI" xmlns:advancedreshape="clr-namespace:ProSuite.AGP.Editing.AdvancedReshape" 
+             xmlns:managedOptions="clr-namespace:ProSuite.Commons.UI.ManagedOptions;assembly=ProSuite.Commons.UI" 
+             xmlns:advancedreshape="clr-namespace:ProSuite.AGP.Editing.AdvancedReshape" 
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="335"
              d:DataContext="{d:DesignInstance Type=advancedreshape:DockPaneAdvancedReshapeViewModelBase}">
@@ -15,7 +16,8 @@
                 <extensions:DesignOnlyResourceDictionary
                     Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
 
-                <ResourceDictionary Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
+                <ResourceDictionary 
+                    Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
 
             </ResourceDictionary.MergedDictionaries>
 
