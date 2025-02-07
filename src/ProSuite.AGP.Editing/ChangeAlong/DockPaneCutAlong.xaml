@@ -10,7 +10,11 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
+                <extensions:DesignOnlyResourceDictionary 
+                    Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
+
+                <ResourceDictionary 
+                    Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -18,13 +22,125 @@
         HorizontalAlignment="Left"
         VerticalAlignment="Top" Width="Auto">
 
-        <CheckBox Content="Insert vertices on targets for topological correctness"
-                  IsChecked="{Binding Path=Options.CentralizableInsertVertices.CurrentValue}" />
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <!-- Restore Defaults -->
-        <Button Content="Restore Defaults" 
-                Command="{Binding Path=Options.RevertToDefaultsCommand}"
-                Margin="5"/>
+            <!-- Ungrouped  -->
+            <StackPanel Grid.Row="0">
+                <CheckBox 
+                          Template="{StaticResource CentralizableSettingCheckbox}"
+                          Content="Insert vertices on targets for topological correctness"
+                          DataContext="{Binding Options.CentralizableInsertVertices}"/>
+
+            </StackPanel>
+
+            <!-- Z Value Source Section -->
+            <StackPanel Grid.Row="1">
+                <Label FontWeight="Medium" Content="Z Value Source" Padding="6,6,6,2"/>
+                <changealong:ZValueSourceSelectionControl DataContext="{Binding ZValueSourceSelectionVM}"/>
+            </StackPanel>
+
+            <!-- Display Performance Options  -->
+            <StackPanel Grid.Row="2">
+                <Label FontWeight="Medium" Content="Display Performance Options" Padding="6,6,6,2"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <CheckBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
+                              Template="{StaticResource CentralizableSettingCheckbox}"
+                              Content="Exclude cut lines that are not completely within main map"
+                              DataContext="{Binding Options.CentralizableDisplayExcludeCutLines}"/>
+
+                    <CheckBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
+                              Template="{StaticResource CentralizableSettingCheckbox}"
+                              Content="Recalculate cut lines when the map extent changes"
+                              Margin="20,0,0,0"
+                              DataContext="{Binding Options.CentralizableDisplayRecalculateCutLines}"/>
+
+                    <CheckBox Grid.Row="2" Grid.Column="1"
+                         Template="{StaticResource CentralizableSettingCheckbox}"
+                         Content="Hide cut lines when zoomed beyond 1:"
+                         DataContext="{Binding Options.CentralizableDisplayHideCutLines}"/>
+
+                    <ContentControl Grid.Row="2" Grid.Column="2"
+                              Template="{StaticResource CentralizableSettingsSpinner}"
+                              DataContext="{Binding Options.CentralizableDisplayHideCutLines}"/>
+
+                    <ContentControl Grid.Row="2" Grid.Column="3"
+                              Template="{StaticResource CentralizableSettingsLabel}"
+                              DataContext="{Binding Options.CentralizableDisplayHideCutLines}"/>
+
+                </Grid>
+            </StackPanel>
+
+
+            <!-- Target Buffer Section -->
+            <StackPanel Grid.Row="3">
+                <Label FontWeight="Medium" Content="Target Buffer" Padding="6,6,6,2"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <CheckBox Grid.Row="0" Grid.Column="1"
+                  Template="{StaticResource CentralizableSettingCheckbox}"
+                  Content="Buffer the target geometry by"
+                  DataContext="{Binding Options.CentralizableInsertVertices}"/>
+
+                    <ContentControl Grid.Row="0" Grid.Column="2"
+                       Template="{StaticResource CentralizableSettingsSpinner}"
+                       DataContext="{Binding Options.CentralizableBufferTolerance}"/>
+
+                    <ContentControl Grid.Row="0" Grid.Column="3"
+                       Template="{StaticResource CentralizableSettingsLabel}"
+                       DataContext="{Binding Options.CentralizableBufferTolerance}"/>
+
+                    <CheckBox Grid.Column="1"
+                  Template="{StaticResource CentralizableSettingCheckbox}"
+                  Content="Enforce minimum buffer segment length"
+                  Margin="20,27,10,0"
+                  DataContext="{Binding Options.CentralizableInsertVertices}" Grid.RowSpan="2"/>
+
+                    <ContentControl Grid.Row="1" Grid.Column="2"
+                       Template="{StaticResource CentralizableSettingsSpinner}"
+                       DataContext="{Binding Options.CentralizableMinBufferSegmentLength}"/>
+
+                    <ContentControl Grid.Row="1" Grid.Column="3"
+                       Template="{StaticResource CentralizableSettingsLabel}"
+                       DataContext="{Binding Options.CentralizableMinBufferSegmentLength}"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- Restore Defaults Button -->
+            <Button Grid.Row="4" 
+                    Template="{StaticResource RestoreDefaultsButton}"
+                    HorizontalAlignment="Left"
+                    Margin="6,12,6,6"/>
+        </Grid>
 
     </StackPanel>
 </UserControl>

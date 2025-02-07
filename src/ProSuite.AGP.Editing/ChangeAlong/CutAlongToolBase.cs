@@ -28,7 +28,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			DisplayTargetLines = true;
 		}
 
-		protected ChangeAlongToolOptions _cutAlongToolOptions;
+		protected CutAlongToolOptions _cutAlongToolOptions;
 
 		[CanBeNull]
 		private OverridableSettingsProvider<PartialChangeAlongToolOptions> _settingsProvider;
@@ -124,7 +124,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected void InitializeOptions()
 		{
-			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			// Create a new instance only if it doesn't exist yet
 			_settingsProvider ??= new OverridableSettingsProvider<PartialChangeAlongToolOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
@@ -132,7 +132,14 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
 
 			_cutAlongToolOptions =
-				new ChangeAlongToolOptions(centralConfiguration, localConfiguration);
+				new CutAlongToolOptions(centralConfiguration, localConfiguration);
+
+			// Update the view model with the options
+			var viewModel = GetCutAlongViewModel();
+			if (viewModel != null)
+			{
+				viewModel.Options = _cutAlongToolOptions;
+			}
 		}
 
 		protected override async Task OnToolActivatingCoreAsync()
@@ -250,14 +257,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected override void ShowOptionsPane()
 		{
 			var viewModel = GetCutAlongViewModel();
-
 			if (viewModel == null)
 			{
 				return;
 			}
 
 			viewModel.Options = _cutAlongToolOptions;
-
 			viewModel.Activate(true);
 		}
 

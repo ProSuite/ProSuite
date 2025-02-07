@@ -5,13 +5,13 @@ using ProSuite.Commons.AGP.Framework;
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
 	public class DockPaneCutAlongViewModelBase : DockPaneViewModelBase {
-		protected DockPaneCutAlongViewModelBase() : base(new DockPaneCutAlong())
-		{
+		public DockPaneCutAlongViewModelBase() : base(new DockPaneCutAlong()) {
 			RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 		}
 		#region RestoreDefaultsButton
 		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
 
+		public ZValueSourceSelectionViewModel ZValueSourceSelectionVM { get; private set; }
 
 		public ICommand RevertToDefaultsCommand { get; }
 
@@ -21,20 +21,25 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			Options?.RevertToDefaults();
 		}
 		#endregion
-		
-		private string _heading = "Cut Along Options";
-		private ChangeAlongToolOptions _options;
 
-		public string Heading
-		{
+		private string _heading = "Cut Along Options";
+
+		private CutAlongToolOptions _options;
+
+		public string Heading {
 			get { return _heading; }
 			set { SetProperty(ref _heading, value, () => Heading); }
 		}
-
-		public ChangeAlongToolOptions Options
-		{
-			get { return _options; }
-			set { SetProperty(ref _options, value); }
+		public CutAlongToolOptions Options {
+			get => _options;
+			set {
+				SetProperty(ref _options, value, () => Options);
+				NotifyPropertyChanged();
+				if (value != null)
+				{
+					ZValueSourceSelectionVM = new ZValueSourceSelectionViewModel(value.CentralizableZValueSource);
+				}
+			}
 		}
 	}
 }
