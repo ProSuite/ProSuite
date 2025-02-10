@@ -41,6 +41,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 
 		public SpatialRelationship SpatialRelationship { get; }
 		public SelectionCombinationMethod SelectionCombinationMethod { get; }
+		public bool NoMultiselection { get; set; }
 
 		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
 		{

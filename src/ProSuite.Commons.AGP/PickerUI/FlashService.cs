@@ -11,7 +11,6 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using Envelope = ArcGIS.Core.Geometry.Envelope;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
-using Polygon = ArcGIS.Core.Geometry.Polygon;
 
 namespace ProSuite.Commons.AGP.PickerUI;
 
@@ -146,7 +145,8 @@ public class FlashService : IDisposable
 		MapView.Active.NotNullCallback(mv =>
 		{
 			double referenceScale = useRealWorldUnits ? 1000 : -1;
-			IDisposable overlay = mv.AddOverlay(geometry, symbol.MakeSymbolReference(), referenceScale);
+			IDisposable overlay =
+				mv.AddOverlay(geometry, symbol.MakeSymbolReference(), referenceScale);
 
 			_overlays.Add(Assert.NotNull(overlay));
 		});
@@ -178,15 +178,23 @@ public class ColoredSymbol : IFlashSymbol
 	private readonly CIMColor _color;
 	private readonly double _width;
 
-	public ColoredSymbol(string name, double R, double G, double B, double width = 4, bool useRealWorldUnits = false)
-		: this(R, G, B, width, useRealWorldUnits)
+	public ColoredSymbol(string name, double R, double G, double B, double width = 4,
+	                     SimpleLineStyle lineStyle = SimpleLineStyle.Solid,
+	                     SimpleMarkerStyle markerStyle = SimpleMarkerStyle.Circle,
+	                     bool useRealWorldUnits = false)
+		: this(R, G, B, width, lineStyle, markerStyle, useRealWorldUnits)
 	{
 		Name = name;
 	}
 
-	public ColoredSymbol(double R, double G, double B, double width = 4, bool useRealWorldUnits = false)
+	public ColoredSymbol(double R, double G, double B, double width = 4,
+	                     SimpleLineStyle lineStyle = SimpleLineStyle.Solid,
+	                     SimpleMarkerStyle markerStyle = SimpleMarkerStyle.Circle,
+	                     bool useRealWorldUnits = false)
 	{
 		UseRealWorldUnits = useRealWorldUnits;
+		LineStyle = lineStyle;
+		MarkerStyle = markerStyle;
 
 		_width = width;
 		_color = ColorFactory.Instance.CreateRGBColor(R, G, B);
@@ -195,6 +203,8 @@ public class ColoredSymbol : IFlashSymbol
 	public string Name { get; set; }
 
 	public bool UseRealWorldUnits { get; set; }
+	public SimpleLineStyle LineStyle { get; set; }
+	public SimpleMarkerStyle MarkerStyle { get; set; }
 
 	public CIMSymbol GetSymbol(GeometryType type)
 	{
@@ -203,21 +213,22 @@ public class ColoredSymbol : IFlashSymbol
 			case GeometryType.Point:
 			case GeometryType.Multipoint:
 			{
-				var symbol = SymbolUtils.CreatePointSymbol(_color, _width * 1.5);
+				var symbol =
+					SymbolFactory.Instance.ConstructPointSymbol(_color, _width, MarkerStyle);
 				symbol.UseRealWorldSymbolSizes = UseRealWorldUnits;
 				return symbol;
 			}
 			case GeometryType.Polyline:
 			{
-				var symbol = SymbolFactory.Instance.ConstructLineSymbol(_color, _width);
+				var symbol = SymbolFactory.Instance.ConstructLineSymbol(_color, _width, LineStyle);
 				symbol.UseRealWorldSymbolSizes = UseRealWorldUnits;
 				return symbol;
 			}
 			case GeometryType.Polygon:
 			{
 				CIMStroke outline =
-					SymbolFactory.Instance.ConstructStroke(_color, _width, SimpleLineStyle.Solid);
-					
+					SymbolFactory.Instance.ConstructStroke(_color, _width, LineStyle);
+
 				var symbol = SymbolFactory.Instance.ConstructPolygonSymbol(
 					_color, SimpleFillStyle.Null, outline);
 				symbol.UseRealWorldSymbolSizes = UseRealWorldUnits;

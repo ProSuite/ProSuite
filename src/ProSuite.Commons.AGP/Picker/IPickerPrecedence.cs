@@ -13,6 +13,8 @@ public interface IPickerPrecedence : IDisposable
 	Point PickerLocation { get; set; }
 	SpatialRelationship SpatialRelationship { get; }
 	SelectionCombinationMethod SelectionCombinationMethod { get; }
+	bool NoMultiselection { get; set; }
+
 	IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items);
 
 	IPickableItem PickBest(IEnumerable<IPickableItem> items);

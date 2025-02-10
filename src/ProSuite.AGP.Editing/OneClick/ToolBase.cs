@@ -58,7 +58,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		ConstructionCursorCore = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
 	}
 
-	private List<Key> HandledKeys { get; } =
+	protected List<Key> HandledKeys { get; } =
 		new(6)
 		{
 			Key.Escape, Key.LeftShift, Key.RightShift,

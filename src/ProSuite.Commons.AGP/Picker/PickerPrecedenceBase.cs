@@ -113,6 +113,8 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 	public Point PickerLocation { get; set; }
 
+	public bool NoMultiselection { get; set; }
+
 	public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
 	{
 		if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
@@ -128,6 +130,11 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		bool areaSelect = ! IsSingleClick;
 		if (areaSelect)
 		{
+			if (NoMultiselection)
+			{
+				return PickerMode.ShowPicker;
+			}
+
 			return PickerMode.PickAll;
 		}
 
