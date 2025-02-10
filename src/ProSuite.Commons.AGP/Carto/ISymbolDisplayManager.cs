@@ -2,13 +2,13 @@ using ArcGIS.Desktop.Mapping;
 
 namespace ProSuite.Commons.AGP.Carto;
 
-public interface ISymbolLayerDisplay
+public interface ISymbolDisplayManager
 {
-	public bool AutoSwitch { get; set; }
-	public double AutoMinScaleDenom { get; set; }
-	public double AutoMaxScaleDenom { get; set; }
+	public IIndexedProperty<Map, bool> AutoSwitch { get; }
+	public IIndexedProperty<Map, double> AutoMinScaleDenom { get; }
+	public IIndexedProperty<Map, double> AutoMaxScaleDenom { get; }
 
-	public bool NoMaskingWithoutSLD { get; set; }
+	public IIndexedProperty<Map, bool> NoMaskingWithoutSLD { get; }
 
 	bool? QuickUsesSLD(Map map);
 	bool? QuickUsesLM(Map map);

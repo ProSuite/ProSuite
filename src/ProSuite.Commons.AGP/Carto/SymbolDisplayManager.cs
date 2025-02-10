@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using ArcGIS.Core.Events;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -11,7 +12,12 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto;
 
-public class SymbolLayerDisplayManager : ISymbolLayerDisplay
+public interface IIndexedProperty<in TKey, TValue>
+{
+	TValue this[TKey key] { get; set; }
+}
+
+public class SymbolDisplayManager : ISymbolDisplayManager
 {
 	private readonly Dictionary<string, bool> _sldState = new();
 	private readonly Dictionary<string, bool> _lmState = new();
@@ -22,23 +28,33 @@ public class SymbolLayerDisplayManager : ISymbolLayerDisplay
 	private SubscriptionToken _projectClosedToken;
 
 	private readonly Settings _defaultSettings;
-	private Settings _settings;
+	//private Settings _settings;
 	private double _lastScaleDenom;
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	#region Singleton
 
-	private static volatile SymbolLayerDisplayManager _instance;
+	private static volatile SymbolDisplayManager _instance;
 	private static readonly object _instanceLock = new();
 
-	private SymbolLayerDisplayManager() // private to prevent outside instantiation
+	private SymbolDisplayManager() // private to prevent outside instantiation
 	{
-		_settings = _defaultSettings = new Settings();
+		_defaultSettings = new Settings();
 		_lastScaleDenom = double.NaN;
+
+		NoMaskingWithoutSLD = new IndexedProperty<bool>(_settingsByMap, _defaultSettings,
+		                                                nameof(Settings.NoMaskingWithoutSLD));
+
+		AutoSwitch = new IndexedProperty<bool>(_settingsByMap, _defaultSettings,
+		                                       nameof(Settings.AutoSwitch));
+		AutoMinScaleDenom = new IndexedProperty<double>(_settingsByMap, _defaultSettings,
+		                                                nameof(Settings.AutoMinScaleDenom));
+		AutoMaxScaleDenom = new IndexedProperty<double>(_settingsByMap, _defaultSettings,
+		                                                nameof(Settings.AutoMaxScaleDenom));
 	}
 
-	public static SymbolLayerDisplayManager Instance
+	public static SymbolDisplayManager Instance
 	{
 		get
 		{
@@ -48,7 +64,7 @@ public class SymbolLayerDisplayManager : ISymbolLayerDisplay
 				{
 					if (_instance is null)
 					{
-						_instance = new SymbolLayerDisplayManager();
+						_instance = new SymbolDisplayManager();
 					}
 				}
 			}
@@ -59,29 +75,35 @@ public class SymbolLayerDisplayManager : ISymbolLayerDisplay
 
 	#endregion
 
-	public bool NoMaskingWithoutSLD
-	{
-		get => _settings.NoMaskingWithoutSLD;
-		set => _settings.NoMaskingWithoutSLD = value;
-	}
+	public IIndexedProperty<Map, bool> NoMaskingWithoutSLD { get; }
 
-	public bool AutoSwitch
-	{
-		get => _settings.AutoSwitch;
-		set => _settings.AutoSwitch = value;
-	}
+	public IIndexedProperty<Map, bool> AutoSwitch { get; }
+	public IIndexedProperty<Map, double> AutoMinScaleDenom { get; }
+	public IIndexedProperty<Map, double> AutoMaxScaleDenom { get; }
 
-	public double AutoMinScaleDenom
-	{
-		get => _settings.AutoMinScaleDenom;
-		set => _settings.AutoMinScaleDenom = value;
-	}
+	//public bool NoMaskingWithoutSLD
+	//{
+	//	get => _settings.NoMaskingWithoutSLD;
+	//	set => _settings.NoMaskingWithoutSLD = value;
+	//}
 
-	public double AutoMaxScaleDenom
-	{
-		get => _settings.AutoMaxScaleDenom;
-		set => _settings.AutoMaxScaleDenom = value;
-	}
+	//public bool AutoSwitch
+	//{
+	//	get => _settings.AutoSwitch;
+	//	set => _settings.AutoSwitch = value;
+	//}
+
+	//public double AutoMinScaleDenom
+	//{
+	//	get => _settings.AutoMinScaleDenom;
+	//	set => _settings.AutoMinScaleDenom = value;
+	//}
+
+	//public double AutoMaxScaleDenom
+	//{
+	//	get => _settings.AutoMaxScaleDenom;
+	//	set => _settings.AutoMaxScaleDenom = value;
+	//}
 
 	public void Initialize()
 	{
@@ -129,11 +151,9 @@ public class SymbolLayerDisplayManager : ISymbolLayerDisplay
 	{
 		try
 		{
-			var activeMap = MapView.Active?.Map;
-			// TODO vs args.IncomingView?!
 			var map = args.IncomingView?.Map;
 
-			SwitchSettings(map);
+			//SwitchSettings(map);
 		}
 		catch (Exception ex)
 		{
@@ -208,7 +228,9 @@ public class SymbolLayerDisplayManager : ISymbolLayerDisplay
 
 		_sldState[map.URI] = turnOn; // cache for performance
 
-		if (NoMaskingWithoutSLD && !turnOn && UsesLM(map))
+		bool noMaskingWithoutSLD = NoMaskingWithoutSLD[map];
+
+		if (noMaskingWithoutSLD && !turnOn && UsesLM(map))
 		{
 			modified |= ToggleLM(map, false);
 		}
@@ -260,7 +282,9 @@ public class SymbolLayerDisplayManager : ISymbolLayerDisplay
 
 		_lmState[map.URI] = turnOn; // cache for performance
 
-		if (NoMaskingWithoutSLD && turnOn && ! UsesSLD(map))
+		bool noMaskingWithoutSLD = NoMaskingWithoutSLD[map];
+
+		if (noMaskingWithoutSLD && turnOn && ! UsesSLD(map))
 		{
 			modified |= ToggleSLD(map, true);
 		}
@@ -273,7 +297,8 @@ public class SymbolLayerDisplayManager : ISymbolLayerDisplay
 	/// <remarks>Must run on MCT</remarks>
 	private void ScaleChanged(Map map, double currentScaleDenom)
 	{
-		if (!AutoSwitch) return; // nothing to do
+		var autoSwitch = AutoSwitch[map];
+		if (! autoSwitch) return; // nothing to do
 
 		if (double.IsNaN(currentScaleDenom)) return;
 
@@ -282,10 +307,10 @@ public class SymbolLayerDisplayManager : ISymbolLayerDisplay
 
 		_lastScaleDenom = currentScaleDenom;
 
-		var min = AutoMinScaleDenom;
+		var min = AutoMinScaleDenom[map];
 		if (!(min > 0)) min = 0;
 
-		var max = AutoMaxScaleDenom;
+		var max = AutoMaxScaleDenom[map];
 		if (!(max > 0)) max = double.MaxValue;
 
 		bool wantOn = min <= currentScaleDenom && currentScaleDenom <= max;
@@ -320,7 +345,7 @@ public class SymbolLayerDisplayManager : ISymbolLayerDisplay
 	{
 		if (activeMap is null)
 		{
-			_settings = _defaultSettings;
+			//_currentSettings = _defaultSettings;
 		}
 		else
 		{
@@ -333,14 +358,14 @@ public class SymbolLayerDisplayManager : ISymbolLayerDisplay
 				_settingsByMap.Add(activeMap.URI, settings);
 			}
 
-			_settings = settings;
+			//_currentSettings = settings;
 		}
 	}
 
 	private void ClearSettings()
 	{
 		_settingsByMap.Clear();
-		_settings = _defaultSettings;
+		//_currentSettings = _defaultSettings;
 	}
 
 	private void ClearStateCache()
@@ -369,6 +394,81 @@ public class SymbolLayerDisplayManager : ISymbolLayerDisplay
 			AutoMinScaleDenom = settings.AutoMinScaleDenom;
 			AutoMaxScaleDenom = settings.AutoMaxScaleDenom;
 			NoMaskingWithoutSLD = settings.NoMaskingWithoutSLD;
+		}
+	}
+
+	#endregion
+
+	#region Nested type: IndexedProperty
+
+	private class IndexedProperty<T> : IIndexedProperty<Map, T>
+	{
+		private readonly string _propertyName;
+		private readonly Dictionary<string, Settings> _settings;
+		private readonly Settings _defaultSettings;
+
+		public IndexedProperty(Dictionary<string, Settings> settings, Settings defaultSettings, string propertyName)
+		{
+			_settings = settings;
+			_defaultSettings = defaultSettings;
+			_propertyName = propertyName;
+		}
+
+		public T this[Map map]
+		{
+			get
+			{
+				if (map is null) return GetValue(_defaultSettings);
+				if (map.URI is null) throw MapHasNoUri();
+				return GetValue(_settings.GetValueOrDefault(map.URI, _defaultSettings));
+			}
+			set
+			{
+				if (map is null)
+				{
+					SetValue(_defaultSettings, value);
+				}
+				else
+				{
+					if (map.URI is null) throw MapHasNoUri();
+					if (!_settings.TryGetValue(map.URI, out var settings))
+					{
+						settings = new Settings(_defaultSettings);
+						_settings.Add(map.URI, settings);
+					}
+
+					SetValue(settings, value);
+				}
+			}
+		}
+
+		private T GetValue(Settings settings)
+		{
+			const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
+			var type = settings.GetType();
+			var property = type.GetProperty(_propertyName, flags)
+			               ?? throw PropertyNotFound();
+			return (T) property.GetValue(settings);
+		}
+
+		private void SetValue(Settings settings, T value)
+		{
+			const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
+			var type = settings.GetType();
+			var property = type.GetProperty(_propertyName, flags)
+			               ?? throw new InvalidOperationException(
+				               $"No such property: {_propertyName}");
+			property.SetValue(settings, value);
+		}
+
+		private InvalidOperationException PropertyNotFound()
+		{
+			return new InvalidOperationException($"Property not found: {_propertyName}");
+		}
+
+		private static ArgumentException MapHasNoUri()
+		{
+			return new ArgumentException("Map has no URI");
 		}
 	}
 
