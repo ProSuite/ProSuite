@@ -7,28 +7,20 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto;
 
-public interface IIndexedProperty<in TKey, TValue>
-{
-	TValue this[TKey key] { get; set; }
-}
-
 public class SymbolDisplayManager : ISymbolDisplayManager
 {
-	private readonly Dictionary<string, bool> _sldState = new();
-	private readonly Dictionary<string, bool> _lmState = new();
-	private readonly Dictionary<string, Settings> _settingsByMap = new();
+	private readonly Dictionary<string, bool> _sldStateCache = new();
+	private readonly Dictionary<string, bool> _lmStateCache = new();
+	private readonly Dictionary<string, SymbolDisplaySettings> _settingsByMap = new();
 
-	private SubscriptionToken _activeMapViewChangedToken;
 	private SubscriptionToken _mapViewCameraChangedToken;
 	private SubscriptionToken _projectClosedToken;
 
-	private readonly Settings _defaultSettings;
-	//private Settings _settings;
+	private SymbolDisplaySettings _defaultSettings;
 	private double _lastScaleDenom;
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -40,19 +32,21 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 
 	private SymbolDisplayManager() // private to prevent outside instantiation
 	{
-		_defaultSettings = new Settings();
+		_defaultSettings = new SymbolDisplaySettings();
 		_lastScaleDenom = double.NaN;
 
-		NoMaskingWithoutSLD = new IndexedProperty<bool>(_settingsByMap, _defaultSettings,
-		                                                nameof(Settings.NoMaskingWithoutSLD));
+		NoMaskingWithoutSLD = new IndexedProperty<bool>(
+			nameof(SymbolDisplaySettings.NoMaskingWithoutSLD), _settingsByMap, GetDefaults);
 
-		AutoSwitch = new IndexedProperty<bool>(_settingsByMap, _defaultSettings,
-		                                       nameof(Settings.AutoSwitch));
-		AutoMinScaleDenom = new IndexedProperty<double>(_settingsByMap, _defaultSettings,
-		                                                nameof(Settings.AutoMinScaleDenom));
-		AutoMaxScaleDenom = new IndexedProperty<double>(_settingsByMap, _defaultSettings,
-		                                                nameof(Settings.AutoMaxScaleDenom));
+		AutoSwitch = new IndexedProperty<bool>(
+			nameof(SymbolDisplaySettings.AutoSwitch), _settingsByMap, GetDefaults);
+		AutoMinScaleDenom = new IndexedProperty<double>(
+			nameof(SymbolDisplaySettings.AutoMinScaleDenom), _settingsByMap, GetDefaults);
+		AutoMaxScaleDenom = new IndexedProperty<double>(
+			nameof(SymbolDisplaySettings.AutoMaxScaleDenom), _settingsByMap, GetDefaults);
 	}
+
+	private SymbolDisplaySettings GetDefaults() => _defaultSettings;
 
 	public static SymbolDisplayManager Instance
 	{
@@ -75,50 +69,29 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 
 	#endregion
 
+	// Settings:
+	// write: set current and default
+	// read: get current (or default)
+
 	public IIndexedProperty<Map, bool> NoMaskingWithoutSLD { get; }
 
 	public IIndexedProperty<Map, bool> AutoSwitch { get; }
 	public IIndexedProperty<Map, double> AutoMinScaleDenom { get; }
 	public IIndexedProperty<Map, double> AutoMaxScaleDenom { get; }
 
-	//public bool NoMaskingWithoutSLD
-	//{
-	//	get => _settings.NoMaskingWithoutSLD;
-	//	set => _settings.NoMaskingWithoutSLD = value;
-	//}
-
-	//public bool AutoSwitch
-	//{
-	//	get => _settings.AutoSwitch;
-	//	set => _settings.AutoSwitch = value;
-	//}
-
-	//public double AutoMinScaleDenom
-	//{
-	//	get => _settings.AutoMinScaleDenom;
-	//	set => _settings.AutoMinScaleDenom = value;
-	//}
-
-	//public double AutoMaxScaleDenom
-	//{
-	//	get => _settings.AutoMaxScaleDenom;
-	//	set => _settings.AutoMaxScaleDenom = value;
-	//}
-
-	public void Initialize()
+	public void Initialize(SymbolDisplaySettings settings)
 	{
-		_activeMapViewChangedToken ??= ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
+		if (settings is not null)
+		{
+			_defaultSettings = settings;
+		}
+
 		_mapViewCameraChangedToken ??= MapViewCameraChangedEvent.Subscribe(OnMapViewCameraChanged);
 		_projectClosedToken ??= ProjectClosedEvent.Subscribe(OnProjectClosed);
 	}
 
 	public void Shutdown()
 	{
-		if (_activeMapViewChangedToken is not null)
-		{
-			ActiveMapViewChangedEvent.Unsubscribe(_activeMapViewChangedToken);
-		}
-
 		if (_mapViewCameraChangedToken is not null)
 		{
 			MapViewCameraChangedEvent.Unsubscribe(_mapViewCameraChangedToken);
@@ -144,20 +117,6 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 		catch (Exception ex)
 		{
 			Gateway.LogError(ex, _msg, nameof(OnProjectClosed));
-		}
-	}
-
-	private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs args)
-	{
-		try
-		{
-			var map = args.IncomingView?.Map;
-
-			//SwitchSettings(map);
-		}
-		catch (Exception ex)
-		{
-			Gateway.LogError(ex, _msg, nameof(OnActiveMapViewChanged));
 		}
 	}
 
@@ -188,7 +147,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	{
 		if (map is null) return false;
 		if (map.URI is null) return null; // paranoia
-		return _sldState.TryGetValue(map.URI, out bool enabled) ? enabled : null;
+		return _sldStateCache.TryGetValue(map.URI, out bool enabled) ? enabled : null;
 	}
 
 	/// <remarks>Must run on MCT</remarks>
@@ -196,14 +155,14 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	{
 		if (map is null) return false;
 
-		if (! uncached && _sldState.TryGetValue(map.URI, out bool enabled))
+		if (! uncached && _sldStateCache.TryGetValue(map.URI, out bool enabled))
 		{
 			return enabled;
 		}
 
 		enabled = DisplayUtils.UsesSLD(map);
 
-		_sldState[map.URI] = enabled;
+		_sldStateCache[map.URI] = enabled;
 
 		return enabled;
 	}
@@ -226,7 +185,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 			modified = DisplayUtils.ToggleSymbolLayerDrawing(map, turnOn);
 		}
 
-		_sldState[map.URI] = turnOn; // cache for performance
+		_sldStateCache[map.URI] = turnOn; // cache for performance
 
 		bool noMaskingWithoutSLD = NoMaskingWithoutSLD[map];
 
@@ -242,7 +201,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	{
 		if (map is null) return false;
 		if (map.URI is null) return null; // paranoia
-		return _lmState.TryGetValue(map.URI, out bool enabled) ? enabled : null;
+		return _lmStateCache.TryGetValue(map.URI, out bool enabled) ? enabled : null;
 	}
 
 	/// <remarks>Must run on MCT</remarks>
@@ -250,14 +209,14 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	{
 		if (map is null) return false;
 
-		if (! uncached && _lmState.TryGetValue(map.URI, out bool enabled))
+		if (! uncached && _lmStateCache.TryGetValue(map.URI, out bool enabled))
 		{
 			return enabled;
 		}
 
 		enabled = DisplayUtils.UsesLayerMasking(map) ?? false;
 
-		_lmState[map.URI] = enabled;
+		_lmStateCache[map.URI] = enabled;
 
 		return enabled;
 	}
@@ -280,7 +239,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 			modified = DisplayUtils.ToggleLayerMasking(map, turnOn);
 		}
 
-		_lmState[map.URI] = turnOn; // cache for performance
+		_lmStateCache[map.URI] = turnOn; // cache for performance
 
 		bool noMaskingWithoutSLD = NoMaskingWithoutSLD[map];
 
@@ -341,60 +300,15 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 		}
 	}
 
-	private void SwitchSettings([CanBeNull] Map activeMap)
-	{
-		if (activeMap is null)
-		{
-			//_currentSettings = _defaultSettings;
-		}
-		else
-		{
-			if (activeMap.URI is null)
-				throw new InvalidOperationException("Map has no URI");
-
-			if (!_settingsByMap.TryGetValue(activeMap.URI, out var settings))
-			{
-				settings = new(_defaultSettings);
-				_settingsByMap.Add(activeMap.URI, settings);
-			}
-
-			//_currentSettings = settings;
-		}
-	}
-
 	private void ClearSettings()
 	{
 		_settingsByMap.Clear();
-		//_currentSettings = _defaultSettings;
 	}
 
 	private void ClearStateCache()
 	{
-		_sldState.Clear();
-		_lmState.Clear();
-	}
-
-	#endregion
-
-	#region Nested type: Settings
-
-	private class Settings
-	{
-		public bool AutoSwitch { get; set; }
-		public double AutoMinScaleDenom { get; set; }
-		public double AutoMaxScaleDenom { get; set; }
-
-		public bool NoMaskingWithoutSLD { get; set; }
-
-		public Settings() { }
-
-		public Settings(Settings settings)
-		{
-			AutoSwitch = settings.AutoSwitch;
-			AutoMinScaleDenom = settings.AutoMinScaleDenom;
-			AutoMaxScaleDenom = settings.AutoMaxScaleDenom;
-			NoMaskingWithoutSLD = settings.NoMaskingWithoutSLD;
-		}
+		_sldStateCache.Clear();
+		_lmStateCache.Clear();
 	}
 
 	#endregion
@@ -404,60 +318,64 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	private class IndexedProperty<T> : IIndexedProperty<Map, T>
 	{
 		private readonly string _propertyName;
-		private readonly Dictionary<string, Settings> _settings;
-		private readonly Settings _defaultSettings;
+		private readonly Dictionary<string, SymbolDisplaySettings> _settings;
+		private readonly Func<SymbolDisplaySettings> _getDefaults;
 
-		public IndexedProperty(Dictionary<string, Settings> settings, Settings defaultSettings, string propertyName)
+		public IndexedProperty(
+			string propertyName, Dictionary<string, SymbolDisplaySettings> settings, Func<SymbolDisplaySettings> getDefaults)
 		{
-			_settings = settings;
-			_defaultSettings = defaultSettings;
-			_propertyName = propertyName;
+			_propertyName = propertyName ?? throw new ArgumentNullException(nameof(propertyName));
+			_settings = settings ?? throw new ArgumentNullException(nameof(settings));
+			_getDefaults = getDefaults ?? throw new ArgumentNullException(nameof(getDefaults));
 		}
 
 		public T this[Map map]
 		{
 			get
 			{
-				if (map is null) return GetValue(_defaultSettings);
+				if (map is null) return GetValue(_getDefaults());
 				if (map.URI is null) throw MapHasNoUri();
-				return GetValue(_settings.GetValueOrDefault(map.URI, _defaultSettings));
+				return GetValue(_settings.GetValueOrDefault(map.URI, _getDefaults()));
 			}
 			set
 			{
-				if (map is null)
-				{
-					SetValue(_defaultSettings, value);
-				}
-				else
+				if (map is not null)
 				{
 					if (map.URI is null) throw MapHasNoUri();
+
 					if (!_settings.TryGetValue(map.URI, out var settings))
 					{
-						settings = new Settings(_defaultSettings);
+						settings = new SymbolDisplaySettings(_getDefaults());
 						_settings.Add(map.URI, settings);
 					}
 
 					SetValue(settings, value);
 				}
+
+				SetValue(_getDefaults(), value);
 			}
 		}
 
-		private T GetValue(Settings settings)
+		private T GetValue(SymbolDisplaySettings settings)
 		{
+			if (settings is null) return default;
+
 			const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
 			var type = settings.GetType();
 			var property = type.GetProperty(_propertyName, flags)
-			               ?? throw PropertyNotFound();
-			return (T) property.GetValue(settings);
+						   ?? throw PropertyNotFound();
+			return (T)property.GetValue(settings);
 		}
 
-		private void SetValue(Settings settings, T value)
+		private void SetValue(SymbolDisplaySettings settings, T value)
 		{
+			if (settings is null) return; // no-op
+
 			const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
 			var type = settings.GetType();
 			var property = type.GetProperty(_propertyName, flags)
-			               ?? throw new InvalidOperationException(
-				               $"No such property: {_propertyName}");
+						   ?? throw new InvalidOperationException(
+							   $"No such property: {_propertyName}");
 			property.SetValue(settings, value);
 		}
 

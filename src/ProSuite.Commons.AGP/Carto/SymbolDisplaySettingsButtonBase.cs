@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Windows;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Framework;
 
@@ -21,7 +22,7 @@ public abstract class SymbolDisplaySettingsButtonBase : ButtonCommandBase
 
 		var viewModel = new SymbolDisplaySettingsViewModel
 		                {
-							ScopeMessage = scopeHint,
+			                ScopeMessage = scopeHint,
 			                AvoidSLMWithoutSLD = manager.NoMaskingWithoutSLD[map],
 			                UseScaleRange = manager.AutoSwitch[map],
 			                MinScaleDenominator = manager.AutoMinScaleDenom[map],
@@ -36,6 +37,7 @@ public abstract class SymbolDisplaySettingsButtonBase : ButtonCommandBase
 			manager.AutoSwitch[map] = viewModel.UseScaleRange;
 			manager.AutoMaxScaleDenom[map] = viewModel.MaxScaleDenominator;
 			manager.AutoMinScaleDenom[map] = viewModel.MinScaleDenominator;
+			Project.Current?.SetDirty();
 		}
 
 		return Task.FromResult(result ?? false);

@@ -32,7 +32,6 @@ public abstract class AvoidSLMWithoutSLDCheckBoxBase : CheckBox
 		try
 		{
 			var map = MapView.Active?.Map;
-
 			var state = Manager.NoMaskingWithoutSLD[map];
 
 			if (state == _lastState)

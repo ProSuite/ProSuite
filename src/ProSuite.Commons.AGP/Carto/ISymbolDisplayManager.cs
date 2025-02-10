@@ -2,6 +2,11 @@ using ArcGIS.Desktop.Mapping;
 
 namespace ProSuite.Commons.AGP.Carto;
 
+public interface IIndexedProperty<in TKey, TValue>
+{
+	TValue this[TKey key] { get; set; }
+}
+
 public interface ISymbolDisplayManager
 {
 	public IIndexedProperty<Map, bool> AutoSwitch { get; }
