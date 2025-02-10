@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using NUnit.Framework;
-using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Hosting;
+using ProSuite.Commons.AGP.Picker;
 
 namespace ProSuite.AGP.Editing.Test.Picker
 {

@@ -11,7 +11,6 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
@@ -19,6 +18,7 @@ using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -341,10 +341,16 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async void OnToolDoubleClick(MapViewMouseButtonEventArgs args)
 		{
+			_msg.VerboseDebug(() => $"{nameof(OnToolDoubleClick)} ({Caption})");
+
 			try
 			{
-				if (SketchType == SketchGeometryType.Polygon && await IsInSelectionPhaseAsync())
+				// Typically, shift is pressed which prevents the standard finish-sketch.
+				// We want to override this in specific situations, such as in intermittent
+				// selection phases with polygon sketches.
+				if (await FinishSketchOnDoubleClick())
 				{
+					_msg.VerboseDebug(() => "Calling finish sketch due to double-click...");
 					await FinishSketchAsync();
 				}
 			}
@@ -352,6 +358,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				Gateway.ShowError(ex, _msg);
 			}
+		}
+
+		/// <summary>
+		/// During the selection phase or some other (target selection) phase FinishSketch is not
+		/// always automatically called when double-clicking (typically Shift prevents this).
+		/// This method allows for defining whether the current double click shall result
+		/// in a call to FinishSketchAsync()
+		/// </summary>
+		/// <returns></returns>
+		protected virtual async Task<bool> FinishSketchOnDoubleClick()
+		{
+			return SketchType == SketchGeometryType.Polygon && await IsInSelectionPhaseAsync();
 		}
 
 		protected virtual void OnToolMouseDownCore(MapViewMouseButtonEventArgs args) { }
@@ -433,11 +451,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			await ShiftPressedCoreAsync();
 		}
 
-		protected virtual Task ShiftPressedCoreAsync()
-		{
-			return Task.CompletedTask;
-		}
-
 		private async Task ShiftReleasedAsync()
 		{
 			if (await IsInSelectionPhaseAsync())
@@ -448,6 +461,21 @@ namespace ProSuite.AGP.Editing.OneClick
 			await ShiftReleasedCoreAsync();
 		}
 
+		/// <summary>
+		/// Allows implementors to start tasks when the shift key is pressed.
+		/// NOTE: ShiftPressedCoreAsync and ShiftReleasedAsync are not necessarily symmetrical!
+		/// </summary>
+		/// <returns></returns>
+		protected virtual Task ShiftPressedCoreAsync()
+		{
+			return Task.CompletedTask;
+		}
+
+		/// <summary>
+		/// Allows implementors to start tasks when the shift key is released. Do not Assume that
+		/// ShiftPressedCoreAsync has been called before!
+		/// </summary>
+		/// <returns></returns>
 		protected virtual Task ShiftReleasedCoreAsync()
 		{
 			return Task.CompletedTask;
@@ -613,7 +641,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
 
-					PickerUtils.Select(items, precedence.SelectionCombinationMethod);
+					await OnItemsPickedAsync(items, precedence);
 
 					ProcessSelection(progressor);
 				}, progressor);
@@ -626,7 +654,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		protected virtual IPickerPrecedence CreatePickerPrecedence(Geometry sketchGeometry)
+		protected virtual Task OnItemsPickedAsync([NotNull] List<IPickableItem> items,
+		                                          [NotNull] IPickerPrecedence precedence)
+		{
+			PickerUtils.Select(items, precedence.SelectionCombinationMethod);
+
+			return Task.CompletedTask;
+		}
+
+		protected virtual IPickerPrecedence CreatePickerPrecedence(
+			[NotNull] Geometry sketchGeometry)
 		{
 			return new PickerPrecedence(sketchGeometry,
 			                            GetSelectionTolerancePixels(),
@@ -818,7 +855,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			return CanSelectFromLayerCore(featureLayer);
+			return CanSelectFromLayerCore(featureLayer, notifications);
 		}
 
 		protected bool CanUseSelection([NotNull] MapView mapView)
@@ -965,7 +1002,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		protected virtual bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer basicFeatureLayer)
+		protected virtual bool CanSelectFromLayerCore(
+			[NotNull] BasicFeatureLayer basicFeatureLayer,
+			[CanBeNull] NotificationCollection notifications)
 		{
 			return true;
 		}

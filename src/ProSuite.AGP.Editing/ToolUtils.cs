@@ -1,26 +1,23 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using System.Windows.Interop;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Internal.Mapping;
 using ArcGIS.Desktop.Mapping;
-using Microsoft.Win32.SafeHandles;
-using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.AGP.Windows;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -34,13 +31,10 @@ namespace ProSuite.AGP.Editing
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		// todo daro rename CreateCursor
 		[NotNull]
 		public static Cursor GetCursor([NotNull] byte[] bytes)
 		{
-			Assert.ArgumentNotNull(bytes, nameof(bytes));
-
-			return new Cursor(new MemoryStream(bytes));
+			return CursorUtils.GetCursor(bytes);
 		}
 
 		public static Cursor CreateCursor(byte[] baseImage,
@@ -48,7 +42,7 @@ namespace ProSuite.AGP.Editing
 		                                  int xHotspot = 0,
 		                                  int yHotspot = 0)
 		{
-			return CreateCursor(baseImage, overlay1, overlay2: null, overlay3: null, xHotspot, yHotspot);
+			return CursorUtils.CreateCursor(baseImage, overlay1, xHotspot, yHotspot);
 		}
 
 		public static Cursor CreateCursor(byte[] baseImage,
@@ -58,79 +52,9 @@ namespace ProSuite.AGP.Editing
 		                                  int xHotspot = 0,
 		                                  int yHotspot = 0)
 		{
-			var result = new Bitmap(32, 32);
-			var destinationRectangle = new Rectangle(0, 0, 32, 32);
-
-			using (var graphic = Graphics.FromImage(result))
-			{
-				graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
-
-				graphic.DrawImage(CreateImage(baseImage), destinationRectangle);
-
-				if (overlay1 != null)
-				{
-					graphic.DrawImage(CreateImage(overlay1), destinationRectangle);
-				}
-
-				if (overlay2 != null)
-				{
-					graphic.DrawImage(CreateImage(overlay2), destinationRectangle);
-				}
-
-				if (overlay3 != null)
-				{
-					graphic.DrawImage(CreateImage(overlay3), destinationRectangle);
-				}
-			}
-
-			var icon = new IconInfo();
-			GetIconInfo(result.GetHicon(), ref icon);
-			icon.xHotspot = xHotspot;
-			icon.yHotspot = yHotspot;
-			icon.fIcon = false;
-
-			nint ptr = CreateIconIndirect(ref icon);
-
-			return CursorInteropHelper.Create(new SafeIconHandle(ptr, true));
-		}
-
-		private static Image CreateImage(byte[] resource)
-		{
-			using var stream = new MemoryStream(resource);
-			return Image.FromStream(stream);
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		private struct IconInfo
-		{
-			public bool fIcon;
-			public int xHotspot;
-			public int yHotspot;
-			public readonly nint hbmMask;
-			public readonly nint hbmColor;
-		}
-
-		[DllImport("user32.dll")]
-		private static extern nint CreateIconIndirect(ref IconInfo icon);
-
-		[DllImport("user32.dll")]
-		private static extern bool GetIconInfo(nint handle, ref IconInfo pIconInfo);
-
-		private class SafeIconHandle : SafeHandleZeroOrMinusOneIsInvalid
-		{
-			public SafeIconHandle(nint hIcon, bool ownsHandle) : base(ownsHandle)
-			{
-				SetHandle(hIcon);
-			}
-
-			[DllImport("user32.dll", SetLastError = true)]
-			[return: MarshalAs(UnmanagedType.Bool)]
-			private static extern bool DestroyIcon([In] nint hIcon);
-
-			protected override bool ReleaseHandle()
-			{
-				return DestroyIcon(handle);
-			}
+			return CursorUtils.CreateCursor(baseImage,
+			                                overlay1, overlay2, overlay3,
+			                                xHotspot, yHotspot);
 		}
 
 		public static string GetDisabledReasonNoGeometryMicroservice()
@@ -403,6 +327,58 @@ namespace ProSuite.AGP.Editing
 		public static SketchGeometryType GetSketchGeometryType()
 		{
 			return MapView.Active?.GetSketchType() ?? SketchGeometryType.None;
+		}
+
+		/// <summary>
+		/// Finds the features that intersect the specified selection.
+		/// </summary>
+		/// <param name="selection"></param>
+		/// <param name="activeMapView"></param>
+		/// <param name="targetFeatureSelection"></param>
+		/// <param name="extraTargetSearchTolerance"></param>
+		/// <param name="cancellabelProgressor"></param>
+		/// <returns></returns>
+		[NotNull]
+		public static IList<Feature> GetIntersectingFeatures(
+			[NotNull] IDictionary<MapMember, List<long>> selection,
+			MapView activeMapView,
+			TargetFeatureSelection targetFeatureSelection,
+			double extraTargetSearchTolerance,
+			[CanBeNull] CancelableProgressor cancellabelProgressor)
+		{
+			Envelope inExtent = activeMapView.Extent;
+
+			if (targetFeatureSelection == TargetFeatureSelection.SelectedFeatures)
+			{
+				// NOTE: cracking within selection is signalled to the server by an empty target list.
+				return new List<Feature>();
+			}
+
+			var featureFinder = new FeatureFinder(activeMapView, targetFeatureSelection);
+
+			// They might be stored (insert target vertices):
+			featureFinder.ReturnUnJoinedFeatures = true;
+			featureFinder.ExtraSearchTolerance = extraTargetSearchTolerance;
+
+			// Set the feature classes to ignore
+			IEnumerable<FeatureSelectionBase> featureClassSelections =
+				featureFinder.FindIntersectingFeaturesByFeatureClass(
+					selection, null, inExtent, cancellabelProgressor);
+
+			if (cancellabelProgressor != null &&
+			    cancellabelProgressor.CancellationToken.IsCancellationRequested)
+			{
+				return new List<Feature>();
+			}
+
+			var foundFeatures = new List<Feature>();
+
+			foreach (FeatureSelectionBase selectionBase in featureClassSelections)
+			{
+				foundFeatures.AddRange(selectionBase.GetFeatures());
+			}
+
+			return foundFeatures;
 		}
 
 		/// <summary>

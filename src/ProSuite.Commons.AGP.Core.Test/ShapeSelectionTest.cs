@@ -34,7 +34,7 @@ public class ShapeSelectionTest
 	public void CanCombineVertices()
 	{
 		var shape = CreatePolylineXY(0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6);
-		var selection = new ShapeSelection(shape);
+		IShapeSelection selection = new ShapeSelection(shape);
 
 		Assert.True(selection.CombineVertex(0, 2, SetCombineMethod.New)); // (0,2)
 		Assert.True(selection.IsVertexSelected(0, 2));
@@ -42,6 +42,7 @@ public class ShapeSelectionTest
 		Assert.True(selection.CombineVertex(0, 3, SetCombineMethod.Add)); // (0,2) (0,3)
 		Assert.True(selection.IsVertexSelected(0, 2));
 		Assert.True(selection.IsVertexSelected(0, 3));
+		Assert.AreEqual(ShapeSelectionState.Partially, selection.IsShapeSelected());
 
 		Assert.True(selection.CombineVertex(0, 4, SetCombineMethod.New)); // (0,4)
 		Assert.False(selection.IsVertexSelected(0, 2));
@@ -67,6 +68,7 @@ public class ShapeSelectionTest
 
 		Assert.True(selection.IsEmpty);
 		Assert.False(selection.IsFully);
+		Assert.AreEqual(ShapeSelectionState.Not, selection.IsShapeSelected());
 	}
 
 	[Test]
@@ -134,9 +136,9 @@ public class ShapeSelectionTest
 		var tolerance = 0.15; // a little more than pyth(hitPoint)
 
 		selection.CombineVertex(0, 0, SetCombineMethod.New);
-		Assert.True(selection.HitTestVertex(hitPoint, tolerance, out var vertex));
+		Assert.True(selection.SelectedVertex(hitPoint, tolerance, out var vertex));
 		Assert.NotNull(vertex);
-		Assert.False(selection.HitTestVertex(hitPoint, tolerance / 2, out vertex));
+		Assert.False(selection.SelectedVertex(hitPoint, tolerance / 2, out vertex));
 		Assert.Null(vertex);
 
 		// other geometry types... but since HitTestVertex is implemented
@@ -150,28 +152,28 @@ public class ShapeSelectionTest
 	{
 		var blocks = new BlockList();
 
-		Assert.False(blocks.ContainsVertex(0, 0));
+		Assert.False(blocks.IsSelected(0, 0));
 		Assert.True(blocks.IsEmpty);
 		Assert.IsEmpty(blocks);
 
-		Assert.False(blocks.Remove(0, 0));
+		Assert.False(blocks.Unselect(0, 0));
 
-		Assert.True(blocks.Add(0, 2)); // new node
-		Assert.True(blocks.Add(0, 3)); // append
-		Assert.True(blocks.Add(0, 1)); // prepend
-		Assert.True(blocks.Add(0, 5)); // new node
-		Assert.True(blocks.Add(0, 4)); // merge
+		Assert.True(blocks.Select(0, 2)); // new node
+		Assert.True(blocks.Select(0, 3)); // append
+		Assert.True(blocks.Select(0, 1)); // prepend
+		Assert.True(blocks.Select(0, 5)); // new node
+		Assert.True(blocks.Select(0, 4)); // merge
 
-		Assert.False(blocks.Add(0, 5)); // already in list
+		Assert.False(blocks.Select(0, 5)); // already in list
 		Assert.False(blocks.IsEmpty);
 
-		Assert.True(blocks.ContainsVertex(0, 1));
-		Assert.True(blocks.ContainsVertex(0, 5));
+		Assert.True(blocks.IsSelected(0, 1));
+		Assert.True(blocks.IsSelected(0, 5));
 
-		Assert.True(blocks.Remove(0, 2)); // split
-		Assert.True(blocks.ContainsVertex(0, 1));
-		Assert.False(blocks.ContainsVertex(0, 2));
-		Assert.True(blocks.ContainsVertex(0, 3));
+		Assert.True(blocks.Unselect(0, 2)); // split
+		Assert.True(blocks.IsSelected(0, 1));
+		Assert.False(blocks.IsSelected(0, 2));
+		Assert.True(blocks.IsSelected(0, 3));
 
 		var list = blocks.ToList();
 		Assert.AreEqual(2, list.Count);
@@ -182,19 +184,19 @@ public class ShapeSelectionTest
 		Assert.AreEqual(3, block1.First);
 		Assert.AreEqual(3, block1.Count);
 
-		Assert.True(blocks.Remove(0, 1)); // drop node
-		Assert.False(blocks.ContainsVertex(0, 1));
-		Assert.False(blocks.Remove(0, 1)); // idempotent
+		Assert.True(blocks.Unselect(0, 1)); // drop node
+		Assert.False(blocks.IsSelected(0, 1));
+		Assert.False(blocks.Unselect(0, 1)); // idempotent
 
-		Assert.True(blocks.Remove(0, 5)); // cut end
-		Assert.True(blocks.Remove(0, 3)); // cut begin
-		Assert.True(blocks.ContainsVertex(0, 4));
-		Assert.True(blocks.Remove(0, 4)); // drop node
-		Assert.False(blocks.ContainsVertex(0, 4));
+		Assert.True(blocks.Unselect(0, 5)); // cut end
+		Assert.True(blocks.Unselect(0, 3)); // cut begin
+		Assert.True(blocks.IsSelected(0, 4));
+		Assert.True(blocks.Unselect(0, 4)); // drop node
+		Assert.False(blocks.IsSelected(0, 4));
 		Assert.True(blocks.IsEmpty);
 
-		Assert.True(blocks.Add(0, 1));
-		Assert.True(blocks.Add(1, 2));
+		Assert.True(blocks.Select(0, 1));
+		Assert.True(blocks.Select(1, 2));
 		// can't merge blocks because part differs:
 		Assert.AreEqual(2, blocks.Count());
 
@@ -203,16 +205,16 @@ public class ShapeSelectionTest
 	}
 
 	[Test]
-	public void CanBlockListAdd()
+	public void CanBlockListSelect()
 	{
 		var blocks = new BlockList();
 
-		Assert.True(blocks.Add(0, 0, 2)); // vertices 0,1 in part 0
-		Assert.False(blocks.Add(0, 1, 1)); // vertex 1 in part 0
-		Assert.True(blocks.Add(0, 3, 2)); // vertices 3,4 in part 0
-		Assert.True(blocks.Add(1, 4, 3)); // vertices 4,5,6 in part 1
-		Assert.False(blocks.Add(1, 5, 2)); // vertices 5,6 in part 1
-		Assert.True(blocks.Add(0, 2, 5)); // vertices 2,3,4,5,6 in part 0 (merges)
+		Assert.True(blocks.Select(0, 0, 2)); // vertices 0,1 in part 0
+		Assert.False(blocks.Select(0, 1, 1)); // vertex 1 in part 0
+		Assert.True(blocks.Select(0, 3, 2)); // vertices 3,4 in part 0
+		Assert.True(blocks.Select(1, 4, 3)); // vertices 4,5,6 in part 1
+		Assert.False(blocks.Select(1, 5, 2)); // vertices 5,6 in part 1
+		Assert.True(blocks.Select(0, 2, 5)); // vertices 2,3,4,5,6 in part 0 (merges)
 		var blockList = blocks.ToList();
 		Assert.AreEqual(2, blockList.Count);
 		Assert.AreEqual(0, blockList[0].Part);
@@ -221,6 +223,44 @@ public class ShapeSelectionTest
 		Assert.AreEqual(1, blockList[1].Part);
 		Assert.AreEqual(4, blockList[1].First);
 		Assert.AreEqual(3, blockList[1].Count);
+	}
+
+	[Test]
+	public void CanBlockListVertexShifting()
+	{
+		var blocks = new BlockList();
+
+		blocks.Select(0, 0, 2);
+		blocks.Select(0, 5, 1);
+		blocks.Select(1, 2, 2);
+
+		var list = blocks.ToList();
+
+		Assert.AreEqual(3, list.Count);
+		AssertBlock(list[0], 0, 0, 2);
+		AssertBlock(list[1], 0, 5, 1);
+		AssertBlock(list[2], 1, 2, 2);
+
+		blocks.VertexAdded(0, 0); // enlarge (0,0,2)=>(0,0,3) and shift (0,5,1)=>(0,6,1)
+		blocks.VertexAdded(1, 1); // shift (1,2,2)=>(1,3,2)
+		blocks.VertexRemoved(0, 4); // shift (0,6,1)=>(0,5,1)
+		blocks.VertexRemoved(0, 5); // drop the (0,5,1) block
+		blocks.VertexRemoved(1, 3); // shorten (1,3,2)=>(1,3,1)
+
+		list = blocks.ToList();
+
+		Assert.AreEqual(2, list.Count);
+		AssertBlock(list[0], 0, 0, 3);
+		AssertBlock(list[1], 1, 3, 1);
+	}
+
+	private void AssertBlock(BlockList.Block block, int part, int first, int count)
+	{
+		if (block.Part != part || block.First != first || block.Count != count)
+		{
+			Assert.Fail($"Expect Block({part},{first},{count}) but " +
+			            $"got Block({block.Part},{block.First},{block.Count})");
+		}
 	}
 
 	[Test]
@@ -235,19 +275,19 @@ public class ShapeSelectionTest
 		Assert.AreEqual(0, inverted1[0].First);
 		Assert.AreEqual(1, inverted1[0].Count);
 
-		blocks1.Add(0, 0); // add the single vertex
+		blocks1.Select(0, 0); // add the single vertex
 		inverted1 = ShapeSelection.Invert(blocks1, point).ToList();
 		Assert.IsEmpty(inverted1);
 
 		// Multipoint
 		var multipoint = CreateMultipointXY(0, 0, 1, 1, 2, 2); // vertices 0,1,2
 		var blocks2 = new BlockList();
-		blocks2.Add(0, 1); // select the middle vertex
+		blocks2.Select(0, 1); // select the middle vertex
 		var inverted2 = ShapeSelection.Invert(blocks2, multipoint).ToList();
 		Assert.AreEqual(2, inverted2.Count);
 		blocks2.Clear();
-		blocks2.Add(0, 0);
-		blocks2.Add(0, 2);
+		blocks2.Select(0, 0);
+		blocks2.Select(0, 2);
 		inverted2 = ShapeSelection.Invert(blocks2, multipoint).ToList();
 		Assert.AreEqual(1, inverted2.Count);
 		Assert.AreEqual(1, inverted2[0].First);
@@ -256,7 +296,7 @@ public class ShapeSelectionTest
 		// Polyline (multipart)
 		var polyline = CreatePolylineXY(0, 0, 1, 1, 2, 2, double.NaN, 3, 3, 4, 4); // part 0: 0,1,2, part1: 0,1
 		var blocks3 = new BlockList();
-		blocks3.Add(0, 1); // select middle vertex of 1st part
+		blocks3.Select(0, 1); // select middle vertex of 1st part
 		var inverted3 = ShapeSelection.Invert(blocks3, polyline).ToList();
 		Assert.AreEqual(3, inverted3.Count);
 		Assert.AreEqual(0, inverted3[0].Part);
@@ -265,9 +305,9 @@ public class ShapeSelectionTest
 		Assert.AreEqual(0, inverted3[2].First);
 		Assert.AreEqual(2, inverted3[2].Count);
 		blocks3.Clear();
-		blocks3.Add(0, 0);
-		blocks3.Add(0, 2);
-		blocks3.Add(1, 0, 2); // entire 2nd part
+		blocks3.Select(0, 0);
+		blocks3.Select(0, 2);
+		blocks3.Select(1, 0, 2); // entire 2nd part
 		inverted3 = ShapeSelection.Invert(blocks3, polyline).ToList();
 		Assert.AreEqual(1, inverted3.Count);
 		Assert.AreEqual(1, inverted3[0].First);
@@ -276,7 +316,7 @@ public class ShapeSelectionTest
 		// Polygon (multipart)
 		var polygon = CreatePolygonXY(0, 0, 1, 3, 2, 0, double.NaN, 3, 0, 4, 6, 5, 0);
 		var blocks4 = new BlockList();
-		blocks4.Add(0, 1); // select middle vertex of 1st part
+		blocks4.Select(0, 1); // select middle vertex of 1st part
 		var inverted4 = ShapeSelection.Invert(blocks4, polygon).ToList();
 		Assert.AreEqual(3, inverted4.Count);
 		Assert.AreEqual(0, inverted4[0].Part);
@@ -285,9 +325,9 @@ public class ShapeSelectionTest
 		Assert.AreEqual(0, inverted4[2].First);
 		Assert.AreEqual(3, inverted4[2].Count);
 		blocks4.Clear();
-		blocks4.Add(0, 0);
-		blocks4.Add(0, 2);
-		blocks4.Add(1, 0, 3); // entire 2nd part
+		blocks4.Select(0, 0);
+		blocks4.Select(0, 2);
+		blocks4.Select(1, 0, 3); // entire 2nd part
 		inverted4 = ShapeSelection.Invert(blocks4, polygon).ToList();
 		Assert.AreEqual(1, inverted4.Count);
 		Assert.AreEqual(1, inverted4[0].First);

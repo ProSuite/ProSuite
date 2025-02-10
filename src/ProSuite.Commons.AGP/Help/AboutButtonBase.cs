@@ -27,7 +27,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		_caption = caption;
 	}
 
-	protected override Task<bool> OnClickCore()
+	protected override Task<bool> OnClickAsyncCore()
 	{
 		var configFileSearcher = GetConfigFileSearcher();
 

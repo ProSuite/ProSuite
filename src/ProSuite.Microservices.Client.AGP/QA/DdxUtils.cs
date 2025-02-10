@@ -334,21 +334,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					}
 				}
 
-				ObjectDataset originalDataset = dataset as ObjectDataset;
-
-				if (originalDataset == null)
-				{
-					continue;
-				}
-
-				if (originalDataset.Attributes.Count > 0)
-				{
-					_msg.DebugFormat("Dataset details already loaded for {0}",
-					                 originalDataset.Name);
-					continue;
-				}
-
-				ProtoDataQualityUtils.AddDetailsToDataset(originalDataset, datasetMsg);
+				TryAddDetailsToDataset(dataset, datasetMsg);
 			}
 
 			foreach (AssociationMsg associationMsg in response.Associations)
@@ -641,6 +627,16 @@ namespace ProSuite.Microservices.Client.AGP.QA
 						                       projectWorkspaceMsg.IsMasterDatabaseWorkspace
 				                       };
 
+				projectWorkspace.ExcludeReadOnlyDatasetsFromProjectWorkspace =
+					projectMsg.ExcludeReadOnlyDatasetsFromProjectWorkspace;
+
+				projectWorkspace.MinimumScaleDenominator =
+					projectMsg.MinimumScaleDenominator;
+
+				projectWorkspace.ToolConfigDirectory = projectMsg.ToolConfigDirectory;
+				projectWorkspace.WorkListConfigDir = projectMsg.WorkListConfigDir;
+				projectWorkspace.AttributeEditorConfigDir = projectMsg.AttributeEditorConfigDir;
+
 				result.Add(projectWorkspace);
 			}
 
@@ -687,6 +683,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				Dataset dataset = modelFactory.CreateDataset(datasetMsg);
 
 				datasetsById.Add(dataset.Id, dataset);
+
+				if (datasetMsg.Attributes.Count > 0 || datasetMsg.ObjectCategories.Count > 0)
+				{
+					TryAddDetailsToDataset(dataset, datasetMsg);
+				}
 			}
 
 			return datasetsById;
@@ -703,6 +704,25 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 				yield return association;
 			}
+		}
+
+		private static void TryAddDetailsToDataset(IDdxDataset dataset, DatasetMsg datasetMsg)
+		{
+			ObjectDataset originalDataset = dataset as ObjectDataset;
+
+			if (originalDataset == null)
+			{
+				return;
+			}
+
+			if (originalDataset.Attributes.Count > 0)
+			{
+				_msg.DebugFormat("Dataset details already loaded for {0}",
+				                 originalDataset.Name);
+				return;
+			}
+
+			ProtoDataQualityUtils.AddDetailsToDataset(originalDataset, datasetMsg);
 		}
 
 		private static SpatialReference GetSpatialReference(

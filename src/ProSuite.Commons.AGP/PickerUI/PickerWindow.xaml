@@ -1,0 +1,128 @@
+<controls:ProWindow x:Class="ProSuite.Commons.AGP.PickerUI.PickerWindow"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                    xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
+                    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+                    xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+                    xmlns:picker="clr-namespace:ProSuite.Commons.AGP.Picker"
+                    xmlns:pickerUi="clr-namespace:ProSuite.Commons.AGP.PickerUI"
+                    d:DataContext="{d:DesignInstance Type=pickerUi:IPickerViewModel}"
+                    mc:Ignorable="d"
+                    ShowTitleBar="false"
+                    TitlebarHeight="0"
+                    ResizeMode="NoResize"
+                    Height="300"
+                    Width="300"
+                    SizeToContent="WidthAndHeight"
+                    WindowStartupLocation="Manual"
+					SaveWindowPosition="False"
+                    ShowInTaskbar="False"
+                    WindowStyle="None"
+                    BorderBrush="{DynamicResource Esri_BorderBrush}"
+                    BorderThickness="1"
+                    AllowsTransparency="True"
+                    FontWeight="Normal"
+                    Foreground="Black">
+	<!-- Notes regarding ProWindow properties:
+         - ShowTitleBar="false" is not enough to hide it. TitlebarHeight="0" makes it disappear.
+         - ResizeMode="NoResize" is necessary to avoid the resize-handles appear
+    -->
+
+	<Window.Background>
+		<SolidColorBrush Opacity="0.7" Color="White" />
+	</Window.Background>
+
+	<Window.Resources>
+		<!--ArcGIS Pro dark and light themes are overriden with several style resources. 
+        This is because Pro dark/light themes result in bad contrast when transparent background is used -->
+		<ResourceDictionary>
+
+			<ResourceDictionary.MergedDictionaries>
+				<!--for loading Pro XAML styles (DynamicResources) in Design Mode-->
+				<extensions:DesignOnlyResourceDictionary
+					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+			</ResourceDictionary.MergedDictionaries>
+
+			<Style x:Key="TextBlock" TargetType="TextBlock">
+				<Setter Property="Foreground" Value="Black" />
+			</Style>
+
+			<Style x:Key="Image" TargetType="Image">
+				<Setter Property="Margin" Value="0,0,5,0" />
+			</Style>
+
+			<Style x:Key="ListBox" TargetType="ListBox">
+				<Setter Property="Foreground" Value="Black" />
+				<Setter Property="Background" Value="Transparent" />
+				<Setter Property="BorderBrush" Value="Transparent" />
+				<Setter Property="Margin" Value="2" />
+			</Style>
+
+			<DataTemplate x:Key="SinglePickTemplate" DataType="{x:Type picker:IPickableItem}">
+				<DockPanel>
+					<behaviors:Interaction.Triggers>
+						<behaviors:EventTrigger EventName="MouseEnter">
+							<behaviors:InvokeCommandAction
+								Command="{Binding Path=DataContext.FlashItemCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
+								CommandParameter="{Binding}" />
+						</behaviors:EventTrigger>
+					</behaviors:Interaction.Triggers>
+					<Image Source="{Binding ImageSource}" Style="{StaticResource Image}" />
+					<TextBlock Text="{Binding DisplayValue}" Style="{StaticResource TextBlock}" />
+				</DockPanel>
+			</DataTemplate>
+
+		</ResourceDictionary>
+	</Window.Resources>
+
+	<Window.InputBindings>
+		<KeyBinding Key="Escape"
+		            Command="{Binding PressEscapeCommand}"
+		            CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" />
+		<KeyBinding Key="Space" 
+		            Command="{Binding PressSpaceCommand}"/>
+	</Window.InputBindings>
+
+	<behaviors:Interaction.Triggers>
+		<behaviors:EventTrigger EventName="Deactivated">
+			<behaviors:InvokeCommandAction Command="{Binding Path=DeactivatedCommand}" 
+			                               CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
+		</behaviors:EventTrigger>
+	</behaviors:Interaction.Triggers>
+
+	<Grid Background="Transparent">
+		<DockPanel Background="Transparent">
+
+			<!-- Listbox visibility is set in viewmodel 
+            and depends on Single/Multiselection mode. -->
+			<ListBox DockPanel.Dock="Top"
+			         ItemsSource="{Binding Path=Items}"
+			         ItemTemplate="{StaticResource SinglePickTemplate}"
+			         SelectedItem="{Binding Path=SelectedItem, Mode=TwoWay}"
+			         Style="{StaticResource ListBox}">
+
+				<ListBox.ItemContainerStyle>
+					<!--when this block is not here (it does not even have content), 
+                        the background color of highlighted items is blackish 
+                        (bad contrast). -->
+					<Style TargetType="{x:Type ListBoxItem}">
+						<Setter Property="IsSelected" Value="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+					</Style>
+				</ListBox.ItemContainerStyle>
+
+				<behaviors:Interaction.Triggers>
+					<behaviors:EventTrigger EventName="SelectionChanged">
+						<behaviors:InvokeCommandAction Command="{Binding Path=SelectionChangedCommand}"
+						                               CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" />
+					</behaviors:EventTrigger>
+				</behaviors:Interaction.Triggers>
+			</ListBox>
+
+			<!-- This only works if the Window is modal (ShowDialog()). For ProWindows it is not necessary.
+        <Button Width="1" Height="1" Background="Transparent" BorderBrush="Transparent" IsCancel="True" />
+        -->
+		</DockPanel>
+	</Grid>
+</controls:ProWindow>

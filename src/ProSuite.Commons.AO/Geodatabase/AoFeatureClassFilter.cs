@@ -1,9 +1,9 @@
+using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using System;
-using System.Collections.Generic;
 using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Commons.AO.Geodatabase
@@ -12,6 +12,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		private string _subFields;
 		private HashSet<string> _subFieldSet;
+
 		public string SubFields
 		{
 			get => _subFields;
@@ -54,10 +55,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 							subFieldSet.Add(subfield.Trim());
 						}
 					}
-					else
-					{
-						
-					}
+					else { }
 
 					_subFieldSet = subFieldSet;
 				}
@@ -97,7 +95,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		protected override ITableFilter Clone()
 		{
-			AoFeatureClassFilter clone = (AoFeatureClassFilter)base.Clone();
+			AoFeatureClassFilter clone = (AoFeatureClassFilter) base.Clone();
 			if (FilterGeometry != null)
 			{
 				clone.FilterGeometry = GeometryFactory.Clone(FilterGeometry);
@@ -115,6 +113,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#region Implementation of ITileFilter
 
+		// TODO: Could this be unified with FilterHelper.FullGeometrySearch?
+		//       Or should ITableFilter and FilterHelper be combined to a QaFilter superstructure?
+		//       Currently, this property is only checked for null
 		public IEnvelope TileExtent { get; set; }
 
 		#endregion

@@ -30,7 +30,7 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 	private readonly ExportSLDLMOptions _options = new();
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	protected override async Task<bool> OnClickCore()
+	protected override async Task<bool> OnClickAsyncCore()
 	{
 		var map = MapView.Active?.Map;
 		if (map is null) return false;

@@ -238,6 +238,10 @@
       <Link>Licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\lib\licenses\Stopbyte.MIT.WPF-Numeric-Spinner-NumericUpDown.licence.txt" 
+						             Link="Licenses\Stopbyte.MIT.WPF-Numeric-Spinner-NumericUpDown.licence.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Properties\Images\Browse.png" />
     <Content Include="Properties\Images\ClearFilter.png" />
     <Content Include="Properties\Images\Collapse.png" />
@@ -256,7 +260,11 @@
   <ItemGroup>
     <!-- DPS/#217: Allow other components in the same process to use a different log4net version.
 		     Example: X-Tools Add-in. -->
-		<PackageReference Include="log4net" Version="[2.0.12,2.0.17]" />
+		<PackageReference Include="log4net" Version="[2.0.12,2.0.17]" Condition="'$(TargetFramework)' != 'net48'" />
+    <!-- But in .NET Framework the resolution of differing package versions is somewhat different, resulting
+		     in build errors. Therefore, keep it fixed in .NET Framework: -->
+    <PackageReference Include="log4net" Version="2.0.15" Condition="'$(TargetFramework)' == 'net48'" />
+
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
   </ItemGroup>
 </Project>

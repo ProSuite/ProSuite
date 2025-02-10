@@ -1,0 +1,616 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.OneClick;
+using ProSuite.Commons;
+using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Picker;
+using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
+using ProSuite.Commons.UI.Input;
+
+namespace ProSuite.AGP.Editing.ChangeAlong
+{
+	public abstract class ChangeAlongToolBase : OneClickToolBase
+	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		[CanBeNull]
+		protected virtual string CentralConfigDir => null;
+
+		/// <summary>
+		/// By default, the local configuration directory shall be in
+		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// </summary>
+		protected virtual string LocalConfigDir
+			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				AppDataFolder.Roaming, "ToolDefaults");
+
+		protected ChangeAlongCurves ChangeAlongCurves { get; private set; }
+
+		private ChangeAlongFeedback _feedback;
+		private SketchAndCursorSetter _targetSketchCursor;
+
+		protected ChangeAlongToolBase()
+		{
+			IsSketchTool = true;
+
+			GeomIsSimpleAsFeature = false;
+		}
+
+		protected abstract string OptionsDockPaneID { get; }
+		protected bool DisplayTargetLines { get; set; }
+
+		protected abstract string EditOperationDescription { get; }
+
+		protected abstract IChangeAlongService MicroserviceClient { get; }
+
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
+		}
+
+		protected override void OnUpdateCore()
+		{
+			Enabled = MicroserviceClient != null;
+
+			if (MicroserviceClient == null)
+				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
+		}
+
+		protected override async Task OnToolActivatingCoreAsync()
+		{
+			_feedback = new ChangeAlongFeedback()
+			            {
+				            ShowTargetLines = DisplayTargetLines
+			            };
+
+			await QueuedTaskUtils.Run(() =>
+			{
+				_targetSketchCursor =
+					SketchAndCursorSetter.Create(this,
+					                             GetTargetSelectionCursor(),
+					                             GetTargetSelectionCursorLasso(),
+					                             GetTargetSelectionCursorPolygon(),
+					                             GetSelectionSketchGeometryType(),
+					                             DefaultSketchTypeOnFinishSketch);
+
+				_targetSketchCursor.SetSelectionCursorShift(GetTargetSelectionCursorShift());
+				_targetSketchCursor.SetSelectionCursorLassoShift(
+					GetTargetSelectionCursorLassoShift());
+				_targetSketchCursor.SetSelectionCursorPolygonShift(
+					GetTargetSelectionCursorPolygonShift());
+			});
+		}
+
+		protected bool IsInSubcurveSelectionPhase()
+		{
+			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+
+			return HasReshapeCurves() && ! shiftDown;
+		}
+
+		protected override async Task HandleEscapeAsync()
+		{
+			// Do not reset feedback in polygon sketch mode: Esc
+			// should only clear sketch not the feedback.
+			if (await NonEmptyPolygonSketchAsync())
+			{
+				await ClearSketchAsync();
+				return;
+			}
+
+			Task task = QueuedTask.Run(
+				() =>
+				{
+					if (IsInSubcurveSelectionPhase())
+					{
+						ResetDerivedGeometries();
+					}
+					else
+					{
+						ClearSelection();
+						StartSelectionPhase();
+					}
+				});
+
+			await ViewUtils.TryAsync(task, _msg);
+		}
+
+		protected abstract Cursor GetTargetSelectionCursor();
+
+		protected abstract Cursor GetTargetSelectionCursorShift();
+
+		protected abstract Cursor GetTargetSelectionCursorLasso();
+
+		protected abstract Cursor GetTargetSelectionCursorLassoShift();
+
+		protected abstract Cursor GetTargetSelectionCursorPolygon();
+
+		protected abstract Cursor GetTargetSelectionCursorPolygonShift();
+		
+		protected override void AfterSelection(IList<Feature> selectedFeatures,
+		                                       CancelableProgressor progressor)
+		{
+			StartTargetSelectionPhase();
+		}
+
+		protected virtual async Task ResetSketchCoreAsync()
+		{
+			try
+			{
+				if (! await IsInSelectionPhaseAsync())
+				{
+					_targetSketchCursor.ResetOrDefault();
+				}
+				else
+				{
+					SetupSelectionSketch();
+				}
+			}
+			catch (Exception ex)
+			{
+				ViewUtils.ShowError(ex, _msg);
+			}
+		}
+
+		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
+		{
+			if (HasReshapeCurves())
+			{
+				return false;
+			}
+
+			// First or second phase:
+			if (shiftDown)
+			{
+				// With reshape curves and shift it would mean we're in the target selection phase
+				return ! HasReshapeCurves();
+			}
+
+			Task<bool> task = QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
+			bool result = await ViewUtils.TryAsync(task, _msg);
+			return result;
+		}
+
+		private bool HasReshapeCurves()
+		{
+			// Test for target features because in cut along the curves are not provided until
+			// there is a cut (but the targets get symbolized).
+			return ChangeAlongCurves != null && ChangeAlongCurves.TargetFeatures?.Count > 0;
+		}
+
+		protected virtual bool CanUseAsTargetLayer(Layer layer)
+		{
+			if (layer is FeatureLayer featureLayer)
+			{
+				return featureLayer.ShapeType == esriGeometryType.esriGeometryPolyline ||
+				       featureLayer.ShapeType == esriGeometryType.esriGeometryPolygon;
+			}
+
+			return false;
+		}
+
+		protected virtual bool CanUseAsTargetFeature([NotNull] IList<Feature> selection,
+		                                             [NotNull] Feature testFeature)
+		{
+			foreach (Feature selectedFeature in selection)
+			{
+				if (selectedFeature.GetObjectID() == testFeature.GetObjectID() &&
+				    selectedFeature.GetTable().Handle == testFeature.GetTable().Handle)
+				{
+					// already selected
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		protected abstract void LogAfterPickTarget(
+			ReshapeAlongCurveUsability reshapeCurveUsability);
+
+		protected abstract ChangeAlongCurves CalculateChangeAlongCurves(
+			[NotNull] IList<Feature> selectedFeatures,
+			[NotNull] IList<Feature> targetFeatures,
+			CancellationToken cancellationToken);
+
+		protected abstract List<ResultFeature> ChangeFeaturesAlong(
+			List<Feature> selectedFeatures, [NotNull] IList<Feature> targetFeatures,
+			[NotNull] List<CutSubcurve> cutSubcurves,
+			CancellationToken cancellationToken,
+			out ChangeAlongCurves newChangeAlongCurves);
+
+		private void StartTargetSelectionPhase()
+		{
+			SetupSketch();
+
+			_targetSketchCursor.ResetOrDefault();
+		}
+
+		private async Task<bool> SelectTargetsAsync(
+			[NotNull] List<Feature> selectedFeatures,
+			[NotNull] Geometry sketchGeometry,
+			[CanBeNull] CancelableProgressor progressor)
+		{
+			const TargetFeatureSelection targetFeatureSelection =
+				TargetFeatureSelection.VisibleSelectableFeatures;
+
+			Task<IEnumerable<Feature>> task = QueuedTaskUtils.Run(async () =>
+			{
+				using var pickerPrecedence =
+					new PickerPrecedence(sketchGeometry,
+					                     GetSelectionTolerancePixels(),
+					                     ActiveMapView.ClientToScreen(CurrentMousePosition));
+
+				Geometry selectionGeometry = pickerPrecedence.GetSelectionGeometry();
+
+				List<FeatureSelectionBase> candidates =
+					FindTargetFeatureCandidates(selectionGeometry, targetFeatureSelection,
+					                            selectedFeatures, progressor);
+
+				if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
+				{
+					_msg.Warn("Calculation of reshape lines was cancelled.");
+					return Enumerable.Empty<Feature>();
+				}
+
+				if (pickerPrecedence.IsSingleClick && candidates.Count > 1)
+				{
+					var orderedCandidates =
+						candidates.OrderBy(candidate => candidate.ShapeDimension);
+
+					IPickableItem item =
+						await PickerUtils.ShowPickerAsync<IPickableFeatureItem>(
+							pickerPrecedence, orderedCandidates);
+
+					return item is IPickableFeatureItem pickedItem
+						       ? new List<Feature> { pickedItem.Feature }
+						       : Enumerable.Empty<Feature>();
+				}
+
+				return candidates.SelectMany(c => c.GetFeatures());
+			}, progressor);
+
+			IEnumerable<Feature> targetFeatures = await ViewUtils.TryAsync(task, _msg);
+
+			if (targetFeatures == null)
+			{
+				// Likely an exception or cancellation
+				return false;
+			}
+
+			return true;
+		}
+
+		private List<FeatureSelectionBase> FindTargetFeatureCandidates(
+			[NotNull] Geometry sketch,
+			TargetFeatureSelection targetFeatureSelection,
+			[NotNull] List<Feature> selectedFeatures,
+			CancelableProgressor progressor)
+		{
+			Predicate<Feature> canUseAsTargetFeature =
+				t => CanUseAsTargetFeature(selectedFeatures, t);
+
+			SpatialRelationship spatialRel =
+				SketchType == SketchGeometryType.Polygon ||
+				SketchType == SketchGeometryType.Lasso
+					? SpatialRelationship.Contains
+					: SpatialRelationship.Intersects;
+
+			FeatureFinder featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
+			                              {
+				                              SelectedFeatures = selectedFeatures,
+				                              SpatialRelationship = spatialRel,
+				                              ReturnUnJoinedFeatures = true
+			                              };
+
+			var selectionByClass =
+				featureFinder.FindFeaturesByFeatureClass(sketch, CanUseAsTargetLayer,
+				                                         canUseAsTargetFeature, progressor)
+				             .ToList();
+
+			return selectionByClass;
+		}
+
+		private static IList<Feature> GetDistinctTargetFeatures(
+			[NotNull] IEnumerable<Feature> foundFeatures,
+			[CanBeNull] IList<Feature> existingTargetSelection,
+			bool xor)
+		{
+			var resultDictionary = new Dictionary<GdbObjectReference, Feature>();
+
+			if (xor && existingTargetSelection != null)
+			{
+				AddRange(existingTargetSelection, resultDictionary);
+			}
+
+			if (xor)
+			{
+				foreach (Feature selected in foundFeatures)
+				{
+					var selectedObjRef = new GdbObjectReference(
+						selected.GetTable().Handle.ToInt64(),
+						selected.GetObjectID());
+
+					if (resultDictionary.ContainsKey(selectedObjRef))
+					{
+						resultDictionary.Remove(selectedObjRef);
+					}
+					else
+					{
+						resultDictionary.Add(selectedObjRef, selected);
+					}
+				}
+			}
+			else
+			{
+				AddRange(foundFeatures, resultDictionary);
+			}
+
+			IList<Feature> allTargetFeatures = resultDictionary.Values.ToList();
+
+			return allTargetFeatures;
+		}
+
+		private static void AddRange(
+			[NotNull] IEnumerable<Feature> features,
+			[NotNull] IDictionary<GdbObjectReference, Feature> resultDictionary)
+		{
+			foreach (Feature target in features)
+			{
+				var objRef = new GdbObjectReference(target.GetTable().Handle.ToInt64(),
+				                                    target.GetObjectID());
+
+				if (! resultDictionary.ContainsKey(objRef))
+				{
+					resultDictionary.Add(objRef, target);
+				}
+			}
+		}
+
+		private List<CutSubcurve> GetSelectedCutSubcurves([NotNull] Geometry sketch)
+		{
+			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
+			                                          out bool singlePick);
+
+			Predicate<CutSubcurve> canReshapePredicate =
+				cutSubcurve => ToolUtils.IsSelected(sketch, cutSubcurve.Path, singlePick);
+
+			ChangeAlongCurves.PreSelectCurves(canReshapePredicate);
+
+			var cutSubcurves =
+				ChangeAlongCurves.GetSelectedReshapeCurves(canReshapePredicate, true);
+
+			return cutSubcurves;
+		}
+
+		protected void ResetDerivedGeometries()
+		{
+			_feedback?.DisposeOverlays();
+			ChangeAlongCurves = null;
+		}
+
+		private ChangeAlongCurves RefreshChangeAlongCurves(
+			[NotNull] IList<Feature> selectedFeatures,
+			[NotNull] IList<Feature> targetFeatures,
+			[CanBeNull] CancelableProgressor progressor)
+		{
+			ChangeAlongCurves result;
+
+			CancellationToken cancellationToken;
+
+			if (progressor != null)
+			{
+				cancellationToken = progressor.CancellationToken;
+			}
+			else
+			{
+				// TODO Why not CancellationToken.None?
+				var cancellationTokenSource = new CancellationTokenSource();
+				cancellationToken = cancellationTokenSource.Token;
+			}
+
+			if (MicroserviceClient != null)
+			{
+				result = CalculateChangeAlongCurves(selectedFeatures, targetFeatures,
+				                                    cancellationToken);
+
+				result.TargetFeatures = targetFeatures;
+			}
+			else
+			{
+				throw new InvalidConfigurationException("Microservice has not been started.");
+			}
+
+			return result;
+		}
+
+		private void RefreshExistingChangeAlongCurves(
+			[NotNull] IList<Feature> selectedFeatures,
+			[CanBeNull] CancelableProgressor progressor = null)
+		{
+			if (ChangeAlongCurves == null ||
+			    ChangeAlongCurves.TargetFeatures == null ||
+			    ChangeAlongCurves.TargetFeatures.Count == 0)
+			{
+				return;
+			}
+
+			SpatialReference mapSr = MapView.Active.Map.SpatialReference;
+
+			// After undo/redo the shape's spatial reference could have been changed.
+			ChangeAlongCurves.TargetFeatures =
+				ReRead(ChangeAlongCurves.TargetFeatures, mapSr).ToList();
+
+			ChangeAlongCurves newState =
+				RefreshChangeAlongCurves(selectedFeatures, ChangeAlongCurves.TargetFeatures,
+				                         progressor);
+
+			ChangeAlongCurves.Update(newState);
+
+			_feedback.Update(ChangeAlongCurves);
+		}
+
+		private async Task<bool> UpdateFeatures(List<Feature> selectedFeatures,
+		                                        List<CutSubcurve> cutSubcurves,
+		                                        CancelableProgressor progressor)
+		{
+			CancellationToken cancellationToken =
+				progressor?.CancellationToken ?? new CancellationTokenSource().Token;
+
+			MapView activeMap = MapView.Active;
+
+			IList<Feature> targetFeatures = Assert.NotNull(ChangeAlongCurves.TargetFeatures);
+
+			List<ResultFeature> updatedFeatures = ChangeFeaturesAlong(
+				selectedFeatures, targetFeatures, cutSubcurves, cancellationToken,
+				out ChangeAlongCurves newChangeAlongCurves);
+
+			if (updatedFeatures.Count > 0)
+			{
+				// This also clears the PreSelected reshape curves
+				ChangeAlongCurves = newChangeAlongCurves;
+			}
+
+			_feedback.Update(ChangeAlongCurves);
+
+			if (updatedFeatures.Count == 0)
+			{
+				// Probably an additional yellow line needs to be selected
+				return false;
+			}
+
+			HashSet<long> editableClassHandles = ToolUtils.GetEditableClassHandles(activeMap);
+
+			// Updates:
+			Dictionary<Feature, Geometry> resultFeatures =
+				updatedFeatures
+					.Where(f => IsStoreRequired(
+						       f, editableClassHandles, RowChangeType.Update))
+					.ToDictionary(r => r.OriginalFeature, r => r.NewGeometry);
+
+			// Inserts (in case of cut), grouped by original feature:
+			var inserts = updatedFeatures
+			              .Where(
+				              f => IsStoreRequired(f, editableClassHandles, RowChangeType.Insert))
+			              .ToList();
+
+			if (resultFeatures.Count == 0 && inserts.Count == 0)
+			{
+				_msg.Warn("No feature to store probably because nothing has changed not editable.");
+				return false;
+			}
+
+			List<Feature> newFeatures = new List<Feature>();
+
+			bool success = await GdbPersistenceUtils.ExecuteInTransactionAsync(
+				               delegate(EditOperation.IEditContext editContext)
+				               {
+					               GdbPersistenceUtils.UpdateTx(editContext, resultFeatures);
+
+					               newFeatures.AddRange(
+						               GdbPersistenceUtils.InsertTx(editContext, inserts));
+
+					               return true;
+				               },
+				               EditOperationDescription,
+				               GdbPersistenceUtils.GetDatasetsNonEmpty(resultFeatures.Keys));
+
+			LogReshapeResults(updatedFeatures, resultFeatures);
+
+			ToolUtils.SelectNewFeatures(newFeatures, activeMap);
+
+			SpatialReference outputSpatialReference = activeMap.Map.SpatialReference;
+
+			if (ChangeAlongCurves.TargetFeatures != null)
+			{
+				ChangeAlongCurves.TargetFeatures =
+					ReRead(ChangeAlongCurves.TargetFeatures, outputSpatialReference).ToList();
+			}
+
+			return success;
+		}
+
+		private static IEnumerable<Feature> ReRead([NotNull] IList<Feature> features,
+		                                           [CanBeNull]
+		                                           SpatialReference outputSpatialReference)
+		{
+			var groupedByClass = features.GroupBy(f => f.GetTable().GetID());
+
+			foreach (IGrouping<long, Feature> grouping in groupedByClass)
+			{
+				FeatureClass featureClass = grouping.FirstOrDefault()?.GetTable();
+
+				if (featureClass == null)
+				{
+					continue;
+				}
+
+				foreach (Feature feature in GdbQueryUtils.GetFeatures(
+					         featureClass, grouping.Select(f => f.GetObjectID()),
+					         outputSpatialReference, false))
+				{
+					yield return feature;
+				}
+			}
+		}
+
+		private static bool IsStoreRequired([NotNull] ResultFeature resultFeature,
+		                                    [NotNull] HashSet<long> editableClassHandles,
+		                                    RowChangeType changeType)
+		{
+			if (! GdbPersistenceUtils.CanChange(resultFeature, editableClassHandles, changeType))
+			{
+				return false;
+			}
+
+			Feature feature = resultFeature.OriginalFeature;
+
+			Geometry originalGeometry = feature.GetShape();
+
+			if (changeType == RowChangeType.Update &&
+			    originalGeometry != null &&
+			    originalGeometry.IsEqual(resultFeature.NewGeometry))
+			{
+				_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",
+				                 GdbObjectUtils.ToString(feature));
+
+				return false;
+			}
+
+			return true;
+		}
+
+		private void LogReshapeResults(List<ResultFeature> updatedFeatures,
+		                               Dictionary<Feature, Geometry> savedUpdates)
+		{
+			foreach (ResultFeature resultFeature in updatedFeatures)
+			{
+				if (savedUpdates.ContainsKey(resultFeature.OriginalFeature) &&
+				    resultFeature.Messages.Count == 1)
+				{
+					_msg.Info(resultFeature.Messages[0]);
+				}
+			}
+		}
+	}
+}

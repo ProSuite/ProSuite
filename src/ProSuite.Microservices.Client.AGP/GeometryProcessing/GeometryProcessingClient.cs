@@ -10,9 +10,11 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.Generalize;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedGeneralize;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker;
@@ -28,11 +30,13 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 	                                        IRemoveOverlapsService,
 	                                        ICrackerService,
 	                                        ICalculateHolesService,
-	                                        IChangeAlongService
+	                                        IChangeAlongService,
+	                                        IAdvancedGeneralizeService
 
 	{
 		private RemoveOverlapsGrpc.RemoveOverlapsGrpcClient RemoveOverlapsClient { get; set; }
 		private CrackGrpc.CrackGrpcClient CrackClient { get; set; }
+		private GeneralizeGrpc.GeneralizeGrpcClient GeneralizeClient { get; set; }
 		private ChangeAlongGrpc.ChangeAlongGrpcClient ChangeAlongClient { get; set; }
 		private ReshapeGrpc.ReshapeGrpcClient ReshapeClient { get; set; }
 		private FillHolesGrpc.FillHolesGrpcClient RemoveHolesClient { get; set; }
@@ -52,6 +56,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		{
 			RemoveOverlapsClient = new RemoveOverlapsGrpc.RemoveOverlapsGrpcClient(channel);
 			CrackClient = new CrackGrpc.CrackGrpcClient(channel);
+			GeneralizeClient = new GeneralizeGrpc.GeneralizeGrpcClient(channel);
 			ChangeAlongClient = new ChangeAlongGrpc.ChangeAlongGrpcClient(channel);
 			ReshapeClient = new ReshapeGrpc.ReshapeGrpcClient(channel);
 			RemoveHolesClient = new FillHolesGrpc.FillHolesGrpcClient(channel);
@@ -87,6 +92,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 		#endregion
 
+		#region IRemoveOverlapsService
+
 		[CanBeNull]
 		public Overlaps CalculateOverlaps(
 			IList<Feature> selectedFeatures,
@@ -114,6 +121,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 				options, cancellationToken);
 		}
 
+		#endregion
+
+		#region ICalculateHolesService
+
 		[CanBeNull]
 		public IList<Holes> CalculateHoles(
 			IList<Feature> selectedFeatures,
@@ -128,6 +139,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 				RemoveHolesClient, selectedFeatures, clipEnvelopes, unionFeatures,
 				cancellationToken);
 		}
+
+		#endregion
+
+		#region IChangeAlongService
 
 		[NotNull]
 		public ChangeAlongCurves CalculateReshapeLines(
@@ -197,6 +212,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 				cancellationToken, out newChangeAlongCurves);
 		}
 
+		#endregion
+
+		#region IAdvancedReshapeService
+
 		public ReshapeResult TryReshape(
 			IList<Feature> selectedFeatures,
 			Polyline reshapeLine,
@@ -228,8 +247,11 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return AdvancedReshapeClientUtils.Reshape(
 				ReshapeClient, selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
-				multiReshapeAsUnion, tryReshapeNonDefault, cancellationToken, moveOpenJawEndJunction);
+				multiReshapeAsUnion, tryReshapeNonDefault, cancellationToken,
+				moveOpenJawEndJunction);
 		}
+
+		#endregion
 
 		public async Task<MapPoint> GetOpenJawReplacementPointAsync(
 			Feature polylineFeature,
@@ -242,6 +264,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			return await AdvancedReshapeClientUtils.GetOpenJawReplacementPointAsync(
 				       ReshapeClient, polylineFeature, reshapeLine, useNonDefaultReshapeSide);
 		}
+
+		#region ICrackerService
 
 		public CrackerResult CalculateCrackPoints(
 			IList<Feature> selectedFeatures,
@@ -296,5 +320,48 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 				CrackClient, selectedFeatures, splitPoints, intersectingFeatures, chopperOptions,
 				intersectionPointOptions, addCrackPointsOnExistingVertices, cancellationToken);
 		}
+
+		#endregion
+
+		#region IAdvancedGeneralizeService
+
+		public GeneralizeResult CalculateRemovableSegments(IList<Feature> selectedFeatures,
+		                                                   IList<Feature> targetFeatures,
+		                                                   bool protectVerticesWithinSameClassOnly,
+		                                                   double? weedTolerance,
+		                                                   bool weedNonLinearSegments,
+		                                                   double? minimumSegmentLength,
+		                                                   bool use2DLength,
+		                                                   Geometry perimeter,
+		                                                   CancellationToken cancellationToken)
+		{
+			if (GeneralizeClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
+			return GeneralizeClientUtils.CalculateRemovableSegments(
+				GeneralizeClient, selectedFeatures, targetFeatures,
+				protectVerticesWithinSameClassOnly, weedTolerance,
+				weedNonLinearSegments, minimumSegmentLength, use2DLength, perimeter,
+				cancellationToken);
+		}
+
+		public IList<ResultFeature> ApplySegmentRemoval(IList<Feature> selectedFeatures,
+		                                                IList<GeneralizedFeature> segmentsToRemove,
+		                                                double? weedTolerance,
+		                                                bool weedNonLinearSegments,
+		                                                double? minimumSegmentLength,
+		                                                bool use2DLength, Geometry perimeter,
+		                                                CancellationToken cancellationToken)
+		{
+			if (GeneralizeClient == null)
+				throw new InvalidOperationException("No microservice available.");
+
+			return GeneralizeClientUtils.ApplySegmentRemoval(
+				GeneralizeClient, selectedFeatures, segmentsToRemove, weedTolerance,
+				weedNonLinearSegments, minimumSegmentLength, use2DLength, perimeter,
+				cancellationToken);
+		}
+
+		#endregion
 	}
 }

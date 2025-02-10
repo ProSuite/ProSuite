@@ -47,12 +47,13 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public IEnvelope Envelope => new ArcEnvelope(_proEnvelope.Extent);
 
-		public void Project(ISpatialReference newReferenceSystem)
+		public IGeometry Project(ISpatialReference newReferenceSystem)
 		{
-			// TODO: Change semantics, return result
-			throw new NotImplementedException();
-			//var newProSpatialRef = ((ArcSpatialReference) newReferenceSystem).ProSpatialReference;
-			//Geometry result = GeometryEngine.Instance.Project(_proEnvelope, newProSpatialRef);
+			var newProSpatialRef = ((ArcSpatialReference) newReferenceSystem).ProSpatialReference;
+			var proResultEnvelope =
+				(Envelope) GeometryEngine.Instance.Project(_proEnvelope, newProSpatialRef);
+
+			return new ArcEnvelope(proResultEnvelope);
 		}
 
 		public void SnapToSpatialReference()
@@ -75,6 +76,8 @@ namespace ProSuite.GIS.Geometry.AGP
 			Envelope clone = (Envelope) _proEnvelope.Clone();
 			return new ArcEnvelope(clone);
 		}
+
+		public object NativeImplementation => ProEnvelope;
 
 		#endregion
 

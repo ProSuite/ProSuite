@@ -8,8 +8,10 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.AdvancedReshape;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
@@ -25,7 +27,6 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Text;
-using static System.Environment;
 
 namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
@@ -47,6 +48,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
 
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+		
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
@@ -81,6 +85,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+
+			_settingsProvider?.StoreLocalConfiguration(_removeOverlapsToolOptions.LocalOptions);
+			HideOptionsPane();
 		}
 
 		protected override void LogPromptForSelection()
@@ -245,7 +252,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			if (_overlaps != null && _overlaps.Notifications.Count > 0)
 			{
-				_msg.Info(_overlaps.Notifications.Concatenate(NewLine));
+				_msg.Info(_overlaps.Notifications.Concatenate(Environment.NewLine));
 
 				if (! _overlaps.HasOverlaps())
 				{
@@ -376,10 +383,10 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			string currentCentralConfigDir = CentralConfigDir;
 			string currentLocalConfigDir = LocalConfigDir;
 
-			// For the time being, we always reload the options because they could have been updated in ArcMap
-			_settingsProvider =
-				new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(
-					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			_settingsProvider ??= new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
+
 
 			PartialRemoveOverlapsOptions localConfiguration, centralConfiguration;
 
@@ -400,6 +407,45 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			return _removeOverlapsToolOptions;
 		}
+
+		#region Tool Options DockPane
+
+		[CanBeNull]
+		private DockPaneRemoveOverlapsViewModelBase GetRemoveOverlapsViewModel()
+		{
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
+
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneRemoveOverlapsViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found", OptionsDockPaneID);
+		}
+
+		protected override void ShowOptionsPane()
+		{
+			var viewModel = GetRemoveOverlapsViewModel();
+
+			if (viewModel == null)
+			{
+				return;
+			}
+
+			viewModel.Options = _removeOverlapsToolOptions;
+
+			viewModel.Activate(true);
+		}
+
+		protected override void HideOptionsPane()
+		{
+			var viewModel = GetRemoveOverlapsViewModel();
+			viewModel?.Hide();
+		}
+
+		#endregion
 
 		#region Search target features
 
@@ -505,27 +551,27 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay, null);
+			                              Resources.RemoveOverlapsOverlay, null);
 		}
 
 		protected override Cursor GetSelectionCursorShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Shift);
 		}
 
 		protected override Cursor GetSelectionCursorLasso()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Lasso);
 		}
 
 		protected override Cursor GetSelectionCursorLassoShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Lasso,
 			                              Resources.Shift);
 		}
@@ -533,14 +579,14 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursorPolygon()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Polygon);
 		}
 
 		protected override Cursor GetSelectionCursorPolygonShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Polygon,
 			                              Resources.Shift);
 		}
@@ -549,18 +595,19 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override Cursor GetSecondPhaseCursor()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay, 10, 10);
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay, 10,
+			                              10);
 		}
 
 		protected override Cursor GetSecondPhaseCursorLasso()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay,
 			                              Resources.Lasso, null, 10, 10);
 		}
 
 		protected override Cursor GetSecondPhaseCursorPolygon()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay,
 			                              Resources.Polygon, null, 10, 10);
 		}
 

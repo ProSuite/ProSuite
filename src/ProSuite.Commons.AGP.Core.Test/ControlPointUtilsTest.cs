@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Hosting;
 using System.Linq;
@@ -18,6 +19,51 @@ public class ControlPointUtilsTest
 	}
 
 	[Test]
+	public void CanCreateCircularArc()
+	{
+		// Due to the immutable geometries, setting a control point
+		// on a polygon or polyline means we have to recreate two
+		// segments. 
+		MapPoint right = MapPointBuilderEx.CreateMapPoint(1, 0);
+		MapPoint up = MapPointBuilderEx.CreateMapPoint(0, 1);
+		MapPoint left = MapPointBuilderEx.CreateMapPoint(-1, 0);
+		MapPoint down = MapPointBuilderEx.CreateMapPoint(0, -1);
+		Coordinate2D origin = new Coordinate2D(0, 0);
+		const ArcOrientation ccw = ArcOrientation.ArcCounterClockwise;
+
+		// quarter circle:
+
+		var arc = EllipticArcBuilderEx.CreateCircularArc(right, up, origin, ccw);
+
+		Assert.True(arc.IsCircular);
+		Assert.True(arc.IsMinor);
+
+		// half circle: considered major because central angle >= pi
+
+		arc = EllipticArcBuilderEx.CreateCircularArc(right, left, origin, ccw);
+
+		Assert.True(arc.IsCircular);
+		Assert.False(arc.IsMinor);
+		Assert.AreEqual(Math.PI, arc.CentralAngle, 1E-7);
+
+		// 3/4 circle:
+
+		arc = EllipticArcBuilderEx.CreateCircularArc(right, down, origin, ccw);
+
+		Assert.True(arc.IsCircular);
+		Assert.False(arc.IsMinor);
+		Assert.AreEqual(1.5 * Math.PI, arc.CentralAngle, 1E-7);
+
+		// full circle:
+
+		arc = EllipticArcBuilderEx.CreateCircularArc(right, right, origin, ccw);
+
+		Assert.True(arc.IsCircular);
+		Assert.False(arc.IsMinor);
+		Assert.AreEqual(2 * Math.PI, arc.CentralAngle, 1E-7);
+	}
+
+	[Test]
 	public void CanSetPointID()
 	{
 		var point = MapPointBuilderEx.CreateMapPoint(1.2, 3.4);
@@ -27,20 +73,17 @@ public class ControlPointUtilsTest
 		var point0 = ControlPointUtils.SetPointID(null, 42);
 		Assert.IsNull(point0);
 
-		var point1 = ControlPointUtils.SetPointID(point, null);
-		Assert.AreSame(point, point1);
+		var point1 = ControlPointUtils.SetPointID(point, 1);
+		Assert.IsTrue(point1.HasID);
+		Assert.AreEqual(1, point1.ID);
 
-		var point2 = ControlPointUtils.SetPointID(point, 1);
+		var point2 = ControlPointUtils.SetPointID(point, 123);
 		Assert.IsTrue(point2.HasID);
-		Assert.AreEqual(1, point2.ID);
+		Assert.AreEqual(123, point2.ID);
 
-		var point3 = ControlPointUtils.SetPointID(point, 123);
-		Assert.IsTrue(point3.HasID);
-		Assert.AreEqual(123, point3.ID);
-
-		var point4 = ControlPointUtils.SetPointID(point, 0);
-		Assert.IsTrue(point4.HasID);
-		Assert.AreEqual(0, point4.ID);
+		var point3 = ControlPointUtils.SetPointID(point, 0);
+		Assert.IsFalse(point3.HasID); // setting ID to zero clears HasID
+		Assert.AreEqual(0, point3.ID);
 	}
 
 	[Test]

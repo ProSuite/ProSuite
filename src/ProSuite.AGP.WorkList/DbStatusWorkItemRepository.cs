@@ -20,7 +20,7 @@ namespace ProSuite.AGP.WorkList
 		#region Overrides of GdbItemRepository
 
 		public DbStatusWorkItemRepository(
-			[NotNull] IEnumerable<DbStatusSourceClassDefinition> sourceClassDefinitions,
+			[NotNull] IList<DbStatusSourceClassDefinition> sourceClassDefinitions,
 			[NotNull] IWorkItemStateRepository workItemStateRepository)
 			: base(sourceClassDefinitions, workItemStateRepository) { }
 

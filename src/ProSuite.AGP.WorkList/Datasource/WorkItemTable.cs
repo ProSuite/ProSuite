@@ -25,6 +25,14 @@ namespace ProSuite.AGP.WorkList.Datasource
 			_workList = workList ?? throw new ArgumentNullException(nameof(workList));
 			_tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
 			_fields = new ReadOnlyCollection<PluginField>(GetSchema());
+
+			// Now that the table is likely used by a layer, make sure its work list is initialized
+			// and correctly updated when source rows change.
+			// TODO: In order to avoid duplicate item caching (once the work list navigator is open and re-creates its work list)
+			//       try updating this work list rather than replacing it (just replace its repository?)
+			// Also, consider not a-priory caching the work list items but query through the source tables.
+			// this would likely also fix changing definition queries or updates that make the item disappear (set allowed).
+			_workList.EnsureRowCacheSynchronized();
 		}
 
 		public override string GetName()

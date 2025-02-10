@@ -125,8 +125,11 @@ namespace ProSuite.Commons.ManagedOptions
 		{
 			string oldTooltip = Tooltip;
 
-			_localSetting.Value = value;
-			NotifyCurrentValueChanged("CurrentValue");
+			if (! Equals(value, _localSetting.Value))
+			{
+				_localSetting.Value = value;
+				NotifyCurrentValueChanged(nameof(CurrentValue));
+			}
 
 			HasLocalOverride = _centralSetting == null ||
 			                   value != null && ! value.Equals(_centralSetting.Value);

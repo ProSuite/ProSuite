@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -8,6 +9,8 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
@@ -225,18 +228,18 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrSpatialJoin tr = new TrSpatialJoin(
-								   ReadOnlyTableFactory.Create(pointFc),
-								   ReadOnlyTableFactory.Create(linFc))
-			{
-				Grouped = false,
-				T1Attributes = new[]
-												  {
+				                   ReadOnlyTableFactory.Create(pointFc),
+				                   ReadOnlyTableFactory.Create(linFc))
+			                   {
+				                   Grouped = false,
+				                   T1Attributes = new[]
+				                                  {
 					                                  // If T1Attribute is not not null, only specified attributes are added
 					                                  "OBJECTID as Line_OID",
-													  "COUNT(OBJECTID) AS LineCount"
-												  },
-				OuterJoin = true
-			};
+					                                  "COUNT(OBJECTID) AS LineCount"
+				                                  },
+				                   OuterJoin = true
+			                   };
 
 			TransformedFeatureClass transformedClass = tr.GetTransformed();
 			WriteFieldNames(transformedClass);
@@ -473,19 +476,20 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			{
 				IFeature f = fcGe.CreateFeature();
 				f.Value[1] = uuid;
-				f.Shape = CurveConstruction.StartPoly(1190, 990).LineTo(1210, 990).LineTo(1210, 1010)
-				                           .LineTo(1190, 1010).LineTo(1190, 990).ClosePolygon();
+				f.Shape = CurveConstruction
+				          .StartPoly(1190, 990).LineTo(1210, 990).LineTo(1210, 1010)
+				          .LineTo(1190, 1010).LineTo(1190, 990).ClosePolygon();
 				f.Store();
 			}
 			{
 				IFeature f = fcGk.CreateFeature();
 				f.Value[1] = uuid;
 				f.Value[2] = 2;
-				f.Shape = CurveConstruction.StartPoly(1190, 990).LineTo(1210, 990).LineTo(1210, 1010)
-				                           .LineTo(1190, 1010).LineTo(1190, 990).ClosePolygon();
+				f.Shape = CurveConstruction
+				          .StartPoly(1190, 990).LineTo(1210, 990).LineTo(1210, 1010)
+				          .LineTo(1190, 1010).LineTo(1190, 990).ClosePolygon();
 				f.Store();
 			}
-
 
 			IReadOnlyFeatureClass ge = ReadOnlyTableFactory.Create(fcGe);
 			IReadOnlyFeatureClass gk = ReadOnlyTableFactory.Create(fcGk);
@@ -495,11 +499,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			trSj.OuterJoin = false;
 			trSj.NeighborSearchOption = SearchOption.All;
 			trSj.Grouped = true;
-			trSj.T0Attributes = new [] { "UUID" };
-			trSj.T1Attributes = new []{ "SUM(GEBAEUDEKOERPER) AS ANZAHL_GEBAEUDEKOERPER" };
+			trSj.T0Attributes = new[] { "UUID" };
+			trSj.T1Attributes = new[] { "SUM(GEBAEUDEKOERPER) AS ANZAHL_GEBAEUDEKOERPER" };
 			trSj.T1CalcAttributes = new[] { "IIF(OBJEKTART=2,1,0)  AS GEBAEUDEKOERPER" };
 
-			QaConstraint test = new QaConstraint(trSj.GetTransformed(), "ANZAHL_GEBAEUDEKOERPER = 1");
+			QaConstraint test =
+				new QaConstraint(trSj.GetTransformed(), "ANZAHL_GEBAEUDEKOERPER = 1");
 
 			{
 				var runner = new QaContainerTestRunner(1000, test);
@@ -507,13 +512,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
-
 		}
 
 		[Test]
 		public void Top5728()
 		{
-
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("Bielersee");
 
 			{
@@ -546,17 +549,19 @@ namespace ProSuite.QA.Tests.Test.Transformer
 						});
 				{
 					IFeature f = fc.CreateFeature();
-					f.Shape = CurveConstruction.StartLine(2576125, 1212189).LineTo(2574259,1210759).
-					                            LineTo(2576119,1211673)
-					                           .Curve;
+					f.Shape = CurveConstruction
+					          .StartLine(2576125, 1212189).LineTo(2574259, 1210759)
+					          .LineTo(2576119, 1211673)
+					          .Curve;
 					f.Value[1] = uuid;
 					f.Store();
 				}
 				{
 					IFeature f = fc.CreateFeature();
-					f.Shape = CurveConstruction.StartLine(2576119, 1211673).LineTo(2577695, 1213983).
-					                            LineTo(2576125, 1212189)
-												.Curve;
+					f.Shape = CurveConstruction
+					          .StartLine(2576119, 1211673).LineTo(2577695, 1213983)
+					          .LineTo(2576125, 1212189)
+					          .Curve;
 					f.Value[1] = uuid;
 					f.Store();
 				}
@@ -572,14 +577,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				}
 			}
 
-
 			var fws = ws;
 			IReadOnlyFeatureClass fcFg =
 				ReadOnlyTableFactory.Create(fws.OpenFeatureClass("TLM_FLIESSGEWAESSER"));
 			IReadOnlyFeatureClass fcSg =
 				ReadOnlyTableFactory.Create(fws.OpenFeatureClass("TLM_STEHENDES_GEWAESSER"));
 			IReadOnlyTable tbGl = ReadOnlyTableFactory.Create(fws.OpenTable("TLM_GEWAESSER_LAUF"));
-
 
 			TrGeometryToPoints trEp = new TrGeometryToPoints(fcFg, GeometryComponent.LineEndPoints);
 			trEp.TransformerName = "trEp";
@@ -590,14 +593,17 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			trIm.TransformerName = "trIm";
 
 			TrOnlyDisjointFeatures trDj =
-				new TrOnlyDisjointFeatures((IReadOnlyFeatureClass)trIm.GetTransformed(), trEp.GetTransformed());
+				new TrOnlyDisjointFeatures((IReadOnlyFeatureClass) trIm.GetTransformed(),
+				                           trEp.GetTransformed());
 			trDj.TransformerName = "trDj";
 			trDj.FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All;
 
 			QaExportTables test = new QaExportTables(
 				new List<IReadOnlyTable>
-				{ fcFg, fcSg,
-					trEp.GetTransformed(), trIm.GetTransformed(), trDj.GetTransformed() },
+				{
+					fcFg, fcSg,
+					trEp.GetTransformed(), trIm.GetTransformed(), trDj.GetTransformed()
+				},
 				"c:\\temp\\top5728_*.gdb"
 			);
 			test.ExportTileIds = true;
@@ -612,6 +618,125 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			IFeatureClass fcTrDj = ((IFeatureWorkspace) exportWorkspace).OpenFeatureClass("trDj");
 			Assert.AreEqual(0, fcTrDj.FeatureCount(null));
 		}
+
+		[Test]
+		public void CanHandleOutOfTileRequests()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+
+			IFeatureClass featureClass =
+				CreateFeatureClass(
+					ws, "polyFc", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("Nr") });
+
+			ReadOnlyFeatureClass roPolyFc = ReadOnlyTableFactory.Create(featureClass);
+
+			double tileSize = 100;
+			double x = 2600000;
+			double y = 1200000;
+
+			// Left of first tile, NOT within search distance
+			IFeature leftOfFirst = CreateFeature(featureClass, x - 20, y + 30, x - 15, y + 40);
+			IFeature leftOfFirstIntersect =
+				CreateFeature(featureClass, x - 20, y + 30, x - 15, y + 40);
+
+			// Inside first tile:
+			IFeature insideFirst = CreateFeature(featureClass, x, y, x + 10, y + 10);
+			IFeature insideFirstIntersect = CreateFeature(featureClass, x, y, x + 10, y + 10);
+
+			// Right of first tile, NOT within search distance
+			IFeature rightOfFirst =
+				CreateFeature(featureClass, x + tileSize + 15, y + 30, x + tileSize + 20, y + 40);
+			IFeature rightOfFirstIntersect =
+				CreateFeature(featureClass, x + tileSize + 15, y + 30, x + tileSize + 20, y + 40);
+
+			// Left of second tile, NOT within the search distance:
+			IFeature leftOfSecond =
+				CreateFeature(featureClass, x + tileSize - 20, y, x + tileSize - 15, y + 10);
+			IFeature leftOfSecondIntersect =
+				CreateFeature(featureClass, x + tileSize - 20, y, x + tileSize - 15, y + 10);
+
+			TrSpatialJoin tr = new TrSpatialJoin(roPolyFc, roPolyFc)
+			                   {
+				                   // NOTE: The search logic should work correctly even if search option is Tile! (e.g. due to downstream transformers)
+				                   //NeighborSearchOption = TrSpatialJoin.SearchOption.All
+			                   };
+
+			TransformedFeatureClass transformedClass = tr.GetTransformed();
+			WriteFieldNames(transformedClass);
+
+			var test =
+				new ContainerOutOfTileDataAccessTest(transformedClass)
+				{
+					SearchDistanceIntoNeighbourTiles = 50
+				};
+
+			test.TileProcessed = (tile, outsideTileFeatures) =>
+			{
+				if (tile.CurrentEnvelope.XMin == x && tile.CurrentEnvelope.YMin == y)
+				{
+					// first tile: the leftOfFirst and rightOfFirst
+					Assert.AreEqual(4, outsideTileFeatures.Count);
+
+					foreach (IReadOnlyRow outsideTileFeature in outsideTileFeatures)
+					{
+						Assert.True(InvolvedRowUtils.GetInvolvedRows(outsideTileFeature).All(
+							            r => r.OID == leftOfFirst.OID ||
+							                 r.OID == leftOfFirstIntersect.OID ||
+							                 r.OID == rightOfFirst.OID ||
+							                 r.OID == rightOfFirstIntersect.OID));
+					}
+				}
+
+				if (tile.CurrentEnvelope.XMin == x + tileSize && tile.CurrentEnvelope.YMin == y)
+				{
+					// second tile: leftOfSecond, found twice because it intersects 2 tiles!
+					Assert.AreEqual(2, outsideTileFeatures.Count);
+
+					foreach (IReadOnlyRow outsideTileFeature in outsideTileFeatures)
+					{
+						Assert.True(InvolvedRowUtils.GetInvolvedRows(outsideTileFeature).All(
+							            r => r.OID == leftOfSecond.OID ||
+							                 r.OID == leftOfSecondIntersect.OID));
+					}
+				}
+
+				return 0;
+			};
+
+			test.SetSearchDistance(10);
+
+			var container = new TestContainer { TileSize = tileSize };
+
+			container.AddTest(test);
+
+			ISpatialReference sr = DatasetUtils.GetSpatialReference(featureClass);
+
+			IEnvelope aoi = GeometryFactory.CreateEnvelope(
+				2600000, 1200000.00, 2600000 + 2 * tileSize, 1200000.00 + tileSize, sr);
+
+			// First, using FullGeometrySearch:
+			test.UseFullGeometrySearch = true;
+			container.Execute(aoi);
+
+			// Now simulate full tile loading:
+			test.UseFullGeometrySearch = false;
+			test.UseTileEnvelope = true;
+			container.Execute(aoi);
+		}
+
+		private static IFeature CreateFeature(IFeatureClass featureClass,
+		                                      double xMin, double yMin,
+		                                      double xMax, double yMax)
+		{
+			ISpatialReference sr = DatasetUtils.GetSpatialReference(featureClass);
+
+			IFeature row = featureClass.CreateFeature();
+			row.Shape = GeometryFactory.CreatePolygon(xMin, yMin, xMax, yMax, sr);
+			row.Store();
+			return row;
+		}
+
 		private static void WriteFieldNames(IReadOnlyTable targetTable)
 		{
 			for (int i = 0; i < targetTable.Fields.FieldCount; i++)

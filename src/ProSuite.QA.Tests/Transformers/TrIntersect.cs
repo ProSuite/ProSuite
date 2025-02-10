@@ -120,7 +120,8 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				filter = filter ?? new AoTableFilter();
 
-				IFeatureClassFilter intersectingFilter = new AoFeatureClassFilter();
+				// Important: Include the TileExtent in the filter to avoid searching in empty areas of the main tile cache!
+				IFeatureClassFilter intersectingFilter = (IFeatureClassFilter) filter.Clone();
 				intersectingFilter.SpatialRelationship =
 					esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 

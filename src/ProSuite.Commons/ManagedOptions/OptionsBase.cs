@@ -1,12 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.ManagedOptions
 {
-	public abstract class OptionsBase<TPartialOptions>
+	public abstract class OptionsBase<TPartialOptions> : INotifyPropertyChanged
 		where TPartialOptions : PartialOptionsBase
 	{
 		[CanBeNull]
@@ -57,6 +58,13 @@ namespace ProSuite.Commons.ManagedOptions
 
 			var result = new CentralizableSetting<T>(centralSetting, localSetting,
 			                                         factoryDefault);
+
+			// Re-direct the property changed event from the centralizable setting to the option's
+			// property changed event:
+			result.PropertyChanged += (sender, eventArgs) =>
+			{
+				OnPropertyChanged(eventArgs, overridableSettingPropertyInfo.Name);
+			};
 
 			return result;
 		}
@@ -115,5 +123,26 @@ namespace ProSuite.Commons.ManagedOptions
 
 			return result;
 		}
+
+		#region INotifyPropertyChanged implementation
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		protected virtual void OnPropertyChanged(
+			PropertyChangedEventArgs args,
+			[NotNull] string overridablePropertyName)
+		{
+			// NOTE: After a property update, all kinds of secondary properties, such as HasOverride and
+			// Tooltip fire the changed event too. Just fire on the actual properties' change:
+			const string relevantPropertyName = nameof(CentralizableSetting<bool>.CurrentValue);
+
+			if (args.PropertyName == relevantPropertyName)
+			{
+				PropertyChanged?.Invoke(
+					this, new PropertyChangedEventArgs(overridablePropertyName));
+			}
+		}
+
+		#endregion
 	}
 }

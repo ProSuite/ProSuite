@@ -216,20 +216,16 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 			{
-				IFeatureClassFilter joinFilter = null;
+				// For correct out-of tile searches, clone the provided filter!
+				IFeatureClassFilter joinFilter =
+					(IFeatureClassFilter) filter?.Clone() ?? new AoFeatureClassFilter();
 
 				foreach (var toJoin in DataSearchContainer.Search(
 					         _t0, filter ?? new AoTableFilter(), QueryHelpers[0]))
 				{
 					IGeometry joinFilterGeometry = ((IReadOnlyFeature) toJoin).Extent;
-					if (joinFilter == null)
-					{
-						joinFilter = new AoFeatureClassFilter(joinFilterGeometry);
-					}
-					else
-					{
-						joinFilter.FilterGeometry = joinFilterGeometry;
-					}
+
+					joinFilter.FilterGeometry = joinFilterGeometry;
 
 					var op = (IRelationalOperator) ((IReadOnlyFeature) toJoin).Shape;
 

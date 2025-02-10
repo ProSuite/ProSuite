@@ -12,7 +12,8 @@ public abstract class TableSelection : IDisposable
 		Table = table ??
 		        throw new ArgumentNullException(nameof(table));
 	}
-	
+
+	// TODO dispose when done (implement IDisposable)
 	[NotNull]
 	public Table Table { get; }
 

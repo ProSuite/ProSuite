@@ -277,7 +277,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <returns>The found features in the same spatial reference as the provided selected features</returns>
 		[NotNull]
 		public IEnumerable<FeatureSelectionBase> FindIntersectingFeaturesByFeatureClass(
-			[NotNull] Dictionary<MapMember, List<long>> intersectingSelectedFeatures,
+			[NotNull] IDictionary<MapMember, List<long>> intersectingSelectedFeatures,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Envelope extent = null,
 			[CanBeNull] CancelableProgressor cancelableProgressor = null)
@@ -385,8 +385,8 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
-		private static bool
-			LayerUsesFeatureClass(BasicFeatureLayer featureLayer, FeatureClass featureClass)
+		private static bool LayerUsesFeatureClass([NotNull] BasicFeatureLayer featureLayer,
+		                                          [NotNull] FeatureClass featureClass)
 		{
 			var layerClass = featureLayer.GetTable() as FeatureClass;
 
