@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:ProSuite.Commons.AGP.Carto"
         xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
         xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
+        xmlns:ui="clr-namespace:ProSuite.Commons.UI.WPF;assembly=ProSuite.Commons.UI"
         d:DataContext="{d:DesignInstance {x:Type local:SymbolDisplaySettingsViewModel}, IsDesignTimeCreatable=False}"
         mc:Ignorable="d"
         Title="Symbol Display Settings"
@@ -63,18 +64,18 @@
                         </TextBox.Style>
                         <TextBox.Text>
                             <Binding Path="MinScaleDenominator"
-                                     UpdateSourceTrigger="PropertyChanged">
+                                     UpdateSourceTrigger="Default">
                                 <Binding.ValidationRules>
-                                    <local:ScaleValidation/>
+                                    <ui:ScaleValidation/>
                                 </Binding.ValidationRules>
                                 <Binding.Converter>
-                                    <local:ScaleConverter/>
+                                    <ui:ScaleConverter/>
                                 </Binding.Converter>
                             </Binding>
                         </TextBox.Text>
                     </TextBox>
                     <Separator Width="8" Visibility="Hidden"/>
-                    <TextBlock VerticalAlignment="Center">(max scale)</TextBlock>
+                    <TextBlock VerticalAlignment="Center">(max scale, e.g. 1:500)</TextBlock>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="28,2,2,4">
                     <TextBlock VerticalAlignment="Center">zoomed out beyond</TextBlock>
@@ -93,16 +94,16 @@
                             <Binding Path="MaxScaleDenominator"
                                      UpdateSourceTrigger="Default">
                                 <Binding.ValidationRules>
-                                    <local:ScaleValidation/>
+                                    <ui:ScaleValidation/>
                                 </Binding.ValidationRules>
                                 <Binding.Converter>
-                                    <local:ScaleConverter/>
+                                    <ui:ScaleConverter/>
                                 </Binding.Converter>
                             </Binding>
                         </TextBox.Text>
                     </TextBox>
                     <Separator Width="8" Visibility="Hidden"/>
-                    <TextBlock VerticalAlignment="Center">(min scale)</TextBlock>
+                    <TextBlock VerticalAlignment="Center">(min scale, e.g. 1:15000)</TextBlock>
                 </StackPanel>
             </StackPanel>
             <Separator Grid.Row="3" />
