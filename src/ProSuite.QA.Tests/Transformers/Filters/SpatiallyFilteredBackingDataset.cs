@@ -8,6 +8,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Transformers.Filters
 {
@@ -16,13 +17,13 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IReadOnlyFeatureClass _filtering;
-		private readonly TrSpatiallyFiltered.SearchOption _neighborSearchOption;
+		private readonly SearchOption _neighborSearchOption;
 
 		public SpatiallyFilteredBackingDataset(
 			[NotNull] FilteredFeatureClass resultFeatureClass,
 			[NotNull] IReadOnlyFeatureClass featureClassToFilter,
 			[NotNull] IReadOnlyFeatureClass filtering,
-			TrSpatiallyFiltered.SearchOption neighborSearchOption)
+			SearchOption neighborSearchOption)
 			: base(resultFeatureClass, featureClassToFilter,
 			       new List<IReadOnlyTable> { featureClassToFilter, filtering })
 		{
@@ -100,7 +101,7 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			spatialFilter.FilterGeometry = testGeometry;
 			QueryFilterHelper queryFilterHelper = QueryHelpers[1];
 			queryFilterHelper.FullGeometrySearch =
-				_neighborSearchOption == TrSpatiallyFiltered.SearchOption.All;
+				_neighborSearchOption == SearchOption.All;
 
 			foreach (var testRow in DataSearchContainer.Search(
 				         _filtering, spatialFilter, queryFilterHelper))

@@ -170,7 +170,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			var trFullSearch = new TrOnlyIntersectingFeatures(ReadOnlyTableFactory.Create(lineFc),
 			                                                  ReadOnlyTableFactory.Create(polyFc));
-			trFullSearch.FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All;
+			trFullSearch.FilteringSearchOption = SearchOption.All;
 			{
 				var test = new QaMinLength(trFullSearch.GetTransformed(), 500);
 
@@ -318,7 +318,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			var trFullSearch = new TrOnlyDisjointFeatures(ReadOnlyTableFactory.Create(lineFc),
 			                                              ReadOnlyTableFactory.Create(polyFc));
-			trFullSearch.FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All;
+			trFullSearch.FilteringSearchOption = SearchOption.All;
 			{
 				var test = new QaMaxLength(trFullSearch.GetTransformed(), 400);
 

@@ -1128,7 +1128,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrOnlyDisjointFeatures fiDjSgwFgw =
 				new TrOnlyDisjointFeatures(roMjSgwGl, roEpFgw)
 				{
-					FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All,
+					FilteringSearchOption = SearchOption.All,
 					//						TransformerName = "fiDjSgwFgw"
 				};
 			IReadOnlyFeatureClass roDjSgwFgw = fiDjSgwFgw.GetTransformed();

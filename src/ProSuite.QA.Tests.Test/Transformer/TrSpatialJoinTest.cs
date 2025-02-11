@@ -596,7 +596,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new TrOnlyDisjointFeatures((IReadOnlyFeatureClass) trIm.GetTransformed(),
 				                           trEp.GetTransformed());
 			trDj.TransformerName = "trDj";
-			trDj.FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All;
+			trDj.FilteringSearchOption = SearchOption.All;
 
 			QaExportTables test = new QaExportTables(
 				new List<IReadOnlyTable>
