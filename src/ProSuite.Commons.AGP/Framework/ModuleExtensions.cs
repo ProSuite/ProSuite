@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.Commons.Logging;
 
@@ -37,6 +38,48 @@ public static class ModuleExtensions
 			_msg.Error($"Cannot convert project setting {name} to {nameof(Boolean)}: {ex.Message}; assuming null");
 			return null;
 		}
+	}
+
+	public static void Add(this ModuleSettingsWriter settings, string name, bool flag)
+	{
+		if (settings is null)
+			throw new ArgumentNullException(nameof(settings));
+		if (name is null)
+			throw new ArgumentNullException(nameof(name));
+
+		var text = flag.ToString(CultureInfo.InvariantCulture);
+		settings.Add(name, text);
+	}
+
+	public static double? GetDouble(this ModuleSettingsReader settings, string name)
+	{
+		if (settings is null || name is null) return null;
+
+		var setting = settings.Get(name);
+		if (setting is null) return null;
+		if (setting is double value) return value;
+
+		try
+		{
+			var text = Convert.ToString(setting);
+			return double.TryParse(text, CultureInfo.InvariantCulture, out value) ? value : null;
+		}
+		catch (Exception ex)
+		{
+			_msg.Error($"Cannot convert project setting {name} to {nameof(Double)}: {ex.Message}");
+			return null;
+		}
+	}
+
+	public static void Add(this ModuleSettingsWriter settings, string name, double value)
+	{
+		if (settings is null)
+			throw new ArgumentNullException(nameof(settings));
+		if (name is null)
+			throw new ArgumentNullException(nameof(name));
+
+		var text = value.ToString(CultureInfo.InvariantCulture);
+		settings.Add(name, text);
 	}
 
 	/// <summary>
