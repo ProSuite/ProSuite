@@ -21,6 +21,7 @@ using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Transformers;
+using ProSuite.QA.Tests.Transformers.Filters;
 using FieldInfo = System.Reflection.FieldInfo;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
@@ -4874,7 +4875,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			CheckCompleteness(
 				typeFromAssembly: typeof(TrDissolve),
-				namespaceSuffix: "Transformer",
+				namespaceSuffix: "Transformers",
 				refactoredTypes: TrRefactoredTypes,
 				methodName: "CanCreateTransformers");
 		}
