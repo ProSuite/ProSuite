@@ -3728,7 +3728,8 @@ namespace ProSuite.QA.Tests.Test
 					                               typeof(TrTableAppend),
 					                               typeof(TrTableJoin),
 					                               typeof(TrTableJoinInMemory),
-					                               typeof(TrZAssign)
+					                               typeof(TrZAssign),
+												   typeof(TrOnlyContainedFeatures)
 				                               };
 				return trRefactoredTypes;
 			}
@@ -3837,6 +3838,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrTableAppendCases(model, trCases);
 			AddTrTableJoinInMemoryCases(model, trCases);
 			AddTrZAssignCases(model, trCases);
+			AddTrOnlyContainedFeaturesCases(model, trCases);
 
 			return trCases;
 		}
@@ -4004,7 +4006,6 @@ namespace ProSuite.QA.Tests.Test
 											 },
 												optionalValues));
 		}
-
 
 		private static void AddTrGetNodesCases(TestDataModel model,
 		                                       ICollection<TrDefinitionCase>
@@ -4177,6 +4178,22 @@ namespace ProSuite.QA.Tests.Test
 				                                 model.GetMosaicDataset()
 			                                 },
 			                                 optionalValues));
+		}
+
+		private static void AddTrOnlyContainedFeaturesCases(TestDataModel model,
+											  ICollection<TrDefinitionCase>
+												  trCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("FilteringSearchOption", SearchOption.Tile);
+
+			trCases.Add(new TrDefinitionCase(typeof(TrOnlyContainedFeatures), 0,
+											 new object[]
+											 {
+												 model.GetVectorDataset(),
+												 model.GetPolygonDataset()
+											 },
+											 optionalValues));
 		}
 
 		#endregion
