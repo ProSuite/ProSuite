@@ -147,29 +147,102 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged();
 		}
 
-		public void RefreshItems()
-		{
-			List<IWorkItem> newItems = new List<IWorkItem>(_items.Count);
-			_rowMap.Clear();
+		private readonly Dictionary<int, int> _indexByTask = new(20);
 
-			foreach (IWorkItem item in Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo))
+		private readonly Dictionary<int, List<IWorkItem>> _itemsByIndex = new(20);
+
+		private readonly List<List<IWorkItem>> _itemChunks = new(3);
+
+		public bool TryGetItems(int taskId, out List<IWorkItem> result)
+		{
+			result = null;
+
+			if (_indexByTask.ContainsKey(taskId))
 			{
-				newItems.Add(item);
-				_rowMap[item.GdbRowProxy] = item;
+				return false;
 			}
 
-			_msg.DebugFormat("Added {0} items to work list", newItems.Count);
+			foreach (List<IWorkItem> items in _itemChunks)
+			{
+				int index = _itemChunks.IndexOf(items);
+
+				if (_itemsByIndex.TryGetValue(index, out List<IWorkItem> _))
+				{
+					continue;
+				}
+
+				_indexByTask.Add(taskId, index);
+				_itemsByIndex.Add(index, items);
+
+				result = items;
+				return true;
+			}
+
+			return false;
+		}
+
+		public void ReportFinished()
+		{
+			_msg.Info($"{DisplayName} is ready.");
+
+			_itemChunks.Clear();
+			_itemsByIndex.Clear();
+			_indexByTask.Clear();
+		}
+
+		public void RefreshItems()
+		{
+			var items = Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo).ToList();
+
+			_items = new List<IWorkItem>(items.Count);
+			_rowMap.Clear();
+
+			int chunkSize = items.Count / 3;
+
+			_itemChunks.Add(new List<IWorkItem>(chunkSize + items.Count % 3));
+			_itemChunks.Add(new List<IWorkItem>(chunkSize));
+			_itemChunks.Add(new List<IWorkItem>(chunkSize));
+
+			int counter = 0;
+			var listIndex = 0;
+			List<IWorkItem> currentList = Assert.NotNull(_itemChunks[listIndex]);
+
+			foreach (IWorkItem item in items)
+			{
+				_rowMap[item.GdbRowProxy] = item;
+
+				_items.Add(item);
+				currentList.Add(item);
+
+				counter += 1;
+
+				if (counter == currentList.Capacity)
+				{
+					listIndex += 1;
+
+					if (listIndex == _itemChunks.Capacity)
+					{
+						break;
+					}
+
+					currentList = Assert.NotNull(_itemChunks[listIndex]);
+
+					counter = 0;
+				}
+			}
+
+			Assert.True(listIndex == 3, "listIndex == 3");
+
+			_msg.DebugFormat("Added {0} items to work list", _items.Count);
 
 			// initializes the state repository if no states for
 			// the work items are read yet
-			Repository.UpdateVolatileState(newItems);
+			Repository.UpdateVolatileState(_items);
 
-			_msg.DebugFormat("Getting extents for {0} items...", newItems.Count);
+			_msg.DebugFormat("Getting extents for {0} items...", _items.Count);
 			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
 			//			  look old work item implementation
-			Extent = GetExtentFromItems(newItems);
-
-			_items = newItems;
+			Extent = GetExtentFromItems(_items);
 		}
 
 		public bool IsValid(out string message)
@@ -238,6 +311,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				query = query.Where(item => WithinAreaOfInterest(item.Extent, AreaOfInterest));
 			}
 
+			// TODO: (daro) drop!
 			if (startIndex > -1 && startIndex < _items.Count)
 			{
 				// This can be ultra-slow for a large item count! Consider looping over all items exactly once!
@@ -285,11 +359,22 @@ namespace ProSuite.AGP.WorkList.Domain
 		//	return query;
 		//}
 
+
+		// TODO: daro drop?
 		public virtual int Count(QueryFilter filter = null, bool ignoreListSettings = false)
 		{
 			lock (_syncLock)
 			{
 				return GetItems(filter, ignoreListSettings).Count();
+			}
+		}
+
+		// TODO: daro move to base?
+		public int Count()
+		{
+			lock (_syncLock)
+			{
+				return _items.Count;
 			}
 		}
 

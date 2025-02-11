@@ -2,11 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Core.Threading.Tasks;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -74,52 +80,181 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			_workList = null;
 			_msg.VerboseDebug(() => "WorkListDataSource.Close()");
+
+			// https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-cancellation
+			if (_progressorSource != null)
+			{
+				_progressorSource.CancellationTokenSource.Cancel();
+				_progressorSource.Progressor.Message = "Work list removed";
+			}
 		}
 
 		public override PluginTableTemplate OpenTable([NotNull] string name)
 		{
+			Assert.ArgumentNotNull(name, nameof(name));
+
 			WorkItemTable result = null;
-			Try(() =>
-			    {
-				    Assert.ArgumentNotNull(name, nameof(name));
+			try
+			{
+				// The given name is one of those returned by GetTableNames()
+				_msg.Debug($"Open table '{name}'");
 
-				    // The given name is one of those returned by GetTableNames()
-				    _msg.Debug($"Open table '{name}'");
+				ParseTableName(name, out string listName);
 
-				    ParseTableName(name, out string listName);
+				_workList = WorkListRegistry.Instance.Get(name);
+				Assert.NotNull(_workList);
 
-				    _workList = WorkListRegistry.Instance.Get(name);
+				if (_workList == null &&
+				    ! _path.EndsWith("swl") && ! _path.EndsWith("iwl"))
+				{
+					throw new ArgumentException();
 
-				    if (_workList == null &&
-				        ! _path.EndsWith("swl") && ! _path.EndsWith("iwl"))
-				    {
-					    // Work lists not registered as project items. Auto-register (consider always?):
-					    var xmlBasedWorkListFactory = new XmlBasedWorkListFactory(_path, name);
-					    WorkListRegistry.Instance.TryAdd(xmlBasedWorkListFactory);
-					    _workList = xmlBasedWorkListFactory.Get();
-				    }
+					// Work lists not registered as project items. Auto-register (consider always?):
+					var xmlBasedWorkListFactory = new XmlBasedWorkListFactory(_path, name);
+					WorkListRegistry.Instance.TryAdd(xmlBasedWorkListFactory);
+					_workList = xmlBasedWorkListFactory.Get();
+				}
 
-				    if (_workList != null)
-				    {
-					    result = new WorkItemTable(_workList, listName);
-				    }
-				    else
-				    {
-					    // TODO: Can we just auto-register?
-					    string fileName = Path.GetFileName(_path);
-					    var message =
-						    $"Cannot find data source of work list {fileName}. It is likely not part of the Work List project items.";
+				if (_workList != null)
+				{
+					// Protect geometry
+					// Trouble with Buffer method?
+					if (! QueuedTask.OnWorker)
+					{
+						_progressorSource = new BackgroundProgressorSource(OnUpdateProgress);
 
-					    // The exception is not going to crash Pro. Or is it?
-					    // It might depend on the application state.
-					    // It results in a broken data source of the work list layer.
-					    _msg.Warn(message);
-					    _msg.DebugFormat("File location: {0}. Work list unique name: {1}",
-					                     _path, name);
-				    }
-			    }, $"Error opening work list {name}");
+						// TODO: daro lock? Close sets worklist to null.
+						_ = OpenTableCoreAsync(_progressorSource.Progressor);
+					}
+
+					result = new WorkItemTable(_workList, listName);
+				}
+				else
+				{
+					// TODO: Can we just auto-register?
+					string fileName = Path.GetFileName(_path);
+					var message =
+						$"Cannot find data source of work list {fileName}. It is likely not part of the Work List project items.";
+
+					// The exception is not going to crash Pro. Or is it?
+					// It might depend on the application state.
+					// It results in a broken data source of the work list layer.
+					_msg.Warn(message);
+					_msg.DebugFormat("File location: {0}. Work list unique name: {1}",
+					                 _path, name);
+				}
+			}
+			catch (Exception ex)
+			{
+				Gateway.LogError(ex, _msg);
+			}
 
 			return result;
+		}
+
+		private BackgroundProgressorSource _progressorSource;
+
+		private void OnUpdateProgress(BackgroundProgressor progressor)
+		{
+			if (_workList == null)
+			{
+				_progressorSource?.CancellationTokenSource.Cancel();
+			}
+		}
+
+		private async Task OpenTableCoreAsync(BackgroundProgressor progressor)
+		{
+			Gateway.LogEntry(_msg);
+
+			try
+			{
+				await BackgroundTask.Run(() =>
+				{
+					try
+					{
+						// TODO: (DARO) implement Cancellation ON Close()
+						// TODO: (DARO) add flush or counter
+						// TODO: (DARO) ERROR handling see documentation
+						if (_workList == null)
+						{
+							return;
+						}
+
+						int next = Random.Shared.Next();
+						if (_workList.TryGetItems(next, out List<IWorkItem> items))
+						{
+							progressor.Max = (uint) items.Count;
+
+							foreach (IWorkItem item in items)
+							{
+								if (_workList == null)
+								{
+									break;
+								}
+
+								CancellationToken token = progressor.CancelToken;
+								if (token.IsCancellationRequested)
+								{
+									progressor.Message = "Canceled";
+								}
+
+								_workList.Repository.RefreshGeometry(item);
+
+								progressor.Value += 1;
+							}
+						}
+					}
+					catch (Exception ex)
+					{
+						Gateway.LogError(ex, _msg);
+					}
+				}, progressor);
+			}
+			finally
+			{
+				_workList.ReportFinished();
+			}
+		}
+
+		private async Task OpenTableCoreAsync2(BackgroundProgressor progressor)
+		{
+			Gateway.LogEntry(_msg);
+			
+			await BackgroundTask.Run(() =>
+			{
+				try
+				{
+					// TODO: (DARO) implement Cancellation ON Close()
+					// TODO: (DARO) add flush or counter
+					// ToList() is important
+					List<IWorkItem> items = _workList.GetItems().ToList();
+					progressor.Max = (uint) items.Count;
+
+					foreach (IWorkItem item in items)
+					{
+						if (_workList == null)
+						{
+							CancellationToken token = progressor.CancelToken;
+							
+							bool cancellationRequested = token.IsCancellationRequested;
+
+							progressor.Message = "Canceled";
+
+							break;
+						}
+
+						_workList.Repository.RefreshGeometry(item);
+						//item.Geometry = GeometryUtils.Buffer(item.Geometry, 10);
+						progressor.Value += 1;
+					}
+				}
+				catch (Exception ex)
+				{
+					Gateway.LogError(ex, _msg);
+				}
+			}, progressor);
+
+
 		}
 
 		public override IReadOnlyList<string> GetTableNames()

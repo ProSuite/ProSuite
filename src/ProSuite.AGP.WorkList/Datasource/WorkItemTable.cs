@@ -15,6 +15,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 	public class WorkItemTable : PluginTableTemplate
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly IReadOnlyList<PluginField> _fields;
 		private readonly string _tableName;
 
@@ -113,6 +114,11 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 			if (UseExtent(item))
 			{
+				if (item.HasFeatureGeometry)
+				{
+					return (Polygon) item.Geometry;
+				}
+
 				return PolygonBuilderEx.CreatePolygon(extent, extent.SpatialReference);
 			}
 

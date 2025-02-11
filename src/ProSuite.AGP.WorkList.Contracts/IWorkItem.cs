@@ -38,10 +38,17 @@ namespace ProSuite.AGP.WorkList.Contracts
 		Envelope Extent { get; }
 
 		[CanBeNull]
+		Geometry Geometry { get; set; }
+
+		[CanBeNull]
 		string Description { get; }
 
 		GeometryType? GeometryType { get; }
-		bool HasGeometry { get; set; }
+
+		// TODO: (daro) rename to HasExtent
+		bool HasGeometry { get; }
+		// TODO: (daro) rename to HasGeometry
+		bool HasFeatureGeometry { get; }
 
 		void QueryPoints(out double xmin, out double ymin,
 		                 out double xmax, out double ymax,

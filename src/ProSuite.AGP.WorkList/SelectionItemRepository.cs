@@ -2,9 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 
@@ -52,7 +54,12 @@ namespace ProSuite.AGP.WorkList
 
 			long tableId = sourceClass.GetUniqueTableId();
 
-			return RefreshState(new SelectionItem(rowId, tableId, row));
+			var item = new SelectionItem(rowId, tableId, row);
+
+			// check performance
+			item.Geometry = ((Feature)row).GetShape()
+
+			return RefreshState(item);
 		}
 
 		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
