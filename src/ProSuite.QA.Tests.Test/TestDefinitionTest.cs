@@ -4170,11 +4170,11 @@ namespace ProSuite.QA.Tests.Test
 				                                 model.GetRasterDataset()
 			                                 },
 			                                 optionalValues));
-			trCases.Add(new TrDefinitionCase(typeof(TrZAssign), 0,
+			trCases.Add(new TrDefinitionCase(typeof(TrZAssign), 1,
 			                                 new object[]
 			                                 {
 				                                 model.GetVectorDataset(),
-				                                 model.GetRasterDataset()
+				                                 model.GetMosaicDataset()
 			                                 },
 			                                 optionalValues));
 		}
