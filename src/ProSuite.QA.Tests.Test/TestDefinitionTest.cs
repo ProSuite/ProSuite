@@ -3729,7 +3729,8 @@ namespace ProSuite.QA.Tests.Test
 					                               typeof(TrTableJoin),
 					                               typeof(TrTableJoinInMemory),
 					                               typeof(TrZAssign),
-												   typeof(TrOnlyContainedFeatures)
+												   typeof(TrOnlyContainedFeatures),
+												   typeof(TrOnlyDisjointFeatures)
 				                               };
 				return trRefactoredTypes;
 			}
@@ -3839,6 +3840,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrTableJoinInMemoryCases(model, trCases);
 			AddTrZAssignCases(model, trCases);
 			AddTrOnlyContainedFeaturesCases(model, trCases);
+			AddTrOnlyDisjointFeaturesCases(model, trCases);
 
 			return trCases;
 		}
@@ -4194,6 +4196,22 @@ namespace ProSuite.QA.Tests.Test
 												 model.GetPolygonDataset()
 											 },
 											 optionalValues));
+		}
+
+		private static void AddTrOnlyDisjointFeaturesCases(TestDataModel model,
+		                                                    ICollection<TrDefinitionCase>
+			                                                    trCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("FilteringSearchOption", SearchOption.Tile);
+
+			trCases.Add(new TrDefinitionCase(typeof(TrOnlyDisjointFeatures), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetVectorDataset(),
+				                                 model.GetPolygonDataset()
+			                                 },
+			                                 optionalValues));
 		}
 
 		#endregion
