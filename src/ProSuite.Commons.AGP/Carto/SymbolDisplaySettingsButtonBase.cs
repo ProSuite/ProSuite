@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using System.Windows;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Framework;
@@ -29,7 +28,7 @@ public abstract class SymbolDisplaySettingsButtonBase : ButtonCommandBase
 			                MaxScaleDenominator = manager.AutoMaxScaleDenom[map]
 		                };
 
-	var result = ShowDialog<SymbolDisplaySettingsWindow>(viewModel);
+		var result = Gateway.ShowDialog<SymbolDisplaySettingsWindow>(viewModel);
 
 		if (result == true)
 		{
@@ -41,22 +40,5 @@ public abstract class SymbolDisplaySettingsButtonBase : ButtonCommandBase
 		}
 
 		return Task.FromResult(result ?? false);
-	}
-
-	// TODO Should be on Gateway, but there's already another function with the same signature (which passes VM to V's ctor, a quick hack that could/should be resolved)
-	private static bool? ShowDialog<T>(object viewModel) where T : Window
-	{
-		var dispatcher = Application.Current.Dispatcher;
-
-		return dispatcher.Invoke(() =>
-		{
-			var owner = Application.Current.MainWindow;
-			var dialog = (Window)Activator.CreateInstance(typeof(T));
-			if (dialog is null) return null;
-			dialog.Owner = owner;
-			dialog.DataContext = viewModel;
-			var result = dialog.ShowDialog();
-			return result;
-		});
 	}
 }

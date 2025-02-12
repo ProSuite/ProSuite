@@ -38,7 +38,8 @@ public abstract class AboutButtonBase : ButtonCommandBase
 
 		_msg.Info(message);
 
-		Gateway.ShowDialog<AboutWindow>(_caption, items);
+		var viewModel = new AboutViewModel(_caption, items);
+		Gateway.ShowDialog<AboutWindow>(viewModel);
 
 		return Task.FromResult(true);
 	}
