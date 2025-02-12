@@ -9,6 +9,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -21,8 +22,8 @@ namespace ProSuite.AGP.WorkList.Domain
 	/// It maintains a current item and provides
 	/// navigation to change the current item.
 	/// </summary>
-	// todo daro: separate geometry processing code
-	// todo daro: separate QueuedTask code
+	// todo: daro separate geometry processing code
+	// todo: daro separate QueuedTask code
 	public abstract class WorkList : IWorkList, IEquatable<WorkList>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -41,8 +42,18 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		[NotNull] private List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
 
+		[NotNull]
+		protected List<IWorkItem> Items
+		{
+			get => _items;
+			set => _items = value;
+		}
+
 		[NotNull] private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
 			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
+
+		[NotNull]
+		protected Dictionary<GdbRowIdentity, IWorkItem> RowMap => _rowMap;
 
 		private WorkItemVisibility _visibility;
 		private readonly string _displayName;
@@ -85,7 +96,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		// NOTE: An empty work list should return null and not an empty envelope.
 		//		 Pluggable Datasource cannot handle an empty envelope.
-		public Envelope Extent { get; private set; }
+		public Envelope Extent { get; protected set; }
 
 		public virtual IWorkItem Current => GetItem(CurrentIndex);
 
@@ -152,6 +163,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		private readonly Dictionary<int, List<IWorkItem>> _itemsByIndex = new(20);
 
 		private readonly List<List<IWorkItem>> _itemChunks = new(3);
+		private bool _itemsGeometryDraftMode = true;
 
 		public bool TryGetItems(int taskId, out List<IWorkItem> result)
 		{
@@ -188,6 +200,63 @@ namespace ProSuite.AGP.WorkList.Domain
 			_itemChunks.Clear();
 			_itemsByIndex.Clear();
 			_indexByTask.Clear();
+		}
+
+		public void SetItemsGeometryDraftMode(bool enable)
+		{
+			_itemsGeometryDraftMode = enable;
+
+			// invalidate map
+			OnWorkListChanged(MapView.Active.Extent);
+		}
+
+		public Geometry GetItemGeometry(IWorkItem item)
+		{
+			try
+			{
+				if (item?.Extent == null)
+				{
+					return null;
+				}
+
+				if (! UseItemGeometry(item))
+				{
+					item.QueryPoints(out double xmin, out double ymin,
+					                 out double xmax, out double ymax,
+					                 out double zmax);
+
+					return PolygonBuilderEx.CreatePolygon(EnvelopeBuilderEx.CreateEnvelope(
+						                                      new Coordinate3D(xmin, ymin, zmax),
+						                                      new Coordinate3D(xmax, ymax, zmax),
+						                                      item.Extent.SpatialReference));
+				}
+
+				if (item.HasFeatureGeometry && ! _itemsGeometryDraftMode)
+				{
+					return (Polygon) item.Geometry;
+				}
+
+				return PolygonBuilderEx.CreatePolygon(item.Extent, item.Extent.SpatialReference);
+			}
+			catch (Exception ex)
+			{
+				Gateway.ReportError(ex, _msg);
+			}
+
+			return null;
+		}
+
+		private static bool UseItemGeometry([NotNull] IWorkItem item)
+		{
+			switch (item.GeometryType)
+			{
+				case GeometryType.Polyline:
+				case GeometryType.Polygon:
+					return true;
+
+				default:
+					return false;
+			}
 		}
 
 		public void RefreshItems()
@@ -1134,9 +1203,9 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		// todo daro: to Utils? Compare with EnvelopeBuilderEx
-		// todo daro: drop or refactor
+		// todo: daro drop or refactor
 		[CanBeNull]
-		private static Envelope GetExtentFromItems([CanBeNull] IEnumerable<IWorkItem> items)
+		public static Envelope GetExtentFromItems([CanBeNull] IEnumerable<IWorkItem> items)
 		{
 			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
 			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;

@@ -2,13 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
-using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -80,13 +76,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			_workList = null;
 			_msg.VerboseDebug(() => "WorkListDataSource.Close()");
-
-			// https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-cancellation
-			if (_progressorSource != null)
-			{
-				_progressorSource.CancellationTokenSource.Cancel();
-				_progressorSource.Progressor.Message = "Work list removed";
-			}
 		}
 
 		public override PluginTableTemplate OpenTable([NotNull] string name)
@@ -117,14 +106,10 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 				if (_workList != null)
 				{
-					// Protect geometry
-					// Trouble with Buffer method?
-					if (! QueuedTask.OnWorker)
+					if (QueuedTask.OnWorker)
 					{
-						_progressorSource = new BackgroundProgressorSource(OnUpdateProgress);
-
-						// TODO: daro lock? Close sets worklist to null.
-						_ = OpenTableCoreAsync(_progressorSource.Progressor);
+						var service = new WorkListService();
+						service.Start(_workList);
 					}
 
 					result = new WorkItemTable(_workList, listName);
@@ -150,111 +135,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 			}
 
 			return result;
-		}
-
-		private BackgroundProgressorSource _progressorSource;
-
-		private void OnUpdateProgress(BackgroundProgressor progressor)
-		{
-			if (_workList == null)
-			{
-				_progressorSource?.CancellationTokenSource.Cancel();
-			}
-		}
-
-		private async Task OpenTableCoreAsync(BackgroundProgressor progressor)
-		{
-			Gateway.LogEntry(_msg);
-
-			try
-			{
-				await BackgroundTask.Run(() =>
-				{
-					try
-					{
-						// TODO: (DARO) implement Cancellation ON Close()
-						// TODO: (DARO) add flush or counter
-						// TODO: (DARO) ERROR handling see documentation
-						if (_workList == null)
-						{
-							return;
-						}
-
-						int next = Random.Shared.Next();
-						if (_workList.TryGetItems(next, out List<IWorkItem> items))
-						{
-							progressor.Max = (uint) items.Count;
-
-							foreach (IWorkItem item in items)
-							{
-								if (_workList == null)
-								{
-									break;
-								}
-
-								CancellationToken token = progressor.CancelToken;
-								if (token.IsCancellationRequested)
-								{
-									progressor.Message = "Canceled";
-								}
-
-								_workList.Repository.RefreshGeometry(item);
-
-								progressor.Value += 1;
-							}
-						}
-					}
-					catch (Exception ex)
-					{
-						Gateway.LogError(ex, _msg);
-					}
-				}, progressor);
-			}
-			finally
-			{
-				_workList.ReportFinished();
-			}
-		}
-
-		private async Task OpenTableCoreAsync2(BackgroundProgressor progressor)
-		{
-			Gateway.LogEntry(_msg);
-			
-			await BackgroundTask.Run(() =>
-			{
-				try
-				{
-					// TODO: (DARO) implement Cancellation ON Close()
-					// TODO: (DARO) add flush or counter
-					// ToList() is important
-					List<IWorkItem> items = _workList.GetItems().ToList();
-					progressor.Max = (uint) items.Count;
-
-					foreach (IWorkItem item in items)
-					{
-						if (_workList == null)
-						{
-							CancellationToken token = progressor.CancelToken;
-							
-							bool cancellationRequested = token.IsCancellationRequested;
-
-							progressor.Message = "Canceled";
-
-							break;
-						}
-
-						_workList.Repository.RefreshGeometry(item);
-						//item.Geometry = GeometryUtils.Buffer(item.Geometry, 10);
-						progressor.Value += 1;
-					}
-				}
-				catch (Exception ex)
-				{
-					Gateway.LogError(ex, _msg);
-				}
-			}, progressor);
-
-
 		}
 
 		public override IReadOnlyList<string> GetTableNames()

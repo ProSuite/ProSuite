@@ -1,9 +1,11 @@
+using System;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
@@ -71,57 +73,64 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public new void RefreshItems()
 		{
-			var items = Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo).ToList();
-
-			Items = new List<IWorkItem>(items.Count);
-			RowMap.Clear();
-
-			int chunkSize = items.Count / 3;
-
-			_itemChunks.Add(new List<IWorkItem>(chunkSize + items.Count % 3));
-			_itemChunks.Add(new List<IWorkItem>(chunkSize));
-			_itemChunks.Add(new List<IWorkItem>(chunkSize));
-
-			int counter = 0;
-			var listIndex = 0;
-			List<IWorkItem> currentList = Assert.NotNull(_itemChunks[listIndex]);
-
-			foreach (IWorkItem item in items)
+			try
 			{
-				RowMap[item.GdbRowProxy] = item;
+				var items = Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo).ToList();
 
-				Items.Add(item);
-				currentList.Add(item);
+				Items = new List<IWorkItem>(items.Count);
+				RowMap.Clear();
 
-				counter += 1;
+				int chunkSize = items.Count / 3;
 
-				if (counter == currentList.Capacity)
+				_itemChunks.Add(new List<IWorkItem>(chunkSize + items.Count % 3));
+				_itemChunks.Add(new List<IWorkItem>(chunkSize));
+				_itemChunks.Add(new List<IWorkItem>(chunkSize));
+
+				int counter = 0;
+				var listIndex = 0;
+				List<IWorkItem> currentList = Assert.NotNull(_itemChunks[listIndex]);
+
+				foreach (IWorkItem item in items)
 				{
-					listIndex += 1;
+					RowMap[item.GdbRowProxy] = item;
 
-					if (listIndex == _itemChunks.Capacity)
+					Items.Add(item);
+					currentList.Add(item);
+
+					counter += 1;
+
+					if (counter == currentList.Capacity)
 					{
-						break;
+						listIndex += 1;
+
+						if (listIndex == _itemChunks.Capacity)
+						{
+							break;
+						}
+
+						currentList = Assert.NotNull(_itemChunks[listIndex]);
+
+						counter = 0;
 					}
-
-					currentList = Assert.NotNull(_itemChunks[listIndex]);
-
-					counter = 0;
 				}
+
+				Assert.True(listIndex == 3, "listIndex == 3");
+
+				_msg.DebugFormat("Added {0} items to work list", Items.Count);
+
+				// initializes the state repository if no states for
+				// the work items are read yet
+				Repository.UpdateVolatileState(Items);
+
+				_msg.DebugFormat("Getting extents for {0} items...", Items.Count);
+				// todo: daro EnvelopeBuilder as parameter > do not iterate again over items
+				//			  look old work item implementation
+				Extent = GetExtentFromItems(Items);
 			}
-
-			Assert.True(listIndex == 3, "listIndex == 3");
-
-			_msg.DebugFormat("Added {0} items to work list", Items.Count);
-
-			// initializes the state repository if no states for
-			// the work items are read yet
-			Repository.UpdateVolatileState(Items);
-
-			_msg.DebugFormat("Getting extents for {0} items...", Items.Count);
-			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
-			//			  look old work item implementation
-			Extent = WorkList.GetExtentFromItems(Items);
+			catch (Exception ex)
+			{
+				Gateway.ReportError(ex, _msg);
+			}
 		}
 	}
 }

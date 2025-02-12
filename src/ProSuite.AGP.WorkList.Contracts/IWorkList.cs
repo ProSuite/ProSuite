@@ -102,5 +102,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		bool TryGetItems(int taskId, out List<IWorkItem> result);
 
 		void ReportFinished();
+
+		Geometry GetItemGeometry(IWorkItem item);
+
+		void SetItemsGeometryDraftMode(bool enable);
 	}
 }
