@@ -227,14 +227,11 @@ namespace ProSuite.AGP.WorkList
 			[NotNull] string path,
 			[NotNull] ILayerContainerEdit layerContainer)
 		{
-			PluginDatastore datastore = null;
 			Table table = null;
 
 			try
 			{
-				datastore = WorkListUtils.GetPluginDatastore(new Uri(path, UriKind.Absolute));
-
-				table = datastore.OpenTable(worklist.Name);
+				table = OpenTable(path, worklist.Name);
 				Assert.NotNull(table);
 
 				string workListLayerName = SuggestWorkListLayerName() ?? worklist.DisplayName;
@@ -261,9 +258,16 @@ namespace ProSuite.AGP.WorkList
 			}
 			finally
 			{
-				datastore?.Dispose();
 				table?.Dispose();
 			}
+		}
+
+		protected virtual Table OpenTable([NotNull] string path, [NotNull] string tableName)
+		{
+			using PluginDatastore datastore =
+				WorkListUtils.GetPluginDatastore(new Uri(path, UriKind.Absolute));
+
+			return datastore.OpenTable(tableName);
 		}
 
 		private LayerDocument GetWorkListSymbologyTemplateLayer()

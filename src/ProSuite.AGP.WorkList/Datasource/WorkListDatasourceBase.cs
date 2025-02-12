@@ -5,10 +5,8 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -80,59 +78,46 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override PluginTableTemplate OpenTable([NotNull] string name)
 		{
-			Assert.ArgumentNotNull(name, nameof(name));
-
 			WorkItemTable result = null;
-			try
-			{
-				// The given name is one of those returned by GetTableNames()
-				_msg.Debug($"Open table '{name}'");
+			Try(() =>
+			    {
+				    Assert.ArgumentNotNull(name, nameof(name));
 
-				ParseTableName(name, out string listName);
+				    // The given name is one of those returned by GetTableNames()
+				    _msg.Debug($"Open table '{name}'");
 
-				_workList = WorkListRegistry.Instance.Get(name);
-				Assert.NotNull(_workList);
+				    ParseTableName(name, out string listName);
 
-				if (_workList == null &&
-				    ! _path.EndsWith("swl") && ! _path.EndsWith("iwl"))
-				{
-					throw new ArgumentException();
+				    _workList = WorkListRegistry.Instance.Get(name);
 
-					// Work lists not registered as project items. Auto-register (consider always?):
-					var xmlBasedWorkListFactory = new XmlBasedWorkListFactory(_path, name);
-					WorkListRegistry.Instance.TryAdd(xmlBasedWorkListFactory);
-					_workList = xmlBasedWorkListFactory.Get();
-				}
+				    if (_workList == null &&
+				        ! _path.EndsWith("swl") && ! _path.EndsWith("iwl"))
+				    {
+					    // Work lists not registered as project items. Auto-register (consider always?):
+					    var xmlBasedWorkListFactory = new XmlBasedWorkListFactory(_path, name);
+					    WorkListRegistry.Instance.TryAdd(xmlBasedWorkListFactory);
+					    _workList = xmlBasedWorkListFactory.Get();
+				    }
 
-				if (_workList != null)
-				{
-					if (QueuedTask.OnWorker)
-					{
-						var service = new WorkListService();
-						service.Start(_workList);
-					}
+				    if (_workList != null)
+				    {
+					    result = new WorkItemTable(_workList, listName);
+				    }
+				    else
+				    {
+					    // TODO: Can we just auto-register?
+					    string fileName = Path.GetFileName(_path);
+					    var message =
+						    $"Cannot find data source of work list {fileName}. It is likely not part of the Work List project items.";
 
-					result = new WorkItemTable(_workList, listName);
-				}
-				else
-				{
-					// TODO: Can we just auto-register?
-					string fileName = Path.GetFileName(_path);
-					var message =
-						$"Cannot find data source of work list {fileName}. It is likely not part of the Work List project items.";
-
-					// The exception is not going to crash Pro. Or is it?
-					// It might depend on the application state.
-					// It results in a broken data source of the work list layer.
-					_msg.Warn(message);
-					_msg.DebugFormat("File location: {0}. Work list unique name: {1}",
-					                 _path, name);
-				}
-			}
-			catch (Exception ex)
-			{
-				Gateway.LogError(ex, _msg);
-			}
+					    // The exception is not going to crash Pro. Or is it?
+					    // It might depend on the application state.
+					    // It results in a broken data source of the work list layer.
+					    _msg.Warn(message);
+					    _msg.DebugFormat("File location: {0}. Work list unique name: {1}",
+					                     _path, name);
+				    }
+			    }, $"Error opening work list {name}");
 
 			return result;
 		}
