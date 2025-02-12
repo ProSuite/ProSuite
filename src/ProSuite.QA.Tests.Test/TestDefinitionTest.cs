@@ -3729,7 +3729,7 @@ namespace ProSuite.QA.Tests.Test
 					                               typeof(TrTableJoin),
 					                               typeof(TrTableJoinInMemory),
 					                               typeof(TrZAssign),
-												   //typeof(TrCombinedFilter),
+												   typeof(TrCombinedFilter),
 												   typeof(TrOnlyContainedFeatures),
 												   typeof(TrOnlyDisjointFeatures),
 												   typeof(TrOnlyIntersectingFeatures)
@@ -3821,6 +3821,7 @@ namespace ProSuite.QA.Tests.Test
 			// Transformer cases with automatic parameter value generation:
 			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrIntersect)));
 			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrTableJoin)));
+			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrCombinedFilter)));
 
 			//
 			// Special Cases
