@@ -3729,8 +3729,10 @@ namespace ProSuite.QA.Tests.Test
 					                               typeof(TrTableJoin),
 					                               typeof(TrTableJoinInMemory),
 					                               typeof(TrZAssign),
+												   //typeof(TrCombinedFilter),
 												   typeof(TrOnlyContainedFeatures),
-												   typeof(TrOnlyDisjointFeatures)
+												   typeof(TrOnlyDisjointFeatures),
+												   typeof(TrOnlyIntersectingFeatures)
 				                               };
 				return trRefactoredTypes;
 			}
@@ -3841,6 +3843,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrZAssignCases(model, trCases);
 			AddTrOnlyContainedFeaturesCases(model, trCases);
 			AddTrOnlyDisjointFeaturesCases(model, trCases);
+			AddTrOnlyIntersectingFeaturesCases(model, trCases);
 
 			return trCases;
 		}
@@ -4210,6 +4213,22 @@ namespace ProSuite.QA.Tests.Test
 			                                 {
 				                                 model.GetVectorDataset(),
 				                                 model.GetPolygonDataset()
+			                                 },
+			                                 optionalValues));
+		}
+
+		private static void AddTrOnlyIntersectingFeaturesCases(TestDataModel model,
+		                                                   ICollection<TrDefinitionCase>
+			                                                   trCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("FilteringSearchOption", SearchOption.Tile);
+
+			trCases.Add(new TrDefinitionCase(typeof(TrOnlyIntersectingFeatures), 0,
+			                                 new object[]
+			                                 {
+				                                 model.GetVectorDataset(),
+				                                 model.GetVectorDataset()
 			                                 },
 			                                 optionalValues));
 		}
