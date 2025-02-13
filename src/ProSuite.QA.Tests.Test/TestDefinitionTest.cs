@@ -4877,13 +4877,30 @@ namespace ProSuite.QA.Tests.Test
 			string desiredNamespace = ! string.IsNullOrEmpty(namespaceSuffix)
 				                          ? $"{assemblyName}.{namespaceSuffix}"
 				                          : null;
+			List<Type> typesToCheck;
 
-			List<Type> typesToCheck = desiredNamespace != null
-				                          ? testAssembly.GetTypes()
-				                                        .Where(t => t.Namespace == desiredNamespace &&
-					                                               t.IsPublic)
-				                                        .ToList()
-				                          : CollectTestTypes(new List<Assembly> { testAssembly });
+			if (desiredNamespace != "ProSuite.QA.Tests.Transformers")
+			{
+				typesToCheck = desiredNamespace != null
+					                          ? testAssembly.GetTypes()
+					                                        .Where(t => t.Namespace == desiredNamespace &&
+						                                               t.IsPublic)
+					                                        .ToList()
+					                          : CollectTestTypes(new List<Assembly> { testAssembly });
+			}
+			else
+			{
+				List<string> desiredNamespaces = new List<string>
+				                                 {
+					                                 "ProSuite.QA.Tests.Transformers",
+													 "ProSuite.QA.Tests.Transformers.Filters"
+				                                 };
+				
+				typesToCheck = testAssembly.GetTypes()
+												 .Where(t => desiredNamespaces.Contains(t.Namespace) &&
+															 t.IsPublic && !t.IsAbstract && t.CustomAttributes.Any())
+												 .ToList();
+			}
 
 			List<Type> missingCanCreateTypes =
 				FindMissingCanCreateTypes(typesToCheck, refactoredTypes);
