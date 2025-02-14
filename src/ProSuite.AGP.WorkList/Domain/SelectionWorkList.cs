@@ -82,6 +82,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 				int chunkSize = items.Count / 3;
 
+				_itemChunks.Clear();
 				_itemChunks.Add(new List<IWorkItem>(chunkSize + items.Count % 3));
 				_itemChunks.Add(new List<IWorkItem>(chunkSize));
 				_itemChunks.Add(new List<IWorkItem>(chunkSize));
