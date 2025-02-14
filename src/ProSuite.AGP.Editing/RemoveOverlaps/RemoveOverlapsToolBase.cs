@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -20,6 +21,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -293,6 +295,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				cancellationToken = cancellationTokenSource.Token;
 			}
 
+			//_msg.DebugFormat("Calculating removable overlaps with the following options: {0}",
+			//                 removeToolOptions);
+
 			if (MicroserviceClient != null)
 			{
 				overlaps =
@@ -396,6 +401,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			_removeOverlapsToolOptions = new RemoveOverlapsOptions(centralConfiguration,
 				localConfiguration);
 
+			_removeOverlapsToolOptions.PropertyChanged -= OptionsPropertyChanged;
+			_removeOverlapsToolOptions.PropertyChanged += OptionsPropertyChanged;
+
 			_msg.DebugStopTiming(watch, "Remove Overlap Tool Options validated / initialized");
 
 			string optionsMessage = _removeOverlapsToolOptions.GetLocalOverridesMessage();
@@ -406,6 +414,18 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			}
 
 			return _removeOverlapsToolOptions;
+		}
+
+		private void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args)
+		{
+			try
+			{
+				QueuedTaskUtils.Run(() => ProcessSelection());
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating removable overlaps : {e.Message}", e);
+			}
 		}
 
 		#region Tool Options DockPane
