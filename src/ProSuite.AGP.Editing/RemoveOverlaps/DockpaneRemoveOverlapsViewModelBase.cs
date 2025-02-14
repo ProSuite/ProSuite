@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
@@ -47,7 +48,10 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 				TargetFeatureSelectionVM =
 					new TargetFeatureSelectionViewModel(
-						_options.CentralizableTargetFeatureSelection);
+						_options.CentralizableTargetFeatureSelection)
+					{
+						SelectedFeaturesVisibility = Visibility.Collapsed
+					};
 			}
 		}
 	}
