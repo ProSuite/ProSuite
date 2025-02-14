@@ -7,7 +7,7 @@ namespace ProSuite.Processing.Domain
 	{
 		double ReferenceScale { get; }
 
-		// TODO double CurrentScale { get; } in case no reference scale is set
+		// TODO double CurrentScale { get; } in case no reference scale is set? Hardly useful
 
 		// TODO int SRID { get; } Needed? Don't want SpatialReference here (dependencies) // AlignToGrid needs SRef
 
