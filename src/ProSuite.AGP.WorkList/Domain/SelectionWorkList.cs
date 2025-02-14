@@ -9,7 +9,7 @@ using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
-	public class SelectionWorkList : WorkList
+	public class SelectionWorkList : WorkList, IDisposable
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -132,6 +132,20 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				Gateway.ReportError(ex, _msg);
 			}
+		}
+
+		public void Dispose()
+		{
+			// TODO: (daro) inline?
+			DeactivateRowCacheSynchronization();
+
+			foreach (IWorkItem item in Items)
+			{
+				item.Geometry = null;
+			}
+
+			Items.Clear();
+			RowMap.Clear();
 		}
 	}
 }
