@@ -99,10 +99,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// </summary>
 		void DeactivateRowCacheSynchronization();
 
-		bool TryGetItems(int taskId, out List<IWorkItem> result);
-
-		void ReportFinished();
-
 		Geometry GetItemGeometry(IWorkItem item);
 
 		void SetItemsGeometryDraftMode(bool enable);

@@ -103,7 +103,7 @@ public class SelectionWorkListDatasourceBase : PluginDatasourceTemplate
 			{
 				if (QueuedTask.OnWorker)
 				{
-					var service = new WorkListService();
+					var service = new WorkListGeometryService();
 					service.Start(_workList);
 				}
 

@@ -158,49 +158,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged();
 		}
 
-		private readonly Dictionary<int, int> _indexByTask = new(20);
-
-		private readonly Dictionary<int, List<IWorkItem>> _itemsByIndex = new(20);
-
-		private readonly List<List<IWorkItem>> _itemChunks = new(3);
 		private bool _itemsGeometryDraftMode = true;
-
-		public bool TryGetItems(int taskId, out List<IWorkItem> result)
-		{
-			result = null;
-
-			if (_indexByTask.ContainsKey(taskId))
-			{
-				return false;
-			}
-
-			foreach (List<IWorkItem> items in _itemChunks)
-			{
-				int index = _itemChunks.IndexOf(items);
-
-				if (_itemsByIndex.TryGetValue(index, out List<IWorkItem> _))
-				{
-					continue;
-				}
-
-				_indexByTask.Add(taskId, index);
-				_itemsByIndex.Add(index, items);
-
-				result = items;
-				return true;
-			}
-
-			return false;
-		}
-
-		public void ReportFinished()
-		{
-			_msg.Info($"{DisplayName} is ready.");
-
-			_itemChunks.Clear();
-			_itemsByIndex.Clear();
-			_indexByTask.Clear();
-		}
 
 		public void SetItemsGeometryDraftMode(bool enable)
 		{
@@ -240,7 +198,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 			catch (Exception ex)
 			{
-				Gateway.ReportError(ex, _msg);
+				Gateway.LogError(ex, _msg);
 			}
 
 			return null;
@@ -259,59 +217,36 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public void RefreshItems()
+		public virtual void RefreshItems()
 		{
-			var items = Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo).ToList();
+			List<IWorkItem> newItems = new List<IWorkItem>(_items.Count);
 
-			_items = new List<IWorkItem>(items.Count);
-			_rowMap.Clear();
-
-			int chunkSize = items.Count / 3;
-
-			_itemChunks.Add(new List<IWorkItem>(chunkSize + items.Count % 3));
-			_itemChunks.Add(new List<IWorkItem>(chunkSize));
-			_itemChunks.Add(new List<IWorkItem>(chunkSize));
-
-			int counter = 0;
-			var listIndex = 0;
-			List<IWorkItem> currentList = Assert.NotNull(_itemChunks[listIndex]);
-
-			foreach (IWorkItem item in items)
+			foreach (IWorkItem item in Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo))
 			{
-				_rowMap[item.GdbRowProxy] = item;
+				newItems.Add(item);
 
-				_items.Add(item);
-				currentList.Add(item);
-
-				counter += 1;
-
-				if (counter == currentList.Capacity)
+				if (!_rowMap.ContainsKey(item.GdbRowProxy))
 				{
-					listIndex += 1;
-
-					if (listIndex == _itemChunks.Capacity)
-					{
-						break;
-					}
-
-					currentList = Assert.NotNull(_itemChunks[listIndex]);
-
-					counter = 0;
+					_rowMap.Add(item.GdbRowProxy, item);
+				}
+				else
+				{
+					// todo daro: warn
 				}
 			}
 
-			Assert.True(listIndex == 3, "listIndex == 3");
-
-			_msg.DebugFormat("Added {0} items to work list", _items.Count);
+			_msg.DebugFormat("Added {0} items to work list", newItems.Count);
 
 			// initializes the state repository if no states for
 			// the work items are read yet
-			Repository.UpdateVolatileState(_items);
+			Repository.UpdateVolatileState(newItems);
 
-			_msg.DebugFormat("Getting extents for {0} items...", _items.Count);
+			_msg.DebugFormat("Getting extents for {0} items...", newItems.Count);
 			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
 			//			  look old work item implementation
-			Extent = GetExtentFromItems(_items);
+			Extent = GetExtentFromItems(newItems);
+
+			_items = newItems;
 		}
 
 		public bool IsValid(out string message)

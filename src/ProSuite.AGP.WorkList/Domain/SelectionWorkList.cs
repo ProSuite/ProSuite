@@ -34,7 +34,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		private readonly Dictionary<int, List<IWorkItem>> _itemsByIndex = new(20);
 		private readonly List<List<IWorkItem>> _itemChunks = new(3);
 
-		public new bool TryGetItems(int taskId, out List<IWorkItem> result)
+		public bool TryGetItems(int taskId, out List<IWorkItem> result)
 		{
 			result = null;
 
@@ -71,7 +71,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			_indexByTask.Clear();
 		}
 
-		public new void RefreshItems()
+		public override void RefreshItems()
 		{
 			try
 			{
