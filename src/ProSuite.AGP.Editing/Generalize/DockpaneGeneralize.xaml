@@ -89,10 +89,12 @@
 
         <Label FontWeight="Medium" Content="Topological consistency with adjacent features" Margin="0,15,0,0"/>
         <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-                  Content="Protect topologically important vertices"
+                  Content="Protect topologically important vertices, using"
                   DataContext="{Binding Options.CentralizableProtectTopologicalVertices}" />
 
-        <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" HorizontalAlignment="Left" />
+        <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" 
+                                               HorizontalAlignment="Left" 
+                                               Margin="20,0, 0, 0"/>
 
         <!-- Z values -->
         <Label FontWeight="Medium" Content="Area of interest" Margin="0,15,0,0"/>

@@ -297,7 +297,7 @@ namespace ProSuite.AGP.Editing.Generalize
 			_generalizeToolOptions =
 				new AdvancedGeneralizeOptions(centralConfiguration, localConfiguration);
 
-			_generalizeToolOptions.PropertyChanged += OptionsPropertyChanged;
+			_generalizeToolOptions.PropertyChanged -= OptionsPropertyChanged;
 			_generalizeToolOptions.PropertyChanged += OptionsPropertyChanged;
 
 			_msg.DebugStopTiming(watch, "Advanced Generalize Tool Options validated / initialized");
