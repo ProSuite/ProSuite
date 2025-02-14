@@ -15,7 +15,6 @@ namespace ProSuite.AGP.WorkList
 		private readonly IDictionary<ISourceClass, List<long>> _oidsBySource =
 			new Dictionary<ISourceClass, List<long>>();
 
-		// todo daro: refactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
 		public SelectionItemRepository(IEnumerable<Table> tables,
 		                               Dictionary<Table, List<long>> selection,
 		                               IWorkItemStateRepository stateRepository) : base(
