@@ -10,6 +10,8 @@ namespace ProSuite.AGP.Editing
 	{
 		private Visibility _selectedFeaturesVisibility;
 
+		private Visibility _editableSelectableFeaturesVisibility;
+
 		public TargetFeatureSelectionViewModel(
 			CentralizableSetting<TargetFeatureSelection> centralizableSetting)
 		{
@@ -41,6 +43,16 @@ namespace ProSuite.AGP.Editing
 			set
 			{
 				_selectedFeaturesVisibility = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public Visibility EditableSelectableFeaturesVisibility
+		{
+			get => _editableSelectableFeaturesVisibility;
+			set
+			{
+				_editableSelectableFeaturesVisibility = value;
 				OnPropertyChanged();
 			}
 		}

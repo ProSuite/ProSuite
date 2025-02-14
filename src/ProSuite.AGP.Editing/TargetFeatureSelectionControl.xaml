@@ -54,7 +54,8 @@
                      IsEnabled="{Binding CentralizableSetting.CanOverrideLocally}" 
                      Margin="6,0,0,2"/>
 
-        <RadioButton Content="Visible features from editable and selectable layers" 
+        <RadioButton Content="Visible features from editable and selectable layers"
+                     Visibility="{Binding Path=EditableSelectableFeaturesVisibility}"
                      IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.VisibleSelectableEditableFeatures}}"
                      FontStyle="{Binding CentralizableSetting.HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" 
                      IsEnabled="{Binding CentralizableSetting.CanOverrideLocally}" 
