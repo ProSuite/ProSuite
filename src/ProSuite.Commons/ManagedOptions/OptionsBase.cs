@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Notifications;
 
@@ -63,7 +62,9 @@ namespace ProSuite.Commons.ManagedOptions
 			// Re-direct the property changed event from the centralizable setting to the option's
 			// property changed event:
 			result.PropertyChanged += (sender, eventArgs) =>
-				OnPropertyChanged(overridableSettingPropertyInfo.Name);
+			{
+				OnPropertyChanged(eventArgs, overridableSettingPropertyInfo.Name);
+			};
 
 			return result;
 		}
@@ -127,9 +128,19 @@ namespace ProSuite.Commons.ManagedOptions
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+		protected virtual void OnPropertyChanged(
+			PropertyChangedEventArgs args,
+			[NotNull] string overridablePropertyName)
 		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+			// NOTE: After a property update, all kinds of secondary properties, such as HasOverride and
+			// Tooltip fire the changed event too. Just fire on the actual properties' change:
+			const string relevantPropertyName = nameof(CentralizableSetting<bool>.CurrentValue);
+
+			if (args.PropertyName == relevantPropertyName)
+			{
+				PropertyChanged?.Invoke(
+					this, new PropertyChangedEventArgs(overridablePropertyName));
+			}
 		}
 
 		#endregion
