@@ -318,7 +318,7 @@ namespace ProSuite.AGP.Editing.Generalize
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error re-calculating crack points: {e.Message}", e);
+				_msg.Error($"Error re-calculating generalize segments / minimum length segments : {e.Message}", e);
 			}
 		}
 
