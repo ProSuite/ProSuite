@@ -189,10 +189,12 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		                                                         ISourceClass sourceClass)
 		{
 			var xmlTableReference =
-				new XmlTableReference(tableIdentity.Id, tableIdentity.Name);
-
-			xmlTableReference.Id = sourceClass.GetUniqueTableId();
-			xmlTableReference.DefinitionQuery = sourceClass.DefinitionQuery;
+				new XmlTableReference
+				{
+					Id = sourceClass.GetUniqueTableId(),
+					Name = tableIdentity.Name,
+					DefinitionQuery = sourceClass.DefinitionQuery
+				};
 
 			if (sourceClass is DatabaseSourceClass dbStatusSourceClass)
 			{

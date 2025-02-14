@@ -388,6 +388,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	public void SetSketchType(SketchGeometryType? sketchType)
 	{
+		SetSketchTypeCore(sketchType);
+	}
+
+	protected virtual void SetSketchTypeCore(SketchGeometryType? sketchType)
+	{
 		SketchType = sketchType;
 	}
 
@@ -433,8 +438,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 				if (CanUseSelection(selection, new NotificationCollection()))
 				{
+					using var source = GetProgressorSource();
+					var progressor = source?.Progressor;
+
 					bool constructionProcessed =
-						await OnConstructionSketchCompleteAsync(geometry, selection);
+						await OnConstructionSketchCompleteAsync(geometry, selection, progressor);
 
 					if (constructionProcessed)
 					{
@@ -523,7 +531,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		return Task.FromResult(MapUtils.HasSelection(ActiveMapView));
 	}
 
-	protected virtual IPickerPrecedence CreatePickerPrecedence(Geometry sketchGeometry)
+	[NotNull]
+	protected virtual IPickerPrecedence CreatePickerPrecedence([NotNull] Geometry sketchGeometry)
 	{
 		return new PickerPrecedence(sketchGeometry,
 		                            GetSelectionSettings().SelectionTolerancePixels,
@@ -534,7 +543,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	/// <returns><b>true</b>: construction finished and start selection phase,
 	/// <b>false</b>: stay in construction phase.</returns>
 	protected virtual Task<bool> OnConstructionSketchCompleteAsync([NotNull] Geometry geometry,
-		IDictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+		IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+		CancelableProgressor progressor)
 	{
 		return Task.FromResult(true);
 	}

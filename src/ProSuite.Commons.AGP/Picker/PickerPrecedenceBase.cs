@@ -64,6 +64,11 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		}
 
 		Geometry geometry = MapView.Active.ScreenToMap(PickerLocation);
+		return GetSelectionGeometryCore(geometry);
+	}
+
+	protected virtual Geometry GetSelectionGeometryCore(Geometry geometry)
+	{
 		return PickerUtils.ExpandGeometryByPixels(geometry, SelectionTolerance);
 	}
 
