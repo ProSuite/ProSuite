@@ -12,7 +12,7 @@
                   IsEnabled="{Binding CanOverrideLocally}"
                   FontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}"
                   ToolTipService.ShowOnDisabled="True"
-                  ToolTip="{Binding ToolTip}" 
+                  ToolTip="{Binding Tooltip}" 
                   Margin="6"/>
     </ControlTemplate>
 
@@ -24,7 +24,7 @@
                 Margin="0, 2" 
                 Value="{Binding CurrentValue, Mode=TwoWay}" 
                 ToolTipService.ShowOnDisabled="True"
-                ToolTip="{Binding ToolTip}" 
+                ToolTip="{Binding Tooltip}" 
                 TextFontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" />
 
     </ControlTemplate>
@@ -37,7 +37,7 @@
                 Content="meters"
                 HorizontalAlignment="Left"
                 ToolTipService.ShowOnDisabled="True"
-                ToolTip="{Binding ToolTip}" 
+                ToolTip="{Binding Tooltip}" 
                 FontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" />
     </ControlTemplate>
 
