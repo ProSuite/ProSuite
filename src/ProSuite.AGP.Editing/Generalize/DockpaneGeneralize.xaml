@@ -85,7 +85,7 @@
         </Grid>
 
 
-        <!-- Calculate crack points at intersections with other -->
+        <!-- Topological consitency with adjacent features -->
 
         <Label FontWeight="Medium" Content="Topological consistency with adjacent features" Margin="0,15,0,0"/>
         <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
@@ -96,7 +96,7 @@
                                                HorizontalAlignment="Left" 
                                                Margin="20,0, 0, 0"/>
 
-        <!-- Z values -->
+        <!-- Area of interest -->
         <Label FontWeight="Medium" Content="Area of interest" Margin="0,15,0,0"/>
         <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
                       Content="Apply only within visible extent"
