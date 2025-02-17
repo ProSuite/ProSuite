@@ -304,6 +304,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			_crackerToolOptions = new CrackerToolOptions(centralConfiguration,
 			                                             localConfiguration);
 
+			_crackerToolOptions.PropertyChanged -= _crackerToolOptions_PropertyChanged;
 			_crackerToolOptions.PropertyChanged += _crackerToolOptions_PropertyChanged;
 
 			_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
