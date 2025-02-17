@@ -16,6 +16,18 @@ namespace ProSuite.AGP.Editing
 			CentralizableSetting<TargetFeatureSelection> centralizableSetting)
 		{
 			CentralizableSetting = centralizableSetting;
+
+			CentralizableSetting.PropertyChanged += (sender, args) =>
+			{
+				if (args.PropertyName == nameof(CentralizableSetting.CurrentValue))
+				{
+					OnPropertyChanged(nameof(CurrentValue));
+				}
+				if (args.PropertyName == nameof(CentralizableSetting.Tooltip))
+				{
+					OnPropertyChanged(nameof(Tooltip));
+				}
+			};
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -55,6 +67,11 @@ namespace ProSuite.AGP.Editing
 				_editableSelectableFeaturesVisibility = value;
 				OnPropertyChanged();
 			}
+		}
+
+		public string Tooltip
+		{
+			get => CentralizableSetting.Tooltip;
 		}
 	}
 }
