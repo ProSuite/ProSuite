@@ -51,7 +51,7 @@ namespace ProSuite.Commons.ManagedOptions
 					string oldTooltip = Tooltip;
 
 					_localSetting.Override = value;
-					NotifyCurrentValueChanged("HasLocalOverride");
+					NotifyCurrentValueChanged(nameof(HasLocalOverride));
 
 					CheckTooltipChange(oldTooltip);
 				}
@@ -62,7 +62,7 @@ namespace ProSuite.Commons.ManagedOptions
 		{
 			if (oldValue != Tooltip)
 			{
-				NotifyCurrentValueChanged("Tooltip");
+				NotifyCurrentValueChanged(nameof(Tooltip));
 			}
 		}
 
