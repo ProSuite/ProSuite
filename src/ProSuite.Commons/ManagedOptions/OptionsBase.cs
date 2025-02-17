@@ -133,7 +133,7 @@ namespace ProSuite.Commons.ManagedOptions
 			[NotNull] string overridablePropertyName)
 		{
 			// NOTE: After a property update, all kinds of secondary properties, such as HasOverride and
-			// Tooltip fire the changed event too. Just fire on the actual properties' change:
+			// ToolTip fire the changed event too. Just fire on the actual properties' change:
 			const string relevantPropertyName = nameof(CentralizableSetting<bool>.CurrentValue);
 
 			if (args.PropertyName == relevantPropertyName)

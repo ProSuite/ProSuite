@@ -23,7 +23,7 @@ namespace ProSuite.AGP.Editing
 				{
 					OnPropertyChanged(nameof(CurrentValue));
 				}
-				if (args.PropertyName == nameof(CentralizableSetting.Tooltip))
+				if (args.PropertyName == nameof(CentralizableSetting.ToolTip))
 				{
 					OnPropertyChanged(nameof(Tooltip));
 				}
@@ -71,7 +71,7 @@ namespace ProSuite.AGP.Editing
 
 		public string Tooltip
 		{
-			get => CentralizableSetting.Tooltip;
+			get => CentralizableSetting.ToolTip;
 		}
 	}
 }
