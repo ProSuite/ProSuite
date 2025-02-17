@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -17,6 +19,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -293,6 +296,9 @@ namespace ProSuite.AGP.Editing.Chopper
 			_chopperToolOptions = new ChopperToolOptions(centralConfiguration,
 			                                             localConfiguration);
 
+			_chopperToolOptions.PropertyChanged -= _chopperToolOptions_PropertyChanged;
+			_chopperToolOptions.PropertyChanged += _chopperToolOptions_PropertyChanged;
+
 			_msg.DebugStopTiming(watch, "Chopper Tool Options validated / initialized");
 
 			string optionsMessage = _chopperToolOptions.GetLocalOverridesMessage();
@@ -300,6 +306,19 @@ namespace ProSuite.AGP.Editing.Chopper
 			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
+			}
+		}
+
+		private void _chopperToolOptions_PropertyChanged(object sender,
+		                                                 PropertyChangedEventArgs eventArgs)
+		{
+			try
+			{
+				QueuedTaskUtils.Run(() => ProcessSelection());
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating chop points: {e.Message}", e);
 			}
 		}
 
