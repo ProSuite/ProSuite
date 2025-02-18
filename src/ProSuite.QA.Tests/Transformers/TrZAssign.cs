@@ -12,10 +12,13 @@ using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
+	[GeometryTransformer]
+	[ZValuesTest]
 	public class TrZAssign : TrGeometryTransform
 	{
 		public enum AssignOption

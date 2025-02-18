@@ -994,6 +994,8 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			Assert.ArgumentNotNull(qaError, nameof(qaError));
 
+			SetErrorGeometryInModelSpatialRef(qaError);
+
 			ITest test = qaError.Test;
 			QualityConditionVerification conditionVerification =
 				_verificationElements.GetQualityConditionVerification(test);
@@ -1077,6 +1079,22 @@ namespace ProSuite.DomainServices.AO.QA
 			                                             isAllowable));
 
 			return true;
+		}
+
+		private void SetErrorGeometryInModelSpatialRef(QaError qaError)
+		{
+			IGeometry errorGeometry = qaError.Geometry;
+
+			ISpatialReference contextSpatialReference = GetSpatialReferenceForIssueDatasets();
+
+			if (errorGeometry != null && contextSpatialReference != null &&
+			    GeometryUtils.EnsureSpatialReference(errorGeometry, contextSpatialReference, false,
+			                                         out IGeometry projected))
+			{
+				_msg.DebugFormat(
+					"Error spatial reference different from model context. Projected!");
+				qaError.SetGeometryInModelSpatialReference(projected);
+			}
 		}
 
 		private bool HasAnyRowsToBeTested(
@@ -1187,7 +1205,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] QaError qaError,
 			[NotNull] QualityCondition qualityCondition)
 		{
-			IGeometry errorGeometry = qaError.Geometry;
+			IGeometry errorGeometry = qaError.GetGeometryInModelSpatialRef();
 
 			if (errorGeometry == null || errorGeometry.IsEmpty)
 			{
