@@ -45,7 +45,7 @@
         <Button
             DataContext="{TemplateBinding DataContext}"
             Command="{Binding RevertToDefaultsCommand}"
-            IsEnabled="{Binding IsButtonEnabled}"
+            IsEnabled="{Binding IsRevertToDefaultsEnabled}"
             Content="Restore Defaults" 
             Width="120"
             HorizontalAlignment="Left"
