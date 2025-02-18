@@ -96,20 +96,12 @@
         <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
                       Content="Delete unnecessary vertices"
                       DataContext="{Binding Options.CentralizableRemoveUnnecessaryVertices}" />
+		<Button Template="{StaticResource RestoreDefaultsButton}"
+        />
 
-        <!-- Restore Defaults -->
-        <Button 
-                Command="{Binding RevertToDefaultsCommand}" 
-                IsEnabled="{Binding IsButtonEnabled}"
-                Style="{DynamicResource Esri_Button}"
-                Content="Restore Defaults" 
-                Width="120"
-                HorizontalAlignment="Right"
-                Margin="15"/>
+		<!-- Restore Defaults -->
 
-
-
-        <!--<RadioButton Template="{StaticResource CentralizableSettingRadioButton}"
+		<!--<RadioButton Template="{StaticResource CentralizableSettingRadioButton}"
                          IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.VisibleEditableFeatures}}"
                          Content="Visible "
                          DataContext="{Binding Options.CentralizableTargetFeatureSelection}" />

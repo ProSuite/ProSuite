@@ -52,15 +52,9 @@
 	              DataContext="{Binding Options.CentralizableInsertVerticesInTarget}" />
 
 		<!-- Restore Defaults -->
-        <Button 
-                Command="{Binding RevertToDefaultsCommand}" 
-                IsEnabled="{Binding IsButtonEnabled}"
-                Style="{DynamicResource Esri_Button}"
-                Content="Restore Defaults" 
-                Width="120"
-                HorizontalAlignment="Right"
-                Margin="15"/>
+	    <Button Template="{StaticResource RestoreDefaultsButton}"
+	    />
 
-    </StackPanel>
+	</StackPanel>
 
 </UserControl>
