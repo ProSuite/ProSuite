@@ -13,6 +13,9 @@ public interface IChangeAlongService
 	ChangeAlongCurves CalculateReshapeLines(
 		[NotNull] IList<Feature> sourceFeatures,
 		[NotNull] IList<Feature> targetFeatures,
+		TargetBufferOptions targetBufferOptions,
+		ReshapeCurveFilterOptions curveFilterOptions,
+		double? customTolerance,
 		CancellationToken cancellationToken);
 
 	ChangeAlongCurves CalculateCutLines(
@@ -24,6 +27,9 @@ public interface IChangeAlongService
 		[NotNull] IList<Feature> sourceFeatures,
 		[NotNull] IList<Feature> targetFeatures,
 		[NotNull] IList<CutSubcurve> selectedReshapeLines,
+		[NotNull] TargetBufferOptions targetBufferOptions,
+		[NotNull] ReshapeCurveFilterOptions curveFilterOptions,
+		double? customTolerance,
 		CancellationToken cancellationToken,
 		out ChangeAlongCurves newChangeAlongCurves);
 

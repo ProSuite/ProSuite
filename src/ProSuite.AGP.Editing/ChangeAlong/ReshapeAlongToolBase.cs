@@ -7,6 +7,7 @@ using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
@@ -70,8 +71,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CancellationToken cancellationToken,
 			out ChangeAlongCurves newChangeAlongCurves)
 		{
+			var targetBufferOptions = new TargetBufferOptions();
+			var filterOptions = new ReshapeCurveFilterOptions();
+			double tolerance = 0;
+
 			var updatedFeatures = MicroserviceClient.ApplyReshapeLines(
 				selectedFeatures, targetFeatures, cutSubcurves,
+				targetBufferOptions, filterOptions, tolerance,
 				cancellationToken, out newChangeAlongCurves);
 
 			return updatedFeatures;
@@ -141,8 +147,20 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			IList<Feature> targetFeatures,
 			CancellationToken cancellationToken)
 		{
+			var targetBufferOptions = _reshapeAlongToolOptions.GetTargetBufferOptions();
+
+			targetBufferOptions.ZSettingsModel = GetZSettingsModel();
+
+			var filterOptions = _reshapeAlongToolOptions.GetReshapeLineFilterOptions(ActiveMapView);
+
+			double? customTolerance = _reshapeAlongToolOptions.UseCustomTolerance
+				                          ? _reshapeAlongToolOptions.CustomTolerance
+				                          : null;
+
 			ChangeAlongCurves result = MicroserviceClient.CalculateReshapeLines(
-				selectedFeatures, targetFeatures, cancellationToken);
+				selectedFeatures, targetFeatures, targetBufferOptions, filterOptions,
+				customTolerance,
+				cancellationToken);
 
 			return result;
 		}
@@ -324,6 +342,28 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		#endregion
+
+		private ZSettingsModel GetZSettingsModel()
+		{
+			Map map = ActiveMapView.Map;
+
+			var elevationSurface = GetElevationSurface(map);
+
+			ZMode zMode = ZMode.Interpolate;
+			if (elevationSurface != null)
+			{
+				_msg.DebugFormat("Using DTM from elevation surface for Z-values");
+				zMode = ZMode.Dtm;
+			}
+
+			var zSettingsModel = new ZSettingsModel(zMode, map, elevationSurface);
+			return zSettingsModel;
+		}
+
+		protected virtual ElevationSurfaceLayer GetElevationSurface(Map map)
+		{
+			return null;
+		}
 
 		public void Dispose() { }
 	}
