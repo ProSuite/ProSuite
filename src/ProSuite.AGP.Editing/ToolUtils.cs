@@ -336,6 +336,7 @@ namespace ProSuite.AGP.Editing
 		/// <param name="activeMapView"></param>
 		/// <param name="targetFeatureSelection"></param>
 		/// <param name="extraTargetSearchTolerance"></param>
+		/// <param name="targetFeatureClassPredicate"></param>
 		/// <param name="cancellabelProgressor"></param>
 		/// <returns></returns>
 		[NotNull]
@@ -344,6 +345,7 @@ namespace ProSuite.AGP.Editing
 			MapView activeMapView,
 			TargetFeatureSelection targetFeatureSelection,
 			double extraTargetSearchTolerance,
+			[CanBeNull] Predicate<FeatureClass> targetFeatureClassPredicate,
 			[CanBeNull] CancelableProgressor cancellabelProgressor)
 		{
 			Envelope inExtent = activeMapView.Extent;
@@ -354,7 +356,10 @@ namespace ProSuite.AGP.Editing
 				return new List<Feature>();
 			}
 
-			var featureFinder = new FeatureFinder(activeMapView, targetFeatureSelection);
+			var featureFinder = new FeatureFinder(activeMapView, targetFeatureSelection)
+			                    {
+				                    FeatureClassPredicate = targetFeatureClassPredicate
+			                    };
 
 			// They might be stored (insert target vertices):
 			featureFinder.ReturnUnJoinedFeatures = true;

@@ -146,7 +146,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected abstract Cursor GetTargetSelectionCursorPolygon();
 
 		protected abstract Cursor GetTargetSelectionCursorPolygonShift();
-		
+
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
@@ -207,6 +207,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 
 			return false;
+		}
+
+		protected virtual Predicate<FeatureClass> GetTargetFeatureClassPredicate()
+		{
+			return null;
 		}
 
 		protected virtual bool CanUseAsTargetFeature([NotNull] IList<Feature> selection,
@@ -320,7 +325,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			                              {
 				                              SelectedFeatures = selectedFeatures,
 				                              SpatialRelationship = spatialRel,
-				                              ReturnUnJoinedFeatures = true
+				                              ReturnUnJoinedFeatures = true,
+				                              FeatureClassPredicate = GetTargetFeatureClassPredicate()
 			                              };
 
 			var selectionByClass =

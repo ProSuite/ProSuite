@@ -12,7 +12,6 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Editing.AdvancedReshape;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
@@ -52,7 +51,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		[CanBeNull]
 		protected virtual string OptionsDockPaneID => null;
-		
+
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
@@ -392,7 +391,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			_settingsProvider ??= new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
-
 			PartialRemoveOverlapsOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
@@ -442,7 +440,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
 					DockPaneRemoveOverlapsViewModelBase;
 
-			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found", OptionsDockPaneID);
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+			                      OptionsDockPaneID);
 		}
 
 		protected override void ShowOptionsPane()
@@ -482,7 +481,10 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			TargetFeatureSelection targetFeatureSelection =
 				_removeOverlapsToolOptions.TargetFeatureSelection;
 
-			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
+			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
+			                    {
+				                    FeatureClassPredicate = GetTargetFeatureClassPredicate()
+			                    };
 
 			// They might be stored (insert target vertices):
 			featureFinder.ReturnUnJoinedFeatures = true;
@@ -511,6 +513,11 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
 
 			return foundFeatures;
+		}
+
+		protected virtual Predicate<FeatureClass> GetTargetFeatureClassPredicate()
+		{
+			return null;
 		}
 
 		private bool CanOverlapLayer(Layer layer)

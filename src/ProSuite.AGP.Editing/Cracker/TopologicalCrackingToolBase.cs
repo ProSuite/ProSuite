@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using ArcGIS.Core.Data;
@@ -77,7 +78,14 @@ public abstract class TopologicalCrackingToolBase : TwoPhaseEditToolBase
 			SelectionUtils.GetSelection(ActiveMapView.Map);
 
 		return ToolUtils.GetIntersectingFeatures(selection, ActiveMapView, targetFeatureSelection,
-		                                         extraSearchTolerance, cancellabelProgressor);
+		                                         extraSearchTolerance,
+		                                         GetTargetFeatureClassPredicate(),
+		                                         cancellabelProgressor);
+	}
+
+	protected virtual Predicate<FeatureClass> GetTargetFeatureClassPredicate()
+	{
+		return null;
 	}
 
 	#endregion
