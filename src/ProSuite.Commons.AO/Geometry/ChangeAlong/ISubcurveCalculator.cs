@@ -16,12 +16,10 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// <param name="sourceFeatures"></param>
 		/// <param name="targetFeatures"></param>
 		/// <param name="processingExtent"></param>
-		/// <param name="useMinimalTolerance"></param>
 		/// <param name="filterOptions"></param>
 		void Prepare([NotNull] IEnumerable<IFeature> sourceFeatures,
 		             IList<IFeature> targetFeatures,
 		             [CanBeNull] IEnvelope processingExtent,
-		             bool useMinimalTolerance,
 		             [NotNull] ReshapeCurveFilterOptions filterOptions);
 
 		/// <summary>
@@ -44,6 +42,12 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		bool UseMinimumTolerance { get; set; }
 
 		/// <summary>
+		/// The new custom tolerance that is more flexible than the minimum vs standard tolerance
+		/// setting (which could be replaced in the future).
+		/// </summary>
+		double? CustomTolerance { get; set; }
+
+		/// <summary>
 		/// The subcurve filter that determines the IsFiltered property on the resulting subcurves.
 		/// The prepared filter should be set before calculating the subcurves.
 		/// </summary>
@@ -55,7 +59,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		IEnvelope ClipExtent { get; set; }
 
 		/// <summary>
-		/// Whether or not the provided geometry type can be used as source geometry.
+		/// Whether the provided geometry type can be used as source geometry.
 		/// </summary>
 		/// <param name="geometryType"></param>
 		/// <returns></returns>
