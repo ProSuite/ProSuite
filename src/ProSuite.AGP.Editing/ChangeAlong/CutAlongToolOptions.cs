@@ -5,16 +5,14 @@ using ProSuite.Commons.Notifications;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
-	public class CutAlongToolOptions : ChangeAlongToolOptions
+	public class CutAlongToolOptions : ReshapeAlongToolOptions
 	{
-		public CutAlongToolOptions([CanBeNull] PartialChangeAlongToolOptions centralOptions,
-		                              [CanBeNull] PartialChangeAlongToolOptions localOptions)
-			: base(centralOptions, localOptions)
-		{
+		public CutAlongToolOptions([CanBeNull] PartialReshapeAlongToolOptions centralOptions,
+									  [CanBeNull] PartialReshapeAlongToolOptions localOptions)
+			: base(centralOptions, localOptions) {
 		}
 
-		public CutAlongToolOptions() : this(null, null)
-		{
+		public CutAlongToolOptions() : this(null, null) {
 		}
 	}
 }

@@ -27,7 +27,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 
 		[CanBeNull]
-		private OverridableSettingsProvider<PartialChangeAlongToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialReshapeAlongToolOptions> _settingsProvider;
 
 		protected override string EditOperationDescription => "Reshape along";
 
@@ -159,10 +159,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			// For the time being, we always reload the options because they could have been updated in ArcMap
 			_settingsProvider =
-				new OverridableSettingsProvider<PartialChangeAlongToolOptions>(
+				new OverridableSettingsProvider<PartialReshapeAlongToolOptions>(
 					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
 
-			PartialChangeAlongToolOptions localConfiguration, centralConfiguration;
+			PartialReshapeAlongToolOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);

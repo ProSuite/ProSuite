@@ -3,7 +3,7 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
-	public class PartialChangeAlongToolOptions : PartialOptionsBase
+	public class PartialReshapeAlongToolOptions : PartialOptionsBase
 	{
 		#region Overridable Settings
 
@@ -45,7 +45,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		public override PartialOptionsBase Clone()
 		{
-			var result = new PartialChangeAlongToolOptions
+			var result = new PartialReshapeAlongToolOptions
 			{
 				TargetFeatureSelection = TryClone(TargetFeatureSelection),
 				InsertVertices = TryClone(InsertVertices),
