@@ -59,9 +59,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					ReflectionUtils.GetProperty(() => LocalOptions.MinBufferSegmentLength), 0.1);
 
 			// Reshape line filter settings
-			CentralizableExcludeLines =
+			CentralizableExcludeLinesOutsideSource =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLines), false);
+					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesOutsideSource), false);
 			CentralizableExcludeLinesTolerance =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesTolerance), 1.0);
@@ -131,7 +131,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		// Reshape line filter settings
-		public CentralizableSetting<bool> CentralizableExcludeLines { get; private set; }
+		public CentralizableSetting<bool> CentralizableExcludeLinesOutsideSource { get; private set; }
 		public CentralizableSetting<double> CentralizableExcludeLinesTolerance { get; private set; }
 		public CentralizableSetting<bool> CentralizableExcludeLinesDisplay { get; private set; }
 
@@ -184,7 +184,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		public double MinBufferSegmentLength => CentralizableMinBufferSegmentLength.CurrentValue;
 
 		// Reshape line filter settings
-		public bool ExcludeLines => CentralizableExcludeLines.CurrentValue;
+		public bool ExcludeLines => CentralizableExcludeLinesOutsideSource.CurrentValue;
 		public double ExcludeLinesTolerance => CentralizableExcludeLinesTolerance.CurrentValue;
 		public bool ExcludeLinesDisplay => CentralizableExcludeLinesDisplay.CurrentValue;
 
@@ -223,7 +223,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CentralizableMinBufferSegmentLength.RevertToDefault();
 
 			// Reshape line filter settings
-			CentralizableExcludeLines.RevertToDefault();
+			CentralizableExcludeLinesOutsideSource.RevertToDefault();
 			CentralizableExcludeLinesTolerance.RevertToDefault();
 			CentralizableExcludeLinesDisplay.RevertToDefault();
 			CentralizableExcludeLinesShowOnlyRemove.RevertToDefault();
@@ -314,7 +314,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 
 			// Reshape line filter settings
-			if (HasLocalOverride(CentralizableExcludeLines,
+			if (HasLocalOverride(CentralizableExcludeLinesOutsideSource,
 			                     "Exclude reshape lines outside tolerance of source",
 			                     notifications))
 			{
