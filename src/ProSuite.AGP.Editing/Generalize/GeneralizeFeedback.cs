@@ -88,6 +88,20 @@ namespace ProSuite.AGP.Editing.Generalize
 
 			foreach (GeneralizedFeature generalizedFeature in generalizedFeatures)
 			{
+				foreach (SegmentInfo segmentInfo in generalizedFeature.RemovableSegments)
+				{
+					Segment segment = segmentInfo.Segment;
+
+					Polyline highLevelSegment =
+						PolylineBuilderEx.CreatePolyline(segment, segment.SpatialReference);
+
+					IDisposable addedSegment =
+						MapView.Active.AddOverlay(highLevelSegment,
+						                          _redSegmentSymbol.MakeSymbolReference());
+
+					_overlays.Add(addedSegment);
+				}
+
 				if (generalizedFeature.DeletablePoints != null)
 				{
 					IDisposable addedDeletePoints =
@@ -105,20 +119,6 @@ namespace ProSuite.AGP.Editing.Generalize
 							MapView.Active.AddOverlay(point, _greenPointMarker);
 						_overlays.Add(addedProtectedPoint);
 					}
-				}
-
-				foreach (SegmentInfo segmentInfo in generalizedFeature.RemovableSegments)
-				{
-					Segment segment = segmentInfo.Segment;
-
-					Polyline highLevelSegment =
-						PolylineBuilderEx.CreatePolyline(segment, segment.SpatialReference);
-
-					IDisposable addedSegment =
-						MapView.Active.AddOverlay(highLevelSegment,
-						                          _redSegmentSymbol.MakeSymbolReference());
-
-					_overlays.Add(addedSegment);
 				}
 			}
 

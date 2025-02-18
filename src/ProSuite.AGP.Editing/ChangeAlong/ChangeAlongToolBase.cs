@@ -408,6 +408,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return false;
 		}
 
+		protected virtual Predicate<FeatureClass> GetTargetFeatureClassPredicate()
+		{
+			return null;
+		}
+
 		protected virtual bool CanUseAsTargetFeature([NotNull] IList<Feature> selection,
 		                                             [NotNull] Feature testFeature)
 		{
@@ -523,7 +528,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			                              {
 				                              SelectedFeatures = selectedFeatures,
 				                              SpatialRelationship = spatialRel,
-				                              ReturnUnJoinedFeatures = true
+				                              ReturnUnJoinedFeatures = true,
+				                              FeatureClassPredicate = GetTargetFeatureClassPredicate()
 			                              };
 
 			var selectionByClass =

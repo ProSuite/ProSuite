@@ -338,8 +338,13 @@ namespace ProSuite.AGP.Editing.Generalize
 
 			IList<Feature> intersectingFeatures =
 				ToolUtils.GetIntersectingFeatures(selection, MapView.Active, targetFeatureSelection,
-				                                  0, progressor);
+				                                  0, GetTargetFeatureClassPredicate(), progressor);
 			return intersectingFeatures;
+		}
+
+		protected virtual Predicate<FeatureClass> GetTargetFeatureClassPredicate()
+		{
+			return null;
 		}
 
 		private GeneralizeResult CalculateRemovableSegments(
