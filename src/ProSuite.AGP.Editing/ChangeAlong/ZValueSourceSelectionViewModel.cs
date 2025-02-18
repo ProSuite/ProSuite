@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
@@ -10,6 +11,18 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CentralizableSetting<ZValueSource> centralizableSetting)
 		{
 			CentralizableSetting = centralizableSetting;
+
+			CentralizableSetting.PropertyChanged += (sender, args) =>
+			{
+				if (args.PropertyName == nameof(CentralizableSetting.CurrentValue))
+				{
+					OnPropertyChanged(nameof(CurrentValue));
+				}
+				if (args.PropertyName == nameof(CentralizableSetting.ToolTip))
+				{
+					OnPropertyChanged(nameof(Tooltip));
+				}
+			};
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -29,6 +42,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				CentralizableSetting.CurrentValue = value;
 				OnPropertyChanged();
 			}
+		}
+
+		public string Tooltip
+		{
+			get => CentralizableSetting.ToolTip;
 		}
 	}
 }

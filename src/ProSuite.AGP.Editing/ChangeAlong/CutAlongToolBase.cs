@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
-using ProSuite.AGP.Editing.AdvancedReshape;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
@@ -21,21 +21,28 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[CanBeNull] private AdvancedReshapeFeedback _feedback;
-
-		protected CutAlongToolBase()
-		{
-			DisplayTargetLines = true;
-		}
-
 		protected CutAlongToolOptions _cutAlongToolOptions;
 
 		[CanBeNull]
-		private OverridableSettingsProvider<PartialReshapeAlongToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialCutAlongToolOptions> _settingsProvider;
 
 		protected override string EditOperationDescription => "Cut along";
 
 		protected string OptionsFileName => "CutAlongToolOptions.xml";
+
+		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+		{
+			_settingsProvider?.StoreLocalConfiguration(_cutAlongToolOptions.LocalOptions);
+
+			HideOptionsPane();
+		}
+
+		protected override Task OnToolActivatingCoreAsync()
+		{
+			InitializeOptions();
+
+			return base.OnToolActivatingCoreAsync();
+		}
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
 		{
@@ -124,40 +131,60 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override void InitializeOptions()
 		{
-			// Create a new instance only if it doesn't exist yet
-			_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeAlongToolOptions>(
-				CentralConfigDir, LocalConfigDir, OptionsFileName);
+			Stopwatch watch = _msg.DebugStartTiming();
 
-			PartialReshapeAlongToolOptions localConfiguration, centralConfiguration;
-			_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
+			// NOTE: by only reading the file locations we can save a couple of 100ms
+			string currentCentralConfigDir = CentralConfigDir;
+			string currentLocalConfigDir = LocalConfigDir;
+
+			// For the time being, we always reload the options because they could have been updated in ArcMap
+			_settingsProvider =
+				new OverridableSettingsProvider<PartialCutAlongToolOptions>(
+					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+
+			PartialCutAlongToolOptions localConfiguration, centralConfiguration;
+
+			_settingsProvider.GetConfigurations(out localConfiguration,
+			                                    out centralConfiguration);
 
 			_cutAlongToolOptions =
 				new CutAlongToolOptions(centralConfiguration, localConfiguration);
 
-			// Update the view model with the options
-			var viewModel = GetCutAlongViewModel();
-			if (viewModel != null)
+			_cutAlongToolOptions.PropertyChanged -= OptionsPropertyChanged;
+			_cutAlongToolOptions.PropertyChanged += OptionsPropertyChanged;
+
+			_msg.DebugStopTiming(watch, "Cut Along Tool Options validated / initialized");
+
+			string optionsMessage = _cutAlongToolOptions.GetLocalOverridesMessage();
+
+			if (! string.IsNullOrEmpty(optionsMessage))
 			{
-				viewModel.Options = _cutAlongToolOptions;
+				_msg.Info(optionsMessage);
 			}
 		}
 
-		protected override async Task OnToolActivatingCoreAsync()
+		protected override void ShowOptionsPane()
 		{
-			// Make sure options are initialized
+			// Ensure options are initialized
 			if (_cutAlongToolOptions == null)
 			{
 				InitializeOptions();
 			}
 
-			// Update the view model again to ensure it has the options
 			var viewModel = GetCutAlongViewModel();
-			if (viewModel != null)
+			if (viewModel == null)
 			{
-				viewModel.Options = _cutAlongToolOptions;
+				return;
 			}
 
-			await base.OnToolActivatingCoreAsync();
+			viewModel.Options = _cutAlongToolOptions;
+			viewModel.Activate(true);
+		}
+
+		protected override void HideOptionsPane()
+		{
+			var viewModel = GetCutAlongViewModel();
+			viewModel?.Hide();
 		}
 
 		#region first phase selection cursor
@@ -263,30 +290,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
 			                      OptionsDockPaneID);
-		}
-
-		protected override void ShowOptionsPane()
-		{
-			var viewModel = GetCutAlongViewModel();
-			if (viewModel == null)
-			{
-				return;
-			}
-
-			// Ensure options are set before activating
-			if (_cutAlongToolOptions == null)
-			{
-				InitializeOptions();
-			}
-
-			viewModel.Options = _cutAlongToolOptions;
-			viewModel.Activate(true);
-		}
-
-		protected override void HideOptionsPane()
-		{
-			var viewModel = GetCutAlongViewModel();
-			viewModel?.Hide();
 		}
 
 		#endregion
