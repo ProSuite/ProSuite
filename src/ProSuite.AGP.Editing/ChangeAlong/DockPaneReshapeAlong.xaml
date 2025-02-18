@@ -26,8 +26,7 @@
             <RowDefinition Height="Auto"/> <!-- Reshape Line Filters Section -->
             <RowDefinition Height="Auto"/> <!-- Target Selection -->
             <RowDefinition Height="Auto"/> <!-- Display Performance Options -->
-            <RowDefinition Height="Auto"/>
-            <!-- Advanced Section -->
+            <RowDefinition Height="Auto"/> <!-- Advanced Section -->
             <RowDefinition Height="Auto"/> <!-- Restore Defaults Button -->
         </Grid.RowDefinitions>
 

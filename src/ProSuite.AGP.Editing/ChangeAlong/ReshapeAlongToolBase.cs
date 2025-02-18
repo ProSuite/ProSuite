@@ -7,7 +7,6 @@ using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
-using ProSuite.AGP.Editing.Generalize;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
@@ -24,7 +23,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected ReshapeAlongToolOptions _reshapeAlongToolOptions;
 		private ChangeAlongFeedback _feedback;
-
 
 		[CanBeNull]
 		private OverridableSettingsProvider<PartialReshapeAlongToolOptions> _settingsProvider;
@@ -220,7 +218,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			var viewModel = GetReshapeAlongViewModel();
 			viewModel?.Hide();
-			
 		}
 
 		#region first phase selection cursor

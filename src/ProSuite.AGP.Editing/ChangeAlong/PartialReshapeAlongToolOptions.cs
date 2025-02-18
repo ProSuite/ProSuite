@@ -1,5 +1,5 @@
-using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
@@ -11,7 +11,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		public OverridableSetting<TargetFeatureSelection> TargetFeatureSelection { get; set; }
 
 		public OverridableSetting<bool> InsertVertices { get; set; }
-		
+
 		// Display Performance Options
 		public OverridableSetting<bool> DisplayExcludeCutLines { get; set; }
 		public OverridableSetting<bool> DisplayRecalculateCutLines { get; set; }
@@ -43,36 +43,37 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		public override PartialOptionsBase Clone()
 		{
 			var result = new PartialReshapeAlongToolOptions
-			{
-				TargetFeatureSelection = TryClone(TargetFeatureSelection),
-				InsertVertices = TryClone(InsertVertices),
-				
-				// Display Performance Options
-				DisplayExcludeCutLines = TryClone(DisplayExcludeCutLines),
-				DisplayRecalculateCutLines = TryClone(DisplayRecalculateCutLines),
-				DisplayHideCutLines = TryClone(DisplayHideCutLines),
-				DisplayHideCutLinesScale = TryClone(DisplayHideCutLinesScale),
+			             {
+				             TargetFeatureSelection = TryClone(TargetFeatureSelection),
+				             InsertVertices = TryClone(InsertVertices),
 
-				// Minimal Tolerance settings
-				MinimalToleranceApply = TryClone(MinimalToleranceApply),
-				MinimalTolerance = TryClone(MinimalTolerance),
+				             // Display Performance Options
+				             DisplayExcludeCutLines = TryClone(DisplayExcludeCutLines),
+				             DisplayRecalculateCutLines = TryClone(DisplayRecalculateCutLines),
+				             DisplayHideCutLines = TryClone(DisplayHideCutLines),
+				             DisplayHideCutLinesScale = TryClone(DisplayHideCutLinesScale),
 
-				// Buffer settings
-				BufferTarget = TryClone(BufferTarget),
-				BufferTolerance = TryClone(BufferTolerance),
-				EnforceMinimumBufferSegmentLength = TryClone(EnforceMinimumBufferSegmentLength),
-				MinBufferSegmentLength = TryClone(MinBufferSegmentLength),
+				             // Minimal Tolerance settings
+				             MinimalToleranceApply = TryClone(MinimalToleranceApply),
+				             MinimalTolerance = TryClone(MinimalTolerance),
 
-				// Reshape line filter settings
-				ExcludeLines = TryClone(ExcludeLines),
-				ExcludeLinesTolerance = TryClone(ExcludeLinesTolerance),
-				ExcludeLinesDisplay = TryClone(ExcludeLinesDisplay),
-				ExcludeLinesShowOnlyRemove = TryClone(ExcludeLinesShowOnlyRemove),
-				ExcludeLinesOverlaps = TryClone(ExcludeLinesOverlaps),
+				             // Buffer settings
+				             BufferTarget = TryClone(BufferTarget),
+				             BufferTolerance = TryClone(BufferTolerance),
+				             EnforceMinimumBufferSegmentLength =
+					             TryClone(EnforceMinimumBufferSegmentLength),
+				             MinBufferSegmentLength = TryClone(MinBufferSegmentLength),
 
-				// Z Value settings
-				ZValueSource = TryClone(ZValueSource)
-			};
+				             // Reshape line filter settings
+				             ExcludeLines = TryClone(ExcludeLines),
+				             ExcludeLinesTolerance = TryClone(ExcludeLinesTolerance),
+				             ExcludeLinesDisplay = TryClone(ExcludeLinesDisplay),
+				             ExcludeLinesShowOnlyRemove = TryClone(ExcludeLinesShowOnlyRemove),
+				             ExcludeLinesOverlaps = TryClone(ExcludeLinesOverlaps),
+
+				             // Z Value settings
+				             ZValueSource = TryClone(ZValueSource)
+			             };
 			return result;
 		}
 	}

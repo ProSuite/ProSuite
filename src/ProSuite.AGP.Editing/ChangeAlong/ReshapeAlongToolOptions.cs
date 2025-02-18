@@ -1,8 +1,8 @@
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
-using ProSuite.Commons.AGP.Core.GeometryProcessing;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
@@ -52,7 +52,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					ReflectionUtils.GetProperty(() => LocalOptions.BufferTolerance), 1.0);
 			CentralizableEnforceMinimumBufferSegmentLength =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.EnforceMinimumBufferSegmentLength), true);
+					ReflectionUtils.GetProperty(
+						() => LocalOptions.EnforceMinimumBufferSegmentLength), true);
 			CentralizableMinBufferSegmentLength =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.MinBufferSegmentLength), 0.1);
@@ -94,9 +95,20 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		// Display Performance Options
 		public CentralizableSetting<bool> CentralizableDisplayExcludeCutLines { get; private set; }
-		public CentralizableSetting<bool> CentralizableDisplayRecalculateCutLines { get; private set; }
+
+		public CentralizableSetting<bool> CentralizableDisplayRecalculateCutLines
+		{
+			get;
+			private set;
+		}
+
 		public CentralizableSetting<bool> CentralizableDisplayHideCutLines { get; private set; }
-		public CentralizableSetting<double> CentralizableDisplayHideCutLinesScale { get; private set; }
+
+		public CentralizableSetting<double> CentralizableDisplayHideCutLinesScale
+		{
+			get;
+			private set;
+		}
 
 		// Minimal Tolerance settings
 		public CentralizableSetting<bool> CentralizableMinimalToleranceApply { get; private set; }
@@ -105,21 +117,41 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		// Buffer settings
 		public CentralizableSetting<bool> CentralizableBufferTarget { get; private set; }
 		public CentralizableSetting<double> CentralizableBufferTolerance { get; private set; }
-		public CentralizableSetting<bool> CentralizableEnforceMinimumBufferSegmentLength { get; private set; }
-		public CentralizableSetting<double> CentralizableMinBufferSegmentLength { get; private set; }
+
+		public CentralizableSetting<bool> CentralizableEnforceMinimumBufferSegmentLength
+		{
+			get;
+			private set;
+		}
+
+		public CentralizableSetting<double> CentralizableMinBufferSegmentLength
+		{
+			get;
+			private set;
+		}
 
 		// Reshape line filter settings
 		public CentralizableSetting<bool> CentralizableExcludeLines { get; private set; }
 		public CentralizableSetting<double> CentralizableExcludeLinesTolerance { get; private set; }
 		public CentralizableSetting<bool> CentralizableExcludeLinesDisplay { get; private set; }
-		public CentralizableSetting<bool> CentralizableExcludeLinesShowOnlyRemove { get; private set; }
+
+		public CentralizableSetting<bool> CentralizableExcludeLinesShowOnlyRemove
+		{
+			get;
+			private set;
+		}
+
 		public CentralizableSetting<bool> CentralizableExcludeLinesOverlaps { get; private set; }
 
 		// Z Value settings
 		public CentralizableSetting<ZValueSource> CentralizableZValueSource { get; private set; }
 
 		// Target Selection
-		public CentralizableSetting<TargetFeatureSelection> CentralizableTargetFeatureSelection { get; private set; }
+		public CentralizableSetting<TargetFeatureSelection> CentralizableTargetFeatureSelection
+		{
+			get;
+			private set;
+		}
 
 		#endregion
 
@@ -129,9 +161,14 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		// Display Performance Options
 		public bool DisplayExcludeCutLines => CentralizableDisplayExcludeCutLines.CurrentValue;
-		public bool DisplayRecalculateCutLines => CentralizableDisplayRecalculateCutLines.CurrentValue;
+
+		public bool DisplayRecalculateCutLines =>
+			CentralizableDisplayRecalculateCutLines.CurrentValue;
+
 		public bool DisplayHideCutLines => CentralizableDisplayHideCutLines.CurrentValue;
-		public double DisplayHideCutLinesScale => CentralizableDisplayHideCutLinesScale.CurrentValue;
+
+		public double DisplayHideCutLinesScale =>
+			CentralizableDisplayHideCutLinesScale.CurrentValue;
 
 		// Minimal Tolerance settings
 		public bool MinimalToleranceApply => CentralizableMinimalToleranceApply.CurrentValue;
@@ -140,28 +177,35 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		// Buffer settings
 		public bool BufferTarget => CentralizableBufferTarget.CurrentValue;
 		public double BufferTolerance => CentralizableBufferTolerance.CurrentValue;
-		public bool EnforceMinimumBufferSegmentLength => CentralizableEnforceMinimumBufferSegmentLength.CurrentValue;
+
+		public bool EnforceMinimumBufferSegmentLength =>
+			CentralizableEnforceMinimumBufferSegmentLength.CurrentValue;
+
 		public double MinBufferSegmentLength => CentralizableMinBufferSegmentLength.CurrentValue;
 
 		// Reshape line filter settings
 		public bool ExcludeLines => CentralizableExcludeLines.CurrentValue;
 		public double ExcludeLinesTolerance => CentralizableExcludeLinesTolerance.CurrentValue;
 		public bool ExcludeLinesDisplay => CentralizableExcludeLinesDisplay.CurrentValue;
-		public bool ExcludeLinesShowOnlyRemove => CentralizableExcludeLinesShowOnlyRemove.CurrentValue;
+
+		public bool ExcludeLinesShowOnlyRemove =>
+			CentralizableExcludeLinesShowOnlyRemove.CurrentValue;
+
 		public bool ExcludeLinesOverlaps => CentralizableExcludeLinesOverlaps.CurrentValue;
 
 		// Z Value settings
 		public ZValueSource ZValueSource => CentralizableZValueSource.CurrentValue;
 
 		// Target Selection
-		public TargetFeatureSelection TargetFeatureSelection => CentralizableTargetFeatureSelection.CurrentValue;
+		public TargetFeatureSelection TargetFeatureSelection =>
+			CentralizableTargetFeatureSelection.CurrentValue;
 
 		#endregion
 
 		public override void RevertToDefaults()
 		{
 			CentralizableInsertVertices.RevertToDefault();
-			
+
 			// Display Performance Options
 			CentralizableDisplayExcludeCutLines.RevertToDefault();
 			CentralizableDisplayRecalculateCutLines.RevertToDefault();
@@ -196,7 +240,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			bool result = false;
 
-			if (HasLocalOverride(CentralizableInsertVertices, "Insert vertices on targets for topological correctness",
+			if (HasLocalOverride(CentralizableInsertVertices,
+			                     "Insert vertices on targets for topological correctness",
 			                     notifications))
 			{
 				result = true;
@@ -232,18 +277,21 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 
 			// Minimal Tolerance settings
-			if (HasLocalOverride(CentralizableMinimalToleranceApply, "Use custom minimal tolerance", notifications))
+			if (HasLocalOverride(CentralizableMinimalToleranceApply, "Use custom minimal tolerance",
+			                     notifications))
 			{
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableMinimalTolerance, "Minimal tolerance value", notifications))
+			if (HasLocalOverride(CentralizableMinimalTolerance, "Minimal tolerance value",
+			                     notifications))
 			{
 				result = true;
 			}
 
 			// Buffer settings
-			if (HasLocalOverride(CentralizableBufferTarget, "Buffer the target geometry", notifications))
+			if (HasLocalOverride(CentralizableBufferTarget, "Buffer the target geometry",
+			                     notifications))
 			{
 				result = true;
 			}
@@ -253,38 +301,49 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableEnforceMinimumBufferSegmentLength, "Enforce minimum buffer segment length", notifications))
+			if (HasLocalOverride(CentralizableEnforceMinimumBufferSegmentLength,
+			                     "Enforce minimum buffer segment length", notifications))
 			{
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableMinBufferSegmentLength, "Minimum buffer segment length", notifications))
+			if (HasLocalOverride(CentralizableMinBufferSegmentLength,
+			                     "Minimum buffer segment length", notifications))
 			{
 				result = true;
 			}
 
 			// Reshape line filter settings
-			if (HasLocalOverride(CentralizableExcludeLines, "Exclude reshape lines outside tolerance of source", notifications))
+			if (HasLocalOverride(CentralizableExcludeLines,
+			                     "Exclude reshape lines outside tolerance of source",
+			                     notifications))
 			{
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableExcludeLinesTolerance, "Exclude lines tolerance", notifications))
+			if (HasLocalOverride(CentralizableExcludeLinesTolerance, "Exclude lines tolerance",
+			                     notifications))
 			{
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableExcludeLinesDisplay, "Display reshape lines that remove areas from polygons", notifications))
+			if (HasLocalOverride(CentralizableExcludeLinesDisplay,
+			                     "Display reshape lines that remove areas from polygons",
+			                     notifications))
 			{
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableExcludeLinesShowOnlyRemove, "Only show reshape lines that remove areas from polygons", notifications))
+			if (HasLocalOverride(CentralizableExcludeLinesShowOnlyRemove,
+			                     "Only show reshape lines that remove areas from polygons",
+			                     notifications))
 			{
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableExcludeLinesOverlaps, "Exclude reshape lines that result in overlaps with target features", notifications))
+			if (HasLocalOverride(CentralizableExcludeLinesOverlaps,
+			                     "Exclude reshape lines that result in overlaps with target features",
+			                     notifications))
 			{
 				result = true;
 			}

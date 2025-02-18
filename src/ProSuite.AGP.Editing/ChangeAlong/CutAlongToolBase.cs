@@ -15,13 +15,16 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
 
-namespace ProSuite.AGP.Editing.ChangeAlong {
-	public abstract class CutAlongToolBase : ChangeAlongToolBase {
+namespace ProSuite.AGP.Editing.ChangeAlong
+{
+	public abstract class CutAlongToolBase : ChangeAlongToolBase
+	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[CanBeNull] private AdvancedReshapeFeedback _feedback;
 
-		protected CutAlongToolBase() {
+		protected CutAlongToolBase()
+		{
 			DisplayTargetLines = true;
 		}
 
@@ -34,16 +37,19 @@ namespace ProSuite.AGP.Editing.ChangeAlong {
 
 		protected string OptionsFileName => "CutAlongToolOptions.xml";
 
-		protected override bool CanSelectGeometryType(GeometryType geometryType) {
+		protected override bool CanSelectGeometryType(GeometryType geometryType)
+		{
 			return geometryType == GeometryType.Polyline ||
-				   geometryType == GeometryType.Polygon;
+			       geometryType == GeometryType.Polygon;
 		}
 
-		protected override void LogUsingCurrentSelection() {
+		protected override void LogUsingCurrentSelection()
+		{
 			_msg.Info(LocalizableStrings.CutPolygonAlongTool_LogUsingCurrentSelection);
 		}
 
-		protected override void LogPromptForSelection() {
+		protected override void LogPromptForSelection()
+		{
 			_msg.Info(LocalizableStrings.CutPolygonAlongTool_LogPromptForSelection);
 		}
 
@@ -51,7 +57,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong {
 			List<Feature> selectedFeatures, IList<Feature> targetFeatures,
 			List<CutSubcurve> cutSubcurves,
 			CancellationToken cancellationToken,
-			out ChangeAlongCurves newChangeAlongCurves) {
+			out ChangeAlongCurves newChangeAlongCurves)
+		{
 			var updatedFeatures = MicroserviceClient.ApplyCutLines(
 				selectedFeatures, targetFeatures, cutSubcurves,
 				cancellationToken, out newChangeAlongCurves);
@@ -60,8 +67,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong {
 		}
 
 		protected override void LogAfterPickTarget(
-			ReshapeAlongCurveUsability reshapeCurveUsability) {
-			if (reshapeCurveUsability == ReshapeAlongCurveUsability.CanReshape) {
+			ReshapeAlongCurveUsability reshapeCurveUsability)
+		{
+			if (reshapeCurveUsability == ReshapeAlongCurveUsability.CanReshape)
+			{
 				string selectReshapeLinesMsg =
 					string.Format(
 						"Select a line to cut along by clicking on it, " +
@@ -72,24 +81,30 @@ namespace ProSuite.AGP.Editing.ChangeAlong {
 
 				_msg.Info(selectReshapeLinesMsg);
 			}
-			else {
-				if (reshapeCurveUsability == ReshapeAlongCurveUsability.NoTarget) {
+			else
+			{
+				if (reshapeCurveUsability == ReshapeAlongCurveUsability.NoTarget)
+				{
 					_msg.Info(
 						"No target feature selected. Select one or more target line or polygon " +
 						"features to cut along. Press ESC to select a different feature.");
 				}
 				else if (reshapeCurveUsability ==
-						 ReshapeAlongCurveUsability.AlreadyCongruent) {
+				         ReshapeAlongCurveUsability.AlreadyCongruent)
+				{
 					_msg.Info(
 						"Source and target features are already congruent. Select a different target feature.");
 				}
-				else {
-					if (ChangeAlongCurves.HasSelectableCurves) {
+				else
+				{
+					if (ChangeAlongCurves.HasSelectableCurves)
+					{
 						_msg.InfoFormat(
 							"Not enough or ambiguous cut lines. " +
 							"Add additional targets or select yellow candidate lines.");
 					}
-					else {
+					else
+					{
 						_msg.InfoFormat(
 							"Unable to use target(s) to cut along. Add additional targets while holding SHIFT");
 					}
@@ -99,14 +114,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong {
 
 		protected override ChangeAlongCurves CalculateChangeAlongCurves(
 			IList<Feature> selectedFeatures, IList<Feature> targetFeatures,
-			CancellationToken cancellationToken) {
+			CancellationToken cancellationToken)
+		{
 			ChangeAlongCurves result = MicroserviceClient.CalculateCutLines(
 				selectedFeatures, targetFeatures, cancellationToken);
 
 			return result;
 		}
 
-		protected override void InitializeOptions() {
+		protected override void InitializeOptions()
+		{
 			// Create a new instance only if it doesn't exist yet
 			_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeAlongToolOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
@@ -119,20 +136,24 @@ namespace ProSuite.AGP.Editing.ChangeAlong {
 
 			// Update the view model with the options
 			var viewModel = GetCutAlongViewModel();
-			if (viewModel != null) {
+			if (viewModel != null)
+			{
 				viewModel.Options = _cutAlongToolOptions;
 			}
 		}
 
-		protected override async Task OnToolActivatingCoreAsync() {
+		protected override async Task OnToolActivatingCoreAsync()
+		{
 			// Make sure options are initialized
-			if (_cutAlongToolOptions == null) {
+			if (_cutAlongToolOptions == null)
+			{
 				InitializeOptions();
 			}
 
 			// Update the view model again to ensure it has the options
 			var viewModel = GetCutAlongViewModel();
-			if (viewModel != null) {
+			if (viewModel != null)
+			{
 				viewModel.Options = _cutAlongToolOptions;
 			}
 
@@ -141,75 +162,87 @@ namespace ProSuite.AGP.Editing.ChangeAlong {
 
 		#region first phase selection cursor
 
-		protected override Cursor GetSelectionCursor() {
+		protected override Cursor GetSelectionCursor()
+		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-										  Resources.CutPolygonAlongOverlay, null);
+			                              Resources.CutPolygonAlongOverlay, null);
 		}
 
-		protected override Cursor GetSelectionCursorShift() {
+		protected override Cursor GetSelectionCursorShift()
+		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-										  Resources.CutPolygonAlongOverlay,
-										  Resources.Shift);
+			                              Resources.CutPolygonAlongOverlay,
+			                              Resources.Shift);
 		}
 
-		protected override Cursor GetSelectionCursorLasso() {
+		protected override Cursor GetSelectionCursorLasso()
+		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-										  Resources.CutPolygonAlongOverlay,
-										  Resources.Lasso);
+			                              Resources.CutPolygonAlongOverlay,
+			                              Resources.Lasso);
 		}
 
-		protected override Cursor GetSelectionCursorLassoShift() {
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-										  Resources.CutPolygonAlongOverlay,
-										  Resources.Lasso,
-										  Resources.Shift);
+			                              Resources.CutPolygonAlongOverlay,
+			                              Resources.Lasso,
+			                              Resources.Shift);
 		}
 
-		protected override Cursor GetSelectionCursorPolygon() {
+		protected override Cursor GetSelectionCursorPolygon()
+		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-										  Resources.CutPolygonAlongOverlay,
-										  Resources.Polygon);
+			                              Resources.CutPolygonAlongOverlay,
+			                              Resources.Polygon);
 		}
 
-		protected override Cursor GetSelectionCursorPolygonShift() {
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-										  Resources.CutPolygonAlongOverlay,
-										  Resources.Polygon,
-										  Resources.Shift);
+			                              Resources.CutPolygonAlongOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
 		}
 
 		#endregion
 
 		#region second phase target selection cursor
 
-		protected override Cursor GetTargetSelectionCursor() {
+		protected override Cursor GetTargetSelectionCursor()
+		{
 			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay, 10,
-										  10);
+			                              10);
 		}
 
-		protected override Cursor GetTargetSelectionCursorShift() {
+		protected override Cursor GetTargetSelectionCursorShift()
+		{
 			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-										  Resources.Shift, null, 10, 10);
+			                              Resources.Shift, null, 10, 10);
 		}
 
-		protected override Cursor GetTargetSelectionCursorLasso() {
+		protected override Cursor GetTargetSelectionCursorLasso()
+		{
 			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-										  Resources.Lasso, null, 10, 10);
+			                              Resources.Lasso, null, 10, 10);
 		}
 
-		protected override Cursor GetTargetSelectionCursorLassoShift() {
+		protected override Cursor GetTargetSelectionCursorLassoShift()
+		{
 			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-										  Resources.Lasso, Resources.Shift, 10, 10);
+			                              Resources.Lasso, Resources.Shift, 10, 10);
 		}
 
-		protected override Cursor GetTargetSelectionCursorPolygon() {
+		protected override Cursor GetTargetSelectionCursorPolygon()
+		{
 			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-										  Resources.Polygon, null, 10, 10);
+			                              Resources.Polygon, null, 10, 10);
 		}
 
-		protected override Cursor GetTargetSelectionCursorPolygonShift() {
+		protected override Cursor GetTargetSelectionCursorPolygonShift()
+		{
 			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-										  Resources.Polygon, Resources.Shift, 10, 10);
+			                              Resources.Polygon, Resources.Shift, 10, 10);
 		}
 
 		#endregion
@@ -217,8 +250,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong {
 		#region Tool Options DockPane
 
 		[CanBeNull]
-		private DockPaneCutAlongViewModelBase GetCutAlongViewModel() {
-			if (OptionsDockPaneID == null) {
+		private DockPaneCutAlongViewModelBase GetCutAlongViewModel()
+		{
+			if (OptionsDockPaneID == null)
+			{
 				return null;
 			}
 
@@ -227,17 +262,20 @@ namespace ProSuite.AGP.Editing.ChangeAlong {
 					DockPaneCutAlongViewModelBase;
 
 			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
-								  OptionsDockPaneID);
+			                      OptionsDockPaneID);
 		}
 
-		protected override void ShowOptionsPane() {
+		protected override void ShowOptionsPane()
+		{
 			var viewModel = GetCutAlongViewModel();
-			if (viewModel == null) {
+			if (viewModel == null)
+			{
 				return;
 			}
 
 			// Ensure options are set before activating
-			if (_cutAlongToolOptions == null) {
+			if (_cutAlongToolOptions == null)
+			{
 				InitializeOptions();
 			}
 
@@ -245,7 +283,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong {
 			viewModel.Activate(true);
 		}
 
-		protected override void HideOptionsPane() {
+		protected override void HideOptionsPane()
+		{
 			var viewModel = GetCutAlongViewModel();
 			viewModel?.Hide();
 		}
