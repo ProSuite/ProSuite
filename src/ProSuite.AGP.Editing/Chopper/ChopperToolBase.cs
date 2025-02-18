@@ -68,7 +68,7 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		protected override Task OnToolActivatingCoreAsync()
 		{
-			InitializeOptions();
+			_chopperToolOptions = InitializeOptions();
 
 			_feedback = new CrackerFeedback();
 
@@ -275,7 +275,7 @@ namespace ProSuite.AGP.Editing.Chopper
 			return true;
 		}
 
-		private void InitializeOptions()
+		private ChopperToolOptions InitializeOptions()
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
@@ -293,20 +293,22 @@ namespace ProSuite.AGP.Editing.Chopper
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
-			_chopperToolOptions = new ChopperToolOptions(centralConfiguration,
+			var result = new ChopperToolOptions(centralConfiguration,
 			                                             localConfiguration);
 
-			_chopperToolOptions.PropertyChanged -= _chopperToolOptions_PropertyChanged;
-			_chopperToolOptions.PropertyChanged += _chopperToolOptions_PropertyChanged;
+			result.PropertyChanged -= _chopperToolOptions_PropertyChanged;
+			result.PropertyChanged += _chopperToolOptions_PropertyChanged;
 
 			_msg.DebugStopTiming(watch, "Chopper Tool Options validated / initialized");
 
-			string optionsMessage = _chopperToolOptions.GetLocalOverridesMessage();
+			string optionsMessage = result.GetLocalOverridesMessage();
 
 			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
+
+			return result;
 		}
 
 		private void _chopperToolOptions_PropertyChanged(object sender,
