@@ -71,7 +71,7 @@ namespace ProSuite.AGP.Editing.Generalize
 
 		protected override Task OnToolActivatingCoreAsync()
 		{
-			InitializeOptions();
+			_generalizeToolOptions = InitializeOptions();
 
 			_feedback = new GeneralizeFeedback();
 
@@ -276,7 +276,7 @@ namespace ProSuite.AGP.Editing.Generalize
 			return true;
 		}
 
-		private void InitializeOptions()
+		private AdvancedGeneralizeOptions InitializeOptions()
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
@@ -294,20 +294,22 @@ namespace ProSuite.AGP.Editing.Generalize
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
-			_generalizeToolOptions =
+			var result =
 				new AdvancedGeneralizeOptions(centralConfiguration, localConfiguration);
 
-			_generalizeToolOptions.PropertyChanged -= OptionsPropertyChanged;
-			_generalizeToolOptions.PropertyChanged += OptionsPropertyChanged;
+			result.PropertyChanged -= OptionsPropertyChanged;
+			result.PropertyChanged += OptionsPropertyChanged;
 
 			_msg.DebugStopTiming(watch, "Advanced Generalize Tool Options validated / initialized");
 
-			string optionsMessage = _generalizeToolOptions.GetLocalOverridesMessage();
+			string optionsMessage = result.GetLocalOverridesMessage();
 
 			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
+
+			return result;
 		}
 
 		private void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args)
