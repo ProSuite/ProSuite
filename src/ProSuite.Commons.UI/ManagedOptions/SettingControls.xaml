@@ -45,12 +45,12 @@
         <Button
             DataContext="{TemplateBinding DataContext}"
             Command="{Binding RevertToDefaultsCommand}"
-            IsEnabled="{Binding IsButtonEnabled}"
+            IsEnabled="{Binding IsRevertToDefaultsEnabled}"
             Content="Restore Defaults" 
             Width="120"
-            HorizontalAlignment="Right"
+            HorizontalAlignment="Left"
             ToolTip=""
-            Margin="15" 
+            Margin="27,12,6,12"
             Style="{DynamicResource Esri_Button}">
         </Button>
         <!-- Todo: Tooltip -->

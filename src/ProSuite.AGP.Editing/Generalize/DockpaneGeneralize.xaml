@@ -104,15 +104,9 @@
 
 
         <!-- Restore Defaults -->
-        <Button 
-                Command="{Binding RevertToDefaultsCommand}" 
-                IsEnabled="{Binding IsRevertToDefaultsEnabled}"
-                Style="{DynamicResource Esri_Button}"
-                Content="Restore Defaults" 
-                Width="120"
-                HorizontalAlignment="Right"
-                Margin="15"/>
+        <Button Template="{StaticResource RestoreDefaultsButton}"
+        />
 
-    </StackPanel>
+	</StackPanel>
 
 </UserControl>

@@ -220,8 +220,6 @@
 
         <!-- Restore Defaults Button -->
         <Button Grid.Row="5" 
-                Template="{StaticResource RestoreDefaultsButton}"
-                HorizontalAlignment="Left"
-                Margin="6,12,6,6"/>
+                Template="{StaticResource RestoreDefaultsButton}"/>
     </Grid>
 </UserControl>
