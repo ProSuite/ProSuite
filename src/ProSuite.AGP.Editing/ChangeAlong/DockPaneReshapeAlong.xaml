@@ -24,58 +24,17 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Target Buffer Section -->
             <RowDefinition Height="Auto"/> <!-- Reshape Line Filters Section -->
-            <RowDefinition Height="Auto"/> <!-- Target Selection -->
             <RowDefinition Height="Auto"/> <!-- Display Performance Options -->
+            <RowDefinition Height="Auto"/> <!-- Target Buffer Section -->
+            <RowDefinition Height="Auto"/> <!-- Target Selection -->
             <RowDefinition Height="Auto"/> <!-- Advanced Section -->
             <RowDefinition Height="Auto"/> <!-- Restore Defaults Button -->
         </Grid.RowDefinitions>
 
-        <!-- Target Buffer Section -->
-        <StackPanel Grid.Row="0">
-            <Label FontWeight="Medium" Content="Target Buffer" Padding="6,6,6,2"/>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <CheckBox Grid.Row="0" Grid.Column="1"
-                         Template="{StaticResource CentralizableSettingCheckbox}"
-                         Content="Buffer the target geometry by"
-                         DataContext="{Binding Options.CentralizableBufferTarget}"/>
-
-                <CheckBox Grid.Column="1"
-                         Template="{StaticResource CentralizableSettingCheckbox}"
-                         Content="Enforce minimum buffer segment length"
-                         Margin="20,27,10,0"
-                         DataContext="{Binding Options.CentralizableEnforceMinimumBufferSegmentLength}" Grid.RowSpan="2"/>
-
-                <ContentControl Grid.Row="0" Grid.Column="2"
-                              Template="{StaticResource CentralizableSettingsSpinner}"
-                              DataContext="{Binding Options.CentralizableBufferTolerance}"/>
-
-                <ContentControl Grid.Row="0" Grid.Column="3"
-                              Template="{StaticResource CentralizableSettingsLabel}"
-                              DataContext="{Binding Options.CentralizableBufferTolerance}"/>
-
-                <ContentControl Grid.Row="1" Grid.Column="2"
-                              Template="{StaticResource CentralizableSettingsSpinner}"
-                              DataContext="{Binding Options.CentralizableMinBufferSegmentLength}"/>
-
-                <ContentControl Grid.Row="1" Grid.Column="3"
-                              Template="{StaticResource CentralizableSettingsLabel}"
-                              DataContext="{Binding Options.CentralizableMinBufferSegmentLength}"/>
-            </Grid>
-        </StackPanel>
+       
 
         <!-- Reshape Line Filters Section -->
-        <StackPanel Grid.Row="1">
+        <StackPanel Grid.Row="0">
             <Label FontWeight="Medium" Content="Reshape Line Filters" Padding="6,6,6,2"/>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -122,16 +81,10 @@
             </Grid>
         </StackPanel>
 
-        <!-- Target Selection -->
-        <StackPanel Grid.Row="2"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top" Width="Auto">
-            <Label FontWeight="Medium" Content="Target Selection" Padding="6,6,6,2"/>
-            <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}"/>
-        </StackPanel>
+
 
         <!-- Display Performance Options -->
-        <StackPanel Grid.Row="3">
+        <StackPanel Grid.Row="1">
             <Label FontWeight="Medium" Content="Display Performance Options" Padding="6,6,6,2"/>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -171,6 +124,58 @@
                        Template="{StaticResource CentralizableSettingsLabel}"
                        DataContext="{Binding Options.CentralizableDisplayHideCutLinesScale}"/>
             </Grid>
+        </StackPanel>
+
+        <!-- Target Buffer Section -->
+        <StackPanel Grid.Row="2">
+            <Label FontWeight="Medium" Content="Target Buffer" Padding="6,6,6,2"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <CheckBox Grid.Row="0" Grid.Column="1"
+                  Template="{StaticResource CentralizableSettingCheckbox}"
+                  Content="Buffer the target geometry by"
+                  DataContext="{Binding Options.CentralizableBufferTarget}"/>
+
+                <CheckBox Grid.Row="0" Grid.Column="1"
+                  Template="{StaticResource CentralizableSettingCheckbox}"
+                  Content="Enforce minimum buffer segment length"
+                  Margin="20,27,10,0"
+                  DataContext="{Binding Options.CentralizableEnforceMinimumBufferSegmentLength}" Grid.RowSpan="2"/>
+
+                <ContentControl Grid.Row="0" Grid.Column="2"
+                       Template="{StaticResource CentralizableSettingsSpinner}"
+                       DataContext="{Binding Options.CentralizableBufferTolerance}"/>
+
+                <ContentControl Grid.Row="0" Grid.Column="3"
+                       Template="{StaticResource CentralizableSettingsLabel}"
+                       DataContext="{Binding Options.CentralizableBufferTolerance}"/>
+
+                <ContentControl Grid.Row="1" Grid.Column="2"
+                       Template="{StaticResource CentralizableSettingsSpinner}"
+                       DataContext="{Binding Options.CentralizableMinBufferSegmentLength}"/>
+
+                <ContentControl Grid.Row="1" Grid.Column="3"
+                       Template="{StaticResource CentralizableSettingsLabel}"
+                       DataContext="{Binding Options.CentralizableMinBufferSegmentLength}"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Target Selection -->
+        <StackPanel Grid.Row="3"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top" Width="Auto">
+            <Label FontWeight="Medium" Content="Target Selection" Padding="6,6,6,2"/>
+            <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}"/>
         </StackPanel>
 
         <!-- Advanced Section -->
