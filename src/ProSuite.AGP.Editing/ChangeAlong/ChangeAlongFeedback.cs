@@ -46,7 +46,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_preselectedLineSymbol =
 				SymbolFactory.Instance.ConstructLineSymbol(blue, _lineWidth);
 
-			var grey = ColorFactory.Instance.CreateRGBColor(100, 100, 100);
+			var grey = ColorFactory.Instance.CreateRGBColor(200, 200, 200);
 			_filteredReshapeLineSymbol =
 				SymbolFactory.Instance.ConstructLineSymbol(grey, _lineWidth);
 
@@ -88,6 +88,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				}
 			}
 
+			Predicate<CutSubcurve> canReshape = c => c.CanReshape && ! c.IsFiltered;
+
 			Predicate<CutSubcurve> noReshape = c =>
 				! c.CanReshape && ! c.IsReshapeMemberCandidate && ! c.IsFiltered;
 
@@ -102,8 +104,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			AddReshapeLines(newCurves.ReshapeCutSubcurves, isCandidate,
 			                _candidateReshapeLineSymbol);
 			AddReshapeLines(newCurves.ReshapeCutSubcurves, isPreSelected, _preselectedLineSymbol);
-			AddReshapeLines(newCurves.ReshapeCutSubcurves, c => c.CanReshape,
-			                _reshapeLineSymbol);
+			AddReshapeLines(newCurves.ReshapeCutSubcurves, canReshape, _reshapeLineSymbol);
 
 			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, noReshape, _noReshapeLineEnd);
 			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, c => c.IsFiltered,
@@ -112,8 +113,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, isPreSelected,
 			                        _preselectedLineEnd);
 
-			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, c => c.CanReshape,
-			                        _reshapeLineEnd);
+			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, canReshape, _reshapeLineEnd);
 		}
 
 		public void DisposeOverlays()

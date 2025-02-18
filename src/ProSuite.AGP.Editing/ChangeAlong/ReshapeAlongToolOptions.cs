@@ -1,5 +1,9 @@
+using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
@@ -61,7 +65,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			// Reshape line filter settings
 			CentralizableExcludeLinesOutsideSource =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesOutsideSource), false);
+					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesOutsideSource),
+					false);
 			CentralizableExcludeLinesTolerance =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesTolerance), 1.0);
@@ -131,8 +136,14 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		// Reshape line filter settings
-		public CentralizableSetting<bool> CentralizableExcludeLinesOutsideSource { get; private set; }
+		public CentralizableSetting<bool> CentralizableExcludeLinesOutsideSource
+		{
+			get;
+			private set;
+		}
+
 		public CentralizableSetting<double> CentralizableExcludeLinesTolerance { get; private set; }
+
 		public CentralizableSetting<bool> CentralizableExcludeLinesDisplay { get; private set; }
 
 		public CentralizableSetting<bool> CentralizableExcludeLinesShowOnlyRemove
@@ -157,10 +168,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		#region Current Values
 
-		public bool InsertVertices => CentralizableInsertVertices.CurrentValue;
+		public bool InsertTargetVertices => CentralizableInsertVertices.CurrentValue;
 
 		// Display Performance Options
-		public bool DisplayExcludeCutLines => CentralizableDisplayExcludeCutLines.CurrentValue;
+		public bool ClipLinesOnVisibleExtent => CentralizableDisplayExcludeCutLines.CurrentValue;
 
 		public bool DisplayRecalculateCutLines =>
 			CentralizableDisplayRecalculateCutLines.CurrentValue;
@@ -171,8 +182,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CentralizableDisplayHideCutLinesScale.CurrentValue;
 
 		// Minimal Tolerance settings
-		public bool MinimalToleranceApply => CentralizableMinimalToleranceApply.CurrentValue;
-		public double MinimalTolerance => CentralizableMinimalTolerance.CurrentValue;
+		public bool UseCustomTolerance => CentralizableMinimalToleranceApply.CurrentValue;
+		public double CustomTolerance => CentralizableMinimalTolerance.CurrentValue;
 
 		// Buffer settings
 		public bool BufferTarget => CentralizableBufferTarget.CurrentValue;
@@ -184,9 +195,14 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		public double MinBufferSegmentLength => CentralizableMinBufferSegmentLength.CurrentValue;
 
 		// Reshape line filter settings
-		public bool ExcludeLines => CentralizableExcludeLinesOutsideSource.CurrentValue;
+		public bool ExcludeLinesOutsideBufferDistance =>
+			CentralizableExcludeLinesOutsideSource.CurrentValue;
+
 		public double ExcludeLinesTolerance => CentralizableExcludeLinesTolerance.CurrentValue;
-		public bool ExcludeLinesDisplay => CentralizableExcludeLinesDisplay.CurrentValue;
+
+		// TODO: Rename centralizable property, UI text
+		public bool ShowExcludeReshapeLinesToleranceBuffer =>
+			CentralizableExcludeLinesDisplay.CurrentValue;
 
 		public bool ExcludeLinesShowOnlyRemove =>
 			CentralizableExcludeLinesShowOnlyRemove.CurrentValue;
@@ -367,6 +383,36 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			const string optionsName = "Reshape Along Tool Options";
 			return GetLocalOverridesMessage(optionsName);
+		}
+
+		public TargetBufferOptions GetTargetBufferOptions()
+		{
+			double bufferDistance = BufferTarget ? BufferTolerance : 0;
+			double minSegmentLength =
+				EnforceMinimumBufferSegmentLength ? MinBufferSegmentLength : 0;
+
+			return new TargetBufferOptions(bufferDistance, minSegmentLength);
+		}
+
+		public ReshapeCurveFilterOptions GetReshapeLineFilterOptions([NotNull] MapView mapView)
+		{
+			Envelope envelope = mapView.Extent;
+
+			EnvelopeXY envelopeXY = ClipLinesOnVisibleExtent
+				                        ? new EnvelopeXY(envelope.XMin, envelope.YMin,
+				                                         envelope.XMax, envelope.YMax)
+				                        : null;
+
+			bool excludeOutsideTolerance = ExcludeLinesOutsideBufferDistance;
+
+			return new ReshapeCurveFilterOptions(
+				       envelopeXY,
+				       excludeLInesOutsideSourceBuffer: excludeOutsideTolerance,
+				       excludeOutSideSourceTolerance: ExcludeLinesTolerance)
+			       {
+				       OnlyResultingInRemovals = ExcludeLinesShowOnlyRemove,
+				       ExcludeResultingInOverlaps = ExcludeLinesOverlaps
+			       };
 		}
 	}
 }
