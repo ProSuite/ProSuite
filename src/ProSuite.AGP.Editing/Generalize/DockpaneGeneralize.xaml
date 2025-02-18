@@ -106,7 +106,7 @@
         <!-- Restore Defaults -->
         <Button 
                 Command="{Binding RevertToDefaultsCommand}" 
-                IsEnabled="{Binding IsRevertToDefaultsEnabled}"
+                IsEnabled="{Binding IsButtonEnabled}"
                 Style="{DynamicResource Esri_Button}"
                 Content="Restore Defaults" 
                 Width="120"

@@ -22,7 +22,7 @@ namespace ProSuite.AGP.Editing.Generalize
 
 		public ICommand RevertToDefaultsCommand { get; }
 
-		public bool IsRevertToDefaultsEnabled => true;
+		public bool IsButtonEnabled => _options?.CentralOptions != null;
 
 		private void RevertToDefaults()
 		{
