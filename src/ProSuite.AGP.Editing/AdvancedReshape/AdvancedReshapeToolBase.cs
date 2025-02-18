@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,7 +51,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		[CanBeNull] private AdvancedReshapeFeedback _feedback;
 		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
-		protected ReshapeToolOptions _advancedReshapeToolOptions;
+		private ReshapeToolOptions _advancedReshapeToolOptions;
 
 		[CanBeNull]
 		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
@@ -153,23 +155,68 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override async Task OnToolActivatingCoreAsync()
 		{
-			InitializeOptions();
+			_advancedReshapeToolOptions = InitializeOptions();
 			_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
 
 			await base.OnToolActivatingCoreAsync();
 		}
 
-		protected void InitializeOptions()
+		private ReshapeToolOptions InitializeOptions()
 		{
+			Stopwatch watch = _msg.DebugStartTiming();
+
+			// NOTE: by only reading the file locations we can save a couple of 100ms
+			string currentCentralConfigDir = CentralConfigDir;
+			string currentLocalConfigDir = LocalConfigDir;
+
 			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
 			_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeToolOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
 			PartialReshapeToolOptions localConfiguration, centralConfiguration;
-			_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
 
-			_advancedReshapeToolOptions =
-				new ReshapeToolOptions(centralConfiguration, localConfiguration);
+			_settingsProvider.GetConfigurations(out localConfiguration,
+			                                    out centralConfiguration);
+
+			var result = new ReshapeToolOptions(centralConfiguration,
+			                                                     localConfiguration);
+
+			result.PropertyChanged -= _advancedReshapeToolOptions_PropertyChanged;
+			result.PropertyChanged += _advancedReshapeToolOptions_PropertyChanged;
+
+			_msg.DebugStopTiming(watch, "Advanced Reshape Options validated / initialized");
+
+			string optionsMessage = result.GetLocalOverridesMessage();
+
+			if (!string.IsNullOrEmpty(optionsMessage))
+			{
+				_msg.Info(optionsMessage);
+			}
+
+			return result;
+
+			//// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			//_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeToolOptions>(
+			//	CentralConfigDir, LocalConfigDir, OptionsFileName);
+
+			//PartialReshapeToolOptions localConfiguration, centralConfiguration;
+			//_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
+
+			//_advancedReshapeToolOptions =
+			//	new ReshapeToolOptions(centralConfiguration, localConfiguration);
+		}
+
+		private void _advancedReshapeToolOptions_PropertyChanged(object sender,
+		                                                         PropertyChangedEventArgs eventArgs)
+		{
+			try
+			{
+				QueuedTaskUtils.Run(() => ProcessSelection());
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating crack points: {e.Message}", e);
+			}
 		}
 
 		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
