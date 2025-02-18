@@ -11,6 +11,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 		}
 		#region RestoreDefaultsButton
+
 		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
 
 
@@ -18,27 +19,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		public bool IsRevertToDefaultsEnabled => true;
 
-		private void RevertToDefaults() {
+		private void RevertToDefaults()
+		{
 			Options?.RevertToDefaults();
 		}
 		#endregion
 
-
-		/// <summary>
-		/// Show the DockPane.
-		/// </summary>
-		//internal static void Show()
-		//{
-		//	DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneDamlID);
-		//	if (pane == null)
-		//		return;
-
-		//	pane.Activate();
-		//}
-
-		/// <summary>
-		/// Text shown near the top of the DockPane.
-		/// </summary>
 		private string _heading = "Reshape Options";
 
 		private ReshapeToolOptions _options;
