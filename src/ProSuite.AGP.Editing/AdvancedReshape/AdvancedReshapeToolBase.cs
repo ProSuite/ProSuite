@@ -51,7 +51,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		[CanBeNull] private AdvancedReshapeFeedback _feedback;
 		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
-		private ReshapeToolOptions _advancedReshapeToolOptions;
+		protected ReshapeToolOptions _advancedReshapeToolOptions;
 
 		[CanBeNull]
 		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
