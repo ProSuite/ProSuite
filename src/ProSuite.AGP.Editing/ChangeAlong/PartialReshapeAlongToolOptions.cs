@@ -29,7 +29,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		public OverridableSetting<double> MinBufferSegmentLength { get; set; }
 
 		// Reshape line filter settings
-		public OverridableSetting<bool> ExcludeLines { get; set; }
+		public OverridableSetting<bool> ExcludeLinesOutsideSource { get; set; }
 		public OverridableSetting<double> ExcludeLinesTolerance { get; set; }
 		public OverridableSetting<bool> ExcludeLinesDisplay { get; set; }
 		public OverridableSetting<bool> ExcludeLinesShowOnlyRemove { get; set; }
@@ -65,7 +65,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				             MinBufferSegmentLength = TryClone(MinBufferSegmentLength),
 
 				             // Reshape line filter settings
-				             ExcludeLines = TryClone(ExcludeLines),
+				             ExcludeLinesOutsideSource = TryClone(ExcludeLinesOutsideSource),
 				             ExcludeLinesTolerance = TryClone(ExcludeLinesTolerance),
 				             ExcludeLinesDisplay = TryClone(ExcludeLinesDisplay),
 				             ExcludeLinesShowOnlyRemove = TryClone(ExcludeLinesShowOnlyRemove),

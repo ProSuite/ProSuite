@@ -53,7 +53,7 @@
                 <CheckBox Grid.Row="0" Grid.Column="1"
                          Template="{StaticResource CentralizableSettingCheckbox}"
                          Content="Exclude reshape lines outside tolerance of source"
-                         DataContext="{Binding Options.CentralizableExcludeLines}"/>
+                         DataContext="{Binding Options.CentralizableExcludeLinesOutsideSource}"/>
 
                 <ContentControl Grid.Row="0" Grid.Column="2"
                               Template="{StaticResource CentralizableSettingsSpinner}"
