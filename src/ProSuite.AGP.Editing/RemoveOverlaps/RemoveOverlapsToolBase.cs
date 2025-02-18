@@ -75,7 +75,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override Task OnToolActivatingCoreAsync()
 		{
-			InitializeOptions();
+			_removeOverlapsToolOptions = InitializeOptions();
 
 			_feedback = new RemoveOverlapsFeedback();
 
@@ -396,22 +396,22 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
-			_removeOverlapsToolOptions = new RemoveOverlapsOptions(centralConfiguration,
+			var result  = new RemoveOverlapsOptions(centralConfiguration,
 				localConfiguration);
 
-			_removeOverlapsToolOptions.PropertyChanged -= OptionsPropertyChanged;
-			_removeOverlapsToolOptions.PropertyChanged += OptionsPropertyChanged;
+			result.PropertyChanged -= OptionsPropertyChanged;
+			result.PropertyChanged += OptionsPropertyChanged;
 
 			_msg.DebugStopTiming(watch, "Remove Overlap Tool Options validated / initialized");
 
-			string optionsMessage = _removeOverlapsToolOptions.GetLocalOverridesMessage();
+			string optionsMessage = result.GetLocalOverridesMessage();
 
 			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
 
-			return _removeOverlapsToolOptions;
+			return result;
 		}
 
 		private void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args)
