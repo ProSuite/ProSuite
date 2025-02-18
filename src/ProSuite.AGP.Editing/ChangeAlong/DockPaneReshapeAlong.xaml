@@ -22,22 +22,17 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Placeholder Section -->
             <RowDefinition Height="Auto"/> <!-- Target Buffer Section -->
             <RowDefinition Height="Auto"/> <!-- Reshape Line Filters Section -->
             <RowDefinition Height="Auto"/> <!-- Target Selection -->
             <RowDefinition Height="Auto"/> <!-- Display Performance Options -->
+            <RowDefinition Height="Auto"/>
+            <!-- Advanced Section -->
             <RowDefinition Height="Auto"/> <!-- Restore Defaults Button -->
         </Grid.RowDefinitions>
 
-        <!-- Placeholder Section -->
-        <StackPanel Grid.Row="0">
-            <Label FontWeight="Medium" Content="Placeholder Section" Padding="6,6,6,2"/>
-            
-        </StackPanel>
-
         <!-- Target Buffer Section -->
-        <StackPanel Grid.Row="1">
+        <StackPanel Grid.Row="0">
             <Label FontWeight="Medium" Content="Target Buffer" Padding="6,6,6,2"/>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -81,7 +76,7 @@
         </StackPanel>
 
         <!-- Reshape Line Filters Section -->
-        <StackPanel Grid.Row="2">
+        <StackPanel Grid.Row="1">
             <Label FontWeight="Medium" Content="Reshape Line Filters" Padding="6,6,6,2"/>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -129,7 +124,7 @@
         </StackPanel>
 
         <!-- Target Selection -->
-        <StackPanel Grid.Row="3"
+        <StackPanel Grid.Row="2"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top" Width="Auto">
             <Label FontWeight="Medium" Content="Target Selection" Padding="6,6,6,2"/>
@@ -137,7 +132,7 @@
         </StackPanel>
 
         <!-- Display Performance Options -->
-        <StackPanel Grid.Row="4">
+        <StackPanel Grid.Row="3">
             <Label FontWeight="Medium" Content="Display Performance Options" Padding="6,6,6,2"/>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -177,6 +172,46 @@
                        Template="{StaticResource CentralizableSettingsLabel}"
                        DataContext="{Binding Options.CentralizableDisplayHideCutLinesScale}"/>
             </Grid>
+        </StackPanel>
+
+        <!-- Advanced Section -->
+        <StackPanel Grid.Row="4">
+            <Label FontWeight="Medium" Content="Advanced" Padding="6,6,6,2"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+
+
+                </Grid.RowDefinitions>
+
+                <CheckBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
+                          Template="{StaticResource CentralizableSettingCheckbox}"
+                          Content="Insert vertices on targets for topological correctness"
+                          DataContext="{Binding Options.CentralizableInsertVertices}"/>
+
+
+                <CheckBox Grid.Row="1" Grid.Column="1"
+                          Template="{StaticResource CentralizableSettingCheckbox}"
+                          Content="Use custom minimal tolerance of "
+                          DataContext="{Binding Options.CentralizableMinimalToleranceApply}"/>
+
+                <ContentControl Grid.Row="1" Grid.Column="2"
+                                Template="{StaticResource CentralizableSettingsSpinner}"
+                                DataContext="{Binding Options.CentralizableMinimalTolerance}"/>
+
+                <ContentControl Grid.Row="1" Grid.Column="3"
+                                Template="{StaticResource CentralizableSettingsLabel}"
+                                DataContext="{Binding Options.CentralizableMinimalTolerance}"/>
+            </Grid>
+
         </StackPanel>
 
         <!-- Restore Defaults Button -->

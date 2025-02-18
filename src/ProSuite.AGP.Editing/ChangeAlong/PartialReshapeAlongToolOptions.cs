@@ -11,7 +11,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		public OverridableSetting<TargetFeatureSelection> TargetFeatureSelection { get; set; }
 
 		public OverridableSetting<bool> InsertVertices { get; set; }
-		public OverridableSetting<bool> ExcludeCutLines { get; set; }
 		
 		// Display Performance Options
 		public OverridableSetting<bool> DisplayExcludeCutLines { get; set; }
@@ -19,11 +18,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		public OverridableSetting<bool> DisplayHideCutLines { get; set; }
 		public OverridableSetting<double> DisplayHideCutLinesScale { get; set; }
 
-		// Adjust settings
-		public OverridableSetting<bool> Adjust { get; set; }
-		public OverridableSetting<double> AdjustTolerance { get; set; }
-		public OverridableSetting<bool> AdjustExcludeCurves { get; set; }
-		public OverridableSetting<bool> AdjustShowTolerance { get; set; }
+		// Minimal Tolerance settings
+		public OverridableSetting<bool> MinimalToleranceApply { get; set; }
+		public OverridableSetting<double> MinimalTolerance { get; set; }
 
 		// Buffer settings
 		public OverridableSetting<bool> BufferTarget { get; set; }
@@ -49,7 +46,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			{
 				TargetFeatureSelection = TryClone(TargetFeatureSelection),
 				InsertVertices = TryClone(InsertVertices),
-				ExcludeCutLines = TryClone(ExcludeCutLines),
 				
 				// Display Performance Options
 				DisplayExcludeCutLines = TryClone(DisplayExcludeCutLines),
@@ -57,11 +53,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				DisplayHideCutLines = TryClone(DisplayHideCutLines),
 				DisplayHideCutLinesScale = TryClone(DisplayHideCutLinesScale),
 
-				// Adjust settings
-				Adjust = TryClone(Adjust),
-				AdjustTolerance = TryClone(AdjustTolerance),
-				AdjustExcludeCurves = TryClone(AdjustExcludeCurves),
-				AdjustShowTolerance = TryClone(AdjustShowTolerance),
+				// Minimal Tolerance settings
+				MinimalToleranceApply = TryClone(MinimalToleranceApply),
+				MinimalTolerance = TryClone(MinimalTolerance),
 
 				// Buffer settings
 				BufferTarget = TryClone(BufferTarget),

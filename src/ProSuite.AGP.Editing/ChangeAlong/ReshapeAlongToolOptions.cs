@@ -18,9 +18,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CentralizableInsertVertices =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.InsertVertices), true);
-			CentralizableExcludeCutLines =
-				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeCutLines), false);
 
 			// Display Performance Options
 			CentralizableDisplayExcludeCutLines =
@@ -38,19 +35,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					ReflectionUtils.GetProperty(() => LocalOptions.DisplayHideCutLinesScale),
 					10000.0);
 
-			// Adjust settings
-			CentralizableAdjust =
+			// Minimal Tolerance settings
+			CentralizableMinimalToleranceApply =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.Adjust), true);
-			CentralizableAdjustTolerance =
+					ReflectionUtils.GetProperty(() => LocalOptions.MinimalToleranceApply), false);
+			CentralizableMinimalTolerance =
 				InitializeSetting<double>(
-					ReflectionUtils.GetProperty(() => LocalOptions.AdjustTolerance), 1.0);
-			CentralizableAdjustExcludeCurves =
-				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.AdjustExcludeCurves), false);
-			CentralizableAdjustShowTolerance =
-				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.AdjustShowTolerance), false);
+					ReflectionUtils.GetProperty(() => LocalOptions.MinimalTolerance), 0.1);
 
 			// Buffer settings
 			CentralizableBufferTarget =
@@ -100,19 +91,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		#region Centralizable Properties
 
 		public CentralizableSetting<bool> CentralizableInsertVertices { get; private set; }
-		public CentralizableSetting<bool> CentralizableExcludeCutLines { get; private set; }
 
 		// Display Performance Options
 		public CentralizableSetting<bool> CentralizableDisplayExcludeCutLines { get; private set; }
 		public CentralizableSetting<bool> CentralizableDisplayRecalculateCutLines { get; private set; }
 		public CentralizableSetting<bool> CentralizableDisplayHideCutLines { get; private set; }
 		public CentralizableSetting<double> CentralizableDisplayHideCutLinesScale { get; private set; }
-		
-		// Adjust settings
-		public CentralizableSetting<bool> CentralizableAdjust { get; private set; }
-		public CentralizableSetting<double> CentralizableAdjustTolerance { get; private set; }
-		public CentralizableSetting<bool> CentralizableAdjustExcludeCurves { get; private set; }
-		public CentralizableSetting<bool> CentralizableAdjustShowTolerance { get; private set; }
+
+		// Minimal Tolerance settings
+		public CentralizableSetting<bool> CentralizableMinimalToleranceApply { get; private set; }
+		public CentralizableSetting<double> CentralizableMinimalTolerance { get; private set; }
 
 		// Buffer settings
 		public CentralizableSetting<bool> CentralizableBufferTarget { get; private set; }
@@ -138,7 +126,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		#region Current Values
 
 		public bool InsertVertices => CentralizableInsertVertices.CurrentValue;
-		public bool ExcludeCutLines => CentralizableExcludeCutLines.CurrentValue;
 
 		// Display Performance Options
 		public bool DisplayExcludeCutLines => CentralizableDisplayExcludeCutLines.CurrentValue;
@@ -146,11 +133,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		public bool DisplayHideCutLines => CentralizableDisplayHideCutLines.CurrentValue;
 		public double DisplayHideCutLinesScale => CentralizableDisplayHideCutLinesScale.CurrentValue;
 
-		// Adjust settings
-		public bool Adjust => CentralizableAdjust.CurrentValue;
-		public double AdjustTolerance => CentralizableAdjustTolerance.CurrentValue;
-		public bool AdjustExcludeCurves => CentralizableAdjustExcludeCurves.CurrentValue;
-		public bool AdjustShowTolerance => CentralizableAdjustShowTolerance.CurrentValue;
+		// Minimal Tolerance settings
+		public bool MinimalToleranceApply => CentralizableMinimalToleranceApply.CurrentValue;
+		public double MinimalTolerance => CentralizableMinimalTolerance.CurrentValue;
 
 		// Buffer settings
 		public bool BufferTarget => CentralizableBufferTarget.CurrentValue;
@@ -176,7 +161,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		public override void RevertToDefaults()
 		{
 			CentralizableInsertVertices.RevertToDefault();
-			CentralizableExcludeCutLines.RevertToDefault();
 			
 			// Display Performance Options
 			CentralizableDisplayExcludeCutLines.RevertToDefault();
@@ -184,11 +168,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CentralizableDisplayHideCutLines.RevertToDefault();
 			CentralizableDisplayHideCutLinesScale.RevertToDefault();
 
-			// Adjust settings
-			CentralizableAdjust.RevertToDefault();
-			CentralizableAdjustTolerance.RevertToDefault();
-			CentralizableAdjustExcludeCurves.RevertToDefault();
-			CentralizableAdjustShowTolerance.RevertToDefault();
+			// Minimal Tolerance settings
+			CentralizableMinimalToleranceApply.RevertToDefault();
+			CentralizableMinimalTolerance.RevertToDefault();
 
 			// Buffer settings
 			CentralizableBufferTarget.RevertToDefault();
@@ -215,13 +197,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			bool result = false;
 
 			if (HasLocalOverride(CentralizableInsertVertices, "Insert vertices on targets for topological correctness",
-			                     notifications))
-			{
-				result = true;
-			}
-
-			if (HasLocalOverride(CentralizableExcludeCutLines,
-			                     "Exclude cut lines that are not completely within main map extent",
 			                     notifications))
 			{
 				result = true;
@@ -256,23 +231,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				result = true;
 			}
 
-			// Adjust settings
-			if (HasLocalOverride(CentralizableAdjust, "Calculate adjust lines with tolerance", notifications))
+			// Minimal Tolerance settings
+			if (HasLocalOverride(CentralizableMinimalToleranceApply, "Use custom minimal tolerance", notifications))
 			{
 				result = true;
 			}
 
-			if (HasLocalOverride(CentralizableAdjustTolerance, "Adjust tolerance", notifications))
-			{
-				result = true;
-			}
-
-			if (HasLocalOverride(CentralizableAdjustExcludeCurves, "Exclude curves that can be reshaped without adjust line", notifications))
-			{
-				result = true;
-			}
-
-			if (HasLocalOverride(CentralizableAdjustShowTolerance, "Show adjust tolerance buffer", notifications))
+			if (HasLocalOverride(CentralizableMinimalTolerance, "Minimal tolerance value", notifications))
 			{
 				result = true;
 			}
@@ -341,7 +306,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		public override string GetLocalOverridesMessage()
 		{
-			const string optionsName = "Change Along Tool Options";
+			const string optionsName = "Reshape Along Tool Options";
 			return GetLocalOverridesMessage(optionsName);
 		}
 	}
