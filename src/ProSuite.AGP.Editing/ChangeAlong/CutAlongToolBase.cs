@@ -31,7 +31,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected CutAlongToolOptions _cutAlongToolOptions;
 
 		[CanBeNull]
-		private OverridableSettingsProvider<PartialChangeAlongToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialReshapeAlongToolOptions> _settingsProvider;
 
 		protected override string EditOperationDescription => "Cut along";
 
@@ -122,13 +122,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return result;
 		}
 
-		protected void InitializeOptions()
+		protected override void InitializeOptions()
 		{
 			// Create a new instance only if it doesn't exist yet
-			_settingsProvider ??= new OverridableSettingsProvider<PartialChangeAlongToolOptions>(
+			_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeAlongToolOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
-			PartialChangeAlongToolOptions localConfiguration, centralConfiguration;
+			PartialReshapeAlongToolOptions localConfiguration, centralConfiguration;
 			_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
 
 			_cutAlongToolOptions =
@@ -278,7 +278,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			{
 				InitializeOptions();
 			}
-			
+
 			viewModel.Options = _cutAlongToolOptions;
 			viewModel.Activate(true);
 		}

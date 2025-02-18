@@ -31,7 +31,6 @@ namespace ProSuite.AGP.Editing.Generalize
 
 		#endregion
 
-		/// Text shown near the top of the DockPane.
 		private string _heading = "Generalization Options";
 
 		private AdvancedGeneralizeOptions _options;

@@ -22,154 +22,16 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Target Selection -->
-            <RowDefinition Height="Auto"/> <!-- Display Performance Options -->
-            <RowDefinition Height="Auto"/> <!-- Display Performance Options -->
-            <RowDefinition Height="Auto"/> <!-- Adjust Section -->
             <RowDefinition Height="Auto"/> <!-- Target Buffer Section -->
             <RowDefinition Height="Auto"/> <!-- Reshape Line Filters Section -->
+            <RowDefinition Height="Auto"/> <!-- Target Selection -->
+            <RowDefinition Height="Auto"/> <!-- Display Performance Options -->
+            <RowDefinition Height="Auto"/> <!-- Advanced Section -->
             <RowDefinition Height="Auto"/> <!-- Restore Defaults Button -->
         </Grid.RowDefinitions>
 
-        <!-- Target Selection -->
-        <StackPanel Grid.Row="0"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top" Width="Auto">
-            <Label FontWeight="Medium" Content="Target Selection" Padding="6,6,6,2"/>
-            <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}"/>
-        </StackPanel>
-
-        <!-- Display Performance Options -->
-        <StackPanel Grid.Row="1">
-            <Label FontWeight="Medium" Content="Display Performance Options" Padding="6,6,6,2"/>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <CheckBox Grid.Row="0" Grid.Column="1"
-                         Template="{StaticResource CentralizableSettingCheckbox}"
-                         Content="Calculate adjust lines with tolerance"
-                         DataContext="{Binding Options.CentralizableAdjust}" Margin="0,0,10,0"/>
-
-                <ContentControl Grid.Row="0" Grid.Column="2"
-                              Template="{StaticResource CentralizableSettingsSpinner}"
-                              DataContext="{Binding Options.CentralizableAdjustTolerance}"/>
-
-                <ContentControl Grid.Row="0" Grid.Column="3"
-                              Template="{StaticResource CentralizableSettingsLabel}"
-                              DataContext="{Binding Options.CentralizableAdjustTolerance}"/>
-
-                <CheckBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
-                         Template="{StaticResource CentralizableSettingCheckbox}"
-                         Content="Exclude curves that can be reshaped without adjust line"
-                         Margin="20,0,0,0"
-                         DataContext="{Binding Options.CentralizableAdjustExcludeCurves}"/>
-
-                <CheckBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"
-                         Template="{StaticResource CentralizableSettingCheckbox}"
-                         Content="Show adjust tolerance buffer"
-                         Margin="20,0,0,0"
-                         DataContext="{Binding Options.CentralizableAdjustShowTolerance}"/>
-            </Grid>
-        </StackPanel>
-
-        <StackPanel Grid.Row="2">
-        <!-- Display Performance Options -->
-            <Label FontWeight="Medium" Content="Display Performance Options" Padding="6,6,6,2"/>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <CheckBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
-                          Template="{StaticResource CentralizableSettingCheckbox}"
-                          Content="Exclude reshape lines that are not completely within main map"
-                          DataContext="{Binding Options.CentralizableDisplayExcludeCutLines}"/>
-
-                <CheckBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
-                          Template="{StaticResource CentralizableSettingCheckbox}"
-                          Content="Recalculate reshape lines when the map extent changes"
-                          Margin="20,0,0,0"
-                          DataContext="{Binding Options.CentralizableDisplayRecalculateCutLines}"/>
-
-                <CheckBox Grid.Row="2" Grid.Column="1"
-                         Template="{StaticResource CentralizableSettingCheckbox}"
-                         Content="Hide reshape lines when zoomed beyond 1:"
-                         DataContext="{Binding Options.CentralizableDisplayHideCutLines}"/>
-
-                <ContentControl Grid.Row="2" Grid.Column="2"
-                              Template="{StaticResource CentralizableSettingsSpinner}"
-                              DataContext="{Binding Options.CentralizableDisplayHideCutLinesScale}"/>
-
-                <ContentControl Grid.Row="2" Grid.Column="3"
-                              Template="{StaticResource CentralizableSettingsLabel}"
-                              DataContext="{Binding Options.CentralizableDisplayHideCutLinesScale}"/>
-            </Grid>
-        </StackPanel>
-
-        <StackPanel Grid.Row="3">
-        <!-- Adjust Section -->
-            <Label FontWeight="Medium" Content="Adjust" Padding="6,6,6,2"/>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <CheckBox Grid.Row="0" Grid.Column="1"
-                         Template="{StaticResource CentralizableSettingCheckbox}"
-                         Content="Calculate adjust lines with tolerance"
-                         DataContext="{Binding Options.CentralizableAdjust}" Margin="0,0,10,0"/>
-
-                <ContentControl Grid.Row="0" Grid.Column="2"
-                              Template="{StaticResource CentralizableSettingsSpinner}"
-                              DataContext="{Binding Options.CentralizableAdjustTolerance}"/>
-
-                <ContentControl Grid.Row="0" Grid.Column="3"
-                              Template="{StaticResource CentralizableSettingsLabel}"
-                              DataContext="{Binding Options.CentralizableAdjustTolerance}"/>
-
-                <CheckBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
-                         Template="{StaticResource CentralizableSettingCheckbox}"
-                         Content="Exclude curves that can be reshaped without adjust line"
-                         Margin="20,0,0,0"
-                         DataContext="{Binding Options.CentralizableAdjustExcludeCurves}"/>
-
-                <CheckBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"
-                         Template="{StaticResource CentralizableSettingCheckbox}"
-                         Content="Show adjust tolerance buffer"
-                         Margin="20,0,0,0"
-                         DataContext="{Binding Options.CentralizableAdjustShowTolerance}"/>
-            </Grid>
-        </StackPanel>
-
-        <StackPanel Grid.Row="4">
         <!-- Target Buffer Section -->
+        <StackPanel Grid.Row="0">
             <Label FontWeight="Medium" Content="Target Buffer" Padding="6,6,6,2"/>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -186,7 +48,13 @@
                 <CheckBox Grid.Row="0" Grid.Column="1"
                          Template="{StaticResource CentralizableSettingCheckbox}"
                          Content="Buffer the target geometry by"
-                         DataContext="{Binding Options.CentralizableInsertVertices}"/>
+                         DataContext="{Binding Options.CentralizableBufferTarget}"/>
+
+                <CheckBox Grid.Column="1"
+                         Template="{StaticResource CentralizableSettingCheckbox}"
+                         Content="Enforce minimum buffer segment length"
+                         Margin="20,27,10,0"
+                         DataContext="{Binding Options.CentralizableEnforceMinimumBufferSegmentLength}" Grid.RowSpan="2"/>
 
                 <ContentControl Grid.Row="0" Grid.Column="2"
                               Template="{StaticResource CentralizableSettingsSpinner}"
@@ -195,12 +63,6 @@
                 <ContentControl Grid.Row="0" Grid.Column="3"
                               Template="{StaticResource CentralizableSettingsLabel}"
                               DataContext="{Binding Options.CentralizableBufferTolerance}"/>
-
-                <CheckBox Grid.Column="1"
-                         Template="{StaticResource CentralizableSettingCheckbox}"
-                         Content="Enforce minimum buffer segment length"
-                         Margin="20,27,10,0"
-                         DataContext="{Binding Options.CentralizableInsertVertices}" Grid.RowSpan="2"/>
 
                 <ContentControl Grid.Row="1" Grid.Column="2"
                               Template="{StaticResource CentralizableSettingsSpinner}"
@@ -213,7 +75,7 @@
         </StackPanel>
 
         <!-- Reshape Line Filters Section -->
-        <StackPanel Grid.Row="5">
+        <StackPanel Grid.Row="1">
             <Label FontWeight="Medium" Content="Reshape Line Filters" Padding="6,6,6,2"/>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -255,14 +117,104 @@
 
                 <CheckBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3"
                          Template="{StaticResource CentralizableSettingCheckbox}"
-                         Content="Exclude reshape lines that result in overlaps with target features" />
+                         Content="Exclude reshape lines that result in overlaps with target features"
+                         DataContext="{Binding Options.CentralizableExcludeLinesOverlaps}"/>
             </Grid>
         </StackPanel>
 
+        <!-- Target Selection -->
+        <StackPanel Grid.Row="2"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top" Width="Auto">
+            <Label FontWeight="Medium" Content="Target Selection" Padding="6,6,6,2"/>
+            <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}"/>
+        </StackPanel>
+
+        <!-- Display Performance Options -->
+        <StackPanel Grid.Row="3">
+            <Label FontWeight="Medium" Content="Display Performance Options" Padding="6,6,6,2"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <CheckBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
+                   Template="{StaticResource CentralizableSettingCheckbox}"
+                   Content="Exclude reshape lines that are not completely within main map"
+                   DataContext="{Binding Options.CentralizableDisplayExcludeCutLines}"/>
+
+                <CheckBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
+                   Template="{StaticResource CentralizableSettingCheckbox}"
+                   Content="Recalculate reshape lines when the map extent changes"
+                   Margin="20,0,0,0"
+                   DataContext="{Binding Options.CentralizableDisplayRecalculateCutLines}"/>
+
+                <CheckBox Grid.Row="2" Grid.Column="1"
+                  Template="{StaticResource CentralizableSettingCheckbox}"
+                  Content="Hide reshape lines when zoomed beyond 1:"
+                  DataContext="{Binding Options.CentralizableDisplayHideCutLines}"/>
+
+                <ContentControl Grid.Row="2" Grid.Column="2"
+                       Template="{StaticResource CentralizableSettingsSpinner}"
+                       DataContext="{Binding Options.CentralizableDisplayHideCutLinesScale}"/>
+
+                <ContentControl Grid.Row="2" Grid.Column="3"
+                       Template="{StaticResource CentralizableSettingsLabel}"
+                       DataContext="{Binding Options.CentralizableDisplayHideCutLinesScale}"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Advanced Section -->
+        <StackPanel Grid.Row="4">
+            <Label FontWeight="Medium" Content="Advanced" Padding="6,6,6,2"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+
+
+                </Grid.RowDefinitions>
+
+                <CheckBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
+                          Template="{StaticResource CentralizableSettingCheckbox}"
+                          Content="Insert vertices on targets for topological correctness"
+                          DataContext="{Binding Options.CentralizableInsertVertices}"/>
+
+
+                <CheckBox Grid.Row="1" Grid.Column="1"
+                          Template="{StaticResource CentralizableSettingCheckbox}"
+                          Content="Use custom minimal tolerance of "
+                          DataContext="{Binding Options.CentralizableMinimalToleranceApply}"/>
+
+                <ContentControl Grid.Row="1" Grid.Column="2"
+                                Template="{StaticResource CentralizableSettingsSpinner}"
+                                DataContext="{Binding Options.CentralizableMinimalTolerance}"/>
+
+                <ContentControl Grid.Row="1" Grid.Column="3"
+                                Template="{StaticResource CentralizableSettingsLabel}"
+                                DataContext="{Binding Options.CentralizableMinimalTolerance}"/>
+            </Grid>
+
+        </StackPanel>
+
         <!-- Restore Defaults Button -->
-        <Button Grid.Row="6" 
-                         DataContext="{Binding Options.CentralizableExcludeLinesOverlaps}"/>
-        <Button Grid.Row="6" 
+        <Button Grid.Row="5" 
                 Template="{StaticResource RestoreDefaultsButton}"
                 HorizontalAlignment="Left"
                 Margin="6,12,6,6"/>
