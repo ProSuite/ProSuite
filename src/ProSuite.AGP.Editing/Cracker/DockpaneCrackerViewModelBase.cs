@@ -22,7 +22,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		public ICommand RevertToDefaultsCommand { get; }
 
-		public bool IsButtonEnabled => _options?.CentralOptions != null;
+		public bool IsRevertToDefaultsEnabled => true;
 
 		private void RevertToDefaults()
 		{
