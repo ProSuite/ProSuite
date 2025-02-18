@@ -26,7 +26,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		public OverridableSetting<bool> AdjustShowTolerance { get; set; }
 
 		// Buffer settings
+		public OverridableSetting<bool> BufferTarget { get; set; }
 		public OverridableSetting<double> BufferTolerance { get; set; }
+		public OverridableSetting<bool> EnforceMinimumBufferSegmentLength { get; set; }
 		public OverridableSetting<double> MinBufferSegmentLength { get; set; }
 
 		// Reshape line filter settings
@@ -62,7 +64,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				AdjustShowTolerance = TryClone(AdjustShowTolerance),
 
 				// Buffer settings
+				BufferTarget = TryClone(BufferTarget),
 				BufferTolerance = TryClone(BufferTolerance),
+				EnforceMinimumBufferSegmentLength = TryClone(EnforceMinimumBufferSegmentLength),
 				MinBufferSegmentLength = TryClone(MinBufferSegmentLength),
 
 				// Reshape line filter settings

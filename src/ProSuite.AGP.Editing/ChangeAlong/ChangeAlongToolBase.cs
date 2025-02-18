@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +12,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.Generalize;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
@@ -77,6 +80,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override async Task OnToolActivatingCoreAsync()
 		{
+			InitializeOptions();
+			
 			_feedback = new ChangeAlongFeedback()
 			            {
 				            ShowTargetLines = DisplayTargetLines
@@ -299,6 +304,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 
 			return true;
+		}
+
+		public void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args) {
+			try {
+				QueuedTaskUtils.Run(() => ProcessSelection());
+			}
+			catch (Exception e) {
+				_msg.Error($"Error re-calculating reshape lines : {e.Message}", e);
+			}
 		}
 
 		private List<FeatureSelectionBase> FindTargetFeatureCandidates(
@@ -612,5 +626,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				}
 			}
 		}
+
+		protected abstract void InitializeOptions();
 	}
 }
