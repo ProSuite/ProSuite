@@ -83,8 +83,6 @@
 		<Label FontWeight="Medium" Content="Calculate crack points at intersections with other" Margin="0,15,0,0"/>
 		<editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" HorizontalAlignment="Left" />
 
-
-
 		<!-- Z values -->
 		<Label FontWeight="Medium" Content="Z values" Margin="0,15,0,0"/>
 		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
@@ -92,14 +90,14 @@
                       DataContext="{Binding Options.CentralizableUseSourceZs}" />
 
 		<!-- Clean up option -->
-		<Label FontWeight="Medium" Content="Clean up option" Margin="0,15,0,0"/>
+		<!--<Label FontWeight="Medium" Content="Clean up option" Margin="0,15,0,0"/>
 		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
                       Content="Delete unnecessary vertices"
-                      DataContext="{Binding Options.CentralizableRemoveUnnecessaryVertices}" />
+                      DataContext="{Binding Options.CentralizableRemoveUnnecessaryVertices}" />-->
+
+		<!-- Restore Defaults Button -->
 		<Button Template="{StaticResource RestoreDefaultsButton}"
         />
-
-		<!-- Restore Defaults -->
 
 		<!--<RadioButton Template="{StaticResource CentralizableSettingRadioButton}"
                          IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.VisibleEditableFeatures}}"

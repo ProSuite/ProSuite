@@ -49,26 +49,9 @@
             Content="Restore Defaults" 
             Width="120"
             HorizontalAlignment="Left"
-            ToolTip=""
             Margin="27,12,6,12"
             Style="{DynamicResource Esri_Button}">
         </Button>
-        <!-- Todo: Tooltip -->
-        <!-- <Button.Style >
-                <Style TargetType="Button" BasedOn="{esri:Esri_Button}">
-                    <Setter Property="ToolTip" Value="{x:Null}" />
-                    <Style.Triggers>
-                        Trigger when IsEnabled is false 
-            <Trigger Property="IsEnabled" Value="false">
-                <Setter Property="ToolTip" Value="This button is disabled because CentralConfigDir is null." />
-            </Trigger>
-            </Style.Triggers>
-            </Style>
-            </Button.Style>-->
-  
-
-
-
     </ControlTemplate>
 
     <!--<ControlTemplate TargetType="RadioButton" x:Key="CentralizableSettingRadioButton">

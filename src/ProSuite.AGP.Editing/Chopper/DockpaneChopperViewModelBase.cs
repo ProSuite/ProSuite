@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
@@ -14,7 +13,11 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		#region RestoreDefaultsButton
 
-		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
+		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
+		{
+			get => _targetFeatureSelectionVm;
+			private set => SetProperty(ref _targetFeatureSelectionVm, value);
+		}
 
 		public ICommand RevertToDefaultsCommand { get; }
 
@@ -31,6 +34,7 @@ namespace ProSuite.AGP.Editing.Chopper
 		private string _heading = "Chopper Options";
 
 		private ChopperToolOptions _options;
+		private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 
 		public string Heading
 		{
@@ -49,13 +53,6 @@ namespace ProSuite.AGP.Editing.Chopper
 					new TargetFeatureSelectionViewModel(
 						_options.CentralizableTargetFeatureSelection);
 			}
-		}
-
-		public event PropertyChangedEventHandler PropertyChanged;
-
-		protected virtual void OnPropertyChanged(string propertyName)
-		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 	}
 }
