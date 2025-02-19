@@ -66,6 +66,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected abstract IChangeAlongService MicroserviceClient { get; }
 
+		protected abstract TargetFeatureSelection TargetFeatureSelection { get; }
+
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
 		{
 			return SketchGeometryType.Rectangle;
@@ -450,13 +452,34 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_targetSketchCursor.ResetOrDefault();
 		}
 
+		protected ZSettingsModel GetZSettingsModel()
+		{
+			Map map = ActiveMapView.Map;
+
+			var elevationSurface = GetElevationSurface(map);
+
+			ZMode zMode = ZMode.Interpolate;
+			if (elevationSurface != null)
+			{
+				_msg.DebugFormat("Using DTM from elevation surface for Z-values");
+				zMode = ZMode.Dtm;
+			}
+
+			var zSettingsModel = new ZSettingsModel(zMode, map, elevationSurface);
+			return zSettingsModel;
+		}
+
+		protected virtual ElevationSurfaceLayer GetElevationSurface(Map map)
+		{
+			return null;
+		}
+
 		private async Task<bool> SelectTargetsAsync(
 			[NotNull] List<Feature> selectedFeatures,
 			[NotNull] Geometry sketchGeometry,
 			[CanBeNull] CancelableProgressor progressor)
 		{
-			const TargetFeatureSelection targetFeatureSelection =
-				TargetFeatureSelection.VisibleSelectableFeatures;
+			TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection;
 
 			Task<IEnumerable<Feature>> task = QueuedTaskUtils.Run(async () =>
 			{
@@ -529,7 +552,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				                              SelectedFeatures = selectedFeatures,
 				                              SpatialRelationship = spatialRel,
 				                              ReturnUnJoinedFeatures = true,
-				                              FeatureClassPredicate = GetTargetFeatureClassPredicate()
+				                              FeatureClassPredicate =
+					                              GetTargetFeatureClassPredicate()
 			                              };
 
 			var selectionByClass =

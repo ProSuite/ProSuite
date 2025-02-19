@@ -1,4 +1,4 @@
-namespace ProSuite.AGP.Editing.ChangeAlong
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 {
 	public enum ZValueSource
 	{

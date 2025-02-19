@@ -32,6 +32,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected string OptionsFileName => "ReshapeAlongToolOptions.xml";
 
+		protected override TargetFeatureSelection TargetFeatureSelection =>
+			_reshapeAlongToolOptions.TargetFeatureSelection;
+
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			_settingsProvider?.StoreLocalConfiguration(_reshapeAlongToolOptions.LocalOptions);
@@ -71,14 +74,22 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CancellationToken cancellationToken,
 			out ChangeAlongCurves newChangeAlongCurves)
 		{
-			var targetBufferOptions = new TargetBufferOptions();
-			var filterOptions = new ReshapeCurveFilterOptions();
-			double tolerance = 0;
+			var targetBufferOptions = _reshapeAlongToolOptions.GetTargetBufferOptions();
+
+			targetBufferOptions.ZSettingsModel = GetZSettingsModel();
+
+			var filterOptions = _reshapeAlongToolOptions.GetReshapeLineFilterOptions(ActiveMapView);
+
+			double? customTolerance = _reshapeAlongToolOptions.UseCustomTolerance
+				                          ? _reshapeAlongToolOptions.CustomTolerance
+				                          : null;
+
+			bool insertVerticesInTarget = _reshapeAlongToolOptions.InsertVerticesInTarget;
 
 			var updatedFeatures = MicroserviceClient.ApplyReshapeLines(
-				selectedFeatures, targetFeatures, cutSubcurves,
-				targetBufferOptions, filterOptions, tolerance,
-				cancellationToken, out newChangeAlongCurves);
+				selectedFeatures, targetFeatures, cutSubcurves, targetBufferOptions, filterOptions,
+				customTolerance, insertVerticesInTarget, cancellationToken,
+				out newChangeAlongCurves);
 
 			return updatedFeatures;
 		}
@@ -342,28 +353,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		#endregion
-
-		private ZSettingsModel GetZSettingsModel()
-		{
-			Map map = ActiveMapView.Map;
-
-			var elevationSurface = GetElevationSurface(map);
-
-			ZMode zMode = ZMode.Interpolate;
-			if (elevationSurface != null)
-			{
-				_msg.DebugFormat("Using DTM from elevation surface for Z-values");
-				zMode = ZMode.Dtm;
-			}
-
-			var zSettingsModel = new ZSettingsModel(zMode, map, elevationSurface);
-			return zSettingsModel;
-		}
-
-		protected virtual ElevationSurfaceLayer GetElevationSurface(Map map)
-		{
-			return null;
-		}
 
 		public void Dispose() { }
 	}

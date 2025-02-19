@@ -12,6 +12,7 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
 
@@ -29,6 +30,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected override string EditOperationDescription => "Cut along";
 
 		protected string OptionsFileName => "CutAlongToolOptions.xml";
+
+		protected override TargetFeatureSelection TargetFeatureSelection =>
+			_cutAlongToolOptions.TargetFeatureSelection;
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
@@ -66,11 +70,31 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CancellationToken cancellationToken,
 			out ChangeAlongCurves newChangeAlongCurves)
 		{
+			var targetBufferOptions = _cutAlongToolOptions.GetTargetBufferOptions();
+
+			targetBufferOptions.ZSettingsModel = GetZSettingsModel();
+
+			ZValueSource zValueSource = _cutAlongToolOptions.ZValueSource;
+
+			EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
+
 			var updatedFeatures = MicroserviceClient.ApplyCutLines(
-				selectedFeatures, targetFeatures, cutSubcurves,
+				selectedFeatures, targetFeatures, cutSubcurves, targetBufferOptions, envelopeXY,
+				zValueSource,
 				cancellationToken, out newChangeAlongCurves);
 
 			return updatedFeatures;
+		}
+
+		private EnvelopeXY GetMapExtentEnvelopeXY()
+		{
+			Envelope envelope = ActiveMapView.Extent;
+
+			EnvelopeXY envelopeXY = _cutAlongToolOptions.ClipLinesOnVisibleExtent
+				                        ? new EnvelopeXY(envelope.XMin, envelope.YMin,
+				                                         envelope.XMax, envelope.YMax)
+				                        : null;
+			return envelopeXY;
 		}
 
 		protected override void LogAfterPickTarget(
@@ -123,8 +147,19 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			IList<Feature> selectedFeatures, IList<Feature> targetFeatures,
 			CancellationToken cancellationToken)
 		{
+			var targetBufferOptions = _cutAlongToolOptions.GetTargetBufferOptions();
+
+			targetBufferOptions.ZSettingsModel = GetZSettingsModel();
+			
+			targetBufferOptions.ZSettingsModel = GetZSettingsModel();
+
+			ZValueSource zValueSource = _cutAlongToolOptions.ZValueSource;
+
+			EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
+
 			ChangeAlongCurves result = MicroserviceClient.CalculateCutLines(
-				selectedFeatures, targetFeatures, cancellationToken);
+				selectedFeatures, targetFeatures, targetBufferOptions, envelopeXY, zValueSource,
+				cancellationToken);
 
 			return result;
 		}

@@ -168,7 +168,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		#region Current Values
 
-		public bool InsertTargetVertices => CentralizableInsertVertices.CurrentValue;
+		public bool InsertVerticesInTarget => CentralizableInsertVertices.CurrentValue;
 
 		// Display Performance Options
 		public bool ClipLinesOnVisibleExtent => CentralizableDisplayExcludeCutLines.CurrentValue;

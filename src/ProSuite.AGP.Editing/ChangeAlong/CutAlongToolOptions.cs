@@ -1,4 +1,5 @@
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
@@ -126,10 +127,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		#region Current Values
 
-		public bool InsertVertices => CentralizableInsertVertices.CurrentValue;
+		public bool InsertVerticesInTarget => CentralizableInsertVertices.CurrentValue;
 
 		// Display Performance Options
-		public bool DisplayExcludeCutLines => CentralizableDisplayExcludeCutLines.CurrentValue;
+		public bool ClipLinesOnVisibleExtent => CentralizableDisplayExcludeCutLines.CurrentValue;
 
 		public bool DisplayRecalculateCutLines =>
 			CentralizableDisplayRecalculateCutLines.CurrentValue;
@@ -284,6 +285,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			const string optionsName = "Cut Along Tool Options";
 			return GetLocalOverridesMessage(optionsName);
+		}
+
+		public TargetBufferOptions GetTargetBufferOptions()
+		{
+			double bufferDistance = BufferTarget ? BufferTolerance : 0;
+			double minSegmentLength =
+				EnforceMinimumBufferSegmentLength ? MinBufferSegmentLength : 0;
+
+			return new TargetBufferOptions(bufferDistance, minSegmentLength);
 		}
 	}
 }
