@@ -229,6 +229,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			TargetBufferOptions targetBufferOptions,
 			IBoundedXY clipExtent,
 			ZValueSource zValueSource,
+			bool insertVerticesInTarget,
 			[NotNull] IList<CutSubcurve> selectedSubcurves,
 			CancellationToken cancellationToken,
 			out ChangeAlongCurves newChangeAlongCurves)
@@ -238,7 +239,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 
 			ApplyCutLinesRequest request =
 				CreateApplyCutCurvesRequest(sourceFeatures, targetFeatures, targetBufferOptions,
-				                            clipExtent, zValueSource, selectedSubcurves);
+				                            clipExtent, zValueSource, insertVerticesInTarget,
+				                            selectedSubcurves);
 
 			ApplyCutLinesResponse response =
 				rpcClient.ApplyCutLines(request, null, null, cancellationToken);
@@ -315,6 +317,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			TargetBufferOptions targetBufferOptions,
 			IBoundedXY clipExtent,
 			ZValueSource zValueSource,
+			bool insertVerticesInTarget,
 			IList<CutSubcurve> selectedSubcurves)
 		{
 			var result =
@@ -331,8 +334,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 				result.CutLines.Add(ToReshapeLineMsg(subcurve));
 			}
 
-			// TODO: Options
-			result.InsertVerticesInTarget = true;
+			result.InsertVerticesInTarget = insertVerticesInTarget;
 
 			return result;
 		}

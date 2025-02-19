@@ -213,6 +213,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			TargetBufferOptions targetBufferOptions,
 			IBoundedXY clipExtent,
 			ZValueSource zValueSource,
+			bool insertVerticesInTarget,
 			CancellationToken cancellationToken,
 			out ChangeAlongCurves newChangeAlongCurves)
 		{
@@ -226,7 +227,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return ChangeAlongClientUtils.ApplyCutCurves(
 				ChangeAlongClient, sourceFeatures, targetFeatures,
-				targetBufferOptions, clipExtent, zValueSource,
+				targetBufferOptions, clipExtent, zValueSource, insertVerticesInTarget,
 				selectedReshapeLines, cancellationToken, out newChangeAlongCurves);
 		}
 

@@ -78,9 +78,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
 
+			bool insertVerticesInTarget = _cutAlongToolOptions.InsertVerticesInTarget;
+
 			var updatedFeatures = MicroserviceClient.ApplyCutLines(
 				selectedFeatures, targetFeatures, cutSubcurves, targetBufferOptions, envelopeXY,
-				zValueSource,
+				zValueSource, insertVerticesInTarget,
 				cancellationToken, out newChangeAlongCurves);
 
 			return updatedFeatures;
@@ -150,7 +152,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			var targetBufferOptions = _cutAlongToolOptions.GetTargetBufferOptions();
 
 			targetBufferOptions.ZSettingsModel = GetZSettingsModel();
-			
+
 			targetBufferOptions.ZSettingsModel = GetZSettingsModel();
 
 			ZValueSource zValueSource = _cutAlongToolOptions.ZValueSource;

@@ -45,6 +45,7 @@ public interface IChangeAlongService
 		TargetBufferOptions targetBufferOptions,
 		IBoundedXY clipExtent,
 		ZValueSource zValueSource,
+		bool insertVerticesInTarget,
 		CancellationToken cancellationToken,
 		out ChangeAlongCurves newChangeAlongCurves);
 }
