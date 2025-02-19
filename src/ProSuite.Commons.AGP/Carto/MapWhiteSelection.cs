@@ -38,7 +38,7 @@ public interface IMapWhiteSelection
 	void ClearGeometryCache();
 
 	void UpdateRegularSelection();
-	bool UpdateWhiteSelection(SelectionSet regular);
+	bool UpdateWhiteSelection(SelectionSet regular, bool selectAllVertices = false);
 }
 
 /// <summary>
@@ -47,7 +47,7 @@ public interface IMapWhiteSelection
 /// Maintains one <see cref="IWhiteSelection"/> instance per layer, which
 /// in turn maintains one <see cref="IShapeSelection"/> per involved feature.
 /// </summary>
-public class MapWhiteSelection : IMapWhiteSelection, IDisposable
+public class MapWhiteSelection : IMapWhiteSelection
 {
 	private readonly MapView _mapView;
 	// TODO probably should keep _layerSelections ordered as in the ToC
@@ -542,7 +542,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 	/// than the regular selection (which is just a list of OIDs);
 	/// consider not updating the white selection if the regular
 	/// selection is large (say more than 50 features).</remarks>
-	public bool UpdateWhiteSelection(SelectionSet regular)
+	public bool UpdateWhiteSelection(SelectionSet regular, bool selectAllVertices = false)
 	{
 		if (regular is null) return false;
 
@@ -571,7 +571,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 					var sel = ws.GetShapeSelection(oid);
 					if (sel is null)
 					{
-						if (ws.Add(oid))
+						if (ws.Add(oid, selectAllVertices))
 						{
 							changed = true;
 						}
@@ -605,10 +605,5 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		}
 
 		return changed;
-	}
-
-	public void Dispose()
-	{
-		// nothing to dispose at the moment
 	}
 }
