@@ -36,6 +36,15 @@ namespace ProSuite.Commons.AO.Surface
 		                                    IFeatureClass featureClass, IQueryFilter filter,
 		                                    IGeometry inExtent)
 		{
+			// Spike Free only makes sense for points. Lines should be ignored.
+			var isPointClass = featureClass.ShapeType == esriGeometryType.esriGeometryPoint ||
+			                   featureClass.ShapeType == esriGeometryType.esriGeometryMultipoint;
+			if (! isPointClass)
+			{
+				base.AddFeaturesToTin(tin, surfaceType, featureClass, filter, inExtent);
+				return;
+			}
+
 			object useShapeZ = true;
 
 			var geometries = GdbQueryUtils.GetFeatures(featureClass, filter, recycle: true)
