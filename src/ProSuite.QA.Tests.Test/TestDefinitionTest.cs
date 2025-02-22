@@ -4190,48 +4190,36 @@ namespace ProSuite.QA.Tests.Test
 											  ICollection<TrDefinitionCase>
 												  trCases)
 		{
-			var optionalValues = new Dictionary<string, object>();
-			optionalValues.Add("FilteringSearchOption", SearchOption.Tile);
-
 			trCases.Add(new TrDefinitionCase(typeof(TrOnlyContainedFeatures), 0,
 											 new object[]
 											 {
 												 model.GetVectorDataset(),
 												 model.GetPolygonDataset()
-											 },
-											 optionalValues));
+											 }));
 		}
 
 		private static void AddTrOnlyDisjointFeaturesCases(TestDataModel model,
 		                                                    ICollection<TrDefinitionCase>
 			                                                    trCases)
 		{
-			var optionalValues = new Dictionary<string, object>();
-			optionalValues.Add("FilteringSearchOption", SearchOption.Tile);
-
 			trCases.Add(new TrDefinitionCase(typeof(TrOnlyDisjointFeatures), 0,
 			                                 new object[]
 			                                 {
 				                                 model.GetVectorDataset(),
 				                                 model.GetPolygonDataset()
-			                                 },
-			                                 optionalValues));
+			                                 }));
 		}
 
 		private static void AddTrOnlyIntersectingFeaturesCases(TestDataModel model,
 		                                                   ICollection<TrDefinitionCase>
 			                                                   trCases)
 		{
-			var optionalValues = new Dictionary<string, object>();
-			optionalValues.Add("FilteringSearchOption", SearchOption.Tile);
-
 			trCases.Add(new TrDefinitionCase(typeof(TrOnlyIntersectingFeatures), 0,
 			                                 new object[]
 			                                 {
 				                                 model.GetVectorDataset(),
 				                                 model.GetVectorDataset()
-			                                 },
-			                                 optionalValues));
+			                                 }));
 		}
 
 		#endregion
