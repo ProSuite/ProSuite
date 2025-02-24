@@ -1,16 +1,17 @@
 using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
-using System.Collections.Generic;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Coincidence;
+using ProSuite.QA.Tests.Documentation;
 using Pnt = ProSuite.Commons.Geom.Pnt;
 
 namespace ProSuite.QA.Tests.IssueFilters
@@ -20,7 +21,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 	{
 		private readonly double _near;
 
-		private double _tolerance = 0;
+		private readonly double _tolerance = 0;
 		private bool _is3D;
 
 		private IList<QueryFilterHelper> _filterHelpers;
@@ -52,7 +53,6 @@ namespace ProSuite.QA.Tests.IssueFilters
 
 			EnsureFilters();
 
-
 			IReadOnlyTable table = InvolvedTables[0];
 			IFeatureClassFilter filter = _spatialFilters[0];
 			QueryFilterHelper helper = _filterHelpers[0];
@@ -65,6 +65,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 			Dictionary<SegmentHull, List<double[]>> uncompleteSegs = null;
 			Pnt errorPnt = null;
 			IBox nearPntBox = null;
+			List<Tuple<Pnt, IBox>> errorPnts = null;
 			if (errorGeometry is ISegmentCollection curve)
 			{
 				IIndexedSegments errorSegs = new SegmentSearcher(curve, releaseOnDispose);
@@ -80,18 +81,29 @@ namespace ProSuite.QA.Tests.IssueFilters
 				errorPnt = ProxyUtils.CreatePoint3D(p);
 				nearPntBox = GeomUtils.GetExpanded(errorPnt, _near);
 			}
+			else if (errorGeometry is IMultipoint multipoint)
+			{
+				errorPnts = new List<Tuple<Pnt, IBox>>();
+				foreach (IPoint point in GeometryUtils.GetPoints(multipoint))
+				{
+					Pnt singlePnt = ProxyUtils.CreatePoint3D(point);
+					IBox singlePntBox = GeomUtils.GetExpanded(singlePnt, _near);
+
+					errorPnts.Add(new Tuple<Pnt, IBox>(singlePnt, singlePntBox));
+				}
+			}
 			else
 			{
 				throw new NotImplementedException(
 					$"Unhandled geometry type {errorGeometry.GeometryType}");
 			}
 
-
 			foreach (var row in Search(table, filter, helper))
 			{
-				var feat = (IReadOnlyFeature)row;
+				var feat = (IReadOnlyFeature) row;
 
-				IIndexedSegments geom = IndexedSegmentUtils.GetIndexedGeometry(feat, releaseOnDispose);
+				IIndexedSegments geom =
+					IndexedSegmentUtils.GetIndexedGeometry(feat, releaseOnDispose);
 
 				if (uncompleteSegs != null)
 				{
@@ -108,6 +120,15 @@ namespace ProSuite.QA.Tests.IssueFilters
 						return true;
 					}
 				}
+				else
+				{
+					Assert.NotNull(errorPnts);
+
+					if (HandlePoints(geom, errorPnts))
+					{
+						return true;
+					}
+				}
 			}
 
 			return false;
@@ -115,7 +136,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 
 		private bool HandlePoint(IIndexedSegments geom, Pnt p, IBox nearBox)
 		{
-			foreach (var neighborSegment in geom.GetSegments(nearBox))
+			foreach (SegmentProxy neighborSegment in geom.GetSegments(nearBox))
 			{
 				neighborSegment.QueryOffset(p, out double offset, out _);
 				if (Math.Abs(offset) < _near)
@@ -123,10 +144,25 @@ namespace ProSuite.QA.Tests.IssueFilters
 					return true;
 				}
 			}
+
 			return false;
 		}
 
-		private void HandleUncompleteSegs(IIndexedSegments geom, Dictionary<SegmentHull, List<double[]>> uncompletedHulls)
+		private bool HandlePoints(IIndexedSegments geom, List<Tuple<Pnt, IBox>> errorPnts)
+		{
+			foreach ((Pnt p, IBox box) in errorPnts)
+			{
+				if (! HandlePoint(geom, p, box))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		private void HandleUncompleteSegs(IIndexedSegments geom,
+		                                  Dictionary<SegmentHull, List<double[]>> uncompletedHulls)
 		{
 			List<SegmentHull> completeds = new List<SegmentHull>();
 
@@ -141,17 +177,17 @@ namespace ProSuite.QA.Tests.IssueFilters
 				{
 					IBox neighborBox = neighborSegment.Extent;
 
-					if (!nearBox.Intersects(neighborBox))
+					if (! nearBox.Intersects(neighborBox))
 					{
 						continue;
 					}
-
 
 					var neighborHull = neighborSegment.CreateHull(0);
 
 					SegmentPair segmentPair = SegmentPair.Create(hull, neighborHull, _is3D);
 					segmentPair.CutCurveHull(_tolerance,
-											 out IList<double[]> limits, out _, out _, out bool coincident);
+					                         out IList<double[]> limits, out _, out _,
+					                         out bool coincident);
 
 					if (coincident)
 					{
@@ -182,7 +218,8 @@ namespace ProSuite.QA.Tests.IssueFilters
 			if (_spatialFilters == null)
 			{
 				CopyFilters(out _spatialFilters, out _filterHelpers);
-				_spatialFilters[0].SpatialRelationship = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+				_spatialFilters[0].SpatialRelationship =
+					esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 				_filterHelpers[0].FullGeometrySearch = true;
 			}
 		}
@@ -198,6 +235,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 				{
 					return false;
 				}
+
 				x0 = Math.Max(x0, limits[1]);
 			}
 
@@ -209,5 +247,4 @@ namespace ProSuite.QA.Tests.IssueFilters
 			return true;
 		}
 	}
-
 }

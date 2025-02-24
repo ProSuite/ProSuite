@@ -111,6 +111,16 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
+		public void RefreshGeometry(IWorkItem item)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void RefreshGeometry2(IWorkItem item)
+		{
+			throw new NotImplementedException();
+		}
+
 		public void Dispose() { }
 	}
 }

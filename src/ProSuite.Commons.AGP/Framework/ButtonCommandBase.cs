@@ -44,7 +44,7 @@ namespace ProSuite.Commons.AGP.Framework
 
 		protected override async void OnClick()
 		{
-			Gateway.LogEntry(_msg);
+			_msg.Debug($"{Caption}.OnClick");
 
 			try
 			{

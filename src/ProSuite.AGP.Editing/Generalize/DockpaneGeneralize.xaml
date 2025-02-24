@@ -4,10 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
-             xmlns:cracker="clr-namespace:ProSuite.AGP.Editing.Generalize"
+             xmlns:generalize="clr-namespace:ProSuite.AGP.Editing.Generalize"
              xmlns:editing="clr-namespace:ProSuite.AGP.Editing"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=cracker:DockPaneGeneralizeViewModelBase}" Width="475" Height="480" HorizontalAlignment="Left"
+             d:DataContext="{d:DesignInstance Type=generalize:DockPaneGeneralizeViewModelBase}" Width="475" Height="480" HorizontalAlignment="Left"
              VerticalAlignment="Top">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -85,7 +85,7 @@
         </Grid>
 
 
-        <!-- Calculate crack points at intersections with other -->
+        <!-- Topological consitency with adjacent features -->
 
         <Label FontWeight="Medium" Content="Topological consistency with adjacent features" Margin="0,15,0,0"/>
         <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
@@ -96,7 +96,7 @@
                                                HorizontalAlignment="Left" 
                                                Margin="20,0, 0, 0"/>
 
-        <!-- Z values -->
+        <!-- Area of interest -->
         <Label FontWeight="Medium" Content="Area of interest" Margin="0,15,0,0"/>
         <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
                       Content="Apply only within visible extent"
@@ -104,15 +104,9 @@
 
 
         <!-- Restore Defaults -->
-        <Button 
-                Command="{Binding RevertToDefaultsCommand}" 
-                IsEnabled="{Binding IsRevertToDefaultsEnabled}"
-                Style="{DynamicResource Esri_Button}"
-                Content="Restore Defaults" 
-                Width="120"
-                HorizontalAlignment="Right"
-                Margin="15"/>
+        <Button Template="{StaticResource RestoreDefaultsButton}"
+        />
 
-    </StackPanel>
+	</StackPanel>
 
 </UserControl>

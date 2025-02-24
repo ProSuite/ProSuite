@@ -26,6 +26,10 @@ namespace ProSuite.AGP.WorkList.Domain
 		private double _ymin;
 		private double _zmax;
 		private double _zmin;
+		private Geometry _geometry;
+		private bool _hasFeatureGeometry;
+
+		private static readonly object _obj = new();
 
 		public string Description { get; }
 
@@ -51,7 +55,25 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		public bool HasGeometry { get; set; }
+		public bool HasGeometry { get; private set; }
+
+		public bool HasFeatureGeometry
+		{
+			get
+			{
+				lock (_obj)
+				{
+					return _hasFeatureGeometry;
+				}
+			}
+			private set
+			{
+				lock (_obj)
+				{
+					_hasFeatureGeometry = value;
+				}
+			}
+		}
 
 		#region IWorkItem
 
@@ -76,6 +98,25 @@ namespace ProSuite.AGP.WorkList.Domain
 		public GdbRowIdentity GdbRowProxy { get; }
 
 		public Envelope Extent { get; private set; }
+
+		public Geometry Geometry
+		{
+			get
+			{
+				lock (_obj)
+				{
+					return _geometry;
+				}
+			}
+			set
+			{
+				lock (_obj)
+				{
+					_geometry = value;
+					HasFeatureGeometry = true;
+				}
+			}
+		}
 
 		public GeometryType? GeometryType { get; set; }
 

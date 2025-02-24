@@ -61,7 +61,9 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creates a filtered feature class based on several other filters that use the same &apos;featureClassToFilter&apos;..
+        ///   Looks up a localized string similar to This transformer is an input feature filter. Input feature filters use a spatial restriction to filter the rows of the input feature class &apos;featureClassToFilter&apos;.
+        ///
+        ///Creates a filtered feature class based on several other input feature filters that use the same &apos;featureClassToFilter&apos; as this transformer. Other input feature filters are transformers with name &apos;TrOnly...&apos;..
         /// </summary>
         public static string TrCombinedFilter_0 {
             get {
@@ -433,7 +435,9 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creates a filtered feature class containing only the features that are contained within features from &apos;containing&apos;. The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
+        ///   Looks up a localized string similar to This transformer is an input feature filter. Input feature filters use a spatial restriction to filter the rows of the input feature class &apos;featureClassToFilter&apos;.
+        ///
+        ///Creates a filtered feature class containing only the features that are contained within features from &apos;containing&apos;. The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
         /// </summary>
         public static string TrOnlyContainedFeatures_0 {
             get {
@@ -460,7 +464,9 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creates a filtered feature class containing only the features that are disjoint from features from &apos;disjoint&apos;. Features that intersect any feature from &apos;disjoint&apos; are filtered out. The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
+        ///   Looks up a localized string similar to This transformer is an input feature filter. Input feature filters use a spatial restriction to filter the rows of the input feature class &apos;featureClassToFilter&apos;.
+        ///
+        ///Creates a filtered feature class containing only the features that are disjoint from features from &apos;disjoint&apos;. Features that intersect any feature from &apos;disjoint&apos; are filtered out. The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
         /// </summary>
         public static string TrOnlyDisjointFeatures_0 {
             get {
@@ -487,7 +493,9 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creates a filtered feature class containing only the features that intersect features from &apos;intersecting&apos;.  The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
+        ///   Looks up a localized string similar to This transformer is an input feature filter. Input feature filters use a spatial restriction to filter the rows of the input feature class &apos;featureClassToFilter&apos;.
+        ///
+        ///Creates a filtered feature class containing only the features that intersect features from &apos;intersecting&apos;.  The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
         /// </summary>
         public static string TrOnlyIntersectingFeatures_0 {
             get {

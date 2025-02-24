@@ -18,6 +18,8 @@ using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Transformers
 {
+	[GeometryTransformer]
+	[ZValuesTest]
 	public class TrZAssign : TrGeometryTransform
 	{
 		private const AssignOption _defaultZAssignOption = AssignOption.Tile;

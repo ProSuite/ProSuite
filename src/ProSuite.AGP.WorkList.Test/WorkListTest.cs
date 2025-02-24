@@ -34,24 +34,24 @@ namespace ProSuite.AGP.WorkList.Test
 			// http://stackoverflow.com/questions/8245926/the-current-synchronizationcontext-may-not-be-used-as-a-taskscheduler
 			SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
 
-			_geodatabase =
-				new Geodatabase(
-					new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
+			//_geodatabase =
+			//	new Geodatabase(
+			//		new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
 
-			_issuePoints = _geodatabase.OpenDataset<Table>(_issuePointsName);
-			_issueLines = _geodatabase.OpenDataset<Table>(_issueLinesName);
+			//_issuePoints = _geodatabase.OpenDataset<Table>(_issuePointsName);
+			//_issueLines = _geodatabase.OpenDataset<Table>(_issueLinesName);
 
-			var tablesByGeodatabase = new Dictionary<Datastore, List<Table>>
-			                          {
-				                          {
-					                          _geodatabase,
-					                          new List<Table> {_issuePoints, _issueLines}
-				                          }
-			                          };
+			//var tablesByGeodatabase = new Dictionary<Datastore, List<Table>>
+			//                          {
+			//	                          {
+			//		                          _geodatabase,
+			//		                          new List<Table> {_issuePoints, _issueLines}
+			//	                          }
+			//                          };
 
-			IWorkItemStateRepository stateRepository =
-				new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-			_repository = new IssueItemRepository(new List<Table> { _issuePoints, _issueLines }, stateRepository);
+			//IWorkItemStateRepository stateRepository =
+			//	new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+			//_repository = new IssueItemRepository(new List<Table> { _issuePoints, _issueLines }, stateRepository);
 		}
 
 		[TearDown]
@@ -93,6 +93,116 @@ namespace ProSuite.AGP.WorkList.Test
 		private readonly string _issueLinesName = "IssueLines";
 
 		#region work list navigation tests
+
+		[Test]
+		public void LearningTest()
+		{
+			var capacity = 8000;
+			var items = new List<IWorkItem>(capacity);
+
+			for (int i = 0; i < capacity; i++)
+			{
+				items.Add(new WorkItemMock(i));
+			}
+
+			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+		}
+
+		[Test]
+		public void LearningTest2()
+		{
+			var capacity = 8000;
+			var items = new List<IWorkItem>(capacity);
+
+			for (int i = 0; i < capacity; i++)
+			{
+				items.Add(new WorkItemMock(i));
+			}
+
+			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+			List<IWorkItem> list;
+			Assert.True(workList.TryGetItems(42, out list));
+			Assert.NotNull(list);
+			Assert.IsNotEmpty(list);
+
+			Assert.False(workList.TryGetItems(42, out list));
+			Assert.Null(list);
+			Assert.IsNull(list);
+		}
+
+		[Test]
+		public void LearningTest3()
+		{
+			var capacity = 4200;
+			var items = new List<IWorkItem>(capacity);
+
+			for (int i = 0; i < capacity; i++)
+			{
+				items.Add(new WorkItemMock(i));
+			}
+
+			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+			Assert.True(workList.TryGetItems(42, out List<IWorkItem> firstList));
+			Assert.NotNull(firstList);
+			Assert.IsNotEmpty(firstList);
+			Assert.AreEqual(1000, firstList.Count);
+
+			Assert.False(workList.TryGetItems(42, out List<IWorkItem> secondList));
+			Assert.Null(secondList);
+			Assert.IsNull(secondList);
+
+			Assert.True(workList.TryGetItems(1, out List<IWorkItem> thirdList));
+			Assert.NotNull(thirdList);
+			Assert.IsNotEmpty(thirdList);
+			Assert.AreEqual(1000, thirdList.Count);
+
+			Assert.True(workList.TryGetItems(2, out List<IWorkItem> fourthList));
+			Assert.NotNull(fourthList);
+			Assert.IsNotEmpty(fourthList);
+			Assert.AreEqual(1000, fourthList.Count);
+
+			Assert.True(workList.TryGetItems(3, out List<IWorkItem> fifthList));
+			Assert.NotNull(fifthList);
+			Assert.IsNotEmpty(fifthList);
+			Assert.AreEqual(1000, fifthList.Count);
+
+			Assert.True(workList.TryGetItems(4, out List<IWorkItem> sixthList));
+			Assert.NotNull(sixthList);
+			Assert.IsNotEmpty(sixthList);
+			Assert.AreEqual(200, sixthList.Count);
+		}
+
+		[Test]
+		public void LearningTest4()
+		{
+			var capacity = 35;
+			var items = new List<IWorkItem>(capacity);
+
+			for (int i = 0; i < capacity; i++)
+			{
+				items.Add(new WorkItemMock(i));
+			}
+
+			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+			workList.RefreshItems();
+
+			Assert.True(workList.TryGetItems(1, out List<IWorkItem> thirdList));
+			Assert.NotNull(thirdList);
+			Assert.IsNotEmpty(thirdList);
+			Assert.AreEqual(13, thirdList.Count);
+
+			Assert.True(workList.TryGetItems(2, out List<IWorkItem> fourthList));
+			Assert.NotNull(fourthList);
+			Assert.IsNotEmpty(fourthList);
+			Assert.AreEqual(11, fourthList.Count);
+
+			Assert.True(workList.TryGetItems(3, out List<IWorkItem> fifthList));
+			Assert.NotNull(fifthList);
+			Assert.IsNotEmpty(fifthList);
+			Assert.AreEqual(11, fifthList.Count);
+		}
 
 		[Test]
 		public void Can_go_next()

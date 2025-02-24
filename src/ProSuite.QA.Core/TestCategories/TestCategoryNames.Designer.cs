@@ -79,7 +79,7 @@ namespace ProSuite.QA.Core.TestCategories {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Filter.
+        ///   Looks up a localized string similar to Input feature filter.
         /// </summary>
         internal static string Filter {
             get {

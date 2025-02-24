@@ -98,5 +98,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// Deactivate the synchronization of the work list's row cache with the underlying data store.
 		/// </summary>
 		void DeactivateRowCacheSynchronization();
+
+		Geometry GetItemGeometry(IWorkItem item);
+
+		void SetItemsGeometryDraftMode(bool enable);
 	}
 }

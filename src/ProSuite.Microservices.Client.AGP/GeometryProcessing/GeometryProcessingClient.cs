@@ -14,6 +14,7 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing.Generalize;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedGeneralize;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
@@ -148,26 +149,34 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		public ChangeAlongCurves CalculateReshapeLines(
 			IList<Feature> sourceFeatures,
 			IList<Feature> targetFeatures,
+			TargetBufferOptions targetBufferOptions,
+			ReshapeCurveFilterOptions curveFilterOptions,
+			double? customTolerance,
 			CancellationToken cancellationToken)
 		{
 			if (ChangeAlongClient == null)
 				throw new InvalidOperationException("No microservice available.");
 
 			return ChangeAlongClientUtils.CalculateReshapeLines(
-				ChangeAlongClient, sourceFeatures, targetFeatures, cancellationToken);
+				ChangeAlongClient, sourceFeatures, targetFeatures, targetBufferOptions,
+				curveFilterOptions, customTolerance, cancellationToken);
 		}
 
 		[NotNull]
 		public ChangeAlongCurves CalculateCutLines(
 			IList<Feature> sourceFeatures,
 			IList<Feature> targetFeatures,
+			TargetBufferOptions targetBufferOptions,
+			IBoundedXY clipExtent,
+			ZValueSource zValueSource,
 			CancellationToken cancellationToken)
 		{
 			if (ChangeAlongClient == null)
 				throw new InvalidOperationException("No microservice available.");
 
 			return ChangeAlongClientUtils.CalculateCutLines(
-				ChangeAlongClient, sourceFeatures, targetFeatures, cancellationToken);
+				ChangeAlongClient, sourceFeatures, targetFeatures, targetBufferOptions, clipExtent,
+				zValueSource, cancellationToken);
 		}
 
 		[NotNull]
@@ -175,6 +184,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			IList<Feature> sourceFeatures,
 			IList<Feature> targetFeatures,
 			IList<CutSubcurve> selectedReshapeLines,
+			[NotNull] TargetBufferOptions targetBufferOptions,
+			[NotNull] ReshapeCurveFilterOptions curveFilterOptions,
+			double? customTolerance,
+			bool insertVerticesInTarget,
 			CancellationToken cancellationToken,
 			out ChangeAlongCurves newChangeAlongCurves)
 		{
@@ -188,6 +201,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return ChangeAlongClientUtils.ApplyReshapeCurves(
 				ChangeAlongClient, sourceFeatures, targetFeatures, selectedReshapeLines,
+				targetBufferOptions, curveFilterOptions, customTolerance, insertVerticesInTarget,
 				cancellationToken, out newChangeAlongCurves);
 		}
 
@@ -196,6 +210,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			IList<Feature> sourceFeatures,
 			IList<Feature> targetFeatures,
 			IList<CutSubcurve> selectedReshapeLines,
+			TargetBufferOptions targetBufferOptions,
+			IBoundedXY clipExtent,
+			ZValueSource zValueSource,
+			bool insertVerticesInTarget,
 			CancellationToken cancellationToken,
 			out ChangeAlongCurves newChangeAlongCurves)
 		{
@@ -208,8 +226,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 				throw new InvalidOperationException("No microservice available.");
 
 			return ChangeAlongClientUtils.ApplyCutCurves(
-				ChangeAlongClient, sourceFeatures, targetFeatures, selectedReshapeLines,
-				cancellationToken, out newChangeAlongCurves);
+				ChangeAlongClient, sourceFeatures, targetFeatures,
+				targetBufferOptions, clipExtent, zValueSource, insertVerticesInTarget,
+				selectedReshapeLines, cancellationToken, out newChangeAlongCurves);
 		}
 
 		#endregion

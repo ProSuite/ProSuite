@@ -67,7 +67,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		protected override Task OnToolActivatingCoreAsync()
 		{
-			InitializeOptions();
+			_crackerToolOptions = InitializeOptions();
 
 			_feedback = new CrackerFeedback();
 
@@ -301,21 +301,22 @@ namespace ProSuite.AGP.Editing.Cracker
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
-			_crackerToolOptions = new CrackerToolOptions(centralConfiguration,
-			                                             localConfiguration);
+			var result = new CrackerToolOptions(centralConfiguration,
+			                                    localConfiguration);
 
-			_crackerToolOptions.PropertyChanged += _crackerToolOptions_PropertyChanged;
+			result.PropertyChanged -= _crackerToolOptions_PropertyChanged;
+			result.PropertyChanged += _crackerToolOptions_PropertyChanged;
 
 			_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
 
-			string optionsMessage = _crackerToolOptions.GetLocalOverridesMessage();
+			string optionsMessage = result.GetLocalOverridesMessage();
 
 			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
 
-			return _crackerToolOptions;
+			return result;
 		}
 
 		private void _crackerToolOptions_PropertyChanged(object sender,

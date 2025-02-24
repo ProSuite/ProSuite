@@ -22,38 +22,23 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Target Selection -->
-            <RowDefinition Height="Auto"/> <!-- Basic Options -->
             <RowDefinition Height="Auto"/> <!-- Z Value Source -->
             <RowDefinition Height="Auto"/> <!-- Display Performance -->
             <RowDefinition Height="Auto"/> <!-- Target Buffer -->
+            <RowDefinition Height="Auto"/> <!-- Target Selection -->
             <RowDefinition Height="Auto"/> <!-- Restore Defaults -->
+            <RowDefinition Height="Auto"/> <!-- Advanced Options -->
         </Grid.RowDefinitions>
 
-        <!-- Target Selection -->
-        <StackPanel Grid.Row="0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top" Width="Auto">
-            <Label FontWeight="Medium" Content="Target Selection" Padding="6,6,6,2"/>
-            <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}"/>
-        </StackPanel>
-
-        <!-- Basic Options -->
-        <StackPanel Grid.Row="1">
-            <CheckBox 
-                      Template="{StaticResource CentralizableSettingCheckbox}"
-                      Content="Insert vertices on targets for topological correctness"
-                      DataContext="{Binding Options.CentralizableInsertVertices}"/>
-        </StackPanel>
 
         <!-- Z Value Source Section -->
-        <StackPanel Grid.Row="2">
+        <StackPanel Grid.Row="0">
             <Label FontWeight="Medium" Content="Z Value Source" Padding="6,6,6,2"/>
             <changealong:ZValueSourceSelectionControl DataContext="{Binding ZValueSourceSelectionVM}"/>
         </StackPanel>
 
         <!-- Display Performance Options  -->
-        <StackPanel Grid.Row="3">
+        <StackPanel Grid.Row="1">
             <Label FontWeight="Medium" Content="Display Performance Options" Padding="6,6,6,2"/>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -97,7 +82,7 @@
         </StackPanel>
 
         <!-- Target Buffer Section -->
-        <StackPanel Grid.Row="4">
+        <StackPanel Grid.Row="2">
             <Label FontWeight="Medium" Content="Target Buffer" Padding="6,6,6,2"/>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -114,7 +99,7 @@
                 <CheckBox Grid.Row="0" Grid.Column="1"
                           Template="{StaticResource CentralizableSettingCheckbox}"
                           Content="Buffer the target geometry by"
-                          DataContext="{Binding Options.CentralizableInsertVertices}"/>
+                          DataContext="{Binding Options.CentralizableBufferTarget}"/>
 
                 <ContentControl Grid.Row="0" Grid.Column="2"
                                Template="{StaticResource CentralizableSettingsSpinner}"
@@ -124,11 +109,11 @@
                                Template="{StaticResource CentralizableSettingsLabel}"
                                DataContext="{Binding Options.CentralizableBufferTolerance}"/>
 
-                <CheckBox Grid.Column="1"
+                <CheckBox Grid.Row="0"  Grid.Column="1"
                           Template="{StaticResource CentralizableSettingCheckbox}"
                           Content="Enforce minimum buffer segment length"
                           Margin="20,27,10,0"
-                          DataContext="{Binding Options.CentralizableInsertVertices}" Grid.RowSpan="2"/>
+                          DataContext="{Binding Options.CentralizableEnforceMinimumBufferSegmentLength}" Grid.RowSpan="2"/>
 
                 <ContentControl Grid.Row="1" Grid.Column="2"
                                Template="{StaticResource CentralizableSettingsSpinner}"
@@ -140,10 +125,25 @@
             </Grid>
         </StackPanel>
 
+        <!-- Target Selection -->
+        <StackPanel Grid.Row="3"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top" Width="Auto">
+            <Label FontWeight="Medium" Content="Target Selection" Padding="6,6,6,2"/>
+            <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}"/>
+        </StackPanel>
+
+        <!-- Basic Options -->
+        <StackPanel Grid.Row="4">
+            <Label FontWeight="Medium" Content="Advanced" Padding="6,6,6,2"/>
+            <CheckBox 
+                Template="{StaticResource CentralizableSettingCheckbox}"
+                Content="Insert vertices on targets for topological correctness"
+                DataContext="{Binding Options.CentralizableInsertVertices}"/>
+        </StackPanel>
+
         <!-- Restore Defaults Button -->
         <Button Grid.Row="5" 
-                Template="{StaticResource RestoreDefaultsButton}"
-                HorizontalAlignment="Left"
-                Margin="6,12,6,6"/>
+                Template="{StaticResource RestoreDefaultsButton}"/>
     </Grid>
 </UserControl>
