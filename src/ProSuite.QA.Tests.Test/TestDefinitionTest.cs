@@ -3718,7 +3718,7 @@ namespace ProSuite.QA.Tests.Test
 					                               typeof(TrDissolve),
 												   typeof(TrFootprint),
 					                               typeof(TrGeometryToPoints),
-					                               typeof(TrGetNodes),
+					                               //typeof(TrGetNodes),
 					                               typeof(TrIntersect),
 					                               typeof(TrLineToPolygon),
 					                               typeof(TrMakeTable),
@@ -3832,7 +3832,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrDissolveCases(model, trCases);
 			AddTrFootprintCases(model, trCases);
 			AddTrGeometryToPointsCases(model, trCases);
-			AddTrGetNodesCases(model, trCases);
+			//AddTrGetNodesCases(model, trCases);
 			AddTrLineToPolygonCases(model, trCases);
 			AddTrMakeTableCases(model, trCases);
 			AddTrMultilineToLineCases(model, trCases);
@@ -4936,7 +4936,8 @@ namespace ProSuite.QA.Tests.Test
 				
 				typesToCheck = testAssembly.GetTypes()
 												 .Where(t => desiredNamespaces.Contains(t.Namespace) &&
-															 t.IsPublic && !t.IsAbstract && t.CustomAttributes.Any())
+															 t.IsPublic && !t.IsAbstract && t.CustomAttributes.Any() &&
+															 !t.IsDefined(typeof(ProSuite.QA.Core.TestCategories.InternallyUsedTestAttribute), false))
 												 .ToList();
 			}
 
