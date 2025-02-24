@@ -14,6 +14,7 @@ using ProSuite.QA.Core.TestCategories;
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
+	[InternallyUsedTest] //This shall be removed when the transformer is ready for use
 	[TableTransformer]
 	public class TrTableAppend : InvolvesTablesBase, ITableTransformer<IReadOnlyTable>
 	{
