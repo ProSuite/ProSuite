@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.QA;
@@ -3821,7 +3823,6 @@ namespace ProSuite.QA.Tests.Test
 			// Transformer cases with automatic parameter value generation:
 			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrIntersect)));
 			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrTableJoin)));
-			trCases.AddRange(CreateDefaultValueTransformerCases(typeof(TrCombinedFilter)));
 
 			//
 			// Special Cases
@@ -3842,6 +3843,7 @@ namespace ProSuite.QA.Tests.Test
 			AddTrTableAppendCases(model, trCases);
 			AddTrTableJoinInMemoryCases(model, trCases);
 			AddTrZAssignCases(model, trCases);
+			AddTrCombinedFilterCases(model,trCases);
 			AddTrOnlyContainedFeaturesCases(model, trCases);
 			AddTrOnlyDisjointFeaturesCases(model, trCases);
 			AddTrOnlyIntersectingFeaturesCases(model, trCases);
@@ -4184,6 +4186,57 @@ namespace ProSuite.QA.Tests.Test
 				                                 model.GetMosaicDataset()
 			                                 },
 			                                 optionalValues));
+		}
+
+		private static void AddTrCombinedFilterCases(TestDataModel model,
+		                                             ICollection<TrDefinitionCase>
+			                                             trCases)
+		{
+			VectorDataset lineDataset = model.GetVectorDataset();
+			IFeatureClass lineFc = model.OpenFeatureClass(lineDataset);
+
+			VectorDataset polygonDataset = model.GetPolygonDataset();
+			IFeatureClass polygonFc = model.OpenFeatureClass(polygonDataset);
+
+			var trFilter1 = new TrOnlyIntersectingFeatures(ReadOnlyTableFactory.Create(lineFc),
+			                                               ReadOnlyTableFactory.Create(polygonFc));
+
+			// The name is used as the table name and thus necessary
+			((ITableTransformer) trFilter1).TransformerName = "filtered_lines";
+
+			TransformerConfiguration trConfiguration1 =
+				new TransformerConfiguration("TrConfigurationOnlyIntersectingFeatures",
+				                             CreateTransformerDescriptor(
+					                             typeof(TrOnlyIntersectingFeatures), 0));
+
+			var param1 = new TestParameter("featureClassToFilter", typeof(Dataset));
+			var param2 = new TestParameter("intersecting", typeof(Dataset));
+
+			trConfiguration1.AddParameterValue(new DatasetTestParameterValue(param1, lineDataset));
+			trConfiguration1.AddParameterValue(
+				new DatasetTestParameterValue(param2, polygonDataset));
+
+			TransformerConfiguration trConfiguration2 =
+				new TransformerConfiguration("TrConfigurationOnlyDisjointFeatures",
+				                             CreateTransformerDescriptor(
+					                             typeof(TrOnlyDisjointFeatures), 0));
+
+			var param3 = new TestParameter("disjoint", typeof(Dataset));
+
+			trConfiguration2.AddParameterValue(new DatasetTestParameterValue(param1, lineDataset));
+			trConfiguration2.AddParameterValue(
+				new DatasetTestParameterValue(param3, polygonDataset));
+
+			trCases.Add(new TrDefinitionCase(typeof(TrCombinedFilter), 0,
+			                                 new object[]
+			                                 {
+				                                 lineDataset,
+				                                 new object[]
+				                                 {
+					                                 trConfiguration1, trConfiguration2
+				                                 },
+				                                 "TrConfigurationOnlyIntersectingFeatures OR TrConfigurationOnlyDisjointFeatures"
+			                                 }));
 		}
 
 		private static void AddTrOnlyContainedFeaturesCases(TestDataModel model,
