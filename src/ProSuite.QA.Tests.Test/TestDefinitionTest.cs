@@ -4249,18 +4249,17 @@ namespace ProSuite.QA.Tests.Test
 		{
 			if (value is Dataset datasetVal)
 			{
-				TestParameterValueUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					testCondition, parameterName, datasetVal);
-				TestParameterValueUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					testDefCondition, parameterName, datasetVal);
 			}
 			else
 			{
-				string stringVal = Convert.ToString(value);
-				TestParameterValueUtils.AddParameterValue(
-					testCondition, parameterName, stringVal);
-				TestParameterValueUtils.AddParameterValue(
-					testDefCondition, parameterName, stringVal);
+				InstanceConfigurationUtils.AddParameterValue(
+					testCondition, parameterName, value);
+				InstanceConfigurationUtils.AddParameterValue(
+					testDefCondition, parameterName, value);
 			}
 		}
 
@@ -4292,25 +4291,24 @@ namespace ProSuite.QA.Tests.Test
 		{
 			if (value is Dataset datasetVal)
 			{
-				TestParameterValueUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					issuefilter, parameterName, datasetVal);
-				TestParameterValueUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					issueFilterDef, parameterName, datasetVal);
 			}
 			else
 			{
-				string stringVal = Convert.ToString(value);
-				TestParameterValueUtils.AddParameterValue(
-					issuefilter, parameterName, stringVal);
-				TestParameterValueUtils.AddParameterValue(
-					issueFilterDef, parameterName, stringVal);
+				InstanceConfigurationUtils.AddParameterValue(
+					issuefilter, parameterName, value);
+				InstanceConfigurationUtils.AddParameterValue(
+					issueFilterDef, parameterName, value);
 			}
 		}
 
 		private static void AddParameterValueTransformer(string parameterName, object value,
-		                                                 TransformerConfiguration transformer, //**
+		                                                 TransformerConfiguration transformer, 
 		                                                 TransformerConfiguration
-			                                                 transformerDef) //**
+			                                                 transformerDef)
 		{
 			// NOTE: For lists, multiple TranformerValues can be added for the same Transformer.
 			if (value is IEnumerable enumerable and not string)
@@ -4335,18 +4333,17 @@ namespace ProSuite.QA.Tests.Test
 		{
 			if (value is Dataset datasetVal)
 			{
-				TestParameterValueUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					transformer, parameterName, datasetVal);
-				TestParameterValueUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					transformerDef, parameterName, datasetVal);
 			}
 			else
 			{
-				string stringVal = Convert.ToString(value);
-				TestParameterValueUtils.AddParameterValue(
-					transformer, parameterName, stringVal);
-				TestParameterValueUtils.AddParameterValue(
-					transformerDef, parameterName, stringVal);
+				InstanceConfigurationUtils.AddParameterValue(transformer, parameterName, value);
+
+				InstanceConfigurationUtils.AddParameterValue(
+					transformerDef, parameterName, value);
 			}
 		}
 
