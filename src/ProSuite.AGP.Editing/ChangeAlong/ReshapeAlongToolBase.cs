@@ -36,6 +36,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			base.OnToolDeactivateCore(hasMapViewChanged);
+
 			_settingsProvider?.StoreLocalConfiguration(_reshapeAlongToolOptions.LocalOptions);
 
 			HideOptionsPane();
