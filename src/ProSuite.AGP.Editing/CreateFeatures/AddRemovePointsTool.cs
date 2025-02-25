@@ -289,7 +289,7 @@ public class AddRemovePointsTool : MapTool
 		{
 			if (DoubleClickCommits)
 			{
-				 await QueuedTask.Run(Commit);
+				await QueuedTask.Run(Commit);
 			}
 		}
 		catch (Exception ex)
@@ -384,7 +384,8 @@ public class AddRemovePointsTool : MapTool
 		}
 	}
 
-	private static bool IsCtrlDown => Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+	private static bool IsCtrlDown =>
+		Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
 
 	protected override bool? OnActivePaneChanged(Pane pane)
 	{
@@ -397,6 +398,7 @@ public class AddRemovePointsTool : MapTool
 		{
 			Gateway.LogError(ex, _msg);
 		}
+
 		return null;
 	}
 
@@ -461,6 +463,14 @@ public class AddRemovePointsTool : MapTool
 				var symbol = SketchSymbol;
 				SketchSymbol = null;
 				SketchSymbol = symbol;
+
+				QueuedTask.Run(() =>
+				{
+					// For some unknown reason, the SketchSymbol is only correctly
+					// updated after a call to ActiveMapView.ClearSketchAsync in
+					// a QueuedTask since ArcGis Pro 3.4
+					ActiveMapView.ClearSketchAsync();
+				});
 			}
 		}
 		catch (Exception ex)
@@ -503,6 +513,13 @@ public class AddRemovePointsTool : MapTool
 		var symbol = LookupSymbol(TargetLayer, CurrentValues, referenceScale);
 		SketchSymbol = symbol.SetAlpha(67f);
 		SketchTip = GetSketchTip();
+		QueuedTask.Run(() =>
+		{
+			// For some unknown reason, the SketchSymbol is only correctly
+			// updated after a call to ActiveMapView.ClearSketchAsync in
+			// a QueuedTask since ArcGis Pro 3.4
+			ActiveMapView.ClearSketchAsync();
+		});
 	}
 
 	/// <remarks>Must call on MCT</remarks>
@@ -609,7 +626,8 @@ public class AddRemovePointsTool : MapTool
 	/// </summary>
 	/// <returns>OID of feature (and <paramref name="snapped"/>) if found,
 	/// -1 if not found (<paramref name="snapped"/> is null)</returns>
-	private static long FindExisting(Layer layer, MapPoint point, double radius, out MapPoint snapped)
+	private static long FindExisting(Layer layer, MapPoint point, double radius,
+	                                 out MapPoint snapped)
 	{
 		const long notFound = -1;
 		var rr = radius * radius;
@@ -625,7 +643,9 @@ public class AddRemovePointsTool : MapTool
 
 			double cx = point.X;
 			double cy = point.Y;
-			var extent = EnvelopeBuilderEx.CreateEnvelope(cx - radius, cy - radius, cx + radius, cy + radius);
+			var extent =
+				EnvelopeBuilderEx.CreateEnvelope(cx - radius, cy - radius, cx + radius,
+				                                 cy + radius);
 
 			var query = new SpatialQueryFilter();
 			var oidFieldName = defn.GetObjectIDField();
@@ -771,7 +791,8 @@ public class AddRemovePointsTool : MapTool
 			Values = null;
 		}
 
-		public Element(MapPoint point, Operation op, IDisposable overlay, Dictionary<string, object> values)
+		public Element(MapPoint point, Operation op, IDisposable overlay,
+		               Dictionary<string, object> values)
 		{
 			Point = point ?? throw new ArgumentNullException(nameof(point));
 			Operation = op;
@@ -814,7 +835,11 @@ public class AddRemovePointsTool : MapTool
 		}
 	}
 
-	private enum Operation { Add, Remove }
+	private enum Operation
+	{
+		Add,
+		Remove
+	}
 
 	/// <summary>Adapter from Dictionary to <see cref="INamedValues"/></summary>
 	private class NamedValues : INamedValues
