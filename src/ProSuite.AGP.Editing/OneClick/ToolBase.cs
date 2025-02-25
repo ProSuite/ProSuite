@@ -856,7 +856,13 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		SetConstructionCursor();
 
-		await ClearSketchAsync();
+		await QueuedTask.Run(() =>
+		{
+			// For some unknown reason, the SketchSymbol is only correctly
+			// updated after a call to ActiveMapView.ClearSketchAsync in
+			// a QueuedTask since ArcGis Pro 3.4
+			ActiveMapView.ClearSketchAsync();
+		});
 	}
 
 	protected virtual void StartSelectionPhaseCore() { }
