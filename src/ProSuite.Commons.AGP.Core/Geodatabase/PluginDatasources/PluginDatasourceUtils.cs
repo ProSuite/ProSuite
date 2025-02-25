@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using ArcGIS.Core.CIM;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources;
 
@@ -69,6 +70,34 @@ public static class PluginDatasourceUtils
 		pseudoPath = PseudoPathDecode(pseudoPath);
 
 		return true;
+	}
+
+	/// <summary>
+	/// Parse the <see cref="CIMStandardDataConnection.WorkspaceConnectionString"/>
+	/// to a plugin datasource (which looks like "DATABASE=foo;IDENTIFIER=bar").
+	/// All parameters may be null.
+	/// </summary>
+	public static void ParsePluginConnectionString(
+		string connectionString, out string identifier, out string database)
+	{
+		identifier = database = null;
+		if (string.IsNullOrEmpty(connectionString)) return;
+		var parts = connectionString.Split(';');
+		foreach (var part in parts)
+		{
+			int index = part.IndexOf('=');
+			if (index < 0) continue;
+			var key = part.Substring(0, index).Trim();
+			switch (key.ToUpperInvariant())
+			{
+				case "IDENTIFIER":
+					identifier = part.Substring(index + 1).Trim();
+					break;
+				case "DATABASE":
+					database = part.Substring(index + 1).Trim();
+					break;
+			}
+		}
 	}
 
 	#region Pseudo URL encoding
