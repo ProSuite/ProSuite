@@ -22,6 +22,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		protected CutAlongToolBase()
+		{
+			DisplayTargetLines = true;
+		}
+
 		protected CutAlongToolOptions _cutAlongToolOptions;
 
 		[CanBeNull]
