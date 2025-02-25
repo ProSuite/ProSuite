@@ -47,8 +47,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			InitializeOptions();
 
-			_feedback = new ChangeAlongFeedback();
-
 			return base.OnToolActivatingCoreAsync();
 		}
 
