@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
@@ -11,6 +12,7 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
@@ -56,8 +58,15 @@ namespace ProSuite.AGP.WorkList.Selection
 
 				if (tables.Count == 0)
 				{
-					_msg.Warn($"No referenced table from {path} exists in the map.");
-					return null;
+					// TODO: (daro) show work list display name?
+					_msg.Debug($"There are no referenced table from '{path}' in the map");
+
+					var message = $"There are no referenced table from '{Path.GetFileName(path)}' in the map";
+					var caption = "Cannot open work List";
+
+					Gateway.ShowMessage(message, caption, MessageBoxButton.OK, MessageBoxImage.Information);
+
+					return Task.FromResult<IWorkItemRepository>(null);
 				}
 
 				return Task.FromResult(WorkListUtils.CreateSelectionItemRepository(tables, stateRepository, definition));
