@@ -11,7 +11,6 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Editing.AdvancedReshape;
 using ProSuite.AGP.Editing.Cracker;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;

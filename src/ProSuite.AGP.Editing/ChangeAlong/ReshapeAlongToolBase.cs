@@ -207,21 +207,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			{
 				_msg.Info(optionsMessage);
 			}
-			//// Create a new instance only if it doesn't exist yet
-			//_settingsProvider ??= new OverridableSettingsProvider<PartialChangeAlongToolOptions>(
-			//	CentralConfigDir, LocalConfigDir, OptionsFileName);
-
-			//PartialChangeAlongToolOptions localConfiguration, centralConfiguration;
-			//_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
-
-			//_reshapeAlongToolOptions =
-			//	new ReshapeAlongToolOptions(centralConfiguration, localConfiguration);
-
-			//// Update the view model with the options
-			//var viewModel = GetReshapeAlongViewModel();
-			//if (viewModel != null) {
-			//	viewModel.Options = _reshapeAlongToolOptions;
-			//}
 		}
 
 		protected override void ShowOptionsPane()
