@@ -215,7 +215,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error re-calculating crack points: {e.Message}", e);
+				_msg.Error($"Error re-calculating preview: {e.Message}", e);
 			}
 		}
 
