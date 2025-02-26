@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -46,13 +45,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_settingsProvider?.StoreLocalConfiguration(_cutAlongToolOptions.LocalOptions);
 
 			HideOptionsPane();
-		}
-
-		protected override Task OnToolActivatingCoreAsync()
-		{
-			InitializeOptions();
-
-			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
