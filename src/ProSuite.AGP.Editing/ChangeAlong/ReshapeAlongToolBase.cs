@@ -21,7 +21,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected ReshapeAlongToolOptions _reshapeAlongToolOptions;
-		private ChangeAlongFeedback _feedback;
 
 		[CanBeNull]
 		private OverridableSettingsProvider<PartialReshapeAlongToolOptions> _settingsProvider;
