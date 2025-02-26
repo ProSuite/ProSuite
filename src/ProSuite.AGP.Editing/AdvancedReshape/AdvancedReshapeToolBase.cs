@@ -192,6 +192,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			try
 			{
 				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); });
+				QueuedTask.Run(() => { ActiveMapView.ClearSketchAsync(); });
 			}
 			catch (Exception ex)
 			{
