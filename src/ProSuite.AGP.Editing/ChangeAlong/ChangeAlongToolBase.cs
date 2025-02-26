@@ -170,7 +170,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			try
 			{
-				QueuedTaskUtils.Run(() => ProcessSelection());
+				QueuedTaskUtils.Run(() =>
+				{
+					var selectedFeatures =
+						GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+					using var source = GetProgressorSource();
+					var progressor = source?.Progressor;
+
+					RefreshExistingChangeAlongCurves(selectedFeatures, progressor);
+				});
 			}
 			catch (Exception e)
 			{
