@@ -236,7 +236,13 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			{
 				if (await HasSketchAsync())
 				{
-					await ClearSketchAsync();
+					await QueuedTask.Run(() =>
+					{
+						// For some unknown reason, the SketchSymbol is only correctly
+						// updated after a call to ActiveMapView.ClearSketchAsync in
+						// a QueuedTask since ArcGis Pro 3.4
+						ActiveMapView.ClearSketchAsync();
+					});
 				}
 				else
 				{
@@ -646,7 +652,13 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		{
 			LogPromptForSelection();
 			StartSelectionPhase();
-			await ClearSketchAsync();
+			await QueuedTask.Run(() =>
+			{
+				// For some unknown reason, the SketchSymbol is only correctly
+				// updated after a call to ActiveMapView.ClearSketchAsync in
+				// a QueuedTask since ArcGis Pro 3.4
+				ActiveMapView.ClearSketchAsync();
+			});
 		}
 		else if (args.Selection.Count > 0)
 		{

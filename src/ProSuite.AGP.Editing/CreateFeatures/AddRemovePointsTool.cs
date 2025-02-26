@@ -61,6 +61,7 @@ public class AddRemovePointsTool : MapTool
 	private CIMSymbolReference _addSymbol;
 	private CIMSymbolReference _removeSymbol;
 	private SubscriptionToken _editCompletedToken;
+	private bool _ignoreNextSketchCancel;
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -404,6 +405,18 @@ public class AddRemovePointsTool : MapTool
 
 	protected override Task<bool> OnSketchCanceledAsync()
 	{
+		if (_ignoreNextSketchCancel)
+		{
+			// For some unknown reason, the SketchSymbol is only correctly
+			// updated after a call to ActiveMapView.ClearSketchAsync in
+			// a QueuedTask since ArcGis Pro 3.4. This leads to a call to
+			// this method, which we need to ignore if it was only due
+			// to a call of UpdateSketch, i.e. if only the type of symbol
+			// to be added was changed.
+			_ignoreNextSketchCancel = false;
+			return Task.FromResult(true);
+		}
+
 		try
 		{
 			ClearElements();
@@ -518,7 +531,9 @@ public class AddRemovePointsTool : MapTool
 			// For some unknown reason, the SketchSymbol is only correctly
 			// updated after a call to ActiveMapView.ClearSketchAsync in
 			// a QueuedTask since ArcGis Pro 3.4
+			_ignoreNextSketchCancel = true;
 			ActiveMapView.ClearSketchAsync();
+
 		});
 	}
 
