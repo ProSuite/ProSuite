@@ -475,14 +475,7 @@ public static class DrawingOutline
 		var frame = marker.Frame;
 		bool respectFrame = marker.RespectFrame; // TODO don't understand
 		//bool scaleStrokes = vectorMarker.ScaleSymbolsProportionally; // relative to Size=10pt ???
-		if (marker.ClippingPath?.Path != null)
-		{
-			if (! options.IgnoreErrors)
-				throw new NotImplementedException(
-					$"{nameof(marker.ClippingPath)} on vector marker is not yet supported");
-			_msg.Warn($"Ignoring {nameof(marker.ClippingPath)} (not yet implemented)");
-		}
-
+		
 		var list = new List<Geometry>();
 		foreach (var graphic in graphics)
 		{
@@ -499,6 +492,28 @@ public static class DrawingOutline
 		}
 
 		var outline = GeometryUtils.Union(list);
+
+		var clippingPath = marker.ClippingPath?.Path;
+		if (clippingPath != null)
+		{
+			switch (marker.ClippingPath.ClippingType)
+			{
+				case ClippingType.Intersect:
+				{
+					outline = GeometryUtils.Intersection(outline, clippingPath);
+					break;
+				}
+
+				case ClippingType.Subtract:
+				{
+					outline = GeometryUtils.Difference(outline, clippingPath);
+					break;
+				}
+
+				default:
+					throw new ArgumentOutOfRangeException($"Unknow clipping type {marker.ClippingPath.ClippingType}");
+			}
+		}
 
 		var box = respectFrame ? frame : outline.Extent;
 		outline = GeometryUtils.Move(outline, -box.Center.X, -box.Center.Y);
