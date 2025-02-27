@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ProSuite.Commons.AGP.Framework;
@@ -8,6 +9,7 @@ using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.AGP.WorkList
 {
+	[Obsolete]
 	public abstract class OpenWorkListButtonBase : ButtonCommandBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
