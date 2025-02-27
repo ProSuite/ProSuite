@@ -214,6 +214,12 @@ namespace ProSuite.Commons.AGP.Picker
 		{
 			foreach (IPickableFeatureClassItem item in items.OfType<IPickableFeatureClassItem>())
 			{
+				// Important to loop over each layer, they could have different definition queries!
+				foreach (BasicFeatureLayer layer in item.Layers)
+				{
+					SelectionUtils.SelectRows(layer, selectionMethod, item.Oids.ToList());
+				}
+
 				SelectionUtils.SelectRows(item.Layers.First(),
 				                          selectionMethod, item.Oids.ToList());
 			}
