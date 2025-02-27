@@ -142,21 +142,22 @@ namespace ProSuite.AGP.Editing.Cracker
 			return _resultCrackPoints != null && _resultCrackPoints.ResultsByFeature.Count > 0;
 		}
 
-		protected override void ToggleVertices()
-		{
-			base.ToggleVertices();
+		// TODO: Show/hide Vertex labels, maybe impl on TopologicalCrackingToolBase / Shortcut T
+		//protected override void ToggleVertices()
+		//{
+		//	base.ToggleVertices();
 
-			try
-			{
-				//_vertexLabels.Toggle();
+		//	try
+		//	{
+		//		//_vertexLabels.Toggle();
 
-				//_vertexLabels.UpdateLabels();
-			}
-			catch (Exception ex)
-			{
-				_msg.Error($"Toggling Vertices Labels Error: {ex.Message}");
-			}
-		}
+		//		//_vertexLabels.UpdateLabels();
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		_msg.Error($"Toggling Vertices Labels Error: {ex.Message}");
+		//	}
+		//}
 
 		protected override async Task<bool> SelectAndProcessDerivedGeometry(
 			Dictionary<MapMember, List<long>> selection,
