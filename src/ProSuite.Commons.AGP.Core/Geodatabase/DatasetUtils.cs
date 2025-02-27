@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.Exceptions;
+using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -255,12 +256,26 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				{
 					return fsDatastore.OpenDataset<T>(datasetName);
 				}
+
+				if (datastore is PluginDatastore pluginDatastore)
+				{
+					Table table = pluginDatastore.OpenTable(datasetName);
+					return Assert.NotNull(table as T);
+				}
 			}
 			catch (GeodatabaseTableException ex)
 			{
 				// dataset does not exist
 				string displayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
 				_msg.Debug($"Failed to open {datasetName} from {displayText}: {ex.Message}", ex);
+				throw;
+			}
+			catch (AssertionException ex)
+			{
+				string displayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
+				_msg.Debug(
+					$"Failed to open {datasetName} from {displayText}: Invalid Dataset type for PluginDatastore: {nameof(T)}",
+					ex);
 				throw;
 			}
 

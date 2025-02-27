@@ -567,6 +567,10 @@ namespace ProSuite.AGP.WorkList
 							new FileSystemConnectionPath(
 								new Uri(connectionString, UriKind.Absolute),
 								FileSystemDatastoreType.Shapefile));
+					case WorkspaceFactory.Custom:
+						return new PluginDatastore(
+							new PluginDatasourceConnectionPath(
+								PluginIdentifier, new Uri(connectionString, UriKind.Absolute)));
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
