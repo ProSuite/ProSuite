@@ -92,24 +92,10 @@ namespace ProSuite.AGP.WorkList.Test
 		private readonly string _issuePointsName = "IssuePoints";
 		private readonly string _issueLinesName = "IssueLines";
 
-		#region work list navigation tests
+		#region item chunks tests
 
 		[Test]
-		public void LearningTest()
-		{
-			var capacity = 8000;
-			var items = new List<IWorkItem>(capacity);
-
-			for (int i = 0; i < capacity; i++)
-			{
-				items.Add(new WorkItemMock(i));
-			}
-
-			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
-		}
-
-		[Test]
-		public void LearningTest2()
+		public void Can_get_items_by_task_id_only_once()
 		{
 			var capacity = 8000;
 			var items = new List<IWorkItem>(capacity);
@@ -132,7 +118,7 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		[Test]
-		public void LearningTest3()
+		public void Only_three_tasks_can_get_items()
 		{
 			var capacity = 4200;
 			var items = new List<IWorkItem>(capacity);
@@ -147,7 +133,7 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(workList.TryGetItems(42, out List<IWorkItem> firstList));
 			Assert.NotNull(firstList);
 			Assert.IsNotEmpty(firstList);
-			Assert.AreEqual(1000, firstList.Count);
+			Assert.AreEqual(1400, firstList.Count);
 
 			Assert.False(workList.TryGetItems(42, out List<IWorkItem> secondList));
 			Assert.Null(secondList);
@@ -156,26 +142,22 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(workList.TryGetItems(1, out List<IWorkItem> thirdList));
 			Assert.NotNull(thirdList);
 			Assert.IsNotEmpty(thirdList);
-			Assert.AreEqual(1000, thirdList.Count);
+			Assert.AreEqual(1400, thirdList.Count);
 
 			Assert.True(workList.TryGetItems(2, out List<IWorkItem> fourthList));
 			Assert.NotNull(fourthList);
 			Assert.IsNotEmpty(fourthList);
-			Assert.AreEqual(1000, fourthList.Count);
+			Assert.AreEqual(1400, fourthList.Count);
 
-			Assert.True(workList.TryGetItems(3, out List<IWorkItem> fifthList));
-			Assert.NotNull(fifthList);
-			Assert.IsNotEmpty(fifthList);
-			Assert.AreEqual(1000, fifthList.Count);
+			Assert.False(workList.TryGetItems(3, out List<IWorkItem> fifthList));
+			Assert.Null(fifthList);
 
-			Assert.True(workList.TryGetItems(4, out List<IWorkItem> sixthList));
-			Assert.NotNull(sixthList);
-			Assert.IsNotEmpty(sixthList);
-			Assert.AreEqual(200, sixthList.Count);
+			Assert.False(workList.TryGetItems(4, out List<IWorkItem> sixthList));
+			Assert.Null(sixthList);
 		}
 
 		[Test]
-		public void LearningTest4()
+		public void Can_get_evenly_distributetd_item_chunks()
 		{
 			var capacity = 35;
 			var items = new List<IWorkItem>(capacity);
@@ -186,23 +168,82 @@ namespace ProSuite.AGP.WorkList.Test
 			}
 
 			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
-			workList.RefreshItems();
 
-			Assert.True(workList.TryGetItems(1, out List<IWorkItem> thirdList));
+			Assert.True(workList.TryGetItems(1, out List<IWorkItem> firstList));
+			Assert.NotNull(firstList);
+			Assert.IsNotEmpty(firstList);
+			Assert.AreEqual(13, firstList.Count);
+
+			Assert.True(workList.TryGetItems(2, out List<IWorkItem> secondList));
+			Assert.NotNull(secondList);
+			Assert.IsNotEmpty(secondList);
+			Assert.AreEqual(11, secondList.Count);
+
+			Assert.True(workList.TryGetItems(3, out List<IWorkItem> thirdList));
 			Assert.NotNull(thirdList);
 			Assert.IsNotEmpty(thirdList);
-			Assert.AreEqual(13, thirdList.Count);
-
-			Assert.True(workList.TryGetItems(2, out List<IWorkItem> fourthList));
-			Assert.NotNull(fourthList);
-			Assert.IsNotEmpty(fourthList);
-			Assert.AreEqual(11, fourthList.Count);
-
-			Assert.True(workList.TryGetItems(3, out List<IWorkItem> fifthList));
-			Assert.NotNull(fifthList);
-			Assert.IsNotEmpty(fifthList);
-			Assert.AreEqual(11, fifthList.Count);
+			Assert.AreEqual(11, thirdList.Count);
 		}
+
+		[Test]
+		public void Can_process_item_chunks_for_very_few_items()
+		{
+			var capacity = 1;
+			var items = new List<IWorkItem>(capacity);
+
+			for (int i = 0; i < capacity; i++)
+			{
+				items.Add(new WorkItemMock(i));
+			}
+
+			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+			Assert.True(workList.TryGetItems(1, out List<IWorkItem> firstList));
+			Assert.NotNull(firstList);
+			Assert.IsNotEmpty(firstList);
+			Assert.AreEqual(1, firstList.Count);
+
+			Assert.True(workList.TryGetItems(2, out List<IWorkItem> secondList));
+			Assert.NotNull(secondList);
+			Assert.IsEmpty(secondList);
+
+			Assert.True(workList.TryGetItems(3, out List<IWorkItem> thirdList));
+			Assert.NotNull(thirdList);
+			Assert.IsEmpty(thirdList);
+		}
+
+		[Test]
+		public void Can_process_item_chunks_for_three_items()
+		{
+			var capacity = 3;
+			var items = new List<IWorkItem>(capacity);
+
+			for (int i = 0; i < capacity; i++)
+			{
+				items.Add(new WorkItemMock(i));
+			}
+
+			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+			Assert.True(workList.TryGetItems(1, out List<IWorkItem> firstList));
+			Assert.NotNull(firstList);
+			Assert.IsNotEmpty(firstList);
+			Assert.AreEqual(1, firstList.Count);
+
+			Assert.True(workList.TryGetItems(2, out List<IWorkItem> secondList));
+			Assert.NotNull(secondList);
+			Assert.IsNotEmpty(secondList);
+			Assert.AreEqual(1, secondList.Count);
+
+			Assert.True(workList.TryGetItems(3, out List<IWorkItem> thirdList));
+			Assert.NotNull(thirdList);
+			Assert.IsNotEmpty(thirdList);
+			Assert.AreEqual(1, thirdList.Count);
+		}
+
+		#endregion
+
+		#region work list navigation tests
 
 		[Test]
 		public void Can_go_next()
@@ -365,8 +406,6 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.AreEqual(item7, wl.Current);
 			Assert.True(wl.Current?.Visited);
 		}
-
-		public void Can_go_nearest_if_item_is_Done() { }
 
 		[Test]
 		public void Cannot_go_first_again_if_first_item_is_set_done()
