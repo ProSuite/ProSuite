@@ -215,7 +215,7 @@ namespace ProSuite.Commons.AGP.Picker
 			foreach (IPickableFeatureClassItem item in items.OfType<IPickableFeatureClassItem>())
 			{
 				SelectionUtils.SelectRows(item.Layers.First(),
-				                          selectionMethod, item.Oids);
+				                          selectionMethod, item.Oids.ToList());
 			}
 
 			foreach (IPickableFeatureItem item in items.OfType<IPickableFeatureItem>())

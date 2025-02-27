@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Media;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
@@ -12,17 +13,27 @@ namespace ProSuite.Commons.AGP.Picker
 	{
 		private readonly string _datasetName;
 		private bool _selected;
-		
+		private readonly HashSet<long> _oids;
+
 		protected PickableFeatureClassItemBase([NotNull] string datasetName,
-		                                       [NotNull] IReadOnlyList<long> oids, Geometry geometry)
+		                                       [NotNull] IEnumerable<long> oids,
+		                                       Geometry geometry)
 		{
 			_datasetName = datasetName;
-			Oids = oids;
+			_oids = oids.ToHashSet();
 			Geometry = geometry;
 		}
 
-		public IReadOnlyList<long> Oids { get; }
-		
+		public ICollection<long> Oids => _oids;
+
+		public void AddOids(IEnumerable<long> oids)
+		{
+			foreach (long oid in oids)
+			{
+				_oids.Add(oid);
+			}
+		}
+
 		public Geometry Geometry { get; }
 
 		public List<BasicFeatureLayer> Layers { get; } = new();

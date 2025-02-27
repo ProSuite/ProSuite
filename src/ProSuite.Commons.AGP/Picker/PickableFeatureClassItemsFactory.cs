@@ -41,6 +41,11 @@ public class PickableFeatureClassItemsFactory : IPickableItemsFactory
 				item = CreatePickableClassItem(selection, isAnnotation);
 				itemsByName.Add(name, item);
 			}
+			else
+			{
+				// GOTOP-390 Merge the selected OIDs into the existing selection
+				item.AddOids(selection.GetOids());
+			}
 
 			item.Layers.Add(layer);
 		}
