@@ -177,7 +177,7 @@ namespace ProSuite.AGP.WorkList
 
 				long uniqueTableId = GetUniqueTableIdAcrossWorkspaces(gdbTableIdentity);
 
-				tablesById.Add(uniqueTableId, table);
+				tablesById.TryAdd(uniqueTableId, table);
 			}
 
 			Dictionary<Table, List<long>> oidsByTable =
@@ -187,12 +187,11 @@ namespace ProSuite.AGP.WorkList
 			{
 				_msg.Warn(
 					"No items in selection work list or they could not be associated with an existing table.");
-				return new SelectionItemRepository(new List<Table>(),
-				                                   new Dictionary<Table, List<long>>(),
+				return new SelectionItemRepository(new Dictionary<Table, List<long>>(),
 				                                   stateRepository);
 			}
 
-			return new SelectionItemRepository(tables, oidsByTable, stateRepository);
+			return new SelectionItemRepository(oidsByTable, stateRepository);
 		}
 
 		[NotNull]
@@ -437,8 +436,7 @@ namespace ProSuite.AGP.WorkList
 
 			if (type == typeof(SelectionWorkList))
 			{
-				return new SelectionItemRepository(new List<Table>(),
-				                                   new Dictionary<Table, List<long>>(),
+				return new SelectionItemRepository(new Dictionary<Table, List<long>>(),
 				                                   itemStateRepository);
 			}
 
