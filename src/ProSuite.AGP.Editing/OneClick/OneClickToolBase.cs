@@ -35,7 +35,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		private const Key _keyShowOptionsPane = Key.O;
 		private const Key _keyPolygonDraw = Key.P;
 		private const Key _keyLassoDraw = Key.L;
-		private const Key _keyDisplayVertices = Key.T;
 
 		private int _updateErrorCounter;
 		private const int MaxUpdateErrors = 10;
@@ -61,7 +60,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			HandledKeys.Add(_keyLassoDraw);
 			HandledKeys.Add(_keyPolygonDraw);
 			HandledKeys.Add(_keyShowOptionsPane);
-			HandledKeys.Add(_keyDisplayVertices);
 		}
 
 		/// <summary>
@@ -248,11 +246,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					await HandleEscapeAsync();
 				}
 
-				if (args.Key == _keyDisplayVertices)
-				{
-					ToggleVertices();
-				}
-
 				await HandleKeyDownCoreAsync(args);
 			}
 			catch (Exception ex)
@@ -260,8 +253,6 @@ namespace ProSuite.AGP.Editing.OneClick
 				ViewUtils.ShowError(ex, _msg);
 			}
 		}
-
-		protected virtual void ToggleVertices() { }
 
 		protected virtual Task SetupLassoSketchAsync()
 		{
@@ -847,12 +838,14 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			using var featureClass = featureLayer.GetFeatureClass();
-			if (featureClass is null)
+			using (FeatureClass featureClass = featureLayer.GetFeatureClass())
 			{
-				NotificationUtils.Add(notifications,
-				                      $"Layer has no valid data source: {layerName}");
-				return false;
+				if (featureClass is null)
+				{
+					NotificationUtils.Add(notifications,
+					                      $"Layer has no valid data source: {layerName}");
+					return false;
+				}
 			}
 
 			return CanSelectFromLayerCore(featureLayer, notifications);
