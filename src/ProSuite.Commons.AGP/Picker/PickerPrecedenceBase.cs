@@ -121,50 +121,38 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 	public virtual PickerMode GetPickerMode(ICollection<FeatureSelectionBase> orderedSelection)
 	{
-		PickerMode result = PickerMode.PickBest;
-
 		if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
 		{
-			result |= PickerMode.ShowPicker;
+			return PickerMode.ShowPicker;
 		}
 
-		if (NoMultiselection && orderedSelection.Sum(fs => fs.GetCount()) > 1)
+		bool areaSelect = ! IsSingleClick;
+		if (areaSelect)
 		{
-			// if area selection: show picker
-			if (! IsSingleClick)
+			if (NoMultiselection)
 			{
-				result |= PickerMode.ShowPicker;
-			}
-			// ...if not: pick best
-		}
-		else
-		{
-			if (CountLowestShapeDimension(orderedSelection) > 1)
-			{
-				result |= PickerMode.ShowPicker;
-			}
-			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
-			{
-				result |= PickerMode.PickAll;
+				return PickerMode.ShowPicker;
 			}
 
-			if (! IsSingleClick)
-			{
-				result |= PickerMode.PickAll;
-			}
+			return PickerMode.PickAll;
 		}
 
-		if ((result & PickerMode.ShowPicker) != 0)
+		if (NoMultiselection)
 		{
-			result = PickerMode.ShowPicker;
+			return PickerMode.ShowPicker;
 		}
 
-		if ((result & PickerMode.PickAll) != 0)
+		if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
 		{
-			result = PickerMode.PickAll;
+			return PickerMode.PickAll;
 		}
 
-		return result;
+		if (CountLowestShapeDimension(orderedSelection) > 1)
+		{
+			return PickerMode.ShowPicker;
+		}
+
+		return PickerMode.PickBest;
 	}
 
 	public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
