@@ -16,9 +16,9 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 {
 	[UsedImplicitly]
 	protected PickerPrecedenceBase([NotNull] Geometry sketchGeometry,
-								   int selectionTolerance,
-								   Point pickerLocation,
-								   SelectionCombinationMethod? selectionMethod = null)
+	                               int selectionTolerance,
+	                               Point pickerLocation,
+	                               SelectionCombinationMethod? selectionMethod = null)
 	{
 		SketchGeometry = sketchGeometry;
 		SelectionTolerance = selectionTolerance;
@@ -120,35 +120,52 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 	public bool NoMultiselection { get; set; }
 
-	public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
+	public virtual PickerMode GetPickerMode(ICollection<FeatureSelectionBase> orderedSelection)
 	{
-		if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
-		{
-			return PickerMode.PickAll;
-		}
+		PickerMode result = PickerMode.PickBest;
 
 		if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
 		{
-			return PickerMode.ShowPicker;
+			result |= PickerMode.ShowPicker;
 		}
 
-		bool areaSelect = ! IsSingleClick;
-		if (areaSelect)
+		if (NoMultiselection && orderedSelection.Sum(fs => fs.GetCount()) > 1)
 		{
-			if (NoMultiselection)
+			// if area selection: show picker
+			if (! IsSingleClick)
 			{
-				return PickerMode.ShowPicker;
+				result |= PickerMode.ShowPicker;
+			}
+			// ...if not: pick best
+		}
+		else
+		{
+			if (CountLowestShapeDimension(orderedSelection) > 1)
+			{
+				result |= PickerMode.ShowPicker;
+			}
+			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+			{
+				result |= PickerMode.PickAll;
 			}
 
-			return PickerMode.PickAll;
+			if (! IsSingleClick)
+			{
+				result |= PickerMode.PickAll;
+			}
 		}
 
-		if (CountLowestShapeDimension(orderedSelection) > 1)
+		if ((result & PickerMode.ShowPicker) != 0)
 		{
-			return PickerMode.ShowPicker;
+			result = PickerMode.ShowPicker;
 		}
 
-		return PickerMode.PickBest;
+		if ((result & PickerMode.PickAll) != 0)
+		{
+			result = PickerMode.PickAll;
+		}
+
+		return result;
 	}
 
 	public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
