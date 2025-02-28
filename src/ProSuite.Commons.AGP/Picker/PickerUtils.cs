@@ -67,6 +67,7 @@ namespace ProSuite.Commons.AGP.Picker
 			//       .SelectMany(fcs => fcs);
 		}
 
+		[Obsolete($"use {nameof(CreatePolygon)}")]
 		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
 		                                              int selectionTolerancePixels)
 		{
@@ -94,13 +95,13 @@ namespace ProSuite.Commons.AGP.Picker
 				envelope.SpatialReference);
 		}
 
-		public static Geometry CreatePolygon(Point screenPoint,
-		                                     int expansionPixels)
+		public static Geometry CreatePolygon(Point screenPoint, int expansionPixels)
 		{
 			double selectionToleranceMapUnits =
 				MapUtils.ConvertScreenPixelToMapLength(MapView.Active, expansionPixels,
 				                                       screenPoint);
 
+			// TODO: (daro) revise multiplication by 2
 			double envelopeExpansion = selectionToleranceMapUnits * 2;
 
 			MapPoint mapPoint = MapView.Active.ScreenToMap(screenPoint);
