@@ -8,6 +8,7 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -199,6 +200,29 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			RefreshCore(item, source, row);
+		}
+
+		public void RefreshGeometry(IWorkItem item)
+		{
+			ITableReference tableId = item.GdbRowProxy.Table;
+
+			// todo daro: log message
+			ISourceClass source =
+				SourceClasses.FirstOrDefault(sc => sc.Uses(tableId));
+			Assert.NotNull(source);
+
+			Row row = GetSourceRow(source, item.ObjectID);
+			Assert.NotNull(row);
+
+			if (row is Feature feature)
+			{
+				item.Geometry = GeometryUtils.Buffer(feature.GetShape(), 10);
+			}
+		}
+
+		public void RefreshGeometry2(IWorkItem item)
+		{
+			item.Geometry = GeometryUtils.Buffer(item.Geometry, 10);
 		}
 
 		[CanBeNull]

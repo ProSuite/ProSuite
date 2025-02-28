@@ -15,6 +15,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 	public class WorkItemTable : PluginTableTemplate
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly IReadOnlyList<PluginField> _fields;
 		private readonly string _tableName;
 
@@ -63,7 +64,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 			const bool ignoreStatusFilter = false;
 			List<object[]> list = _workList.GetItems(queryFilter, ignoreStatusFilter)
-			                               .Select(item => GetValues(item, _workList.Current))
+			                               .Select(item => GetValues(item, _workList, _workList.Current))
 			                               .ToList(); // TODO drop ToList, inline
 
 			_msg.DebugStopTiming(
@@ -77,14 +78,15 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return Search((QueryFilter) spatialQueryFilter);
 		}
 
-		private static object[] GetValues([NotNull] IWorkItem item, IWorkItem current = null)
+		private static object[] GetValues([NotNull] IWorkItem item, IWorkList workList,
+		                                  IWorkItem current = null)
 		{
 			var values = new object[5];
 			values[0] = item.OID;
 			values[1] = item.Status == WorkItemStatus.Done ? 1 : 0;
 			values[2] = item.Visited ? 1 : 0;
 			values[3] = item == current ? 1 : 0;
-			values[4] = CreatePolygon(item);
+			values[4] = workList.GetItemGeometry(item);
 			return values;
 		}
 
@@ -99,44 +101,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 				             new PluginField("SHAPE", "Shape", FieldType.Geometry)
 			             };
 			return fields.ToArray();
-		}
-
-		[CanBeNull]
-		private static Polygon CreatePolygon(IWorkItem item)
-		{
-			if (item?.Extent == null)
-			{
-				return null;
-			}
-
-			Envelope extent = item.Extent;
-
-			if (UseExtent(item))
-			{
-				return PolygonBuilderEx.CreatePolygon(extent, extent.SpatialReference);
-			}
-
-			item.QueryPoints(out double xmin, out double ymin,
-			                 out double xmax, out double ymax,
-			                 out double zmax);
-
-			return PolygonBuilderEx.CreatePolygon(EnvelopeBuilderEx.CreateEnvelope(
-				                                      new Coordinate3D(xmin, ymin, zmax),
-				                                      new Coordinate3D(xmax, ymax, zmax),
-				                                      extent.SpatialReference));
-		}
-
-		private static bool UseExtent([NotNull] IWorkItem item)
-		{
-			switch (item.GeometryType)
-			{
-				case GeometryType.Polyline:
-				case GeometryType.Polygon:
-					return true;
-
-				default:
-					return false;
-			}
 		}
 
 		#region Native RowCount

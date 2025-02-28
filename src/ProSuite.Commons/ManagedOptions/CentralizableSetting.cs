@@ -48,10 +48,10 @@ namespace ProSuite.Commons.ManagedOptions
 			{
 				if (_localSetting.Override != value)
 				{
-					string oldTooltip = Tooltip;
+					string oldTooltip = ToolTip;
 
 					_localSetting.Override = value;
-					NotifyCurrentValueChanged("HasLocalOverride");
+					NotifyCurrentValueChanged(nameof(HasLocalOverride));
 
 					CheckTooltipChange(oldTooltip);
 				}
@@ -60,9 +60,9 @@ namespace ProSuite.Commons.ManagedOptions
 
 		private void CheckTooltipChange(string oldValue)
 		{
-			if (oldValue != Tooltip)
+			if (oldValue != ToolTip)
 			{
-				NotifyCurrentValueChanged("Tooltip");
+				NotifyCurrentValueChanged(nameof(ToolTip));
 			}
 		}
 
@@ -123,10 +123,13 @@ namespace ProSuite.Commons.ManagedOptions
 
 		public void SetLocalValue(T? value)
 		{
-			string oldTooltip = Tooltip;
+			string oldTooltip = ToolTip;
 
-			_localSetting.Value = value;
-			NotifyCurrentValueChanged("CurrentValue");
+			if (! Equals(value, _localSetting.Value))
+			{
+				_localSetting.Value = value;
+				NotifyCurrentValueChanged(nameof(CurrentValue));
+			}
 
 			HasLocalOverride = _centralSetting == null ||
 			                   value != null && ! value.Equals(_centralSetting.Value);
@@ -135,7 +138,7 @@ namespace ProSuite.Commons.ManagedOptions
 		}
 
 		[NotNull]
-		public string Tooltip
+		public string ToolTip
 		{
 			get
 			{
