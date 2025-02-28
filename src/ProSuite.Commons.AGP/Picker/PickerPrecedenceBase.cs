@@ -63,13 +63,12 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			return SketchGeometry;
 		}
 
-		Geometry geometry = MapView.Active.ScreenToMap(PickerLocation);
-		return GetSelectionGeometryCore(geometry);
+		return GetSelectionGeometryCore(PickerLocation);
 	}
 
-	protected virtual Geometry GetSelectionGeometryCore(Geometry geometry)
+	protected virtual Geometry GetSelectionGeometryCore(Point screenPoint)
 	{
-		return PickerUtils.ExpandGeometryByPixels(geometry, SelectionTolerance);
+		return PickerUtils.CreatePolygon(screenPoint, SelectionTolerance);
 	}
 
 	[NotNull]
