@@ -87,6 +87,8 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 				else if (subCurvePredicate == null || subCurvePredicate(cutSubcurve))
 				{
 					result.Add(cutSubcurve);
+					_msg.Info(
+						"The feature was not reshaped. Please select green or yellow lines to reshape along");
 				}
 			}
 
