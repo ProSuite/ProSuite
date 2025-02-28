@@ -137,7 +137,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				}
 			}
 
-			if (_filterOptions.ExcludeOutsideSource)
+			if (_filterOptions.OnlyResultingInRemovals)
 			{
 				var mustInteriorIntersectPoly = _currentSourceGeometry as IPolygon;
 

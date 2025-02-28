@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -16,6 +18,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -64,7 +67,7 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		protected override Task OnToolActivatingCoreAsync()
 		{
-			InitializeOptions();
+			_chopperToolOptions = InitializeOptions();
 
 			_feedback = new CrackerFeedback();
 
@@ -73,6 +76,8 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_settingsProvider?.StoreLocalConfiguration(_chopperToolOptions.LocalOptions);
+			
 			_feedback?.DisposeOverlays();
 			_feedback = null;
 		}
@@ -269,7 +274,7 @@ namespace ProSuite.AGP.Editing.Chopper
 			return true;
 		}
 
-		private void InitializeOptions()
+		private ChopperToolOptions InitializeOptions()
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
@@ -277,26 +282,44 @@ namespace ProSuite.AGP.Editing.Chopper
 			string currentCentralConfigDir = CentralConfigDir;
 			string currentLocalConfigDir = LocalConfigDir;
 
-			// For the time being, we always reload the options because they could have been updated in ArcMap
-			_settingsProvider =
-				new OverridableSettingsProvider<PartialChopperToolOptions>(
-					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			_settingsProvider ??= new OverridableSettingsProvider<PartialChopperToolOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
+
 
 			PartialChopperToolOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
-			_chopperToolOptions = new ChopperToolOptions(centralConfiguration,
+			var result = new ChopperToolOptions(centralConfiguration,
 			                                             localConfiguration);
+
+			result.PropertyChanged -= _chopperToolOptions_PropertyChanged;
+			result.PropertyChanged += _chopperToolOptions_PropertyChanged;
 
 			_msg.DebugStopTiming(watch, "Chopper Tool Options validated / initialized");
 
-			string optionsMessage = _chopperToolOptions.GetLocalOverridesMessage();
+			string optionsMessage = result.GetLocalOverridesMessage();
 
 			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
+			}
+
+			return result;
+		}
+
+		private void _chopperToolOptions_PropertyChanged(object sender,
+		                                                 PropertyChangedEventArgs eventArgs)
+		{
+			try
+			{
+				QueuedTaskUtils.Run(() => ProcessSelection());
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating chop points: {e.Message}", e);
 			}
 		}
 

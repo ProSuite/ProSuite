@@ -171,6 +171,7 @@ namespace ProSuite.AGP.Editing.Cracker
 				result = true;
 			}
 
+			//ToDo: Remove the "Remove unnecessary vertices" option once it's clear that no one needs it.
 			if (HasLocalOverride(CentralizableRemoveUnnecessaryVertices,
 			                     "Remove unnecessary vertices", notifications))
 			{

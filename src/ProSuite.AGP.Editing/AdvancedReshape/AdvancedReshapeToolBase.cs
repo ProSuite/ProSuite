@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -153,22 +155,68 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override async Task OnToolActivatingCoreAsync()
 		{
-			InitializeOptions();
+			_advancedReshapeToolOptions = InitializeOptions();
 			_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
 
 			await base.OnToolActivatingCoreAsync();
 		}
 
-		protected void InitializeOptions()
+		private ReshapeToolOptions InitializeOptions()
 		{
-			_settingsProvider = new OverridableSettingsProvider<PartialReshapeToolOptions>(
+			Stopwatch watch = _msg.DebugStartTiming();
+
+			// NOTE: by only reading the file locations we can save a couple of 100ms
+			string currentCentralConfigDir = CentralConfigDir;
+			string currentLocalConfigDir = LocalConfigDir;
+
+			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeToolOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
 			PartialReshapeToolOptions localConfiguration, centralConfiguration;
-			_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
 
-			_advancedReshapeToolOptions =
-				new ReshapeToolOptions(centralConfiguration, localConfiguration);
+			_settingsProvider.GetConfigurations(out localConfiguration,
+			                                    out centralConfiguration);
+
+			var result = new ReshapeToolOptions(centralConfiguration,
+			                                                     localConfiguration);
+
+			result.PropertyChanged -= _advancedReshapeToolOptions_PropertyChanged;
+			result.PropertyChanged += _advancedReshapeToolOptions_PropertyChanged;
+
+			_msg.DebugStopTiming(watch, "Advanced Reshape Options validated / initialized");
+
+			string optionsMessage = result.GetLocalOverridesMessage();
+
+			if (!string.IsNullOrEmpty(optionsMessage))
+			{
+				_msg.Info(optionsMessage);
+			}
+
+			return result;
+
+			//// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			//_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeToolOptions>(
+			//	CentralConfigDir, LocalConfigDir, OptionsFileName);
+
+			//PartialReshapeToolOptions localConfiguration, centralConfiguration;
+			//_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
+
+			//_advancedReshapeToolOptions =
+			//	new ReshapeToolOptions(centralConfiguration, localConfiguration);
+		}
+
+		private void _advancedReshapeToolOptions_PropertyChanged(object sender,
+		                                                         PropertyChangedEventArgs eventArgs)
+		{
+			try
+			{
+				QueuedTaskUtils.Run(() => ProcessSelection());
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating preview: {e.Message}", e);
+			}
 		}
 
 		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
@@ -406,82 +454,33 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_feedback?.Clear();
 
-			// TODO: cancel all running background tasks...
-
 			var polyline = (Polyline) sketchGeometry;
 
-			bool success = await QueuedTaskUtils.Run(async () =>
+			SetCursor(Cursors.Wait);
+
+			bool success = false;
+			try
 			{
-				try
-				{
-					SetCursor(Cursors.Wait);
-
-					Dictionary<MapMember, List<long>> selectionByLayer =
-						SelectionUtils.GetSelection(activeView.Map);
-
-					List<Feature> selection =
-						GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
-							.ToList();
-
-					var potentiallyAffectedFeatures =
-						GetAdjacentFeatures(selection, cancelableProgressor);
-
-					// This timeout should be enough even in extreme circumstances:
-					int timeout = selection.Count * 10000;
-					_cancellationTokenSource = new CancellationTokenSource(timeout);
-
-					ReshapeResult result = MicroserviceClient.Reshape(
-						selection, polyline, potentiallyAffectedFeatures, true, true,
-						_nonDefaultSideMode, _cancellationTokenSource.Token,
-						_advancedReshapeToolOptions.MoveOpenJawEndJunction);
-
-					if (result == null)
-					{
-						return false;
-					}
-
-					if (result.ResultFeatures.Count == 0)
-					{
-						if (! string.IsNullOrEmpty(result.FailureMessage))
-						{
-							_msg.Warn(result.FailureMessage);
-							return false;
-						}
-					}
-
-					HashSet<long> editableClassHandles =
-						ToolUtils.GetEditableClassHandles(activeView);
-
-					Dictionary<Feature, Geometry> resultFeatures =
-						result.ResultFeatures
-						      .Where(r => GdbPersistenceUtils.CanChange(
-							             r, editableClassHandles, RowChangeType.Update))
-						      .ToDictionary(r => r.OriginalFeature, r => r.NewGeometry);
-
-					success = await SaveAsync(resultFeatures);
-
-					LogReshapeResults(result, selection.Count);
-
-					// At some point, hopefully, read-only operations on the CIM model can run in parallel
-					await ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures);
-
-					return success;
-				}
-				finally
-				{
-					// Anything but the Wait cursor
-					SetCursor(Cursors.Arrow);
-				}
-			});
-
-			_nonDefaultSideMode = false;
-
-			//if (!_advancedReshapeOptions.RemainInSketchMode)
+				success = await QueuedTaskUtils.Run(
+					          async () =>
+						          await Reshape(polyline, activeView, cancelableProgressor));
+			}
+			finally
 			{
-				StartSelectionPhase();
+				_nonDefaultSideMode = false;
+
+				if (success && ! _advancedReshapeToolOptions.RemainInSketchMode)
+				{
+					StartSelectionPhase();
+				}
+				else
+				{
+					await ClearSketchAsync();
+					StartSketchPhase();
+				}
 			}
 
-			return success; // taskSave.Result;
+			return success;
 		}
 
 		protected override void OnSketchResetCore()
@@ -489,6 +488,63 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_feedback?.Clear();
 
 			_nonDefaultSideMode = false;
+		}
+
+		private async Task<bool> Reshape(Polyline sketchLine, MapView activeView,
+		                                 CancelableProgressor cancelableProgressor)
+		{
+			Dictionary<MapMember, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection(activeView.Map);
+
+			List<Feature> selection =
+				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+					.ToList();
+
+			var potentiallyAffectedFeatures =
+				GetAdjacentFeatures(selection, cancelableProgressor);
+
+			// This timeout should be enough even in extreme circumstances:
+			int timeout = selection.Count * 10000;
+			_cancellationTokenSource = new CancellationTokenSource(timeout);
+
+			ReshapeResult result = MicroserviceClient.Reshape(
+				selection, sketchLine, potentiallyAffectedFeatures, true, true,
+				_nonDefaultSideMode, _cancellationTokenSource.Token,
+				_advancedReshapeToolOptions.MoveOpenJawEndJunction);
+
+			if (result == null)
+			{
+				return false;
+			}
+
+			if (result.ResultFeatures.Count == 0)
+			{
+				if (! string.IsNullOrEmpty(result.FailureMessage))
+				{
+					_msg.Warn(result.FailureMessage);
+					{
+						return false;
+					}
+				}
+			}
+
+			HashSet<long> editableClassHandles =
+				ToolUtils.GetEditableClassHandles(activeView);
+
+			Dictionary<Feature, Geometry> resultFeatures =
+				result.ResultFeatures
+				      .Where(r => GdbPersistenceUtils.CanChange(
+					             r, editableClassHandles, RowChangeType.Update))
+				      .ToDictionary(r => r.OriginalFeature, r => r.NewGeometry);
+
+			bool success = await SaveAsync(resultFeatures);
+
+			LogReshapeResults(result, selection.Count);
+
+			// At some point, hopefully, read-only operations on the CIM model can run in parallel
+			await ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures);
+
+			return success;
 		}
 
 		private async Task<bool> TryUpdateFeedbackAsync()

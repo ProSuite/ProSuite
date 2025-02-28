@@ -4,14 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
-             xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
-             xmlns:managedOptions="clr-namespace:ProSuite.Commons.UI.ManagedOptions;assembly=ProSuite.Commons.UI" 
-             xmlns:cracker="clr-namespace:ProSuite.AGP.Editing.Cracker"
              xmlns:editing="clr-namespace:ProSuite.AGP.Editing"
-             xmlns:geometryProcessing="clr-namespace:ProSuite.Commons.AGP.Core.GeometryProcessing;assembly=ProSuite.Commons.AGP.Core"
              xmlns:chopper="clr-namespace:ProSuite.AGP.Editing.Chopper"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=chopper:DockPaneChopperViewModelBase}" Width="378" Height="471" HorizontalAlignment="Left"
+             d:DataContext="{d:DesignInstance Type=chopper:DockPaneChopperViewModelBase}" Width="400" Height="471" HorizontalAlignment="Left"
              VerticalAlignment="Top">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -100,18 +96,10 @@
                       DataContext="{Binding Options.CentralizableExcludeInteriorInteriorIntersections}" />
 
         <!-- Restore Defaults -->
-        <Button 
-                Command="{Binding RevertToDefaultsCommand}" 
-                IsEnabled="{Binding IsButtonEnabled}"
-                Style="{DynamicResource Esri_Button}"
-                Content="Restore Defaults" 
-                Width="120"
-                HorizontalAlignment="Right"
-                Margin="15"/>
+        <Button Template="{StaticResource RestoreDefaultsButton}"
+        />
 
-
-
-        <!--<RadioButton Template="{StaticResource CentralizableSettingRadioButton}"
+		<!--<RadioButton Template="{StaticResource CentralizableSettingRadioButton}"
                          IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.VisibleEditableFeatures}}"
                          Content="Visible "
                          DataContext="{Binding Options.CentralizableTargetFeatureSelection}" />
