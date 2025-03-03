@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -1859,11 +1858,6 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			MapPoint upperRight = GetUpperRight(extent);
 
 			return $"{Format(lowerLeft, digits)}, {Format(upperRight, digits)}";
-		}
-
-		public static IEnumerable<MapPoint> GetVertices([NotNull] Feature feature)
-		{
-			return GetVertices(feature.GetShape());
 		}
 
 		public static IEnumerable<MapPoint> GetVertices([CanBeNull] Geometry geometry)
