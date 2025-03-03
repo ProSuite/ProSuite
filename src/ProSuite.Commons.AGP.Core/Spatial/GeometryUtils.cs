@@ -686,6 +686,97 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		}
 
 		/// <summary>
+		/// Reverse the orientation of the given part <paramref name="partIndex"/>
+		/// (or all parts if <paramref name="partIndex"/> is negative) of the given
+		/// <paramref name="polycurve"/> (Polyline or Polygon). Notice that reversing
+		/// a polygon ring changes its meaning from interior to exterior or vice versa!
+		/// </summary>
+		public static T ReverseOrientation<T>(T polycurve, int partIndex = -1) where T : Multipart
+		{
+			if (polycurve is null)
+				return null;
+
+			if (partIndex < 0)
+			{
+				return (T) GeometryEngine.Instance.ReverseOrientation(polycurve);
+			}
+
+			Multipart result;
+
+			switch (polycurve)
+			{
+				case Polyline polyline:
+					result = ReverseOrientation(polyline, partIndex);
+					break;
+
+				case Polygon polygon:
+					result = ReverseOrientation(polygon, partIndex);
+					break;
+
+				default:
+					throw new NotSupportedException(
+						$"Unknown {nameof(Multipart)} subtype: {polycurve.GetType().Name}");
+			}
+
+			return (T) result;
+		}
+
+		private static Polyline ReverseOrientation(Polyline polyline, int partIndex = -1)
+		{
+			if (polyline is null)
+				throw new ArgumentNullException(nameof(polyline));
+			if (partIndex < 0 || partIndex >= polyline.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			var builder = new PolylineBuilderEx(polyline);
+			ReverseOrientation(builder.Parts[partIndex]);
+			return builder.ToGeometry();
+		}
+
+		private static Polygon ReverseOrientation(Polygon polygon, int partIndex = -1)
+		{
+			if (polygon is null)
+				throw new ArgumentNullException(nameof(polygon));
+			if (partIndex < 0 || partIndex > polygon.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			var builder = new PolygonBuilderEx(polygon);
+			ReverseOrientation(builder.Parts[partIndex]);
+			return builder.ToGeometry();
+		}
+
+		private static void ReverseOrientation(List<Segment> path)
+		{
+			// Reverse the list, then each segment in the list:
+
+			path.Reverse();
+
+			int count = path.Count;
+			for (int i = 0; i < count; i++)
+			{
+				var segment = path[i];
+
+				switch (segment)
+				{
+					case LineSegment line:
+						path[i] = LineBuilderEx.CreateLineSegment(line.EndPoint, line.StartPoint);
+						break;
+
+					case CubicBezierSegment bezier:
+						path[i] = CubicBezierBuilderEx.CreateCubicBezierSegment(
+							bezier.EndPoint, bezier.ControlPoint2, bezier.ControlPoint1, bezier.StartPoint);
+						break;
+
+					case EllipticArcSegment arc:
+						var builder = new EllipticArcBuilderEx(arc);
+						builder.Orientation = arc.IsCounterClockwise
+							                      ? ArcOrientation.ArcClockwise
+							                      : ArcOrientation.ArcCounterClockwise;
+						path[i] = builder.ToSegment();
+						break;
+				}
+			}
+		}
+
+		/// <summary>
 		/// Return a copy of the input geometry with index structures
 		/// added that may accelerate the relational operations.
 		/// </summary>
