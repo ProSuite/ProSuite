@@ -219,9 +219,6 @@ namespace ProSuite.Commons.AGP.Picker
 				{
 					SelectionUtils.SelectRows(layer, selectionMethod, item.Oids.ToList());
 				}
-
-				SelectionUtils.SelectRows(item.Layers.First(),
-				                          selectionMethod, item.Oids.ToList());
 			}
 
 			foreach (IPickableFeatureItem item in items.OfType<IPickableFeatureItem>())
