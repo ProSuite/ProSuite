@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -19,6 +20,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -49,7 +51,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		[CanBeNull]
 		protected virtual string OptionsDockPaneID => null;
-		
+
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
 
@@ -73,7 +75,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override Task OnToolActivatingCoreAsync()
 		{
-			InitializeOptions();
+			_removeOverlapsToolOptions = InitializeOptions();
 
 			_feedback = new RemoveOverlapsFeedback();
 
@@ -292,6 +294,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				cancellationToken = cancellationTokenSource.Token;
 			}
 
+			//_msg.DebugFormat("Calculating removable overlaps with the following options: {0}",
+			//                 removeToolOptions);
+
 			if (MicroserviceClient != null)
 			{
 				overlaps =
@@ -382,29 +387,43 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			string currentCentralConfigDir = CentralConfigDir;
 			string currentLocalConfigDir = LocalConfigDir;
 
-			// For the time being, we always reload the options because they could have been updated in ArcMap
-			_settingsProvider =
-				new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(
-					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			_settingsProvider ??= new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
 			PartialRemoveOverlapsOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
-			_removeOverlapsToolOptions = new RemoveOverlapsOptions(centralConfiguration,
+			var result  = new RemoveOverlapsOptions(centralConfiguration,
 				localConfiguration);
+
+			result.PropertyChanged -= OptionsPropertyChanged;
+			result.PropertyChanged += OptionsPropertyChanged;
 
 			_msg.DebugStopTiming(watch, "Remove Overlap Tool Options validated / initialized");
 
-			string optionsMessage = _removeOverlapsToolOptions.GetLocalOverridesMessage();
+			string optionsMessage = result.GetLocalOverridesMessage();
 
 			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
 
-			return _removeOverlapsToolOptions;
+			return result;
+		}
+
+		private void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args)
+		{
+			try
+			{
+				QueuedTaskUtils.Run(() => ProcessSelection());
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating removable overlaps : {e.Message}", e);
+			}
 		}
 
 		#region Tool Options DockPane
@@ -421,7 +440,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
 					DockPaneRemoveOverlapsViewModelBase;
 
-			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found", OptionsDockPaneID);
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+			                      OptionsDockPaneID);
 		}
 
 		protected override void ShowOptionsPane()
@@ -461,7 +481,10 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			TargetFeatureSelection targetFeatureSelection =
 				_removeOverlapsToolOptions.TargetFeatureSelection;
 
-			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
+			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
+			                    {
+				                    FeatureClassPredicate = GetTargetFeatureClassPredicate()
+			                    };
 
 			// They might be stored (insert target vertices):
 			featureFinder.ReturnUnJoinedFeatures = true;
@@ -490,6 +513,11 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
 
 			return foundFeatures;
+		}
+
+		protected virtual Predicate<FeatureClass> GetTargetFeatureClassPredicate()
+		{
+			return null;
 		}
 
 		private bool CanOverlapLayer(Layer layer)

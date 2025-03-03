@@ -63,6 +63,16 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] AdvancedGeneralizeOverlay {
+            get {
+                object obj = ResourceManager.GetObject("AdvancedGeneralizeOverlay", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] AdvancedReshapeOverlay {
             get {
                 object obj = ResourceManager.GetObject("AdvancedReshapeOverlay", resourceCulture);

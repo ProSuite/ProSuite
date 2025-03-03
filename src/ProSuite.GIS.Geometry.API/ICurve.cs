@@ -6,10 +6,16 @@ namespace ProSuite.GIS.Geometry.API
 	{
 		double Length { get; }
 
+		/// <summary>
+		/// Returns a clone of the curve's start point.
+		/// </summary>
 		IPoint FromPoint { get; set; }
 
 		void QueryFromPoint([NotNull] IPoint result);
 
+		/// <summary>
+		/// Returns a clone of the curve's end point.
+		/// </summary>
 		IPoint ToPoint { get; set; }
 
 		void QueryToPoint([NotNull] IPoint result);

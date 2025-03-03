@@ -37,7 +37,7 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		}
 	}
 
-	protected override async Task<IList<Table>> PrepareReferencedTables()
+	protected async Task<IList<Table>> PrepareReferencedTables()
 	{
 		IList<Table> dbTables = GetTablesCore().ToList();
 

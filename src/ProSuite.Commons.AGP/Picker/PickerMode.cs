@@ -1,9 +1,13 @@
+using System;
+
 namespace ProSuite.Commons.AGP.Picker
 {
+	[Flags]
 	public enum PickerMode
 	{
-		ShowPicker,
-		PickAll,
-		PickBest
+		None = 0,
+		PickBest = 1,
+		ShowPicker = 2,
+		PickAll = 4
 	}
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
@@ -29,6 +30,8 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			}
 		}
 
+		protected List<Key> PressedKeys { get; }
+
 		public IPickableItem PickBest(IEnumerable<IPickableItem> items)
 		{
 			throw new NotImplementedException();
@@ -43,9 +46,102 @@ namespace ProSuite.AGP.Editing.Test.Picker
 		public SelectionCombinationMethod SelectionCombinationMethod { get; }
 		public bool NoMultiselection { get; set; }
 
-		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
+		public StandardPickerPrecedenceMock(List<Key> pressedKeys)
 		{
-			return PickerMode.PickBest;
+			PressedKeys = pressedKeys;
+		}
+
+		public PickerMode GetPickerMode(List<int> orderedSelection)
+		{
+			PickerMode result = PickerMode.PickBest;
+
+			if (NoMultiselection)
+			{
+				result = PickerMode.ShowPicker;
+			}
+
+			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
+			{
+				result = PickerMode.ShowPicker;
+			}
+
+			if (orderedSelection.Count > 1)
+			{
+				result = PickerMode.ShowPicker;
+			}
+
+			if (!IsSingleClick)
+			{
+				result = PickerMode.PickAll;
+			}
+
+			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+			{
+				result = PickerMode.PickAll;
+			}
+
+			return result;
+		}
+
+		public PickerMode GetPickerMode(ICollection<FeatureSelectionBase> orderedSelection)
+		{
+			PickerMode result = PickerMode.PickBest;
+
+			if (NoMultiselection)
+			{
+				result = PickerMode.ShowPicker;
+			}
+
+			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
+			{
+				result = PickerMode.ShowPicker;
+			}
+
+			if (CountLowestShapeDimension(orderedSelection) > 1)
+			{
+				result = PickerMode.ShowPicker;
+			}
+
+			if (! IsSingleClick)
+			{
+				result = PickerMode.PickAll;
+			}
+
+			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+			{
+				result = PickerMode.PickAll;
+			}
+
+			return result;
+		}
+
+		protected static int CountLowestShapeDimension(
+			IEnumerable<FeatureSelectionBase> layerSelection)
+		{
+			var count = 0;
+
+			int? lastShapeDimension = null;
+
+			foreach (FeatureSelectionBase selection in layerSelection)
+			{
+				if (lastShapeDimension == null)
+				{
+					lastShapeDimension = selection.ShapeDimension;
+
+					count += selection.GetCount();
+
+					continue;
+				}
+
+				if (lastShapeDimension < selection.ShapeDimension)
+				{
+					continue;
+				}
+
+				count += selection.GetCount();
+			}
+
+			return count;
 		}
 
 		public void EnsureGeometryNonEmpty()

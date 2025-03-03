@@ -16,9 +16,9 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 {
 	[UsedImplicitly]
 	protected PickerPrecedenceBase([NotNull] Geometry sketchGeometry,
-								   int selectionTolerance,
-								   Point pickerLocation,
-								   SelectionCombinationMethod? selectionMethod = null)
+	                               int selectionTolerance,
+	                               Point pickerLocation,
+	                               SelectionCombinationMethod? selectionMethod = null)
 	{
 		SketchGeometry = sketchGeometry;
 		SelectionTolerance = selectionTolerance;
@@ -63,13 +63,12 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			return SketchGeometry;
 		}
 
-		Geometry geometry = MapView.Active.ScreenToMap(PickerLocation);
-		return GetSelectionGeometryCore(geometry);
+		return GetSelectionGeometryCore(PickerLocation);
 	}
 
-	protected virtual Geometry GetSelectionGeometryCore(Geometry geometry)
+	protected virtual Geometry GetSelectionGeometryCore(Point screenPoint)
 	{
-		return PickerUtils.ExpandGeometryByPixels(geometry, SelectionTolerance);
+		return PickerUtils.CreatePolygon(screenPoint, SelectionTolerance);
 	}
 
 	[NotNull]
@@ -120,13 +119,8 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 	public bool NoMultiselection { get; set; }
 
-	public virtual PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection)
+	public virtual PickerMode GetPickerMode(ICollection<FeatureSelectionBase> orderedSelection)
 	{
-		if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
-		{
-			return PickerMode.PickAll;
-		}
-
 		if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
 		{
 			return PickerMode.ShowPicker;
@@ -140,6 +134,16 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 				return PickerMode.ShowPicker;
 			}
 
+			return PickerMode.PickAll;
+		}
+
+		if (NoMultiselection)
+		{
+			return PickerMode.ShowPicker;
+		}
+
+		if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+		{
 			return PickerMode.PickAll;
 		}
 
