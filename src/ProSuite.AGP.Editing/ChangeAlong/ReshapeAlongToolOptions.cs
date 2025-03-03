@@ -50,7 +50,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			// Buffer settings
 			CentralizableBufferTarget =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.BufferTarget), true);
+					ReflectionUtils.GetProperty(() => LocalOptions.BufferTarget), false);
 			CentralizableBufferTolerance =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.BufferTolerance), 1.0);
@@ -91,7 +91,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CentralizableTargetFeatureSelection =
 				InitializeSetting<TargetFeatureSelection>(
 					ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
-					TargetFeatureSelection.SameClass);
+					TargetFeatureSelection.VisibleSelectableFeatures);
 		}
 
 		#region Centralizable Properties
