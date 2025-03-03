@@ -233,6 +233,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			base.OnSelectionPhaseStarted();
 			_symbolizedSketch?.ClearSketchSymbol();
 			_feedback?.Clear();
+			ActiveMapView.ClearSketchAsync();
 		}
 
 		protected override void OnSketchPhaseStarted()
