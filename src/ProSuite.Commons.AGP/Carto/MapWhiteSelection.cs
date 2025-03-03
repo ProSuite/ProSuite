@@ -18,9 +18,24 @@ public interface IMapWhiteSelection
 	/// <returns>true iff no involved features (regardless of vertices)</returns>
 	bool IsEmpty { get; }
 
-	bool Select(MapPoint clickPont, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates);
-	bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates);
+	/// <summary>
+	/// Select vertices around <paramref name="clickPoint"/> from amongst
+	/// the given <paramref name="candidates"/> or (if null) the features
+	/// already involved with this white selection.
+	/// </summary>
+	/// <returns>True iff this white selection changed</returns>
+	bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates = null);
+
+	/// <summary>
+	/// Select vertices within <paramref name="geometry"/> from amongst
+	/// the given <paramref name="candidates"/> or (if null) the features
+	/// already involved with this white selection.
+	/// </summary>
+	/// <returns>True iff this white selection changed</returns>
+	bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates = null);
+
 	int Remove(FeatureLayer layer, IEnumerable<long> oids);
+
 	bool SetEmpty();
 
 	bool SelectedVertex(MapPoint point, double tolerance, out MapPoint vertex);
@@ -182,7 +197,7 @@ public class MapWhiteSelection : IMapWhiteSelection
 	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
 	public int Remove(FeatureLayer layer, IEnumerable<long> oids)
 	{
-		if (! _layerSelections.TryGetValue(layer.URI, out var ws))
+		if (layer is null || ! _layerSelections.TryGetValue(layer.URI, out var ws))
 		{
 			return 0; // layer has no white selection
 		}
@@ -209,9 +224,10 @@ public class MapWhiteSelection : IMapWhiteSelection
 	/// <remarks>Must call on MCT</remarks>
 	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
 	{
-		//var extent = clickPoint.Extent.Expand(tolerance, tolerance, false);
-		//var dict = GetFeatures(extent);
-		var dict = candidates;
+		if (clickPoint is null)
+			throw new ArgumentNullException(nameof(clickPoint));
+
+		var dict = candidates ?? GetInvolvedFeatures();
 
 		var changed = false;
 
@@ -293,8 +309,7 @@ public class MapWhiteSelection : IMapWhiteSelection
 	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
 	public bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
 	{
-		//var dict = GetFeatures(geometry);
-		var dict = candidates;
+		var dict = candidates ?? GetInvolvedFeatures();
 
 		var changed = false;
 
@@ -434,6 +449,12 @@ public class MapWhiteSelection : IMapWhiteSelection
 		var selectionSet = _mapView.GetFeatures(geometry);
 		//var selectionSet = mapView.GetFeaturesEx(geometry);
 		return selectionSet.ToDictionary<FeatureLayer>();
+	}
+
+	private Dictionary<FeatureLayer, List<long>> GetInvolvedFeatures()
+	{
+		return GetLayerSelections()
+			.ToDictionary(ws => ws.Layer, ws => ws.GetInvolvedOIDs().ToList());
 	}
 
 	/// <returns>true iff the selection changed (was not already empty)</returns>
