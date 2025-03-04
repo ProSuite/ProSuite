@@ -8,7 +8,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Gdb
 {
-	// todo daro: check correct handle / instantiation of Uri
 	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>,
 	                                     IComparable<GdbWorkspaceIdentity>,
 	                                     IDatastoreReference
@@ -31,7 +30,7 @@ namespace ProSuite.Commons.AGP.Gdb
 
 			switch (connector)
 			{
-				case DatabaseConnectionProperties connectionProperties:
+				case DatabaseConnectionProperties:
 					ConnectionString = connectionString;
 					WorkspaceFactory = WorkspaceFactory.SDE;
 					break;

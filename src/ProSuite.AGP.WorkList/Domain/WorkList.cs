@@ -98,7 +98,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		//		 Pluggable Datasource cannot handle an empty envelope.
 		public Envelope Extent { get; protected set; }
 
-		public virtual IWorkItem Current => GetItem(CurrentIndex);
+		public IWorkItem Current => GetItem(CurrentIndex);
 
 		public int CurrentIndex { get; set; }
 
