@@ -762,7 +762,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				if (selectionCount > 0)
 				{
-					_msg.InfoFormat(notifications.Concatenate(Environment.NewLine));
+					_msg.DebugFormat(notifications.Concatenate(Environment.NewLine));
 				}
 
 				LogPromptForSelection();
