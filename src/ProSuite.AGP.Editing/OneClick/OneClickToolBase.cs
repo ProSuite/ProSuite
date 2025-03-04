@@ -932,56 +932,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		// todo: daro drop!
-		[NotNull]
-		protected IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
-			[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-			bool unJoinedFeaturesForEditing = false,
-			[CanBeNull] NotificationCollection notifications = null)
-		{
-			var filteredCount = 0;
-			var selectionCount = 0;
-
-			var result = new Dictionary<BasicFeatureLayer, List<Feature>>(selectionByLayer.Count);
-
-			SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
-
-			foreach (KeyValuePair<BasicFeatureLayer, List<long>> oidsByLayer in selectionByLayer)
-			{
-				BasicFeatureLayer layer = oidsByLayer.Key;
-				List<long> oids = oidsByLayer.Value;
-
-				if (! CanSelectFromLayer(layer, notifications))
-				{
-					filteredCount += oidsByLayer.Value.Count;
-					continue;
-				}
-
-				var features = MapUtils
-				               .GetFeatures(layer, oids, unJoinedFeaturesForEditing,
-				                            recycling: false, mapSpatialReference).ToList();
-
-				result.Add(layer, features);
-				selectionCount++;
-			}
-
-			if (filteredCount == 1)
-			{
-				notifications?.Insert(
-					0, new Notification("The selected feature cannot be used by the tool."));
-			}
-
-			if (filteredCount > 1)
-			{
-				notifications?.Insert(
-					0,
-					new Notification(
-						$"{filteredCount} of {selectionCount + filteredCount} selected features cannot be used by the tool."));
-			}
-
-			return result;
-		}
-
 		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView mapView)
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer =
