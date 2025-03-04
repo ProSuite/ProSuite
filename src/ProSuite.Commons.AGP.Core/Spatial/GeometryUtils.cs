@@ -1182,23 +1182,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			if (shape is Multipart multipart)
 			{
-				int vertexIndex = globalVertexIndex;
-				int partCount = multipart.PartCount;
-				for (int k = 0; k < partCount; k++)
-				{
-					int segmentCount = multipart.Parts[k].Count;
-					int vertexCount = segmentCount + 1; // even for rings!
-
-					if (vertexIndex < vertexCount)
-					{
-						partIndex = k;
-						return vertexIndex;
-					}
-
-					vertexIndex -= vertexCount;
-				}
-
-				throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
+				return GetLocalVertexIndex(multipart, globalVertexIndex, out partIndex);
 			}
 
 			if (shape is Multipatch)
@@ -1208,6 +1192,36 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			partIndex = 0;
 			return globalVertexIndex;
+		}
+
+		/// <summary>
+		/// Given a global (shape-wide) vertex index, get the part-local
+		/// vertex index and the part index
+		/// </summary>
+		public static int GetLocalVertexIndex(Multipart multipart, int globalVertexIndex, out int partIndex)
+		{
+			if (multipart is null)
+				throw new ArgumentNullException(nameof(multipart));
+			if (globalVertexIndex < 0)
+				throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
+
+			int vertexIndex = globalVertexIndex;
+			int partCount = multipart.PartCount;
+			for (int k = 0; k < partCount; k++)
+			{
+				int segmentCount = multipart.Parts[k].Count;
+				int vertexCount = segmentCount + 1; // even for rings!
+
+				if (vertexIndex < vertexCount)
+				{
+					partIndex = k;
+					return vertexIndex;
+				}
+
+				vertexIndex -= vertexCount;
+			}
+
+			throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
 		}
 
 		/// <summary>
@@ -1323,7 +1337,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			// Multipoint: add point at clickPoint
 			// Multipart: split line at clickPoint
 			// MultiPatch: not implemented
-			// otherwise: error (UI should not call AddVertex)
+			// otherwise: error
 
 			if (shape is Multipoint multipoint)
 			{

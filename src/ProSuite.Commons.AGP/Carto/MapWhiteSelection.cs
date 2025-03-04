@@ -40,9 +40,9 @@ public interface IMapWhiteSelection
 
 	bool SelectedVertex(MapPoint point, double tolerance, out MapPoint vertex);
 
-	MapPoint NearestPoint(MapPoint clickPoint, double tolerance,
-	                      out FeatureLayer layer, out long oid, out int partIndex,
-	                      out int? segmentIndex, out int? vertexIndex);
+	MapPoint HitTest(MapPoint clickPoint, double tolerance,
+	                 out FeatureLayer layer, out long oid, out int partIndex,
+	                 out int? segmentIndex, out int? vertexIndex);
 
 	ICollection<IWhiteSelection> GetLayerSelections();
 	IWhiteSelection GetLayerSelection(FeatureLayer layer);
@@ -98,9 +98,9 @@ public class MapWhiteSelection : IMapWhiteSelection
 		return false;
 	}
 
-	public MapPoint NearestPoint(MapPoint clickPoint, double tolerance,
-	                             out FeatureLayer layer, out long oid, out int partIndex,
-	                             out int? segmentIndex, out int? vertexIndex)
+	public MapPoint HitTest(MapPoint clickPoint, double tolerance,
+	                        out FeatureLayer layer, out long oid, out int partIndex,
+	                        out int? segmentIndex, out int? vertexIndex)
 	{
 		var all = GetLayerSelections();
 
@@ -131,6 +131,7 @@ public class MapWhiteSelection : IMapWhiteSelection
 					minOid = involvedOid;
 					minPartIndex = proximity.PartIndex;
 					minVertIndex = proximity.PointIndex ?? throw new AssertionException();
+					// Note: PointIndex is global (NOT relative to PartIndex)
 					minPoint = proximity.Point;
 				}
 			}
@@ -157,6 +158,7 @@ public class MapWhiteSelection : IMapWhiteSelection
 						minOid = involvedOid;
 						minPartIndex = proximity.PartIndex;
 						minSegIndex = proximity.SegmentIndex ?? throw new AssertionException();
+						// Note: SegmentIndex is relative to PartIndex (unlike PointIndex)
 						minPoint = proximity.Point;
 					}
 				}

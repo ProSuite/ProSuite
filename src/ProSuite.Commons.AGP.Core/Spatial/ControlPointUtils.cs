@@ -15,11 +15,13 @@ public static class ControlPointUtils
 {
 	/// <summary>
 	/// Get the point ID at the addressed vertex of the given shape.
-	/// For a point geometry, pass zero as part and vertex index.
-	/// For a multipoint, pass the point index as both part and vertex index.
+	/// The given vertex index is global (not relative to a part).
+	/// For a point geometry, pass zero as the vertex index.
 	/// </summary>
-	/// <returns>The point ID or zero of there is no point ID</returns>
-	public static int GetPointID(Geometry shape, int partIndex, int vertexIndex)
+	/// <returns>The point ID or zero if there is no point ID</returns>
+	/// <remarks>Use <see cref="GeometryUtils"/> to convert a part index
+	/// and a part-relative vertex index to a global vertex index.</remarks>
+	public static int GetPointID(Geometry shape, int globalVertexIndex)
 	{
 		const int noID = 0;
 
@@ -30,30 +32,27 @@ public static class ControlPointUtils
 
 		if (shape is MapPoint mapPoint)
 		{
-			if (partIndex != 0)
-				throw new ArgumentOutOfRangeException(nameof(partIndex));
-			if (vertexIndex != 0)
-				throw new ArgumentOutOfRangeException(nameof(vertexIndex));
-
+			if (globalVertexIndex != 0)
+				throw new ArgumentOutOfRangeException(
+					nameof(globalVertexIndex), "point index must be zero for point shape");
 			return mapPoint.HasID ? mapPoint.ID : noID;
 		}
 
 		if (shape is Multipoint multipoint)
 		{
-			int pointIndex = GeometryUtils.GetMultipointIndex(partIndex, vertexIndex);
-			if (pointIndex < 0 || pointIndex >= multipoint.PointCount)
+			if (globalVertexIndex < 0 || globalVertexIndex >= multipoint.PointCount)
 				throw new ArgumentOutOfRangeException(
-					"point index out of range for multipoint shape", (Exception)null);
-
-			var point = multipoint.Points[vertexIndex];
+					nameof(globalVertexIndex), "point index out of range for given shape");
+			var point = multipoint.Points[globalVertexIndex];
 			return multipoint.HasID ? point.ID : noID;
 		}
 
 		if (shape is Multipart multipart)
 		{
-			// Here GetGlobalVertexIndex validates the index arguments:
-			var globalIndex = GeometryUtils.GetGlobalVertexIndex(multipart, partIndex, vertexIndex);
-			var point = multipart.Points[globalIndex];
+			if (globalVertexIndex < 0 || globalVertexIndex >= multipart.PointCount)
+				throw new ArgumentOutOfRangeException(
+					nameof(globalVertexIndex), "point index out of range for given shape");
+			var point = multipart.Points[globalVertexIndex];
 			return multipart.HasID ? point.ID : noID;
 		}
 
@@ -64,7 +63,83 @@ public static class ControlPointUtils
 
 		if (shape is Envelope)
 		{
-			return noID; // has no vertices and thus no control points
+			return noID; // envelope has no vertices and thus no control points
+		}
+
+		throw new NotSupportedException($"Geometry type {shape.GetType().Name} is not supported");
+	}
+
+	/// <summary>
+	/// Get the point ID at the addressed vertex of the given shape.
+	/// For a point geometry, pass zero as part and vertex index.
+	/// For a multipoint, pass the point index as both part and vertex index.
+	/// </summary>
+	/// <returns>The point ID or zero of there is no point ID</returns>
+	public static int GetPointID(Geometry shape, int partIndex, int localIndex)
+	{
+		var globalIndex = GeometryUtils.GetGlobalVertexIndex(shape, partIndex, localIndex);
+
+		return GetPointID(shape, globalIndex);
+	}
+
+	/// <summary>
+	/// Set the point ID at the addressed vertex to the given value.
+	/// The given vertex index is global (not relative to a part).
+	/// For a point geometry, pass zero as the vertex index.
+	/// </summary>
+	/// <returns>A new geometry instance with the point ID set</returns>
+	public static Geometry SetPointID(int value, Geometry shape, int globalVertexIndex)
+	{
+		if (shape is null || shape.IsEmpty)
+		{
+			return shape;
+		}
+
+		if (shape is MapPoint mapPoint)
+		{
+			if (globalVertexIndex != 0)
+				throw new ArgumentOutOfRangeException(
+					nameof(globalVertexIndex), "point index must be zero for a point shape");
+			return SetPointID(mapPoint, value);
+		}
+
+		if (shape is Multipoint multipoint)
+		{
+			if (globalVertexIndex < 0 || globalVertexIndex >= multipoint.PointCount)
+				throw new ArgumentOutOfRangeException(
+					nameof(globalVertexIndex), "point index out of range for given shape");
+			var builder = new MultipointBuilderEx(multipoint);
+			var hadID = builder.HasID;
+			builder.HasID = true; // so builder.IDs is non-nul
+			builder.IDs[globalVertexIndex] = value;
+			builder.HasID = hadID || value != 0;
+			return builder.ToGeometry();
+		}
+
+		if (shape is Polyline polyline)
+		{
+			var localIndex = GeometryUtils.GetLocalVertexIndex(polyline, globalVertexIndex, out var partIndex);
+			var builder = new PolylineBuilderEx(polyline);
+			builder.SetPointID(partIndex, localIndex, value);
+			return builder.ToGeometry();
+		}
+
+		if (shape is Polygon polygon)
+		{
+			var localIndex = GeometryUtils.GetLocalVertexIndex(polygon, globalVertexIndex, out var partIndex);
+			var builder = new PolygonBuilderEx(polygon);
+			builder.SetPointID(partIndex, localIndex, value);
+			return builder.ToGeometry();
+		}
+
+		if (shape is Multipatch)
+		{
+			throw new NotImplementedException();
+		}
+
+		if (shape is Envelope)
+		{
+			throw new NotSupportedException("Cannot set control points on an Envelope");
 		}
 
 		throw new NotSupportedException($"Geometry type {shape.GetType().Name} is not supported");
@@ -111,7 +186,6 @@ public static class ControlPointUtils
 
 		if (shape is Polyline polyline)
 		{
-			// Index arguments are validated by SetPointID()
 			var builder = new PolylineBuilderEx(polyline);
 			builder.SetPointID(partIndex, vertexIndex, value);
 			return builder.ToGeometry();
@@ -119,7 +193,6 @@ public static class ControlPointUtils
 
 		if (shape is Polygon polygon)
 		{
-			// Index arguments are validated by SetPointID()
 			var builder = new PolygonBuilderEx(polygon);
 			builder.SetPointID(partIndex, vertexIndex, value);
 			return builder.ToGeometry();
@@ -139,7 +212,7 @@ public static class ControlPointUtils
 	}
 
 	public static void SetPointID(this MultipartBuilderEx builder,
-	                              int partIndex, int pointIndex, int pointID)
+	                              int partIndex, int pointIndex, int value)
 	{
 		if (builder is null)
 			throw new ArgumentNullException(nameof(builder));
@@ -151,11 +224,11 @@ public static class ControlPointUtils
 		if (!(0 <= pointIndex && pointIndex <= segmentCount))
 			throw new ArgumentOutOfRangeException(nameof(pointIndex));
 
-		if (pointID != 0)
+		if (value != 0)
 		{
 			builder.HasID = true;
 		}
-		//else: don't modify HasID
+		// else: don't modify HasID
 
 		switch (builder)
 		{
@@ -163,20 +236,20 @@ public static class ControlPointUtils
 				// update StartPoint on segment i (if exists)
 				// update EndPoint on segment i-1 (if exists)
 				if (pointIndex < segmentCount)
-					UpdateStartPoint(builder, partIndex, pointIndex, pointID);
+					UpdateStartPoint(builder, partIndex, pointIndex, value);
 				pointIndex -= 1;
 				if (pointIndex >= 0)
-					UpdateEndPoint(builder, partIndex, pointIndex, pointID);
+					UpdateEndPoint(builder, partIndex, pointIndex, value);
 				break;
 
 			case PolygonBuilderEx:
 				// update StartPoint of segment i (mod N)
 				// update EndPoint of segment (i-1) (mod N)
 				pointIndex %= segmentCount;
-				UpdateStartPoint(builder, partIndex, pointIndex, pointID);
+				UpdateStartPoint(builder, partIndex, pointIndex, value);
 				pointIndex -= 1;
 				if (pointIndex < 0) pointIndex += segmentCount;
-				UpdateEndPoint(builder, partIndex, pointIndex, pointID);
+				UpdateEndPoint(builder, partIndex, pointIndex, value);
 				break;
 			default:
 				throw new AssertionException(
@@ -304,7 +377,7 @@ public static class ControlPointUtils
 
 			return builder.ToSegment();
 		}
-		catch (Exception ignore)
+		catch (Exception)
 		{
 			// Alternative approach: recreate segment using an
 			// appropriate utility method on the builder class:
@@ -362,7 +435,7 @@ public static class ControlPointUtils
 		return dist < 1E-12;
 	}
 
-	public static MapPoint SetPointID(MapPoint point, int id)
+	public static MapPoint SetPointID(MapPoint point, int value)
 	{
 		if (point is null) return null;
 
@@ -370,8 +443,8 @@ public static class ControlPointUtils
 		// Do NOT use object initializer:
 		// we want control over assignment ordering
 		builder.HasID = true;
-		builder.ID = id;
-		builder.HasID = id != 0;
+		builder.ID = value;
+		builder.HasID = value != 0;
 
 		return builder.ToGeometry();
 	}
