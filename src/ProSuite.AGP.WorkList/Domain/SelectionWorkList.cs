@@ -81,13 +81,14 @@ namespace ProSuite.AGP.WorkList.Domain
 				RowMap.Clear();
 
 				int chunkSize = items.Count / 3;
+				int firstListChunkSize = chunkSize + items.Count % 3;
 
 				_itemChunks.Clear();
-				_itemChunks.Add(new List<IWorkItem>(chunkSize + items.Count % 3));
+				_itemChunks.Add(new List<IWorkItem>(firstListChunkSize));
 				_itemChunks.Add(new List<IWorkItem>(chunkSize));
 				_itemChunks.Add(new List<IWorkItem>(chunkSize));
 
-				int counter = 0;
+				int itemsCount = 0;
 				var listIndex = 0;
 				List<IWorkItem> currentList = Assert.NotNull(_itemChunks[listIndex]);
 
@@ -98,9 +99,10 @@ namespace ProSuite.AGP.WorkList.Domain
 					Items.Add(item);
 					currentList.Add(item);
 
-					counter += 1;
+					// distribute the items to the 3 chunks
+					itemsCount += 1;
 
-					if (counter == currentList.Capacity)
+					if (itemsCount == currentList.Capacity)
 					{
 						listIndex += 1;
 
@@ -110,12 +112,9 @@ namespace ProSuite.AGP.WorkList.Domain
 						}
 
 						currentList = Assert.NotNull(_itemChunks[listIndex]);
-
-						counter = 0;
+						itemsCount = 0;
 					}
 				}
-
-				Assert.True(listIndex == 3, "listIndex == 3");
 
 				_msg.DebugFormat("Added {0} items to work list", Items.Count);
 

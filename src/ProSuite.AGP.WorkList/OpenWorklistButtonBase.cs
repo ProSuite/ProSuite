@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ProSuite.Commons.AGP.Framework;
@@ -8,6 +9,7 @@ using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.AGP.WorkList
 {
+	[Obsolete]
 	public abstract class OpenWorkListButtonBase : ButtonCommandBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -15,7 +17,8 @@ namespace ProSuite.AGP.WorkList
 		// TODO: Separate base tools with helper methods where necessary
 		protected override async Task<bool> OnClickAsyncCore()
 		{
-			string path = null;
+			string path = GetWorklistPathCore();
+
 			WorkEnvironmentBase environment = null;
 
 			if (CanUseProductionModelIssueSchema() &&
@@ -28,8 +31,6 @@ namespace ProSuite.AGP.WorkList
 			{
 				ViewUtils.Try(() =>
 				{
-					path = GetWorklistPathCore();
-
 					// has to be outside QueuedTask because of OpenItemDialog
 					// AND outside of Task.Run because OpenItemDialog has to be
 					// in UI thread.

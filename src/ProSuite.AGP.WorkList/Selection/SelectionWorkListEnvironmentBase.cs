@@ -78,10 +78,8 @@ namespace ProSuite.AGP.WorkList.Selection
 				Dictionary<Table, List<long>> selection =
 					MapUtils.GetDistinctSelectionByTable(oidsByLayer);
 
-				IList<Table> tables = DatasetUtils.Distinct(selection.Keys).ToList();
-
 				return Task.FromResult<IWorkItemRepository>(
-					new SelectionItemRepository(tables, selection, stateRepository));
+					new SelectionItemRepository(selection, stateRepository));
 			}
 		}
 

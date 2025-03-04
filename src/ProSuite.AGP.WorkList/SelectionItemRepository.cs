@@ -15,10 +15,9 @@ namespace ProSuite.AGP.WorkList
 		private readonly IDictionary<ISourceClass, List<long>> _oidsBySource =
 			new Dictionary<ISourceClass, List<long>>();
 
-		public SelectionItemRepository(IEnumerable<Table> tables,
-		                               Dictionary<Table, List<long>> selection,
+		public SelectionItemRepository(Dictionary<Table, List<long>> selection,
 		                               IWorkItemStateRepository stateRepository) : base(
-			tables, stateRepository)
+			selection.Keys, stateRepository)
 		{
 			foreach (var pair in selection)
 			{
