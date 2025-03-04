@@ -220,11 +220,6 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		public void RefreshGeometry2(IWorkItem item)
-		{
-			item.Geometry = GeometryUtils.Buffer(item.Geometry, 10);
-		}
-
 		[CanBeNull]
 		public Row GetSourceRow(ISourceClass sourceClass, long oid)
 		{
