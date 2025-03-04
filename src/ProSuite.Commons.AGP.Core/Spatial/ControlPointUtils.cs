@@ -102,8 +102,10 @@ public static class ControlPointUtils
 					"point index out of range for multipoint shape", (Exception)null);
 
 			var builder = new MultipointBuilderEx(multipoint);
-			builder.HasID = true;
+			var hadID = builder.HasID;
+			builder.HasID = true; // so IDs is non-null
 			builder.IDs[vertexIndex] = value;
+			builder.HasID = hadID || value != 0;
 			return builder.ToGeometry();
 		}
 
@@ -153,6 +155,7 @@ public static class ControlPointUtils
 		{
 			builder.HasID = true;
 		}
+		//else: don't modify HasID
 
 		switch (builder)
 		{

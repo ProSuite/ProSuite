@@ -1306,7 +1306,9 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// Add a vertex to the given <paramref name="shape"/>
 		/// (a Polyline, Polygon, or a Multipoint) at or near the
 		/// given <paramref name="point"/> (it will be projected
-		/// onto the Polyline or Polygon boundary).
+		/// onto the Polyline or Polygon boundary). If the given
+		/// <paramref name="point"/> has a non-zero ID, the new
+		/// vertex will be a control point, otherwise a regular vertex.
 		/// </summary>
 		/// <returns>A new geometry with the vertex added</returns>
 		/// <remarks>For multipoints, just append the point, for polylines
@@ -1327,6 +1329,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			{
 				point = EnsureSpatialReference(point, multipoint.SpatialReference);
 				var builder = new MultipointBuilderEx(multipoint);
+				if (point.HasID) builder.HasID = true;
+				// else: don't modify HasID
 				builder.AddPoint(point);
 				partIndex = vertexIndex = builder.PointCount - 1;
 				return builder.ToGeometry();
@@ -1354,8 +1358,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				// split point, thus segmentIndex is the vertexIndex of the inserted vertex:
 				vertexIndex = segmentIndex;
 				// SplitAtPoint interpolates Z and M attributes (good), but also seems to
-				// inherit the ID from neighbouring vertices (not so good): manually clear:
-				newShape = ControlPointUtils.SetPointID(0, newShape, partIndex, segmentIndex);
+				// inherit the ID from neighbouring vertices: take ID from split point
+				newShape = ControlPointUtils.SetPointID(point.ID, newShape, partIndex, segmentIndex);
 				return newShape;
 			}
 
