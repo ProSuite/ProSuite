@@ -62,6 +62,13 @@ public interface IShapeSelection
 	void VertexRemoved(int partIndex, int vertexIndex);
 
 	/// <summary>
+	/// Notify this shape selection that the path at the given
+	/// part index has been reversed. The internal representation
+	/// will be adjusted accordingly.
+	/// </summary>
+	void PathReversed(int partIndex);
+
+	/// <summary>
 	/// Replace <see cref="Shape"/> with the given <paramref name="newShape"/>,
 	/// even if it is not compatible (see <see cref="IsCompatible"/>) with the
 	/// current shape/selection.
@@ -530,6 +537,12 @@ public class ShapeSelection : IShapeSelection
 		_blocks.VertexRemoved(partIndex, vertexIndex);
 	}
 
+	public void PathReversed(int partIndex)
+	{
+		int numVerticesInPart = GeometryUtils.GetPointCount(Shape, partIndex);
+		_blocks.PartReversed(partIndex, numVerticesInPart);
+	}
+
 	#region Private methods
 
 	private static IEnumerable<BlockList.Block> Invert(
@@ -775,6 +788,7 @@ public class ShapeSelection : IShapeSelection
 /// starts a new block. Blocks never overlap (such blocks are merged).
 /// Represents selected vertices of a shape/geometry.
 /// </summary>
+/// <remarks>Not thread-safe!</remarks>
 public class BlockList : IEnumerable<BlockList.Block>
 {
 	// _head.Next points to first real node
@@ -786,6 +800,8 @@ public class BlockList : IEnumerable<BlockList.Block>
 
 	public bool Select(int part, int vertex, int count = 1)
 	{
+		// if vertex is in existing block: nothing to do
+		// if vertex abuts existing block: grow this block
 		// if vertex is in existing block: grow this block and merge down the list
 		// otherwise: append new block to before and merge down the list
 
@@ -810,7 +826,7 @@ public class BlockList : IEnumerable<BlockList.Block>
 			node.Next = before.Next;
 			before.Next = node;
 
-			MergeBlocks(before);
+			MergeBlocks(before.IsHead ? node : before);
 		}
 
 		return true;
@@ -1011,6 +1027,54 @@ public class BlockList : IEnumerable<BlockList.Block>
 		}
 	}
 
+	public void PartReversed(int part, int numVerticesInPart)
+	{
+		var node = Find(part, 0, out var before);
+
+		if (node is null)
+		{
+			node = before.Next;
+		}
+
+		var list = new List<Node>();
+
+		while (node is not null && node.Part == part)
+		{
+			list.Add(node);
+			node = node.Next;
+		}
+
+		Node tail = node;
+
+		if (list.Count < 1)
+		{
+			return; // no selected vertices in given part
+		}
+
+		int last = list.Count - 1;
+
+		int minVertexCount = list[last].First + list[last].Count;
+		if (numVerticesInPart < minVertexCount)
+		{
+			throw new ArgumentOutOfRangeException(
+				nameof(numVerticesInPart), numVerticesInPart,
+				$"must be at least {minVertexCount} for this selection");
+		}
+
+		list.Reverse();
+
+		for (int i = 0; i < last; i++)
+		{
+			list[i].First = numVerticesInPart - list[i].First - list[i].Count;
+			list[i].Next = list[i + 1];
+		}
+
+		list[last].First = numVerticesInPart - list[last].First - list[last].Count;
+		list[last].Next = tail;
+
+		before.Next = list[0];
+	}
+
 	[MustDisposeResource]
 	IEnumerator IEnumerable.GetEnumerator()
 	{
@@ -1059,6 +1123,13 @@ public class BlockList : IEnumerable<BlockList.Block>
 		}
 	}
 
+	/// <summary>
+	/// Get the node that contains the addressed vertex, or
+	/// null if no node contains this vertex. In both cases,
+	/// <paramref name="before"/> will be the node just before
+	/// the one that contains the vertex, or where a node for
+	/// the vertex would have to be inserted.
+	/// </summary>
 	private Node Find(int part, int vertex, out Node before)
 	{
 		if (part < 0)
@@ -1134,7 +1205,7 @@ public class BlockList : IEnumerable<BlockList.Block>
 		}
 
 		//public bool IsWholePart => First < 0;
-		private bool IsHead => Part < 0;
+		internal bool IsHead => Part < 0;
 
 		public override string ToString()
 		{

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Geometry;
@@ -170,12 +171,17 @@ public class ShapeSelectionTest
 		Assert.True(blocks.IsSelected(0, 1));
 		Assert.True(blocks.IsSelected(0, 5));
 
+		var list = blocks.ToList();
+		Assert.AreEqual(1, list.Count);
+		Assert.AreEqual(1, list.Single().First);
+		Assert.AreEqual(5, list.Single().Count);
+
 		Assert.True(blocks.Unselect(0, 2)); // split
 		Assert.True(blocks.IsSelected(0, 1));
 		Assert.False(blocks.IsSelected(0, 2));
 		Assert.True(blocks.IsSelected(0, 3));
 
-		var list = blocks.ToList();
+		list = blocks.ToList();
 		Assert.AreEqual(2, list.Count);
 		var block0 = list[0];
 		Assert.AreEqual(1, block0.First);
@@ -215,14 +221,14 @@ public class ShapeSelectionTest
 		Assert.True(blocks.Select(1, 4, 3)); // vertices 4,5,6 in part 1
 		Assert.False(blocks.Select(1, 5, 2)); // vertices 5,6 in part 1
 		Assert.True(blocks.Select(0, 2, 5)); // vertices 2,3,4,5,6 in part 0 (merges)
-		var blockList = blocks.ToList();
-		Assert.AreEqual(2, blockList.Count);
-		Assert.AreEqual(0, blockList[0].Part);
-		Assert.AreEqual(0, blockList[0].First);
-		Assert.AreEqual(7, blockList[0].Count);
-		Assert.AreEqual(1, blockList[1].Part);
-		Assert.AreEqual(4, blockList[1].First);
-		Assert.AreEqual(3, blockList[1].Count);
+		var list = blocks.ToList();
+		Assert.AreEqual(2, list.Count);
+		Assert.AreEqual(0, list[0].Part);
+		Assert.AreEqual(0, list[0].First);
+		Assert.AreEqual(7, list[0].Count);
+		Assert.AreEqual(1, list[1].Part);
+		Assert.AreEqual(4, list[1].First);
+		Assert.AreEqual(3, list[1].Count);
 	}
 
 	[Test]
@@ -254,7 +260,41 @@ public class ShapeSelectionTest
 		AssertBlock(list[1], 1, 3, 1);
 	}
 
-	private void AssertBlock(BlockList.Block block, int part, int first, int count)
+	[Test]
+	public void CanBlockListPartReversed()
+	{
+		var blocks = new BlockList();
+		blocks.Select(0, 0); // vertex 0
+		blocks.Select(0, 2); // vertex 2
+		blocks.Select(0, 4, 2); // vertices 4,5
+		// 0  1  2  3  4  5
+		// *--o--*--o--*--*
+		// *--*--o--*--o--*
+		blocks.PartReversed(0, 6);
+
+		var list = blocks.ToList();
+		Assert.AreEqual(3, list.Count);
+		AssertBlock(list[0], 0, 0, 2);
+		AssertBlock(list[1], 0, 3, 1);
+		AssertBlock(list[2], 0, 5, 1);
+
+		blocks.PartReversed(0, 6); // revert
+		blocks.PartReversed(0, 8);
+		// 0  1  2  3  4  5  6  7
+		// *--o--*--o--*--*--o--o
+		// o--o--*--*--o--*--o--*
+
+		list = blocks.ToList();
+		Assert.AreEqual(3, list.Count);
+		AssertBlock(list[0], 0, 2, 2);
+		AssertBlock(list[1], 0, 5, 1);
+		AssertBlock(list[2], 0, 7, 1);
+
+		// Expect error if numVerticesInPart is too small:
+		Assert.Throws<ArgumentOutOfRangeException>(() => blocks.PartReversed(0, 5));
+	}
+
+	private static void AssertBlock(BlockList.Block block, int part, int first, int count)
 	{
 		if (block.Part != part || block.First != first || block.Count != count)
 		{
