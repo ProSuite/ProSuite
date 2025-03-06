@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 using ProSuite.Commons.Essentials.Assertions;
@@ -49,6 +49,21 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 		[XmlAttribute("stopErrorCount")]
 		public int StopErrorCount { get; set; }
 
+		[XmlAttribute("geometryType")]
+		public string GeometryType { get; set; }
+
+		[XmlAttribute("verifiedConditionCount")]
+		public int VerifiedConditionCount { get; set; }
+
+		[XmlAttribute("coordinateSystem")]
+		public string CoordinateSystem { get; set; }
+
+		[XmlAttribute("tolerance")]
+		public double Tolerance { get; set; }
+
+		[XmlAttribute("resolution")]
+		public double Resolution { get; set; }
+
 		[XmlArray("VerifiedConditions")]
 		[XmlArrayItem("Category")]
 		[CanBeNull]
@@ -60,6 +75,8 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 		public void AddVerifiedCondition(
 			[NotNull] XmlVerifiedQualityCondition verifiedCondition)
 		{
+			VerifiedConditionCount++;
+
 			_categoriesBuilder.AddVerifiedCondition(verifiedCondition);
 		}
 

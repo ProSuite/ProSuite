@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
@@ -14,11 +15,15 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		#region RestoreDefaultsButton
 
-		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
+		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
+		{
+			get => _targetFeatureSelectionVm;
+			private set => SetProperty(ref _targetFeatureSelectionVm, value);
+		}
 
 		public ICommand RevertToDefaultsCommand { get; }
 
-		public bool IsButtonEnabled => _options?.CentralOptions != null;
+		public bool IsRevertToDefaultsEnabled => true;
 
 		private void RevertToDefaults()
 		{
@@ -31,6 +36,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		private string _heading = "Remove Overlaps Options";
 
 		private RemoveOverlapsOptions _options;
+		private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 
 		public string Heading
 		{
@@ -47,7 +53,10 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 				TargetFeatureSelectionVM =
 					new TargetFeatureSelectionViewModel(
-						_options.CentralizableTargetFeatureSelection);
+						_options.CentralizableTargetFeatureSelection)
+					{
+						SelectedFeaturesVisibility = Visibility.Collapsed
+					};
 			}
 		}
 	}

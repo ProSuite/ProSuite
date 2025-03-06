@@ -36,8 +36,6 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 				request.SourceFeatures, request.TargetFeatures, request.ClassDefinitions,
 				out IList<IFeature> sourceFeatures, out IList<IFeature> targetFeatures);
 
-			_msg.DebugStopTiming(watch, "Unpacked feature lists from request params");
-
 			IGeometry calculationPerimeter = ProtobufGeometryUtils.FromShapeMsg(request.Perimeter);
 
 			double? snapTolerance = optionsMsg.SnapToTargetVertices

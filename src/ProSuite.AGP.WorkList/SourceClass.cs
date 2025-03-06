@@ -1,5 +1,6 @@
 using System;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
@@ -50,6 +51,11 @@ namespace ProSuite.AGP.WorkList
 				if (datastore is FileSystemDatastore fsDatastore)
 				{
 					return fsDatastore.OpenDataset<T>(_tableIdentity.Name);
+				}
+
+				if (datastore is PluginDatastore plugin)
+				{
+					return (T) plugin.OpenTable(_tableIdentity.Name);
 				}
 
 				throw new NotSupportedException(

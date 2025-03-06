@@ -4,9 +4,9 @@ using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using IDatasetContainer = ProSuite.Commons.GeoDb.IDatasetContainer;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -525,6 +525,27 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		protected virtual bool EqualsCore(IReadOnlyTable otherTable)
 		{
+			if (otherTable is VirtualTable otherVirtualTable)
+			{
+				if (ObjectClassID >= 0 && otherVirtualTable.ObjectClassID >= 0)
+				{
+					if (ObjectClassID != otherVirtualTable.ObjectClassID)
+					{
+						return false;
+					}
+				}
+				else if (Name != otherVirtualTable.Name)
+				{
+					// Unregistered table or view
+					return false;
+				}
+
+				if (Workspace != null)
+				{
+					return Workspace.Equals(otherVirtualTable.Workspace);
+				}
+			}
+
 			return false;
 		}
 

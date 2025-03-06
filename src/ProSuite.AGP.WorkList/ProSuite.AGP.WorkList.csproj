@@ -67,7 +67,6 @@
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
-    <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
   </ItemGroup>

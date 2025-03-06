@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -12,6 +13,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto
 {
@@ -22,6 +24,8 @@ namespace ProSuite.Commons.AGP.Carto
 	/// </summary>
 	public class FeatureFinder
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly MapView _mapView;
 
 		public FeatureFinder(
@@ -60,6 +64,9 @@ namespace ProSuite.Commons.AGP.Carto
 		/// Extra tolerance that will be added to all provided (or calculated) search geometries.
 		/// </summary>
 		public double ExtraSearchTolerance { get; set; }
+
+		[CanBeNull]
+		public Predicate<FeatureClass> FeatureClassPredicate { get; set; }
 
 		public IEnumerable<FeatureSelectionBase> FindFeaturesByLayer(
 			[NotNull] Geometry searchGeometry,
@@ -277,7 +284,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <returns>The found features in the same spatial reference as the provided selected features</returns>
 		[NotNull]
 		public IEnumerable<FeatureSelectionBase> FindIntersectingFeaturesByFeatureClass(
-			[NotNull] Dictionary<MapMember, List<long>> intersectingSelectedFeatures,
+			[NotNull] IDictionary<MapMember, List<long>> intersectingSelectedFeatures,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate = null,
 			[CanBeNull] Envelope extent = null,
 			[CanBeNull] CancelableProgressor cancelableProgressor = null)
@@ -316,7 +323,7 @@ namespace ProSuite.Commons.AGP.Carto
 			                         SelectedFeatures);
 		}
 
-		private static bool IsLayerApplicable(
+		private bool IsLayerApplicable(
 			[CanBeNull] BasicFeatureLayer basicFeatureLayer,
 			[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate,
 			TargetFeatureSelection? targetSelectionType,
@@ -366,7 +373,25 @@ namespace ProSuite.Commons.AGP.Carto
 
 			if (basicFeatureLayer is FeatureLayer fl)
 			{
-				if (fl.GetFeatureClass() == null)
+				FeatureClass featureClass = fl.GetFeatureClass();
+
+				if (featureClass == null)
+				{
+					return false;
+				}
+
+				var standardConnection =
+					featureClass.GetDataConnection() as CIMStandardDataConnection;
+
+				if (standardConnection != null &&
+				    standardConnection.WorkspaceFactory == WorkspaceFactory.Custom)
+				{
+					_msg.VerboseDebug(() => $"Skipping layer {fl.Name} with plug-in data source");
+
+					return false;
+				}
+
+				if (FeatureClassPredicate != null && ! FeatureClassPredicate(featureClass))
 				{
 					return false;
 				}
@@ -385,8 +410,8 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
-		private static bool
-			LayerUsesFeatureClass(BasicFeatureLayer featureLayer, FeatureClass featureClass)
+		private static bool LayerUsesFeatureClass([NotNull] BasicFeatureLayer featureLayer,
+		                                          [NotNull] FeatureClass featureClass)
 		{
 			var layerClass = featureLayer.GetTable() as FeatureClass;
 

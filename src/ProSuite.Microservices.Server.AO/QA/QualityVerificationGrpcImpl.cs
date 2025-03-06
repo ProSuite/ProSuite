@@ -122,6 +122,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		public bool KeepServingOnErrorDefaultValue { get; set; }
 
+		/// <summary>
+		/// Whether the service should be set to unhealthy after each verification. This allows
+		/// for process recycling after each verification to avoid GDB-locks.
+		/// </summary>
+		public bool SetUnhealthyAfterEachVerification { get; set; } =
+			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+				"PROSUITE_QA_SERVER_SET_UNHEALTHY_AFTER_VERIFICATION");
+
 		public override async Task VerifyQuality(
 			VerificationRequest request,
 			IServerStreamWriter<VerificationResponse> responseStream,
@@ -330,6 +338,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				_msg.DebugFormat("Remaining requests that are inprogress: {0}",
 				                 CurrentLoad.CurrentProcessCount);
+			}
+
+			if (SetUnhealthyAfterEachVerification)
+			{
+				_msg.Info(
+					"Setting process to un-healthy after request to allow for process recycling.");
+				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
 		}
 

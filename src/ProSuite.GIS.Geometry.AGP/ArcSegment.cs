@@ -8,9 +8,13 @@ namespace ProSuite.GIS.Geometry.AGP;
 
 public abstract class ArcSegment : ISegment
 {
-	public Segment ProSegment { get; }
+	public Segment ProSegment { get; private set; }
 
 	public ArcSpatialReference ArcSpatialReference { get; set; }
+
+	private IEnvelope _envelope;
+
+	private Polyline _highLevelSegment;
 
 	public ArcSegment([NotNull] Segment proSegment,
 	                  [CanBeNull] ArcSpatialReference arcSpatialReference)
@@ -24,6 +28,38 @@ public abstract class ArcSegment : ISegment
 
 		ArcSpatialReference = arcSpatialReference;
 	}
+
+	private IEnvelope Envelope2D
+	{
+		get
+		{
+			if (_envelope == null)
+			{
+				_envelope = new ArcEnvelope(GetEnvelope());
+			}
+
+			return _envelope;
+		}
+	}
+
+	private Polyline HighLevelSegment
+	{
+		get
+		{
+			if (_highLevelSegment == null)
+			{
+				_highLevelSegment =
+					PolylineBuilderEx.CreatePolyline(ProSegment,
+					                                 ArcSpatialReference.ProSpatialReference);
+			}
+
+			return _highLevelSegment;
+		}
+	}
+
+	protected abstract Envelope GetEnvelope();
+
+	#region Implementation of IGeometry
 
 	public abstract esriGeometryType GeometryType { get; }
 
@@ -42,9 +78,17 @@ public abstract class ArcSegment : ISegment
 		throw new NotImplementedException();
 	}
 
-	public abstract void QueryEnvelope(IEnvelope outEnvelope);
+	public void QueryEnvelope(IEnvelope outEnvelope)
+	{
+		outEnvelope.XMin = Envelope2D.XMin;
+		outEnvelope.XMax = Envelope2D.XMax;
+		outEnvelope.YMin = Envelope2D.YMin;
+		outEnvelope.YMax = Envelope2D.YMax;
 
-	public abstract IEnvelope Envelope { get; }
+		outEnvelope.SpatialReference = SpatialReference;
+	}
+
+	public IEnvelope Envelope => new ArcEnvelope(GetEnvelope());
 
 	public IGeometry Project(ISpatialReference outputSpatialReference)
 	{
@@ -60,6 +104,8 @@ public abstract class ArcSegment : ISegment
 
 	public object NativeImplementation => ProSegment;
 
+	#endregion
+
 	#region Implementation of ISegment
 
 	public double Length => ProSegment.Length;
@@ -67,19 +113,55 @@ public abstract class ArcSegment : ISegment
 	public IPoint FromPoint
 	{
 		get => new ArcPoint(ProSegment.StartPoint);
-		set => throw new NotImplementedException();
-	}
+		set
+		{
+			SegmentBuilderEx segmentBuilder = SegmentBuilderEx.ConstructSegmentBuilder(ProSegment);
 
-	public void QueryFromPoint(IPoint result)
-	{
-		MapPoint mapPoint = ProSegment.StartPoint;
-		ArcGeometryUtils.QueryPoint(result, mapPoint);
+			if (segmentBuilder is EllipticArcBuilderEx arcBuilder)
+			{
+				// NOTE: For elliptic arcs we cannot change just the start point!
+				segmentBuilder = ConstructEllipticArc(arcBuilder,
+				                                      (MapPoint) value.NativeImplementation,
+				                                      arcBuilder.EndPoint);
+			}
+			else
+			{
+				segmentBuilder.StartPoint = (MapPoint) value.NativeImplementation;
+			}
+
+			ReplaceProSegment(segmentBuilder);
+		}
 	}
 
 	public IPoint ToPoint
 	{
 		get => new ArcPoint(ProSegment.EndPoint);
-		set => throw new NotImplementedException();
+		set
+		{
+			SegmentBuilderEx segmentBuilder = SegmentBuilderEx.ConstructSegmentBuilder(ProSegment);
+
+			if (segmentBuilder is EllipticArcBuilderEx arcBuilder)
+			{
+				segmentBuilder = ConstructEllipticArc(arcBuilder,
+				                                      arcBuilder.StartPoint,
+				                                      (MapPoint) value.NativeImplementation);
+			}
+			else
+			{
+				segmentBuilder.EndPoint = (MapPoint) value.NativeImplementation;
+			}
+
+			ReplaceProSegment(segmentBuilder);
+		}
+	}
+
+	public bool IsClosed =>
+		ProSegment.IsCurve && ProSegment.StartPoint.IsEqual(ProSegment.EndPoint);
+
+	public void QueryFromPoint(IPoint result)
+	{
+		MapPoint mapPoint = ProSegment.StartPoint;
+		ArcGeometryUtils.QueryPoint(result, mapPoint);
 	}
 
 	public void QueryToPoint(IPoint result)
@@ -145,7 +227,19 @@ public abstract class ArcSegment : ISegment
 	                                         out double distanceAlongRatio,
 	                                         out IPoint pointOnLine)
 	{
-		throw new NotImplementedException();
+		MapPoint proPoint = (MapPoint) ofPoint.NativeImplementation;
+
+		MapPoint nearestPoint = GeometryEngine.Instance.QueryPointAndDistance(
+			HighLevelSegment,
+			SegmentExtensionType.NoExtension,
+			proPoint, AsRatioOrLength.AsRatio,
+			out distanceAlongRatio,
+			out double distanceFromCurve,
+			out LeftOrRightSide _);
+
+		pointOnLine = nearestPoint != null ? new ArcPoint(nearestPoint) : null;
+
+		return distanceFromCurve;
 	}
 
 	public void QueryTangent(double distanceAlongCurve, bool asRatio, double length,
@@ -180,10 +274,13 @@ public abstract class ArcSegment : ISegment
 		throw new NotImplementedException();
 	}
 
-	public bool IsClosed =>
-		ProSegment.IsCurve && ProSegment.StartPoint.IsEqual(ProSegment.EndPoint);
-
-	public abstract void QueryWksEnvelope(ref WKSEnvelope envelope);
+	public void QueryWksEnvelope(ref WKSEnvelope result)
+	{
+		result.XMin = Envelope2D.XMin;
+		result.XMax = Envelope2D.XMax;
+		result.YMin = Envelope2D.YMin;
+		result.YMax = Envelope2D.YMax;
+	}
 
 	public void SplitAtDistance(double distanceAlong2D, bool asRatio,
 	                            out ISegment fromSegment,
@@ -219,4 +316,29 @@ public abstract class ArcSegment : ISegment
 	}
 
 	#endregion
+
+	private void ReplaceProSegment(SegmentBuilderEx segmentBuilder)
+	{
+		ProSegment = segmentBuilder.ToSegment();
+		_envelope = null;
+		_highLevelSegment = null;
+	}
+
+	/// <summary>
+	/// Construct a new elliptic arc with the same center point / orientation but a new start/end point.
+	/// </summary>
+	/// <param name="template"></param>
+	/// <param name="newStartPoint"></param>
+	/// <param name="newEndPoint"></param>
+	/// <returns></returns>
+	private static SegmentBuilderEx ConstructEllipticArc(EllipticArcBuilderEx template,
+	                                                     MapPoint newStartPoint,
+	                                                     MapPoint newEndPoint)
+	{
+		var result = new EllipticArcBuilderEx(newStartPoint, newEndPoint,
+		                                      template.CenterPoint, template.Orientation,
+		                                      template.SpatialReference);
+
+		return result;
+	}
 }

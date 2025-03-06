@@ -41,7 +41,8 @@ namespace ProSuite.AGP.WorkList
 		protected string UniqueName { get; set; }
 
 		[ItemCanBeNull]
-		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName)
+		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName,
+		                                                 string workListFilePath = null)
 		{
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
 
@@ -71,6 +72,11 @@ namespace ProSuite.AGP.WorkList
 				// underlying table(s), ideally along with the relevant status schema?
 			}
 
+			if (File.Exists(workListFilePath))
+			{
+				definitionFilePath = workListFilePath;
+			}
+
 			if (! await TryPrepareSchemaCoreAsync())
 			{
 				// null work list
@@ -85,12 +91,15 @@ namespace ProSuite.AGP.WorkList
 			_msg.DebugStopTiming(watch, "Created work list state repository in {0}",
 			                     definitionFilePath);
 
-			// todo daro: dispose feature classes?
-			IList<Table> tables = await PrepareReferencedTables();
+			IWorkItemRepository itemRepository =
+				await CreateItemRepositoryCore(stateRepository);
 
-			IWorkList result = CreateWorkListCore(
-				CreateItemRepositoryCore(tables, stateRepository),
-				uniqueName, DisplayName);
+			if (itemRepository == null)
+			{
+				return await Task.FromResult<IWorkList>(null);
+			}
+
+			IWorkList result = CreateWorkListCore(itemRepository, uniqueName, DisplayName);
 
 			_msg.DebugFormat("Created work list {0}", uniqueName);
 
@@ -103,12 +112,6 @@ namespace ProSuite.AGP.WorkList
 		protected virtual string SuggestWorkListLayerName()
 		{
 			return null;
-		}
-
-		protected virtual Task<IList<Table>> PrepareReferencedTables()
-		{
-			IList<Table> result = new List<Table>();
-			return Task.FromResult(result);
 		}
 
 		public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
@@ -205,8 +208,9 @@ namespace ProSuite.AGP.WorkList
 		protected abstract IWorkItemStateRepository CreateStateRepositoryCore(
 			string path, string workListName);
 
-		protected abstract IWorkItemRepository CreateItemRepositoryCore(
-			IList<Table> tables, IWorkItemStateRepository stateRepository);
+		[ItemCanBeNull]
+		protected abstract Task<IWorkItemRepository> CreateItemRepositoryCore(
+			IWorkItemStateRepository stateRepository);
 
 		protected abstract string GetWorkListSymbologyTemplateLayerPath();
 
@@ -223,14 +227,11 @@ namespace ProSuite.AGP.WorkList
 			[NotNull] string path,
 			[NotNull] ILayerContainerEdit layerContainer)
 		{
-			PluginDatastore datastore = null;
 			Table table = null;
 
 			try
 			{
-				datastore = WorkListUtils.GetPluginDatastore(new Uri(path, UriKind.Absolute));
-
-				table = datastore.OpenTable(worklist.Name);
+				table = OpenTable(path, worklist.Name);
 				Assert.NotNull(table);
 
 				string workListLayerName = SuggestWorkListLayerName() ?? worklist.DisplayName;
@@ -257,9 +258,16 @@ namespace ProSuite.AGP.WorkList
 			}
 			finally
 			{
-				datastore?.Dispose();
 				table?.Dispose();
 			}
+		}
+
+		protected virtual Table OpenTable([NotNull] string path, [NotNull] string tableName)
+		{
+			using PluginDatastore datastore =
+				WorkListUtils.GetPluginDatastore(new Uri(path, UriKind.Absolute));
+
+			return datastore.OpenTable(tableName);
 		}
 
 		private LayerDocument GetWorkListSymbologyTemplateLayer()

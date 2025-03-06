@@ -43,9 +43,9 @@ namespace ProSuite.Commons.AO.Geometry
 			[NotNull] out ISpatialReference highPrecisionSpatialReference)
 		{
 			Assert.ArgumentNotNull(immutableSpatialReference,
-								   nameof(immutableSpatialReference));
+			                       nameof(immutableSpatialReference));
 
-			if (((IControlPrecision2)immutableSpatialReference).IsHighPrecision)
+			if (((IControlPrecision2) immutableSpatialReference).IsHighPrecision)
 			{
 				highPrecisionSpatialReference = immutableSpatialReference;
 				return false;
@@ -69,7 +69,7 @@ namespace ProSuite.Commons.AO.Geometry
 			WellKnownHorizontalCS cs,
 			bool setDefaultXyDomain = false)
 		{
-			return CreateSpatialReference((int)cs, setDefaultXyDomain);
+			return CreateSpatialReference((int) cs, setDefaultXyDomain);
 		}
 
 		/// <summary>
@@ -81,9 +81,9 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <returns></returns>
 		[NotNull]
 		public static ISpatialReference CreateSpatialReference(WellKnownHorizontalCS hcs,
-															   WellKnownVerticalCS vcs)
+		                                                       WellKnownVerticalCS vcs)
 		{
-			return CreateSpatialReference((int)hcs, (int)vcs);
+			return CreateSpatialReference((int) hcs, (int) vcs);
 		}
 
 		/// <summary>
@@ -94,7 +94,7 @@ namespace ProSuite.Commons.AO.Geometry
 		public static IVerticalCoordinateSystem CreateVerticalCoordinateSystem(
 			WellKnownVerticalCS vcs)
 		{
-			return CreateVerticalCoordinateSystem((int)vcs);
+			return CreateVerticalCoordinateSystem((int) vcs);
 		}
 
 		private static readonly object _srLock = new object();
@@ -108,8 +108,7 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <returns></returns>
 		[NotNull]
 		public static ISpatialReference CreateSpatialReference(int srId,
-															   bool setDefaultXyDomain =
-																   false)
+		                                                       bool setDefaultXyDomain = false)
 		{
 			ISpatialReference sref;
 
@@ -126,10 +125,10 @@ namespace ProSuite.Commons.AO.Geometry
 
 			if (setDefaultXyDomain)
 			{
-				((ISpatialReferenceResolution)sref).ConstructFromHorizon();
+				((ISpatialReferenceResolution) sref).ConstructFromHorizon();
 			}
 
-			((IControlPrecision2)sref).IsHighPrecision = true;
+			((IControlPrecision2) sref).IsHighPrecision = true;
 
 			return sref;
 		}
@@ -151,10 +150,10 @@ namespace ProSuite.Commons.AO.Geometry
 
 			if (setDefaultXyDomain)
 			{
-				((ISpatialReferenceResolution)sref).ConstructFromHorizon();
+				((ISpatialReferenceResolution) sref).ConstructFromHorizon();
 			}
 
-			((IControlPrecision2)sref).IsHighPrecision = true;
+			((IControlPrecision2) sref).IsHighPrecision = true;
 
 			return sref;
 		}
@@ -174,7 +173,7 @@ namespace ProSuite.Commons.AO.Geometry
 			bool setDefaultXyDomain = false)
 		{
 			var sref =
-				(ISpatialReference3)CreateSpatialReference(srId, setDefaultXyDomain);
+				(ISpatialReference3) CreateSpatialReference(srId, setDefaultXyDomain);
 
 			sref.VerticalCoordinateSystem = CreateVerticalCoordinateSystem(vcsId);
 
@@ -187,7 +186,7 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			const double resolutionFactor = 1;
 			return CreateSpatialReferenceWithMinimumTolerance(spatialReference,
-															  resolutionFactor);
+			                                                  resolutionFactor);
 		}
 
 		[NotNull]
@@ -197,12 +196,12 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 			Assert.ArgumentCondition(resolutionFactor >= 1,
-									 "resolution factor must be >= 1");
+			                         "resolution factor must be >= 1");
 
 			var srefTol = spatialReference as ISpatialReferenceTolerance;
 			var srefRes = spatialReference as ISpatialReferenceResolution;
 
-			var clone = (ISpatialReference)((IClone)spatialReference).Clone();
+			var clone = (ISpatialReference) ((IClone) spatialReference).Clone();
 
 			if (srefTol == null || srefRes == null)
 			{
@@ -215,11 +214,11 @@ namespace ProSuite.Commons.AO.Geometry
 			if (resolutionFactor > 1)
 			{
 				resolution = resolution / resolutionFactor;
-				((ISpatialReferenceResolution)clone).set_XYResolution(
+				((ISpatialReferenceResolution) clone).set_XYResolution(
 					standardUnits, resolution);
 			}
 
-			((ISpatialReferenceTolerance)clone).XYTolerance = resolution * 2;
+			((ISpatialReferenceTolerance) clone).XYTolerance = resolution * 2;
 
 			return clone;
 		}
@@ -235,44 +234,44 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		public static bool AreEqual([NotNull] ISpatialReference sref1,
-									[NotNull] ISpatialReference sref2,
-									out bool coordinateSystemDifferent,
-									out bool verticalCoordinateSystemDifferent,
-									out bool xyPrecisionDifferent,
-									out bool zPrecisionDifferent,
-									out bool mPrecisionDifferent,
-									out bool xyToleranceDifferent,
-									out bool zToleranceDifferent,
-									out bool mToleranceDifferent)
+		                            [NotNull] ISpatialReference sref2,
+		                            out bool coordinateSystemDifferent,
+		                            out bool verticalCoordinateSystemDifferent,
+		                            out bool xyPrecisionDifferent,
+		                            out bool zPrecisionDifferent,
+		                            out bool mPrecisionDifferent,
+		                            out bool xyToleranceDifferent,
+		                            out bool zToleranceDifferent,
+		                            out bool mToleranceDifferent)
 		{
 			Assert.ArgumentNotNull(sref1, nameof(sref1));
 			Assert.ArgumentNotNull(sref2, nameof(sref2));
 
-			var sref12 = (ISpatialReference2)sref1;
-			var sref1Tol = (ISpatialReferenceTolerance)sref1;
+			var sref12 = (ISpatialReference2) sref1;
+			var sref1Tol = (ISpatialReferenceTolerance) sref1;
 
-			var compare = (ICompareCoordinateSystems)sref1;
-			coordinateSystemDifferent = !compare.IsEqualNoVCS(sref2);
+			var compare = (ICompareCoordinateSystems) sref1;
+			coordinateSystemDifferent = ! compare.IsEqualNoVCS(sref2);
 			verticalCoordinateSystemDifferent =
-				!AreEqual(GetVerticalCoordinateSystem(sref1),
-						   GetVerticalCoordinateSystem(sref2));
-			xyPrecisionDifferent = !sref12.IsXYPrecisionEqual(sref2);
-			zPrecisionDifferent = !sref12.IsZPrecisionEqual(sref2);
-			mPrecisionDifferent = !sref12.IsMPrecisionEqual(sref2);
-			xyToleranceDifferent = !sref1Tol.IsXYToleranceEqual(sref2);
-			zToleranceDifferent = !sref1Tol.IsZToleranceEqual(sref2);
-			mToleranceDifferent = !sref1Tol.IsMToleranceEqual(sref2);
+				! AreEqual(GetVerticalCoordinateSystem(sref1),
+				           GetVerticalCoordinateSystem(sref2));
+			xyPrecisionDifferent = ! sref12.IsXYPrecisionEqual(sref2);
+			zPrecisionDifferent = ! sref12.IsZPrecisionEqual(sref2);
+			mPrecisionDifferent = ! sref12.IsMPrecisionEqual(sref2);
+			xyToleranceDifferent = ! sref1Tol.IsXYToleranceEqual(sref2);
+			zToleranceDifferent = ! sref1Tol.IsZToleranceEqual(sref2);
+			mToleranceDifferent = ! sref1Tol.IsMToleranceEqual(sref2);
 
 			bool anyDifferent = coordinateSystemDifferent ||
-								verticalCoordinateSystemDifferent ||
-								xyPrecisionDifferent ||
-								zPrecisionDifferent ||
-								mPrecisionDifferent ||
-								xyToleranceDifferent ||
-								mToleranceDifferent ||
-								zToleranceDifferent;
+			                    verticalCoordinateSystemDifferent ||
+			                    xyPrecisionDifferent ||
+			                    zPrecisionDifferent ||
+			                    mPrecisionDifferent ||
+			                    xyToleranceDifferent ||
+			                    mToleranceDifferent ||
+			                    zToleranceDifferent;
 
-			return !anyDifferent;
+			return ! anyDifferent;
 		}
 
 		[CanBeNull]
@@ -293,14 +292,14 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="sref2">The second spatial reference.</param>
 		/// <returns><c>true</c> if the factory codes are equal, <c>false</c> otherwise.</returns>
 		public static bool AreEqual([CanBeNull] ISpatialReference sref1,
-									[CanBeNull] ISpatialReference sref2)
+		                            [CanBeNull] ISpatialReference sref2)
 		{
 			return AreEqual(sref1, sref2, false, false);
 		}
 
 		public static bool AreEqualXY([CanBeNull] ISpatialReference sref1,
-									  [CanBeNull] ISpatialReference sref2,
-									  bool compareTolerance)
+		                              [CanBeNull] ISpatialReference sref2,
+		                              bool compareTolerance)
 		{
 			const bool compareXyPrecision = true;
 			const bool compareZPrecision = false;
@@ -308,14 +307,14 @@ namespace ProSuite.Commons.AO.Geometry
 			const bool compareVerticalCoordinateSystems = false;
 
 			return AreEqual(sref1, sref2,
-							compareXyPrecision, compareZPrecision,
-							compareMPrecision, compareTolerance,
-							compareVerticalCoordinateSystems);
+			                compareXyPrecision, compareZPrecision,
+			                compareMPrecision, compareTolerance,
+			                compareVerticalCoordinateSystems);
 		}
 
 		public static bool AreEqualXYZ([CanBeNull] ISpatialReference sref1,
-									   [CanBeNull] ISpatialReference sref2,
-									   bool compareTolerances)
+		                               [CanBeNull] ISpatialReference sref2,
+		                               bool compareTolerances)
 		{
 			const bool compareXyPrecision = true;
 			const bool compareZPrecision = true;
@@ -323,14 +322,14 @@ namespace ProSuite.Commons.AO.Geometry
 			const bool compareVerticalCoordinateSystems = true;
 
 			return AreEqual(sref1, sref2,
-							compareXyPrecision, compareZPrecision,
-							compareMPrecision, compareTolerances,
-							compareVerticalCoordinateSystems);
+			                compareXyPrecision, compareZPrecision,
+			                compareMPrecision, compareTolerances,
+			                compareVerticalCoordinateSystems);
 		}
 
 		public static bool AreEqualXYM([CanBeNull] ISpatialReference sref1,
-									   [CanBeNull] ISpatialReference sref2,
-									   bool compareTolerances)
+		                               [CanBeNull] ISpatialReference sref2,
+		                               bool compareTolerances)
 		{
 			const bool compareXyPrecision = true;
 			const bool compareZPrecision = false;
@@ -338,14 +337,14 @@ namespace ProSuite.Commons.AO.Geometry
 			const bool compareVerticalCoordinateSystems = false;
 
 			return AreEqual(sref1, sref2,
-							compareXyPrecision, compareZPrecision,
-							compareMPrecision, compareTolerances,
-							compareVerticalCoordinateSystems);
+			                compareXyPrecision, compareZPrecision,
+			                compareMPrecision, compareTolerances,
+			                compareVerticalCoordinateSystems);
 		}
 
 		public static bool AreEqualXYZM([CanBeNull] ISpatialReference sref1,
-										[CanBeNull] ISpatialReference sref2,
-										bool compareTolerances)
+		                                [CanBeNull] ISpatialReference sref2,
+		                                bool compareTolerances)
 		{
 			const bool compareXyPrecision = true;
 			const bool compareZPrecision = true;
@@ -353,17 +352,17 @@ namespace ProSuite.Commons.AO.Geometry
 			const bool compareVerticalCoordinateSystems = true;
 
 			return AreEqual(sref1, sref2, compareXyPrecision, compareZPrecision,
-							compareMPrecision, compareTolerances,
-							compareVerticalCoordinateSystems);
+			                compareMPrecision, compareTolerances,
+			                compareVerticalCoordinateSystems);
 		}
 
 		public static bool AreEqual([CanBeNull] ISpatialReference sref1,
-									[CanBeNull] ISpatialReference sref2,
-									bool compareXYPrecision,
-									bool compareZPrecision,
-									bool compareMPrecision,
-									bool compareTolerances,
-									bool compareVerticalCoordinateSystems)
+		                            [CanBeNull] ISpatialReference sref2,
+		                            bool compareXYPrecision,
+		                            bool compareZPrecision,
+		                            bool compareMPrecision,
+		                            bool compareTolerances,
+		                            bool compareVerticalCoordinateSystems)
 		{
 			if (sref1 == null && sref2 == null)
 			{
@@ -380,7 +379,7 @@ namespace ProSuite.Commons.AO.Geometry
 			// both not null -> check
 			if (compareVerticalCoordinateSystems)
 			{
-				if (!((IClone)sref1).IsEqual((IClone)sref2))
+				if (! ((IClone) sref1).IsEqual((IClone) sref2))
 				{
 					// TODO TEST VCS COMPARISON
 					// coordinate system different (also if only vcs is different)
@@ -389,23 +388,23 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 			else
 			{
-				if (!((ICompareCoordinateSystems)sref1).IsEqualNoVCS(sref2))
+				if (! ((ICompareCoordinateSystems) sref1).IsEqualNoVCS(sref2))
 				{
 					// coordinate system different (ignoring precision/tolerance) -> not equal
 					return false;
 				}
 			}
 
-			var sref12 = (ISpatialReference2)sref1;
-			var sref1Tol = (ISpatialReferenceTolerance)sref1;
+			var sref12 = (ISpatialReference2) sref1;
+			var sref1Tol = (ISpatialReferenceTolerance) sref1;
 
 			if (compareXYPrecision && compareZPrecision && compareMPrecision &&
-				compareTolerances)
+			    compareTolerances)
 			{
 				// NOTE contrary to the documentation, this does NOT compare tolerances (at least Z tol)
 				bool isPrecisionEqual;
 				sref1.IsPrecisionEqual(sref2, out isPrecisionEqual);
-				if (!isPrecisionEqual)
+				if (! isPrecisionEqual)
 				{
 					return false;
 				}
@@ -414,12 +413,12 @@ namespace ProSuite.Commons.AO.Geometry
 			if (compareXYPrecision)
 			{
 				// if the precision grid is compatible, this returns true (also if domains are different)
-				if (!sref12.IsXYPrecisionEqual(sref2))
+				if (! sref12.IsXYPrecisionEqual(sref2))
 				{
 					return false;
 				}
 
-				if (compareTolerances && !sref1Tol.IsXYToleranceEqual(sref2))
+				if (compareTolerances && ! sref1Tol.IsXYToleranceEqual(sref2))
 				{
 					return false;
 				}
@@ -427,12 +426,12 @@ namespace ProSuite.Commons.AO.Geometry
 
 			if (compareZPrecision)
 			{
-				if (!sref12.IsZPrecisionEqual(sref2))
+				if (! sref12.IsZPrecisionEqual(sref2))
 				{
 					return false;
 				}
 
-				if (compareTolerances && !sref1Tol.IsZToleranceEqual(sref2))
+				if (compareTolerances && ! sref1Tol.IsZToleranceEqual(sref2))
 				{
 					return false;
 				}
@@ -440,12 +439,12 @@ namespace ProSuite.Commons.AO.Geometry
 
 			if (compareMPrecision)
 			{
-				if (!sref12.IsMPrecisionEqual(sref2))
+				if (! sref12.IsMPrecisionEqual(sref2))
 				{
 					return false;
 				}
 
-				if (compareTolerances && !sref1Tol.IsMToleranceEqual(sref2))
+				if (compareTolerances && ! sref1Tol.IsMToleranceEqual(sref2))
 				{
 					return false;
 				}
@@ -469,9 +468,9 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <returns><c>true</c> if the spatial references are equal, <c>false</c> otherwise.</returns>
 		/// <remarks>M precision/tolerance not yet properly dealt with</remarks>
 		public static bool AreEqual([CanBeNull] ISpatialReference sref1,
-									[CanBeNull] ISpatialReference sref2,
-									bool comparePrecisionAndTolerance,
-									bool compareVerticalCoordinateSystems)
+		                            [CanBeNull] ISpatialReference sref2,
+		                            bool comparePrecisionAndTolerance,
+		                            bool compareVerticalCoordinateSystems)
 		{
 			// TODO add support for comparing M settings
 
@@ -498,7 +497,7 @@ namespace ProSuite.Commons.AO.Geometry
 			var compareSref1 = sref1 as ICompareCoordinateSystems;
 
 			// both not null -> check
-			if (compareSref1 == null || !compareSref1.IsEqualNoVCS(sref2))
+			if (compareSref1 == null || ! compareSref1.IsEqualNoVCS(sref2))
 			{
 				// coordinate system different (ignoring precision/tolerance) -> not equal
 				return false;
@@ -507,29 +506,29 @@ namespace ProSuite.Commons.AO.Geometry
 			if (comparePrecisionAndTolerance)
 			{
 				// compare precision first
-				bool compareOnlyXYPrecision = !compareVerticalCoordinateSystems;
-				if (!IsPrecisionEqual(sref1, sref2, compareOnlyXYPrecision))
+				bool compareOnlyXYPrecision = ! compareVerticalCoordinateSystems;
+				if (! IsPrecisionEqual(sref1, sref2, compareOnlyXYPrecision))
 				{
 					return false;
 				}
 
 				// if precision equal, compare relevant tolerances also
-				var sref1Tol = (ISpatialReferenceTolerance)sref1;
+				var sref1Tol = (ISpatialReferenceTolerance) sref1;
 
-				if (!sref1Tol.IsXYToleranceEqual(sref2))
+				if (! sref1Tol.IsXYToleranceEqual(sref2))
 				{
 					return false;
 				}
 
 				if (compareVerticalCoordinateSystems &&
-					!sref1Tol.IsZToleranceEqual(sref2))
+				    ! sref1Tol.IsZToleranceEqual(sref2))
 				{
 					return false;
 				}
 			}
 
-			return !compareVerticalCoordinateSystems ||
-				   compareSref1.IsEqualLeftLongitude(sref2, true);
+			return ! compareVerticalCoordinateSystems ||
+			       compareSref1.IsEqualLeftLongitude(sref2, true);
 		}
 
 		/// <summary>
@@ -540,7 +539,7 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="vcs2">The second vertical coordinate system.</param>
 		/// <returns><c>true</c> if the factory codes and names are equal, <c>false</c> otherwise.</returns>
 		public static bool AreEqual([CanBeNull] IVerticalCoordinateSystem vcs1,
-									[CanBeNull] IVerticalCoordinateSystem vcs2)
+		                            [CanBeNull] IVerticalCoordinateSystem vcs2)
 		{
 			if (vcs1 == null && vcs2 == null)
 			{
@@ -553,7 +552,7 @@ namespace ProSuite.Commons.AO.Geometry
 				return false;
 			}
 
-			return ((IClone)vcs1).IsEqual((IClone)vcs2);
+			return ((IClone) vcs1).IsEqual((IClone) vcs2);
 		}
 
 		public static bool IsHorizontalCoordinateSystemEqual(
@@ -563,7 +562,7 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentNotNull(sref1, nameof(sref1));
 			Assert.ArgumentNotNull(sref2, nameof(sref2));
 
-			return ((ICompareCoordinateSystems)sref1).IsEqualNoVCS(sref2);
+			return ((ICompareCoordinateSystems) sref1).IsEqualNoVCS(sref2);
 		}
 
 		[NotNull]
@@ -571,7 +570,7 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			Assert.ArgumentNotNull(sref, nameof(sref));
 
-			var esriSref = (IESRISpatialReferenceGEN)sref;
+			var esriSref = (IESRISpatialReferenceGEN) sref;
 
 			string srString;
 			esriSref.ExportToESRISpatialReference(out srString, out int _);
@@ -614,14 +613,14 @@ namespace ProSuite.Commons.AO.Geometry
 			[NotNull] string xmlSpatialReferenceString)
 		{
 			Assert.ArgumentNotNull(xmlSpatialReferenceString,
-								   nameof(xmlSpatialReferenceString));
+			                       nameof(xmlSpatialReferenceString));
 
 			IXMLSerializer serializer = new XMLSerializerClass();
 			try
 			{
 				var result = (ISpatialReference)
 					serializer.LoadFromString(xmlSpatialReferenceString,
-											  null, null);
+					                          null, null);
 				Assert.NotNull(result, "spatial refrence is null is null");
 				return result;
 			}
@@ -642,20 +641,20 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <returns>The modified spatial reference (same instance as input)</returns>
 		[NotNull]
 		public static ISpatialReference SetZDomain([NotNull] ISpatialReference sref,
-												   double zmin, double zmax,
-												   double zResolution,
-												   double zTolerance)
+		                                           double zmin, double zmax,
+		                                           double zResolution,
+		                                           double zTolerance)
 		{
 			Assert.ArgumentNotNull(sref, nameof(sref));
 
 			// Alternative: sref.SetZFalseOriginAndUnits(zmin, 1 / zResolution);
 			sref.SetZDomain(zmin, zmax);
 
-			var resolution = (ISpatialReferenceResolution)sref;
+			var resolution = (ISpatialReferenceResolution) sref;
 
 			resolution.set_ZResolution(true, zResolution);
 
-			var tol = (ISpatialReferenceTolerance)sref;
+			var tol = (ISpatialReferenceTolerance) sref;
 			tol.ZTolerance = zTolerance;
 
 			return sref;
@@ -663,21 +662,21 @@ namespace ProSuite.Commons.AO.Geometry
 
 		[NotNull]
 		public static ISpatialReference SetMDomain([NotNull] ISpatialReference sref,
-												   double mmin, double mmax,
-												   double mResolution,
-												   double mTolerance)
+		                                           double mmin, double mmax,
+		                                           double mResolution,
+		                                           double mTolerance)
 		{
 			Assert.ArgumentNotNull(sref, nameof(sref));
 
 			sref.SetMDomain(mmin, mmax);
 
-			var resolution = (ISpatialReferenceResolution)sref;
+			var resolution = (ISpatialReferenceResolution) sref;
 
 			sref.SetMDomain(mmin, mmax);
 
 			resolution.MResolution = mResolution;
 
-			var tol = (ISpatialReferenceTolerance)sref;
+			var tol = (ISpatialReferenceTolerance) sref;
 			tol.MTolerance = mTolerance;
 
 			return sref;
@@ -696,20 +695,20 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <returns>The modified spatial reference (same instance as input)</returns>
 		[NotNull]
 		public static ISpatialReference SetXYDomain([NotNull] ISpatialReference sref,
-													double xmin, double ymin,
-													double xmax, double ymax,
-													double xyResolution,
-													double xyTolerance)
+		                                            double xmin, double ymin,
+		                                            double xmax, double ymax,
+		                                            double xyResolution,
+		                                            double xyTolerance)
 		{
 			Assert.ArgumentNotNull(sref, nameof(sref));
 
 			sref.SetDomain(xmin, xmax, ymin, ymax);
 
-			var res = (ISpatialReferenceResolution)sref;
+			var res = (ISpatialReferenceResolution) sref;
 
 			res.set_XYResolution(true, xyResolution);
 
-			var tol = (ISpatialReferenceTolerance)sref;
+			var tol = (ISpatialReferenceTolerance) sref;
 			tol.XYTolerance = xyTolerance;
 
 			return sref;
@@ -778,7 +777,7 @@ namespace ProSuite.Commons.AO.Geometry
 							double zMax;
 							sref.GetZDomain(out zMin, out zMax);
 							sb.AppendFormat("- Z Domain: ZMin {0:N5} ZMax {1:N5}", zMin,
-											zMax);
+							                zMax);
 							sb.AppendLine();
 						}
 						catch (Exception e)
@@ -800,7 +799,7 @@ namespace ProSuite.Commons.AO.Geometry
 							double mMax;
 							sref.GetMDomain(out mMin, out mMax);
 							sb.AppendFormat("- M Domain: MMin {0:N5} MMax {1:N5}", mMin,
-											mMax);
+							                mMax);
 							sb.AppendLine();
 						}
 						catch (Exception e)
@@ -841,13 +840,13 @@ namespace ProSuite.Commons.AO.Geometry
 						if (vcs != null)
 						{
 							sb.AppendFormat("- Vertical coordinate system: {0}",
-											vcs.Name);
+							                vcs.Name);
 							sb.AppendLine();
 							if (vcs.Datum != null)
 							{
-								var vDatumInfo = (ISpatialReferenceInfo)vcs.Datum;
+								var vDatumInfo = (ISpatialReferenceInfo) vcs.Datum;
 								sb.AppendFormat("  - Vertical datum: {0}",
-												vDatumInfo.Name);
+								                vDatumInfo.Name);
 								sb.AppendLine();
 							}
 							else
@@ -856,9 +855,9 @@ namespace ProSuite.Commons.AO.Geometry
 							}
 
 							sb.AppendFormat("  - VCS Z coordinate unit: {0}",
-											vcs.CoordinateUnit == null
-												? "<null>"
-												: vcs.CoordinateUnit.Name);
+							                vcs.CoordinateUnit == null
+								                ? "<null>"
+								                : vcs.CoordinateUnit.Name);
 							sb.AppendLine();
 						}
 						else
@@ -870,7 +869,7 @@ namespace ProSuite.Commons.AO.Geometry
 					if (sref.ZCoordinateUnit != null)
 					{
 						sb.AppendFormat("- Z coordinate unit: {0}",
-										sref.ZCoordinateUnit.Name);
+						                sref.ZCoordinateUnit.Name);
 						sb.AppendLine();
 					}
 					else
@@ -916,12 +915,12 @@ namespace ProSuite.Commons.AO.Geometry
 			[NotNull] string esriSpatialReferenceString)
 		{
 			Assert.ArgumentNotNull(esriSpatialReferenceString,
-								   nameof(esriSpatialReferenceString));
+			                       nameof(esriSpatialReferenceString));
 
 			IESRISpatialReferenceGEN2 result = new ProjectedCoordinateSystemClass();
 			result.ImportFromESRISpatialReference(esriSpatialReferenceString, out int _);
 
-			return (ISpatialReference)result;
+			return (ISpatialReference) result;
 		}
 
 		[NotNull]
@@ -931,13 +930,13 @@ namespace ProSuite.Commons.AO.Geometry
 
 			set.Reset();
 
-			var geoTransformation = (IGeoTransformation)set.Next();
+			var geoTransformation = (IGeoTransformation) set.Next();
 
 			while (geoTransformation != null)
 			{
 				yield return geoTransformation;
 
-				geoTransformation = (IGeoTransformation)set.Next();
+				geoTransformation = (IGeoTransformation) set.Next();
 			}
 		}
 
@@ -984,7 +983,7 @@ namespace ProSuite.Commons.AO.Geometry
 				new List<KeyValuePair<IGeoTransformation, esriTransformDirection>>();
 
 			foreach (IGeoTransformation geoTransformation in
-					 GetPredefinedGeoTransformations())
+			         GetPredefinedGeoTransformations())
 			{
 				esriTransformDirection? direction = GetTransformationDirection(
 					geoTransformation,
@@ -995,7 +994,7 @@ namespace ProSuite.Commons.AO.Geometry
 				}
 
 				result.Add(new KeyValuePair<IGeoTransformation, esriTransformDirection>(
-							   geoTransformation, direction.Value));
+					           geoTransformation, direction.Value));
 			}
 
 			return result;
@@ -1024,7 +1023,7 @@ namespace ProSuite.Commons.AO.Geometry
 				ISpatialReference transformationSource;
 				ISpatialReference transformationTarget;
 				geoTransformation.GetSpatialReferences(out transformationSource,
-													   out transformationTarget);
+				                                       out transformationTarget);
 
 				ISpatialReference gcs1 =
 					direction == esriTransformDirection.esriTransformForward
@@ -1036,7 +1035,7 @@ namespace ProSuite.Commons.AO.Geometry
 						: fromGCS;
 
 				if (IsHorizontalCoordinateSystemEqual(gcs1, transformationSource) &&
-					IsHorizontalCoordinateSystemEqual(gcs2, transformationTarget))
+				    IsHorizontalCoordinateSystemEqual(gcs2, transformationTarget))
 				{
 					result.Add(geoTransformation);
 				}
@@ -1054,8 +1053,8 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentNotNull(transformationTypes, nameof(transformationTypes));
 
 			EnsureGeoTransformations(geoTransformationSet, throwOnError,
-									 transformationTypes.Select(CreateGeoTransformation)
-														.ToList());
+			                         transformationTypes.Select(CreateGeoTransformation)
+			                                            .ToList());
 		}
 
 		public static void EnsureGeoTransformations(
@@ -1067,8 +1066,8 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentNotNull(transformationTypes, nameof(transformationTypes));
 
 			EnsureGeoTransformations(geoTransformationSet, throwOnError,
-									 transformationTypes.Select(CreateGeoTransformation)
-														.ToList());
+			                         transformationTypes.Select(CreateGeoTransformation)
+			                                            .ToList());
 		}
 
 		public static void EnsureGeoTransformations(
@@ -1080,8 +1079,8 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentNotNull(transformationTypes, nameof(transformationTypes));
 
 			EnsureGeoTransformations(geoTransformationSet, throwOnError,
-									 transformationTypes.Select(CreateGeoTransformation)
-														.ToList());
+			                         transformationTypes.Select(CreateGeoTransformation)
+			                                            .ToList());
 		}
 
 		public static bool EnsureGeoTransformation(
@@ -1118,7 +1117,7 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentNotNull(transformation, nameof(transformation));
 
 			return EnsureGeoTransformation(transformation, direction,
-										   Factory.GeoTransformationDefaults);
+			                               Factory.GeoTransformationDefaults);
 		}
 
 		public static bool EnsureGeoTransformation(
@@ -1130,7 +1129,7 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentNotNull(set, nameof(set));
 
 			var changed = false;
-			if (!set.Find(direction, transformation))
+			if (! set.Find(direction, transformation))
 			{
 				set.Set(direction, transformation);
 				changed = true;
@@ -1143,21 +1142,21 @@ namespace ProSuite.Commons.AO.Geometry
 		public static IGeoTransformation CreateGeoTransformation(
 			esriSRGeoTransformationType transformationType)
 		{
-			return CreateGeoTransformation((int)transformationType);
+			return CreateGeoTransformation((int) transformationType);
 		}
 
 		[NotNull]
 		public static IGeoTransformation CreateGeoTransformation(
 			esriSRGeoTransformation2Type transformationType)
 		{
-			return CreateGeoTransformation((int)transformationType);
+			return CreateGeoTransformation((int) transformationType);
 		}
 
 		[NotNull]
 		public static IGeoTransformation CreateGeoTransformation(
 			esriSRGeoTransformation3Type transformationType)
 		{
-			return CreateGeoTransformation((int)transformationType);
+			return CreateGeoTransformation((int) transformationType);
 		}
 
 		[NotNull]
@@ -1165,14 +1164,14 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			try
 			{
-				return (IGeoTransformation)Assert.NotNull(
+				return (IGeoTransformation) Assert.NotNull(
 					Factory.CreateGeoTransformation(transformationType));
 			}
 			catch (Exception e)
 			{
 				throw new ArgumentException(
 					string.Format("Error creating geo transformation for type {0}",
-								  transformationType),
+					              transformationType),
 					nameof(transformationType), e);
 			}
 		}
@@ -1184,8 +1183,8 @@ namespace ProSuite.Commons.AO.Geometry
 			const bool comparePrecisionAndTolerance = false;
 			const bool compareVerticalCoordinateSystems = false;
 			return GetUniqueSpatialReference(spatialReferences,
-											 comparePrecisionAndTolerance,
-											 compareVerticalCoordinateSystems);
+			                                 comparePrecisionAndTolerance,
+			                                 compareVerticalCoordinateSystems);
 		}
 
 		[NotNull]
@@ -1211,9 +1210,9 @@ namespace ProSuite.Commons.AO.Geometry
 				}
 				else
 				{
-					if (!AreEqual(result, spatialReference,
-								   comparePrecisionAndTolerance,
-								   compareVerticalCoordinateSystems))
+					if (! AreEqual(result, spatialReference,
+					               comparePrecisionAndTolerance,
+					               compareVerticalCoordinateSystems))
 					{
 						throw new InvalidOperationException(
 							"Spatial references are not identical");
@@ -1240,7 +1239,6 @@ namespace ProSuite.Commons.AO.Geometry
 			throw new ArgumentException(
 				$"Spatial reference '{sr.Name}' uses neither a projected nor a geographic coordinate system",
 				nameof(spatialReference));
-
 		}
 
 		public static esriTransformDirection? GetTransformationDirection(
@@ -1251,7 +1249,7 @@ namespace ProSuite.Commons.AO.Geometry
 			ISpatialReference transformationSource;
 			ISpatialReference transformationTarget;
 			geoTransformation.GetSpatialReferences(out transformationSource,
-												   out transformationTarget);
+			                                       out transformationTarget);
 
 			ISpatialReference fromGCS =
 				GetGeographicCoordinateSystem(fromSpatialReference);
@@ -1259,13 +1257,13 @@ namespace ProSuite.Commons.AO.Geometry
 				GetGeographicCoordinateSystem(toSpatialReference);
 
 			if (IsHorizontalCoordinateSystemEqual(fromGCS, transformationSource) &&
-				IsHorizontalCoordinateSystemEqual(toGCS, transformationTarget))
+			    IsHorizontalCoordinateSystemEqual(toGCS, transformationTarget))
 			{
 				return esriTransformDirection.esriTransformForward;
 			}
 
 			if (IsHorizontalCoordinateSystemEqual(fromGCS, transformationTarget) &&
-				IsHorizontalCoordinateSystemEqual(toGCS, transformationSource))
+			    IsHorizontalCoordinateSystemEqual(toGCS, transformationSource))
 			{
 				return esriTransformDirection.esriTransformReverse;
 			}
@@ -1282,7 +1280,7 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <returns></returns>
 		[NotNull]
 		public static string GetName(esriUnits distanceUnits,
-									 esriCaseAppearance caseAppearance, bool plural)
+		                             esriCaseAppearance caseAppearance, bool plural)
 		{
 			IUnitConverter unitConverter = new UnitConverterClass();
 
@@ -1320,7 +1318,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			geom.ProjectEx(targetSr, trans.Dir, trans.GeogrTrans, false, 0, 0);
 
-			return (T)geom;
+			return (T) geom;
 		}
 
 		public static void GetGeoTrans(
@@ -1328,7 +1326,8 @@ namespace ProSuite.Commons.AO.Geometry
 			out IGeoTransformation geoTransformation, out esriTransformDirection dir,
 			string transformation = null)
 		{
-			GeoTrans trans = GetGeoTrans(sourceSr.FactoryCode, targetSr.FactoryCode, transformation);
+			GeoTrans trans =
+				GetGeoTrans(sourceSr.FactoryCode, targetSr.FactoryCode, transformation);
 
 			geoTransformation = trans.GeogrTrans;
 			dir = trans.Dir;
@@ -1372,14 +1371,20 @@ namespace ProSuite.Commons.AO.Geometry
 			return GetTransList(GetPrj(fromSr), GetPrj(toSr));
 		}
 
-		private static IList<GeoTrans> GetTransList(ISpatialReference fromSr, ISpatialReference toSr)
+		private static IList<GeoTrans> GetTransList(ISpatialReference fromSr,
+		                                            ISpatialReference toSr)
 		{
 			List<IGeoTransformation> transList = GetTransformations(fromSr, toSr);
 			List<GeoTrans> geoTransList = new List<GeoTrans>();
 			foreach (var trans in transList)
 			{
-				geoTransList.Add(new GeoTrans { FromSr = fromSr, ToSr = toSr, GeogrTrans = trans, Dir = GetDir(trans, fromSr, toSr) });
+				geoTransList.Add(new GeoTrans
+				                 {
+					                 FromSr = fromSr, ToSr = toSr, GeogrTrans = trans,
+					                 Dir = GetDir(trans, fromSr, toSr)
+				                 });
 			}
+
 			return geoTransList;
 		}
 
@@ -1389,7 +1394,8 @@ namespace ProSuite.Commons.AO.Geometry
 			return sr;
 		}
 
-		private static esriTransformDirection GetDir(IGeoTransformation geoTrans, ISpatialReference sr1, ISpatialReference sr2)
+		private static esriTransformDirection GetDir(IGeoTransformation geoTrans,
+		                                             ISpatialReference sr1, ISpatialReference sr2)
 		{
 			int code1 = GetGeographicCoordinateSystem(sr1).FactoryCode;
 			int code2 = GetGeographicCoordinateSystem(sr2).FactoryCode;
@@ -1401,11 +1407,12 @@ namespace ProSuite.Commons.AO.Geometry
 			else if (fromSR.FactoryCode == code2 && toSR.FactoryCode == code1)
 				return esriTransformDirection.esriTransformReverse;
 			else
-				throw new Exception(String.Format("{0} does not support going between {1} and {2}",
-												  geoTrans.Name, sr1.Name, sr2.Name));
+				throw new Exception(string.Format("{0} does not support going between {1} and {2}",
+				                                  geoTrans.Name, sr1.Name, sr2.Name));
 		}
 
-		private static List<IGeoTransformation> GetTransformations(ISpatialReference fromSR, ISpatialReference toSR)
+		private static List<IGeoTransformation> GetTransformations(
+			ISpatialReference fromSR, ISpatialReference toSR)
 		{
 			int fromFactcode = GetGeographicCoordinateSystem(fromSR).FactoryCode;
 			int toFactcode = GetGeographicCoordinateSystem(toSR).FactoryCode;
@@ -1419,15 +1426,16 @@ namespace ProSuite.Commons.AO.Geometry
 			gtSet.Reset();
 			for (int i = 0; i < gtSet.Count; i++)
 			{
-				var geoTrans = (IGeoTransformation)gtSet.Next();
+				var geoTrans = (IGeoTransformation) gtSet.Next();
 				geoTrans.GetSpatialReferences(out ISpatialReference fromGcsSR,
-											  out ISpatialReference toGcsSR);
+				                              out ISpatialReference toGcsSR);
 				if ((fromGcsSR.FactoryCode == fromFactcode && toGcsSR.FactoryCode == toFactcode) ||
-					(fromGcsSR.FactoryCode == toFactcode && toGcsSR.FactoryCode == fromFactcode))
+				    (fromGcsSR.FactoryCode == toFactcode && toGcsSR.FactoryCode == fromFactcode))
 				{
 					outList.Add(geoTrans);
 				}
 			}
+
 			return outList;
 		}
 
@@ -1445,20 +1453,19 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			int[] key = new[] { fromSr, toSr };
 			IList<GeoTrans> transList;
-			if (!_geoTransCache.Value.TryGetValue(key, out transList))
+			if (! _geoTransCache.Value.TryGetValue(key, out transList))
 			{
 				transList = GetTransList(fromSr, toSr);
 				Assert.True((transList?.Count ?? 0) > 0,
-							$"No transformation found between SrIds {fromSr} and {toSr}");
+				            $"No transformation found between SrIds {fromSr} and {toSr}");
 				_geoTransCache.Value.Add(key, transList);
 			}
 
 			return string.IsNullOrWhiteSpace(transformation)
-					   ? transList[0]
-					   : transList.First(x => string.Equals(x.GeogrTrans.Name, transformation,
-															StringComparison.OrdinalIgnoreCase));
+				       ? transList[0]
+				       : transList.First(x => string.Equals(x.GeogrTrans.Name, transformation,
+				                                            StringComparison.OrdinalIgnoreCase));
 		}
-
 
 		/// <summary>
 		/// Returns the abbreviation of the specified unit.
@@ -1522,35 +1529,35 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
 			// TODO revise: bStandardUnits should be false, probably
-			return ((ISpatialReferenceResolution)spatialReference).XYResolution[true];
+			return ((ISpatialReferenceResolution) spatialReference).XYResolution[true];
 		}
 
 		public static double GetZResolution([NotNull] ISpatialReference spatialReference)
 		{
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
-			return ((ISpatialReferenceResolution)spatialReference).ZResolution[false];
+			return ((ISpatialReferenceResolution) spatialReference).ZResolution[false];
 		}
 
 		public static double GetMResolution([NotNull] ISpatialReference spatialReference)
 		{
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
-			return ((ISpatialReferenceResolution)spatialReference).MResolution;
+			return ((ISpatialReferenceResolution) spatialReference).MResolution;
 		}
 
 		public static double GetXyTolerance([NotNull] ISpatialReference spatialReference)
 		{
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
-			return ((ISpatialReferenceTolerance)spatialReference).XYTolerance;
+			return ((ISpatialReferenceTolerance) spatialReference).XYTolerance;
 		}
 
 		public static double GetZTolerance([NotNull] ISpatialReference spatialReference)
 		{
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
-			return ((ISpatialReferenceTolerance)spatialReference).ZTolerance;
+			return ((ISpatialReferenceTolerance) spatialReference).ZTolerance;
 		}
 
 		#region Non-public methods
@@ -1565,7 +1572,7 @@ namespace ProSuite.Commons.AO.Geometry
 			[NotNull] IEnumerable<IGeoTransformation> transformations)
 		{
 			Assert.ArgumentNotNull(geoTransformationSet,
-								   nameof(geoTransformationSet));
+			                       nameof(geoTransformationSet));
 			Assert.ArgumentNotNull(transformations, nameof(transformations));
 
 			var directions =
@@ -1593,16 +1600,16 @@ namespace ProSuite.Commons.AO.Geometry
 					}
 
 					_msg.Warn(string.Format(
-								  "Error setting up default geographic transformation {0}: {1}",
-								  transformation.Name, e.Message),
-							  e);
+						          "Error setting up default geographic transformation {0}: {1}",
+						          transformation.Name, e.Message),
+					          e);
 				}
 			}
 		}
 
 		private static bool IsPrecisionEqual([NotNull] ISpatialReference sref1,
-											 [NotNull] ISpatialReference sref2,
-											 bool onlyXYPrecision)
+		                                     [NotNull] ISpatialReference sref2,
+		                                     bool onlyXYPrecision)
 		{
 			Assert.ArgumentNotNull(sref1, nameof(sref1));
 			Assert.ArgumentNotNull(sref2, nameof(sref2));
@@ -1610,7 +1617,7 @@ namespace ProSuite.Commons.AO.Geometry
 			bool precisionEqual;
 			if (onlyXYPrecision)
 			{
-				precisionEqual = ((ISpatialReference2)sref1).IsXYPrecisionEqual(sref2);
+				precisionEqual = ((ISpatialReference2) sref1).IsXYPrecisionEqual(sref2);
 			}
 			else
 			{
@@ -1643,7 +1650,7 @@ namespace ProSuite.Commons.AO.Geometry
 		private static string HandleToStringException(Exception e)
 		{
 			string msg = string.Format("Error converting to string: {0}",
-									   e.Message);
+			                           e.Message);
 			_msg.Debug(msg, e);
 			return msg;
 		}

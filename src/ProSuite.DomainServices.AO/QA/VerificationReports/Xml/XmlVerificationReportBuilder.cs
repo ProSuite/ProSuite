@@ -7,6 +7,7 @@ using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -30,8 +31,8 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 
 		private bool _verificationOngoing;
 
-		[NotNull] private readonly HashSet<Dataset> _verifiedDatasets =
-			new HashSet<Dataset>();
+		[NotNull] private readonly HashSet<QualityVerificationDataset> _verifiedDatasets =
+			new HashSet<QualityVerificationDataset>();
 
 		[NotNull] private readonly HashSet<QualitySpecificationElement>
 			_verifiedQualityConditions =
@@ -44,6 +45,9 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 		[NotNull] private readonly Dictionary<QualitySpecificationElement, IssueStats>
 			_issuesByQualityCondition =
 				new Dictionary<QualitySpecificationElement, IssueStats>();
+
+		[NotNull] private readonly Dictionary<DdxModel, string>
+			_dataSourceDescriptionsByModel = new Dictionary<DdxModel, string>();
 
 		private DateTime _verificationStartTime;
 		private DateTime _verificationEndTime;
@@ -96,12 +100,30 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			_issuesByQualityCondition.Clear();
 			_qualitySpecificationElementsByDataset.Clear();
 			_verifiedDatasets.Clear();
+			_dataSourceDescriptionsByModel.Clear();
 			_verifiedQualityConditions.Clear();
 		}
 
-		public void AddVerifiedDataset(Dataset dataset)
+		public void AddVerifiedDataset(QualityVerificationDataset verificationDataset,
+		                               string workspaceDisplayText,
+		                               ISpatialReference spatialReference)
 		{
-			_verifiedDatasets.Add(dataset);
+			if (spatialReference != null)
+			{
+				verificationDataset.CoordinateSystem = spatialReference.Name;
+				verificationDataset.Tolerance =
+					SpatialReferenceUtils.GetXyTolerance(spatialReference);
+				verificationDataset.Resolution =
+					SpatialReferenceUtils.GetXyResolution(spatialReference);
+			}
+
+			_verifiedDatasets.Add(verificationDataset);
+
+			if (! string.IsNullOrEmpty(workspaceDisplayText))
+			{
+				_dataSourceDescriptionsByModel[verificationDataset.Dataset.Model] =
+					workspaceDisplayText;
+			}
 		}
 
 		public void AddVerifiedQualityCondition(
@@ -245,7 +267,8 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 				}
 			}
 
-			foreach (Dataset verifiedDataset in _verifiedDatasets.OrderBy(d => d.Name))
+			foreach (QualityVerificationDataset verifiedDataset in _verifiedDatasets.OrderBy(
+				         d => d.Dataset.Name))
 			{
 				bool reportParameters = ! reportConditionsInSummary;
 				bool reportDescription = ! reportConditionsInSummary;
@@ -258,6 +281,12 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 					                         reportDescription);
 
 				result.AddVerifiedDataset(xmlVerifiedDataset);
+			}
+
+			foreach (KeyValuePair<DdxModel, string> dataSource in _dataSourceDescriptionsByModel)
+			{
+				string modelName = Escape(dataSource.Key.Name);
+				result.AddDataSourceDescription(modelName, dataSource.Value);
 			}
 
 			if (reportQualityConditionsWithIssues)
@@ -335,12 +364,15 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 		}
 
 		[NotNull]
-		private XmlVerifiedDataset CreateXmlVerifiedDataset([NotNull] Dataset dataset,
-		                                                    bool reportVerifiedConditions,
-		                                                    bool reportIssues,
-		                                                    bool reportParameters,
-		                                                    bool reportDescription)
+		private XmlVerifiedDataset CreateXmlVerifiedDataset(
+			[NotNull] QualityVerificationDataset verifiedDataset,
+			bool reportVerifiedConditions,
+			bool reportIssues,
+			bool reportParameters,
+			bool reportDescription)
 		{
+			var dataset = verifiedDataset.Dataset;
+
 			List<QualitySpecificationElement> qualitySpecificationElements;
 			if (! _qualitySpecificationElementsByDataset.TryGetValue(
 				    dataset, out qualitySpecificationElements))
@@ -373,6 +405,12 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			result.ErrorCount = errorCount;
 			result.WarningCount = warningCount;
 			result.StopErrorCount = stopErrorCount;
+
+			result.GeometryType = dataset.GeometryType?.Name;
+
+			result.CoordinateSystem = verifiedDataset.CoordinateSystem;
+			result.Tolerance = verifiedDataset.Tolerance;
+			result.Resolution = verifiedDataset.Resolution;
 
 			return result;
 		}

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -18,6 +19,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -65,7 +67,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		protected override Task OnToolActivatingCoreAsync()
 		{
-			InitializeOptions();
+			_crackerToolOptions = InitializeOptions();
 
 			_feedback = new CrackerFeedback();
 
@@ -75,7 +77,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			_settingsProvider?.StoreLocalConfiguration(_crackerToolOptions.LocalOptions);
-			
+
 			_feedback?.DisposeOverlays();
 			_feedback = null;
 
@@ -114,7 +116,7 @@ namespace ProSuite.AGP.Editing.Cracker
 				_msg.Warn("Calculation of crack points was cancelled.");
 				return;
 			}
-			
+
 			_resultCrackPoints =
 				CalculateCrackPoints(selectedFeatures, intersectingFeatures, _crackerToolOptions,
 				                     IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
@@ -140,21 +142,22 @@ namespace ProSuite.AGP.Editing.Cracker
 			return _resultCrackPoints != null && _resultCrackPoints.ResultsByFeature.Count > 0;
 		}
 
-		protected override void ToggleVertices()
-		{
-			base.ToggleVertices();
+		// TODO: Show/hide Vertex labels, maybe impl on TopologicalCrackingToolBase / Shortcut T
+		//protected override void ToggleVertices()
+		//{
+		//	base.ToggleVertices();
 
-			try
-			{
-				//_vertexLabels.Toggle();
+		//	try
+		//	{
+		//		//_vertexLabels.Toggle();
 
-				//_vertexLabels.UpdateLabels();
-			}
-			catch (Exception ex)
-			{
-				_msg.Error($"Toggling Vertices Labels Error: {ex.Message}");
-			}
-		}
+		//		//_vertexLabels.UpdateLabels();
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		_msg.Error($"Toggling Vertices Labels Error: {ex.Message}");
+		//	}
+		//}
 
 		protected override async Task<bool> SelectAndProcessDerivedGeometry(
 			Dictionary<MapMember, List<long>> selection,
@@ -186,7 +189,8 @@ namespace ProSuite.AGP.Editing.Cracker
 			var result =
 				MicroserviceClient.ApplyCrackPoints(
 					selectedFeatures, crackPointsToApply, intersectingFeatures,
-					_crackerToolOptions, IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+					_crackerToolOptions,
+					IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
 					false, progressor?.CancellationToken ?? new CancellationTokenSource().Token);
 
 			var updates = new Dictionary<Feature, Geometry>();
@@ -289,29 +293,44 @@ namespace ProSuite.AGP.Editing.Cracker
 			string currentCentralConfigDir = CentralConfigDir;
 			string currentLocalConfigDir = LocalConfigDir;
 
-			// For the time being, we always reload the options because they could have been updated in ArcMap
-			_settingsProvider =
-				new OverridableSettingsProvider<PartialCrackerToolOptions>(
-					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			_settingsProvider ??= new OverridableSettingsProvider<PartialCrackerToolOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
 			PartialCrackerToolOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
-			_crackerToolOptions = new CrackerToolOptions(centralConfiguration,
-			                                             localConfiguration);
+			var result = new CrackerToolOptions(centralConfiguration,
+			                                    localConfiguration);
+
+			result.PropertyChanged -= _crackerToolOptions_PropertyChanged;
+			result.PropertyChanged += _crackerToolOptions_PropertyChanged;
 
 			_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
 
-			string optionsMessage = _crackerToolOptions.GetLocalOverridesMessage();
+			string optionsMessage = result.GetLocalOverridesMessage();
 
 			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
 
-			return _crackerToolOptions;
+			return result;
+		}
+
+		private void _crackerToolOptions_PropertyChanged(object sender,
+		                                                 PropertyChangedEventArgs eventArgs)
+		{
+			try
+			{
+				QueuedTaskUtils.Run(() => ProcessSelection());
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating crack points: {e.Message}", e);
+			}
 		}
 
 		#region Tool Options DockPane
@@ -352,8 +371,8 @@ namespace ProSuite.AGP.Editing.Cracker
 			viewModel?.Hide();
 		}
 
-		#endregion 
-		
+		#endregion
+
 		#region Search target features
 
 		private static bool CanOverlapGeometryType([CanBeNull] FeatureLayer featureLayer)
@@ -393,7 +412,6 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		#endregion
-
 
 		protected override Cursor GetSelectionCursor()
 		{
