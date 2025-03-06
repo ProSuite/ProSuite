@@ -138,7 +138,8 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 
 			QualityCondition qualityCondition = qualitySpecificationElement.QualityCondition;
 
-			foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues())
+			foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues(
+				         excludeReferenceDatasets: true))
 			{
 				List<QualitySpecificationElement> list;
 				if (! _qualitySpecificationElementsByDataset.TryGetValue(dataset, out list))
