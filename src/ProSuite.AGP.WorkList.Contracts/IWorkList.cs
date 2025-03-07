@@ -68,7 +68,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool CanSetStatus();
 
-		void SetVisited([NotNull] IWorkItem item);
+		//void SetVisited([NotNull] IWorkItem item);
+		void SetVisited(IList<IWorkItem> items);
 
 		void Commit();
 
@@ -80,6 +81,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		IAttributeReader GetAttributeReader(long forSourceClassId);
 
+		// TODO: (daro) drop!
 		/// <summary>
 		/// Gets the current item's source row.
 		/// </summary>

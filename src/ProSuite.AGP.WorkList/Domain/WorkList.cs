@@ -261,11 +261,24 @@ namespace ProSuite.AGP.WorkList.Domain
 			return true;
 		}
 
-		public void SetVisited(IWorkItem item)
-		{
-			Repository.SetVisited(item);
+		//public void SetVisited(IWorkItem item)
+		//{
+		//	Repository.SetVisited(item);
 
-			OnWorkListChanged(null, new List<long> { item.OID });
+		//	OnWorkListChanged(null, new List<long> { item.OID });
+		//}
+
+		public void SetVisited(IList<IWorkItem> items)
+		{
+			var oids = new List<long>(items.Count);
+
+			foreach (IWorkItem item in items)
+			{
+				item.Visited = true;
+				oids.Add(item.OID);
+			}
+
+			OnWorkListChanged(null, oids);
 		}
 
 		public void Commit()
