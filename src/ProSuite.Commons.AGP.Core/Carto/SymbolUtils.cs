@@ -1491,7 +1491,6 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			                    out index);
 		}
 
-		// todo daro: to CollectionUtils?
 		/// <remarks>
 		/// Usage: <c>foo.Array = AddOne(foo.Array, item)</c>
 		/// </remarks>

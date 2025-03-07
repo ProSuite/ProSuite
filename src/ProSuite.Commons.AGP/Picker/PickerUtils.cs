@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -66,6 +67,7 @@ namespace ProSuite.Commons.AGP.Picker
 			//       .SelectMany(fcs => fcs);
 		}
 
+		[Obsolete($"use {nameof(CreatePolygon)}")]
 		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
 		                                              int selectionTolerancePixels)
 		{
@@ -75,6 +77,35 @@ namespace ProSuite.Commons.AGP.Picker
 			double envelopeExpansion = selectionToleranceMapUnits * 2;
 
 			Envelope envelope = sketchGeometry.Extent;
+
+			// NOTE: MapToScreen in stereo map is sensitive to Z value (Picker location!)
+
+			// Rather than creating a non-Z-aware polygon with elliptic arcs by using buffer...
+			//Geometry selectionGeometry =
+			//	GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
+
+			// Just expand the envelope
+			// .. but PickerViewModel needs a polygon to display selection geometry (press space).
+
+			// HasZ, HasM and HasID are inherited from input geometry.
+			// There is no need for GeometryUtils.EnsureGeometrySchema()
+
+			return GeometryFactory.CreatePolygon(
+				envelope.Expand(envelopeExpansion, envelopeExpansion, false),
+				envelope.SpatialReference);
+		}
+
+		public static Geometry CreatePolygon(Point screenPoint, int expansionPixels)
+		{
+			double selectionToleranceMapUnits =
+				MapUtils.ConvertScreenPixelToMapLength(MapView.Active, expansionPixels,
+				                                       screenPoint);
+
+			// TODO: (daro) revise multiplication by 2
+			double envelopeExpansion = selectionToleranceMapUnits * 2;
+
+			MapPoint mapPoint = MapView.Active.ScreenToMap(screenPoint);
+			Envelope envelope = mapPoint.Extent;
 
 			// NOTE: MapToScreen in stereo map is sensitive to Z value (Picker location!)
 

@@ -169,7 +169,10 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			TestDescriptor testDescriptor = GetTestDescriptor(conditionMsg);
 
-			var result = new QualityCondition(conditionMsg.Name, testDescriptor);
+			var result = new QualityCondition(conditionMsg.Name, testDescriptor,
+			                                  conditionMsg.Description);
+			result.Url = conditionMsg.Url;
+
 			result.SetCloneId(conditionMsg.ConditionId);
 
 			AddIssueFilters(result, conditionMsg, datasetSettings);

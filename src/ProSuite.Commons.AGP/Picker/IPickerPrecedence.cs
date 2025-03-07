@@ -13,11 +13,13 @@ public interface IPickerPrecedence : IDisposable
 	Point PickerLocation { get; set; }
 	SpatialRelationship SpatialRelationship { get; }
 	SelectionCombinationMethod SelectionCombinationMethod { get; }
+	bool NoMultiselection { get; set; }
+
 	IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items);
 
 	IPickableItem PickBest(IEnumerable<IPickableItem> items);
 
-	PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection);
+	PickerMode GetPickerMode(ICollection<FeatureSelectionBase> orderedSelection);
 	/// <summary>
 	/// Returns the geometry which can be used for spatial queries.
 	/// For single-click picks, it returns the geometry expanded by the PickerPrecedenceBase.SelectionTolerance.

@@ -301,8 +301,33 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 
 		public IEnumerable<MapPoint> GetPotentialTargetInsertPoints()
 		{
-			yield return FromPointOnTarget;
-			yield return ToPointOnTarget;
+			//TODO: wegen overrides FromPointOnTarget, ToPointOnTarget PointCount nicht ohne weiteres ermittelbar
+			//<see cref="AdjustedCutSubcurve.FromPointOnTarget"/>, throws an exception if PointCount = 0
+			//<see cref="CutSubcurve.FromPointOnTarget"/>, throws an exception if PointCount = 0
+
+			var list = new List<MapPoint>();
+			try
+			{
+				list.Add(FromPointOnTarget);
+			}
+			catch (Exception exception)
+			{
+				//nothing to do				
+			}
+
+			try
+			{
+				list.Add(ToPointOnTarget);
+			}
+			catch (Exception exception)
+			{
+				//nothing to do
+			}
+
+			foreach (MapPoint mapPoint in list)
+			{
+				yield return mapPoint;
+			}
 
 			if (ExtraTargetInsertPoints != null)
 			{

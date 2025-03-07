@@ -80,7 +80,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			// get all vertices of selected features
 			foreach (var feature in selectedFeatures)
 			{
-				IEnumerable<MapPoint> vertices = GeometryUtils.GetVertices(feature);
+				IEnumerable<MapPoint> vertices = GeometryUtils.GetVertices(feature.GetShape());
 
 				// draw vertices before drawing crack points
 				foreach (var vertex in vertices)

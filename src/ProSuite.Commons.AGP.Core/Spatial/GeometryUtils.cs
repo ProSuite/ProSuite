@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -686,6 +685,97 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		}
 
 		/// <summary>
+		/// Reverse the orientation of the given part <paramref name="partIndex"/>
+		/// (or all parts if <paramref name="partIndex"/> is negative) of the given
+		/// <paramref name="polycurve"/> (Polyline or Polygon). Notice that reversing
+		/// a polygon ring changes its meaning from interior to exterior or vice versa!
+		/// </summary>
+		public static T ReverseOrientation<T>(T polycurve, int partIndex = -1) where T : Multipart
+		{
+			if (polycurve is null)
+				return null;
+
+			if (partIndex < 0)
+			{
+				return (T) GeometryEngine.Instance.ReverseOrientation(polycurve);
+			}
+
+			Multipart result;
+
+			switch (polycurve)
+			{
+				case Polyline polyline:
+					result = ReverseOrientation(polyline, partIndex);
+					break;
+
+				case Polygon polygon:
+					result = ReverseOrientation(polygon, partIndex);
+					break;
+
+				default:
+					throw new NotSupportedException(
+						$"Unknown {nameof(Multipart)} subtype: {polycurve.GetType().Name}");
+			}
+
+			return (T) result;
+		}
+
+		private static Polyline ReverseOrientation(Polyline polyline, int partIndex = -1)
+		{
+			if (polyline is null)
+				throw new ArgumentNullException(nameof(polyline));
+			if (partIndex < 0 || partIndex >= polyline.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			var builder = new PolylineBuilderEx(polyline);
+			ReverseOrientation(builder.Parts[partIndex]);
+			return builder.ToGeometry();
+		}
+
+		private static Polygon ReverseOrientation(Polygon polygon, int partIndex = -1)
+		{
+			if (polygon is null)
+				throw new ArgumentNullException(nameof(polygon));
+			if (partIndex < 0 || partIndex > polygon.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			var builder = new PolygonBuilderEx(polygon);
+			ReverseOrientation(builder.Parts[partIndex]);
+			return builder.ToGeometry();
+		}
+
+		private static void ReverseOrientation(List<Segment> path)
+		{
+			// Reverse the list, then each segment in the list:
+
+			path.Reverse();
+
+			int count = path.Count;
+			for (int i = 0; i < count; i++)
+			{
+				var segment = path[i];
+
+				switch (segment)
+				{
+					case LineSegment line:
+						path[i] = LineBuilderEx.CreateLineSegment(line.EndPoint, line.StartPoint);
+						break;
+
+					case CubicBezierSegment bezier:
+						path[i] = CubicBezierBuilderEx.CreateCubicBezierSegment(
+							bezier.EndPoint, bezier.ControlPoint2, bezier.ControlPoint1, bezier.StartPoint);
+						break;
+
+					case EllipticArcSegment arc:
+						var builder = new EllipticArcBuilderEx(arc);
+						builder.Orientation = arc.IsCounterClockwise
+							                      ? ArcOrientation.ArcClockwise
+							                      : ArcOrientation.ArcCounterClockwise;
+						path[i] = builder.ToSegment();
+						break;
+				}
+			}
+		}
+
+		/// <summary>
 		/// Return a copy of the input geometry with index structures
 		/// added that may accelerate the relational operations.
 		/// </summary>
@@ -1092,23 +1182,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			if (shape is Multipart multipart)
 			{
-				int vertexIndex = globalVertexIndex;
-				int partCount = multipart.PartCount;
-				for (int k = 0; k < partCount; k++)
-				{
-					int segmentCount = multipart.Parts[k].Count;
-					int vertexCount = segmentCount + 1; // even for rings!
-
-					if (vertexIndex < vertexCount)
-					{
-						partIndex = k;
-						return vertexIndex;
-					}
-
-					vertexIndex -= vertexCount;
-				}
-
-				throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
+				return GetLocalVertexIndex(multipart, globalVertexIndex, out partIndex);
 			}
 
 			if (shape is Multipatch)
@@ -1118,6 +1192,36 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			partIndex = 0;
 			return globalVertexIndex;
+		}
+
+		/// <summary>
+		/// Given a global (shape-wide) vertex index, get the part-local
+		/// vertex index and the part index
+		/// </summary>
+		public static int GetLocalVertexIndex(Multipart multipart, int globalVertexIndex, out int partIndex)
+		{
+			if (multipart is null)
+				throw new ArgumentNullException(nameof(multipart));
+			if (globalVertexIndex < 0)
+				throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
+
+			int vertexIndex = globalVertexIndex;
+			int partCount = multipart.PartCount;
+			for (int k = 0; k < partCount; k++)
+			{
+				int segmentCount = multipart.Parts[k].Count;
+				int vertexCount = segmentCount + 1; // even for rings!
+
+				if (vertexIndex < vertexCount)
+				{
+					partIndex = k;
+					return vertexIndex;
+				}
+
+				vertexIndex -= vertexCount;
+			}
+
+			throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
 		}
 
 		/// <summary>
@@ -1216,7 +1320,9 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// Add a vertex to the given <paramref name="shape"/>
 		/// (a Polyline, Polygon, or a Multipoint) at or near the
 		/// given <paramref name="point"/> (it will be projected
-		/// onto the Polyline or Polygon boundary).
+		/// onto the Polyline or Polygon boundary). If the given
+		/// <paramref name="point"/> has a non-zero ID, the new
+		/// vertex will be a control point, otherwise a regular vertex.
 		/// </summary>
 		/// <returns>A new geometry with the vertex added</returns>
 		/// <remarks>For multipoints, just append the point, for polylines
@@ -1231,12 +1337,14 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			// Multipoint: add point at clickPoint
 			// Multipart: split line at clickPoint
 			// MultiPatch: not implemented
-			// otherwise: error (UI should not call AddVertex)
+			// otherwise: error
 
 			if (shape is Multipoint multipoint)
 			{
 				point = EnsureSpatialReference(point, multipoint.SpatialReference);
 				var builder = new MultipointBuilderEx(multipoint);
+				if (point.HasID) builder.HasID = true;
+				// else: don't modify HasID
 				builder.AddPoint(point);
 				partIndex = vertexIndex = builder.PointCount - 1;
 				return builder.ToGeometry();
@@ -1264,8 +1372,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				// split point, thus segmentIndex is the vertexIndex of the inserted vertex:
 				vertexIndex = segmentIndex;
 				// SplitAtPoint interpolates Z and M attributes (good), but also seems to
-				// inherit the ID from neighbouring vertices (not so good): manually clear:
-				newShape = ControlPointUtils.SetPointID(0, newShape, partIndex, segmentIndex);
+				// inherit the ID from neighbouring vertices: take ID from split point
+				newShape = ControlPointUtils.SetPointID(point.ID, newShape, partIndex, segmentIndex);
 				return newShape;
 			}
 
@@ -1768,11 +1876,6 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			MapPoint upperRight = GetUpperRight(extent);
 
 			return $"{Format(lowerLeft, digits)}, {Format(upperRight, digits)}";
-		}
-
-		public static IEnumerable<MapPoint> GetVertices([NotNull] Feature feature)
-		{
-			return GetVertices(feature.GetShape());
 		}
 
 		public static IEnumerable<MapPoint> GetVertices([CanBeNull] Geometry geometry)

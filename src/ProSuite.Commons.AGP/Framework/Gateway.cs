@@ -69,25 +69,32 @@ public static class Gateway
 	}
 
 	/// <summary>
-	/// Shows the Window <typeparamref name="TWindow"/> as a modal dialog,
+	/// Show the window <typeparamref name="T"/> as a modal dialog,
 	/// creating and running it (synchronously) on the proper thread.
 	/// </summary>
-	/// <returns>The DialogResult property before the dialog closes</returns>
-	public static bool? ShowDialog<TWindow>(params object[] args) where TWindow : Window
+	/// <typeparam name="T">The <see cref="Window"/> subclass to create
+	/// and show (must have a public parameterless constructor)</typeparam>
+	/// <param name="viewModel">The view model (optional, used
+	/// as the window's <see cref="Window.DataContext"/>)</param>
+	/// <returns>The value of the <see cref="Window.DialogResult"/>
+	/// property just before the window closes</returns>
+	public static bool? ShowDialog<T>(object viewModel) where T : Window
 	{
-		args ??= Array.Empty<object>();
-
 		try
 		{
 			var dispatcher = Application.Current.Dispatcher;
 
 			return dispatcher.Invoke(() =>
 			{
-				var owner = GetMainWindow();
-				if (owner is null) return null;
-				var dialog = (Window) Activator.CreateInstance(typeof(TWindow), args, null);
+				// Available only on thread that created the Application:
+				Window owner = Application.Current.MainWindow;
+
+				var dialog = (Window) Activator.CreateInstance(typeof(T));
 				if (dialog is null) return null;
+
 				dialog.Owner = owner;
+				dialog.DataContext = viewModel;
+
 				_msg.Debug($"Showing dialog: {dialog.Title}");
 				var result = dialog.ShowDialog();
 				return result;
