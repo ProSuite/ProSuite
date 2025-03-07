@@ -18,16 +18,31 @@ public interface IMapWhiteSelection
 	/// <returns>true iff no involved features (regardless of vertices)</returns>
 	bool IsEmpty { get; }
 
-	bool Select(MapPoint clickPont, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates);
-	bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates);
+	/// <summary>
+	/// Select vertices around <paramref name="clickPoint"/> from amongst
+	/// the given <paramref name="candidates"/> or (if null) the features
+	/// already involved with this white selection.
+	/// </summary>
+	/// <returns>True iff this white selection changed</returns>
+	bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates = null);
+
+	/// <summary>
+	/// Select vertices within <paramref name="geometry"/> from amongst
+	/// the given <paramref name="candidates"/> or (if null) the features
+	/// already involved with this white selection.
+	/// </summary>
+	/// <returns>True iff this white selection changed</returns>
+	bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates = null);
+
 	int Remove(FeatureLayer layer, IEnumerable<long> oids);
+
 	bool SetEmpty();
 
 	bool SelectedVertex(MapPoint point, double tolerance, out MapPoint vertex);
 
-	MapPoint NearestPoint(MapPoint clickPoint, double tolerance,
-	                      out FeatureLayer layer, out long oid, out int partIndex,
-	                      out int? segmentIndex, out int? vertexIndex);
+	MapPoint HitTest(MapPoint clickPoint, double tolerance,
+	                 out FeatureLayer layer, out long oid, out int partIndex,
+	                 out int? segmentIndex, out int? vertexIndex);
 
 	ICollection<IWhiteSelection> GetLayerSelections();
 	IWhiteSelection GetLayerSelection(FeatureLayer layer);
@@ -38,7 +53,7 @@ public interface IMapWhiteSelection
 	void ClearGeometryCache();
 
 	void UpdateRegularSelection();
-	bool UpdateWhiteSelection(SelectionSet regular);
+	bool UpdateWhiteSelection(SelectionSet regular, bool selectAllVertices = false);
 }
 
 /// <summary>
@@ -47,7 +62,7 @@ public interface IMapWhiteSelection
 /// Maintains one <see cref="IWhiteSelection"/> instance per layer, which
 /// in turn maintains one <see cref="IShapeSelection"/> per involved feature.
 /// </summary>
-public class MapWhiteSelection : IMapWhiteSelection, IDisposable
+public class MapWhiteSelection : IMapWhiteSelection
 {
 	private readonly MapView _mapView;
 	// TODO probably should keep _layerSelections ordered as in the ToC
@@ -83,9 +98,9 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		return false;
 	}
 
-	public MapPoint NearestPoint(MapPoint clickPoint, double tolerance,
-	                             out FeatureLayer layer, out long oid, out int partIndex,
-	                             out int? segmentIndex, out int? vertexIndex)
+	public MapPoint HitTest(MapPoint clickPoint, double tolerance,
+	                        out FeatureLayer layer, out long oid, out int partIndex,
+	                        out int? segmentIndex, out int? vertexIndex)
 	{
 		var all = GetLayerSelections();
 
@@ -116,6 +131,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 					minOid = involvedOid;
 					minPartIndex = proximity.PartIndex;
 					minVertIndex = proximity.PointIndex ?? throw new AssertionException();
+					// Note: PointIndex is global (NOT relative to PartIndex)
 					minPoint = proximity.Point;
 				}
 			}
@@ -142,6 +158,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 						minOid = involvedOid;
 						minPartIndex = proximity.PartIndex;
 						minSegIndex = proximity.SegmentIndex ?? throw new AssertionException();
+						// Note: SegmentIndex is relative to PartIndex (unlike PointIndex)
 						minPoint = proximity.Point;
 					}
 				}
@@ -182,7 +199,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
 	public int Remove(FeatureLayer layer, IEnumerable<long> oids)
 	{
-		if (! _layerSelections.TryGetValue(layer.URI, out var ws))
+		if (layer is null || ! _layerSelections.TryGetValue(layer.URI, out var ws))
 		{
 			return 0; // layer has no white selection
 		}
@@ -209,9 +226,10 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 	/// <remarks>Must call on MCT</remarks>
 	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
 	{
-		//var extent = clickPoint.Extent.Expand(tolerance, tolerance, false);
-		//var dict = GetFeatures(extent);
-		var dict = candidates;
+		if (clickPoint is null)
+			throw new ArgumentNullException(nameof(clickPoint));
+
+		var dict = candidates ?? GetInvolvedFeatures();
 
 		var changed = false;
 
@@ -293,8 +311,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
 	public bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
 	{
-		//var dict = GetFeatures(geometry);
-		var dict = candidates;
+		var dict = candidates ?? GetInvolvedFeatures();
 
 		var changed = false;
 
@@ -436,6 +453,12 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		return selectionSet.ToDictionary<FeatureLayer>();
 	}
 
+	private Dictionary<FeatureLayer, List<long>> GetInvolvedFeatures()
+	{
+		return GetLayerSelections()
+			.ToDictionary(ws => ws.Layer, ws => ws.GetInvolvedOIDs().ToList());
+	}
+
 	/// <returns>true iff the selection changed (was not already empty)</returns>
 	public bool SetEmpty()
 	{
@@ -542,7 +565,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 	/// than the regular selection (which is just a list of OIDs);
 	/// consider not updating the white selection if the regular
 	/// selection is large (say more than 50 features).</remarks>
-	public bool UpdateWhiteSelection(SelectionSet regular)
+	public bool UpdateWhiteSelection(SelectionSet regular, bool selectAllVertices = false)
 	{
 		if (regular is null) return false;
 
@@ -571,7 +594,7 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 					var sel = ws.GetShapeSelection(oid);
 					if (sel is null)
 					{
-						if (ws.Add(oid))
+						if (ws.Add(oid, selectAllVertices))
 						{
 							changed = true;
 						}
@@ -605,10 +628,5 @@ public class MapWhiteSelection : IMapWhiteSelection, IDisposable
 		}
 
 		return changed;
-	}
-
-	public void Dispose()
-	{
-		// nothing to dispose at the moment
 	}
 }

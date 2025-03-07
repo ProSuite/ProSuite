@@ -550,11 +550,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			return CanStartSketchPhaseCore(selectedFeatures);
 		}
 
-		private async Task ResetSketchAsync()
+		protected async Task ResetSketchAsync()
 		{
 			Geometry currentSketch = await GetCurrentSketchAsync();
 
-			if (currentSketch is { IsEmpty: false })
+			//if (currentSketch is { IsEmpty: false })
 			{
 				RememberSketch();
 

@@ -658,6 +658,18 @@ namespace ProSuite.Commons.AGP.Carto
 			return GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
 		}
 
+		public static double ConvertScreenPixelToMapLength([NotNull] MapView mapView,
+		                                                   int pixels, Point screenPoint)
+		{
+			MapPoint atPoint = mapView.ScreenToMap(screenPoint);
+
+			// Add pixels to get a "radius".
+			var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
+			var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
+
+			return GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
+		}
+
 		/// <summary>
 		/// Gets the pixel size for the specified map view in the map space without
 		/// using the ScreenToMap method (which is incorrect in stereo maps at 3.3).
