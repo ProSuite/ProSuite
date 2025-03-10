@@ -237,7 +237,7 @@ namespace ProSuite.AGP.WorkList
 			WorkItemStateRepository.Update(item);
 		}
 
-		public async Task SetStatus(IWorkItem item, WorkItemStatus status)
+		public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 		{
 			item.Status = status;
 

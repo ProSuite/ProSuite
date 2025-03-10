@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -73,7 +74,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		void Commit();
 
-		void SetStatus([NotNull] IWorkItem item, WorkItemStatus status);
+		Task SetStatusAsync([NotNull] IWorkItem item, WorkItemStatus status);
 
 		void RefreshItems();
 

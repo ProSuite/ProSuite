@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
@@ -147,9 +148,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			return Repository.GetSourceRow(sourceClass, Current.ObjectID);
 		}
 
-		public void SetStatus(IWorkItem item, WorkItemStatus status)
+		public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 		{
-			Repository.SetStatus(item, status);
+			await Repository.SetStatusAsync(item, status);
 
 			// If a item visibility changes to Done the item is not part
 			// of the work list anymore, respectively GetItems(QuerFilter, bool, int)
