@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -288,15 +287,18 @@ public class MapWhiteSelection : IMapWhiteSelection
 
 	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape, MapPoint clickPoint, double tolerance)
 	{
-		// By K2-204, polygons without a fill shall only be selected
-		// if the boundary intersects the selection geometry, therefore:
-		// - if not polygon or filled polygon: can click anywhere
-		// - otherwise: must click within tolerance of polygon boundary
-
-		if (featureShape is not Polygon polygon || ! IsUnfilledPolygon(layer, oid))
+		if (featureShape is not Polygon polygon)
 		{
 			return true;
 		}
+
+		if (WhiteSelectionUtils.IsFilledPolygon(_mapView, layer, oid))
+		{
+			return true;
+		}
+
+		// This is an unfilled polygon: can only select at its boundary,
+		// not on the (invisible) interior
 
 		var boundary = GeometryUtils.Boundary(polygon);
 
@@ -398,10 +400,18 @@ public class MapWhiteSelection : IMapWhiteSelection
 
 	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape, Geometry selectionArea)
 	{
-		if (featureShape is not Polygon polygon || !IsUnfilledPolygon(layer, oid))
+		if (featureShape is not Polygon polygon)
 		{
 			return true;
 		}
+
+		if (WhiteSelectionUtils.IsFilledPolygon(_mapView, layer, oid))
+		{
+			return true;
+		}
+
+		// This is an unfilled polygon: can only select at its boundary,
+		// not on the (invisible) interior
 
 		var boundary = GeometryUtils.Boundary(polygon);
 
@@ -483,26 +493,6 @@ public class MapWhiteSelection : IMapWhiteSelection
 	}
 
 	#endregion
-
-	private bool IsUnfilledPolygon(FeatureLayer layer, long oid)
-	{
-		if (layer.ShapeType != esriGeometryType.esriGeometryPolygon)
-		{
-			return true; // not a polygon layer
-		}
-
-		if (!layer.CanLookupSymbol())
-		{
-			return false; // assume filled or not polygon
-		}
-
-		var symbol = layer.LookupSymbol(oid, _mapView);
-
-		bool hasFill = symbol is CIMMultiLayerSymbol { SymbolLayers: not null } mls &&
-		               mls.SymbolLayers.Any(sl => sl is CIMFill);
-
-		return ! hasFill;
-	}
 
 	/// <remarks>Must call on MCT</remarks>
 	private Dictionary<FeatureLayer, List<long>> GetFeatures(Geometry geometry)
