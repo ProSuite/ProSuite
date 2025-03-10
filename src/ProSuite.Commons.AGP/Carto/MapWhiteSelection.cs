@@ -69,12 +69,16 @@ public class MapWhiteSelection : IMapWhiteSelection
 	// TODO probably should keep _layerSelections ordered as in the ToC
 	private readonly Dictionary<string, IWhiteSelection> _layerSelections = new();
 
-	public MapWhiteSelection(MapView mapView)
+	public MapWhiteSelection(MapView mapView, bool mustBoundarySelectUnfilledPolygons = true)
 	{
 		_mapView = mapView ?? throw new ArgumentNullException(nameof(mapView));
+
+		MustBoundarySelectUnfilledPolygons = mustBoundarySelectUnfilledPolygons;
 	}
 
 	public Map Map => _mapView.Map;
+
+	public bool MustBoundarySelectUnfilledPolygons { get; set; }
 
 	/// <returns>true iff the no involved features (regardless of selected vertices)</returns>
 	public bool IsEmpty => _layerSelections.Values.Sum(ws => ws.InvolvedFeatureCount) <= 0;
@@ -287,6 +291,11 @@ public class MapWhiteSelection : IMapWhiteSelection
 
 	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape, MapPoint clickPoint, double tolerance)
 	{
+		if (! MustBoundarySelectUnfilledPolygons)
+		{
+			return true;
+		}
+
 		if (featureShape is not Polygon polygon)
 		{
 			return true;
@@ -400,6 +409,11 @@ public class MapWhiteSelection : IMapWhiteSelection
 
 	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape, Geometry selectionArea)
 	{
+		if (!MustBoundarySelectUnfilledPolygons)
+		{
+			return true;
+		}
+
 		if (featureShape is not Polygon polygon)
 		{
 			return true;
