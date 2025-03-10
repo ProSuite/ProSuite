@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -68,11 +69,12 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool CanSetStatus();
 
-		void SetVisited([NotNull] IWorkItem item);
+		//void SetVisited([NotNull] IWorkItem item);
+		void SetVisited(IList<IWorkItem> items, bool visited);
 
 		void Commit();
 
-		void SetStatus([NotNull] IWorkItem item, WorkItemStatus status);
+		Task SetStatusAsync([NotNull] IWorkItem item, WorkItemStatus status);
 
 		void RefreshItems();
 
@@ -80,6 +82,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		IAttributeReader GetAttributeReader(long forSourceClassId);
 
+		// TODO: (daro) drop!
 		/// <summary>
 		/// Gets the current item's source row.
 		/// </summary>

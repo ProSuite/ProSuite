@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
@@ -98,7 +99,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		//		 Pluggable Datasource cannot handle an empty envelope.
 		public Envelope Extent { get; protected set; }
 
-		public virtual IWorkItem Current => GetItem(CurrentIndex);
+		public IWorkItem Current => GetItem(CurrentIndex);
 
 		public int CurrentIndex { get; set; }
 
@@ -147,11 +148,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			return Repository.GetSourceRow(sourceClass, Current.ObjectID);
 		}
 
-		public void SetStatus(IWorkItem item, WorkItemStatus status)
+		public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 		{
-			Repository.SetStatus(item, status);
+			await Repository.SetStatusAsync(item, status);
 
-			// If a item visibility changes to Done the item is not part
+			// If an item visibility changes to 'Done' the item is not part
 			// of the work list anymore, respectively GetItems(QuerFilter, bool, int)
 			// does not return the Done-item anymore. Therefor use the item's Extent
 			// to invalidate the work list layer.
@@ -261,11 +262,20 @@ namespace ProSuite.AGP.WorkList.Domain
 			return true;
 		}
 
-		public void SetVisited(IWorkItem item)
+		/// <summary>
+		/// Set work items visibility and invokes WorkListChanged event.
+		/// </summary>
+		public void SetVisited(IList<IWorkItem> items, bool visited)
 		{
-			Repository.SetVisited(item);
+			var oids = new List<long>(items.Count);
 
-			OnWorkListChanged(null, new List<long> { item.OID });
+			foreach (IWorkItem item in items)
+			{
+				item.Visited = visited;
+				oids.Add(item.OID);
+			}
+
+			OnWorkListChanged(null, oids);
 		}
 
 		public void Commit()

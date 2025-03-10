@@ -489,6 +489,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 		#endregion
 
+		[NotNull]
 		public static string GetMeaningfulDisplayExpression([NotNull] Feature feature,
 		                                                    [CanBeNull] string expression)
 		{
@@ -501,11 +502,40 @@ namespace ProSuite.Commons.AGP.Carto
 
 			// GetDisplayExpressions() returns
 			// 1) the OIDs if the display field value is null
+			//    e.g. feature["NAME"] == null > layer.GetDisplayExpressions(oid) returns the Object ID
 			// 2) 0 if the display expression string is null
 			bool fieldValueIsNull = long.TryParse(expression, out long oid1) && oid1 == oid;
 			bool displayExpressionIsNull = long.TryParse(expression, out long oid2) && oid2 == 0;
 
 			if (fieldValueIsNull || displayExpressionIsNull)
+			{
+				return GdbObjectUtils.GetDisplayValue(feature);
+			}
+
+			return expression;
+		}
+
+		[NotNull]
+		public static string GetMeaningfulDisplayExpression([NotNull] BasicFeatureLayer layer,
+		                                                    [NotNull] Feature feature)
+		{
+			long oid = feature.GetObjectID();
+
+			// Many display expressions are possible. We take the first one.
+			var expression = layer.GetDisplayExpressions(new List<long> { oid })
+			                      .FirstOrDefault();
+
+			if (string.IsNullOrEmpty(expression) || string.IsNullOrWhiteSpace(expression))
+			{
+				return GdbObjectUtils.GetDisplayValue(feature);
+			}
+
+			// GetDisplayExpressions() returns
+			// 1) the OIDs if the display field value is null
+			//    e.g. feature["NAME"] == null > layer.GetDisplayExpressions(oid) returns the Object ID
+			bool fieldValueIsNull = long.TryParse(expression, out long oid1) && oid1 == oid;
+
+			if (fieldValueIsNull)
 			{
 				return GdbObjectUtils.GetDisplayValue(feature);
 			}

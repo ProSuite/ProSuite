@@ -433,7 +433,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 			// set status done and update work list
 			wl.Current.Status = WorkItemStatus.Done;
-			wl.SetStatus(wl.Current, WorkItemStatus.Done);
+			wl.SetStatusAsync(wl.Current, WorkItemStatus.Done);
 
 			// second item is now the first in work list
 			// because first item is set to done and therefor 'not visible'

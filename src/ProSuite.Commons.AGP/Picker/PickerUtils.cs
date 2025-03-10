@@ -186,9 +186,11 @@ namespace ProSuite.Commons.AGP.Picker
 
 			switch (GetPickerMode(precedence, ordered))
 			{
+				// TODO: daro return empty list instead of list with null item. Happens
+				// when user doesn't pick an item from picker window.
 				case PickerMode.ShowPicker:
 					IPickableItem pick = await ShowPickerAsync(precedence, ordered);
-					return new List<IPickableItem> { pick };
+					return pick == null ? [] : [pick];
 
 				case PickerMode.PickAll:
 					return new PickableFeatureClassItemsFactory().CreateItems(ordered).ToList();
@@ -221,7 +223,7 @@ namespace ProSuite.Commons.AGP.Picker
 			{
 				case PickerMode.ShowPicker:
 					IPickableItem pick = await ShowPickerAsync<T>(precedence, ordered);
-					return new List<IPickableItem> { pick };
+					return pick == null ? [] : [pick];
 
 				case PickerMode.PickAll:
 					return new PickableFeatureClassItemsFactory().CreateItems(ordered).ToList();

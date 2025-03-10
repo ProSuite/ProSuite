@@ -220,11 +220,6 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		public void RefreshGeometry2(IWorkItem item)
-		{
-			item.Geometry = GeometryUtils.Buffer(item.Geometry, 10);
-		}
-
 		[CanBeNull]
 		public Row GetSourceRow(ISourceClass sourceClass, long oid)
 		{
@@ -242,7 +237,7 @@ namespace ProSuite.AGP.WorkList
 			WorkItemStateRepository.Update(item);
 		}
 
-		public async Task SetStatus(IWorkItem item, WorkItemStatus status)
+		public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 		{
 			item.Status = status;
 

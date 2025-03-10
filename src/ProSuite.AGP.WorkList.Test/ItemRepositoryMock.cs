@@ -82,7 +82,7 @@ namespace ProSuite.AGP.WorkList.Test
 			item.Visited = true;
 		}
 
-		public Task SetStatus(IWorkItem item, WorkItemStatus status)
+		public Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 		{
 			throw new NotImplementedException();
 		}
