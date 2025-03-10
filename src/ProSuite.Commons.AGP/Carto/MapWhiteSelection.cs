@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -19,9 +20,10 @@ public interface IMapWhiteSelection
 	bool IsEmpty { get; }
 
 	/// <summary>
-	/// Select vertices around <paramref name="clickPoint"/> from amongst
-	/// the given <paramref name="candidates"/> or (if null) the features
-	/// already involved with this white selection.
+	/// Select vertices within <paramref name="tolerance"/> (map units)
+	/// around <paramref name="clickPoint"/> from amongst the given
+	/// <paramref name="candidates"/> or (if null) the features already
+	/// involved with this white selection.
 	/// </summary>
 	/// <returns>True iff this white selection changed</returns>
 	bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates = null);
@@ -222,6 +224,8 @@ public class MapWhiteSelection : IMapWhiteSelection
 		return removed;
 	}
 
+	#region Click-select (point+tolerance)
+
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT</remarks>
 	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
@@ -253,6 +257,11 @@ public class MapWhiteSelection : IMapWhiteSelection
 				var shape = selection.GetGeometry(oid);
 				if (shape is null || shape.IsEmpty) continue;
 
+				if (! IsFeatureHit(featureLayer, oid, shape, clickPoint, tolerance))
+				{
+					continue;
+				}
+
 				bool added = selection.Add(oid);
 				if (added)
 				{
@@ -275,6 +284,25 @@ public class MapWhiteSelection : IMapWhiteSelection
 		}
 
 		return changed;
+	}
+
+	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape, MapPoint clickPoint, double tolerance)
+	{
+		// By K2-204, polygons without a fill shall only be selected
+		// if the boundary intersects the selection geometry, therefore:
+		// - if not polygon or filled polygon: can click anywhere
+		// - otherwise: must click within tolerance of polygon boundary
+
+		if (featureShape is not Polygon polygon || ! IsUnfilledPolygon(layer, oid))
+		{
+			return true;
+		}
+
+		var boundary = GeometryUtils.Boundary(polygon);
+
+		var point = GeometryUtils.EnsureSpatialReference(clickPoint, polygon.SpatialReference);
+		var distance = GeometryEngine.Instance.Distance(boundary, point);
+		return distance <= tolerance;
 	}
 
 	private static bool SelectVertex(
@@ -307,6 +335,10 @@ public class MapWhiteSelection : IMapWhiteSelection
 		return false;
 	}
 
+	#endregion
+
+	#region Area-select (polygon)
+
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
 	public bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
@@ -335,6 +367,11 @@ public class MapWhiteSelection : IMapWhiteSelection
 				var shape = selection.GetGeometry(oid);
 				if (shape is null || shape.IsEmpty) continue;
 
+				if (! IsFeatureHit(featureLayer, oid, shape, geometry))
+				{
+					continue;
+				}
+
 				bool added = selection.Add(oid);
 				if (added)
 				{
@@ -357,6 +394,19 @@ public class MapWhiteSelection : IMapWhiteSelection
 		}
 
 		return changed;
+	}
+
+	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape, Geometry selectionArea)
+	{
+		if (featureShape is not Polygon polygon || !IsUnfilledPolygon(layer, oid))
+		{
+			return true;
+		}
+
+		var boundary = GeometryUtils.Boundary(polygon);
+
+		var area = GeometryUtils.EnsureSpatialReference(selectionArea, polygon.SpatialReference);
+		return GeometryUtils.Intersects(boundary, area);
 	}
 
 	private static bool SelectVertices(
@@ -430,6 +480,28 @@ public class MapWhiteSelection : IMapWhiteSelection
 		//else: not supported (silently ignore)
 
 		return changed;
+	}
+
+	#endregion
+
+	private bool IsUnfilledPolygon(FeatureLayer layer, long oid)
+	{
+		if (layer.ShapeType != esriGeometryType.esriGeometryPolygon)
+		{
+			return true; // not a polygon layer
+		}
+
+		if (!layer.CanLookupSymbol())
+		{
+			return false; // assume filled or not polygon
+		}
+
+		var symbol = layer.LookupSymbol(oid, _mapView);
+
+		bool hasFill = symbol is CIMMultiLayerSymbol { SymbolLayers: not null } mls &&
+		               mls.SymbolLayers.Any(sl => sl is CIMFill);
+
+		return ! hasFill;
 	}
 
 	/// <remarks>Must call on MCT</remarks>
