@@ -63,9 +63,11 @@ namespace ProSuite.AGP.WorkList
 			return new SelectionSourceClass(identity);
 		}
 
-		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
+		protected override Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
 		{
-			await Task.Run(() => WorkItemStateRepository.Update(item));
+			WorkItemStateRepository.Update(item);
+
+			return Task.CompletedTask;
 		}
 
 		public override bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)

@@ -70,7 +70,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		bool CanSetStatus();
 
 		//void SetVisited([NotNull] IWorkItem item);
-		void SetVisited(IList<IWorkItem> items);
+		void SetVisited(IList<IWorkItem> items, bool visited);
 
 		void Commit();
 

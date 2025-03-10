@@ -152,7 +152,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			await Repository.SetStatusAsync(item, status);
 
-			// If a item visibility changes to Done the item is not part
+			// If an item visibility changes to 'Done' the item is not part
 			// of the work list anymore, respectively GetItems(QuerFilter, bool, int)
 			// does not return the Done-item anymore. Therefor use the item's Extent
 			// to invalidate the work list layer.
@@ -262,20 +262,16 @@ namespace ProSuite.AGP.WorkList.Domain
 			return true;
 		}
 
-		//public void SetVisited(IWorkItem item)
-		//{
-		//	Repository.SetVisited(item);
-
-		//	OnWorkListChanged(null, new List<long> { item.OID });
-		//}
-
-		public void SetVisited(IList<IWorkItem> items)
+		/// <summary>
+		/// Set work items visibility and invokes WorkListChanged event.
+		/// </summary>
+		public void SetVisited(IList<IWorkItem> items, bool visited)
 		{
 			var oids = new List<long>(items.Count);
 
 			foreach (IWorkItem item in items)
 			{
-				item.Visited = true;
+				item.Visited = visited;
 				oids.Add(item.OID);
 			}
 
