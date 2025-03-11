@@ -21,9 +21,15 @@ namespace ProSuite.DomainServices.AO.QA.HtmlReports
 		public int StopErrorCount { get; set; }
 
 		/// <summary>
-		/// The number of conditions in which this dataset is involved.
+		/// The number of conditions in which this dataset is involved. Conditions in which it
+		/// participates as reference dataset only will not be counted.
 		/// </summary>
 		public int VerifiedConditionCount { get; set; }
+
+		/// <summary>
+		/// Whether this dataset is used as reference dataset in all conditions it is involved in.
+		/// </summary>
+		public bool UsedAsReferenceDatasetOnly { get; set; }
 
 		public double Resolution { get; set; }
 
@@ -55,6 +61,7 @@ namespace ProSuite.DomainServices.AO.QA.HtmlReports
 			Resolution = xmlVerifiedDataset.Resolution;
 
 			VerifiedConditionCount = xmlVerifiedDataset.VerifiedConditionCount;
+			UsedAsReferenceDatasetOnly = xmlVerifiedDataset.UsedAsReferenceDatasetOnly;
 
 			DatasetType = xmlVerifiedDataset.GeometryType;
 		}

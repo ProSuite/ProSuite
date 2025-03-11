@@ -72,6 +72,9 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 				   ? null
 				   : _categoriesBuilder.RootCategories;
 
+		[XmlAttribute("usedAsReferenceDatasetOnly")]
+		public bool UsedAsReferenceDatasetOnly { get; set; }
+
 		public void AddVerifiedCondition(
 			[NotNull] XmlVerifiedQualityCondition verifiedCondition)
 		{

@@ -378,10 +378,13 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			if (! _qualitySpecificationElementsByDataset.TryGetValue(
 				    dataset, out qualitySpecificationElements))
 			{
+				// Not in dictionary means it is used as reference dataset only! -> Empty list
 				qualitySpecificationElements = new List<QualitySpecificationElement>();
 			}
 
 			var result = new XmlVerifiedDataset(dataset.Name, Escape(dataset.Model.Name));
+
+			result.UsedAsReferenceDatasetOnly = qualitySpecificationElements.Count == 0;
 
 			if (reportVerifiedConditions)
 			{
