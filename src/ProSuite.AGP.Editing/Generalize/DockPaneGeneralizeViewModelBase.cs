@@ -70,6 +70,9 @@ namespace ProSuite.AGP.Editing.Generalize
 			new CentralizableSettingViewModel<bool>(
 				Options.CentralizableProtectTopologicalVertices);
 
+		public CentralizableSettingViewModel<bool> LimitToVisibleExtent =>
+			new CentralizableSettingViewModel<bool>(Options.CentralizableLimitToVisibleExtent);
+
 		public AdvancedGeneralizeOptions Options
 		{
 			get => _options;

@@ -102,7 +102,7 @@
 		<Label FontWeight="Medium" Content="Area of interest" Margin="0,15,0,0" />
 		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
 		          Content="Apply only within visible extent"
-		          DataContext="{Binding Options.CentralizableLimitToVisibleExtent}" />
+		          DataContext="{Binding LimitToVisibleExtent}" />
 
 
 		<!-- Restore Defaults -->
