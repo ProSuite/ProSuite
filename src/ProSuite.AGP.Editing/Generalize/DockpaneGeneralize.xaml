@@ -96,7 +96,7 @@
 		                                       HorizontalAlignment="Left"
 		                                       Margin="20,0, 0, 0"
 		                                       IsEnabled="{Binding IsTargetFeatureSelectionEnabled}"
-		                                       ToolTip="{Binding ToolTip}" />
+		                                       ToolTip="{Binding ToolTip}" ToolTipService.ShowOnDisabled="True"/>
 
 		<!-- Area of interest -->
 		<Label FontWeight="Medium" Content="Area of interest" Margin="0,15,0,0" />
