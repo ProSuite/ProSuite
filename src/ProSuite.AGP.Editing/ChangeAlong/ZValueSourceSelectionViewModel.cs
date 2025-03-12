@@ -22,7 +22,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 				if (args.PropertyName == nameof(CentralizableSetting.HasLocalOverride))
 				{
-					//OnPropertyChanged(nameof(HasLocalOverride));
 					OnPropertyChanged(nameof(ToolTip));
 				}
 			};
