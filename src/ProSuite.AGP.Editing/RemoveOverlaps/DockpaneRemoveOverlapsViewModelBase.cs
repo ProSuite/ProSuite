@@ -44,6 +44,16 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			set { SetProperty(ref _heading, value, () => Heading); }
 		}
 
+		public CentralizableSettingViewModel<bool> LimitOverlapCalculationToExtent =>
+			new CentralizableSettingViewModel<bool>(
+				Options.CentralizableLimitOverlapCalculationToExtent);
+
+		public CentralizableSettingViewModel<bool> ExplodeMultipartResults =>
+			new CentralizableSettingViewModel<bool>(Options.CentralizableExplodeMultipartResults);
+
+		public CentralizableSettingViewModel<bool> InsertVerticesInTarget =>
+			new CentralizableSettingViewModel<bool>(Options.CentralizableInsertVerticesInTarget);
+
 		public RemoveOverlapsOptions Options
 		{
 			get => _options;
