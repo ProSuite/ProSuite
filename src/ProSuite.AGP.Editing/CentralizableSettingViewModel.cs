@@ -39,6 +39,12 @@ namespace ProSuite.AGP.Editing
 				OnPropertyChanged(nameof(HasLocalOverride));
 				OnPropertyChanged(nameof(ToolTip));
 			}
+
+			if (e.PropertyName == nameof(_centralizableSetting.CurrentValue))
+			{
+				OnPropertyChanged(nameof(CurrentValue));
+				OnPropertyChanged(nameof(ToolTip));
+			}
 		}
 
 		private bool CanOverrideLocally => _centralizableSetting.CanOverrideLocally;
