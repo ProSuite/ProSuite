@@ -42,6 +42,26 @@ namespace ProSuite.AGP.Editing.Chopper
 			set { SetProperty(ref _heading, value, () => Heading); }
 		}
 
+		public CentralizableSettingViewModel<bool> SnapToTargetVertices =>
+			new CentralizableSettingViewModel<bool>(Options.CentralizableSnapToTargetVertices);
+
+		public CentralizableSettingViewModel<double> SnapTolerance =>
+			new CentralizableSettingViewModel<double>(Options.CentralizableSnapTolerance,
+			                                          Options.CentralizableSnapToTargetVertices);
+
+		public CentralizableSettingViewModel<bool> RespectMinimumSegmentLength =>
+			new CentralizableSettingViewModel<bool>(Options.CentralizableRespectMinimumSegmentLength);
+
+		public CentralizableSettingViewModel<double> MinimumSegmentLength =>
+			new CentralizableSettingViewModel<double>(Options.CentralizableMinimumSegmentLength,
+			                                          Options.CentralizableRespectMinimumSegmentLength);
+
+		public CentralizableSettingViewModel<bool> UseSourceZs =>
+			new CentralizableSettingViewModel<bool>(Options.CentralizableUseSourceZs);
+
+		public CentralizableSettingViewModel<bool> ExcludeInteriorInteriorIntersections =>
+			new CentralizableSettingViewModel<bool>(Options.CentralizableExcludeInteriorInteriorIntersections);
+
 		public ChopperToolOptions Options
 		{
 			get => _options;
