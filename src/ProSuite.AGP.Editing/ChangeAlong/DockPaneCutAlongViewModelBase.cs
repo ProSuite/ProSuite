@@ -49,6 +49,40 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			set { SetProperty(ref _heading, value, () => Heading); }
 		}
 
+		public CentralizableSettingViewModel<bool> DisplayExcludeCutLines =>
+			new CentralizableSettingViewModel<bool>(Options.CentralizableDisplayExcludeCutLines);
+
+		public CentralizableSettingViewModel<bool> DisplayRecalculateCutLines =>
+			new CentralizableSettingViewModel<bool>(Options.CentralizableDisplayRecalculateCutLines,
+			                                        Options.CentralizableDisplayExcludeCutLines);
+
+		public CentralizableSettingViewModel<bool> DisplayHideCutLines =>
+			new CentralizableSettingViewModel<bool>(Options.CentralizableDisplayHideCutLines);
+
+		public CentralizableSettingViewModel<double> DisplayHideCutLinesScale =>
+			new CentralizableSettingViewModel<double>(Options.CentralizableDisplayHideCutLinesScale,
+			                                          Options.CentralizableDisplayHideCutLines);
+
+		public CentralizableSettingViewModel<bool> BufferTarget =>
+			new CentralizableSettingViewModel<bool>(Options.CentralizableBufferTarget);
+
+		public CentralizableSettingViewModel<double> BufferTolerance =>
+			new CentralizableSettingViewModel<double>(Options.CentralizableBufferTolerance,
+			                                          Options.CentralizableBufferTarget);
+
+		public CentralizableSettingViewModel<bool> EnforceMinimumBufferSegmentLength =>
+			new CentralizableSettingViewModel<bool>(
+				Options.CentralizableEnforceMinimumBufferSegmentLength,
+				Options.CentralizableBufferTarget);
+
+		public CentralizableSettingViewModel<double> MinBufferSegmentLength =>
+			new CentralizableSettingViewModel<double>(Options.CentralizableMinBufferSegmentLength,
+			                                          Options
+				                                          .CentralizableEnforceMinimumBufferSegmentLength);
+
+		public CentralizableSettingViewModel<bool> InsertVertices =>
+			new CentralizableSettingViewModel<bool>(Options.CentralizableInsertVertices);
+
 		public CutAlongToolOptions Options
 		{
 			get => _options;
