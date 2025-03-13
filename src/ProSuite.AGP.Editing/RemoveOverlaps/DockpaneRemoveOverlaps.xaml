@@ -34,8 +34,7 @@
 
         <!-- Calculate overlap areas with other -->
 		<Label FontWeight="Medium" Content="Calculate overlap areas with other" Margin="0,15,0,0"/>
-        <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" HorizontalAlignment="Left"
-                                               ToolTip="{Binding ToolTip}"/>
+        <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" HorizontalAlignment="Left" />
 
         <!-- Result geometry options -->
 		<Label FontWeight="Medium" Content="Result geometry options" Margin="0,15,0,0"/>
