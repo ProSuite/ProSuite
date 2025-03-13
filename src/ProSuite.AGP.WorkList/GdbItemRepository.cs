@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
@@ -18,7 +17,6 @@ using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 
 namespace ProSuite.AGP.WorkList
 {
-	// todo daro: SetStatusDone !!!!
 	// Note maybe all SDK code, like open workspace, etc. should be in here. Not in DatabaseSourceClass for instance.
 	public abstract class GdbItemRepository : IWorkItemRepository
 	{
@@ -107,7 +105,7 @@ namespace ProSuite.AGP.WorkList
 		[CanBeNull]
 		public Geodatabase CurrentWorkspace { get; set; }
 
-		protected IWorkItemStateRepository WorkItemStateRepository { get; }
+		public IWorkItemStateRepository WorkItemStateRepository { get; }
 
 		[CanBeNull]
 		public IWorkListItemDatastore TableSchema { get; protected set; }

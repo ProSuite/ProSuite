@@ -46,6 +46,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		string WorkListDefinitionFilePath { get; set; }
 
+		IWorkItemStateRepository WorkItemStateRepository { get; }
+
 		/// <summary>
 		/// Update the table schema once the domain information is available. This only necessary
 		/// if the field values of the source classes depend on the DDX attribute roles instead of
