@@ -26,6 +26,7 @@ namespace ProSuite.AGP.WorkList
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected abstract string FileSuffix { get; }
+		protected virtual string WorklistsFolder => "WorkLists";
 
 		/// <summary>
 		/// The unique name of the work list that corresponds to the file name in
@@ -264,7 +265,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(GetDisplayName(), '_');
 
-			string definitionFilePath = WorkListUtils.GetDatasource(Project.Current.HomeFolderPath, fileName, FileSuffix);
+			string definitionFilePath = WorkListUtils.GetDatasource(Project.Current.HomeFolderPath, WorklistsFolder, fileName, FileSuffix);
 
 			string directory = Assert.NotNull(Path.GetDirectoryName(definitionFilePath));
 			string uniqueDisplayName = GetUniqueDisplayName(definitionFilePath);
