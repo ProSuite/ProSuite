@@ -64,5 +64,30 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			throw new ArgumentOutOfRangeException("Unknown domain type");
 		}
+
+		public static QueryFilter ToProQueryFilter(IQueryFilter queryFilter)
+		{
+			QueryFilter result;
+			if (queryFilter is ISpatialFilter spatialFilter)
+			{
+				result = new SpatialQueryFilter()
+				         {
+					         FilterGeometry =
+						         (ArcGIS.Core.Geometry.Geometry) spatialFilter.Geometry
+							         .NativeImplementation,
+					         SpatialRelationship = (SpatialRelationship) spatialFilter.SpatialRel
+				         };
+			}
+			else
+			{
+				result = new QueryFilter();
+			}
+
+			result.WhereClause = queryFilter.WhereClause;
+			result.SubFields = queryFilter.SubFields;
+			result.PostfixClause = queryFilter.PostfixClause;
+
+			return result;
+		}
 	}
 }
