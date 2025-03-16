@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -112,10 +112,10 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="HtmlTexts_QualitySpecificationTitle" xml:space="preserve">
     <value>Quality Specification</value>
@@ -165,6 +165,9 @@
   <data name="HtmlTexts_ColumnHeadingQualityCondition" xml:space="preserve">
     <value>Quality condition</value>
   </data>
+  <data name="HtmlTexts_ColumnHeadingQualityConditions" xml:space="preserve">
+    <value>Verified conditions</value>
+  </data>
   <data name="HtmlTexts_ColumnHeadingIssueDescription" xml:space="preserve">
     <value>Issue description</value>
   </data>
@@ -186,11 +189,17 @@
   <data name="HtmlTexts_Name" xml:space="preserve">
     <value>Name</value>
   </data>
+  <data name="HtmlTexts_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
   <data name="HtmlTexts_Alias" xml:space="preserve">
     <value>Alias</value>
   </data>
   <data name="HtmlTexts_DataSource" xml:space="preserve">
     <value>Data source</value>
+  </data>
+  <data name="HtmlTexts_DataSources" xml:space="preserve">
+    <value>Data Sources</value>
   </data>
   <data name="HtmlTexts_RegisteredAsVersioned" xml:space="preserve">
     <value>Registered as versioned</value>
@@ -242,5 +251,8 @@
   </data>
   <data name="HtmlTexts_UndefinedExceptionCategory" xml:space="preserve">
     <value>-</value>
+  </data>
+  <data name="HtmlTexts_DatasetName" xml:space="preserve">
+    <value>Dataset name</value>
   </data>
 </root>
