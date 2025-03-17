@@ -19,7 +19,7 @@ public interface IPickerPrecedence : IDisposable
 
 	IPickableItem PickBest(IEnumerable<IPickableItem> items);
 
-	PickerMode GetPickerMode(ICollection<FeatureSelectionBase> orderedSelection);
+	PickerMode GetPickerMode(ICollection<FeatureSelectionBase> candidates);
 	/// <summary>
 	/// Returns the geometry which can be used for spatial queries.
 	/// For single-click picks, it returns the geometry expanded by the PickerPrecedenceBase.SelectionTolerance.

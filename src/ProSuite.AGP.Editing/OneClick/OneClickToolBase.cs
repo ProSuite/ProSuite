@@ -626,11 +626,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await QueuedTaskUtils.Run(async () =>
 				{
-					IEnumerable<FeatureSelectionBase> candidates =
+					var candidates =
 						FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
-						                        precedence.SpatialRelationship);
+						                        precedence.SpatialRelationship).ToList();
 
-					List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
+					List<IPickableItem> items = await PickerUtils.GetItemsAsync(candidates, precedence);
 
 					await OnItemsPickedAsync(items, precedence);
 

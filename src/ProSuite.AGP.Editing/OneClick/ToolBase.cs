@@ -515,11 +515,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 			await QueuedTaskUtils.Run(async () =>
 			{
-				IEnumerable<FeatureSelectionBase> candidates =
+				var candidates =
 					FindFeatureSelection(precedence.GetSelectionGeometry(),
-					                     precedence.SpatialRelationship);
+					                     precedence.SpatialRelationship).ToList();
 
-				List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
+				List<IPickableItem> items = await PickerUtils.GetItemsAsync(candidates, precedence);
 
 				PickerUtils.Select(items, precedence.SelectionCombinationMethod);
 			});

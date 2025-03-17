@@ -66,11 +66,6 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		return GetSelectionGeometryCore(PickerLocation);
 	}
 
-	protected virtual Geometry GetSelectionGeometryCore(Point screenPoint)
-	{
-		return PickerUtils.CreatePolygon(screenPoint, SelectionTolerance);
-	}
-
 	[NotNull]
 	public virtual IPickableItemsFactory CreateItemsFactory()
 	{
@@ -119,40 +114,62 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 	public bool NoMultiselection { get; set; }
 
-	public virtual PickerMode GetPickerMode(ICollection<FeatureSelectionBase> orderedSelection)
+	public virtual PickerMode GetPickerMode(ICollection<FeatureSelectionBase> candidates)
 	{
+		if (candidates.Count == 0)
+		{
+			return PickerMode.None;
+		}
+
+		var modes = PickerMode.PickBest;
+
 		if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
 		{
+			// always show picker if CTRL pressed
 			return PickerMode.ShowPicker;
 		}
 
-		bool areaSelect = ! IsSingleClick;
-		if (areaSelect)
+		if (NoMultiselection && candidates.Sum(fs => fs.GetCount()) > 1)
 		{
-			if (NoMultiselection)
+			// if area selection: show picker
+			if (! IsSingleClick)
 			{
-				return PickerMode.ShowPicker;
+				modes |= PickerMode.ShowPicker;
+			}
+			// ...if not: pick best
+		}
+		else
+		{
+			if (CountLowestGeometryDimension(PickerUtils.OrderByGeometryDimension(candidates)) > 1)
+			{
+				modes |= PickerMode.ShowPicker;
 			}
 
-			return PickerMode.PickAll;
+			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+			{
+				modes |= PickerMode.PickAll;
+			}
+
+			if (! IsSingleClick)
+			{
+				modes |= PickerMode.PickAll;
+			}
 		}
 
-		if (NoMultiselection)
+		// the higher mode wins
+		var result = PickerMode.PickBest;
+
+		if ((modes & PickerMode.ShowPicker) != 0)
 		{
-			return PickerMode.ShowPicker;
+			result = PickerMode.ShowPicker;
 		}
 
-		if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+		if ((modes & PickerMode.PickAll) != 0)
 		{
-			return PickerMode.PickAll;
+			result = PickerMode.PickAll;
 		}
 
-		if (CountLowestShapeDimension(orderedSelection) > 1)
-		{
-			return PickerMode.ShowPicker;
-		}
-
-		return PickerMode.PickBest;
+		return result;
 	}
 
 	public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
@@ -164,6 +181,11 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	{
 		SketchGeometry = null;
 		PressedKeys.Clear();
+	}
+
+	protected virtual Geometry GetSelectionGeometryCore(Point screenPoint)
+	{
+		return PickerUtils.CreatePolygon(screenPoint, SelectionTolerance);
 	}
 
 	private void AreModifierKeysPressed()
@@ -187,7 +209,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		}
 	}
 
-	protected static int CountLowestShapeDimension(
+	protected static int CountLowestGeometryDimension(
 		IEnumerable<FeatureSelectionBase> layerSelection)
 	{
 		var count = 0;
