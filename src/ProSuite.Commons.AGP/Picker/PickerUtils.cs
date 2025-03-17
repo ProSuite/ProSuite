@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -67,66 +66,45 @@ namespace ProSuite.Commons.AGP.Picker
 			//       .SelectMany(fcs => fcs);
 		}
 
-		[Obsolete($"use {nameof(CreatePolygon)}")]
-		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
-		                                              int selectionTolerancePixels)
+		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry, int tolerancePixels)
 		{
-			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
-				MapView.Active, selectionTolerancePixels, sketchGeometry.Extent.Center);
-
-			double envelopeExpansion = selectionToleranceMapUnits * 2;
-
 			Envelope envelope = sketchGeometry.Extent;
+			MapPoint center = envelope.Center;
+
+			double toleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(MapView.Active, tolerancePixels, center);
+
+			double expansion = toleranceMapUnits * 2;
 
 			// NOTE: MapToScreen in stereo map is sensitive to Z value (Picker location!)
-
-			// Rather than creating a non-Z-aware polygon with elliptic arcs by using buffer...
-			//Geometry selectionGeometry =
-			//	GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
-
-			// Just expand the envelope
-			// .. but PickerViewModel needs a polygon to display selection geometry (press space).
-
 			// HasZ, HasM and HasID are inherited from input geometry.
 			// There is no need for GeometryUtils.EnsureGeometrySchema()
 
 			return GeometryFactory.CreatePolygon(
-				envelope.Expand(envelopeExpansion, envelopeExpansion, false),
+				envelope.Expand(expansion, expansion, false),
 				envelope.SpatialReference);
 		}
 
-		public static Geometry CreatePolygon(Point screenPoint, int expansionPixels)
+		public static bool IsPointClick(Geometry geometry, double tolerance, out MapPoint clickPoint)
 		{
-			double selectionToleranceMapUnits =
-				MapUtils.ConvertScreenPixelToMapLength(MapView.Active, expansionPixels,
-				                                       screenPoint);
+			clickPoint = null;
 
-			// TODO: (daro) revise multiplication by 2
-			double envelopeExpansion = selectionToleranceMapUnits * 2;
+			if (geometry is null) return false;
+			if (geometry.IsEmpty) return false;
 
-			MapPoint mapPoint = MapView.Active.ScreenToMap(screenPoint);
-			Envelope envelope = mapPoint.Extent;
+			if (geometry is MapPoint point)
+			{
+				clickPoint = point;
+				return true;
+			}
 
-			// NOTE: MapToScreen in stereo map is sensitive to Z value (Picker location!)
+			var extent = geometry.Extent;
+			if (extent.Length < tolerance)
+			{
+				clickPoint = extent.Center;
+				return true;
+			}
 
-			// Rather than creating a non-Z-aware polygon with elliptic arcs by using buffer...
-			//Geometry selectionGeometry =
-			//	GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
-
-			// Just expand the envelope
-			// .. but PickerViewModel needs a polygon to display selection geometry (press space).
-
-			// HasZ, HasM and HasID are inherited from input geometry.
-			// There is no need for GeometryUtils.EnsureGeometrySchema()
-
-			return GeometryFactory.CreatePolygon(
-				envelope.Expand(envelopeExpansion, envelopeExpansion, false),
-				envelope.SpatialReference);
-		}
-
-		public static bool IsSingleClick(Geometry sketch)
-		{
-			return ! (sketch.Extent.Width > 0 || sketch.Extent.Height > 0);
+			return false;
 		}
 
 		public static SpatialRelationship GetSpatialRelationship()
@@ -169,7 +147,7 @@ namespace ProSuite.Commons.AGP.Picker
 
 			switch (precedence.GetPickerMode(candidates))
 			{
-				// TODO: daro return empty list instead of list with null item. Happens
+				// Return empty list instead of list with null item. Happens
 				// when user doesn't pick an item from picker window.
 				case PickerMode.ShowPicker:
 					IPickableItem pick = await ShowPickerAsync(precedence, candidates, itemsFactory);

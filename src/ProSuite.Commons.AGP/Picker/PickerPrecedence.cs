@@ -8,8 +8,8 @@ namespace ProSuite.Commons.AGP.Picker
 	{
 		[UsedImplicitly]
 		public PickerPrecedence([NotNull] Geometry sketchGeometry,
-		                         int selectionTolerance,
+		                         int tolerance,
 		                         Point pickerLocation) : base(
-			sketchGeometry, selectionTolerance, pickerLocation) { }
+			sketchGeometry, tolerance, pickerLocation) { }
 	}
 }

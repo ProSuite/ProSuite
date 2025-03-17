@@ -508,10 +508,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	{
 		try
 		{
-			Geometry simpleGeometry = GeometryUtils.Simplify(geometry);
-			Assert.NotNull(simpleGeometry, "Geometry is null");
-
-			using IPickerPrecedence precedence = CreatePickerPrecedence(simpleGeometry);
+			using IPickerPrecedence precedence = CreatePickerPrecedence(geometry);
 
 			await QueuedTaskUtils.Run(async () =>
 			{

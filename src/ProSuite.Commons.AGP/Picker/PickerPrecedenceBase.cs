@@ -6,7 +6,9 @@ using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Input;
 
@@ -14,17 +16,20 @@ namespace ProSuite.Commons.AGP.Picker;
 
 public abstract class PickerPrecedenceBase : IPickerPrecedence
 {
+	[NotNull] private readonly Geometry _sketchGeometry;
+	[CanBeNull] private readonly MapPoint _clickPoint;
+
 	[UsedImplicitly]
 	protected PickerPrecedenceBase([NotNull] Geometry sketchGeometry,
-	                               int selectionTolerance,
+	                               int tolerance,
 	                               Point pickerLocation,
 	                               SelectionCombinationMethod? selectionMethod = null)
 	{
-		SketchGeometry = sketchGeometry;
-		SelectionTolerance = selectionTolerance;
+		_sketchGeometry = sketchGeometry;
+		Tolerance = tolerance;
 		PickerLocation = pickerLocation;
 
-		IsSingleClick = PickerUtils.IsSingleClick(sketchGeometry);
+		IsPointClick = PickerUtils.IsPointClick(sketchGeometry, tolerance, out _clickPoint);
 		SpatialRelationship = PickerUtils.GetSpatialRelationship();
 
 		SelectionCombinationMethod = selectionMethod ?? PickerUtils.GetSelectionCombinationMethod();
@@ -33,15 +38,10 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	}
 
 	protected List<Key> PressedKeys { get; } = new();
+	
+	public int Tolerance { get; }
 
-	/// <summary>
-	/// The original sketch geometry, without expansion or simplification.
-	/// </summary>
-	private Geometry SketchGeometry { get; set; }
-
-	public int SelectionTolerance { get; }
-
-	public bool IsSingleClick { get; }
+	public bool IsPointClick { get; }
 
 	public bool AggregateItems =>
 		PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl);
@@ -52,24 +52,27 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 	/// <summary>
 	/// Side-effect-free method that returns the geometry which can be used for spatial queries.
-	/// For single-click picks, it returns the geometry expanded by the <see cref="SelectionTolerance" />.
+	/// For single-click picks, it returns the geometry expanded by the <see cref="Tolerance" />.
 	/// This method must be called on the CIM thread.
 	/// </summary>
 	/// <returns></returns>
 	public Geometry GetSelectionGeometry()
 	{
-		if (! IsSingleClick)
+		if (IsPointClick)
 		{
-			return SketchGeometry;
+			Assert.NotNull(_clickPoint);
+			return GetSelectionGeometryCore(_clickPoint);
 		}
 
-		return GetSelectionGeometryCore(PickerLocation);
+		// Otherwise relational operators and spatial queries return the wrong result
+		Geometry simpleGeometry = GeometryUtils.Simplify(_sketchGeometry);
+		return Assert.NotNull(simpleGeometry, "Geometry is null");
 	}
 
 	[NotNull]
 	public virtual IPickableItemsFactory CreateItemsFactory()
 	{
-		if (IsSingleClick)
+		if (IsPointClick)
 		{
 			return CreateItemsFactory<IPickableFeatureItem>();
 		}
@@ -132,7 +135,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		if (NoMultiselection && candidates.Sum(fs => fs.GetCount()) > 1)
 		{
 			// if area selection: show picker
-			if (! IsSingleClick)
+			if (! IsPointClick)
 			{
 				modes |= PickerMode.ShowPicker;
 			}
@@ -150,7 +153,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 				modes |= PickerMode.PickAll;
 			}
 
-			if (! IsSingleClick)
+			if (! IsPointClick)
 			{
 				modes |= PickerMode.PickAll;
 			}
@@ -179,13 +182,12 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 	public void Dispose()
 	{
-		SketchGeometry = null;
 		PressedKeys.Clear();
 	}
 
-	protected virtual Geometry GetSelectionGeometryCore(Point screenPoint)
+	protected virtual Geometry GetSelectionGeometryCore(Geometry geometry)
 	{
-		return PickerUtils.CreatePolygon(screenPoint, SelectionTolerance);
+		return PickerUtils.ExpandGeometryByPixels(geometry, Tolerance);
 	}
 
 	private void AreModifierKeysPressed()

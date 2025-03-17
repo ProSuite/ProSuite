@@ -15,7 +15,6 @@ using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.AGP.Windows;
 using ProSuite.Commons.Essentials.Assertions;
@@ -70,7 +69,7 @@ namespace ProSuite.AGP.Editing
 		/// <returns></returns>
 		public static bool IsSingleClickSketch([NotNull] Geometry sketchGeometry)
 		{
-			return PickerUtils.IsSingleClick(sketchGeometry);
+			return ! (sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0);
 		}
 
 		public static Geometry GetSinglePickSelectionArea([NotNull] Geometry sketchGeometry,
