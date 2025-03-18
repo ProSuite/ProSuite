@@ -119,6 +119,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			get => _options;
 			set
 			{
+				SetProperty(ref _options, value);
+
 				DisplayExcludeCutLines =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableDisplayExcludeCutLines);

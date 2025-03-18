@@ -147,6 +147,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			get => _options;
 			set
 			{
+				SetProperty(ref _options, value);
+
 				ExcludeLinesOutsideSource =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableExcludeLinesOutsideSource);

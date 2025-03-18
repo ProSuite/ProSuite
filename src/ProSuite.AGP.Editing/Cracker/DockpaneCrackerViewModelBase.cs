@@ -84,6 +84,8 @@ namespace ProSuite.AGP.Editing.Cracker
 			get => _options;
 			set
 			{
+				SetProperty(ref _options, value);
+
 				SnapToTargetVertices =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableSnapToTargetVertices);

@@ -91,6 +91,8 @@ namespace ProSuite.AGP.Editing.Chopper
 			get => _options;
 			set
 			{
+				SetProperty(ref _options, value);
+
 				SnapToTargetVertices =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableSnapToTargetVertices);
