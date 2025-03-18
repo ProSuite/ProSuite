@@ -9,6 +9,7 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using CrackPoint = ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker.CrackPoint;
 
 namespace ProSuite.AGP.Editing.Cracker
 
@@ -201,7 +202,13 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			var lineSymbol = SymbolUtils.CreateLineSymbol(0, 255, 150, 3);
 
-			_extentOverlay = MapView.Active.AddOverlay(polygon, lineSymbol.MakeSymbolReference());
+			// Ensure no fill by using a symbol reference with no fill
+			var lineSymbolLayer = lineSymbol.SymbolLayers[0]; // Get the first layer
+			var polygonSymbol =
+				SymbolUtils.CreatePolygonSymbol(lineSymbolLayer, null); // Pass null for fill
+
+			_extentOverlay =
+				MapView.Active.AddOverlay(polygon, polygonSymbol.MakeSymbolReference());
 
 			_overlays.Add(_extentOverlay);
 		}
@@ -220,4 +227,4 @@ namespace ProSuite.AGP.Editing.Cracker
 			_extentOverlay = null;
 		}
 	}
-}
+}
