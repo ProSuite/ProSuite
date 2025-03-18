@@ -45,7 +45,7 @@ namespace ProSuite.AGP.WorkList.Selection
 			return new XmlSelectionItemStateRepository(path, workListName, type);
 		}
 
-		protected override Task<IWorkItemRepository> CreateItemRepositoryCore(
+		protected override Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository)
 		{
 			Map map = MapView.Active.Map;

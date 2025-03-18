@@ -88,7 +88,7 @@ namespace ProSuite.AGP.WorkList
 			            "Multiple geodatabases are referenced by the work list's source classes.");
 
 			CurrentWorkspace =
-				sourceClassDefinitions.FirstOrDefault()?.Table?.GetDatastore() as Geodatabase;
+				sourceClassDefinitions.FirstOrDefault()?.Table.GetDatastore() as Geodatabase;
 
 			if (CurrentWorkspace == null)
 			{
@@ -230,6 +230,7 @@ namespace ProSuite.AGP.WorkList
 		                                   [NotNull] ISourceClass sourceClass,
 		                                   [NotNull] Row row) { }
 
+		// TODO: Rename to Update?
 		public void SetVisited(IWorkItem item)
 		{
 			WorkItemStateRepository.Update(item);
@@ -245,19 +246,8 @@ namespace ProSuite.AGP.WorkList
 				SourceClasses.FirstOrDefault(s => s.Uses(tableId));
 			Assert.NotNull(source);
 
-			// todo daro: read / restore item again from db? restore pattern in case of failure?
+			// todo: daro read / restore item again from db? restore pattern in case of failure?
 			await SetStatusCoreAsync(item, source);
-		}
-
-		public void UpdateStateRepository(string path)
-		{
-			UpdateStateRepositoryCore(path);
-		}
-
-		public Task UpdateAsync(IWorkItem item)
-		{
-			// todo daro: revise
-			return Task.FromResult(0);
 		}
 
 		// todo daro: rename?

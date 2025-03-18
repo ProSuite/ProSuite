@@ -88,7 +88,7 @@ namespace ProSuite.AGP.WorkList
 			                     definitionFilePath);
 
 			IWorkItemRepository itemRepository =
-				await CreateItemRepositoryCore(stateRepository);
+				await CreateItemRepositoryCoreAsync(stateRepository);
 
 			if (itemRepository == null)
 			{
@@ -186,7 +186,7 @@ namespace ProSuite.AGP.WorkList
 			string path, string workListName);
 
 		[ItemCanBeNull]
-		protected abstract Task<IWorkItemRepository> CreateItemRepositoryCore(
+		protected abstract Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository);
 
 		protected abstract string GetWorkListSymbologyTemplateLayerPath();
