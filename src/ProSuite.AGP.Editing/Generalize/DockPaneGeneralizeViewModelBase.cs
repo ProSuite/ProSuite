@@ -108,13 +108,30 @@ namespace ProSuite.AGP.Editing.Generalize
 				SetProperty(ref _options, value);
 
 				Weed = new CentralizableSettingViewModel<bool>(Options.CentralizableWeed);
-				WeedTolerance = new CentralizableSettingViewModel<double>(Options.CentralizableWeedTolerance, Options.CentralizableWeed);
-				WeedNonLinearSegments = new CentralizableSettingViewModel<bool>(Options.CentralizableWeedNonLinearSegments, Options.CentralizableWeed);
-				EnforceMinimumSegmentLength = new CentralizableSettingViewModel<bool>(Options.CentralizableEnforceMinimumSegmentLength);
-				MinimumSegmentLength = new CentralizableSettingViewModel<double>(Options.CentralizableMinimumSegmentLength, Options.CentralizableEnforceMinimumSegmentLength);
+				WeedTolerance = new CentralizableSettingViewModel<double>(
+					Options.CentralizableWeedTolerance, new[] { Options.CentralizableWeed });
+
+				WeedNonLinearSegments = new CentralizableSettingViewModel<bool>(
+					Options.CentralizableWeedNonLinearSegments,
+					new[] { Options.CentralizableWeed });
+
+				EnforceMinimumSegmentLength =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableEnforceMinimumSegmentLength);
+
+				MinimumSegmentLength = new CentralizableSettingViewModel<double>(
+					Options.CentralizableMinimumSegmentLength,
+					new[] { Options.CentralizableEnforceMinimumSegmentLength });
+
 				Only2D = new CentralizableSettingViewModel<bool>(Options.CentralizableOnly2D);
-				ProtectTopologicalVertices = new CentralizableSettingViewModel<bool>(Options.CentralizableProtectTopologicalVertices);
-				LimitToVisibleExtent = new CentralizableSettingViewModel<bool>(Options.CentralizableLimitToVisibleExtent);
+
+				ProtectTopologicalVertices =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableProtectTopologicalVertices);
+
+				LimitToVisibleExtent =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableLimitToVisibleExtent);
 
 				TargetFeatureSelectionVM =
 					new TargetFeatureSelectionViewModel(

@@ -1,5 +1,7 @@
 using System;
 using System.ComponentModel;
+using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 
@@ -8,28 +10,36 @@ namespace ProSuite.AGP.Editing
 	public class CentralizableSettingViewModel<T> : INotifyPropertyChanged where T : struct
 	{
 		private readonly CentralizableSetting<T> _centralizableSetting;
-		private readonly CentralizableSetting<bool> _controllingParent;
+		private readonly IReadOnlyList<CentralizableSetting<bool>> _controllingParents;
 		private bool _isChangeAllowedByParent;
 
 		public CentralizableSettingViewModel(
 			CentralizableSetting<T> centralizableSetting,
-			[CanBeNull] CentralizableSetting<bool> controllingParent = null)
+			[CanBeNull] IReadOnlyList<CentralizableSetting<bool>> controllingParents = null)
 		{
 			_centralizableSetting = centralizableSetting ??
-			                        throw new ArgumentNullException(nameof(centralizableSetting));
+								   throw new ArgumentNullException(nameof(centralizableSetting));
 
 			_centralizableSetting.PropertyChanged += CentralizableSetting_PropertyChanged;
 
-			_controllingParent = controllingParent;
-			IsChangeAllowedByParent = _controllingParent?.CurrentValue ?? true;
+			_controllingParents = controllingParents ?? Array.Empty<CentralizableSetting<bool>>();
+			UpdateIsChangeAllowedByParent(); 
 
-			if (_controllingParent != null)
+			foreach (var parent in _controllingParents)
 			{
-				_controllingParent.PropertyChanged += (sender, e) =>
-				{
-					IsChangeAllowedByParent = _controllingParent.CurrentValue;
-				};
+				parent.PropertyChanged += Parent_PropertyChanged;
 			}
+		}
+
+		private void Parent_PropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			UpdateIsChangeAllowedByParent();
+		}
+
+		private void UpdateIsChangeAllowedByParent()
+		{
+			IsChangeAllowedByParent = _controllingParents.Count == 0 ||
+									_controllingParents.All(parent => parent.CurrentValue);
 		}
 
 		private void CentralizableSetting_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -59,7 +69,7 @@ namespace ProSuite.AGP.Editing
 			get => _centralizableSetting.CurrentValue;
 			set
 			{
-				if (! Equals(_centralizableSetting.CurrentValue, value))
+				if (!Equals(_centralizableSetting.CurrentValue, value))
 				{
 					_centralizableSetting.CurrentValue = value;
 					OnPropertyChanged(nameof(CurrentValue));
@@ -70,10 +80,14 @@ namespace ProSuite.AGP.Editing
 		public bool IsChangeAllowedByParent
 		{
 			get => _isChangeAllowedByParent;
-			set
+			private set
 			{
-				_isChangeAllowedByParent = value;
-				OnPropertyChanged(nameof(IsEnabled));
+				if (_isChangeAllowedByParent != value)
+				{
+					_isChangeAllowedByParent = value;
+					OnPropertyChanged(nameof(IsChangeAllowedByParent));
+					OnPropertyChanged(nameof(IsEnabled));
+				}
 			}
 		}
 
@@ -83,7 +97,6 @@ namespace ProSuite.AGP.Editing
 			get
 			{
 				CentralizableSetting<T> centralizableSetting = _centralizableSetting;
-
 				return ManagedOptionsUtils.GetMessage(centralizableSetting);
 			}
 		}

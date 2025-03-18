@@ -89,14 +89,18 @@ namespace ProSuite.AGP.Editing.Cracker
 				SnapToTargetVertices =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableSnapToTargetVertices);
+
 				SnapTolerance = new CentralizableSettingViewModel<double>(
-					Options.CentralizableSnapTolerance, Options.CentralizableSnapToTargetVertices);
+					Options.CentralizableSnapTolerance, new[] { Options.CentralizableSnapToTargetVertices });
+
 				RespectMinimumSegmentLength =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableRespectMinimumSegmentLength);
+
 				MinimumSegmentLength = new CentralizableSettingViewModel<double>(
 					Options.CentralizableMinimumSegmentLength,
-					Options.CentralizableRespectMinimumSegmentLength);
+					new[] { Options.CentralizableRespectMinimumSegmentLength });
+
 				UseSourceZs =
 					new CentralizableSettingViewModel<bool>(Options.CentralizableUseSourceZs);
 

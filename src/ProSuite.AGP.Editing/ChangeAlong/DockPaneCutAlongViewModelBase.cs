@@ -124,25 +124,38 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				DisplayExcludeCutLines =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableDisplayExcludeCutLines);
+
 				DisplayRecalculateCutLines = new CentralizableSettingViewModel<bool>(
 					Options.CentralizableDisplayRecalculateCutLines,
-					Options.CentralizableDisplayExcludeCutLines);
+					new[] { Options.CentralizableDisplayExcludeCutLines });
+
 				DisplayHideCutLines =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableDisplayHideCutLines);
+
 				DisplayHideCutLinesScale = new CentralizableSettingViewModel<double>(
 					Options.CentralizableDisplayHideCutLinesScale,
-					Options.CentralizableDisplayHideCutLines);
+					new[] { Options.CentralizableDisplayHideCutLines });
+
 				BufferTarget =
 					new CentralizableSettingViewModel<bool>(Options.CentralizableBufferTarget);
+
 				BufferTolerance = new CentralizableSettingViewModel<double>(
-					Options.CentralizableBufferTolerance, Options.CentralizableBufferTarget);
+					Options.CentralizableBufferTolerance,
+					new[] { Options.CentralizableBufferTarget });
+
 				EnforceMinimumBufferSegmentLength = new CentralizableSettingViewModel<bool>(
 					Options.CentralizableEnforceMinimumBufferSegmentLength,
-					Options.CentralizableBufferTarget);
+					new[] { Options.CentralizableBufferTarget });
+
 				MinBufferSegmentLength = new CentralizableSettingViewModel<double>(
 					Options.CentralizableMinBufferSegmentLength,
-					Options.CentralizableEnforceMinimumBufferSegmentLength);
+					new[]
+					{
+						Options.CentralizableEnforceMinimumBufferSegmentLength,
+						Options.CentralizableBufferTarget
+					});
+
 				InsertVertices =
 					new CentralizableSettingViewModel<bool>(Options.CentralizableInsertVertices);
 

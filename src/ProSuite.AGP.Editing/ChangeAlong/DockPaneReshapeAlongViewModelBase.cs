@@ -152,42 +152,59 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				ExcludeLinesOutsideSource =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableExcludeLinesOutsideSource);
+
 				ExcludeLinesTolerance = new CentralizableSettingViewModel<double>(
 					Options.CentralizableExcludeLinesTolerance,
-					Options.CentralizableExcludeLinesOutsideSource);
+					new[] { Options.CentralizableExcludeLinesOutsideSource });
+
 				ExcludeLinesDisplay = new CentralizableSettingViewModel<bool>(
 					Options.CentralizableExcludeLinesDisplay,
-					Options.CentralizableExcludeLinesOutsideSource);
+					new[] { Options.CentralizableExcludeLinesOutsideSource });
+
 				ExcludeLinesShowOnlyRemove =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableExcludeLinesShowOnlyRemove);
+
 				ExcludeLinesOverlaps =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableExcludeLinesOverlaps);
+
 				DisplayExcludeCutLines =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableDisplayExcludeCutLines);
+
 				DisplayRecalculateCutLines = new CentralizableSettingViewModel<bool>(
 					Options.CentralizableDisplayRecalculateCutLines,
-					Options.CentralizableDisplayExcludeCutLines);
+					new[] { Options.CentralizableDisplayExcludeCutLines });
+
 				BufferTarget =
 					new CentralizableSettingViewModel<bool>(Options.CentralizableBufferTarget);
 				BufferTolerance = new CentralizableSettingViewModel<double>(
-					Options.CentralizableBufferTolerance, Options.CentralizableBufferTarget);
+					Options.CentralizableBufferTolerance,
+					new[] { Options.CentralizableBufferTarget });
+
 				EnforceMinimumBufferSegmentLength = new CentralizableSettingViewModel<bool>(
 					Options.CentralizableEnforceMinimumBufferSegmentLength,
-					Options.CentralizableBufferTarget);
+					new[] { Options.CentralizableBufferTarget });
+
 				MinBufferSegmentLength = new CentralizableSettingViewModel<double>(
 					Options.CentralizableMinBufferSegmentLength,
-					Options.CentralizableEnforceMinimumBufferSegmentLength);
+					new[]
+					{
+						Options.CentralizableEnforceMinimumBufferSegmentLength,
+						Options.CentralizableBufferTarget
+					});
+
 				InsertVertices =
 					new CentralizableSettingViewModel<bool>(Options.CentralizableInsertVertices);
+
 				MinimalToleranceApply =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableMinimalToleranceApply);
+
 				MinimalTolerance = new CentralizableSettingViewModel<double>(
 					Options.CentralizableMinimalTolerance,
-					Options.CentralizableMinimalToleranceApply);
+					new[] { Options.CentralizableMinimalToleranceApply });
 
 				if (SetProperty(ref _options, value) && value != null)
 				{
