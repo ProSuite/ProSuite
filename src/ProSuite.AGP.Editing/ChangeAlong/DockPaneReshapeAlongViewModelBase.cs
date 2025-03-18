@@ -34,6 +34,22 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private string _heading = "Reshape Along Options";
 
 		private ReshapeAlongToolOptions _options;
+
+		private CentralizableSettingViewModel<bool> _excludeLinesOutsideSource;
+		private CentralizableSettingViewModel<double> _excludeLinesTolerance;
+		private CentralizableSettingViewModel<bool> _excludeLinesDisplay;
+		private CentralizableSettingViewModel<bool> _excludeLinesShowOnlyRemove;
+		private CentralizableSettingViewModel<bool> _excludeLinesOverlaps;
+		private CentralizableSettingViewModel<bool> _displayExcludeCutLines;
+		private CentralizableSettingViewModel<bool> _displayRecalculateCutLines;
+		private CentralizableSettingViewModel<bool> _bufferTarget;
+		private CentralizableSettingViewModel<double> _bufferTolerance;
+		private CentralizableSettingViewModel<bool> _enforceMinimumBufferSegmentLength;
+		private CentralizableSettingViewModel<double> _minBufferSegmentLength;
+		private CentralizableSettingViewModel<bool> _insertVertices;
+		private CentralizableSettingViewModel<bool> _minimalToleranceApply;
+		private CentralizableSettingViewModel<double> _minimalTolerance;
+
 		private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 
 		public string Heading
@@ -42,64 +58,135 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			set { SetProperty(ref _heading, value, () => Heading); }
 		}
 
-		public CentralizableSettingViewModel<bool> ExcludeLinesOutsideSource =>
-			new CentralizableSettingViewModel<bool>(Options.CentralizableExcludeLinesOutsideSource);
+		public CentralizableSettingViewModel<bool> ExcludeLinesOutsideSource
+		{
+			get => _excludeLinesOutsideSource;
+			set => SetProperty(ref _excludeLinesOutsideSource, value);
+		}
 
-		public CentralizableSettingViewModel<double> ExcludeLinesTolerance =>
-			new CentralizableSettingViewModel<double>(Options.CentralizableExcludeLinesTolerance,
-			                                          Options
-				                                          .CentralizableExcludeLinesOutsideSource);
+		public CentralizableSettingViewModel<double> ExcludeLinesTolerance
+		{
+			get => _excludeLinesTolerance;
+			set => SetProperty(ref _excludeLinesTolerance, value);
+		}
 
-		public CentralizableSettingViewModel<bool> ExcludeLinesDisplay =>
-			new CentralizableSettingViewModel<bool>(Options.CentralizableExcludeLinesDisplay,
-			                                        Options.CentralizableExcludeLinesOutsideSource);
+		public CentralizableSettingViewModel<bool> ExcludeLinesDisplay
+		{
+			get => _excludeLinesDisplay;
+			set => SetProperty(ref _excludeLinesDisplay, value);
+		}
 
-		public CentralizableSettingViewModel<bool> ExcludeLinesShowOnlyRemove =>
-			new CentralizableSettingViewModel<bool>(
-				Options.CentralizableExcludeLinesShowOnlyRemove);
+		public CentralizableSettingViewModel<bool> ExcludeLinesShowOnlyRemove
+		{
+			get => _excludeLinesShowOnlyRemove;
+			set => SetProperty(ref _excludeLinesShowOnlyRemove, value);
+		}
 
-		public CentralizableSettingViewModel<bool> ExcludeLinesOverlaps =>
-			new CentralizableSettingViewModel<bool>(Options.CentralizableExcludeLinesOverlaps);
+		public CentralizableSettingViewModel<bool> ExcludeLinesOverlaps
+		{
+			get => _excludeLinesOverlaps;
+			set => SetProperty(ref _excludeLinesOverlaps, value);
+		}
 
-		public CentralizableSettingViewModel<bool> DisplayExcludeCutLines =>
-			new CentralizableSettingViewModel<bool>(Options.CentralizableDisplayExcludeCutLines);
+		public CentralizableSettingViewModel<bool> DisplayExcludeCutLines
+		{
+			get => _displayExcludeCutLines;
+			set => SetProperty(ref _displayExcludeCutLines, value);
+		}
 
-		public CentralizableSettingViewModel<bool> DisplayRecalculateCutLines =>
-			new CentralizableSettingViewModel<bool>(Options.CentralizableDisplayRecalculateCutLines,
-			                                        Options.CentralizableDisplayExcludeCutLines);
+		public CentralizableSettingViewModel<bool> DisplayRecalculateCutLines
+		{
+			get => _displayRecalculateCutLines;
+			set => SetProperty(ref _displayRecalculateCutLines, value);
+		}
 
-		public CentralizableSettingViewModel<bool> BufferTarget =>
-			new CentralizableSettingViewModel<bool>(Options.CentralizableBufferTarget);
+		public CentralizableSettingViewModel<bool> BufferTarget
+		{
+			get => _bufferTarget;
+			set => SetProperty(ref _bufferTarget, value);
+		}
 
-		public CentralizableSettingViewModel<double> BufferTolerance =>
-			new CentralizableSettingViewModel<double>(Options.CentralizableBufferTolerance,
-			                                          Options.CentralizableBufferTarget);
+		public CentralizableSettingViewModel<double> BufferTolerance
+		{
+			get => _bufferTolerance;
+			set => SetProperty(ref _bufferTolerance, value);
+		}
 
-		public CentralizableSettingViewModel<bool> EnforceMinimumBufferSegmentLength =>
-			new CentralizableSettingViewModel<bool>(
-				Options.CentralizableEnforceMinimumBufferSegmentLength,
-				Options.CentralizableBufferTarget);
+		public CentralizableSettingViewModel<bool> EnforceMinimumBufferSegmentLength
+		{
+			get => _enforceMinimumBufferSegmentLength;
+			set => SetProperty(ref _enforceMinimumBufferSegmentLength, value);
+		}
 
-		public CentralizableSettingViewModel<double> MinBufferSegmentLength =>
-			new CentralizableSettingViewModel<double>(Options.CentralizableMinBufferSegmentLength,
-			                                          Options
-				                                          .CentralizableEnforceMinimumBufferSegmentLength);
+		public CentralizableSettingViewModel<double> MinBufferSegmentLength
+		{
+			get => _minBufferSegmentLength;
+			set => SetProperty(ref _minBufferSegmentLength, value);
+		}
 
-		public CentralizableSettingViewModel<bool> InsertVertices =>
-			new CentralizableSettingViewModel<bool>(Options.CentralizableInsertVertices);
+		public CentralizableSettingViewModel<bool> InsertVertices
+		{
+			get => _insertVertices;
+			set => SetProperty(ref _insertVertices, value);
+		}
 
-		public CentralizableSettingViewModel<bool> MinimalToleranceApply =>
-			new CentralizableSettingViewModel<bool>(Options.CentralizableMinimalToleranceApply);
+		public CentralizableSettingViewModel<bool> MinimalToleranceApply
+		{
+			get => _minimalToleranceApply;
+			set => SetProperty(ref _minimalToleranceApply, value);
+		}
 
-		public CentralizableSettingViewModel<double> MinimalTolerance =>
-			new CentralizableSettingViewModel<double>(Options.CentralizableMinimalTolerance,
-			                                          Options.CentralizableMinimalToleranceApply);
+		public CentralizableSettingViewModel<double> MinimalTolerance
+		{
+			get => _minimalTolerance;
+			set => SetProperty(ref _minimalTolerance, value);
+		}
 
 		public ReshapeAlongToolOptions Options
 		{
 			get => _options;
 			set
 			{
+				ExcludeLinesOutsideSource =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableExcludeLinesOutsideSource);
+				ExcludeLinesTolerance = new CentralizableSettingViewModel<double>(
+					Options.CentralizableExcludeLinesTolerance,
+					Options.CentralizableExcludeLinesOutsideSource);
+				ExcludeLinesDisplay = new CentralizableSettingViewModel<bool>(
+					Options.CentralizableExcludeLinesDisplay,
+					Options.CentralizableExcludeLinesOutsideSource);
+				ExcludeLinesShowOnlyRemove =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableExcludeLinesShowOnlyRemove);
+				ExcludeLinesOverlaps =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableExcludeLinesOverlaps);
+				DisplayExcludeCutLines =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableDisplayExcludeCutLines);
+				DisplayRecalculateCutLines = new CentralizableSettingViewModel<bool>(
+					Options.CentralizableDisplayRecalculateCutLines,
+					Options.CentralizableDisplayExcludeCutLines);
+				BufferTarget =
+					new CentralizableSettingViewModel<bool>(Options.CentralizableBufferTarget);
+				BufferTolerance = new CentralizableSettingViewModel<double>(
+					Options.CentralizableBufferTolerance, Options.CentralizableBufferTarget);
+				EnforceMinimumBufferSegmentLength = new CentralizableSettingViewModel<bool>(
+					Options.CentralizableEnforceMinimumBufferSegmentLength,
+					Options.CentralizableBufferTarget);
+				MinBufferSegmentLength = new CentralizableSettingViewModel<double>(
+					Options.CentralizableMinBufferSegmentLength,
+					Options.CentralizableEnforceMinimumBufferSegmentLength);
+				InsertVertices =
+					new CentralizableSettingViewModel<bool>(Options.CentralizableInsertVertices);
+				MinimalToleranceApply =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableMinimalToleranceApply);
+				MinimalTolerance = new CentralizableSettingViewModel<double>(
+					Options.CentralizableMinimalTolerance,
+					Options.CentralizableMinimalToleranceApply);
+
 				if (SetProperty(ref _options, value) && value != null)
 				{
 					TargetFeatureSelectionVM =

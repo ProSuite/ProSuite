@@ -34,6 +34,14 @@ namespace ProSuite.AGP.Editing.Chopper
 		private string _heading = "Chopper Options";
 
 		private ChopperToolOptions _options;
+
+		private CentralizableSettingViewModel<bool> _snapToTargetVertices;
+		private CentralizableSettingViewModel<double> _snapTolerance;
+		private CentralizableSettingViewModel<bool> _respectMinimumSegmentLength;
+		private CentralizableSettingViewModel<double> _minimumSegmentLength;
+		private CentralizableSettingViewModel<bool> _useSourceZs;
+		private CentralizableSettingViewModel<bool> _excludeInteriorInteriorIntersections;
+
 		private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 
 		public string Heading
@@ -42,31 +50,64 @@ namespace ProSuite.AGP.Editing.Chopper
 			set { SetProperty(ref _heading, value, () => Heading); }
 		}
 
-		public CentralizableSettingViewModel<bool> SnapToTargetVertices =>
-			new CentralizableSettingViewModel<bool>(Options.CentralizableSnapToTargetVertices);
+		public CentralizableSettingViewModel<bool> SnapToTargetVertices
+		{
+			get => _snapToTargetVertices;
+			set => SetProperty(ref _snapToTargetVertices, value);
+		}
 
-		public CentralizableSettingViewModel<double> SnapTolerance =>
-			new CentralizableSettingViewModel<double>(Options.CentralizableSnapTolerance,
-			                                          Options.CentralizableSnapToTargetVertices);
+		public CentralizableSettingViewModel<double> SnapTolerance
+		{
+			get => _snapTolerance;
+			set => SetProperty(ref _snapTolerance, value);
+		}
 
-		public CentralizableSettingViewModel<bool> RespectMinimumSegmentLength =>
-			new CentralizableSettingViewModel<bool>(Options.CentralizableRespectMinimumSegmentLength);
+		public CentralizableSettingViewModel<bool> RespectMinimumSegmentLength
+		{
+			get => _respectMinimumSegmentLength;
+			set => SetProperty(ref _respectMinimumSegmentLength, value);
+		}
 
-		public CentralizableSettingViewModel<double> MinimumSegmentLength =>
-			new CentralizableSettingViewModel<double>(Options.CentralizableMinimumSegmentLength,
-			                                          Options.CentralizableRespectMinimumSegmentLength);
+		public CentralizableSettingViewModel<double> MinimumSegmentLength
+		{
+			get => _minimumSegmentLength;
+			set => SetProperty(ref _minimumSegmentLength, value);
+		}
 
-		public CentralizableSettingViewModel<bool> UseSourceZs =>
-			new CentralizableSettingViewModel<bool>(Options.CentralizableUseSourceZs);
+		public CentralizableSettingViewModel<bool> UseSourceZs
+		{
+			get => _useSourceZs;
+			set => SetProperty(ref _useSourceZs, value);
+		}
 
-		public CentralizableSettingViewModel<bool> ExcludeInteriorInteriorIntersections =>
-			new CentralizableSettingViewModel<bool>(Options.CentralizableExcludeInteriorInteriorIntersections);
+		public CentralizableSettingViewModel<bool> ExcludeInteriorInteriorIntersections
+		{
+			get => _excludeInteriorInteriorIntersections;
+			set => SetProperty(ref _excludeInteriorInteriorIntersections, value);
+		}
 
 		public ChopperToolOptions Options
 		{
 			get => _options;
 			set
 			{
+				SnapToTargetVertices =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableSnapToTargetVertices);
+				SnapTolerance = new CentralizableSettingViewModel<double>(
+					Options.CentralizableSnapTolerance, Options.CentralizableSnapToTargetVertices);
+				RespectMinimumSegmentLength =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableRespectMinimumSegmentLength);
+				MinimumSegmentLength = new CentralizableSettingViewModel<double>(
+					Options.CentralizableMinimumSegmentLength,
+					Options.CentralizableRespectMinimumSegmentLength);
+				UseSourceZs =
+					new CentralizableSettingViewModel<bool>(Options.CentralizableUseSourceZs);
+				ExcludeInteriorInteriorIntersections =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableExcludeInteriorInteriorIntersections);
+
 				SetProperty(ref _options, value);
 
 				TargetFeatureSelectionVM =
