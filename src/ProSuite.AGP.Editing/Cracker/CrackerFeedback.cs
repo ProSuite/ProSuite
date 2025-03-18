@@ -198,14 +198,13 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			var polygon = GeometryFactory.CreatePolygon(extent);
 
-			// Create a simple line symbol with no fill
+			// Extent symbolization
 
-			var lineSymbol = SymbolUtils.CreateLineSymbol(0, 255, 150, 3);
-
-			// Ensure no fill by using a symbol reference with no fill
-			var lineSymbolLayer = lineSymbol.SymbolLayers[0]; // Get the first layer
+			var outlineSymbol = SymbolUtils.CreateLineSymbol(255, 255, 255, 5);
+			var lineSymbol = SymbolUtils.CreateLineSymbol(0, 255, 150, 2); 
+			
 			var polygonSymbol =
-				SymbolUtils.CreatePolygonSymbol(lineSymbolLayer, null); // Pass null for fill
+				SymbolUtils.CreatePolygonSymbol(lineSymbol.SymbolLayers[0], outlineSymbol.SymbolLayers[0]);
 
 			_extentOverlay =
 				MapView.Active.AddOverlay(polygon, polygonSymbol.MakeSymbolReference());
