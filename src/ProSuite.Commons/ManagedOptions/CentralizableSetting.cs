@@ -48,21 +48,9 @@ namespace ProSuite.Commons.ManagedOptions
 			{
 				if (_localSetting.Override != value)
 				{
-					string oldTooltip = ToolTip;
-
 					_localSetting.Override = value;
 					NotifyCurrentValueChanged(nameof(HasLocalOverride));
-
-					CheckTooltipChange(oldTooltip);
 				}
-			}
-		}
-
-		private void CheckTooltipChange(string oldValue)
-		{
-			if (oldValue != ToolTip)
-			{
-				NotifyCurrentValueChanged(nameof(ToolTip));
 			}
 		}
 
@@ -123,8 +111,6 @@ namespace ProSuite.Commons.ManagedOptions
 
 		public void SetLocalValue(T? value)
 		{
-			string oldTooltip = ToolTip;
-
 			if (! Equals(value, _localSetting.Value))
 			{
 				_localSetting.Value = value;
@@ -133,41 +119,6 @@ namespace ProSuite.Commons.ManagedOptions
 
 			HasLocalOverride = _centralSetting == null ||
 			                   value != null && ! value.Equals(_centralSetting.Value);
-
-			CheckTooltipChange(oldTooltip);
-		}
-
-		[NotNull]
-		public string ToolTip
-		{
-			get
-			{
-				string result;
-
-				if (! HasCentralValue)
-				{
-					result =
-						$"No value defined in central configuration file. The factory default value is: {FactoryDefault}";
-				}
-				else if (CanOverrideLocally)
-				{
-					result = HasLocalOverride
-						         ? $"Using local override. Centrally defined value: {CentralValue}"
-						         : "Centrally defined value is currently used. It could be overridden locally.";
-				}
-				else
-				{
-					result =
-						"Centrally defined value is currently used. No local override allowed.";
-				}
-
-				if (! string.IsNullOrEmpty(TooltipAppendix))
-				{
-					result += TooltipAppendix;
-				}
-
-				return result;
-			}
 		}
 
 		[CanBeNull]

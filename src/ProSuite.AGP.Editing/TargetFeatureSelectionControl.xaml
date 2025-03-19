@@ -17,7 +17,7 @@
         <managedOptionsUi:OverrideToFontStyleConverter x:Key="OverrideToFontStyleConverter" />
     </UserControl.Resources>
     <StackPanel
-	    ToolTip="{Binding CentralizableSetting.ToolTip}" >
+	    ToolTip="{Binding ToolTip}" ToolTipService.ShowOnDisabled="True" >
         <StackPanel.Resources>
             <local:ComparisonConverter x:Key="ComparisonConverter" />
         </StackPanel.Resources>
