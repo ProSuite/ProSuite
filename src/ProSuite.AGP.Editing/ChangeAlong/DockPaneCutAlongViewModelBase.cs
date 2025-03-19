@@ -159,19 +159,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				InsertVertices =
 					new CentralizableSettingViewModel<bool>(Options.CentralizableInsertVertices);
 
-				if (SetProperty(ref _options, value) && value != null)
-				{
-					TargetFeatureSelectionVM =
-						new TargetFeatureSelectionViewModel(
-							_options.CentralizableTargetFeatureSelection)
-						{
-							SelectedFeaturesVisibility = Visibility.Collapsed,
-							EditableSelectableFeaturesVisibility = Visibility.Collapsed
-						};
+				TargetFeatureSelectionVM =
+					new TargetFeatureSelectionViewModel(
+						_options.CentralizableTargetFeatureSelection)
+					{
+						SelectedFeaturesVisibility = Visibility.Collapsed,
+						EditableSelectableFeaturesVisibility = Visibility.Collapsed
+					};
 
-					ZValueSourceSelectionVM =
-						new ZValueSourceSelectionViewModel(_options.CentralizableZValueSource);
-				}
+				ZValueSourceSelectionVM =
+					new ZValueSourceSelectionViewModel(_options.CentralizableZValueSource);
 			}
 		}
 	}

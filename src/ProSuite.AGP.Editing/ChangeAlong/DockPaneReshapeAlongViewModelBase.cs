@@ -206,16 +206,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					Options.CentralizableMinimalTolerance,
 					new[] { Options.CentralizableMinimalToleranceApply });
 
-				if (SetProperty(ref _options, value) && value != null)
-				{
-					TargetFeatureSelectionVM =
-						new TargetFeatureSelectionViewModel(
-							_options.CentralizableTargetFeatureSelection)
-						{
-							SelectedFeaturesVisibility = Visibility.Collapsed,
-							EditableSelectableFeaturesVisibility = Visibility.Collapsed
-						};
-				}
+				TargetFeatureSelectionVM =
+					new TargetFeatureSelectionViewModel(
+						_options.CentralizableTargetFeatureSelection)
+					{
+						SelectedFeaturesVisibility = Visibility.Collapsed,
+						EditableSelectableFeaturesVisibility = Visibility.Collapsed
+					};
 			}
 		}
 	}
