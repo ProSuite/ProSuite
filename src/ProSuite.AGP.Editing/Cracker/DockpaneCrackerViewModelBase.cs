@@ -104,8 +104,6 @@ namespace ProSuite.AGP.Editing.Cracker
 				UseSourceZs =
 					new CentralizableSettingViewModel<bool>(Options.CentralizableUseSourceZs);
 
-				SetProperty(ref _options, value);
-
 				TargetFeatureSelectionVM =
 					new TargetFeatureSelectionViewModel(
 						_options.CentralizableTargetFeatureSelection);

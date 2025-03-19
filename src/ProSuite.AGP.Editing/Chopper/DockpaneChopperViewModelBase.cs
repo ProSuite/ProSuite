@@ -116,8 +116,6 @@ namespace ProSuite.AGP.Editing.Chopper
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableExcludeInteriorInteriorIntersections);
 
-				SetProperty(ref _options, value);
-
 				TargetFeatureSelectionVM =
 					new TargetFeatureSelectionViewModel(
 						_options.CentralizableTargetFeatureSelection);
