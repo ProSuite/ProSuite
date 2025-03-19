@@ -72,6 +72,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected virtual bool AllowNoSelection => false;
 
+	protected virtual bool EnableLassoSketch => true;
+	protected virtual bool EnablePolygonSketch => true;
+
 	/// Whether the required selection can only contain selectable features.
 	protected bool SelectOnlySelectableFeatures { get; init; } = true;
 
@@ -294,12 +297,12 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 			if (! InConstructionPhase())
 			{
-				if (args.Key == _keyPolygonDraw)
+				if (EnablePolygonSketch && args.Key == _keyPolygonDraw)
 				{
 					SetupPolygonSketch();
 				}
 
-				if (args.Key == _keyLassoDraw)
+				if (EnableLassoSketch && args.Key == _keyLassoDraw)
 				{
 					SetupLassoSketch();
 				}
