@@ -720,6 +720,7 @@ public class AddRemovePointsTool : MapTool
 			operation.Delete(targetLayer, oids);
 		}
 
+		Task<bool> succeed = null;
 		try
 		{
 			if (operation.IsEmpty)
@@ -728,12 +729,28 @@ public class AddRemovePointsTool : MapTool
 				return Task.FromResult(true);
 			}
 
-			return operation.ExecuteAsync();
+			succeed = operation.ExecuteAsync();
+		}
+		catch (Exception e)
+		{
+			_msg.Debug($"{Caption}: edit operation threw an exception", e);
 		}
 		finally
 		{
+			if (succeed is { Result: true })
+			{
+				_msg.Info(
+					$"{Caption} added {adds.Count}/deleted {drops.Count} points in {targetLayer.Name}");
+			}
+			else
+			{
+				_msg.Debug($"{Caption}: edit operation failed");
+			}
+
 			ClearElements();
 		}
+
+		return succeed;
 	}
 
 	private void Abort()
