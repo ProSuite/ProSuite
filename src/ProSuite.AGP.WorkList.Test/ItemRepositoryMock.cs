@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Test
@@ -16,6 +17,11 @@ namespace ProSuite.AGP.WorkList.Test
 		public ItemRepositoryMock(IEnumerable<IWorkItem> items)
 		{
 			_items = items;
+		}
+
+		public ItemRepositoryMock(List<Table> items, IWorkItemStateRepository stateRepository)
+		{
+			throw new NotImplementedException();
 		}
 
 		public int GetCount(QueryFilter filter = null)
