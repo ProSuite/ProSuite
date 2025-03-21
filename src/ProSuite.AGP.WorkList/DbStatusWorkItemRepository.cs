@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Editing;
@@ -31,15 +32,7 @@ namespace ProSuite.AGP.WorkList
 				return false;
 			}
 
-			foreach (ISourceClass sourceClass in SourceClasses)
-			{
-				if (workListItemSchema.ContainsSourceClass(sourceClass))
-				{
-					return true;
-				}
-			}
-
-			return false;
+			return SourceClasses.Any(workListItemSchema.ContainsSourceClass);
 		}
 
 		protected override void AdaptSourceFilter(QueryFilter filter, ISourceClass sourceClass)

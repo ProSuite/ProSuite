@@ -15,7 +15,7 @@ namespace ProSuite.AGP.WorkList
 		public DatabaseSourceClass(GdbTableIdentity tableIdentity,
 		                           [NotNull] WorkListStatusSchema statusSchema,
 		                           [CanBeNull] IAttributeReader attributeReader,
-		                           [CanBeNull] string definitionQuery)
+		                           [CanBeNull] string definitionQuery = null)
 			: base(tableIdentity, attributeReader)
 		{
 			Assert.ArgumentNotNull(statusSchema, nameof(statusSchema));
