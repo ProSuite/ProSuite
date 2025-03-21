@@ -5,13 +5,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Selection;
@@ -23,11 +22,14 @@ namespace ProSuite.AGP.WorkList.Selection
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public override string FileSuffix => ".swl";
+		protected override string FileSuffix => ".swl";
 
-		protected override string SuggestWorkListName()
+		protected override string GetDisplayName()
 		{
-			return "Selection Work List";
+			string currentName = Path.GetFileNameWithoutExtension(Project.Current.Name);
+			var now = DateTime.Now.ToString("yyyy_MM_dd_HHmmss");
+
+			return $"{currentName}_{now}";
 		}
 
 		protected override T GetLayerContainerCore<T>()
@@ -43,7 +45,7 @@ namespace ProSuite.AGP.WorkList.Selection
 			return new XmlSelectionItemStateRepository(path, workListName, type);
 		}
 
-		protected override Task<IWorkItemRepository> CreateItemRepositoryCore(
+		protected override Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository)
 		{
 			Map map = MapView.Active.Map;

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -67,66 +66,45 @@ namespace ProSuite.Commons.AGP.Picker
 			//       .SelectMany(fcs => fcs);
 		}
 
-		[Obsolete($"use {nameof(CreatePolygon)}")]
-		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
-		                                              int selectionTolerancePixels)
+		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry, int tolerancePixels)
 		{
-			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
-				MapView.Active, selectionTolerancePixels, sketchGeometry.Extent.Center);
-
-			double envelopeExpansion = selectionToleranceMapUnits * 2;
-
 			Envelope envelope = sketchGeometry.Extent;
+			MapPoint center = envelope.Center;
+
+			double toleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(MapView.Active, tolerancePixels, center);
+
+			double expansion = toleranceMapUnits * 2;
 
 			// NOTE: MapToScreen in stereo map is sensitive to Z value (Picker location!)
-
-			// Rather than creating a non-Z-aware polygon with elliptic arcs by using buffer...
-			//Geometry selectionGeometry =
-			//	GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
-
-			// Just expand the envelope
-			// .. but PickerViewModel needs a polygon to display selection geometry (press space).
-
 			// HasZ, HasM and HasID are inherited from input geometry.
 			// There is no need for GeometryUtils.EnsureGeometrySchema()
 
 			return GeometryFactory.CreatePolygon(
-				envelope.Expand(envelopeExpansion, envelopeExpansion, false),
+				envelope.Expand(expansion, expansion, false),
 				envelope.SpatialReference);
 		}
 
-		public static Geometry CreatePolygon(Point screenPoint, int expansionPixels)
+		public static bool IsPointClick(Geometry geometry, double tolerance, out MapPoint clickPoint)
 		{
-			double selectionToleranceMapUnits =
-				MapUtils.ConvertScreenPixelToMapLength(MapView.Active, expansionPixels,
-				                                       screenPoint);
+			clickPoint = null;
 
-			// TODO: (daro) revise multiplication by 2
-			double envelopeExpansion = selectionToleranceMapUnits * 2;
+			if (geometry is null) return false;
+			if (geometry.IsEmpty) return false;
 
-			MapPoint mapPoint = MapView.Active.ScreenToMap(screenPoint);
-			Envelope envelope = mapPoint.Extent;
+			if (geometry is MapPoint point)
+			{
+				clickPoint = point;
+				return true;
+			}
 
-			// NOTE: MapToScreen in stereo map is sensitive to Z value (Picker location!)
+			var extent = geometry.Extent;
+			if (extent.Length < tolerance)
+			{
+				clickPoint = extent.Center;
+				return true;
+			}
 
-			// Rather than creating a non-Z-aware polygon with elliptic arcs by using buffer...
-			//Geometry selectionGeometry =
-			//	GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
-
-			// Just expand the envelope
-			// .. but PickerViewModel needs a polygon to display selection geometry (press space).
-
-			// HasZ, HasM and HasID are inherited from input geometry.
-			// There is no need for GeometryUtils.EnsureGeometrySchema()
-
-			return GeometryFactory.CreatePolygon(
-				envelope.Expand(envelopeExpansion, envelopeExpansion, false),
-				envelope.SpatialReference);
-		}
-
-		public static bool IsSingleClick(Geometry sketch)
-		{
-			return ! (sketch.Extent.Width > 0 || sketch.Extent.Height > 0);
+			return false;
 		}
 
 		public static SpatialRelationship GetSpatialRelationship()
@@ -148,29 +126,12 @@ namespace ProSuite.Commons.AGP.Picker
 
 		#region Show Picker
 
-		public static async Task<IPickableItem> ShowPickerAsync(
+		private static async Task<IPickableItem> ShowPickerAsync(
 			IPickerPrecedence precedence,
-			IEnumerable<FeatureSelectionBase> orderedSelection)
+			IEnumerable<FeatureSelectionBase> candidates,
+			IPickableItemsFactory factory)
 		{
-			return await ShowPickerAsync(precedence, orderedSelection,
-			                             precedence.CreateItemsFactory());
-		}
-
-		public static async Task<IPickableItem> ShowPickerAsync<T>(
-			IPickerPrecedence precedence,
-			IEnumerable<FeatureSelectionBase> orderedSelection)
-			where T : IPickableItem
-		{
-			return await ShowPickerAsync(precedence, orderedSelection,
-			                             precedence.CreateItemsFactory<T>());
-		}
-
-		private static async Task<IPickableItem> ShowPickerAsync(IPickerPrecedence precedence,
-		                                                         IEnumerable<FeatureSelectionBase>
-			                                                         orderedSelection,
-		                                                         IPickableItemsFactory factory)
-		{
-			var items = factory.CreateItems(orderedSelection).ToList();
+			var items = factory.CreateItems(candidates);
 			IPickerViewModel vm = factory.CreateViewModel(precedence.GetSelectionGeometry());
 
 			var picker = new PickerService(precedence);
@@ -178,63 +139,58 @@ namespace ProSuite.Commons.AGP.Picker
 			return await picker.Pick(items, vm);
 		}
 
-		public static async Task<List<IPickableItem>> GetItems(
-			IEnumerable<FeatureSelectionBase> candidates,
+		public static async Task<List<IPickableItem>> GetItemsAsync(
+			ICollection<FeatureSelectionBase> candidates,
 			IPickerPrecedence precedence)
 		{
-			var ordered = OrderByGeometryDimension(candidates).ToList();
+			IPickableItemsFactory itemsFactory = precedence.CreateItemsFactory();
 
-			switch (GetPickerMode(precedence, ordered))
+			switch (precedence.GetPickerMode(candidates))
 			{
-				// TODO: daro return empty list instead of list with null item. Happens
+				// Return empty list instead of list with null item. Happens
 				// when user doesn't pick an item from picker window.
 				case PickerMode.ShowPicker:
-					IPickableItem pick = await ShowPickerAsync(precedence, ordered);
+					IPickableItem pick = await ShowPickerAsync(precedence, candidates, itemsFactory);
 					return pick == null ? [] : [pick];
 
 				case PickerMode.PickAll:
-					return new PickableFeatureClassItemsFactory().CreateItems(ordered).ToList();
+					return itemsFactory.CreateItems(candidates).ToList();
 
 				case PickerMode.PickBest:
-					IEnumerable<IPickableItem> items = precedence.CreateItemsFactory()
-					                                             .CreateItems(ordered);
-					return new List<IPickableItem> { precedence.PickBest(items) };
+					IEnumerable<IPickableItem> items = itemsFactory.CreateItems(candidates);
+					return [precedence.PickBest(items)];
 
-				case null:
-					return new List<IPickableItem>(0);
+				case PickerMode.None:
+					return [];
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 		}
 
-		public static async Task<List<IPickableItem>> GetItems<T>(
+		public static async Task<List<T>> GetItemsAsync<T>(
 			IEnumerable<FeatureSelectionBase> candidates,
-			IPickerPrecedence precedence, PickerMode? pickerMode)
+			IPickerPrecedence precedence, PickerMode pickerMode)
 			where T : IPickableItem
 		{
-			var ordered = OrderByGeometryDimension(candidates).ToList();
-
-			if (! ordered.Any())
-			{
-				pickerMode = null;
-			}
+			IPickableItemsFactory itemsFactory = precedence.CreateItemsFactory<T>();
 
 			switch (pickerMode)
 			{
+				// Return empty list instead of list with null item. Happens
+				// when user doesn't pick an item from picker window.
 				case PickerMode.ShowPicker:
-					IPickableItem pick = await ShowPickerAsync<T>(precedence, ordered);
-					return pick == null ? [] : [pick];
+					IPickableItem pick = await ShowPickerAsync(precedence, candidates, itemsFactory);
+					return pick == null ? [] : [(T) pick];
 
 				case PickerMode.PickAll:
-					return new PickableFeatureClassItemsFactory().CreateItems(ordered).ToList();
+					return itemsFactory.CreateItems(candidates).OfType<T>().ToList();
 
 				case PickerMode.PickBest:
-					IEnumerable<IPickableItem> items = precedence.CreateItemsFactory()
-					                                             .CreateItems(ordered);
-					return new List<IPickableItem> { precedence.PickBest(items) };
+					IEnumerable<IPickableItem> items = itemsFactory.CreateItems(candidates);
+					return [(T) precedence.PickBest(items)];
 
-				case null:
-					return new List<IPickableItem>(0);
+				case PickerMode.None:
+					return [];
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -245,6 +201,19 @@ namespace ProSuite.Commons.AGP.Picker
 		public static void Select(List<IPickableItem> items,
 		                          SelectionCombinationMethod selectionMethod)
 		{
+			// No candidate (user clicked into empty space):
+			if (items.Count == 0)
+			{
+				ClearSelection();
+				return;
+			}
+
+			// New selection: clear the selection on the map level, NOT on the layer level
+			if (selectionMethod == SelectionCombinationMethod.New)
+			{
+				ClearSelection();
+			}
+
 			foreach (IPickableFeatureClassItem item in items.OfType<IPickableFeatureClassItem>())
 			{
 				// Important to loop over each layer, they could have different definition queries!
@@ -254,38 +223,13 @@ namespace ProSuite.Commons.AGP.Picker
 				}
 			}
 
-			foreach (IPickableFeatureItem item in items.OfType<IPickableFeatureItem>())
+			foreach (var itemsByLayer in items.OfType<IPickableFeatureItem>().GroupBy(item => item.Layer))
 			{
-				SelectionUtils.SelectRows(item.Layer,
-				                          selectionMethod, new[] { item.Oid });
+				BasicFeatureLayer layer = itemsByLayer.Key;
+				List<long> oids = itemsByLayer.Select(item => item.Oid).ToList();
+
+				SelectionUtils.SelectRows(layer, selectionMethod, oids);
 			}
-		}
-
-		private static PickerMode? GetPickerMode(
-			[NotNull] IPickerPrecedence precedence, ICollection<FeatureSelectionBase> candidates)
-		{
-			SelectionCombinationMethod selectionMethod = precedence.SelectionCombinationMethod;
-
-			if (! candidates.Any() && selectionMethod == SelectionCombinationMethod.XOR)
-			{
-				// No addition to and no removal from selection
-				return null;
-			}
-
-			if (! candidates.Any())
-			{
-				// No candidate (user clicked into empty space):
-				ClearSelection();
-				return null;
-			}
-
-			// Clear the selection on the map level, NOT on the layer level
-			if (selectionMethod == SelectionCombinationMethod.New)
-			{
-				ClearSelection();
-			}
-
-			return precedence.GetPickerMode(candidates);
 		}
 
 		private static void ClearSelection()

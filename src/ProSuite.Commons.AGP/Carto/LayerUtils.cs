@@ -542,5 +542,12 @@ namespace ProSuite.Commons.AGP.Carto
 
 			return expression;
 		}
+
+		public static void Rename(Layer layer, string name)
+		{
+			CIMBaseLayer cimLayer = layer.GetDefinition();
+			cimLayer.Name = name;
+			layer.SetDefinition(cimLayer);
+		}
 	}
 }

@@ -29,18 +29,7 @@ namespace ProSuite.Commons.AGP.Picker
 			_precedence = precedence ?? throw new ArgumentNullException(nameof(precedence));
 		}
 
-		public Task<IPickableItem> Pick(List<IPickableItem> items, IPickerViewModel viewModel)
-		{
-			if (items.Count == 1)
-			{
-				return Task.FromResult(_precedence.PickBest(items));
-			}
-
-			return PickSingle(items, viewModel);
-		}
-
-		private Task<IPickableItem> PickSingle(IEnumerable<IPickableItem> items,
-		                                       IPickerViewModel viewModel)
+		public Task<IPickableItem> Pick(IEnumerable<IPickableItem> items, IPickerViewModel viewModel)
 		{
 			viewModel.Items = new ObservableCollection<IPickableItem>(_precedence.Order(items));
 

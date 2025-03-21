@@ -19,9 +19,10 @@ public interface IMapWhiteSelection
 	bool IsEmpty { get; }
 
 	/// <summary>
-	/// Select vertices around <paramref name="clickPoint"/> from amongst
-	/// the given <paramref name="candidates"/> or (if null) the features
-	/// already involved with this white selection.
+	/// Select vertices within <paramref name="tolerance"/> (map units)
+	/// around <paramref name="clickPoint"/> from amongst the given
+	/// <paramref name="candidates"/> or (if null) the features already
+	/// involved with this white selection.
 	/// </summary>
 	/// <returns>True iff this white selection changed</returns>
 	bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates = null);
@@ -68,12 +69,16 @@ public class MapWhiteSelection : IMapWhiteSelection
 	// TODO probably should keep _layerSelections ordered as in the ToC
 	private readonly Dictionary<string, IWhiteSelection> _layerSelections = new();
 
-	public MapWhiteSelection(MapView mapView)
+	public MapWhiteSelection(MapView mapView, bool mustBoundarySelectUnfilledPolygons = true)
 	{
 		_mapView = mapView ?? throw new ArgumentNullException(nameof(mapView));
+
+		MustBoundarySelectUnfilledPolygons = mustBoundarySelectUnfilledPolygons;
 	}
 
 	public Map Map => _mapView.Map;
+
+	public bool MustBoundarySelectUnfilledPolygons { get; set; }
 
 	/// <returns>true iff the no involved features (regardless of selected vertices)</returns>
 	public bool IsEmpty => _layerSelections.Values.Sum(ws => ws.InvolvedFeatureCount) <= 0;
@@ -222,6 +227,8 @@ public class MapWhiteSelection : IMapWhiteSelection
 		return removed;
 	}
 
+	#region Click-select (point+tolerance)
+
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT</remarks>
 	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
@@ -253,6 +260,11 @@ public class MapWhiteSelection : IMapWhiteSelection
 				var shape = selection.GetGeometry(oid);
 				if (shape is null || shape.IsEmpty) continue;
 
+				if (! IsFeatureHit(featureLayer, oid, shape, clickPoint, tolerance))
+				{
+					continue;
+				}
+
 				bool added = selection.Add(oid);
 				if (added)
 				{
@@ -275,6 +287,33 @@ public class MapWhiteSelection : IMapWhiteSelection
 		}
 
 		return changed;
+	}
+
+	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape, MapPoint clickPoint, double tolerance)
+	{
+		if (! MustBoundarySelectUnfilledPolygons)
+		{
+			return true;
+		}
+
+		if (featureShape is not Polygon polygon)
+		{
+			return true;
+		}
+
+		if (WhiteSelectionUtils.IsFilledPolygon(_mapView, layer, oid))
+		{
+			return true;
+		}
+
+		// This is an unfilled polygon: can only select at its boundary,
+		// not on the (invisible) interior
+
+		var boundary = GeometryUtils.Boundary(polygon);
+
+		var point = GeometryUtils.EnsureSpatialReference(clickPoint, polygon.SpatialReference);
+		var distance = GeometryEngine.Instance.Distance(boundary, point);
+		return distance <= tolerance;
 	}
 
 	private static bool SelectVertex(
@@ -307,6 +346,10 @@ public class MapWhiteSelection : IMapWhiteSelection
 		return false;
 	}
 
+	#endregion
+
+	#region Area-select (polygon)
+
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
 	public bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
@@ -335,6 +378,11 @@ public class MapWhiteSelection : IMapWhiteSelection
 				var shape = selection.GetGeometry(oid);
 				if (shape is null || shape.IsEmpty) continue;
 
+				if (! IsFeatureHit(featureLayer, oid, shape, geometry))
+				{
+					continue;
+				}
+
 				bool added = selection.Add(oid);
 				if (added)
 				{
@@ -357,6 +405,32 @@ public class MapWhiteSelection : IMapWhiteSelection
 		}
 
 		return changed;
+	}
+
+	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape, Geometry selectionArea)
+	{
+		if (!MustBoundarySelectUnfilledPolygons)
+		{
+			return true;
+		}
+
+		if (featureShape is not Polygon polygon)
+		{
+			return true;
+		}
+
+		if (WhiteSelectionUtils.IsFilledPolygon(_mapView, layer, oid))
+		{
+			return true;
+		}
+
+		// This is an unfilled polygon: can only select at its boundary,
+		// not on the (invisible) interior
+
+		var boundary = GeometryUtils.Boundary(polygon);
+
+		var area = GeometryUtils.EnsureSpatialReference(selectionArea, polygon.SpatialReference);
+		return GeometryUtils.Intersects(boundary, area);
 	}
 
 	private static bool SelectVertices(
@@ -431,6 +505,8 @@ public class MapWhiteSelection : IMapWhiteSelection
 
 		return changed;
 	}
+
+	#endregion
 
 	/// <remarks>Must call on MCT</remarks>
 	private Dictionary<FeatureLayer, List<long>> GetFeatures(Geometry geometry)

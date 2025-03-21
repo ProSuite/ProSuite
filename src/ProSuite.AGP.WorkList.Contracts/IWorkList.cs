@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -8,7 +7,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
-	public interface IWorkList : IRowCache, INotifyPropertyChanged
+	public interface IWorkList : IRowCache
 	{
 		[NotNull]
 		string Name { get; set; }
@@ -105,5 +104,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		Geometry GetItemGeometry(IWorkItem item);
 
 		void SetItemsGeometryDraftMode(bool enable);
+
+		void Rename(string name);
 	}
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +7,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -25,7 +25,8 @@ namespace ProSuite.AGP.WorkList.Domain
 	/// </summary>
 	// todo: daro separate geometry processing code
 	// todo: daro separate QueuedTask code
-	public abstract class WorkList : IWorkList, IEquatable<WorkList>
+	// todo: daro avoid ArcGIS.Desktop.Mapping dependency
+	public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatable<WorkList>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -57,7 +58,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		protected Dictionary<GdbRowIdentity, IWorkItem> RowMap => _rowMap;
 
 		private WorkItemVisibility _visibility;
-		private readonly string _displayName;
+		private string _displayName;
 
 		protected WorkList([NotNull] IWorkItemRepository repository,
 		                   [NotNull] string name,
@@ -75,9 +76,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			RefreshItems();
 		}
-
-		public event PropertyChangedEventHandler PropertyChanged;
-
+		
 		public string Name { get; set; }
 
 		public string DisplayName
@@ -91,6 +90,13 @@ namespace ProSuite.AGP.WorkList.Domain
 
 				return _displayName;
 			}
+			private set => SetProperty(ref _displayName, value);
+		}
+
+		public void Rename(string name)
+		{
+			DisplayName = name;
+			Repository.WorkItemStateRepository.Rename(name);
 		}
 
 		protected abstract string GetDisplayNameCore();
@@ -127,7 +133,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			return HasCurrentItem && CanSetStatusCore();
 		}
 
-		[CanBeNull]
 		public Row GetCurrentItemSourceRow()
 		{
 			if (Current == null)
