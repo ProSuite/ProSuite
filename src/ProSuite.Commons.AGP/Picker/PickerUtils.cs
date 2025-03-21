@@ -126,7 +126,7 @@ namespace ProSuite.Commons.AGP.Picker
 
 		#region Show Picker
 
-		private static async Task<IPickableItem> ShowPickerAsync(
+		public static async Task<IPickableItem> ShowPickerAsync(
 			IPickerPrecedence precedence,
 			IEnumerable<FeatureSelectionBase> candidates,
 			IPickableItemsFactory factory)
