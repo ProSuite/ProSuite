@@ -16,6 +16,7 @@ using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
@@ -497,7 +498,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.Error($"Error checking quality for request {request}", e);
-				cancellationMessage = $"Server error: {e.Message}";
+				cancellationMessage = $"Server error: {ExceptionUtils.FormatMessage(e)}";
 
 				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
@@ -593,7 +594,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.Error($"Error checking quality for request {request}", e);
-				cancellationMessage = $"Server error: {e.Message}";
+				cancellationMessage = $"Server error: {ExceptionUtils.FormatMessage(e)}";
 
 				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
@@ -657,7 +658,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.DebugFormat("Error during processing of request {0}", request);
-				_msg.Error($"Error verifying quality: {e.Message}", e);
+				_msg.Error($"Error verifying quality: {ExceptionUtils.FormatMessage(e)}", e);
 
 				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{

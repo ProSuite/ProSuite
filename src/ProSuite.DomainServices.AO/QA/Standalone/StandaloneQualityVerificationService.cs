@@ -11,6 +11,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
@@ -252,7 +253,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			}
 			catch (Exception e)
 			{
-				_msg.Warn($"Failed to add verified dataset to report. {e.Message}", e);
+				_msg.Warn(
+					$"Failed to add verified dataset to report. {ExceptionUtils.FormatMessage(e)}",
+					e);
 			}
 		}
 

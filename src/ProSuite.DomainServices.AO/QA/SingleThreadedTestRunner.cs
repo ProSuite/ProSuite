@@ -12,6 +12,7 @@ using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
@@ -272,8 +273,8 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 
 				QualityCondition qualityCondition = _verificationElements.GetQualityCondition(test);
-				string description = string.Format("Error testing quality condition '{0}': {1}",
-				                                   qualityCondition.Name, e.Message);
+				string description =
+					$"Error testing quality condition '{qualityCondition.Name}': {ExceptionUtils.FormatMessage(e)}";
 
 				_msg.Error(description, e);
 
@@ -346,9 +347,8 @@ namespace ProSuite.DomainServices.AO.QA
 				QualityCondition qualityCondition =
 					_verificationElements.GetQualityCondition(e.Test);
 
-				string description = string.Format("Error testing {0}: {1}",
-				                                   qualityCondition.Name,
-				                                   e.Message);
+				string description =
+					$"Error testing {qualityCondition.Name}: {ExceptionUtils.FormatMessage(e)}";
 
 				var involvedRows = new List<InvolvedRow>();
 				IGeometry exceptionErrorGeometry = null;
