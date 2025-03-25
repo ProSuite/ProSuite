@@ -474,9 +474,19 @@ namespace ProSuite.AGP.Editing.OneClick
 			OnSelectionPhaseStarted();
 		}
 
-		protected void SetupSelectionSketch()
+		private async Task<bool> HasSketchAsync()
 		{
-			ClearSketchAsync();
+			Geometry currentSketch = await GetCurrentSketchAsync();
+
+			return currentSketch?.IsEmpty == false;
+		}
+
+		protected async void SetupSelectionSketch()
+		{
+			if (await HasSketchAsync())
+			{
+				await ClearSketchAsync();
+			}
 
 			SetupSketch();
 
@@ -625,7 +635,8 @@ namespace ProSuite.AGP.Editing.OneClick
 						FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
 						                        precedence.SpatialRelationship).ToList();
 
-					List<IPickableItem> items = await PickerUtils.GetItemsAsync(candidates, precedence);
+					List<IPickableItem> items =
+						await PickerUtils.GetItemsAsync(candidates, precedence);
 
 					await OnItemsPickedAsync(items, precedence);
 
