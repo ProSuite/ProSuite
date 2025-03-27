@@ -96,6 +96,8 @@ namespace ProSuite.AGP.WorkList.Test
 
 		public string WorkListDefinitionFilePath { get; set; }
 
+		public IWorkItemStateRepository WorkItemStateRepository { get; }
+
 		public void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
 		{
 			throw new NotImplementedException();

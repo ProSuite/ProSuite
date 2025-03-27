@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
@@ -34,6 +35,19 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		private IDictionary<GdbObjectReference, TState> StatesByRow
 		{
 			get { return _statesByRow ??= ReadStatesByRow(); }
+		}
+
+		public void Rename(string name)
+		{
+			string directoryName = Path.GetDirectoryName(WorkListDefinitionFilePath);
+			Assert.NotNull(directoryName);
+
+			string extension = Path.GetExtension(WorkListDefinitionFilePath);
+			Assert.NotNull(extension);
+
+			string path = Path.Combine(directoryName, $"{name}{extension}");
+
+			WorkListDefinitionFilePath = path;
 		}
 
 		public string WorkListDefinitionFilePath { get; set; }

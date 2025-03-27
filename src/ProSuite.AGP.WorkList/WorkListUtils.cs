@@ -28,22 +28,16 @@ namespace ProSuite.AGP.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private const string WorklistsFolder = "Worklists";
 		private const string PluginIdentifier = "ProSuite_WorkListDatasource";
 
 		[NotNull]
-		public static string GetLocalWorklistsFolder(string homeFolderPath)
-		{
-			return Path.Combine(homeFolderPath, WorklistsFolder);
-		}
-
-		[NotNull]
 		public static string GetDatasource([NotNull] string homeFolderPath,
+		                                   [NotNull] string worklistsFolder,
 		                                   [NotNull] string workListName,
 		                                   [NotNull] string fileSuffix)
 		{
 			//var baseUri = new Uri("worklist://localhost/");
-			string folder = GetLocalWorklistsFolder(homeFolderPath);
+			string folder = Path.Combine(homeFolderPath, worklistsFolder);
 
 			if (! FileSystemUtils.EnsureDirectoryExists(folder))
 			{

@@ -66,9 +66,9 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 
 	public override bool IsSameWorkListDefinition(string existingDefinitionFilePath)
 	{
-		string suggestedWorkListName = Assert.NotNull(SuggestWorkListName());
+		string uniqueDisplayName = Assert.NotNull(GetUniqueDisplayName(existingDefinitionFilePath));
 
-		return IsSameWorkListDefinition(existingDefinitionFilePath, suggestedWorkListName);
+		return IsSameWorkListDefinition(existingDefinitionFilePath, uniqueDisplayName);
 	}
 
 	protected void AddToMapCore(IEnumerable<Table> tables, IWorkList worklist)

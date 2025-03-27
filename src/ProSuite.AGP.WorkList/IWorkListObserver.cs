@@ -5,7 +5,7 @@ namespace ProSuite.AGP.WorkList
 {
 	public interface IWorkListObserver
 	{
-		void Show([CanBeNull] string title = null);
+		void Show();
 
 		void Close();
 

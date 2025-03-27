@@ -8,7 +8,6 @@ using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -26,12 +25,8 @@ namespace ProSuite.AGP.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public abstract string FileSuffix { get; }
-
-		/// <summary>
-		/// The display name of the work list, used by the layer or navigator.
-		/// </summary>
-		protected string DisplayName { get; set; }
+		protected abstract string FileSuffix { get; }
+		protected virtual string WorklistsFolder => "WorkLists";
 
 		/// <summary>
 		/// The unique name of the work list that corresponds to the file name in
@@ -41,22 +36,18 @@ namespace ProSuite.AGP.WorkList
 		protected string UniqueName { get; set; }
 
 		[ItemCanBeNull]
-		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName,
-		                                                 string workListFilePath = null)
+		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName)
 		{
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
 
-			if (string.IsNullOrEmpty(DisplayName))
-			{
-				DisplayName = SuggestWorkListName() ?? uniqueName;
-			}
-
-			string definitionFilePath = GetDefinitionFileFromProjectFolder();
+			string definitionFilePath = GetUniqueDefinitionFileFromProjectFolder();
+			Assert.NotNull(definitionFilePath);
 
 			if (File.Exists(definitionFilePath))
 			{
 				_msg.DebugFormat("Work list definition file {0} already exists",
 				                 definitionFilePath);
+
 				// Special handling (e.g. message box notifying the user) must have happened before.
 				// TODO: Check that the state from the definition file is actually used.
 				// NOTE: In case of DB Status work lists with changing table content the visited
@@ -72,10 +63,15 @@ namespace ProSuite.AGP.WorkList
 				// underlying table(s), ideally along with the relevant status schema?
 			}
 
-			if (File.Exists(workListFilePath))
-			{
-				definitionFilePath = workListFilePath;
-			}
+			return await CreateWorkListAsync(uniqueName, definitionFilePath);
+		}
+
+		[ItemCanBeNull]
+		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName,
+		                                                 [NotNull] string definitionFilePath)
+		{
+			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
+			Assert.ArgumentNotNullOrEmpty(definitionFilePath, nameof(definitionFilePath));
 
 			if (! await TryPrepareSchemaCoreAsync())
 			{
@@ -83,7 +79,7 @@ namespace ProSuite.AGP.WorkList
 				return await Task.FromResult(default(IWorkList));
 			}
 
-			Stopwatch watch = Stopwatch.StartNew();
+			var watch = Stopwatch.StartNew();
 
 			IWorkItemStateRepository stateRepository =
 				CreateStateRepositoryCore(definitionFilePath, uniqueName);
@@ -92,14 +88,15 @@ namespace ProSuite.AGP.WorkList
 			                     definitionFilePath);
 
 			IWorkItemRepository itemRepository =
-				await CreateItemRepositoryCore(stateRepository);
+				await CreateItemRepositoryCoreAsync(stateRepository);
 
 			if (itemRepository == null)
 			{
 				return await Task.FromResult<IWorkList>(null);
 			}
 
-			IWorkList result = CreateWorkListCore(itemRepository, uniqueName, DisplayName);
+			string displayName = Path.GetFileNameWithoutExtension(definitionFilePath);
+			IWorkList result = CreateWorkListCore(itemRepository, uniqueName, displayName);
 
 			_msg.DebugFormat("Created work list {0}", uniqueName);
 
@@ -107,38 +104,18 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[CanBeNull]
-		protected abstract string SuggestWorkListName();
-
 		protected virtual string SuggestWorkListLayerName()
 		{
 			return null;
 		}
 
+		// TODO: (daro) check usages!
+		// TODO: (daro) check usage in GoTop!
 		public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
 		{
-			definitionFile = null;
-			string suggestedName = SuggestWorkListName();
-
-			if (suggestedName == null)
-			{
-				return false;
-			}
-
-			DisplayName = suggestedName;
-
-			definitionFile = GetDefinitionFileFromProjectFolder();
+			definitionFile = GetUniqueDefinitionFileFromProjectFolder();
 
 			return definitionFile != null && File.Exists(definitionFile);
-		}
-
-		public string GetDefinitionFileFromProjectFolder()
-		{
-			Assert.ArgumentNotNullOrEmpty(DisplayName, nameof(DisplayName));
-
-			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(DisplayName, '_');
-
-			return WorkListUtils.GetDatasource(
-				Project.Current.HomeFolderPath, fileName, FileSuffix);
 		}
 
 		/// <summary>
@@ -209,7 +186,7 @@ namespace ProSuite.AGP.WorkList
 			string path, string workListName);
 
 		[ItemCanBeNull]
-		protected abstract Task<IWorkItemRepository> CreateItemRepositoryCore(
+		protected abstract Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository);
 
 		protected abstract string GetWorkListSymbologyTemplateLayerPath();
@@ -281,13 +258,27 @@ namespace ProSuite.AGP.WorkList
 
 		#endregion
 
-		public void EnsureUniqueName(string conflictingDefinitionFile)
-		{
-			Assert.NotNull(DisplayName);
+		protected abstract string GetDisplayName();
 
-			string directory = Assert.NotNull(Path.GetDirectoryName(conflictingDefinitionFile));
-			string fileName = Path.GetFileNameWithoutExtension(conflictingDefinitionFile);
-			string suffix = Path.GetExtension(conflictingDefinitionFile);
+		[NotNull]
+		private string GetUniqueDefinitionFileFromProjectFolder()
+		{
+			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(GetDisplayName(), '_');
+
+			string definitionFilePath = WorkListUtils.GetDatasource(Project.Current.HomeFolderPath, WorklistsFolder, fileName, FileSuffix);
+
+			string directory = Assert.NotNull(Path.GetDirectoryName(definitionFilePath));
+			string uniqueDisplayName = GetUniqueDisplayName(definitionFilePath);
+
+			return Path.Combine(directory, $"{uniqueDisplayName}{FileSuffix}");
+		}
+
+		// todo: to utils
+		protected static string GetUniqueDisplayName(string definitionFilePath)
+		{
+			string directory = Assert.NotNull(Path.GetDirectoryName(definitionFilePath));
+			string fileName = Path.GetFileNameWithoutExtension(definitionFilePath);
+			string suffix = Path.GetExtension(definitionFilePath);
 
 			int increment = 1;
 			string newFileName = fileName;
@@ -296,12 +287,12 @@ namespace ProSuite.AGP.WorkList
 				newFileName = $"{fileName} {increment++}";
 			}
 
-			DisplayName = newFileName;
-			UniqueName = newFileName;
+			return newFileName;
 		}
 
 		public abstract bool IsSameWorkListDefinition(string existingDefinitionFile);
 
+		// TODO: (daro) check usage in GoTop!
 		public IEnumerable<BasicFeatureLayer> FindWorkListLayers(Map map)
 		{
 			if (! DefinitionFileExistsInProjectFolder(out string definitionFile))

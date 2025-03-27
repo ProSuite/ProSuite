@@ -20,7 +20,6 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
@@ -411,11 +410,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (RequiresSelection && await IsInSelectionPhaseAsync())
 				{
-					// Otherwise relational operators and spatial queries return the wrong result
-					Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
-					Assert.NotNull(simpleGeometry, "Geometry is null");
-
-					return await OnSelectionSketchCompleteAsync(simpleGeometry, progressor);
+					return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
 				}
 
 				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
@@ -626,11 +621,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await QueuedTaskUtils.Run(async () =>
 				{
-					IEnumerable<FeatureSelectionBase> candidates =
+					var candidates =
 						FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
-						                        precedence.SpatialRelationship);
+						                        precedence.SpatialRelationship).ToList();
 
-					List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
+					List<IPickableItem> items = await PickerUtils.GetItemsAsync(candidates, precedence);
 
 					await OnItemsPickedAsync(items, precedence);
 

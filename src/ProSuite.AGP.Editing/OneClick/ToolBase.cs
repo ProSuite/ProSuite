@@ -72,6 +72,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected virtual bool AllowNoSelection => false;
 
+	protected virtual bool EnableLassoSketch => true;
+	protected virtual bool EnablePolygonSketch => true;
+
 	/// Whether the required selection can only contain selectable features.
 	protected bool SelectOnlySelectableFeatures { get; init; } = true;
 
@@ -294,12 +297,12 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 			if (! InConstructionPhase())
 			{
-				if (args.Key == _keyPolygonDraw)
+				if (EnablePolygonSketch && args.Key == _keyPolygonDraw)
 				{
 					SetupPolygonSketch();
 				}
 
-				if (args.Key == _keyLassoDraw)
+				if (EnableLassoSketch && args.Key == _keyLassoDraw)
 				{
 					SetupLassoSketch();
 				}
@@ -508,18 +511,15 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	{
 		try
 		{
-			Geometry simpleGeometry = GeometryUtils.Simplify(geometry);
-			Assert.NotNull(simpleGeometry, "Geometry is null");
-
-			using IPickerPrecedence precedence = CreatePickerPrecedence(simpleGeometry);
+			using IPickerPrecedence precedence = CreatePickerPrecedence(geometry);
 
 			await QueuedTaskUtils.Run(async () =>
 			{
-				IEnumerable<FeatureSelectionBase> candidates =
+				var candidates =
 					FindFeatureSelection(precedence.GetSelectionGeometry(),
-					                     precedence.SpatialRelationship);
+					                     precedence.SpatialRelationship).ToList();
 
-				List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
+				List<IPickableItem> items = await PickerUtils.GetItemsAsync(candidates, precedence);
 
 				PickerUtils.Select(items, precedence.SelectionCombinationMethod);
 			});

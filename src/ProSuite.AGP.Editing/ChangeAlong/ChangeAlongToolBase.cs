@@ -490,37 +490,34 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection;
 
+			var pickerPrecedence =
+				new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
+				                     ActiveMapView.ClientToScreen(CurrentMousePosition));
+
 			Task<IEnumerable<Feature>> task = QueuedTaskUtils.Run(async () =>
 			{
-				using var pickerPrecedence =
-					new PickerPrecedence(sketchGeometry,
-										 GetSelectionTolerancePixels(),
-										 ActiveMapView.ClientToScreen(CurrentMousePosition));
-
-				Geometry selectionGeometry = pickerPrecedence.GetSelectionGeometry();
-
 				List<FeatureSelectionBase> candidates =
-					FindTargetFeatureCandidates(selectionGeometry, targetFeatureSelection,
-												selectedFeatures, progressor);
+					FindTargetFeatureCandidates(pickerPrecedence.GetSelectionGeometry(),
+					                            targetFeatureSelection, selectedFeatures,
+					                            progressor);
 
 				if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 				{
 					_msg.Warn("Calculation of reshape lines was cancelled.");
-					return Enumerable.Empty<Feature>();
+					return [];
 				}
 
-				if (pickerPrecedence.IsSingleClick && candidates.Count > 1)
+				if (pickerPrecedence.IsPointClick && candidates.Count > 1)
 				{
-					var orderedCandidates =
-						candidates.OrderBy(candidate => candidate.ShapeDimension);
+					List<IPickableFeatureItem> items =
+						await PickerUtils.GetItemsAsync<IPickableFeatureItem>(
+							candidates, pickerPrecedence, PickerMode.ShowPicker);
 
-					IPickableItem item =
-						await PickerUtils.ShowPickerAsync<IPickableFeatureItem>(
-							pickerPrecedence, orderedCandidates);
+					IPickableFeatureItem item = items.FirstOrDefault();
 
-					return item is IPickableFeatureItem pickedItem
-							   ? new List<Feature> { pickedItem.Feature }
-							   : Enumerable.Empty<Feature>();
+					return item == null
+						       ? Enumerable.Empty<Feature>()
+						       : new List<Feature> { item.Feature };
 				}
 
 				return candidates.SelectMany(c => c.GetFeatures());

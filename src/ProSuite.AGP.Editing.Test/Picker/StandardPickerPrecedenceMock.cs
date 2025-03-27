@@ -83,7 +83,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			return result;
 		}
 
-		public PickerMode GetPickerMode(ICollection<FeatureSelectionBase> orderedSelection)
+		public PickerMode GetPickerMode(ICollection<FeatureSelectionBase> candidates)
 		{
 			PickerMode result = PickerMode.PickBest;
 
@@ -97,7 +97,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 				result = PickerMode.ShowPicker;
 			}
 
-			if (CountLowestShapeDimension(orderedSelection) > 1)
+			if (CountLowestShapeDimension(candidates) > 1)
 			{
 				result = PickerMode.ShowPicker;
 			}
