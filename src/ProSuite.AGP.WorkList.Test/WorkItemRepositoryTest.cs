@@ -24,7 +24,6 @@ namespace ProSuite.AGP.WorkList.Test
 		private Geodatabase _geodatabase;
 		private Table _table0;
 		private Table _table1;
-		private IssueItemRepository _repository;
 
 		[SetUp]
 		public void SetUp()
@@ -85,13 +84,6 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItemStateRepository stateRepository =
 				new XmlWorkItemStateRepository(Path.Join(Path.GetDirectoryName(path), "states.xml"), null, null);
 
-			IssueItemRepository repository =
-				new IssueItemRepository(new List<Table> { lines, issueRows }, stateRepository);
-
-			foreach (IWorkItem item in repository.GetItems())
-			{
-				Console.WriteLine(item);
-			}
 		}
 
 		#region same as in WorkListTest

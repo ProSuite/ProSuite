@@ -424,8 +424,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			if (type == typeof(IssueWorkList))
 			{
-				return new IssueItemRepository(new List<Tuple<Table, string>>(0),
-				                               itemStateRepository);
+				throw new NotImplementedException();
 			}
 
 			if (type == typeof(SelectionWorkList))
@@ -436,8 +435,6 @@ namespace ProSuite.AGP.WorkList
 
 			// TODO (EMA):
 			_msg.Warn($"Unknown work list type: {type.Name}. Using Issue work list");
-			return new IssueItemRepository(new List<Tuple<Table, string>>(0),
-			                               itemStateRepository);
 
 			throw new ArgumentException($"Unknown work list type: {type.Name}");
 		}
