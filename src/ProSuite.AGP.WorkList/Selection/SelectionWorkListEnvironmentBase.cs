@@ -107,13 +107,6 @@ namespace ProSuite.AGP.WorkList.Selection
 			}
 		}
 
-		public override bool IsSameWorkListDefinition(string existingDefinitionFile)
-		{
-			// We currently cannot compare the current selection with the one in the file
-			// so for the time being, always make a new one.
-			return false;
-		}
-
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
 		                                                string uniqueName,
 		                                                string displayName)

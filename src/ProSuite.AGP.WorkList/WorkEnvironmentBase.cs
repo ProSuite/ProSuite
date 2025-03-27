@@ -290,8 +290,6 @@ namespace ProSuite.AGP.WorkList
 			return newFileName;
 		}
 
-		public abstract bool IsSameWorkListDefinition(string existingDefinitionFile);
-
 		// TODO: (daro) check usage in GoTop!
 		public IEnumerable<BasicFeatureLayer> FindWorkListLayers(Map map)
 		{
