@@ -211,8 +211,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 					watch, "Gotten quality specification for peer {0} (<id> {1})",
 					context.Peer, request.QualitySpecificationId);
 
-				_msg.InfoFormat("Returning quality specification {0} with {1} conditions",
-				                response.Specification.Name, response.Specification.Elements.Count);
+				ConditionListSpecificationMsg specificationMsg = response.Specification;
+
+				if (specificationMsg == null)
+				{
+					_msg.Warn("No specification found.");
+				}
+				else
+				{
+					_msg.InfoFormat("Returning quality specification {0} with {1} conditions",
+					                specificationMsg.Name, specificationMsg.Elements.Count);
+				}
 			}
 			catch (Exception e)
 			{

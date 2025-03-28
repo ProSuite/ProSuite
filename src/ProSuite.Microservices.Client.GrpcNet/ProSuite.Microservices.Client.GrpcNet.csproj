@@ -26,13 +26,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="ProSuite.Microservices.Definitions.QA.Test, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.Test.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
 
@@ -44,6 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA.Test" Version="0.6.3" />
     <PackageReference Include="Grpc.HealthCheck" Version="2.62.0" />
     <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
   </ItemGroup>
@@ -55,6 +49,10 @@
     </Content>
     <Content Include="..\..\lib\licenses\grpc_Apache2.txt">
       <Link>Licenses\grpc_Apache2.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\lib\licenses\prosuite-microservice-definitions.license.txt">
+      <Link>Licenses\prosuite-microservice-definitions.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
