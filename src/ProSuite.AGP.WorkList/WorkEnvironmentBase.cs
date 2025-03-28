@@ -40,13 +40,15 @@ namespace ProSuite.AGP.WorkList
 		{
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
 
-			string definitionFilePath = GetUniqueDefinitionFileFromProjectFolder();
-			Assert.NotNull(definitionFilePath);
+			string directory = Path.Combine(Project.Current.HomeFolderPath, WorklistsFolder);
+			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(GetDisplayName(), '_');
 
-			if (File.Exists(definitionFilePath))
+			string filePath = EnsureValidDefinitionFilePath(directory, fileName, FileSuffix);
+			Assert.NotNull(filePath);
+
+			if (File.Exists(filePath))
 			{
-				_msg.DebugFormat("Work list definition file {0} already exists",
-				                 definitionFilePath);
+				_msg.DebugFormat("Work list definition file {0} already exists", filePath);
 
 				// Special handling (e.g. message box notifying the user) must have happened before.
 				// TODO: Check that the state from the definition file is actually used.
@@ -54,7 +56,7 @@ namespace ProSuite.AGP.WorkList
 				// state of the work list definition file is probably irrelevant or even incorrect
 				// because the items (issues, revision points, etc.) regularly change in the
 				// underlying DB table. In case a different extent / work unit has been loaded the
-				// original items might not event be present any more.
+				// original items might not event be present anymore.
 
 				// TODO:
 				// We should probably delete the definition file when the layer is unloaded
@@ -63,7 +65,7 @@ namespace ProSuite.AGP.WorkList
 				// underlying table(s), ideally along with the relevant status schema?
 			}
 
-			return await CreateWorkListAsync(uniqueName, definitionFilePath);
+			return await CreateWorkListAsync(uniqueName, filePath);
 		}
 
 		[ItemCanBeNull]
@@ -107,15 +109,6 @@ namespace ProSuite.AGP.WorkList
 		protected virtual string SuggestWorkListLayerName()
 		{
 			return null;
-		}
-
-		// TODO: (daro) check usages!
-		// TODO: (daro) check usage in GoTop!
-		public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
-		{
-			definitionFile = GetUniqueDefinitionFileFromProjectFolder();
-
-			return definitionFile != null && File.Exists(definitionFile);
 		}
 
 		/// <summary>
@@ -260,34 +253,29 @@ namespace ProSuite.AGP.WorkList
 
 		protected abstract string GetDisplayName();
 
-		[NotNull]
-		private string GetUniqueDefinitionFileFromProjectFolder()
+		// TODO: (DARO) move to RevisionWorkListEnvironment
+		public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
 		{
+			string directory = Path.Combine(Project.Current.HomeFolderPath, WorklistsFolder);
+			Assert.True(FileSystemUtils.EnsureDirectoryExists(directory), $"Cannot create {directory}");
+
 			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(GetDisplayName(), '_');
+			definitionFile = EnsureValidDefinitionFilePath(directory, fileName, FileSuffix);
 
-			string definitionFilePath = WorkListUtils.GetDatasource(Project.Current.HomeFolderPath, WorklistsFolder, fileName, FileSuffix);
-
-			string directory = Assert.NotNull(Path.GetDirectoryName(definitionFilePath));
-			string uniqueDisplayName = GetUniqueDisplayName(definitionFilePath);
-
-			return Path.Combine(directory, $"{uniqueDisplayName}{FileSuffix}");
+			return definitionFile != null && File.Exists(definitionFile);
 		}
 
-		// todo: to utils
-		protected static string GetUniqueDisplayName(string definitionFilePath)
+		protected virtual string EnsureValidDefinitionFilePath(string directory, string fileName, string suffix)
 		{
-			string directory = Assert.NotNull(Path.GetDirectoryName(definitionFilePath));
-			string fileName = Path.GetFileNameWithoutExtension(definitionFilePath);
-			string suffix = Path.GetExtension(definitionFilePath);
-
 			int increment = 1;
 			string newFileName = fileName;
-			while (File.Exists(Path.Combine(directory, newFileName + suffix)))
+
+			while (File.Exists(Path.Combine(directory, $"{newFileName}{suffix}")))
 			{
 				newFileName = $"{fileName} {increment++}";
 			}
 
-			return newFileName;
+			return Path.Combine(directory, $"{newFileName}{FileSuffix}");
 		}
 
 		// TODO: (daro) check usage in GoTop!

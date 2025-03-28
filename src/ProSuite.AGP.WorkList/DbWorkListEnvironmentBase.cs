@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,6 +61,11 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 	public override void LoadAssociatedLayers(IWorkList worklist)
 	{
 		AddToMapCore(GetTablesCore(), worklist);
+	}
+
+	protected override string EnsureValidDefinitionFilePath(string directory, string fileName, string suffix)
+	{
+		return Path.Combine(directory, $"{fileName}{suffix}");
 	}
 
 	protected void AddToMapCore(IEnumerable<Table> tables, IWorkList worklist)
