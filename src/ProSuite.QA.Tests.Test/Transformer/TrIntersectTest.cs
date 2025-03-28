@@ -79,6 +79,109 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
+		public void CanIntersectLinesWithLines()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+
+			IFeatureClass lineFc1 =
+				CreateFeatureClass(ws, "lineFc1", esriGeometryType.esriGeometryPolyline);
+			IFeatureClass lineFc2 =
+				CreateFeatureClass(ws, "lineFc2", esriGeometryType.esriGeometryPolyline);
+
+			{
+				IFeature f = lineFc1.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(69.5, 69.5).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc1.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 80).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc2.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(40, 20).LineTo(40, 60).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc2.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 50).Curve;
+				f.Store();
+			}
+
+			TrIntersect tr = new TrIntersect(ReadOnlyTableFactory.Create(lineFc1),
+			                                 ReadOnlyTableFactory.Create(lineFc2));
+			{
+				QaMaxLength test = new QaMaxLength(tr.GetTransformed(), 25);
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+			{
+				QaMaxLength test = new QaMaxLength(tr.GetTransformed(), 10);
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+		}
+
+		[Test]
+		public void CanIntersectLinesWithLinesWithResultDimension0()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+
+			IFeatureClass lineFc1 =
+				CreateFeatureClass(ws, "lineFc1", esriGeometryType.esriGeometryPolyline);
+			IFeatureClass lineFc2 =
+				CreateFeatureClass(ws, "lineFc2", esriGeometryType.esriGeometryPolyline);
+
+			{
+				IFeature f = lineFc1.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(69.5, 69.5).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc1.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 80).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc2.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(40, 20).LineTo(40, 60).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc2.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 50).Curve;
+				f.Store();
+			}
+
+			ReadOnlyFeatureClass roLineFc = ReadOnlyTableFactory.Create(lineFc1);
+
+			TrIntersect tr = new TrIntersect(roLineFc,
+			                                 ReadOnlyTableFactory.Create(lineFc2))
+			                 {
+				                 ResultDimension = 0
+			                 };
+			{
+				QaPointOnLine test = new QaPointOnLine(tr.GetTransformed(),
+				                                       new List<IReadOnlyFeatureClass> { roLineFc },
+				                                       0.01);
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+			{
+				QaMaxVertexCount test = new QaMaxVertexCount(tr.GetTransformed(), 0, false);
+				test.SetConstraint(0, "IntersectionRatio is null");
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+		}
+
+		[Test]
 		public void CanIntersectPoints()
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
@@ -152,13 +255,15 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrIntersect tr = new TrIntersect(ReadOnlyTableFactory.Create(pointFc),
 			                                 ReadOnlyTableFactory.Create(polyFc));
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "PartIntersected < 0.3");
+				QaConstraint test =
+					new QaConstraint(tr.GetTransformed(), "IntersectionRatio < 0.3");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "PartIntersected < 0.8");
+				QaConstraint test =
+					new QaConstraint(tr.GetTransformed(), "IntersectionRatio < 0.8");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(0, runner.Errors.Count);
@@ -170,36 +275,38 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		{
 			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
 
-			IFeatureClass pFc =
-				CreateFeatureClass(ws, "pointFc", esriGeometryType.esriGeometryPolygon,
+			IFeatureClass polyFc1 =
+				CreateFeatureClass(ws, "polyFc1", esriGeometryType.esriGeometryPolygon,
 				                   new[] { FieldUtils.CreateIntegerField("IntVal") });
-			IFeatureClass polyFc =
-				CreateFeatureClass(ws, "polyFc", esriGeometryType.esriGeometryPolygon);
+			IFeatureClass polyFc2 =
+				CreateFeatureClass(ws, "polyFc2", esriGeometryType.esriGeometryPolygon);
 
 			{
-				IFeature f = pFc.CreateFeature();
+				IFeature f = polyFc1.CreateFeature();
 				f.Shape = CurveConstruction.StartPoly(40, 40).LineTo(40, 60).LineTo(60, 60)
 				                           .LineTo(60, 40).ClosePolygon();
 				f.Value[1] = 5;
 				f.Store();
 			}
 			{
-				IFeature f = polyFc.CreateFeature();
+				IFeature f = polyFc2.CreateFeature();
 				f.Shape = CurveConstruction.StartPoly(50, 50).LineTo(50, 70).LineTo(70, 70)
 				                           .LineTo(70, 50).ClosePolygon();
 				f.Store();
 			}
 
-			TrIntersect tr = new TrIntersect(ReadOnlyTableFactory.Create(pFc),
-			                                 ReadOnlyTableFactory.Create(polyFc));
+			TrIntersect tr = new TrIntersect(ReadOnlyTableFactory.Create(polyFc1),
+			                                 ReadOnlyTableFactory.Create(polyFc2));
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "PartIntersected < 0.2");
+				QaConstraint test =
+					new QaConstraint(tr.GetTransformed(), "IntersectionRatio < 0.2");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "PartIntersected < 0.26");
+				QaConstraint test =
+					new QaConstraint(tr.GetTransformed(), "IntersectionRatio < 0.26");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(0, runner.Errors.Count);
@@ -232,16 +339,69 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrIntersect tr = new TrIntersect(ReadOnlyTableFactory.Create(polyFc),
 			                                 ReadOnlyTableFactory.Create(polyFc));
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "PartIntersected < 0.2");
+				QaConstraint test =
+					new QaConstraint(tr.GetTransformed(), "IntersectionRatio < 0.2");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 			{
-				QaConstraint test = new QaConstraint(tr.GetTransformed(), "PartIntersected < 0.26");
+				QaConstraint test =
+					new QaConstraint(tr.GetTransformed(), "IntersectionRatio < 0.26");
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(0, runner.Errors.Count);
+			}
+		}
+
+		[Test]
+		public void CanIntersectLinesWithResultDimension0()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolyline);
+			IFeatureClass polyFc =
+				CreateFeatureClass(ws, "polyFc", esriGeometryType.esriGeometryPolygon);
+
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(69.5, 69.5).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(60, 40).LineTo(60, 80).Curve;
+				f.Store();
+			}
+			{
+				IFeature f = polyFc.CreateFeature();
+				f.Shape = CurveConstruction.StartPoly(50, 50).LineTo(50, 70).LineTo(70, 70)
+				                           .LineTo(70, 50).ClosePolygon();
+				f.Store();
+			}
+
+			ReadOnlyFeatureClass roLineFc = ReadOnlyTableFactory.Create(lineFc);
+
+			TrIntersect tr = new TrIntersect(roLineFc,
+			                                 ReadOnlyTableFactory.Create(polyFc))
+			                 {
+				                 ResultDimension = 0
+			                 };
+			{
+				QaPointOnLine test = new QaPointOnLine(tr.GetTransformed(),
+				                                       new List<IReadOnlyFeatureClass> { roLineFc },
+				                                       0.01);
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+			{
+				QaMaxVertexCount test = new QaMaxVertexCount(tr.GetTransformed(), 0, false);
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
 			}
 		}
 
@@ -303,7 +463,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				ft.SetIssueFilters(
 					"filter",
 					new List<IIssueFilter>
-					{ new IfInvolvedRows("Nr = 12 OR polyFc_Nr = 6") { Name = "filter" } });
+					{
+						new IfInvolvedRows("Nr = 12 OR polyFc_Nr = 6")
+						{
+							Name = "filter"
+						}
+					});
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
