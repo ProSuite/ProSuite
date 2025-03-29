@@ -77,6 +77,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		public IVerificationDataDictionary<TModel> VerificationDdx { get; set; }
 
 		/// <summary>
+		/// The supported test descriptors for a fine-granular specification based off a condition list.
+		/// </summary>
+		[CanBeNull]
+		public ISupportedInstanceDescriptors SupportedInstanceDescriptors { get; set; }
+
+		/// <summary>
 		/// The default value to use if the environment variable that indicates whether or not the
 		/// service should continue serving (or shut down) in case of an exception.
 		/// </summary>
@@ -499,7 +505,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					ConditionListSpecificationMsg specificationMsg =
 						ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
-							qualitySpecification, null,
+							qualitySpecification, SupportedInstanceDescriptors,
 							out IDictionary<int, DdxModel> modelsById);
 
 					response.Specification = specificationMsg;
