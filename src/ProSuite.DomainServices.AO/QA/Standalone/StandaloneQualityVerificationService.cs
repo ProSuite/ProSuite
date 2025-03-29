@@ -444,7 +444,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			[CanBeNull] IExceptionStatistics exceptionStatistics)
 		{
 			StringBuilder streamMessage = new StringBuilder("Quality verification finished");
-
+			streamMessage.AppendLine();
 			streamMessage.AppendLine($"Number of verified datasets: {datasetCount:N0}.");
 			streamMessage.AppendLine($"Number of verified conditions: {qualityConditionCount}");
 
