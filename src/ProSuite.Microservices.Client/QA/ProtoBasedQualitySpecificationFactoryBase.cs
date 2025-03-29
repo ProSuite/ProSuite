@@ -106,7 +106,13 @@ namespace ProSuite.Microservices.Client.QA
 				string conditionName = Assert.NotNullOrEmpty(
 					element.Condition.Name, "Empty or null condition name.");
 
-				QualityCondition qualityCondition = qualityConditionsByName[conditionName];
+				if (! qualityConditionsByName.TryGetValue(conditionName,
+				                                          out QualityCondition qualityCondition))
+				{
+					_msg.InfoFormat("Condition '{0}' was not created and will be skipped.",
+					                conditionName);
+					continue;
+				}
 
 				if (! string.IsNullOrEmpty(element.CategoryName))
 				{
