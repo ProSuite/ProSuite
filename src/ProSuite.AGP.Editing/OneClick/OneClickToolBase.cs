@@ -20,7 +20,6 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
@@ -411,11 +410,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (RequiresSelection && await IsInSelectionPhaseAsync())
 				{
-					// Otherwise relational operators and spatial queries return the wrong result
-					Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
-					Assert.NotNull(simpleGeometry, "Geometry is null");
-
-					return await OnSelectionSketchCompleteAsync(simpleGeometry, progressor);
+					return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
 				}
 
 				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
@@ -626,11 +621,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await QueuedTaskUtils.Run(async () =>
 				{
-					IEnumerable<FeatureSelectionBase> candidates =
+					var candidates =
 						FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
-						                        precedence.SpatialRelationship);
+						                        precedence.SpatialRelationship).ToList();
 
-					List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
+					List<IPickableItem> items = await PickerUtils.GetItemsAsync(candidates, precedence);
 
 					await OnItemsPickedAsync(items, precedence);
 
@@ -762,7 +757,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				if (selectionCount > 0)
 				{
-					_msg.InfoFormat(notifications.Concatenate(Environment.NewLine));
+					_msg.DebugFormat(notifications.Concatenate(Environment.NewLine));
 				}
 
 				LogPromptForSelection();
@@ -930,56 +925,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					new Notification(
 						$"{filteredCount} of {selectionCount + filteredCount} selected features cannot be used by the tool."));
 			}
-		}
-
-		// todo: daro drop!
-		[NotNull]
-		protected IDictionary<BasicFeatureLayer, List<Feature>> GetApplicableSelectedFeatures(
-			[NotNull] IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-			bool unJoinedFeaturesForEditing = false,
-			[CanBeNull] NotificationCollection notifications = null)
-		{
-			var filteredCount = 0;
-			var selectionCount = 0;
-
-			var result = new Dictionary<BasicFeatureLayer, List<Feature>>(selectionByLayer.Count);
-
-			SpatialReference mapSpatialReference = MapView.Active.Map.SpatialReference;
-
-			foreach (KeyValuePair<BasicFeatureLayer, List<long>> oidsByLayer in selectionByLayer)
-			{
-				BasicFeatureLayer layer = oidsByLayer.Key;
-				List<long> oids = oidsByLayer.Value;
-
-				if (! CanSelectFromLayer(layer, notifications))
-				{
-					filteredCount += oidsByLayer.Value.Count;
-					continue;
-				}
-
-				var features = MapUtils
-				               .GetFeatures(layer, oids, unJoinedFeaturesForEditing,
-				                            recycling: false, mapSpatialReference).ToList();
-
-				result.Add(layer, features);
-				selectionCount++;
-			}
-
-			if (filteredCount == 1)
-			{
-				notifications?.Insert(
-					0, new Notification("The selected feature cannot be used by the tool."));
-			}
-
-			if (filteredCount > 1)
-			{
-				notifications?.Insert(
-					0,
-					new Notification(
-						$"{filteredCount} of {selectionCount + filteredCount} selected features cannot be used by the tool."));
-			}
-
-			return result;
 		}
 
 		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView mapView)

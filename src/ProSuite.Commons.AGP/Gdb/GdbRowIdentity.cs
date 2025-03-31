@@ -14,7 +14,6 @@ namespace ProSuite.Commons.AGP.Gdb
 	{
 		public GdbRowIdentity([NotNull] Row row)
 		{
-			// todo daro: GetTable() might be a performance issue?
 			using (Table table = row.GetTable())
 			{
 				Table = new GdbTableIdentity(table);

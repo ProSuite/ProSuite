@@ -226,7 +226,12 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 
 			foreach (ReshapeLineMsg reshapeLineMsg in request.ReshapeLines)
 			{
-				subcurves.Add(FromReshapeLineMsg(reshapeLineMsg));
+				CutSubcurve cutSubcurve = FromReshapeLineMsg(reshapeLineMsg);
+
+				if (! cutSubcurve.IsFiltered)
+				{
+					subcurves.Add(cutSubcurve);
+				}
 			}
 
 			GeometryReshaperBase reshaper = CreateReshaper(request);

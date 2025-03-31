@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Win32.SafeHandles;
 using ProSuite.Commons.Essentials.Assertions;
 using System.Drawing.Drawing2D;
@@ -6,12 +7,16 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Input;
 using System.Windows.Interop;
+using ProSuite.Commons.Diagnostics;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Windows
 {
 	public static class CursorUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull]
 		public static Cursor GetCursor([NotNull] byte[] cursorBytes)
 		{
@@ -37,46 +42,73 @@ namespace ProSuite.Commons.AGP.Windows
 		{
 			Assert.ArgumentNotNull(baseImage, nameof(baseImage));
 
-			var result = new Bitmap(32, 32);
-			var destinationRectangle = new Rectangle(0, 0, 32, 32);
+			// https://stackoverflow.com/questions/14866603/a-generic-error-occurred-in-gdi-when-attempting-to-use-image-save
+			// https://stackoverflow.com/questions/72010973/a-generic-error-occurred-in-gdi-while-saving-image-to-memorystream
+			// https://stackoverflow.com/questions/5813633/a-generic-error-occurs-at-gdi-at-bitmap-save-after-using-savefiledialog
 
-			using (var graphics = Graphics.FromImage(result))
+			try
 			{
-				graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+				var destinationRectangle = new Rectangle(0, 0, 32, 32);
 
-				graphics.DrawImage(CreateImage(baseImage), destinationRectangle);
-
-				if (overlay1 != null)
+				using var result = new Bitmap(32, 32);
+				using (Graphics graphics = Graphics.FromImage(result))
 				{
-					graphics.DrawImage(CreateImage(overlay1), destinationRectangle);
-				}
+					graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-				if (overlay2 != null)
-				{
-					graphics.DrawImage(CreateImage(overlay2), destinationRectangle);
-				}
+					using (var stream = new MemoryStream(baseImage))
+					using (Image image = Image.FromStream(stream))
+					{
+						graphics.DrawImage(image, destinationRectangle);
+					}
 
-				if (overlay3 != null)
-				{
-					graphics.DrawImage(CreateImage(overlay3), destinationRectangle);
+					if (overlay1 != null)
+					{
+						using (var stream = new MemoryStream(overlay1))
+						using (Image image = Image.FromStream(stream))
+						{
+							graphics.DrawImage(image, destinationRectangle);
+						}
+					}
+
+					if (overlay2 != null)
+					{
+						using (var stream = new MemoryStream(overlay2))
+						using (Image image = Image.FromStream(stream))
+						{
+							graphics.DrawImage(image, destinationRectangle);
+						}
+					}
+
+					if (overlay3 != null)
+					{
+						using (var stream = new MemoryStream(overlay3))
+						using (Image image = Image.FromStream(stream))
+						{
+							graphics.DrawImage(image, destinationRectangle);
+						}
+					}
+
+					using (Bitmap clone = result.Clone(destinationRectangle, result.PixelFormat))
+					{
+						var icon = new IconInfo();
+						GetIconInfo(clone.GetHicon(), ref icon);
+						icon.xHotspot = xHotspot;
+						icon.yHotspot = yHotspot;
+						icon.fIcon = false;
+
+						nint ptr = CreateIconIndirect(ref icon);
+
+						return CursorInteropHelper.Create(new SafeIconHandle(ptr, true));
+					}
 				}
 			}
+			catch (Exception ex)
+			{
+				var info = new MemoryUsageInfo();
+				_msg.Debug($"PB: {info.PrivateBytes:N0}. {ex.Message}", ex);
 
-			var icon = new IconInfo();
-			GetIconInfo(result.GetHicon(), ref icon);
-			icon.xHotspot = xHotspot;
-			icon.yHotspot = yHotspot;
-			icon.fIcon = false;
-
-			nint ptr = CreateIconIndirect(ref icon);
-
-			return CursorInteropHelper.Create(new SafeIconHandle(ptr, true));
-		}
-
-		private static Image CreateImage(byte[] resource)
-		{
-			using var stream = new MemoryStream(resource);
-			return Image.FromStream(stream);
+				return Cursors.Cross;
+			}
 		}
 
 		[StructLayout(LayoutKind.Sequential)]

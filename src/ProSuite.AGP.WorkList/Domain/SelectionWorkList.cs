@@ -62,15 +62,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			return false;
 		}
 
-		public new void ReportFinished()
-		{
-			_msg.Info($"{DisplayName} is ready.");
-
-			_itemChunks.Clear();
-			_itemsByIndex.Clear();
-			_indexByTask.Clear();
-		}
-
 		public override void RefreshItems()
 		{
 			try
@@ -135,7 +126,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void Dispose()
 		{
-			// TODO: (daro) inline?
 			DeactivateRowCacheSynchronization();
 
 			foreach (IWorkItem item in Items)

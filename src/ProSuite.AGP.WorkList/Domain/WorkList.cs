@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -24,7 +25,8 @@ namespace ProSuite.AGP.WorkList.Domain
 	/// </summary>
 	// todo: daro separate geometry processing code
 	// todo: daro separate QueuedTask code
-	public abstract class WorkList : IWorkList, IEquatable<WorkList>
+	// todo: daro avoid ArcGIS.Desktop.Mapping dependency
+	public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatable<WorkList>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -56,7 +58,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		protected Dictionary<GdbRowIdentity, IWorkItem> RowMap => _rowMap;
 
 		private WorkItemVisibility _visibility;
-		private readonly string _displayName;
+		private string _displayName;
 
 		protected WorkList([NotNull] IWorkItemRepository repository,
 		                   [NotNull] string name,
@@ -74,9 +76,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			RefreshItems();
 		}
-
-		public event PropertyChangedEventHandler PropertyChanged;
-
+		
 		public string Name { get; set; }
 
 		public string DisplayName
@@ -90,6 +90,13 @@ namespace ProSuite.AGP.WorkList.Domain
 
 				return _displayName;
 			}
+			private set => SetProperty(ref _displayName, value);
+		}
+
+		public void Rename(string name)
+		{
+			DisplayName = name;
+			Repository.WorkItemStateRepository.Rename(name);
 		}
 
 		protected abstract string GetDisplayNameCore();
@@ -98,7 +105,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		//		 Pluggable Datasource cannot handle an empty envelope.
 		public Envelope Extent { get; protected set; }
 
-		public virtual IWorkItem Current => GetItem(CurrentIndex);
+		public IWorkItem Current => GetItem(CurrentIndex);
 
 		public int CurrentIndex { get; set; }
 
@@ -126,7 +133,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			return HasCurrentItem && CanSetStatusCore();
 		}
 
-		[CanBeNull]
 		public Row GetCurrentItemSourceRow()
 		{
 			if (Current == null)
@@ -147,11 +153,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			return Repository.GetSourceRow(sourceClass, Current.ObjectID);
 		}
 
-		public void SetStatus(IWorkItem item, WorkItemStatus status)
+		public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 		{
-			Repository.SetStatus(item, status);
+			await Repository.SetStatusAsync(item, status);
 
-			// If a item visibility changes to Done the item is not part
+			// If an item visibility changes to 'Done' the item is not part
 			// of the work list anymore, respectively GetItems(QuerFilter, bool, int)
 			// does not return the Done-item anymore. Therefor use the item's Extent
 			// to invalidate the work list layer.
@@ -261,11 +267,20 @@ namespace ProSuite.AGP.WorkList.Domain
 			return true;
 		}
 
-		public void SetVisited(IWorkItem item)
+		/// <summary>
+		/// Set work items visibility and invokes WorkListChanged event.
+		/// </summary>
+		public void SetVisited(IList<IWorkItem> items, bool visited)
 		{
-			Repository.SetVisited(item);
+			var oids = new List<long>(items.Count);
 
-			OnWorkListChanged(null, new List<long> { item.OID });
+			foreach (IWorkItem item in items)
+			{
+				item.Visited = visited;
+				oids.Add(item.OID);
+			}
+
+			OnWorkListChanged(null, oids);
 		}
 
 		public void Commit()
@@ -408,11 +423,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			IWorkItem current = GetItem(CurrentIndex);
 
-			// todo daro to ?? statement
 			IWorkItem first = GetFirstVisibleVisitedItemBeforeCurrent();
 
-			// todo daro: remove assertion when sure algorithm works
-			//			  CanGoFirst should prevent the assertion
 			Assert.NotNull(first);
 			Assert.False(Equals(first, Current), "current item and first item are equal");
 
@@ -530,8 +542,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			IWorkItem previous = GetPreviousVisitedVisibleItem();
 
-			// todo daro: remove assertion when sure algorithm works
-			//			  CanGoPrevious should prevent the assertion
 			Assert.NotNull(previous);
 			Assert.False(Equals(previous, Current), "current item and previous item are equal");
 
@@ -1008,7 +1018,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			// move new item to just after previous current
 			int insertIndex = GetReorderInsertIndex(nextItem);
 
-			// todo daro drop
 			_msg.Debug($"Reorder visited items: {nextItem}, insert index: {insertIndex}");
 
 			WorkListUtils.MoveTo(_items, nextItem, insertIndex);

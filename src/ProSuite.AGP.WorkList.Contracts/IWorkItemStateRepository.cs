@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList.Domain.Persistence
+namespace ProSuite.AGP.WorkList.Contracts
 {
 	/// <summary>
 	/// Repository interface that encapsulates the persistence of the (volatile) state of work items.
@@ -24,5 +23,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		void Discard();
 
 		int? CurrentIndex { get; set; }
+
+		void Rename(string name);
 	}
 }

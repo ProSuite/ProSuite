@@ -1,18 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace ProSuite.Commons.UI.ManagedOptions;
 
@@ -21,85 +12,223 @@ namespace ProSuite.Commons.UI.ManagedOptions;
 /// </summary>
 public partial class NumericSpinner : UserControl
 {
-	#region Fields
+	#region Events
 
 	public event EventHandler PropertyChanged;
 	public event EventHandler ValueChanged;
+
 	#endregion
 
 	public NumericSpinner()
 	{
 		InitializeComponent();
 
-		grid.SetBinding(Grid.IsEnabledProperty, new Binding("IsEnabled") {
+		grid.SetBinding(Grid.IsEnabledProperty, new Binding("IsEnabled")
+		                                        {
 			                                        ElementName = "root_numeric_spinner",
 			                                        Mode = BindingMode.OneWay,
-			                                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+			                                        UpdateSourceTrigger = UpdateSourceTrigger
+				                                        .PropertyChanged
 		                                        });
-		
-		textBox.SetBinding(TextBox.TextProperty, new Binding("Value")
-		                                         {
-			                                         ElementName = "root_numeric_spinner",
-			                                         Mode = BindingMode.TwoWay,
-			                                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
-		                                         });
 
-		textBox.SetBinding(TextBox.FontStyleProperty, new Binding("TextFontStyle") {
-			                                         ElementName = "root_numeric_spinner",
-			                                         Mode = BindingMode.OneWay,
-			                                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
-		                                         });
+		var textBinding = new Binding("TextValue")
+		                  {
+			                  ElementName = "root_numeric_spinner",
+			                  Mode = BindingMode.TwoWay,
+			                  UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+			                  ValidatesOnDataErrors = true,
+			                  NotifyOnValidationError = true
+		                  };
+		textBinding.ValidationRules.Add(new DoubleValidationRule());
+		textBox.SetBinding(TextBox.TextProperty, textBinding);
 
-		DependencyPropertyDescriptor.FromProperty(ValueProperty, typeof(NumericSpinner)).AddValueChanged(this, PropertyChanged);
-		DependencyPropertyDescriptor.FromProperty(ValueProperty, typeof(NumericSpinner)).AddValueChanged(this, ValueChanged);
-		DependencyPropertyDescriptor.FromProperty(DecimalsProperty, typeof(NumericSpinner)).AddValueChanged(this, PropertyChanged);
-		DependencyPropertyDescriptor.FromProperty(MinValueProperty, typeof(NumericSpinner)).AddValueChanged(this, PropertyChanged);
-		DependencyPropertyDescriptor.FromProperty(MaxValueProperty, typeof(NumericSpinner)).AddValueChanged(this, PropertyChanged);
-	   DependencyPropertyDescriptor.FromProperty(FontStyleProperty, typeof(NumericSpinner)).AddValueChanged(this, PropertyChanged);
-	   DependencyPropertyDescriptor.FromProperty(IsEnabledProperty, typeof(NumericSpinner)).AddValueChanged(this, PropertyChanged);
+		textBox.SetBinding(FontStyleProperty, new Binding("TextFontStyle")
+		                                      {
+			                                      ElementName = "root_numeric_spinner",
+			                                      Mode = BindingMode.OneWay,
+			                                      UpdateSourceTrigger =
+				                                      UpdateSourceTrigger.PropertyChanged
+		                                      });
 
-		PropertyChanged += (x, y) => validate();
+		textBox.LostFocus += TextBox_LostFocus;
+		textBox.GotFocus += TextBox_GotFocus;
+
+		DependencyPropertyDescriptor.FromProperty(ValueProperty, typeof(NumericSpinner))
+		                            .AddValueChanged(
+			                            this,
+			                            (sender, e) =>
+				                            OnValueChanged(
+					                            this,
+					                            new DependencyPropertyChangedEventArgs(
+						                            ValueProperty, null, null)));
+		DependencyPropertyDescriptor.FromProperty(TextValueProperty, typeof(NumericSpinner))
+		                            .AddValueChanged(
+			                            this,
+			                            (sender, e) =>
+				                            OnTextValueChanged(
+					                            this,
+					                            new DependencyPropertyChangedEventArgs(
+						                            TextValueProperty, null, null)));
+		DependencyPropertyDescriptor.FromProperty(DecimalsProperty, typeof(NumericSpinner))
+		                            .AddValueChanged(
+			                            this,
+			                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+		DependencyPropertyDescriptor.FromProperty(MinValueProperty, typeof(NumericSpinner))
+		                            .AddValueChanged(
+			                            this,
+			                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+		DependencyPropertyDescriptor.FromProperty(MaxValueProperty, typeof(NumericSpinner))
+		                            .AddValueChanged(
+			                            this,
+			                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+		DependencyPropertyDescriptor.FromProperty(FontStyleProperty, typeof(NumericSpinner))
+		                            .AddValueChanged(
+			                            this,
+			                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+		DependencyPropertyDescriptor.FromProperty(IsEnabledProperty, typeof(NumericSpinner))
+		                            .AddValueChanged(
+			                            this,
+			                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+
+		DataContextChanged += NumericSpinner_DataContextChanged;
+
+		TextValue = Value.ToString(CultureInfo.CurrentCulture);
 	}
-	
+
+	private void NumericSpinner_DataContextChanged(object sender,
+	                                               DependencyPropertyChangedEventArgs e)
+	{
+		UpdateTextValue();
+	}
+
+	private void UpdateTextValue()
+	{
+		string textValue = Value.ToString(CultureInfo.CurrentCulture);
+
+		if (textValue == textBox.Text)
+		{
+			return;
+		}
+
+		BindingExpression binding = GetBindingExpression(ValueProperty);
+		if (binding != null)
+		{
+			TextValue = textValue;
+			BindingOperations.GetBindingExpression(textBox, TextBox.TextProperty)?.UpdateTarget();
+		}
+	}
+
+	private void TextBox_LostFocus(object sender, RoutedEventArgs e)
+	{
+		string newText = ((TextBox) sender).Text;
+		string decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+		if (! double.TryParse(newText, NumberStyles.Any, CultureInfo.CurrentCulture,
+		                      out double parsed) &&
+		    ! newText.EndsWith(decimalSeparator) && newText != "-")
+		{
+			UpdateTextValue();
+		}
+		else
+		{
+			double roundedValue = Math.Round(parsed, Decimals);
+
+			if (! MathUtils.AreEqual(Value, roundedValue))
+			{
+				Value = roundedValue;
+				UpdateTextValue();
+			}
+		}
+	}
+
+	private void TextBox_GotFocus(object sender, RoutedEventArgs e)
+	{
+		BindingExpression binding = textBox.GetBindingExpression(TextBox.TextProperty);
+		binding?.UpdateSource();
+	}
 
 	#region ValueProperty
 
 	public static readonly DependencyProperty ValueProperty = DependencyProperty.Register(
-		"Value",
-		typeof(decimal),
-		typeof(NumericSpinner),
-		new PropertyMetadata(new decimal(0.01)));
+		nameof(Value), typeof(double), typeof(NumericSpinner),
+		new PropertyMetadata(0.01, OnValueChanged));
 
-	public static readonly DependencyProperty TextFontStyleProperty = DependencyProperty.Register(
-		"TextFontStyle", typeof(FontStyle), typeof(NumericSpinner),
-		new PropertyMetadata(new FontStyle()));
-
-	public static readonly DependencyProperty IsEnabledProperty = DependencyProperty.Register(
-		"IsEnabled", typeof(bool), typeof(NumericSpinner),
-		new PropertyMetadata(new bool()));
-
-	public decimal Value
+	public double Value
 	{
-		get { return (decimal)GetValue(ValueProperty); }
-		set
+		get => (double) GetValue(ValueProperty);
+		set => SetValue(ValueProperty, value);
+	}
+
+	private static void OnValueChanged(object sender, DependencyPropertyChangedEventArgs e)
+	{
+		if (sender is NumericSpinner spinner)
 		{
-			if (value < MinValue)
-				value = MinValue;
-			if (value > MaxValue)
-				value = MaxValue;
-			SetValue(ValueProperty, value);
-			ValueChanged?.Invoke(this, new EventArgs());
+			spinner.Validate();
+			spinner.ValueChanged?.Invoke(spinner, EventArgs.Empty);
+			spinner.PropertyChanged?.Invoke(spinner, EventArgs.Empty);
+
+			spinner.UpdateTextValue();
 		}
 	}
+
+	#endregion
+
+	#region TextValueProperty
+
+	public static readonly DependencyProperty TextValueProperty = DependencyProperty.Register(
+		nameof(TextValue), typeof(string), typeof(NumericSpinner),
+		new PropertyMetadata("0.01", OnTextValueChanged));
+
+	public string TextValue
+	{
+		get => (string) GetValue(TextValueProperty);
+		set => SetValue(TextValueProperty, value);
+	}
+
+	private static void OnTextValueChanged(object sender, DependencyPropertyChangedEventArgs e)
+	{
+		if (sender is NumericSpinner spinner)
+		{
+			spinner.TryUpdateValueFromText();
+			spinner.PropertyChanged?.Invoke(spinner, EventArgs.Empty);
+		}
+	}
+
+	private void TryUpdateValueFromText()
+	{
+		if (double.TryParse(TextValue, NumberStyles.Any, CultureInfo.CurrentCulture,
+		                    out double parsed))
+		{
+			double clampedValue = Math.Max(MinValue, Math.Min(MaxValue, parsed));
+
+			if (! MathUtils.AreEqual(parsed, clampedValue) ||
+			    ! MathUtils.AreEqual(Value, clampedValue))
+			{
+				Value = clampedValue;
+			}
+		}
+	}
+
+	#endregion
+
+	#region TextFontStyleProperty
+
+	public static readonly DependencyProperty TextFontStyleProperty = DependencyProperty.Register(
+		nameof(TextFontStyle), typeof(FontStyle), typeof(NumericSpinner),
+		new PropertyMetadata(FontStyles.Normal));
 
 	public FontStyle TextFontStyle
 	{
-		get { return (FontStyle) GetValue(TextFontStyleProperty); }
-		set
-		{
-			SetValue(TextFontStyleProperty, value);
-		}
+		get => (FontStyle) GetValue(TextFontStyleProperty);
+		set => SetValue(TextFontStyleProperty, value);
 	}
+
+	#endregion
+
+	#region IsEnabledProperty
+
+	public static readonly DependencyProperty IsEnabledProperty = DependencyProperty.Register(
+		nameof(IsEnabled), typeof(bool), typeof(NumericSpinner),
+		new PropertyMetadata(true));
 
 	public new bool IsEnabled
 	{
@@ -112,18 +241,13 @@ public partial class NumericSpinner : UserControl
 	#region StepProperty
 
 	public static readonly DependencyProperty StepProperty = DependencyProperty.Register(
-		"Step",
-		typeof(decimal),
-		typeof(NumericSpinner),
-		new PropertyMetadata(new decimal(0.01))); 
+		nameof(Step), typeof(double), typeof(NumericSpinner),
+		new PropertyMetadata(0.01));
 
-	public decimal Step
+	public double Step
 	{
-		get { return (decimal)GetValue(StepProperty); }
-		set
-		{
-			SetValue(StepProperty, value);
-		}
+		get => (double) GetValue(StepProperty);
+		set => SetValue(StepProperty, value);
 	}
 
 	#endregion
@@ -131,18 +255,13 @@ public partial class NumericSpinner : UserControl
 	#region DecimalsProperty
 
 	public static readonly DependencyProperty DecimalsProperty = DependencyProperty.Register(
-		"Decimals",
-		typeof(int),
-		typeof(NumericSpinner),
+		nameof(Decimals), typeof(int), typeof(NumericSpinner),
 		new PropertyMetadata(2));
 
 	public int Decimals
 	{
-		get { return (int)GetValue(DecimalsProperty); }
-		set
-		{
-			SetValue(DecimalsProperty, value);
-		}
+		get => (int) GetValue(DecimalsProperty);
+		set => SetValue(DecimalsProperty, value);
 	}
 
 	#endregion
@@ -150,20 +269,13 @@ public partial class NumericSpinner : UserControl
 	#region MinValueProperty
 
 	public static readonly DependencyProperty MinValueProperty = DependencyProperty.Register(
-		"MinValue",
-		typeof(decimal),
-		typeof(NumericSpinner),
-		new PropertyMetadata(decimal.MinValue));
+		nameof(MinValue), typeof(double), typeof(NumericSpinner),
+		new PropertyMetadata(double.MinValue));
 
-	public decimal MinValue
+	public double MinValue
 	{
-		get { return (decimal)GetValue(MinValueProperty); }
-		set
-		{
-			if (value > MaxValue)
-				MaxValue = value;
-			SetValue(MinValueProperty, value);
-		}
+		get => (double) GetValue(MinValueProperty);
+		set => SetValue(MinValueProperty, value);
 	}
 
 	#endregion
@@ -171,36 +283,40 @@ public partial class NumericSpinner : UserControl
 	#region MaxValueProperty
 
 	public static readonly DependencyProperty MaxValueProperty = DependencyProperty.Register(
-		"MaxValue",
-		typeof(decimal),
-		typeof(NumericSpinner),
-		new PropertyMetadata(decimal.MaxValue));
+		nameof(MaxValue), typeof(double), typeof(NumericSpinner),
+		new PropertyMetadata(double.MaxValue));
 
-	public decimal MaxValue
+	public double MaxValue
 	{
-		get { return (decimal)GetValue(MaxValueProperty); }
-		set
-		{
-			if (value < MinValue)
-				value = MinValue;
-			SetValue(MaxValueProperty, value);
-		}
+		get => (double) GetValue(MaxValueProperty);
+		set => SetValue(MaxValueProperty, value);
 	}
 
 	#endregion
 
-	/// <summary>
-	/// Revalidate the object, whenever a value is changed...
-	/// </summary>
-	private void validate()
+	private void Validate()
 	{
-		// Logically, This is not needed at all... as it's handled within other properties...
-		if (MinValue > MaxValue) MinValue = MaxValue;
-		if (MaxValue < MinValue) MaxValue = MinValue;
-		if (Value < MinValue) Value = MinValue;
-		if (Value > MaxValue) Value = MaxValue;
+		double testValue = Value;
 
-		Value = decimal.Round(Value, Decimals);
+		if (double.IsNaN(testValue) || double.IsInfinity(testValue))
+			testValue = 0;
+		if (testValue < MinValue) testValue = MinValue;
+		if (testValue > MaxValue) testValue = MaxValue;
+
+		double roundedValue = Math.Round(testValue, Decimals);
+
+		if (! MathUtils.AreEqual(Value, roundedValue))
+		{
+			Value = roundedValue;
+		}
+
+		PropertyChanged?.Invoke(this, EventArgs.Empty);
+	}
+
+	private void OnPropertyChanged(object sender, EventArgs e)
+	{
+		Validate();
+		PropertyChanged?.Invoke(this, e);
 	}
 
 	private void cmdUp_Click(object sender, RoutedEventArgs e)
@@ -211,10 +327,5 @@ public partial class NumericSpinner : UserControl
 	private void cmdDown_Click(object sender, RoutedEventArgs e)
 	{
 		Value -= Step;
-	}
-
-	private void tb_main_Loaded(object sender, RoutedEventArgs e)
-	{
-		ValueChanged(this, new EventArgs());
 	}
 }

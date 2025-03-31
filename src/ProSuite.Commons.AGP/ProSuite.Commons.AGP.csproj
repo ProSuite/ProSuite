@@ -97,6 +97,9 @@
     <Resource Include="Images\LayerMaskingOn32.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Images\LayerMaskingUnknown32.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Images\StatusCriticalError_12x_16x.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>

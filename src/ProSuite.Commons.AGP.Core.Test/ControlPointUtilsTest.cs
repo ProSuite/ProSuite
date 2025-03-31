@@ -165,32 +165,31 @@ public class ControlPointUtilsTest
 		var polygon = PolygonBuilderEx.CreatePolygon(
 			new[] { Pt(0, 0, 1), Pt(0, 3, 2), Pt(5, 5), Pt(5, 0, 1), Pt(0, 0, 1) });
 
-		var p1 = ControlPointUtils.ResetControlPoints(polygon, out int c1);
+		var p1 = ControlPointUtils.ResetControlPoints(polygon);
 		Assert.NotNull(p1);
-		Assert.AreEqual(3, c1); // first/last point count as one for this change
+		//Assert.AreEqual(3, c1); // first/last point count as one for this change
 		Assert.IsTrue(p1.Points.All(p => p.ID == 0));
 
-		var p2 = ControlPointUtils.ResetControlPoints(polygon, out int c2, 2);
+		var p2 = ControlPointUtils.ResetControlPoints(polygon, -1, 2);
 		Assert.NotNull(p2);
-		Assert.AreEqual(1, c2);
 		Assert.AreEqual(2, p2.Points.Count(p => p.ID == 0));
 		Assert.AreEqual(3, p2.Points.Count(p => p.ID == 1));
 
-		var p3 = ControlPointUtils.ResetControlPoints(polygon, out int c3, 1);
+		var p3 = ControlPointUtils.ResetControlPoints(polygon, -1, 1);
 		Assert.NotNull(p3);
-		Assert.AreEqual(2, c3); // first/last point count as one for this change
+		//Assert.AreEqual(2, c3); // first/last point count as one for this change
 		Assert.AreEqual(4, p3.Points.Count(p => p.ID == 0));
 		Assert.AreEqual(1, p3.Points.Count(p => p.ID == 2));
 
 		var polyline = PolylineBuilderEx.CreatePolyline(polygon);
 
-		var p4 = ControlPointUtils.ResetControlPoints(polyline, out int c4, 1);
+		var p4 = ControlPointUtils.ResetControlPoints(polyline, -1, 1);
 		Assert.NotNull(p4);
-		Assert.AreEqual(3, c4); // now first/last count as two because path (not ring)
+		//Assert.AreEqual(3, c4); // now first/last count as two because path (not ring)
 		Assert.AreEqual(4, p4.Points.Count(p => p.ID == 0));
 		Assert.AreEqual(1, p4.Points.Count(p => p.ID == 2));
 
-		Assert.IsNull(ControlPointUtils.ResetControlPoints((Polygon) null, out _));
+		Assert.IsNull(ControlPointUtils.ResetControlPoints((Polygon) null));
 
 		// It also works straight on a MultipartBuilderEx instance:
 		var builder = new PolylineBuilderEx(polyline);
