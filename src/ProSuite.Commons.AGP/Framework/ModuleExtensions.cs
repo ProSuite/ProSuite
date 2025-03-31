@@ -35,7 +35,8 @@ public static class ModuleExtensions
 		}
 		catch (Exception ex)
 		{
-			_msg.Error($"Cannot convert project setting {name} to {nameof(Boolean)}: {ex.Message}; assuming null");
+			_msg.Error(
+				$"Cannot convert project setting {name} to {nameof(Boolean)}: {ex.Message}; assuming null");
 			return null;
 		}
 	}
@@ -62,7 +63,11 @@ public static class ModuleExtensions
 		try
 		{
 			var text = Convert.ToString(setting);
-			return double.TryParse(text, CultureInfo.InvariantCulture, out value) ? value : null;
+
+			bool canParse = double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture,
+			                                out value);
+
+			return canParse ? value : null;
 		}
 		catch (Exception ex)
 		{
@@ -101,7 +106,8 @@ public static class ModuleExtensions
 		}
 		catch (Exception ex)
 		{
-			_msg.Error($"Cannot convert project setting {name} to {nameof(String)}: {ex.Message}; assuming null");
+			_msg.Error(
+				$"Cannot convert project setting {name} to {nameof(String)}: {ex.Message}; assuming null");
 			return null;
 		}
 	}
