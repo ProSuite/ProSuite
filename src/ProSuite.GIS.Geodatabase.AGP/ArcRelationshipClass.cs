@@ -179,21 +179,20 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 		}
 
-		public IEnumerable<IObject> GetObjectsRelatedToObjectSet(ISet anObjectSet)
+		public IEnumerable<IObject> GetObjectsRelatedToObjectSet(IList<IObject> objectList)
 		{
-			if (anObjectSet.Count == 0)
+			if (objectList.Count == 0)
 			{
 				yield break;
 			}
 
-			ICollection<Row> proRows = ((ArcSet) anObjectSet).ProRows;
+			// TODO: Ensure all objects are of the same class
 
-			List<long> objectIds = proRows.Select(row => row.GetObjectID())
-			                              .ToList();
+			List<long> objectIds = objectList.Select(row => row.OID).ToList();
 
-			string sourceClassName = proRows.Select(r => r.GetTable().GetName()).First();
+			string sourceClassName = objectList.Select(r => r.Table.Name).First();
 
-			IEnumerable<Row> relatedObjects = GetRelatedObjects(objectIds, sourceClassName);
+			IReadOnlyList<Row> relatedObjects = GetRelatedObjects(objectIds, sourceClassName);
 
 			foreach (ArcRow related in relatedObjects.Select(o => ArcGeodatabaseUtils.ToArcRow(o)))
 			{
@@ -237,8 +236,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return GetRelatedObjects(new[] { sourceOid }, sourceClassName);
 		}
 
-		private IEnumerable<Row> GetRelatedObjects([NotNull] IEnumerable<long> sourceOids,
-		                                           [NotNull] string sourceClassName)
+		private IReadOnlyList<Row> GetRelatedObjects([NotNull] IEnumerable<long> sourceOids,
+		                                             [NotNull] string sourceClassName)
 		{
 			IReadOnlyList<Row> relatedObjects;
 
