@@ -800,6 +800,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		public void UpdateCursors()
+		{
+			SetupCursors();
+			_selectionSketchCursor.ResetOrDefault();
+		}
+
 		protected bool CanSelectFromLayer([CanBeNull] Layer layer,
 		                                  NotificationCollection notifications = null)
 		{
