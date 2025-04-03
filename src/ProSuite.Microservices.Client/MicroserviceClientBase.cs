@@ -175,12 +175,14 @@ namespace ProSuite.Microservices.Client
 
 			string serviceName = ChannelServiceName;
 
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
 			bool result =
 				GrpcClientUtils.IsServing(healthClient, serviceName, out StatusCode statusCode);
 
 			if (! result || ! logOnlyIfUnhealthy)
 			{
-				LogHealthStatus(statusCode);
+				LogHealthStatus(statusCode, stopwatch.ElapsedMilliseconds);
 			}
 
 			if (! result && allowFailOver)
@@ -200,10 +202,12 @@ namespace ProSuite.Microservices.Client
 
 			string serviceName = ChannelServiceName;
 
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
 			StatusCode statusCode = await GrpcClientUtils.IsServingAsync(healthClient, serviceName)
 			                                             .ConfigureAwait(false);
 
-			LogHealthStatus(statusCode);
+			LogHealthStatus(statusCode, stopwatch.ElapsedMilliseconds);
 
 			if (statusCode != StatusCode.OK && allowFailOver)
 			{
@@ -530,12 +534,15 @@ namespace ProSuite.Microservices.Client
 			return true;
 		}
 
-		private void LogHealthStatus(StatusCode statusCode)
+		private void LogHealthStatus(StatusCode statusCode,
+		                             long latencyMilliseconds)
 		{
 			string address = GetAddress();
 
-			_msg.DebugFormat("Health status for service {0} at {1}: {2}. Channel state: {3}",
-			                 ChannelServiceName, address, statusCode, GetChannelState());
+			_msg.DebugFormat("Health status for service {0} at {1}: {2}. " +
+			                 "Channel state: {3}. Latency: {4}ms",
+			                 ChannelServiceName, address, statusCode, GetChannelState(),
+			                 latencyMilliseconds);
 		}
 
 		private int GetFreeTcpPort()

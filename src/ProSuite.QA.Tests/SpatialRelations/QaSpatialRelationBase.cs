@@ -6,6 +6,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
 
@@ -124,7 +125,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				string otherRowMsg =
 					otherRow == null ? "<null>" : GdbObjectUtils.ToString(otherRow);
 				string msg =
-					$"Error testing row {GdbObjectUtils.ToString(feature)} against {otherRowMsg}: {e.Message}";
+					$"Error testing row {GdbObjectUtils.ToString(feature)} against {otherRowMsg}: {ExceptionUtils.FormatMessage(e)}";
 
 				_msg.Debug(msg, e);
 				throw new TestRowException(this, feature, msg);

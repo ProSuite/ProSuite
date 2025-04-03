@@ -18,6 +18,8 @@
 
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
+    <LangVersion>7.3</LangVersion>
+
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

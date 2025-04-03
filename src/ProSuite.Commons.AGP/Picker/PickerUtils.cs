@@ -71,7 +71,8 @@ namespace ProSuite.Commons.AGP.Picker
 			Envelope envelope = sketchGeometry.Extent;
 			MapPoint center = envelope.Center;
 
-			double toleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(MapView.Active, tolerancePixels, center);
+			double toleranceMapUnits =
+				MapUtils.ConvertScreenPixelToMapLength(MapView.Active, tolerancePixels, center);
 
 			double expansion = toleranceMapUnits * 2;
 
@@ -84,7 +85,8 @@ namespace ProSuite.Commons.AGP.Picker
 				envelope.SpatialReference);
 		}
 
-		public static bool IsPointClick(Geometry geometry, double tolerance, out MapPoint clickPoint)
+		public static bool IsPointClick(Geometry geometry, double tolerance,
+		                                out MapPoint clickPoint)
 		{
 			clickPoint = null;
 
@@ -150,18 +152,21 @@ namespace ProSuite.Commons.AGP.Picker
 				// Return empty list instead of list with null item. Happens
 				// when user doesn't pick an item from picker window.
 				case PickerMode.ShowPicker:
-					IPickableItem pick = await ShowPickerAsync(precedence, candidates, itemsFactory);
-					return pick == null ? [] : [pick];
+					IPickableItem pick =
+						await ShowPickerAsync(precedence, candidates, itemsFactory);
+					return pick == null
+						       ? new List<IPickableItem>()
+						       : new List<IPickableItem> { pick };
 
 				case PickerMode.PickAll:
 					return itemsFactory.CreateItems(candidates).ToList();
 
 				case PickerMode.PickBest:
 					IEnumerable<IPickableItem> items = itemsFactory.CreateItems(candidates);
-					return [precedence.PickBest(items)];
+					return new List<IPickableItem> { precedence.PickBest(items) };
 
 				case PickerMode.None:
-					return [];
+					return new List<IPickableItem>();
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -179,18 +184,19 @@ namespace ProSuite.Commons.AGP.Picker
 				// Return empty list instead of list with null item. Happens
 				// when user doesn't pick an item from picker window.
 				case PickerMode.ShowPicker:
-					IPickableItem pick = await ShowPickerAsync(precedence, candidates, itemsFactory);
-					return pick == null ? [] : [(T) pick];
+					IPickableItem pick =
+						await ShowPickerAsync(precedence, candidates, itemsFactory);
+					return pick == null ? new List<T>() : new List<T> { (T) pick };
 
 				case PickerMode.PickAll:
 					return itemsFactory.CreateItems(candidates).OfType<T>().ToList();
 
 				case PickerMode.PickBest:
 					IEnumerable<IPickableItem> items = itemsFactory.CreateItems(candidates);
-					return [(T) precedence.PickBest(items)];
+					return new List<T> { (T) precedence.PickBest(items) };
 
 				case PickerMode.None:
-					return [];
+					return new List<T>();
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -223,7 +229,8 @@ namespace ProSuite.Commons.AGP.Picker
 				}
 			}
 
-			foreach (var itemsByLayer in items.OfType<IPickableFeatureItem>().GroupBy(item => item.Layer))
+			foreach (var itemsByLayer in items.OfType<IPickableFeatureItem>()
+			                                  .GroupBy(item => item.Layer))
 			{
 				BasicFeatureLayer layer = itemsByLayer.Key;
 				List<long> oids = itemsByLayer.Select(item => item.Oid).ToList();

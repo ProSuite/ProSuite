@@ -16,6 +16,7 @@ using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
@@ -121,6 +122,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// service should continue serving (or shut down) in case of an exception.
 		/// </summary>
 		public bool KeepServingOnErrorDefaultValue { get; set; }
+
+		/// <summary>
+		/// Whether the service should be set to unhealthy after each verification. This allows
+		/// for process recycling after each verification to avoid GDB-locks.
+		/// </summary>
+		public bool SetUnhealthyAfterEachVerification { get; set; } =
+			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+				"PROSUITE_QA_SERVER_SET_UNHEALTHY_AFTER_VERIFICATION");
 
 		public override async Task VerifyQuality(
 			VerificationRequest request,
@@ -331,6 +340,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.DebugFormat("Remaining requests that are inprogress: {0}",
 				                 CurrentLoad.CurrentProcessCount);
 			}
+
+			if (SetUnhealthyAfterEachVerification)
+			{
+				_msg.Info(
+					"Setting process to un-healthy after request to allow for process recycling.");
+				ServiceUtils.SetUnhealthy(Health, GetType());
+			}
 		}
 
 		private async Task<bool> EnsureLicenseAsync()
@@ -482,7 +498,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.Error($"Error checking quality for request {request}", e);
-				cancellationMessage = $"Server error: {e.Message}";
+				cancellationMessage = $"Server error: {ExceptionUtils.FormatMessage(e)}";
 
 				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
@@ -578,7 +594,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.Error($"Error checking quality for request {request}", e);
-				cancellationMessage = $"Server error: {e.Message}";
+				cancellationMessage = $"Server error: {ExceptionUtils.FormatMessage(e)}";
 
 				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
@@ -642,7 +658,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.DebugFormat("Error during processing of request {0}", request);
-				_msg.Error($"Error verifying quality: {e.Message}", e);
+				_msg.Error($"Error verifying quality: {ExceptionUtils.FormatMessage(e)}", e);
 
 				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
