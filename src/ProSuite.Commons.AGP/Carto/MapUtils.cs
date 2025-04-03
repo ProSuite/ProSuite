@@ -809,6 +809,48 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
+		public static void FlashGeometries(
+			[NotNull] MapView mapView,
+			IEnumerable<Geometry> geometries,
+			int milliseconds = 400,
+			bool useReferenceScale = false)
+		{
+			CIMRGBColor green = ColorUtils.CreateRGB(0, 200, 0);
+
+			List<Overlay> overlays = new List<Overlay>();
+
+			CIMSymbol symbol = null;
+			foreach (var group in geometries.GroupBy(g => g.Dimension))
+			{
+				if (group.Key == 0)
+				{
+					symbol = SymbolUtils.CreateMarker(green, 4, SymbolUtils.MarkerStyle.Circle)
+					                    .MakePointSymbol();
+				}
+
+				if (group.Key == 1)
+				{
+					symbol = SymbolUtils.CreateLineSymbol(green, 2);
+				}
+
+				if (group.Key == 2)
+				{
+					symbol = SymbolUtils.CreatePolygonSymbol(SymbolUtils.CreateSolidFill(green));
+				}
+
+				foreach (Geometry geometry in group)
+				{
+					overlays.Add(new Overlay(geometry, symbol));
+				}
+			}
+
+			if (overlays.Count > 0)
+			{
+				FlashGeometries(mapView, overlays, milliseconds,
+				                useReferenceScale);
+			}
+		}
+
 		public static bool FlashGeometries(
 			[NotNull] MapView mapView,
 			IEnumerable<Overlay> overlays,
