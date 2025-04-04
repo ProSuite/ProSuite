@@ -2,6 +2,9 @@ namespace ProSuite.Commons.AGP.Carto;
 
 public class SymbolDisplaySettings
 {
+	public bool? WantSLD { get; set; }
+	public bool? WantLM { get; set; }
+
 	public bool AutoSwitch { get; set; }
 	public double AutoMinScaleDenom { get; set; }
 	public double AutoMaxScaleDenom { get; set; }
