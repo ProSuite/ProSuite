@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.Exceptions;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -415,6 +414,36 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 
 			return IsSameDatabase(versionedWorkspace1, versionedWorkspace2);
+		}
+
+		public string Description
+		{
+			get
+			{
+				string result;
+
+				switch (Type)
+				{
+					case esriWorkspaceType.esriFileSystemWorkspace:
+						result = "File System";
+						break;
+					case esriWorkspaceType.esriLocalDatabaseWorkspace:
+						result = "Local Geodatabase";
+						break;
+					case esriWorkspaceType.esriRemoteDatabaseWorkspace:
+						result = "Remote Geodatabase";
+						break;
+					default:
+						throw new ArgumentOutOfRangeException($"Unknown Workspace Type: {Type}");
+				}
+
+				if (Type == esriWorkspaceType.esriRemoteDatabaseWorkspace)
+				{
+					result += $" ({DbmsType})";
+				}
+
+				return result;
+			}
 		}
 
 		#endregion

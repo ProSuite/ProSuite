@@ -30,6 +30,8 @@ namespace ProSuite.GIS.Geodatabase.API
 		IWorkspaceName GetWorkspaceName();
 
 		bool IsSameDatabase(IWorkspace otherWorkspace);
+
+		string Description { get; }
 	}
 
 	public interface IFeatureWorkspace : IWorkspace

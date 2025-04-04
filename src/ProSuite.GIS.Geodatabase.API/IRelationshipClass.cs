@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.GIS.Geodatabase.API
 {
@@ -49,7 +50,8 @@ namespace ProSuite.GIS.Geodatabase.API
 
 		//IEnumRelationship GetRelationshipsForObjectSet(ISet anObjectSet);
 
-		//IRelClassEnumRowPairs GetObjectsMatchingObjectSet(ISet srcObjectSet);
+		IEnumerable<KeyValuePair<T, IObject>> GetObjectsMatchingObjectSet<T>(
+			[NotNull] IEnumerable<T> sourceObjects) where T : IObject;
 
 		void DeleteRelationshipsForObjectSet(ISet anObjectSet);
 
