@@ -6,6 +6,6 @@ namespace ProSuite.Commons.AGP.Picker
 {
 	public interface IPickerService
 	{
-		Task<IPickableItem> Pick(List<IPickableItem> items, IPickerViewModel viewModel);
+		Task<IPickableItem> Pick(IEnumerable<IPickableItem> items, IPickerViewModel viewModel);
 	}
 }

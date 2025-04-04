@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -85,6 +87,8 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 				else if (subCurvePredicate == null || subCurvePredicate(cutSubcurve))
 				{
 					result.Add(cutSubcurve);
+					_msg.Info(
+						"The feature was not reshaped. Please select green or yellow lines to reshape along");
 				}
 			}
 
@@ -164,6 +168,47 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 			else
 			{
 				preSelectedCurveList.Add(cutSubcurve);
+			}
+		}
+
+		public void ApplyZsToReshapeCurves([CanBeNull] IZSettingsModel zSettingsModel,
+		                                   IList<Feature> sourceFeatures)
+		{
+			if (zSettingsModel == null)
+			{
+				return;
+			}
+
+			if (! sourceFeatures.Any(f => f.GetTable().GetDefinition().HasZ()))
+			{
+				return;
+			}
+
+			foreach (CutSubcurve reshapeSubcurve in _reshapeSubcurves)
+			{
+				GdbObjectReference? sourceRef = reshapeSubcurve.Source;
+
+				if (sourceRef != null)
+				{
+					Feature feature =
+						sourceFeatures.FirstOrDefault(f => sourceRef.Value.References(f));
+
+					if (feature != null && feature.GetTable().GetDefinition().HasZ() == false)
+					{
+						continue;
+					}
+				}
+
+				Polyline reshapePath = reshapeSubcurve.Path;
+
+				if (! reshapePath.HasZ)
+				{
+					PolylineBuilder builder = new PolylineBuilder(reshapePath);
+					builder.HasZ = true;
+					reshapePath = builder.ToGeometry();
+				}
+
+				reshapeSubcurve.Path = (Polyline) zSettingsModel.ApplyUndefinedZs(reshapePath);
 			}
 		}
 	}

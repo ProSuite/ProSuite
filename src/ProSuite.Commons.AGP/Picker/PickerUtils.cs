@@ -66,36 +66,47 @@ namespace ProSuite.Commons.AGP.Picker
 			//       .SelectMany(fcs => fcs);
 		}
 
-		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
-		                                              int selectionTolerancePixels)
+		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry, int tolerancePixels)
 		{
-			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
-				MapView.Active, selectionTolerancePixels, sketchGeometry.Extent.Center);
-
-			double envelopeExpansion = selectionToleranceMapUnits * 2;
-
 			Envelope envelope = sketchGeometry.Extent;
+			MapPoint center = envelope.Center;
+
+			double toleranceMapUnits =
+				MapUtils.ConvertScreenPixelToMapLength(MapView.Active, tolerancePixels, center);
+
+			double expansion = toleranceMapUnits * 2;
 
 			// NOTE: MapToScreen in stereo map is sensitive to Z value (Picker location!)
-
-			// Rather than creating a non-Z-aware polygon with elliptic arcs by using buffer...
-			//Geometry selectionGeometry =
-			//	GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
-
-			// Just expand the envelope
-			// .. but PickerViewModel needs a polygon to display selection geometry (press space).
-
 			// HasZ, HasM and HasID are inherited from input geometry.
 			// There is no need for GeometryUtils.EnsureGeometrySchema()
 
 			return GeometryFactory.CreatePolygon(
-				envelope.Expand(envelopeExpansion, envelopeExpansion, false),
+				envelope.Expand(expansion, expansion, false),
 				envelope.SpatialReference);
 		}
 
-		public static bool IsSingleClick(Geometry sketch)
+		public static bool IsPointClick(Geometry geometry, double tolerance,
+		                                out MapPoint clickPoint)
 		{
-			return ! (sketch.Extent.Width > 0 || sketch.Extent.Height > 0);
+			clickPoint = null;
+
+			if (geometry is null) return false;
+			if (geometry.IsEmpty) return false;
+
+			if (geometry is MapPoint point)
+			{
+				clickPoint = point;
+				return true;
+			}
+
+			var extent = geometry.Extent;
+			if (extent.Length < tolerance)
+			{
+				clickPoint = extent.Center;
+				return true;
+			}
+
+			return false;
 		}
 
 		public static SpatialRelationship GetSpatialRelationship()
@@ -119,27 +130,10 @@ namespace ProSuite.Commons.AGP.Picker
 
 		public static async Task<IPickableItem> ShowPickerAsync(
 			IPickerPrecedence precedence,
-			IEnumerable<FeatureSelectionBase> orderedSelection)
+			IEnumerable<FeatureSelectionBase> candidates,
+			IPickableItemsFactory factory)
 		{
-			return await ShowPickerAsync(precedence, orderedSelection,
-			                             precedence.CreateItemsFactory());
-		}
-
-		public static async Task<IPickableItem> ShowPickerAsync<T>(
-			IPickerPrecedence precedence,
-			IEnumerable<FeatureSelectionBase> orderedSelection)
-			where T : IPickableItem
-		{
-			return await ShowPickerAsync(precedence, orderedSelection,
-			                             precedence.CreateItemsFactory<T>());
-		}
-
-		private static async Task<IPickableItem> ShowPickerAsync(IPickerPrecedence precedence,
-		                                                         IEnumerable<FeatureSelectionBase>
-			                                                         orderedSelection,
-		                                                         IPickableItemsFactory factory)
-		{
-			var items = factory.CreateItems(orderedSelection).ToList();
+			var items = factory.CreateItems(candidates);
 			IPickerViewModel vm = factory.CreateViewModel(precedence.GetSelectionGeometry());
 
 			var picker = new PickerService(precedence);
@@ -147,61 +141,62 @@ namespace ProSuite.Commons.AGP.Picker
 			return await picker.Pick(items, vm);
 		}
 
-		public static async Task<List<IPickableItem>> GetItems(
-			IEnumerable<FeatureSelectionBase> candidates,
+		public static async Task<List<IPickableItem>> GetItemsAsync(
+			ICollection<FeatureSelectionBase> candidates,
 			IPickerPrecedence precedence)
 		{
-			var ordered = OrderByGeometryDimension(candidates).ToList();
+			IPickableItemsFactory itemsFactory = precedence.CreateItemsFactory();
 
-			switch (GetPickerMode(precedence, ordered))
+			switch (precedence.GetPickerMode(candidates))
 			{
+				// Return empty list instead of list with null item. Happens
+				// when user doesn't pick an item from picker window.
 				case PickerMode.ShowPicker:
-					IPickableItem pick = await ShowPickerAsync(precedence, ordered);
-					return new List<IPickableItem> { pick };
+					IPickableItem pick =
+						await ShowPickerAsync(precedence, candidates, itemsFactory);
+					return pick == null
+						       ? new List<IPickableItem>()
+						       : new List<IPickableItem> { pick };
 
 				case PickerMode.PickAll:
-					return new PickableFeatureClassItemsFactory().CreateItems(ordered).ToList();
+					return itemsFactory.CreateItems(candidates).ToList();
 
 				case PickerMode.PickBest:
-					IEnumerable<IPickableItem> items = precedence.CreateItemsFactory()
-					                                             .CreateItems(ordered);
+					IEnumerable<IPickableItem> items = itemsFactory.CreateItems(candidates);
 					return new List<IPickableItem> { precedence.PickBest(items) };
 
-				case null:
-					return new List<IPickableItem>(0);
+				case PickerMode.None:
+					return new List<IPickableItem>();
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 		}
 
-		public static async Task<List<IPickableItem>> GetItems<T>(
+		public static async Task<List<T>> GetItemsAsync<T>(
 			IEnumerable<FeatureSelectionBase> candidates,
-			IPickerPrecedence precedence, PickerMode? pickerMode)
+			IPickerPrecedence precedence, PickerMode pickerMode)
 			where T : IPickableItem
 		{
-			var ordered = OrderByGeometryDimension(candidates).ToList();
-
-			if (! ordered.Any())
-			{
-				pickerMode = null;
-			}
+			IPickableItemsFactory itemsFactory = precedence.CreateItemsFactory<T>();
 
 			switch (pickerMode)
 			{
+				// Return empty list instead of list with null item. Happens
+				// when user doesn't pick an item from picker window.
 				case PickerMode.ShowPicker:
-					IPickableItem pick = await ShowPickerAsync<T>(precedence, ordered);
-					return new List<IPickableItem> { pick };
+					IPickableItem pick =
+						await ShowPickerAsync(precedence, candidates, itemsFactory);
+					return pick == null ? new List<T>() : new List<T> { (T) pick };
 
 				case PickerMode.PickAll:
-					return new PickableFeatureClassItemsFactory().CreateItems(ordered).ToList();
+					return itemsFactory.CreateItems(candidates).OfType<T>().ToList();
 
 				case PickerMode.PickBest:
-					IEnumerable<IPickableItem> items = precedence.CreateItemsFactory()
-					                                             .CreateItems(ordered);
-					return new List<IPickableItem> { precedence.PickBest(items) };
+					IEnumerable<IPickableItem> items = itemsFactory.CreateItems(candidates);
+					return new List<T> { (T) precedence.PickBest(items) };
 
-				case null:
-					return new List<IPickableItem>(0);
+				case PickerMode.None:
+					return new List<T>();
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -212,44 +207,36 @@ namespace ProSuite.Commons.AGP.Picker
 		public static void Select(List<IPickableItem> items,
 		                          SelectionCombinationMethod selectionMethod)
 		{
-			foreach (IPickableFeatureClassItem item in items.OfType<IPickableFeatureClassItem>())
+			// No candidate (user clicked into empty space):
+			if (items.Count == 0)
 			{
-				SelectionUtils.SelectRows(item.Layers.First(),
-				                          selectionMethod, item.Oids);
-			}
-
-			foreach (IPickableFeatureItem item in items.OfType<IPickableFeatureItem>())
-			{
-				SelectionUtils.SelectRows(item.Layer,
-				                          selectionMethod, new[] { item.Oid });
-			}
-		}
-
-		private static PickerMode? GetPickerMode(
-			[NotNull] IPickerPrecedence precedence, ICollection<FeatureSelectionBase> candidates)
-		{
-			SelectionCombinationMethod selectionMethod = precedence.SelectionCombinationMethod;
-
-			if (! candidates.Any() && selectionMethod == SelectionCombinationMethod.XOR)
-			{
-				// No addition to and no removal from selection
-				return null;
-			}
-
-			if (! candidates.Any())
-			{
-				// No candidate (user clicked into empty space):
 				ClearSelection();
-				return null;
+				return;
 			}
 
-			// Clear the selection on the map level, NOT on the layer level
+			// New selection: clear the selection on the map level, NOT on the layer level
 			if (selectionMethod == SelectionCombinationMethod.New)
 			{
 				ClearSelection();
 			}
 
-			return precedence.GetPickerMode(candidates);
+			foreach (IPickableFeatureClassItem item in items.OfType<IPickableFeatureClassItem>())
+			{
+				// Important to loop over each layer, they could have different definition queries!
+				foreach (BasicFeatureLayer layer in item.Layers)
+				{
+					SelectionUtils.SelectRows(layer, selectionMethod, item.Oids.ToList());
+				}
+			}
+
+			foreach (var itemsByLayer in items.OfType<IPickableFeatureItem>()
+			                                  .GroupBy(item => item.Layer))
+			{
+				BasicFeatureLayer layer = itemsByLayer.Key;
+				List<long> oids = itemsByLayer.Select(item => item.Oid).ToList();
+
+				SelectionUtils.SelectRows(layer, selectionMethod, oids);
+			}
 		}
 
 		private static void ClearSelection()

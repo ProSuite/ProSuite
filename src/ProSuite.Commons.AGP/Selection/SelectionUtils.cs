@@ -44,28 +44,52 @@ namespace ProSuite.Commons.AGP.Selection
 		                              [NotNull] Predicate<IDisplayTable> mapMemberPredicate,
 		                              [NotNull] IReadOnlyList<long> objectIds)
 		{
+			if (objectIds.Count == 0)
+			{
+				return 0;
+			}
+
+			var queryFilter = new QueryFilter { ObjectIDs = objectIds };
+
+			SelectionCombinationMethod combinationMethod = SelectionCombinationMethod.Add;
+
+			return SelectRows(map, queryFilter, combinationMethod, mapMemberPredicate);
+		}
+
+		/// <summary>
+		/// Selects the requested features or rows from the specified layers or stand-alone tables.
+		/// Selections are only performed on visible selectable layers, preferably on the first
+		/// layer or table without definition query.
+		/// </summary>
+		/// <returns>The number of actually selected rows.</returns>
+		public static long SelectRows(
+			[NotNull] Map map,
+			[NotNull] QueryFilter queryFilter,
+			SelectionCombinationMethod combinationMethod = SelectionCombinationMethod.Add,
+			[CanBeNull] Predicate<IDisplayTable> mapMemberPredicate = null)
+		{
 			long totalSelected = 0;
 
 			Predicate<BasicFeatureLayer> layerPredicate =
 				l => l is IDisplayTable displayTable &&
-				     mapMemberPredicate(displayTable);
+				     (mapMemberPredicate == null || mapMemberPredicate(displayTable));
 
 			foreach (BasicFeatureLayer featureLayer in
 			         MapUtils.GetFeatureLayersForSelection(map, layerPredicate))
 			{
 				totalSelected +=
-					SelectRows(featureLayer, SelectionCombinationMethod.Add, objectIds);
+					SelectRows(featureLayer, combinationMethod, queryFilter);
 			}
 
 			Predicate<StandaloneTable> tablePredicate =
 				t => t is IDisplayTable displayTable &&
-				     mapMemberPredicate(displayTable);
+				     (mapMemberPredicate == null || mapMemberPredicate(displayTable));
 
 			foreach (StandaloneTable standaloneTable in
 			         MapUtils.GetStandaloneTablesForSelection(map, tablePredicate))
 			{
 				totalSelected +=
-					SelectRows(standaloneTable, SelectionCombinationMethod.Add, objectIds);
+					SelectRows(standaloneTable, combinationMethod, queryFilter);
 			}
 
 			return totalSelected;
@@ -91,6 +115,22 @@ namespace ProSuite.Commons.AGP.Selection
 
 			var queryFilter = new QueryFilter { ObjectIDs = objectIds };
 
+			return SelectRows(tableBasedMapMember, combinationMethod, queryFilter);
+		}
+
+		/// <summary>
+		/// Selects the requested features or rows from the specified layer or stand-alone table
+		/// and immediately disposes the selection to avoid selection and immediate de-selection
+		/// (for selection method XOR) because it is called in 2 threads.
+		/// </summary>
+		/// <param name="tableBasedMapMember"></param>
+		/// <param name="combinationMethod"></param>
+		/// <param name="queryFilter"></param>
+		/// <returns>The number of actually selected rows.</returns>
+		public static long SelectRows(IDisplayTable tableBasedMapMember,
+		                              SelectionCombinationMethod combinationMethod,
+		                              QueryFilter queryFilter)
+		{
 			using var selection =
 				tableBasedMapMember.Select(queryFilter, combinationMethod);
 

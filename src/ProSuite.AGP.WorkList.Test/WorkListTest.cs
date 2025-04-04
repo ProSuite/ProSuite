@@ -34,24 +34,24 @@ namespace ProSuite.AGP.WorkList.Test
 			// http://stackoverflow.com/questions/8245926/the-current-synchronizationcontext-may-not-be-used-as-a-taskscheduler
 			SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
 
-			_geodatabase =
-				new Geodatabase(
-					new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
+			//_geodatabase =
+			//	new Geodatabase(
+			//		new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
 
-			_issuePoints = _geodatabase.OpenDataset<Table>(_issuePointsName);
-			_issueLines = _geodatabase.OpenDataset<Table>(_issueLinesName);
+			//_issuePoints = _geodatabase.OpenDataset<Table>(_issuePointsName);
+			//_issueLines = _geodatabase.OpenDataset<Table>(_issueLinesName);
 
-			var tablesByGeodatabase = new Dictionary<Datastore, List<Table>>
-			                          {
-				                          {
-					                          _geodatabase,
-					                          new List<Table> {_issuePoints, _issueLines}
-				                          }
-			                          };
+			//var tablesByGeodatabase = new Dictionary<Datastore, List<Table>>
+			//                          {
+			//	                          {
+			//		                          _geodatabase,
+			//		                          new List<Table> {_issuePoints, _issueLines}
+			//	                          }
+			//                          };
 
-			IWorkItemStateRepository stateRepository =
-				new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-			_repository = new IssueItemRepository(new List<Table> { _issuePoints, _issueLines }, stateRepository);
+			//IWorkItemStateRepository stateRepository =
+			//	new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+			//_repository = new IssueItemRepository(new List<Table> { _issuePoints, _issueLines }, stateRepository);
 		}
 
 		[TearDown]
@@ -91,6 +91,157 @@ namespace ProSuite.AGP.WorkList.Test
 		private readonly string _issuePolygons = "IssuePolygons";
 		private readonly string _issuePointsName = "IssuePoints";
 		private readonly string _issueLinesName = "IssueLines";
+
+		#region item chunks tests
+
+		[Test]
+		public void Can_get_items_by_task_id_only_once()
+		{
+			var capacity = 8000;
+			var items = new List<IWorkItem>(capacity);
+
+			for (int i = 0; i < capacity; i++)
+			{
+				items.Add(new WorkItemMock(i));
+			}
+
+			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+			List<IWorkItem> list;
+			Assert.True(workList.TryGetItems(42, out list));
+			Assert.NotNull(list);
+			Assert.IsNotEmpty(list);
+
+			Assert.False(workList.TryGetItems(42, out list));
+			Assert.Null(list);
+			Assert.IsNull(list);
+		}
+
+		[Test]
+		public void Only_three_tasks_can_get_items()
+		{
+			var capacity = 4200;
+			var items = new List<IWorkItem>(capacity);
+
+			for (int i = 0; i < capacity; i++)
+			{
+				items.Add(new WorkItemMock(i));
+			}
+
+			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+			Assert.True(workList.TryGetItems(42, out List<IWorkItem> firstList));
+			Assert.NotNull(firstList);
+			Assert.IsNotEmpty(firstList);
+			Assert.AreEqual(1400, firstList.Count);
+
+			Assert.False(workList.TryGetItems(42, out List<IWorkItem> secondList));
+			Assert.Null(secondList);
+			Assert.IsNull(secondList);
+
+			Assert.True(workList.TryGetItems(1, out List<IWorkItem> thirdList));
+			Assert.NotNull(thirdList);
+			Assert.IsNotEmpty(thirdList);
+			Assert.AreEqual(1400, thirdList.Count);
+
+			Assert.True(workList.TryGetItems(2, out List<IWorkItem> fourthList));
+			Assert.NotNull(fourthList);
+			Assert.IsNotEmpty(fourthList);
+			Assert.AreEqual(1400, fourthList.Count);
+
+			Assert.False(workList.TryGetItems(3, out List<IWorkItem> fifthList));
+			Assert.Null(fifthList);
+
+			Assert.False(workList.TryGetItems(4, out List<IWorkItem> sixthList));
+			Assert.Null(sixthList);
+		}
+
+		[Test]
+		public void Can_get_evenly_distributetd_item_chunks()
+		{
+			var capacity = 35;
+			var items = new List<IWorkItem>(capacity);
+
+			for (int i = 0; i < capacity; i++)
+			{
+				items.Add(new WorkItemMock(i));
+			}
+
+			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+			Assert.True(workList.TryGetItems(1, out List<IWorkItem> firstList));
+			Assert.NotNull(firstList);
+			Assert.IsNotEmpty(firstList);
+			Assert.AreEqual(13, firstList.Count);
+
+			Assert.True(workList.TryGetItems(2, out List<IWorkItem> secondList));
+			Assert.NotNull(secondList);
+			Assert.IsNotEmpty(secondList);
+			Assert.AreEqual(11, secondList.Count);
+
+			Assert.True(workList.TryGetItems(3, out List<IWorkItem> thirdList));
+			Assert.NotNull(thirdList);
+			Assert.IsNotEmpty(thirdList);
+			Assert.AreEqual(11, thirdList.Count);
+		}
+
+		[Test]
+		public void Can_process_item_chunks_for_very_few_items()
+		{
+			var capacity = 1;
+			var items = new List<IWorkItem>(capacity);
+
+			for (int i = 0; i < capacity; i++)
+			{
+				items.Add(new WorkItemMock(i));
+			}
+
+			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+			Assert.True(workList.TryGetItems(1, out List<IWorkItem> firstList));
+			Assert.NotNull(firstList);
+			Assert.IsNotEmpty(firstList);
+			Assert.AreEqual(1, firstList.Count);
+
+			Assert.True(workList.TryGetItems(2, out List<IWorkItem> secondList));
+			Assert.NotNull(secondList);
+			Assert.IsEmpty(secondList);
+
+			Assert.True(workList.TryGetItems(3, out List<IWorkItem> thirdList));
+			Assert.NotNull(thirdList);
+			Assert.IsEmpty(thirdList);
+		}
+
+		[Test]
+		public void Can_process_item_chunks_for_three_items()
+		{
+			var capacity = 3;
+			var items = new List<IWorkItem>(capacity);
+
+			for (int i = 0; i < capacity; i++)
+			{
+				items.Add(new WorkItemMock(i));
+			}
+
+			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+			Assert.True(workList.TryGetItems(1, out List<IWorkItem> firstList));
+			Assert.NotNull(firstList);
+			Assert.IsNotEmpty(firstList);
+			Assert.AreEqual(1, firstList.Count);
+
+			Assert.True(workList.TryGetItems(2, out List<IWorkItem> secondList));
+			Assert.NotNull(secondList);
+			Assert.IsNotEmpty(secondList);
+			Assert.AreEqual(1, secondList.Count);
+
+			Assert.True(workList.TryGetItems(3, out List<IWorkItem> thirdList));
+			Assert.NotNull(thirdList);
+			Assert.IsNotEmpty(thirdList);
+			Assert.AreEqual(1, thirdList.Count);
+		}
+
+		#endregion
 
 		#region work list navigation tests
 
@@ -256,8 +407,6 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(wl.Current?.Visited);
 		}
 
-		public void Can_go_nearest_if_item_is_Done() { }
-
 		[Test]
 		public void Cannot_go_first_again_if_first_item_is_set_done()
 		{
@@ -284,7 +433,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 			// set status done and update work list
 			wl.Current.Status = WorkItemStatus.Done;
-			wl.SetStatus(wl.Current, WorkItemStatus.Done);
+			wl.SetStatusAsync(wl.Current, WorkItemStatus.Done);
 
 			// second item is now the first in work list
 			// because first item is set to done and therefor 'not visible'
@@ -445,7 +594,7 @@ namespace ProSuite.AGP.WorkList.Test
 				IWorkItemStateRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
-					new IssueItemRepository(new List<Table> { table }, stateRepository);
+					new ItemRepositoryMock(new List<Table> { table }, stateRepository);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -495,7 +644,7 @@ namespace ProSuite.AGP.WorkList.Test
 				IWorkItemStateRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
-					new IssueItemRepository(new List<Table> { table }, stateRepository);
+					new ItemRepositoryMock(new List<Table> { table }, stateRepository);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -554,7 +703,7 @@ namespace ProSuite.AGP.WorkList.Test
 				IWorkItemStateRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
-					new IssueItemRepository(new List<Table> { table }, stateRepository);
+					new ItemRepositoryMock(new List<Table> { table }, stateRepository);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -605,7 +754,7 @@ namespace ProSuite.AGP.WorkList.Test
 				IWorkItemStateRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
-					new IssueItemRepository(new List<Table> { table }, stateRepository);
+					new ItemRepositoryMock(new List<Table> { table }, stateRepository);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 

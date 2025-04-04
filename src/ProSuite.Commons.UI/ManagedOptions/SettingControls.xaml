@@ -9,7 +9,7 @@
         <CheckBox Content="{TemplateBinding Content}"
                   DataContext="{TemplateBinding DataContext}"
                   IsChecked="{Binding CurrentValue}"
-                  IsEnabled="{Binding CanOverrideLocally}"
+                  IsEnabled="{Binding IsEnabled}"
                   FontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}"
                   ToolTipService.ShowOnDisabled="True"
                   ToolTip="{Binding ToolTip}" 
@@ -20,7 +20,7 @@
 
             <managedOptions:NumericSpinner 
                 DataContext="{TemplateBinding DataContext}"
-                IsEnabled="{Binding CanOverrideLocally}" 
+                IsEnabled="{Binding IsEnabled}" 
                 Margin="0, 2" 
                 Value="{Binding CurrentValue, Mode=TwoWay}" 
                 ToolTipService.ShowOnDisabled="True"
@@ -33,7 +33,7 @@
 
             <Label 
                 DataContext="{TemplateBinding DataContext}"
-                IsEnabled="{Binding CanOverrideLocally}" 
+                IsEnabled="{Binding IsEnabled}" 
                 Content="meters"
                 HorizontalAlignment="Left"
                 ToolTipService.ShowOnDisabled="True"
@@ -45,30 +45,13 @@
         <Button
             DataContext="{TemplateBinding DataContext}"
             Command="{Binding RevertToDefaultsCommand}"
-            IsEnabled="{Binding IsButtonEnabled}"
+            IsEnabled="{Binding IsRevertToDefaultsEnabled}"
             Content="Restore Defaults" 
             Width="120"
-            HorizontalAlignment="Right"
-            ToolTip=""
-            Margin="15" 
+            HorizontalAlignment="Left"
+            Margin="27,12,6,12"
             Style="{DynamicResource Esri_Button}">
         </Button>
-        <!-- Todo: Tooltip -->
-        <!-- <Button.Style >
-                <Style TargetType="Button" BasedOn="{esri:Esri_Button}">
-                    <Setter Property="ToolTip" Value="{x:Null}" />
-                    <Style.Triggers>
-                        Trigger when IsEnabled is false 
-            <Trigger Property="IsEnabled" Value="false">
-                <Setter Property="ToolTip" Value="This button is disabled because CentralConfigDir is null." />
-            </Trigger>
-            </Style.Triggers>
-            </Style>
-            </Button.Style>-->
-  
-
-
-
     </ControlTemplate>
 
     <!--<ControlTemplate TargetType="RadioButton" x:Key="CentralizableSettingRadioButton">

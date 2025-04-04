@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -17,7 +17,6 @@ using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 
 namespace ProSuite.AGP.WorkList
 {
-	// todo daro: SetStatusDone !!!!
 	// Note maybe all SDK code, like open workspace, etc. should be in here. Not in DatabaseSourceClass for instance.
 	public abstract class GdbItemRepository : IWorkItemRepository
 	{
@@ -89,7 +88,7 @@ namespace ProSuite.AGP.WorkList
 			            "Multiple geodatabases are referenced by the work list's source classes.");
 
 			CurrentWorkspace =
-				sourceClassDefinitions.FirstOrDefault()?.Table?.GetDatastore() as Geodatabase;
+				sourceClassDefinitions.FirstOrDefault()?.Table.GetDatastore() as Geodatabase;
 
 			if (CurrentWorkspace == null)
 			{
@@ -106,7 +105,7 @@ namespace ProSuite.AGP.WorkList
 		[CanBeNull]
 		public Geodatabase CurrentWorkspace { get; set; }
 
-		protected IWorkItemStateRepository WorkItemStateRepository { get; }
+		public IWorkItemStateRepository WorkItemStateRepository { get; }
 
 		[CanBeNull]
 		public IWorkListItemDatastore TableSchema { get; protected set; }
@@ -201,6 +200,24 @@ namespace ProSuite.AGP.WorkList
 			RefreshCore(item, source, row);
 		}
 
+		public void RefreshGeometry(IWorkItem item)
+		{
+			ITableReference tableId = item.GdbRowProxy.Table;
+
+			// todo daro: log message
+			ISourceClass source =
+				SourceClasses.FirstOrDefault(sc => sc.Uses(tableId));
+			Assert.NotNull(source);
+
+			Row row = GetSourceRow(source, item.ObjectID);
+			Assert.NotNull(row);
+
+			if (row is Feature feature)
+			{
+				item.Geometry = GeometryUtils.Buffer(feature.GetShape(), 10);
+			}
+		}
+
 		[CanBeNull]
 		public Row GetSourceRow(ISourceClass sourceClass, long oid)
 		{
@@ -213,12 +230,13 @@ namespace ProSuite.AGP.WorkList
 		                                   [NotNull] ISourceClass sourceClass,
 		                                   [NotNull] Row row) { }
 
+		// TODO: Rename to Update?
 		public void SetVisited(IWorkItem item)
 		{
 			WorkItemStateRepository.Update(item);
 		}
 
-		public async Task SetStatus(IWorkItem item, WorkItemStatus status)
+		public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 		{
 			item.Status = status;
 
@@ -228,19 +246,8 @@ namespace ProSuite.AGP.WorkList
 				SourceClasses.FirstOrDefault(s => s.Uses(tableId));
 			Assert.NotNull(source);
 
-			// todo daro: read / restore item again from db? restore pattern in case of failure?
+			// todo: daro read / restore item again from db? restore pattern in case of failure?
 			await SetStatusCoreAsync(item, source);
-		}
-
-		public void UpdateStateRepository(string path)
-		{
-			UpdateStateRepositoryCore(path);
-		}
-
-		public Task UpdateAsync(IWorkItem item)
-		{
-			// todo daro: revise
-			return Task.FromResult(0);
 		}
 
 		// todo daro: rename?

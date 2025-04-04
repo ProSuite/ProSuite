@@ -58,7 +58,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		ConstructionCursorCore = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
 	}
 
-	private List<Key> HandledKeys { get; } =
+	protected List<Key> HandledKeys { get; } =
 		new(6)
 		{
 			Key.Escape, Key.LeftShift, Key.RightShift,
@@ -71,6 +71,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	protected virtual Cursor ConstructionCursorCore { get; }
 
 	protected virtual bool AllowNoSelection => false;
+
+	protected virtual bool EnableLassoSketch => true;
+	protected virtual bool EnablePolygonSketch => true;
 
 	/// Whether the required selection can only contain selectable features.
 	protected bool SelectOnlySelectableFeatures { get; init; } = true;
@@ -236,7 +239,13 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			{
 				if (await HasSketchAsync())
 				{
-					await ClearSketchAsync();
+					await QueuedTask.Run(() =>
+					{
+						// For some unknown reason, the SketchSymbol is only correctly
+						// updated after a call to ActiveMapView.ClearSketchAsync in
+						// a QueuedTask since ArcGis Pro 3.4
+						ActiveMapView.ClearSketchAsync();
+					});
 				}
 				else
 				{
@@ -288,12 +297,12 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 			if (! InConstructionPhase())
 			{
-				if (args.Key == _keyPolygonDraw)
+				if (EnablePolygonSketch && args.Key == _keyPolygonDraw)
 				{
 					SetupPolygonSketch();
 				}
 
-				if (args.Key == _keyLassoDraw)
+				if (EnableLassoSketch && args.Key == _keyLassoDraw)
 				{
 					SetupLassoSketch();
 				}
@@ -388,6 +397,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	public void SetSketchType(SketchGeometryType? sketchType)
 	{
+		SetSketchTypeCore(sketchType);
+	}
+
+	protected virtual void SetSketchTypeCore(SketchGeometryType? sketchType)
+	{
 		SketchType = sketchType;
 	}
 
@@ -433,8 +447,11 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 				if (CanUseSelection(selection, new NotificationCollection()))
 				{
+					using var source = GetProgressorSource();
+					var progressor = source?.Progressor;
+
 					bool constructionProcessed =
-						await OnConstructionSketchCompleteAsync(geometry, selection);
+						await OnConstructionSketchCompleteAsync(geometry, selection, progressor);
 
 					if (constructionProcessed)
 					{
@@ -494,18 +511,15 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	{
 		try
 		{
-			Geometry simpleGeometry = GeometryUtils.Simplify(geometry);
-			Assert.NotNull(simpleGeometry, "Geometry is null");
-
-			using IPickerPrecedence precedence = CreatePickerPrecedence(simpleGeometry);
+			using IPickerPrecedence precedence = CreatePickerPrecedence(geometry);
 
 			await QueuedTaskUtils.Run(async () =>
 			{
-				IEnumerable<FeatureSelectionBase> candidates =
+				var candidates =
 					FindFeatureSelection(precedence.GetSelectionGeometry(),
-					                     precedence.SpatialRelationship);
+					                     precedence.SpatialRelationship).ToList();
 
-				List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
+				List<IPickableItem> items = await PickerUtils.GetItemsAsync(candidates, precedence);
 
 				PickerUtils.Select(items, precedence.SelectionCombinationMethod);
 			});
@@ -523,7 +537,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		return Task.FromResult(MapUtils.HasSelection(ActiveMapView));
 	}
 
-	protected virtual IPickerPrecedence CreatePickerPrecedence(Geometry sketchGeometry)
+	[NotNull]
+	protected virtual IPickerPrecedence CreatePickerPrecedence([NotNull] Geometry sketchGeometry)
 	{
 		return new PickerPrecedence(sketchGeometry,
 		                            GetSelectionSettings().SelectionTolerancePixels,
@@ -534,7 +549,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	/// <returns><b>true</b>: construction finished and start selection phase,
 	/// <b>false</b>: stay in construction phase.</returns>
 	protected virtual Task<bool> OnConstructionSketchCompleteAsync([NotNull] Geometry geometry,
-		IDictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+		IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+		CancelableProgressor progressor)
 	{
 		return Task.FromResult(true);
 	}
@@ -636,7 +652,13 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		{
 			LogPromptForSelection();
 			StartSelectionPhase();
-			await ClearSketchAsync();
+			await QueuedTask.Run(() =>
+			{
+				// For some unknown reason, the SketchSymbol is only correctly
+				// updated after a call to ActiveMapView.ClearSketchAsync in
+				// a QueuedTask since ArcGis Pro 3.4
+				ActiveMapView.ClearSketchAsync();
+			});
 		}
 		else if (args.Selection.Count > 0)
 		{
@@ -846,7 +868,13 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 		SetConstructionCursor();
 
-		await ClearSketchAsync();
+		await QueuedTask.Run(() =>
+		{
+			// For some unknown reason, the SketchSymbol is only correctly
+			// updated after a call to ActiveMapView.ClearSketchAsync in
+			// a QueuedTask since ArcGis Pro 3.4
+			ActiveMapView.ClearSketchAsync();
+		});
 	}
 
 	protected virtual void StartSelectionPhaseCore() { }

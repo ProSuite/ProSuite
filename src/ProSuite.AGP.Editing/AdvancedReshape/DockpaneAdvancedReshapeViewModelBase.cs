@@ -11,37 +11,26 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 		}
 		#region RestoreDefaultsButton
+
 		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
 
 
 		public ICommand RevertToDefaultsCommand { get; }
 
-		public bool IsButtonEnabled => _options?.CentralOptions != null;
+		public bool IsRevertToDefaultsEnabled => true;
 
-		private void RevertToDefaults() {
+		private void RevertToDefaults()
+		{
 			Options?.RevertToDefaults();
 		}
 		#endregion
 
-
-		/// <summary>
-		/// Show the DockPane.
-		/// </summary>
-		//internal static void Show()
-		//{
-		//	DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneDamlID);
-		//	if (pane == null)
-		//		return;
-
-		//	pane.Activate();
-		//}
-
-		/// <summary>
-		/// Text shown near the top of the DockPane.
-		/// </summary>
 		private string _heading = "Reshape Options";
 
 		private ReshapeToolOptions _options;
+		private CentralizableSettingViewModel<bool> _remainInSketchMode;
+		private CentralizableSettingViewModel<bool> _showPreview;
+		private CentralizableSettingViewModel<bool> _moveOpenJawEndJunction;
 
 		public string Heading
 		{
@@ -49,10 +38,41 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			set { SetProperty(ref _heading, value, () => Heading); }
 		}
 
+		public CentralizableSettingViewModel<bool> RemainInSketchMode
+		{
+			get => _remainInSketchMode;
+			set => SetProperty(ref _remainInSketchMode, value);
+		}
+
+		public CentralizableSettingViewModel<bool> ShowPreview
+		{
+			get => _showPreview;
+			set => SetProperty(ref _showPreview, value);
+		}
+
+		public CentralizableSettingViewModel<bool> MoveOpenJawEndJunction
+		{
+			get => _moveOpenJawEndJunction;
+			set => SetProperty(ref _moveOpenJawEndJunction, value);
+		}
+
 		public ReshapeToolOptions Options
 		{
 			get { return _options; }
-			set { SetProperty(ref _options, value); }
+			set
+			{
+				SetProperty(ref _options, value);
+
+				RemainInSketchMode =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableRemainInSketchMode);
+				ShowPreview =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableShowPreview);
+				MoveOpenJawEndJunction =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableMoveOpenJawEndJunction);
+			}
 		}
 
 

@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
-	public interface IWorkList : IRowCache, INotifyPropertyChanged
+	public interface IWorkList : IRowCache
 	{
 		[NotNull]
 		string Name { get; set; }
@@ -68,11 +68,12 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool CanSetStatus();
 
-		void SetVisited([NotNull] IWorkItem item);
+		//void SetVisited([NotNull] IWorkItem item);
+		void SetVisited(IList<IWorkItem> items, bool visited);
 
 		void Commit();
 
-		void SetStatus([NotNull] IWorkItem item, WorkItemStatus status);
+		Task SetStatusAsync([NotNull] IWorkItem item, WorkItemStatus status);
 
 		void RefreshItems();
 
@@ -80,6 +81,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		IAttributeReader GetAttributeReader(long forSourceClassId);
 
+		// TODO: (daro) drop!
 		/// <summary>
 		/// Gets the current item's source row.
 		/// </summary>
@@ -98,5 +100,11 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// Deactivate the synchronization of the work list's row cache with the underlying data store.
 		/// </summary>
 		void DeactivateRowCacheSynchronization();
+
+		Geometry GetItemGeometry(IWorkItem item);
+
+		void SetItemsGeometryDraftMode(bool enable);
+
+		void Rename(string name);
 	}
 }

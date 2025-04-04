@@ -135,7 +135,8 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 	}
 
 	protected override async Task<bool> OnConstructionSketchCompleteAsync(
-		Geometry geometry, IDictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+		Geometry geometry, IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+		CancelableProgressor progressor)
 	{
 		// todo daro: assert instead?
 		if (selectionByLayer.Count == 0)

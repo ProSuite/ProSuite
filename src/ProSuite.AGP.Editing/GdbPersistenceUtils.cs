@@ -150,7 +150,9 @@ namespace ProSuite.AGP.Editing
 
 		public static IEnumerable<Feature> InsertTx(
 			[NotNull] EditOperation.IEditContext editContext,
-			[NotNull] IDictionary<Feature, IList<Geometry>> copies)
+			[NotNull] IDictionary<Feature, IList<Geometry>> copies,
+			[CanBeNull] ICollection<string> excludeFields = null,
+			[CanBeNull] CancelableProgressor cancelableProgressor = null)
 		{
 			int insertCount = 0;
 
@@ -161,7 +163,12 @@ namespace ProSuite.AGP.Editing
 
 				foreach (Geometry newGeometry in newGeometries)
 				{
-					yield return InsertTx(editContext, originalFeature, newGeometry);
+					if (cancelableProgressor is { CancellationToken.IsCancellationRequested: true })
+					{
+						yield break;
+					}
+
+					yield return InsertTx(editContext, originalFeature, newGeometry, excludeFields);
 					insertCount++;
 				}
 			}

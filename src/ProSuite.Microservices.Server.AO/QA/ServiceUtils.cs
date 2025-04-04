@@ -3,6 +3,7 @@ using Grpc.Core;
 using log4net.Core;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Microservices.Definitions.QA;
@@ -62,7 +63,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				response.Progress = new VerificationProgressMsg
 				                    {
-					                    Message = exception.Message
+					                    Message = ExceptionUtils.FormatMessage(exception)
 				                    };
 			}
 
@@ -86,7 +87,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			                            {
 				                            Message = new LogMsg()
 				                                      {
-					                                      Message = exception.Message,
+					                                      Message = ExceptionUtils.FormatMessage(
+						                                      exception),
 					                                      MessageLevel = Level.Error.Value
 				                                      },
 				                            ServiceCallStatus = (int) ServiceCallStatus.Failed

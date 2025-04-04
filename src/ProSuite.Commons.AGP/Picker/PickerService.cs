@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
+using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.UI.WPF;
@@ -27,32 +29,30 @@ namespace ProSuite.Commons.AGP.Picker
 			_precedence = precedence ?? throw new ArgumentNullException(nameof(precedence));
 		}
 
-		public Task<IPickableItem> Pick(List<IPickableItem> items, IPickerViewModel viewModel)
-		{
-			if (items.Count == 1)
-			{
-				return Task.FromResult(_precedence.PickBest(items));
-			}
-
-			return PickSingle(items, viewModel);
-		}
-
-		private Task<IPickableItem> PickSingle(IEnumerable<IPickableItem> items, IPickerViewModel viewModel)
+		public Task<IPickableItem> Pick(IEnumerable<IPickableItem> items, IPickerViewModel viewModel)
 		{
 			viewModel.Items = new ObservableCollection<IPickableItem>(_precedence.Order(items));
 
 			return ShowPickerControlAsync(viewModel, _precedence.PickerLocation);
 		}
 
-		private static async Task<IPickableItem> ShowPickerControlAsync(IPickerViewModel vm, Point location)
+		private static async Task<IPickableItem> ShowPickerControlAsync(
+			IPickerViewModel vm, Point location)
 		{
 			var dispatcher = Application.Current.Dispatcher;
 
-			return await dispatcher.Invoke<Task<IPickableItem>>(async () =>
+			List<Geometry> geometries = new() { };
+			WindowPositioner positioner =
+				new WindowPositioner(geometries, WindowPositioner.PreferredPlacement.MainWindow,
+				                     WindowPositioner.EvaluationMethod.DistanceToRect);
+
+			return await dispatcher.Invoke(async () =>
 			{
 				using var window = new PickerWindow(vm);
 
 				SetWindowLocation(window, location);
+
+				positioner.SetWindow(window, location);
 
 				window.Show();
 

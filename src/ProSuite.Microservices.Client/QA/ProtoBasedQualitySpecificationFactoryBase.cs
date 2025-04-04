@@ -106,7 +106,13 @@ namespace ProSuite.Microservices.Client.QA
 				string conditionName = Assert.NotNullOrEmpty(
 					element.Condition.Name, "Empty or null condition name.");
 
-				QualityCondition qualityCondition = qualityConditionsByName[conditionName];
+				if (! qualityConditionsByName.TryGetValue(conditionName,
+				                                          out QualityCondition qualityCondition))
+				{
+					_msg.InfoFormat("Condition '{0}' was not created and will be skipped.",
+					                conditionName);
+					continue;
+				}
 
 				if (! string.IsNullOrEmpty(element.CategoryName))
 				{
@@ -169,7 +175,10 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			TestDescriptor testDescriptor = GetTestDescriptor(conditionMsg);
 
-			var result = new QualityCondition(conditionMsg.Name, testDescriptor);
+			var result = new QualityCondition(conditionMsg.Name, testDescriptor,
+			                                  conditionMsg.Description);
+			result.Url = conditionMsg.Url;
+
 			result.SetCloneId(conditionMsg.ConditionId);
 
 			AddIssueFilters(result, conditionMsg, datasetSettings);

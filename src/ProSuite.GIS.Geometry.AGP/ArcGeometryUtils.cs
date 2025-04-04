@@ -70,17 +70,22 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public static ISegment CreateSegment(Segment proSegment)
 		{
-			if (proSegment is EllipticArcSegment ellipticArc)
-			{
-				return new ArcEllipticSegment(ellipticArc);
-			}
-
 			if (proSegment is LineSegment lineSegment)
 			{
 				return new ArcLineSegment(lineSegment);
 			}
 
-			throw new NotImplementedException("Béziers are not yet supported");
+			if (proSegment is EllipticArcSegment ellipticArc)
+			{
+				return new ArcEllipticSegment(ellipticArc);
+			}
+
+			if (proSegment is CubicBezierSegment cubicSegment)
+			{
+				return new ArcBezierSegment(cubicSegment);
+			}
+
+			throw new NotSupportedException("Unsupported segment type");
 		}
 	}
 }

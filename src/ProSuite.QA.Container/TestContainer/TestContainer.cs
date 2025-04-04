@@ -586,16 +586,18 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 				catch (TestException exp)
 				{
-					_msg.Error($"Non-container test execution failed: {exp.Message}", exp);
+					string expMessage = ExceptionUtils.FormatMessage(exp);
+
+					_msg.Error($"Non-container test execution failed: {expMessage}", exp);
 
 					ReportErrorForFailedTest(exp.Test, null,
-					                         $"Test execution failed: {exp.Message}");
+					                         $"Test execution failed: {expMessage}");
 				}
 				catch (TestDataException testDataException)
 				{
-					_msg.Error(
-						$"Non-container test execution failed for row: {testDataException.Message}",
-						testDataException);
+					string expMessage = ExceptionUtils.FormatMessage(exp);
+
+					_msg.Error($"Non-container test execution failed for row: {expMessage}", exp);
 
 					ReportErrorForFailedTest(nonContainerTest, testDataException.DataReference,
 					                         $"Test execution failed: {testDataException.Message}");
@@ -606,7 +608,7 @@ namespace ProSuite.QA.Container.TestContainer
 					    string.IsNullOrEmpty(dataAccessException.TableName))
 					{
 						_msg.Debug(
-							$"Non-container test execution failed: {dataAccessException.Message}",
+							$"Non-container test execution failed: {ExceptionUtils.FormatMessage(dataAccessException)}",
 							dataAccessException);
 
 						throw;
@@ -631,7 +633,9 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 				catch (Exception exp)
 				{
-					_msg.Error($"Non-container test execution failed: {exp.Message}", exp);
+					_msg.Error(
+						$"Non-container test execution failed: {ExceptionUtils.FormatMessage(exp)}",
+						exp);
 
 					throw new TestContainerException(nonContainerTest, exp);
 				}
@@ -677,30 +681,30 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 			catch (TestException e)
 			{
-				_msg.Warn(string.Format("Container test execution failed: {0}",
-				                        e.Message), e);
+				string message = ExceptionUtils.FormatMessage(e);
+
+				_msg.Warn($"Container test execution failed: {message}", e);
 
 				failedTests.Add(containerTest);
 
-				ReportErrorForFailedTest(containerTest, dataReference,
-				                         string.Format("Test failed: {0}",
-				                                       e.Message));
+				ReportErrorForFailedTest(containerTest, dataReference, $"Test failed: {message}");
 				return 0;
 			}
 			catch (TestDataException e)
 			{
-				_msg.Warn(string.Format("Container test execution failed: {0}",
-				                        e.Message), e);
+				string message = ExceptionUtils.FormatMessage(e);
+
+				_msg.Warn($"Container test execution failed: {message}", e);
 
 				ReportErrorForFailedTest(containerTest, dataReference,
-				                         string.Format("Test failed for row: {0}",
-				                                       e.Message));
+				                         $"Test failed for row: {message}");
 				return 0;
 			}
 			catch (Exception e)
 			{
-				_msg.Error(string.Format("Container test execution failed: {0}",
-				                         e.Message), e);
+				string message = ExceptionUtils.FormatMessage(e);
+
+				_msg.Error($"Container test execution failed: {message}", e);
 
 				var rowReference = dataReference as RowReference;
 				if (rowReference != null)

@@ -4,7 +4,7 @@ using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
-using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Core.Test;
 using ProSuite.Commons.AGP.Hosting;
@@ -20,7 +20,7 @@ namespace ProSuite.AGP.WorkList.Test
 		private Geodatabase _geodatabase;
 		private Table _table0;
 		private Table _table1;
-		private IssueItemRepository _repository;
+		private ItemRepositoryMock _repository;
 
 		[SetUp]
 		public void SetUp()
@@ -42,7 +42,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 			IWorkItemStateRepository stateRepository =
 				new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-			_repository = new IssueItemRepository(new List<Table> { _table0, _table1 }, stateRepository);
+			_repository = new ItemRepositoryMock(new List<Table> { _table0, _table1 }, stateRepository);
 		}
 
 		[TearDown]
