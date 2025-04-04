@@ -21,6 +21,9 @@
 
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
+    <!-- .net framework: -->
+    <LangVersion>7.3</LangVersion>
+
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
