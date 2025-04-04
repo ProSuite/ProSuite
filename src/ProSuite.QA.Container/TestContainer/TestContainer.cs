@@ -595,9 +595,10 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 				catch (TestDataException testDataException)
 				{
-					string expMessage = ExceptionUtils.FormatMessage(exp);
+					string expMessage = ExceptionUtils.FormatMessage(testDataException);
 
-					_msg.Error($"Non-container test execution failed for row: {expMessage}", exp);
+					_msg.Error($"Non-container test execution failed for row: {expMessage}",
+					           testDataException);
 
 					ReportErrorForFailedTest(nonContainerTest, testDataException.DataReference,
 					                         $"Test execution failed: {testDataException.Message}");

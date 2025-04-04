@@ -1298,7 +1298,7 @@ namespace ProSuite.QA.Container
 
 				case esriFieldType.esriFieldTypeInteger:
 					return typeof(int);
-#if !NET48
+#if !ArcGIS
 				// TODO: BigInteger support everywhere!
 				case esriFieldType.esriFieldTypeBigInteger:
 					return typeof(long);
