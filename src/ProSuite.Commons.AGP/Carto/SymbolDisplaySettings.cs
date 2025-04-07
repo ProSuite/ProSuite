@@ -21,6 +21,8 @@ public class SymbolDisplaySettings
 		}
 		else
 		{
+			WantSLD = null; // do not copy
+			WantLM = null; // do not copy
 			AutoSwitch = settings.AutoSwitch;
 			AutoMinScaleDenom = settings.AutoMinScaleDenom;
 			AutoMaxScaleDenom = settings.AutoMaxScaleDenom;
@@ -30,6 +32,8 @@ public class SymbolDisplaySettings
 
 	public void Reset()
 	{
+		WantSLD = null;
+		WantLM = null;
 		AutoSwitch = false;
 		AutoMinScaleDenom = 0;
 		AutoMaxScaleDenom = 0;
