@@ -58,8 +58,11 @@ namespace ProSuite.QA.Tests.IssueFilters
 				{
 					if (! (Tables?.Count > 0) || Tables.Contains(table))
 					{
+						int tableIndex = InvolvedTables.IndexOf(table);
+
+						string tableConstraint = tableIndex < 0 ? null : GetConstraint(tableIndex);
+
 						string resultConstraint;
-						string tableConstraint = GetConstraint(table);
 
 						if (string.IsNullOrEmpty(tableConstraint))
 						{
@@ -77,6 +80,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 							table, resultConstraint, useAsConstraint: true,
 							caseSensitive: false);
 					}
+					// else: The involved row does not belong to any of the specified tables. Do nothing.
 
 					_tableViews.Add(row.Table, tableView);
 				}

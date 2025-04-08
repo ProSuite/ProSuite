@@ -22,7 +22,9 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 
 		public void BeginVerification(AreaOfInterest areaOfInterest) { }
 
-		public void AddVerifiedDataset(Dataset dataset) { }
+		public void AddVerifiedDataset(QualityVerificationDataset verificationDataset,
+		                               string workspaceDisplayText,
+		                               ISpatialReference spatialReference) { }
 
 		public void AddIssue(Issue issue, IGeometry errorGeometry)
 		{

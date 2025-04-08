@@ -41,7 +41,7 @@ namespace ProSuite.Commons.AGP.Picker
 		{
 			var dispatcher = Application.Current.Dispatcher;
 
-			List<Geometry> geometries = [];
+			List<Geometry> geometries = new() { };
 			WindowPositioner positioner =
 				new WindowPositioner(geometries, WindowPositioner.PreferredPlacement.MainWindow,
 				                     WindowPositioner.EvaluationMethod.DistanceToRect);

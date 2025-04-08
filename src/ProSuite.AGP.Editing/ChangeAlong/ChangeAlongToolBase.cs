@@ -504,7 +504,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 				{
 					_msg.Warn("Calculation of reshape lines was cancelled.");
-					return [];
+					return new List<Feature>();
 				}
 
 				if (pickerPrecedence.IsPointClick && candidates.Count > 1)

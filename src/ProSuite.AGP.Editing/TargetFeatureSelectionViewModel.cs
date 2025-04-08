@@ -12,6 +12,8 @@ namespace ProSuite.AGP.Editing
 
 		private Visibility _editableSelectableFeaturesVisibility;
 
+		private bool _isTargetFeatureSelectionEnabled;
+
 		public TargetFeatureSelectionViewModel(
 			CentralizableSetting<TargetFeatureSelection> centralizableSetting)
 		{
@@ -22,10 +24,12 @@ namespace ProSuite.AGP.Editing
 				if (args.PropertyName == nameof(CentralizableSetting.CurrentValue))
 				{
 					OnPropertyChanged(nameof(CurrentValue));
+					OnPropertyChanged(nameof(ToolTip));
 				}
-				if (args.PropertyName == nameof(CentralizableSetting.ToolTip))
+
+				if (args.PropertyName == nameof(CentralizableSetting.HasLocalOverride))
 				{
-					OnPropertyChanged(nameof(Tooltip));
+					OnPropertyChanged(nameof(ToolTip));
 				}
 			};
 		}
@@ -69,9 +73,19 @@ namespace ProSuite.AGP.Editing
 			}
 		}
 
-		public string Tooltip
+		public bool IsTargetFeatureSelectionEnabled
 		{
-			get => CentralizableSetting.ToolTip;
+			get => _isTargetFeatureSelectionEnabled;
+			set
+			{
+				_isTargetFeatureSelectionEnabled = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public string ToolTip
+		{
+			get => ManagedOptionsUtils.GetMessage(CentralizableSetting);
 		}
 	}
 }

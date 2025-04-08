@@ -126,7 +126,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void Dispose()
 		{
-			// TODO: (daro) inline?
 			DeactivateRowCacheSynchronization();
 
 			foreach (IWorkItem item in Items)

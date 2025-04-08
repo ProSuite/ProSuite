@@ -423,11 +423,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			IWorkItem current = GetItem(CurrentIndex);
 
-			// todo daro to ?? statement
 			IWorkItem first = GetFirstVisibleVisitedItemBeforeCurrent();
 
-			// todo daro: remove assertion when sure algorithm works
-			//			  CanGoFirst should prevent the assertion
 			Assert.NotNull(first);
 			Assert.False(Equals(first, Current), "current item and first item are equal");
 
@@ -545,8 +542,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			IWorkItem previous = GetPreviousVisitedVisibleItem();
 
-			// todo daro: remove assertion when sure algorithm works
-			//			  CanGoPrevious should prevent the assertion
 			Assert.NotNull(previous);
 			Assert.False(Equals(previous, Current), "current item and previous item are equal");
 
@@ -1023,7 +1018,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			// move new item to just after previous current
 			int insertIndex = GetReorderInsertIndex(nextItem);
 
-			// todo daro drop
 			_msg.Debug($"Reorder visited items: {nextItem}, insert index: {insertIndex}");
 
 			WorkListUtils.MoveTo(_items, nextItem, insertIndex);

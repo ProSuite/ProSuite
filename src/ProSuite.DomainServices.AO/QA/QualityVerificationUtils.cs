@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -188,9 +189,11 @@ namespace ProSuite.DomainServices.AO.QA
 				var testIndex = 0;
 				foreach (ITest test in tests)
 				{
+					IList<IReadOnlyTable> involvedTables = test.InvolvedTables;
+
 					_msg.VerboseDebug(
 						() =>
-							$"Adding test {test}. Tables: {StringUtils.Concatenate(test.InvolvedTables, t => t.Name, ", ")}. Hashcode: {test.GetHashCode()}");
+							$"Adding test {test}. Tables: {StringUtils.Concatenate(involvedTables, t => t.Name, ", ")}. Hashcode: {test.GetHashCode()}");
 
 					testList.Add(test);
 					testVerifications.Add(test,
