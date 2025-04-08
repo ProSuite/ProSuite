@@ -9,8 +9,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <summary>
 		/// The work item id.
 		/// </summary>
-		long OID { get; }
-
+		long OID { get; set; }
+		
 		/// <summary>
 		/// Object ID of the work item's source row
 		/// </summary>
@@ -35,8 +35,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		WorkItemStatus Status { get; set; }
 
 		[CanBeNull]
-		Envelope Extent { get; }
+		Envelope Extent { get; set; }
 
+		// TODO: (daro) GetGeometry?
 		[CanBeNull]
 		Geometry Geometry { get; set; }
 
@@ -45,9 +46,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		GeometryType? GeometryType { get; }
 
-		// TODO: (daro) rename to HasExtent
-		bool HasGeometry { get; }
-		// TODO: (daro) rename to HasGeometry
+		bool HasExtent { get; }
+
 		bool HasFeatureGeometry { get; }
 
 		void QueryPoints(out double xmin, out double ymin,
@@ -57,5 +57,10 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void QueryPoints(out double xmin, out double ymin,
 		                 out double xmax, out double ymax,
 		                 out double zmax);
+
+		// TODO: (daro) still needed?
+		void SetExtent([CanBeNull] Envelope extent);
+
+		void SetGeometry([CanBeNull] Geometry geometry);
 	}
 }

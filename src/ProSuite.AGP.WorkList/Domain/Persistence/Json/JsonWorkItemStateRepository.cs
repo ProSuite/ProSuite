@@ -33,12 +33,14 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Json
 			throw new NotImplementedException();
 		}
 
-		protected override IDictionary<GdbObjectReference, JsonWorkItemState> ReadStatesByRow()
+		protected override void ReadStatesByRowCore()
 		{
 			throw new NotImplementedException();
 		}
 
 		public JsonWorkItemStateRepository(string name, Type type, int? currentItemIndex = null) :
 			base(name, type, currentItemIndex) { }
+
+		public string WorkListDefinitionFilePath { get; set; }
 	}
 }

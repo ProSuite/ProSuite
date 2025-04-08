@@ -101,7 +101,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 				    if (_workList != null)
 				    {
-					    result = new WorkItemTable(_workList, listName);
+					    result = new WorkItemTable(listName);
 				    }
 				    else
 				    {

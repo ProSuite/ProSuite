@@ -19,26 +19,11 @@ namespace ProSuite.AGP.WorkList.Test
 	[Apartment(ApartmentState.STA)]
 	public class WorkItemRepositoryTest
 	{
-		private Polygon _poly0;
-		private Polygon _poly1;
-		private Geodatabase _geodatabase;
-		private Table _table0;
-		private Table _table1;
-
 		[SetUp]
 		public void SetUp()
 		{
 			// http://stackoverflow.com/questions/8245926/the-current-synchronizationcontext-may-not-be-used-as-a-taskscheduler
 			SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
-		}
-
-		[TearDown]
-		public void TearDown()
-		{
-			_table0?.Dispose();
-			_table1?.Dispose();
-			_geodatabase?.Dispose();
-			//_repository?.Dispose();
 		}
 
 		[OneTimeSetUp]
@@ -85,29 +70,5 @@ namespace ProSuite.AGP.WorkList.Test
 				new XmlWorkItemStateRepository(Path.Join(Path.GetDirectoryName(path), "states.xml"), null, null);
 
 		}
-
-		#region same as in WorkListTest
-
-		//private static void InsertFeature(string featureClassName, Polygon polygon)
-		//{
-		//	TestUtils.InsertRows(_emptyIssuesGdb, featureClassName, polygon, 1);
-		//}
-
-		//private static void UpdateFeatureGeometry(string featureClassName, Polygon polygon)
-		//{
-		//	TestUtils.UpdateFeatureGeometry(_emptyIssuesGdb, featureClassName, polygon, 1);
-		//}
-
-		//private static void DeleteRow(string featureClassName)
-		//{
-		//	TestUtils.DeleteRow(_emptyIssuesGdb, featureClassName, 1);
-		//}
-
-		//private static void DeleteAllRows(string featureClassName)
-		//{
-		//	TestUtils.DeleteAllRows(_emptyIssuesGdb, featureClassName);
-		//}
-
-		#endregion
 	}
 }

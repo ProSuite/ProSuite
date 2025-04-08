@@ -23,7 +23,10 @@ public class WorkListGeometryService
 
 		try
 		{
-			var selectionWorkList = (SelectionWorkList) workList;
+			if (workList is not SelectionWorkList selectionWorkList)
+			{
+				return;
+			}
 
 			var threads = new Thread[count];
 
@@ -47,7 +50,8 @@ public class WorkListGeometryService
 	private static Thread CreateThread(SelectionWorkList workList, string name,
 	                                   CancellationToken token)
 	{
-		var thread = new Thread(() => BackgroundAction(workList, token));
+		//var thread = new Thread(() => BackgroundAction(workList, token));
+		var thread = new Thread(() => { });
 
 		thread.TrySetApartmentState(ApartmentState.STA);
 		thread.Name = name;
@@ -55,52 +59,52 @@ public class WorkListGeometryService
 		return thread;
 	}
 
-	private static void BackgroundAction(SelectionWorkList workList, CancellationToken token)
-	{
-		int id = Environment.CurrentManagedThreadId;
+	//private static void BackgroundAction(SelectionWorkList workList, CancellationToken token)
+	//{
+	//	int id = Environment.CurrentManagedThreadId;
 
-		try
-		{
-			Stopwatch watch = _msg.DebugStartTiming("Start thread {0}", id);
+	//	try
+	//	{
+	//		Stopwatch watch = _msg.DebugStartTiming("Start thread {0}", id);
 
-			int total = 0;
-			if (workList.TryGetItems(id, out List<IWorkItem> items))
-			{
-				total = items.Count;
-				for (int index = 0; index < total; index++)
-				{
-					IWorkItem item = items[index];
+	//		int total = 0;
+	//		if (workList.TryGetItems(id, out List<IWorkItem> items))
+	//		{
+	//			total = items.Count;
+	//			for (int index = 0; index < total; index++)
+	//			{
+	//				IWorkItem item = items[index];
 
-					if (token.IsCancellationRequested)
-					{
-						_msg.Debug(
-							$"Thread {id} cancellation after {index} of {total} items");
+	//				if (token.IsCancellationRequested)
+	//				{
+	//					_msg.Debug(
+	//						$"Thread {id} cancellation after {index} of {total} items");
 
-						// without catch block: this kills the process!
-						token.ThrowIfCancellationRequested();
-					}
+	//					// without catch block: this kills the process!
+	//					token.ThrowIfCancellationRequested();
+	//				}
 
-					//// without catch block: this kills the process!
-					//if (index == total - 3)
-					//{
-					//	throw new OperationCanceledException("bar");
-					//}
+	//				//// without catch block: this kills the process!
+	//				//if (index == total - 3)
+	//				//{
+	//				//	throw new OperationCanceledException("bar");
+	//				//}
 
-					workList.Repository.RefreshGeometry(item);
-				}
-			}
+	//				workList.Repository.RefreshGeometry(item);
+	//			}
+	//		}
 
-			_msg.DebugStopTiming(watch, $"Thread {id}: {total} item geometries refreshed");
+	//		_msg.DebugStopTiming(watch, $"Thread {id}: {total} item geometries refreshed");
 
-			// The thread terminates once its work is done.
-		}
-		catch (OperationCanceledException oce)
-		{
-			_msg.Debug("Cancel service", oce);
-		}
-		catch (Exception ex)
-		{
-			Gateway.LogError(ex, _msg);
-		}
-	}
+	//		// The thread terminates once its work is done.
+	//	}
+	//	catch (OperationCanceledException oce)
+	//	{
+	//		_msg.Debug("Cancel service", oce);
+	//	}
+	//	catch (Exception ex)
+	//	{
+	//		Gateway.LogError(ex, _msg);
+	//	}
+	//}
 }

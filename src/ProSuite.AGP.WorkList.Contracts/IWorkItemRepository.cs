@@ -19,9 +19,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		                                WorkItemStatus? statusFilter,
 		                                bool recycle = true);
 
-		void Refresh(IWorkItem item);
-
-		void UpdateVolatileState(IEnumerable<IWorkItem> items);
+		void UpdateState(IWorkItem item);
 
 		void Commit();
 
@@ -49,6 +47,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		Row GetSourceRow([NotNull] ISourceClass sourceClass, long oid);
 
-		void RefreshGeometry(IWorkItem item);
+		long GetNextOid();
 	}
 }

@@ -5,9 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -112,12 +110,6 @@ namespace ProSuite.AGP.WorkList
 
 		public List<ISourceClass> SourceClasses { get; } = new();
 
-		public string WorkListDefinitionFilePath
-		{
-			get => WorkItemStateRepository.WorkListDefinitionFilePath;
-			set => WorkItemStateRepository.WorkListDefinitionFilePath = value;
-		}
-
 		public abstract void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
 
 		public abstract bool CanUseTableSchema(
@@ -125,97 +117,39 @@ namespace ProSuite.AGP.WorkList
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
+			// TODO: (daro) inline
 			foreach (ISourceClass sourceClass in SourceClasses)
 			{
-				int count = 0;
-
-				Stopwatch watch = _msg.DebugStartTiming();
-
-				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
+				foreach (IWorkItem item in GetItems(sourceClass, filter, recycle))
 				{
-					IWorkItem item = CreateWorkItemCore(row, sourceClass);
-
-					count += 1;
-					yield return WorkItemStateRepository.Refresh(item);
+					yield return item;
 				}
-
-				_msg.DebugStopTiming(
-					watch, $"GetItems() {sourceClass.Name}: {count} items");
 			}
 		}
 
-		public IEnumerable<IWorkItem> GetItems(Geometry areaOfInterest,
-		                                       WorkItemStatus? statusFilter,
-		                                       bool recycle = true)
+		private IEnumerable<IWorkItem> GetItems(ISourceClass sourceClass,
+		                                        QueryFilter filter,
+		                                        bool recycle)
 		{
-			foreach (ISourceClass sourceClass in SourceClasses)
+			int count = 0;
+
+			Stopwatch watch = _msg.DebugStartTiming();
+
+			// Selection Item ObjectIDs to filter out, or change of SearchOrder:
+			filter ??= new QueryFilter();
+			AdaptSourceFilter(filter, sourceClass);
+
+			foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
 			{
-				int count = 0;
+				IWorkItem item = CreateWorkItemCore(row, sourceClass);
 
-				Stopwatch watch = _msg.DebugStartTiming();
-
-				QueryFilter filter = areaOfInterest != null
-					                     ? GdbQueryUtils.CreateSpatialFilter(areaOfInterest)
-					                     : new QueryFilter();
-
-				// Source classes can set the respective filters / definition queries
-				// TODO: Consider getting only the right status, but that means
-				// extra round trips:
-				statusFilter = null;
-				filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
-
-				// Selection Item ObjectIDs to filter out, or change of SearchOrder:
-				AdaptSourceFilter(filter, sourceClass);
-
-				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
-				{
-					IWorkItem item = CreateWorkItemCore(row, sourceClass);
-
-					count += 1;
-					yield return WorkItemStateRepository.Refresh(item);
-				}
-
-				_msg.DebugStopTiming(
-					watch, $"GetItems() {sourceClass.Name}: {count} items");
-			}
-		}
-
-		public void Refresh(IWorkItem item)
-		{
-			ITableReference tableId = item.GdbRowProxy.Table;
-
-			// todo daro: log message
-			ISourceClass source =
-				SourceClasses.FirstOrDefault(sc => sc.Uses(tableId));
-			Assert.NotNull(source);
-
-			Row row = GetSourceRow(source, item.ObjectID);
-			Assert.NotNull(row);
-
-			if (row is Feature feature)
-			{
-				((WorkItem) item).SetGeometryFromFeature(feature);
+				count += 1;
+				// TODO: (daro) probably not needed anymore
+				yield return WorkItemStateRepository.Refresh(item);
 			}
 
-			RefreshCore(item, source, row);
-		}
-
-		public void RefreshGeometry(IWorkItem item)
-		{
-			ITableReference tableId = item.GdbRowProxy.Table;
-
-			// todo daro: log message
-			ISourceClass source =
-				SourceClasses.FirstOrDefault(sc => sc.Uses(tableId));
-			Assert.NotNull(source);
-
-			Row row = GetSourceRow(source, item.ObjectID);
-			Assert.NotNull(row);
-
-			if (row is Feature feature)
-			{
-				item.Geometry = GeometryUtils.Buffer(feature.GetShape(), 10);
-			}
+			_msg.DebugStopTiming(
+				watch, $"GetItems() {sourceClass.Name}: {count} items");
 		}
 
 		[CanBeNull]
@@ -226,14 +160,10 @@ namespace ProSuite.AGP.WorkList
 			return GetRowsCore(sourceClass, filter, recycle: false).FirstOrDefault();
 		}
 
-		protected virtual void RefreshCore([NotNull] IWorkItem item,
-		                                   [NotNull] ISourceClass sourceClass,
-		                                   [NotNull] Row row) { }
-
 		// TODO: Rename to Update?
 		public void SetVisited(IWorkItem item)
 		{
-			WorkItemStateRepository.Update(item);
+			WorkItemStateRepository.UpdateState(item);
 		}
 
 		public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
@@ -250,10 +180,40 @@ namespace ProSuite.AGP.WorkList
 			await SetStatusCoreAsync(item, source);
 		}
 
-		// todo daro: rename?
-		public void UpdateVolatileState(IEnumerable<IWorkItem> items)
+		public void Refresh(IWorkItem item)
 		{
-			WorkItemStateRepository.UpdateVolatileState(items);
+			WorkItemStateRepository.Refresh(item);
+		}
+
+		public void UpdateState(IWorkItem item)
+		{
+			WorkItemStateRepository.UpdateState(item);
+		}
+
+		public IEnumerable<IWorkItem> GetItems(Geometry areaOfInterest,
+		                                       WorkItemStatus? statusFilter,
+		                                       bool recycle = true)
+		{
+			foreach (ISourceClass sourceClass in SourceClasses)
+			{
+				QueryFilter filter = areaOfInterest != null
+					                     ? GdbQueryUtils.CreateSpatialFilter(areaOfInterest)
+					                     : new QueryFilter();
+
+				// Source classes can set the respective filters / definition queries
+				// TODO: Consider getting only the right status, but that means
+				// extra round trips:
+				statusFilter = null;
+				filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
+
+				// Selection Item ObjectIDs to filter out, or change of SearchOrder:
+				AdaptSourceFilter(filter, sourceClass);
+
+				foreach (IWorkItem item in GetItems(sourceClass, filter, recycle))
+				{
+					yield return item;
+				}
+			}
 		}
 
 		public void Commit()
@@ -365,18 +325,19 @@ namespace ProSuite.AGP.WorkList
 			Table table = null;
 			try
 			{
-				if (CurrentWorkspace == null)
-				{
-					// NOTE: This can lead to using a different instance of the same workspace
-					// because opening a new Geodatabase with the Connector of an existing
-					// Geodatabase can in some cases result in a different instance!
-					table = sourceClass.OpenDataset<Table>();
-				}
-				else
-				{
-					// Therefore try using the (single) workspace of the repository:
-					table = CurrentWorkspace.OpenDataset<Table>(sourceClass.Name);
-				}
+				table = sourceClass.OpenDataset<Table>();
+				//if (CurrentWorkspace != null)
+				//{
+				//	// NOTE: This can lead to using a different instance of the same workspace
+				//	// because opening a new Geodatabase with the Connector of an existing
+				//	// Geodatabase can in some cases result in a different instance!
+				//	table = sourceClass.OpenDataset<Table>();
+				//}
+				//else
+				//{
+				//	// Therefore try using the (single) workspace of the repository:
+				//	table = CurrentWorkspace.OpenDataset<Table>(sourceClass.Name);
+				//}
 			}
 			catch (Exception e)
 			{
@@ -408,14 +369,9 @@ namespace ProSuite.AGP.WorkList
 
 		#endregion
 
-		protected virtual long GetNextOid([NotNull] Row row)
+		public long GetNextOid()
 		{
 			return ++_lastUsedOid;
-		}
-
-		protected IWorkItem RefreshState(IWorkItem item)
-		{
-			return WorkItemStateRepository.Refresh(item);
 		}
 	}
 }

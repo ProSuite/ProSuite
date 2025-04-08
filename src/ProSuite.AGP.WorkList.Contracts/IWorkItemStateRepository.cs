@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
@@ -10,13 +9,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 	/// </summary>
 	public interface IWorkItemStateRepository
 	{
-		string WorkListDefinitionFilePath { get; set; }
-
 		IWorkItem Refresh(IWorkItem item);
 
-		void Update(IWorkItem item);
-
-		void UpdateVolatileState([NotNull] IEnumerable<IWorkItem> items);
+		void UpdateState(IWorkItem item);
 
 		void Commit(IList<ISourceClass> sourceClasses);
 

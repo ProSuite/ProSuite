@@ -44,7 +44,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		                                bool ignoreListSettings = false,
 		                                int startIndex = -1);
 
-		int Count([CanBeNull] QueryFilter filter = null, bool ignoreListSettings = false);
+		int Count();
 
 		bool CanGoFirst();
 
@@ -75,19 +75,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		Task SetStatusAsync([NotNull] IWorkItem item, WorkItemStatus status);
 
-		void RefreshItems();
-
 		bool IsValid(out string message);
 
 		IAttributeReader GetAttributeReader(long forSourceClassId);
-
-		// TODO: (daro) drop!
-		/// <summary>
-		/// Gets the current item's source row.
-		/// </summary>
-		/// <returns></returns>
-		[CanBeNull]
-		Row GetCurrentItemSourceRow();
 
 		/// <summary>
 		/// Ensures that the work list's row cache is synchronized with the underlying data store.
@@ -106,5 +96,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void SetItemsGeometryDraftMode(bool enable);
 
 		void Rename(string name);
+
+		void Invalidate(Envelope geometry);
+
+		int Count(out int todo);
 	}
 }

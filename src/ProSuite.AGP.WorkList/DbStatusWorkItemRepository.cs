@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Editing;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
@@ -49,13 +48,18 @@ namespace ProSuite.AGP.WorkList
 
 		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
 		{
-			long id = GetNextOid(row);
-
 			DatabaseSourceClass dbSourceClass = (DatabaseSourceClass) sourceClass;
 
 			WorkItemStatus status = dbSourceClass.GetStatus(row);
 
-			return new DbStatusWorkItem(id, sourceClass.GetUniqueTableId(), row, status);
+			var item = new DbStatusWorkItem(sourceClass.GetUniqueTableId(), row, status);
+
+			if (row is Feature feature)
+			{
+				item.SetGeometry(feature);
+			}
+
+			return item;
 		}
 
 		// TODO: Remove other two constructors who need this method

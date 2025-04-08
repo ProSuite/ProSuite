@@ -35,19 +35,18 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region constructors
 
-		protected WorkItem(long itemId, long uniqueTableId, [NotNull] Row row)
-			: this(itemId, uniqueTableId, new GdbRowIdentity(row))
+		protected WorkItem(long uniqueTableId, [NotNull] Row row)
+			: this(uniqueTableId, new GdbRowIdentity(row))
 		{
 			Description = GetDescription(row);
 
 			var feature = row as Feature;
 
-			SetGeometryFromFeature(feature);
+			SetExtent(feature);
 		}
 
-		protected WorkItem(long itemId, long uniqueTableId, GdbRowIdentity identity)
+		protected WorkItem(long uniqueTableId, GdbRowIdentity identity)
 		{
-			OID = itemId;
 			UniqueTableId = uniqueTableId;
 			GdbRowProxy = identity;
 			Status = WorkItemStatus.Todo;
@@ -55,7 +54,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		public bool HasGeometry { get; private set; }
+		public bool HasExtent { get; private set; }
 
 		public bool HasFeatureGeometry
 		{
@@ -77,7 +76,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region IWorkItem
 
-		public long OID { get; }
+		public long OID { get; set; }
 
 		public long UniqueTableId { get; }
 
@@ -97,7 +96,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public GdbRowIdentity GdbRowProxy { get; }
 
-		public Envelope Extent { get; private set; }
+		public Envelope Extent { get; set; }
 
 		public Geometry Geometry
 		{
@@ -175,26 +174,22 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		[CanBeNull]
-		protected virtual Envelope GetExtent([CanBeNull] Feature feature)
-		{
-			return feature?.GetShape().Extent;
-		}
-
-		[CanBeNull]
 		private Row GetRow()
 		{
 			return GdbRowProxy.GetRow();
 		}
 
-		public void SetGeometryFromFeature([CanBeNull] Feature feature)
+		public void SetGeometry([CanBeNull] Feature feature)
 		{
 			Geometry geometry = feature?.GetShape();
 
 			SetGeometry(geometry);
 		}
 
-		private void SetGeometry([CanBeNull] Geometry geometry)
+		public void SetGeometry([CanBeNull] Geometry geometry)
 		{
+			Geometry = geometry;
+
 			Envelope extent = geometry?.Extent;
 			GeometryType = geometry?.GeometryType;
 
@@ -203,14 +198,29 @@ namespace ProSuite.AGP.WorkList.Domain
 				return;
 			}
 
-			SetGeometry(extent);
+			SetExtent(extent);
 		}
 
-		public void SetGeometry([CanBeNull] Envelope extent)
+		private void SetExtent([CanBeNull] Feature feature)
+		{
+			Geometry geometry = feature?.GetShape();
+
+			Envelope extent = geometry?.Extent;
+			GeometryType = geometry?.GeometryType;
+
+			if (extent == null)
+			{
+				return;
+			}
+
+			SetExtent(extent);
+		}
+
+		public void SetExtent([CanBeNull] Envelope extent)
 		{
 			if (extent == null || extent.IsEmpty)
 			{
-				HasGeometry = false;
+				HasExtent = false;
 
 				_xmin = 0;
 				_ymin = 0;
@@ -221,7 +231,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 			else
 			{
-				HasGeometry = true;
+				HasExtent = true;
 
 				double xmin;
 				double ymin;

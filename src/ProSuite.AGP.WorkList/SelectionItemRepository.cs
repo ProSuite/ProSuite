@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
@@ -46,13 +45,16 @@ namespace ProSuite.AGP.WorkList
 
 		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
 		{
-			long rowId = GetNextOid(row);
-
 			long tableId = sourceClass.GetUniqueTableId();
 
-			var item = new SelectionItem(rowId, tableId, row);
+			var item = new SelectionItem(tableId, row);
 
-			return RefreshState(item);
+			if (row is Feature feature)
+			{
+				item.SetGeometry(feature);
+			}
+
+			return item;
 		}
 
 		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
@@ -65,7 +67,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected override Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
 		{
-			WorkItemStateRepository.Update(item);
+			WorkItemStateRepository.UpdateState(item);
 
 			return Task.CompletedTask;
 		}

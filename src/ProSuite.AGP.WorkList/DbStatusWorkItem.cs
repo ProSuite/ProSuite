@@ -7,11 +7,10 @@ namespace ProSuite.AGP.WorkList
 {
 	public class DbStatusWorkItem : WorkItem
 	{
-		public DbStatusWorkItem(long itemId,
-		                        long uniqueTableId,
+		public DbStatusWorkItem(long uniqueTableId,
 		                        [NotNull] Row row,
 		                        WorkItemStatus status)
-			: base(itemId, uniqueTableId, row)
+			: base(uniqueTableId, row)
 		{
 			Status = status;
 		}

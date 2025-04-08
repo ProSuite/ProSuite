@@ -413,6 +413,9 @@ namespace ProSuite.AGP.WorkList
 				                                   itemStateRepository);
 			}
 
+			return new DbStatusWorkItemRepository(new List<DbStatusSourceClassDefinition>(0),
+			                                      itemStateRepository);
+
 			// TODO (EMA):
 			_msg.Warn($"Unknown work list type: {type.Name}. Using Issue work list");
 

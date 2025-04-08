@@ -15,7 +15,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
 {
-	// todo daro: is this the right namespace for this type?
+	// todo: daro is this the right namespace for this type?
 	public class EditEventsRowCacheSynchronizer : IDisposable
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();

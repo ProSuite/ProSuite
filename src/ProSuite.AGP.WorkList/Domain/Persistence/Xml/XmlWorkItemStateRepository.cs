@@ -6,20 +6,25 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Xml;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 {
 	public class XmlWorkItemStateRepository
-		: WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition>
+		: WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition>, IFileBasedStateRepository
 	{
 		public XmlWorkItemStateRepository(string filePath, string name, Type type,
 		                                  int? currentItemIndex = null) : base(
 			name, type, currentItemIndex)
 		{
 			WorkListDefinitionFilePath = filePath;
+
+			ReadStatesByRow();
 		}
+
+		public string WorkListDefinitionFilePath { get; set; }
 
 		public static XmlWorkListDefinition Import(string xmlFilePath)
 		{
@@ -84,13 +89,12 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			return definition;
 		}
 
-		protected override IDictionary<GdbObjectReference, XmlWorkItemState> ReadStatesByRow()
+		protected override void ReadStatesByRowCore()
 		{
-			var result = new Dictionary<GdbObjectReference, XmlWorkItemState>();
-
 			if (! File.Exists(WorkListDefinitionFilePath))
 			{
-				return result;
+				base.ReadStatesByRowCore();
+				return;
 			}
 
 			XmlWorkListDefinition definition = Import(WorkListDefinitionFilePath);
@@ -117,10 +121,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 				var objectReference =
 					new GdbObjectReference(itemState.Row.TableId, itemState.Row.OID);
 
-				result.Add(objectReference, itemState);
+				StatesByRow.Add(objectReference, itemState);
 			}
-
-			return result;
 		}
 
 		protected override XmlWorkItemState CreateState(IWorkItem item)
@@ -130,6 +132,14 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 			var state = new XmlWorkItemState(item.OID, item.Visited, WorkItemStatus.Unknown,
 			                                 xmlGdbRowIdentity);
+
+			if (item.Extent != null)
+			{
+				state.XMin = item.Extent.XMin;
+				state.XMax = item.Extent.XMax;
+				state.YMin = item.Extent.YMin;
+				state.YMax = item.Extent.YMax;
+			}
 
 			state.ConnectionString = item.GdbRowProxy.Table.Workspace.ConnectionString;
 
@@ -144,6 +154,19 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		protected override void UpdateCore(XmlWorkItemState state, IWorkItem item)
 		{
 			state.Status = item.Status;
+		}
+
+		public override void Rename(string name)
+		{
+			string directoryName = Path.GetDirectoryName(WorkListDefinitionFilePath);
+			Assert.NotNull(directoryName);
+
+			string extension = Path.GetExtension(WorkListDefinitionFilePath);
+			Assert.NotNull(extension);
+
+			string path = Path.Combine(directoryName, $"{name}{extension}");
+
+			WorkListDefinitionFilePath = path;
 		}
 
 		private static void PopulateXmlWorkspaceList(

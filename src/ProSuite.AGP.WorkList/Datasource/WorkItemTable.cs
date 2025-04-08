@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -17,24 +17,30 @@ namespace ProSuite.AGP.WorkList.Datasource
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IReadOnlyList<PluginField> _fields;
-		private readonly string _tableName;
+		[NotNull] private readonly string _tableName;
 
-		private readonly IWorkList _workList;
+		[CanBeNull] private IWorkList _workList;
 
-		public WorkItemTable(IWorkList workList, string tableName)
+		public WorkItemTable(string tableName)
 		{
-			_workList = workList ?? throw new ArgumentNullException(nameof(workList));
 			_tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
 			_fields = new ReadOnlyCollection<PluginField>(GetSchema());
-
-			// Now that the table is likely used by a layer, make sure its work list is initialized
-			// and correctly updated when source rows change.
-			// TODO: In order to avoid duplicate item caching (once the work list navigator is open and re-creates its work list)
-			//       try updating this work list rather than replacing it (just replace its repository?)
-			// Also, consider not a-priory caching the work list items but query through the source tables.
-			// this would likely also fix changing definition queries or updates that make the item disappear (set allowed).
-			_workList.EnsureRowCacheSynchronized();
 		}
+
+		//public WorkItemTable(IWorkList workList, string tableName)
+		//{
+		//	_workList = workList ?? throw new ArgumentNullException(nameof(workList));
+		//	_tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
+		//	_fields = new ReadOnlyCollection<PluginField>(GetSchema());
+
+		//	// Now that the table is likely used by a layer, make sure its work list is initialized
+		//	// and correctly updated when source rows change.
+		//	// TODO: In order to avoid duplicate item caching (once the work list navigator is open and re-creates its work list)
+		//	//       try updating this work list rather than replacing it (just replace its repository?)
+		//	// Also, consider not a-priory caching the work list items but query through the source tables.
+		//	// this would likely also fix changing definition queries or updates that make the item disappear (set allowed).
+		//	_workList.EnsureRowCacheSynchronized();
+		//}
 
 		public override string GetName()
 		{
@@ -50,7 +56,21 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			// Do return not an empty envelope.
 			// Pluggable Datasource cannot handle an empty envelope.
-			return _workList.Extent;
+			return _workList?.Extent;
+		}
+
+		[CanBeNull]
+		public IWorkList WorkList
+		{
+			get
+			{
+				if (_workList == null)
+				{
+					_workList = WorkListRegistry.Instance.Get(_tableName);
+					_workList?.EnsureRowCacheSynchronized();
+				}
+				return _workList;
+			}
 		}
 
 		public override GeometryType GetShapeType()
@@ -60,15 +80,17 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override PluginCursorTemplate Search(QueryFilter queryFilter)
 		{
-			Stopwatch watch = _msg.DebugStartTiming();
+			//queryFilter.RowCount;
+			//Stopwatch watch = _msg.DebugStartTiming();
 
 			const bool ignoreStatusFilter = false;
-			List<object[]> list = _workList.GetItems(queryFilter, ignoreStatusFilter)
-			                               .Select(item => GetValues(item, _workList, _workList.Current))
-			                               .ToList(); // TODO drop ToList, inline
 
-			_msg.DebugStopTiming(
-				watch, $"{nameof(WorkItemTable)}.{nameof(Search)}(): {list.Count} items");
+			IEnumerable<object[]> list =
+				WorkList.GetItems(queryFilter, ignoreStatusFilter)
+				        .Select(item => GetValues(item, _workList, _workList.Current)); // TODO drop ToList, inline
+
+			//_msg.DebugStopTiming(
+			//	watch, $"{nameof(WorkItemTable)}.{nameof(Search)}(): {list.Count} items");
 
 			return new WorkItemCursor(list);
 		}
