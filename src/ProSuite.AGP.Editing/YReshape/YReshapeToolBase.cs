@@ -1,18 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using System.Windows.Input;
-using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
 using ProSuite.AGP.Editing.AdvancedReshape;
-using ProSuite.AGP.Editing.Cracker;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.AGP.Editing.Selection;
-using ProSuite.Commons;
-using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
-using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.YReshape
 {
@@ -63,7 +51,4 @@ namespace ProSuite.AGP.Editing.YReshape
 			                              Resources.Shift);
 		}
 	}
-
-
 }
-

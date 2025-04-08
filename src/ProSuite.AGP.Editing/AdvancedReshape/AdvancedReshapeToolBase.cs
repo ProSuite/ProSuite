@@ -509,8 +509,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			int timeout = selection.Count * 10000;
 			_cancellationTokenSource = new CancellationTokenSource(timeout);
 
+			bool allowOpenJawReshape = _advancedReshapeToolOptions.AllowOpenJawReshape;
+
 			ReshapeResult result = MicroserviceClient.Reshape(
-				selection, sketchLine, potentiallyAffectedFeatures, true, true,
+				selection, sketchLine, potentiallyAffectedFeatures, allowOpenJawReshape, true,
 				_nonDefaultSideMode, _cancellationTokenSource.Token,
 				_advancedReshapeToolOptions.MoveOpenJawEndJunction);
 
