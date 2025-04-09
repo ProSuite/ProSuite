@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.GIS.Geodatabase.API
 {
@@ -60,6 +61,10 @@ namespace ProSuite.GIS.Geodatabase.API
 
 		//IFeatureDataset CreateFeatureDataset(string name, ISpatialReference spatialReference);
 
+		IEnumerable<IRow> EvaluateQuery([NotNull] string tables,
+		                                [CanBeNull] string whereClause = null,
+		                                string subFields = "*",
+		                                bool recycling = false);
 		//IQueryDef CreateQueryDef();
 
 		//IFeatureDataset OpenFeatureQuery(string queryName, IQueryDef queryDef);

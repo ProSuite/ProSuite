@@ -302,6 +302,36 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return (IFeatureClass) OpenTable(name);
 		}
 
+		public IEnumerable<IRow> EvaluateQuery(string tables,
+		                                       string whereClause = null,
+		                                       string subFields = "*",
+		                                       bool recycling = false)
+		{
+			var queryDef = new QueryDef
+			               {
+				               SubFields = subFields,
+				               Tables = tables,
+				               WhereClause = whereClause
+			               };
+
+			using (RowCursor rowCursor = Geodatabase.Evaluate(queryDef, recycling))
+			{
+				Table table = null;
+
+				while (rowCursor.MoveNext())
+				{
+					Row row = rowCursor.Current;
+
+					if (table == null)
+					{
+						table = row.GetTable();
+					}
+
+					yield return ArcGeodatabaseUtils.ToArcRow(row);
+				}
+			}
+		}
+
 		public IRelationshipClass OpenRelationshipClass(string name)
 		{
 			var proRelClass = Geodatabase.OpenDataset<RelationshipClass>(name);
