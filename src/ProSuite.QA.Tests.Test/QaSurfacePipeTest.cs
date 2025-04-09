@@ -12,10 +12,12 @@ using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
+
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
@@ -208,6 +210,94 @@ namespace ProSuite.QA.Tests.Test
 			const double yMin = 1238000;
 			IEnvelope box = GeometryFactory.CreateEnvelope(xMin, yMin, xMin + 100, yMin + 100);
 			runner.Execute(box);
+		}
+
+		[Test]
+		// NOTE: This test requires the 3D Analyst extension
+		public void TestPolygonsOutsideTerrain()
+		{
+			IFieldsEdit fields = new FieldsClass();
+			fields.AddField(FieldUtils.CreateOIDField());
+			fields.AddField(FieldUtils.CreateShapeField(
+				                "Shape", esriGeometryType.esriGeometryPolygon,
+				                SpatialReferenceUtils.CreateSpatialReference
+				                ((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
+				                 true), 1000, true));
+
+			IFeatureClass fc =
+				DatasetUtils.CreateSimpleFeatureClass(TestFgdbWs, "TestPolygonsOutsideTerrain",
+				                                      fields);
+
+			// make sure the table is known by the workspace
+			((IWorkspaceEdit) TestFgdbWs).StartEditing(false);
+			((IWorkspaceEdit) TestFgdbWs).StopEditing(true);
+
+			// identical parts
+			IFeature row1 = fc.CreateFeature();
+			row1.Shape = CurveConstruction.StartPoly(2430000, 1250000, 849)
+			                              .LineTo(2430000, 1250010, 849)
+			                              .LineTo(2430010, 1250000, 849)
+			                              .ClosePolygon();
+			row1.Store();
+
+			// identical parts
+			IFeature row2 = fc.CreateFeature();
+			row2.Shape = CurveConstruction.StartPoly(2430000, 1250000, 849)
+			                              .LineTo(2430000, 1250010, 849)
+			                              .LineTo(2430010, 1250000, 849)
+			                              .ClosePolygon();
+			row2.Store();
+
+			IWorkspace dtmWs = TestDataUtils.OpenTopgisAlti();
+
+			SimpleTerrain terrain = GetAltiDtmSimpleTerrain(dtmWs);
+
+			var test = new QaSurfacePipe(
+				ReadOnlyTableFactory.Create(fc), terrain, 5, ZOffsetConstraint.AboveLimit, 0,
+				false);
+
+			var runner = new QaContainerTestRunner(10000, test);
+			runner.KeepGeometry = true;
+
+			IEnvelope box = row1.Shape.Envelope;
+			box.Expand(1.1, 1.1, true);
+			runner.Execute(box);
+
+			// If in SimpleTerrain
+			// tinGenerator.AllowIncompleteInterpolationDomainAtBoundary = true;
+			//  -> 2 errors (Terrain is missing)
+			// tinGenerator.AllowIncompleteInterpolationDomainAtBoundary = false;
+			//  -> 1 error (missing terrain) The extent [Envelope]
+			// XMin: 2’429’949.21 YMin: 1’249’930.17 XMax: 2’430’109.21 YMax: 1’250’090.17
+			//  is not sufficiently covered by terrain data
+			Assert.IsTrue(runner.Errors.Count == 2);
+			IEnvelope errorEnvelope = runner.ErrorGeometries[0].Envelope;
+
+			Assert.IsTrue(GeometryUtils.Contains(errorEnvelope, row1.Shape));
+
+			foreach (QaError error in runner.Errors)
+			{
+				// TODO: Better error code if not covered!
+				// BUT first try with the flag AllowIncompleteInterpolationDomainAtBoundary
+				//Assert.AreEqual("GeometryToTerrainZOffset.NoTerrainData",
+				//                error.IssueCode?.ToString());
+			}
+		}
+
+		private static SimpleTerrain GetAltiDtmSimpleTerrain(IWorkspace dtmWs)
+		{
+			SimpleTerrain terrain = new SimpleTerrain(
+				"dataset.Name",
+				new List<SimpleTerrainDataSource>
+				{
+					new SimpleTerrainDataSource(
+						DatasetUtils.OpenFeatureClass(dtmWs, "TOPGIS_TLM.TLM_DTM_MASSENPUNKTE"),
+						esriTinSurfaceType.esriTinMassPoint),
+					new SimpleTerrainDataSource(
+						DatasetUtils.OpenFeatureClass(dtmWs, "TOPGIS_TLM.TLM_DTM_BRUCHKANTE"),
+						esriTinSurfaceType.esriTinHardLine)
+				}, 7.8125, null);
+			return terrain;
 		}
 	}
 }

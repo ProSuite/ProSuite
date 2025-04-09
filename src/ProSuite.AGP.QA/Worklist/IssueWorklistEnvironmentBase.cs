@@ -9,7 +9,6 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -27,14 +26,14 @@ namespace ProSuite.AGP.QA.WorkList
 		protected IssueWorkListEnvironmentBase([CanBeNull] string path)
 			: base(new FileGdbIssueWorkListItemDatastore(path)) { }
 
-		public override string FileSuffix => ".iwl";
+		protected override string FileSuffix => ".iwl";
 
-		public Geometry AreaOfInterest { get; set; }
-
-		protected override string SuggestWorkListName()
+		protected override string GetDisplayName()
 		{
 			return WorkListItemDatastore.SuggestWorkListName();
 		}
+
+		public Geometry AreaOfInterest { get; set; }
 
 		protected override string SuggestWorkListLayerName()
 		{
@@ -69,7 +68,7 @@ namespace ProSuite.AGP.QA.WorkList
 			// - They should be deletable by the user (in which case a new layer should be re-added)
 			// - If the layer is moved outside the group a new layer should be added. Only layers within the
 			//   sub-group are considered to be part of the work list.
-			string groupName = DisplayName; // _workListItemDatastore.SuggestWorkListGroupName();
+			string groupName = GetDisplayName(); // _workListItemDatastore.SuggestWorkListGroupName();
 			if (groupName != null)
 			{
 				GroupLayer workListGroupLayer = qaGroupLayer.FindLayers(groupName)
@@ -107,7 +106,7 @@ namespace ProSuite.AGP.QA.WorkList
 			return new XmlWorkItemStateRepository(path, workListName, type);
 		}
 
-		protected override async Task<IWorkItemRepository> CreateItemRepositoryCore(
+		protected override async Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository)
 		{
 			var tables = await PrepareReferencedTables();

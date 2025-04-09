@@ -3,6 +3,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Container.TestContainer;
 
@@ -100,7 +101,16 @@ namespace ProSuite.QA.Container
 					using (_testProgress?.UseProgressWatch(
 						       Step.TinLoading, Step.TinLoaded, 0, 1, TerrainReference))
 					{
-						ITin tin = TerrainReference.CreateTin(Extent, _resolution);
+						ITin tin;
+						try
+						{
+							tin = TerrainReference.CreateTin(Extent, _resolution);
+						}
+						catch (InvalidDataException e)
+						{
+							_msg.Debug("Error creating TIN. Throwing TestRowException.", e);
+							throw new TestDataException(e.Message, this, e);
+						}
 
 						_tinSurface = new TinSurface(tin);
 					}

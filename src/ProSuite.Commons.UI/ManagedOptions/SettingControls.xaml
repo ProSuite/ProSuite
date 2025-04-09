@@ -9,7 +9,7 @@
         <CheckBox Content="{TemplateBinding Content}"
                   DataContext="{TemplateBinding DataContext}"
                   IsChecked="{Binding CurrentValue}"
-                  IsEnabled="{Binding CanOverrideLocally}"
+                  IsEnabled="{Binding IsEnabled}"
                   FontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}"
                   ToolTipService.ShowOnDisabled="True"
                   ToolTip="{Binding ToolTip}" 
@@ -20,7 +20,7 @@
 
             <managedOptions:NumericSpinner 
                 DataContext="{TemplateBinding DataContext}"
-                IsEnabled="{Binding CanOverrideLocally}" 
+                IsEnabled="{Binding IsEnabled}" 
                 Margin="0, 2" 
                 Value="{Binding CurrentValue, Mode=TwoWay}" 
                 ToolTipService.ShowOnDisabled="True"
@@ -33,7 +33,7 @@
 
             <Label 
                 DataContext="{TemplateBinding DataContext}"
-                IsEnabled="{Binding CanOverrideLocally}" 
+                IsEnabled="{Binding IsEnabled}" 
                 Content="meters"
                 HorizontalAlignment="Left"
                 ToolTipService.ShowOnDisabled="True"

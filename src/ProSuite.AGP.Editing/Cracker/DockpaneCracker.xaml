@@ -43,35 +43,35 @@
 			<CheckBox Grid.Row="0" Grid.Column="0"
                           Template="{StaticResource CentralizableSettingCheckbox}"
                           Content="Snap crack points within tolerance of"
-                          DataContext="{Binding Options.CentralizableSnapToTargetVertices}" />
+                          DataContext="{Binding SnapToTargetVertices}" />
 
 			<Grid Grid.Row="0"  Grid.Column="1" >
 				<ContentControl 
                         Template="{StaticResource CentralizableSettingsSpinner}"
-                        DataContext="{Binding Options.CentralizableSnapTolerance}" />
+                        DataContext="{Binding SnapTolerance}" />
 			</Grid>
 
 			<Grid Grid.Row="0" Grid.Column="2">
 				<ContentControl 
                     Template="{StaticResource CentralizableSettingsLabel}"
-                    DataContext="{Binding Options.CentralizableSnapTolerance}" />
+                    DataContext="{Binding SnapTolerance}" />
 			</Grid>
 
 
 			<CheckBox Grid.Row="1"  Grid.Column="0"  Template="{StaticResource CentralizableSettingCheckbox}"
                           Content="Respect a minimum segment length"
-                          DataContext="{Binding Options.CentralizableRespectMinimumSegmentLength}"  />
+                          DataContext="{Binding RespectMinimumSegmentLength}"  />
 
 			<Grid Grid.Row="1"  Grid.Column="1" >
 				<ContentControl 
                         Template="{StaticResource CentralizableSettingsSpinner}"
-                        DataContext="{Binding Options.CentralizableMinimumSegmentLength}" 
+                        DataContext="{Binding MinimumSegmentLength}" 
                     />
 			</Grid>
 			<Grid Grid.Row="1" Grid.Column="2">
 				<ContentControl 
                         Template="{StaticResource CentralizableSettingsLabel}"
-                        DataContext="{Binding Options.CentralizableMinimumSegmentLength}" 
+                        DataContext="{Binding MinimumSegmentLength}" 
                     />
 			</Grid>
 
@@ -87,7 +87,7 @@
 		<Label FontWeight="Medium" Content="Z values" Margin="0,15,0,0"/>
 		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
                       Content="Use selected feature's Z values instead of target feature's Z values"
-                      DataContext="{Binding Options.CentralizableUseSourceZs}" />
+                      DataContext="{Binding UseSourceZs}" />
 
 		<!-- Clean up option -->
 		<!--<Label FontWeight="Medium" Content="Clean up option" Margin="0,15,0,0"/>

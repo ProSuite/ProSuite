@@ -17,8 +17,8 @@ namespace ProSuite.Commons.AGP.Framework;
 
 public class WindowPositioner : IWindowPositioner
 {
-	private readonly List<Rect> _preferredAreas = [];
-	private readonly List<Rect> _areasToAvoid = [];
+	private readonly List<Rect> _preferredAreas = new() { };
+	private readonly List<Rect> _areasToAvoid = new() { };
 	private readonly EvaluationMethod _method;
 	private Window _window;
 	private Point _initialPosition;
@@ -124,9 +124,9 @@ public class WindowPositioner : IWindowPositioner
 	public Point FindSuitablePosition(Point desiredPosition, double windowWidth,
 	                                  double windowHeight)
 	{
-		List<Rect> preferredAreasDeviceIndependent = [];
-		List<Rect> areasToAvoidDeviceIndependent = [];
-		List<Rect> monitorsDeviceIndependent = [];
+		List<Rect> preferredAreasDeviceIndependent = new() { };
+		List<Rect> areasToAvoidDeviceIndependent = new() { };
+		List<Rect> monitorsDeviceIndependent = new() { };
 
 		Window ownerWindow = Application.Current?.MainWindow;
 
@@ -278,7 +278,7 @@ public class WindowPositioner : IWindowPositioner
 		bool positionFound = false;
 		for (int iteration = firstIteration;; ++iteration)
 		{
-			Queue<Point> pointsToLookAt = [];
+			Queue<Point> pointsToLookAt = new() { };
 			AddNextPoints(desiredPosition, objectWidth, objectHeight, iteration,
 			              ref pointsToLookAt);
 
@@ -478,7 +478,7 @@ public class WindowPositioner : IWindowPositioner
 	// The resulting list is sorted by proximity to focusPoint
 	private static List<Rect> GetMonitorExtends(Point focusPoint)
 	{
-		List<Rect> screens = [];
+		List<Rect> screens = new() { };
 		foreach (var screen2 in Screen.AllScreens)
 		{
 			var rect = screen2.WorkingArea;
@@ -554,7 +554,7 @@ public class WindowPositioner : IWindowPositioner
 	                                                 int lineOffset,
 	                                                 int maxRectLengthForLines = 25)
 	{
-		List<Rect> boundingRects = [];
+		List<Rect> boundingRects = new() { };
 
 		switch (geometry.GeometryType)
 		{
@@ -603,7 +603,7 @@ public class WindowPositioner : IWindowPositioner
 	                                                   int lineOffset,
 	                                                   int maxRectLengthForLines)
 	{
-		List<Rect> boundingRects = [];
+		List<Rect> boundingRects = new() { };
 		foreach (var part in line.Parts)
 		{
 			foreach (var segment in part)

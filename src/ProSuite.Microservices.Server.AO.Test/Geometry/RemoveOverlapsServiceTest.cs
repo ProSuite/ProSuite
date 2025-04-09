@@ -120,12 +120,15 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 		[Test]
 		public void CanRemoveOverlaps()
 		{
-			var fClass =
-				new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon);
-
 			var sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95,
 				WellKnownVerticalCS.LN02);
+
+			var fClass =
+				new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon)
+				{
+					SpatialReference = sr
+				};
 
 			IPolygon polygon1 = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600000, 1200000, sr),

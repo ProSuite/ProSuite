@@ -74,7 +74,6 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 			if (state == null)
 			{
-				// todo daro: revise
 				// create new state if it doesn't exist
 				state = CreateState(item);
 

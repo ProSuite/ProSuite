@@ -594,7 +594,7 @@ namespace ProSuite.AGP.WorkList.Test
 				IWorkItemStateRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
-					new IssueItemRepository(new List<Table> { table }, stateRepository);
+					new ItemRepositoryMock(new List<Table> { table }, stateRepository);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -644,7 +644,7 @@ namespace ProSuite.AGP.WorkList.Test
 				IWorkItemStateRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
-					new IssueItemRepository(new List<Table> { table }, stateRepository);
+					new ItemRepositoryMock(new List<Table> { table }, stateRepository);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -703,7 +703,7 @@ namespace ProSuite.AGP.WorkList.Test
 				IWorkItemStateRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
-					new IssueItemRepository(new List<Table> { table }, stateRepository);
+					new ItemRepositoryMock(new List<Table> { table }, stateRepository);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -754,7 +754,7 @@ namespace ProSuite.AGP.WorkList.Test
 				IWorkItemStateRepository stateRepository =
 					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 				IWorkItemRepository repository =
-					new IssueItemRepository(new List<Table> { table }, stateRepository);
+					new ItemRepositoryMock(new List<Table> { table }, stateRepository);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 

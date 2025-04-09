@@ -40,6 +40,17 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private string _heading = "Cut Along Options";
 
 		private CutAlongToolOptions _options;
+
+		private CentralizableSettingViewModel<bool> _displayExcludeCutLines;
+		private CentralizableSettingViewModel<bool> _displayRecalculateCutLines;
+		private CentralizableSettingViewModel<bool> _displayHideCutLines;
+		private CentralizableSettingViewModel<double> _displayHideCutLinesScale;
+		private CentralizableSettingViewModel<bool> _bufferTarget;
+		private CentralizableSettingViewModel<double> _bufferTolerance;
+		private CentralizableSettingViewModel<bool> _enforceMinimumBufferSegmentLength;
+		private CentralizableSettingViewModel<double> _minBufferSegmentLength;
+		private CentralizableSettingViewModel<bool> _insertVertices;
+
 		private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 		private ZValueSourceSelectionViewModel _zValueSourceSelectionVm;
 
@@ -49,25 +60,115 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			set { SetProperty(ref _heading, value, () => Heading); }
 		}
 
+		public CentralizableSettingViewModel<bool> DisplayExcludeCutLines
+		{
+			get => _displayExcludeCutLines;
+			set => SetProperty(ref _displayExcludeCutLines, value);
+		}
+
+		public CentralizableSettingViewModel<bool> DisplayRecalculateCutLines
+		{
+			get => _displayRecalculateCutLines;
+			set => SetProperty(ref _displayRecalculateCutLines, value);
+		}
+
+		public CentralizableSettingViewModel<bool> DisplayHideCutLines
+		{
+			get => _displayHideCutLines;
+			set => SetProperty(ref _displayHideCutLines, value);
+		}
+
+		public CentralizableSettingViewModel<double> DisplayHideCutLinesScale
+		{
+			get => _displayHideCutLinesScale;
+			set => SetProperty(ref _displayHideCutLinesScale, value);
+		}
+
+		public CentralizableSettingViewModel<bool> BufferTarget
+		{
+			get => _bufferTarget;
+			set => SetProperty(ref _bufferTarget, value);
+		}
+
+		public CentralizableSettingViewModel<double> BufferTolerance
+		{
+			get => _bufferTolerance;
+			set => SetProperty(ref _bufferTolerance, value);
+		}
+
+		public CentralizableSettingViewModel<bool> EnforceMinimumBufferSegmentLength
+		{
+			get => _enforceMinimumBufferSegmentLength;
+			set => SetProperty(ref _enforceMinimumBufferSegmentLength, value);
+		}
+
+		public CentralizableSettingViewModel<double> MinBufferSegmentLength
+		{
+			get => _minBufferSegmentLength;
+			set => SetProperty(ref _minBufferSegmentLength, value);
+		}
+
+		public CentralizableSettingViewModel<bool> InsertVertices
+		{
+			get => _insertVertices;
+			set => SetProperty(ref _insertVertices, value);
+		}
+
 		public CutAlongToolOptions Options
 		{
 			get => _options;
 			set
 			{
-				if (SetProperty(ref _options, value) && value != null)
-				{
-					TargetFeatureSelectionVM =
-						new TargetFeatureSelectionViewModel(
-							_options.CentralizableTargetFeatureSelection)
-						{
-							SelectedFeaturesVisibility = Visibility.Collapsed,
-							EditableSelectableFeaturesVisibility = Visibility.Collapsed
-						};
+				SetProperty(ref _options, value);
 
-					ZValueSourceSelectionVM =
-						new ZValueSourceSelectionViewModel(_options.CentralizableZValueSource);
+				DisplayExcludeCutLines =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableDisplayExcludeCutLines);
 
-				}
+				DisplayRecalculateCutLines = new CentralizableSettingViewModel<bool>(
+					Options.CentralizableDisplayRecalculateCutLines,
+					new[] { Options.CentralizableDisplayExcludeCutLines });
+
+				DisplayHideCutLines =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableDisplayHideCutLines);
+
+				DisplayHideCutLinesScale = new CentralizableSettingViewModel<double>(
+					Options.CentralizableDisplayHideCutLinesScale,
+					new[] { Options.CentralizableDisplayHideCutLines });
+
+				BufferTarget =
+					new CentralizableSettingViewModel<bool>(Options.CentralizableBufferTarget);
+
+				BufferTolerance = new CentralizableSettingViewModel<double>(
+					Options.CentralizableBufferTolerance,
+					new[] { Options.CentralizableBufferTarget });
+
+				EnforceMinimumBufferSegmentLength = new CentralizableSettingViewModel<bool>(
+					Options.CentralizableEnforceMinimumBufferSegmentLength,
+					new[] { Options.CentralizableBufferTarget });
+
+				MinBufferSegmentLength = new CentralizableSettingViewModel<double>(
+					Options.CentralizableMinBufferSegmentLength,
+					new[]
+					{
+						Options.CentralizableEnforceMinimumBufferSegmentLength,
+						Options.CentralizableBufferTarget
+					});
+
+				InsertVertices =
+					new CentralizableSettingViewModel<bool>(Options.CentralizableInsertVertices);
+
+				TargetFeatureSelectionVM =
+					new TargetFeatureSelectionViewModel(
+						_options.CentralizableTargetFeatureSelection)
+					{
+						SelectedFeaturesVisibility = Visibility.Collapsed,
+						EditableSelectableFeaturesVisibility = Visibility.Collapsed
+					};
+
+				ZValueSourceSelectionVM =
+					new ZValueSourceSelectionViewModel(_options.CentralizableZValueSource);
 			}
 		}
 	}

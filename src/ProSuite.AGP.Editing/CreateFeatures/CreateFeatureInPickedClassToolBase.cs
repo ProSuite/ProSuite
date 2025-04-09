@@ -258,26 +258,29 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 				{
 					if (simplifiedSketch is Multipoint multipoint)
 					{
-						newFeatures =
-						[
-							..CreatePointFeatures(editContext,
-							                      targetFeatureClass,
-							                      originalFeature, multipoint,
-							                      exclusionFieldNames, progressor)
-						];
+						newFeatures = CreatePointFeatures(
+							editContext,
+							targetFeatureClass,
+							originalFeature,
+							multipoint,
+							exclusionFieldNames,
+							progressor).ToList();
 					}
 					else
 					{
 						newFeatures =
-						[
-							GdbPersistenceUtils.InsertTx(
-								editContext, originalFeature, simplifiedSketch,
-								exclusionFieldNames)
-						];
+							new List<Feature>
+							{
+								GdbPersistenceUtils.InsertTx(
+									editContext,
+									originalFeature,
+									simplifiedSketch,
+									exclusionFieldNames)
+							};
 					}
 
 					return newFeatures.Count > 0;
-				}, description, [targetFeatureClass]);
+				}, description, new List<Dataset> { targetFeatureClass });
 
 		if (succeeded)
 		{

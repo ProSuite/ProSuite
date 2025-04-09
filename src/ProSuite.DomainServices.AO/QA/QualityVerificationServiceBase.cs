@@ -727,8 +727,16 @@ namespace ProSuite.DomainServices.AO.QA
 			// TODO indicate if polygon, perimeter name, perimeter type etc.
 			reportBuilder.BeginVerification(areaOfInterest);
 
-			verificationReporter.AddVerifiedDatasets(
-				qualityVerification.VerificationDatasets.Select(vds => vds.Dataset));
+			foreach (var verificationDataset in qualityVerification.VerificationDatasets)
+			{
+				Dataset dataset = verificationDataset.Dataset;
+				double loadTime = verificationDataset.LoadTime;
+
+				IWorkspaceContext workspaceContext =
+					VerificationContext.GetWorkspaceContext(dataset);
+
+				verificationReporter.AddVerifiedDataset(verificationDataset, workspaceContext);
+			}
 
 			verificationReporter.AddVerifiedConditions(
 				qualityVerification.ConditionVerifications.Select(

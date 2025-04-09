@@ -6,6 +6,7 @@ using Grpc.Core;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
@@ -247,7 +248,7 @@ namespace ProSuite.Microservices.Client.QA
 					// Communicate the error to the server but do not throw here (it might just be
 					// a test whether a where clause is valid). The server shall decide whether it
 					// wants to continue or not.
-					result.ErrorMessage = e.Message;
+					result.ErrorMessage = ExceptionUtils.FormatMessage(e);
 					callRequestStream.WriteAsync(result);
 
 					return false;
