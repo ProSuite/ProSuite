@@ -43,7 +43,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			return Execute(action, description, new[] { dataset });
 		}
 
-		public bool Execute([NotNull] Action<EditOperation.IEditContext> action,
+		public bool Execute([NotNull, InstantHandle] Action<EditOperation.IEditContext> action,
 		                    [NotNull] string description,
 		                    [NotNull] IEnumerable<Dataset> datasets)
 		{
