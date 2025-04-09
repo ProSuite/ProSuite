@@ -8,14 +8,12 @@ using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
@@ -29,24 +27,6 @@ namespace ProSuite.AGP.WorkList
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private const string PluginIdentifier = "ProSuite_WorkListDatasource";
-
-		[NotNull]
-		public static string GetDatasource([NotNull] string homeFolderPath,
-		                                   [NotNull] string worklistsFolder,
-		                                   [NotNull] string workListName,
-		                                   [NotNull] string fileSuffix)
-		{
-			//var baseUri = new Uri("worklist://localhost/");
-			string folder = Path.Combine(homeFolderPath, worklistsFolder);
-
-			if (! FileSystemUtils.EnsureDirectoryExists(folder))
-			{
-				Assert.True(Directory.Exists(homeFolderPath), $"{homeFolderPath} does not exist");
-				return homeFolderPath;
-			}
-
-			return Path.Combine(folder, $"{workListName}{fileSuffix}");
-		}
 
 		[NotNull]
 		public static IWorkList Create([NotNull] XmlWorkListDefinition definition,
@@ -424,8 +404,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			if (type == typeof(IssueWorkList))
 			{
-				return new IssueItemRepository(new List<Tuple<Table, string>>(0),
-				                               itemStateRepository);
+				throw new NotImplementedException();
 			}
 
 			if (type == typeof(SelectionWorkList))
@@ -436,8 +415,6 @@ namespace ProSuite.AGP.WorkList
 
 			// TODO (EMA):
 			_msg.Warn($"Unknown work list type: {type.Name}. Using Issue work list");
-			return new IssueItemRepository(new List<Tuple<Table, string>>(0),
-			                               itemStateRepository);
 
 			throw new ArgumentException($"Unknown work list type: {type.Name}");
 		}

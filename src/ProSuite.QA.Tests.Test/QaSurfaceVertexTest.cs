@@ -70,17 +70,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IWorkspace dtmWs = TestDataUtils.OpenTopgisAlti();
 
-			SimpleTerrain terrain = new SimpleTerrain(
-				"dataset.Name",
-				new List<SimpleTerrainDataSource>
-				{
-					new SimpleTerrainDataSource(
-						DatasetUtils.OpenFeatureClass(dtmWs, "TOPGIS_TLM.TLM_DTM_MASSENPUNKTE"),
-						esriTinSurfaceType.esriTinMassPoint),
-					new SimpleTerrainDataSource(
-						DatasetUtils.OpenFeatureClass(dtmWs, "TOPGIS_TLM.TLM_DTM_BRUCHKANTE"),
-						esriTinSurfaceType.esriTinHardLine)
-				}, 7.8125, null);
+			SimpleTerrain terrain = GetAltiDtmSimpleTerrain(dtmWs);
 
 			//ITerrain terrain = TerrainUtils.OpenTerrain((IFeatureWorkspace)dtmWs,
 			//                                            "TOPGIS_TLM.TLM_DTM_TERRAIN",
@@ -97,6 +87,22 @@ namespace ProSuite.QA.Tests.Test
 
 			Assert.IsTrue(runner.ErrorGeometries[0].Envelope.ZMin > 800);
 			Console.WriteLine(runner.Errors.Count);
+		}
+
+		private static SimpleTerrain GetAltiDtmSimpleTerrain(IWorkspace dtmWs)
+		{
+			SimpleTerrain terrain = new SimpleTerrain(
+				"dataset.Name",
+				new List<SimpleTerrainDataSource>
+				{
+					new SimpleTerrainDataSource(
+						DatasetUtils.OpenFeatureClass(dtmWs, "TOPGIS_TLM.TLM_DTM_MASSENPUNKTE"),
+						esriTinSurfaceType.esriTinMassPoint),
+					new SimpleTerrainDataSource(
+						DatasetUtils.OpenFeatureClass(dtmWs, "TOPGIS_TLM.TLM_DTM_BRUCHKANTE"),
+						esriTinSurfaceType.esriTinHardLine)
+				}, 7.8125, null);
+			return terrain;
 		}
 	}
 }

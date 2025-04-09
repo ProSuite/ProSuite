@@ -68,5 +68,34 @@ namespace ProSuite.Commons.ManagedOptions
 
 			return File.Exists(fullConfigFileName);
 		}
+
+		public static string GetMessage<T>([NotNull] CentralizableSetting<T> centralizableSetting)
+			where T : struct
+		{
+			string result;
+			if (! centralizableSetting.HasCentralValue)
+			{
+				result =
+					$"No value defined in central configuration file. The factory default value is: {centralizableSetting.FactoryDefault}";
+			}
+			else if (centralizableSetting.CanOverrideLocally)
+			{
+				result = centralizableSetting.HasLocalOverride
+					         ? $"Using local override. Centrally defined value: {centralizableSetting.CentralValue}"
+					         : "Centrally defined value is currently used. It could be overridden locally.";
+			}
+			else
+			{
+				result =
+					"Centrally defined value is currently used. No local override allowed.";
+			}
+
+			if (! string.IsNullOrEmpty(centralizableSetting.TooltipAppendix))
+			{
+				result += centralizableSetting.TooltipAppendix;
+			}
+
+			return result;
+		}
 	}
 }

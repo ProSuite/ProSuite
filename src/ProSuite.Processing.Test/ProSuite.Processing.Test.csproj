@@ -11,8 +11,9 @@
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
     <LangVersion>default</LangVersion>
-
+		
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
     <DefineConstants>DEBUG;TRACE</DefineConstants>

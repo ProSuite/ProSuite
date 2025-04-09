@@ -33,7 +33,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// Sometimes it takes almost two minutes!
-		private const int _timeoutMilliseconds = 180000;
+		// From the US west cost to postgreSQL server in AWS europe even longer.
+		private const int _timeoutMilliseconds = 300000;
 
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidatesAsync(
 			[NotNull] ICollection<Table> tables,

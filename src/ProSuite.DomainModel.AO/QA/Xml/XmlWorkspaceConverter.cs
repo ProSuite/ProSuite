@@ -139,7 +139,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				{
 					_msg.WarnFormat(
 						"Unable to open workspace based on connection string for xml workspace with id '{0}': {1}",
-						xmlWorkspace.ID, e.Message);
+						xmlWorkspace.ID, ExceptionUtils.FormatMessage(e));
 
 					// TODO: xmlWorkspace.ModelName?
 					result.Add(GetModel(xmlWorkspace.ID, models));

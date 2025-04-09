@@ -13,7 +13,6 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList;
@@ -64,11 +63,9 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		AddToMapCore(GetTablesCore(), worklist);
 	}
 
-	public override bool IsSameWorkListDefinition(string existingDefinitionFilePath)
+	protected override string EnsureValidDefinitionFilePath(string directory, string fileName, string suffix)
 	{
-		string uniqueDisplayName = Assert.NotNull(GetUniqueDisplayName(existingDefinitionFilePath));
-
-		return IsSameWorkListDefinition(existingDefinitionFilePath, uniqueDisplayName);
+		return Path.Combine(directory, $"{fileName}{suffix}");
 	}
 
 	protected void AddToMapCore(IEnumerable<Table> tables, IWorkList worklist)
@@ -213,18 +210,6 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		}
 
 		return WorkListItemDatastore.GetTables();
-	}
-
-	private static bool IsSameWorkListDefinition(
-		[NotNull] string existingDefinitionFilePath,
-		[NotNull] string suggestedNewWorkListName)
-	{
-		string suggestedFileName =
-			FileSystemUtils.ReplaceInvalidFileNameChars(suggestedNewWorkListName, '_');
-
-		string existingFileName = Path.GetFileNameWithoutExtension(existingDefinitionFilePath);
-
-		return existingFileName.Equals(suggestedFileName);
 	}
 
 	private static void SetDisplayField(FeatureLayer layer, string name)

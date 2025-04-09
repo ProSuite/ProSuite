@@ -99,7 +99,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			IPointCollection deletablePoints = (IPointCollection)
 				ProtobufGeometryUtils.FromShapeMsg(response.RemovableSegments[0].PointsToDelete);
 
-			Assert.AreEqual(5, deletablePoints!.PointCount);
+			Assert.AreEqual(5, deletablePoints.PointCount);
 
 			ICollection<ShortSegmentMsg> removableSegments =
 				response.RemovableSegments[0].ShortSegments;
@@ -118,13 +118,13 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 				(IPointCollection) ProtobufGeometryUtils.FromShapeMsg(
 					response.RemovableSegments[0].ProtectedPoints);
 
-			Assert.AreEqual(2, protectedPoints!.PointCount);
+			Assert.AreEqual(2, protectedPoints.PointCount);
 
 			deletablePoints = (IPointCollection)
 				ProtobufGeometryUtils.FromShapeMsg(response.RemovableSegments[0].PointsToDelete);
 
 			// 5 - 2 protected = 3
-			Assert.AreEqual(3, deletablePoints!.PointCount);
+			Assert.AreEqual(3, deletablePoints.PointCount);
 
 			removableSegments = response.RemovableSegments[0].ShortSegments;
 
@@ -269,7 +269,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 				ProtobufGeometryUtils.FromShapeMsg(response.RemovableSegments[0].PointsToDelete);
 
 			// No protection from target in different class:
-			Assert.AreEqual(5, deletablePoints!.PointCount);
+			Assert.AreEqual(5, deletablePoints.PointCount);
 
 			ICollection<ShortSegmentMsg> removableSegments =
 				response.RemovableSegments[0].ShortSegments;

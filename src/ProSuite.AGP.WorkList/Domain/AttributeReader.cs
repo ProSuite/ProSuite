@@ -8,8 +8,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
-	// todo daro: extract super class?
-
 	public class AttributeReader : IAttributeReader
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -25,12 +23,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public AttributeReader(TableDefinition definition, params Attributes[] attributes)
 		{
-			// todo daro: add all
-			// todo daro: does FindField works with qualified field names?
-
-			// todo daro: remove, not needed anymore
-			//_fieldNameByIssueAttribute.Add(Attributes.ObjectID, definition.GetObjectIDField());
-
 			_fieldNameByIssueAttribute.Add(Attributes.IssueCode, "Code");
 			_fieldNameByIssueAttribute.Add(Attributes.IssueCodeDescription, "CodeDescription");
 			_fieldNameByIssueAttribute.Add(Attributes.InvolvedObjects, "InvolvedObjects");

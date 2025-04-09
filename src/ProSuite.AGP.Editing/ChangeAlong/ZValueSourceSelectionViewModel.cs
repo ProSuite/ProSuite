@@ -17,11 +17,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				if (args.PropertyName == nameof(CentralizableSetting.CurrentValue))
 				{
 					OnPropertyChanged(nameof(CurrentValue));
+					OnPropertyChanged(nameof(ToolTip));
 				}
 
-				if (args.PropertyName == nameof(CentralizableSetting.ToolTip))
+				if (args.PropertyName == nameof(CentralizableSetting.HasLocalOverride))
 				{
-					OnPropertyChanged(nameof(Tooltip));
+					OnPropertyChanged(nameof(ToolTip));
 				}
 			};
 		}
@@ -45,9 +46,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
-		public string Tooltip
+		public string ToolTip
 		{
-			get => CentralizableSetting.ToolTip;
+			get => ManagedOptionsUtils.GetMessage(CentralizableSetting);
 		}
 	}
 }
