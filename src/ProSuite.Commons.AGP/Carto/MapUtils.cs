@@ -93,7 +93,8 @@ namespace ProSuite.Commons.AGP.Carto
 		#endregion
 
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
-			Dictionary<MapMember, List<long>> oidsByLayer)
+			[NotNull] Dictionary<MapMember, List<long>> oidsByLayer,
+			[CanBeNull] Predicate<Table> predicate = null)
 		{
 			var result = new Dictionary<Table, SimpleSet<long>>();
 			var distinctTableIds = new Dictionary<GdbTableIdentity, Table>();
@@ -102,17 +103,20 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				Table table = DatasetUtils.GetDatabaseTable(GetTable(pair.Key));
 
+				if (predicate != null && ! predicate(table))
+				{
+					continue;
+				}
+
 				var tableId = new GdbTableIdentity(table);
 
-				if (! distinctTableIds.ContainsKey(tableId))
+				if (! distinctTableIds.TryGetValue(tableId, out Table distinctTable))
 				{
 					distinctTableIds.Add(tableId, table);
 					result.Add(table, new SimpleSet<long>(pair.Value));
 				}
 				else
 				{
-					Table distinctTable = distinctTableIds[tableId];
-
 					SimpleSet<long> ids = result[distinctTable];
 					foreach (long id in pair.Value)
 					{
@@ -813,9 +817,13 @@ namespace ProSuite.Commons.AGP.Carto
 			[NotNull] MapView mapView,
 			IEnumerable<Geometry> geometries,
 			int milliseconds = 400,
+			CIMColor color = null,
 			bool useReferenceScale = false)
 		{
-			CIMRGBColor green = ColorUtils.CreateRGB(0, 200, 0);
+			if (color == null)
+			{
+				color = ColorUtils.CreateRGB(0, 200, 0);
+			}
 
 			List<Overlay> overlays = new List<Overlay>();
 
@@ -824,18 +832,18 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				if (group.Key == 0)
 				{
-					symbol = SymbolUtils.CreateMarker(green, 4, SymbolUtils.MarkerStyle.Circle)
+					symbol = SymbolUtils.CreateMarker(color, 4, SymbolUtils.MarkerStyle.Circle)
 					                    .MakePointSymbol();
 				}
 
 				if (group.Key == 1)
 				{
-					symbol = SymbolUtils.CreateLineSymbol(green, 2);
+					symbol = SymbolUtils.CreateLineSymbol(color, 2);
 				}
 
 				if (group.Key == 2)
 				{
-					symbol = SymbolUtils.CreatePolygonSymbol(SymbolUtils.CreateSolidFill(green));
+					symbol = SymbolUtils.CreatePolygonSymbol(SymbolUtils.CreateSolidFill(color));
 				}
 
 				foreach (Geometry geometry in group)
