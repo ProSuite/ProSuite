@@ -352,6 +352,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					             $"{table.GetDefinition().GetObjectIDField()} IN ({StringUtils.Concatenate(objectIds, ", ")})"
 			             };
 
+			// TODO: Check SQL if using filter.ObjectIDs, it might be more efficient
+
 			filter.OutputSpatialReference = outputSpatialReference;
 
 			return filter;
