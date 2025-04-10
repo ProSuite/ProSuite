@@ -288,36 +288,44 @@ namespace ProSuite.Microservices.Client.QA
 
 		private void HandleProgressMsg(VerificationResponse responseMsg)
 		{
-			Progress.RemoteCallStatus =
-				(ServiceCallStatus) responseMsg.ServiceCallStatus;
-
-			foreach (IssueMsg issueMessage in responseMsg.Issues)
+			try
 			{
-				ResultIssueCollector?.AddIssueMessage(issueMessage);
-			}
+				Progress.RemoteCallStatus =
+					(ServiceCallStatus) responseMsg.ServiceCallStatus;
 
-			foreach (GdbObjRefMsg objRefMsg in responseMsg.ObsoleteExceptions)
-			{
-				ResultIssueCollector?.AddObsoleteException(objRefMsg);
-			}
-
-			UpdateServiceProgress(Progress, responseMsg);
-
-			if (responseMsg.ServiceCallStatus != (int) ServiceCallStatus.Running)
-			{
-				// Final message: Finished, Failed or Cancelled
-
-				if (QualityVerificationResult != null)
+				foreach (IssueMsg issueMessage in responseMsg.Issues)
 				{
-					QualityVerificationResult.VerificationMsg =
-						responseMsg.QualityVerification;
-
-					ResultIssueCollector?.SetVerifiedPerimeter(
-						responseMsg.VerifiedPerimeter);
+					ResultIssueCollector?.AddIssueMessage(issueMessage);
 				}
-			}
 
-			LogProgress(responseMsg.Progress, responseMsg.Issues.Count);
+				foreach (GdbObjRefMsg objRefMsg in responseMsg.ObsoleteExceptions)
+				{
+					ResultIssueCollector?.AddObsoleteException(objRefMsg);
+				}
+
+				UpdateServiceProgress(Progress, responseMsg);
+
+				if (responseMsg.ServiceCallStatus != (int) ServiceCallStatus.Running)
+				{
+					// Final message: Finished, Failed or Cancelled
+
+					if (QualityVerificationResult != null)
+					{
+						QualityVerificationResult.VerificationMsg =
+							responseMsg.QualityVerification;
+
+						ResultIssueCollector?.SetVerifiedPerimeter(
+							responseMsg.VerifiedPerimeter);
+					}
+				}
+
+				LogProgress(responseMsg.Progress, responseMsg.Issues.Count);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error handling progress: {e.Message}", e);
+				throw;
+			}
 		}
 
 		private static void LogProgress(VerificationProgressMsg progressMsg,
