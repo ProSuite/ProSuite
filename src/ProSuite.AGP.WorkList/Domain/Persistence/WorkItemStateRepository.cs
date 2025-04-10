@@ -37,18 +37,18 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 		public int? CurrentIndex { get; set; }
 
-		public IWorkItem Refresh(IWorkItem item)
+		public void Refresh(IWorkItem item)
 		{
 			TState state = Lookup(item);
 
 			if (state == null)
 			{
-				return item;
+				return;
 			}
 
 			item.Visited = state.Visited;
 
-			return RefreshCore(item, state);
+			RefreshCore(item, state);
 		}
 
 		public void UpdateState([NotNull] IWorkItem item)
@@ -121,10 +121,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			StatesByRow = new Dictionary<GdbObjectReference, TState>();
 		}
 
-		protected virtual IWorkItem RefreshCore([NotNull] IWorkItem item, [NotNull] TState state)
-		{
-			return item;
-		}
+		protected virtual void RefreshCore([NotNull] IWorkItem item, [NotNull] TState state) { }
 
 		protected virtual void UpdateCore(TState state, IWorkItem item) { }
 

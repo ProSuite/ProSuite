@@ -31,6 +31,21 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
+		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter = null, bool recycle = true, bool excludeGeometry = false)
+		{
+			IEnumerable<IWorkItem> result = filter == null
+				                                ? _items
+				                                : _items.Where(item => filter.ObjectIDs.Contains(item.GdbRowProxy.ObjectId));
+
+			IEnumerable<KeyValuePair<IWorkItem, Geometry>> dictionary = result.ToDictionary(item => item, item => item.Geometry);
+
+			foreach ((IWorkItem item, Geometry geometry) in dictionary)
+			{
+				WorkItemStateRepository?.Refresh(item);
+				yield return KeyValuePair.Create(item, geometry);
+			}
+		}
+
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
 			IEnumerable<IWorkItem> result = filter == null

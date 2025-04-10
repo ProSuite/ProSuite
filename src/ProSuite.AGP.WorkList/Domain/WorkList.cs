@@ -172,7 +172,18 @@ namespace ProSuite.AGP.WorkList.Domain
 					if (item.HasFeatureGeometry && UseItemGeometry(item))
 					{
 						Assert.NotNull(item.Geometry);
-						return (Polygon) item.Geometry;
+
+						switch (item.GeometryType)
+						{
+							case GeometryType.Polyline:
+								var polyline = (Polyline) item.Geometry;
+								return PolygonBuilderEx.CreatePolygon(polyline, item.Geometry.SpatialReference);
+							case GeometryType.Polygon:
+								return (Polygon) item.Geometry;
+
+							default:
+								throw new ArgumentOutOfRangeException();
+						}
 					}
 				}
 
@@ -202,7 +213,19 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private static bool UseItemGeometry([NotNull] IWorkItem item)
 		{
-			switch (item.GeometryType)
+			GeometryType? geometryType = item.GeometryType;
+			return UseItemGeometry(geometryType);
+		}
+
+		private static bool UseItemGeometry(Geometry geometry)
+		{
+			GeometryType geometryType = geometry.GeometryType;
+			return UseItemGeometry(geometryType);
+		}
+
+		private static bool UseItemGeometry(GeometryType? geometryType)
+		{
+			switch (geometryType)
 			{
 				case GeometryType.Polyline:
 				case GeometryType.Polygon:
@@ -256,6 +279,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region GetItems
 
+
+		// TODO: (daro) always buffers geometry....
 		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null)
 		{
 			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
@@ -271,57 +296,46 @@ namespace ProSuite.AGP.WorkList.Domain
 			// Note: SelectionItemRepository ensures only items of selected rows are returned.
 			//		 For DbStatusWorkItemRepository make sure not entire database is searched.
 			//		 filter by AOI.
-			foreach (IWorkItem item in Repository.GetItems(filter))
+
+
+			// TODO: daro Invalidate leads to what kind of filter?
+
+			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter))
 			{
-				Envelope extent = item.HasExtent ? item.Extent : null;
-
-				if (extent is { IsEmpty: false })
-				{
-					sref = extent.SpatialReference;
-				}
-
 				if (_rowMap.TryGetValue(item.GdbRowProxy, out IWorkItem cachedItem))
 				{
-					// TODO: (daro) hydrate
+					Assert.True(cachedItem.OID > 0, "item is not initialized");
+
+					// Don't refresh the item. Use cached geometry. In case of a geometry update, insert => IRowCache kicks in
 					// If it's a cached item > update its state
 					Repository.UpdateState(cachedItem);
-
-					if (item.HasFeatureGeometry)
-					{
-						cachedItem.Geometry = item.Geometry;
-					}
-					else if (extent is { IsEmpty: false })
-					{
-						// TODO: (daro) refactor
-						cachedItem.Extent = item.Extent;
-					}
-
-					Assert.True(cachedItem.OID > 0, "item OID not initialized");
 
 					yield return cachedItem;
 				}
 				else
 				{
-					// If it's a new unkown item > refresh the item by its state that
-					// might come from persisted definition file.
-					// TODO: (daro) merge into Refresh?
+					Assert.True(item.OID == 0, $"item {item} is already initialized");
 
-					// TODO: not needed because it's done in Repository.GetItems()
-					// TODO: refresh state only for known items?
-					//Repository.Refresh(item);
-					if (item.OID == 0)
-					{
-						item.OID = Repository.GetNextOid();
-					}
+					newItemsCount++;
+
+					HydrateItem(item, geometry);
 
 					_rowMap.Add(item.GdbRowProxy, item);
 					_items.Add(item);
 
+					if (item.HasExtent)
+					{
+						yield return item;
+					}
+					
+					if (item.Extent is { IsEmpty: false })
+					{
+						sref = item.Extent.SpatialReference;
+					}
+
 					GetExtentFromItems(item,
 					                   ref xmin, ref ymin, ref zmin,
 					                   ref xmax, ref ymax, ref zmax);
-
-					newItemsCount++;
 					yield return item;
 				}
 			}
@@ -345,6 +359,25 @@ namespace ProSuite.AGP.WorkList.Domain
 			Extent = Extent == null ? newExtent : Extent.Union(newExtent);
 		}
 
+		private void HydrateItem([NotNull] IWorkItem item, [CanBeNull] Geometry geometry)
+		{
+			item.OID = Repository.GetNextOid();
+
+			if (geometry == null)
+			{
+				return;
+			}
+
+			if (UseItemGeometry(geometry))
+			{
+				item.SetGeometry(GeometryUtils.Buffer(geometry, 10));
+			}
+			else
+			{
+				item.SetExtent(geometry.Extent);
+			}
+		}
+
 		#endregion
 
 		// TODO: daro find ways to speed up?
@@ -358,13 +391,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			int total = 0;
 			todo = 0;
 
-			// TODO: daro doesn't work for shape file
-			QueryFilter filter = new QueryFilter
-			                     {
-				                     SubFields = "OBJECTID"
-			                     };
-
-			foreach (IWorkItem item in Repository.GetItems(filter))
+			foreach ((IWorkItem item, Geometry _) in Repository.GetItems(filter: null, recycle: true, excludeGeometry: true))
 			{
 				if (item.Status == WorkItemStatus.Todo)
 				{
@@ -587,27 +614,12 @@ namespace ProSuite.AGP.WorkList.Domain
 					// and qualify each candidate with "intersects" / "within" 
 					// --> filter result
 
-					// Note daro old implementation
-					// search the items fully within the search extent
-					//IList<WorkItem> workItems = GetItems(statusSearch, currentSearch,
-					//                                     visitedSearch, startIndex,
-					//                                     intersection,
-					//                                     SpatialSearchOption.Within,
-					//                                     match);
-
 					var workItems =
 						GetItems(GdbQueryUtils.CreateSpatialFilter(intersection, SpatialRelationship.Contains), currentSearch, visitedSearch).ToList();
 
 					if (workItems.Count == 0)
 					{
 						_msg.VerboseDebug(() => "The intersection contains no items, searching partially contained items");
-
-						// Note daro old implementation
-						// search also intersecting items
-						//workItems = GetItems(statusSearch, currentSearch,
-						//					 visitedSearch, startIndex,
-						//					 intersection, SpatialSearchOption.Intersect,
-						//					 match);
 						
 						workItems =
 							GetItems(GdbQueryUtils.CreateSpatialFilter(intersection), currentSearch, visitedSearch).ToList();
@@ -625,8 +637,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 
 			// nothing found so far. Search entire work list
-			// Note daro old implementation
-			//return GetItems(statusSearch, currentSearch, visitedSearch, startIndex, match);
 
 			// Note: SelectionItemRepository ensures only items of selected rows are returned.
 			//		 For DbStatusWorkItemRepository make sure not entire database is searched.
@@ -634,7 +644,15 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			// TODO: daro use GdbQueryUtils.CreateSpatialFilter(AreaOfInterest)
 			// TODO: daro use status search: see comment in GdbItemRepository.GetItems
-			return GetItems(null, currentSearch, visitedSearch).ToList();
+			return GetWorkItemsForInnermostContextCore(null, visitedSearch, currentSearch).ToList();
+		}
+
+		protected virtual IEnumerable<IWorkItem> GetWorkItemsForInnermostContextCore(
+			QueryFilter filter,
+			VisitedSearchOption visitedSearch,
+			CurrentSearchOption currentSearch)
+		{
+			return GetItems(filter, currentSearch, visitedSearch);
 		}
 
 		#region GetItems
@@ -1182,6 +1200,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			_msg.Debug("Invalidate");
 
+			// TODO: (daro) revise
 			//if (! HasCurrentItem)
 			//{
 			//	GoNearest(MapView.Active.Extent);
@@ -1194,6 +1213,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			_msg.Debug("Invalidate by geometry");
 
+			// TODO: (daro) revise
 			//RefreshItems();
 
 			if (! HasCurrentItem)
@@ -1275,7 +1295,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 
 				// invalidate item removes it from work list cache
-				Assert.True(InvalidateWorkItem(rowId), $"Invalidate work item failed: {rowId} not part of work list");
+				bool invalidated = InvalidateWorkItem(rowId);
+				Assert.True(invalidated, $"Invalidate work item failed: {rowId} not part of work list");
 			}
 
 			Assert.NotNull(Extent);
@@ -1289,7 +1310,10 @@ namespace ProSuite.AGP.WorkList.Domain
 			foreach (long oid in oids)
 			{
 				var rowId = new GdbRowIdentity(oid, tableId);
-				Assert.True(InvalidateWorkItem(rowId), $"Invalidate work item failed: {rowId} not part of work list");
+
+				// invalidate item removes it from work list cache
+				bool invalidated = InvalidateWorkItem(rowId);
+				Assert.True(invalidated, $"Invalidate work item failed: {rowId} not part of work list");
 			}
 		}
 

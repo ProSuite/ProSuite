@@ -22,6 +22,7 @@ namespace ProSuite.AGP.WorkList
 
 		private int _lastUsedOid;
 
+		// TODO: Create basic record for each source class: Table, DefinitionQuery, StatusSchema
 		protected GdbItemRepository(IEnumerable<Table> tables,
 		                            IWorkItemStateRepository workItemStateRepository,
 		                            // ReSharper disable once UnusedParameter.Local because it is required by dynamic instantiation
@@ -47,22 +48,6 @@ namespace ProSuite.AGP.WorkList
 				_msg.Warn("Some source classes have duplicate table ids. " +
 				          "Please ensure they have unique table names if they are not registered");
 			}
-		}
-
-		// TODO: Create basic record for each source class: Table, DefinitionQuery, StatusSchema
-		protected GdbItemRepository(IEnumerable<Tuple<Table, string>> tableWithDefinitionQuery,
-		                            IWorkItemStateRepository workItemStateRepository,
-		                            [CanBeNull] IWorkListItemDatastore tableSchema = null)
-		{
-			foreach ((Table table, string definitionQuery) in tableWithDefinitionQuery)
-			{
-				ISourceClass sourceClass =
-					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition(),
-					                  tableSchema, definitionQuery);
-				SourceClasses.Add(sourceClass);
-			}
-
-			WorkItemStateRepository = workItemStateRepository;
 		}
 
 		protected GdbItemRepository(
@@ -115,15 +100,17 @@ namespace ProSuite.AGP.WorkList
 		public abstract bool CanUseTableSchema(
 			[CanBeNull] IWorkListItemDatastore workListItemSchema);
 
-		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
+		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+			QueryFilter filter = null, bool recycle = true, bool excludeGeometry = false)
 		{
-			return SourceClasses.SelectMany(sourceClass => GetItems(sourceClass, filter, null, recycle));
+			return SourceClasses.SelectMany(sourceClass =>
+				                                GetItems(sourceClass, filter, null, recycle));
 		}
 
-		private IEnumerable<IWorkItem> GetItems(ISourceClass sourceClass,
-		                                        QueryFilter filter,
-		                                        WorkItemStatus? statusFilter = null,
-		                                        bool recycle = true)
+		private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(ISourceClass sourceClass,
+			QueryFilter filter,
+			WorkItemStatus? statusFilter = null,
+			bool recycle = true, bool excludeGeometry = false)
 		{
 			int count = 0;
 
@@ -131,21 +118,29 @@ namespace ProSuite.AGP.WorkList
 
 			filter ??= new QueryFilter();
 
+			if (string.IsNullOrEmpty(filter.SubFields) || string.Equals(filter.SubFields, "*"))
+			{
+				filter.SubFields = excludeGeometry ? "OBJECTID" : "OBJECTID,SHAPE";
+			}
+
 			// Source classes can set the respective filters / definition queries
 			// TODO: Consider getting only the right status, but that means
 			// extra round trips:
 			statusFilter = null;
 			filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
-			
+
 			// Selection Item ObjectIDs to filter out, or change of SearchOrder:
 			AdaptSourceFilter(filter, sourceClass);
 
 			foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
 			{
 				IWorkItem item = CreateWorkItemCore(row, sourceClass);
+				WorkItemStateRepository.Refresh(item);
+
+				Geometry geometry = row is Feature feature ? feature.GetShape() : null;
 
 				count += 1;
-				yield return WorkItemStateRepository.Refresh(item);
+				yield return KeyValuePair.Create(item, geometry);
 			}
 
 			_msg.DebugStopTiming(
@@ -179,12 +174,7 @@ namespace ProSuite.AGP.WorkList
 			// todo: daro read / restore item again from db? restore pattern in case of failure?
 			await SetStatusCoreAsync(item, source);
 		}
-
-		public void Refresh(IWorkItem item)
-		{
-			WorkItemStateRepository.Refresh(item);
-		}
-
+		
 		public void UpdateState(IWorkItem item)
 		{
 			WorkItemStateRepository.UpdateState(item);
@@ -230,6 +220,7 @@ namespace ProSuite.AGP.WorkList
 			return Task.FromResult(0);
 		}
 
+		// TODO: (daro) rename
 		private IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
 		                                     [CanBeNull] QueryFilter filter,
 		                                     bool recycle)

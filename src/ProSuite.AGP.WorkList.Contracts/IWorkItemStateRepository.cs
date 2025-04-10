@@ -9,7 +9,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 	/// </summary>
 	public interface IWorkItemStateRepository
 	{
-		IWorkItem Refresh(IWorkItem item);
+		void Refresh(IWorkItem item);
 
 		void UpdateState(IWorkItem item);
 

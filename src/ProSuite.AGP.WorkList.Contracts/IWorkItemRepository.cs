@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
@@ -12,7 +13,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 	/// </summary>
 	public interface IWorkItemRepository
 	{
-		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true);
+		IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter = null, bool recycle = true, bool excludeGeometry = false);
 
 		void UpdateState(IWorkItem item);
 

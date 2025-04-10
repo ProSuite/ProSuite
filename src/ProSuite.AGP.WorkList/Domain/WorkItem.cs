@@ -27,8 +27,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		private double _zmax;
 		private double _zmin;
 		private Geometry _geometry;
-		private bool _hasFeatureGeometry;
 
+		// TODO: (daro) remove _obj since we don't use multi threading anymore?
 		private static readonly object _obj = new();
 
 		public string Description { get; }
@@ -40,9 +40,9 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			Description = GetDescription(row);
 
-			var feature = row as Feature;
+			//var feature = row as Feature;
 
-			SetExtent(feature);
+			//SetExtent(feature);
 		}
 
 		protected WorkItem(long uniqueTableId, GdbRowIdentity identity)
@@ -56,23 +56,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public bool HasExtent { get; private set; }
 
-		public bool HasFeatureGeometry
-		{
-			get
-			{
-				lock (_obj)
-				{
-					return _hasFeatureGeometry;
-				}
-			}
-			private set
-			{
-				lock (_obj)
-				{
-					_hasFeatureGeometry = value;
-				}
-			}
-		}
+		public bool HasFeatureGeometry { get; private set; }
 
 		#region IWorkItem
 
@@ -112,12 +96,11 @@ namespace ProSuite.AGP.WorkList.Domain
 				lock (_obj)
 				{
 					_geometry = value;
-					HasFeatureGeometry = true;
 				}
 			}
 		}
 
-		public GeometryType? GeometryType { get; set; }
+		public GeometryType? GeometryType { get; private set; }
 
 		public void QueryPoints(out double xmin, out double ymin,
 		                        out double xmax, out double ymax,
@@ -179,6 +162,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			return GdbRowProxy.GetRow();
 		}
 
+		// todo: daro drop
 		public void SetGeometry([CanBeNull] Feature feature)
 		{
 			Geometry geometry = feature?.GetShape();
@@ -188,6 +172,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void SetGeometry([CanBeNull] Geometry geometry)
 		{
+			HasFeatureGeometry = true;
 			Geometry = geometry;
 
 			Envelope extent = geometry?.Extent;
@@ -201,6 +186,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			SetExtent(extent);
 		}
 
+		// todo: daro drop
 		private void SetExtent([CanBeNull] Feature feature)
 		{
 			Geometry geometry = feature?.GetShape();

@@ -9,10 +9,7 @@ public class EmptyWorkItemStateRepository : IWorkItemStateRepository
 
 	public string WorkListDefinitionFilePath { get; set; }
 
-	public IWorkItem Refresh(IWorkItem item)
-	{
-		return item;
-	}
+	public void Refresh(IWorkItem item) { }
 
 	public void UpdateState(IWorkItem item)
 	{

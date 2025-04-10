@@ -52,14 +52,7 @@ namespace ProSuite.AGP.WorkList
 
 			WorkItemStatus status = dbSourceClass.GetStatus(row);
 
-			var item = new DbStatusWorkItem(sourceClass.GetUniqueTableId(), row, status);
-
-			if (row is Feature feature)
-			{
-				item.SetGeometry(feature);
-			}
-
-			return item;
+			return new DbStatusWorkItem(sourceClass.GetUniqueTableId(), row, status);
 		}
 
 		// TODO: Remove other two constructors who need this method

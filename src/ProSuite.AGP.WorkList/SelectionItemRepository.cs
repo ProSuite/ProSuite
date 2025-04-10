@@ -47,14 +47,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			long tableId = sourceClass.GetUniqueTableId();
 
-			var item = new SelectionItem(tableId, row);
-
-			if (row is Feature feature)
-			{
-				item.SetGeometry(feature);
-			}
-
-			return item;
+			return new SelectionItem(tableId, row);
 		}
 
 		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
