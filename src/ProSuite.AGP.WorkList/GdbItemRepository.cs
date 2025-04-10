@@ -117,26 +117,27 @@ namespace ProSuite.AGP.WorkList
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
-			// TODO: (daro) inline
-			foreach (ISourceClass sourceClass in SourceClasses)
-			{
-				foreach (IWorkItem item in GetItems(sourceClass, filter, recycle))
-				{
-					yield return item;
-				}
-			}
+			return SourceClasses.SelectMany(sourceClass => GetItems(sourceClass, filter, null, recycle));
 		}
 
 		private IEnumerable<IWorkItem> GetItems(ISourceClass sourceClass,
 		                                        QueryFilter filter,
-		                                        bool recycle)
+		                                        WorkItemStatus? statusFilter = null,
+		                                        bool recycle = true)
 		{
 			int count = 0;
 
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			// Selection Item ObjectIDs to filter out, or change of SearchOrder:
 			filter ??= new QueryFilter();
+
+			// Source classes can set the respective filters / definition queries
+			// TODO: Consider getting only the right status, but that means
+			// extra round trips:
+			statusFilter = null;
+			filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
+			
+			// Selection Item ObjectIDs to filter out, or change of SearchOrder:
 			AdaptSourceFilter(filter, sourceClass);
 
 			foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
@@ -144,7 +145,6 @@ namespace ProSuite.AGP.WorkList
 				IWorkItem item = CreateWorkItemCore(row, sourceClass);
 
 				count += 1;
-				// TODO: (daro) probably not needed anymore
 				yield return WorkItemStateRepository.Refresh(item);
 			}
 
@@ -188,32 +188,6 @@ namespace ProSuite.AGP.WorkList
 		public void UpdateState(IWorkItem item)
 		{
 			WorkItemStateRepository.UpdateState(item);
-		}
-
-		public IEnumerable<IWorkItem> GetItems(Geometry areaOfInterest,
-		                                       WorkItemStatus? statusFilter,
-		                                       bool recycle = true)
-		{
-			foreach (ISourceClass sourceClass in SourceClasses)
-			{
-				QueryFilter filter = areaOfInterest != null
-					                     ? GdbQueryUtils.CreateSpatialFilter(areaOfInterest)
-					                     : new QueryFilter();
-
-				// Source classes can set the respective filters / definition queries
-				// TODO: Consider getting only the right status, but that means
-				// extra round trips:
-				statusFilter = null;
-				filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
-
-				// Selection Item ObjectIDs to filter out, or change of SearchOrder:
-				AdaptSourceFilter(filter, sourceClass);
-
-				foreach (IWorkItem item in GetItems(sourceClass, filter, recycle))
-				{
-					yield return item;
-				}
-			}
 		}
 
 		public void Commit()

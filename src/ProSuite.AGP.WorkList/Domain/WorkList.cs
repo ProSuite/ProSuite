@@ -22,8 +22,6 @@ namespace ProSuite.AGP.WorkList.Domain
 	/// It maintains a current item and provides
 	/// navigation to change the current item.
 	/// </summary>
-	// todo: daro separate geometry processing code
-	// todo: daro separate QueuedTask code
 	public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatable<WorkList>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -258,9 +256,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region GetItems
 
-		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null,
-		                                               bool ignoreListSettings = false,
-		                                               int startIndex = -1)
+		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null)
 		{
 			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
 			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
@@ -272,8 +268,10 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			int newItemsCount = 0;
 
-			// TODO: (daro) recycle?
-			foreach (IWorkItem item in Repository.GetItems(filter, false))
+			// Note: SelectionItemRepository ensures only items of selected rows are returned.
+			//		 For DbStatusWorkItemRepository make sure not entire database is searched.
+			//		 filter by AOI.
+			foreach (IWorkItem item in Repository.GetItems(filter))
 			{
 				Envelope extent = item.HasExtent ? item.Extent : null;
 
@@ -454,21 +452,16 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			// start after the current item
-			int startIndex = CurrentIndex + 1;
-
 			// first, try to go to an unvisited item
 			bool found = TryGoNearest(contextPerimeters, reference,
-			                          VisitedSearchOption.ExcludeVisited,
-			                          startIndex);
+			                          VisitedSearchOption.ExcludeVisited);
 
 			if (! found)
 			{
 				// if none found, search also the visited ones, but
 				// only those *after* the current item
 				found = TryGoNearest(contextPerimeters, reference,
-				                     VisitedSearchOption.IncludeVisited,
-				                     startIndex);
+				                     VisitedSearchOption.IncludeVisited);
 			}
 
 			if (! found && HasCurrentItem && Current != null)
@@ -539,7 +532,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 
 			var filter = new QueryFilter { ObjectIDs = new[] { oid } };
-			IWorkItem target = GetItems(filter, false).FirstOrDefault();
+			IWorkItem target = GetItems(filter).FirstOrDefault();
 
 			if (target != null)
 			{
@@ -551,12 +544,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private bool TryGoNearest([NotNull] Polygon[] contextPerimeters,
 		                          [NotNull] Geometry reference,
-		                          VisitedSearchOption visitedSearchOption,
-		                          int startIndex)
+		                          VisitedSearchOption visitedSearchOption)
 		{
 			IList<IWorkItem> candidates =
 				GetWorkItemsForInnermostContext(contextPerimeters,
-				                                visitedSearchOption, startIndex);
+				                                visitedSearchOption);
 			if (candidates.Count > 0)
 			{
 				IWorkItem nearest = GetNearest(reference, candidates);
@@ -571,30 +563,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			return false;
 		}
 
-		private bool TryGoNearest2([NotNull] Polygon[] contextPerimeters,
-		                          [NotNull] Geometry reference,
-		                          VisitedSearchOption visitedSearchOption,
-		                          int startIndex)
-		{
-			IEnumerable<IWorkItem> candidates =
-				GetWorkItemsForInnermostContext(contextPerimeters,
-				                                visitedSearchOption, startIndex);
-
-			IWorkItem nearest = GetNearest(reference, candidates);
-
-			if (nearest != null)
-			{
-				SetCurrentItem(nearest, Current);
-				return true;
-			}
-
-			return false;
-		}
-
 		[NotNull]
 		private IList<IWorkItem> GetWorkItemsForInnermostContext([NotNull] Polygon[] perimeters,
-		                                                         VisitedSearchOption visitedSearch,
-		                                                         int startIndex)
+		                                                         VisitedSearchOption visitedSearch)
 		{
 			Assert.ArgumentNotNull(perimeters, nameof(perimeters));
 
@@ -625,12 +596,11 @@ namespace ProSuite.AGP.WorkList.Domain
 					//                                     match);
 
 					var workItems =
-						GetItems(GdbQueryUtils.CreateSpatialFilter(intersection, SpatialRelationship.Contains),
-						         startIndex, currentSearch, visitedSearch).ToList();
+						GetItems(GdbQueryUtils.CreateSpatialFilter(intersection, SpatialRelationship.Contains), currentSearch, visitedSearch).ToList();
 
 					if (workItems.Count == 0)
 					{
-						_msg.VerboseDebug(() => "No work items fully within the intersection, searching partially contained items");
+						_msg.VerboseDebug(() => "The intersection contains no items, searching partially contained items");
 
 						// Note daro old implementation
 						// search also intersecting items
@@ -640,8 +610,7 @@ namespace ProSuite.AGP.WorkList.Domain
 						//					 match);
 						
 						workItems =
-							GetItems(GdbQueryUtils.CreateSpatialFilter(intersection),
-							         startIndex, currentSearch, visitedSearch).ToList();
+							GetItems(GdbQueryUtils.CreateSpatialFilter(intersection), currentSearch, visitedSearch).ToList();
 					}
 
 					_msg.VerboseDebug(() => $"{workItems.Count} work item(s) found");
@@ -659,19 +628,22 @@ namespace ProSuite.AGP.WorkList.Domain
 			// Note daro old implementation
 			//return GetItems(statusSearch, currentSearch, visitedSearch, startIndex, match);
 
+			// Note: SelectionItemRepository ensures only items of selected rows are returned.
+			//		 For DbStatusWorkItemRepository make sure not entire database is searched.
+			//		 filter by AOI.
+
 			// TODO: daro use GdbQueryUtils.CreateSpatialFilter(AreaOfInterest)
-			return GetItems(null,
-			                startIndex, currentSearch, visitedSearch).ToList();
+			// TODO: daro use status search: see comment in GdbItemRepository.GetItems
+			return GetItems(null, currentSearch, visitedSearch).ToList();
 		}
 
 		#region GetItems
 
 		private IEnumerable<IWorkItem> GetItems(
-			QueryFilter filter = null, int startIndex = -1,
-			CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent,
+			QueryFilter filter, CurrentSearchOption currentSearch,
 			VisitedSearchOption visitedSearch = VisitedSearchOption.ExcludeVisited)
 		{
-			IEnumerable<IWorkItem> query = GetItems(filter, false, startIndex);
+			IEnumerable<IWorkItem> query = GetItems(filter);
 
 			if (currentSearch == CurrentSearchOption.ExcludeCurrent)
 			{
@@ -843,7 +815,7 @@ namespace ProSuite.AGP.WorkList.Domain
 					{
 						// todo daro: old implementation
 						//workItem.QueryExtent(otherExtent);
-						Envelope otherExtent = item.Extent;
+						Envelope otherExtent = Assert.NotNull(item.Extent);
 
 						// IWorkItem.Extent from SDE (and reported from ALGR from occasionally from issues.gdb) seems to
 						// to have an unequal SR compared to the referenceGeometry which is the MapView.Current.Extent
@@ -983,6 +955,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		/// <param name="currentItem">The work item.</param>
 		private void SetCurrentItem([NotNull] IWorkItem nextItem, IWorkItem currentItem = null)
 		{
+			// TODO: daro still needed?
 			ReorderCurrentItem(nextItem);
 
 			SetCurrentItemCore(nextItem, currentItem);
@@ -1155,31 +1128,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (extent.ZMax > zmax) zmax = extent.ZMax;
 		}
 
-		private static bool Relates(Geometry a, SpatialRelationship rel, Geometry b)
-		{
-			if (a == null || b == null) return false;
-
-			switch (rel)
-			{
-				case SpatialRelationship.EnvelopeIntersects:
-				case SpatialRelationship.IndexIntersects:
-				case SpatialRelationship.Intersects:
-					return GeometryEngine.Instance.Intersects(a, b);
-				case SpatialRelationship.Touches:
-					return GeometryEngine.Instance.Touches(a, b);
-				case SpatialRelationship.Overlaps:
-					return GeometryEngine.Instance.Overlaps(a, b);
-				case SpatialRelationship.Crosses:
-					return GeometryEngine.Instance.Crosses(a, b);
-				case SpatialRelationship.Within:
-					return GeometryEngine.Instance.Within(a, b);
-				case SpatialRelationship.Contains:
-					return GeometryEngine.Instance.Contains(a, b);
-			}
-
-			return false;
-		}
-
 		private bool IsVisible([NotNull] IWorkItem item)
 		{
 			return IsVisible(item, Visibility);
@@ -1202,13 +1150,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				default:
 					throw new ArgumentOutOfRangeException(nameof(visibility), visibility, null);
 			}
-		}
-
-		private static bool WithinAreaOfInterest(Envelope extent, Geometry areaOfInterest)
-		{
-			if (extent == null) return false;
-			if (areaOfInterest == null) return true;
-			return GeometryEngine.Instance.Intersects(extent, areaOfInterest);
 		}
 
 		#endregion

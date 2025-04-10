@@ -86,7 +86,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			const bool ignoreStatusFilter = false;
 
 			IEnumerable<object[]> list =
-				WorkList.GetItems(queryFilter, ignoreStatusFilter)
+				_workList.GetItems(filter)
 				        .Select(item => GetValues(item, _workList, _workList.Current)); // TODO drop ToList, inline
 
 			//_msg.DebugStopTiming(

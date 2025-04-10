@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
@@ -6,11 +7,13 @@ using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Core.Test;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Hosting;
+using ProSuite.Commons.Testing;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -577,6 +580,51 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);
 
 			AssertEqual(_poly0.Extent, wl.Extent);
+		}
+
+		[Test]
+		public void Can_rename_worklist()
+		{
+			string fileNameWithoutSuffix = nameof(Can_rename_worklist);
+			string fileName = $"{nameof(Can_rename_worklist)}.xml";
+			string path = TestDataPreparer.FromDirectory().GetPath(fileName);
+			var uniqueName = "stateRepo";
+
+			var newName = "Run to the Hills";
+			string newPath = TestDataPreparer.FromDirectory().GetPath("Run to the Hills.xml");
+
+			try
+			{
+				var stateRepo = new XmlSelectionItemStateRepository(path, uniqueName, typeof(IssueWorkList));
+
+				var repo = new ItemRepositoryMock(new List<IWorkItem>(), stateRepo);
+				var wl = new IssueWorkList(repo, uniqueName, "displayName");
+				Assert.AreEqual(uniqueName, wl.Name);
+				Assert.AreEqual("displayName", wl.DisplayName);
+				wl.Commit();
+
+				Assert.True(File.Exists(path));
+				Assert.AreEqual(fileNameWithoutSuffix, WorkListUtils.GetName(path));
+
+				wl.Rename(newName);
+				Assert.AreEqual(uniqueName, wl.Name);
+				Assert.AreEqual(newName, wl.DisplayName);
+				wl.Commit();
+
+				Assert.True(File.Exists(newPath));
+			}
+			finally
+			{
+				if (File.Exists(path))
+				{
+					File.Delete(path);
+				}
+
+				if (File.Exists(newPath))
+				{
+					File.Delete(newPath);
+				}
+			}
 		}
 
 		[Test]

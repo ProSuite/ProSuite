@@ -36,13 +36,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		/// <summary>Yield all work items subject to list settings and the given filter.</summary>
 		/// <param name="filter">optional QueryFilter or SpatialQueryFilter</param>
-		/// <param name="ignoreListSettings">if true, ignore Visibility and AreaOfInterest</param>
-		/// <param name="startIndex"></param>
 		/// <returns></returns>
 		[NotNull]
-		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null,
-		                                bool ignoreListSettings = false,
-		                                int startIndex = -1);
+		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null);
 
 		int Count();
 
