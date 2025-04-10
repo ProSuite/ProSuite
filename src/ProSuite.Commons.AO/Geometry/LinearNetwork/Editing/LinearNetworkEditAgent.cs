@@ -312,7 +312,13 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 
 			if (DeleteOrphanedJunctionsOnEdgeDelete)
 			{
-				DeleteOrphanedJunctions(GetEdgeFeatures(_deletedInOperation));
+				// TOP-5937: Evaluating the where clause will fail on deleted objects. They
+				// presumably have only been added to the delete list because they are part of the network.
+				const bool ignoreWhereClause = true;
+				IEnumerable<IFeature> deletedEdges =
+					GetEdgeFeatures(_deletedInOperation, ignoreWhereClause);
+
+				DeleteOrphanedJunctions(deletedEdges);
 			}
 
 			NetworkEditValidator?.PerformFinalValidation(_updatedInOperation, _createdInOperation,
@@ -731,9 +737,10 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 			}
 		}
 
-		private IEnumerable<IFeature> GetEdgeFeatures([NotNull] IEnumerable<IFeature> fromList)
+		private IEnumerable<IFeature> GetEdgeFeatures([NotNull] IEnumerable<IFeature> fromList,
+		                                              bool ignoreWhereClause = false)
 		{
-			return fromList.Where(f => NetworkDefinition.IsEdgeFeature(f));
+			return fromList.Where(f => NetworkDefinition.IsEdgeFeature(f, ignoreWhereClause));
 		}
 
 		private IEnumerable<IFeature> GetJunctionFeatures([NotNull] IEnumerable<IFeature> fromList)

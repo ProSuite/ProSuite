@@ -42,15 +42,21 @@ public class ScaleConverter : IValueConverter
 			return string.Empty;
 		}
 
-		var denom = System.Convert.ToDouble(value);
-		if (denom <= 0 || ! double.IsFinite(denom))
+		double denom = System.Convert.ToDouble(value);
+		if (denom <= 0 || ! IsFinite(denom))
 		{
 			return string.Empty;
 		}
 
 		return denom < 1
-			       ? string.Create(culture, $"{1/denom}:1")
-			       : string.Create(culture, $"1:{denom}");
+			       ? string.Format(culture, $"{1/denom}:1")
+			       : string.Format(culture, $"1:{denom}");
+	}
+
+	private static bool IsFinite(double value)
+	{
+		// IsFinite does not compile in .net framework
+		return !double.IsNaN(value) && !double.IsInfinity(value);
 	}
 
 	public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

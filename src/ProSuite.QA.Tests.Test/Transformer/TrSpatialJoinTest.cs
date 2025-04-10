@@ -620,7 +620,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[Test]
 		public void CanHandleOutOfTileRequests()
 		{
-			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrIntersect");
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrSpatialJoin");
 
 			IFeatureClass featureClass =
 				CreateFeatureClass(
