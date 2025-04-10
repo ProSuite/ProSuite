@@ -17,7 +17,10 @@
 
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
+    <!-- .net framework: -->
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
     <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
@@ -27,6 +30,7 @@
     <DebugType>pdbonly</DebugType>
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
   </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesGDB, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesGDB.dll</HintPath>

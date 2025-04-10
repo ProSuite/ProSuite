@@ -22,8 +22,8 @@
 
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
-    <!-- This can be changed to 12 once only .NET 8 (and Pro 3.2) support is dropped. -->
-    <LangVersion>10</LangVersion>
+    <!-- .net framework: -->
+    <LangVersion>7.3</LangVersion>
 
   </PropertyGroup>
 

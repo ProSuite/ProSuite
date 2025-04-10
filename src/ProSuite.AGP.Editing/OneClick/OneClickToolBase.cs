@@ -625,7 +625,8 @@ namespace ProSuite.AGP.Editing.OneClick
 						FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
 						                        precedence.SpatialRelationship).ToList();
 
-					List<IPickableItem> items = await PickerUtils.GetItemsAsync(candidates, precedence);
+					List<IPickableItem> items =
+						await PickerUtils.GetItemsAsync(candidates, precedence);
 
 					await OnItemsPickedAsync(items, precedence);
 
@@ -643,10 +644,14 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual Task OnItemsPickedAsync([NotNull] List<IPickableItem> items,
 		                                          [NotNull] IPickerPrecedence precedence)
 		{
+			OnSelecting();
+
 			PickerUtils.Select(items, precedence.SelectionCombinationMethod);
 
 			return Task.CompletedTask;
 		}
+
+		protected virtual void OnSelecting() { }
 
 		protected virtual IPickerPrecedence CreatePickerPrecedence(
 			[NotNull] Geometry sketchGeometry)
