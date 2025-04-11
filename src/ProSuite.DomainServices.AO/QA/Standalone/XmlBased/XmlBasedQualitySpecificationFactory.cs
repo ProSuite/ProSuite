@@ -158,7 +158,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				if (createdCondition == null)
 				{
 					InstanceConfigurationUtils.HandleNoConditionCreated(
-						xmlCondition.Name, modelsByWorkspaceId, factorySettings.IgnoreConditionsForUnknownDatasets,
+						xmlCondition.Name, modelsByWorkspaceId,
+						factorySettings.IgnoreConditionsForUnknownDatasets,
 						unknownDatasetParameters);
 				}
 				else
