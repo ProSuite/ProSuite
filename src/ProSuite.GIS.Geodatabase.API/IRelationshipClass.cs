@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.GIS.Geodatabase.API
 {
@@ -44,11 +45,13 @@ namespace ProSuite.GIS.Geodatabase.API
 
 		void DeleteRelationshipsForObject(IObject anObject);
 
-		IEnumerable<IObject> GetObjectsRelatedToObjectSet(ISet anObjectSet);
+		IEnumerable<IObject> GetObjectsRelatedToObjectSet(IList<IObject> objectList);
+		//IEnumerable<IObject> GetObjectsRelatedToObjectSet(ISet anObjectSet);
 
 		//IEnumRelationship GetRelationshipsForObjectSet(ISet anObjectSet);
 
-		//IRelClassEnumRowPairs GetObjectsMatchingObjectSet(ISet srcObjectSet);
+		IEnumerable<KeyValuePair<T, IObject>> GetObjectsMatchingObjectSet<T>(
+			[NotNull] IEnumerable<T> sourceObjects) where T : IObject;
 
 		void DeleteRelationshipsForObjectSet(ISet anObjectSet);
 
@@ -64,22 +67,5 @@ namespace ProSuite.GIS.Geodatabase.API
 		esriRelRoleAny = 1,
 		esriRelRoleOrigin = 2,
 		esriRelRoleDestination = 3,
-	}
-
-	public interface ISet
-	{
-		void Add(object unk);
-
-		void Remove(object unk);
-
-		void RemoveAll();
-
-		object Find(object unk);
-
-		object Next();
-
-		void Reset();
-
-		int Count { get; }
 	}
 }

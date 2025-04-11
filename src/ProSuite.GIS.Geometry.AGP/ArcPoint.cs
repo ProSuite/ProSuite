@@ -13,7 +13,7 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public MapPoint ProPoint { get; set; }
 
-		#region Implementation of IGeometry
+		#region Implementation of IPoint
 
 		public void QueryCoords(out double x, out double y)
 		{
