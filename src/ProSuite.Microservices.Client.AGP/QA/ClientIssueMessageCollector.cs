@@ -25,6 +25,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private readonly List<IssueMsg> _issueMessages = new();
 		private readonly List<GdbObjRefMsg> _obsoleteExceptionGdbRefs = new();
 
+		private ShapeMsg _verifiedPerimeterMsg;
+
 		[CanBeNull] private readonly IIssueStore _issueStore;
 
 		private int _verifiedSpecificationId = -1;
@@ -90,6 +92,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			await QueuedTask.Run(() =>
 			{
+				if (_verifiedPerimeterMsg != null)
+				{
+					VerifiedPerimeter = ProtobufConversionUtils.FromShapeMsg(_verifiedPerimeterMsg);
+				}
+
 				objectsToVerify = VerifiedRows?.Select(row => new GdbObjectReference(
 					                                       row.GetTable().GetID(),
 					                                       row.GetObjectID()))
@@ -135,7 +142,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		{
 			if (perimeterMsg != null)
 			{
-				VerifiedPerimeter = ProtobufConversionUtils.FromShapeMsg(perimeterMsg);
+				// We're potentially on an MTA thread, no COM!
+				_verifiedPerimeterMsg = perimeterMsg;
 			}
 		}
 
