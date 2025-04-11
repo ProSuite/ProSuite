@@ -13,62 +13,158 @@ namespace ProSuite.GIS.Geodatabase.AGP
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly RelationshipClass _proRelationshipClass;
+		private bool _cachePropertiesEagerly;
 		private readonly RelationshipClassDefinition _proRelationshipClassDefinition;
 
-		public ArcRelationshipClass(RelationshipClass proRelationshipClass)
+		// Property caching for non CIM-thread access:
+		[CanBeNull] private string _name;
+		private long? _relationshipClassId;
+		private string _originPrimaryKey;
+		private string _destinationPrimaryKey;
+		private string _originForeignKey;
+		private string _destinationForeignKey;
+		private string _forwardPathLabel;
+		private string _backwardPathLabel;
+		private esriRelCardinality? _cardinality;
+		private bool? _isComposite;
+		private IObjectClass _originClass;
+		private IObjectClass _destinationClass;
+
+		public static ArcRelationshipClass Create([NotNull] RelationshipClass proRelationshipClass,
+		                                          bool cacheEagerly = false)
 		{
-			_proRelationshipClass = proRelationshipClass;
-			_proRelationshipClassDefinition = proRelationshipClass.GetDefinition();
+			var gdb = (ArcGIS.Core.Data.Geodatabase) proRelationshipClass.GetDatastore();
+
+			ArcWorkspace existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle);
+
+			ArcRelationshipClass found =
+				existingWorkspace?.GetRelClassByName(proRelationshipClass.GetName());
+
+			if (found != null)
+			{
+				if (cacheEagerly)
+				{
+					found.CacheProperties();
+				}
+
+				return found;
+			}
+
+			var result = new ArcRelationshipClass(proRelationshipClass, cacheEagerly);
+
+			existingWorkspace?.Cache(result);
+
+			return result;
 		}
 
-		public RelationshipClass ProRelationshipClass => _proRelationshipClass;
+		public ArcRelationshipClass(RelationshipClass proRelationshipClass,
+		                            bool cachePropertiesEagerly = false)
+		{
+			ProRelationshipClass = proRelationshipClass;
+			_proRelationshipClassDefinition = proRelationshipClass.GetDefinition();
+
+			if (cachePropertiesEagerly)
+			{
+				CacheProperties();
+			}
+		}
+
+		public RelationshipClass ProRelationshipClass { get; }
+
+		internal void CacheProperties()
+		{
+			if (_cachePropertiesEagerly)
+			{
+				// Already cached
+				return;
+			}
+
+			// In case the method is called on an existing instance:
+			_cachePropertiesEagerly = true;
+
+			ArcWorkspace.Create((ArcGIS.Core.Data.Geodatabase) ProRelationshipClass.GetDatastore(),
+			                    true);
+
+			_originPrimaryKey = OriginPrimaryKey;
+			_originForeignKey = OriginForeignKey;
+			_destinationPrimaryKey = DestinationPrimaryKey;
+			_destinationForeignKey = DestinationForeignKey;
+			_forwardPathLabel = ForwardPathLabel;
+			_backwardPathLabel = BackwardPathLabel;
+			_cardinality = Cardinality;
+			_isComposite = IsComposite;
+			_originClass = PrepareCached(OriginClass);
+			_destinationClass = PrepareCached(DestinationClass);
+		}
 
 		#region Implementation of IRelationshipClass
 
-		public string OriginPrimaryKey => _proRelationshipClassDefinition.GetOriginKeyField();
+		public string OriginPrimaryKey
+		{
+			get
+			{
+				return _originPrimaryKey ??= _proRelationshipClassDefinition.GetOriginKeyField();
+			}
+		}
 
 		public string DestinationPrimaryKey
 		{
 			get
 			{
-				if (_proRelationshipClassDefinition is
-				    AttributedRelationshipClassDefinition attributedRelClass)
+				if (_destinationPrimaryKey == null)
 				{
-					return attributedRelClass.GetDestinationKeyField();
+					if (_proRelationshipClassDefinition is AttributedRelationshipClassDefinition
+					    attributedRelClass)
+					{
+						_destinationPrimaryKey = attributedRelClass.GetDestinationKeyField();
+					}
+					else
+					{
+						// Only attributed (m:n) relationship classes have a destination key field
+						return null;
+					}
 				}
 
-				throw new InvalidOperationException(
-					"Only attributed (m:n) relationship classes have a destination key field");
+				return _destinationPrimaryKey;
 			}
 		}
 
 		public string OriginForeignKey =>
-			_proRelationshipClassDefinition.GetOriginForeignKeyField();
+			_originForeignKey ??= _proRelationshipClassDefinition.GetOriginForeignKeyField();
 
 		public string DestinationForeignKey
 		{
 			get
 			{
-				if (_proRelationshipClassDefinition is
-				    AttributedRelationshipClassDefinition attributedRelClass)
+				if (_destinationForeignKey == null)
 				{
-					return attributedRelClass.GetDestinationForeignKeyField();
+					if (_proRelationshipClassDefinition is
+					    AttributedRelationshipClassDefinition attributedRelClass)
+					{
+						return attributedRelClass.GetDestinationForeignKeyField();
+					}
+
+					// Only attributed (m:n) relationship classes have a destination foreign key field
+					return null;
 				}
 
-				throw new InvalidOperationException(
-					"Only attributed (m:n) relationship classes have a destination foreign key field");
+				return _destinationForeignKey;
 			}
 		}
 
-		public long RelationshipClassID => _proRelationshipClass.GetID();
+		public long RelationshipClassID => _relationshipClassId ??= ProRelationshipClass.GetID();
 
 		public IObjectClass OriginClass
 		{
 			get
 			{
+				if (_originClass != null)
+				{
+					return _originClass;
+				}
+
 				ArcGIS.Core.Data.Geodatabase geodatabase =
-					_proRelationshipClass.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
+					ProRelationshipClass.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
 
 				Assert.NotNull(geodatabase, "No geodatabase could be retrieved from rel class");
 
@@ -76,7 +172,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 				Table originClass = geodatabase.OpenDataset<Table>(originClassName);
 
-				return ArcGeodatabaseUtils.ToArcTable(originClass);
+				return _originClass = ArcGeodatabaseUtils.ToArcTable(originClass, _cachePropertiesEagerly);
 			}
 		}
 
@@ -84,8 +180,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get
 			{
+				if (_destinationClass != null)
+				{
+					return _destinationClass;
+				}
+
 				ArcGIS.Core.Data.Geodatabase geodatabase =
-					_proRelationshipClass.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
+					ProRelationshipClass.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
 
 				Assert.NotNull(geodatabase, "No geodatabase could be retrieved from rel class");
 
@@ -93,20 +194,24 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 				Table destinationClass = geodatabase.OpenDataset<Table>(destinationClassName);
 
-				return ArcGeodatabaseUtils.ToArcTable(destinationClass);
+				return _destinationClass =
+					       ArcGeodatabaseUtils.ToArcTable(destinationClass, _cachePropertiesEagerly);
 			}
 		}
 
-		public string ForwardPathLabel => _proRelationshipClassDefinition.GetForwardPathLabel();
+		public string ForwardPathLabel =>
+			_forwardPathLabel ??= _proRelationshipClassDefinition.GetForwardPathLabel();
 
-		public string BackwardPathLabel => _proRelationshipClassDefinition.GetBackwardPathLabel();
+		public string BackwardPathLabel => _backwardPathLabel ??=
+			                                   _proRelationshipClassDefinition
+				                                   .GetBackwardPathLabel();
 
 		public esriRelCardinality Cardinality =>
-			(esriRelCardinality) _proRelationshipClassDefinition.GetCardinality();
+			_cardinality ??= (esriRelCardinality) _proRelationshipClassDefinition.GetCardinality();
 
-		public bool IsAttributed => _proRelationshipClass is AttributedRelationshipClass;
+		public bool IsAttributed => ProRelationshipClass is AttributedRelationshipClass;
 
-		public bool IsComposite => _proRelationshipClassDefinition.IsComposite();
+		public bool IsComposite => _isComposite ??= _proRelationshipClassDefinition.IsComposite();
 
 		public IRelationship CreateRelationship(IObject originObject, IObject destinationObject)
 		{
@@ -114,10 +219,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			ArcRow arcDestinationObj = (ArcRow) destinationObject;
 
 			var aoRelationship =
-				_proRelationshipClass.CreateRelationship(arcOriginObj.ProRow,
-				                                         arcDestinationObj.ProRow);
+				ProRelationshipClass.CreateRelationship(arcOriginObj.ProRow,
+				                                        arcDestinationObj.ProRow);
 
-			return new ArcRelationship(aoRelationship, _proRelationshipClass);
+			return new ArcRelationship(aoRelationship, ProRelationshipClass);
 		}
 
 		public IRelationship GetRelationship(IObject originObject, IObject destinationObject)
@@ -130,7 +235,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			var originRow = ((ArcRow) originObject).ProRow;
 			var destinationRow = ((ArcRow) destinationObject).ProRow;
 
-			_proRelationshipClass.DeleteRelationship(originRow, destinationRow);
+			ProRelationshipClass.DeleteRelationship(originRow, destinationRow);
 		}
 
 		public IEnumerable<IObject> GetObjectsRelatedToObject(IObject anObject)
@@ -160,7 +265,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				if (sourceClassName == _proRelationshipClassDefinition.GetOriginClass())
 				{
-					_proRelationshipClass.DeleteRelationship(sourceRow, relatedRow);
+					ProRelationshipClass.DeleteRelationship(sourceRow, relatedRow);
 				}
 				else
 				{
@@ -168,7 +273,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 						sourceClassName == _proRelationshipClassDefinition.GetDestinationClass(),
 						"Object is neither origin nor destination of relationship class");
 
-					_proRelationshipClass.DeleteRelationship(relatedRow, sourceRow);
+					ProRelationshipClass.DeleteRelationship(relatedRow, sourceRow);
 				}
 			}
 		}
@@ -210,7 +315,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			int pairCount = 0;
 
-			if (_proRelationshipClass is AttributedRelationshipClass attributedRelationshipClass)
+			if (ProRelationshipClass is AttributedRelationshipClass attributedRelationshipClass)
 			{
 				foreach (AttributedRelationship attributedRelationship in
 				         attributedRelationshipClass.GetRelationshipsForOriginRows(
@@ -237,7 +342,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				string foreignKeyFieldName = OriginForeignKey;
 				int originPrimaryKeyIdx = OriginClass.FindField(OriginPrimaryKey);
 
-				foreach (Row proDestinationRow in _proRelationshipClass.GetRowsRelatedToOriginRows(
+				foreach (Row proDestinationRow in ProRelationshipClass.GetRowsRelatedToOriginRows(
 					         sourceDictionary.Keys))
 				{
 					// Get the origin object by searching the origin rows by searching values in the
@@ -328,6 +433,16 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		#endregion
 
+		private IObjectClass PrepareCached(IObjectClass objectClass)
+		{
+			if (_cachePropertiesEagerly && objectClass is ArcTable arcTable)
+			{
+				arcTable.CacheProperties();
+			}
+
+			return objectClass;
+		}
+
 		private IEnumerable<Row> GetRelatedObjects(long sourceOid, string sourceClassName)
 		{
 			return GetRelatedObjects(new[] { sourceOid }, sourceClassName);
@@ -341,7 +456,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			if (sourceClassName == _proRelationshipClassDefinition.GetOriginClass())
 			{
 				relatedObjects =
-					_proRelationshipClass.GetRowsRelatedToOriginRows(sourceOids);
+					ProRelationshipClass.GetRowsRelatedToOriginRows(sourceOids);
 			}
 			else
 			{
@@ -350,7 +465,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					"Object is neither origin nor destination of relationship class");
 
 				relatedObjects =
-					_proRelationshipClass.GetRowsRelatedToDestinationRows(sourceOids);
+					ProRelationshipClass.GetRowsRelatedToDestinationRows(sourceOids);
 			}
 
 			return relatedObjects;
@@ -358,7 +473,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		#region Implementation of IDataset
 
-		public string Name => _proRelationshipClassDefinition.GetName();
+		public string Name => _name ??= _proRelationshipClassDefinition.GetName();
 
 		public IName FullName => new ArcDatasetName(this);
 
@@ -377,8 +492,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			get { throw new NotImplementedException(); }
 		}
 
-		public IWorkspace Workspace => ArcWorkspace.Create(
-			(ArcGIS.Core.Data.Geodatabase) _proRelationshipClass.GetDatastore());
+		internal ArcWorkspace ArcWorkspace => ArcWorkspace.Create(
+			(ArcGIS.Core.Data.Geodatabase) ProRelationshipClass.GetDatastore());
+
+		IWorkspace IDataset.Workspace => ArcWorkspace;
 
 		public bool CanCopy()
 		{

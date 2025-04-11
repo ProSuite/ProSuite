@@ -21,16 +21,41 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		public static ArcTable ToArcTable(
-			[NotNull] Table proTable)
+			[NotNull] Table proTable,
+			bool eagerPropertyCaching = false)
 		{
-			Table databaseTable =
-				DatasetUtils.GetDatabaseTable(proTable);
+			Table databaseTable = DatasetUtils.GetDatabaseTable(proTable);
+
+			var gdb = (ArcGIS.Core.Data.Geodatabase) databaseTable.GetDatastore();
+
+			ArcWorkspace existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle);
+
+			ArcTable found = existingWorkspace?.GetTableByName(databaseTable.GetName());
+
+			if (found != null)
+			{
+				if (eagerPropertyCaching)
+				{
+					found.CacheProperties();
+				}
+
+				return found;
+			}
 
 			ArcTable result = databaseTable is FeatureClass featureClass
-				                  ? new ArcFeatureClass(featureClass)
-				                  : new ArcTable(proTable);
+				                  ? new ArcFeatureClass(featureClass, eagerPropertyCaching)
+				                  : new ArcTable(proTable, eagerPropertyCaching);
+
+			existingWorkspace?.Cache(result);
 
 			return result;
+		}
+
+		public static ArcFeatureClass ToArcFeatureClass(
+			[NotNull] FeatureClass proFeatureClass,
+			bool eagerPropertyCaching = false)
+		{
+			return (ArcFeatureClass) ToArcTable((Table) proFeatureClass, eagerPropertyCaching);
 		}
 
 		public static ArcRow ToArcRow([NotNull] Row proRow,
