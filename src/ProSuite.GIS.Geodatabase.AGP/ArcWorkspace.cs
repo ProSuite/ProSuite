@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.Exceptions;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -303,6 +302,36 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return (IFeatureClass) OpenTable(name);
 		}
 
+		public IEnumerable<IRow> EvaluateQuery(string tables,
+		                                       string whereClause = null,
+		                                       string subFields = "*",
+		                                       bool recycling = false)
+		{
+			var queryDef = new QueryDef
+			               {
+				               SubFields = subFields,
+				               Tables = tables,
+				               WhereClause = whereClause
+			               };
+
+			using (RowCursor rowCursor = Geodatabase.Evaluate(queryDef, recycling))
+			{
+				Table table = null;
+
+				while (rowCursor.MoveNext())
+				{
+					Row row = rowCursor.Current;
+
+					if (table == null)
+					{
+						table = row.GetTable();
+					}
+
+					yield return ArcGeodatabaseUtils.ToArcRow(row);
+				}
+			}
+		}
+
 		public IRelationshipClass OpenRelationshipClass(string name)
 		{
 			var proRelClass = Geodatabase.OpenDataset<RelationshipClass>(name);
@@ -415,6 +444,36 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 
 			return IsSameDatabase(versionedWorkspace1, versionedWorkspace2);
+		}
+
+		public string Description
+		{
+			get
+			{
+				string result;
+
+				switch (Type)
+				{
+					case esriWorkspaceType.esriFileSystemWorkspace:
+						result = "File System";
+						break;
+					case esriWorkspaceType.esriLocalDatabaseWorkspace:
+						result = "Local Geodatabase";
+						break;
+					case esriWorkspaceType.esriRemoteDatabaseWorkspace:
+						result = "Remote Geodatabase";
+						break;
+					default:
+						throw new ArgumentOutOfRangeException($"Unknown Workspace Type: {Type}");
+				}
+
+				if (Type == esriWorkspaceType.esriRemoteDatabaseWorkspace)
+				{
+					result += $" ({DbmsType})";
+				}
+
+				return result;
+			}
 		}
 
 		#endregion
