@@ -5,8 +5,8 @@ namespace ProSuite.Commons
 {
 	/// <summary>
 	/// A dimension is a value (double) with a unit (string).
-	/// The unit is an arbitrary string; it is the client's
-	/// responsibility to impose restrictions and provide
+	/// The unit is an arbitrary (trimmed) string; it is the
+	/// client's responsibility to impose restrictions and provide
 	/// conversions. Immutable type.
 	/// </summary>
 	/// <remarks>When binding in WPF, consider using the classes
@@ -19,7 +19,7 @@ namespace ProSuite.Commons
 		public Dimension(double value, string unit)
 		{
 			Value = value;
-			Unit = string.IsNullOrWhiteSpace(unit) ? null : unit;
+			Unit = string.IsNullOrWhiteSpace(unit) ? null : unit.Trim();
 		}
 
 		#region Equality
@@ -63,7 +63,7 @@ namespace ProSuite.Commons
 
 		public string ToString(CultureInfo culture)
 		{
-			return Unit is null || double.IsNaN(Value) || double.IsInfinity(Value)
+			return Unit is null || double.IsNaN(Value)
 				       ? Value.ToString(culture)
 				       : string.Format(culture, "{0} {1}", Value, Unit);
 		}
@@ -76,6 +76,8 @@ namespace ProSuite.Commons
 				return true;
 			}
 
+			text = text.Trim();
+
 			var style = NumberStyles.Float & ~NumberStyles.AllowExponent;
 
 			if (double.TryParse(text, style, culture, out double number))
@@ -86,13 +88,24 @@ namespace ProSuite.Commons
 			}
 
 			// "0"  "0.3 mm"  "1 pt"  "-10mu"  ".25"
+
 			int i = 0;
+			// Skip over numeric part:
 			for (; i < text.Length; i++)
 			{
 				char c = text[i];
 				if (char.IsDigit(c)) continue;
 				if (c == '-' || c == '+' || c == '.' || c == ',' || c == '\'') continue;
 				break;
+			}
+
+			if (i == 0 || i == 1 && (text[0] == '-' || text[0] == '+'))
+			{
+				// Skip over "NaN" and "Infinity" and "-Infinity":
+				for (; i < text.Length; i++)
+				{
+					if (char.IsWhiteSpace(text, i)) break;
+				}
 			}
 
 			string unit = text.Substring(i).Trim();
