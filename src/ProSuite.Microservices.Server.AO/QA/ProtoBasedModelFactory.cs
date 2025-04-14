@@ -86,7 +86,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 						ISpatialReference sr = ProtobufGeometryUtils.FromSpatialReferenceMsg(
 							objectClassMsg.SpatialReference);
 
-						model.SpatialReferenceDescriptor = new SpatialReferenceDescriptor(sr);
+						model.SpatialReferenceDescriptor =
+							SpatialReferenceDescriptorExtensions.CreateFrom(sr);
 					}
 
 					model.AddDataset(dataset);
@@ -107,7 +108,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			if (spatialReference != null)
 			{
 				model.SpatialReferenceDescriptor =
-					new SpatialReferenceDescriptor(spatialReference);
+					SpatialReferenceDescriptorExtensions.CreateFrom(spatialReference);
 			}
 		}
 

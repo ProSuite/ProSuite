@@ -243,7 +243,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 				                               _fullExtentYMax.Value);
 
 			extent.SpatialReference =
-				_productionModel.SpatialReferenceDescriptor.SpatialReference;
+				_productionModel.SpatialReferenceDescriptor.GetSpatialReference();
 
 			return extent;
 		}
