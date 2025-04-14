@@ -2,7 +2,7 @@ using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Shared.GIS.Geodatabase
+namespace ProSuite.GIS.Geodatabase.API
 {
 	/// <summary>
 	/// An coded value pair (key/name). Immutable value type.

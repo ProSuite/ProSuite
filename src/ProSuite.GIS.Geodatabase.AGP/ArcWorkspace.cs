@@ -28,6 +28,8 @@ public class ArcWorkspace : IFeatureWorkspace
 	private esriConnectionDBMS? _dbmsType;
 	private IWorkspaceName _workspaceName;
 
+	private readonly Dictionary<string, ArcDomain> _domains = new();
+
 	[CanBeNull]
 	internal static ArcWorkspace GetByHandle(long handle)
 	{
@@ -465,15 +467,44 @@ public class ArcWorkspace : IFeatureWorkspace
 
 	public IEnumerable<IDomain> Domains()
 	{
-		return Geodatabase.GetDomains().Select(ArcGeodatabaseUtils.ToArcDomain);
+		IReadOnlyList<Domain> proDomains = Geodatabase.GetDomains();
+
+		bool allDomainsAreCached = proDomains.Count == _domains.Count;
+
+		if (allDomainsAreCached)
+		{
+			foreach (ArcDomain arcDomain in _domains.Values)
+			{
+				yield return arcDomain;
+			}
+
+			yield break;
+		}
+
+		foreach (Domain proDomain in proDomains)
+		{
+			ArcDomain arcDomain = Assert.NotNull(ArcGeodatabaseUtils.ToArcDomain(proDomain, this));
+			_domains.TryAdd(arcDomain.Name, arcDomain);
+
+			yield return arcDomain;
+		}
 	}
 
 	public IDomain get_DomainByName(string domainName)
 	{
-		return (from proDomain in Geodatabase.GetDomains()
+		IReadOnlyList<Domain> proDomains = Geodatabase.GetDomains();
+
+		bool allDomainsAreCached = proDomains.Count == _domains.Count;
+
+		if (allDomainsAreCached)
+		{
+			return _domains.GetValueOrDefault(domainName);
+		}
+
+		return (from proDomain in proDomains
 		        where proDomain.GetName()
 		                       .Equals(domainName, StringComparison.InvariantCultureIgnoreCase)
-		        select ArcGeodatabaseUtils.ToArcDomain(proDomain)).FirstOrDefault();
+		        select ArcGeodatabaseUtils.ToArcDomain(proDomain, this)).FirstOrDefault();
 	}
 
 	public bool IsSameDatabase(IWorkspace otherWorkspace)
@@ -639,7 +670,7 @@ public class ArcWorkspace : IFeatureWorkspace
 		return _relationshipClassesByName.GetValueOrDefault(name);
 	}
 
-	internal void Cache(ArcRelationshipClass relationshipClass)
+	internal void Cache([NotNull] ArcRelationshipClass relationshipClass)
 	{
 		_relationshipClassesByName.TryAdd(relationshipClass.Name, relationshipClass);
 	}
@@ -649,9 +680,14 @@ public class ArcWorkspace : IFeatureWorkspace
 		return _tablesByName.GetValueOrDefault(name);
 	}
 
-	internal void Cache(ArcTable table)
+	internal void Cache([NotNull] ArcTable table)
 	{
 		_tablesByName.TryAdd(table.Name, table);
+	}
+
+	internal void Cache([NotNull] ArcDomain domain)
+	{
+		_domains.TryAdd(domain.Name, domain);
 	}
 }
 

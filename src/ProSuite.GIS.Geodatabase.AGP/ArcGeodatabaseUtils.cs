@@ -70,21 +70,37 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		[CanBeNull]
-		public static ArcDomain ToArcDomain([CanBeNull] Domain domain)
+		public static ArcDomain ToArcDomain([CanBeNull] Domain domain,
+		                                    [CanBeNull] IFeatureWorkspace workspace)
 		{
 			if (domain == null)
 			{
 				return null;
 			}
 
+			ArcDomain cachedDomain = workspace?.get_DomainByName(domain.GetName()) as ArcDomain;
+
+			if (cachedDomain != null)
+			{
+				return cachedDomain;
+			}
+
+			ArcDomain result = null;
+
+			// Use the ProDomain
 			if (domain is CodedValueDomain codedDomain)
 			{
-				return new ArcCodedValueDomain(codedDomain);
+				result = new ArcCodedValueDomain(codedDomain);
 			}
 
 			if (domain is RangeDomain rangeDomain)
 			{
-				return new ArcRangeDomain(rangeDomain);
+				result = new ArcRangeDomain(rangeDomain);
+			}
+
+			if (result != null && workspace is ArcWorkspace arcWorkspace)
+			{
+				arcWorkspace.Cache(result);
 			}
 
 			throw new ArgumentOutOfRangeException("Unknown domain type");

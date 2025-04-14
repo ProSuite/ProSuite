@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.GIS.Geodatabase.API;
 using Field = ArcGIS.Core.Data.Field;
@@ -15,11 +16,21 @@ public class ArcFields : IFields
 
 	private Dictionary<string, int> _fieldIndexByName;
 
-	public ArcFields(IEnumerable<Field> fields, IGeometryDef geometryDefinition)
+	/// <summary>
+	/// Initializes a new instance of the <see cref="ArcFields"/> class.
+	/// </summary>
+	/// <param name="fields">The Pro Sdk fields</param>
+	/// <param name="geometryDefinition">The geometry definition, in case the fields belong to a feature class.</param>
+	/// <param name="workspace">The optional workspace, to enable re-using domains.</param>
+	public ArcFields([NotNull] IEnumerable<Field> fields,
+	                 [CanBeNull] IGeometryDef geometryDefinition,
+	                 [CanBeNull] IFeatureWorkspace workspace)
 	{
 		_fields = fields
-		          .Select(f => new ArcField(
-			                  f, f.FieldType == FieldType.Geometry ? geometryDefinition : null))
+		          .Select(f => f.FieldType == FieldType.Geometry
+			                       ? new ArcGeometryField(f, Assert.NotNull(geometryDefinition),
+			                                              workspace)
+			                       : new ArcField(f, workspace))
 		          .ToList();
 	}
 
@@ -75,12 +86,19 @@ public class ArcFields : IFields
 public class ArcField : IField
 {
 	private readonly Field _proField;
+	private readonly IDomain _cachedDomain;
+	private readonly object _defaultValue;
 
-	public ArcField(Field proField, IGeometryDef geometryDefinition = null)
+	public ArcField(Field proField,
+	                IFeatureWorkspace workspace = null)
 	{
 		_proField = proField;
 
-		GeometryDef = geometryDefinition;
+		Domain domain = _proField.GetDomain();
+
+		_cachedDomain = ArcGeodatabaseUtils.ToArcDomain(domain, workspace);
+
+		_defaultValue = _proField.GetDefaultValue();
 	}
 
 	#region Implementation of IField
@@ -91,10 +109,10 @@ public class ArcField : IField
 
 	public esriFieldType Type => (esriFieldType) _proField.FieldType;
 
-	public IDomain Domain => ArcGeodatabaseUtils.ToArcDomain(_proField.GetDomain());
+	public IDomain Domain => _cachedDomain;
 
-	public object DefaultValue =>
-		_proField.HasDefaultValue ? _proField.GetDefaultValue() : null;
+	public object DefaultValue => _defaultValue;
+	//_proField.HasDefaultValue ? _proField.GetDefaultValue() : null;
 
 	public int Length => _proField.Length;
 
@@ -104,7 +122,7 @@ public class ArcField : IField
 
 	public bool IsNullable => _proField.IsNullable;
 
-	public IGeometryDef GeometryDef { get; }
+	public virtual IGeometryDef GeometryDef => null; // Implemented by ArcGeometryField subclass
 
 	public int VarType => throw new NotImplementedException();
 
@@ -122,13 +140,34 @@ public class ArcField : IField
 	#endregion
 }
 
+public class ArcGeometryField : ArcField
+{
+	private readonly IGeometryDef _geometryDef;
+
+	public ArcGeometryField([NotNull] Field proField,
+	                        [NotNull] IGeometryDef geometryDef,
+	                        [CanBeNull] IFeatureWorkspace workspace)
+		: base(proField, workspace)
+	{
+		_geometryDef = geometryDef;
+	}
+
+	public override IGeometryDef GeometryDef => _geometryDef;
+}
+
 public abstract class ArcDomain : IDomain
 {
 	private readonly Domain _proDomain;
 
+	private readonly string _domainName;
+	private readonly esriFieldType _fieldType;
+
 	protected ArcDomain(Domain proDomain)
 	{
 		_proDomain = proDomain;
+
+		_domainName = proDomain.GetName();
+		_fieldType = (esriFieldType) proDomain.GetFieldType();
 	}
 
 	#region Implementation of IDomain
@@ -153,7 +192,7 @@ public abstract class ArcDomain : IDomain
 
 	public esriFieldType FieldType
 	{
-		get => (esriFieldType) _proDomain.GetFieldType();
+		get => _fieldType;
 		set => throw new NotImplementedException();
 	}
 
@@ -171,7 +210,7 @@ public abstract class ArcDomain : IDomain
 
 	public string Name
 	{
-		get => _proDomain.GetName();
+		get => _domainName;
 		set => throw new NotImplementedException();
 	}
 
@@ -194,31 +233,47 @@ public class ArcCodedValueDomain : ArcDomain, ICodedValueDomain
 {
 	private readonly CodedValueDomain _proCodedDomain;
 
-	private SortedList<object, string> _codedValuePairs;
+	private readonly List<CodedValue> _codedValues;
+	private readonly int _codeCount;
 
 	public ArcCodedValueDomain(CodedValueDomain proDomain)
 		: base(proDomain)
 	{
 		_proCodedDomain = proDomain;
-	}
 
-	private SortedList<object, string> CodedValuePairs
-	{
-		get { return _codedValuePairs ??= _proCodedDomain.GetCodedValuePairs(); }
+		SortedList<object, string> codedValuePairs = proDomain.GetCodedValuePairs();
+		_codeCount = codedValuePairs.Count;
+
+		_codedValues = new List<CodedValue>(_codeCount);
+
+		foreach (KeyValuePair<object, string> pair in codedValuePairs)
+		{
+			_codedValues.Add(new CodedValue(pair.Key, pair.Value));
+		}
 	}
 
 	#region Implementation of ICodedValueDomain
 
-	public int CodeCount => _proCodedDomain.GetCount();
+	public int CodeCount => _codeCount;
 
 	public string get_Name(int index)
 	{
-		return CodedValuePairs.Values[index];
+		if (index < 0 || index >= _codedValues.Count)
+		{
+			throw new ArgumentOutOfRangeException(nameof(index));
+		}
+
+		return _codedValues[index].Name;
 	}
 
 	public object get_Value(int index)
 	{
-		return CodedValuePairs.Keys[index];
+		if (index < 0 || index >= _codedValues.Count)
+		{
+			throw new ArgumentOutOfRangeException(nameof(index));
+		}
+
+		return _codedValues[index].Value;
 	}
 
 	#endregion
@@ -228,22 +283,28 @@ public class ArcRangeDomain : ArcDomain, IRangeDomain
 {
 	private readonly RangeDomain _proRangeDomain;
 
+	private readonly object _minValue;
+	private readonly object _maxValue;
+
 	public ArcRangeDomain(RangeDomain proDomain)
 		: base(proDomain)
 	{
 		_proRangeDomain = proDomain;
+
+		_minValue = _proRangeDomain.GetMinValue();
+		_maxValue = _proRangeDomain.GetMaxValue();
 	}
 
 	#region Implementation of IRangeDomain
 
 	public object MinValue
 	{
-		get => _proRangeDomain.GetMinValue();
+		get => _minValue;
 	}
 
 	public object MaxValue
 	{
-		get => _proRangeDomain.GetMaxValue();
+		get => _maxValue;
 	}
 
 	#endregion

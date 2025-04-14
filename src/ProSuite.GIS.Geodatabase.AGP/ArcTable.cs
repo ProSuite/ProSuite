@@ -262,7 +262,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public IFields Fields =>
 			_fields ??= new ArcFields(ProTableDefinition.GetFields(),
-			                          this is ArcFeatureClass fc ? fc.GeometryDefinition : null);
+			                          this is ArcFeatureClass fc ? fc.GeometryDefinition : null,
+			                          Workspace as IFeatureWorkspace);
 
 		public bool HasOID
 		{
@@ -516,7 +517,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			Domain proDomain = field.GetDomain(proSubtype);
 
-			return ArcGeodatabaseUtils.ToArcDomain(proDomain);
+			return ArcGeodatabaseUtils.ToArcDomain(proDomain, (IFeatureWorkspace) Workspace);
 		}
 
 		public string SubtypeFieldName
@@ -616,7 +617,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					Domain proDomain = field.GetDomain(proSubtype);
 					if (proDomain != null)
 					{
-						IDomain domain = ArcGeodatabaseUtils.ToArcDomain(proDomain);
+						IDomain domain =
+							ArcGeodatabaseUtils.ToArcDomain(
+								proDomain, (IFeatureWorkspace) Workspace);
 						subtype.SetAttributeDomain(field.Name, domain);
 					}
 				}
