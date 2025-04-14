@@ -26,20 +26,25 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			Table databaseTable = DatasetUtils.GetDatabaseTable(proTable);
 
-			var gdb = (ArcGIS.Core.Data.Geodatabase) databaseTable.GetDatastore();
+			ArcWorkspace existingWorkspace = null;
 
-			ArcWorkspace existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle);
+			var gdb = databaseTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
 
-			ArcTable found = existingWorkspace?.GetTableByName(databaseTable.GetName());
-
-			if (found != null)
+			if (gdb != null)
 			{
-				if (eagerPropertyCaching)
-				{
-					found.CacheProperties();
-				}
+				existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle);
 
-				return found;
+				ArcTable found = existingWorkspace?.GetTableByName(databaseTable.GetName());
+
+				if (found != null)
+				{
+					if (eagerPropertyCaching)
+					{
+						found.CacheProperties();
+					}
+
+					return found;
+				}
 			}
 
 			ArcTable result = databaseTable is FeatureClass featureClass
