@@ -377,6 +377,11 @@ public class ArcWorkspace : IFeatureWorkspace
 
 	public ITable OpenTable(string name)
 	{
+		if (_tablesByName.TryGetValue(name, out ArcTable result))
+		{
+			return result;
+		}
+
 		return ArcGeodatabaseUtils.ToArcTable(Geodatabase.OpenDataset<Table>(name));
 	}
 
@@ -417,6 +422,11 @@ public class ArcWorkspace : IFeatureWorkspace
 
 	public IRelationshipClass OpenRelationshipClass(string name)
 	{
+		if (_relationshipClassesByName.TryGetValue(name, out ArcRelationshipClass result))
+		{
+			return result;
+		}
+
 		var proRelClass = Geodatabase.OpenDataset<RelationshipClass>(name);
 
 		return new ArcRelationshipClass(proRelClass);
@@ -492,13 +502,20 @@ public class ArcWorkspace : IFeatureWorkspace
 
 	public IDomain get_DomainByName(string domainName)
 	{
+		if (_domains.TryGetValue(domainName, out ArcDomain foundDomain))
+		{
+			return foundDomain;
+		}
+
+		// Try find it in the Geodatabase:
 		IReadOnlyList<Domain> proDomains = Geodatabase.GetDomains();
 
 		bool allDomainsAreCached = proDomains.Count == _domains.Count;
 
 		if (allDomainsAreCached)
 		{
-			return _domains.GetValueOrDefault(domainName);
+			// If all domains are cached, so we can trust the cache:
+			return foundDomain;
 		}
 
 		return (from proDomain in proDomains
