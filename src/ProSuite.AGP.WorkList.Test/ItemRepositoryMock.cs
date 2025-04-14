@@ -119,7 +119,7 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
-		public List<ISourceClass> SourceClasses { get; }
+		public IList<ISourceClass> SourceClasses { get; }
 
 		public string WorkListDefinitionFilePath { get; set; }
 

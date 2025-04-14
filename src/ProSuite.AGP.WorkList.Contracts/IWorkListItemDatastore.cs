@@ -32,7 +32,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		IAttributeReader CreateAttributeReader([NotNull] TableDefinition definition,
 		                                       [NotNull] params Attributes[] attributes);
 
-		WorkListStatusSchema CreateStatusSchema(TableDefinition tableDefinition);
+		DbSourceClassSchema CreateStatusSchema(TableDefinition tableDefinition);
 
 		string SuggestWorkListName();
 

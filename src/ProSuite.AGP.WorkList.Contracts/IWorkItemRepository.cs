@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -27,7 +28,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		Task SetStatusAsync(IWorkItem item, WorkItemStatus status);
 
-		List<ISourceClass> SourceClasses { get; }
+		IList<ISourceClass> SourceClasses { get; }
 
 		IWorkItemStateRepository WorkItemStateRepository { get; }
 

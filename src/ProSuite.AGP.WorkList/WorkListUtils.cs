@@ -18,7 +18,6 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.Xml;
-using ProSuite.DomainModel.Core;
 
 namespace ProSuite.AGP.WorkList
 {
@@ -28,116 +27,7 @@ namespace ProSuite.AGP.WorkList
 
 		private const string PluginIdentifier = "ProSuite_WorkListDatasource";
 
-		[NotNull]
-		public static IWorkList Create([NotNull] XmlWorkListDefinition definition,
-		                               [NotNull] string displayName)
-		{
-			Assert.ArgumentNotNull(definition, nameof(definition));
-			Assert.ArgumentNotNullOrEmpty(displayName, nameof(displayName));
-
-			try
-			{
-				List<Table> tables = GetDistinctTables(
-					definition.Workspaces, definition.Name,
-					definition.Path, out NotificationCollection notifications);
-
-				var descriptor = new ClassDescriptor(definition.TypeName, definition.AssemblyName);
-				Type type = descriptor.GetInstanceType();
-
-				string name = definition.Name;
-				string filePath = definition.Path;
-				int currentIndex = definition.CurrentIndex;
-
-				IWorkItemStateRepository stateRepository =
-					CreateItemStateRepository(filePath, name, type, currentIndex);
-
-				IWorkItemRepository workItemRepository =
-					CreateWorkItemRepository(tables, type, stateRepository, definition);
-
-				return descriptor.CreateInstance<IWorkList>(workItemRepository,
-				                                            definition.Name, displayName);
-			}
-			catch (Exception e)
-			{
-				_msg.Error("Cannot create work list", e);
-				throw;
-			}
-		}
-
-		public static IWorkItemRepository CreateWorkItemRepository(
-			List<Table> tables, Type type, IWorkItemStateRepository stateRepository,
-			XmlWorkListDefinition definition)
-		{
-			if (tables.Count == 0)
-			{
-				return EmptyWorkItemRepository(type, stateRepository);
-			}
-
-			IWorkItemRepository repository;
-
-			if (typeof(DbStatusWorkList).IsAssignableFrom(type))
-			{
-				var dbSourceClassDefinitions = new List<DbStatusSourceClassDefinition>();
-
-				// Issue source classes: table/definition query pairs
-				foreach (XmlWorkListWorkspace xmlWorkspace in definition.Workspaces)
-				{
-					foreach (XmlTableReference tableReference in xmlWorkspace.Tables)
-					{
-						Table table =
-							tables.FirstOrDefault(t => t.GetName() == tableReference.Name);
-
-						if (table == null)
-						{
-							continue;
-						}
-
-						string statusField = tableReference.StatusFieldName;
-						int todoValue = tableReference.StatusValueTodo;
-						int doneValue = tableReference.StatusValueDone;
-
-						if (string.IsNullOrEmpty(statusField))
-						{
-							// Issue-FileGdb uses hard-coded status field name,
-							// but other models do not.
-							const string legacyStatusField = "STATUS";
-							statusField = legacyStatusField;
-						}
-
-						int statusFieldIndex = table.GetDefinition().FindField(statusField);
-
-						if (statusFieldIndex == -1)
-						{
-							_msg.WarnFormat("Status field {0} not found in {1}", statusField,
-							                table.GetName());
-						}
-
-						WorkListStatusSchema statusSchema = new WorkListStatusSchema(
-							statusField, statusFieldIndex, todoValue, doneValue);
-
-						var sourceClassDefinition = new DbStatusSourceClassDefinition(
-							table, tableReference.DefinitionQuery, statusSchema);
-
-						dbSourceClassDefinitions.Add(sourceClassDefinition);
-					}
-				}
-
-				repository =
-					new DbStatusWorkItemRepository(dbSourceClassDefinitions, stateRepository);
-			}
-			else if (type == typeof(SelectionWorkList))
-			{
-				// Selection source classes: tables/oids pairs
-				repository = CreateSelectionItemRepository(tables, stateRepository, definition);
-			}
-			else
-			{
-				throw new ArgumentException("Unknown work list type");
-			}
-
-			return repository;
-		}
-
+		// TODO: (daro) really needed?
 		public static IWorkItemRepository CreateSelectionItemRepository(
 			List<Table> tables,
 			IWorkItemStateRepository stateRepository,
@@ -161,11 +51,33 @@ namespace ProSuite.AGP.WorkList
 			{
 				_msg.Warn(
 					"No items in selection work list or they could not be associated with an existing table.");
-				return new SelectionItemRepository(new Dictionary<Table, List<long>>(),
-				                                   stateRepository);
+				return new SelectionItemRepository(new List<SelectionSourceClass>(), stateRepository);
 			}
 
-			return new SelectionItemRepository(oidsByTable, stateRepository);
+			IList<SelectionSourceClass> sourceClasses = new List<SelectionSourceClass>(oidsByTable.Count);
+
+			foreach ((Table table, List<long> oids) in oidsByTable)
+			{
+				using TableDefinition tableDefinition = table.GetDefinition();
+
+				string objectIDField = tableDefinition.GetObjectIDField();
+
+				string shapeField = null;
+
+				if (tableDefinition is FeatureClassDefinition featureClassDefinition)
+				{
+					shapeField = featureClassDefinition.GetShapeField();
+				}
+
+				var schema = new SourceClassSchema(objectIDField, shapeField);
+
+				// todo: daro inline
+				Datastore datastore = table.GetDatastore();
+				var sourceClass = new SelectionSourceClass(new GdbTableIdentity(), datastore, schema, oids, null);
+				sourceClasses.Add(sourceClass);
+			}
+
+			return new SelectionItemRepository(sourceClasses, stateRepository);
 		}
 
 		[NotNull]
@@ -327,28 +239,6 @@ namespace ProSuite.AGP.WorkList
 			return layerParams;
 		}
 
-		public static Dictionary<Datastore, List<Table>> GetDistinctTables(
-			[NotNull] IEnumerable<Table> tables)
-		{
-			var result = new Dictionary<Datastore, SimpleSet<Table>>(new DatastoreComparer());
-
-			foreach (Table table in tables.Distinct())
-			{
-				var datastore = table.GetDatastore();
-
-				if (! result.ContainsKey(datastore))
-				{
-					result.Add(datastore, new SimpleSet<Table> { table });
-				}
-				else
-				{
-					result[datastore].TryAdd(table);
-				}
-			}
-
-			return result.ToDictionary(pair => pair.Key, pair => pair.Value.ToList());
-		}
-
 		public static long GetUniqueTableIdAcrossWorkspaces(GdbTableIdentity tableIdentity)
 		{
 			// NOTE: Do not use string.GetHashCode() because it is not guaranteed to be stable!
@@ -391,35 +281,12 @@ namespace ProSuite.AGP.WorkList
 				return new XmlWorkItemStateRepository(path, workListName, workListType, currentIndex);
 			}
 
-			if (workListType == typeof(SelectionWorkList))
+			if (typeof(SelectionWorkList).IsAssignableFrom(workListType))
 			{
 				return new XmlSelectionItemStateRepository(path, workListName, workListType, currentIndex);
 			}
 
 			throw new ArgumentException($"Unknown work list type: {workListType.Name}");
-		}
-
-		private static IWorkItemRepository EmptyWorkItemRepository([NotNull] Type type,
-		                                                           [NotNull] IWorkItemStateRepository itemStateRepository)
-		{
-			if (type == typeof(IssueWorkList))
-			{
-				throw new NotImplementedException();
-			}
-
-			if (type == typeof(SelectionWorkList))
-			{
-				return new SelectionItemRepository(new Dictionary<Table, List<long>>(),
-				                                   itemStateRepository);
-			}
-
-			return new DbStatusWorkItemRepository(new List<DbStatusSourceClassDefinition>(0),
-			                                      itemStateRepository);
-
-			// TODO (EMA):
-			_msg.Warn($"Unknown work list type: {type.Name}. Using Issue work list");
-
-			throw new ArgumentException($"Unknown work list type: {type.Name}");
 		}
 
 		[NotNull]

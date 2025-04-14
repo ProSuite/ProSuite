@@ -9,7 +9,10 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -101,8 +104,9 @@ namespace ProSuite.AGP.QA.WorkList
 		protected override IWorkItemStateRepository CreateStateRepositoryCore(
 			string path, string workListName)
 		{
-			Type type = GetWorkListTypeCore<IssueWorkList>();
+			//return new EmptyWorkItemStateRepository();
 
+			Type type = GetWorkListTypeCore<IssueWorkList>();
 			return new XmlWorkItemStateRepository(path, workListName, type);
 		}
 
@@ -111,7 +115,7 @@ namespace ProSuite.AGP.QA.WorkList
 		{
 			var tables = await PrepareReferencedTables();
 
-			var sourceClassDefinitions = new List<DbStatusSourceClassDefinition>(tables.Count);
+			IList<ISourceClass> sourceClasses = new List<ISourceClass>(tables.Count);
 
 			Stopwatch watch = Stopwatch.StartNew();
 
@@ -127,28 +131,36 @@ namespace ProSuite.AGP.QA.WorkList
 				                          Attributes.IssueType
 			                          };
 
+			Dictionary<IntPtr, Datastore> datastoresByHandle = new Dictionary<IntPtr, Datastore>();
+
 			foreach (Table table in tables)
 			{
 				string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
 
 				TableDefinition tableDefinition = table.GetDefinition();
 
-				WorkListStatusSchema statusSchema =
+				DbSourceClassSchema schema =
 					WorkListItemDatastore.CreateStatusSchema(tableDefinition);
 
 				IAttributeReader attributeReader =
 					WorkListItemDatastore.CreateAttributeReader(tableDefinition, attributes);
 
-				var sourceClassDef =
-					new DbStatusSourceClassDefinition(table, defaultDefinitionQuery, statusSchema)
-					{
-						AttributeReader = attributeReader
-					};
+				// TODO: inline
+				// TODO: add assertions
+				Datastore datastore = table.GetDatastore();
 
-				sourceClassDefinitions.Add(sourceClassDef);
+				datastoresByHandle.TryAdd(datastore.Handle, datastore);
+
+				var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), datastore, schema, attributeReader, defaultDefinitionQuery);
+
+				sourceClasses.Add(sourceClass);
 			}
 
-			var result = new DbStatusWorkItemRepository(sourceClassDefinitions, stateRepository);
+			Assert.True(datastoresByHandle.Count == 1,
+			            "Multiple geodatabases are referenced by the work list's source classes.");
+
+			var geodatabase = (Geodatabase) datastoresByHandle.First().Value;
+			var result = new DbStatusWorkItemRepository(sourceClasses, stateRepository, geodatabase);
 
 			_msg.DebugStopTiming(watch, "Created revision work item repository");
 

@@ -97,11 +97,6 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			Store(CreateDefinition(_workspaces, sourceClasses, StatesByRow.Values));
 		}
 
-		public void Discard()
-		{
-			Invalidate();
-		}
-
 		protected abstract void Store(TDefinition definition);
 
 		protected abstract TDefinition CreateDefinition(
@@ -140,11 +135,6 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			}
 
 			return volatileState;
-		}
-
-		private void Invalidate()
-		{
-			StatesByRow = null;
 		}
 	}
 }

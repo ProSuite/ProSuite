@@ -13,6 +13,7 @@ using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.QA.WorkList;
@@ -148,7 +149,7 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		return new AttributeReader(definition, attributes);
 	}
 
-	public WorkListStatusSchema CreateStatusSchema(TableDefinition tableDefinition)
+	public DbSourceClassSchema CreateStatusSchema(TableDefinition tableDefinition)
 	{
 		int fieldIndex;
 
@@ -167,10 +168,19 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 			throw;
 		}
 
+		string shapeField = null;
+		string objectIDField = tableDefinition.GetObjectIDField();
+
+		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
+		{
+			shapeField = featureClassDefinition.GetShapeField();
+		}
+
 		// The status schema is the same for production model datasets and Issue Geodatabase tables.
-		return new WorkListStatusSchema(_statusFieldName, fieldIndex,
-		                                (int) IssueCorrectionStatus.NotCorrected,
-		                                (int) IssueCorrectionStatus.Corrected);
+		return new DbSourceClassSchema(objectIDField, shapeField,
+		                               _statusFieldName, fieldIndex,
+		                               (int) IssueCorrectionStatus.NotCorrected,
+		                               (int) IssueCorrectionStatus.Corrected);
 	}
 
 	public string SuggestWorkListName()
@@ -184,6 +194,11 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 		return IssueGdbSchema.IssueFeatureClassNames.Any(
 			n => n.Equals(sourceClass.Name, StringComparison.InvariantCultureIgnoreCase));
+	}
+
+	public IObjectDataset GetObjetDataset(TableDefinition tableDefinition)
+	{
+		throw new NotImplementedException();
 	}
 
 	#endregion

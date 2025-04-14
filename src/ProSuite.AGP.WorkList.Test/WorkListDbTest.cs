@@ -11,6 +11,7 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Hosting;
 using ProSuite.Commons.Testing;
 using ProSuite.DomainModel.Core.QA;
@@ -21,8 +22,6 @@ namespace ProSuite.AGP.WorkList.Test;
 [Apartment(ApartmentState.STA)]
 public class WorkListDbTest
 {
-	private string _path;
-
 	[OneTimeSetUp]
 	public void OnTimeSetUp()
 	{
@@ -34,37 +33,38 @@ public class WorkListDbTest
 	[Test]
 	public void Can_count_db_workItems_measure_performance()
 	{
-		ITestDataArchive testDataArchive = TestDataPreparer.ExtractZip("TLM_ERRORS.gdb.zip");
-		_path = testDataArchive.GetPath();
+		string path = TestDataPreparer.ExtractZip("TLM_ERRORS.gdb.zip").GetPath();
 
-		using var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)));
+		using var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
 		using var lines = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_LINE");
 		using var multipatchs = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_MULTIPATCH");
 		using var multipoints = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_MULTIPOINT");
 		using var polygons = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_POLYGON");
 
 		var tables = new List<FeatureClass> { lines, multipatchs, multipoints, polygons };
-		var sourceClassDefinitions = new List<DbStatusSourceClassDefinition>(tables.Count);
+		var sourceClasses = new List<ISourceClass>(tables.Count);
+
+		Dictionary<IntPtr, Datastore> datastoresByHandle = new Dictionary<IntPtr, Datastore>();
 
 		foreach (Table table in tables)
 		{
-			string defQuery = GetDefaultDefinitionQuery(table);
-
 			TableDefinition tableDefinition = table.GetDefinition();
 
-			WorkListStatusSchema statusSchema = CreateStatusSchema(tableDefinition);
+			DbSourceClassSchema schema = CreateStatusSchema(tableDefinition);
 
-			var sourceClassDef = new DbStatusSourceClassDefinition(table, defQuery, statusSchema)
-			                     {
-				                     AttributeReader = new NoOpAttributeReader()
-			                     };
+			Datastore datastore = table.GetDatastore();
+			datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
-			sourceClassDefinitions.Add(sourceClassDef);
+			var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), datastore, schema, null, null);
+
+			sourceClasses.Add(sourceClass);
 		}
 
-		var itemRepository =
-			new DbStatusWorkItemRepository(sourceClassDefinitions,
-			                               new EmptyWorkItemStateRepository());
+		Assert.True(datastoresByHandle.Count == 1,
+		            "Multiple geodatabases are referenced by the work list's source classes.");
+
+		var gdb = (Geodatabase) datastoresByHandle.First().Value;
+		var itemRepository = new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
 
 		var wl = new IssueWorkList(itemRepository, "uniqueName", "displayName");
 
@@ -94,37 +94,41 @@ public class WorkListDbTest
 	[Test]
 	public void Can_get_extent_db_workitems()
 	{
-		ITestDataArchive testDataArchive = TestDataPreparer.ExtractZip("TLM_ERRORS.gdb.zip");
-		_path = testDataArchive.GetPath();
+		string path = TestDataPreparer.ExtractZip("TLM_ERRORS.gdb.zip").GetPath();
 
-		using var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)));
+		using var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
 		using var lines = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_LINE");
 		using var multipatchs = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_MULTIPATCH");
 		using var multipoints = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_MULTIPOINT");
 		using var polygons = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_POLYGON");
 
 		var tables = new List<FeatureClass> { lines, multipatchs, multipoints, polygons };
-		var sourceClassDefinitions = new List<DbStatusSourceClassDefinition>(tables.Count);
+		var sourceClasses = new List<ISourceClass>(tables.Count);
+
+		Dictionary<IntPtr, Datastore> datastoresByHandle = new Dictionary<IntPtr, Datastore>();
 
 		foreach (Table table in tables)
 		{
-			string defQuery = GetDefaultDefinitionQuery(table);
-
 			TableDefinition tableDefinition = table.GetDefinition();
 
-			WorkListStatusSchema statusSchema = CreateStatusSchema(tableDefinition);
+			DbSourceClassSchema schema = CreateStatusSchema(tableDefinition);
 
-			var sourceClassDef = new DbStatusSourceClassDefinition(table, defQuery, statusSchema)
-			                     {
-				                     AttributeReader = new NoOpAttributeReader()
-			                     };
+			Datastore datastore = table.GetDatastore();
 
-			sourceClassDefinitions.Add(sourceClassDef);
+			datastoresByHandle.TryAdd(datastore.Handle, datastore);
+
+			var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), datastore, schema, null, null);
+
+			sourceClasses.Add(sourceClass);
 		}
 
+		Assert.True(datastoresByHandle.Count == 1,
+		            "Multiple geodatabases are referenced by the work list's source classes.");
+
+		var gdb = (Geodatabase)datastoresByHandle.First().Value;
+
 		var itemRepository =
-			new DbStatusWorkItemRepository(sourceClassDefinitions,
-			                               new EmptyWorkItemStateRepository());
+			new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
 
 		var wl = new IssueWorkList(itemRepository, "uniqueName", "displayName");
 
@@ -144,14 +148,152 @@ public class WorkListDbTest
 		Assert.AreEqual(3861, items.Count);
 	}
 
-	private string GetDefaultDefinitionQuery(Table table)
+	[Test]
+	public void Can_open_fgdb_IssueWorkList()
 	{
-		return null;
+		string path = TestDataPreparer.ExtractZip("issues.gdb.zip").GetPath();
+
+		using var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
+		using var rows = geodatabase.OpenDataset<Table>("IssueRows");
+		using var lines = geodatabase.OpenDataset<FeatureClass>("IssueLines");
+		using var multipatchs = geodatabase.OpenDataset<FeatureClass>("IssueMultipatches");
+		using var multipoints = geodatabase.OpenDataset<FeatureClass>("IssuePoints");
+		using var polygons = geodatabase.OpenDataset<FeatureClass>("IssuePolygons");
+
+		var tables = new List<Table> { rows, lines, multipatchs, multipoints, polygons };
+		var sourceClasses = new List<ISourceClass>(tables.Count);
+
+		Dictionary<IntPtr, Datastore> datastoresByHandle = new Dictionary<IntPtr, Datastore>();
+
+		foreach (Table table in tables)
+		{
+			TableDefinition tableDefinition = table.GetDefinition();
+
+			DbSourceClassSchema schema = CreateStatusSchema(tableDefinition);
+
+			Datastore datastore = table.GetDatastore();
+			datastoresByHandle.TryAdd(datastore.Handle, datastore);
+
+			var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), datastore, schema, null, null);
+
+			sourceClasses.Add(sourceClass);
+		}
+
+		Assert.True(datastoresByHandle.Count == 1,
+		            "Multiple geodatabases are referenced by the work list's source classes.");
+
+		var gdb = (Geodatabase)datastoresByHandle.First().Value;
+
+		var itemRepository =
+			new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
+
+		var wl = new IssueWorkList(itemRepository, "uniqueName", "displayName");
+		List<IWorkItem> items = wl.GetItems().ToList();
+
+		Assert.AreEqual(62, items.Count);
 	}
 
-	private static WorkListStatusSchema CreateStatusSchema(TableDefinition tableDefinition)
+	[Test]
+	public void Can_open_fgdb_SelectionWorkList()
 	{
-		return new WorkListStatusSchema("STATUS", tableDefinition.FindField("STATUS"),
+		string path = TestDataPreparer.ExtractZip("issues.gdb.zip").GetPath();
+
+		using var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
+		using var rows = geodatabase.OpenDataset<Table>("IssueRows");
+		using var lines = geodatabase.OpenDataset<FeatureClass>("IssueLines");
+		using var multipatchs = geodatabase.OpenDataset<FeatureClass>("IssueMultipatches");
+		using var multipoints = geodatabase.OpenDataset<FeatureClass>("IssuePoints");
+		using var polygons = geodatabase.OpenDataset<FeatureClass>("IssuePolygons");
+
+		Dictionary<Table, List<long>> selection = new Dictionary<Table, List<long>>();
+		selection.Add(rows, []);
+		selection.Add(lines, [1, 2, 3, 4, 5]);
+		selection.Add(multipatchs, []);
+		selection.Add(multipoints, [5, 7, 12, 9]);
+		selection.Add(polygons, []);
+
+		var sourceClasses = new List<SelectionSourceClass>(selection.Count);
+
+		foreach ((Table table, List<long> oids) in selection)
+		{
+			TableDefinition tableDefinition = table.GetDefinition();
+
+			SourceClassSchema schema = CreateSchema(tableDefinition);
+
+			Datastore datastore = table.GetDatastore();
+			var sourceClass = new SelectionSourceClass(new GdbTableIdentity(table), datastore, schema, oids);
+
+			sourceClasses.Add(sourceClass);
+		}
+
+		var repository = new SelectionItemRepository(sourceClasses, new EmptyWorkItemStateRepository());
+
+		var wl = new SelectionWorkList(repository, "uniqueName", "displayName");
+		List<IWorkItem> items = wl.GetItems().ToList();
+
+		Assert.AreEqual(9, items.Count);
+	}
+
+	[Test]
+	public void Can_create_SelectionWorkList_from_Shapefile()
+	{
+		string path = @"C:\temp\Shapefile";
+		using var fileSystem =
+			new FileSystemDatastore(new FileSystemConnectionPath(new Uri(path, UriKind.Absolute),
+			                                                     FileSystemDatastoreType.Shapefile));
+
+		var shapefile = fileSystem.OpenDataset<FeatureClass>("TLM_STRASSE_clip");
+
+		var tables = new List<Table> { shapefile };
+		var sourceClasses = new List<SelectionSourceClass>(tables.Count);
+
+		foreach (Table table in tables)
+		{
+			TableDefinition tableDefinition = table.GetDefinition();
+
+			SourceClassSchema schema = CreateSchema(tableDefinition);
+
+			Datastore datastore = table.GetDatastore();
+			List<long> oids = [0, 1, 2, 3];
+			var sourceClass = new SelectionSourceClass(new GdbTableIdentity(table), datastore, schema, oids);
+
+			sourceClasses.Add(sourceClass);
+		}
+
+		var repository = new SelectionItemRepository(sourceClasses, new EmptyWorkItemStateRepository());
+
+		var wl = new SelectionWorkList(repository, "uniqueName", "displayName");
+		List<IWorkItem> items = wl.GetItems().ToList();
+
+		Assert.AreEqual(4, items.Count);
+	}
+
+	private static SourceClassSchema CreateSchema(TableDefinition tableDefinition)
+	{
+		string objectIDField = tableDefinition.GetObjectIDField();
+
+		string shapeField = null;
+
+		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
+		{
+			shapeField = featureClassDefinition.GetShapeField();
+		}
+
+		return new SourceClassSchema(objectIDField, shapeField);
+	}
+
+	private static DbSourceClassSchema CreateStatusSchema(TableDefinition tableDefinition)
+	{
+		string objectIDField = tableDefinition.GetObjectIDField();
+
+		string shapeField = null;
+
+		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
+		{
+			shapeField = featureClassDefinition.GetShapeField();
+		}
+
+		return new DbSourceClassSchema(objectIDField, shapeField, "STATUS", tableDefinition.FindField("STATUS"),
 		                                (int) IssueCorrectionStatus.NotCorrected,
 		                                (int) IssueCorrectionStatus.Corrected);
 	}

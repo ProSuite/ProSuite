@@ -322,11 +322,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 					_rowMap.Add(item.GdbRowProxy, item);
 					_items.Add(item);
-
-					if (item.HasExtent)
-					{
-						yield return item;
-					}
 					
 					if (item.Extent is { IsEmpty: false })
 					{

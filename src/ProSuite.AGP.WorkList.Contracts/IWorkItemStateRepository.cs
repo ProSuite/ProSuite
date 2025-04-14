@@ -15,8 +15,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		void Commit(IList<ISourceClass> sourceClasses);
 
-		void Discard();
-
 		int? CurrentIndex { get; set; }
 
 		void Rename(string name);

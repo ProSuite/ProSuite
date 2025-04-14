@@ -5,9 +5,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Editing;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
@@ -16,12 +14,17 @@ namespace ProSuite.AGP.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private readonly Geodatabase _geodatabase;
+
 		#region Overrides of GdbItemRepository
 
-		public DbStatusWorkItemRepository(
-			[NotNull] IList<DbStatusSourceClassDefinition> sourceClassDefinitions,
-			[NotNull] IWorkItemStateRepository workItemStateRepository)
-			: base(sourceClassDefinitions, workItemStateRepository) { }
+		public DbStatusWorkItemRepository(IList<ISourceClass> sourceClasses,
+		                                  IWorkItemStateRepository workItemStateRepository,
+		                                  Geodatabase geodatabase) : base(
+			sourceClasses, workItemStateRepository)
+		{
+			_geodatabase = geodatabase;
+		}
 
 		public override bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
 		{
@@ -55,19 +58,10 @@ namespace ProSuite.AGP.WorkList
 			return new DbStatusWorkItem(sourceClass.GetUniqueTableId(), row, status);
 		}
 
-		// TODO: Remove other two constructors who need this method
-		protected override ISourceClass CreateSourceClassCore(
-			GdbTableIdentity identity, IAttributeReader attributeReader,
-			WorkListStatusSchema statusSchema,
-			string definitionQuery = null)
-		{
-			throw new NotImplementedException();
-		}
-
 		protected override async Task SetStatusCoreAsync(IWorkItem item,
 		                                                 ISourceClass source)
 		{
-			Table table = OpenTable(source);
+			Table table = OpenEditableTable(source);
 			Assert.NotNull(table, $"Cannot set status for missing table {source.Name}");
 
 			try
@@ -86,10 +80,9 @@ namespace ProSuite.AGP.WorkList
 					context.Invalidate(row);
 				}, table);
 
-				string fieldName = databaseSourceClass.StatusSchema.FieldName;
-				object value = databaseSourceClass.GetValue(item.Status);
-
-				operation.Modify(table, item.ObjectID, fieldName, value);
+				operation.Modify(table, item.ObjectID,
+				                 databaseSourceClass.StatusField,
+				                 databaseSourceClass.GetValue(item.Status));
 
 				await operation.ExecuteAsync();
 			}
@@ -102,6 +95,22 @@ namespace ProSuite.AGP.WorkList
 			{
 				table.Dispose();
 			}
+		}
+
+		private Table OpenEditableTable(ISourceClass sourceClass)
+		{
+			Table table = null;
+			try
+			{
+				// NOTE: This ensures that no stale table instance is opened from no stale workspace instance.
+				table = _geodatabase.OpenDataset<Table>(sourceClass.Name);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error opening source table {sourceClass.Name}: {e.Message}.", e);
+			}
+
+			return table;
 		}
 
 		#endregion
@@ -133,7 +142,7 @@ namespace ProSuite.AGP.WorkList
 
 			foreach (ISourceClass sourceClass in SourceClasses)
 			{
-				Table table = OpenTable(sourceClass);
+				Table table = OpenEditableTable(sourceClass);
 
 				if (table != null)
 				{

@@ -218,11 +218,9 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 			if (sourceClass is DatabaseSourceClass dbStatusSourceClass)
 			{
-				WorkListStatusSchema statusSchema = dbStatusSourceClass.StatusSchema;
-
-				xmlTableReference.StatusFieldName = statusSchema.FieldName;
-				xmlTableReference.StatusValueTodo = (int) statusSchema.TodoValue;
-				xmlTableReference.StatusValueDone = (int) statusSchema.DoneValue;
+				xmlTableReference.StatusFieldName = dbStatusSourceClass.StatusField;
+				xmlTableReference.StatusValueTodo = (int) dbStatusSourceClass.TodoValue;
+				xmlTableReference.StatusValueDone = (int) dbStatusSourceClass.DoneValue;
 			}
 
 			return xmlTableReference;

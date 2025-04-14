@@ -22,62 +22,14 @@ namespace ProSuite.AGP.WorkList
 
 		private int _lastUsedOid;
 
-		// TODO: Create basic record for each source class: Table, DefinitionQuery, StatusSchema
-		protected GdbItemRepository(IEnumerable<Table> tables,
-		                            IWorkItemStateRepository workItemStateRepository,
-		                            // ReSharper disable once UnusedParameter.Local because it is required by dynamic instantiation
-		                            [CanBeNull] IWorkListItemDatastore tableSchema = null)
-		{
-			WorkItemStateRepository = workItemStateRepository;
-
-			foreach (Table table in tables)
-			{
-				ISourceClass sourceClass =
-					CreateSourceClass(new GdbTableIdentity(table), table.GetDefinition(),
-					                  null);
-
-				SourceClasses.Add(sourceClass);
-			}
-
-			int distinctIds =
-				SourceClasses.Select(sc => sc.GetUniqueTableId()).Distinct().Count();
-
-			if (distinctIds != SourceClasses.Count)
-			{
-				// TODO: Extract problematic tables
-				_msg.Warn("Some source classes have duplicate table ids. " +
-				          "Please ensure they have unique table names if they are not registered");
-			}
-		}
-
+		// TODO: Create basic record for each source class: Table, DefinitionQuery, Schema
+		//		 re-use DbStatusSourceClassDefinition?
 		protected GdbItemRepository(
-			IList<DbStatusSourceClassDefinition> sourceClassDefinitions,
+			IList<ISourceClass> sourceClasses,
 			IWorkItemStateRepository workItemStateRepository)
 		{
-			HashSet<nint> datastoreHandles = new HashSet<IntPtr>();
-			foreach (DbStatusSourceClassDefinition sourceDefinition in sourceClassDefinitions)
-			{
-				ISourceClass sourceClass = new DatabaseSourceClass(
-					new GdbTableIdentity(sourceDefinition.Table), sourceDefinition.StatusSchema,
-					sourceDefinition.AttributeReader, sourceDefinition.DefinitionQuery);
-
-				SourceClasses.Add(sourceClass);
-
-				IntPtr datastoreHandle = sourceDefinition.Table.GetDatastore().Handle;
-				datastoreHandles.Add(datastoreHandle);
-			}
-
-			Assert.True(datastoreHandles.Count < 2,
-			            "Multiple geodatabases are referenced by the work list's source classes.");
-
-			CurrentWorkspace =
-				sourceClassDefinitions.FirstOrDefault()?.Table.GetDatastore() as Geodatabase;
-
-			if (CurrentWorkspace == null)
-			{
-				_msg.Warn("No workspace found for the work list.");
-			}
-
+			SourceClasses = sourceClasses;
+			
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
@@ -93,7 +45,7 @@ namespace ProSuite.AGP.WorkList
 		[CanBeNull]
 		public IWorkListItemDatastore TableSchema { get; protected set; }
 
-		public List<ISourceClass> SourceClasses { get; } = new();
+		public IList<ISourceClass> SourceClasses { get; set; }
 
 		public abstract void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
 
@@ -104,7 +56,7 @@ namespace ProSuite.AGP.WorkList
 			QueryFilter filter = null, bool recycle = true, bool excludeGeometry = false)
 		{
 			return SourceClasses.SelectMany(sourceClass =>
-				                                GetItems(sourceClass, filter, null, recycle));
+				                                GetItems(sourceClass, filter, null, recycle, excludeGeometry));
 		}
 
 		private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(ISourceClass sourceClass,
@@ -120,7 +72,7 @@ namespace ProSuite.AGP.WorkList
 
 			if (string.IsNullOrEmpty(filter.SubFields) || string.Equals(filter.SubFields, "*"))
 			{
-				filter.SubFields = excludeGeometry ? "OBJECTID" : "OBJECTID,SHAPE";
+				filter.SubFields = sourceClass.GetRelevantSubFields(excludeGeometry);
 			}
 
 			// Source classes can set the respective filters / definition queries
@@ -132,7 +84,7 @@ namespace ProSuite.AGP.WorkList
 			// Selection Item ObjectIDs to filter out, or change of SearchOrder:
 			AdaptSourceFilter(filter, sourceClass);
 
-			foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
+			foreach (Row row in GetRows(sourceClass, filter, recycle))
 			{
 				IWorkItem item = CreateWorkItemCore(row, sourceClass);
 				WorkItemStateRepository.Refresh(item);
@@ -152,7 +104,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			var filter = new QueryFilter { ObjectIDs = new List<long> { oid } };
 
-			return GetRowsCore(sourceClass, filter, recycle: false).FirstOrDefault();
+			return GetRows(sourceClass, filter, recycle: false).FirstOrDefault();
 		}
 
 		// TODO: Rename to Update?
@@ -185,11 +137,6 @@ namespace ProSuite.AGP.WorkList
 			WorkItemStateRepository.Commit(SourceClasses);
 		}
 
-		public void Discard()
-		{
-			WorkItemStateRepository.Discard();
-		}
-
 		public void SetCurrentIndex(int currentIndex)
 		{
 			WorkItemStateRepository.CurrentIndex = currentIndex;
@@ -199,20 +146,10 @@ namespace ProSuite.AGP.WorkList
 		{
 			return WorkItemStateRepository.CurrentIndex ?? -1;
 		}
-
-		// TODO: Workspace property, the source class references the table
-		[CanBeNull]
-		public Row GetGdbItemRow(IWorkItem workItem)
-		{
-			Geodatabase workspace = workItem.GdbRowProxy.Table.Workspace.OpenGeodatabase();
-
-			return workItem.GdbRowProxy.GetRow(workspace);
-		}
-
+		
+		// todo: (daro) move to ISourceClass?
 		protected abstract void AdaptSourceFilter([NotNull] QueryFilter filter,
 		                                          [NotNull] ISourceClass sourceClass);
-
-		protected virtual void UpdateStateRepositoryCore(string path) { }
 
 		protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
 		                                          [NotNull] ISourceClass source)
@@ -220,12 +157,11 @@ namespace ProSuite.AGP.WorkList
 			return Task.FromResult(0);
 		}
 
-		// TODO: (daro) rename
-		private IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
-		                                     [CanBeNull] QueryFilter filter,
-		                                     bool recycle)
+		private static IEnumerable<Row> GetRows([NotNull] ISourceClass sourceClass,
+		                                        [CanBeNull] QueryFilter filter,
+		                                        bool recycle)
 		{
-			Table table = OpenTable(sourceClass);
+			Table table = OpenReadOnlyTable(sourceClass);
 
 			if (table == null)
 			{
@@ -235,7 +171,7 @@ namespace ProSuite.AGP.WorkList
 
 			try
 			{
-				// Todo daro: check recycle
+				// Todo: daro check recycle
 				foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
 				{
 					yield return row;
@@ -247,13 +183,7 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		[CanBeNull]
-		protected virtual WorkListStatusSchema CreateStatusSchemaCore(
-			[NotNull] TableDefinition definition)
-		{
-			return null;
-		}
-
+		// TODO: (daro) still needed?
 		[CanBeNull]
 		protected virtual IAttributeReader CreateAttributeReaderCore(
 			[NotNull] TableDefinition definition,
@@ -277,32 +207,16 @@ namespace ProSuite.AGP.WorkList
 		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row,
 		                                                [NotNull] ISourceClass sourceClass);
 
-		[NotNull]
-		protected abstract ISourceClass CreateSourceClassCore(
-			GdbTableIdentity identity,
-			[CanBeNull] IAttributeReader attributeReader,
-			[CanBeNull] WorkListStatusSchema statusSchema,
-			string definitionQuery = null);
-
 		[CanBeNull]
-		protected Table OpenTable([NotNull] ISourceClass sourceClass)
+		private static Table OpenReadOnlyTable([NotNull] ISourceClass sourceClass)
 		{
 			Table table = null;
 			try
 			{
+				// NOTE: This can lead to using a different instance of the same workspace
+				// because opening a new Geodatabase with the Connector of an existing
+				// Geodatabase can in some cases result in a different instance!
 				table = sourceClass.OpenDataset<Table>();
-				//if (CurrentWorkspace != null)
-				//{
-				//	// NOTE: This can lead to using a different instance of the same workspace
-				//	// because opening a new Geodatabase with the Connector of an existing
-				//	// Geodatabase can in some cases result in a different instance!
-				//	table = sourceClass.OpenDataset<Table>();
-				//}
-				//else
-				//{
-				//	// Therefore try using the (single) workspace of the repository:
-				//	table = CurrentWorkspace.OpenDataset<Table>(sourceClass.Name);
-				//}
 			}
 			catch (Exception e)
 			{
@@ -310,19 +224,6 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return table;
-		}
-
-		private ISourceClass CreateSourceClass(GdbTableIdentity identity,
-		                                       TableDefinition definition,
-		                                       [CanBeNull] IWorkListItemDatastore tableSchema,
-		                                       string definitionQuery = null)
-		{
-			IAttributeReader attributeReader =
-				CreateAttributeReaderCore(definition, tableSchema);
-
-			WorkListStatusSchema statusSchema = CreateStatusSchemaCore(definition);
-
-			return CreateSourceClassCore(identity, attributeReader, statusSchema, definitionQuery);
 		}
 
 		#region unused

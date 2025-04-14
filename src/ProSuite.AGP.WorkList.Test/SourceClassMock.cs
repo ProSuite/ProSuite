@@ -13,6 +13,14 @@ public class SourceClassMock : ISourceClass
 	public IAttributeReader AttributeReader { get; set; }
 	public bool HasGeometry { get; }
 	public string DefinitionQuery { get; }
+	public string OIDField { get; set; }
+	public string ShapeField { get; set; }
+	public string StatusField { get; set; }
+
+	public string GetRelevantSubFields(bool excludeGeometry)
+	{
+		throw new NotImplementedException();
+	}
 
 	public bool Uses(ITableReference tableReference)
 	{

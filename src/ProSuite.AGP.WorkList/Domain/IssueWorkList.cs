@@ -12,6 +12,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		                     [CanBeNull] string displayName = null) :
 			base(repository, name, areaOfInterest, displayName) { }
 
+		// TODO: (daro) revise. If WorkListUtils.Create doesn't instantiate the work list anymore
+		//		 we can ensure AOI is not null. Necessary to not search the entire DB.
 		/// <summary>
 		/// Do not change this constructor at all, it is used for dynamic loading!
 		/// </summary>

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
@@ -371,6 +370,7 @@ namespace ProSuite.AGP.WorkList.Test
 			// go to item7
 			Assert.True(wl.CanGoNearest());
 			Assert.NotNull(wl.Current);
+			Assert.NotNull(wl.Current.Extent);
 			wl.GoNearest(wl.Current.Extent);
 			Assert.AreEqual(item7, wl.Current);
 			Assert.True(wl.Current?.Visited);
@@ -422,6 +422,7 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(wl.Current?.Visited);
 
 			// set status done and update work list
+			Assert.NotNull(wl.Current);
 			wl.Current.Status = WorkItemStatus.Done;
 			wl.SetStatusAsync(wl.Current, WorkItemStatus.Done);
 
