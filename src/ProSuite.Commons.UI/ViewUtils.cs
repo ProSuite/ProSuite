@@ -179,7 +179,19 @@ namespace ProSuite.Commons.UI
 				else
 				{
 					//We are not on the UI
-					dispatcher.BeginInvoke(action);
+					dispatcher.BeginInvoke(
+						() =>
+						{
+							try
+							{
+								action();
+							}
+							catch (Exception e)
+							{
+								// Prevent crashes by catching the exception here:
+								_msg.Error($"Error running action on UI thread: {e.Message}", e);
+							}
+						});
 				}
 			}
 			catch (Exception e)

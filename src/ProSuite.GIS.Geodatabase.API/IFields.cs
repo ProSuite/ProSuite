@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace ProSuite.GIS.Geodatabase.API
@@ -6,7 +7,10 @@ namespace ProSuite.GIS.Geodatabase.API
 	{
 		int FieldCount { get; }
 
+		[Obsolete("Use indexer")]
 		IList<IField> Field { get; }
+
+		IField this[int index] { get; }
 
 		IField get_Field(int index);
 

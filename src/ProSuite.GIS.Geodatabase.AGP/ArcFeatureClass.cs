@@ -5,6 +5,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
@@ -16,17 +17,27 @@ namespace ProSuite.GIS.Geodatabase.AGP
 	{
 		private readonly FeatureClass _proFeatureClass;
 
-		private readonly FeatureClassDefinition _proFeatureClassDefinition;
+		// Property caching for non CIM-thread access:
+		private esriGeometryType? _shapeType;
+		private string _shapeFieldName;
 
-		public ArcFeatureClass(FeatureClass proFeatureClass) : base(proFeatureClass)
+		public ArcFeatureClass([NotNull] FeatureClass proFeatureClass,
+		                       bool cachePropertiesEagerly = false)
+			: base(proFeatureClass, cachePropertiesEagerly)
 		{
 			_proFeatureClass = proFeatureClass;
-			_proFeatureClassDefinition = proFeatureClass.GetDefinition();
 			GeometryDefinition =
-				new ArcGeometryDef(new ShapeDescription(_proFeatureClassDefinition));
+				new ArcGeometryDef(
+					new ShapeDescription((FeatureClassDefinition) ProTableDefinition));
 		}
 
 		public IGeometryDef GeometryDefinition { get; }
+
+		protected internal override void CachePropertiesCore()
+		{
+			_shapeType = ShapeType;
+			_shapeFieldName = ShapeFieldName;
+		}
 
 		#region Implementation of IClass
 
@@ -255,30 +266,49 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		//public string AliasName => _aoFeatureClass.AliasName;
 
+		private FeatureClassDefinition ProFeatureClassDefinition =>
+			(FeatureClassDefinition) ProTableDefinition;
+
 		public esriGeometryType ShapeType
 		{
 			get
 			{
-				GeometryType coreGeometryType = _proFeatureClassDefinition.GetShapeType();
+				if (_shapeType == null)
+				{
+					GeometryType coreGeometryType = ProFeatureClassDefinition.GetShapeType();
 
-				ProSuiteGeometryType geometryType =
-					GeometryUtils.TranslateToProSuiteGeometryType(coreGeometryType);
+					ProSuiteGeometryType geometryType =
+						GeometryUtils.TranslateToProSuiteGeometryType(coreGeometryType);
 
-				return (esriGeometryType) geometryType;
+					_shapeType = (esriGeometryType) geometryType;
+				}
+
+				return _shapeType.Value;
 			}
 		}
 
 		//public esriFeatureType FeatureType => _proFeatureClass.FeatureType;
 
-		public string ShapeFieldName => _proFeatureClassDefinition.GetShapeField();
+		public string ShapeFieldName
+		{
+			get
+			{
+				if (_shapeFieldName == null)
+				{
+					_shapeFieldName = ProFeatureClassDefinition.GetShapeField();
+				}
 
-		public IField AreaField => TryGetField(_proFeatureClassDefinition.GetAreaField());
+				return _shapeFieldName;
+			}
+		}
 
-		public IField LengthField => TryGetField(_proFeatureClassDefinition.GetLengthField());
+		public IField AreaField => TryGetField(ProFeatureClassDefinition.GetAreaField());
+
+		public IField LengthField => TryGetField(ProFeatureClassDefinition.GetLengthField());
 
 		//public IFeatureDataset FeatureDataset => _proFeatureClass.FeatureDataset;
 
-		public long FeatureClassID => _proFeatureClass.GetID();
+		public long FeatureClassID => ObjectClassID;
 
 		//public IEnumerable<IRelationshipClass> get_RelationshipClasses(esriRelRole role)
 		//{
@@ -300,9 +330,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		#region Implementation of IGeoDataset
 
 		public ISpatialReference SpatialReference =>
-			new ArcSpatialReference(_proFeatureClassDefinition.GetSpatialReference());
+			new ArcSpatialReference(ProFeatureClassDefinition.GetSpatialReference());
 
-		public IEnvelope Extent => new ArcEnvelope(_proFeatureClassDefinition.GetExtent());
+		public IEnvelope Extent => new ArcEnvelope(ProFeatureClassDefinition.GetExtent());
 
 		#endregion
 
@@ -313,16 +343,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				return null;
 			}
 
-			Field field =
-				_proFeatureClassDefinition.GetFields()
-				                          .FirstOrDefault(
-					                          f => f.Name.Equals(fieldName));
-			if (field == null)
-			{
-				return null;
-			}
+			Field field = ProFeatureClassDefinition.GetFields()
+			                                       .FirstOrDefault(f => f.Name.Equals(fieldName));
 
-			return new ArcField(field);
+			return field == null ? null : new ArcField(field);
 		}
 	}
 }

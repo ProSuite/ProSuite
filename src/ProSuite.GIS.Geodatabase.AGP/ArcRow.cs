@@ -7,6 +7,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
 using ProSuite.GIS.Geometry.API;
+using Subtype = ArcGIS.Core.Data.Subtype;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
