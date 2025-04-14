@@ -521,16 +521,16 @@ namespace ProSuite.QA.Container.TestContainer
 			InvolvedRow involvedRow = null;
 			IGeometry errorGeometry = null;
 
-			IReadOnlyRow row = null;
 			if (dataReference is RowReference rowReference)
 			{
-				row = rowReference.Row;
-			}
+				IReadOnlyRow row = rowReference.Row;
 
-			if (row != null)
-			{
 				involvedRow = new InvolvedRow(row);
 				errorGeometry = TestUtils.GetShapeCopy(row);
+			}
+			else if (dataReference is ISurfaceRow surfaceRow)
+			{
+				errorGeometry = GeometryFactory.CreatePolygon(surfaceRow.Extent);
 			}
 
 			ReportErrorForFailedTest(test, message, involvedRow, errorGeometry);
@@ -593,14 +593,15 @@ namespace ProSuite.QA.Container.TestContainer
 					ReportErrorForFailedTest(exp.Test, null,
 					                         $"Test execution failed: {expMessage}");
 				}
-				catch (TestRowException exp)
+				catch (TestDataException testDataException)
 				{
-					string expMessage = ExceptionUtils.FormatMessage(exp);
+					string expMessage = ExceptionUtils.FormatMessage(testDataException);
 
-					_msg.Error($"Non-container test execution failed for row: {expMessage}", exp);
+					_msg.Error($"Non-container test execution failed for row: {expMessage}",
+					           testDataException);
 
-					ReportErrorForFailedTest(exp.Test, new RowReference(exp.Row, recycled: false),
-					                         $"Test execution failed: {expMessage}");
+					ReportErrorForFailedTest(nonContainerTest, testDataException.DataReference,
+					                         $"Test execution failed: {testDataException.Message}");
 				}
 				catch (DataAccessException dataAccessException)
 				{
@@ -683,18 +684,18 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				string message = ExceptionUtils.FormatMessage(e);
 
-				_msg.Error($"Container test execution failed: {message}", e);
+				_msg.Warn($"Container test execution failed: {message}", e);
 
 				failedTests.Add(containerTest);
 
 				ReportErrorForFailedTest(containerTest, dataReference, $"Test failed: {message}");
 				return 0;
 			}
-			catch (TestRowException e)
+			catch (TestDataException e)
 			{
 				string message = ExceptionUtils.FormatMessage(e);
 
-				_msg.Error($"Container test execution failed: {message}", e);
+				_msg.Warn($"Container test execution failed: {message}", e);
 
 				ReportErrorForFailedTest(containerTest, dataReference,
 				                         $"Test failed for row: {message}");

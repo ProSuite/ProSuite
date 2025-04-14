@@ -5,24 +5,20 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Shared.ArcGIS;
 
 namespace ProSuite.Commons.AO.Test.Surface
 {
 	[TestFixture]
 	public class SpikeFreeTinGeneratorTests
 	{
-		private ArcGISLicenses _lic;
-
 		private static ISpatialReference _spatialReference;
 
 		[OneTimeSetUp]
 		public void Setup()
 		{
-			_lic = new ArcGISLicenses();
-			_lic.Checkout(EsriProduct.ArcEditor, EsriExtension.ThreeDAnalyst,
-			              EsriExtension.SpatialAnalyst);
+			TestUtils.InitializeLicense();
 
 			_spatialReference = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
@@ -31,7 +27,7 @@ namespace ProSuite.Commons.AO.Test.Surface
 		[OneTimeTearDown]
 		public void TearDown()
 		{
-			_lic.Release();
+			TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -120,7 +116,7 @@ namespace ProSuite.Commons.AO.Test.Surface
 
 			var envelope =
 				GeometryFactory.CreateEnvelope(0, 0, 100, 100, 0, 100, _spatialReference);
-			var tin = tinGenerator.GenerateTin(envelope);
+			ITin tin = tinGenerator.GenerateTin(envelope);
 			Assert.AreEqual(tin.DataNodeCount, 4);
 			Assert.AreEqual(tin.Extent.ZMin, spike.Z);
 		}
@@ -183,7 +179,7 @@ namespace ProSuite.Commons.AO.Test.Surface
 				new SimpleTerrain("TEST", new List<SimpleTerrainDataSource> { terrainDataSource },
 				                  10, null);
 			var tinGenerator =
-				new SpikeFreeTinGenerator(simpleTerrain, freezeDistance, insertionBuffer, null);
+				new SpikeFreeTinGenerator(simpleTerrain, freezeDistance, insertionBuffer, null, null);
 			tinGenerator.AllowIncompleteInterpolationDomainAtBoundary = true;
 
 			return tinGenerator;
