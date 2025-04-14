@@ -142,6 +142,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				using var source = GetProgressorSource();
 				var progressor = source?.Progressor;
 
+				OnToolActivatingCore();
+
 				await QueuedTaskUtils.Run(async () =>
 				{
 					SetupCursors();
@@ -202,6 +204,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			ViewUtils.Try(HideOptionsPane, _msg);
 
+			OnToolDeactivatingCore();
 			Task task = QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
 
 			await ViewUtils.TryAsync(task, _msg);
@@ -552,6 +555,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.CompletedTask;
 		}
 
+		/// <remarks>Will be called on GUI thread</remarks>
+		protected virtual void OnToolActivatingCore() { }
+
 		/// <remarks>Will be called on MCT</remarks>
 		protected virtual Task OnToolActivatingCoreAsync()
 		{
@@ -580,6 +586,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
+
+		/// <remarks>Will be called on GUI thread</remarks>
+		protected virtual void OnToolDeactivatingCore() { }
 
 		/// <remarks>Will be called on MCT</remarks>
 		protected virtual bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)

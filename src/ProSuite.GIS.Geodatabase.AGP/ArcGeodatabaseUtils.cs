@@ -21,16 +21,46 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		public static ArcTable ToArcTable(
-			[NotNull] Table proTable)
+			[NotNull] Table proTable,
+			bool eagerPropertyCaching = false)
 		{
-			Table databaseTable =
-				DatasetUtils.GetDatabaseTable(proTable);
+			Table databaseTable = DatasetUtils.GetDatabaseTable(proTable);
+
+			ArcWorkspace existingWorkspace = null;
+
+			var gdb = databaseTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
+
+			if (gdb != null)
+			{
+				existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle);
+
+				ArcTable found = existingWorkspace?.GetTableByName(databaseTable.GetName());
+
+				if (found != null)
+				{
+					if (eagerPropertyCaching)
+					{
+						found.CacheProperties();
+					}
+
+					return found;
+				}
+			}
 
 			ArcTable result = databaseTable is FeatureClass featureClass
-				                  ? new ArcFeatureClass(featureClass)
-				                  : new ArcTable(proTable);
+				                  ? new ArcFeatureClass(featureClass, eagerPropertyCaching)
+				                  : new ArcTable(proTable, eagerPropertyCaching);
+
+			existingWorkspace?.Cache(result);
 
 			return result;
+		}
+
+		public static ArcFeatureClass ToArcFeatureClass(
+			[NotNull] FeatureClass proFeatureClass,
+			bool eagerPropertyCaching = false)
+		{
+			return (ArcFeatureClass) ToArcTable((Table) proFeatureClass, eagerPropertyCaching);
 		}
 
 		public static ArcRow ToArcRow([NotNull] Row proRow,
@@ -45,21 +75,37 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		[CanBeNull]
-		public static ArcDomain ToArcDomain([CanBeNull] Domain domain)
+		public static ArcDomain ToArcDomain([CanBeNull] Domain domain,
+		                                    [CanBeNull] IFeatureWorkspace workspace)
 		{
 			if (domain == null)
 			{
 				return null;
 			}
 
+			ArcDomain cachedDomain = workspace?.get_DomainByName(domain.GetName()) as ArcDomain;
+
+			if (cachedDomain != null)
+			{
+				return cachedDomain;
+			}
+
+			ArcDomain result = null;
+
+			// Use the ProDomain
 			if (domain is CodedValueDomain codedDomain)
 			{
-				return new ArcCodedValueDomain(codedDomain);
+				result = new ArcCodedValueDomain(codedDomain);
 			}
 
 			if (domain is RangeDomain rangeDomain)
 			{
-				return new ArcRangeDomain(rangeDomain);
+				result = new ArcRangeDomain(rangeDomain);
+			}
+
+			if (result != null && workspace is ArcWorkspace arcWorkspace)
+			{
+				arcWorkspace.Cache(result);
 			}
 
 			throw new ArgumentOutOfRangeException("Unknown domain type");
