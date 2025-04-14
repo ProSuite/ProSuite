@@ -1,7 +1,6 @@
 using ProSuite.Commons.DomainModels;
-using ProSuite.DomainModel.Core.DataModel;
 
-namespace ProSuite.DomainModel.AO.DataModel
+namespace ProSuite.DomainModel.Core.DataModel.Repositories
 {
 	public interface ISpatialReferenceDescriptorRepository : IRepository<SpatialReferenceDescriptor>
 	{
