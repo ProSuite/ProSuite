@@ -6,6 +6,7 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.GIS.Geodatabase.API;
+using ProSuite.GIS.Geometry.API;
 using Field = ArcGIS.Core.Data.Field;
 
 namespace ProSuite.GIS.Geodatabase.AGP;
@@ -134,7 +135,96 @@ public class ArcField : IField
 
 	public bool CheckValue(object value)
 	{
-		throw new NotImplementedException();
+		if (Type == esriFieldType.esriFieldTypeGUID)
+		{
+			try
+			{
+				new Guid((string) value);
+				return true;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		if (Type == esriFieldType.esriFieldTypeSmallInteger)
+		{
+			// value could be int16
+			return short.TryParse(Convert.ToString(value), out _);
+		}
+
+		if (Type == esriFieldType.esriFieldTypeInteger)
+		{
+			// value could be int32
+			return int.TryParse(Convert.ToString(value), out _);
+		}
+
+		if (Type == esriFieldType.esriFieldTypeBigInteger)
+		{
+			return long.TryParse(Convert.ToString(value), out _);
+		}
+
+		if (! TryGetType(Type, out Type type))
+		{
+			// Cannot check raster, XML, blob field:
+			return true;
+		}
+
+		return type.IsInstanceOfType(value);
+	}
+
+	private static bool TryGetType(esriFieldType fieldType, out Type type)
+	{
+		switch (fieldType)
+		{
+			case esriFieldType.esriFieldTypeString:
+				type = typeof(string);
+				return true;
+
+			case esriFieldType.esriFieldTypeInteger:
+				type = typeof(int);
+				return true;
+
+			case esriFieldType.esriFieldTypeSmallInteger:
+				type = typeof(short);
+				return true;
+
+			case esriFieldType.esriFieldTypeOID:
+			case esriFieldType.esriFieldTypeBigInteger:
+				type = typeof(long);
+				return true;
+
+			case esriFieldType.esriFieldTypeDouble:
+				type = typeof(double);
+				return true;
+
+			case esriFieldType.esriFieldTypeSingle:
+				type = typeof(float);
+				return true;
+
+			case esriFieldType.esriFieldTypeDate:
+				type = typeof(DateTime);
+				return true;
+
+			case esriFieldType.esriFieldTypeGeometry:
+				type = typeof(IGeometry);
+				return true;
+
+			case esriFieldType.esriFieldTypeGlobalID:
+			case esriFieldType.esriFieldTypeGUID:
+				type = typeof(Guid);
+				return true;
+
+			case esriFieldType.esriFieldTypeBlob:
+			case esriFieldType.esriFieldTypeRaster:
+			case esriFieldType.esriFieldTypeXML:
+				type = null;
+				return false;
+
+			default:
+				throw new ArgumentException($"Unexpected field type: {fieldType}");
+		}
 	}
 
 	#endregion
