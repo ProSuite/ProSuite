@@ -302,11 +302,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 		                                           [NotNull] string gdbDatasetName,
 		                                           [NotNull] IObjectDataset dataset)
 		{
-			Model model = (Model) dataset.Model;
-
 			return OpenObjectClass(workspace, gdbDatasetName,
 			                       dataset.GetAttribute(AttributeRole.ObjectID)?.Name,
-			                       model.SpatialReferenceDescriptor);
+			                       dataset.Model.SpatialReferenceDescriptor);
 		}
 
 		[NotNull]

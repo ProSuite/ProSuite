@@ -431,12 +431,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 				int modelId = ddxModel.Id;
 
-				ISpatialReference spatialReference = null;
-
-				if (ddxModel is Model model)
-				{
-					spatialReference = model.SpatialReferenceDescriptor?.GetSpatialReference();
-				}
+				ISpatialReference spatialReference =
+					ddxModel.SpatialReferenceDescriptor?.GetSpatialReference();
 
 				foreach (Dataset dataset in ddxModel.GetDatasets())
 				{
