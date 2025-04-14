@@ -83,11 +83,14 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				return null;
 			}
 
-			ArcDomain cachedDomain = workspace?.get_DomainByName(domain.GetName()) as ArcDomain;
+			var arcWorkspace = workspace as ArcWorkspace;
 
-			if (cachedDomain != null)
+			// Cached domain:
+			ArcDomain existing = arcWorkspace?.GetDomainByName(domain.GetName());
+
+			if (existing != null)
 			{
-				return cachedDomain;
+				return existing;
 			}
 
 			ArcDomain result = null;
@@ -103,12 +106,15 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				result = new ArcRangeDomain(rangeDomain);
 			}
 
-			if (result != null && workspace is ArcWorkspace arcWorkspace)
+			if (result == null)
 			{
-				arcWorkspace.Cache(result);
+				throw new ArgumentOutOfRangeException(nameof(domain),
+				                                      $"Domain {domain.GetName()} is neither range nor coded value domain");
 			}
 
-			throw new ArgumentOutOfRangeException("Unknown domain type");
+			arcWorkspace?.Cache(result);
+
+			return result;
 		}
 
 		public static QueryFilter ToProQueryFilter(IQueryFilter queryFilter)

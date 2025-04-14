@@ -685,6 +685,11 @@ public class ArcWorkspace : IFeatureWorkspace
 		_tablesByName.TryAdd(table.Name, table);
 	}
 
+	internal ArcDomain GetDomainByName(string name)
+	{
+		return _domains.GetValueOrDefault(name);
+	}
+
 	internal void Cache([NotNull] ArcDomain domain)
 	{
 		_domains.TryAdd(domain.Name, domain);

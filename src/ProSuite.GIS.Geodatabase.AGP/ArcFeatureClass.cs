@@ -23,12 +23,19 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public ArcFeatureClass([NotNull] FeatureClass proFeatureClass,
 		                       bool cachePropertiesEagerly = false)
-			: base(proFeatureClass, cachePropertiesEagerly)
+			: base(proFeatureClass, false)
 		{
 			_proFeatureClass = proFeatureClass;
+
 			GeometryDefinition =
 				new ArcGeometryDef(
 					new ShapeDescription((FeatureClassDefinition) ProTableDefinition));
+
+			// Only cache properties after the GeometryDefinition is set;
+			if (cachePropertiesEagerly)
+			{
+				CacheProperties();
+			}
 		}
 
 		public IGeometryDef GeometryDefinition { get; }
