@@ -51,7 +51,14 @@ namespace ProSuite.Commons.AGP.Carto
 		/// </summary>
 		public ICollection<Feature> SelectedFeatures { get; set; }
 
-		// todo daro rethink usage
+		/// Determines the behaviour of the GetFeatures() method of the resulting selections.
+		/// If true, the GetFeatures() method on the resulting <see cref="FeatureSelectionBase"/>
+		/// objects returns a separate instance for each row, i.e. it uses a non-recycling cursor.
+		/// Otherwise, the GetFeatures() method on the resulting <see cref="FeatureSelectionBase"/>
+		/// objects returns the same instance for each row (recycling)! Make sure to clone the
+		/// objects if they are to be re-used outside the enumeration (for example if they are added
+		/// to a list).
+		/// Also, if the features are to be counted only, this is a more efficient method.
 		public bool DelayFeatureFetching { get; set; }
 
 		/// <summary>
@@ -84,6 +91,22 @@ namespace ProSuite.Commons.AGP.Carto
 			                           cancelableProgressor);
 		}
 
+		/// <summary>
+		/// Returns the found features for each layer using the specified parameters.
+		/// NOTE: If <see cref="DelayFeatureFetching"/> is active, the GetFeatures()
+		/// method on the resulting <see cref="FeatureSelectionBase"/> objects returns
+		/// a separate instance for each row, i.e. it uses a non-recycling cursor.
+		/// If <see cref="DelayFeatureFetching"/> is false, the GetFeatures()
+		/// method on the resulting <see cref="FeatureSelectionBase"/> objects returns
+		/// the same instance for each row (recycling)! Make sure to clone the objects if
+		/// they are to be re-used outside the enumeration (for example if they are added
+		/// to a list).
+		/// </summary>
+		/// <param name="layers"></param>
+		/// <param name="searchGeometry"></param>
+		/// <param name="featurePredicate"></param>
+		/// <param name="cancelableProgressor"></param>
+		/// <returns></returns>
 		public IEnumerable<FeatureSelectionBase> FindFeaturesByLayer(
 			[NotNull] IEnumerable<BasicFeatureLayer> layers,
 			[NotNull] Geometry searchGeometry,
@@ -135,13 +158,12 @@ namespace ProSuite.Commons.AGP.Carto
 					// TODO: Honour ReturnUnJoinedFeatures value.
 					filter.OutputSpatialReference = outputSpatialReference;
 
-					List<Feature> features =
-						LayerUtils.SearchRows(basicFeatureLayer, filter, featurePredicate).ToList();
+					IEnumerable<Feature> features =
+						LayerUtils.SearchRows(basicFeatureLayer, filter, featurePredicate);
 
-					if (features.Count > 0)
-					{
-						yield return new FeatureSelection(basicFeatureLayer, features);
-					}
+					// Return the selection without counting the result features to
+					// avoid enumerating the features several times (Recycling cursor!).
+					yield return new FeatureSelection(basicFeatureLayer, features);
 				}
 			}
 		}

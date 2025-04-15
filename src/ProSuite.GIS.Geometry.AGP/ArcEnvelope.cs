@@ -186,10 +186,10 @@ namespace ProSuite.GIS.Geometry.AGP
 		{
 			var aoEnvelope = ((ArcEnvelope) other).ProEnvelope;
 
-			Envelope result = _proEnvelope.Union(aoEnvelope);
+			_proEnvelope.Union(aoEnvelope);
 
 			// TODO: Change semantics, return result
-			throw new NotImplementedException();
+			//throw new NotImplementedException();
 		}
 
 		public void Intersect(IEnvelope inEnvelope)
@@ -219,7 +219,14 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public void Expand(double dx, double dy, bool asRatio)
 		{
-			throw new NotImplementedException();
+			if (asRatio)
+			{
+				_proEnvelope.Expand(dx * _proEnvelope.Width, dy * _proEnvelope.Height, false);
+			}
+			else
+			{
+				_proEnvelope.Expand(dx, dy, false);
+			}
 		}
 
 		public void ExpandZ(double dz, bool asRatio)
