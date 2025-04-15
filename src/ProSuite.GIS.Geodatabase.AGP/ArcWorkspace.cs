@@ -203,6 +203,17 @@ public class ArcWorkspace : IFeatureWorkspace
 					_allRelationshipClasses.Add(relationshipClass);
 				}
 			}
+
+			foreach (AttributedRelationshipClassDefinition definition in Geodatabase
+				         .GetDefinitions<AttributedRelationshipClassDefinition>())
+			{
+				IDataset result = Open(definition);
+
+				if (result is IRelationshipClass relationshipClass)
+				{
+					_allRelationshipClasses.Add(relationshipClass);
+				}
+			}
 		}
 
 		foreach (IRelationshipClass relationshipClass in _allRelationshipClasses)

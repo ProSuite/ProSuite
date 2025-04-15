@@ -172,7 +172,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 				Table originClass = geodatabase.OpenDataset<Table>(originClassName);
 
-				return _originClass = ArcGeodatabaseUtils.ToArcTable(originClass, _cachePropertiesEagerly);
+				return _originClass =
+					       ArcGeodatabaseUtils.ToArcTable(originClass, _cachePropertiesEagerly);
 			}
 		}
 
@@ -195,7 +196,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				Table destinationClass = geodatabase.OpenDataset<Table>(destinationClassName);
 
 				return _destinationClass =
-					       ArcGeodatabaseUtils.ToArcTable(destinationClass, _cachePropertiesEagerly);
+					       ArcGeodatabaseUtils.ToArcTable(destinationClass,
+					                                      _cachePropertiesEagerly);
 			}
 		}
 
@@ -453,16 +455,15 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			IReadOnlyList<Row> relatedObjects;
 
-			if (sourceClassName == _proRelationshipClassDefinition.GetOriginClass())
+			if (sourceClassName == OriginClass.Name)
 			{
 				relatedObjects =
 					ProRelationshipClass.GetRowsRelatedToOriginRows(sourceOids);
 			}
 			else
 			{
-				Assert.True(
-					sourceClassName == _proRelationshipClassDefinition.GetDestinationClass(),
-					"Object is neither origin nor destination of relationship class");
+				Assert.True(sourceClassName == DestinationClass.Name,
+				            "Object is neither origin nor destination of relationship class");
 
 				relatedObjects =
 					ProRelationshipClass.GetRowsRelatedToDestinationRows(sourceOids);
