@@ -13,11 +13,9 @@ namespace ProSuite.AGP.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly string _statusField;
 		private readonly int _statusFieldIndex;
 
 		public DatabaseSourceClass(GdbTableIdentity tableIdentity,
-		                           Datastore datastore,
 		                           [NotNull] DbSourceClassSchema schema,
 		                           [CanBeNull] IAttributeReader attributeReader,
 		                           [CanBeNull] string definitionQuery)
@@ -25,7 +23,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			Assert.ArgumentNotNull(schema, nameof(schema));
 			_statusFieldIndex = schema.StatusFieldIndex;
-			_statusField = schema.StatusField;
+			StatusField = schema.StatusField;
 			TodoValue = schema.TodoValue;
 			DoneValue = schema.DoneValue;
 
@@ -69,11 +67,11 @@ namespace ProSuite.AGP.WorkList
 			return WorkItemStatus.Todo;
 		}
 
-		public object DoneValue { get; set; }
+		public object DoneValue { get; }
 
 		public object TodoValue { get; }
 
-		public string StatusField { get; set; }
+		public string StatusField { get; }
 
 		public object GetValue(WorkItemStatus status)
 		{
@@ -110,7 +108,7 @@ namespace ProSuite.AGP.WorkList
 
 			if (statusFilter != null)
 			{
-				result = $"{_statusField} = {GetValue(statusFilter.Value)}";
+				result = $"{StatusField} = {GetValue(statusFilter.Value)}";
 			}
 
 			if (DefinitionQuery != null)
@@ -128,9 +126,9 @@ namespace ProSuite.AGP.WorkList
 
 		protected override string GetRelevantSubFieldsCore(string subFields)
 		{
-			return string.IsNullOrEmpty(_statusField)
+			return string.IsNullOrEmpty(StatusField)
 				       ? subFields
-				       : $"{subFields},{_statusField}";
+				       : $"{subFields},{StatusField}";
 		}
 
 		#endregion

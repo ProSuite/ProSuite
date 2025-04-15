@@ -19,6 +19,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		protected string Name { get; }
 		protected Type Type { get; }
 
+		public string WorkListDefinitionFilePath { get; set; }
+
 		private readonly IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>
 			_workspaces = new Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>();
 

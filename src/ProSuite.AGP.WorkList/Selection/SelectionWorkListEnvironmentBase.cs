@@ -73,16 +73,37 @@ namespace ProSuite.AGP.WorkList.Selection
 
 				return Task.FromResult(WorkListUtils.CreateSelectionItemRepository(tables, stateRepository, definition));
 			}
-			else
+
+			Dictionary<MapMember, List<long>> oidsByLayer = SelectionUtils.GetSelection(map);
+
+			Dictionary<Table, List<long>> selection =
+				MapUtils.GetDistinctSelectionByTable(oidsByLayer);
+			
+			IList<SelectionSourceClass> sourceClasses = new List<SelectionSourceClass>(selection.Count);
+
+			foreach ((Table table, List<long> oids) in selection)
 			{
-				Dictionary<MapMember, List<long>> oidsByLayer = SelectionUtils.GetSelection(map);
+				using TableDefinition tableDefinition = table.GetDefinition();
 
-				Dictionary<Table, List<long>> selection =
-					MapUtils.GetDistinctSelectionByTable(oidsByLayer);
+				string objectIDField = tableDefinition.GetObjectIDField();
 
-				return Task.FromResult<IWorkItemRepository>(
-					new SelectionItemRepository(selection, stateRepository));
+				string shapeField = null;
+
+				if (tableDefinition is FeatureClassDefinition featureClassDefinition)
+				{
+					shapeField = featureClassDefinition.GetShapeField();
+				}
+
+				var schema = new SourceClassSchema(objectIDField, shapeField);
+
+				// todo: daro inline
+				Datastore datastore = table.GetDatastore();
+				var sourceClass = new SelectionSourceClass(new GdbTableIdentity(table), datastore, schema, oids, null);
+				sourceClasses.Add(sourceClass);
 			}
+
+			return Task.FromResult<IWorkItemRepository>(
+				new SelectionItemRepository(sourceClasses, stateRepository));
 		}
 
 		private static IEnumerable<Table> FindMatchingTables(

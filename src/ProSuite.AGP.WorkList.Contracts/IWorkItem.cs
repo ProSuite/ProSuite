@@ -39,10 +39,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		// TODO: (daro) GetGeometry?
 		[CanBeNull]
-		Geometry Geometry { get; set; }
-
-		[CanBeNull]
-		string Description { get; }
+		Geometry Geometry { get; }
 
 		GeometryType? GeometryType { get; }
 
@@ -62,5 +59,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void SetExtent([CanBeNull] Envelope extent);
 
 		void SetGeometry([CanBeNull] Geometry geometry);
+
+		string GetDescription();
 	}
 }

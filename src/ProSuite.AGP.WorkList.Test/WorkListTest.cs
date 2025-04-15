@@ -436,6 +436,63 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		[Test]
+		public void Can_set_worklist_visibility()
+		{
+			IWorkItem item1 = new WorkItemMock(1);
+			IWorkItem item2 = new WorkItemMock(2);
+			IWorkItem item3 = new WorkItemMock(3);
+			IWorkItem item4 = new WorkItemMock(4);
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+
+			IEnumerable<IWorkItem> _ = wl.GetItems().ToList();
+
+			Assert.AreEqual(WorkItemVisibility.Todo, wl.Visibility);
+
+			Assert.AreEqual(4, wl.GetItems().ToList().Count);
+			wl.SetStatusAsync(item2, WorkItemStatus.Done);
+			Assert.AreEqual(3, wl.GetItems().ToList().Count);
+
+			wl.Visibility = WorkItemVisibility.All;
+			Assert.AreEqual(4, wl.GetItems().ToList().Count);
+		}
+
+		[Test]
+		public void Can_go_next_atfter_alter_workitems_visibility()
+		{
+			// The items have to be visible to enable the work list to go to the next item.
+			// Normally GoNearest() sets Item.Visible = true.
+			IWorkItem item1 = new WorkItemMock(1) { Visited = true };
+			IWorkItem item2 = new WorkItemMock(2) { Visited = true };
+			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
+			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+
+			IEnumerable<IWorkItem> _ = wl.GetItems().ToList();
+
+			Assert.AreEqual(WorkItemVisibility.Todo, wl.Visibility);
+			Assert.AreEqual(item1, wl.Current);
+
+			Assert.AreEqual(4, wl.GetItems().ToList().Count);
+			wl.SetStatusAsync(item1, WorkItemStatus.Done);
+			Assert.AreEqual(3, wl.GetItems().ToList().Count);
+
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.Current);
+			Assert.False(wl.CanGoFirst());
+			Assert.False(wl.CanGoPrevious());
+
+			wl.GoNext();
+			Assert.AreEqual(item3, wl.Current);
+			Assert.True(wl.CanGoFirst());
+			Assert.True(wl.CanGoPrevious());
+
+			wl.Visibility = WorkItemVisibility.All;
+			Assert.AreEqual(4, wl.GetItems().ToList().Count);
+		}
+
+		[Test]
 		public void Can_go_next_and_add_items_incremently()
 		{
 			IWorkItem item1 = new WorkItemMock(1) { Visited = true };

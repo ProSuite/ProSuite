@@ -38,7 +38,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <param name="filter">optional QueryFilter or SpatialQueryFilter</param>
 		/// <returns></returns>
 		[NotNull]
-		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null);
+		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null, bool excludeGeometry = false);
 
 		int Count();
 

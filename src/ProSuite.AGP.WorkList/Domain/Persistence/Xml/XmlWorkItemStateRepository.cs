@@ -13,7 +13,7 @@ using ProSuite.Commons.Xml;
 namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 {
 	public class XmlWorkItemStateRepository
-		: WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition>, IFileBasedStateRepository
+		: WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition>
 	{
 		public XmlWorkItemStateRepository(string filePath, string name, Type type,
 		                                  int? currentItemIndex = null) : base(
@@ -23,8 +23,6 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 			ReadStatesByRow();
 		}
-
-		public string WorkListDefinitionFilePath { get; set; }
 
 		public static XmlWorkListDefinition Import(string xmlFilePath)
 		{

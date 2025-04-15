@@ -53,10 +53,15 @@ namespace ProSuite.AGP.WorkList
 			[CanBeNull] IWorkListItemDatastore workListItemSchema);
 
 		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-			QueryFilter filter = null, bool recycle = true, bool excludeGeometry = false)
+			QueryFilter filter = null,
+			WorkItemStatus? statusFilter = null,
+			bool recycle = true,
+			bool excludeGeometry = false)
 		{
 			return SourceClasses.SelectMany(sourceClass =>
-				                                GetItems(sourceClass, filter, null, recycle, excludeGeometry));
+				                                GetItems(sourceClass, filter,
+				                                         statusFilter, recycle,
+				                                         excludeGeometry));
 		}
 
 		private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(ISourceClass sourceClass,
@@ -76,9 +81,10 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			// Source classes can set the respective filters / definition queries
+
+			// TODO: (daro) drop todo below?
 			// TODO: Consider getting only the right status, but that means
 			// extra round trips:
-			statusFilter = null;
 			filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
 
 			// Selection Item ObjectIDs to filter out, or change of SearchOrder:

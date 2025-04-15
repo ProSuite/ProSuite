@@ -55,7 +55,7 @@ public class WorkListDbTest
 			Datastore datastore = table.GetDatastore();
 			datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
-			var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), datastore, schema, null, null);
+			var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -117,7 +117,7 @@ public class WorkListDbTest
 
 			datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
-			var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), datastore, schema, null, null);
+			var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -131,6 +131,7 @@ public class WorkListDbTest
 			new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
 
 		var wl = new IssueWorkList(itemRepository, "uniqueName", "displayName");
+		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
 
 		SpatialReference ch1903plus = SpatialReferenceBuilder.CreateSpatialReference(2056);
 
@@ -174,7 +175,7 @@ public class WorkListDbTest
 			Datastore datastore = table.GetDatastore();
 			datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
-			var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), datastore, schema, null, null);
+			var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -188,6 +189,7 @@ public class WorkListDbTest
 			new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
 
 		var wl = new IssueWorkList(itemRepository, "uniqueName", "displayName");
+		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
 		List<IWorkItem> items = wl.GetItems().ToList();
 
 		Assert.AreEqual(62, items.Count);

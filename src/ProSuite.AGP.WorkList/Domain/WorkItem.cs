@@ -3,7 +3,6 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -31,19 +30,10 @@ namespace ProSuite.AGP.WorkList.Domain
 		// TODO: (daro) remove _obj since we don't use multi threading anymore?
 		private static readonly object _obj = new();
 
-		public string Description { get; }
-
 		#region constructors
 
 		protected WorkItem(long uniqueTableId, [NotNull] Row row)
-			: this(uniqueTableId, new GdbRowIdentity(row))
-		{
-			Description = GetDescription(row);
-
-			//var feature = row as Feature;
-
-			//SetExtent(feature);
-		}
+			: this(uniqueTableId, new GdbRowIdentity(row)) { }
 
 		protected WorkItem(long uniqueTableId, GdbRowIdentity identity)
 		{
@@ -136,60 +126,19 @@ namespace ProSuite.AGP.WorkList.Domain
 		[NotNull]
 		public string GetDescription()
 		{
-			// todo daro: this is copied from the old world. Why not set description in constructor?
-			Row row = GetRow();
-
-			return GetDescription(row);
+			return GetDescriptionCore(GdbRowProxy) ?? string.Empty;
 		}
 
-		[NotNull]
-		public string GetDescription(Row row)
+		private string GetDescriptionCore(GdbRowIdentity row)
 		{
-			return row == null
-				       ? "Row not found for work item"
-				       : GetDescriptionCore(row) ?? string.Empty;
-		}
-
-		protected virtual string GetDescriptionCore(Row row)
-		{
-			return
-				$"{DatasetUtils.GetTableDisplayName(row.GetTable())} OID={row.GetObjectID()} (item ID={OID})";
-		}
-
-		[CanBeNull]
-		private Row GetRow()
-		{
-			return GdbRowProxy.GetRow();
-		}
-
-		// todo: daro drop
-		public void SetGeometry([CanBeNull] Feature feature)
-		{
-			Geometry geometry = feature?.GetShape();
-
-			SetGeometry(geometry);
+			string tableName = row.Table.Name;
+			return $"{tableName} OID={row.ObjectId} (item ID={OID})";
 		}
 
 		public void SetGeometry([CanBeNull] Geometry geometry)
 		{
 			HasFeatureGeometry = true;
 			Geometry = geometry;
-
-			Envelope extent = geometry?.Extent;
-			GeometryType = geometry?.GeometryType;
-
-			if (extent == null)
-			{
-				return;
-			}
-
-			SetExtent(extent);
-		}
-
-		// todo: daro drop
-		private void SetExtent([CanBeNull] Feature feature)
-		{
-			Geometry geometry = feature?.GetShape();
 
 			Envelope extent = geometry?.Extent;
 			GeometryType = geometry?.GeometryType;

@@ -18,5 +18,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		int? CurrentIndex { get; set; }
 
 		void Rename(string name);
+
+		string WorkListDefinitionFilePath { get; set; }
 	}
 }
