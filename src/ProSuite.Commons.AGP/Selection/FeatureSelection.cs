@@ -9,10 +9,10 @@ namespace ProSuite.Commons.AGP.Selection
 {
 	public class FeatureSelection : FeatureSelectionBase
 	{
-		private readonly IList<Feature> _features;
+		private readonly IEnumerable<Feature> _features;
 
 		public FeatureSelection([NotNull] BasicFeatureLayer featureLayer,
-		                        [NotNull] IList<Feature> features)
+		                        [NotNull] IEnumerable<Feature> features)
 			: base(featureLayer)
 		{
 			_features = features ?? throw new ArgumentNullException(nameof(features));
@@ -26,7 +26,7 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public override int GetCount()
 		{
-			return _features.Count;
+			return _features.Count();
 		}
 
 		/// <summary>
