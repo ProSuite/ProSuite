@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Collections;
@@ -260,6 +261,51 @@ namespace ProSuite.Commons.AO.Geometry
 				{
 					_construction.ConstructBuffers(enumInput, distance,
 					                               outputCollection);
+				}
+				catch (COMException comException)
+				{
+					_msg.Debug($"Error buffering {enumInput.Count} geometries with distance " +
+					           $"{distance}. Checking geometries...", comException);
+
+					// TOP-5939: Starting with 11.2 or 11.3 vertical polylines or those with several
+					// points at the exact same XYZ location start throwing!
+
+					enumInput.Reset();
+
+					IGeometry currentGeometry = enumInput.Next();
+
+					while (currentGeometry != null)
+					{
+						if (! currentGeometry.IsEmpty &&
+						    currentGeometry is IPolycurve polycurve)
+						{
+							IPoint emergencyPoint = polycurve.FromPoint;
+
+							var cloned = GeometryFactory.Clone(currentGeometry);
+							GeometryUtils.Simplify(cloned, allowReorder: true);
+
+							// Empty: all points in one location
+							if (cloned.IsEmpty || ((IPolycurve) cloned).Length == 0)
+							{
+								// Let's use the start point instead
+								IList<IPolygon> bufferResults = Buffer(emergencyPoint, distance);
+
+								foreach (IPolygon polygon in bufferResults)
+								{
+									object missing = Type.Missing;
+									outputCollection.AddGeometry(polygon, ref missing, ref missing);
+								}
+							}
+						}
+
+						currentGeometry = enumInput.Next();
+					}
+
+					if (outputCollection.GeometryCount == 0)
+					{
+						// Work around not effective...
+						throw;
+					}
 				}
 				catch (Exception)
 				{
