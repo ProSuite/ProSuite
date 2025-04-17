@@ -474,9 +474,19 @@ namespace ProSuite.AGP.Editing.OneClick
 			OnSelectionPhaseStarted();
 		}
 
-		protected void SetupSelectionSketch()
+		private async Task<bool> HasSketchAsync()
 		{
-			ClearSketchAsync();
+			Geometry currentSketch = await GetCurrentSketchAsync();
+
+			return currentSketch?.IsEmpty == false;
+		}
+
+		protected async void SetupSelectionSketch()
+		{
+			if (await HasSketchAsync())
+			{
+				await ClearSketchAsync();
+			}
 
 			SetupSketch();
 
@@ -792,6 +802,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				Application.Current.Dispatcher.Invoke(() => { Cursor = cursor; });
 			}
+		}
+
+		public void UpdateCursors()
+		{
+			SetupCursors();
+			_selectionSketchCursor.ResetOrDefault();
 		}
 
 		protected bool CanSelectFromLayer([CanBeNull] Layer layer,
