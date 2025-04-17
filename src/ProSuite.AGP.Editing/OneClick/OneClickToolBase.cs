@@ -610,7 +610,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected int GetSelectionTolerancePixels()
 		{
-			return GetSelectionSettings().SelectionTolerancePixels;
+			return SelectionEnvironment.SelectionTolerance;
 		}
 
 		private async Task<bool> OnSelectionSketchCompleteAsync(
