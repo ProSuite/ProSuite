@@ -5,6 +5,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.GIS.Geodatabase.API;
@@ -303,6 +304,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				if (_shapeFieldName == null)
 				{
 					_shapeFieldName = ProFeatureClassDefinition.GetShapeField();
+
+					// GOTOP-469: In some data models the GetShapeField() does not return the actual
+					//            field name, but the model name or even the alias.
+					int shapeFieldIndex = FindField(_shapeFieldName);
+					Assert.False(shapeFieldIndex < 0, $"{_shapeFieldName} not found in {Name}");
+
+					_shapeFieldName = Fields[shapeFieldIndex].Name;
 				}
 
 				return _shapeFieldName;

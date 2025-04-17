@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Interop;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.API;
 using Field = ArcGIS.Core.Data.Field;
@@ -13,6 +15,8 @@ namespace ProSuite.GIS.Geodatabase.AGP;
 
 public class ArcFields : IFields
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	private readonly IReadOnlyList<ArcField> _fields;
 
 	private Dictionary<string, int> _fieldIndexByName;
@@ -59,7 +63,28 @@ public class ArcFields : IFields
 			}
 		}
 
-		return _fieldIndexByName.GetValueOrDefault(fieldName, -1);
+		if (! _fieldIndexByName.TryGetValue(fieldName, out int resultIndex))
+		{
+			// GOTOP-469: In some models the FeatureClassDefinition.GetShapeField() returns the Model name,
+			// i.e. 'Shape' instead of 'SHAPE', which is the actual field name. The default FindField
+			// implementation also finds when searching with different case search strings, i.e. the search
+			// is case insensitive!
+			for (int i= 0; i < _fields.Count; i++)
+			{
+				ArcField field = _fields[i];
+
+				if (field.Name.ToUpper() == fieldName.ToUpper())
+				{
+					_msg.DebugFormat("Field {0} found in field list but only using case-insensitive search.", fieldName);
+					return i;
+				}
+			}
+
+			_msg.VerboseDebug(() => $"Field {fieldName} not found in feature class.");
+			return -1;
+		}
+
+		return resultIndex;
 	}
 
 	public int FindFieldByAliasName(string aliasName)
