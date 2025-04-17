@@ -188,8 +188,6 @@ namespace ProSuite.GIS.Geometry.AGP
 
 			_proEnvelope.Union(aoEnvelope);
 
-			// TODO: Change semantics, return result
-			//throw new NotImplementedException();
 		}
 
 		public void Intersect(IEnvelope inEnvelope)
