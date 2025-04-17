@@ -20,6 +20,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
@@ -383,30 +384,19 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => $"OnSketchCompleteAsync ({Caption})");
 
-			if (sketchGeometry == null)
+			if (IsDuplicateSketchCompleteInvocation(sketchGeometry))
 			{
-				return false;
-			}
-
-			if (DateTime.Now - _lastSketchFinishedTime < _sketchBlockingPeriod &&
-			    GeometryUtils.Engine.Equals(_lastSketch, sketchGeometry))
-			{
-				// In some situations, seemingly randomly, this method is called twice
-				// - On the same instance
-				// - Both times on the UI thread
-#if DEBUG
-				_msg.Warn($"OnSketchCompleteAsync: Duplicate call is ignored for {Caption}!");
-#else
-				_msg.Debug($"OnSketchCompleteAsync: Duplicate call is ignored for {Caption}.");
-#endif
-
 				return false;
 			}
 
 			try
 			{
-				_lastSketch = sketchGeometry;
-				_lastSketchFinishedTime = DateTime.Now;
+				sketchGeometry = GetSimplifiedSketch(sketchGeometry);
+
+				if (sketchGeometry == null)
+				{
+					return false;
+				}
 
 				using var source = GetProgressorSource();
 				var progressor = source?.Progressor;
@@ -515,21 +505,26 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
 		{
-			_msg.VerboseDebug(() => $"OnMapSelectionChangedAsync ({Caption})");
 			// NOTE: This method is called repeatedly with different selection sets during the
 			//       OnSelectionSketchCompleteAsync method. Therefore, the flag is set to prevent
 			//       multiple calls to the AfterSelectionMethod with intermediate results!
 			//       The ProcessSelection method is called at the end of the sketch completion.
-			// Note: app crashes on uncaught exceptions here
 
-			if (IsCompletingSelectionSketch)
+			try
 			{
-				return;
+				_msg.VerboseDebug(() => $"OnMapSelectionChangedAsync ({Caption})");
+
+				if (IsCompletingSelectionSketch)
+				{
+					return;
+				}
+
+				await QueuedTask.Run(() => OnMapSelectionChangedCore(args));
 			}
-
-			Task<bool> task = QueuedTask.Run(() => OnMapSelectionChangedCore(args));
-
-			await ViewUtils.TryAsync(task, _msg, suppressErrorMessageBox: true);
+			catch (Exception e)
+			{
+				_msg.Error($"Error while handling selection change: {e.Message}", e);
+			}
 		}
 
 		private async Task OnEditCompletedAsync(EditCompletedEventArgs args)
@@ -1018,6 +1013,83 @@ namespace ProSuite.AGP.Editing.OneClick
 			return
 				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
 				                       Resources.Polygon, Resources.Shift, 10, 10);
+		}
+
+		/// <summary>
+		/// Returns a simplified sketch geometry of the correct geometry type.
+		/// NOTE: This method can return a different geometry type in the single click case.
+		/// </summary>
+		/// <param name="sketchGeometry"></param>
+		/// <returns></returns>
+		/// <exception cref="NotImplementedException"></exception>
+		[CanBeNull]
+		private Geometry GetSimplifiedSketch([CanBeNull] Geometry sketchGeometry)
+		{
+			if (sketchGeometry == null || sketchGeometry.IsEmpty)
+			{
+				_msg.VerboseDebug(() => $"{Caption}: Null or empty sketch");
+				return null;
+			}
+
+			Geometry simplified = GeometryUtils.Simplify(sketchGeometry);
+
+			if (! simplified.IsEmpty)
+			{
+				return simplified;
+			}
+
+			if (sketchGeometry is Polygon sketchPolygon)
+			{
+				// Convert polygon sketch to point sketch because the picker does not test for
+				// single click anymore, just for point geometry.
+				if (ToolUtils.IsSingleClickSketch(simplified))
+				{
+					Assert.False(sketchGeometry.PointCount == 0,
+					             "Non empty single click sketch without points");
+
+					return sketchPolygon.Points.First();
+				}
+			}
+
+			throw new AssertionException(
+				"Empty sketch after simplify in non-single-click scenario.");
+		}
+
+		/// <summary>
+		/// Determines whether the sketch completion is a duplicate call that should be ignored.
+		/// </summary>
+		/// <param name="sketchGeometry"></param>
+		/// <returns></returns>
+		private bool IsDuplicateSketchCompleteInvocation([CanBeNull] Geometry sketchGeometry)
+		{
+			// NOTE: This still happens occasionally. This is not a reentrancy problem. The sketch
+			//       completion is called twice in a row by the framework.
+
+			if (sketchGeometry == null || sketchGeometry.IsEmpty)
+			{
+				return false;
+			}
+
+			if (DateTime.Now - _lastSketchFinishedTime < _sketchBlockingPeriod &&
+			    GeometryUtils.Engine.Equals(_lastSketch, sketchGeometry))
+			{
+				// In some situations, seemingly randomly, this method is called twice
+				// - On the same instance
+				// - Both times on the UI thread
+#if DEBUG
+				_msg.Warn($"OnSketchCompleteAsync: Duplicate call is ignored for {Caption}!");
+#else
+				_msg.Debug($"OnSketchCompleteAsync: Duplicate call is ignored for {Caption}.");
+#endif
+
+				return true;
+			}
+
+			// Remember state for next call:
+			_lastSketch = sketchGeometry;
+			_lastSketchFinishedTime = DateTime.Now;
+
+			return false;
 		}
 
 		protected async Task<bool> NonEmptySketchAsync()
