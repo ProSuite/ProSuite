@@ -50,7 +50,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
 			SpatialReferenceDescriptor spatialReferenceDescriptor =
-				(dataset.Model as Model)?.SpatialReferenceDescriptor;
+				dataset.Model?.SpatialReferenceDescriptor;
 
 			return (IObjectClass) _workspaceProxy.OpenTable(
 				GetGdbElementName(dataset),

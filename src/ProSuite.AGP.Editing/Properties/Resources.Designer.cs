@@ -141,16 +141,6 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap CutPolygonAlongTool {
-            get {
-                object obj = ResourceManager.GetObject("CutPolygonAlongTool", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] DestroyAndRebuildOverlay {

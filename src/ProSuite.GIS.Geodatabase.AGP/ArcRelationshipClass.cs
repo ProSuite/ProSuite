@@ -4,12 +4,15 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcRelationshipClass : IRelationshipClass
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly RelationshipClass _proRelationshipClass;
 		private readonly RelationshipClassDefinition _proRelationshipClassDefinition;
 
@@ -119,16 +122,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public IRelationship GetRelationship(IObject originObject, IObject destinationObject)
 		{
-			throw new NotImplementedException();
-
-			var aoOriginObj = ((ArcRow) originObject).ProRow;
-			var aoDestinationObj = ((ArcRow) destinationObject).ProRow;
-
-			// TODO: Is this the correct way to get an existing relationship?
-			Relationship relationship =
-				_proRelationshipClass.CreateRelationship(aoOriginObj, aoDestinationObj);
-
-			return new ArcRelationship(originObject, destinationObject, _proRelationshipClass);
+			return new ArcRelationship(originObject, destinationObject, this);
 		}
 
 		public void DeleteRelationship(IObject originObject, IObject destinationObject)
@@ -179,26 +173,128 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 		}
 
-		public IEnumerable<IObject> GetObjectsRelatedToObjectSet(ISet anObjectSet)
+		public IEnumerable<IObject> GetObjectsRelatedToObjectSet(IList<IObject> objectList)
 		{
-			if (anObjectSet.Count == 0)
+			if (objectList.Count == 0)
 			{
 				yield break;
 			}
 
-			ICollection<Row> proRows = ((ArcSet) anObjectSet).ProRows;
+			// TODO: Ensure all objects are of the same class
 
-			List<long> objectIds = proRows.Select(row => row.GetObjectID())
-			                              .ToList();
+			List<long> objectIds = objectList.Select(row => row.OID).ToList();
 
-			string sourceClassName = proRows.Select(r => r.GetTable().GetName()).First();
+			string sourceClassName = objectList.Select(r => r.Table.Name).First();
 
-			IEnumerable<Row> relatedObjects = GetRelatedObjects(objectIds, sourceClassName);
+			IReadOnlyList<Row> relatedObjects = GetRelatedObjects(objectIds, sourceClassName);
 
 			foreach (ArcRow related in relatedObjects.Select(o => ArcGeodatabaseUtils.ToArcRow(o)))
 			{
 				yield return related;
 			}
+		}
+
+		public IEnumerable<KeyValuePair<T, IObject>> GetObjectsMatchingObjectSet<T>(
+			IEnumerable<T> sourceObjects) where T : IObject
+		{
+			Dictionary<long, T> sourceDictionary = sourceObjects.ToDictionary(
+				sourceObject => sourceObject.OID,
+				sourceObject => sourceObject);
+
+			if (sourceDictionary.Count == 0)
+			{
+				yield break;
+			}
+
+			ITable destinationTable = null;
+
+			int pairCount = 0;
+
+			if (_proRelationshipClass is AttributedRelationshipClass attributedRelationshipClass)
+			{
+				foreach (AttributedRelationship attributedRelationship in
+				         attributedRelationshipClass.GetRelationshipsForOriginRows(
+					         sourceDictionary.Keys))
+				{
+					long originOid = attributedRelationship.GetOriginRow().GetObjectID();
+
+					T sourceObj = sourceDictionary[originOid];
+
+					Row proDestinationRow = attributedRelationship.GetDestinationRow();
+
+					destinationTable ??=
+						ArcGeodatabaseUtils.ToArcTable(proDestinationRow.GetTable());
+
+					ArcRow destinationRow =
+						ArcGeodatabaseUtils.ToArcRow(proDestinationRow, destinationTable);
+
+					pairCount++;
+					yield return new KeyValuePair<T, IObject>(sourceObj, destinationRow);
+				}
+			}
+			else
+			{
+				string foreignKeyFieldName = OriginForeignKey;
+				int originPrimaryKeyIdx = OriginClass.FindField(OriginPrimaryKey);
+
+				foreach (Row proDestinationRow in _proRelationshipClass.GetRowsRelatedToOriginRows(
+					         sourceDictionary.Keys))
+				{
+					// Get the origin object by searching the origin rows by searching values in the
+					// origin primary key using the origin foreign key value in the destination row...
+
+					proDestinationRow.GetTable().GetDefinition().FindField(foreignKeyFieldName);
+
+					object foreignKeyValue = proDestinationRow[foreignKeyFieldName];
+
+					// Find the origin object(s):
+
+					int foundCount = 0;
+					foreach (T relatedSourceObj in sourceDictionary.Values.Where(
+						         d => HasFieldValue(d, originPrimaryKeyIdx, foreignKeyValue)))
+					{
+						destinationTable ??=
+							ArcGeodatabaseUtils.ToArcTable(proDestinationRow.GetTable());
+
+						ArcRow destinationRow =
+							ArcGeodatabaseUtils.ToArcRow(proDestinationRow, destinationTable);
+
+						foundCount++;
+						pairCount++;
+						yield return new KeyValuePair<T, IObject>(relatedSourceObj, destinationRow);
+					}
+
+					if (_proRelationshipClassDefinition.GetCardinality() ==
+					    RelationshipCardinality.OneToOne &&
+					    foundCount != 1)
+					{
+						_msg.WarnFormat(
+							"Found unexpected number of origin objects ({0}) for destination object {1} in relationship class {2}",
+							foundCount, proDestinationRow.GetObjectID(),
+							_proRelationshipClassDefinition.GetName());
+					}
+
+					if (_proRelationshipClassDefinition.GetCardinality() ==
+					    RelationshipCardinality.OneToMany && foundCount == 0)
+					{
+						throw new AssertionException(
+							$"Found no origin objects for destination object {proDestinationRow.GetObjectID()} in " +
+							$"in relationship class {_proRelationshipClassDefinition.GetName()}");
+					}
+				}
+			}
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.Debug(
+					$"Extracted {pairCount} pairs from {sourceDictionary.Count} source objects");
+			}
+		}
+
+		private static bool HasFieldValue<T>(T row, int fieldIndex, object compareValue)
+			where T : IObject
+		{
+			return compareValue.Equals(row.get_Value(fieldIndex));
 		}
 
 		public void DeleteRelationshipsForObjectSet(ISet anObjectSet)
@@ -237,8 +333,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return GetRelatedObjects(new[] { sourceOid }, sourceClassName);
 		}
 
-		private IEnumerable<Row> GetRelatedObjects([NotNull] IEnumerable<long> sourceOids,
-		                                           [NotNull] string sourceClassName)
+		private IReadOnlyList<Row> GetRelatedObjects([NotNull] IEnumerable<long> sourceOids,
+		                                             [NotNull] string sourceClassName)
 		{
 			IReadOnlyList<Row> relatedObjects;
 
