@@ -14,7 +14,10 @@ namespace ProSuite.AGP.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly Geodatabase _geodatabase;
+		/// <summary>
+		/// The single, current workspace in which all source tables reside. Not null for DbStatus
+		/// </summary>
+		private readonly Uri _path;
 
 		#region Overrides of GdbItemRepository
 
@@ -23,7 +26,8 @@ namespace ProSuite.AGP.WorkList
 		                                  Geodatabase geodatabase) : base(
 			sourceClasses, workItemStateRepository)
 		{
-			_geodatabase = geodatabase;
+			// TODO: (daro) inject path?
+			_path = geodatabase.GetPath();
 		}
 
 		public override bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
@@ -61,7 +65,7 @@ namespace ProSuite.AGP.WorkList
 		protected override async Task SetStatusCoreAsync(IWorkItem item,
 		                                                 ISourceClass source)
 		{
-			Table table = OpenEditableTable(source);
+			Table table = OpenTable(source);
 			Assert.NotNull(table, $"Cannot set status for missing table {source.Name}");
 
 			try
@@ -77,6 +81,7 @@ namespace ProSuite.AGP.WorkList
 				{
 					// ReSharper disable once AccessToDisposedClosure
 					Row row = GdbQueryUtils.GetRow(table, item.ObjectID);
+
 					context.Invalidate(row);
 				}, table);
 
@@ -97,13 +102,13 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		private Table OpenEditableTable(ISourceClass sourceClass)
+		protected override Table OpenTable(ISourceClass sourceClass)
 		{
 			Table table = null;
 			try
 			{
-				// NOTE: This ensures that no stale table instance is opened from no stale workspace instance.
-				table = _geodatabase.OpenDataset<Table>(sourceClass.Name);
+				Geodatabase geodatabase = OpenGeodatabase(_path);
+				table = geodatabase.OpenDataset<Table>(sourceClass.Name);
 			}
 			catch (Exception e)
 			{
@@ -111,6 +116,26 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return table;
+		}
+
+		private Geodatabase OpenGeodatabase(Uri path)
+		{
+			string filePath = path.AbsolutePath;
+
+			if (filePath.EndsWith(".sde"))
+			{
+				// NOTE: This ensures that no stale table instance is opened from no stale workspace instance.
+				var file = new DatabaseConnectionFile(new Uri(filePath));
+				return new Geodatabase(file);
+			}
+
+			if (filePath.EndsWith(".gdb"))
+			{
+				var fgdbPath = new FileGeodatabaseConnectionPath(new Uri(filePath));
+				return new Geodatabase(fgdbPath);
+			}
+
+			throw new ArgumentOutOfRangeException($"Unknown PATH from {path}");
 		}
 
 		#endregion
@@ -142,7 +167,7 @@ namespace ProSuite.AGP.WorkList
 
 			foreach (ISourceClass sourceClass in SourceClasses)
 			{
-				Table table = OpenEditableTable(sourceClass);
+				Table table = OpenTable(sourceClass);
 
 				if (table != null)
 				{

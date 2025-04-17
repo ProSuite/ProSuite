@@ -15,6 +15,7 @@ using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Hosting;
 using ProSuite.Commons.Testing;
 using ProSuite.DomainModel.Core.QA;
+using static System.String;
 
 namespace ProSuite.AGP.WorkList.Test;
 
@@ -31,11 +32,83 @@ public class WorkListDbTest
 	}
 
 	[Test]
-	public void Can_count_db_workItems_measure_performance()
+	public void Can_count_rdbms_workItems_measure_performance()
+	{
+		using var geodatabase = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
+		                                  {
+			                                  AuthenticationMode = AuthenticationMode.DBMS,
+			                                  Instance = "TOPGIST",
+			                                  User = "daro",
+			                                  Password = "DARO",
+			                                  Database = Empty
+		                                  });
+
+		using var lines = geodatabase.OpenDataset<FeatureClass>("TOPGIS_TLM.TLM_ERRORS_LINE");
+		using var multipatchs = geodatabase.OpenDataset<FeatureClass>("TOPGIS_TLM.TLM_ERRORS_MULTIPATCH");
+		using var multipoints = geodatabase.OpenDataset<FeatureClass>("TOPGIS_TLM.TLM_ERRORS_MULTIPOINT");
+		using var polygons = geodatabase.OpenDataset<FeatureClass>("TOPGIS_TLM.TLM_ERRORS_POLYGON");
+
+		var tables = new List<FeatureClass> { lines, multipatchs, multipoints, polygons };
+		var sourceClasses = new List<ISourceClass>(tables.Count);
+
+		Dictionary<IntPtr, Datastore> datastoresByHandle = new Dictionary<IntPtr, Datastore>();
+
+		foreach (Table table in tables)
+		{
+			TableDefinition tableDefinition = table.GetDefinition();
+
+			DbSourceClassSchema schema = CreateStatusSchema(tableDefinition);
+
+			Datastore datastore = table.GetDatastore();
+			datastoresByHandle.TryAdd(datastore.Handle, datastore);
+
+			var sourceClass =
+				new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
+
+			sourceClasses.Add(sourceClass);
+		}
+
+		Assert.True(datastoresByHandle.Count == 1,
+		            "Multiple geodatabases are referenced by the work list's source classes.");
+
+		var gdb = (Geodatabase) datastoresByHandle.First().Value;
+		var itemRepository =
+			new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
+
+		var wl = new IssueWorkList(itemRepository, "uniqueName", "displayName");
+
+		var watch = new Stopwatch();
+		watch.Start();
+
+		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
+		List<IWorkItem> items = wl.GetItems().ToList();
+		int itemsCount = items.Count;
+
+		watch.Stop();
+
+		Console.WriteLine($"items count {itemsCount}");
+		Console.WriteLine($"{watch.ElapsedMilliseconds:N0} ms");
+
+		var filter = new QueryFilter();
+		filter.SubFields = "OBJECTID";
+
+		watch.Reset();
+		watch.Start();
+		items = wl.Search(filter).ToList();
+
+		Console.WriteLine($"items {itemsCount}");
+		Console.WriteLine($"{watch.ElapsedMilliseconds:N0} ms");
+
+		Assert.AreEqual(itemsCount, items.Count);
+	}
+
+	[Test]
+	public void Can_count_fgdb_workItems_measure_performance()
 	{
 		string path = TestDataPreparer.ExtractZip("TLM_ERRORS.gdb.zip").GetPath();
 
-		using var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
+		using var geodatabase =
+			new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
 		using var lines = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_LINE");
 		using var multipatchs = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_MULTIPATCH");
 		using var multipoints = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_MULTIPOINT");
@@ -55,7 +128,8 @@ public class WorkListDbTest
 			Datastore datastore = table.GetDatastore();
 			datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
-			var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
+			var sourceClass =
+				new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -64,14 +138,17 @@ public class WorkListDbTest
 		            "Multiple geodatabases are referenced by the work list's source classes.");
 
 		var gdb = (Geodatabase) datastoresByHandle.First().Value;
-		var itemRepository = new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
+		var itemRepository =
+			new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
 
 		var wl = new IssueWorkList(itemRepository, "uniqueName", "displayName");
 
 		var watch = new Stopwatch();
 		watch.Start();
 
-		int itemsCount = wl.Count();
+		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
+		List<IWorkItem> items = wl.GetItems().ToList();
+		int itemsCount = items.Count;
 
 		watch.Stop();
 
@@ -83,7 +160,7 @@ public class WorkListDbTest
 
 		watch.Reset();
 		watch.Start();
-		List<IWorkItem> items = wl.GetItems(filter).ToList();
+		items = wl.Search(filter).ToList();
 
 		Console.WriteLine($"items {itemsCount}");
 		Console.WriteLine($"{watch.ElapsedMilliseconds:N0} ms");
@@ -96,7 +173,8 @@ public class WorkListDbTest
 	{
 		string path = TestDataPreparer.ExtractZip("TLM_ERRORS.gdb.zip").GetPath();
 
-		using var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
+		using var geodatabase =
+			new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
 		using var lines = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_LINE");
 		using var multipatchs = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_MULTIPATCH");
 		using var multipoints = geodatabase.OpenDataset<FeatureClass>("TLM_ERRORS_MULTIPOINT");
@@ -117,7 +195,8 @@ public class WorkListDbTest
 
 			datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
-			var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
+			var sourceClass =
+				new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -125,7 +204,7 @@ public class WorkListDbTest
 		Assert.True(datastoresByHandle.Count == 1,
 		            "Multiple geodatabases are referenced by the work list's source classes.");
 
-		var gdb = (Geodatabase)datastoresByHandle.First().Value;
+		var gdb = (Geodatabase) datastoresByHandle.First().Value;
 
 		var itemRepository =
 			new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
@@ -139,7 +218,8 @@ public class WorkListDbTest
 			new Coordinate2D(2624810, 1184300),
 			new Coordinate2D(2929350, 1186910), ch1903plus);
 
-		List<IWorkItem> items = wl.GetItems(GdbQueryUtils.CreateSpatialFilter(visibleExtent)).ToList();
+		List<IWorkItem> items =
+			wl.GetItems(GdbQueryUtils.CreateSpatialFilter(visibleExtent)).ToList();
 
 		Envelope extent = wl.Extent;
 		Assert.NotNull(extent);
@@ -154,7 +234,8 @@ public class WorkListDbTest
 	{
 		string path = TestDataPreparer.ExtractZip("issues.gdb.zip").GetPath();
 
-		using var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
+		using var geodatabase =
+			new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
 		using var rows = geodatabase.OpenDataset<Table>("IssueRows");
 		using var lines = geodatabase.OpenDataset<FeatureClass>("IssueLines");
 		using var multipatchs = geodatabase.OpenDataset<FeatureClass>("IssueMultipatches");
@@ -175,7 +256,8 @@ public class WorkListDbTest
 			Datastore datastore = table.GetDatastore();
 			datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
-			var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
+			var sourceClass =
+				new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -183,7 +265,7 @@ public class WorkListDbTest
 		Assert.True(datastoresByHandle.Count == 1,
 		            "Multiple geodatabases are referenced by the work list's source classes.");
 
-		var gdb = (Geodatabase)datastoresByHandle.First().Value;
+		var gdb = (Geodatabase) datastoresByHandle.First().Value;
 
 		var itemRepository =
 			new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
@@ -200,7 +282,8 @@ public class WorkListDbTest
 	{
 		string path = TestDataPreparer.ExtractZip("issues.gdb.zip").GetPath();
 
-		using var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
+		using var geodatabase =
+			new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute)));
 		using var rows = geodatabase.OpenDataset<Table>("IssueRows");
 		using var lines = geodatabase.OpenDataset<FeatureClass>("IssueLines");
 		using var multipatchs = geodatabase.OpenDataset<FeatureClass>("IssueMultipatches");
@@ -223,12 +306,14 @@ public class WorkListDbTest
 			SourceClassSchema schema = CreateSchema(tableDefinition);
 
 			Datastore datastore = table.GetDatastore();
-			var sourceClass = new SelectionSourceClass(new GdbTableIdentity(table), datastore, schema, oids);
+			var sourceClass =
+				new SelectionSourceClass(new GdbTableIdentity(table), datastore, schema, oids);
 
 			sourceClasses.Add(sourceClass);
 		}
 
-		var repository = new SelectionItemRepository(sourceClasses, new EmptyWorkItemStateRepository());
+		var repository =
+			new SelectionItemRepository(sourceClasses, new EmptyWorkItemStateRepository());
 
 		var wl = new SelectionWorkList(repository, "uniqueName", "displayName");
 		List<IWorkItem> items = wl.GetItems().ToList();
@@ -237,12 +322,124 @@ public class WorkListDbTest
 	}
 
 	[Test]
+	public void LearningTest_oracle_geodatabase_handle_with_osa()
+	{
+		var gdb0 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
+		                           {
+			                           AuthenticationMode = AuthenticationMode.OSA,
+			                           Instance = "TOPGIST",
+			                           Database = Empty
+		                           });
+		Console.WriteLine(gdb0.GetPath());
+
+		IntPtr gdb0Handle = gdb0.Handle;
+
+		Connector connector = gdb0.GetConnector();
+
+		if (connector is DatabaseConnectionProperties sde)
+		{
+			var gdb1 = new Geodatabase(sde);
+			Console.WriteLine(gdb1.GetPath());
+
+			IntPtr gdb1Handle = gdb1.Handle;
+
+			Assert.AreEqual(gdb0Handle, gdb1Handle);
+		}
+	}
+
+	[Test]
+	public void LearningTest_oracle_geodatabase_handle()
+	{
+		var gdb0 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
+		                           {
+			                           AuthenticationMode = AuthenticationMode.DBMS,
+			                           Instance = "TOPGIST",
+			                           User = "daro",
+			                           Password = "DARO",
+			                           Database = Empty
+		                           });
+		Uri path0 = gdb0.GetPath();
+
+		var sde = (DatabaseConnectionProperties) gdb0.GetConnector();
+
+		var gdb1 = new Geodatabase(sde);
+		Uri path1 = gdb1.GetPath();
+
+		Console.WriteLine(path0);
+		Console.WriteLine(path1);
+
+		Assert.AreEqual(path0, path1);
+		Assert.AreEqual(gdb0.Handle, gdb1.Handle);
+		Assert.AreEqual((int) gdb0.Handle, (int) gdb1.Handle);
+	}
+
+	[Test]
+	public void LearningTest_impact_of_dispose_on_oracle_geodatabase_handle()
+	{
+		var gdb0 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
+		                           {
+			                           AuthenticationMode = AuthenticationMode.DBMS,
+			                           Instance = "TOPGIST",
+			                           User = "daro",
+			                           Password = "DARO",
+			                           Database = Empty
+		                           });
+		Uri path0 = gdb0.GetPath();
+
+		var sde = (DatabaseConnectionProperties) gdb0.GetConnector();
+		gdb0.Dispose();
+
+		var gdb1 = new Geodatabase(sde);
+		Uri path1 = gdb1.GetPath();
+		gdb1.Dispose();
+
+		Console.WriteLine(path0);
+		Console.WriteLine(path1);
+
+		Assert.AreNotEqual(path0, path1);
+		Assert.AreEqual(gdb0.Handle, gdb1.Handle);
+		Assert.AreEqual((int) gdb0.Handle, (int) gdb1.Handle);
+	}
+
+	[Test]
+	public void LearningTest_impact_of_different_geodatabase_instances_on_geodatabase_handles()
+	{
+		var gdb0 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
+		                           {
+			                           AuthenticationMode = AuthenticationMode.DBMS,
+			                           Instance = "TOPGIST",
+			                           User = "daro",
+			                           Password = "DARO",
+			                           Database = Empty
+		                           });
+		Uri path0 = gdb0.GetPath();
+
+		var gdb1 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
+		                           {
+			                           AuthenticationMode = AuthenticationMode.DBMS,
+			                           Instance = "TOPGIST",
+			                           User = "daro",
+			                           Password = "DARO",
+			                           Database = Empty
+		                           });
+		Uri path1 = gdb1.GetPath();
+
+		Console.WriteLine(path0);
+		Console.WriteLine(path1);
+
+		Assert.AreEqual(path0, path1);
+		Assert.AreEqual(gdb0.Handle, gdb1.Handle);
+		Assert.AreEqual((int) gdb0.Handle, (int) gdb1.Handle);
+	}
+
+	[Test]
 	public void Can_create_SelectionWorkList_from_Shapefile()
 	{
 		string path = @"C:\temp\Shapefile";
 		using var fileSystem =
 			new FileSystemDatastore(new FileSystemConnectionPath(new Uri(path, UriKind.Absolute),
-			                                                     FileSystemDatastoreType.Shapefile));
+			                                                     FileSystemDatastoreType
+				                                                     .Shapefile));
 
 		var shapefile = fileSystem.OpenDataset<FeatureClass>("TLM_STRASSE_clip");
 
@@ -257,12 +454,14 @@ public class WorkListDbTest
 
 			Datastore datastore = table.GetDatastore();
 			List<long> oids = [0, 1, 2, 3];
-			var sourceClass = new SelectionSourceClass(new GdbTableIdentity(table), datastore, schema, oids);
+			var sourceClass =
+				new SelectionSourceClass(new GdbTableIdentity(table), datastore, schema, oids);
 
 			sourceClasses.Add(sourceClass);
 		}
 
-		var repository = new SelectionItemRepository(sourceClasses, new EmptyWorkItemStateRepository());
+		var repository =
+			new SelectionItemRepository(sourceClasses, new EmptyWorkItemStateRepository());
 
 		var wl = new SelectionWorkList(repository, "uniqueName", "displayName");
 		List<IWorkItem> items = wl.GetItems().ToList();
@@ -295,28 +494,9 @@ public class WorkListDbTest
 			shapeField = featureClassDefinition.GetShapeField();
 		}
 
-		return new DbSourceClassSchema(objectIDField, shapeField, "STATUS", tableDefinition.FindField("STATUS"),
-		                                (int) IssueCorrectionStatus.NotCorrected,
-		                                (int) IssueCorrectionStatus.Corrected);
-	}
-}
-
-public class NoOpAttributeReader : IAttributeReader
-{
-	public T GetValue<T>(Row row, Attributes attribute)
-	{
-		return default(T);
-	}
-
-	public void ReadAttributes(Row fromRow, IWorkItem forItem, ISourceClass source) { }
-
-	public IList<InvolvedTable> ParseInvolved(string involvedString, bool hasGeometry)
-	{
-		return new List<InvolvedTable>(0);
-	}
-
-	public string GetName(Attributes attribute)
-	{
-		return "fooName";
+		return new DbSourceClassSchema(objectIDField, shapeField, "STATUS",
+		                               tableDefinition.FindField("STATUS"),
+		                               (int) IssueCorrectionStatus.NotCorrected,
+		                               (int) IssueCorrectionStatus.Corrected);
 	}
 }

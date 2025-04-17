@@ -16,9 +16,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		private readonly double _minimumSizeDegrees = 0.001;
 		private readonly double _minimumSizeProjected = 30;
 
-		private WorkItemStatus _status;
-		private bool _visited;
-
 		private double _xmax;
 		private double _xmin;
 		private double _ymax;
@@ -26,8 +23,10 @@ namespace ProSuite.AGP.WorkList.Domain
 		private double _zmax;
 		private double _zmin;
 		private Geometry _geometry;
+		private WorkItemStatus _status;
+		private long _oid;
+		private Envelope _extent;
 
-		// TODO: (daro) remove _obj since we don't use multi threading anymore?
 		private static readonly object _obj = new();
 
 		#region constructors
@@ -44,33 +43,67 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		public bool HasExtent { get; private set; }
+		public bool HasExtent => _extent != null;
 
-		public bool HasFeatureGeometry { get; private set; }
+		public bool HasFeatureGeometry => _geometry != null;
 
 		#region IWorkItem
 
-		public long OID { get; set; }
+		#region thread safe
 
-		public long UniqueTableId { get; }
-
-		public long ObjectID => GdbRowProxy.ObjectId;
-
-		public bool Visited
+		public long OID
 		{
-			get => _visited;
-			set { _visited = value; }
+			get
+			{
+				lock (_obj)
+				{
+					return _oid;
+				}
+			}
+			set
+			{
+				lock (_obj)
+				{
+					_oid = value;
+				}
+			}
 		}
 
 		public WorkItemStatus Status
 		{
-			get => _status;
-			set { _status = value; }
+			get
+			{
+				lock (_obj)
+				{
+					return _status;
+				}
+			}
+			set
+			{
+				lock (_obj)
+				{
+					_status = value;
+				}
+			}
 		}
 
-		public GdbRowIdentity GdbRowProxy { get; }
-
-		public Envelope Extent { get; set; }
+		public Envelope Extent
+		{
+			get
+			{
+				lock (_obj)
+				{
+					return _extent;
+				}
+			}
+			set
+			{
+				lock (_obj)
+				{
+					_extent = value;
+				}
+			}
+		}
 
 		public Geometry Geometry
 		{
@@ -90,7 +123,17 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public GeometryType? GeometryType { get; private set; }
+		#endregion
+
+		public long UniqueTableId { get; }
+
+		public long ObjectID => GdbRowProxy.ObjectId;
+
+		public bool Visited { get; set; }
+
+		public GdbRowIdentity GdbRowProxy { get; }
+
+		public GeometryType? GeometryType => _geometry?.GeometryType;
 
 		public void QueryPoints(out double xmin, out double ymin,
 		                        out double xmax, out double ymax,
@@ -135,28 +178,26 @@ namespace ProSuite.AGP.WorkList.Domain
 			return $"{tableName} OID={row.ObjectId} (item ID={OID})";
 		}
 
-		public void SetGeometry([CanBeNull] Geometry geometry)
+		public bool TrySetGeometry([NotNull] Geometry geometry)
 		{
-			HasFeatureGeometry = true;
-			Geometry = geometry;
-
-			Envelope extent = geometry?.Extent;
-			GeometryType = geometry?.GeometryType;
-
-			if (extent == null)
+			if (Geometry != null)
 			{
-				return;
+				return false;
 			}
 
+			Geometry = geometry;
+
+			Envelope extent = geometry.Extent;
+
 			SetExtent(extent);
+			return true;
+
 		}
 
 		public void SetExtent([CanBeNull] Envelope extent)
 		{
 			if (extent == null || extent.IsEmpty)
 			{
-				HasExtent = false;
-
 				_xmin = 0;
 				_ymin = 0;
 				_xmax = 0;
@@ -166,8 +207,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 			else
 			{
-				HasExtent = true;
-
 				double xmin;
 				double ymin;
 				double xmax;

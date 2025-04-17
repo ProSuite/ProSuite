@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -37,20 +36,58 @@ namespace ProSuite.AGP.WorkList
 		/// The single, current workspace in which all source tables reside. Not null for DbStatus
 		/// work lists.
 		/// </summary>
-		[CanBeNull]
-		public Geodatabase CurrentWorkspace { get; set; }
 
+		[NotNull]
 		public IWorkItemStateRepository WorkItemStateRepository { get; }
 
+		// TODO: (daro) still needed? check usage.
 		[CanBeNull]
 		public IWorkListItemDatastore TableSchema { get; protected set; }
 
-		public IList<ISourceClass> SourceClasses { get; set; }
+		[NotNull]
+		public IList<ISourceClass> SourceClasses { get; }
 
 		public abstract void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
 
 		public abstract bool CanUseTableSchema(
 			[CanBeNull] IWorkListItemDatastore workListItemSchema);
+
+		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItemsCore(
+			QueryFilter filter, bool excludeGeometry)
+		{
+			return SourceClasses.SelectMany(sourceClass => GetItemsCore(sourceClass, filter, excludeGeometry));
+		}
+
+		private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItemsCore(
+			ISourceClass sourceClass, QueryFilter filter, bool excludeGeometry)
+		{
+			int count = 0;
+
+			Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
+
+			filter ??= new QueryFilter();
+
+			if (string.IsNullOrEmpty(filter.SubFields) || string.Equals(filter.SubFields, "*"))
+			{
+				filter.SubFields = sourceClass.GetRelevantSubFields(excludeGeometry);
+			}
+
+			// Selection Item ObjectIDs to filter out, or change of SearchOrder:
+			AdaptSourceFilter(filter, sourceClass);
+
+			foreach (Row row in GetRows(sourceClass, filter, recycle: true))
+			{
+				IWorkItem item = CreateWorkItemCore(row, sourceClass);
+
+				Geometry geometry = row is Feature feature ? feature.GetShape() : null;
+
+				count += 1;
+				yield return KeyValuePair.Create(item, geometry);
+			}
+
+			_msg.DebugStopTiming(
+				watch, $"GetItems() {sourceClass.Name}: {count} items");
+		}
 
 		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
 			QueryFilter filter = null,
@@ -71,7 +108,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			int count = 0;
 
-			Stopwatch watch = _msg.DebugStartTiming();
+			Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
 			filter ??= new QueryFilter();
 
@@ -81,7 +118,6 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			// Source classes can set the respective filters / definition queries
-
 			// TODO: (daro) drop todo below?
 			// TODO: Consider getting only the right status, but that means
 			// extra round trips:
@@ -163,11 +199,11 @@ namespace ProSuite.AGP.WorkList
 			return Task.FromResult(0);
 		}
 
-		private static IEnumerable<Row> GetRows([NotNull] ISourceClass sourceClass,
+		private IEnumerable<Row> GetRows([NotNull] ISourceClass sourceClass,
 		                                        [CanBeNull] QueryFilter filter,
 		                                        bool recycle)
 		{
-			Table table = OpenReadOnlyTable(sourceClass);
+			Table table = OpenTable(sourceClass);
 
 			if (table == null)
 			{
@@ -214,32 +250,7 @@ namespace ProSuite.AGP.WorkList
 		                                                [NotNull] ISourceClass sourceClass);
 
 		[CanBeNull]
-		private static Table OpenReadOnlyTable([NotNull] ISourceClass sourceClass)
-		{
-			Table table = null;
-			try
-			{
-				// NOTE: This can lead to using a different instance of the same workspace
-				// because opening a new Geodatabase with the Connector of an existing
-				// Geodatabase can in some cases result in a different instance!
-				table = sourceClass.OpenDataset<Table>();
-			}
-			catch (Exception e)
-			{
-				_msg.Warn($"Error opening source table {sourceClass.Name}: {e.Message}.", e);
-			}
-
-			return table;
-		}
-
-		#region unused
-
-		public int GetCount(QueryFilter filter = null)
-		{
-			throw new NotImplementedException();
-		}
-
-		#endregion
+		protected abstract Table OpenTable([NotNull] ISourceClass sourceClass);
 
 		public long GetNextOid()
 		{

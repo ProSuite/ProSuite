@@ -4,7 +4,6 @@ using System.Threading;
 using ArcGIS.Core.Data;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Hosting;
 using ProSuite.Commons.Notifications;

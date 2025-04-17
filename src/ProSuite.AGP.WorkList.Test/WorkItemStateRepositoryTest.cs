@@ -74,6 +74,7 @@ public class WorkItemStateRepositoryTest
 
 			wl.Commit();
 
+			wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
 			items = wl.GetItems().ToList();
 			first = items.First();
 

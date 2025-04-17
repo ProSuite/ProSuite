@@ -111,7 +111,7 @@ namespace ProSuite.AGP.WorkList
 
 			// Note This event is fired (to) many times!
 			// Add work list to map -> it fires 6 times. There are
-			// 6 layers in group layer QA..
+			// 6 layers in group layer QA.
 			// Remove group layer, save project and add work list again.
 			// The event fires more often! Wtf..?!
 			if (args.Creates.IsEmpty && args.Deletes.IsEmpty && args.Modifies.IsEmpty)

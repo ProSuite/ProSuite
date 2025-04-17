@@ -5,6 +5,7 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -17,7 +18,8 @@ namespace ProSuite.AGP.WorkList.Datasource
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IReadOnlyList<PluginField> _fields;
-		[NotNull] private readonly string _tableName;
+		private readonly string _tableName;
+		private readonly WorkListGeometryService _service;
 
 		[CanBeNull] private IWorkList _workList;
 
@@ -25,6 +27,11 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			_tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
 			_fields = new ReadOnlyCollection<PluginField>(GetSchema());
+		}
+
+		public WorkItemTable(string tableName, WorkListGeometryService service) : this(tableName)
+		{
+			_service = service;
 		}
 
 		//public WorkItemTable(IWorkList workList, string tableName)
@@ -56,21 +63,13 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			// Do return not an empty envelope.
 			// Pluggable Datasource cannot handle an empty envelope.
-			return _workList?.Extent;
-		}
 
-		[CanBeNull]
-		public IWorkList WorkList
-		{
-			get
+			if (_workList == null)
 			{
-				if (_workList == null)
-				{
-					_workList = WorkListRegistry.Instance.Get(_tableName);
-					_workList?.EnsureRowCacheSynchronized();
-				}
-				return _workList;
+				TryCreateWorkListAsync();
 			}
+
+			return _workList?.Extent;
 		}
 
 		public override GeometryType GetShapeType()
@@ -78,26 +77,61 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return GeometryType.Polygon;
 		}
 
-		public override PluginCursorTemplate Search(QueryFilter queryFilter)
+		public override PluginCursorTemplate Search(QueryFilter filter)
 		{
-			//queryFilter.RowCount;
-			//Stopwatch watch = _msg.DebugStartTiming();
+			// This is called on open table. Check QueryFilter.ObjectIDs.
 
-			const bool ignoreStatusFilter = false;
+			if (_workList == null)
+			{
+				TryCreateWorkListAsync();
+			}
 
-			IEnumerable<object[]> list =
-				_workList.GetItems(filter)
-				        .Select(item => GetValues(item, _workList, _workList.Current)); // TODO drop ToList, inline
+			if (_workList == null)
+			{
+				return new WorkItemCursor([]);
+			}
 
-			//_msg.DebugStopTiming(
-			//	watch, $"{nameof(WorkItemTable)}.{nameof(Search)}(): {list.Count} items");
+			IEnumerable<object[]> items =
+				_workList.Search(filter)
+				         .Select(item => GetValues(item, _workList, _workList.Current));
 
-			return new WorkItemCursor(list);
+			return new WorkItemCursor(items);
 		}
 
-		public override PluginCursorTemplate Search(SpatialQueryFilter spatialQueryFilter)
+		public override PluginCursorTemplate Search(SpatialQueryFilter filter)
 		{
-			return Search((QueryFilter) spatialQueryFilter);
+			bool onWorker = QueuedTask.OnWorker;
+
+			if (_workList == null)
+			{
+				TryCreateWorkListAsync();
+			}
+
+			if (_workList == null)
+			{
+				return new WorkItemCursor([]);
+			}
+
+			_service.HydrateItemGeometries(_tableName, filter);
+
+			IEnumerable<object[]> items =
+				_workList.GetItems(filter)
+				         .Select(item => GetValues(item, _workList, _workList.Current));
+
+			return new WorkItemCursor(items);
+		}
+
+		private async void TryCreateWorkListAsync()
+		{
+			IWorkList workList = await WorkListRegistry.Instance.GetAsync(_tableName);
+
+			if (workList == null)
+			{
+				return;
+			}
+
+			workList?.EnsureRowCacheSynchronized();
+			_workList = workList;
 		}
 
 		private static object[] GetValues([NotNull] IWorkItem item, IWorkList workList,
@@ -128,7 +162,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 		#region Native RowCount
 
 		// First shot: not supported; but we probably could easily!
-
 		public override bool IsNativeRowCountSupported()
 		{
 			return false;

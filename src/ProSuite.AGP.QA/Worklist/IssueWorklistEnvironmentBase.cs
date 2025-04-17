@@ -9,7 +9,6 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
@@ -151,7 +150,7 @@ namespace ProSuite.AGP.QA.WorkList
 
 				datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
-				var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), datastore, schema, attributeReader, defaultDefinitionQuery);
+				var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), schema, attributeReader, defaultDefinitionQuery);
 
 				sourceClasses.Add(sourceClass);
 			}
@@ -162,7 +161,7 @@ namespace ProSuite.AGP.QA.WorkList
 			var geodatabase = (Geodatabase) datastoresByHandle.First().Value;
 			var result = new DbStatusWorkItemRepository(sourceClasses, stateRepository, geodatabase);
 
-			_msg.DebugStopTiming(watch, "Created revision work item repository");
+			_msg.DebugStopTiming(watch, "Created issue work item repository");
 
 			return result;
 		}

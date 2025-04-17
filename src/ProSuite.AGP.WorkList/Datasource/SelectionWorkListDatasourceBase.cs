@@ -6,8 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -20,8 +18,23 @@ public class SelectionWorkListDatasourceBase : PluginDatasourceTemplate
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	private string _path;
-	private IWorkList _workList;
+	//private IWorkList _workList;
 	private IReadOnlyList<string> _tableNames;
+
+	static WorkListGeometryService _service;
+
+	private static WorkListGeometryService Service
+	{
+		get
+		{
+			if (_service == null)
+			{
+				_service = new WorkListGeometryService();
+				_service.Start();
+			}
+			return _service;
+		}
+	}
 
 	public override void Open([NotNull] Uri connectionPath) // "open workspace"
 	{
@@ -67,9 +80,13 @@ public class SelectionWorkListDatasourceBase : PluginDatasourceTemplate
 		}, "Error opening work list data source");
 	}
 
+	// TODO: (DARO) no usage
 	public override void Close()
 	{
-		_workList = null;
+		_service.Stop();
+
+		// TODO: revise
+		//_workList = null;
 		_msg.VerboseDebug(() => "WorkListDataSource.Close()");
 	}
 
@@ -85,44 +102,9 @@ public class SelectionWorkListDatasourceBase : PluginDatasourceTemplate
 
 			ParseTableName(name, out string listName);
 
-			_workList = WorkListRegistry.Instance.Get(name);
-			Assert.NotNull(_workList);
+			bool onWorker = QueuedTask.OnWorker;
 
-			if (_workList == null &&
-			    ! _path.EndsWith("swl") && ! _path.EndsWith("iwl"))
-			{
-				throw new ArgumentException();
-
-				// Work lists not registered as project items. Auto-register (consider always?):
-				var xmlBasedWorkListFactory = new XmlBasedWorkListFactory(_path, name);
-				WorkListRegistry.Instance.TryAdd(xmlBasedWorkListFactory);
-				_workList = xmlBasedWorkListFactory.Get();
-			}
-
-			if (_workList != null)
-			{
-				if (QueuedTask.OnWorker)
-				{
-					var service = new WorkListGeometryService();
-					service.Start(_workList);
-				}
-
-				result = new WorkItemTable(_workList, listName);
-			}
-			else
-			{
-				// TODO: Can we just auto-register?
-				string fileName = Path.GetFileName(_path);
-				var message =
-					$"Cannot find data source of work list {fileName}. It is likely not part of the Work List project items.";
-
-				// The exception is not going to crash Pro. Or is it?
-				// It might depend on the application state.
-				// It results in a broken data source of the work list layer.
-				_msg.Warn(message);
-				_msg.DebugFormat("File location: {0}. Work list unique name: {1}",
-				                 _path, name);
-			}
+			result = new WorkItemTable(listName, Service);
 		}
 		catch (Exception ex)
 		{
@@ -140,7 +122,8 @@ public class SelectionWorkListDatasourceBase : PluginDatasourceTemplate
 	public override bool IsQueryLanguageSupported()
 	{
 		// TODO Pro calls this before Open(), i.e., when _workList is still null!
-		return _workList?.QueryLanguageSupported ?? false;
+		return false;
+		//return _workList?.QueryLanguageSupported ?? false;
 	}
 
 	private static string FormatTableName([NotNull] string listName)

@@ -34,11 +34,10 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
 
-		/// <summary>Yield all work items subject to list settings and the given filter.</summary>
-		/// <param name="filter">optional QueryFilter or SpatialQueryFilter</param>
-		/// <returns></returns>
-		[NotNull]
-		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null, bool excludeGeometry = false);
+		IEnumerable<IWorkItem> Search(QueryFilter filter);
+
+		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null,
+		                                bool excludeGeometry = false);
 
 		int Count();
 
@@ -95,6 +94,10 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		void Invalidate(Envelope geometry);
 
+		void Invalidate(List<long> oids);
+
 		int Count(out int todo);
+
+		void HydrateItemGeometries(QueryFilter filter);
 	}
 }

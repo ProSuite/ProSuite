@@ -42,7 +42,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// Opens the associated datastore. This method must be run on the MCT.
 		/// </summary>
 		/// <remarks>
-		/// NOTE: This can lead to different instanceS of the same workspace
+		/// NOTE: This can lead to different instances of the same workspace
 		///       because opening a new Geodatabase with the Connector of an existing Geodatabase
 		///       can in some cases result in a different instance!
 		/// </remarks>

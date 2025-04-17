@@ -16,7 +16,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		string DefinitionQuery { get; }
 
-		string GetRelevantSubFields(bool excludeGeometry);
+		string GetRelevantSubFields(bool excludeGeometry = false);
 
 		bool Uses(ITableReference tableReference);
 

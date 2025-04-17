@@ -686,7 +686,7 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		[Test]
-		public void LearningTest()
+		public void Can_set_worklist_extent()
 		{
 			GdbTableIdentity tableId = WorkListTestUtils.CreateTableProxy();
 			GdbRowIdentity rowId1 = WorkListTestUtils.CreateRowProxy(1);
@@ -698,7 +698,8 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);
 
 			// Note: work item has a minimum length/width of 30!!
-			AssertEqual(_poly0.Extent, wl.Extent);
+			Assert.NotNull(item1.Extent);
+			Assert.True(item1.Extent.IsEqual(wl.Extent));
 		}
 
 		private static void AssertEqual(Envelope expected, Envelope actual)

@@ -58,8 +58,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 		// TODO: (daro) still needed?
 		void SetExtent([CanBeNull] Envelope extent);
 
-		void SetGeometry([CanBeNull] Geometry geometry);
-
 		string GetDescription();
+
+		bool TrySetGeometry([NotNull] Geometry geometry);
 	}
 }
