@@ -4,6 +4,7 @@ using NHibernate.Cfg;
 using NHibernate.Dialect;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using Environment = System.Environment;
 
 namespace ProSuite.Commons.Orm.NHibernate
@@ -79,11 +80,17 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 		public bool IsSQLite => _dialect is SQLiteDialect;
 
-		public bool IsPostgreSQL => Dialect.Contains("PosgreSQL");
+		public bool IsPostgreSQL =>
+			StringUtils.Contains(Dialect, "PostgreSQL",
+			                     StringComparison.InvariantCultureIgnoreCase);
 
-		public bool IsSqlServer => Dialect.Contains("MsSql");
+		public bool IsSqlServer =>
+			StringUtils.Contains(Dialect, "MsSql",
+			                     StringComparison.InvariantCultureIgnoreCase);
 
-		public bool IsOracle => Dialect.Contains("Oracle");
+		public bool IsOracle =>
+			StringUtils.Contains(Dialect, "Oracle",
+			                     StringComparison.InvariantCultureIgnoreCase);
 
 		public string DdxEnvironmentName { get; protected set; }
 
