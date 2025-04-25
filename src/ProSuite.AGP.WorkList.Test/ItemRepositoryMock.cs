@@ -31,40 +31,27 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
-		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter = null,  WorkItemStatus? statusFilter = null, bool recycle = true, bool excludeGeometry = false)
+		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+			QueryFilter filter = null, WorkItemStatus? statusFilter = null, bool recycle = true,
+			bool excludeGeometry = false)
 		{
-			IEnumerable<IWorkItem> query = statusFilter == null ? _items : _items.Where(item => item.Status == statusFilter);
+			IEnumerable<IWorkItem> query =
+				statusFilter == null
+					? _items
+					: _items.Where(item => item.Status == statusFilter);
 
-			IEnumerable<IWorkItem> result = filter == null
-				                                ? query
-				                                : query.Where(item => filter.ObjectIDs.Contains(item.GdbRowProxy.ObjectId));
+			IEnumerable<IWorkItem> result =
+				filter == null
+					? query
+					: query.Where(item => filter.ObjectIDs.Contains(item.GdbRowProxy.ObjectId));
 
-			IEnumerable<KeyValuePair<IWorkItem, Geometry>> dictionary = result.ToDictionary(item => item, item => item.Geometry);
+			IEnumerable<KeyValuePair<IWorkItem, Envelope>> dictionary = result.ToDictionary(item => item, item => item.Extent);
 
 			foreach ((IWorkItem item, Geometry geometry) in dictionary)
 			{
 				WorkItemStateRepository?.Refresh(item);
 				yield return KeyValuePair.Create(item, geometry);
 			}
-		}
-
-		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
-		{
-			IEnumerable<IWorkItem> result = filter == null
-												   ? _items
-												   : _items.Where(item => filter.ObjectIDs.Contains(item.GdbRowProxy.ObjectId));
-
-			foreach (IWorkItem item in result)
-			{
-				WorkItemStateRepository?.Refresh(item);
-				yield return item;
-			}
-		}
-
-		public IEnumerable<IWorkItem> GetItems(Geometry areaOfInterest,
-		                                       WorkItemStatus? statusFilter, bool recycle = true)
-		{
-			return _items;
 		}
 
 		public void Refresh(IWorkItem item)
@@ -146,6 +133,19 @@ namespace ProSuite.AGP.WorkList.Test
 		public long GetNextOid()
 		{
 			return ++_lastUsedOid;
+		}
+
+		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(Table table, QueryFilter filter = null,
+		                                                               WorkItemStatus? statusFilter = null, bool recycle = true,
+		                                                               bool excludeGeometry = false)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItemsCore(
+			QueryFilter filter, bool excludeGeometry = false)
+		{
+			throw new NotImplementedException();
 		}
 
 		public void Add(IWorkItem item)

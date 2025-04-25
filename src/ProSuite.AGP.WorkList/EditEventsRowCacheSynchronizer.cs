@@ -81,11 +81,12 @@ namespace ProSuite.AGP.WorkList
 
 		private void ProcessChanges(EditCompletedEventArgs args)
 		{
-			// On Undo and Redo e.Members is not empty
-			//if (! e.Members.Any(member => _rowCache.CanContain(member)))
-			//{
-			//	return;
-			//}
+			IEnumerable<FeatureLayer> layers = args.Members.OfType<FeatureLayer>();
+
+			if (! layers.All(layer => _rowCache.CanContain(layer.GetTable())))
+			{
+				return;
+			}
 
 			var fullTableInvalidations = new List<Table>();
 

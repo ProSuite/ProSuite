@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
-using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
@@ -14,11 +13,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void ProcessChanges([NotNull] Dictionary<Table, List<long>> inserts,
 		                    [NotNull] Dictionary<Table, List<long>> deletes,
 		                    [NotNull] Dictionary<Table, List<long>> updates);
-
-
-		void ProcessChanges([NotNull] Dictionary<GdbTableIdentity, List<long>> inserts,
-		                    [NotNull] Dictionary<GdbTableIdentity, List<long>> deletes,
-		                    [NotNull] Dictionary<GdbTableIdentity, List<long>> updates);
 
 		bool CanContain([NotNull] Table table);
 	}

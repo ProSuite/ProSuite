@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -17,12 +15,13 @@ public class SelectionWorkListDatasourceBase : PluginDatasourceTemplate
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	private string _path;
-	//private IWorkList _workList;
 	private IReadOnlyList<string> _tableNames;
+	private string _path;
 
-	static WorkListGeometryService _service;
+	[CanBeNull]
+	private static WorkListGeometryService _service;
 
+	[NotNull]
 	private static WorkListGeometryService Service
 	{
 		get
@@ -32,13 +31,14 @@ public class SelectionWorkListDatasourceBase : PluginDatasourceTemplate
 				_service = new WorkListGeometryService();
 				_service.Start();
 			}
+
 			return _service;
 		}
 	}
 
 	public override void Open([NotNull] Uri connectionPath) // "open workspace"
 	{
-		Try(() =>
+		try
 		{
 			Assert.ArgumentNotNull(connectionPath, nameof(connectionPath));
 
@@ -72,21 +72,22 @@ public class SelectionWorkListDatasourceBase : PluginDatasourceTemplate
 				return;
 			}
 
-			_tableNames = new ReadOnlyCollection<string>(
-				new List<string>
-				{
-					FormatTableName(name)
-				});
-		}, "Error opening work list data source");
+			_tableNames = new ReadOnlyCollection<string>([name]);
+		}
+		catch (Exception ex)
+		{
+			_msg.Debug("Error opening work list data source", ex);
+		}
 	}
 
-	// TODO: (DARO) no usage
+	/// <summary>
+	/// Is called on removing work list layer
+	/// </summary>
 	public override void Close()
 	{
-		_service.Stop();
+		_service?.Stop();
+		_service = null;
 
-		// TODO: revise
-		//_workList = null;
 		_msg.VerboseDebug(() => "WorkListDataSource.Close()");
 	}
 
@@ -100,11 +101,7 @@ public class SelectionWorkListDatasourceBase : PluginDatasourceTemplate
 			// The given name is one of those returned by GetTableNames()
 			_msg.Debug($"Open table '{name}'");
 
-			ParseTableName(name, out string listName);
-
-			bool onWorker = QueuedTask.OnWorker;
-
-			result = new WorkItemTable(listName, Service);
+			result = new WorkItemTable(name, Service);
 		}
 		catch (Exception ex)
 		{
@@ -124,35 +121,5 @@ public class SelectionWorkListDatasourceBase : PluginDatasourceTemplate
 		// TODO Pro calls this before Open(), i.e., when _workList is still null!
 		return false;
 		//return _workList?.QueryLanguageSupported ?? false;
-	}
-
-	private static string FormatTableName([NotNull] string listName)
-	{
-		// for now just the list name; later we *may* have separate "layers" for different geometry types
-		return Assert.NotNull(listName);
-	}
-
-	private static void ParseTableName([NotNull] string tableName, out string listName)
-	{
-		// for now table name *is* the list name
-		listName = tableName;
-	}
-
-	private static void Try([NotNull] Action action,
-	                        [NotNull] string message,
-	                        [CallerMemberName] string caller = null)
-	{
-		Assert.ArgumentNotNull(action, nameof(action));
-
-		try
-		{
-			_msg.VerboseDebug(() => $"WorkListDataSource.{caller}");
-
-			action();
-		}
-		catch (Exception e)
-		{
-			_msg.Warn(message, e);
-		}
 	}
 }

@@ -24,6 +24,8 @@ public class WorkListGeometryService
 	{
 		try
 		{
+			_msg.Debug("Start service.");
+
 			_cancellationTokenSource = new CancellationTokenSource();
 
 			CancellationToken token = _cancellationTokenSource.Token;
@@ -51,8 +53,11 @@ public class WorkListGeometryService
 		{
 			if (_thread == null)
 			{
+				_msg.Debug("Service has not been started.");
 				return;
 			}
+
+			_msg.Debug("Stop service.");
 
 			_cancellationTokenSource?.Cancel();
 
@@ -69,10 +74,6 @@ public class WorkListGeometryService
 		catch (Exception ex)
 		{
 			Gateway.ReportError(ex, _msg);
-		}
-		finally
-		{
-			_msg.Debug("Stop service.");
 		}
 	}
 

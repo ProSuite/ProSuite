@@ -14,7 +14,21 @@ namespace ProSuite.AGP.WorkList.Contracts
 	/// </summary>
 	public interface IWorkItemRepository
 	{
-		IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter = null, WorkItemStatus? statusFilter = null, bool recycle = true, bool excludeGeometry = false);
+		IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+			QueryFilter filter = null,
+			WorkItemStatus? statusFilter = null,
+			bool recycle = true,
+			bool excludeGeometry = false);
+
+		IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+			Table table,
+			QueryFilter filter = null,
+			WorkItemStatus? statusFilter = null,
+			bool recycle = true,
+			bool excludeGeometry = false);
+
+		IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItemsCore(
+			QueryFilter filter, bool excludeGeometry);
 
 		void UpdateState(IWorkItem item);
 

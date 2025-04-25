@@ -101,7 +101,21 @@ namespace ProSuite.AGP.WorkList
 				                                         excludeGeometry));
 		}
 
-		private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(ISourceClass sourceClass,
+		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+			Table table,
+			QueryFilter filter = null,
+			WorkItemStatus? statusFilter = null,
+			bool recycle = true,
+			bool excludeGeometry = false)
+		{
+			return SourceClasses.Where(sc => sc.Uses(new GdbTableIdentity(table)))
+			                    .SelectMany(sourceClass =>
+				                                GetItems(sourceClass, table, filter,
+				                                         statusFilter, recycle, excludeGeometry));
+		}
+
+		private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+			ISourceClass sourceClass,
 			QueryFilter filter,
 			WorkItemStatus? statusFilter = null,
 			bool recycle = true, bool excludeGeometry = false)
@@ -127,6 +141,47 @@ namespace ProSuite.AGP.WorkList
 			AdaptSourceFilter(filter, sourceClass);
 
 			foreach (Row row in GetRows(sourceClass, filter, recycle))
+			{
+				IWorkItem item = CreateWorkItemCore(row, sourceClass);
+				WorkItemStateRepository.Refresh(item);
+
+				Geometry geometry = row is Feature feature ? feature.GetShape() : null;
+
+				count += 1;
+				yield return KeyValuePair.Create(item, geometry);
+			}
+
+			_msg.DebugStopTiming(
+				watch, $"GetItems() {sourceClass.Name}: {count} items");
+		}
+
+		private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+			ISourceClass sourceClass, Table table,
+			QueryFilter filter,
+			WorkItemStatus? statusFilter = null,
+			bool recycle = true, bool excludeGeometry = false)
+		{
+			int count = 0;
+
+			Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
+
+			filter ??= new QueryFilter();
+
+			if (string.IsNullOrEmpty(filter.SubFields) || string.Equals(filter.SubFields, "*"))
+			{
+				filter.SubFields = sourceClass.GetRelevantSubFields(excludeGeometry);
+			}
+
+			// Source classes can set the respective filters / definition queries
+			// TODO: (daro) drop todo below?
+			// TODO: Consider getting only the right status, but that means
+			// extra round trips:
+			filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
+
+			// Selection Item ObjectIDs to filter out, or change of SearchOrder:
+			AdaptSourceFilter(filter, sourceClass);
+
+			foreach (Row row in GetRows(table, filter, recycle))
 			{
 				IWorkItem item = CreateWorkItemCore(row, sourceClass);
 				WorkItemStateRepository.Refresh(item);
@@ -200,9 +255,10 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		private IEnumerable<Row> GetRows([NotNull] ISourceClass sourceClass,
-		                                        [CanBeNull] QueryFilter filter,
-		                                        bool recycle)
+		                                 [CanBeNull] QueryFilter filter,
+		                                 bool recycle)
 		{
+			// TODO: (daro) pass in name
 			Table table = OpenTable(sourceClass);
 
 			if (table == null)
@@ -222,6 +278,17 @@ namespace ProSuite.AGP.WorkList
 			finally
 			{
 				table.Dispose();
+			}
+		}
+
+		private IEnumerable<Row> GetRows([NotNull] Table table,
+		                                 [CanBeNull] QueryFilter filter,
+		                                 bool recycle)
+		{
+			// Todo: daro check recycle
+			foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
+			{
+				yield return row;
 			}
 		}
 

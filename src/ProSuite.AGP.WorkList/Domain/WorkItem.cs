@@ -178,20 +178,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			return $"{tableName} OID={row.ObjectId} (item ID={OID})";
 		}
 
-		public bool TrySetGeometry([NotNull] Geometry geometry)
+		public void SetGeometry([NotNull] Geometry geometry)
 		{
-			if (Geometry != null)
-			{
-				return false;
-			}
-
 			Geometry = geometry;
 
-			Envelope extent = geometry.Extent;
-
-			SetExtent(extent);
-			return true;
-
+			SetExtent(geometry.Extent);
 		}
 
 		public void SetExtent([CanBeNull] Envelope extent)

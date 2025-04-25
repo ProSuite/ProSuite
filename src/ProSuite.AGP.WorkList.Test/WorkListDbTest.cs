@@ -219,7 +219,7 @@ public class WorkListDbTest
 			new Coordinate2D(2929350, 1186910), ch1903plus);
 
 		List<IWorkItem> items =
-			wl.GetItems(GdbQueryUtils.CreateSpatialFilter(visibleExtent)).ToList();
+			wl.GetItems(GdbQueryUtils.CreateSpatialFilter(visibleExtent), false).ToList();
 
 		Envelope extent = wl.Extent;
 		Assert.NotNull(extent);
@@ -352,10 +352,8 @@ public class WorkListDbTest
 	{
 		var gdb0 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
 		                           {
-			                           AuthenticationMode = AuthenticationMode.DBMS,
+			                           AuthenticationMode = AuthenticationMode.OSA,
 			                           Instance = "TOPGIST",
-			                           User = "daro",
-			                           Password = "DARO",
 			                           Database = Empty
 		                           });
 		Uri path0 = gdb0.GetPath();
@@ -378,10 +376,8 @@ public class WorkListDbTest
 	{
 		var gdb0 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
 		                           {
-			                           AuthenticationMode = AuthenticationMode.DBMS,
+			                           AuthenticationMode = AuthenticationMode.OSA,
 			                           Instance = "TOPGIST",
-			                           User = "daro",
-			                           Password = "DARO",
 			                           Database = Empty
 		                           });
 		Uri path0 = gdb0.GetPath();
@@ -406,20 +402,16 @@ public class WorkListDbTest
 	{
 		var gdb0 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
 		                           {
-			                           AuthenticationMode = AuthenticationMode.DBMS,
+			                           AuthenticationMode = AuthenticationMode.OSA,
 			                           Instance = "TOPGIST",
-			                           User = "daro",
-			                           Password = "DARO",
 			                           Database = Empty
 		                           });
 		Uri path0 = gdb0.GetPath();
 
 		var gdb1 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
 		                           {
-			                           AuthenticationMode = AuthenticationMode.DBMS,
+			                           AuthenticationMode = AuthenticationMode.OSA,
 			                           Instance = "TOPGIST",
-			                           User = "daro",
-			                           Password = "DARO",
 			                           Database = Empty
 		                           });
 		Uri path1 = gdb1.GetPath();

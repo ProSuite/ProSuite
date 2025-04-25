@@ -5,7 +5,6 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -100,8 +99,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override PluginCursorTemplate Search(SpatialQueryFilter filter)
 		{
-			bool onWorker = QueuedTask.OnWorker;
-
 			if (_workList == null)
 			{
 				TryCreateWorkListAsync();
@@ -115,7 +112,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			_service.HydrateItemGeometries(_tableName, filter);
 
 			IEnumerable<object[]> items =
-				_workList.GetItems(filter)
+				_workList.GetItems(filter, false)
 				         .Select(item => GetValues(item, _workList, _workList.Current));
 
 			return new WorkItemCursor(items);

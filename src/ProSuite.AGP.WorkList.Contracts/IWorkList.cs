@@ -41,6 +41,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		int Count();
 
+		int Count(out int todo);
+
 		bool CanGoFirst();
 
 		void GoFirst();
@@ -96,8 +98,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		void Invalidate(List<long> oids);
 
-		int Count(out int todo);
-
 		void HydrateItemGeometries(QueryFilter filter);
+
+		IEnumerable<IWorkItem> GetItems(QueryFilter filter, WorkItemStatus? itemStatus = null, bool excludeGeometry = false);
 	}
 }

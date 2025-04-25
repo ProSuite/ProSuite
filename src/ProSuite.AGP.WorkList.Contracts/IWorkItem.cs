@@ -47,6 +47,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool HasFeatureGeometry { get; }
 
+		// TODO: (daro) still needed?
 		void QueryPoints(out double xmin, out double ymin,
 		                 out double xmax, out double ymax,
 		                 out double zmax, double minimumSize);
@@ -55,11 +56,10 @@ namespace ProSuite.AGP.WorkList.Contracts
 		                 out double xmax, out double ymax,
 		                 out double zmax);
 
-		// TODO: (daro) still needed?
-		void SetExtent([CanBeNull] Envelope extent);
+		void SetGeometry(Geometry geometry);
+
+		void SetExtent(Envelope extent);
 
 		string GetDescription();
-
-		bool TrySetGeometry([NotNull] Geometry geometry);
 	}
 }

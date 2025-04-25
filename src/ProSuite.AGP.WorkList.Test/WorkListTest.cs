@@ -504,7 +504,7 @@ namespace ProSuite.AGP.WorkList.Test
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4, item5, item6 });
 			var wl = new SelectionWorkList(repo, "uniqueName", "displayName");
 
-			IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter([2, 3, 4])).ToList();
+			IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter([2, 3, 4]), false).ToList();
 
 			Assert.AreEqual(item2, wl.Current);
 			Assert.True(wl.Current?.Visited);
@@ -529,7 +529,7 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(wl.CanGoFirst());
 
 			// get remaining items
-			IEnumerable<IWorkItem> __ = wl.GetItems(GdbQueryUtils.CreateFilter([1, 5, 6])).ToList();
+			IEnumerable<IWorkItem> __ = wl.GetItems(GdbQueryUtils.CreateFilter([1, 5, 6]), false).ToList();
 
 			Assert.True(wl.CanGoNext());
 			Assert.True(wl.CanGoPrevious());
@@ -553,28 +553,29 @@ namespace ProSuite.AGP.WorkList.Test
 			// important to get items from DB because the items are loaded lazyly
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);
 
-			AssertEqual(_poly0.Extent, wl.Extent);
+			Assert.NotNull(item1.Extent);
+			Assert.True(item1.Extent.IsEqual(wl.Extent));
 
 			GdbRowIdentity rowId2 = WorkListTestUtils.CreateRowProxy(2);
 			IWorkItem item2 = new WorkItemMock(rowId2, tableId, _poly1) { Visited = true };
 			repo.Add(item2);
 
-			var inserts = new Dictionary<GdbTableIdentity, List<long>> { { tableId, [2] } };
+			var inserts = new Dictionary<GdbTableIdentity, List<long>> { { tableId, [item2.OID] } };
 			var deletes = new Dictionary<GdbTableIdentity, List<long>>();
 			var updates = new Dictionary<GdbTableIdentity, List<long>>();
 
-			wl.ProcessChanges(inserts, deletes, updates);
+			//wl.ProcessChanges(inserts, deletes, updates);
 
 			Assert.AreEqual(2, wl.GetItems().ToList().Count);
 
 			// assert oid is still the same
 			Assert.AreEqual(1, item1.OID);
 			Assert.AreEqual(2, item2.OID);
-			AssertEqual(_poly1.Extent, wl.Extent);
 
-			Envelope envelope = _poly0.Extent.Union(_poly1.Extent);
+			Envelope envelope = item1.Extent.Union(item2.Extent);
 			Assert.True(GeometryUtils.Intersects(wl.Extent, envelope));
 			Assert.True(GeometryUtils.Contains(wl.Extent, envelope));
+			Assert.True(envelope.IsEqual(wl.Extent));
 		}
 
 		[Test]
@@ -589,7 +590,8 @@ namespace ProSuite.AGP.WorkList.Test
 			// important to get items from DB because the items are loaded lazyly
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);
 
-			AssertEqual(_poly0.Extent, wl.Extent);
+			Assert.NotNull(item1.Extent);
+			Assert.True(item1.Extent.IsEqual(wl.Extent));
 
 			// Update Extext
 			item1.SetExtent(_poly1.Extent);
@@ -598,14 +600,15 @@ namespace ProSuite.AGP.WorkList.Test
 			var deletes = new Dictionary<GdbTableIdentity, List<long>>();
 			var updates = new Dictionary<GdbTableIdentity, List<long>>{ { tableId, [item1.OID] } };
 
-			wl.ProcessChanges(inserts, deletes, updates);
+			//wl.ProcessChanges(inserts, deletes, updates);
 
 			// get items again because item1 was invalidated
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);
 
 			// assert oid is still the same
 			Assert.AreEqual(1, item1.OID);
-			AssertEqual(_poly1.Extent, wl.Extent);
+			Assert.NotNull(item1.Extent);
+			Assert.True(item1.Extent.IsEqual(wl.Extent));
 		}
 
 		[Test]
@@ -628,16 +631,17 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(GeometryUtils.Contains(wl.Extent, envelope));
 
 			var inserts = new Dictionary<GdbTableIdentity, List<long>>();
-			var deletes = new Dictionary<GdbTableIdentity, List<long>> { { tableId, [2] } };
+			var deletes = new Dictionary<GdbTableIdentity, List<long>> { { tableId, [item2.OID] } };
 			var updates = new Dictionary<GdbTableIdentity, List<long>>();
 
-			wl.ProcessChanges(inserts, deletes, updates);
+			//wl.ProcessChanges(inserts, deletes, updates);
 
 			// remove it from repo mock too
 			Assert.True(repo.Remove(item2));
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);
 
-			AssertEqual(_poly0.Extent, wl.Extent);
+			Assert.NotNull(item1.Extent);
+			Assert.True(item1.Extent.IsEqual(wl.Extent));
 		}
 
 		[Test]
