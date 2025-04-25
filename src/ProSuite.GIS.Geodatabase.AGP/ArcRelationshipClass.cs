@@ -229,7 +229,17 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public IRelationship GetRelationship(IObject originObject, IObject destinationObject)
 		{
-			return new ArcRelationship(originObject, destinationObject, this);
+			foreach (Row destinationRow in ProRelationshipClass.GetRowsRelatedToOriginRows(
+				         new[] { originObject.OID }))
+			{
+				if (destinationRow.GetObjectID() == destinationObject.OID)
+				{
+					return new ArcRelationship(originObject, destinationObject, this);
+				}
+			}
+
+			// Not related:
+			return null;
 		}
 
 		public void DeleteRelationship(IObject originObject, IObject destinationObject)
@@ -319,24 +329,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			if (ProRelationshipClass is AttributedRelationshipClass attributedRelationshipClass)
 			{
-				foreach (AttributedRelationship attributedRelationship in
-				         attributedRelationshipClass.GetRelationshipsForOriginRows(
-					         sourceDictionary.Keys))
+				foreach (var keyValuePair in GetAttributedRelationships(
+					         attributedRelationshipClass, sourceDictionary))
 				{
-					long originOid = attributedRelationship.GetOriginRow().GetObjectID();
-
-					T sourceObj = sourceDictionary[originOid];
-
-					Row proDestinationRow = attributedRelationship.GetDestinationRow();
-
-					destinationTable ??=
-						ArcGeodatabaseUtils.ToArcTable(proDestinationRow.GetTable());
-
-					ArcRow destinationRow =
-						ArcGeodatabaseUtils.ToArcRow(proDestinationRow, destinationTable);
-
 					pairCount++;
-					yield return new KeyValuePair<T, IObject>(sourceObj, destinationRow);
+					yield return keyValuePair;
 				}
 			}
 			else
@@ -395,6 +392,65 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				_msg.Debug(
 					$"Extracted {pairCount} pairs from {sourceDictionary.Count} source objects");
+			}
+		}
+
+		private IEnumerable<KeyValuePair<T, IObject>> GetAttributedRelationships<T>(
+			[NotNull] AttributedRelationshipClass attributedRelationshipClass,
+			[NotNull] Dictionary<long, T> sourceObjectsById) where T : IObject
+		{
+			IObjectClass thisClass =
+				Assert.NotNull(sourceObjectsById.Values.First().Class, "Source class is null");
+
+			if (thisClass.Equals(OriginClass))
+			{
+				ITable destinationTable = null;
+
+				foreach (AttributedRelationship attributedRelationship in
+				         attributedRelationshipClass.GetRelationshipsForOriginRows(
+					         sourceObjectsById.Keys))
+				{
+					long originOid = attributedRelationship.GetOriginRow().GetObjectID();
+
+					T sourceObj = sourceObjectsById[originOid];
+
+					Row proDestinationRow = attributedRelationship.GetDestinationRow();
+
+					destinationTable ??=
+						ArcGeodatabaseUtils.ToArcTable(proDestinationRow.GetTable());
+
+					ArcRow destinationRow =
+						ArcGeodatabaseUtils.ToArcRow(proDestinationRow, destinationTable);
+
+					yield return new KeyValuePair<T, IObject>(sourceObj, destinationRow);
+				}
+			}
+			else if (thisClass.Equals(DestinationClass))
+			{
+				ITable originTable = null;
+
+				foreach (AttributedRelationship attributedRelationship in
+				         attributedRelationshipClass.GetRelationshipsForDestinationRows(
+					         sourceObjectsById.Keys))
+				{
+					long destinationOid = attributedRelationship.GetDestinationRow().GetObjectID();
+
+					T destinationObj = sourceObjectsById[destinationOid];
+
+					Row proOriginRow = attributedRelationship.GetOriginRow();
+
+					originTable ??=
+						ArcGeodatabaseUtils.ToArcTable(proOriginRow.GetTable());
+
+					ArcRow originRow = ArcGeodatabaseUtils.ToArcRow(proOriginRow, originTable);
+
+					yield return new KeyValuePair<T, IObject>(destinationObj, originRow);
+				}
+			}
+			else
+			{
+				throw new InvalidOperationException(
+					$"Source objects have to be either from the Origin ({OriginClass.Name}) or the Destination ({DestinationClass.Name}) class.");
 			}
 		}
 
