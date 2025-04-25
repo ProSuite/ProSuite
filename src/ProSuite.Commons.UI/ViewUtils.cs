@@ -155,9 +155,16 @@ namespace ProSuite.Commons.UI
 
 		public static void RunOnUIThread([NotNull] Action action)
 		{
-			Assert.ArgumentNotNull(action, nameof(action));
+			RunOnUIThread(() =>
+			{
+				action();
+				return Task.CompletedTask;
+			});
+		}
 
-			// NOTE: Application.Current is null in ArcMap
+		public static Task RunOnUIThread([NotNull] Func<Task> action)
+		{
+			Assert.ArgumentNotNull(action, nameof(action));
 
 			Dispatcher dispatcher = Application.Current?.Dispatcher;
 
@@ -166,7 +173,7 @@ namespace ProSuite.Commons.UI
 			if (dispatcher == null)
 			{
 				_msg.Warn("No dispatcher in this application");
-				return;
+				return Task.CompletedTask;
 			}
 
 			try
@@ -174,30 +181,31 @@ namespace ProSuite.Commons.UI
 				if (dispatcher.CheckAccess())
 				{
 					//No invoke needed
-					action();
+					return action();
 				}
-				else
+
+				//We are not on the UI
+				dispatcher.BeginInvoke(() =>
 				{
-					//We are not on the UI
-					dispatcher.BeginInvoke(
-						() =>
-						{
-							try
-							{
-								action();
-							}
-							catch (Exception e)
-							{
-								// Prevent crashes by catching the exception here:
-								_msg.Error($"Error running action on UI thread: {e.Message}", e);
-							}
-						});
-				}
+					try
+					{
+						return Task.FromResult(action());
+					}
+					catch (Exception e)
+					{
+						// Prevent crashes by catching the exception here:
+						_msg.Error($"Error running action on UI thread: {e.Message}", e);
+					}
+
+					return Task.CompletedTask;
+				});
 			}
 			catch (Exception e)
 			{
 				_msg.Error($"Error running action on UI thread: {e.Message}", e);
 			}
+
+			return Task.CompletedTask;
 		}
 
 		private static Window GetMainWindow()
