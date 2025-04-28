@@ -30,7 +30,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		int CurrentIndex { get; set; }
 
+		// TODO: daro hide?
 		IWorkItemRepository Repository { get; }
+		long? TotalCount { get; set; }
 
 		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
 
@@ -41,7 +43,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		int Count();
 
-		int Count(out int todo);
+		long Count(out int todo);
 
 		bool CanGoFirst();
 
@@ -98,8 +100,10 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		void Invalidate(List<long> oids);
 
-		void HydrateItemGeometries(QueryFilter filter);
+		void UpdateItemGeometries(QueryFilter filter);
 
 		IEnumerable<IWorkItem> GetItems(QueryFilter filter, WorkItemStatus? itemStatus = null, bool excludeGeometry = false);
+
+		void ComputeTotalCount();
 	}
 }

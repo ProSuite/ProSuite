@@ -14,6 +14,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 	/// </summary>
 	public interface IWorkItemRepository
 	{
+		long Count();
+
 		IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
 			QueryFilter filter = null,
 			WorkItemStatus? statusFilter = null,

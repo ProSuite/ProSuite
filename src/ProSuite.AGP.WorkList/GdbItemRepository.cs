@@ -89,6 +89,40 @@ namespace ProSuite.AGP.WorkList
 				watch, $"GetItems() {sourceClass.Name}: {count} items");
 		}
 
+		public long Count()
+		{
+			return SourceClasses.Sum(sourceClass => Count(sourceClass, new QueryFilter()));
+		}
+
+		private long Count([NotNull] ISourceClass sourceClass, [NotNull] QueryFilter filter)
+		{
+			Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
+
+			// include done and todo
+			filter.WhereClause = sourceClass.CreateWhereClause(null);
+
+			AdaptSourceFilter(filter, sourceClass);
+
+			// TODO: (daro) pass in name
+			using Table table = OpenTable(sourceClass);
+
+			if (table == null)
+			{
+				_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
+				return 0;
+			}
+
+			using TableDefinition definition = table.GetDefinition();
+			filter.SubFields = definition.GetObjectIDField();
+
+			long count = table.GetCount(filter);
+
+			_msg.DebugStopTiming(
+				watch, $"Count() {sourceClass.Name}: {count} items");
+
+			return count;
+		}
+
 		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
 			QueryFilter filter = null,
 			WorkItemStatus? statusFilter = null,

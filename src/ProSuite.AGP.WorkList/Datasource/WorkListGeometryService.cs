@@ -6,6 +6,7 @@ using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -77,7 +78,7 @@ public class WorkListGeometryService
 		}
 	}
 
-	public void HydrateItemGeometries(string workListName, QueryFilter filter)
+	public void UpdateItemGeometries(string workListName, QueryFilter filter)
 	{
 		try
 		{
@@ -86,6 +87,8 @@ public class WorkListGeometryService
 				_msg.Debug("Service has not been started.");
 				return;
 			}
+
+			Assert.True(_thread.IsAlive, "Thread is dead. Maybe an exception occurred.");
 
 			if (_queue.IsAddingCompleted)
 			{
@@ -117,7 +120,7 @@ public class WorkListGeometryService
 					return;
 				}
 
-				workList.HydrateItemGeometries(filter);
+				workList.UpdateItemGeometries(filter);
 			}
 		}
 		catch (OperationCanceledException ex)

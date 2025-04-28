@@ -142,9 +142,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			QueryPoints(out xmin, out ymin, out xmax, out ymax, out zmax, 0);
 		}
 
-		public void QueryPoints(out double xmin, out double ymin,
-		                        out double xmax, out double ymax,
-		                        out double zmax, double minimumSize)
+		private void QueryPoints(out double xmin, out double ymin,
+		                         out double xmax, out double ymax,
+		                         out double zmax, double minimumSize)
 		{
 			// calculate offsets to meet minimum size
 			double offsetX = CalculateMinimumSizeOffset(_xmin, _xmax, minimumSize);

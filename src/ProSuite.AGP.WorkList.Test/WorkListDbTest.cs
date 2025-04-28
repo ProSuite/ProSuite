@@ -15,7 +15,6 @@ using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Hosting;
 using ProSuite.Commons.Testing;
 using ProSuite.DomainModel.Core.QA;
-using static System.String;
 
 namespace ProSuite.AGP.WorkList.Test;
 
@@ -35,13 +34,11 @@ public class WorkListDbTest
 	public void Can_count_rdbms_workItems_measure_performance()
 	{
 		using var geodatabase = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
-		                                  {
-			                                  AuthenticationMode = AuthenticationMode.DBMS,
-			                                  Instance = "TOPGIST",
-			                                  User = "daro",
-			                                  Password = "DARO",
-			                                  Database = Empty
-		                                  });
+		                                        {
+			                                        AuthenticationMode = AuthenticationMode.OSA,
+			                                        Instance = "TOPGIST",
+			                                        Database = string.Empty
+		                                        });
 
 		using var lines = geodatabase.OpenDataset<FeatureClass>("TOPGIS_TLM.TLM_ERRORS_LINE");
 		using var multipatchs = geodatabase.OpenDataset<FeatureClass>("TOPGIS_TLM.TLM_ERRORS_MULTIPATCH");
@@ -328,7 +325,7 @@ public class WorkListDbTest
 		                           {
 			                           AuthenticationMode = AuthenticationMode.OSA,
 			                           Instance = "TOPGIST",
-			                           Database = Empty
+			                           Database = string.Empty
 		                           });
 		Console.WriteLine(gdb0.GetPath());
 
@@ -354,7 +351,7 @@ public class WorkListDbTest
 		                           {
 			                           AuthenticationMode = AuthenticationMode.OSA,
 			                           Instance = "TOPGIST",
-			                           Database = Empty
+			                           Database = string.Empty
 		                           });
 		Uri path0 = gdb0.GetPath();
 
@@ -378,7 +375,7 @@ public class WorkListDbTest
 		                           {
 			                           AuthenticationMode = AuthenticationMode.OSA,
 			                           Instance = "TOPGIST",
-			                           Database = Empty
+			                           Database = string.Empty
 		                           });
 		Uri path0 = gdb0.GetPath();
 
@@ -404,7 +401,7 @@ public class WorkListDbTest
 		                           {
 			                           AuthenticationMode = AuthenticationMode.OSA,
 			                           Instance = "TOPGIST",
-			                           Database = Empty
+			                           Database = string.Empty
 		                           });
 		Uri path0 = gdb0.GetPath();
 
@@ -412,7 +409,7 @@ public class WorkListDbTest
 		                           {
 			                           AuthenticationMode = AuthenticationMode.OSA,
 			                           Instance = "TOPGIST",
-			                           Database = Empty
+			                           Database = string.Empty
 		                           });
 		Uri path1 = gdb1.GetPath();
 

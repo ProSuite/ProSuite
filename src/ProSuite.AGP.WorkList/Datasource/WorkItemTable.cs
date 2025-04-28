@@ -109,7 +109,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 				return new WorkItemCursor([]);
 			}
 
-			_service.HydrateItemGeometries(_tableName, filter);
+			_service.UpdateItemGeometries(_tableName, filter);
 
 			IEnumerable<object[]> items =
 				_workList.GetItems(filter, false)

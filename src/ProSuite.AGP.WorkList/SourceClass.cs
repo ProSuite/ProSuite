@@ -11,7 +11,6 @@ namespace ProSuite.AGP.WorkList
 {
 	public abstract class SourceClass : ISourceClass
 	{
-		private readonly Table _table;
 		private readonly GdbTableIdentity _tableIdentity;
 		[NotNull] private readonly string _oidField;
 		[CanBeNull] private readonly string _shapeField;
@@ -26,19 +25,6 @@ namespace ProSuite.AGP.WorkList
 			_tableIdentity = tableIdentity;
 			AttributeReader = attributeReader;
 		}
-
-		protected SourceClass(Table table, SourceClassSchema schema, IAttributeReader attributeReader = null)
-		{
-			_table = table;
-
-			_oidField = schema.OIDField;
-			_shapeField = schema.ShapeField;
-
-			_tableIdentity = new GdbTableIdentity(table);
-			AttributeReader = attributeReader;
-		}
-
-		public Table Table => _table;
 
 		public GdbTableIdentity TableIdentity => _tableIdentity;
 

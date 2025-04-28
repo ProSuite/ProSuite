@@ -47,11 +47,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool HasFeatureGeometry { get; }
 
-		// TODO: (daro) still needed?
-		void QueryPoints(out double xmin, out double ymin,
-		                 out double xmax, out double ymax,
-		                 out double zmax, double minimumSize);
-
 		void QueryPoints(out double xmin, out double ymin,
 		                 out double xmax, out double ymax,
 		                 out double zmax);
