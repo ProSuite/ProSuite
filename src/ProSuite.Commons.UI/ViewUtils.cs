@@ -185,20 +185,18 @@ namespace ProSuite.Commons.UI
 				}
 
 				//We are not on the UI
-				dispatcher.BeginInvoke(() =>
+				dispatcher.BeginInvoke(new Action(() =>
 				{
 					try
 					{
-						return Task.FromResult(action());
+						action();
 					}
 					catch (Exception e)
 					{
 						// Prevent crashes by catching the exception here:
 						_msg.Error($"Error running action on UI thread: {e.Message}", e);
 					}
-
-					return Task.CompletedTask;
-				});
+				}));
 			}
 			catch (Exception e)
 			{
