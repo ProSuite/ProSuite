@@ -467,10 +467,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 				else
 				{
-					// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
-					// short-term objects (request) -> add to background verification inputs
 					IBackgroundVerificationInputs backgroundVerificationInputs =
-						_verificationInputsFactoryMethod(request);
+						CreateBackgroundVerificationInputs(request);
 
 					if (initialRequest.Schema != null)
 					{
@@ -678,10 +676,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ITrackCancel trackCancel,
 			out BackgroundVerificationService qaService)
 		{
-			// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
-			// short-term objects (request) -> add to background verification inputs
 			IBackgroundVerificationInputs backgroundVerificationInputs =
-				_verificationInputsFactoryMethod(request);
+				CreateBackgroundVerificationInputs(request);
 
 			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
 
@@ -694,6 +690,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 				qaService.Verify(backgroundVerificationInputs, trackCancel);
 
 			return verification;
+		}
+
+		private IBackgroundVerificationInputs CreateBackgroundVerificationInputs(
+			VerificationRequest request)
+		{
+			// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
+			// short-term objects (request) -> add to background verification inputs
+			IBackgroundVerificationInputs backgroundVerificationInputs =
+				_verificationInputsFactoryMethod(request);
+
+			if (SupportedInstanceDescriptors != null)
+			{
+				backgroundVerificationInputs.SupportedInstanceDescriptors =
+					SupportedInstanceDescriptors;
+			}
+
+			return backgroundVerificationInputs;
 		}
 
 		private QualityVerification VerifyStandaloneXmlCore<T>(
