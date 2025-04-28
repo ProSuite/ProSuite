@@ -150,7 +150,7 @@ namespace ProSuite.DomainServices.AO.QA
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
 		                                [NotNull] Model model)
 		{
-			SetTestPerimeter(areaOfInterest, model.SpatialReferenceDescriptor.SpatialReference);
+			SetTestPerimeter(areaOfInterest, model.SpatialReferenceDescriptor.GetSpatialReference());
 		}
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
@@ -679,7 +679,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 					string aoiTableName = verificationReporter.WriteAreaOfInterest(
 						_externalIssueRepository, areaOfInterest,
-						_verificationContext.SpatialReferenceDescriptor.SpatialReference);
+						_verificationContext.SpatialReferenceDescriptor.GetSpatialReference());
 
 					#region Write MXD - TO BE DEPRECATED once AO 10.x support is dropped
 
@@ -757,7 +757,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			// Take from the model (as in the standalone/XML service)
 			ISpatialReference spatialReference =
-				_verificationContext.SpatialReferenceDescriptor.SpatialReference;
+				_verificationContext.SpatialReferenceDescriptor.GetSpatialReference();
 
 			return spatialReference;
 		}

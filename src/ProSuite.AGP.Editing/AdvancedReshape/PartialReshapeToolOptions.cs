@@ -8,9 +8,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		public OverridableSetting<bool> ShowPreview { get; set; }
 
-		public OverridableSetting<bool> MoveOpenJawEndJunction { get; set; }
-
 		public OverridableSetting<bool> RemainInSketchMode { get; set; }
+
+		public OverridableSetting<bool> AllowOpenJawReshape { get; set; }
+
+		public OverridableSetting<bool> MoveOpenJawEndJunction { get; set; }
 
 		public OverridableSetting<bool> UseTopologyTypeSelection { get; set; }
 
@@ -20,9 +22,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			var result = new PartialReshapeToolOptions
 			             {
-				             ShowPreview = TryClone(ShowPreview), 
-				             MoveOpenJawEndJunction = TryClone(MoveOpenJawEndJunction), 
-				             RemainInSketchMode = TryClone(RemainInSketchMode), 
+				             ShowPreview = TryClone(ShowPreview),
+				             RemainInSketchMode = TryClone(RemainInSketchMode),
+				             AllowOpenJawReshape = TryClone(AllowOpenJawReshape),
+				             MoveOpenJawEndJunction = TryClone(MoveOpenJawEndJunction),
 				             UseTopologyTypeSelection = TryClone(UseTopologyTypeSelection)
 			             };
 			return result;

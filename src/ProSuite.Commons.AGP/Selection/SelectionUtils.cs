@@ -14,10 +14,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Selection
 {
-	// Note: the Selection is a property of the map (or its layers) and has nothing to do with the MapView
-	// Therefore, pass in a Map and not a MapView
-	// Note: SelectionUtils MUST NEVER use MapView.Active
-
 	public static class SelectionUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -25,6 +21,70 @@ namespace ProSuite.Commons.AGP.Selection
 		public static void ClearSelection(Map map)
 		{
 			map?.ClearSelection();
+		}
+
+		/// <summary>Select the given <paramref name="feature"/>
+		/// on the given <paramref name="layer"/>, if possible</summary>
+		/// <returns>true iff the feature was selected</returns>
+		/// <remarks>Must run on MCT</remarks>
+		public static bool SelectFeature(BasicFeatureLayer layer, Feature feature)
+		{
+			if (layer is null) return false;
+			if (feature is null) return false;
+			if (IsSelected(layer, feature))
+				return true; // already selected
+			long oid = feature.GetObjectID();
+			var filter = new QueryFilter { ObjectIDs = new[] { oid } };
+			using var selection = layer.Select(filter);
+			return IsSelected(selection, feature);
+		}
+
+		/// <summary>Select the given <paramref name="feature"/>
+		/// on the first layer of the given <paramref name="map"/>
+		/// that is visible, selectable, and actually shows the
+		/// feature (e.g. not excluded by definition query)</summary>
+		/// <returns>true iff the feature was selected</returns>
+		/// <remarks>Must run on MCT</remarks>
+		public static bool SelectFeature(Map map, Feature feature)
+		{
+			if (map is null) return false;
+			if (feature is null) return false;
+
+			using var featureClass = feature.GetTable();
+
+			var layerList = map.GetLayersAsFlattenedList();
+
+			foreach (var layer in layerList.OfType<FeatureLayer>())
+			{
+				if (!layer.IsVisible) continue;
+				if (!layer.IsSelectable) continue;
+
+				using var layerClass = layer.GetFeatureClass();
+
+				if (SameFeatureClass(layerClass, featureClass))
+				{
+					if (SelectFeature(layer, feature))
+					{
+						return true;
+					}
+					// else: could not select feature, probably because of a def query
+				}
+			}
+
+			return false;
+		}
+
+		private static bool SameFeatureClass(FeatureClass a, FeatureClass b)
+		{
+			if (a is null || b is null) return false;
+			if (ReferenceEquals(a, b)) return true;
+			if (a.Handle == b.Handle) return true;
+			// A table's Path is a URI of the form C:\Path\To\File.gdb\Dataset or C:\Path\To\Conn.sde\Dataset
+			// If two different connection files (.sde) point to the same database and version, our approach
+			// here considers it different, a false negative... but probably good enough for now
+			Uri aUri = a.GetPath();
+			Uri bUri = b.GetPath();
+			return aUri.Equals(bUri);
 		}
 
 		public static void SelectFeature(BasicFeatureLayer basicFeatureLayer,
@@ -392,6 +452,40 @@ namespace ProSuite.Commons.AGP.Selection
 
 			return selectionByLayer.Where(pair => predicate != null && predicate(pair.Key))
 			                       .ToDictionary(p => p.Key, p => p.Value);
+		}
+
+		/// <returns>true iff the given <paramref name="feature"/> is
+		/// selected on the given <paramref name="layer"/></returns>
+		/// <remarks>Must run on MCT</remarks>
+		public static bool IsSelected(BasicFeatureLayer layer, Feature feature)
+		{
+			if (layer is null) return false;
+
+			using var selection = layer.GetSelection();
+
+			return IsSelected(selection, feature);
+		}
+
+		/// <returns>true iff the given <paramref name="feature"/> is
+		/// in the given <paramref name="selection"/></returns>
+		/// <remarks>Must run on MCT</remarks>
+		public static bool IsSelected(ArcGIS.Core.Data.Selection selection, Feature feature)
+		{
+			if (selection is null) return false;
+
+			switch (selection.SelectionType)
+			{
+				case SelectionType.ObjectID:
+					var oid = feature.GetObjectID();
+					return selection.GetObjectIDs().Contains(oid);
+
+				case SelectionType.GlobalID:
+					var guid = feature.GetGlobalID();
+					return selection.GetGlobalIDs().Contains(guid);
+
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
 		}
 	}
 }
