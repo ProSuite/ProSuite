@@ -9,11 +9,14 @@ public interface IIndexedProperty<in TKey, TValue>
 
 public interface ISymbolDisplayManager
 {
+	public IIndexedProperty<Map, bool> NoMaskingWithoutSLD { get; }
+
 	public IIndexedProperty<Map, bool> AutoSwitch { get; }
 	public IIndexedProperty<Map, double> AutoMinScaleDenom { get; }
 	public IIndexedProperty<Map, double> AutoMaxScaleDenom { get; }
 
-	public IIndexedProperty<Map, bool> NoMaskingWithoutSLD { get; }
+	public IIndexedProperty<Map, bool?> WantSLD { get; }
+	public IIndexedProperty<Map, bool?> WantLM { get; }
 
 	bool? QuickUsesSLD(Map map);
 	bool? QuickUsesLM(Map map);

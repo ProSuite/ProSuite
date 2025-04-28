@@ -77,6 +77,34 @@ public class SymbolDisplaySettingsViewModel : INotifyPropertyChanged
 		}
 	}
 
+	private bool? _wantSLD;
+	public bool? WantSLD
+	{
+		get => _wantSLD;
+		set
+		{
+			if (_wantSLD != value)
+			{
+				_wantSLD = value;
+				OnPropertyChanged();
+			}
+		}
+	}
+
+	private bool? _wantLM;
+	public bool? WantLM
+	{
+		get => _wantLM;
+		set
+		{
+			if (_wantLM != value)
+			{
+				_wantLM = value;
+				OnPropertyChanged();
+			}
+		}
+	}
+
 	public event PropertyChangedEventHandler PropertyChanged;
 
 	private void OnPropertyChanged([CallerMemberName] string name = null)

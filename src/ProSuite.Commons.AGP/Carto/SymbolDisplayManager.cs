@@ -17,6 +17,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	private readonly Dictionary<string, bool> _lmStateCache = new();
 	private readonly Dictionary<string, SymbolDisplaySettings> _settingsByMap = new();
 
+	private SubscriptionToken _mapViewInitializedToken;
 	private SubscriptionToken _activeMapViewChangedToken;
 	private SubscriptionToken _mapViewCameraChangedToken;
 	private SubscriptionToken _projectClosedToken;
@@ -79,8 +80,8 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	// write: set current and default
 	// read: get current (or default)
 
-	private IIndexedProperty<Map, bool?> WantSLD { get; }
-	private IIndexedProperty<Map, bool?> WantLM { get; }
+	public IIndexedProperty<Map, bool?> WantSLD { get; }
+	public IIndexedProperty<Map, bool?> WantLM { get; }
 
 	public IIndexedProperty<Map, bool> NoMaskingWithoutSLD { get; }
 
@@ -95,6 +96,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 			_defaultSettings = settings;
 		}
 
+		_mapViewInitializedToken ??= MapViewInitializedEvent.Subscribe(OnMapViewInitialized);
 		_activeMapViewChangedToken ??= ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
 		_mapViewCameraChangedToken ??= MapViewCameraChangedEvent.Subscribe(OnMapViewCameraChanged);
 		_projectClosedToken ??= ProjectClosedEvent.Subscribe(OnProjectClosed);
@@ -117,11 +119,34 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 			ActiveMapViewChangedEvent.Unsubscribe(_activeMapViewChangedToken);
 		}
 
+		if (_mapViewInitializedToken is not null)
+		{
+			MapViewInitializedEvent.Unsubscribe(_mapViewInitializedToken);
+		}
+
 		ClearStateCache();
 		ClearSettings();
 	}
 
 	#region Event handling
+
+	private void OnMapViewInitialized(MapViewEventArgs args)
+	{
+		try
+		{
+			// Note: MapViewInitialized fires when the map view's Camera is still null, so can't set _lastScaleDenom here
+
+			var map = args.MapView?.Map;
+			if (map is not null)
+			{
+				QueuedTask.Run(() => InitializeDesiredState(map));
+			}
+		}
+		catch (Exception ex)
+		{
+			Gateway.LogError(ex, _msg, nameof(OnMapViewInitialized));
+		}
+	}
 
 	private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs args)
 	{
@@ -129,7 +154,12 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 		{
 			var camera = args.IncomingView?.Camera;
 			_lastScaleDenom = camera?.Scale ?? 0.0;
-			// Note: MapViewInitialized fires when the map view's Camera is still null
+
+			var map = args.IncomingView?.Map;
+			if (map != null && (WantSLD[map] is null || WantLM[map] is null))
+			{
+				QueuedTask.Run(() => InitializeDesiredState(map));
+			}
 		}
 		catch (Exception ex)
 		{
@@ -372,6 +402,21 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	{
 		_sldStateCache.Clear();
 		_lmStateCache.Clear();
+	}
+
+	/// <remarks>Must run on MCT</remarks>
+	private void InitializeDesiredState(Map map)
+	{
+		_msg.Debug($"Initializing {GetType().Name} for map “{map?.Name ?? "(null)"}”");
+
+		using (_msg.IncrementIndentation())
+		{
+			const bool uncached = true;
+			WantSLD[map] = UsesSLD(map, uncached);
+			WantLM[map] = UsesLM(map, uncached);
+
+			_msg.Debug($"Want: SLD={WantSLD[map]}, LM={WantLM[map]}");
+		}
 	}
 
 	#endregion
