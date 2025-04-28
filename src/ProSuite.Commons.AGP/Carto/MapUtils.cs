@@ -552,6 +552,40 @@ namespace ProSuite.Commons.AGP.Carto
 			return elevationUnitAbbreviation;
 		}
 
+		/// <summary>
+		/// Gets the first elevation surface layer in the map with the specified name.
+		/// This layer contains the layers that provide the actual elevation.
+		/// </summary>
+		/// <param name="map"></param>
+		/// <param name="name"></param>
+		/// <param name="evenIfEmpty">Whether also empty surface layers containing no actual
+		/// elevation sources should be returned.</param>
+		/// <returns></returns>
+		public static ElevationSurfaceLayer GetElevationSurfaceGroupLayer(
+			[NotNull] Map map,
+			bool evenIfEmpty = false,
+			[CanBeNull] string name = "Ground")
+		{
+			ElevationSurfaceLayer existingSurfaceLayer = null;
+			foreach (ElevationSurfaceLayer elevationSurfaceLayer in map.GetElevationSurfaceLayers())
+			{
+				if (elevationSurfaceLayer.ElevationMode != ElevationMode.BaseGlobeSurface ||
+					elevationSurfaceLayer.Name != name)
+				{
+					continue;
+				}
+
+				if (elevationSurfaceLayer.GetLayersAsFlattenedList().Count == 0)
+				{
+					continue;
+				}
+
+				existingSurfaceLayer = elevationSurfaceLayer;
+			}
+
+			return existingSurfaceLayer;
+		}
+
 		#region Not MapUtils --> move elsewhere
 
 		/// <summary>
