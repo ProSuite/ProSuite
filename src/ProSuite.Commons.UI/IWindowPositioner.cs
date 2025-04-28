@@ -1,8 +1,9 @@
 using System.Windows;
 
-namespace ProSuite.Commons.UI;
-
-public interface IWindowPositioner
+namespace ProSuite.Commons.UI
 {
-	public void SetWindow(Window window, Point desiredPosition);
+	public interface IWindowPositioner
+	{
+		void SetWindow(Window window, Point desiredPosition);
+	}
 }

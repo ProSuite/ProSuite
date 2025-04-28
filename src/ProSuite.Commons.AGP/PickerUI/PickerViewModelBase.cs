@@ -1,7 +1,9 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -17,7 +19,8 @@ using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.Commons.AGP.PickerUI;
 
-public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPickerViewModel where T : IPickableItem
+public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPickerViewModel
+	where T : IPickableItem
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -85,7 +88,10 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 
 			try
 			{
-				_taskCompletionSource.SetResult(_selectedItem);
+				if (! _taskCompletionSource.Task.IsCompleted)
+				{
+					_taskCompletionSource.SetResult(_selectedItem);
+				}
 			}
 			catch (Exception e)
 			{
@@ -130,13 +136,18 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 
 			_latch.RunInsideLatch(() =>
 			{
-				window?.Close();
+				Dispatcher dispatcher = Application.Current.Dispatcher;
 
-				// IMPORTANT set selected item otherwise
-				// task never completes resulting in deadlock
-				SelectedItem = null;
+				dispatcher.InvokeAsync(() =>
+				{
+					window?.Close();
 
-				Dispose();
+					// IMPORTANT set selected item otherwise
+					// task never completes resulting in deadlock
+					SelectedItem = null;
+
+					Dispose();
+				});
 			});
 		}, _msg, true);
 	}

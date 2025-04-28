@@ -29,6 +29,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[UsedImplicitly]
 		private readonly IList<Association> _associations = new List<Association>();
 
+		[UsedImplicitly] private SpatialReferenceDescriptor _spatialReferenceDescriptor;
+
 		[UsedImplicitly]
 		private SqlCaseSensitivity _sqlCaseSensitivity = SqlCaseSensitivity.SameAsDatabase;
 
@@ -194,6 +196,13 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[NotNull]
 		public IList<Association> Associations =>
 			new ReadOnlyList<Association>(_associations);
+
+		[Required]
+		public SpatialReferenceDescriptor SpatialReferenceDescriptor
+		{
+			get { return _spatialReferenceDescriptor; }
+			set { _spatialReferenceDescriptor = value; }
+		}
 
 		[UsedImplicitly]
 		public double DefaultMinimumSegmentLength

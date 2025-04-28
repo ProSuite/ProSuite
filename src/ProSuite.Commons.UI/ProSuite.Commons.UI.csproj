@@ -35,7 +35,6 @@
   <PropertyGroup>
     <UseWpf>true</UseWpf>
     <UseWindowsForms>true</UseWindowsForms>
-    <LangVersion>10</LangVersion>
   </PropertyGroup>
 
   <!-- .NET framework 4.8 legacy reference for WPF, WinForms: -->

@@ -436,7 +436,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		                                   ICollection<DatasetMsg> referencedDatasetMsgs)
 		{
 			SpatialReferenceMsg srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
-				productionModel.SpatialReferenceDescriptor.SpatialReference,
+				productionModel.SpatialReferenceDescriptor.GetSpatialReference(),
 				SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid);
 
 			ModelMsg modelMsg =

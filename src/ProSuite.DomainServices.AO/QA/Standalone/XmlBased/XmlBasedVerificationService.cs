@@ -227,7 +227,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					new MasterDatabaseWorkspaceContextLookup());
 
 			ISpatialReference spatialReference =
-				primaryModel.SpatialReferenceDescriptor?.SpatialReference;
+				primaryModel.SpatialReferenceDescriptor?.GetSpatialReference();
 
 			ISpatialReference issuesSpatialReference =
 				IssueRepositorySpatialReference ?? spatialReference;

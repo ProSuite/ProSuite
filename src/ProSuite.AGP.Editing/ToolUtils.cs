@@ -17,7 +17,6 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.AGP.Windows;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Input;
@@ -63,7 +62,8 @@ namespace ProSuite.AGP.Editing
 		}
 
 		/// <summary>
-		/// Determines whether the sketch geometry is a single click.
+		/// Determines whether the sketch geometry is a single click. Call this method after a
+		/// polygon sketch has been simplified.
 		/// </summary>
 		/// <param name="sketchGeometry">The sketch geometry</param>
 		/// <returns></returns>
@@ -84,11 +84,18 @@ namespace ProSuite.AGP.Editing
 		                                              int selectionTolerancePixels,
 		                                              out bool singleClick)
 		{
+			if (sketch is MapPoint sketchPoint)
+			{
+				// Pre-determined single click (new standard) -> expand to tolerance
+				singleClick = true;
+				return GetSinglePickSelectionArea(sketchPoint, selectionTolerancePixels);
+			}
+
+			// Consider removing, if this is really not called any more:
 			singleClick = IsSingleClickSketch(sketch);
 
 			if (singleClick)
 			{
-				Assert.True(sketch.IsEmpty, "no simple single click sketch");
 				Point mouseScreenPosition = MouseUtils.GetMouseScreenPosition();
 				MapPoint mouseMapPosition = MapView.Active.ScreenToMap(mouseScreenPosition);
 				sketch = GetSinglePickSelectionArea(mouseMapPosition, selectionTolerancePixels);

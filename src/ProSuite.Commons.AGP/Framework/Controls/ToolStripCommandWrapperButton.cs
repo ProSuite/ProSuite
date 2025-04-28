@@ -8,6 +8,7 @@ using System.Windows.Media.Imaging;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Drawing;
@@ -103,7 +104,7 @@ namespace ProSuite.Commons.AGP.Framework.Controls
 					SetPluginWrapper(FrameworkApplication.GetPlugInWrapper(_damlId));
 				}
 
-				return Assert.NotNull(_pluginWrapper);
+				return Assert.NotNull(_pluginWrapper, $"Cannot create tool {_damlId}");
 			}
 		}
 
@@ -175,7 +176,9 @@ namespace ProSuite.Commons.AGP.Framework.Controls
 			}
 			catch (Exception e)
 			{
-				_msg.Warn("Error updating appearance of wrapper control", e);
+				_msg.Warn(
+					$"Error updating appearance of wrapper control: {ExceptionUtils.FormatMessage(e)}",
+					e);
 			}
 		}
 

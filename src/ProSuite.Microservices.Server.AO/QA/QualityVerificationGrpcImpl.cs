@@ -747,7 +747,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			Model primaryModel =
 				StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			responseStreamer.KnownIssueSpatialReference =
-				primaryModel?.SpatialReferenceDescriptor?.SpatialReference;
+				primaryModel?.SpatialReferenceDescriptor?.GetSpatialReference();
 
 			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb;
 

@@ -65,7 +65,15 @@ namespace ProSuite.GIS.Geometry.AGP
 		public double GetDistancePerpendicular2d(IPoint ofPoint, out double distanceAlongRatio,
 		                                         out IPoint pointOnLine)
 		{
-			throw new NotImplementedException();
+			var proPoint = (MapPoint) ofPoint.NativeImplementation;
+
+			MapPoint nearestPoint = GeometryEngine.Instance.QueryPointAndDistance(
+				_proPolycurve, SegmentExtensionType.NoExtension, proPoint, AsRatioOrLength.AsRatio,
+				out distanceAlongRatio, out double distanceFromCurve, out LeftOrRightSide _);
+
+			pointOnLine = nearestPoint != null ? new ArcPoint(nearestPoint) : null;
+
+			return distanceFromCurve;
 		}
 
 		#endregion

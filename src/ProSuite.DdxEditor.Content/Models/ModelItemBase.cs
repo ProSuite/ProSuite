@@ -566,7 +566,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			               "spatial reference descriptor is not defined");
 
 			ISpatialReference modelSpatialReference =
-				spatialReferenceDescriptor.SpatialReference;
+				spatialReferenceDescriptor.GetSpatialReference();
 
 			modelSpatialReferenceProperties =
 				new SpatialReferenceProperties(modelSpatialReference);

@@ -1,12 +1,9 @@
-using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Validation;
 
-namespace ProSuite.DomainModel.AO.DataModel
+namespace ProSuite.DomainModel.Core.DataModel
 {
 	public class SpatialReferenceDescriptor : EntityWithMetadata, INamed, IAnnotated
 	{
@@ -14,7 +11,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 		[UsedImplicitly] private string _description;
 		[UsedImplicitly] private string _xmlString;
 
-		private ISpatialReference _spatialReference;
+		//Used for a cached ISpatialReference during runtime
+		public object SpatialReferenceCache { get; set; }
 
 		#region Constructors
 
@@ -38,13 +36,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			_name = name;
 			_xmlString = xmlString;
 		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="SpatialReferenceDescriptor"/> class.
-		/// </summary>
-		/// <param name="spatialReference">The spatial reference.</param>
-		public SpatialReferenceDescriptor([NotNull] ISpatialReference spatialReference)
-			: this(spatialReference.Name, SpatialReferenceUtils.ToXmlString(spatialReference)) { }
 
 		#endregion
 
@@ -76,29 +67,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 			set { _xmlString = value; }
 		}
 
-		[NotNull]
-		public ISpatialReference SpatialReference
-			=> _spatialReference ?? (_spatialReference = CreateSpatialReference());
-
 		public override string ToString()
 		{
 			return _name;
 		}
-
-		#region Non-public members
-
-		[NotNull]
-		private ISpatialReference CreateSpatialReference()
-		{
-			if (string.IsNullOrEmpty(_xmlString))
-			{
-				throw new InvalidConfigurationException(
-					"Spatial reference xml string not defined");
-			}
-
-			return SpatialReferenceUtils.FromXmlString(_xmlString);
-		}
-
-		#endregion
 	}
 }

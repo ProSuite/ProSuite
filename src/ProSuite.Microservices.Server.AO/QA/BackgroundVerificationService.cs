@@ -186,7 +186,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		                                   [CanBeNull] ICollection<IObject> objectsToVerify)
 		{
 			ISpatialReference spatialReference =
-				verificationContext.SpatialReferenceDescriptor.SpatialReference;
+				verificationContext.SpatialReferenceDescriptor.GetSpatialReference();
 
 			if (objectsToVerify != null)
 			{

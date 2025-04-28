@@ -103,7 +103,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 					Model primaryModel =
 						StandaloneVerificationUtils.GetPrimaryModel(QualitySpecification);
 					_issueSpatialReference =
-						primaryModel?.SpatialReferenceDescriptor?.SpatialReference;
+						primaryModel?.SpatialReferenceDescriptor?.GetSpatialReference();
 				}
 
 				return _issueSpatialReference;
@@ -431,12 +431,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 				int modelId = ddxModel.Id;
 
-				ISpatialReference spatialReference = null;
-
-				if (ddxModel is Model model)
-				{
-					spatialReference = model.SpatialReferenceDescriptor?.SpatialReference;
-				}
+				ISpatialReference spatialReference =
+					ddxModel.SpatialReferenceDescriptor?.GetSpatialReference();
 
 				foreach (Dataset dataset in ddxModel.GetDatasets())
 				{
