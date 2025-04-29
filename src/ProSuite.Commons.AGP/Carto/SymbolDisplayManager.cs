@@ -76,10 +76,11 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 
 	#endregion
 
-	// Settings:
-	// write: set current and default
-	// read: get current (or default)
+	// The following settings are per map:
+	// - on write: set current and default
+	// - on read: get current (or default)
 
+	// The user's last conscious SLD/LM preferences (from toggle buttons):
 	public IIndexedProperty<Map, bool?> WantSLD { get; }
 	public IIndexedProperty<Map, bool?> WantLM { get; }
 
@@ -134,7 +135,8 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	{
 		try
 		{
-			// Note: MapViewInitialized fires when the map view's Camera is still null, so can't set _lastScaleDenom here
+			// MapViewInitialized fires when the map view's Camera is still null,
+			// so can't set _lastScaleDenom here (do so in OnActiveMapViewChanged)
 
 			var map = args.MapView?.Map;
 			if (map is not null)
@@ -158,6 +160,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 			var map = args.IncomingView?.Map;
 			if (map != null && (WantSLD[map] is null || WantLM[map] is null))
 			{
+				// Just a fallback in case we didn't get OnMapViewInitialized
 				QueuedTask.Run(() => InitializeDesiredState(map));
 			}
 		}
@@ -176,7 +179,9 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 
 			var currentScaleDenom = camera.Scale;
 
-			// Note: args.MapView is "ahead" of MapView.Active (the latter may still be null)
+			// Empirically, args.MapView is "ahead" of MapView.Active:
+			// the latter may still be null when we receive this event
+
 			var map = args.MapView?.Map;
 			if (map is null) return;
 
