@@ -12,6 +12,22 @@ namespace ProSuite.Commons.GeoDb
 			_values = new object[valueCount];
 		}
 
+		/// <summary>
+		/// Gets or sets the value at the specified index.
+		/// </summary>
+		/// <param name="index">The zero-based index of the value to get or set.</param>
+		/// <returns>The value at the specified index.</returns>
+		public object this[int index]
+		{
+			get => GetValue(index);
+			set => SetValue(index, value);
+		}
+
+		/// <summary>
+		/// Gets the number of elements in the value list.
+		/// </summary>
+		public int Count => _values.Length;
+
 		#region Implementation of IValueList
 
 		public object GetValue(int index, bool increaseRcwRefCount = false)

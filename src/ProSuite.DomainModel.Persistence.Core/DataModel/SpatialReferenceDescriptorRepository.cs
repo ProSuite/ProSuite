@@ -1,3 +1,5 @@
+using NHibernate;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Orm.NHibernate;
 using ProSuite.DomainModel.Core.DataModel;
@@ -13,7 +15,14 @@ namespace ProSuite.DomainModel.Persistence.Core.DataModel
 
 		public SpatialReferenceDescriptor Get([NotNull] string name)
 		{
-			return GetUniqueResult("Name", name, true);
+			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+
+			using (ISession session = OpenSession(true))
+			{
+				return session.QueryOver<SpatialReferenceDescriptor>()
+				              .WhereRestrictionOn(c => c.Name)
+				              .IsInsensitiveLike(name).SingleOrDefault();
+			}
 		}
 
 		#endregion

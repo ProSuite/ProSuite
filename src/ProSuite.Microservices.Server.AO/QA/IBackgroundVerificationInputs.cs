@@ -54,6 +54,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 		ICollection<IObject> VerifiedObjects { get; }
 
 		/// <summary>
+		/// The supported instance descriptors to be used for verifications.
+		/// </summary>
+		ISupportedInstanceDescriptors SupportedInstanceDescriptors { set; }
+
+		/// <summary>
 		/// Allows loading all required entities inside a transaction.
 		/// </summary>
 		/// <param name="domainTransaction">The transaction manager that started the transaction</param>
