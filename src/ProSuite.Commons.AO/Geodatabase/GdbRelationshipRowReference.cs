@@ -34,7 +34,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// </summary>
 		/// <param name="relationhipClassId">The relationship class id.</param>
 		/// <param name="objectId">The object id (OID field value).</param>
-		public GdbRelationshipRowReference(int relationhipClassId, int objectId)
+		public GdbRelationshipRowReference(int relationhipClassId, long objectId)
 		{
 			RelationshipClassId = relationhipClassId;
 			ObjectId = objectId;
