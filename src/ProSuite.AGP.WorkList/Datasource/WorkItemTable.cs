@@ -147,11 +147,11 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			var fields = new List<PluginField>(8)
 			             {
-				             new PluginField("OBJECTID", "ObjectID", FieldType.OID),
-				             new PluginField("STATUS", "Status", FieldType.Integer),
-				             new PluginField("VISITED", "Visited", FieldType.Integer),
-				             new PluginField("CURRENT", "Is Current", FieldType.Integer),
-				             new PluginField("SHAPE", "Shape", FieldType.Geometry)
+				             new("OBJECTID", "ObjectID", FieldType.OID),
+				             new("STATUS", "Status", FieldType.Integer),
+				             new("VISITED", "Visited", FieldType.Integer),
+				             new("CURRENT", "Is Current", FieldType.Integer),
+				             new("SHAPE", "Shape", FieldType.Geometry)
 			             };
 			return fields.ToArray();
 		}

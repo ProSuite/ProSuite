@@ -106,7 +106,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				filter = new QueryFilter { SubFields = oidField };
 			}
-			else if (GdbQueryUtils.EnsureSubField(filter.SubFields, oidField,
+			else if (GdbQueryUtils.EnsureSubField(oidField, filter.SubFields,
 			                                      out string newSubFields))
 			{
 				filter.SubFields = newSubFields;

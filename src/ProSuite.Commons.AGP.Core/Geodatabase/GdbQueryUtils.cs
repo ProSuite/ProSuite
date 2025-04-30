@@ -256,12 +256,13 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// Ensures that with the specified sub-fields string the required field will be fetched in a
 		/// SQL query. Otherwise it will be added to the result string and the method will return true.
 		/// </summary>
-		/// <param name="currentSubFields"></param>
 		/// <param name="fieldNameToEnsure"></param>
+		/// <param name="currentSubFields"></param>
 		/// <param name="result"></param>
 		/// <returns></returns>
-		public static bool EnsureSubField(string currentSubFields, string fieldNameToEnsure,
-		                                  out string result)
+		public static bool EnsureSubField([NotNull] string fieldNameToEnsure,
+		                                  [CanBeNull] string currentSubFields,
+		                                  [CanBeNull] out string result)
 		{
 			result = null;
 
@@ -289,6 +290,78 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			result = string.Concat(currentSubFields, ",", fieldNameToEnsure);
 
 			return true;
+		}
+
+		public static bool EnsureSubFields([NotNull] List<string> fieldNamesToEnsure,
+		                                   [CanBeNull] string currentSubFields,
+		                                   [CanBeNull] out string result)
+		{
+			result = null;
+
+			if (string.IsNullOrEmpty(currentSubFields))
+			{
+				result = StringUtils.Concatenate(fieldNamesToEnsure, ",");
+				return true;
+			}
+
+			if (currentSubFields.Trim().Equals("*"))
+			{
+				return false;
+			}
+
+			// ensure OID field is in SubFields:
+			var existingFields =
+				new HashSet<string>(StringUtils.SplitAndTrim(currentSubFields, ','),
+				                    StringComparer.OrdinalIgnoreCase);
+
+			foreach (string fieldNameToEnsure in fieldNamesToEnsure)
+			{
+				existingFields.Add(fieldNameToEnsure.Trim());
+			}
+
+			result = StringUtils.Concatenate(existingFields, ",");
+
+			return true;
+		}
+
+		public static T CloneFilter<T>([CanBeNull] QueryFilter filter) where T : QueryFilter
+		{
+			filter ??= new QueryFilter();
+
+			QueryFilter result;
+
+			if (typeof(SpatialQueryFilter).IsAssignableFrom(typeof(T)))
+			{
+				if (filter is SpatialQueryFilter spatialFilter)
+				{
+					result = CreateSpatialFilter(spatialFilter.FilterGeometry,
+					                             spatialFilter.SpatialRelationship,
+					                             spatialFilter.SearchOrder);
+					result.OutputSpatialReference = spatialFilter.OutputSpatialReference;
+				}
+				else
+				{
+					result = new SpatialQueryFilter();
+				}
+			}
+			else if (typeof(QueryFilter).IsAssignableFrom(typeof(T)))
+			{
+				result = new QueryFilter();
+			}
+			else
+			{
+				throw new ArgumentOutOfRangeException($"Unkown query filter type {typeof(T)}");
+			}
+
+			result.ObjectIDs = filter.ObjectIDs;
+			result.SubFields = filter.SubFields;
+			result.WhereClause = filter.WhereClause;
+			result.PrefixClause = filter.PrefixClause;
+			result.PostfixClause = filter.PostfixClause;
+			result.RowCount = filter.RowCount;
+			result.Offset = filter.Offset;
+
+			return (T) result;
 		}
 
 		public static string FilterPropertiesToString([CanBeNull] QueryFilter filter)

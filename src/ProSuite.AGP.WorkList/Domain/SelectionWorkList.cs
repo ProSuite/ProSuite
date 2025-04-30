@@ -1,4 +1,5 @@
 using System;
+using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -6,17 +7,11 @@ namespace ProSuite.AGP.WorkList.Domain
 {
 	public class SelectionWorkList : WorkList, IDisposable
 	{
-		/// <summary>
-		/// Do not change this constructor at all, it is used for dynamic loading!
-		/// </summary>
-		/// <param name="repository"></param>
-		/// <param name="uniqueName"></param>
-		/// <param name="displayName"></param>
-		[UsedImplicitly]
-		public SelectionWorkList(IWorkItemRepository repository,
-		                         string uniqueName,
-		                         string displayName) :
-			base(repository, uniqueName, null, displayName) { }
+		public SelectionWorkList([NotNull] IWorkItemRepository repository,
+		                         [NotNull] Geometry areaOfInterest,
+		                         [NotNull] string uniqueName,
+		                         [NotNull] string displayName) :
+			base(repository, areaOfInterest, uniqueName, displayName) { }
 
 		protected override string GetDisplayNameCore()
 		{

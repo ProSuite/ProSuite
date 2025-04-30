@@ -3,14 +3,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using Geometry = ArcGIS.Core.Geometry.Geometry;
-using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 
 namespace ProSuite.AGP.WorkList
 {
@@ -65,12 +64,7 @@ namespace ProSuite.AGP.WorkList
 
 			Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-			filter ??= new QueryFilter();
-
-			if (string.IsNullOrEmpty(filter.SubFields) || string.Equals(filter.SubFields, "*"))
-			{
-				filter.SubFields = sourceClass.GetRelevantSubFields(excludeGeometry);
-			}
+			filter = sourceClass.EnsureValidFilter(filter, excludeGeometry);
 
 			// Selection Item ObjectIDs to filter out, or change of SearchOrder:
 			AdaptSourceFilter(filter, sourceClass);
@@ -158,12 +152,7 @@ namespace ProSuite.AGP.WorkList
 
 			Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-			filter ??= new QueryFilter();
-
-			if (string.IsNullOrEmpty(filter.SubFields) || string.Equals(filter.SubFields, "*"))
-			{
-				filter.SubFields = sourceClass.GetRelevantSubFields(excludeGeometry);
-			}
+			filter = sourceClass.EnsureValidFilter(filter, excludeGeometry);
 
 			// Source classes can set the respective filters / definition queries
 			// TODO: (daro) drop todo below?
@@ -199,12 +188,7 @@ namespace ProSuite.AGP.WorkList
 
 			Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-			filter ??= new QueryFilter();
-
-			if (string.IsNullOrEmpty(filter.SubFields) || string.Equals(filter.SubFields, "*"))
-			{
-				filter.SubFields = sourceClass.GetRelevantSubFields(excludeGeometry);
-			}
+			filter = sourceClass.EnsureValidFilter(filter, excludeGeometry);
 
 			// Source classes can set the respective filters / definition queries
 			// TODO: (daro) drop todo below?

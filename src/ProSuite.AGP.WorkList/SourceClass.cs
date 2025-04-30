@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
@@ -6,6 +7,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.WorkList
 {
@@ -44,7 +46,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			string subFields = $"{_oidField}";
 
-			if (_tableIdentity.HasGeometry && ! excludeGeometry)
+			if (HasGeometry && ! excludeGeometry)
 			{
 				Assert.NotNullOrEmpty(_shapeField);
 				subFields = $"{subFields},{_shapeField}";
@@ -56,6 +58,40 @@ namespace ProSuite.AGP.WorkList
 		protected virtual string GetRelevantSubFieldsCore(string subFields)
 		{
 			return subFields;
+		}
+
+		public QueryFilter EnsureValidFilter([CanBeNull] QueryFilter filter, bool excludeGeometry)
+		{
+			QueryFilter result;
+
+			string relevantSubFields = GetRelevantSubFields(excludeGeometry);
+
+			List<string> subfields =
+				StringUtils.SplitAndTrim(relevantSubFields, ",");
+
+			// safety net
+			if (HasGeometry)
+			{
+				result = GdbQueryUtils.CloneFilter<SpatialQueryFilter>(filter);
+			}
+			else
+			{
+				// todo: (daro) drop!
+				Assert.False(subfields.Contains("SHAPE"), "Should not containe shape field");
+				result = GdbQueryUtils.CloneFilter<QueryFilter>(filter);
+			}
+
+			if (GdbQueryUtils.EnsureSubFields(subfields, result.SubFields, out string newSubFields))
+			{
+				result.SubFields = newSubFields;
+			}
+			else
+			{
+				// filter.Subfields.Equals("*")
+				result.SubFields = relevantSubFields;
+			}
+
+			return result;
 		}
 
 		public bool Uses(ITableReference tableReference)
@@ -96,6 +132,11 @@ namespace ProSuite.AGP.WorkList
 		protected virtual string CreateWhereClauseCore(WorkItemStatus? statusFilter)
 		{
 			return null;
+		}
+
+		public override string ToString()
+		{
+			return string.IsNullOrEmpty(DefinitionQuery) ? Name : $"{Name}, {DefinitionQuery}";
 		}
 	}
 }

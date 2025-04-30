@@ -208,7 +208,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3) {Visited = true};
 			IWorkItem item4 = new WorkItemMock(4) {Visited = true};
 			var repo = new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
-			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
 			//IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter(new List<long>(2){2,3}));
@@ -241,7 +241,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3);
 			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
 			//IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter(new List<long>(2){2,3}));
@@ -277,7 +277,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
 			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.GetItems().ToList();
 
@@ -314,7 +314,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
 			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.GetItems().ToList();
 			
@@ -353,7 +353,7 @@ namespace ProSuite.AGP.WorkList.Test
 			var item15 = new WorkItemMock(15, pt15);
 
 			var repo = new ItemRepositoryMock([item7, item10, item15]);
-			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
 			//IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter(new List<long>(2){2,3}));
@@ -409,7 +409,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
 			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.GetItems().ToList();
 
@@ -443,7 +443,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3);
 			IWorkItem item4 = new WorkItemMock(4);
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.GetItems().ToList();
 
@@ -467,7 +467,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
 			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.GetItems().ToList();
 
@@ -502,7 +502,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item5 = new WorkItemMock(5) { Visited = true };
 			IWorkItem item6 = new WorkItemMock(6) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4, item5, item6 });
-			var wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			var wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter([2, 3, 4]), false).ToList();
 
@@ -548,7 +548,7 @@ namespace ProSuite.AGP.WorkList.Test
 			GdbTableIdentity tableId = WorkListTestUtils.CreateTableProxy();
 			IWorkItem item1 = new WorkItemMock(rowId, tableId, _poly0) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1 });
-			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);
@@ -585,7 +585,7 @@ namespace ProSuite.AGP.WorkList.Test
 			GdbTableIdentity tableId = WorkListTestUtils.CreateTableProxy();
 			IWorkItem item1 = new WorkItemMock(rowId, tableId, _poly0) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1 });
-			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);
@@ -621,7 +621,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item1 = new WorkItemMock(rowId1, tableId, _poly0) { Visited = true };
 			IWorkItem item2 = new WorkItemMock(rowId2, tableId, _poly1) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2 });
-			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
 			Assert.AreEqual(2, wl.GetItems().ToList().Count);
@@ -660,7 +660,7 @@ namespace ProSuite.AGP.WorkList.Test
 				var stateRepo = new XmlSelectionItemStateRepository(path, uniqueName, typeof(IssueWorkList));
 
 				var repo = new ItemRepositoryMock(new List<IWorkItem>(), stateRepo);
-				var wl = new IssueWorkList(repo, uniqueName, "displayName");
+				var wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), uniqueName, "displayName");
 				Assert.AreEqual(uniqueName, wl.Name);
 				Assert.AreEqual("displayName", wl.DisplayName);
 				wl.Commit();
@@ -696,7 +696,7 @@ namespace ProSuite.AGP.WorkList.Test
 			GdbRowIdentity rowId1 = WorkListTestUtils.CreateRowProxy(1);
 			IWorkItem item1 = new WorkItemMock(rowId1, tableId, _poly0) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1 });
-			IWorkList wl = new SelectionWorkList(repo, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.GetItems().ToList();
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);

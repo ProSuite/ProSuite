@@ -14,6 +14,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Hosting;
 using ProSuite.Commons.Testing;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.WorkList.Test;
@@ -72,7 +73,7 @@ public class WorkListDbTest
 		var itemRepository =
 			new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
 
-		var wl = new IssueWorkList(itemRepository, "uniqueName", "displayName");
+		var wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 		var watch = new Stopwatch();
 		watch.Start();
@@ -80,9 +81,10 @@ public class WorkListDbTest
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
 		List<IWorkItem> items = wl.GetItems().ToList();
 		int itemsCount = items.Count;
-
+		
 		watch.Stop();
 
+		Assert.NotNull(wl.Extent);
 		Console.WriteLine($"items count {itemsCount}");
 		Console.WriteLine($"{watch.ElapsedMilliseconds:N0} ms");
 
@@ -138,7 +140,7 @@ public class WorkListDbTest
 		var itemRepository =
 			new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
 
-		var wl = new IssueWorkList(itemRepository, "uniqueName", "displayName");
+		var wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 		var watch = new Stopwatch();
 		watch.Start();
@@ -149,6 +151,7 @@ public class WorkListDbTest
 
 		watch.Stop();
 
+		Assert.NotNull(wl.Extent);
 		Console.WriteLine($"items count {itemsCount}");
 		Console.WriteLine($"{watch.ElapsedMilliseconds:N0} ms");
 
@@ -206,7 +209,7 @@ public class WorkListDbTest
 		var itemRepository =
 			new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
 
-		var wl = new IssueWorkList(itemRepository, "uniqueName", "displayName");
+		var wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
 
 		SpatialReference ch1903plus = SpatialReferenceBuilder.CreateSpatialReference(2056);
@@ -267,10 +270,11 @@ public class WorkListDbTest
 		var itemRepository =
 			new DbStatusWorkItemRepository(sourceClasses, new EmptyWorkItemStateRepository(), gdb);
 
-		var wl = new IssueWorkList(itemRepository, "uniqueName", "displayName");
+		var wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
-		List<IWorkItem> items = wl.GetItems().ToList();
+		List<IWorkItem> items = wl.GetItems(new QueryFilter(), false).Take(20).ToList();
 
+		Assert.NotNull(wl.Extent);
 		Assert.AreEqual(62, items.Count);
 	}
 
@@ -312,9 +316,10 @@ public class WorkListDbTest
 		var repository =
 			new SelectionItemRepository(sourceClasses, new EmptyWorkItemStateRepository());
 
-		var wl = new SelectionWorkList(repository, "uniqueName", "displayName");
+		var wl = new SelectionWorkList(repository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		List<IWorkItem> items = wl.GetItems().ToList();
 
+		Assert.NotNull(wl.Extent);
 		Assert.AreEqual(9, items.Count);
 	}
 
@@ -452,10 +457,74 @@ public class WorkListDbTest
 		var repository =
 			new SelectionItemRepository(sourceClasses, new EmptyWorkItemStateRepository());
 
-		var wl = new SelectionWorkList(repository, "uniqueName", "displayName");
+		var wl = new SelectionWorkList(repository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		List<IWorkItem> items = wl.GetItems().ToList();
 
+		Assert.NotNull(wl.Extent);
 		Assert.AreEqual(4, items.Count);
+	}
+
+	[Test]
+	public void LearingTest_append_subfields()
+	{
+		string filter = "OBJECTID   ,STATUS";
+
+		string[] subfields = filter.Trim().Split(",");
+
+		var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		foreach (string subfield in subfields)
+		{
+			set.Add(subfield.Trim());
+		}
+
+		string additional = "SHAPE";
+		string[] additionalSubfields = additional.Trim().Split(",");
+
+		foreach (string subfield in additionalSubfields)
+		{
+			set.Add(subfield.Trim());
+		}
+
+		List<string> list = set.ToList();
+		Assert.AreEqual("OBJECTID", list[0]);
+		Assert.AreEqual("STATUS", list[1]);
+		Assert.AreEqual("SHAPE", list[2]);
+	}
+
+	[Test]
+	public void LearingTest_append_subfields2()
+	{
+		var filter = new QueryFilter();
+
+		QueryFilter queryFilter = AppendSubfields(filter);
+
+		List<string> list = queryFilter.SubFields.Split(",").ToList();
+		Assert.AreEqual("OBJECTID", list[0]);
+		Assert.AreEqual("STATUS", list[1]);
+		Assert.AreEqual("SHAPE", list[2]);
+		Assert.AreEqual("fooBar", list[3]);
+	}
+
+	private static QueryFilter AppendSubfields(QueryFilter filter)
+	{
+		filter.SubFields = "OBJECTID   ,STATUS";
+
+		var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		foreach (string subfield in filter.SubFields.Trim().Split(","))
+		{
+			set.Add(subfield.Trim());
+		}
+
+		string additional = "SHAPE,   fooBar ";
+
+		foreach (string subfield in additional.Trim().Split(","))
+		{
+			set.Add(subfield.Trim());
+		}
+
+		filter.SubFields = StringUtils.Concatenate(set, ",");
+
+		return filter;
 	}
 
 	private static SourceClassSchema CreateSchema(TableDefinition tableDefinition)

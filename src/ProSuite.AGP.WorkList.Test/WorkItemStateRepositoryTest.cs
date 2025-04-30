@@ -6,6 +6,7 @@ using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Hosting;
 using ProSuite.Commons.Testing;
 
@@ -35,7 +36,7 @@ public class WorkItemStateRepositoryTest
 
 		var repo =
 			new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 }, stateRepo);
-		var wl = new IssueWorkList(repo, "uniqueName", "displayName");
+		var wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 		List<IWorkItem> items = wl.GetItems().ToList();
 
@@ -61,7 +62,7 @@ public class WorkItemStateRepositoryTest
 
 			var repo =
 				new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 }, stateRepo);
-			var wl = new IssueWorkList(repo, "uniqueName", "displayName");
+			var wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			List<IWorkItem> items = wl.GetItems().ToList();
 

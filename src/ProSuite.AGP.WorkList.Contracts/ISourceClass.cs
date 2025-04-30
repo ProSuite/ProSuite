@@ -38,5 +38,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// </summary>
 		/// <returns></returns>
 		long GetUniqueTableId();
+
+		QueryFilter EnsureValidFilter(QueryFilter filter, bool excludeGeometry);
 	}
 }

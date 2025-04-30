@@ -173,7 +173,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected abstract IWorkList CreateWorkListCore([NotNull] IWorkItemRepository repository,
 		                                                [NotNull] string uniqueName,
-		                                                [CanBeNull] string displayName);
+		                                                [NotNull] string displayName);
 
 		protected abstract IWorkItemStateRepository CreateStateRepositoryCore(
 			string path, string workListName);

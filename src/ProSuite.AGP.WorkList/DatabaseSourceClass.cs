@@ -108,18 +108,24 @@ namespace ProSuite.AGP.WorkList
 
 			if (statusFilter != null)
 			{
-				result = $"{StatusField} = {GetValue(statusFilter.Value)}";
+				object value = GetValue(statusFilter.Value);
+
+				result = value.Equals(TodoValue)
+					         ? $"{StatusField} = {value} OR {StatusField} IS NULL"
+					         : $"{StatusField} = {value}";
 			}
 
-			if (DefinitionQuery != null)
+			if (DefinitionQuery == null)
 			{
-				if (! string.IsNullOrEmpty(result))
-				{
-					result += " AND ";
-				}
-
-				result += DefinitionQuery;
+				return result;
 			}
+
+			if (! string.IsNullOrEmpty(result))
+			{
+				result += " AND ";
+			}
+
+			result += DefinitionQuery;
 
 			return result;
 		}

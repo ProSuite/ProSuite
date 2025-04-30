@@ -19,8 +19,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 		Envelope Extent { get; }
 
 		WorkItemVisibility Visibility { get; set; }
-
-		[CanBeNull]
+		
+		[NotNull]
 		Geometry AreaOfInterest { get; set; }
 
 		bool QueryLanguageSupported { get; }

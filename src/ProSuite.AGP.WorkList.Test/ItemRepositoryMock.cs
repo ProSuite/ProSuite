@@ -26,7 +26,7 @@ namespace ProSuite.AGP.WorkList.Test
 			WorkItemStateRepository = stateRepository;
 		}
 
-		public int GetCount(QueryFilter filter = null)
+		public long Count()
 		{
 			throw new NotImplementedException();
 		}

@@ -97,7 +97,7 @@ namespace ProSuite.AGP.QA.WorkList
 		                                                string uniqueName,
 		                                                string displayName)
 		{
-			return new IssueWorkList(repository, uniqueName, AreaOfInterest, displayName);
+			return new IssueWorkList(repository, AreaOfInterest, uniqueName, displayName);
 		}
 
 		protected override IWorkItemStateRepository CreateStateRepositoryCore(

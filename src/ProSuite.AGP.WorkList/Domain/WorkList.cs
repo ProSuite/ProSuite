@@ -39,17 +39,16 @@ namespace ProSuite.AGP.WorkList.Domain
 		private string _displayName;
 
 		protected WorkList([NotNull] IWorkItemRepository repository,
+		                   [NotNull] Geometry areaOfInterest,
 		                   [NotNull] string name,
-		                   [CanBeNull] Geometry areaOfInterest = null,
-		                   [CanBeNull] string displayName = null)
+		                   [NotNull] string displayName)
 		{
-			_displayName = displayName;
-			Name = name;
-
-			Repository = repository;
+			Repository = repository ?? throw new ArgumentNullException(nameof(repository));
+			Name = name ?? throw new ArgumentNullException(nameof(name));
+			_displayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
+			AreaOfInterest = areaOfInterest ?? throw new ArgumentNullException(nameof(areaOfInterest));
 
 			_visibility = WorkItemVisibility.Todo;
-			AreaOfInterest = areaOfInterest;
 			CurrentIndex = repository.GetCurrentIndex();
 		}
 		
@@ -59,6 +58,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			get
 			{
+				// todo: (daro) revise can it be null?
 				if (string.IsNullOrEmpty(_displayName))
 				{
 					return GetDisplayNameCore();
@@ -326,8 +326,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
 			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
 
-			// defined by WorkItemTable.GetExtent
-			SpatialReference sref = null;
 			int newItemsCount = 0;
 
 			// Note: SelectionItemRepository ensures only items of selected rows are returned.
@@ -362,13 +360,8 @@ namespace ProSuite.AGP.WorkList.Domain
 					Assert.True(TryAddItem(item), $"Could not add {item}");
 					newItemsCount++;
 
-					if (geometry != null)
+					if (geometry?.Extent is { IsEmpty: false })
 					{
-						if (geometry.Extent is { IsEmpty: false })
-						{
-							sref = geometry.SpatialReference;
-						}
-
 						ComputeExtent(geometry.Extent,
 						              ref xmin, ref ymin, ref zmin,
 						              ref xmax, ref ymax, ref zmax);
@@ -392,8 +385,9 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			Envelope newExtent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
 																  new Coordinate3D(xmax, ymax, zmax),
-																  sref);
+																  AreaOfInterest.SpatialReference);
 
+			// Spatial referenece of work list is defined by WorkItemTable.GetExtent().
 			Extent = Extent == null ? newExtent : Extent.Union(newExtent);
 		}
 

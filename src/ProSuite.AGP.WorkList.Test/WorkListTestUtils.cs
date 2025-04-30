@@ -1,5 +1,7 @@
 using System;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Test;
@@ -17,11 +19,6 @@ public static class WorkListTestUtils
 		return new GdbTableIdentity("myTable", 42, CreateWorkspaceProxy());
 	}
 
-	//public static GdbTableIdentity CreateTableProxy(GdbWorkspaceIdentity workspaceProxy)
-	//{
-	//	return new GdbTableIdentity("myTable", 42, workspaceProxy);
-	//}
-
 	public static GdbRowIdentity CreateRowProxy(long oid)
 	{
 		GdbTableIdentity tableProxy = CreateTableProxy();
@@ -32,5 +29,11 @@ public static class WorkListTestUtils
 	{
 		GdbTableIdentity tableProxy = CreateTableProxy();
 		return new GdbRowIdentity(99, tableProxy);
+	}
+
+	public static Geometry GetAOI()
+	{
+		SpatialReference sref = SpatialReferenceBuilder.CreateSpatialReference(2056, 5729);
+		return GeometryFactory.CreatePolygon(GeometryFactory.CreateEmptyEnvelope(), sref);
 	}
 }

@@ -41,4 +41,9 @@ public class SourceClassMock : ISourceClass
 	{
 		return TableIdentity.Id;
 	}
+
+	public QueryFilter EnsureValidFilter(QueryFilter filter, bool excludeGeometry)
+	{
+		throw new NotImplementedException();
+	}
 }
