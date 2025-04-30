@@ -5,7 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.Validation;
 
-namespace ProSuite.DomainModel.AO.Geodatabase
+namespace ProSuite.DomainModel.Core.Geodatabase
 {
 	public abstract class FilePathConnectionProviderBase : ConnectionProvider
 	{
@@ -31,7 +31,7 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		/// </summary>
 		/// <param name="name">The name.</param>
 		/// <param name="path">The path.</param>
-		protected FilePathConnectionProviderBase(string name, [NotNull] string path)
+		protected FilePathConnectionProviderBase([NotNull] string name, [NotNull] string path)
 			: base(name)
 		{
 			Assert.ArgumentNotNullOrEmpty(path, nameof(path));
@@ -67,9 +67,7 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 				       : $"{name} ({Path})";
 		}
 
-		#region Non-public members
-
-		protected void AssertFileExists()
+		public void AssertFileExists()
 		{
 			Assert.True(StringUtils.IsNotEmpty(_path), "Path is not defined");
 
@@ -80,7 +78,7 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 			}
 		}
 
-		protected void AssertDirectoryExists()
+		public void AssertDirectoryExists()
 		{
 			Assert.True(StringUtils.IsNotEmpty(_path), "Path is not defined");
 
@@ -90,6 +88,8 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 					string.Format("Directory does not exist: {0}", _path));
 			}
 		}
+
+		#region Non-public members
 
 		[NotNull]
 		private static string GetDefaultName([CanBeNull] string path)

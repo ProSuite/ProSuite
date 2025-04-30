@@ -1,5 +1,6 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.DomainModel.AO.Geodatabase;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {

@@ -1,10 +1,9 @@
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
 
-namespace ProSuite.DomainModel.AO.Geodatabase
+namespace ProSuite.DomainModel.Core.Geodatabase
 {
 	public class SdeDirectDbUserConnectionProvider : SdeDirectConnectionProvider
 	{
@@ -94,16 +93,6 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		private EncryptedString EncryptedPassword => _encryptedPassword;
 
 		public string EncryptedPasswordValue => EncryptedPassword.EncryptedValue;
-
-		protected override IFeatureWorkspace OpenWorkspaceCore(string versionName = null,
-		                                                       int hWnd = 0)
-		{
-			Assert.NotNull(_userName, "username not defined");
-			string password = Assert.NotNull(_encryptedPassword,
-			                                 "password not defined").PlainTextValue;
-
-			return OpenWorkspace(_userName, password, versionName, hWnd);
-		}
 
 		[NotNull]
 		private static string GetDefaultName([NotNull] string databaseName,

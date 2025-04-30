@@ -1,12 +1,12 @@
 using System;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
+using ProSuite.DomainModel.Core.Geodatabase;
 
 namespace ProSuite.DomainModel.AO.Geodatabase.Legacy
 {
 	/// <summary>
-	/// Legacy connection provider that is not supported any more. However, in order
+	/// Legacy connection provider that is not supported anymore. However, in order
 	/// to be able to open a legacy data dictionary, it must be present in the mapping!
 	/// </summary>
 	[UsedImplicitly]
@@ -21,14 +21,7 @@ namespace ProSuite.DomainModel.AO.Geodatabase.Legacy
 		public PgdbConnectionProvider([NotNull] string path) : base(path) { }
 
 		#endregion
-
-		public override IFeatureWorkspace OpenWorkspace(int hWnd = 0)
-		{
-			throw new NotSupportedException(
-				"The Personal Geodatabase Format is not supported in 64-bit applications, including " +
-				"ArcGIS Pro. Please use ArcMap to convert it to a File Geodatabase.");
-		}
-
+		
 		#region Overrides of ConnectionProvider
 
 		public override DbConnectionType ConnectionType => DbConnectionType.Other;

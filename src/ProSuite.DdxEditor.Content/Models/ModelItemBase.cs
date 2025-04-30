@@ -23,10 +23,10 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
+using ProSuite.DomainModel.Core.Geodatabase;
 using Path = System.IO.Path;
 
 namespace ProSuite.DdxEditor.Content.Models
@@ -129,7 +129,7 @@ namespace ProSuite.DdxEditor.Content.Models
 		{
 			return FindConnectionProviderCore<ConnectionProvider>(
 				owner,
-				c => c is IOpenSdeWorkspace,
+				c => c is SdeConnectionProvider || c is ConnectionFileConnectionProvider,
 				new ColumnDescriptor("Name"),
 				new ColumnDescriptor("TypeDescription"),
 				new ColumnDescriptor("Description"));

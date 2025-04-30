@@ -15,6 +15,7 @@ using ProSuite.DomainModel.AO.DataModel.Harvesting;
 using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.Geodatabase;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {

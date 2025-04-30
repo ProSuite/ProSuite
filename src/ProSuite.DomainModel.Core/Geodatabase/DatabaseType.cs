@@ -1,4 +1,4 @@
-namespace ProSuite.DomainModel.AO.Geodatabase
+namespace ProSuite.DomainModel.Core.Geodatabase
 {
 	/// <summary>
 	/// The type of database

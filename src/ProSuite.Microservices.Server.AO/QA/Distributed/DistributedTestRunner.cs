@@ -21,6 +21,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;

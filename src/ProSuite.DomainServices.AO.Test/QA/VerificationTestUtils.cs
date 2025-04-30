@@ -1,8 +1,8 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.Geodatabase;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DomainServices.AO.Test.QA

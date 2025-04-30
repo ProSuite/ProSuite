@@ -34,6 +34,7 @@ using ProSuite.DomainModel.Core.AttributeDependencies.Xml;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
 using ProSuite.DomainModel.Core.DataModel.Xml;
+using ProSuite.DomainModel.Core.Geodatabase;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.DomainModel.Core.QA.Xml;

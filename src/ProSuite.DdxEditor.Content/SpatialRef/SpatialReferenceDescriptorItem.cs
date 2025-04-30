@@ -27,6 +27,7 @@ using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
+using ProSuite.DomainModel.Core.Geodatabase;
 using ProSuite.UI.DataModel.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.SpatialRef

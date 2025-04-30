@@ -1,13 +1,12 @@
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Validation;
 
-namespace ProSuite.DomainModel.AO.Geodatabase
+namespace ProSuite.DomainModel.Core.Geodatabase
 {
 	public abstract class ConnectionProvider : EntityWithMetadata,
-	                                           IOpenWorkspace,
 	                                           INamed,
 	                                           IAnnotated
 	{
@@ -27,8 +26,10 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		/// Initializes a new instance of the <see cref="ConnectionProvider"/> class.
 		/// </summary>
 		/// <param name="name">The name.</param>
-		protected ConnectionProvider(string name)
+		protected ConnectionProvider([NotNull] string name)
 		{
+			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+
 			_name = name;
 		}
 
@@ -59,14 +60,5 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 
 		[NotNull]
 		public virtual string TypeDescription => "Connection Provider";
-
-		/// <summary>
-		/// Opens the workspace. 
-		/// </summary>
-		/// <param name="hWnd">The window handle of the parent window.</param>
-		/// <remarks>Always opens the workspace from the factory. 
-		/// Can therefore be used on background threads.</remarks>
-		/// <returns></returns>
-		public abstract IFeatureWorkspace OpenWorkspace(int hWnd = 0);
 	}
 }
