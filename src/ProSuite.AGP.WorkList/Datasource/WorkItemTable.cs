@@ -68,7 +68,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 				TryCreateWorkListAsync();
 			}
 
-			return _workList?.Extent;
+			return _workList?.GetExtent();
 		}
 
 		public override GeometryType GetShapeType()
@@ -112,7 +112,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			_service.UpdateItemGeometries(_tableName, filter);
 
 			IEnumerable<object[]> items =
-				_workList.GetItems(filter, false)
+				_workList.GetItems(filter)
 				         .Select(item => GetValues(item, _workList, _workList.Current));
 
 			return new WorkItemCursor(items);

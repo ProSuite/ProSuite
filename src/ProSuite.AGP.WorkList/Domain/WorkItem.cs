@@ -11,21 +11,14 @@ namespace ProSuite.AGP.WorkList.Domain
 {
 	public abstract class WorkItem : NotifyPropertyChangedBase, IWorkItem
 	{
-		// TODO: Make this configurable
 		private readonly double _extentExpansionFactor = 1.1;
 		private readonly double _minimumSizeDegrees = 0.001;
 		private readonly double _minimumSizeProjected = 30;
-
-		private double _xmax;
-		private double _xmin;
-		private double _ymax;
-		private double _ymin;
-		private double _zmax;
-		private double _zmin;
-		private Geometry _geometry;
+			
 		private WorkItemStatus _status;
-		private long _oid;
+		private Geometry _geometry;
 		private Envelope _extent;
+		private long _oid;
 
 		private static readonly object _obj = new();
 
@@ -96,7 +89,8 @@ namespace ProSuite.AGP.WorkList.Domain
 					return _extent;
 				}
 			}
-			set
+			// Use SetExtent! Protected setter is only for unit testing.
+			protected set
 			{
 				lock (_obj)
 				{
@@ -135,30 +129,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public GeometryType? GeometryType => _geometry?.GeometryType;
 
-		public void QueryPoints(out double xmin, out double ymin,
-		                        out double xmax, out double ymax,
-		                        out double zmax)
-		{
-			QueryPoints(out xmin, out ymin, out xmax, out ymax, out zmax, 0);
-		}
-
-		private void QueryPoints(out double xmin, out double ymin,
-		                         out double xmax, out double ymax,
-		                         out double zmax, double minimumSize)
-		{
-			// calculate offsets to meet minimum size
-			double offsetX = CalculateMinimumSizeOffset(_xmin, _xmax, minimumSize);
-			double offsetY = CalculateMinimumSizeOffset(_ymin, _ymax, minimumSize);
-
-			xmin = _xmin - offsetX;
-			ymin = _ymin - offsetY;
-
-			xmax = _xmax + offsetX;
-			ymax = _ymax + offsetY;
-
-			zmax = _zmax;
-		}
-
 		#endregion
 
 		public override string ToString()
@@ -185,77 +155,67 @@ namespace ProSuite.AGP.WorkList.Domain
 			SetExtent(geometry.Extent);
 		}
 
-		public void SetExtent([CanBeNull] Envelope extent)
+		public void SetExtent([NotNull] Envelope extent)
 		{
-			if (extent == null || extent.IsEmpty)
+			double xmin;
+			double ymin;
+			double xmax;
+			double ymax;
+
+			double minimumSize = GetMinimumSize(extent.SpatialReference);
+
+			// calculate the boundary values in x and y, ensuring a minimum size
+			if (extent.Width < minimumSize)
 			{
-				_xmin = 0;
-				_ymin = 0;
-				_xmax = 0;
-				_ymax = 0;
-				_zmin = 0;
-				_zmax = 0;
+				double centerX = extent.XMin + extent.Width / 2;
+				xmin = centerX - minimumSize / 2;
+				xmax = centerX + minimumSize / 2;
 			}
 			else
 			{
-				double xmin;
-				double ymin;
-				double xmax;
-				double ymax;
+				xmin = extent.XMin;
+				xmax = extent.XMax;
+			}
 
-				double minimumSize = GetMinimumSize(extent.SpatialReference);
+			if (extent.Height < minimumSize)
+			{
+				double centerY = extent.YMin + extent.Height / 2;
+				ymin = centerY - minimumSize / 2;
+				ymax = centerY + minimumSize / 2;
+			}
+			else
+			{
+				ymin = extent.YMin;
+				ymax = extent.YMax;
+			}
 
-				// calculate the boundary values in x and y, ensuring a minimum size
-				if (extent.Width < minimumSize)
-				{
-					double centerX = extent.XMin + extent.Width / 2;
-					xmin = centerX - minimumSize / 2;
-					xmax = centerX + minimumSize / 2;
-				}
-				else
-				{
-					xmin = extent.XMin;
-					xmax = extent.XMax;
-				}
+			// calculate the offset to apply for a given expansion factor
+			double offset = CalculateExpansionOffset(xmin, xmax, ymin, ymax,
+			                                         _extentExpansionFactor);
 
-				if (extent.Height < minimumSize)
-				{
-					double centerY = extent.YMin + extent.Height / 2;
-					ymin = centerY - minimumSize / 2;
-					ymax = centerY + minimumSize / 2;
-				}
-				else
-				{
-					ymin = extent.YMin;
-					ymax = extent.YMax;
-				}
+			// apply the offset
+			double xminOffset = xmin - offset;
+			double yminOffset = ymin - offset;
+			double xmaxOffset = xmax + offset;
+			double ymaxOffset = ymax + offset;
 
-				// calculate the offset to apply for a given expansion factor
-				double offset = CalculateExpansionOffset(xmin, xmax, ymin, ymax,
-				                                         _extentExpansionFactor);
+			// use the z boundary values unchanged
+			if (extent.HasZ)
+			{
+				double zminOffset = extent.ZMin;
+				double zmaxOffset = extent.ZMax;
 
-				// apply the offset
-				_xmin = xmin - offset;
-				_ymin = ymin - offset;
-				_xmax = xmax + offset;
-				_ymax = ymax + offset;
-
-				// use the z boundary values unchanged
-				if (extent.HasZ)
-				{
-					_zmin = extent.ZMin;
-					_zmax = extent.ZMax;
-
-					Extent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(_xmin, _ymin, _zmin),
-					                                          new Coordinate3D(_xmax, _ymax, _zmax),
-					                                          extent.SpatialReference);
-				}
-				else
-				{
-					Extent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate2D(_xmin, _ymin),
-					                                          new Coordinate2D(_xmax, _ymax),
-					                                          extent.SpatialReference);
-				}
+				Extent = EnvelopeBuilderEx.CreateEnvelope(
+					new Coordinate3D(xminOffset, yminOffset, zminOffset),
+					new Coordinate3D(xmaxOffset, ymaxOffset, zmaxOffset),
+					extent.SpatialReference);
+			}
+			else
+			{
+				Extent = EnvelopeBuilderEx.CreateEnvelope(
+					new Coordinate2D(xminOffset, yminOffset),
+					new Coordinate2D(xmaxOffset, ymaxOffset),
+					extent.SpatialReference);
 			}
 		}
 
@@ -306,6 +266,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				       : (max - min) * (expansionFactor - 1) / 2;
 		}
 
+		// TODO: (daro) drop!
 		/// <summary>
 		/// Calculates the offset to apply to expand a range by a given minimum size.
 		/// </summary>

@@ -31,11 +31,6 @@ namespace ProSuite.AGP.WorkList
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
-		/// <summary>
-		/// The single, current workspace in which all source tables reside. Not null for DbStatus
-		/// work lists.
-		/// </summary>
-
 		[NotNull]
 		public IWorkItemStateRepository WorkItemStateRepository { get; }
 
@@ -118,7 +113,7 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-			QueryFilter filter = null,
+			QueryFilter filter,
 			WorkItemStatus? statusFilter = null,
 			bool recycle = true,
 			bool excludeGeometry = false)

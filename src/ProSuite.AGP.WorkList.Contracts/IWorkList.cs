@@ -15,8 +15,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		[NotNull]
 		string DisplayName { get; }
 
-		[CanBeNull]
-		Envelope Extent { get; }
+		[NotNull] public Envelope GetExtent();
 
 		WorkItemVisibility Visibility { get; set; }
 		
@@ -38,7 +37,10 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		IEnumerable<IWorkItem> Search(QueryFilter filter);
 
-		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null,
+		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null);
+
+		IEnumerable<IWorkItem> GetItems(QueryFilter filter,
+		                                WorkItemStatus? itemStatus,
 		                                bool excludeGeometry = false);
 
 		int Count();
@@ -101,8 +103,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void Invalidate(List<long> oids);
 
 		void UpdateItemGeometries(QueryFilter filter);
-
-		IEnumerable<IWorkItem> GetItems(QueryFilter filter, WorkItemStatus? itemStatus = null, bool excludeGeometry = false);
 
 		void ComputeTotalCount();
 	}

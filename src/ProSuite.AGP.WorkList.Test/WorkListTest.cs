@@ -504,7 +504,7 @@ namespace ProSuite.AGP.WorkList.Test
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4, item5, item6 });
 			var wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter([2, 3, 4]), false).ToList();
+			IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter([2, 3, 4])).ToList();
 
 			Assert.AreEqual(item2, wl.Current);
 			Assert.True(wl.Current?.Visited);
@@ -529,7 +529,7 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(wl.CanGoFirst());
 
 			// get remaining items
-			IEnumerable<IWorkItem> __ = wl.GetItems(GdbQueryUtils.CreateFilter([1, 5, 6]), false).ToList();
+			IEnumerable<IWorkItem> __ = wl.GetItems(GdbQueryUtils.CreateFilter([1, 5, 6])).ToList();
 
 			Assert.True(wl.CanGoNext());
 			Assert.True(wl.CanGoPrevious());
@@ -554,7 +554,7 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);
 
 			Assert.NotNull(item1.Extent);
-			Assert.True(item1.Extent.IsEqual(wl.Extent));
+			Assert.True(AreEqual(item1.Extent, wl.GetExtent()));
 
 			GdbRowIdentity rowId2 = WorkListTestUtils.CreateRowProxy(2);
 			IWorkItem item2 = new WorkItemMock(rowId2, tableId, _poly1) { Visited = true };
@@ -573,9 +573,9 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.AreEqual(2, item2.OID);
 
 			Envelope envelope = item1.Extent.Union(item2.Extent);
-			Assert.True(GeometryUtils.Intersects(wl.Extent, envelope));
-			Assert.True(GeometryUtils.Contains(wl.Extent, envelope));
-			Assert.True(envelope.IsEqual(wl.Extent));
+			Assert.True(GeometryUtils.Intersects(wl.GetExtent(), envelope));
+			Assert.True(GeometryUtils.Contains(wl.GetExtent(), envelope));
+			Assert.True(envelope.IsEqual(wl.GetExtent()));
 		}
 
 		[Test]
@@ -591,7 +591,7 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);
 
 			Assert.NotNull(item1.Extent);
-			Assert.True(item1.Extent.IsEqual(wl.Extent));
+			Assert.True(AreEqual(item1.Extent, wl.GetExtent()));
 
 			// Update Extext
 			item1.SetExtent(_poly1.Extent);
@@ -608,7 +608,7 @@ namespace ProSuite.AGP.WorkList.Test
 			// assert oid is still the same
 			Assert.AreEqual(1, item1.OID);
 			Assert.NotNull(item1.Extent);
-			Assert.True(item1.Extent.IsEqual(wl.Extent));
+			Assert.True(item1.Extent.IsEqual(wl.GetExtent()));
 		}
 
 		[Test]
@@ -627,8 +627,8 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.AreEqual(2, wl.GetItems().ToList().Count);
 
 			Envelope envelope = _poly0.Extent.Union(_poly1.Extent);
-			Assert.True(GeometryUtils.Intersects(wl.Extent, envelope));
-			Assert.True(GeometryUtils.Contains(wl.Extent, envelope));
+			Assert.True(GeometryUtils.Intersects(wl.GetExtent(), envelope));
+			Assert.True(GeometryUtils.Contains(wl.GetExtent(), envelope));
 
 			var inserts = new Dictionary<GdbTableIdentity, List<long>>();
 			var deletes = new Dictionary<GdbTableIdentity, List<long>> { { tableId, [item2.OID] } };
@@ -641,7 +641,7 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);
 
 			Assert.NotNull(item1.Extent);
-			Assert.True(item1.Extent.IsEqual(wl.Extent));
+			Assert.True(AreEqual(item1.Extent, wl.GetExtent()));
 		}
 
 		[Test]
@@ -660,7 +660,7 @@ namespace ProSuite.AGP.WorkList.Test
 				var stateRepo = new XmlSelectionItemStateRepository(path, uniqueName, typeof(IssueWorkList));
 
 				var repo = new ItemRepositoryMock(new List<IWorkItem>(), stateRepo);
-				var wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), uniqueName, "displayName");
+				IWorkList wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), uniqueName, "displayName");
 				Assert.AreEqual(uniqueName, wl.Name);
 				Assert.AreEqual("displayName", wl.DisplayName);
 				wl.Commit();
@@ -696,26 +696,27 @@ namespace ProSuite.AGP.WorkList.Test
 			GdbRowIdentity rowId1 = WorkListTestUtils.CreateRowProxy(1);
 			IWorkItem item1 = new WorkItemMock(rowId1, tableId, _poly0) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1 });
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, _poly0, "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.GetItems().ToList();
 			Assert.AreEqual(1, wl.GetItems().ToList().Count);
 
 			// Note: work item has a minimum length/width of 30!!
 			Assert.NotNull(item1.Extent);
-			Assert.True(item1.Extent.IsEqual(wl.Extent));
+			Assert.True(AreEqual(item1.Extent, wl.GetExtent()));
+			//AssertEqual(item1.Extent, wl.GetExtent());
 		}
 
-		private static void AssertEqual(Envelope expected, Envelope actual)
-		{
-			Assert.True(AreEqual(expected, actual));
-		}
+		//private static void AssertEqual(Envelope expected, Envelope actual)
+		//{
+		//	Assert.True(AreEqual(expected, actual));
+		//}
 
 		private static bool AreEqual(Envelope expected, Envelope actual)
 		{
 			// 1.1 is default expansion of work items
-			Envelope envelope = expected.Expand(1.1, 1.1, true);
-			return envelope.IsEqual(actual);
+			Envelope envelope = actual.Expand(1.1, 1.1, true);
+			return envelope.IsEqual(expected);
 		}
 	}
 }

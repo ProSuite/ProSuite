@@ -19,7 +19,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 			if (geometry != null)
 			{
-				SetExtent(geometry.Extent);
+				Extent = geometry.Extent;
 			}
 		}
 

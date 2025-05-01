@@ -35,7 +35,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		WorkItemStatus Status { get; set; }
 
 		[CanBeNull]
-		Envelope Extent { get; set; }
+		Envelope Extent { get; }
 
 		// TODO: (daro) GetGeometry?
 		[CanBeNull]
@@ -46,10 +46,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		bool HasExtent { get; }
 
 		bool HasFeatureGeometry { get; }
-
-		void QueryPoints(out double xmin, out double ymin,
-		                 out double xmax, out double ymax,
-		                 out double zmax);
 
 		void SetGeometry(Geometry geometry);
 

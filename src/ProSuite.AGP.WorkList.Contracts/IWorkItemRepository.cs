@@ -17,7 +17,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		long Count();
 
 		IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-			QueryFilter filter = null,
+			QueryFilter filter,
 			WorkItemStatus? statusFilter = null,
 			bool recycle = true,
 			bool excludeGeometry = false);

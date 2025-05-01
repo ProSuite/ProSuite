@@ -100,15 +100,6 @@ namespace ProSuite.AGP.QA.WorkList
 			return new IssueWorkList(repository, AreaOfInterest, uniqueName, displayName);
 		}
 
-		protected override IWorkItemStateRepository CreateStateRepositoryCore(
-			string path, string workListName)
-		{
-			//return new EmptyWorkItemStateRepository();
-
-			Type type = GetWorkListTypeCore<IssueWorkList>();
-			return new XmlWorkItemStateRepository(path, workListName, type);
-		}
-
 		protected override async Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository)
 		{

@@ -32,7 +32,7 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-			QueryFilter filter = null, WorkItemStatus? statusFilter = null, bool recycle = true,
+			QueryFilter filter, WorkItemStatus? statusFilter = null, bool recycle = true,
 			bool excludeGeometry = false)
 		{
 			IEnumerable<IWorkItem> query =
@@ -40,10 +40,15 @@ namespace ProSuite.AGP.WorkList.Test
 					? _items
 					: _items.Where(item => item.Status == statusFilter);
 
-			IEnumerable<IWorkItem> result =
-				filter == null
-					? query
-					: query.Where(item => filter.ObjectIDs.Contains(item.GdbRowProxy.ObjectId));
+			IEnumerable<IWorkItem> result;
+			if (filter.ObjectIDs.Count == 0)
+			{
+				result = query;
+			}
+			else
+			{
+				result = query.Where(item => filter.ObjectIDs.Contains(item.GdbRowProxy.ObjectId));
+			}
 
 			IEnumerable<KeyValuePair<IWorkItem, Envelope>> dictionary = result.ToDictionary(item => item, item => item.Extent);
 

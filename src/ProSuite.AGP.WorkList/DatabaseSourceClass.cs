@@ -111,7 +111,7 @@ namespace ProSuite.AGP.WorkList
 				object value = GetValue(statusFilter.Value);
 
 				result = value.Equals(TodoValue)
-					         ? $"{StatusField} = {value} OR {StatusField} IS NULL"
+					         ? $"({StatusField} = {value} OR {StatusField} IS NULL)"
 					         : $"{StatusField} = {value}";
 			}
 

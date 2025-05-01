@@ -44,9 +44,9 @@ namespace ProSuite.AGP.WorkList.Domain
 		                   [NotNull] string displayName)
 		{
 			Repository = repository ?? throw new ArgumentNullException(nameof(repository));
+			AreaOfInterest = areaOfInterest ?? throw new ArgumentNullException(nameof(areaOfInterest));
 			Name = name ?? throw new ArgumentNullException(nameof(name));
 			_displayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
-			AreaOfInterest = areaOfInterest ?? throw new ArgumentNullException(nameof(areaOfInterest));
 
 			_visibility = WorkItemVisibility.Todo;
 			CurrentIndex = repository.GetCurrentIndex();
@@ -77,10 +77,15 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		protected abstract string GetDisplayNameCore();
 
-		// todo: (daro) check!
-		// NOTE: An empty work list should return null and not an empty envelope.
-		//		 Pluggable Datasource cannot handle an empty envelope.
-		public Envelope Extent { get; private set; }
+		public Envelope GetExtent()
+		{
+			if (_extent == null || _extent.IsEmpty)
+			{
+				return AreaOfInterest.Extent;
+			}
+
+			return _extent;
+		}
 
 		public IWorkItem Current => GetItem(CurrentIndex);
 
@@ -143,6 +148,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		private bool _itemsGeometryDraftMode = true;
+		private Envelope _extent;
 
 		public void SetItemsGeometryDraftMode(bool enable)
 		{
@@ -186,15 +192,9 @@ namespace ProSuite.AGP.WorkList.Domain
 				// it's a point
 				if (item.HasExtent)
 				{
-					item.QueryPoints(out double xmin, out double ymin,
-					                 out double xmax, out double ymax,
-					                 out double zmax);
-
 					Assert.NotNull(item.Extent);
-					return PolygonBuilderEx.CreatePolygon(EnvelopeBuilderEx.CreateEnvelope(
-						                                      new Coordinate3D(xmin, ymin, zmax),
-						                                      new Coordinate3D(xmax, ymax, zmax),
-						                                      item.Extent.SpatialReference));
+					return PolygonBuilderEx.CreatePolygon(item.Extent,
+					                                      item.Extent.SpatialReference);
 				}
 
 				return null;
@@ -276,16 +276,25 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region GetItems
 
+		// TODO: (daro) rename to UpdateItemFeatureGeometry
 		public void UpdateItemGeometries(QueryFilter filter)
 		{
-			Predicate<IWorkItem> predicate = item => item.HasExtent || item.HasFeatureGeometry;
+			// Don't update items already having feature geometry
+			Predicate<IWorkItem> exclusion = item => item.HasFeatureGeometry;
 
 			Stopwatch watch = Stopwatch.StartNew();
 
 			int count = 0;
 			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItemsCore(filter, false))
 			{
-				count += UpdateItemGeometry(item, geometry, predicate);
+				// TODO: (daro) refactor
+				// Don't update for multipatches, points, etc.
+				if (! UseItemGeometry(geometry))
+				{
+					continue;
+				}
+
+				count += UpdateItemGeometry(item, geometry, exclusion);
 			}
 
 			// Avoid flooding the log.
@@ -316,12 +325,15 @@ namespace ProSuite.AGP.WorkList.Domain
 			return _items.Where(item => oids.BinarySearch(item.OID) >= 0);
 		}
 
-		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool excludeGeometry = false)
+		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null)
 		{
-			return GetItems(filter, GetStatus(Visibility), excludeGeometry);
+			filter ??= new QueryFilter();
+			return GetItems(filter, GetStatus(Visibility), excludeGeometry: false);
 		}
 
-		public IEnumerable<IWorkItem> GetItems(QueryFilter filter, WorkItemStatus? itemStatus = null, bool excludeGeometry = false)
+		public IEnumerable<IWorkItem> GetItems(QueryFilter filter,
+		                                       WorkItemStatus? itemStatus,
+		                                       bool excludeGeometry = false)
 		{
 			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
 			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
@@ -362,6 +374,9 @@ namespace ProSuite.AGP.WorkList.Domain
 
 					if (geometry?.Extent is { IsEmpty: false })
 					{
+						// Set extent here whereas item feature geometry is set in UpdateItemFeatureGeometry()
+						item.SetExtent(geometry.Extent);
+
 						ComputeExtent(geometry.Extent,
 						              ref xmin, ref ymin, ref zmin,
 						              ref xmax, ref ymax, ref zmax);
@@ -388,7 +403,26 @@ namespace ProSuite.AGP.WorkList.Domain
 																  AreaOfInterest.SpatialReference);
 
 			// Spatial referenece of work list is defined by WorkItemTable.GetExtent().
-			Extent = Extent == null ? newExtent : Extent.Union(newExtent);
+			_extent = _extent == null ? newExtent : _extent.Union(newExtent);
+		}
+
+		private IEnumerable<IWorkItem> GetItems([NotNull] QueryFilter filter,
+		                                        CurrentSearchOption currentSearch,
+		                                        VisitedSearchOption visitedSearch)
+		{
+			IEnumerable<IWorkItem> query = GetItems(filter, GetStatus(Visibility));
+
+			if (currentSearch == CurrentSearchOption.ExcludeCurrent)
+			{
+				query = query.Where(item => ! Equals(item, Current));
+			}
+
+			if (visitedSearch == VisitedSearchOption.ExcludeVisited)
+			{
+				query = query.Where(item => ! item.Visited);
+			}
+
+			return query;
 		}
 
 		// todo: (daro) to utils?
@@ -675,39 +709,16 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			// TODO: daro use GdbQueryUtils.CreateSpatialFilter(AreaOfInterest)
 			// TODO: daro use status search: see comment in GdbItemRepository.GetItems
-			return GetWorkItemsForInnermostContextCore(null, visitedSearch, currentSearch).ToList();
+			return GetWorkItemsForInnermostContextCore(new QueryFilter(), visitedSearch, currentSearch).ToList();
 		}
 
 		protected virtual IEnumerable<IWorkItem> GetWorkItemsForInnermostContextCore(
-			QueryFilter filter,
+			[NotNull] QueryFilter filter,
 			VisitedSearchOption visitedSearch,
 			CurrentSearchOption currentSearch)
 		{
 			return GetItems(filter, currentSearch, visitedSearch);
 		}
-
-		#region GetItems
-
-		private IEnumerable<IWorkItem> GetItems(
-			QueryFilter filter, CurrentSearchOption currentSearch,
-			VisitedSearchOption visitedSearch = VisitedSearchOption.ExcludeVisited)
-		{
-			IEnumerable<IWorkItem> query = GetItems(filter, false);
-
-			if (currentSearch == CurrentSearchOption.ExcludeCurrent)
-			{
-				query = query.Where(item => ! Equals(item, Current));
-			}
-
-			if (visitedSearch == VisitedSearchOption.ExcludeVisited)
-			{
-				query = query.Where(item => ! item.Visited);
-			}
-
-			return query;
-		}
-
-		#endregion
 
 		[NotNull]
 		private Polygon GetIntersection([NotNull] Polygon[] perimeters, int index)
@@ -1160,14 +1171,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				       : null;
 		}
 
-		//private static void GetExtentFromItem([NotNull] IWorkItem item,
-		//                                      ref double xmin, ref double ymin, ref double zmin,
-		//                                      ref double xmax, ref double ymax, ref double zmax)
-		//{
-		//	var extent = item.Extent;
-		//	GetExtent(extent, ref xmin, ref ymin, ref zmin, ref xmax, ref ymax, ref zmax);
-		//}
-
 		private static void ComputeExtent(Envelope extent,
 		                                  ref double xmin, ref double ymin,
 		                                  ref double zmin, ref double xmax,
@@ -1369,14 +1372,14 @@ namespace ProSuite.AGP.WorkList.Domain
 				Assert.True(ymin > double.MinValue, "Cannot get coordinate");
 				Assert.True(xmax < double.MaxValue, "Cannot get coordinate");
 				Assert.True(ymax < double.MaxValue, "Cannot get coordinate");
-				Assert.NotNull(Extent);
+				Assert.NotNull(_extent);
 
 				Envelope newExtent =
 					EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
 					                                 new Coordinate3D(xmax, ymax, zmax),
 					                                 sref);
 
-				Extent = Extent.Union(newExtent);
+				_extent = _extent.Union(newExtent);
 			}
 			catch (Exception ex)
 			{
@@ -1418,8 +1421,8 @@ namespace ProSuite.AGP.WorkList.Domain
 					}
 				}
 
-				Assert.NotNull(Extent);
-				Extent = CreateExtent(_items, Extent.SpatialReference);
+				Assert.NotNull(_extent);
+				_extent = CreateExtent(_items, _extent.SpatialReference);
 			}
 			catch (Exception ex)
 			{
@@ -1457,8 +1460,8 @@ namespace ProSuite.AGP.WorkList.Domain
 					watch.Stop();
 				}
 
-				Assert.NotNull(Extent);
-				Extent = CreateExtent(_items, Extent.SpatialReference);
+				Assert.NotNull(_extent);
+				_extent = CreateExtent(_items, _extent.SpatialReference);
 			}
 			catch (Exception ex)
 			{
@@ -1470,7 +1473,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private int UpdateItemGeometry([NotNull] IWorkItem item,
 		                               [CanBeNull] Geometry geometry,
-		                               Predicate<IWorkItem> predicate = null)
+		                               Predicate<IWorkItem> exclusion = null)
 		{
 			if (geometry == null)
 			{
@@ -1484,7 +1487,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				return 0;
 			}
 
-			if (predicate != null && predicate(cachedItem))
+			if (exclusion != null && exclusion(cachedItem))
 			{
 				return 0;
 			}
