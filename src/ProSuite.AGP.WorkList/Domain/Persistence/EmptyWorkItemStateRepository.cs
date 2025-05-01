@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Xml;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence;
@@ -51,6 +53,14 @@ public class EmptyWorkItemStateRepository : IWorkItemStateRepository
 
 	public void Rename(string name)
 	{
-		throw new NotImplementedException();
+		string directoryName = Path.GetDirectoryName(WorkListDefinitionFilePath);
+		Assert.NotNull(directoryName);
+
+		string extension = Path.GetExtension(WorkListDefinitionFilePath);
+		Assert.NotNull(extension);
+
+		string path = Path.Combine(directoryName, $"{name}{extension}");
+
+		WorkListDefinitionFilePath = path;
 	}
 }

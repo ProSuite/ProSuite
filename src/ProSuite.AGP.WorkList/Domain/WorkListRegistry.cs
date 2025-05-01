@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.WorkList.Domain
@@ -14,7 +15,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		private readonly IDictionary<string, IWorkListFactory> _map =
 			new Dictionary<string, IWorkListFactory>();
 
-		public static WorkListRegistry Instance
+		public static IWorkListRegistry Instance
 		{
 			get
 			{
@@ -43,6 +44,24 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				return _map.TryGetValue(name, out IWorkListFactory factory) ? factory.Get() : null;
 			}
+		}
+
+		public async Task<IWorkList> GetAsync(string name)
+		{
+			bool exists;
+			IWorkListFactory factory;
+
+			lock (_registryLock)
+			{
+				exists = _map.TryGetValue(name, out factory);
+			}
+
+			if (exists)
+			{
+				return await factory.GetAsync();
+			}
+
+			return null;
 		}
 
 		public void Add(IWorkList workList)

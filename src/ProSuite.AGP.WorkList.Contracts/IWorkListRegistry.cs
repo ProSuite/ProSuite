@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
@@ -38,5 +39,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		bool WorklistExists([NotNull] string name);
 
 		bool AddOrReplace(IWorkList worklist);
+
+		Task<IWorkList> GetAsync(string name);
 	}
 }
