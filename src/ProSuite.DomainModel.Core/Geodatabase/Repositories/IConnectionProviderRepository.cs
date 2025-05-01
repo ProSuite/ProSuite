@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.Core.Geodatabase;
 
-namespace ProSuite.DomainModel.AO.Geodatabase
+namespace ProSuite.DomainModel.Core.Geodatabase.Repositories
 {
 	public interface IConnectionProviderRepository : IRepository<ConnectionProvider>
 	{
