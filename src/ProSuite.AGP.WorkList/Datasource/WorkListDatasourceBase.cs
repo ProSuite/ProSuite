@@ -71,7 +71,7 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 				return;
 			}
 
-			_tableNames = new ReadOnlyCollection<string>([name]);
+			_tableNames = new ReadOnlyCollection<string>(new List<string> { name });
 		}
 		catch (Exception ex)
 		{

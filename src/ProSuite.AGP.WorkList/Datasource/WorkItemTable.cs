@@ -87,7 +87,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 			if (_workList == null)
 			{
-				return new WorkItemCursor([]);
+				return new WorkItemCursor(Enumerable.Empty<object[]>());
 			}
 
 			IEnumerable<object[]> items =
@@ -106,7 +106,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 			if (_workList == null)
 			{
-				return new WorkItemCursor([]);
+				return new WorkItemCursor(Enumerable.Empty<object[]>());
 			}
 
 			_service.UpdateItemGeometries(_tableName, filter);
