@@ -4,8 +4,8 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.DomainModel.AO.Geodatabase.Legacy;
 using ProSuite.DomainModel.Core.Geodatabase;
+using ProSuite.DomainModel.Core.Geodatabase.LegacyTypes;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
 {

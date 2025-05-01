@@ -1,9 +1,8 @@
 using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
-using ProSuite.DomainModel.Core.Geodatabase;
 
-namespace ProSuite.DomainModel.AO.Geodatabase.Legacy
+namespace ProSuite.DomainModel.Core.Geodatabase.LegacyTypes
 {
 	[Obsolete(
 		"Not supported in ArcGIS 11 (or at least not programmatically) but must be retained due to legacy DDX compatibility.")]

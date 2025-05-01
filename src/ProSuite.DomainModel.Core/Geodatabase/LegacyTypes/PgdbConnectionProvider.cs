@@ -1,9 +1,8 @@
 using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
-using ProSuite.DomainModel.Core.Geodatabase;
 
-namespace ProSuite.DomainModel.AO.Geodatabase.Legacy
+namespace ProSuite.DomainModel.Core.Geodatabase.LegacyTypes
 {
 	/// <summary>
 	/// Legacy connection provider that is not supported anymore. However, in order
