@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Collections;
@@ -8,6 +10,7 @@ using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using Path = System.IO.Path;
 
 namespace ProSuite.Commons.AO.Geometry
 {
@@ -258,8 +261,35 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				try
 				{
-					_construction.ConstructBuffers(enumInput, distance,
-					                               outputCollection);
+					_construction.ConstructBuffers(enumInput, distance, outputCollection);
+				}
+				catch (COMException comException)
+				{
+					_msg.Debug($"Error buffering {enumInput.Count} geometries with distance " +
+					           $"{distance}. Checking geometries...", comException);
+
+					// TOP-5939: Starting with 11.2 or 11.3 vertical polylines or those with several
+					// points at the exact same XYZ location start throwing!
+					enumInput.Reset();
+
+					IGeometry currentGeometry = enumInput.Next();
+
+					while (currentGeometry != null)
+					{
+						TryBufferSimplified(currentGeometry, distance, outputCollection);
+
+						currentGeometry = enumInput.Next();
+					}
+
+					if (outputCollection.GeometryCount == 0)
+					{
+						// Work around not applicable or not effective...
+						_msg.Warn(
+							"Unable to work around buffer failure. Logging input to the Temp directory...");
+
+						TryLogGeometries("Buffer", enumInput);
+						throw;
+					}
 				}
 				catch (Exception)
 				{
@@ -274,6 +304,40 @@ namespace ProSuite.Commons.AO.Geometry
 			finally
 			{
 				ResetTemplateBag();
+			}
+		}
+
+		private void TryBufferSimplified(IGeometry geometry, double distance,
+		                                 IGeometryCollection outputCollection)
+		{
+			if (! geometry.IsEmpty &&
+			    geometry is IPolycurve polycurve)
+			{
+				IPoint emergencyPoint = polycurve.FromPoint;
+
+				var cloned = GeometryFactory.Clone(geometry);
+				GeometryUtils.Simplify(cloned, allowReorder: true);
+
+				IGeometry bufferResult;
+				// Empty: all points in one location
+				if (cloned.IsEmpty || GeometryUtils.GetLength(cloned) == 0)
+				{
+					// Let's use the start point instead
+					bufferResult = _construction.Buffer(emergencyPoint, distance);
+				}
+				else
+				{
+					// Buffering the single, simplified geometry
+					bufferResult = _construction.Buffer(cloned, distance);
+				}
+
+				object missing = Type.Missing;
+				outputCollection.AddGeometry(bufferResult, ref missing, ref missing);
+			}
+			else
+			{
+				_msg.Warn("Unexpected geometry type in buffer work-around: " +
+				          $"{GeometryUtils.ToString(geometry)}");
 			}
 		}
 
@@ -347,6 +411,50 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 
 			return (IGeometryCollection) _templateBag;
+		}
+
+		private static void TryLogGeometries(string functionName,
+		                                     IEnumGeometry geometries)
+		{
+			try
+			{
+				string timeString = $"{DateTime.Now:yyyyMMdd_HHmmss}";
+
+				string directoryName = $"{functionName}_{timeString}";
+
+				string resultDirectory =
+					Path.Combine(Path.GetTempPath(), directoryName);
+
+				if (Directory.Exists(resultDirectory))
+				{
+					resultDirectory += $"_{DateTime.Now.Millisecond}";
+				}
+
+				Directory.CreateDirectory(resultDirectory);
+
+				geometries.Reset();
+
+				IGeometry geometry = geometries.Next();
+
+				int index = 0;
+				while (geometry != null)
+				{
+					string sourcePath =
+						Path.Combine(resultDirectory, $"geometry{index++}_{timeString}.wkb");
+
+					byte[] bytes = GeometryUtils.ToWkb(geometry);
+
+					File.WriteAllBytes(sourcePath, bytes);
+
+					geometry = geometries.Next();
+				}
+
+				_msg.DebugFormat("Geometry have been logged to {0}", resultDirectory);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error logging geometries", e);
+			}
 		}
 
 		#region Nested types

@@ -167,6 +167,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_sketchStateHistory?.Deactivate();
 			RememberSketch();
+			IsInSketchPhase = false;
 		}
 
 		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -222,7 +223,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
-			if (await CanStartSketchPhaseAsync(selectedFeatures))
+			if (! IsInSketchPhase && await CanStartSketchPhaseAsync(selectedFeatures))
 			{
 				StartSketchPhase();
 			}

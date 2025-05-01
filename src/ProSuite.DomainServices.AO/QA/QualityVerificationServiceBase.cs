@@ -150,7 +150,7 @@ namespace ProSuite.DomainServices.AO.QA
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
 		                                [NotNull] Model model)
 		{
-			SetTestPerimeter(areaOfInterest, model.SpatialReferenceDescriptor.SpatialReference);
+			SetTestPerimeter(areaOfInterest, model.SpatialReferenceDescriptor.GetSpatialReference());
 		}
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
@@ -679,7 +679,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 					string aoiTableName = verificationReporter.WriteAreaOfInterest(
 						_externalIssueRepository, areaOfInterest,
-						_verificationContext.SpatialReferenceDescriptor.SpatialReference);
+						_verificationContext.SpatialReferenceDescriptor.GetSpatialReference());
 
 					#region Write MXD - TO BE DEPRECATED once AO 10.x support is dropped
 
@@ -727,8 +727,16 @@ namespace ProSuite.DomainServices.AO.QA
 			// TODO indicate if polygon, perimeter name, perimeter type etc.
 			reportBuilder.BeginVerification(areaOfInterest);
 
-			verificationReporter.AddVerifiedDatasets(
-				qualityVerification.VerificationDatasets.Select(vds => vds.Dataset));
+			foreach (var verificationDataset in qualityVerification.VerificationDatasets)
+			{
+				Dataset dataset = verificationDataset.Dataset;
+				double loadTime = verificationDataset.LoadTime;
+
+				IWorkspaceContext workspaceContext =
+					VerificationContext.GetWorkspaceContext(dataset);
+
+				verificationReporter.AddVerifiedDataset(verificationDataset, workspaceContext);
+			}
 
 			verificationReporter.AddVerifiedConditions(
 				qualityVerification.ConditionVerifications.Select(
@@ -749,7 +757,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			// Take from the model (as in the standalone/XML service)
 			ISpatialReference spatialReference =
-				_verificationContext.SpatialReferenceDescriptor.SpatialReference;
+				_verificationContext.SpatialReferenceDescriptor.GetSpatialReference();
 
 			return spatialReference;
 		}

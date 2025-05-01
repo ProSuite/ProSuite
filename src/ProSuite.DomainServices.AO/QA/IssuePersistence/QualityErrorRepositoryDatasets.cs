@@ -289,7 +289,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 			_msg.Warn("Using spatial reference of the verification context...");
 
-			return _verificationContext.SpatialReferenceDescriptor.SpatialReference;
+			return _verificationContext.SpatialReferenceDescriptor.GetSpatialReference();
 		}
 
 		#endregion

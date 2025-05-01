@@ -47,8 +47,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		[UsedImplicitly] private ClassDescriptor _attributeConfiguratorFactoryClassDescriptor;
 
 		[UsedImplicitly] private ClassDescriptor _datasetListBuilderFactoryClassDescriptor;
-		[UsedImplicitly] private SpatialReferenceDescriptor _spatialReferenceDescriptor;
-
+		
 		private bool _keepDatasetLocks;
 
 		[CanBeNull] private IWorkspaceContext _masterDatabaseWorkspaceContext;
@@ -245,13 +244,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			get { return _schemaOwnerConnectionProvider; }
 			set { _schemaOwnerConnectionProvider = value; }
-		}
-
-		[Required]
-		public SpatialReferenceDescriptor SpatialReferenceDescriptor
-		{
-			get { return _spatialReferenceDescriptor; }
-			set { _spatialReferenceDescriptor = value; }
 		}
 
 		/// <summary>

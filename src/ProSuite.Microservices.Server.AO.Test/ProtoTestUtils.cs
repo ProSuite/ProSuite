@@ -47,7 +47,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 			{
 				// If persistent, use model id
 				ObjectClassMsg objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(
-					dataset, modelId, model.SpatialReferenceDescriptor.SpatialReference);
+					dataset, modelId, model.SpatialReferenceDescriptor.GetSpatialReference());
 
 				schemaMsg.ClassDefinitions.Add(objectClassMsg);
 			}

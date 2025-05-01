@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -679,44 +680,52 @@ namespace ProSuite.Commons.Text
 		}
 
 		/// <summary>
-		/// Replaces special characters in the given text with underscores.
-		/// If no special character predicate is given, all characters that are not letters or
-		/// digits are considered special.
+		/// Replaces special characters, i.e. non-letters and non-digits in the given text with
+		/// the specified replacement character.
+		/// Optionally all diacritics (accents) can be removed, such as è or â.
+		/// Ligatures, such as Œ are not removed!
 		/// </summary>
 		/// <param name="text"></param>
-		/// <param name="isSpecialCharacter">The special character predicate.</param>
-		/// <param name="maxLength">The optional max length.</param>
+		/// <param name="specialCharReplacement"></param>
+		/// <param name="removeDiacritics"></param>
 		/// <returns></returns>
 		public static string ReplaceSpecialCharacters(
 			[NotNull] string text,
-			[CanBeNull] Predicate<char> isSpecialCharacter = null,
-			int maxLength = int.MaxValue)
+			char? specialCharReplacement = '_',
+			bool removeDiacritics = true)
 		{
-			var sb = new StringBuilder();
+			// TODO: The proper solution would be doing the same as this:
+			// https://github.com/apache/lucenenet/blob/master/src/Lucene.Net.Analysis.Common/Analysis/Miscellaneous/ASCIIFoldingFilter.cs
 
-			if (isSpecialCharacter == null)
-			{
-				isSpecialCharacter = c => ! char.IsLetterOrDigit(c);
-			}
+			var input = removeDiacritics ? text.Normalize(NormalizationForm.FormD) : text;
 
-			foreach (char c in text)
+			var resultBuilder = new StringBuilder();
+
+			foreach (char c in input)
 			{
-				if (sb.Length >= maxLength)
+				UnicodeCategory unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+
+				if (removeDiacritics && unicodeCategory == UnicodeCategory.NonSpacingMark)
 				{
-					break;
+					// Diacritic:
+					continue;
 				}
 
-				if (! isSpecialCharacter(c))
+				if (! char.IsLetterOrDigit(c))
 				{
-					sb.Append(c);
+					// Replace other special characters (blank, ', ", etc.)
+					if (specialCharReplacement.HasValue)
+					{
+						resultBuilder.Append(specialCharReplacement.Value);
+					}
 				}
 				else
 				{
-					sb.Append('_');
+					resultBuilder.Append(c);
 				}
 			}
 
-			return sb.ToString();
+			return resultBuilder.ToString();
 		}
 
 		/// <summary>

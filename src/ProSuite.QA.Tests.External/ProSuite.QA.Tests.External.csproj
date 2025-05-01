@@ -56,14 +56,6 @@
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).System.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.QA.Test, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.Test.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -84,6 +76,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA.Test" Version="0.6.4" />
     <PackageReference Include="Google.Protobuf" Version="3.24.0" />
     <PackageReference Include="Grpc" Version="2.46.6" />
   </ItemGroup>
@@ -96,6 +89,10 @@
     </Content>
     <Content Include="..\..\lib\licenses\grpc_Apache2.txt">
       <Link>Licenses\grpc_Apache2.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\lib\licenses\prosuite-microservice-definitions.license.txt">
+      <Link>Licenses\prosuite-microservice-definitions.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

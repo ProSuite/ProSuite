@@ -13,6 +13,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Testing;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
+using TestUtils = ProSuite.Commons.Test.Testing.TestUtils;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -22,14 +23,14 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
-			TestUtils.InitializeLicense();
+			TestUtils.ConfigureUnitTestLogging();
+			Commons.AO.Test.TestUtils.InitializeLicense();
 		}
 
 		[OneTimeTearDown]
 		public void TearDownFixture()
 		{
-			TestUtils.ReleaseLicense();
+			Commons.AO.Test.TestUtils.ReleaseLicense();
 		}
 
 		[Test]
@@ -192,6 +193,38 @@ namespace ProSuite.QA.Tests.Test
 			// positive orientation. AO-multipatch footprint does not report
 			// an island in these cases.
 			int expected = IntersectionUtils.UseCustomIntersect ? 32 : 30;
+			Assert.AreEqual(expected, errorCount);
+		}
+
+		[Test]
+		public void CanTestMinusculeMultipatchTop5939()
+		{
+			// This tests a work-around for a failure that started with 11.2 or 11.3 during the
+			// buffer operation of non-simple geometries.
+			string path = TestDataPreparer.ExtractZip("issue_tlmqa-219.gdb.zip").GetPath();
+
+			IFeatureWorkspace featureWorkspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);
+			IFeatureClass buildings =
+				DatasetUtils.OpenFeatureClass(featureWorkspace, "tlm_gebaeude_errors");
+
+			var test = new QaMpSinglePartFootprint(ReadOnlyTableFactory.Create(buildings));
+			test.ResolutionFactor = 1;
+			var runner = new QaTestRunner(test);
+
+			Stopwatch watch = Stopwatch.StartNew();
+
+			int errorCount;
+			try
+			{
+				errorCount = runner.Execute();
+			}
+			finally
+			{
+				watch.Stop();
+				Console.WriteLine("Finished successfully in {0}s", watch.Elapsed.TotalSeconds);
+			}
+
+			int expected = 0;
 			Assert.AreEqual(expected, errorCount);
 		}
 

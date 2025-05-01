@@ -11,6 +11,7 @@ using Grpc.Core;
 using ProSuite.Commons.Cryptography;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Microservices.Server.AO
@@ -71,7 +72,8 @@ namespace ProSuite.Microservices.Server.AO
 		{
 			if (string.IsNullOrEmpty(certificate))
 			{
-				_msg.InfoFormat("Certificate to be used for transport security (SSL/TLS) was not provided. Using insecure credentials.");
+				_msg.InfoFormat(
+					"Certificate to be used for transport security (SSL/TLS) was not provided. Using insecure credentials.");
 
 				return ServerCredentials.Insecure;
 			}
@@ -266,9 +268,11 @@ namespace ProSuite.Microservices.Server.AO
 
 			Metadata metadata = new Metadata { { exceptionBinKey, exceptionBytes } };
 
+			string exceptionMessage = ExceptionUtils.FormatMessage(exception);
+
 			var rpcException =
-				new RpcException(new Status(StatusCode.Aborted, exception.Message), metadata,
-				                 exception.Message);
+				new RpcException(new Status(StatusCode.Aborted, exceptionMessage), metadata,
+				                 exceptionMessage);
 
 			_msg.Debug("Re-throwing exception as RPC Exception", exception);
 

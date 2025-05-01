@@ -18,6 +18,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			CentralizableRemainInSketchMode =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.RemainInSketchMode), false);
+			CentralizableAllowOpenJawReshape =
+				InitializeSetting<bool>(
+					ReflectionUtils.GetProperty(() => LocalOptions.AllowOpenJawReshape), true);
 			CentralizableMoveOpenJawEndJunction =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.MoveOpenJawEndJunction), false);
@@ -30,7 +33,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		#region Centralizable Properties
 
 		public CentralizableSetting<bool> CentralizableShowPreview { get; private set; }
+
 		public CentralizableSetting<bool> CentralizableRemainInSketchMode { get; private set; }
+
+		public CentralizableSetting<bool> CentralizableAllowOpenJawReshape { get; private set; }
+
 		public CentralizableSetting<bool> CentralizableMoveOpenJawEndJunction { get; private set; }
 
 		public CentralizableSetting<bool> CentralizableUseTopologyTypeSelection
@@ -44,7 +51,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		#region Current Values
 
 		public bool ShowPreview => CentralizableShowPreview.CurrentValue;
+
 		public bool RemainInSketchMode => CentralizableRemainInSketchMode.CurrentValue;
+
+		public bool AllowOpenJawReshape => CentralizableAllowOpenJawReshape.CurrentValue;
 
 		public bool MoveOpenJawEndJunction
 		{
@@ -60,6 +70,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			CentralizableShowPreview.RevertToDefault();
 			CentralizableRemainInSketchMode.RevertToDefault();
+			CentralizableAllowOpenJawReshape.RevertToDefault();
 			CentralizableMoveOpenJawEndJunction.RevertToDefault();
 			CentralizableUseTopologyTypeSelection.RevertToDefault();
 		}
@@ -76,6 +87,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			if (HasLocalOverride(CentralizableRemainInSketchMode,
 			                     "Remain in sketch mode after reshape operation",
+			                     notifications))
+			{
+				result = true;
+			}
+
+			if (HasLocalOverride(CentralizableAllowOpenJawReshape, "Allow Y reshape",
 			                     notifications))
 			{
 				result = true;

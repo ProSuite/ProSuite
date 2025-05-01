@@ -16,6 +16,9 @@
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">net6.0-windows</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
+    <!-- This can be changed to 12 once only .NET 8 (and Pro 3.2) support is dropped. -->
+    <LangVersion>10</LangVersion>
+
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -24,13 +27,6 @@
     <DebugType>pdbonly</DebugType>
     <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Microservices.Client.GrpcNet.xml</DocumentationFile>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Reference Include="ProSuite.Microservices.Definitions.QA.Test, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.Test.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
@@ -44,6 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA.Test" Version="0.6.4" />
     <PackageReference Include="Grpc.HealthCheck" Version="2.62.0" />
     <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
   </ItemGroup>
@@ -55,6 +52,10 @@
     </Content>
     <Content Include="..\..\lib\licenses\grpc_Apache2.txt">
       <Link>Licenses\grpc_Apache2.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\lib\licenses\prosuite-microservice-definitions.license.txt">
+      <Link>Licenses\prosuite-microservice-definitions.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

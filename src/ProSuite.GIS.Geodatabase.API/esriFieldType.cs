@@ -27,5 +27,7 @@ namespace ProSuite.GIS.Geodatabase.API
 		esriFieldTypeGlobalID,
 
 		esriFieldTypeXML,
+
+		esriFieldTypeBigInteger
 	}
 }

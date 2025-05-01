@@ -122,5 +122,55 @@ namespace ProSuite.Commons.DomainModels
 
 			throw new ArgumentException(string.Format("Invalid full name: {0}", fullName));
 		}
+
+		public static bool IsValidUnqualifiedFieldName([NotNull] string value,
+		                                               out string message)
+		{
+			return IsValidUnqualifiedModelElementName(value, out message);
+		}
+
+		public static bool IsValidUnqualifiedTableName([NotNull] string value,
+		                                               out string message)
+		{
+			return IsValidUnqualifiedModelElementName(value, out message);
+		}
+
+		private static bool IsValidUnqualifiedModelElementName(string value, out string message)
+		{
+			// See http://support.esri.com/en/technical-article/000005588: 
+			// FAQ: What characters should not be used in ArcGIS for field names and table names?
+
+			if (value.IndexOf('.') >= 0)
+			{
+				message = "Unqualified name must not contain a dot";
+				return false;
+			}
+
+			if (! char.IsLetter(value[0]))
+			{
+				message = "Unqualified name must start with a letter";
+				return false;
+			}
+
+			for (var index = 0; index < value.Length; index++)
+			{
+				char c = value[index];
+
+				if (index == 0 && ! char.IsLetter(c))
+				{
+					message = "Unqualified name must start with a letter";
+					return false;
+				}
+
+				if (! char.IsLetterOrDigit(c) && c != '_')
+				{
+					message = "Unqualified name must contain only letters, digits, and underscores";
+					return false;
+				}
+			}
+
+			message = string.Empty;
+			return true;
+		}
 	}
 }
