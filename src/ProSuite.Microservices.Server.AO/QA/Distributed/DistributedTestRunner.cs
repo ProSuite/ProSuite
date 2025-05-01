@@ -1218,7 +1218,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			foreach (KeyValuePair<int, DdxModel> kvp in usedModelsById)
 			{
-				var model = (Model) kvp.Value;
+				var model = kvp.Value;
 				string dataSourceId = kvp.Key.ToString(CultureInfo.InvariantCulture);
 
 				DataSourceMsg dataSourceMsg =

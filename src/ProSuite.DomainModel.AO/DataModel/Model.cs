@@ -10,7 +10,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.Validation;
 using ProSuite.DomainModel.AO.DataModel.Harvesting;
 using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.Core;
@@ -27,6 +26,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		#region Fields
 
 		[UsedImplicitly] private bool _harvestQualifiedElementNames;
+		[UsedImplicitly] private bool _updateAliasNamesOnHarvest = true;
 		[UsedImplicitly] private DateTime? _lastHarvestedDate;
 		[UsedImplicitly] private string _lastHarvestedByUser;
 		[UsedImplicitly] private string _lastHarvestedConnectionString;
@@ -34,21 +34,12 @@ namespace ProSuite.DomainModel.AO.DataModel
 		[UsedImplicitly] private bool _ignoreUnversionedDatasets;
 		[UsedImplicitly] private bool _ignoreUnregisteredTables;
 
-		[UsedImplicitly] private bool _updateAliasNamesOnHarvest = true;
 		[UsedImplicitly] private string _datasetInclusionCriteria;
 		[UsedImplicitly] private string _datasetExclusionCriteria;
 
-		[UsedImplicitly] private ConnectionProvider _userConnectionProvider;
-
-		[UsedImplicitly] private SdeDirectConnectionProvider
-			_repositoryOwnerConnectionProvider;
-
-		[UsedImplicitly] private ConnectionProvider _schemaOwnerConnectionProvider;
-
 		[UsedImplicitly] private ClassDescriptor _attributeConfiguratorFactoryClassDescriptor;
-
 		[UsedImplicitly] private ClassDescriptor _datasetListBuilderFactoryClassDescriptor;
-		
+
 		private bool _keepDatasetLocks;
 
 		[CanBeNull] private IWorkspaceContext _masterDatabaseWorkspaceContext;
@@ -226,25 +217,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 				return _lastMasterDatabaseAccessError;
 			}
-		}
-
-		[Required]
-		public ConnectionProvider UserConnectionProvider
-		{
-			get { return _userConnectionProvider; }
-			set { _userConnectionProvider = value; }
-		}
-
-		public SdeDirectConnectionProvider RepositoryOwnerConnectionProvider
-		{
-			get { return _repositoryOwnerConnectionProvider; }
-			set { _repositoryOwnerConnectionProvider = value; }
-		}
-
-		public ConnectionProvider SchemaOwnerConnectionProvider
-		{
-			get { return _schemaOwnerConnectionProvider; }
-			set { _schemaOwnerConnectionProvider = value; }
 		}
 
 		/// <summary>

@@ -7,6 +7,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Validation;
+using ProSuite.DomainModel.Core.Geodatabase;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
@@ -22,6 +23,12 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[UsedImplicitly] private bool _elementNamesAreQualified;
 		[UsedImplicitly] private string _defaultDatabaseName;
 		[UsedImplicitly] private string _defaultDatabaseSchemaOwner;
+		[UsedImplicitly] private string _schemaOwner;
+		[UsedImplicitly] private string _datasetPrefix;
+
+		[UsedImplicitly]
+		private SqlCaseSensitivity _sqlCaseSensitivity = SqlCaseSensitivity.SameAsDatabase;
+
 		[UsedImplicitly] private bool _useDefaultDatabaseOnlyForSchema;
 
 		[UsedImplicitly] private readonly IList<Dataset> _datasets = new List<Dataset>();
@@ -31,29 +38,24 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		[UsedImplicitly] private SpatialReferenceDescriptor _spatialReferenceDescriptor;
 
-		[UsedImplicitly]
-		private SqlCaseSensitivity _sqlCaseSensitivity = SqlCaseSensitivity.SameAsDatabase;
+		[UsedImplicitly] private ConnectionProvider _userConnectionProvider;
+
+		[UsedImplicitly] private SdeDirectConnectionProvider
+			_repositoryOwnerConnectionProvider;
+
+		[UsedImplicitly] private ConnectionProvider _schemaOwnerConnectionProvider;
+
+		[UsedImplicitly] private double _defaultMinimumSegmentLength = 2;
 
 		private bool _specialDatasetsAssigned;
+
 		private Dictionary<SimpleTerrainDataset, SimpleTerrainDataset> _terrainDatasets;
-
-		/// <summary>
-		/// Name of the schema owner, e.g. "TOPGIS_TLM"
-		/// </summary>
-		[UsedImplicitly] private string _schemaOwner;
-
-		/// <summary>
-		/// Prefix for individual datasets, e.g. "TLM_"
-		/// </summary>
-		[UsedImplicitly] private string _datasetPrefix;
 
 		[NotNull] private readonly Dictionary<string, Dataset> _datasetIndex =
 			new Dictionary<string, Dataset>(100, StringComparer.OrdinalIgnoreCase);
 
 		[NotNull] private readonly Dictionary<string, Association> _associationIndex =
 			new Dictionary<string, Association>(100, StringComparer.OrdinalIgnoreCase);
-
-		[UsedImplicitly] private double _defaultMinimumSegmentLength = 2;
 
 		#region Constructors
 
@@ -202,6 +204,25 @@ namespace ProSuite.DomainModel.Core.DataModel
 		{
 			get { return _spatialReferenceDescriptor; }
 			set { _spatialReferenceDescriptor = value; }
+		}
+
+		[Required]
+		public ConnectionProvider UserConnectionProvider
+		{
+			get { return _userConnectionProvider; }
+			set { _userConnectionProvider = value; }
+		}
+
+		public SdeDirectConnectionProvider RepositoryOwnerConnectionProvider
+		{
+			get { return _repositoryOwnerConnectionProvider; }
+			set { _repositoryOwnerConnectionProvider = value; }
+		}
+
+		public ConnectionProvider SchemaOwnerConnectionProvider
+		{
+			get { return _schemaOwnerConnectionProvider; }
+			set { _schemaOwnerConnectionProvider = value; }
 		}
 
 		[UsedImplicitly]
@@ -658,9 +679,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 				return GetDatasetFromIndex(name);
 			}
 
-			return _datasets.FirstOrDefault(
-				dataset => string.Equals(dataset.Name, name,
-				                         StringComparison.OrdinalIgnoreCase));
+			return _datasets.FirstOrDefault(dataset => string.Equals(dataset.Name, name,
+				                                StringComparison.OrdinalIgnoreCase));
 		}
 
 		[CanBeNull]
