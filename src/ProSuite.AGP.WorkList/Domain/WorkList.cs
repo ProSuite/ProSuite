@@ -164,11 +164,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged();
 		}
 
-		private bool _itemsGeometryDraftMode = true;
+		private bool _itemsGeometryMode = true;
 
-		public void SetItemsGeometryDraftMode(bool enable)
+		public void SetItemsGeometryMode(bool enable)
 		{
-			_itemsGeometryDraftMode = enable;
+			_itemsGeometryMode = enable;
 
 			// invalidate map
 			OnWorkListChanged(MapView.Active.Extent);
@@ -195,7 +195,7 @@ namespace ProSuite.AGP.WorkList.Domain
 						                                      item.Extent.SpatialReference));
 				}
 
-				if (item.HasFeatureGeometry && ! _itemsGeometryDraftMode)
+				if (item.HasFeatureGeometry && _itemsGeometryMode)
 				{
 					return (Polygon) item.Geometry;
 				}
