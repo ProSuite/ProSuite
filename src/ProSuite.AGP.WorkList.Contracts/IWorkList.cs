@@ -102,7 +102,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		void Invalidate(List<long> oids);
 
-		void UpdateItemGeometries(QueryFilter filter);
+		void UpdateExistingItemGeometries(QueryFilter filter);
 
 		void ComputeTotalCount();
 	}

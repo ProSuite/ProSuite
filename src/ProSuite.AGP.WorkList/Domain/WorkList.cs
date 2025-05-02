@@ -276,8 +276,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region GetItems
 
-		// TODO: (daro) rename to UpdateItemFeatureGeometry
-		public void UpdateItemGeometries(QueryFilter filter)
+		public void UpdateExistingItemGeometries(QueryFilter filter)
 		{
 			// Don't update items already having feature geometry
 			Predicate<IWorkItem> exclusion = item => item.HasFeatureGeometry;
@@ -294,7 +293,7 @@ namespace ProSuite.AGP.WorkList.Domain
 					continue;
 				}
 
-				count += UpdateItemGeometry(item, geometry, exclusion);
+				count += UpdateExistingItemGeometry(item, geometry, exclusion);
 			}
 
 			// Avoid flooding the log.
@@ -1445,7 +1444,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				int count = 0;
 				foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter))
 				{
-					count += UpdateItemGeometry(item, geometry);
+					count += UpdateExistingItemGeometry(item, geometry);
 					invalidateOids.Add(item.OID);
 				}
 
@@ -1471,9 +1470,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			return invalidateOids;
 		}
 
-		private int UpdateItemGeometry([NotNull] IWorkItem item,
-		                               [CanBeNull] Geometry geometry,
-		                               Predicate<IWorkItem> exclusion = null)
+		private int UpdateExistingItemGeometry([NotNull] IWorkItem item,
+		                                       [CanBeNull] Geometry geometry,
+		                                       Predicate<IWorkItem> exclusion = null)
 		{
 			if (geometry == null)
 			{
@@ -1487,34 +1486,21 @@ namespace ProSuite.AGP.WorkList.Domain
 				return 0;
 			}
 
-			if (exclusion != null && exclusion(cachedItem))
-			{
-				return 0;
-			}
-
 			Assert.True(cachedItem.OID > 0, "item is not initialized");
 
-			if (UseItemGeometry(geometry))
-			{
-				cachedItem.SetGeometry(GeometryUtils.Buffer(geometry, 10));
-			}
-			else
-			{
-				cachedItem.SetExtent(geometry.Extent);
-			}
-			return 1;
+			return UpdateItemGeometry(cachedItem, geometry, exclusion);
 		}
 
-		private static int UpdateExistingItemGeometry([NotNull] IWorkItem item,
-		                                              [CanBeNull] Geometry geometry,
-		                                              Predicate<IWorkItem> predicate = null)
+		private static int UpdateItemGeometry([NotNull] IWorkItem item,
+		                                      [CanBeNull] Geometry geometry,
+		                                      Predicate<IWorkItem> exclusion = null)
 		{
 			if (geometry == null)
 			{
 				return 0;
 			}
 
-			if (predicate != null && predicate(item))
+			if (exclusion != null && exclusion(item))
 			{
 				return 0;
 			}
