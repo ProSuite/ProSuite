@@ -120,7 +120,7 @@ public class WorkListGeometryService
 					return;
 				}
 
-				workList.UpdateItemGeometries(filter);
+				workList.UpdateExistingItemGeometries(filter);
 			}
 		}
 		catch (OperationCanceledException ex)

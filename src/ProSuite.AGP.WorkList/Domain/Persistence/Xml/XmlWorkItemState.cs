@@ -43,5 +43,10 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		// todo daro: replace with UUID as workspace id?
 		[XmlAttribute("connectionString")]
 		public string ConnectionString { get; set; }
+
+		public override string ToString()
+		{
+			return $"item id={OID}, row oid={Row.OID}, {Row.TableName}, {Status}, {Visited}";
+		}
 	}
 }

@@ -42,7 +42,7 @@ namespace ProSuite.AGP.WorkList
 
 		public string DefinitionQuery { get; protected set; }
 
-		public string GetRelevantSubFields(bool excludeGeometry = false)
+		private string GetRelevantSubFields(bool excludeGeometry = false)
 		{
 			string subFields = $"{_oidField}";
 

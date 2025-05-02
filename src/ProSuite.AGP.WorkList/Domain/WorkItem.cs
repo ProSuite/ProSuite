@@ -133,7 +133,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public override string ToString()
 		{
-			return $"{GdbRowProxy}: {Status}, {Visited}";
+			return $"item id={OID}, row oid={ObjectID}, {GdbRowProxy.Table.Name}, {Status}, {Visited}";
 		}
 
 		[NotNull]
