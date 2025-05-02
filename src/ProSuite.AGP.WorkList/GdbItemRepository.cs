@@ -11,292 +11,281 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.AGP.WorkList
+namespace ProSuite.AGP.WorkList;
+
+public abstract class GdbItemRepository : IWorkItemRepository
 {
-	// Note maybe all SDK code, like open workspace, etc. should be in here. Not in DatabaseSourceClass for instance.
-	public abstract class GdbItemRepository : IWorkItemRepository
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	private int _lastUsedOid;
+
+	// TODO: Create basic record for each source class: Table, DefinitionQuery, Schema
+	//		 re-use DbStatusSourceClassDefinition?
+	protected GdbItemRepository(
+		IList<ISourceClass> sourceClasses,
+		IWorkItemStateRepository workItemStateRepository)
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		SourceClasses = sourceClasses;
 
-		private int _lastUsedOid;
+		WorkItemStateRepository = workItemStateRepository;
+	}
 
-		// TODO: Create basic record for each source class: Table, DefinitionQuery, Schema
-		//		 re-use DbStatusSourceClassDefinition?
-		protected GdbItemRepository(
-			IList<ISourceClass> sourceClasses,
-			IWorkItemStateRepository workItemStateRepository)
+	// TODO: (daro) still needed? check usage.
+	[CanBeNull]
+	public IWorkListItemDatastore TableSchema { get; protected set; }
+
+	[NotNull]
+	public IWorkItemStateRepository WorkItemStateRepository { get; }
+
+	[NotNull]
+	public IList<ISourceClass> SourceClasses { get; }
+
+	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItemsCore(
+		QueryFilter filter, bool excludeGeometry)
+	{
+		return SourceClasses.SelectMany(sourceClass =>
+			                                GetItemsCore(sourceClass, filter, excludeGeometry));
+	}
+
+	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+		QueryFilter filter,
+		WorkItemStatus? statusFilter = null,
+		bool recycle = true,
+		bool excludeGeometry = false)
+	{
+		return SourceClasses.SelectMany(sourceClass =>
+			                                GetItems(sourceClass, filter,
+			                                         statusFilter, recycle,
+			                                         excludeGeometry));
+	}
+
+	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+		Table table,
+		QueryFilter filter = null,
+		WorkItemStatus? statusFilter = null,
+		bool recycle = true,
+		bool excludeGeometry = false)
+	{
+		return SourceClasses.Where(sc => sc.Uses(new GdbTableIdentity(table)))
+		                    .SelectMany(sourceClass =>
+			                                GetItems(sourceClass, table, filter,
+			                                         statusFilter, recycle, excludeGeometry));
+	}
+
+	public abstract void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
+
+	public abstract bool CanUseTableSchema(
+		[CanBeNull] IWorkListItemDatastore workListItemSchema);
+
+	public long Count()
+	{
+		return SourceClasses.Sum(sourceClass => Count(sourceClass, new QueryFilter()));
+	}
+
+	[CanBeNull]
+	public Row GetSourceRow(ISourceClass sourceClass, long oid)
+	{
+		var filter = new QueryFilter { ObjectIDs = new List<long> { oid } };
+
+		return GetRows(sourceClass, filter, false).FirstOrDefault();
+	}
+
+	// TODO: Rename to Update?
+	public void SetVisited(IWorkItem item)
+	{
+		WorkItemStateRepository.UpdateState(item);
+	}
+
+	public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
+	{
+		item.Status = status;
+
+		GdbTableIdentity tableId = item.GdbRowProxy.Table;
+
+		ISourceClass source =
+			SourceClasses.FirstOrDefault(s => s.Uses(tableId));
+		Assert.NotNull(source);
+
+		// todo: daro read / restore item again from db? restore pattern in case of failure?
+		await SetStatusCoreAsync(item, source);
+	}
+
+	public void UpdateState(IWorkItem item)
+	{
+		WorkItemStateRepository.UpdateState(item);
+	}
+
+	public void Commit()
+	{
+		WorkItemStateRepository.Commit(SourceClasses);
+	}
+
+	public void SetCurrentIndex(int currentIndex)
+	{
+		WorkItemStateRepository.CurrentIndex = currentIndex;
+	}
+
+	public int GetCurrentIndex()
+	{
+		return WorkItemStateRepository.CurrentIndex ?? -1;
+	}
+
+	public long GetNextOid()
+	{
+		return ++_lastUsedOid;
+	}
+
+	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItemsCore(
+		ISourceClass sourceClass, QueryFilter filter, bool excludeGeometry)
+	{
+		var count = 0;
+
+		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
+
+		filter = sourceClass.EnsureValidFilter(filter, excludeGeometry);
+
+		// Selection Item ObjectIDs to filter out, or change of SearchOrder:
+		AdaptSourceFilter(filter, sourceClass);
+
+		foreach (Row row in GetRows(sourceClass, filter, true))
 		{
-			SourceClasses = sourceClasses;
-			
-			WorkItemStateRepository = workItemStateRepository;
+			IWorkItem item = CreateWorkItemCore(row, sourceClass);
+
+			Geometry geometry = row is Feature feature ? feature.GetShape() : null;
+
+			count += 1;
+			yield return KeyValuePair.Create(item, geometry);
 		}
 
-		[NotNull]
-		public IWorkItemStateRepository WorkItemStateRepository { get; }
+		_msg.DebugStopTiming(
+			watch, $"GetItems() {sourceClass.Name}: {count} items");
+	}
 
-		// TODO: (daro) still needed? check usage.
-		[CanBeNull]
-		public IWorkListItemDatastore TableSchema { get; protected set; }
+	private long Count([NotNull] ISourceClass sourceClass, [NotNull] QueryFilter filter)
+	{
+		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		[NotNull]
-		public IList<ISourceClass> SourceClasses { get; }
+		// include done and todo
+		filter.WhereClause = sourceClass.CreateWhereClause(null);
 
-		public abstract void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
+		AdaptSourceFilter(filter, sourceClass);
 
-		public abstract bool CanUseTableSchema(
-			[CanBeNull] IWorkListItemDatastore workListItemSchema);
+		// TODO: (daro) pass in name
+		using Table table = OpenTable(sourceClass);
 
-		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItemsCore(
-			QueryFilter filter, bool excludeGeometry)
+		if (table == null)
 		{
-			return SourceClasses.SelectMany(sourceClass => GetItemsCore(sourceClass, filter, excludeGeometry));
+			_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
+			return 0;
 		}
 
-		private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItemsCore(
-			ISourceClass sourceClass, QueryFilter filter, bool excludeGeometry)
+		using TableDefinition definition = table.GetDefinition();
+		filter.SubFields = definition.GetObjectIDField();
+
+		long count = table.GetCount(filter);
+
+		_msg.DebugStopTiming(
+			watch, $"Count() {sourceClass.Name}: {count} items");
+
+		return count;
+	}
+
+	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+		ISourceClass sourceClass,
+		QueryFilter filter,
+		WorkItemStatus? statusFilter = null,
+		bool recycle = true, bool excludeGeometry = false)
+	{
+		var count = 0;
+
+		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
+
+		filter = sourceClass.EnsureValidFilter(filter, excludeGeometry);
+
+		// Source classes can set the respective filters / definition queries
+		// TODO: (daro) drop todo below?
+		// TODO: Consider getting only the right status, but that means
+		// extra round trips:
+		filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
+
+		// Selection Item ObjectIDs to filter out, or change of SearchOrder:
+		AdaptSourceFilter(filter, sourceClass);
+
+		foreach (Row row in GetRows(sourceClass, filter, recycle))
 		{
-			int count = 0;
+			IWorkItem item = CreateWorkItemCore(row, sourceClass);
+			WorkItemStateRepository.Refresh(item);
 
-			Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
+			Geometry geometry = row is Feature feature ? feature.GetShape() : null;
 
-			filter = sourceClass.EnsureValidFilter(filter, excludeGeometry);
-
-			// Selection Item ObjectIDs to filter out, or change of SearchOrder:
-			AdaptSourceFilter(filter, sourceClass);
-
-			foreach (Row row in GetRows(sourceClass, filter, recycle: true))
-			{
-				IWorkItem item = CreateWorkItemCore(row, sourceClass);
-
-				Geometry geometry = row is Feature feature ? feature.GetShape() : null;
-
-				count += 1;
-				yield return KeyValuePair.Create(item, geometry);
-			}
-
-			_msg.DebugStopTiming(
-				watch, $"GetItems() {sourceClass.Name}: {count} items");
+			count += 1;
+			yield return KeyValuePair.Create(item, geometry);
 		}
 
-		public long Count()
+		_msg.DebugStopTiming(
+			watch, $"GetItems() {sourceClass.Name}: {count} items");
+	}
+
+	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+		ISourceClass sourceClass, Table table,
+		QueryFilter filter,
+		WorkItemStatus? statusFilter = null,
+		bool recycle = true, bool excludeGeometry = false)
+	{
+		var count = 0;
+
+		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
+
+		filter = sourceClass.EnsureValidFilter(filter, excludeGeometry);
+
+		// Source classes can set the respective filters / definition queries
+		// TODO: (daro) drop todo below?
+		// TODO: Consider getting only the right status, but that means
+		// extra round trips:
+		filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
+
+		// Selection Item ObjectIDs to filter out, or change of SearchOrder:
+		AdaptSourceFilter(filter, sourceClass);
+
+		foreach (Row row in GetRows(table, filter, recycle))
 		{
-			return SourceClasses.Sum(sourceClass => Count(sourceClass, new QueryFilter()));
+			IWorkItem item = CreateWorkItemCore(row, sourceClass);
+			WorkItemStateRepository.Refresh(item);
+
+			Geometry geometry = row is Feature feature ? feature.GetShape() : null;
+
+			count += 1;
+			yield return KeyValuePair.Create(item, geometry);
 		}
 
-		private long Count([NotNull] ISourceClass sourceClass, [NotNull] QueryFilter filter)
+		_msg.DebugStopTiming(
+			watch, $"GetItems() {sourceClass.Name}: {count} items");
+	}
+
+	// todo: (daro) move to ISourceClass?
+	protected abstract void AdaptSourceFilter([NotNull] QueryFilter filter,
+	                                          [NotNull] ISourceClass sourceClass);
+
+	protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
+	                                          [NotNull] ISourceClass source)
+	{
+		return Task.FromResult(0);
+	}
+
+	private IEnumerable<Row> GetRows([NotNull] ISourceClass sourceClass,
+	                                 [CanBeNull] QueryFilter filter,
+	                                 bool recycle)
+	{
+		// TODO: (daro) pass in name
+		Table table = OpenTable(sourceClass);
+
+		if (table == null)
 		{
-			Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
-
-			// include done and todo
-			filter.WhereClause = sourceClass.CreateWhereClause(null);
-
-			AdaptSourceFilter(filter, sourceClass);
-
-			// TODO: (daro) pass in name
-			using Table table = OpenTable(sourceClass);
-
-			if (table == null)
-			{
-				_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
-				return 0;
-			}
-
-			using TableDefinition definition = table.GetDefinition();
-			filter.SubFields = definition.GetObjectIDField();
-
-			long count = table.GetCount(filter);
-
-			_msg.DebugStopTiming(
-				watch, $"Count() {sourceClass.Name}: {count} items");
-
-			return count;
+			_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
+			yield break;
 		}
 
-		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-			QueryFilter filter,
-			WorkItemStatus? statusFilter = null,
-			bool recycle = true,
-			bool excludeGeometry = false)
-		{
-			return SourceClasses.SelectMany(sourceClass =>
-				                                GetItems(sourceClass, filter,
-				                                         statusFilter, recycle,
-				                                         excludeGeometry));
-		}
-
-		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-			Table table,
-			QueryFilter filter = null,
-			WorkItemStatus? statusFilter = null,
-			bool recycle = true,
-			bool excludeGeometry = false)
-		{
-			return SourceClasses.Where(sc => sc.Uses(new GdbTableIdentity(table)))
-			                    .SelectMany(sourceClass =>
-				                                GetItems(sourceClass, table, filter,
-				                                         statusFilter, recycle, excludeGeometry));
-		}
-
-		private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-			ISourceClass sourceClass,
-			QueryFilter filter,
-			WorkItemStatus? statusFilter = null,
-			bool recycle = true, bool excludeGeometry = false)
-		{
-			int count = 0;
-
-			Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
-
-			filter = sourceClass.EnsureValidFilter(filter, excludeGeometry);
-
-			// Source classes can set the respective filters / definition queries
-			// TODO: (daro) drop todo below?
-			// TODO: Consider getting only the right status, but that means
-			// extra round trips:
-			filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
-
-			// Selection Item ObjectIDs to filter out, or change of SearchOrder:
-			AdaptSourceFilter(filter, sourceClass);
-
-			foreach (Row row in GetRows(sourceClass, filter, recycle))
-			{
-				IWorkItem item = CreateWorkItemCore(row, sourceClass);
-				WorkItemStateRepository.Refresh(item);
-
-				Geometry geometry = row is Feature feature ? feature.GetShape() : null;
-
-				count += 1;
-				yield return KeyValuePair.Create(item, geometry);
-			}
-
-			_msg.DebugStopTiming(
-				watch, $"GetItems() {sourceClass.Name}: {count} items");
-		}
-
-		private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-			ISourceClass sourceClass, Table table,
-			QueryFilter filter,
-			WorkItemStatus? statusFilter = null,
-			bool recycle = true, bool excludeGeometry = false)
-		{
-			int count = 0;
-
-			Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
-
-			filter = sourceClass.EnsureValidFilter(filter, excludeGeometry);
-
-			// Source classes can set the respective filters / definition queries
-			// TODO: (daro) drop todo below?
-			// TODO: Consider getting only the right status, but that means
-			// extra round trips:
-			filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
-
-			// Selection Item ObjectIDs to filter out, or change of SearchOrder:
-			AdaptSourceFilter(filter, sourceClass);
-
-			foreach (Row row in GetRows(table, filter, recycle))
-			{
-				IWorkItem item = CreateWorkItemCore(row, sourceClass);
-				WorkItemStateRepository.Refresh(item);
-
-				Geometry geometry = row is Feature feature ? feature.GetShape() : null;
-
-				count += 1;
-				yield return KeyValuePair.Create(item, geometry);
-			}
-
-			_msg.DebugStopTiming(
-				watch, $"GetItems() {sourceClass.Name}: {count} items");
-		}
-
-		[CanBeNull]
-		public Row GetSourceRow(ISourceClass sourceClass, long oid)
-		{
-			var filter = new QueryFilter { ObjectIDs = new List<long> { oid } };
-
-			return GetRows(sourceClass, filter, recycle: false).FirstOrDefault();
-		}
-
-		// TODO: Rename to Update?
-		public void SetVisited(IWorkItem item)
-		{
-			WorkItemStateRepository.UpdateState(item);
-		}
-
-		public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
-		{
-			item.Status = status;
-
-			GdbTableIdentity tableId = item.GdbRowProxy.Table;
-
-			ISourceClass source =
-				SourceClasses.FirstOrDefault(s => s.Uses(tableId));
-			Assert.NotNull(source);
-
-			// todo: daro read / restore item again from db? restore pattern in case of failure?
-			await SetStatusCoreAsync(item, source);
-		}
-		
-		public void UpdateState(IWorkItem item)
-		{
-			WorkItemStateRepository.UpdateState(item);
-		}
-
-		public void Commit()
-		{
-			WorkItemStateRepository.Commit(SourceClasses);
-		}
-
-		public void SetCurrentIndex(int currentIndex)
-		{
-			WorkItemStateRepository.CurrentIndex = currentIndex;
-		}
-
-		public int GetCurrentIndex()
-		{
-			return WorkItemStateRepository.CurrentIndex ?? -1;
-		}
-		
-		// todo: (daro) move to ISourceClass?
-		protected abstract void AdaptSourceFilter([NotNull] QueryFilter filter,
-		                                          [NotNull] ISourceClass sourceClass);
-
-		protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
-		                                          [NotNull] ISourceClass source)
-		{
-			return Task.FromResult(0);
-		}
-
-		private IEnumerable<Row> GetRows([NotNull] ISourceClass sourceClass,
-		                                 [CanBeNull] QueryFilter filter,
-		                                 bool recycle)
-		{
-			// TODO: (daro) pass in name
-			Table table = OpenTable(sourceClass);
-
-			if (table == null)
-			{
-				_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
-				yield break;
-			}
-
-			try
-			{
-				// Todo: daro check recycle
-				foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
-				{
-					yield return row;
-				}
-			}
-			finally
-			{
-				table.Dispose();
-			}
-		}
-
-		private IEnumerable<Row> GetRows([NotNull] Table table,
-		                                 [CanBeNull] QueryFilter filter,
-		                                 bool recycle)
+		try
 		{
 			// Todo: daro check recycle
 			foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
@@ -304,37 +293,47 @@ namespace ProSuite.AGP.WorkList
 				yield return row;
 			}
 		}
-
-		// TODO: (daro) still needed?
-		[CanBeNull]
-		protected virtual IAttributeReader CreateAttributeReaderCore(
-			[NotNull] TableDefinition definition,
-			[CanBeNull] IWorkListItemDatastore tableSchema)
+		finally
 		{
-			// TODO: Make independent of attribute list, use standard AttributeRoles
-			Attributes[] attributes = new[]
-			                          {
-				                          Attributes.QualityConditionName,
-				                          Attributes.IssueCodeDescription,
-				                          Attributes.InvolvedObjects,
-				                          Attributes.IssueSeverity,
-				                          Attributes.IssueCode,
-				                          Attributes.IssueDescription
-			                          };
-
-			return tableSchema?.CreateAttributeReader(definition, attributes);
-		}
-
-		[NotNull]
-		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row,
-		                                                [NotNull] ISourceClass sourceClass);
-
-		[CanBeNull]
-		protected abstract Table OpenTable([NotNull] ISourceClass sourceClass);
-
-		public long GetNextOid()
-		{
-			return ++_lastUsedOid;
+			table.Dispose();
 		}
 	}
+
+	private IEnumerable<Row> GetRows([NotNull] Table table,
+	                                 [CanBeNull] QueryFilter filter,
+	                                 bool recycle)
+	{
+		// Todo: daro check recycle
+		foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
+		{
+			yield return row;
+		}
+	}
+
+	// TODO: (daro) still needed?
+	[CanBeNull]
+	protected virtual IAttributeReader CreateAttributeReaderCore(
+		[NotNull] TableDefinition definition,
+		[CanBeNull] IWorkListItemDatastore tableSchema)
+	{
+		// TODO: Make independent of attribute list, use standard AttributeRoles
+		var attributes = new[]
+		                 {
+			                 Attributes.QualityConditionName,
+			                 Attributes.IssueCodeDescription,
+			                 Attributes.InvolvedObjects,
+			                 Attributes.IssueSeverity,
+			                 Attributes.IssueCode,
+			                 Attributes.IssueDescription
+		                 };
+
+		return tableSchema?.CreateAttributeReader(definition, attributes);
+	}
+
+	[NotNull]
+	protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row,
+	                                                [NotNull] ISourceClass sourceClass);
+
+	[CanBeNull]
+	protected abstract Table OpenTable([NotNull] ISourceClass sourceClass);
 }
