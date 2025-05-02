@@ -140,10 +140,10 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			await Repository.SetStatusAsync(item, status);
 
-			// If an item visibility changes to 'Done' the item is not part
-			// of the work list anymore, respectively GetItems(QuerFilter, bool, int)
-			// does not return the Done-item anymore. Therefor use the item's Extent
-			// to invalidate the work list layer.
+			// If an item visibility changes to 'Done' the item might not be part
+			// of the work list anymore depending on the work list's Visibility,
+			// respectively GetItems() does not return the Done-item anymore.
+			// Therefor use the item's Extent to invalidate the work list layer.
 			OnWorkListChanged();
 		}
 
@@ -284,7 +284,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			Stopwatch watch = Stopwatch.StartNew();
 
 			int count = 0;
-			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItemsCore(filter, false))
+			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter))
 			{
 				// TODO: (daro) refactor
 				// Don't update for multipatches, points, etc.
@@ -344,7 +344,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			//		 filter by AOI.
 
 			// TODO: (daro) recycle is always true!
-			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter, itemStatus, true, excludeGeometry))
+			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter, itemStatus, excludeGeometry))
 			{
 				bool exists;
 				IWorkItem cachedItem;
@@ -358,17 +358,16 @@ namespace ProSuite.AGP.WorkList.Domain
 				{
 					Assert.True(cachedItem.OID > 0, "item is not initialized");
 
-					// Don't refresh the item. Use cached geometry. In case of a geometry update, insert => IRowCache kicks in
-					// If it's a cached item > update its state
-					cachedItem.Status = item.Status;
-
-					Repository.UpdateState(cachedItem);
-
 					yield return cachedItem;
 				}
 				else
 				{
 					Assert.True(TryAddItem(item), $"Could not add {item}");
+
+					// it's a unkown item > refresh it's state (status, visited) either
+					// from DB (DbStatusWorkItem) or from definition file (SelectionItem).
+					Repository.Refresh(item);
+
 					newItemsCount++;
 
 					if (geometry?.Extent is { IsEmpty: false })
@@ -1323,20 +1322,24 @@ namespace ProSuite.AGP.WorkList.Domain
 
 				// TODO: (DARO) implement Shapefile!
 				QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
-
 				Stopwatch watch = Stopwatch.StartNew();
 
 				SpatialReference sref = null;
 				int newItemsCount = 0;
-				foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter))
+				foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter, null))
 				{
 					Assert.True(TryAddItem(item), $"Could not add {item}");
+
+					// it's a unkown item > refresh it's state (status, visited) either
+					// from DB (DbStatusWorkItem) or from definition file (SelectionItem).
+					Repository.Refresh(item);
+
 					newItemsCount++;
 
 					// add oid after add item to _items
 					invalidateOids.Add(item.OID);
 
-					UpdateExistingItemGeometry(item, geometry);
+					UpdateItemGeometry(item, geometry);
 
 					if (geometry == null)
 					{
@@ -1442,7 +1445,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				Stopwatch watch = Stopwatch.StartNew();
 
 				int count = 0;
-				foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter))
+				foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter, null))
 				{
 					count += UpdateExistingItemGeometry(item, geometry);
 					invalidateOids.Add(item.OID);
