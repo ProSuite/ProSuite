@@ -12,7 +12,7 @@ using ProSuite.DomainModel.Core.Geodatabase;
 namespace ProSuite.DomainModel.Core.DataModel
 {
 	public abstract class DdxModel : VersionedEntityWithMetadata, IDetachedState, INamed,
-	                                 IAnnotated, IDatasetContainer
+	                                 IAnnotated, IDatasetContainer, IModelHarvest
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -279,21 +279,21 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public DateTime? LastHarvestedDate
 		{
 			get { return _lastHarvestedDate; }
-			protected set { _lastHarvestedDate = value; }
+			set { _lastHarvestedDate = value; }
 		}
 
 		[UsedImplicitly]
 		public string LastHarvestedByUser
 		{
 			get { return _lastHarvestedByUser; }
-			protected set { _lastHarvestedByUser = value; }
+			set { _lastHarvestedByUser = value; }
 		}
 
 		[UsedImplicitly]
 		public string LastHarvestedConnectionString
 		{
 			get { return _lastHarvestedConnectionString; }
-			protected set { _lastHarvestedConnectionString = value; }
+			set { _lastHarvestedConnectionString = value; }
 		}
 
 		[UsedImplicitly]
@@ -377,6 +377,24 @@ namespace ProSuite.DomainModel.Core.DataModel
 				return base.Id;
 			}
 		}
+
+		/// <summary>
+		/// Whether the user is allowed to change the 'Harvest qualified element names' property.
+		/// </summary>
+		/// <value>
+		/// <c>true</c> if the user should be allowed to change this property; otherwise, <c>false</c>.
+		/// </value>
+		public bool AllowUserChangingHarvestQualifiedElementNames =>
+			AllowUserChangingHarvestQualifiedElementNamesCore;
+
+		/// <summary>
+		/// Whether the user is allowed to change the 'Use master database only for schema' property.
+		/// </summary>
+		/// <value>
+		/// <c>true</c> if the user should be allowed to change this property; otherwise, <c>false</c>.
+		/// </value>
+		public bool AllowUserChangingUseMasterDatabaseOnlyForSchema =>
+			AllowUserChangingUseMasterDatabaseOnlyForSchemaCore;
 
 		#region Object overrides
 
@@ -491,7 +509,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// </summary>
 		/// <param name="name">The dataset name as defined in the data model.</param>
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The dataset or null if not found or not of type T</returns>
 		[CanBeNull]
 		public T GetDatasetByModelName<T>([NotNull] string name, bool includeDeleted = false)
@@ -505,7 +523,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// </summary>
 		/// <param name="name">The dataset name as defined in the data model.</param>
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The dataset or null if not found</returns>
 		[CanBeNull]
 		public Dataset GetDatasetByModelName([NotNull] string name, bool includeDeleted = false)
@@ -537,7 +555,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// Gets all datasets.
 		/// </summary>
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The list of datasets.</returns>
 		public IList<Dataset> GetDatasets(bool includeDeleted = false)
 		{
@@ -550,7 +568,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// <param name="match">The <see cref="Predicate{T}"/> delegate that
 		/// defines the conditions of the element to search for.</param>
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The list of matching datasets.</returns>
 		[NotNull]
 		public IList<Dataset> GetDatasets([CanBeNull] Predicate<Dataset> match,
@@ -564,7 +582,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// </summary>
 		/// <typeparam name="T">The type of dataset to return.</typeparam>
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The list of datasets of the specified type.</returns>
 		public IList<T> GetDatasets<T>(bool includeDeleted = false) where T : Dataset
 		{
@@ -579,7 +597,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// <param name="match">The <see cref="Predicate{T}"/> delegate that
 		/// defines the conditions of the element to search for.</param>
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The list of matching datasets.</returns>
 		[NotNull]
 		public IList<T> GetDatasets<T>([CanBeNull] Predicate<T> match, bool includeDeleted = false)
@@ -625,7 +643,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// </summary>
 		/// <param name="associationName">Name of the relationship class.</param>
 		/// <param name="includeDeleted">if set to <c>true</c>, associations registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns></returns>
 		// ReSharper disable once VirtualMemberNeverOverridden.Global
 		[CanBeNull]
@@ -680,7 +698,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// Gets the associations.
 		/// </summary>
 		/// <param name="includeDeleted">if set to <c>true</c> associations that are 
-		/// registered as deleted are included in the result. Otherwise they are excluded.</param>
+		/// registered as deleted are included in the result. Otherwise, they are excluded.</param>
 		/// <returns>The list of associations.</returns>
 		[NotNull]
 		public IList<Association> GetAssociations(bool includeDeleted = false)
@@ -789,31 +807,33 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		protected virtual void ReattachStateCore([NotNull] IUnitOfWork unitOfWork) { }
 
-		protected void InvalidateDatasetIndex()
+		#region Indexing
+
+		public void InvalidateDatasetIndex()
 		{
 			_datasetIndex.Clear();
 		}
 
-		protected void InvalidateAssociationIndex()
+		public void InvalidateAssociationIndex()
 		{
 			_associationIndex.Clear();
 		}
 
-		protected void InvalidateSpecialDatasetAssignment()
-		{
-			_specialDatasetsAssigned = false;
-		}
-
 		[CanBeNull]
-		protected Dataset GetDataset([NotNull] string name, bool useIndex)
+		protected Dataset GetDataset([NotNull] string datasetName, bool useIndex)
 		{
 			if (useIndex)
 			{
-				return GetDatasetFromIndex(name);
+				return GetDatasetFromIndex(datasetName);
 			}
 
-			return _datasets.FirstOrDefault(dataset => string.Equals(dataset.Name, name,
+			return _datasets.FirstOrDefault(dataset => string.Equals(dataset.Name, datasetName,
 				                                StringComparison.OrdinalIgnoreCase));
+		}
+
+		Dataset IModelHarvest.GetExistingDataset(string datasetName, bool useIndex)
+		{
+			return GetDataset(datasetName, useIndex);
 		}
 
 		[CanBeNull]
@@ -864,6 +884,11 @@ namespace ProSuite.DomainModel.Core.DataModel
 			return null; // not found
 		}
 
+		Association IModelHarvest.GetExistingAssociation(string associationName, bool useIndex)
+		{
+			return GetAssociation(associationName, useIndex);
+		}
+
 		private Association GetAssociationFromIndex(string relClassName)
 		{
 			PrepareAssociationIndex();
@@ -887,9 +912,18 @@ namespace ProSuite.DomainModel.Core.DataModel
 			}
 		}
 
+		#endregion
+
+		#region Special Dataset Assignments
+
+		public void InvalidateSpecialDatasetAssignment()
+		{
+			_specialDatasetsAssigned = false;
+		}
+
 		protected abstract void CheckAssignSpecialDatasetCore(Dataset dataset);
 
-		protected void AssignSpecialDatasets()
+		public void AssignSpecialDatasets()
 		{
 			if (_specialDatasetsAssigned)
 			{
@@ -914,6 +948,14 @@ namespace ProSuite.DomainModel.Core.DataModel
 			// allow subclasses to add their own
 			CheckAssignSpecialDatasetCore(dataset);
 		}
+
+		#endregion
+
+		// ReSharper disable once VirtualMemberNeverOverridden.Global
+		protected virtual bool AllowUserChangingHarvestQualifiedElementNamesCore => true;
+
+		// ReSharper disable once VirtualMemberNeverOverridden.Global
+		protected virtual bool AllowUserChangingUseMasterDatabaseOnlyForSchemaCore => true;
 
 		#region Implementation of IDbDatasetContainer
 

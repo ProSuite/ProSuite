@@ -373,8 +373,9 @@ namespace ProSuite.DdxEditor.Content.Models
 					                        geometryTypeRepository.GetAll());
 
 					IEnumerable<ObjectAttributeType> attributeTypes =
-						model.Harvest(geometryTypeRepository.GetAll(),
-						              attributeTypeRepository.GetAll());
+						ModelHarvesting.Harvest(model,
+						                     geometryTypeRepository.GetAll(),
+						                     attributeTypeRepository.GetAll());
 
 					foreach (ObjectAttributeType attributeType in attributeTypes)
 					{
