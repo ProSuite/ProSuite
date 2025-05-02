@@ -12,7 +12,6 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel.Harvesting;
 using ProSuite.DomainModel.AO.Geodatabase;
-using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.Geodatabase;
 
@@ -24,21 +23,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			"PROSUITE_NO_MODEL_SCHEMA_CACHE";
 
 		#region Fields
-
-		[UsedImplicitly] private bool _harvestQualifiedElementNames;
-		[UsedImplicitly] private bool _updateAliasNamesOnHarvest = true;
-		[UsedImplicitly] private DateTime? _lastHarvestedDate;
-		[UsedImplicitly] private string _lastHarvestedByUser;
-		[UsedImplicitly] private string _lastHarvestedConnectionString;
-
-		[UsedImplicitly] private bool _ignoreUnversionedDatasets;
-		[UsedImplicitly] private bool _ignoreUnregisteredTables;
-
-		[UsedImplicitly] private string _datasetInclusionCriteria;
-		[UsedImplicitly] private string _datasetExclusionCriteria;
-
-		[UsedImplicitly] private ClassDescriptor _attributeConfiguratorFactoryClassDescriptor;
-		[UsedImplicitly] private ClassDescriptor _datasetListBuilderFactoryClassDescriptor;
 
 		private bool _keepDatasetLocks;
 
@@ -69,13 +53,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		#endregion
 
-		[UsedImplicitly]
-		public bool HarvestQualifiedElementNames
-		{
-			get { return _harvestQualifiedElementNames; }
-			set { _harvestQualifiedElementNames = value; }
-		}
-
 		/// <summary>
 		/// Gets a value indicating whether the user is allowed to change the 'Harvest qualified element names' property.
 		/// </summary>
@@ -93,87 +70,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// </value>
 		public bool AllowUserChangingUseMasterDatabaseOnlyForSchema =>
 			AllowUserChangingUseMasterDatabaseOnlyForSchemaCore;
-
-		/// <summary>
-		/// Gets a value indicating whether alias names of applicable datasets are
-		/// updated when harvesting. Template methods for subclasses to override.
-		/// </summary>
-		/// <value>
-		/// 	<c>true</c> if alias names should be updated based on the current
-		///	    value in the geodatabase; otherwise, <c>false</c>.
-		/// </value>
-		[UsedImplicitly]
-		public bool UpdateAliasNamesOnHarvest
-		{
-			get { return _updateAliasNamesOnHarvest; }
-			set { _updateAliasNamesOnHarvest = value; }
-		}
-
-		[UsedImplicitly]
-		public DateTime? LastHarvestedDate
-		{
-			get { return _lastHarvestedDate; }
-			private set { _lastHarvestedDate = value; }
-		}
-
-		[UsedImplicitly]
-		public string LastHarvestedByUser
-		{
-			get { return _lastHarvestedByUser; }
-			private set { _lastHarvestedByUser = value; }
-		}
-
-		[UsedImplicitly]
-		public string LastHarvestedConnectionString
-		{
-			get { return _lastHarvestedConnectionString; }
-			private set { _lastHarvestedConnectionString = value; }
-		}
-
-		[UsedImplicitly]
-		public bool IgnoreUnversionedDatasets
-		{
-			get { return _ignoreUnversionedDatasets; }
-			set
-			{
-				if (_ignoreUnversionedDatasets == value)
-				{
-					return;
-				}
-
-				_ignoreUnversionedDatasets = value;
-
-				if (value)
-				{
-					// if unversioned datasets are ignored, unregistered tables are always ignored as they are unversioned
-					_ignoreUnregisteredTables = true;
-				}
-			}
-		}
-
-		[UsedImplicitly]
-		public bool IgnoreUnregisteredTables
-		{
-			get { return _ignoreUnregisteredTables; }
-			set { _ignoreUnregisteredTables = value; }
-		}
-
-		public bool CanChangeIgnoreUnregisteredTables =>
-			! (_ignoreUnversionedDatasets && _ignoreUnregisteredTables);
-
-		[UsedImplicitly]
-		public string DatasetInclusionCriteria
-		{
-			get { return _datasetInclusionCriteria; }
-			set { _datasetInclusionCriteria = value; }
-		}
-
-		[UsedImplicitly]
-		public string DatasetExclusionCriteria
-		{
-			get { return _datasetExclusionCriteria; }
-			set { _datasetExclusionCriteria = value; }
-		}
 
 		[CanBeNull]
 		public IWorkspaceContext MasterDatabaseWorkspaceContext
@@ -217,28 +113,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 				return _lastMasterDatabaseAccessError;
 			}
-		}
-
-		/// <summary>
-		/// Gets or sets the class descriptor for the attribute configurator. Attribute
-		/// configurators must implement <see cref="IAttributeConfigurator"/> interface.
-		/// </summary>
-		/// <value>The attribute configurator factory class descriptor.</value>
-		public ClassDescriptor AttributeConfiguratorFactoryClassDescriptor
-		{
-			get { return _attributeConfiguratorFactoryClassDescriptor; }
-			set { _attributeConfiguratorFactoryClassDescriptor = value; }
-		}
-
-		/// <summary>
-		/// Gets or sets the class descriptor for the dataset list builder. Dataset
-		/// list builder factories must implement <see cref="IDatasetListBuilderFactory"/> interface.
-		/// </summary>
-		/// <value>The dataset list builder factory class descriptor.</value>
-		public ClassDescriptor DatasetListBuilderFactoryClassDescriptor
-		{
-			get { return _datasetListBuilderFactoryClassDescriptor; }
-			set { _datasetListBuilderFactoryClassDescriptor = value; }
 		}
 
 		public bool KeepDatasetLocks
@@ -330,7 +204,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			AssertMasterDatabaseWorkspaceContextAccessible();
 
 			DatasetFilter datasetFilter = HarvestingUtils.CreateDatasetFilter(
-				_datasetInclusionCriteria, _datasetExclusionCriteria);
+				DatasetInclusionCriteria, DatasetExclusionCriteria);
 
 			IDatasetListBuilder datasetListBuilder =
 				datasetListBuilderFactory.Create(SchemaOwner,
@@ -355,20 +229,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			Assert.ArgumentNotNull(datasetListBuilder, nameof(datasetListBuilder));
 			Assert.ArgumentNotNull(existingAttributeTypes, nameof(existingAttributeTypes));
 
-			IAttributeConfigurator attributeConfigurator;
-			if (_attributeConfiguratorFactoryClassDescriptor == null)
-			{
-				attributeConfigurator = null;
-			}
-			else
-			{
-				var attributeConfiguratorFactory =
-					(IAttributeConfiguratorFactory)
-					_attributeConfiguratorFactoryClassDescriptor.CreateInstance();
-
-				attributeConfigurator =
-					attributeConfiguratorFactory.Create(existingAttributeTypes);
-			}
+			IAttributeConfigurator attributeConfigurator = GetAttributeConfigurator(existingAttributeTypes);
 
 			return Harvest(datasetListBuilder, attributeConfigurator, geometryTypeConfigurator);
 		}
@@ -608,7 +469,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		// ReSharper disable once VirtualMemberNeverOverridden.Global
 
 		// ReSharper disable once VirtualMemberNeverOverridden.Global
-		protected virtual SpatialReferenceDescriptor CreateDefaultSpatialReferenceDescriptor()
+		protected virtual SpatialReferenceDescriptor CreateDefaultSpatialReferenceDescriptor() // TODO Drop? No usages in Topgis
 		{
 			return null;
 		}
@@ -630,13 +491,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			Assert.ArgumentNotNull(geometryTypes, nameof(geometryTypes));
 
-			if (_datasetListBuilderFactoryClassDescriptor == null)
+			if (DatasetListBuilderFactoryClassDescriptor == null)
 			{
 				return null;
 			}
 
 			var factory = (IDatasetListBuilderFactory)
-				_datasetListBuilderFactoryClassDescriptor.CreateInstance();
+				DatasetListBuilderFactoryClassDescriptor.CreateInstance();
 
 			factory.GeometryTypes = geometryTypes;
 			return factory;
@@ -646,13 +507,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 		private IAttributeConfigurator GetAttributeConfigurator(
 			[CanBeNull] IEnumerable<AttributeType> existingAttributeTypes)
 		{
-			if (_attributeConfiguratorFactoryClassDescriptor == null)
+			if (AttributeConfiguratorFactoryClassDescriptor == null)
 			{
 				return null;
 			}
 
 			var factory = (IAttributeConfiguratorFactory)
-				_attributeConfiguratorFactoryClassDescriptor.CreateInstance();
+				AttributeConfiguratorFactoryClassDescriptor.CreateInstance();
 
 			IAttributeConfigurator attributeConfigurator = factory.Create(existingAttributeTypes);
 

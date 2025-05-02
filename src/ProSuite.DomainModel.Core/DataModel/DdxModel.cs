@@ -18,6 +18,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		private int _cloneId = -1;
 
+		#region Persistent state
+
 		[UsedImplicitly] private string _name;
 		[UsedImplicitly] private string _description;
 		[UsedImplicitly] private bool _elementNamesAreQualified;
@@ -47,6 +49,23 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		[UsedImplicitly] private double _defaultMinimumSegmentLength = 2;
 
+		[UsedImplicitly] private bool _harvestQualifiedElementNames;
+		[UsedImplicitly] private bool _updateAliasNamesOnHarvest = true;
+		[UsedImplicitly] private DateTime? _lastHarvestedDate;
+		[UsedImplicitly] private string _lastHarvestedByUser;
+		[UsedImplicitly] private string _lastHarvestedConnectionString;
+
+		[UsedImplicitly] private bool _ignoreUnversionedDatasets;
+		[UsedImplicitly] private bool _ignoreUnregisteredTables;
+
+		[UsedImplicitly] private string _datasetInclusionCriteria;
+		[UsedImplicitly] private string _datasetExclusionCriteria;
+
+		[UsedImplicitly] private ClassDescriptor _attributeConfiguratorFactoryClassDescriptor;
+		[UsedImplicitly] private ClassDescriptor _datasetListBuilderFactoryClassDescriptor;
+
+		#endregion
+
 		private bool _specialDatasetsAssigned;
 
 		private Dictionary<SimpleTerrainDataset, SimpleTerrainDataset> _terrainDatasets;
@@ -75,6 +94,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 		}
 
 		#endregion
+
+		#region NHibernated properties
 
 		[Required]
 		[UsedImplicitly]
@@ -231,6 +252,118 @@ namespace ProSuite.DomainModel.Core.DataModel
 			get { return _defaultMinimumSegmentLength; }
 			set { _defaultMinimumSegmentLength = value; }
 		}
+
+		[UsedImplicitly]
+		public bool HarvestQualifiedElementNames
+		{
+			get { return _harvestQualifiedElementNames; }
+			set { _harvestQualifiedElementNames = value; }
+		}
+
+		/// <summary>
+		/// Gets a value indicating whether alias names of applicable datasets are
+		/// updated when harvesting. Template methods for subclasses to override.
+		/// </summary>
+		/// <value>
+		/// 	<c>true</c> if alias names should be updated based on the current
+		///	    value in the geodatabase; otherwise, <c>false</c>.
+		/// </value>
+		[UsedImplicitly]
+		public bool UpdateAliasNamesOnHarvest
+		{
+			get { return _updateAliasNamesOnHarvest; }
+			set { _updateAliasNamesOnHarvest = value; }
+		}
+
+		[UsedImplicitly]
+		public DateTime? LastHarvestedDate
+		{
+			get { return _lastHarvestedDate; }
+			protected set { _lastHarvestedDate = value; }
+		}
+
+		[UsedImplicitly]
+		public string LastHarvestedByUser
+		{
+			get { return _lastHarvestedByUser; }
+			protected set { _lastHarvestedByUser = value; }
+		}
+
+		[UsedImplicitly]
+		public string LastHarvestedConnectionString
+		{
+			get { return _lastHarvestedConnectionString; }
+			protected set { _lastHarvestedConnectionString = value; }
+		}
+
+		[UsedImplicitly]
+		public bool IgnoreUnversionedDatasets
+		{
+			get { return _ignoreUnversionedDatasets; }
+			set
+			{
+				if (_ignoreUnversionedDatasets == value)
+				{
+					return;
+				}
+
+				_ignoreUnversionedDatasets = value;
+
+				if (value)
+				{
+					// if unversioned datasets are ignored, unregistered tables are always ignored as they are unversioned
+					_ignoreUnregisteredTables = true;
+				}
+			}
+		}
+
+		[UsedImplicitly]
+		public bool IgnoreUnregisteredTables
+		{
+			get { return _ignoreUnregisteredTables; }
+			set { _ignoreUnregisteredTables = value; }
+		}
+
+		public bool CanChangeIgnoreUnregisteredTables =>
+			!(_ignoreUnversionedDatasets && _ignoreUnregisteredTables);
+
+		[UsedImplicitly]
+		public string DatasetInclusionCriteria
+		{
+			get { return _datasetInclusionCriteria; }
+			set { _datasetInclusionCriteria = value; }
+		}
+
+		[UsedImplicitly]
+		public string DatasetExclusionCriteria
+		{
+			get { return _datasetExclusionCriteria; }
+			set { _datasetExclusionCriteria = value; }
+		}
+
+		/// <summary>
+		/// Gets or sets the class descriptor for the attribute configurator. Attribute
+		/// configurators must implement IAttributeConfigurator interface.
+		/// </summary>
+		/// <value>The attribute configurator factory class descriptor.</value>
+		public ClassDescriptor AttributeConfiguratorFactoryClassDescriptor
+		{
+			get { return _attributeConfiguratorFactoryClassDescriptor; }
+			set { _attributeConfiguratorFactoryClassDescriptor = value; }
+		}
+
+		/// <summary>
+		/// Gets or sets the class descriptor for the dataset list builder. Dataset
+		/// list builder factories must implement IDatasetListBuilderFactory interface.
+		/// </summary>
+		/// <value>The dataset list builder factory class descriptor.</value>
+		public ClassDescriptor DatasetListBuilderFactoryClassDescriptor
+		{
+			get { return _datasetListBuilderFactoryClassDescriptor; }
+			set { _datasetListBuilderFactoryClassDescriptor = value; }
+		}
+
+		#endregion
 
 		public new int Id
 		{
