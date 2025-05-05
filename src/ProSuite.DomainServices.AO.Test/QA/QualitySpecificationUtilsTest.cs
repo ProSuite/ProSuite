@@ -100,13 +100,23 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			             .Reattach(Arg.Is<ICollection<Dataset>>(x => x.Count == datasets.Count));
 		}
 
-		private class MockModel : Model
+		private class MockModel : Model, IModelMasterDatabase
 		{
 			public MockModel(string name) : base(name) { }
 
-			protected override IWorkspaceContext CreateMasterDatabaseWorkspaceContext()
+			public override string QualifyModelElementName(string modelElementName)
 			{
-				return CreateDefaultMasterDatabaseWorkspaceContext();
+				return ModelUtils.QualifyModelElementName(this, modelElementName);
+			}
+
+			public override string TranslateToModelElementName(string masterDatabaseDatasetName)
+			{
+				return ModelUtils.TranslateToModelElementName(this, masterDatabaseDatasetName);
+			}
+
+			IWorkspaceContext IModelMasterDatabase.CreateMasterDatabaseWorkspaceContext()
+			{
+				return ModelUtils.CreateDefaultMasterDatabaseWorkspaceContext(this);
 			}
 
 			protected override void CheckAssignSpecialDatasetCore(Dataset dataset) { }

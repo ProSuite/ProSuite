@@ -7,6 +7,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -168,7 +169,7 @@ namespace ProSuite.QA.Tests.Test
 			fact.Condition = condition;
 
 			IList<ITest> tests =
-				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				fact.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 			Assert.AreEqual(1, tests.Count);
 
 			var runner = new QaContainerTestRunner(10000, tests[0]) { KeepGeometry = true };
@@ -183,7 +184,7 @@ namespace ProSuite.QA.Tests.Test
 			// Can we load the tests again, now that the simple terrain is part of the model datasets?
 
 			tests =
-				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				fact.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 			Assert.AreEqual(1, tests.Count);
 		}
 	}

@@ -54,7 +54,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 
 			IWorkspaceContext masterDatabaseWorkspaceContext =
-				model.MasterDatabaseWorkspaceContext;
+				model.GetMasterDatabaseWorkspaceContext();
 
 			if (masterDatabaseWorkspaceContext == null)
 			{
@@ -186,7 +186,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return null;
 			}
 
-			return model.MasterDatabaseWorkspaceContext;
+			return model.GetMasterDatabaseWorkspaceContext();
 		}
 
 		/// <summary>

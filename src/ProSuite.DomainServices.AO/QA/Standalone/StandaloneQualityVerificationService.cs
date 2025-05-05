@@ -226,7 +226,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				Model model = dataset.Model as Model;
 
 				// TODO: only if WriteDetailedReport == true (use VerificationReporter from other service?)
-				IWorkspaceContext workspaceContext = model?.MasterDatabaseWorkspaceContext;
+				IWorkspaceContext workspaceContext = model?.GetMasterDatabaseWorkspaceContext();
 
 				IWorkspace workspace = workspaceContext?.Workspace;
 

@@ -141,13 +141,23 @@ namespace ProSuite.DomainModel.AO.Test.QA.SpecificationReport
 			public TestVectorDataset([NotNull] string name) : base(name) { }
 		}
 
-		private class TestModel : Model
+		private class TestModel : Model, IModelMasterDatabase
 		{
 			public TestModel([NotNull] string name) : base(name) { }
 
-			protected override IWorkspaceContext CreateMasterDatabaseWorkspaceContext()
+			public override string QualifyModelElementName(string modelElementName)
 			{
-				return CreateDefaultMasterDatabaseWorkspaceContext();
+				return ModelUtils.QualifyModelElementName(this, modelElementName);
+			}
+
+			public override string TranslateToModelElementName(string masterDatabaseDatasetName)
+			{
+				return ModelUtils.TranslateToModelElementName(this, masterDatabaseDatasetName);
+			}
+
+			IWorkspaceContext IModelMasterDatabase.CreateMasterDatabaseWorkspaceContext()
+			{
+				return ModelUtils.CreateDefaultMasterDatabaseWorkspaceContext(this);
 			}
 
 			protected override void CheckAssignSpecialDatasetCore(Dataset dataset) { }

@@ -4,7 +4,7 @@ using ProSuite.DomainModel.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test.TestRunners
 {
-	public class SimpleModel : ProductionModel
+	public class SimpleModel : ProductionModel, IModelMasterDatabase
 	{
 		public SimpleModel(string name, IFeatureClass anyWorkspaceFeatureClass)
 			: this(name, (ITable) anyWorkspaceFeatureClass) { }
@@ -22,9 +22,19 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 			UserConnectionProvider = new OpenWorkspaceConnectionProvider(workspace);
 		}
 
-		protected override IWorkspaceContext CreateMasterDatabaseWorkspaceContext()
+		public override string QualifyModelElementName(string modelElementName)
 		{
-			return CreateDefaultMasterDatabaseWorkspaceContext();
+			return ModelUtils.QualifyModelElementName(this, modelElementName);
+		}
+
+		public override string TranslateToModelElementName(string masterDatabaseDatasetName)
+		{
+			return ModelUtils.TranslateToModelElementName(this, masterDatabaseDatasetName);
+		}
+
+		IWorkspaceContext IModelMasterDatabase.CreateMasterDatabaseWorkspaceContext()
+		{
+			return ModelUtils.CreateDefaultMasterDatabaseWorkspaceContext(this);
 		}
 	}
 }

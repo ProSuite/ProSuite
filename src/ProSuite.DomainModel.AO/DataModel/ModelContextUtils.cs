@@ -56,7 +56,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		public static bool IsModelDefaultDatabase([NotNull] IWorkspace workspace,
 		                                          [NotNull] Model model)
 		{
-			return model.IsMasterDatabaseAccessible &&
+			return model.IsMasterDatabaseAccessible() &&
 			       WorkspaceUtils.IsSameDatabase(model.GetMasterDatabaseWorkspace(),
 			                                     workspace);
 		}

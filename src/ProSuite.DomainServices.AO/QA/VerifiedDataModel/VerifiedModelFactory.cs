@@ -228,7 +228,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 				// Using a simple dataset opener is good enough. There are no models with just terrains and geometric networks.
 				IWorkspaceContext datasetContext =
-					Assert.NotNull(model.MasterDatabaseWorkspaceContext);
+					Assert.NotNull(model.GetMasterDatabaseWorkspaceContext());
 				IOpenDataset datasetOpener = new SimpleDatasetOpener(datasetContext);
 
 				ISpatialReference spatialReference = GetSpatialReference(maxDataset, datasetOpener);

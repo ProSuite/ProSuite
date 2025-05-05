@@ -116,7 +116,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 			M model = project.ProductionModel;
 
 			IWorkspaceContext masterDatabaseWorkspaceContext =
-				model.MasterDatabaseWorkspaceContext;
+				model.GetMasterDatabaseWorkspaceContext();
 
 			bool isModelMasterDatabase = masterDatabaseWorkspaceContext != null &&
 			                             WorkspaceUtils.IsSameDatabase(
@@ -507,7 +507,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 		                                          [NotNull] ProductionModel model)
 		{
 			IWorkspaceContext masterDatabaseWorkspaceContext =
-				model.MasterDatabaseWorkspaceContext;
+				model.GetMasterDatabaseWorkspaceContext();
 
 			return masterDatabaseWorkspaceContext != null &&
 			       WorkspaceUtils.IsSameDatabase(
