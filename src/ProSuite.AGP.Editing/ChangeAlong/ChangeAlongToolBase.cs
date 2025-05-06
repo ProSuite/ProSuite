@@ -53,7 +53,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		/// <summary>
 		/// By default, the local configuration directory shall be in
-		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// %APPDATA%\Roaming\ORGANIZATION\PRODUCT>\ToolDefaults.
 		/// </summary>
 		protected virtual string LocalConfigDir
 			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
@@ -108,8 +108,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return;
 			}
 
-			Task task = QueuedTask.Run(
-				() =>
+			Task task = QueuedTask.Run(async () =>
 				{
 					if (IsInSubcurveSelectionPhase())
 					{
@@ -118,7 +117,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					else
 					{
 						ClearSelection();
-						StartSelectionPhase();
+						await StartSelectionPhaseAsync();
 					}
 				});
 
@@ -193,12 +192,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_feedback = null;
 		}
 
-		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
+			MapSelectionChangedEventArgs args)
 		{
 			if (args.Selection.Count == 0)
 			{
 				ResetDerivedGeometries();
-				StartSelectionPhase();
+				await StartSelectionPhaseAsync();
 			}
 			else
 			{
@@ -251,10 +251,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return base.OnEditCompletedAsyncCore(args);
 		}
 
-		protected override void AfterSelection(IList<Feature> selectedFeatures,
-											   CancelableProgressor progressor)
+		protected override Task AfterSelectionAsync(IList<Feature> selectedFeatures,
+		                                            CancelableProgressor progressor)
 		{
 			StartTargetSelectionPhase();
+
+			return Task.CompletedTask;
 		}
 
 		protected override async Task<bool> OnSketchCompleteCoreAsync(
@@ -312,7 +314,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				}
 				else
 				{
-					SetupSelectionSketch();
+					await SetupSelectionSketchAsync();
 				}
 			}
 			catch (Exception ex)

@@ -153,7 +153,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					if (RequiresSelection)
 					{
-						ProcessSelection(progressor);
+						await ProcessSelectionAsync(progressor);
 					}
 
 					// ReSharper disable once MethodHasAsyncOverload
@@ -460,25 +460,25 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.CompletedTask;
 		}
 
-		protected void StartSelectionPhase()
+		protected async Task StartSelectionPhaseAsync()
 		{
-			SetupSelectionSketch();
+			await SetupSelectionSketchAsync();
 
 			OnSelectionPhaseStarted();
 		}
 
-		private async Task<bool> HasSketchAsync()
+		protected async Task<bool> HasSketchAsync()
 		{
 			Geometry currentSketch = await GetCurrentSketchAsync();
 
 			return currentSketch?.IsEmpty == false;
 		}
 
-		protected async void SetupSelectionSketch()
+		protected async Task SetupSelectionSketchAsync()
 		{
 			if (await HasSketchAsync())
 			{
-				await ClearSketchAsync();
+				await ActiveMapView.ClearSketchAsync();
 			}
 
 			SetupSketch();
@@ -518,7 +518,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			// NOTE: This method is called repeatedly with different selection sets during the
 			//       OnSelectionSketchCompleteAsync method. Therefore, the flag is set to prevent
 			//       multiple calls to the AfterSelectionMethod with intermediate results!
-			//       The ProcessSelection method is called at the end of the sketch completion.
+			//       The ProcessSelectionAsync method is called at the end of the sketch completion.
 
 			try
 			{
@@ -529,7 +529,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					return;
 				}
 
-				await QueuedTask.Run(() => OnMapSelectionChangedCore(args));
+				await QueuedTask.Run(() => OnMapSelectionChangedCoreAsync(args));
 			}
 			catch (Exception e)
 			{
@@ -596,9 +596,10 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual void OnToolDeactivatingCore() { }
 
 		/// <remarks>Will be called on MCT</remarks>
-		protected virtual bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		protected virtual Task<bool> OnMapSelectionChangedCoreAsync(
+			MapSelectionChangedEventArgs args)
 		{
-			return true;
+			return Task.FromResult(true);
 		}
 
 		[CanBeNull]
@@ -644,7 +645,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					await OnItemsPickedAsync(items, precedence);
 
-					ProcessSelection(progressor);
+					await ProcessSelectionAsync(progressor);
 				}, progressor);
 			}
 			finally
@@ -748,12 +749,14 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		/// <remarks>Will be called on MCT</remarks>>
-		protected virtual void AfterSelection(
-			[NotNull] IList<Feature> selectedFeatures,
-			[CanBeNull] CancelableProgressor progressor) { }
+		protected virtual Task AfterSelectionAsync([NotNull] IList<Feature> selectedFeatures,
+		                                           [CanBeNull] CancelableProgressor progressor)
+		{
+			return Task.CompletedTask;
+		}
 
 		/// <remarks>Must be called on MCT</remarks>
-		protected void ProcessSelection([CanBeNull] CancelableProgressor progressor = null)
+		protected async Task ProcessSelectionAsync([CanBeNull] CancelableProgressor progressor = null)
 		{
 			var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
 
@@ -770,7 +773,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				LogUsingCurrentSelection();
 
-				AfterSelection(applicableSelection, progressor);
+				await AfterSelectionAsync(applicableSelection, progressor);
 			}
 			else
 			{
@@ -780,7 +783,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 
 				LogPromptForSelection();
-				StartSelectionPhase();
+				await StartSelectionPhaseAsync();
 			}
 		}
 

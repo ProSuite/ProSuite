@@ -101,10 +101,11 @@ namespace ProSuite.AGP.Editing.Cracker
 			HideOptionsPane();
 		}
 
-		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
+			MapSelectionChangedEventArgs args)
 
 		{
-			bool result = base.OnMapSelectionChangedCore(args);
+			bool result = await base.OnMapSelectionChangedCoreAsync(args);
 
 			//_vertexLabels.UpdateLabels();
 
@@ -388,7 +389,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			try
 
 			{
-				QueuedTaskUtils.Run(() => ProcessSelection());
+				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
 			}
 
 			catch (Exception e)
