@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.Geodatabase;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -79,25 +77,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return Name ?? "<no name>";
 		}
 
-		#region Non-public members
-
-		// ReSharper disable once VirtualMemberNeverOverridden.Global
-		protected virtual SpatialReferenceDescriptor CreateDefaultSpatialReferenceDescriptor() // TODO Drop? No usages in Topgis (nor in ProSuite/GoTop)
-		{
-			return null;
-		}
-
 		[PublicAPI]
 		public bool DisableAutomaticSchemaCaching { get; set; }
 
-		public virtual bool AutoEnableSchemaCache => false; // TODO public (was: protected)
-
-		// ReSharper disable once VirtualMemberNeverOverridden.Global
-		protected virtual IEnumerable<ConnectionProvider> GetConnectionProvidersCore() // TODO Drop? No usages in Topgis (nor in ProSuite/GoTop)
-		{
-			return new List<ConnectionProvider>();
-		}
-
-		#endregion
+		public virtual bool AutoEnableSchemaCache => false;
 	}
 }
