@@ -197,18 +197,24 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
 		{
+			// If hasMapViewChanged: MapTool.OnToolDeactivateAsync() is called twice!
 			_msg.VerboseDebug(() => "OnToolDeactivateAsync");
 
-			MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
-			MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);
-			EditCompletedEvent.Unsubscribe(OnEditCompletedAsync);
+			try
+			{
+				MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
+				MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);
+				EditCompletedEvent.Unsubscribe(OnEditCompletedAsync);
 
-			ViewUtils.Try(HideOptionsPane, _msg);
+				HideOptionsPane();
 
-			OnToolDeactivatingCore();
-			Task task = QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
-
-			await ViewUtils.TryAsync(task, _msg);
+				OnToolDeactivatingCore();
+				await QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
 		}
 
 		protected override void OnToolKeyDown(MapViewKeyEventArgs args)
@@ -371,8 +377,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override void OnToolMouseMove(MapViewMouseEventArgs args)
 		{
 			CurrentMousePosition = args.ClientPoint;
-
-			_msg.VerboseDebug(() => $"OnToolMouseMove ({Caption})");
 
 			ViewUtils.Try(() => { OnToolMouseMoveCore(args); }, _msg,
 			              suppressErrorMessageBox: true);
