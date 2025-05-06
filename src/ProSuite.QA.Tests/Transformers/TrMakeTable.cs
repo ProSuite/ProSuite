@@ -125,8 +125,8 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			// Wrap to allow assigning a custom name, rather than <currentUser>.%<assignedName>
 			GdbTable wrappedResult = aoTable is IFeatureClass featureClass
-				                         ? new GdbFeatureClass(featureClass, true)
-				                         : new GdbTable(aoTable, true);
+				                         ? new WrappedFeatureClass(featureClass, true)
+				                         : (GdbTable) new WrappedTable(aoTable, true);
 
 			wrappedResult.Rename(TransformerName);
 			return wrappedResult;
