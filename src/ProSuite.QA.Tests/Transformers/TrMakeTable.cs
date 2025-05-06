@@ -32,7 +32,7 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			_baseTable = baseTable;
 			_viewOrTableName = viewOrTableName;
-			_involvedTables = new List<IReadOnlyTable> {baseTable};
+			_involvedTables = new List<IReadOnlyTable> { baseTable };
 		}
 
 		[DocTr(nameof(DocTrStrings.TrMakeTable_1))]
@@ -57,7 +57,7 @@ namespace ProSuite.QA.Tests.Transformers
 			_queryDescription =
 				DatasetUtils.CreateQueryDescription(sqlWorkspace, sql, objectIdField);
 
-			_involvedTables = new List<IReadOnlyTable> {baseTable};
+			_involvedTables = new List<IReadOnlyTable> { baseTable };
 		}
 
 		#region Implementation of IInvolvesTables
@@ -98,14 +98,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 			ITable resultTable = DatasetUtils.OpenTable(workspace, _viewOrTableName);
 
-			GdbTable wrappedResult = resultTable is IFeatureClass featureClass
-				                         ? new GdbFeatureClass(featureClass, true)
-				                         : new GdbTable(resultTable, true);
-
-			// Wrap to allow assigning a custom name:
-			wrappedResult.Rename(TransformerName);
-
-			return wrappedResult;
+			return GetWrappedTable(resultTable);
+			;
 		}
 
 		private IReadOnlyTable CreateQueryLayerClass()
@@ -122,13 +116,19 @@ namespace ProSuite.QA.Tests.Transformers
 			ITable queryTable = DatasetUtils.CreateQueryLayerClass(
 				sqlWorksapce, _queryDescription, TransformerName);
 
+			GdbTable wrappedResult = GetWrappedTable(queryTable);
+
+			return wrappedResult;
+		}
+
+		private GdbTable GetWrappedTable(ITable aoTable)
+		{
 			// Wrap to allow assigning a custom name, rather than <currentUser>.%<assignedName>
-			GdbTable wrappedResult = queryTable is IFeatureClass featureClass
+			GdbTable wrappedResult = aoTable is IFeatureClass featureClass
 				                         ? new GdbFeatureClass(featureClass, true)
-				                         : new GdbTable(queryTable, true);
+				                         : new GdbTable(aoTable, true);
 
 			wrappedResult.Rename(TransformerName);
-
 			return wrappedResult;
 		}
 
