@@ -109,15 +109,8 @@ public partial class UpDownButtonsBlazor
 			return true;
 		}
 
-		Assert.NotNull(rows);
-
-		// only 2 rows and one is a dummy
-		if (rows.Count == 2 && Selected.Required)
-		{
-			Assert.True(rows.Any(row => row is DummyTestParameterValueViewModel),
-			            "unexpected row type: no dummy in collection");
-			return true;
-		}
+		// NOTE: Even though a field is required, the list can be empty. If no empty list is allowed
+		//       some validation on the condition level should be used.
 
 		return false;
 	}
