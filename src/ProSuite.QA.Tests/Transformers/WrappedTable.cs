@@ -29,6 +29,12 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
+		public WrappedTable(ITable template, bool useTemplateForQuerying = false)
+			: base(template, useTemplateForQuerying)
+		{
+			_baseTable = ReadOnlyTableFactory.Create(template);
+		}
+
 		#region Overrides of GdbTable
 
 		// We need to force the ObjectClassID to be the same as the base table for correct equality

@@ -26,6 +26,13 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
+		public WrappedFeatureClass([NotNull] IFeatureClass template,
+		                           bool useTemplateForQuerying = false)
+			: base(template, useTemplateForQuerying)
+		{
+			_baseClass = ReadOnlyTableFactory.Create(template);
+		}
+
 		#region Overrides of GdbTable
 
 		// We need to force the ObjectClassID to be the same as the base table for correct equality
@@ -37,6 +44,22 @@ namespace ProSuite.QA.Tests.Transformers
 		public override int ObjectClassID => TransformedTableUtils.GetClassId(_baseClass);
 
 		#endregion
+
+		/// <summary>
+		/// Override the Equals(IReadOnlyTable) to ensure all equals comparisons are re-directed to this
+		/// class.
+		/// </summary>
+		/// <param name="otherTable"></param>
+		/// <returns></returns>
+		public override bool Equals(IReadOnlyTable otherTable)
+		{
+			if (otherTable is WrappedFeatureClass otherWrappedFeatureClass)
+			{
+				return Equals(otherWrappedFeatureClass);
+			}
+
+			return base.Equals(otherTable);
+		}
 
 		#region Equality members
 
