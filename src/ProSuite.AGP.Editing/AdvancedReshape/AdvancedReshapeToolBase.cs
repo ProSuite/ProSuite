@@ -73,7 +73,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		/// <summary>
 		/// By default, the local configuration directory shall be in
-		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// %APPDATA%\Roaming\ORGANIZATION\PRODUCT>\ToolDefaults.
 		/// </summary>
 		protected virtual string LocalConfigDir
 			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
@@ -166,8 +166,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			Stopwatch watch = _msg.DebugStartTiming();
 
 			// NOTE: by only reading the file locations we can save a couple of 100ms
-			string currentCentralConfigDir = CentralConfigDir;
-			string currentLocalConfigDir = LocalConfigDir;
+			string _ = CentralConfigDir;
+			string __ = LocalConfigDir;
 
 			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
 			_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeToolOptions>(
@@ -201,7 +201,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			try
 			{
-				QueuedTaskUtils.Run(() => ProcessSelection());
+				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
 			}
 			catch (Exception e)
 			{
@@ -226,7 +226,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			ActiveMapView.ClearSketchAsync();
 		}
 
-		protected override void OnSketchPhaseStarted()
+		protected override async Task OnSketchPhaseStartedAsync()
 		{
 			try
 			{
@@ -463,12 +463,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 				if (success && ! _advancedReshapeToolOptions.RemainInSketchMode)
 				{
-					StartSelectionPhase();
+					await StartSelectionPhaseAsync();
 				}
 				else
 				{
-					await ClearSketchAsync();
-					StartSketchPhase();
+					await ActiveMapView.ClearSketchAsync();
+					await StartSketchPhaseAsync();
 				}
 			}
 
@@ -516,9 +516,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				if (! string.IsNullOrEmpty(result.FailureMessage))
 				{
 					_msg.Warn(result.FailureMessage);
-					{
-						return false;
-					}
+					return false;
 				}
 			}
 

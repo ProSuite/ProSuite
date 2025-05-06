@@ -152,7 +152,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (! RequiresSelection)
 			{
-				StartSketchPhase();
+				await StartSketchPhaseAsync();
 			}
 			else
 			{
@@ -201,8 +201,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			// log is written in LogEnteringSketchMode
 		}
 
-		protected override async void AfterSelection(IList<Feature> selectedFeatures,
-		                                             CancelableProgressor progressor)
+		protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
+		                                                  CancelableProgressor progressor)
 		{
 			// Release latch. The tool might not get the shift released when the sift key was
 			// released while picker window was visible.
@@ -210,7 +210,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				if (await CanStartSketchPhaseAsync(selectedFeatures))
 				{
-					StartSketchPhase();
+					await StartSketchPhaseAsync();
 					_isIntermittentSelectionPhaseActive = false;
 					await Assert.NotNull(_sketchStateHistory).StopIntermittentSelectionAsync();
 				}
@@ -225,7 +225,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (! IsInSketchPhase && await CanStartSketchPhaseAsync(selectedFeatures))
 			{
-				StartSketchPhase();
+				await StartSketchPhaseAsync();
 			}
 		}
 
@@ -252,12 +252,14 @@ namespace ProSuite.AGP.Editing.OneClick
 				await _sketchStateHistory.StartIntermittentSelection();
 
 				// During start selection phase the edit sketch is cleared:
-				StartSelectionPhase();
+				await StartSelectionPhaseAsync();
 			}
 			catch (Exception e)
 			{
 				_sketchStateHistory?.ResetSketchStates();
 				_isIntermittentSelectionPhaseActive = false;
+
+				_msg.Debug(e.Message, e);
 			}
 		}
 
@@ -293,7 +295,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			                             suppressErrorMessageBox: true))
 			{
 				// The sketch phase must be restarted 
-				StartSketchPhase();
+				await StartSketchPhaseAsync();
 
 				if (isInIntermittentSelection)
 				{
@@ -320,7 +322,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				if (CanFinishSketch(currentSketch))
 				{
 					await OnSketchCompleteAsync(currentSketch);
-					await ClearSketchAsync();
+					await ActiveMapView.ClearSketchAsync();
 				}
 			}
 
@@ -351,10 +353,8 @@ namespace ProSuite.AGP.Editing.OneClick
 							}
 							else
 							{
-								Geometry sketch = await GetCurrentSketchAsync();
-
 								// if sketch is empty, also remove selection and return to selection phase
-								if (sketch?.IsEmpty == false)
+								if (await HasSketchAsync())
 								{
 									await ResetSketchAsync();
 								}
@@ -366,7 +366,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						}
 						else
 						{
-							await ClearSketchAsync();
+							await ActiveMapView.ClearSketchAsync();
 							ClearSelection();
 						}
 					});
@@ -377,9 +377,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
+			MapSelectionChangedEventArgs args)
 		{
-			_msg.VerboseDebug(() => "OnMapSelectionChangedCore");
+			_msg.VerboseDebug(() => "OnMapSelectionChangedCoreAsync");
 
 			if (ActiveMapView == null)
 			{
@@ -389,11 +390,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (RequiresSelection && ! CanUseSelection(ActiveMapView))
 			{
 				//LogPromptForSelection();
-				StartSelectionPhase();
+				await StartSelectionPhaseAsync();
 			}
 			else
 			{
-				StartSketchPhase();
+				await StartSketchPhaseAsync();
 			}
 
 			// TODO: virtual RefreshFeedbackCoreAsync(), override in AdvancedReshape
@@ -473,7 +474,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnSketchResetCore() { }
 
-		protected void StartSketchPhase()
+		protected async Task StartSketchPhaseAsync()
 		{
 			UseSnapping = true;
 			CompleteSketchOnMouseUp = false;
@@ -489,29 +490,32 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			else
 			{
-				QueuedTask.Run(ResetSketchVertexSymbolOptions);
+				await QueuedTask.Run(ResetSketchVertexSymbolOptions);
 			}
 
 			EditingTemplate relevanteTemplate = GetSketchTemplate();
 
 			if (relevanteTemplate != null)
 			{
-				StartSketchAsync(relevanteTemplate);
+				await StartSketchAsync(relevanteTemplate);
 			}
 			else
 			{
 				// TODO: Manually set up Z/M-awareness
-				StartSketchAsync();
+				await StartSketchAsync();
 			}
 
 			LogEnteringSketchMode();
 
 			IsInSketchPhase = true;
 
-			OnSketchPhaseStarted();
+			await OnSketchPhaseStartedAsync();
 		}
 
-		protected virtual void OnSketchPhaseStarted() { }
+		protected virtual Task OnSketchPhaseStartedAsync()
+		{
+			return Task.CompletedTask;
+		}
 
 		private static bool CanFinishSketch(Geometry sketch)
 		{
@@ -553,16 +557,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected async Task ResetSketchAsync()
 		{
-			Geometry currentSketch = await GetCurrentSketchAsync();
+			RememberSketch();
 
-			//if (currentSketch is { IsEmpty: false })
-			{
-				RememberSketch();
+			await ActiveMapView.ClearSketchAsync();
 
-				await ClearSketchAsync();
-
-				await OnSketchModifiedAsyncCore();
-			}
+			await OnSketchModifiedAsyncCore();
 
 			OnSketchResetCore();
 
@@ -606,7 +605,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					// sketching is not possible any more and the application appears hanging
 
 					// Try start sketch mode:
-					await QueuedTask.Run(() =>
+					await QueuedTask.Run(async () =>
 					{
 						var mapView = ActiveMapView; // TODO should be passed in from outside QTR
 
@@ -615,7 +614,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 						if (CanUseSelection(mapView))
 						{
-							AfterSelection(selection, null);
+							await AfterSelectionAsync(selection, null);
 						}
 					});
 				}
