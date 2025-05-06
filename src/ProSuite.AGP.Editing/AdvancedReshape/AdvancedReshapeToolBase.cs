@@ -230,8 +230,18 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			try
 			{
-				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); });
-				QueuedTask.Run(() => { ActiveMapView.ClearSketchAsync(); });
+				// OnSketchPhaseStartedAsync is sometimes called in QueuedTask and sometimes not
+				// Therefor use QueuedTask.Run() here.
+				// For some strange reason calling ActiveMapView.ClearSketchAsync()
+				// inside a QueuedTask makes the sketch symbol appear correctly. Calling
+				// ActiveMapView.ClearSketchAsync() outside QueuedTask leads to a
+				// not symbolised sketch. It's not documented that ActiveMapView.ClearSketchAsync()
+				// has to be put inside QueuedTask!!! May Teutates be with us!
+				await QueuedTask.Run(() =>
+				{
+					_symbolizedSketch?.SetSketchAppearanceBasedOnSelection();
+					ActiveMapView.ClearSketchAsync();
+				});
 			}
 			catch (Exception ex)
 			{
