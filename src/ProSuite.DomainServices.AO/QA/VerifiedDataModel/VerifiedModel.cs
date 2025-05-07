@@ -9,7 +9,7 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
-	public class VerifiedModel : Model, IModelMasterDatabase
+	public class VerifiedModel : DdxModel, IModelMasterDatabase
 	{
 		[NotNull] private readonly IMasterDatabaseWorkspaceContextFactory _workspaceContextFactory;
 

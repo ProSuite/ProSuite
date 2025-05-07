@@ -100,7 +100,7 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			             .Reattach(Arg.Is<ICollection<Dataset>>(x => x.Count == datasets.Count));
 		}
 
-		private class MockModel : Model, IModelMasterDatabase
+		private class MockModel : DdxModel, IModelMasterDatabase
 		{
 			public MockModel(string name) : base(name) { }
 

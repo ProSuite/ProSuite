@@ -101,7 +101,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			{
 				if (_issueSpatialReference == null)
 				{
-					Model primaryModel =
+					DdxModel primaryModel =
 						StandaloneVerificationUtils.GetPrimaryModel(QualitySpecification);
 					_issueSpatialReference =
 						primaryModel?.SpatialReferenceDescriptor?.GetSpatialReference();

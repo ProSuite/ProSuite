@@ -3,7 +3,6 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Datasets
@@ -12,10 +11,10 @@ namespace ProSuite.DdxEditor.Content.Datasets
 	{
 		private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 
-		private readonly Model _model;
+		private readonly DdxModel _model;
 
 		public ObjectDatasetItem(CoreDomainModelItemModelBuilder modelBuilder, T dataset,
-		                         IRepository<Dataset> repository, Model model)
+		                         IRepository<Dataset> repository, DdxModel model)
 			: base(modelBuilder, dataset, repository)
 		{
 			_modelBuilder = modelBuilder;
@@ -29,7 +28,7 @@ namespace ProSuite.DdxEditor.Content.Datasets
 			return _modelBuilder.GetChildren(this);
 		}
 
-		public Model GetModel()
+		public DdxModel GetModel()
 		{
 			return _model;
 		}

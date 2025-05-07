@@ -1,8 +1,8 @@
-﻿using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework.Dependencies;
-using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.Models
@@ -10,12 +10,12 @@ namespace ProSuite.DdxEditor.Content.Models
 	public class ModelToQualityVerificationDependingItem : DependingItem
 	{
 		[NotNull] private readonly QualityVerification _qualityVerification;
-		[NotNull] private readonly Model _model;
+		[NotNull] private readonly DdxModel _model;
 		[NotNull] private readonly IUnitOfWork _unitOfWork;
 
 		public ModelToQualityVerificationDependingItem(
 			[NotNull] QualityVerification qualityVerification,
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IUnitOfWork unitOfWork)
 			: base(qualityVerification, GetName(qualityVerification))
 		{

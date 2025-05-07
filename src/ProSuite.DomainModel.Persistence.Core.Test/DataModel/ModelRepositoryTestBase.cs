@@ -59,7 +59,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 			InitializeModel();
 
 			Dataset ds1 = null;
-			Model model = null;
+			DdxModel model = null;
 			UnitOfWork.NewTransaction(
 				delegate
 				{
@@ -104,7 +104,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 			InitializeModel();
 
 			Dataset ds1 = null;
-			Model model = null;
+			DdxModel model = null;
 
 			VectorDataset duplicate = null;
 

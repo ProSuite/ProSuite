@@ -14,6 +14,9 @@ namespace ProSuite.DomainModel.Core.DataModel
 	public abstract class DdxModel : VersionedEntityWithMetadata, IDetachedState, INamed,
 	                                 IAnnotated, IDatasetContainer, IModelHarvest
 	{
+		public const string EnvironmentVariableNoModelSchemaCache =
+			"PROSUITE_NO_MODEL_SCHEMA_CACHE";
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private int _cloneId = -1;
@@ -65,6 +68,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[UsedImplicitly] private ClassDescriptor _datasetListBuilderFactoryClassDescriptor;
 
 		#endregion
+
+		private bool _keepDatasetLocks;
 
 		private bool _specialDatasetsAssigned;
 
@@ -396,11 +401,54 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public bool AllowUserChangingUseMasterDatabaseOnlyForSchema =>
 			AllowUserChangingUseMasterDatabaseOnlyForSchemaCore;
 
+		/// <remarks>For internal use only, use GetMasterDatabaseWorkspaceContext()</remarks>
+		public object CachedMasterDatabaseWorkspaceContext { get; set; }
+
+		/// <remarks>For internal use only, use IsMasterDatabaseAccessible()</remarks>
+		public bool? CachedIsMasterDatabaseAccessible { get; set; }
+
+		/// <remarks>For internal use only, use GetMasterDatabaseNoAccessReason()</remarks>
+		public string CachedMasterDatabaseNoAccessReason { get; set; }
+
+		public bool KeepDatasetLocks
+		{
+			get { return _keepDatasetLocks; }
+			set
+			{
+				if (value == _keepDatasetLocks)
+				{
+					return;
+				}
+
+				// Value changed. Discard current workspace proxy
+				_keepDatasetLocks = value;
+
+				//if (_masterDatabaseWorkspaceContext == null)
+				if (CachedMasterDatabaseWorkspaceContext == null)
+				{
+					return;
+				}
+
+				//_masterDatabaseWorkspaceContext = null;
+				CachedMasterDatabaseWorkspaceContext = null;
+
+				if (_keepDatasetLocks)
+				{
+					return;
+				}
+
+				// make sure any locks are released immediately
+				GC.Collect();
+				GC.WaitForPendingFinalizers();
+			}
+		}
+
+
 		#region Object overrides
 
 		public override string ToString()
 		{
-			return Name;
+			return Name ?? "<no name>";
 		}
 
 		public override int GetHashCode()
@@ -803,9 +851,13 @@ namespace ProSuite.DomainModel.Core.DataModel
 			ReattachStateCore(unitOfWork);
 		}
 
+		protected virtual void ReattachStateCore([NotNull] IUnitOfWork unitOfWork) { }
+
 		public abstract string QualifyModelElementName(string modelElementName);
 
-		protected virtual void ReattachStateCore([NotNull] IUnitOfWork unitOfWork) { }
+		[NotNull]
+		public abstract string TranslateToModelElementName(
+			[NotNull] string masterDatabaseDatasetName);
 
 		#region Indexing
 
@@ -956,6 +1008,11 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		// ReSharper disable once VirtualMemberNeverOverridden.Global
 		protected virtual bool AllowUserChangingUseMasterDatabaseOnlyForSchemaCore => true;
+
+		[PublicAPI]
+		public bool DisableAutomaticSchemaCaching { get; set; }
+
+		public virtual bool AutoEnableSchemaCache => false;
 
 		#region Implementation of IDbDatasetContainer
 

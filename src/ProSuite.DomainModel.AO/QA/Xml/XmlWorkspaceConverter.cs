@@ -21,21 +21,20 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 		#region Implementation of IXmlWorkspaceConverter
 
-		public XmlWorkspace CreateXmlWorkspace(DdxModel ddxModel,
+		public XmlWorkspace CreateXmlWorkspace(DdxModel model,
 		                                       bool exportWorkspaceConnections,
 		                                       bool exportConnectionFilePaths)
 		{
 			var result = new XmlWorkspace
 			             {
-				             ID = XmlUtils.EscapeInvalidCharacters(ddxModel.Name),
-				             ModelName = XmlUtils.EscapeInvalidCharacters(ddxModel.Name),
-				             Database = ddxModel.DefaultDatabaseName,
-				             SchemaOwner = ddxModel.DefaultDatabaseSchemaOwner
+				             ID = XmlUtils.EscapeInvalidCharacters(model.Name),
+				             ModelName = XmlUtils.EscapeInvalidCharacters(model.Name),
+				             Database = model.DefaultDatabaseName,
+				             SchemaOwner = model.DefaultDatabaseSchemaOwner
 			             };
 
 			if (exportWorkspaceConnections)
 			{
-				Model model = ddxModel as Model;
 				Assert.NotNull(model, "The specified model is not of type Model.");
 
 				IWorkspace workspace = model.GetMasterDatabaseWorkspace();
@@ -81,7 +80,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			IWorkspace workspace = OpenWorkspace(forXmlWorkspace);
 
-			IList<Model> modelsForDatabase = GetModelsReferencingSameDatabase(
+			IList<DdxModel> modelsForDatabase = GetModelsReferencingSameDatabase(
 				forXmlWorkspace, workspace, fromModels);
 
 			if (modelsForDatabase.Count == 1)
@@ -91,7 +90,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			if (modelsForDatabase.Count > 1)
 			{
-				foreach (Model model in modelsForDatabase)
+				foreach (DdxModel model in modelsForDatabase)
 				{
 					IWorkspace modelWorkspace = model.GetMasterDatabaseWorkspace();
 
@@ -116,22 +115,21 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		#endregion
 
 		[NotNull]
-		private static IList<Model> GetModelsReferencingSameDatabase(
+		private static IList<DdxModel> GetModelsReferencingSameDatabase(
 			[NotNull] XmlWorkspace xmlWorkspace,
 			[NotNull] IWorkspace workspace,
 			[NotNull] IList<DdxModel> models)
 		{
-			var result = new List<Model>();
+			var result = new List<DdxModel>();
 
 			foreach (DdxModel model in models)
 			{
-				Model aoModel = model as Model;
-				Assert.NotNull(aoModel, "Unexpected type of model");
+				Assert.NotNull(model, "Unexpected type of model");
 
 				IWorkspace modelWorkspace;
 				try
 				{
-					modelWorkspace = aoModel.GetMasterDatabaseWorkspace();
+					modelWorkspace = model.GetMasterDatabaseWorkspace();
 				}
 				catch (Exception e)
 				{
@@ -150,7 +148,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				}
 
 				// model workspace references the same database as the xml workspace connection string
-				result.Add(aoModel);
+				result.Add(model);
 			}
 
 			return result;
@@ -164,7 +162,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			Assert.ArgumentCondition(! string.IsNullOrEmpty(xmlWorkspace.ModelName),
 			                         "model name not specified");
 
-			Model model = GetModel(xmlWorkspace.ModelName, fromModels);
+			DdxModel model = GetModel(xmlWorkspace.ModelName, fromModels);
 
 			Assert.NotNull(model, "Model '{0}' referenced in xml workspace not found",
 			               xmlWorkspace.ModelName);
@@ -207,7 +205,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		[NotNull]
-		private static Model GetModel([NotNull] string modelName,
+		private static DdxModel GetModel([NotNull] string modelName,
 		                              [NotNull] IEnumerable<DdxModel> fromModels)
 		{
 			DdxModel model = fromModels.FirstOrDefault(
@@ -216,7 +214,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			Assert.NotNull(model, "Model '{0}' corresponding to xml workspace id not found",
 			               modelName);
 
-			return (Model) model;
+			return model;
 		}
 
 		private static bool ConnectedUserIsEqual([NotNull] IWorkspace ws1,

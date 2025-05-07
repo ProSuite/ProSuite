@@ -22,6 +22,7 @@ using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
@@ -744,7 +745,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				xmlService.ProgressStreamer = responseStreamer;
 			}
 
-			Model primaryModel =
+			DdxModel primaryModel =
 				StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			responseStreamer.KnownIssueSpatialReference =
 				primaryModel?.SpatialReferenceDescriptor?.GetSpatialReference();

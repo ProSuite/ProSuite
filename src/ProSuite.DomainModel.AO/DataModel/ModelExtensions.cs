@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.Geodatabase;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -19,7 +20,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// will be created (that is, a workspace will be opened).
 		/// </summary>
 		[CanBeNull]
-		public static IWorkspaceContext GetMasterDatabaseWorkspaceContext(this Model model)
+		public static IWorkspaceContext GetMasterDatabaseWorkspaceContext(this DdxModel model)
 		{
 			var masterDatabase = GetMasterDatabase(model);
 
@@ -51,10 +52,10 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		/// <summary>
 		/// Opens the workspace, without building the schema cache even
-		/// if <see cref="Model.AutoEnableSchemaCache"/> is set to <c>true</c>.
+		/// if <see cref="DdxModel.AutoEnableSchemaCache"/> is set to <c>true</c>.
 		/// </summary>
 		[CanBeNull]
-		public static IWorkspace GetMasterDatabaseWorkspace(this Model model)
+		public static IWorkspace GetMasterDatabaseWorkspace(this DdxModel model)
 		{
 			if (model.CachedMasterDatabaseWorkspaceContext is IWorkspaceContext workspaceContext)
 			{
@@ -79,7 +80,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			//return (IWorkspace) UserConnectionProvider.OpenWorkspace();
 		}
 
-		public static bool IsMasterDatabaseAccessible(this Model model)
+		public static bool IsMasterDatabaseAccessible(this DdxModel model)
 		{
 			if (model is IModelMasterDatabase)
 			{
@@ -95,7 +96,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return false;
 		}
 
-		public static string GetMasterDatabaseNoAccessReason(this Model model)
+		public static string GetMasterDatabaseNoAccessReason(this DdxModel model)
 		{
 			if (model is null)
 				throw new ArgumentNullException(nameof(model));
@@ -109,7 +110,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		public static bool TryGetMasterDatabaseWorkspaceContext(
-			this Model model, out IWorkspaceContext result, out string noAccessReason)
+			this DdxModel model, out IWorkspaceContext result, out string noAccessReason)
 		{
 			Assert.ArgumentNotNull(model, nameof(model));
 
@@ -127,7 +128,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[NotNull]
 		public static IWorkspaceContext AssertMasterDatabaseWorkspaceContextAccessible(
-			this Model model)
+			this DdxModel model)
 		{
 			Assert.ArgumentNotNull(model, nameof(model));
 
@@ -143,7 +144,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		#region Schema Cache Control
 
-		public static void EnableSchemaCache(this Model model) // TODO move to ModelUtils?
+		public static void EnableSchemaCache(this DdxModel model) // TODO move to ModelUtils?
 		{
 			// schema cache might have been discarded (e.g. Reconcile does this)
 
@@ -152,7 +153,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			// This is experimental and used while analysing memory consumption.
 			bool noModelSchemaCache =
 				EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-					Model.EnvironmentVariableNoModelSchemaCache);
+					DdxModel.EnvironmentVariableNoModelSchemaCache);
 
 			var masterDatabaseWorkspaceContext = GetMasterDatabaseWorkspaceContext(model);
 
@@ -167,7 +168,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			//}
 		}
 
-		public static void DisableSchemaCache(this Model model) // TODO move to ModelUtils?
+		public static void DisableSchemaCache(this DdxModel model) // TODO move to ModelUtils?
 		{
 			var masterDatabaseWorkspaceContext = GetMasterDatabaseWorkspaceContext(model);
 
@@ -188,7 +189,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		#endregion
 
-		private static bool DetermineMasterDatabaseWorkspaceAccessibility(this Model model)
+		private static bool DetermineMasterDatabaseWorkspaceAccessibility(this DdxModel model)
 		{
 			if (model.UserConnectionProvider == null)
 			{
@@ -214,7 +215,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 		}
 
-		private static IModelMasterDatabase GetMasterDatabase(Model model)
+		private static IModelMasterDatabase GetMasterDatabase(DdxModel model)
 		{
 			return model as IModelMasterDatabase ??
 			       throw new InvalidOperationException(

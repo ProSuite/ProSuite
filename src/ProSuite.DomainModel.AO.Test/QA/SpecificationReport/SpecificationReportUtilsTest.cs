@@ -73,7 +73,7 @@ namespace ProSuite.DomainModel.AO.Test.QA.SpecificationReport
 			var geometryType = new GeometryTypeShape("Polygon",
 			                                         ProSuiteGeometryType.Polygon);
 
-			Model m = new TestModel("testmodel");
+			DdxModel m = new TestModel("testmodel");
 			m.UserConnectionProvider = new FileGdbConnectionProvider("C:\\doesnotexist.gdb");
 			Dataset ds0 = m.AddDataset(new TestVectorDataset("Dataset0"));
 			Dataset ds1 = m.AddDataset(new TestVectorDataset("Dataset1"));
@@ -141,7 +141,7 @@ namespace ProSuite.DomainModel.AO.Test.QA.SpecificationReport
 			public TestVectorDataset([NotNull] string name) : base(name) { }
 		}
 
-		private class TestModel : Model, IModelMasterDatabase
+		private class TestModel : DdxModel, IModelMasterDatabase
 		{
 			public TestModel([NotNull] string name) : base(name) { }
 

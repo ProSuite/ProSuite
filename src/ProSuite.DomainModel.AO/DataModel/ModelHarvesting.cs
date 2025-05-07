@@ -23,7 +23,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[NotNull]
 		public static IEnumerable<ObjectAttributeType> Harvest(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IList<GeometryType> geometryTypes,
 			[CanBeNull] IEnumerable<AttributeType> existingAttributeTypes = null)
 		{
@@ -41,7 +41,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[NotNull]
 		public static IEnumerable<ObjectAttributeType> Harvest(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IDatasetListBuilderFactory datasetListBuilderFactory,
 			[CanBeNull] IAttributeConfigurator attributeConfigurator)
 		{
@@ -69,7 +69,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[NotNull]
 		public static IEnumerable<ObjectAttributeType> Harvest(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IDatasetListBuilder datasetListBuilder,
 			[NotNull] IEnumerable<AttributeType> existingAttributeTypes,
 			[NotNull] IGeometryTypeConfigurator geometryTypeConfigurator)
@@ -85,7 +85,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[NotNull]
 		public static IEnumerable<ObjectAttributeType> Harvest(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IDatasetListBuilder datasetListBuilder,
 			[CanBeNull] IAttributeConfigurator attributeConfigurator,
 			[NotNull] IGeometryTypeConfigurator geometryTypeConfigurator)
@@ -100,7 +100,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[NotNull]
 		private static IEnumerable<ObjectAttributeType> Harvest(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IWorkspaceContext workspaceContext,
 			[NotNull] IDatasetListBuilder datasetListBuilder,
 			[CanBeNull] IAttributeConfigurator attributeConfigurator,
@@ -149,7 +149,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return result;
 		}
 
-		public static void HarvestAssociations([NotNull] Model model)
+		public static void HarvestAssociations([NotNull] DdxModel model)
 		{
 			IWorkspaceContext workspaceContext = model.AssertMasterDatabaseWorkspaceContextAccessible();
 
@@ -159,7 +159,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		private static void HarvestAssociations(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IWorkspaceContext workspaceContext,
 			[CanBeNull] string uniqueDatabaseName,
 			[CanBeNull] string uniqueSchemaOwner,
@@ -210,7 +210,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[CanBeNull]
 		private static IDatasetListBuilderFactory GetDatasetListBuilderFactory(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IList<GeometryType> geometryTypes)
 		{
 			Assert.ArgumentNotNull(geometryTypes, nameof(geometryTypes));
@@ -229,7 +229,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[CanBeNull]
 		private static IAttributeConfigurator GetAttributeConfigurator(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[CanBeNull] IEnumerable<AttributeType> existingAttributeTypes)
 		{
 			if (model.AttributeConfiguratorFactoryClassDescriptor == null)
@@ -246,7 +246,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		private static void HarvestDatasets(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IWorkspaceContext workspaceContext,
 			[NotNull] IDatasetListBuilder datasetListBuilder,
 			[CanBeNull] IAttributeConfigurator attributeConfigurator,
@@ -477,7 +477,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[CanBeNull]
 		private static string GetUniqueDatabaseName(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] ICollection<string> databaseNames)
 		{
 			if (databaseNames.Count <= 1)
@@ -500,7 +500,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[CanBeNull]
 		private static string GetUniqueSchemaOwner(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] ICollection<string> ownerNames)
 		{
 			if (ownerNames.Count <= 1)
@@ -527,7 +527,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// </summary>
 		[CanBeNull]
 		private static Association GetExistingAssociation(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] string relationshipClassName,
 			[NotNull] IWorkspace workspace,
 			bool associationNamesAreQualified,
@@ -566,7 +566,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// </summary>
 		[CanBeNull]
 		private static Dataset GetExistingDataset(
-			[NotNull] Model model, [NotNull] string gdbDatasetName,
+			[NotNull] DdxModel model, [NotNull] string gdbDatasetName,
 			[NotNull] IWorkspace workspace,
 			bool useIndex,
 			bool datasetNamesAreQualified)
@@ -603,7 +603,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		private static void HarvestObjectDataset(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] ObjectDataset objectDataset,
 			[NotNull] IObjectClass objectClass,
 			[CanBeNull] IAttributeConfigurator attributeConfigurator,
@@ -677,7 +677,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		private static void DeleteAssociationsNotInList(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] ICollection<IRelationshipClass> relClasses)
 		{
 			Assert.ArgumentNotNull(relClasses, nameof(relClasses));
@@ -698,7 +698,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		private static void AddOrUpdateAssociation(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IRelationshipClass relClass,
 			[CanBeNull] Association association,
 			[NotNull] IWorkspace workspace,

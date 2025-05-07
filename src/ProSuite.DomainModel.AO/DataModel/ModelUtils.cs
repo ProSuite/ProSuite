@@ -7,6 +7,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.Geodatabase;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -15,7 +16,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static string QualifyModelElementName(
-			Model model, string modelElementName)
+			DdxModel model, string modelElementName)
 		{
 			if (model is null)
 				throw new ArgumentNullException(nameof(model));
@@ -35,7 +36,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[NotNull]
 		public static string TranslateToModelElementName(
-			[NotNull] Model model, [NotNull] string masterDatabaseDatasetName)
+			[NotNull] DdxModel model, [NotNull] string masterDatabaseDatasetName)
 		{
 			Assert.ArgumentNotNull(model, nameof(model));
 			Assert.ArgumentNotNullOrEmpty(masterDatabaseDatasetName,
@@ -52,7 +53,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				       : ModelElementNameUtils.GetUnqualifiedName(gdbDatasetName);
 		}
 
-		public static IWorkspaceContext CreateDefaultMasterDatabaseWorkspaceContext(Model model)
+		public static IWorkspaceContext CreateDefaultMasterDatabaseWorkspaceContext(DdxModel model)
 		{
 			Assert.ArgumentNotNull(model, nameof(model));
 
@@ -67,7 +68,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				// The model schema cache can be turned OFF by environment variable.
 				bool noModelSchemaCache =
 					EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-						Model.EnvironmentVariableNoModelSchemaCache);
+						DdxModel.EnvironmentVariableNoModelSchemaCache);
 
 				if (! noModelSchemaCache)
 				{

@@ -6,7 +6,7 @@ namespace ProSuite.DomainModel.Core.DataModel.Repositories
 	/// <summary>
 	/// Provides direct access to DdxModel for non-AO usages.
 	/// </summary>
-	public interface IDdxModelRepository
+	public interface IDdxModelRepository // TODO Drop now that Model is AO-free (and dissolved into DdxModel)
 	{
 		/// <summary>
 		/// Gets the model having the specified name.

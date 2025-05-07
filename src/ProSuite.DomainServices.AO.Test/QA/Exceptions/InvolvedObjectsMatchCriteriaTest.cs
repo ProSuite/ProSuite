@@ -67,7 +67,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 			Assert.False(criteria.IgnoreDataset(dataset21));
 		}
 
-		private class DummyModel : Model, IModelMasterDatabase
+		private class DummyModel : DdxModel, IModelMasterDatabase
 		{
 			public DummyModel(string name) : base(name) { }
 

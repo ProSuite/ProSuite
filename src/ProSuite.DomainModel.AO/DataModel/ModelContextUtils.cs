@@ -15,7 +15,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			[NotNull] IDatasetName datasetName,
 			bool isValid,
 			[NotNull] IWorkspaceContext workspaceContext,
-			[NotNull] Model model)
+			[NotNull] DdxModel model)
 		{
 			Assert.ArgumentNotNull(datasetName, nameof(datasetName));
 			Assert.ArgumentNotNull(workspaceContext, nameof(workspaceContext));
@@ -54,7 +54,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		public static bool IsModelDefaultDatabase([NotNull] IWorkspace workspace,
-		                                          [NotNull] Model model)
+		                                          [NotNull] DdxModel model)
 		{
 			return model.IsMasterDatabaseAccessible() &&
 			       WorkspaceUtils.IsSameDatabase(model.GetMasterDatabaseWorkspace(),
@@ -126,7 +126,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			[NotNull] string gdbDatasetName,
 			[CanBeNull] IWorkspace workspace,
 			[NotNull] IWorkspaceContext workspaceContext,
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[CanBeNull] Predicate<IDdxDataset> isValidDataset)
 		{
 			Assert.ArgumentNotNullOrEmpty(gdbDatasetName, nameof(gdbDatasetName));

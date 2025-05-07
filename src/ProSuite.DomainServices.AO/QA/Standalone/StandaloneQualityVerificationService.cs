@@ -223,7 +223,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			{
 				Dataset dataset = verificationDataset.Dataset;
 
-				Model model = dataset.Model as Model;
+				DdxModel model = dataset.Model;
 
 				// TODO: only if WriteDetailedReport == true (use VerificationReporter from other service?)
 				IWorkspaceContext workspaceContext = model?.GetMasterDatabaseWorkspaceContext();
