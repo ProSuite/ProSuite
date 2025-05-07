@@ -3,7 +3,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel.Repositories
 {
-	public interface IModelRepository : IDdxModelRepository, IRepository<DdxModel>
+	public interface IModelRepository : IRepository<DdxModel>
 	{
 		/// <summary>
 		/// Gets the model having the specified name.

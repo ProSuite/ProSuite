@@ -215,7 +215,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 			// Export an in-memory specification to be imported later:
 			var qualitySpecification =
 				XmlDataQualityImpExpUtils.GetTestQualitySpecification(lineDataset);
-			
+
 			//TODO: Save to common UnitTestFolder?
 			//e.g. "C:\git\Swisstopo.Topgis\bin\Debug\Swisstopo.Topgis.Persistence.Test.QA.Xml.XmlDataQualityImporterTest.CanImport.qa.xml"
 			string xmlFilePath = GetType().FullName + ".CanImport.qa.xml";
@@ -343,9 +343,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 
 		private IDatasetRepository DatasetRepository => Resolve<IDatasetRepository>();
 
-		// TODO: Consider registering the IDdxModelRepository as well and use it directly 
-		private IModelRepository ModelRepository =>
-			Resolve<IModelRepository>();
+		private IModelRepository ModelRepository =>	Resolve<IModelRepository>();
 
 		#endregion
 	}
