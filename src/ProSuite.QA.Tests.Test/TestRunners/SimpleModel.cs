@@ -1,6 +1,7 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.Geodatabase;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.QA.Tests.Test.TestRunners
 {

@@ -1,6 +1,4 @@
-using ProSuite.DomainModel.Core.DataModel;
-
-namespace ProSuite.DomainModel.AO.DataModel
+namespace ProSuite.DomainModel.Core.DataModel
 {
 	public abstract class ProductionModel : DdxModel
 	{
