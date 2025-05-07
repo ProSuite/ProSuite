@@ -1,9 +1,7 @@
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.DataModel.Repositories;
 
-namespace ProSuite.DomainModel.AO.DataModel
+namespace ProSuite.DomainModel.Core.DataModel.Repositories
 {
 	public interface IModelRepository : IDdxModelRepository, IRepository<DdxModel>
 	{

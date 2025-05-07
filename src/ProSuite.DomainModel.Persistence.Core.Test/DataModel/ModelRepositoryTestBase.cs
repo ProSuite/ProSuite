@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using ProSuite.Commons.GeoDb;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.DataModel.Repositories;
 
 namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 {
