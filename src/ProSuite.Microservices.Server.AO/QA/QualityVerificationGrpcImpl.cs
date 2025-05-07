@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -130,6 +131,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 		public bool SetUnhealthyAfterEachVerification { get; set; } =
 			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
 				"PROSUITE_QA_SERVER_SET_UNHEALTHY_AFTER_VERIFICATION");
+
+		/// <summary>
+		/// Whether the service should be set to unhealthy after a verification when the memory
+		/// allocation (private bytes) exceeds the specified amount in MB. This allows
+		/// for process recycling after verifications that fragment the process memory
+		/// which can lead to excessive memory pressure on the host.
+		/// </summary>
+		public double UnhealthyMemoryLimitMegaBytes { get; set; } = GetUnhealthyMemoryLimit();
 
 		public override async Task VerifyQuality(
 			VerificationRequest request,
@@ -341,11 +350,45 @@ namespace ProSuite.Microservices.Server.AO.QA
 				                 CurrentLoad.CurrentProcessCount);
 			}
 
+			if (Health?.IsAnyServiceUnhealthy() == true)
+			{
+				return;
+			}
+
 			if (SetUnhealthyAfterEachVerification)
 			{
-				_msg.Info(
-					"Setting process to un-healthy after request to allow for process recycling.");
-				ServiceUtils.SetUnhealthy(Health, GetType());
+				ServiceUtils.SetUnhealthy(
+					Health, GetType(),
+					"Process is configured to be set to un-healthy after each request to allow for process recycling.");
+			}
+
+			if (UnhealthyMemoryLimitMegaBytes >= 0)
+			{
+				double privateBytesMb;
+				using (Process process = Process.GetCurrentProcess())
+				{
+					long privateBytes = process.PrivateMemorySize64;
+
+					const double mega = 1024 * 1024;
+
+					privateBytesMb = privateBytes / mega;
+				}
+
+				if (privateBytesMb > UnhealthyMemoryLimitMegaBytes)
+				{
+					string reason =
+						"High memory usage (allow for process recycling). " +
+						$"Private Memory: {privateBytesMb} MB. Configured limit: {UnhealthyMemoryLimitMegaBytes} MB";
+
+					ServiceUtils.SetUnhealthy(Health, GetType(), reason);
+				}
+				else
+				{
+					_msg.InfoFormat(
+						"Process is still healthy in terms of memory usage. " +
+						"Private Memory: {0} MB. Configured limit: {1} MB",
+						privateBytesMb, UnhealthyMemoryLimitMegaBytes);
+				}
 			}
 		}
 
@@ -1013,6 +1056,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_msg.Debug($"Task cancelled: {context.CancellationToken.IsCancellationRequested}",
 			           canceledException);
 			_msg.Warn("Task was cancelled, likely by the client");
+		}
+
+		private static double GetUnhealthyMemoryLimit()
+		{
+			const string envVarServerSetUnhealthyMemory =
+				"PROSUITE_QA_SERVER_UNHEALTHY_PROCESS_MEMORY";
+
+			string envVarValue = Environment.GetEnvironmentVariable(
+				envVarServerSetUnhealthyMemory);
+
+			if (! string.IsNullOrEmpty(envVarValue))
+			{
+				if (double.TryParse(envVarValue, out double memoryLimitMb))
+				{
+					return memoryLimitMb;
+				}
+
+				_msg.WarnFormat("Cannot parse environment variable {0} value ({1})",
+				                envVarServerSetUnhealthyMemory, envVarValue);
+			}
+
+			return -1;
 		}
 	}
 }
