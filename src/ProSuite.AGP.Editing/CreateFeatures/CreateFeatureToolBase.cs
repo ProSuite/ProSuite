@@ -232,7 +232,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 			RememberSketch();
 
-			StartSketchPhase();
+			StartSketchPhaseAsync();
 		}
 
 		private async Task StoreNewFeature([NotNull] Geometry sketchGeometry,
