@@ -1,12 +1,14 @@
 using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Transformers
 {
-	public class WrappedFeatureClass : GdbFeatureClass
+	public class WrappedFeatureClass : GdbFeatureClass, ITableBased
 	{
 		private readonly IReadOnlyFeatureClass _baseClass;
 
@@ -32,6 +34,12 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			_baseClass = ReadOnlyTableFactory.Create(template);
 		}
+
+		/// <summary>
+		/// An optional base class to be used for the ITableBased implementation.
+		/// Involved rows will be assumed to come from this class.
+		/// </summary>
+		public IReadOnlyTable InvolvedBaseClass { get; set; }
 
 		#region Overrides of GdbTable
 
@@ -101,6 +109,25 @@ namespace ProSuite.QA.Tests.Transformers
 		public override int GetHashCode()
 		{
 			return (_baseClass != null ? _baseClass.GetHashCode() : 0);
+		}
+
+		#endregion
+
+		#region ITableBased implementation
+
+		public IList<IReadOnlyTable> GetInvolvedTables()
+		{
+			IReadOnlyTable involvedClass = InvolvedBaseClass ?? _baseClass;
+
+			return new List<IReadOnlyTable> { involvedClass };
+		}
+
+		public IEnumerable<Involved> GetInvolvedRows(IReadOnlyRow forTransformedRow)
+		{
+			IReadOnlyTable involvedClass = InvolvedBaseClass ?? _baseClass;
+
+			return new List<Involved>
+			       { new InvolvedRow(involvedClass.Name, forTransformedRow.OID) };
 		}
 
 		#endregion
