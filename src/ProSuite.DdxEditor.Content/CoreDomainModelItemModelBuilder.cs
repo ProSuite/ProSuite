@@ -26,7 +26,6 @@ using ProSuite.DdxEditor.Content.SpatialRef;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.AttributeDependencies;
 using ProSuite.DomainModel.Core.AttributeDependencies.Repositories;
 using ProSuite.DomainModel.Core.AttributeDependencies.Xml;
