@@ -114,12 +114,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task<bool> OnSketchCanceledAsync()
 		{
-			if (! _isIntermittentSelectionPhaseActive)
-			{
-				// In case we did not register the shift-up, reset the sketch state history.
-				_sketchStateHistory?.ResetSketchStates();
-			}
-
 			return await OnSketchCanceledAsyncCore();
 		}
 
@@ -211,13 +205,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				if (await CanStartSketchPhaseAsync(selectedFeatures))
 				{
 					await StartSketchPhaseAsync();
-					_isIntermittentSelectionPhaseActive = false;
 					await Assert.NotNull(_sketchStateHistory).StopIntermittentSelectionAsync();
-				}
-				else
-				{
-					_isIntermittentSelectionPhaseActive = false;
-					Assert.NotNull(_sketchStateHistory).ResetSketchStates();
 				}
 
 				return;
@@ -296,16 +284,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				// The sketch phase must be restarted 
 				await StartSketchPhaseAsync();
-
-				if (isInIntermittentSelection)
-				{
-					_isIntermittentSelectionPhaseActive = false;
-					Assert.NotNull(_sketchStateHistory);
-					await _sketchStateHistory.StopIntermittentSelectionAsync();
-				}
 			}
-			else if (isInIntermittentSelection)
+
+			if (isInIntermittentSelection)
 			{
+				_isIntermittentSelectionPhaseActive = false;
+				Assert.NotNull(_sketchStateHistory);
+				await _sketchStateHistory.StopIntermittentSelectionAsync();
 				_sketchStateHistory?.ResetSketchStates();
 			}
 		}
@@ -451,7 +436,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual bool CanStartSketchPhaseCore(IList<Feature> selectedFeatures)
 		{
-			return true;
+			return ! _isIntermittentSelectionPhaseActive;
 		}
 
 		protected abstract void LogEnteringSketchMode();
