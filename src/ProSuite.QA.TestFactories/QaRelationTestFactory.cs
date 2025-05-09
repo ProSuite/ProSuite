@@ -4,7 +4,6 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -127,7 +126,7 @@ namespace ProSuite.QA.TestFactories
 
 			IReadOnlyTable result = null;
 
-			Model model =
+			DdxModel model =
 				GetUniqueModel(Assert.NotNull(Condition, "No quality condition assigned"));
 
 			Association association = DdxModelElementUtils.GetAssociationFromStoredName(
@@ -160,14 +159,14 @@ namespace ProSuite.QA.TestFactories
 		}
 
 		[NotNull]
-		private static Model GetUniqueModel([NotNull] InstanceConfiguration qualityCondition)
+		private static DdxModel GetUniqueModel([NotNull] InstanceConfiguration qualityCondition)
 		{
-			Model uniqueModel = null;
+			DdxModel uniqueModel = null;
 			foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues())
 			{
 				if (uniqueModel == null)
 				{
-					uniqueModel = dataset.Model as Model;
+					uniqueModel = dataset.Model;
 				}
 				else
 				{

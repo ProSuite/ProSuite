@@ -45,7 +45,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		#region Implementation of IVerifiedModelFactory
 
-		public Model CreateModel(IWorkspace workspace,
+		public DdxModel CreateModel(IWorkspace workspace,
 		                         string modelName,
 		                         int modelId,
 		                         string databaseName,
@@ -99,7 +99,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return model;
 		}
 
-		public void AssignMostFrequentlyUsedSpatialReference(Model model,
+		public void AssignMostFrequentlyUsedSpatialReference(DdxModel model,
 		                                                     IEnumerable<Dataset> usedDatasets)
 		{
 			ISpatialReference spatialReference = VerifiedModelFactory.GetMainSpatialReference(

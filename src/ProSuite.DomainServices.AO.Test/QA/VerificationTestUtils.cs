@@ -29,7 +29,7 @@ namespace ProSuite.DomainServices.AO.Test.QA
 					"ProSuite.QA.TestFactories.QaGdbConstraintFactory",
 					"ProSuite.QA.TestFactories"));
 
-			Model model = new TestModel("testModel");
+			DdxModel model = new TestModel("testModel");
 			model.UserConnectionProvider = new FileGdbConnectionProvider(gdbPath);
 			TestDataset lineDataset = model.AddDataset(new TestDataset(featureClassName));
 
@@ -52,13 +52,23 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			return specification;
 		}
 
-		private class TestModel : ProductionModel
+		private class TestModel : ProductionModel, IModelMasterDatabase
 		{
 			public TestModel(string name) : base(name) { }
 
-			protected override IWorkspaceContext CreateMasterDatabaseWorkspaceContext()
+			public override string QualifyModelElementName(string modelElementName)
 			{
-				return CreateDefaultMasterDatabaseWorkspaceContext();
+				return ModelUtils.QualifyModelElementName(this, modelElementName);
+			}
+
+			public override string TranslateToModelElementName(string masterDatabaseDatasetName)
+			{
+				return ModelUtils.TranslateToModelElementName(this, masterDatabaseDatasetName);
+			}
+
+			IWorkspaceContext IModelMasterDatabase.CreateMasterDatabaseWorkspaceContext()
+			{
+				return ModelUtils.CreateDefaultMasterDatabaseWorkspaceContext(this);
 			}
 		}
 
