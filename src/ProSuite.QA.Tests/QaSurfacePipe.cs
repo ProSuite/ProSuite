@@ -342,7 +342,7 @@ namespace ProSuite.QA.Tests
 			{
 				// interpolateShape returned null, geometry is partly outside terrain
 				return CheckSurfaceParts(surface, wksBox,
-				                         (IPointCollection) fullCurve,
+				                         fullCurve,
 				                         searchedRow);
 			}
 
@@ -526,7 +526,7 @@ namespace ProSuite.QA.Tests
 				// interpolateShape returned null, geometry is partly outside terrain
 				valid = false;
 				Dictionary<IPolyline, IPolycurve> surfaceParts =
-					GetSurfaceParts(surface, wksBox, (IPointCollection) shape1, searchedRow,
+					GetSurfaceParts(surface, wksBox, shape1, searchedRow,
 					                out errorCount);
 				foreach (KeyValuePair<IPolyline, IPolycurve> pair in surfaceParts)
 				{
@@ -560,12 +560,12 @@ namespace ProSuite.QA.Tests
 
 		private int CheckSurfaceParts([NotNull] ISimpleSurface surface,
 		                              WKSEnvelope box,
-		                              [NotNull] IPointCollection polyCurvePoints,
+		                              [NotNull] IPolycurve polyCurve,
 		                              [NotNull] IReadOnlyFeature searchedRow)
 		{
 			int errorCount;
 			Dictionary<IPolyline, IPolycurve> surfaceParts =
-				GetSurfaceParts(surface, box, polyCurvePoints, searchedRow, out errorCount);
+				GetSurfaceParts(surface, box, polyCurve, searchedRow, out errorCount);
 
 			foreach (KeyValuePair<IPolyline, IPolycurve> pair in surfaceParts)
 			{
@@ -585,18 +585,21 @@ namespace ProSuite.QA.Tests
 		private Dictionary<IPolyline, IPolycurve> GetSurfaceParts(
 			[NotNull] ISimpleSurface surface,
 			WKSEnvelope box,
-			[NotNull] IPointCollection polyCurvePoints,
+			[NotNull] IPolycurve polyCurve,
 			[NotNull] IReadOnlyFeature searchedRow,
 			out int errorCount)
 		{
 			errorCount = 0;
 
-			var missingTerrain = new SegmentPartList((IPolycurve) polyCurvePoints);
-			var validTerrain = new SegmentPartList((IPolycurve) polyCurvePoints);
+			var missingTerrain = new SegmentPartList(polyCurve);
+			var validTerrain = new SegmentPartList(polyCurve);
 
+			IPointCollection polyCurvePoints = (IPointCollection) polyCurve;
 			PopulateSegmentLists(polyCurvePoints, box, surface, missingTerrain, validTerrain);
 
-			IList<IPolyline> partsOutsideTerrain = missingTerrain.GetParts();
+			ISpatialReference resultSpatialReference = polyCurve.SpatialReference;
+
+			IList<IPolyline> partsOutsideTerrain = missingTerrain.GetParts(resultSpatialReference);
 
 			foreach (IPolyline polyline in partsOutsideTerrain)
 			{
@@ -606,7 +609,7 @@ namespace ProSuite.QA.Tests
 					Codes[Code.NoTerrainData], null);
 			}
 
-			IList<IPolyline> partsInsideTerrain = validTerrain.GetParts();
+			IList<IPolyline> partsInsideTerrain = validTerrain.GetParts(resultSpatialReference);
 
 			var validDict = new Dictionary<IPolyline, IPolycurve>();
 			foreach (IPolyline polyline in partsInsideTerrain)
@@ -661,7 +664,8 @@ namespace ProSuite.QA.Tests
 						enumSegments.Next(out segment, ref partIndex, ref segmentIndex);
 					}
 
-					foreach (IPolyline invalidPart in invalidSegments.GetParts())
+					foreach (IPolyline invalidPart in invalidSegments.GetParts(
+						         resultSpatialReference))
 					{
 						const string description = "Terrain is missing";
 						errorCount += ReportError(
@@ -669,7 +673,7 @@ namespace ProSuite.QA.Tests
 							Codes[Code.NoTerrainData], null);
 					}
 
-					foreach (IPolyline validPart in validSegments.GetParts())
+					foreach (IPolyline validPart in validSegments.GetParts(resultSpatialReference))
 					{
 						interpol = InterpolateShape(surface, validPart);
 
@@ -916,7 +920,7 @@ namespace ProSuite.QA.Tests
 				Marshal.ReleaseComObject(part);
 			}
 
-			errorCount += ReportAnyErrors(error, maxOffset, row);
+			errorCount += ReportAnyErrors(error, maxOffset, row, polyCurve.SpatialReference);
 
 			return errorCount;
 		}
@@ -993,6 +997,8 @@ namespace ProSuite.QA.Tests
 
 			int pointCount = points.Count;
 
+			ISpatialReference spatialReference = ((IGeometry) partPoints).SpatialReference;
+
 			for (var pointIndex = 0; pointIndex < pointCount; pointIndex++)
 			{
 				WKSPointZ point = points[pointIndex];
@@ -1008,12 +1014,12 @@ namespace ProSuite.QA.Tests
 				}
 				else
 				{
-					errorCount += ReportAnyErrors(error, maxOffset, row);
+					errorCount += ReportAnyErrors(error, maxOffset, row, spatialReference);
 					maxOffset = double.NaN;
 				}
 			}
 
-			errorCount += ReportAnyErrors(error, maxOffset, row);
+			errorCount += ReportAnyErrors(error, maxOffset, row, spatialReference);
 			maxOffset = 0;
 
 			return errorCount;
@@ -1071,11 +1077,12 @@ namespace ProSuite.QA.Tests
 
 		private int ReportAnyErrors([NotNull] SegmentPartList error,
 		                            double maxOffset,
-		                            [NotNull] IReadOnlyRow errorRow)
+		                            [NotNull] IReadOnlyRow errorRow,
+		                            [NotNull] ISpatialReference spatialReference)
 		{
 			var errorCount = 0;
 
-			IEnumerable<IPolyline> parts = error.GetParts();
+			IEnumerable<IPolyline> parts = error.GetParts(spatialReference);
 
 			foreach (IPolyline part in parts)
 			{

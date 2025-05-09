@@ -13,8 +13,8 @@ using ProSuite.Commons.Logging;
 namespace ProSuite.Commons.AO.Geometry.Cracking
 {
 	/// <summary>
-	/// Maintains information on special points/vertices of a feature with other features. These are
-	/// intersection points with other features, crack points used for topological correctness, i.e.
+	/// Maintains information on special points/vertices of a feature in relation with other features.
+	/// These are intersection points with other features, crack points used for topological correctness, i.e.
 	/// intersection points with other geometries that do not (yet) exist, and points to be deleted.
 	/// </summary>
 	public class FeatureVertexInfo

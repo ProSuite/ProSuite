@@ -704,14 +704,9 @@ namespace ProSuite.QA.Tests.Transformers
 			/// <summary>
 			/// Attempts to find more features in the source table that could be unioned with other
 			/// geometries in the specified lists. The features are searched only outside the current
-			/// search extent of the filter. The results are added to both <see cref="allFeaturesByOid"/>
-			/// and <see cref="groupGeometries"/>.
+			/// search extent of the filter. The results are added to both <paramref name="allFeaturesByOid"/>
+			/// and <paramref name="groupGeometries"/>.
 			/// </summary>
-			/// <param name="allFeaturesByOid"></param>
-			/// <param name="groupGeometries"></param>
-			/// <param name="filter"></param>
-			/// <param name="tolerance"></param>
-			/// <returns></returns>
 			private bool AddExtraGeometries(
 				[NotNull] IDictionary<long, IReadOnlyFeature> allFeaturesByOid,
 				[NotNull] ICollection<MultiPolycurve> groupGeometries,

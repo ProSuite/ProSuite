@@ -1,7 +1,6 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -21,7 +20,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			IIndexedSegments IIndexedSegmentsFeature.IndexedSegments
 				=> _indexedPolycurve ??
-				   (_indexedPolycurve = new IndexedPolycurve((IPointCollection4)Shape));
+				   (_indexedPolycurve = new IndexedPolycurve((IPointCollection4) Shape));
 		}
 
 		private class MultiPatchFeature : ReadOnlyFeature, IIndexedMultiPatchFeature
@@ -37,7 +36,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			public IIndexedMultiPatch IndexedMultiPatch
 				=> _indexedMultiPatch ??
-				   (_indexedMultiPatch = new IndexedMultiPatch((IMultiPatch)Shape));
+				   (_indexedMultiPatch = new IndexedMultiPatch((IMultiPatch) Shape));
 		}
 
 		private class AnyFeature : ReadOnlyFeature
@@ -48,7 +47,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public new static ReadOnlyFeature Create([NotNull] IFeature feature)
 		{
-			return Create(ReadOnlyTableFactory.Create((IFeatureClass)feature.Table), feature);
+			return Create(ReadOnlyTableFactory.Create((IFeatureClass) feature.Table), feature);
 		}
 
 		public static ReadOnlyFeature Create(

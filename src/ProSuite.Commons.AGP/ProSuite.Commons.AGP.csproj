@@ -8,12 +8,17 @@
     <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
 
+		<ArcGISProVersion Condition=" '$(ArcGISProVersion)' == '' ">3.0</ArcGISProVersion>
+
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
+    <!-- This can be changed to 12 once only .NET 8 (and Pro 3.2) support is dropped. -->
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
 
   <!-- .net 6 Winforms and WPF references: -->
@@ -24,10 +29,18 @@
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
+    <DefineConstants>DEBUG;TRACE;$(ArcGISProVersion)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
+    <DefineConstants>DEBUG;TRACE;$(ArcGISProVersion)</DefineConstants>
   </PropertyGroup>
+
+  <!-- Exclude file from legacy ArcGIS Pro versions. -->
+  <ItemGroup Condition=" '$(ArcGISProVersion)' &lt; 3.3 ">
+    <Compile Remove="Framework\Controls\ToolStripCommandWrapperButton.cs" />
+    <Compile Remove="Framework\Controls\ToolStripCommandWrapperButton.Designer.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="ArcGIS.Core">
@@ -70,6 +83,7 @@
     <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
   </ItemGroup>
 
@@ -84,6 +98,9 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\LayerMaskingOn32.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\LayerMaskingUnknown32.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\StatusCriticalError_12x_16x.png">
@@ -110,5 +127,13 @@
     <Resource Include="Images\SymbolLayerDrawingOn32.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Images\SymbolLayerDrawingUnknown32.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="PickerUI\Images\Annotation.png" />
+    <Resource Include="PickerUI\Images\LineGeometry.bmp" />
+    <Resource Include="PickerUI\Images\MultipatchGeometry.bmp" />
+    <Resource Include="PickerUI\Images\PointGeometry.bmp" />
+    <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />
   </ItemGroup>
 </Project>

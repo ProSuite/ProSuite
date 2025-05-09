@@ -45,8 +45,17 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				return false;
 			}
 
-			_tablesByName.Add(gdbTable.Name, gdbTable);
-			_tablesByClassId.Add(gdbTable.ObjectClassID, gdbTable);
+			if (gdbTable.ObjectClassID >= 0)
+			{
+				// Do not add views (query layers) with ClassId -1
+				_tablesByClassId.Add(gdbTable.ObjectClassID, gdbTable);
+			}
+
+			if (! _tablesByName.ContainsKey(gdbTable.Name))
+			{
+				// Do not add views (query layers) with the same name twice
+				_tablesByName.Add(gdbTable.Name, gdbTable);
+			}
 
 			return true;
 		}

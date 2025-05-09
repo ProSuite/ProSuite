@@ -1,3 +1,4 @@
+using System;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -7,6 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core.TestCategories;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -44,14 +46,14 @@ namespace ProSuite.QA.Tests.Transformers
 			return transformed;
 		}
 
-		private class ProjectedFc : TransformedFc
+		protected class ProjectedFc : TransformedFc, IHasGeotransformation
 		{
 			private readonly TrProject _transformer;
 			public ProjectedFc(IReadOnlyFeatureClass fc, TrProject transformer, string name)
 				: base(fc, fc.ShapeType,
 				       (t) =>
 				       {
-					       var ds = new TransformedDataset((TransformedFc) t, fc);
+					       var ds = new ProjectedDataset((ProjectedFc) t, fc);
 					       t.SpatialReference = transformer._targetSpatialReference;
 					       return ds;
 				       },
@@ -61,6 +63,9 @@ namespace ProSuite.QA.Tests.Transformers
 				AddStandardFields(fc);
 			}
 
+			public new TrProject Transformer => _transformer;
+
+
 			public override IEnvelope Extent
 			{
 				get
@@ -69,6 +74,26 @@ namespace ProSuite.QA.Tests.Transformers
 					extent.Project(_transformer._targetSpatialReference);
 					return extent;
 				}
+			}
+
+			public T ProjectEx<T>([NotNull] T geometry) where T : IGeometry
+			{
+				ISpatialReference targetSpatialReference = null;
+				if (geometry.SpatialReference?.FactoryCode ==
+				    _transformer._targetSpatialReference.FactoryCode)
+				{
+					IReadOnlyFeatureClass sourceFc = (IReadOnlyFeatureClass) InvolvedTables[0];
+					targetSpatialReference = sourceFc.SpatialReference;
+				}
+
+				if (targetSpatialReference == null)
+				{
+					throw new InvalidOperationException(
+						$"unhandles spatial reference {geometry.SpatialReference?.FactoryCode}");
+				}
+
+				return SpatialReferenceUtils.ProjectEx(
+					geometry, targetSpatialReference);
 			}
 
 			protected override IField CreateShapeField(IReadOnlyFeatureClass involvedFc)
@@ -81,6 +106,18 @@ namespace ProSuite.QA.Tests.Transformers
 					involvedFc.ShapeType,
 					_transformer._targetSpatialReference,
 					geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM);
+			}
+		}
+
+		protected class ProjectedDataset : TransformedDataset
+		{
+
+			private readonly ProjectedFc _projectedFc;
+
+			public ProjectedDataset([NotNull] ProjectedFc projectedFc,
+			                        [NotNull] IReadOnlyFeatureClass t0) : base(projectedFc, t0)
+			{
+				_projectedFc = projectedFc;
 			}
 		}
 	}

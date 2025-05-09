@@ -3,12 +3,14 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.DataModel.Repositories;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 
@@ -22,16 +24,22 @@ namespace ProSuite.DomainServices.AO.QA
 		[NotNull] private readonly IQualitySpecificationRepository _qualitySpecifications;
 		[NotNull] private readonly IQualityConditionRepository _qualityConditions;
 		[NotNull] private readonly IProjectRepository<TModel> _projects;
+		[NotNull] private readonly IDatasetRepository _datasets;
+		[NotNull] private readonly IAssociationRepository _associations;
 
 		public VerificationDataDictionary(
 			[NotNull] IDomainTransactionManager domainTransactions,
 			[NotNull] IQualitySpecificationRepository qualitySpecifications,
 			[NotNull] IQualityConditionRepository qualityConditions,
-			[NotNull] IProjectRepository<TModel> projects)
+			[NotNull] IProjectRepository<TModel> projects,
+			[NotNull] IDatasetRepository datasets,
+			[NotNull] IAssociationRepository associations)
 		{
 			_qualitySpecifications = qualitySpecifications;
 			_qualityConditions = qualityConditions;
 			_projects = projects;
+			_datasets = datasets;
+			_associations = associations;
 		}
 
 		public IList<ProjectWorkspaceBase<Project<TModel>, TModel>> GetProjectWorkspaceCandidates(
@@ -84,6 +92,17 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			return result;
+		}
+
+		public IList<Dataset> GetDatasets(IList<int> datasetIds)
+		{
+			return _datasets.Get(datasetIds);
+		}
+
+		public IList<Association> GetAssociations(IList<int> referencedDatasetIds)
+		{
+			Assert.NotNull(_associations, "Association repository has not been set up.");
+			return _associations.GetByReferencedDatasetIds(referencedDatasetIds);
 		}
 
 		[NotNull]
@@ -209,7 +228,9 @@ namespace ProSuite.DomainServices.AO.QA
 					continue;
 				}
 
-				IWorkspace workspace = DatasetUtils.GetWorkspace(objectClass);
+				// Once GIS.Geodatabase interface is used:
+				//IWorkspace workspace = objectClass.Workspace;
+				IWorkspace workspace = ((IDataset) objectClass).Workspace;
 
 				ICollection<IObjectClass> tables;
 				if (! result.TryGetValue(workspace, out tables))

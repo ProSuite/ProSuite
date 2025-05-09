@@ -23,7 +23,7 @@ namespace ProSuite.UI.MicroserverState
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		private readonly MicroserviceClientBase _serviceClient;
+		private readonly IMicroserviceClient _serviceClient;
 		private string _fullAddress;
 
 		private bool _isConnected;
@@ -38,7 +38,7 @@ namespace ProSuite.UI.MicroserverState
 		private bool _evaluating;
 		private ServiceState _serviceState;
 
-		public ServerState([NotNull] MicroserviceClientBase serviceClient)
+		public ServerState([NotNull] IMicroserviceClient serviceClient)
 		{
 			_serviceClient = serviceClient;
 			_isLocalHost =

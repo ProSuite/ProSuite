@@ -1,9 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.DomainModel.AGP.DataModel;
+using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AGP.Workflow
 {
@@ -15,12 +19,11 @@ namespace ProSuite.DomainModel.AGP.Workflow
 	/// </summary>
 	public class ProjectWorkspace
 	{
-		private DatasetLookup _datasetLookup;
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		// TODO: Add project, dataset implementations to DomainModel
 		public ProjectWorkspace(int projectId,
 		                        string projectName,
-		                        IList<BasicDataset> datasets,
+		                        IList<IDdxDataset> datasets,
 		                        Datastore datastore,
 		                        SpatialReference modelSpatialReference)
 		{
@@ -28,19 +31,34 @@ namespace ProSuite.DomainModel.AGP.Workflow
 			ProjectName = projectName;
 			Datasets = datasets;
 			Datastore = datastore;
+			DatastoreConnector = datastore.GetConnector();
+			DatastoreConnectionString = datastore.GetConnectionString();
 			ModelSpatialReference = modelSpatialReference;
-			DisplayName = $"{ProjectName} - {WorkspaceUtils.GetDatastoreDisplayText(Datastore)}";
+			DisplayName =
+				$"{ProjectName} - {WorkspaceUtils.GetDatastoreDisplayText(DatastoreConnector)}";
 		}
 
 		public int ProjectId { get; }
 		public string ProjectName { get; }
-		public IList<BasicDataset> Datasets { get; }
+		public IList<IDdxDataset> Datasets { get; }
 		public Datastore Datastore { get; }
+		public Connector DatastoreConnector { get; set; }
+		public string DatastoreConnectionString { get; set; }
 		public SpatialReference ModelSpatialReference { get; }
 
 		public string DisplayName { get; }
 
 		public bool IsMasterDatabaseWorkspace { get; set; }
+
+		public bool ExcludeReadOnlyDatasetsFromProjectWorkspace { get; set; }
+
+		public double MinimumScaleDenominator { get; set; }
+
+		public string ToolConfigDirectory { get; set; }
+
+		public string WorkListConfigDir { get; set; }
+
+		public string AttributeEditorConfigDir { get; set; }
 
 		public string GetVersionName()
 		{
@@ -52,9 +70,60 @@ namespace ProSuite.DomainModel.AGP.Workflow
 			return Datasets.Select(d => d.Id).ToList();
 		}
 
-		public DatasetLookup GetDatasetLookup()
+		public IDdxDataset GetDataset(string gdbTableName)
 		{
-			return _datasetLookup ??= new DatasetLookup(Datasets);
+			if (Datasets.Count == 0)
+			{
+				return null;
+			}
+
+			DdxModel ddxModel = Datasets.Select(d => d.Model).FirstOrDefault();
+
+			Assert.NotNull(ddxModel);
+
+			IDdxDataset result;
+
+			if (IsMasterDatabaseWorkspace && ddxModel.ElementNamesAreQualified)
+			{
+				result = Datasets.FirstOrDefault(
+					d => d.Name.Equals(gdbTableName, StringComparison.InvariantCultureIgnoreCase));
+			}
+			else
+			{
+				string unqualifiedName = ModelElementNameUtils.GetUnqualifiedName(gdbTableName);
+
+				result = Datasets.FirstOrDefault(
+					d => d.Name.Equals(gdbTableName, StringComparison.InvariantCultureIgnoreCase) ||
+					     d.Name.Equals(unqualifiedName,
+					                   StringComparison.InvariantCultureIgnoreCase));
+
+				if (result == null)
+				{
+					result = Datasets.FirstOrDefault(
+						d => UnqualifiedDatasetNameEquals(d, gdbTableName) ||
+						     DatasetNameEquals(d, unqualifiedName));
+				}
+			}
+
+			_msg.VerboseDebug(() => $"Found project workspace dataset using " +
+			                        $"table name {gdbTableName}: {result != null}");
+
+			return result;
+		}
+
+		private static bool DatasetNameEquals<T>(T dataset, string name) where T : IDdxDataset
+		{
+			string datasetName = dataset.Name;
+
+			return datasetName.Equals(name, StringComparison.InvariantCultureIgnoreCase);
+		}
+
+		private static bool UnqualifiedDatasetNameEquals<T>(T dataset, string name)
+			where T : IDdxDataset
+		{
+			string unqualifiedName = ModelElementNameUtils.GetUnqualifiedName(dataset.Name);
+
+			return unqualifiedName.Equals(name, StringComparison.InvariantCultureIgnoreCase);
 		}
 	}
 }

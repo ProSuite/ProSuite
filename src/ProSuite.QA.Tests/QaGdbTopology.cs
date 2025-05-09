@@ -22,7 +22,7 @@ namespace ProSuite.QA.Tests
 	public class QaGdbTopology : NonContainerTest
 	{
 		private readonly Dictionary<int, string> _involvedTables;
-		private readonly ITopology _topology;
+		private readonly IList<ITopology> _topologies;
 
 		#region issue codes
 
@@ -46,28 +46,35 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaGdbTopology_0))]
 		public QaGdbTopology(
 			[Doc(nameof(DocStrings.QaGdbTopology_topology))] [NotNull]
-			ITopology topology)
-			: this(topology, GetFeatureClasses(topology)) { }
+			TopologyReference topology)
+			: this(new List<ITopology> { topology.Topology },
+			       GetFeatureClasses(topology.Topology)) { }
 
-		private QaGdbTopology([NotNull] ITopology topology,
-		                      [NotNull] ICollection<IReadOnlyTable> tables)
-			: base(tables)
+		[Doc(nameof(DocStrings.QaGdbTopology_1))]
+		public QaGdbTopology(
+			[Doc(nameof(DocStrings.QaGdbTopology_featureClasses))] [NotNull]
+			IList<IReadOnlyFeatureClass> featureClasses)
+			: this(GetTopologies(featureClasses), featureClasses) { }
+		private QaGdbTopology([NotNull] IList<ITopology> topologies,
+		                      [NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses)
+			: base(featureClasses)
 		{
-			Assert.ArgumentNotNull(topology, nameof(topology));
+			Assert.ArgumentNotNull(topologies, nameof(topologies));
 
-			_topology = topology;
+			_topologies = topologies;
 
-			_involvedTables = new Dictionary<int, string>(tables.Count);
-			foreach (IReadOnlyTable table in tables)
+			_involvedTables = new Dictionary<int, string>();
+
+			foreach (ITopology topology in topologies)
 			{
-				if (! (table is ReadOnlyTable readOnlyTable))
+				foreach (IReadOnlyFeatureClass featureClass in GetFeatureClasses(topology))
 				{
-					throw new ArgumentException("Unsupported input table type");
+					IFeatureClass aoFeatureClass = ExpectFeatureClass(featureClass);
+
+					// TODO: Add to involved tables of base class? Currently, they are considered
+					// as 'Reference only'
+					_involvedTables.Add(aoFeatureClass.ObjectClassID, featureClass.Name);
 				}
-
-				var featureClass = (IFeatureClass) readOnlyTable.BaseTable;
-
-				_involvedTables.Add(featureClass.ObjectClassID, ((IDataset) featureClass).Name);
 			}
 		}
 
@@ -75,8 +82,8 @@ namespace ProSuite.QA.Tests
 
 		protected override ISpatialReference GetSpatialReference()
 		{
-			var geoDataset = _topology as IGeoDataset;
-			return geoDataset?.SpatialReference;
+			return _topologies.Select(topology => ((IGeoDataset) topology).SpatialReference)
+			                  .FirstOrDefault();
 		}
 
 		protected override void SetConstraintCore(IReadOnlyTable table, int tableIndex,
@@ -113,11 +120,56 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		[NotNull]
-		private static List<IReadOnlyTable> GetFeatureClasses([NotNull] ITopology topology)
+		private static List<IReadOnlyFeatureClass> GetFeatureClasses([NotNull] ITopology topology)
 		{
 			return TopologyUtils.GetFeatureClasses(topology)
-			                    .Select(x => (IReadOnlyTable) ReadOnlyTableFactory.Create(x))
+			                    .Select(x => (IReadOnlyFeatureClass) ReadOnlyTableFactory.Create(x))
 			                    .ToList();
+		}
+
+		private static IList<ITopology> GetTopologies(
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses)
+		{
+			List<ITopology> topologies = new List<ITopology>();
+
+			foreach (IReadOnlyFeatureClass featureClass in featureClasses)
+			{
+				IFeatureClass aoFeatureClass = ExpectFeatureClass(featureClass);
+
+				if (! TopologyUtils.ClassBelongsToTopology(aoFeatureClass,
+				                                           out ITopology classTopology))
+				{
+					throw new ArgumentException(
+						$"QaGdbTopology: {featureClass.Name} does not participate in a Geodatabase Topology.");
+				}
+
+				if (! topologies.Contains(classTopology))
+				{
+					topologies.Add(classTopology);
+				}
+			}
+
+			return topologies;
+		}
+		private static IFeatureClass ExpectFeatureClass(IReadOnlyFeatureClass featureClass)
+		{
+			ReadOnlyFeatureClass roFeatureClass = featureClass as ReadOnlyFeatureClass;
+
+			if (roFeatureClass == null)
+			{
+				throw new ArgumentException(
+					$"QaGdbTopology: {featureClass.Name} is no Geodatabase FeatureClass. Only Geodatabase FeatureClasses can participate in a Topology.");
+			}
+
+			IFeatureClass aoFeatureClass = roFeatureClass.BaseTable as IFeatureClass;
+
+			if (aoFeatureClass == null)
+			{
+				throw new ArgumentException(
+					$"QaGdbTopology: {featureClass.Name} is no Geodatabase FeatureClass. Only Geodatabase FeatureClasses can participate in a Topology.");
+			}
+
+			return aoFeatureClass;
 		}
 
 		private int ExecuteGeometry([CanBeNull] IGeometry geometry)
@@ -135,28 +187,45 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			IEnvelope box = geometry != null
-				                ? geometry.Envelope
-				                : GetTopologyExtent();
-
 			var errorCount = ReportDirtyAreasAsErrors(geometry, null);
 
-			errorCount += ReportTopologyErrors(box);
+			errorCount += ReportTopologyErrors(geometry);
 
 			return errorCount;
 		}
 
-		private int ReportTopologyErrors([NotNull] IEnvelope box)
+		private int ReportTopologyErrors([CanBeNull] IGeometry geometry)
+		{
+			int errorCount = 0;
+
+			foreach (ITopology topology in _topologies)
+			{
+				IEnvelope box = geometry != null
+					                ? geometry.Envelope
+					                : GetTopologyExtent(topology);
+
+				if (box.IsEmpty)
+				{
+					return NoError;
+				}
+
+				errorCount += ReportTopologyErrors(topology, box);
+			}
+
+			return errorCount;
+		}
+
+		private int ReportTopologyErrors(ITopology topology, [NotNull] IEnvelope box)
 		{
 			if (box.IsEmpty)
 			{
 				return NoError;
 			}
 
-			var container = (IErrorFeatureContainer) _topology;
-			ISpatialReference sr = ((ITopologyProperties) _topology).SpatialReference;
+			var container = (IErrorFeatureContainer) topology;
+			ISpatialReference sr = ((ITopologyProperties) topology).SpatialReference;
 
-			IEnumRule rules = ((ITopologyRuleContainer) _topology).Rules;
+			IEnumRule rules = ((ITopologyRuleContainer) topology).Rules;
 			rules.Reset();
 
 			var errorCount = 0;
@@ -164,13 +233,14 @@ namespace ProSuite.QA.Tests
 			ITopologyRule rule;
 			while ((rule = (ITopologyRule) rules.Next()) != null)
 			{
-				errorCount += ReportTopologyErrors(box, rule, container, sr);
+				errorCount += ReportTopologyErrors(box, topology, rule, container, sr);
 			}
 
 			return errorCount;
 		}
 
 		private int ReportTopologyErrors([NotNull] IEnvelope box,
+		                                 [NotNull] ITopology topology,
 		                                 [NotNull] ITopologyRule rule,
 		                                 [NotNull] IErrorFeatureContainer container,
 		                                 [NotNull] ISpatialReference spatialReference)
@@ -191,8 +261,11 @@ namespace ProSuite.QA.Tests
 				{
 					if (! errorFeature.IsException && ! errorFeature.IsDeleted)
 					{
+						string topologyName = ((IDataset) topology).Name;
+						string description = $"{GetRuleName(rule)} ({topologyName})";
+
 						errorCount += ReportError(
-							GetRuleName(rule), GetInvolvedRows(errorFeature),
+							description, GetInvolvedRows(errorFeature),
 							GetErrorGeometry(errorFeature),
 							Codes[Code.RuleNotFulfilled], null);
 					}
@@ -292,9 +365,32 @@ namespace ProSuite.QA.Tests
 		private int ReportDirtyAreasAsErrors([CanBeNull] IGeometry geometry,
 		                                     [CanBeNull] Exception validationException)
 		{
+			int errorCount = 0;
+			foreach (ITopology topology in _topologies)
+			{
+				if (geometry == null)
+				{
+					geometry = GetTopologyExtent(topology);
+				}
+
+				if (geometry.IsEmpty)
+				{
+					continue;
+				}
+
+				errorCount += ReportDirtyAreasAsErrors(topology, geometry, validationException);
+			}
+
+			return errorCount;
+		}
+
+		private int ReportDirtyAreasAsErrors([NotNull] ITopology topology,
+		                                     [CanBeNull] IGeometry geometry,
+		                                     [CanBeNull] Exception validationException)
+		{
 			if (geometry == null)
 			{
-				geometry = GetTopologyExtent();
+				geometry = GetTopologyExtent(topology);
 			}
 
 			if (geometry.IsEmpty)
@@ -302,40 +398,44 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			IPolygon dirtyArea = _topology.DirtyArea[GetAsPolygon(geometry)];
+			IPolygon dirtyArea = topology.DirtyArea[GetAsPolygon(geometry)];
 
 			if (dirtyArea == null || dirtyArea.IsEmpty)
 			{
 				return NoError;
 			}
 
+			string topologyName = ((IDataset) topology).Name;
+
 			IssueCode issueCode;
-			string description = GetErrorDescription(validationException, out issueCode);
+			string description =
+				GetErrorDescription(topologyName, validationException, out issueCode);
 
 			return ReportError(
-				description, GetInvolvedDatasets(_topology),
+				description, GetInvolvedDatasets(topology),
 				dirtyArea, issueCode, null);
 		}
 
 		[NotNull]
-		private static string GetErrorDescription([CanBeNull] Exception validationException,
+		private static string GetErrorDescription([NotNull] string topologyName,
+		                                          [CanBeNull] Exception validationException,
 		                                          [CanBeNull] out IssueCode issueCode)
 		{
 			if (validationException != null)
 			{
 				issueCode = Codes[Code.ValidationFailed];
-				return string.Format("Dirty area (topology validation failed: {0})",
-				                     validationException.Message);
+				return $"Topology {topologyName}: " +
+				       $"Dirty area (topology validation failed: {validationException.Message})";
 			}
 
 			issueCode = Codes[Code.DirtyArea];
-			return "Dirty area (run test in an edit session to validate dirty areas)";
+			return $"Topology {topologyName}: Dirty area (validate topology to remove dirty areas)";
 		}
 
 		[NotNull]
-		private IEnvelope GetTopologyExtent()
+		private static IEnvelope GetTopologyExtent(ITopology topology)
 		{
-			return ((IGeoDataset) _topology.FeatureDataset).Extent;
+			return ((IGeoDataset) topology.FeatureDataset).Extent;
 		}
 
 		[NotNull]
@@ -345,9 +445,11 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(topology, nameof(topology));
 
 			InvolvedRows involved = new InvolvedRows();
+
 			involved.AddRange(
 				TopologyUtils.GetFeatureClasses(topology).Select(
 					featureClass => new InvolvedRow(((IDataset) featureClass).Name)).ToList());
+
 			return involved;
 		}
 

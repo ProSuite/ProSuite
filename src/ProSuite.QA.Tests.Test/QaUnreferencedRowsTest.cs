@@ -306,18 +306,18 @@ namespace ProSuite.QA.Tests.Test
 		{
 			IFieldsEdit fields1 = new FieldsClass();
 			fields1.AddField(FieldUtils.CreateOIDField());
-			fields1.AddField(FieldUtils.CreateIntegerField("Pk"));
+			fields1.AddField(FieldUtils.CreateIntegerField("PK1"));
 
 			ITable tbl1 = DatasetUtils.CreateTable(ws, "TestNMRelation1", null, fields1);
 
 			IFieldsEdit fields2 = new FieldsClass();
 			fields2.AddField(FieldUtils.CreateOIDField());
-			fields2.AddField(FieldUtils.CreateIntegerField("Fk"));
+			fields2.AddField(FieldUtils.CreateIntegerField("PK2"));
 
 			ITable tbl2 = DatasetUtils.CreateTable(ws, "TestNMRelation2", null, fields2);
 
 			IRelationshipClass rel = CreateSimpleMNRelationship(ws, "TestNMRelationRel", tbl1,
-			                                                    tbl2, "Pk", "Fk");
+			                                                    tbl2, "PK1", "PK2", "FK1", "FK2");
 
 			((IWorkspaceEdit) ws).StartEditing(false);
 			IRow r11 = CreateRow(tbl1, 8);
@@ -342,7 +342,7 @@ namespace ProSuite.QA.Tests.Test
 			var test = new QaUnreferencedRows(
 				ReadOnlyTableFactory.Create(tbl1),
 				new[] { ReadOnlyTableFactory.Create(tbl2) },
-				new[] { "pk,pk,TestNMRelationRel,fk,fk" });
+				new[] { "PK1,FK1,TestNMRelationRel,FK2,PK2" });
 
 			using (var r = new QaTestRunner(test))
 			{
@@ -360,18 +360,20 @@ namespace ProSuite.QA.Tests.Test
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] string name,
 			[NotNull] ITable tableOrig,
-			[NotNull] ITable tableRel,
-			[NotNull] string orig,
-			[NotNull] string dest)
+			[NotNull] ITable tableDest,
+			[NotNull] string origPK,
+			[NotNull] string destPK,
+			[NotNull] string origFK,
+			[NotNull] string destFK)
 		{
 			IRelationshipClass rel =
 				workspace.CreateRelationshipClass(
 					name,
-					(IObjectClass) tableOrig, (IObjectClass) tableRel,
+					(IObjectClass) tableOrig, (IObjectClass) tableDest,
 					"forLabel", "backLabel",
 					esriRelCardinality.esriRelCardinalityManyToMany,
 					esriRelNotification.esriRelNotificationBoth, false, false, null,
-					orig, dest, orig, dest);
+					origPK, destPK, origFK, destFK);
 			// make sure the table is known by the workspace
 			((IWorkspaceEdit) workspace).StartEditing(false);
 			((IWorkspaceEdit) workspace).StopEditing(true);

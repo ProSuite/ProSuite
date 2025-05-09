@@ -5,9 +5,9 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container.TestContainer;
 
 namespace ProSuite.QA.Container
@@ -49,7 +49,7 @@ namespace ProSuite.QA.Container
 		/// Initializes a new instance of the <see cref="ContainerTest"/> class.
 		/// </summary>
 		/// <param name="table">The table.</param>
-		protected ContainerTest(IReadOnlyTable table) : this(new[] {table}) { }
+		protected ContainerTest(IReadOnlyTable table) : this(new[] { table }) { }
 
 		#endregion
 
@@ -145,13 +145,13 @@ namespace ProSuite.QA.Container
 		{
 			DataContainer = dataContainer;
 
-			SetSearchable(dataContainer, InvolvedTables);
+			TestUtils.SetContainer(dataContainer, InvolvedTables);
 
 			if (IssueFilters != null)
 			{
 				foreach (IIssueFilter issueFilter in IssueFilters)
 				{
-					SetSearchable(dataContainer, issueFilter.InvolvedTables);
+					TestUtils.SetContainer(dataContainer, issueFilter.InvolvedTables);
 				}
 			}
 
@@ -159,20 +159,7 @@ namespace ProSuite.QA.Container
 			{
 				foreach (IRowFilter rowFilter in GetRowFilters(iTable))
 				{
-					SetSearchable(dataContainer, rowFilter.InvolvedTables);
-				}
-			}
-		}
-
-		private void SetSearchable(IDataContainer dataContainer, IEnumerable<IReadOnlyTable> tables)
-		{
-			foreach (IReadOnlyTable table in tables)
-			{
-				if (table is IDataContainerAware transformed)
-				{
-					transformed.DataContainer = dataContainer;
-
-					SetSearchable(dataContainer, transformed.InvolvedTables);
+					TestUtils.SetContainer(dataContainer, rowFilter.InvolvedTables);
 				}
 			}
 		}

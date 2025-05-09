@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
@@ -15,12 +16,12 @@ namespace ProSuite.Commons.AGP.Selection
 		private readonly SpatialReference _outputSpatialReference;
 		private readonly IList<long> _objectIds;
 
-		public OidSelection([NotNull] IList<long> objectIds,
-		                    [NotNull] BasicFeatureLayer featureLayer,
-		                    [CanBeNull] SpatialReference outputSpatialReference)
+		public OidSelection([NotNull] BasicFeatureLayer featureLayer,
+		                    [NotNull] IList<long> objectIds,
+							[CanBeNull] SpatialReference outputSpatialReference)
 			: base(featureLayer)
 		{
-			_objectIds = objectIds;
+			_objectIds = objectIds ?? throw new ArgumentNullException(nameof(objectIds));
 			_outputSpatialReference = outputSpatialReference;
 		}
 
@@ -39,7 +40,6 @@ namespace ProSuite.Commons.AGP.Selection
 			return _objectIds.Count;
 		}
 
-		// daro todo daro to Ienumerable?
 		public override IEnumerable<long> GetOids()
 		{
 			return new ReadOnlyList<long>(_objectIds);

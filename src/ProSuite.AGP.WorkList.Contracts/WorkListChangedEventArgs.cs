@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
@@ -15,7 +14,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 			Extent = extent;
 			Items = items;
 		}
-		
+
 		[CanBeNull]
 		public Envelope Extent { get; }
 

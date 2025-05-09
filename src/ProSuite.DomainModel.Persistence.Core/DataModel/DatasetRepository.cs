@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NHibernate;
 using NHibernate.Criterion;
 using ProSuite.Commons.Essentials.Assertions;
@@ -12,6 +13,8 @@ namespace ProSuite.DomainModel.Persistence.Core.DataModel
 	[UsedImplicitly]
 	public class DatasetRepository : NHibernateRepository<Dataset>, IDatasetRepository
 	{
+		private const int _maxInParameterCount = 1000;
+
 		#region IDatasetRepository Members
 
 		public IList<Dataset> Get(string name)
@@ -88,6 +91,27 @@ namespace ProSuite.DomainModel.Persistence.Core.DataModel
 					              "where ds.DatasetCategory = :datasetCategory")
 				              .SetEntity("datasetCategory", datasetCategory)
 				              .List<Dataset>();
+			}
+		}
+
+		public IList<Dataset> Get(IList<int> idList)
+		{
+			using (ISession session = OpenSession(true))
+			{
+				if (idList.Count <= _maxInParameterCount)
+				{
+					// use a NOT IN query to return the result
+					return session.CreateQuery(
+						              "from Dataset ds " +
+						              " where id in (:datasetIds)")
+					              .SetParameterList("datasetIds", idList)
+					              .List<Dataset>();
+				}
+
+				// too many affected quality conditions; get all and filter locally
+				return GetAll()
+				       .Where(dataset => idList.Contains(dataset.Id))
+				       .ToList();
 			}
 		}
 

@@ -177,16 +177,26 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <param name="includeReferencedProcessors">include IssueFilters and Transformers</param>
 		/// <param name="includeSourceDatasets">Recursively include datasets of transformers</param>
+		/// <param name="excludeReferenceDatasets">Whether dataset parameters that are only used as
+		/// reference data shall be excluded. Also, in case a transformer is used as input, it will
+		/// also be excluded if used as reference data.</param>
 		/// <returns></returns>
 		[NotNull]
 		public IEnumerable<Dataset> GetDatasetParameterValues(
-			bool includeReferencedProcessors = false, bool includeSourceDatasets = false)
+			bool includeReferencedProcessors = false,
+			bool includeSourceDatasets = false,
+			bool excludeReferenceDatasets = false)
 		{
 			foreach (TestParameterValue parameterValue in ParameterValues)
 			{
 				var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
 
 				if (datasetTestParameterValue == null)
+				{
+					continue;
+				}
+
+				if (excludeReferenceDatasets && datasetTestParameterValue.UsedAsReferenceData)
 				{
 					continue;
 				}
@@ -200,7 +210,8 @@ namespace ProSuite.DomainModel.Core.QA
 				else if (includeSourceDatasets)
 				{
 					foreach (Dataset referencedDataset in
-					         datasetTestParameterValue.GetAllSourceDatasets())
+					         datasetTestParameterValue.GetAllSourceDatasets(
+						         excludeReferenceDatasets))
 					{
 						yield return referencedDataset;
 					}

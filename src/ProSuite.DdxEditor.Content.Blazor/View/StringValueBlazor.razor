@@ -3,6 +3,14 @@
 
 <Validation ErrorMessage="@ErrorMessage">
 	<div class="row">
+		@if (ShowExpressionBuilderButton)
+		{
+			<div class="col-1" style="width: 30px; padding-left: 4px; padding-top: 3px">
+				<button onclick="@OnExpressionBuilderClicked" class="ddx-button">
+					<img alt="Query Builder" src="images/QueryBuilder.png" style="padding: 0 0 3px 3px"/>
+				</button>
+			</div>
+		}
 		<div class="col w-100" style="border: unset">
 			<RadzenTextBox @bind-Value="StringValue" oninput="@(OnInput)"/>
 		</div>

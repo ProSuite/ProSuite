@@ -88,18 +88,30 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				string fieldName = field.Name;
 
-				foreach (Subtype subtype in subtypeValues)
+				foreach (IDomain subtypeDomain in GetSubtypeDomains(
+					         subtypes, subtypeValues, fieldName))
 				{
-					IDomain subtypeDomain = subtypes.Domain[subtype.Code, fieldName];
-
-					if (subtypeDomain != null)
-					{
-						domains.Add(subtypeDomain);
-					}
+					domains.Add(subtypeDomain);
 				}
 			}
 
 			return new List<IDomain>(domains);
+		}
+
+		public static IEnumerable<IDomain> GetSubtypeDomains(
+			[NotNull] ISubtypes subtypes,
+			[NotNull] IEnumerable<Subtype> subtypeValues,
+			[NotNull] string fieldName)
+		{
+			foreach (Subtype subtype in subtypeValues)
+			{
+				IDomain subtypeDomain = subtypes.Domain[subtype.Code, fieldName];
+
+				if (subtypeDomain != null)
+				{
+					yield return subtypeDomain;
+				}
+			}
 		}
 
 		[NotNull]

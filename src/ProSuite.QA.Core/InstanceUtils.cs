@@ -16,6 +16,7 @@ namespace ProSuite.QA.Core
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static string AssemblyDefinitionsSuffix => "Definitions";
+		private static string AlgorithmDefinitionSuffix => "Definition";
 
 		[NotNull]
 		public static Type LoadType([NotNull] string assemblyName,
@@ -57,10 +58,9 @@ namespace ProSuite.QA.Core
 
 		/// <summary>
 		/// Returns the name of the assembly containing the test/instance definitions for the
-		/// specified assembly name containing the test/instance implementations.
+		/// specified assembly name containing the test/instance implementations, e.g.
+		/// "ProSuite.QA.Tests" --> "ProSuite.QA.Tests.Definitions"
 		/// </summary>
-		/// <param name="implementationAssemblyName"></param>
-		/// <returns></returns>
 		public static string GetDefinitionsAssemblyName(string implementationAssemblyName)
 		{
 			// Substitute first. Definition based tests can never come from the legacy assemblies
@@ -76,15 +76,23 @@ namespace ProSuite.QA.Core
 		[CanBeNull]
 		public static string TryGetAlgorithmName(string algorithmDefinitionName)
 		{
-			const string definition = "Definition";
-
-			if (algorithmDefinitionName.EndsWith(definition))
+			if (algorithmDefinitionName.EndsWith(AlgorithmDefinitionSuffix))
 			{
 				return algorithmDefinitionName.Substring(
-					0, algorithmDefinitionName.Length - definition.Length);
+					0, algorithmDefinitionName.Length - AlgorithmDefinitionSuffix.Length);
 			}
 
 			return null;
+		}
+		/// <summary>
+		/// Returns test/instance definition name for the specified
+		/// test/instance implementation name (both have the same namespace), e.g.
+		/// "ProSuite.QA.Tests.QaConstraint" --> "ProSuite.QA.Tests.QaConstraintDefinition"
+		/// (both share the same namespace)
+		/// </summary>
+		public static string GetAlgorithmDefinitionName(string algorithmName)
+		{
+			return $"{algorithmName}{AlgorithmDefinitionSuffix}";
 		}
 
 		public static void AssertConstructorExists([NotNull] Type type, int constructorId)

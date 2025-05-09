@@ -9,6 +9,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -102,7 +103,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			IMosaicDataset dataset;
 			if (! _mosaicDatasetsByName.TryGetValue(name, out dataset))
 			{
-				dataset = DatasetUtils.OpenMosaicDataset((IWorkspace) FeatureWorkspace, name);
+				dataset = MosaicUtils.OpenMosaicDataset((IWorkspace) FeatureWorkspace, name);
 				_mosaicDatasetsByName.Add(name, dataset);
 			}
 

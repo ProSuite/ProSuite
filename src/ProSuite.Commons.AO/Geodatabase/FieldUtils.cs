@@ -7,7 +7,9 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
+using FieldType = ProSuite.Commons.GeoDb.FieldType;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
@@ -401,6 +403,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return esriFieldType.esriFieldTypeString;
 			if (dataType == typeof(Guid))
 				return esriFieldType.esriFieldTypeGUID;
+			if (dataType == typeof(DateTime))
+				return esriFieldType.esriFieldTypeDate;
 
 			// can exist for datatable-expression columns, i.e. SUM(...)
 			if (dataType == typeof(long))
@@ -594,6 +598,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			// In .NET 6 we could use ReadOnlySpan<byte>.SequenceEqual() for better performance
 			return bytesMain.SequenceEqual(bytesTest);
+		}
+
+		public static ITableField ToTableField([NotNull] IField field)
+		{
+			return new TableField(field.Name, (FieldType) field.Type,
+			                      field.Length, field.AliasName);
 		}
 
 		[NotNull]

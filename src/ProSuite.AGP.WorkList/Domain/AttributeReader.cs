@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
@@ -7,8 +8,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
-	// todo daro: extract super class?
-
 	public class AttributeReader : IAttributeReader
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -24,12 +23,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public AttributeReader(TableDefinition definition, params Attributes[] attributes)
 		{
-			// todo daro: add all
-			// todo daro: does FindField works with qualified field names?
-
-			// todo daro: remove, not needed anymore
-			//_fieldNameByIssueAttribute.Add(Attributes.ObjectID, definition.GetObjectIDField());
-
 			_fieldNameByIssueAttribute.Add(Attributes.IssueCode, "Code");
 			_fieldNameByIssueAttribute.Add(Attributes.IssueCodeDescription, "CodeDescription");
 			_fieldNameByIssueAttribute.Add(Attributes.InvolvedObjects, "InvolvedObjects");
@@ -88,12 +81,86 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		[CanBeNull]
-		private string GetName(Attributes attribute)
+		public string GetName(Attributes attribute)
 		{
 			return _fieldNameByIssueAttribute.TryGetValue(attribute, out string fieldName)
 				       ? fieldName
 				       : null;
+		}
+
+		public void ReadAttributes(Row fromRow, IWorkItem item, ISourceClass source)
+		{
+			IIssueItem forItem = (IIssueItem) item;
+
+			try
+			{
+				forItem.IssueCode = GetValue<string>(fromRow, Attributes.IssueCode);
+				forItem.IssueCodeDescription =
+					GetValue<string>(fromRow, Attributes.IssueCodeDescription);
+				forItem.IssueDescription =
+					GetValue<string>(fromRow, Attributes.IssueDescription);
+
+				forItem.InvolvedObjects = GetValue<string>(fromRow, Attributes.InvolvedObjects);
+
+				forItem.QualityCondition =
+					GetValue<string>(fromRow, Attributes.QualityConditionName);
+				forItem.TestName = GetValue<string>(fromRow, Attributes.TestName);
+				forItem.TestDescription = GetValue<string>(fromRow, Attributes.TestDescription);
+				forItem.TestType = GetValue<string>(fromRow, Attributes.TestType);
+				forItem.IssueSeverity = GetValue<string>(fromRow, Attributes.IssueSeverity);
+				forItem.StopCondition = GetValue<string>(fromRow, Attributes.IsStopCondition);
+				forItem.Category = GetValue<string>(fromRow, Attributes.Category);
+				forItem.AffectedComponent =
+					GetValue<string>(fromRow, Attributes.AffectedComponent);
+				forItem.Url = GetValue<string>(fromRow, Attributes.Url);
+				forItem.DoubleValue1 = GetValue<double?>(fromRow, Attributes.DoubleValue1);
+				forItem.DoubleValue2 = GetValue<double?>(fromRow, Attributes.DoubleValue2);
+				forItem.TextValue = GetValue<string>(fromRow, Attributes.TextValue);
+				forItem.IssueAssignment = GetValue<string>(fromRow, Attributes.IssueAssignment);
+				forItem.QualityConditionUuid =
+					GetValue<string>(fromRow, Attributes.QualityConditionUuid);
+				forItem.QualityConditionVersionUuid =
+					GetValue<string>(fromRow, Attributes.QualityConditionVersionUuid);
+				forItem.ExceptionStatus = GetValue<string>(fromRow, Attributes.ExceptionStatus);
+				forItem.ExceptionNotes = GetValue<string>(fromRow, Attributes.ExceptionNotes);
+				forItem.ExceptionCategory =
+					GetValue<string>(fromRow, Attributes.ExceptionCategory);
+				forItem.ExceptionOrigin = GetValue<string>(fromRow, Attributes.ExceptionOrigin);
+				forItem.ExceptionDefinedDate =
+					GetValue<string>(fromRow, Attributes.ExceptionDefinedDate);
+				forItem.ExceptionLastRevisionDate =
+					GetValue<string>(fromRow, Attributes.ExceptionLastRevisionDate);
+				forItem.ExceptionRetirementDate =
+					GetValue<string>(fromRow, Attributes.ExceptionRetirementDate);
+				forItem.ExceptionShapeMatchCriterion =
+					GetValue<string>(fromRow, Attributes.ExceptionShapeMatchCriterion);
+				forItem.Status = ((DatabaseSourceClass) source).GetStatus(fromRow);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"An error occurred reading issue item properties from {forItem}", e);
+			}
+
+			if (forItem.InvolvedObjects != null)
+			{
+				try
+				{
+					// todo daro: use source class to determine whether involved tables have geoemtry?
+					forItem.InvolvedTables =
+						IssueUtils.ParseInvolvedTables(forItem.InvolvedObjects,
+						                               source.HasGeometry);
+				}
+				catch (Exception e)
+				{
+					_msg.Warn(
+						$"An error occurred parsing involved tables from issue item {forItem}", e);
+				}
+			}
+		}
+
+		public IList<InvolvedTable> ParseInvolved(string involvedString, bool hasGeometry)
+		{
+			return IssueUtils.ParseInvolvedTables(involvedString, hasGeometry);
 		}
 
 		[CanBeNull]

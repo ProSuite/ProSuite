@@ -30,6 +30,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 			TargetFeatureCandidates = null;
 		}
 
+		public abstract ILinearNetworkFeatureFinder Union(ILinearNetworkFeatureFinder other);
+
 		public IList<IFeature> FindEdgeFeaturesAt(IPoint point,
 		                                          Predicate<IFeature> predicate = null)
 		{
@@ -38,7 +40,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 
 		public IList<IFeature> FindJunctionFeaturesAt(IPoint point)
 		{
-			var geometryTypes = new[] {esriGeometryType.esriGeometryPoint};
+			var geometryTypes = new[] { esriGeometryType.esriGeometryPoint };
 
 			return FindFeaturesAt(point, geometryTypes);
 		}
@@ -200,7 +202,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 			[NotNull] IPoint searchPoint,
 			[CanBeNull] Predicate<IFeature> predicate)
 		{
-			var geometryTypes = new[] {esriGeometryType.esriGeometryPolyline};
+			var geometryTypes = new[] { esriGeometryType.esriGeometryPolyline };
 
 			return FindFeaturesAt(searchPoint,
 			                      geometryTypes, predicate);
@@ -229,6 +231,32 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 					: targetFeatures.Where(targetFeature => predicate(targetFeature)));
 
 			return result;
+		}
+
+		protected IEnumerable<IFeature> UnionTargetFeatureSet(
+			[NotNull] LinearNetworkFeatureFinderBase otherFeatureFinder)
+		{
+			Assert.NotNull(TargetFeatureCandidates, "TargetFeatures are null");
+
+			var unionedFeatures = new List<IFeature>(TargetFeatureCandidates);
+
+			IList<IFeature> otherFeatures =
+				Assert.NotNull(otherFeatureFinder.TargetFeatureCandidates,
+				               "Other target features are null");
+
+			foreach (IFeature otherFeaturue in otherFeatures)
+			{
+				if (unionedFeatures.Any(
+					    f => GdbObjectUtils.IsSameObject(
+						    f, otherFeaturue, ObjectClassEquality.SameTableSameVersion)))
+				{
+					continue;
+				}
+
+				unionedFeatures.Add(otherFeaturue);
+			}
+
+			return unionedFeatures;
 		}
 	}
 }

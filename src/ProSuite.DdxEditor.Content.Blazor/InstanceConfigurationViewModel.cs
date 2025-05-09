@@ -16,6 +16,7 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
+using ProSuite.UI.QA;
 using ProSuite.UI.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.Blazor;
@@ -61,6 +62,11 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 	public ITestParameterDatasetProvider DatasetProvider { get; }
 
 	public IItemNavigation ItemNavigation { get; }
+
+	/// <summary>
+	/// An optional expression builder for SQL expressions.
+	/// </summary>
+	public ISqlExpressionBuilder SqlExpressionBuilder { get; set; }
 
 	void IViewObserver.NotifyChanged(bool dirty)
 	{
@@ -120,7 +126,7 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 		{
 			return;
 		}
-		
+
 		foreach (ViewModelBase vm in Values)
 		{
 			_msg.VerboseDebug(() => $"OnRowPropertyChanged unregister: {this}");
@@ -192,7 +198,7 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 			rowsByParameter.Add(param, new List<ViewModelBase>());
 			parametersByName.Add(param.Name, param);
 		}
-		
+
 		var initializedParameters = new List<TestParameter>();
 
 		foreach (TestParameterValue paramValue in instanceConfiguration.ParameterValues)
@@ -254,7 +260,7 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 
 		TestParameter testParameter = row.Parameter;
 		object value = row.Value;
-		
+
 		_msg.VerboseDebug(() => $"add {row}");
 
 		if (row is DatasetTestParameterValueViewModel datasetParamVM)

@@ -92,6 +92,11 @@ namespace ProSuite.Commons.UI.Input
 			}
 		}
 
+		public static bool IsAnyModifierDown()
+		{
+			return Modifiers != ModifierKeys.None;
+		}
+
 		public static bool IsKeyDown(Key key)
 		{
 			return System.Windows.Input.Keyboard.IsKeyDown(key);

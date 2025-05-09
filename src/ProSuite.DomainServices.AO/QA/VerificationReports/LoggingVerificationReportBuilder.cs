@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.Exceptions;
 using ProSuite.DomainServices.AO.QA.Issues;
@@ -20,7 +19,9 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 
 		void IVerificationReportBuilder.BeginVerification(AreaOfInterest areaOfInterest) { }
 
-		void IVerificationReportBuilder.AddVerifiedDataset(Dataset dataset) { }
+		void IVerificationReportBuilder.AddVerifiedDataset(
+			QualityVerificationDataset verificationDataset, string workspaceDisplayText,
+			ISpatialReference spatialReference) { }
 
 		void IVerificationReportBuilder.AddVerifiedQualityCondition(
 			QualitySpecificationElement qualitySpecificationElement) { }

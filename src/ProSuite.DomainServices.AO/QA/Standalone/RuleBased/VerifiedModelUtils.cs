@@ -35,7 +35,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.RuleBased
 			if (spatialReference != null)
 			{
 				model.SpatialReferenceDescriptor =
-					new SpatialReferenceDescriptor(spatialReference);
+					SpatialReferenceDescriptorExtensions.CreateFrom(spatialReference);
 			}
 
 			return model;

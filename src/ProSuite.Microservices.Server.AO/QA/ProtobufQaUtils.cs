@@ -6,6 +6,7 @@ using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
@@ -13,7 +14,7 @@ using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.Microservices.Server.AO.QA
@@ -44,7 +45,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				GetSupportedErrorRepoGeometryTypes(verificationContext).ToList();
 
 			ISpatialReference spatialReference =
-				verificationContext.SpatialReferenceDescriptor.SpatialReference;
+				verificationContext.SpatialReferenceDescriptor.GetSpatialReference();
 
 			return CreateIssueProto(args, spatialReference, supportedGeometryTypes);
 		}

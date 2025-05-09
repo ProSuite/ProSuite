@@ -1,24 +1,25 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons;
-using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Progress;
-using ProSuite.DomainModel.AGP.DataModel;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.Workflow;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Client.AGP.QA
 {
 	public static class QAUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// Creates the verification request for an extent verification.
 		/// </summary>
@@ -149,25 +150,30 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				return;
 			}
 
-			DatasetLookup datasetLookup = projectWorkspace.GetDatasetLookup();
-
-			Assert.NotNull(datasetLookup, nameof(datasetLookup));
-
 			foreach (Row objToVerify in objectsToVerify)
 			{
+				Table table = DatasetUtils.GetDatabaseTable(objToVerify.GetTable());
+
+				if (table.GetDatastore().Handle != projectWorkspace.Datastore.Handle)
+				{
+					_msg.VerboseDebug(() => $"The object {GdbObjectUtils.ToString(objToVerify)} " +
+					                        $"is not part of the project workspace");
+					continue;
+				}
+
 				Geometry geometry = null;
 				if (objToVerify is Feature feature)
 				{
 					geometry = feature.GetShape();
 				}
 
-				BasicDataset objectDatset = datasetLookup.GetDataset(objToVerify.GetTable());
+				IDdxDataset objectDataset = projectWorkspace.GetDataset(table.GetName());
 
-				if (objectDatset != null)
+				if (objectDataset != null)
 				{
 					request.Features.Add(
 						ProtobufConversionUtils.ToGdbObjectMsg(
-							objToVerify, geometry, objectDatset.Id, false));
+							objToVerify, geometry, objectDataset.Id, false));
 				}
 			}
 		}
@@ -206,20 +212,6 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			request.Parameters.InvalidateExceptionsIfAnyInvolvedObjectChanged =
 				invalidateExceptionsIfAnyInvolvedObjectChanged;
-		}
-
-		public static async Task<ServiceCallStatus> Verify(
-			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
-			[NotNull] VerificationRequest request,
-			[NotNull] QualityVerificationProgressTracker progress)
-		{
-			ClientIssueMessageCollector clientIssueMessageRepository =
-				new ClientIssueMessageCollector();
-
-			BackgroundVerificationRun verificationRun =
-				CreateQualityVerificationRun(request, clientIssueMessageRepository, progress);
-
-			return await verificationRun.ExecuteAndProcessMessagesAsync(qaClient);
 		}
 
 		private static WorkContextMsg CreateWorkContextMsg(

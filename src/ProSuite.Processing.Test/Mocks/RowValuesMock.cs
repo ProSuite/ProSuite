@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using ProSuite.Commons.Gdb;
 
 namespace ProSuite.Processing.Test.Mocks
 {

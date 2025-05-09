@@ -31,6 +31,19 @@ namespace ProSuite.Commons.Ado
 			}
 		}
 
+		public bool TryGetValue(string keyword, out string value)
+		{
+			if (_builder.TryGetValue(keyword, out object obj))
+			{
+				value = ConvertToString(obj);
+				return true;
+			}
+
+			value = string.Empty;
+
+			return false;
+		}
+
 		[NotNull]
 		public string ConnectionString => _builder.ConnectionString;
 
@@ -105,7 +118,7 @@ namespace ProSuite.Commons.Ado
 		/// <param name="connectionString">The connection string.</param>
 		public ConnectionStringBuilder([NotNull] string connectionString)
 		{
-			_builder = new DbConnectionStringBuilder {ConnectionString = connectionString};
+			_builder = new DbConnectionStringBuilder { ConnectionString = connectionString };
 		}
 
 		#endregion

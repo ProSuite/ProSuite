@@ -462,13 +462,13 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		{
 			GetTestParameterItems(qualityCondition);
 
-#if NET48
+#if NET6_0_OR_GREATER
+			_view.TableViewControl.BindTo(qualityCondition);
+#else
 			_view.BindToParameterValues(_paramValues);
 			_view.SetConfigurator(_testFactoryHasError
 				                      ? null
 				                      : _item.GetConfigurator());
-#elif NET6_0
-			_view.TableViewControl.BindTo(qualityCondition);
 #endif
 		}
 

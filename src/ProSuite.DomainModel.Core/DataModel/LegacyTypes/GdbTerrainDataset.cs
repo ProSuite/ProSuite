@@ -1,6 +1,6 @@
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.DomainModel.Core.DataModel.LegacyTypes
 {
@@ -53,5 +53,8 @@ namespace ProSuite.DomainModel.Core.DataModel.LegacyTypes
 		}
 
 		public override DatasetType DatasetType => DatasetType.Terrain;
+
+		public override DatasetImplementationType ImplementationType =>
+			new DatasetImplementationType((int) DatasetType);
 	}
 }

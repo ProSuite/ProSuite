@@ -1,21 +1,21 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Selection
 {
 	public class FeatureSelection : FeatureSelectionBase
 	{
-		private readonly IList<Feature> _features;
+		private readonly IEnumerable<Feature> _features;
 
-		public FeatureSelection([NotNull] IList<Feature> features,
-		                        [NotNull] BasicFeatureLayer featureLayer)
+		public FeatureSelection([NotNull] BasicFeatureLayer featureLayer,
+		                        [NotNull] IEnumerable<Feature> features)
 			: base(featureLayer)
 		{
-			_features = features;
+			_features = features ?? throw new ArgumentNullException(nameof(features));
 		}
 
 		[NotNull]
@@ -26,21 +26,20 @@ namespace ProSuite.Commons.AGP.Selection
 
 		public override int GetCount()
 		{
-			return _features.Count;
+			return _features.Count();
 		}
 
-		// daro todo daro to Ienumerable?
 		/// <summary>
 		/// Does not have to be called on MCT
 		/// </summary>
 		public override IEnumerable<long> GetOids()
 		{
-			return new ReadOnlyList<long>(GetFeatures().Select(feature => feature.GetObjectID()).ToList());
+			return GetFeatures().Select(feature => feature.GetObjectID());
 		}
 
 		public override string ToString()
 		{
-			return $"{BasicFeatureLayer.Name}";
+			return BasicFeatureLayer.Name;
 		}
 	}
 }

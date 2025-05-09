@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using log4net.ObjectRenderer;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Logging
@@ -97,7 +96,7 @@ namespace ProSuite.Commons.Logging
 		/// comparing the level of this logger with the Debug level. 
 		/// If this logger is DEBUG enabled, then it converts the message object 
 		/// (passed as parameter) to a string by invoking the appropriate 
-		/// <see cref="IObjectRenderer"/>. It then proceeds to call all the registered 
+		/// <see cref="log4net.ObjectRenderer.IObjectRenderer"/>. It then proceeds to call all the registered 
 		/// appenders in this logger and also higher in the hierarchy 
 		/// depending on the value of the additivity flag.<para/>
 		/// WARNING Note that passing an Exception to this method will print the name 
@@ -139,7 +138,7 @@ namespace ProSuite.Commons.Logging
 		/// comparing the level of this logger with the Info level. 
 		/// If this logger is INFO enabled, then it converts the message object 
 		/// (passed as parameter) to a string by invoking the appropriate 
-		/// <see cref="IObjectRenderer"/>. It then proceeds to call all the registered 
+		/// <see cref="log4net.ObjectRenderer.IObjectRenderer"/>. It then proceeds to call all the registered 
 		/// appenders in this logger and also higher in the hierarchy 
 		/// depending on the value of the additivity flag.<para/>
 		/// WARNING Note that passing an Exception to this method will print the name 
@@ -177,7 +176,7 @@ namespace ProSuite.Commons.Logging
 		/// comparing the level of this logger with the Warn level. 
 		/// If this logger is WARN enabled, then it converts the message object 
 		/// (passed as parameter) to a string by invoking the appropriate 
-		/// <see cref="IObjectRenderer"/>. It then proceeds to call all the registered 
+		/// <see cref="log4net.ObjectRenderer.IObjectRenderer"/>. It then proceeds to call all the registered 
 		/// appenders in this logger and also higher in the hierarchy 
 		/// depending on the value of the additivity flag.<para/>
 		/// WARNING Note that passing an Exception to this method will print the name 
@@ -215,7 +214,7 @@ namespace ProSuite.Commons.Logging
 		/// comparing the level of this logger with the Error level. 
 		/// If this logger is ERROR enabled, then it converts the message object 
 		/// (passed as parameter) to a string by invoking the appropriate 
-		/// <see cref="IObjectRenderer"/>. It then proceeds to call all the registered 
+		/// <see cref="log4net.ObjectRenderer.IObjectRenderer"/>. It then proceeds to call all the registered 
 		/// appenders in this logger and also higher in the hierarchy 
 		/// depending on the value of the additivity flag.<para/>
 		/// WARNING Note that passing an Exception to this method will print the name 
@@ -253,7 +252,7 @@ namespace ProSuite.Commons.Logging
 		/// comparing the level of this logger with the Fatal level. 
 		/// If this logger is FATAL enabled, then it converts the message object 
 		/// (passed as parameter) to a string by invoking the appropriate 
-		/// <see cref="IObjectRenderer"/>. It then proceeds to call all the registered 
+		/// <see cref="log4net.ObjectRenderer.IObjectRenderer"/>. It then proceeds to call all the registered 
 		/// appenders in this logger and also higher in the hierarchy 
 		/// depending on the value of the additivity flag.<para/>
 		/// WARNING Note that passing an Exception to this method will print the name 

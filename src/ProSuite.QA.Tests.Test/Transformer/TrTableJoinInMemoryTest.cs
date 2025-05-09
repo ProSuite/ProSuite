@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -9,6 +10,8 @@ using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
@@ -783,6 +786,183 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
+		[Test]
+		public void CanInnerJoinJoinManyToManyWithNullKeys()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateTestFgdbWorkspace(
+					"TrTableJoinInMemory_CanInnerJoinJoinManyToManyWithNullKeys");
+
+			ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
+				(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+			const string leftTableKey = "STRASSENNUMMER";
+
+			IFeatureClass pointFc = DatasetUtils.CreateSimpleFeatureClass(
+				ws, "TLM_POINTS", null,
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateIntegerField("OBJEKTART"),
+				FieldUtils.CreateIntegerField(leftTableKey),
+				FieldUtils.CreateShapeField(
+					"SHAPE", esriGeometryType.esriGeometryPoint,
+					sref, 1000));
+
+			const string rightTableKey = "ROUTENNUMMER";
+
+			ITable routeTable = DatasetUtils.CreateTable(ws, "TLM_STRASSENROUTE",
+			                                             FieldUtils.CreateOIDField(),
+			                                             FieldUtils.CreateIntegerField("OBJEKTART"),
+			                                             FieldUtils.CreateTextField(
+				                                             rightTableKey, 100));
+
+			// Rather than a 'proper' many-to-many relationship, we create a normal table as bridge table:
+			ITable associationTable = DatasetUtils.CreateTable(
+				ws, "TLM_STRASSENROUTE_STRASSE",
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateIntegerField(leftTableKey),
+				FieldUtils.CreateTextField(rightTableKey, 100));
+
+			for (int iRow = 0; iRow < 20; iRow++)
+			{
+				string routenNummer = $"A{iRow}";
+				IRow row = routeTable.CreateRow();
+				row.Value[1] = 5;
+				row.Value[2] = routenNummer;
+				row.Store();
+
+				for (int iFeature = 0; iFeature < 20; iFeature++)
+				{
+					int roadNumber = iRow * 1000 + iFeature;
+					IFeature f = pointFc.CreateFeature();
+					// Objektart:
+					f.Value[1] = iFeature % 3;
+					// Strassennummer:
+					f.Value[2] = roadNumber;
+					f.Shape = GeometryFactory.CreatePoint(2603000 + iRow, 1203000 + iFeature);
+					f.Store();
+
+					IRow a = associationTable.CreateRow();
+					a.Value[1] = roadNumber;
+					a.Value[2] = routenNummer;
+					a.Store();
+				}
+
+				// Feature with relationship to association table, but association table has no link
+				// to route table (null foreign key, TOP-5877):
+				{
+					int roadIdWithoutRoute = 100 + iRow;
+
+					IFeature f = pointFc.CreateFeature();
+					f.Value[2] = roadIdWithoutRoute;
+					f.Shape = GeometryFactory.CreatePoint(2603000 + iRow, 1203000);
+					f.Store();
+
+					// No 'proper' relationship to other side, but null foreign key (TOP-5877);
+					IRow a = associationTable.CreateRow();
+					a.Value[1] = roadIdWithoutRoute;
+					a.Store();
+				}
+				// Feature with no relationship to association table:
+				{
+					IFeature f = pointFc.CreateFeature();
+					f.Value[1] = iRow % 5;
+					f.Shape = GeometryFactory.CreatePoint(2603000 + iRow, 1203000);
+					f.Store();
+				}
+				// Association table entry with link to route table, but no link to point table:
+				{
+					IRow a = associationTable.CreateRow();
+					a.Value[2] = routenNummer;
+					a.Store();
+				}
+			}
+
+			TrTableJoinInMemory tr =
+				new TrTableJoinInMemory(ReadOnlyTableFactory.Create(pointFc),
+				                        ReadOnlyTableFactory.Create(routeTable), leftTableKey,
+				                        rightTableKey, JoinType.InnerJoin);
+			tr.ManyToManyTable = ReadOnlyTableFactory.Create(associationTable);
+			tr.ManyToManyTableLeftKey = leftTableKey;
+			tr.ManyToManyTableRightKey = rightTableKey;
+
+			// Tests with the transformed table (TOP-5877):
+			// The name is used as the table name and thus necessary
+			((ITableTransformer) tr).TransformerName = "test_join";
+
+			Assert.AreEqual(400, tr.GetTransformed().RowCount(null));
+
+			// Normal join:
+			AssertJoinedRowExists(tr, 20);
+
+			// Association record OID 21 has no link to the route table (ok in left join)
+			AssertJoinedRowExists(tr, 21);
+
+			// Association record OID 22 has no link to the point table (currently not ok, right join is not yet supported)
+			Assert.Throws<InvalidOperationException>(() => AssertJoinedRowExists(tr, 22));
+
+			// Row count: 400 (the rest is filtered due to inner join)
+			{
+				QaRowCount test = new QaRowCount(tr.GetTransformed(), 400, 400);
+
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+
+			// Within box of lower left quadrant
+			{
+				var intersectsSelf =
+					new QaWithinBox((IReadOnlyFeatureClass) tr.GetTransformed(), 2603000, 1203000,
+					                2603000 + 9, 1203000 + 9);
+				//intersectsSelf.SetConstraint(0, "polyFc.Nr_Poly < 10");
+
+				var runner = new QaContainerTestRunner(1000, intersectsSelf)
+				             { KeepGeometry = true };
+				runner.Execute();
+
+				// 100 are inside the box, 300 are outside:
+				Assert.AreEqual(300, runner.Errors.Count);
+			}
+
+			// QaConstraint:
+			{
+				QaConstraint test = new QaConstraint(tr.GetTransformed(), "STRASSENNUMMER > 5");
+				IFilterEditTest ft = test;
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(6, runner.Errors.Count);
+
+				// Check involved rows:
+				QaError error = runner.Errors[0];
+
+				// Check involved rows. They must be from a 'real' feature class, not from a transformed feature class.
+				List<string> realTableNames =
+					new List<string> { "TLM_STRASSENROUTE", "TLM_POINTS" };
+				CheckInvolvedRows(error.InvolvedRows, 2, realTableNames);
+			}
+			{
+				tr.SetConstraint(0, "STRASSENNUMMER < 10");
+
+				QaConstraint test =
+					new QaConstraint(tr.GetTransformed(),
+					                 "TLM_STRASSENROUTE_OBJEKTART IS NOT NULL");
+				IFilterEditTest ft = test;
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(0, runner.Errors.Count);
+			}
+		}
+
+		private static void AssertJoinedRowExists(TrTableJoinInMemory tr, int id)
+		{
+			JoinedBackingDataset joinedDataset =
+				(JoinedBackingDataset) tr.GetTransformed().BackingDataset;
+			Assert.NotNull(joinedDataset);
+
+			VirtualRow joinedRow = joinedDataset.GetRow(id);
+			Assert.NotNull(joinedRow);
+		}
+
 		/// <summary>
 		/// This test currently fails because (most) transformers cannot deal with non-spatial queries
 		/// which are necessary in order to get the rows from the 'rightTable'.
@@ -917,6 +1097,143 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				FieldUtils.CreateFields(fields));
 
 			return fc;
+		}
+
+		[Test]
+		public void CanHandleOutOfTileRequests()
+		{
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("TrTableJoinInMemory");
+
+			IFeatureClass featureClass1 =
+				CreateFeatureClass(
+					ws, "polyFc1", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("Nr") });
+
+			IFeatureClass featureClass2 =
+				CreateFeatureClass(
+					ws, "polyFc2", esriGeometryType.esriGeometryPolygon,
+					new[] { FieldUtils.CreateIntegerField("Nr") });
+
+			ReadOnlyFeatureClass roPolyFc1 = ReadOnlyTableFactory.Create(featureClass1);
+			ReadOnlyFeatureClass roPolyFc2 = ReadOnlyTableFactory.Create(featureClass2);
+
+			double tileSize = 100;
+			double x = 2600000;
+			double y = 1200000;
+
+			// Left of first tile, NOT within search distance
+			IFeature leftOfFirst = CreateFeature(featureClass1, x - 20, y + 30, x - 15, y + 40);
+			IFeature leftOfFirstIntersect =
+				CreateFeature(featureClass2, x - 20, y + 30, x - 15, y + 40);
+
+			// Inside first tile:
+			IFeature insideFirst = CreateFeature(featureClass1, x, y, x + 10, y + 10);
+			IFeature insideFirstIntersect = CreateFeature(featureClass2, x, y, x + 10, y + 10);
+
+			// Right of first tile, NOT within search distance
+			IFeature rightOfFirst =
+				CreateFeature(featureClass1, x + tileSize + 15, y + 30, x + tileSize + 20, y + 40);
+			IFeature rightOfFirstIntersect =
+				CreateFeature(featureClass2, x + tileSize + 15, y + 30, x + tileSize + 20, y + 40);
+
+			// Left of second tile, NOT within the search distance:
+			IFeature leftOfSecond =
+				CreateFeature(featureClass1, x + tileSize - 20, y, x + tileSize - 15, y + 10);
+			IFeature leftOfSecondIntersect =
+				CreateFeature(featureClass2, x + tileSize - 20, y, x + tileSize - 15, y + 10);
+
+			TrTableJoinInMemory tr =
+				new TrTableJoinInMemory(roPolyFc1, roPolyFc2, "OBJECTID", "OBJECTID",
+				                        JoinType.InnerJoin)
+				{
+					// NOTE: The search logic should work correctly even if search option is Tile! (e.g. due to downstream transformers)
+					//NeighborSearchOption = TrSpatialJoin.SearchOption.All
+				};
+
+			var transformedClass = tr.GetTransformed();
+			WriteFieldNames(transformedClass);
+
+			var test =
+				new ContainerOutOfTileDataAccessTest(transformedClass)
+				{
+					SearchDistanceIntoNeighbourTiles = 50
+				};
+
+			test.TileProcessed = (tile, outsideTileFeatures) =>
+			{
+				if (tile.CurrentEnvelope.XMin == x && tile.CurrentEnvelope.YMin == y)
+				{
+					// first tile: the leftOfFirst and rightOfFirst
+					Assert.AreEqual(2, outsideTileFeatures.Count);
+
+					foreach (IReadOnlyRow outsideTileFeature in outsideTileFeatures)
+					{
+						Assert.True(InvolvedRowUtils.GetInvolvedRows(outsideTileFeature).All(
+							            r => r.OID == leftOfFirst.OID ||
+							                 r.OID == leftOfFirstIntersect.OID ||
+							                 r.OID == rightOfFirst.OID ||
+							                 r.OID == rightOfFirstIntersect.OID));
+					}
+				}
+
+				if (tile.CurrentEnvelope.XMin == x + tileSize && tile.CurrentEnvelope.YMin == y)
+				{
+					// second tile: leftOfSecond
+					Assert.AreEqual(1, outsideTileFeatures.Count);
+
+					foreach (IReadOnlyRow outsideTileFeature in outsideTileFeatures)
+					{
+						Assert.True(InvolvedRowUtils.GetInvolvedRows(outsideTileFeature).All(
+							            r => r.OID == leftOfSecond.OID ||
+							                 r.OID == leftOfSecondIntersect.OID));
+					}
+				}
+
+				return 0;
+			};
+
+			test.SetSearchDistance(10);
+
+			var container = new TestContainer { TileSize = tileSize };
+
+			container.AddTest(test);
+
+			ISpatialReference sr = DatasetUtils.GetSpatialReference(featureClass1);
+
+			IEnvelope aoi = GeometryFactory.CreateEnvelope(
+				2600000, 1200000.00, 2600000 + 2 * tileSize, 1200000.00 + tileSize, sr);
+
+			// First, using FullGeometrySearch:
+			test.UseFullGeometrySearch = true;
+			container.Execute(aoi);
+
+			// Now simulate full tile loading:
+			test.UseFullGeometrySearch = false;
+			test.UseTileEnvelope = true;
+			container.Execute(aoi);
+		}
+
+		private static IFeature CreateFeature(IFeatureClass featureClass,
+		                                      double xMin, double yMin,
+		                                      double xMax, double yMax)
+		{
+			ISpatialReference sr = DatasetUtils.GetSpatialReference(featureClass);
+
+			IFeature row = featureClass.CreateFeature();
+			row.Shape = GeometryFactory.CreatePolygon(xMin, yMin, xMax, yMax, sr);
+			row.Store();
+			return row;
+		}
+
+		private static void WriteFieldNames(IReadOnlyTable targetTable)
+		{
+			for (int i = 0; i < targetTable.Fields.FieldCount; i++)
+			{
+				IField field = targetTable.Fields.Field[i];
+
+				Console.WriteLine(field.Name);
+			}
 		}
 	}
 }

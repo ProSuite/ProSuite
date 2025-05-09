@@ -40,7 +40,7 @@ namespace ProSuite.Commons.AO.Test.Surface
 		{
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
 
-			IMosaicDataset mosaicDataset = DatasetUtils.OpenMosaicDataset(workspace,
+			IMosaicDataset mosaicDataset = MosaicUtils.OpenMosaicDataset(workspace,
 				"TOPGIS_TLM.TLM_DTM_MOSAIC");
 
 			var simpleRasterMosaic = new SimpleRasterMosaic(mosaicDataset);

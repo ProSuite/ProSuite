@@ -85,6 +85,8 @@ namespace ProSuite.Commons.AO.Surface
 			double expansion = Tiling.TileWidth / 2;
 			FeatureTinGenerator tinGenerator = new FeatureTinGenerator(this, expansion);
 
+			tinGenerator.AllowIncompleteInterpolationDomainAtBoundary = true;
+
 			return tinGenerator.GenerateTin(extent);
 		}
 

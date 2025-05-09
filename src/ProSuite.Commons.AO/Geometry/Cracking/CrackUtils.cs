@@ -23,12 +23,12 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static CrackPointCalculator CreateChopPointCalculator(
-			[NotNull] ICrackingOptions crackingOptions,
+			[NotNull] ICrackingOptions choppingOptions,
 			bool excludeInteriorInteriorIntersections,
 			[CanBeNull] IEnvelope inExtent = null)
 		{
 			var cracker = new CrackPointCalculator(
-				              crackingOptions,
+				              choppingOptions,
 				              IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
 				              inExtent)
 			              {
@@ -36,15 +36,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				              AddCrackPointsOnExistingVertices = true
 			              };
 
-			if (excludeInteriorInteriorIntersections)
-			{
-				// only use line end points as intersection targets
-				cracker.TargetTransformation =
-					originalTarget =>
-						originalTarget.Dimension == esriGeometryDimension.esriGeometry1Dimension
-							? GeometryUtils.GetBoundary(originalTarget)
-							: null;
-			}
+			cracker.ExcludeInteriorInteriorIntersections = excludeInteriorInteriorIntersections;
 
 			return cracker;
 		}
@@ -244,6 +236,30 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			[NotNull] CrackPointCalculator crackPointCalculator,
 			[CanBeNull] ITrackCancel trackCancel)
 		{
+			bool crackPointsOnlyWithinSameClass =
+				targetFeatureSelection == TargetFeatureSelection.SameClass;
+
+			AddTargetIntersectionCrackPoints(toVertexInfo, targetFeatures,
+			                                 crackPointsOnlyWithinSameClass, crackPointCalculator,
+			                                 trackCancel);
+		}
+
+		/// <summary>
+		/// Adds intersection- and crack-points for the specified features in vertexInfos
+		/// with other target features.
+		/// </summary>
+		/// <param name="toVertexInfo"></param>
+		/// <param name="targetFeatures">The target features, assuming none of them is also referenced</param>
+		/// <param name="crackPointsOnlyWithinSameClass">Whether cracking is only performed within the same class.</param>
+		/// <param name="crackPointCalculator"></param>
+		/// <param name="trackCancel"></param>
+		public static void AddTargetIntersectionCrackPoints(
+			[NotNull] FeatureVertexInfo toVertexInfo,
+			[NotNull] IEnumerable<IFeature> targetFeatures,
+			bool crackPointsOnlyWithinSameClass,
+			[NotNull] CrackPointCalculator crackPointCalculator,
+			[CanBeNull] ITrackCancel trackCancel)
+		{
 			foreach (IFeature targetFeature in targetFeatures)
 			{
 				if (trackCancel != null && ! trackCancel.Continue())
@@ -251,7 +267,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					return;
 				}
 
-				if (targetFeatureSelection == TargetFeatureSelection.SameClass &&
+				if (crackPointsOnlyWithinSameClass &&
 				    ! DatasetUtils.IsSameObjectClass(targetFeature.Class,
 				                                     toVertexInfo.Feature.Class))
 				{
@@ -1347,10 +1363,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// <param name="pointsToRemove"></param>
 		/// <param name="maxSnapTolerance"></param>
 		/// <returns></returns>
-		private static void AddRemovePoints(IGeometry toFromGeometry,
-		                                    [CanBeNull] IPointCollection pointsToAdd,
-		                                    [CanBeNull] IPointCollection pointsToRemove,
-		                                    [CanBeNull] double? maxSnapTolerance)
+		public static void AddRemovePoints(IGeometry toFromGeometry,
+		                                   [CanBeNull] IPointCollection pointsToAdd,
+		                                   [CanBeNull] IPointCollection pointsToRemove,
+		                                   [CanBeNull] double? maxSnapTolerance)
 		{
 			// ensure topology points first, otherwise they might not be found in the geometry again
 			// (removing points can change the segment on which the topology point is found)
@@ -1700,7 +1716,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return result;
 		}
 
-		private static IEnumerable<IPolyline> GetSplitPolycurves(
+		public static IEnumerable<IPolyline> GetSplitPolycurves(
 			[NotNull] IFeature lineFeature,
 			[NotNull] IPointCollection splitPoints,
 			double? maxSplitPointDistanceToLine)
@@ -1835,7 +1851,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				       : originalGeometry;
 		}
 
-		private static IGeometry ExtractBoundariesForMultipatches(IGeometry targetGeometry)
+		public static IGeometry ExtractBoundariesForMultipatches(IGeometry targetGeometry)
 		{
 			var multipatch = targetGeometry as IMultiPatch;
 

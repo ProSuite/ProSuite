@@ -26,7 +26,8 @@ namespace ProSuite.DomainModel.AO.Workflow.WorkspaceFilters
 				new WorkspaceDbTypeInfo("sde-postgresql", WorkspaceDbType.ArcSDEPostgreSQL),
 				new WorkspaceDbTypeInfo("sde-sqlserver", WorkspaceDbType.ArcSDESqlServer),
 				new WorkspaceDbTypeInfo("fgdb", WorkspaceDbType.FileGeodatabase),
-				new WorkspaceDbTypeInfo("pgdb", WorkspaceDbType.PersonalGeodatabase)
+				new WorkspaceDbTypeInfo("pgdb", WorkspaceDbType.PersonalGeodatabase),
+				new WorkspaceDbTypeInfo("mgdb", WorkspaceDbType.MobileGeodatabase)
 			};
 
 		[NotNull] private static readonly Dictionary<string, WorkspaceDbTypeInfo>

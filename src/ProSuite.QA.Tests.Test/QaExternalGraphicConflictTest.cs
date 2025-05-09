@@ -24,7 +24,7 @@ namespace ProSuite.QA.Tests.Test
 	public class QaExternalGraphicConflictTest
 	{
 		const string Localhost = "localhost";
-		const int Port = 5181;
+		private const int Port = 50051; //5181;
 
 		const string unitTestData =
 			@"C:\git\Swisstopo.Topgis\ProSuite\src\ProSuite.QA.Tests.Test\TestData\ExternalGraphicConflict";

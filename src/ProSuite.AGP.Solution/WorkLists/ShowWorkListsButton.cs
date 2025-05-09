@@ -1,7 +1,7 @@
 using ArcGIS.Desktop.Framework.Contracts;
-using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {

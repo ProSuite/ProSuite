@@ -7,6 +7,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 {

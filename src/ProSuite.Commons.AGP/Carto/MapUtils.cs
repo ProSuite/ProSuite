@@ -7,7 +7,9 @@ using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core.UnitFormats;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
@@ -15,6 +17,7 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using UnitType = ArcGIS.Core.Geometry.UnitType;
 
 namespace ProSuite.Commons.AGP.Carto
 {
@@ -35,27 +38,85 @@ namespace ProSuite.Commons.AGP.Carto
 			return mapView.Map;
 		}
 
+		#region Conversions
+
+		public static double GetMapUnitsPerPoint(this Map map)
+		{
+			if (map is null)
+				throw new ArgumentNullException(nameof(map));
+
+			double referenceScale = map.ReferenceScale;
+			if (! (referenceScale > 0))
+				throw new InvalidOperationException(
+					"Map has no ReferenceScale; cannot convert between points and map units");
+			// TODO or use MapView's current scale instead?
+
+			var unit = GetMapUnit(map, UnitType.Linear);
+			return unit.GetUnitsPerPoint(referenceScale);
+		}
+
+		public static double GetPointsPerMapUnit(this Map map)
+		{
+			if (map is null)
+				throw new ArgumentNullException(nameof(map));
+
+			double referenceScale = map.ReferenceScale;
+			if (! (referenceScale > 0))
+				throw new InvalidOperationException(
+					"Map has no ReferenceScale; cannot convert between points and map units");
+			// TODO use MapView's current scale instead?
+
+			var unit = GetMapUnit(map, UnitType.Linear);
+			return unit.GetPointsPerUnit(referenceScale);
+		}
+
+		private static Unit GetMapUnit(Map map, UnitType? requiredType = null)
+		{
+			if (map is null)
+				throw new ArgumentNullException(nameof(map));
+
+			var sref = map.SpatialReference ??
+			           throw new InvalidOperationException("Map has no spatial reference");
+
+			var unit = sref.Unit ??
+			           throw new InvalidOperationException("Map's spatial reference has no unit");
+
+			if (requiredType.HasValue && unit.UnitType != requiredType)
+			{
+				throw new InvalidOperationException(
+					$"Map's spatial reference units ({unit.Name}) are not of type {requiredType}");
+			}
+
+			return unit;
+		}
+
+		#endregion
+
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
-			Dictionary<MapMember, List<long>> oidsByLayer)
+			[NotNull] Dictionary<MapMember, List<long>> oidsByLayer,
+			[CanBeNull] Predicate<Table> predicate = null)
 		{
 			var result = new Dictionary<Table, SimpleSet<long>>();
 			var distinctTableIds = new Dictionary<GdbTableIdentity, Table>();
 
 			foreach (KeyValuePair<MapMember, List<long>> pair in oidsByLayer)
 			{
-				Table table = GetTable(pair.Key);
+				Table table = DatasetUtils.GetDatabaseTable(GetTable(pair.Key));
+
+				if (predicate != null && ! predicate(table))
+				{
+					continue;
+				}
 
 				var tableId = new GdbTableIdentity(table);
 
-				if (! distinctTableIds.ContainsKey(tableId))
+				if (! distinctTableIds.TryGetValue(tableId, out Table distinctTable))
 				{
 					distinctTableIds.Add(tableId, table);
 					result.Add(table, new SimpleSet<long>(pair.Value));
 				}
 				else
 				{
-					Table distinctTable = distinctTableIds[tableId];
-
 					SimpleSet<long> ids = result[distinctTable];
 					foreach (long id in pair.Value)
 					{
@@ -68,33 +129,50 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		public static Table GetTable<T>([NotNull] T mapMember) where T : MapMember
+		public static Table GetTable([NotNull] MapMember mapMember,
+		                             bool unJoined = false)
 		{
 			Assert.ArgumentNotNull(mapMember, nameof(mapMember));
 
-			if (mapMember is BasicFeatureLayer basicFeatureLayer)
+			if (mapMember is IDisplayTable displayTable)
 			{
-				return Assert.NotNull(basicFeatureLayer.GetTable());
-			}
+				Table table = LayerUtils.GetTable(displayTable, unJoined);
 
-			if (mapMember is StandaloneTable standaloneTable)
-			{
-				return Assert.NotNull(standaloneTable.GetTable());
+				if (table == null)
+				{
+					throw new InvalidOperationException(
+						$"Layer {mapMember.Name} is invalid has no table");
+				}
+
+				return table;
 			}
 
 			throw new ArgumentException(
 				$"{nameof(mapMember)} is not of type BasicFeatureLayer nor StandaloneTable");
 		}
 
+		public static IEnumerable<Table> GetTables(IEnumerable<MapMember> mapMembers,
+		                                           bool unJoined)
+		{
+			foreach (MapMember mapMember in mapMembers)
+			{
+				if (mapMember is IDisplayTable tableBasedMapMember)
+				{
+					yield return LayerUtils.GetTable(tableBasedMapMember, unJoined);
+				}
+			}
+		}
+
 		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] SelectionSet selectionSet,
 			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
-			return GetFeatures(selectionSet.ToDictionary(), outputSpatialReference);
+			return GetFeatures(selectionSet.ToDictionary(), false, outputSpatialReference);
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] IEnumerable<KeyValuePair<MapMember, List<long>>> oidsByMapMembers,
+			bool withoutJoins = false,
 			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
 			foreach (var oidsByMapMember in oidsByMapMembers)
@@ -104,7 +182,8 @@ namespace ProSuite.Commons.AGP.Carto
 				if (featureLayer == null) continue;
 
 				foreach (Feature feature in GetFeatures(featureLayer, oidsByMapMember.Value,
-				                                        false, outputSpatialReference))
+				                                        withoutJoins, recycling: false,
+				                                        outputSpatialReference))
 				{
 					yield return feature;
 				}
@@ -112,8 +191,37 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public static IEnumerable<Feature> GetFeatures(
+			[NotNull] IEnumerable<KeyValuePair<FeatureClass, List<long>>> oidsByTable,
+			bool withoutJoins = false,
+			[CanBeNull] SpatialReference outputSpatialReference = null)
+		{
+			foreach ((FeatureClass featureClass, List<long> oids) in oidsByTable)
+			{
+				if (featureClass == null) continue;
+
+				foreach (Feature feature in GetFeatures(featureClass, oids,
+				                                        withoutJoins, recycling: false,
+				                                        outputSpatialReference))
+				{
+					yield return feature;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Loads the features for the specified object ids from the mapMember's feature class.
+		/// </summary>
+		/// <param name="mapMember">The layer</param>
+		/// <param name="oids"></param>
+		/// <param name="withoutJoins">Whether the features shall be retrieved from the un-joined
+		/// feature class even if the layer has a join.</param>
+		/// <param name="recycling"></param>
+		/// <param name="outputSpatialReference"></param>
+		/// <returns></returns>
+		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] MapMember mapMember,
-			[NotNull] List<long> oidList,
+			[NotNull] IEnumerable<long> oids,
+			bool withoutJoins,
 			bool recycling = false,
 			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
@@ -124,27 +232,35 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			foreach (Feature feature in GetFeatures(basicFeatureLayer, oidList, recycling,
+			FeatureClass featureClass = basicFeatureLayer.GetFeatureClass();
+
+			foreach (Feature feature in GetFeatures(featureClass, oids, withoutJoins,
+			                                        recycling,
 			                                        outputSpatialReference))
 			{
 				yield return feature;
 			}
 		}
 
-		private static IEnumerable<Feature> GetFeatures(
-			[CanBeNull] BasicFeatureLayer layer,
-			[NotNull] List<long> oids,
-			bool recycling = false,
+		public static IEnumerable<Feature> GetFeatures(
+			[CanBeNull] FeatureClass featureClass,
+			[NotNull] IEnumerable<long> oids,
+			bool withoutJoin,
+			bool recycling,
 			[CanBeNull] SpatialReference outputSpatialReference = null)
 		{
-			if (layer == null)
+			if (featureClass == null)
 			{
 				yield break;
 			}
 
-			// TODO: Use layer search (there might have been an issue with recycling?!)
-			var featureClass = layer.GetTable();
+			if (featureClass.IsJoinedTable() && withoutJoin)
+			{
+				// Get the features only based on the feature class, otherwise storing results in NotImplementedExceptions
+				featureClass = GetUnJoinedFeatureClass(featureClass);
+			}
 
+			// TODO: Split by 1000 OIDs to avoid too large queries
 			var filter = new QueryFilter
 			             {
 				             WhereClause =
@@ -152,7 +268,8 @@ namespace ProSuite.Commons.AGP.Carto
 			             };
 
 			// NOTE: The spatial reference of the layer is the same as the feature class rather than the map.
-			filter.OutputSpatialReference = outputSpatialReference ?? layer.GetSpatialReference();
+			filter.OutputSpatialReference =
+				outputSpatialReference ?? featureClass.GetSpatialReference();
 
 			foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filter, recycling))
 			{
@@ -160,52 +277,50 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		public static IEnumerable<T> GetLayers<T>([NotNull] Map map,
-		                                          [CanBeNull] Predicate<T> layerPredicate)
-			where T : Layer
+		public static IEnumerable<T> GetLayers<T>(
+			Map map, Predicate<T> layerPredicate = null) where T : Layer
 		{
-			foreach (Layer layer in map.GetLayersAsFlattenedList())
-			{
-				var matchingTypeLayer = layer as T;
-
-				if (matchingTypeLayer == null)
-				{
-					continue;
-				}
-
-				if (layerPredicate == null ||
-				    layerPredicate(matchingTypeLayer))
-				{
-					yield return matchingTypeLayer;
-				}
-			}
+			if (map is null) return Enumerable.Empty<T>();
+			return map.GetLayersAsFlattenedList()
+			          .OfType<T>()
+			          .Where(l => layerPredicate is null || layerPredicate(l));
 		}
 
 		/// <summary>
-		/// Returns feature layers that contain a set of specified OIDs. This method can be used
-		/// to filter out layers that have a restrictive definition query which potentially
-		/// excludes the specified OIDs. These layers ca be used for flashing or zooming to the
-		/// respective features.
+		/// Returns feature layers and stand-alone tables that contain a set of specified OIDs.
+		/// This method can be used to filter layers that have a restrictive definition query
+		/// which potentially excludes the specified OIDs. These layers ca be used for flashing
+		/// or zooming to the respective features or selecting the respective rows.
 		/// </summary>
-		public static IEnumerable<T> GetFeatureLayersContainingOids<T>(
-			[NotNull] Map map,
-			[NotNull] Predicate<T> layerPredicate,
-			IReadOnlyList<long> objectIds) where T : BasicFeatureLayer
+		public static IEnumerable<T> GetDisplayTablesContainingOids<T>(
+			[NotNull] IEnumerable<MapMember> mapMembers,
+			[NotNull] Predicate<T> predicate,
+			IReadOnlyList<long> objectIds) where T : class, IDisplayTable
 		{
 			// NOTE: Flashing works fine on invisible layers, but not if there is a definition
 			//       query that excludes the feature.
 
 			var filteredLayers = new List<T>();
 
-			foreach (T featureLayer in GetFeatureLayers(map, layerPredicate))
+			foreach (T displayTable in GetDisplayTables(mapMembers, predicate))
 			{
-				if (string.IsNullOrWhiteSpace(featureLayer.DefinitionQuery))
+				string definitionQuery = null;
+				if (displayTable is BasicFeatureLayer featureLayer)
 				{
-					// Return the first layer without definition query:
-					return new[] { featureLayer };
+					definitionQuery = featureLayer.DefinitionQuery;
+				}
+				else if (displayTable is StandaloneTable standaloneTable)
+				{
+					definitionQuery = standaloneTable.DefinitionQuery;
 				}
 
-				filteredLayers.Add(featureLayer);
+				if (string.IsNullOrWhiteSpace(definitionQuery))
+				{
+					// Return the first layer without definition query:
+					return new[] { displayTable };
+				}
+
+				filteredLayers.Add(displayTable);
 			}
 
 			var layersWithSomeOids = new List<T>();
@@ -213,7 +328,9 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				var queryFilter = new QueryFilter
 				                  {
-					                  ObjectIDs = objectIds
+					                  ObjectIDs = objectIds,
+					                  // OID will be ensured in SearchObjectIds:
+					                  SubFields = string.Empty
 				                  };
 
 				int foundCount = LayerUtils.SearchObjectIds(restrictedLayer, queryFilter).Count();
@@ -281,7 +398,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// Gets the first selectable stand-alone table without definition query.
 		/// If all selectable stand-alone tables have a definition query, all tables are yielded.
 		/// </summary>
-		public static IEnumerable<IDisplayTable> GetStandaloneTablesForSelection(
+		public static IEnumerable<StandaloneTable> GetStandaloneTablesForSelection(
 			[NotNull] Map map,
 			[NotNull] Predicate<StandaloneTable> tablePredicate)
 		{
@@ -308,9 +425,40 @@ namespace ProSuite.Commons.AGP.Carto
 			return filteredSelectableLayers;
 		}
 
+		public static IEnumerable<T> GetDisplayTables<T>(
+			[NotNull] IEnumerable<MapMember> mapMembers,
+			[CanBeNull] Predicate<T> predicate,
+			bool includeInvalid = false) where T : class, IDisplayTable
+		{
+			// TODO: Redirect GetLayers, GetStandaloneTables to this method to avoid code duplication
+			Predicate<T> displayTablePredicate;
+
+			if (includeInvalid)
+			{
+				displayTablePredicate = predicate;
+			}
+			else
+			{
+				// Check for validity first because in most cases the specified layerPredicate
+				// uses the FeatureClass name etc. which results in null-pointers if evaluated first.
+				displayTablePredicate = l => l.GetTable() != null &&
+				                             (predicate == null || predicate(l));
+			}
+
+			Predicate<MapMember> mapMemberPredicate = mm =>
+				mm is T t && (displayTablePredicate == null || displayTablePredicate(t));
+
+			foreach (MapMember mapMember in mapMembers)
+			{
+				if (mapMemberPredicate(mapMember))
+				{
+					yield return (T) (IDisplayTable) mapMember;
+				}
+			}
+		}
+
 		public static IEnumerable<T> GetFeatureLayers<T>(
-			[NotNull] Map map,
-			[CanBeNull] Predicate<T> layerPredicate,
+			Map map, Predicate<T> layerPredicate = null,
 			bool includeInvalid = false) where T : BasicFeatureLayer
 		{
 			Predicate<T> combinedPredicate;
@@ -321,29 +469,27 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 			else
 			{
-				// Check for validity first because in most cases the specified layerPredicate
-				// uses the FeatureClass name etc. which results in null-pointers if evaluated first.
+				// Check for validity first so that the predicate can assume the layer has a FeatureClass
 				combinedPredicate = l =>
 					LayerUtils.IsLayerValid(l) && (layerPredicate == null || layerPredicate(l));
 			}
 
-			foreach (T basicFeatureLayer in GetLayers(map, combinedPredicate))
-			{
-				yield return basicFeatureLayer;
-			}
+			return GetLayers(map, combinedPredicate);
 		}
 
-		[CanBeNull]
-		public static BasicFeatureLayer GetFeatureLayer(
-			[NotNull] Map map,
-			[CanBeNull] string featureClassName)
+		/// <summary>
+		/// Returns the layers for which
+		/// (a) the user has data source level permission to edit and
+		/// (b) it is made editable on the map
+		/// </summary>
+		/// <param name="map"></param>
+		/// <returns></returns>
+		public static IEnumerable<T> GetEditableLayers<T>([NotNull] Map map)
+			where T : BasicFeatureLayer
 		{
-			return GetFeatureLayers<BasicFeatureLayer>(
-					map,
-					lyr => string.Equals(lyr.GetFeatureClass().GetName(),
-					                     featureClassName,
-					                     StringComparison.OrdinalIgnoreCase))
-				.FirstOrDefault();
+			IEnumerable<T> editLayers = GetFeatureLayers<T>(map, bfl => bfl?.IsEditable == true);
+
+			return editLayers;
 		}
 
 		public static IEnumerable<StandaloneTable> GetStandaloneTables(
@@ -388,12 +534,49 @@ namespace ProSuite.Commons.AGP.Carto
 				.FirstOrDefault();
 		}
 
-		public static bool HasSelection([CanBeNull] Map map)
+		public static string GetLocationUnitAbbreviation([NotNull] Map map)
 		{
-			return map?.SelectionCount > 0;
+			DisplayUnitFormat locationUnitFormat = map.GetLocationUnitFormat();
+
+			string locationUnitAbbreviation = locationUnitFormat?.Abbreviation;
+
+			return locationUnitAbbreviation;
+		}
+
+		public static string GetElevationUnitAbbreviation(Map map)
+		{
+			DisplayUnitFormat elevationUnitFormat = map.GetElevationUnitFormat();
+
+			string elevationUnitAbbreviation = elevationUnitFormat?.Abbreviation;
+
+			return elevationUnitAbbreviation;
 		}
 
 		#region Not MapUtils --> move elsewhere
+
+		/// <summary>
+		/// Converts a screen point to a map point.
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <param name="screenPoint">The global screen coordinates.</param>
+		/// <returns></returns>
+		public static MapPoint ToMapPoint(MapView mapView, Point screenPoint)
+		{
+			return mapView.ScreenToMap(screenPoint);
+		}
+
+		/// <summary>
+		/// Converts a client point to a map point.
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <param name="clientPoint">The global screen coordinates.</param>
+		/// <returns></returns>
+		public static MapPoint ClientToMapPoint(MapView mapView, Point clientPoint)
+		{
+			Point screenPoint = MapView.Active.ClientToScreen(clientPoint);
+
+			return mapView.ScreenToMap(screenPoint);
+		}
 
 		public static Geometry ToMapGeometry(MapView mapView,
 		                                     Polygon screenGeometry)
@@ -447,17 +630,85 @@ namespace ProSuite.Commons.AGP.Carto
 			return MapPointBuilderEx.CreateMapPoint(new Coordinate2D(clientPoint.X, clientPoint.Y));
 		}
 
-		public static double ConvertScreenPixelToMapLength(int pixels)
+		/// <summary>
+		/// Gets the pixel size for the specified map view in the map space at the specified point.
+		/// Note that the point must have the correct Z value in order to return correct results
+		/// in a stereo map in floating cursor mode.
+		/// BUG: In fixed cursor mode this method always returns 0 because ScreenToMap seems not to
+		/// work correctly.
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <param name="pixels"></param>
+		/// <param name="atPoint"></param>
+		/// <returns></returns>
+		/// <remarks>Must run on MCT</remarks>
+		public static double ConvertScreenPixelToMapLength(
+			MapView mapView,
+			int pixels,
+			[NotNull] MapPoint atPoint)
 		{
-			var mapExtent = MapView.Active.Map.GetDefaultExtent();
-			var mapPoint = mapExtent.Center;
-			//Map center as screen point
-			var screenPoint = MapView.Active.MapToScreen(mapPoint);
+			if (mapView.ViewingMode == MapViewingMode.MapStereo)
+			{
+				return GetPixelSizeInMapUnits(mapView, atPoint) * pixels;
+			}
+
+			// The point as screen point
+			var screenPoint = mapView.MapToScreen(atPoint);
+
 			//Add tolerance pixels to get a "radius".
-			var radiusScreenPoint =
-				new Point(screenPoint.X + pixels, screenPoint.Y);
-			var radiusMapPoint = MapView.Active.ScreenToMap(radiusScreenPoint);
-			return GeometryEngine.Instance.Distance(mapPoint, radiusMapPoint);
+			var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
+			var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
+
+			return GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
+		}
+
+		public static double ConvertScreenPixelToMapLength([NotNull] MapView mapView,
+		                                                   int pixels, Point screenPoint)
+		{
+			MapPoint atPoint = mapView.ScreenToMap(screenPoint);
+
+			// Add pixels to get a "radius".
+			var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
+			var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
+
+			return GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
+		}
+
+		/// <summary>
+		/// Gets the pixel size for the specified map view in the map space without
+		/// using the ScreenToMap method (which is incorrect in stereo maps at 3.3).
+		/// This method is not particularly robust against rotated maps!
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <param name="atPoint"></param>
+		/// <returns></returns>
+		private static double GetPixelSizeInMapUnits(MapView mapView,
+		                                             [NotNull] MapPoint atPoint)
+		{
+			Envelope mapExtent = mapView.Map.GetDefaultExtent();
+			SpatialReference sr = mapExtent.SpatialReference;
+
+			double z = atPoint.Z;
+
+			MapPoint mapLowerLeft = GeometryFactory.CreatePoint(
+				mapExtent.XMin, mapExtent.YMin, z, sr);
+			MapPoint mapUpperRight = GeometryFactory.CreatePoint(
+				mapExtent.XMax, mapExtent.YMax, z, sr);
+
+			Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
+			Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
+
+			// Client window coordinates (probably makes no difference for this calculation but it is correct)
+			Point clientLowerLeft = mapView.ScreenToClient(screenLowerLeft);
+			Point clientUpperRight = mapView.ScreenToClient(screenUpperRight);
+
+			double widthPixels = Math.Abs(clientUpperRight.X - clientLowerLeft.X);
+			double heightPixels = Math.Abs(clientUpperRight.Y - clientLowerLeft.Y);
+
+			double pixelSizeX = mapExtent.Width / widthPixels;
+			double pixelSizeY = mapExtent.Height / heightPixels;
+
+			return pixelSizeX + pixelSizeY / 2;
 		}
 
 		/// <summary>
@@ -499,22 +750,34 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
+		public static bool HasSelection([CanBeNull] MapView mapView)
+		{
+			return HasSelection(mapView?.Map);
+		}
+
+		public static bool HasSelection([CanBeNull] Map map)
+		{
+			return map?.SelectionCount > 0;
+		}
+
 		public static async Task<bool> FlashGeometryAsync(
 			[NotNull] MapView mapView,
 			[NotNull] Geometry geometry,
 			CIMSymbolReference symbolReference,
-			int milliseconds = 400)
+			int milliseconds = 400,
+			bool useReferenceScale = false)
 		{
 			return await FlashGeometryAsync(mapView, new Overlay(geometry, symbolReference),
-			                                milliseconds);
+			                                milliseconds, useReferenceScale);
 		}
 
 		public static async Task<bool> FlashGeometryAsync(
 			[NotNull] MapView mapView,
 			[NotNull] Overlay overlay,
-			int milliseconds = 400)
+			int milliseconds = 400,
+			bool useReferenceScale = false)
 		{
-			using (await overlay.AddToMapAsync(mapView))
+			using (await overlay.AddToMapAsync(mapView, useReferenceScale))
 			{
 				await Task.Delay(milliseconds);
 			}
@@ -525,7 +788,8 @@ namespace ProSuite.Commons.AGP.Carto
 		public static async Task<bool> FlashGeometriesAsync(
 			[NotNull] MapView mapView,
 			IEnumerable<Overlay> overlays,
-			int milliseconds = 400)
+			int milliseconds = 400,
+			bool useReferenceScale = false)
 		{
 			List<IDisposable> disposables = new List<IDisposable>();
 
@@ -533,7 +797,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				foreach (Overlay overlay in overlays)
 				{
-					disposables.Add(await overlay.AddToMapAsync(mapView));
+					disposables.Add(await overlay.AddToMapAsync(mapView, useReferenceScale));
 				}
 
 				await Task.Delay(milliseconds);
@@ -549,10 +813,57 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
+		public static void FlashGeometries(
+			[NotNull] MapView mapView,
+			IEnumerable<Geometry> geometries,
+			int milliseconds = 400,
+			CIMColor color = null,
+			bool useReferenceScale = false)
+		{
+			if (color == null)
+			{
+				color = ColorUtils.CreateRGB(0, 200, 0);
+			}
+
+			List<Overlay> overlays = new List<Overlay>();
+
+			CIMSymbol symbol = null;
+			foreach (var group in geometries.GroupBy(g => g.Dimension))
+			{
+				if (group.Key == 0)
+				{
+					symbol = SymbolUtils.CreateMarker(color, 4, SymbolUtils.MarkerStyle.Circle)
+					                    .MakePointSymbol();
+				}
+
+				if (group.Key == 1)
+				{
+					symbol = SymbolUtils.CreateLineSymbol(color, 2);
+				}
+
+				if (group.Key == 2)
+				{
+					symbol = SymbolUtils.CreatePolygonSymbol(SymbolUtils.CreateSolidFill(color));
+				}
+
+				foreach (Geometry geometry in group)
+				{
+					overlays.Add(new Overlay(geometry, symbol));
+				}
+			}
+
+			if (overlays.Count > 0)
+			{
+				FlashGeometries(mapView, overlays, milliseconds,
+				                useReferenceScale);
+			}
+		}
+
 		public static bool FlashGeometries(
 			[NotNull] MapView mapView,
 			IEnumerable<Overlay> overlays,
-			int milliseconds = 400)
+			int milliseconds = 400,
+			bool useReferenceScale = false)
 		{
 			List<IDisposable> disposables = new List<IDisposable>();
 
@@ -560,7 +871,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				foreach (Overlay overlay in overlays)
 				{
-					disposables.Add(overlay.AddToMap(mapView));
+					disposables.Add(overlay.AddToMap(mapView, useReferenceScale));
 				}
 
 				Thread.Sleep(milliseconds);
@@ -578,59 +889,34 @@ namespace ProSuite.Commons.AGP.Carto
 
 		#endregion
 
-		#region Generally useful? Used anywhere? Drop!
-
-		[NotNull]
-		public static IEnumerable<string> GetUri(Map map, [NotNull] string mapMemberName)
+		private static FeatureClass GetUnJoinedFeatureClass(FeatureClass featureClass)
 		{
-			Assert.ArgumentNotNull(mapMemberName, nameof(mapMemberName));
+			// Get the shape's table name
+			string shapeField = featureClass.GetDefinition().GetShapeField();
 
-			// todo daro What if mapMember is map itself? Can it be found with this method?
-			return map is null
-				       ? Enumerable.Empty<string>()
-				       : map.FindLayers(mapMemberName).Select(GetUri);
+			List<string> tokens = shapeField.Split('.').ToList();
+
+			if (tokens.Count < 2)
+			{
+				return featureClass;
+			}
+
+			tokens.RemoveAt(tokens.Count - 1);
+
+			string tableName = StringUtils.Concatenate(tokens, ".");
+
+			foreach (Table databaseTable in DatasetUtils.GetDatabaseTables(featureClass))
+			{
+				if (databaseTable is FeatureClass dbFeatureClass &&
+				    dbFeatureClass.GetName()
+				                  .Equals(tableName, StringComparison.InvariantCultureIgnoreCase))
+				{
+					return dbFeatureClass;
+				}
+			}
+
+			return featureClass;
 		}
-
-		[NotNull]
-		public static string GetUri([NotNull] MapMember mapMember)
-		{
-			return mapMember.URI;
-		}
-
-		public static IEnumerable<Layer> FindLayers([NotNull] string name,
-		                                            bool recursive = true)
-		{
-			Assert.ArgumentNotNull(name, nameof(name));
-
-			MapView mapView = MapView.Active;
-
-			return mapView == null
-				       ? Enumerable.Empty<Layer>()
-				       : mapView.Map.FindLayers(name, recursive);
-		}
-
-		[CanBeNull]
-		public static Layer GetLayer([NotNull] string uri, bool recursive = true)
-		{
-			Assert.ArgumentNotNull(uri, nameof(uri));
-
-			MapView mapView = MapView.Active;
-
-			return mapView.Map.FindLayer(uri, recursive);
-		}
-
-		public static IEnumerable<T> GetLayers<T>([CanBeNull] this Map map) where T : Layer
-		{
-			return map == null ? Enumerable.Empty<T>() : map.GetLayersAsFlattenedList().OfType<T>();
-		}
-
-		public static IEnumerable<BasicFeatureLayer> Distinct(
-			this IEnumerable<BasicFeatureLayer> layers)
-		{
-			return layers.Distinct(new BasicFeatureLayerComparer());
-		}
-
-		#endregion
 
 		[NotNull]
 		private static Envelope GetZoomExtent([NotNull] Envelope newExtent,

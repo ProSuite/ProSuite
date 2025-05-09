@@ -26,12 +26,17 @@ namespace ProSuite.AGP.WorkList.Domain
 		private double _ymin;
 		private double _zmax;
 		private double _zmin;
+		private Geometry _geometry;
+		private bool _hasFeatureGeometry;
+
+		private static readonly object _obj = new();
 
 		public string Description { get; }
 
 		#region constructors
 
-		protected WorkItem(long id, [NotNull] Row row) : this(id, new GdbRowIdentity(row))
+		protected WorkItem(long itemId, long uniqueTableId, [NotNull] Row row)
+			: this(itemId, uniqueTableId, new GdbRowIdentity(row))
 		{
 			Description = GetDescription(row);
 
@@ -40,27 +45,43 @@ namespace ProSuite.AGP.WorkList.Domain
 			SetGeometryFromFeature(feature);
 		}
 
-		protected WorkItem(long id, GdbRowIdentity identity)
+		protected WorkItem(long itemId, long uniqueTableId, GdbRowIdentity identity)
 		{
-			OID = id;
-			Proxy = identity;
+			OID = itemId;
+			UniqueTableId = uniqueTableId;
+			GdbRowProxy = identity;
 			Status = WorkItemStatus.Todo;
-		}
-
-		protected WorkItem(long id, Geometry geometry) : this(id, default(GdbRowIdentity))
-		{
-			SetGeometry(geometry);
 		}
 
 		#endregion
 
-		public bool HasGeometry { get; set; }
+		public bool HasGeometry { get; private set; }
+
+		public bool HasFeatureGeometry
+		{
+			get
+			{
+				lock (_obj)
+				{
+					return _hasFeatureGeometry;
+				}
+			}
+			private set
+			{
+				lock (_obj)
+				{
+					_hasFeatureGeometry = value;
+				}
+			}
+		}
 
 		#region IWorkItem
 
-		public long OID { get; set; }
+		public long OID { get; }
 
-		public long ObjectID => Proxy.ObjectId;
+		public long UniqueTableId { get; }
+
+		public long ObjectID => GdbRowProxy.ObjectId;
 
 		public bool Visited
 		{
@@ -74,9 +95,28 @@ namespace ProSuite.AGP.WorkList.Domain
 			set { _status = value; }
 		}
 
-		public GdbRowIdentity Proxy { get; }
+		public GdbRowIdentity GdbRowProxy { get; }
 
 		public Envelope Extent { get; private set; }
+
+		public Geometry Geometry
+		{
+			get
+			{
+				lock (_obj)
+				{
+					return _geometry;
+				}
+			}
+			set
+			{
+				lock (_obj)
+				{
+					_geometry = value;
+					HasFeatureGeometry = true;
+				}
+			}
+		}
 
 		public GeometryType? GeometryType { get; set; }
 
@@ -108,7 +148,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public override string ToString()
 		{
-			return $"{Proxy}: {Status}, {Visited}";
+			return $"{GdbRowProxy}: {Status}, {Visited}";
 		}
 
 		[NotNull]
@@ -143,7 +183,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		[CanBeNull]
 		private Row GetRow()
 		{
-			return Proxy.GetRow();
+			return GdbRowProxy.GetRow();
 		}
 
 		public void SetGeometryFromFeature([CanBeNull] Feature feature)

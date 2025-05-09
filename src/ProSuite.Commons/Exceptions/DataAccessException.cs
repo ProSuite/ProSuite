@@ -5,7 +5,7 @@ namespace ProSuite.Commons.Exceptions
 {
 	public class DataAccessException : Exception
 	{
-		public long RowId { get; }
+		public long RowId { get; } = -1;
 		public string TableName { get; }
 
 		public DataAccessException() { }

@@ -20,9 +20,23 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		IEnumerable<string> GetNames();
 
-		// todo rename Contains
-		bool Exists([NotNull] string name);
+		/// <summary>
+		/// Whether the given name is a known work list. It could be registered only as
+		/// XmlWorkListFactory or exist as an opened work list.
+		/// </summary>
+		/// <param name="name"></param>
+		/// <returns></returns>
+		bool Contains([NotNull] string name);
 
-		bool TryAdd(IWorkList worklist);
+		/// <summary>
+		/// Determines whether the work list of the given name as already be instantiated,
+		/// i.e. opened in the navigator. If only the XmlWorkList factory has been registered,
+		/// e.g. for display purposes, false is returned.
+		/// </summary>
+		/// <param name="name"></param>
+		/// <returns></returns>
+		bool WorklistExists([NotNull] string name);
+
+		bool AddOrReplace(IWorkList worklist);
 	}
 }

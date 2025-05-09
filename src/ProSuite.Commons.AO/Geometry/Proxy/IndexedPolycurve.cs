@@ -1,15 +1,13 @@
-
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
 
-namespace ProSuite.Commons.AO.Geometry
+namespace ProSuite.Commons.AO.Geometry.Proxy
 {
 	public class IndexedPolycurve : IIndexedSegments
 	{
@@ -28,7 +26,7 @@ namespace ProSuite.Commons.AO.Geometry
 			const int maxElementCountPerTile = 4; //  was: 64;
 			_boxTree = new BoxTree<SegmentProxy>(dimension, maxElementCountPerTile, @dynamic);
 
-			var geometry = (IGeometry)baseGeometry;
+			var geometry = (IGeometry) baseGeometry;
 
 			_envelope = geometry.Envelope;
 			double tolerance = GeometryUtils.GetXyTolerance(geometry);
@@ -50,7 +48,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 					for (int partIndex = 0; partIndex < partCount; partIndex++)
 					{
-						var part = (IPointCollection4)geometryCollection.Geometry[partIndex];
+						var part = (IPointCollection4) geometryCollection.Geometry[partIndex];
 
 						var partProxy = new PartProxy(_boxTree, partIndex, part);
 
@@ -123,11 +121,11 @@ namespace ProSuite.Commons.AO.Geometry
 			BoxTree<SegmentProxy> neighborBoxTree, double searchDistance, IBox commonBox)
 		{
 			return _boxTree.EnumerateNeighborhoods(neighborBoxTree, searchDistance, commonBox)
-						   .Select(boxPairs => new SegmentProxyNeighborhood
-						   {
-							   SegmentProxy = boxPairs.Entry.Value,
-							   Neighbours = GetSegments(boxPairs.Neighbours)
-						   });
+			               .Select(boxPairs => new SegmentProxyNeighborhood
+			                                   {
+				                                   SegmentProxy = boxPairs.Entry.Value,
+				                                   Neighbours = GetSegments(boxPairs.Neighbours)
+			                                   });
 		}
 
 		[NotNull]
@@ -163,8 +161,8 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		public IPolyline GetSubpart(int partIndex, int startSegmentIndex,
-									double startFraction,
-									int endSegmentIndex, double endFraction)
+		                            double startFraction,
+		                            int endSegmentIndex, double endFraction)
 		{
 			IPolyline subpart = _partProxies[partIndex].GetSubpart(startSegmentIndex,
 				startFraction,

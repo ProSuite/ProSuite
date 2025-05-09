@@ -15,7 +15,7 @@ using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Microservices.Definitions.QA.Test;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Server.AO.QualityTestService
 {
@@ -156,6 +156,11 @@ namespace ProSuite.Microservices.Server.AO.QualityTestService
 			if (workspaceType == WorkspaceDbType.FileGeodatabase)
 			{
 				return WorkspaceUtils.GetFileGdbWorkspaceFactory();
+			}
+
+			if (workspaceType == WorkspaceDbType.MobileGeodatabase)
+			{
+				return WorkspaceUtils.GetSqliteWorkspaceFactory();
 			}
 
 			if (workspaceType == WorkspaceDbType.FileSystem)

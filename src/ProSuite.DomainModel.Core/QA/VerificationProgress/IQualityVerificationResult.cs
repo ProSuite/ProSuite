@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.QA.VerificationProgress
@@ -25,7 +26,12 @@ namespace ProSuite.DomainModel.Core.QA.VerificationProgress
 
 		bool CanSaveIssues { get; }
 
+		int IssuesSaved { get; }
+
 		int SaveIssues(ErrorDeletionInPerimeter errorDeletion =
 			               ErrorDeletionInPerimeter.VerifiedQualityConditions);
+
+		Task<int> SaveIssuesAsync(ErrorDeletionInPerimeter errorDeletion =
+			                          ErrorDeletionInPerimeter.VerifiedQualityConditions);
 	}
 }

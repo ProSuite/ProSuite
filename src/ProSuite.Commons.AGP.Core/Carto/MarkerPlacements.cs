@@ -315,6 +315,97 @@ public static class MarkerPlacements
 		}
 	}
 
+	public enum PolygonMarkerClipping
+	{
+		ClipAtBoundary, // clip marker at polygon boundary (cut outside portions)
+		CenterInsideBoundary, // omit marker if center outside polygon
+		FullyInsideBoundary, // omit marker if any portion outside polygon
+		DoNotClip // marker may extend past polygon boundary
+	}
+
+	public class InsidePolygonOptions : FillOptions
+	{
+		public double StepX { get; set; }
+		public double StepY { get; set; }
+		public double GridAngle { get; set; }
+		public bool ShiftOddRows { get; set; }
+		public double OffsetX { get; set; }
+		public double OffsetY { get; set; }
+		public PolygonMarkerClipping Clipping { get; set; }
+	}
+
+	public static IEnumerable<T> InsidePolygon<T>(
+		T marker, Geometry reference, InsidePolygonOptions options) where T : Geometry
+	{
+		if (marker is null) yield break;
+		if (reference is not Polygon polygon) yield break;
+		if (options is null) throw new ArgumentNullException(nameof(options));
+
+		// The ArcGIS algorithm is unknown; this is an empirical approximation...
+		// It seems the placement is space-fixed (not object-fixed) and thus PlacePerPart is irrelevant (and not exposed on the UI)
+		// --> where's the origin?
+
+		// Ignore options.PlacePerPart: it's not exposed on the UI
+		// and would have no effect anyway because the pattern is space-fixed
+
+		if (options.GridAngle != 0)
+			throw new NotImplementedException($"Non-zero {nameof(options.GridAngle)} is not yet implemented");
+
+		var dx = options.StepX;
+		if (! (dx > 0)) yield break;
+		var dy = options.StepY;
+		if (! (dy > 0)) yield break;
+
+		var ox = options.OffsetX % dx;
+		if (ox > 0) ox -= dx;
+		var oy = options.OffsetY % dy;
+		if (oy > 0) oy -= dy;
+
+		var extent = polygon.Extent;
+
+		var nx = (int)Math.Ceiling(extent.Width / options.StepX) + 1;
+		var ny = (int)Math.Ceiling(extent.Height / options.StepY) + 1;
+
+		var lowerLeft = new Pair(extent.XMin, extent.YMin);
+		var sx = ox + dx * Math.Floor(lowerLeft.X / dx);
+		var sy = oy + dy * Math.Floor(lowerLeft.Y / dy);
+		var start = new Pair(sx, sy);
+
+		for (int row = -1; row < nx; row++)
+		for (int col = -1; col < ny; col++)
+		{
+			var tx = start.X + col * dx;
+			var ty = start.Y + row * dy;
+
+			if (options.ShiftOddRows && row % 2 == 1)
+			{
+				tx += dx / 2;
+			}
+
+			var positioned = Translated(marker, tx, ty);
+
+			switch (options.Clipping)
+			{
+				case PolygonMarkerClipping.ClipAtBoundary:
+					yield return Clipped(positioned, polygon);
+					break;
+				case PolygonMarkerClipping.CenterInsideBoundary:
+					var point = MapPointBuilderEx.CreateMapPoint(tx, ty, polygon.SpatialReference);
+					if (GeometryUtils.Contains(point, polygon))
+						yield return positioned;
+					break;
+				case PolygonMarkerClipping.FullyInsideBoundary:
+					if (GeometryUtils.Contains(polygon, positioned))
+						yield return positioned;
+					break;
+				default: // DoNotClip: any of marker inside polygon
+					if (GeometryUtils.Intersects(polygon, positioned))
+						yield return positioned;
+					break;
+			}
+		}
+	}
+
 	public enum AroundPolygonPosition
 	{
 		Top, Bottom, Left, Right, TopLeft, TopRight, BottomLeft, BottomRight

@@ -9,11 +9,11 @@ namespace ProSuite.Commons.AGP.Gdb
 	/// <summary>
 	///     Represents a lightweight reference to a geodatabase object.
 	/// </summary>
-	public struct GdbRowIdentity : IEquatable<GdbRowIdentity>
+	public struct GdbRowIdentity : IEquatable<GdbRowIdentity>, IComparable<GdbRowIdentity>,
+	                               IRowReference
 	{
 		public GdbRowIdentity([NotNull] Row row)
 		{
-			// todo daro: GetTable() might be a performance issue?
 			using (Table table = row.GetTable())
 			{
 				Table = new GdbTableIdentity(table);
@@ -23,7 +23,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		}
 
 		public GdbRowIdentity(long objectId, long tableId, [NotNull] string tableName,
-		                      GdbWorkspaceIdentity workspaceIdentity = default) : this(
+		                      GdbWorkspaceIdentity workspaceIdentity) : this(
 			objectId, new GdbTableIdentity(tableName, tableId, workspaceIdentity))
 		{
 			ObjectId = objectId;
@@ -63,22 +63,23 @@ namespace ProSuite.Commons.AGP.Gdb
 			}
 		}
 
-		//[Pure]
-		//public bool References([NotNull] Row row)
-		//{
-		//	Assert.ArgumentNotNull(row, nameof(row));
+		#region Implementation of IRowReference
 
-		//	return Equals(new GdbRowIdentity(row));
-		//}
+		public bool References(Row row)
+		{
+			return ObjectId == row.GetObjectID() &&
+			       Table.ReferencesTable(row.GetTable());
+		}
 
-		//[Pure]
-		//public bool References([NotNull] Table table)
-		//{
-		//	Assert.ArgumentNotNull(table, nameof(table));
+		public bool References(Table table, long objectId)
+		{
+			return ObjectId == objectId &&
+			       Table.ReferencesTable(table);
+		}
 
-		//	var other = new GdbWorkspaceIdentity(table.GetDatastore());
-		//	return Equals(Workspace, other);
-		//}
+		public ITableReference TableReference => Table;
+
+		#endregion
 
 		public override string ToString()
 		{
@@ -106,5 +107,14 @@ namespace ProSuite.Commons.AGP.Gdb
 		}
 
 		#endregion
+
+		public int CompareTo(GdbRowIdentity other)
+		{
+			int oidComparison = ObjectId.CompareTo(other.ObjectId);
+			if (oidComparison != 0)
+				return oidComparison;
+
+			return Table.CompareTo(other.Table);
+		}
 	}
 }

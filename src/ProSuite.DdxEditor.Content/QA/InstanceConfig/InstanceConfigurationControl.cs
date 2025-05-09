@@ -56,7 +56,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_tableViewControl = tableViewControl;
 			var instanceConfigTableViewControl = (Control) tableViewControl;
 
-#if NET6_0
+#if NET6_0_OR_GREATER
 			instanceConfigTableViewControl.SuspendLayout();
 			instanceConfigTableViewControl.Dock = DockStyle.Fill;
 			instanceConfigTableViewControl.Location = new Point(0, 0);
@@ -67,7 +67,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			InitializeComponent();
 
-#if NET6_0
+#if NET6_0_OR_GREATER
 			// hack!
 			_splitContainer.SuspendLayout();
 			_instanceConfigTableViewControlPanel.SuspendLayout();

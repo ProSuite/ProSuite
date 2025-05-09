@@ -65,7 +65,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		#region Implementation of IFeatureClassSchema
 
 		public string ShapeFieldName =>
-			Attributes.FirstOrDefault(a => a.FieldType == FieldType.Geometry)?.Name;
+			GetAttributes().FirstOrDefault(a => a.FieldType == FieldType.Geometry)?.Name;
 
 		public ProSuiteGeometryType ShapeType
 		{
@@ -78,7 +78,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		}
 
 		public ITableField AreaField =>
-			Attributes.FirstOrDefault(a => AttributeRole.ShapeArea.Equals(a.Role));
+			GetAttributes().FirstOrDefault(a => AttributeRole.ShapeArea.Equals(a.Role));
 
 		public ITableField LengthField => throw new NotImplementedException();
 

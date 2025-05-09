@@ -40,6 +40,11 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		{
 			ISubcurveCalculator curveCalculator = new ReshapableSubcurveCalculator();
 
+			if (tolerance >= 0)
+			{
+				curveCalculator.CustomTolerance = tolerance;
+			}
+
 			return CalculateChangeAlongCurves(sourceFeatures, targetFeatures, visibleExtent,
 			                                  tolerance, bufferOptions, filterOptions,
 			                                  resultSubcurves, curveCalculator, trackCancel);
@@ -68,6 +73,11 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			ISubcurveCalculator curveCalculator = new CutPolygonSubcurveCalculator();
+
+			if (tolerance >= 0)
+			{
+				curveCalculator.CustomTolerance = tolerance;
+			}
 
 			return CalculateChangeAlongCurves(sourceFeatures, targetFeatures, visibleExtent,
 			                                  tolerance, bufferOptions, filterOptions,
@@ -120,9 +130,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			visibleExtent = visibleExtent ?? UnionExtents(sourceFeatures, targetFeatures);
 
-			// TODO: Actual tolerance that can be specified (using double for forward compatibility)
-			bool useMinimalTolerance = MathUtils.AreEqual(0, tolerance);
-
 			IEnvelope clipExtent =
 				GetClipExtent(visibleExtent,
 				              bufferOptions.BufferTarget ? bufferOptions.BufferDistance : 0);
@@ -141,8 +148,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				return ReshapeAlongCurveUsability.NoTarget;
 			}
 
-			PrepareSubcurveCalculator(curveCalculator, sourceFeatures, targetFeatures,
-			                          useMinimalTolerance, filterOptions, clipExtent);
+			curveCalculator.Prepare(sourceFeatures, targetFeatures, clipExtent, filterOptions);
 
 			ReshapeAlongCurveUsability result;
 			if (sourceFeatures.Count == 1)
@@ -180,8 +186,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		{
 			Assert.ArgumentNotNull(subCurveCalculator, nameof(subCurveCalculator));
 
-			subCurveCalculator.Prepare(sourceFeatures, targetFeatures, clipExtent,
-			                           useMinimalTolerance, filterOptions);
+			subCurveCalculator.UseMinimumTolerance = useMinimalTolerance;
+
+			subCurveCalculator.Prepare(sourceFeatures, targetFeatures, clipExtent, filterOptions);
 		}
 
 		[CanBeNull]

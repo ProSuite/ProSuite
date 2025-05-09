@@ -1,12 +1,14 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
+using ProSuite.DomainModel.Core.Geodatabase;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
 {
 	public class OpenWorkspaceConnectionProvider : ConnectionProvider
 	{
-		private readonly IFeatureWorkspace _featureWorkspace;
+		[NotNull] public readonly IFeatureWorkspace FeatureWorkspace;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="OpenWorkspaceConnectionProvider"/> class.
@@ -23,15 +25,12 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(featureWorkspace, nameof(featureWorkspace));
 
-			_featureWorkspace = featureWorkspace;
+			FeatureWorkspace = featureWorkspace;
 		}
 
 		#region Overrides of ConnectionProvider
 
-		public override IFeatureWorkspace OpenWorkspace(int hWnd = 0)
-		{
-			return _featureWorkspace;
-		}
+		public override DbConnectionType ConnectionType => DbConnectionType.Other;
 
 		#endregion
 	}

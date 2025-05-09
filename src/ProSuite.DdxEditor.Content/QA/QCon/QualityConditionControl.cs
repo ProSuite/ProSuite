@@ -73,7 +73,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 			InitializeComponent();
 
-#if NET6_0
+#if NET6_0_OR_GREATER
 			// hack!
 			_panelParameters.SuspendLayout();
 

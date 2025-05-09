@@ -28,7 +28,8 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
-		public static IEnumerable<Row> GetSelectedRows([CanBeNull] StandaloneTable table)
+		public static IEnumerable<Row> GetSelectedRows([CanBeNull] StandaloneTable table,
+		                                               bool recycling = false)
 		{
 			ArcGIS.Core.Data.Selection selection = table?.GetSelection();
 
@@ -37,7 +38,7 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			using (RowCursor cursor = selection.Search(null, false))
+			using (RowCursor cursor = selection.Search(null, recycling))
 			{
 				while (cursor.MoveNext())
 				{

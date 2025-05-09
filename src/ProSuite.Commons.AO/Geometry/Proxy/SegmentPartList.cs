@@ -1,9 +1,8 @@
-
+using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using System;
-using System.Collections.Generic;
 
 namespace ProSuite.Commons.AO.Geometry.Proxy
 {
@@ -35,14 +34,14 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 		}
 
 		private void Add(int part, int segment, double min, double max,
-						 bool complete)
+		                 bool complete)
 		{
 			var s = new SegmentPart(part, segment, min, max, complete);
 			_list.Add(s);
 		}
 
 		[NotNull]
-		public IList<IPolyline> GetParts()
+		public IList<IPolyline> GetParts(ISpatialReference spatialReference)
 		{
 			_list.Sort(new SegmentPartComparer());
 			int part0 = -1;
@@ -54,11 +53,11 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 			foreach (SegmentPart seg in _list)
 			{
 				if (seg.PartIndex != part0 ||
-					seg.FullMin > max)
+				    seg.FullMin > max)
 				{
 					if (min < max)
 					{
-						IPolyline part = CreateLine(part0, min, max);
+						IPolyline part = CreateLine(part0, min, max, spatialReference);
 						result.Add(part);
 					}
 
@@ -71,7 +70,7 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 
 			if (min < max)
 			{
-				IPolyline part = CreateLine(part0, min, max);
+				IPolyline part = CreateLine(part0, min, max, spatialReference);
 				result.Add(part);
 			}
 
@@ -79,12 +78,13 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 		}
 
 		[NotNull]
-		private IPolyline CreateLine(int part, double min, double max)
+		private IPolyline CreateLine(int part, double min, double max,
+		                             [NotNull] ISpatialReference spatialReference)
 		{
 			if (part != _currentPart)
 			{
 				_currentPart = -1;
-				var coll = (IPointCollection4)((IGeometryCollection)_line).Geometry[part];
+				var coll = (IPointCollection4) ((IGeometryCollection) _line).Geometry[part];
 				_currentWks = new WKSPointZ[coll.PointCount];
 				GeometryUtils.QueryWKSPointZs(coll, _currentWks);
 
@@ -94,12 +94,12 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 			min = Math.Max(min, 0);
 			max = Math.Min(max, _currentWks.Length - 1);
 			var points = new List<WKSPointZ>();
-			var iMin = (int)min;
+			var iMin = (int) min;
 
 			WKSPointZ p = Factor(_currentWks[iMin], _currentWks[iMin + 1], min - iMin);
 			points.Add(p);
 
-			var iMax = (int)max;
+			var iMax = (int) max;
 			for (int i = iMin + 1; i <= iMax; i++)
 			{
 				points.Add(_currentWks[i]);
@@ -111,22 +111,18 @@ namespace ProSuite.Commons.AO.Geometry.Proxy
 				points.Add(p);
 			}
 
-			IPolyline line = new PolylineClass();
-			((IZAware)line).ZAware = true;
 			WKSPointZ[] array = points.ToArray();
-			GeometryUtils.SetWKSPointZs((IPointCollection4)line, array);
-
-			return line;
+			return GeometryFactory.CreatePolyline(array, spatialReference);
 		}
 
 		private static WKSPointZ Factor(WKSPointZ p0, WKSPointZ p1, double factor)
 		{
 			return new WKSPointZ
-			{
-				X = p0.X + factor * (p1.X - p0.X),
-				Y = p0.Y + factor * (p1.Y - p0.Y),
-				Z = p0.Z + factor * (p1.Z - p0.Z)
-			};
+			       {
+				       X = p0.X + factor * (p1.X - p0.X),
+				       Y = p0.Y + factor * (p1.Y - p0.Y),
+				       Z = p0.Z + factor * (p1.Z - p0.Z)
+			       };
 		}
 
 		public void Clear()

@@ -18,5 +18,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 		#endregion
 
 		public override string TypeDescription => "Error Multipoints";
+
+		public override DatasetImplementationType ImplementationType =>
+			DatasetImplementationType.ErrorMultipoint;
 	}
 }

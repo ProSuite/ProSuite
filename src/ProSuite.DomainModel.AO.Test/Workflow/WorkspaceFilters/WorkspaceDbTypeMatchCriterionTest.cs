@@ -84,5 +84,34 @@ namespace ProSuite.DomainModel.AO.Test.Workflow.WorkspaceFilters
 			Console.WriteLine(reason);
 			Assert.IsFalse(isSatisfied);
 		}
+
+		[Test]
+		public void CanMatchMobileGdb()
+		{
+			var criterion = new WorkspaceDbTypeMatchCriterion(
+				new[] { new WorkspaceDbTypeInfo("mgdb", WorkspaceDbType.MobileGeodatabase) });
+
+			string gdbPath = TestData.GetMobileGdbPath();
+
+			IWorkspace workspace = WorkspaceUtils.OpenMobileGdbWorkspace(gdbPath);
+
+			bool isSatisfied = criterion.IsSatisfied(workspace, out string reason);
+
+			Console.WriteLine(reason);
+			Assert.IsTrue(isSatisfied);
+
+			//test mismatch
+			criterion = new WorkspaceDbTypeMatchCriterion(
+				new[]
+				{
+					new WorkspaceDbTypeInfo("sde", WorkspaceDbType.ArcSDE),
+					new WorkspaceDbTypeInfo("sde-oracle", WorkspaceDbType.ArcSDEOracle)
+				});
+
+			isSatisfied = criterion.IsSatisfied(workspace, out reason);
+
+			Console.WriteLine(reason);
+			Assert.IsFalse(isSatisfied);
+		}
 	}
 }

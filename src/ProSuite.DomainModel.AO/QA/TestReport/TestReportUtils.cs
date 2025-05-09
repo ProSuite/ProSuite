@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.QA;
@@ -97,7 +98,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				catch (Exception ex)
 				{
 					NotificationUtils.Add(notifications,
-					                      $"Unable to include {descriptor}: {ex.Message}");
+					                      $"Unable to include {descriptor}: {ExceptionUtils.FormatMessage(ex)}");
 				}
 			}
 

@@ -8,7 +8,7 @@ using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.Geodatabase;
+using ProSuite.DomainModel.Core.Geodatabase;
 
 namespace ProSuite.DdxEditor.Content.Connections
 {
@@ -77,6 +77,11 @@ namespace ProSuite.DdxEditor.Content.Connections
 					             "Add File Geodatabase Connection Provider",
 					             "Add File GDB Connection Provider"));
 			commands.Add(new AddConnectionProviderCommand
+				             <MobileGdbConnectionProvider>(
+					             this, applicationController,
+					             "Add Mobile Geodatabase Connection Provider",
+					             "Add Mobile GDB Connection Provider"));
+			commands.Add(new AddConnectionProviderCommand
 				             <SdeDirectOsaConnectionProvider>(
 					             this, applicationController,
 					             "Add ArcSDE OSA Direct Connection Provider",
@@ -91,11 +96,6 @@ namespace ProSuite.DdxEditor.Content.Connections
 					             this, applicationController,
 					             "Add ArcSDE Connection File Connection Provider",
 					             "Add ArcSDE (.sde) Provider"));
-			commands.Add(new AddConnectionProviderCommand
-				             <OleDbConnectionFileConnectionProvider>(
-					             this, applicationController,
-					             "Add OLE DB Connection File Connection Provider",
-					             "Add OLE DB (.odc) Provider"));
 		}
 
 		public void AddConnectionProvider<E>() where E : ConnectionProvider, new()

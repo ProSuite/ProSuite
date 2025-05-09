@@ -8,7 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework.TableRows;
-using ProSuite.DomainModel.AO.Geodatabase;
+using ProSuite.DomainModel.Core.Geodatabase;
 
 namespace ProSuite.DdxEditor.Content.Connections
 {

@@ -14,6 +14,9 @@
 
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
+    <!-- This can be changed to 12 once only .NET 8 (and Pro 3.2) support is dropped. -->
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -35,23 +38,17 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.Geometry, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Geometry.dll</HintPath>
+    <Reference Include="ArcGIS.Desktop.Editing">
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Editing\ArcGIS.Desktop.Editing.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.QA, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.AGP.Editing\ProSuite.AGP.Editing.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
@@ -59,10 +56,26 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.AGP\ProSuite.DomainModel.AGP.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
+    <ProjectReference Include="..\ProSuite.GIS.Geometry.AGP\ProSuite.GIS.Geometry.AGP.csproj" />
+    <ProjectReference Include="..\ProSuite.Microservices.Client.GrpcNet\ProSuite.Microservices.Client.GrpcNet.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.19.2" />
-    <PackageReference Include="Grpc" Version="2.44.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
+
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.6.4" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.6.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\lib\licenses\grpc_Apache2.txt">
+      <Link>Licenses\grpc_Apache2.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\lib\licenses\prosuite-microservice-definitions.license.txt">
+      <Link>Licenses\prosuite-microservice-definitions.license.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

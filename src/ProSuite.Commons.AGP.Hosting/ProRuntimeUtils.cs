@@ -167,6 +167,34 @@ namespace ProSuite.Commons.AGP.Hosting
 		}
 
 		/// <summary>
+		/// Add the specified install dir to the PATH environment variable (process scope).
+		/// Empirically, this is sometimes required for Core Host applications
+		/// to successfully find and load CoreInterop.dll (and its dependencies).
+		/// </summary>
+		/// <param name="installDir">The ArcGIS Pro installation directory
+		/// (without the trailing \bin), e.g. C:\Program Files\ArcGIS\Pro</param>
+		/// <remarks>
+		/// We prepend (not append) to PATH because otherwise Pro
+		/// might load a DLL from another Program and likely the wrong
+		/// version (typical example: freetype.dll, which is a component
+		/// of many programs). Original inspiration for adding to PATH:
+		/// https://github.com/Esri/arcgis-pro-sdk-community-samples/issues/30#issuecomment-424999941
+		/// Windows searches for a DLL along the PATH env var as a last resort,
+		/// see https://stackoverflow.com/questions/2463243/dll-search-on-windows
+		/// </remarks>
+		public static void AddBinDirectoryToPath(string installDir)
+		{
+			string proBinDir = Path.Combine(installDir, "bin");
+
+			const string name = "PATH";
+			const EnvironmentVariableTarget scope = EnvironmentVariableTarget.Process;
+
+			var oldValue = Environment.GetEnvironmentVariable(name, scope);
+			var newValue = $"{proBinDir};{oldValue}"; // prepend
+			Environment.SetEnvironmentVariable(name, newValue, scope);
+		}
+
+		/// <summary>
 		/// Resolves the ArcGIS Pro Assembly Path.  Called when loading of an assembly fails.
 		/// </summary>
 		/// <param name="sender"></param>

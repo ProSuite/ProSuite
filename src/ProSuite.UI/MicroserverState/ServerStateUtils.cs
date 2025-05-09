@@ -9,7 +9,7 @@ namespace ProSuite.UI.MicroserverState
 	public static class ServerStateUtils
 	{
 		public static WpfHostingWinForm CreateServerStateForm(
-			[NotNull] IEnumerable<MicroserviceClientBase> serviceClients,
+			[NotNull] IEnumerable<IMicroserviceClient> serviceClients,
 			[CanBeNull] string title)
 		{
 			var serverStateViewModel = new ServerStateViewModel(serviceClients);

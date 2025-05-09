@@ -13,6 +13,7 @@
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
   </PropertyGroup>
@@ -20,6 +21,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>false</Optimize>
   </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="ArcGIS.Core">
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
@@ -32,10 +34,12 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
     <PackageReference Include="NUnit" Version="3.13.3" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj" />
     <ProjectReference Include="..\ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj" />
@@ -46,10 +50,12 @@
     <ProjectReference Include="..\ProSuite.Commons.Test\ProSuite.Commons.Test.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <Content Include="TestData\IssuePolygons.xml" />
     <Content Include="TestData\ReadMe_test_data_creation.txt" />
   </ItemGroup>
+
   <ItemGroup>
     <Compile Remove="IssuePolygonsGdbRepository.cs" />
   </ItemGroup>

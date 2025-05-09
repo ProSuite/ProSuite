@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using ArcGIS.Core.CIM;
@@ -8,6 +9,8 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using UnitType = ArcGIS.Core.Geometry.UnitType;
 
 namespace ProSuite.Commons.AGP.Core.Carto
 {
@@ -17,6 +20,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		{
 			Circle,
 			Square,
+			Diamond,
 			Cross
 		}
 
@@ -37,6 +41,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		public const double DefaultStrokeWidth = 1.0;
 		public const double DefaultMarkerSize = 10.0;
 
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		#region Conversion
 
 		/// <remarks>
@@ -45,6 +51,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		/// seems to be established practice in desktop publishing. We adopt it.
 		/// </remarks>
 		private const double PointsPerMillimeter = 2.83465;
+		private const double PointsPerMeter = 2834.65;
+		private const double MetersPerPoint = 1.0 / PointsPerMeter;
 
 		public static double PointsToMillimeters(double points)
 		{
@@ -54,6 +62,42 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		public static double MillimetersToPoints(double millimeters)
 		{
 			return millimeters * PointsPerMillimeter;
+		}
+
+		public static double GetUnitsPerPoint(this Unit unit, double referenceScale = 0)
+		{
+			if (unit is null)
+				throw new ArgumentNullException(nameof(unit));
+			if (unit.UnitType != UnitType.Linear)
+				throw new ArgumentException("Not a linear unit", nameof(unit));
+
+			double distancePoints = 1.0;
+
+			if (referenceScale > 0)
+			{
+				distancePoints *= referenceScale;
+			}
+
+			double meters = distancePoints * MetersPerPoint;
+			return meters / unit.ConversionFactor; // linear unit's ConversionFactor is meters/unit
+		}
+
+		public static double GetPointsPerUnit(this Unit unit, double referenceScale = 0)
+		{
+			if (unit is null)
+				throw new ArgumentNullException(nameof(unit));
+			if (unit.UnitType != UnitType.Linear)
+				throw new ArgumentException("Not a linear unit", nameof(unit));
+
+			double distanceMapUnits = 1.0;
+
+			if (referenceScale > 0)
+			{
+				distanceMapUnits /= referenceScale;
+			}
+
+			double meters = distanceMapUnits * unit.ConversionFactor; // ConversionFactor is meters/unit (for a linear unit)
+			return meters * PointsPerMeter;
 		}
 
 		#endregion
@@ -179,6 +223,134 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		#endregion
 
+		#region Modification
+
+		/// <summary>
+		/// Set the alpha value of all colors in a symbol.
+		/// </summary>
+		/// <remarks>Modifies the given symbol!</remarks>
+		/// <param name="symbol">The symbol reference to modify</param>
+		/// <param name="alpha">New alpha value, between 0 (transparent) and 100 (opaque)</param>
+		/// <returns>The given <paramref name="symbol"/></returns>
+		public static CIMSymbolReference SetAlpha(this CIMSymbolReference symbol, float alpha)
+		{
+			symbol?.Symbol.SetAlpha(alpha);
+			return symbol;
+		}
+
+		/// <summary>
+		/// Set the alpha value of all colors in a symbol.
+		/// </summary>
+		/// <remarks>Modifies the given symbol!</remarks>
+		/// <param name="symbol">The symbol reference to modify</param>
+		/// <param name="alpha">New alpha value, between 0 (transparent) and 100 (opaque)</param>
+		/// <returns>The given <paramref name="symbol"/></returns>
+		public static CIMSymbol SetAlpha(this CIMSymbol symbol, float alpha)
+		{
+			if (symbol is CIMMultiLayerSymbol multiLayerSymbol &&
+			    multiLayerSymbol.SymbolLayers != null)
+			{
+				foreach (var symbolLayer in multiLayerSymbol.SymbolLayers)
+				{
+					if (symbolLayer is CIMSolidFill soldFill)
+					{
+						soldFill.Color.SetAlpha(alpha);
+					}
+					else if (symbolLayer is CIMSolidStroke solidStroke)
+					{
+						solidStroke.Color.SetAlpha(alpha);
+					}
+					else if (symbolLayer is CIMVectorMarker vectorMarker &&
+					         vectorMarker.MarkerGraphics != null)
+					{
+						foreach (var markerGraphic in vectorMarker.MarkerGraphics)
+						{
+							markerGraphic.Symbol.SetAlpha(alpha);
+						}
+					}
+					else if (symbolLayer is CIMCharacterMarker characterMarker)
+					{
+						characterMarker.Symbol.SetAlpha(alpha);
+					}
+				}
+			}
+			else if (symbol is CIMTextSymbol textSymbol)
+			{
+				textSymbol.Symbol.SetAlpha(alpha);
+			}
+			// else: should not occur (all symbols are either MultiLayer or Text)
+
+			return symbol;
+		}
+
+		/// <summary>
+		/// See <see cref="Blend(CIMSymbol,CIMColor,float)"/>. Modifies
+		/// the given symbol reference and returns it for convenience.
+		/// </summary>
+		public static CIMSymbolReference Blend(this CIMSymbolReference symref,
+		                                       CIMColor color, float factor = 0.5f)
+		{
+			symref?.Symbol.Blend(color, factor);
+			return symref;
+		}
+
+		/// <summary>
+		/// Blend the colors of the given symbol with the given color.
+		/// A <paramref name="factor"/> value of 0 keeps the original
+		/// colors, a value of 1 uses the given color, values in-between
+		/// blend, and other values have an undefined result.
+		/// Modifies this symbol (!) and returns it for convenience.
+		/// </summary>
+		public static CIMSymbol Blend(this CIMSymbol symbol, CIMColor color, float factor = 0.5f)
+		{
+			if (color is null) return symbol;
+
+			if (symbol is CIMMultiLayerSymbol multiLayerSymbol &&
+			    multiLayerSymbol.SymbolLayers != null)
+			{
+				foreach (var symbolLayer in multiLayerSymbol.SymbolLayers)
+				{
+					if (symbolLayer is CIMSolidFill solidFill)
+					{
+						solidFill.Color = Blend(solidFill.Color, color, factor);
+					}
+					else if (symbolLayer is CIMSolidStroke solidStroke)
+					{
+						solidStroke.Color = Blend(solidStroke.Color, color, factor);
+					}
+					else if (symbolLayer is CIMVectorMarker vectorMarker &&
+					         vectorMarker.MarkerGraphics != null)
+					{
+						foreach (var markerGraphic in vectorMarker.MarkerGraphics)
+						{
+							markerGraphic.Symbol.Blend(color, factor);
+						}
+					}
+					else if (symbolLayer is CIMCharacterMarker characterMarker)
+					{
+						characterMarker.Symbol.Blend(color, factor);
+					}
+					//else: other symbol layer types are left unmodified
+				}
+			}
+			else if (symbol is CIMTextSymbol textSymbol)
+			{
+				textSymbol.Symbol.Blend(color, factor);
+			}
+			// else: should not occur (all symbols are either MultiLayer or Text)
+
+			return symbol;
+		}
+
+		private static CIMColor Blend(CIMColor color, CIMColor other, float factor)
+		{
+			if (color is null) return null;
+			if (other is null) return color;
+			return ColorUtils.Blend(color, other, factor);
+		}
+
+		#endregion
+
 		#region Symbol Layers
 
 		public static CIMStroke CreateSolidStroke(CIMColor color, double width = -1)
@@ -214,12 +386,35 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return hatchFill;
 		}
 
+		/// <remarks>
+		/// To have a Diamond marker appear the same size as a Square
+		/// marker, use a size that is sqrt 2 (about 1.414) times larger
+		/// for the Diamond than for the Square.
+		/// </remarks>
 		public static CIMMarker CreateMarker(CIMColor color, double size, MarkerStyle style)
 		{
 			var geometry = CreateMarkerGeometry(style);
 			var symbol = CreatePolygonSymbol(color);
 
-			var graphic = new CIMMarkerGraphic {Geometry = geometry, Symbol = symbol};
+			CIMVectorMarker marker = CreateMarker(geometry, symbol, size);
+
+			return marker;
+		}
+
+		public static CIMMarker CreateMarker(
+			MarkerStyle style, CIMPolygonSymbol symbol, double size)
+		{
+			var geometry = CreateMarkerGeometry(style);
+
+			symbol ??= CreatePolygonSymbol(ColorUtils.BlackRGB);
+
+			return CreateMarker(geometry, symbol, size);
+		}
+
+		public static CIMVectorMarker
+			CreateMarker(Geometry geometry, CIMPolygonSymbol symbol, double size)
+		{
+			var graphic = new CIMMarkerGraphic { Geometry = geometry, Symbol = symbol };
 
 			var marker = new CIMVectorMarker();
 			marker.ColorLocked = false;
@@ -230,29 +425,40 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			marker.DominantSizeAxis3D = DominantSizeAxis.Y;
 			marker.ScaleSymbolsProportionally = true;
 			marker.RespectFrame = true;
-			marker.MarkerGraphics = new[] {graphic};
-			marker.Frame = style == MarkerStyle.Circle
-				               ? GeometryFactory.CreateEnvelope(-5, -5, 5, 5)
-				               : graphic.Geometry.Extent;
-
+			marker.MarkerGraphics = new[] { graphic };
+			marker.Frame = graphic.Geometry.Extent;
 			return marker;
 		}
 
 		public static Geometry CreateMarkerGeometry(MarkerStyle style)
 		{
-			switch (style)
+			if (style == MarkerStyle.Circle)
 			{
-				case MarkerStyle.Circle:
-					return GeometryFactory.CreateBezierCircle(5);
-
-				case MarkerStyle.Square:
-					var envelope = GeometryFactory.CreateEnvelope(-5, -5, 5, 5);
-					return GeometryFactory.CreatePolygon(envelope);
-
-				default:
-					throw new NotImplementedException(
-						"Sorry, this MarkerStyle is not yet implemented");
+				return GeometryFactory.CreateBezierCircle(5);
 			}
+
+			if (style == MarkerStyle.Square)
+			{
+				var envelope = GeometryFactory.CreateEnvelope(-5, -5, 5, 5);
+				return GeometryFactory.CreatePolygon(envelope);
+			}
+
+			if (style == MarkerStyle.Diamond)
+			{
+				var envelope = GeometryFactory.CreateEnvelope(-5, -5, 5, 5);
+				var polygon = GeometryFactory.CreatePolygon(envelope);
+				var origin = MapPointBuilderEx.CreateMapPoint(0, 0);
+				return GeometryEngine.Instance.Rotate(polygon, origin, Math.PI / 4);
+			}
+
+			if (style == MarkerStyle.Cross)
+			{
+				var line = GeometryFactory.CreatePolylineXY(-5, -5, 5, 5, 0, 0, -5, 5, 5, -5);
+				return line;
+			}
+			
+			throw new NotImplementedException(
+				"Sorry, this MarkerStyle is not yet implemented");
 		}
 
 		#endregion
@@ -478,7 +684,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		// not on the Symbol. They refer to properties of geometric
 		// effects, symbol layers, and marker placements by means
 		// of a PrimitiveName and the PropertyName. The PrimitiveName
-		// is set to a GUID on both the primitive and the override.
+		// is set to a GUID on both the primitive and the override,
+		// but any string will work.
 		//
 		// Overrides are "typically set by renderers at draw time".
 		//
@@ -570,40 +777,70 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return primitive;
 		}
 
-		public static T FindPrimitiveByName<T>(CIMSymbol symbol, string label) where T : CIMObject
+		public static T FindPrimitiveByName<T>(CIMSymbol symbol, string name) where T : CIMObject
+		{
+			return FindPrimitiveByName<T>(symbol, name, out _);
+		}
+
+		/// <summary>
+		/// Find a symbol primitive by name (and of the given type).
+		/// If found, return the primitive and the path where it is
+		/// located within the symbol. Otherwise, return null and set
+		/// <paramref name="path"/> to null.
+		/// </summary>
+		public static T FindPrimitiveByName<T>(CIMSymbol symbol, string name, out string path) where T : CIMObject
 		{
 			// TextSymbol has no PrimitiveName; all other symbols derive from MultiLayerSymbol
-			if (! (symbol is CIMMultiLayerSymbol multiLayerSymbol)) return null;
-
-			string primitiveName = label;
+			if (! (symbol is CIMMultiLayerSymbol multiLayerSymbol))
+			{
+				path = null;
+				return null;
+			}
 
 			if (multiLayerSymbol.Effects != null)
 			{
-				foreach (var effect in multiLayerSymbol.Effects)
+				for (var i = 0; i < multiLayerSymbol.Effects.Length; i++)
 				{
-					if (string.Equals(effect.PrimitiveName, primitiveName))
+					CIMGeometricEffect effect = multiLayerSymbol.Effects[i];
+
+					if (string.Equals(effect.PrimitiveName, name))
 					{
-						if (effect is T found) return found;
+						if (effect is T found)
+						{
+							path = $"effect {i}";
+							return found;
+						}
 					}
 				}
 			}
 
 			if (multiLayerSymbol.SymbolLayers != null)
 			{
-				foreach (var layer in multiLayerSymbol.SymbolLayers)
+				int layerCount = multiLayerSymbol.SymbolLayers.Length;
+				for (var i = 0; i < layerCount; i++)
 				{
-					if (string.Equals(layer.PrimitiveName, primitiveName))
+					CIMSymbolLayer layer = multiLayerSymbol.SymbolLayers[i];
+
+					if (string.Equals(layer.PrimitiveName, name))
 					{
-						if (layer is T found) return found;
+						if (layer is T found)
+						{
+							path = $"layer {layerCount - 1 - i}";
+							return found;
+						}
 					}
 
 					if (layer is CIMMarker marker)
 					{
 						var placement = marker.MarkerPlacement;
 						if (placement != null &&
-						    string.Equals(placement.PrimitiveName, primitiveName))
+						    string.Equals(placement.PrimitiveName, name))
 						{
-							if (placement is T found) return found;
+							if (placement is T found)
+							{
+								path = $"layer {layerCount - 1 - i} placement";
+								return found;
+							}
 						}
 
 						if (layer is CIMVectorMarker vectorMarker)
@@ -611,11 +848,16 @@ namespace ProSuite.Commons.AGP.Core.Carto
 							var graphics = vectorMarker.MarkerGraphics;
 							if (graphics != null)
 							{
-								foreach (var graphic in graphics)
+								for (var j = 0; j < graphics.Length; j++)
 								{
-									if (string.Equals(graphic.PrimitiveName, primitiveName))
+									CIMMarkerGraphic graphic = graphics[j];
+									if (string.Equals(graphic.PrimitiveName, name))
 									{
-										if (graphic is T found) return found;
+										if (graphic is T found)
+										{
+											path = $"layer {layerCount - 1 - i} graphic {j}";
+											return found;
+										}
 									}
 								}
 							}
@@ -624,17 +866,23 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 					if (layer.Effects != null)
 					{
-						foreach (var effect in layer.Effects)
+						for (var j = 0; j < layer.Effects.Length; j++)
 						{
-							if (string.Equals(effect.PrimitiveName, primitiveName))
+							CIMGeometricEffect effect = layer.Effects[j];
+							if (string.Equals(effect.PrimitiveName, name))
 							{
-								if (effect is T found) return found;
+								if (effect is T found)
+								{
+									path = $"layer {layerCount - 1 - i} effect {j}";
+									return found;
+								}
 							}
 						}
 					}
 				}
 			}
 
+			path = null;
 			return null; // not found
 		}
 
@@ -649,11 +897,16 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		/// <item>layer N graphic M</item>
 		/// <item>layer N effect M</item>
 		/// </list>
-		/// where N and M are non-negative integers.
+		/// where N and M are non-negative integers. N addresses symbol layers
+		/// in the order drawn ("layer 0" is the symbol layer drawn first) and
+		/// M addresses effects in the order applied ("effect 0" is applied first).
 		/// </summary>
 		/// <typeparam name="T">Typically one of CIMGeometricEffect or CIMSymbolLayer
 		/// or CIMMarkerPlacement or a subtype of these.</typeparam>
 		/// <returns>The primitive found, or <c>null</c> if not found</returns>
+		/// <remarks>ArcGIS Pro draws symbol layers in the reverse order stored in
+		/// the SymbolLayers array (stupid), whereas effects (both local and global)
+		/// are applied in the same order as stored in the Effects array (good).</remarks>
 		public static T FindPrimitiveByPath<T>(CIMSymbol symbol, string spec) where T : CIMObject
 		{
 			if (string.IsNullOrEmpty(spec)) return null;
@@ -691,8 +944,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			if (string.Equals(root, "layer", StringComparison.OrdinalIgnoreCase))
 			{
-				var layers = multiLayerSymbol.SymbolLayers;
-				var layer = layers != null && index < layers.Length ? layers[index] : null;
+				var layer = GetSymbolLayer(multiLayerSymbol.SymbolLayers, index);
 				if (string.IsNullOrEmpty(suffix)) return layer as T;
 
 				if (string.Equals(suffix, "placement", StringComparison.OrdinalIgnoreCase))
@@ -702,10 +954,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 				if (string.Equals(suffix, "effect", StringComparison.OrdinalIgnoreCase))
 				{
-					var effects = layer?.Effects;
-					var effect = effects != null && localIndex < effects.Length
-						             ? effects[localIndex]
-						             : null;
+					var effect = GetGeometricEffect(layer?.Effects, localIndex);
 					return effect as T;
 				}
 
@@ -726,6 +975,26 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			throw InvalidPrimitiveSpec(spec);
 		}
 
+		private static CIMSymbolLayer GetSymbolLayer(CIMSymbolLayer[] layers, int index)
+		{
+			if (layers is null) return null;
+			if (index < 0) return null;
+			// ArcGIS Pro draws SymbolLayers[N-1] first and SymbolLayers[0] last.
+			// But we want the path "layer 0" to be symbol layer that draws first, so reverse:
+			index = layers.Length - 1 - index;
+			if (index < 0) return null;
+			return layers[index];
+		}
+
+		private static CIMGeometricEffect GetGeometricEffect(CIMGeometricEffect[] effects, int index)
+		{
+			if (effects is null) return null;
+			if (index < 0) return null;
+			if (index >= effects.Length) return null;
+			// Unlike symbol layers, with geom effects we don't reverse:
+			return effects[index];
+		}
+
 		private static ArgumentException InvalidPrimitiveSpec(string spec)
 		{
 			string message = $"Invalid primitive spec: {spec}. Expect \"effect N\" " +
@@ -741,26 +1010,31 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		#region Retrieval
 
-		public static CIMSymbol GetSymbol(CIMRenderer renderer, INamedValues feature = null, double scaleDenom = 0)
+		public static CIMSymbolReference GetSymbol(CIMRenderer renderer, INamedValues feature = null, double scaleDenom = 0)
+		{
+			return GetSymbol(renderer, feature, scaleDenom, out _);
+		}
+
+		public static CIMSymbolReference GetSymbol(CIMRenderer renderer, INamedValues feature, double scaleDenom, out CIMPrimitiveOverride[] overrides)
 		{
 			if (renderer is null)
 				throw new ArgumentNullException(nameof(renderer));
 
 			if (renderer is CIMSimpleRenderer simpleRenderer)
 			{
-				return GetSymbol(simpleRenderer, feature, scaleDenom);
+				return GetSymbol(simpleRenderer, feature, scaleDenom, out overrides);
 			}
 
 			if (renderer is CIMUniqueValueRenderer uvRenderer)
 			{
-				return GetSymbol(uvRenderer, feature, scaleDenom);
+				return GetSymbol(uvRenderer, feature, scaleDenom, out overrides);
 			}
 
 			throw new NotSupportedException(
 				$"{renderer.GetType().Name} is not supported, sorry");
 		}
 
-		private static CIMSymbol GetSymbol(CIMSimpleRenderer renderer, INamedValues feature, double scaleDenom)
+		private static CIMSymbolReference GetSymbol(CIMSimpleRenderer renderer, INamedValues feature, double scaleDenom, out CIMPrimitiveOverride[] overrides)
 		{
 			// CIMSimpleRenderer:
 			// - .Symbol: CIMSymbolReference
@@ -769,10 +1043,15 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			var symref = GetSymbolReference(renderer.Symbol, renderer.AlternateSymbols, scaleDenom);
 
-			return MaterializeSymbol(symref, feature, scaleDenom, renderer.VisualVariables);
+			// remember overrides before we apply (and remove) them:
+			overrides = symref.PrimitiveOverrides;
+
+			symref = TryApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
+
+			return symref;
 		}
 
-		private static CIMSymbol GetSymbol(CIMUniqueValueRenderer renderer, INamedValues feature, double scaleDenom)
+		private static CIMSymbolReference GetSymbol(CIMUniqueValueRenderer renderer, INamedValues feature, double scaleDenom, out CIMPrimitiveOverride[] overrides)
 		{
 			// CIMUniqueValueRenderer:
 			// - .Fields: string[]
@@ -797,7 +1076,28 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			var symref = GetSymbolReference(primary, alternates, scaleDenom);
 
-			return MaterializeSymbol(symref, feature, scaleDenom, renderer.VisualVariables);
+			// remember overrides before we apply (and remove) them:
+			overrides = symref.PrimitiveOverrides;
+
+			symref = TryApplyOverrides(symref, feature, scaleDenom, renderer.VisualVariables);
+
+			return symref;
+		}
+
+		private static CIMSymbolReference TryApplyOverrides(
+			CIMSymbolReference symref, INamedValues feature,
+			double scaleDenom, CIMVisualVariable[] visualVariables)
+		{
+			try
+			{
+				symref = ApplyOverrides(symref, feature, scaleDenom, visualVariables);
+			}
+			catch (Exception ex)
+			{
+				_msg.Warn($"Could not apply (all) overrides: {ex.Message}", ex);
+			}
+
+			return symref;
 		}
 
 		private static CIMUniqueValueClass FindClass(CIMUniqueValueRenderer renderer, INamedValues feature)
@@ -820,8 +1120,12 @@ namespace ProSuite.Commons.AGP.Core.Carto
 					featureValues[i] = Convert.ToString(value, invariant);
 				}
 
+				if (renderer.Groups is null) return null;
+
 				foreach (var group in renderer.Groups)
 				{
+					if (group.Classes is null) continue;
+
 					foreach (var clazz in group.Classes)
 					{
 						foreach (var combo in clazz.Values)
@@ -900,6 +1204,28 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return primary; // default if no alternate symbol matches
 		}
 
+		public static CIMSymbolReference ApplyOverrides(
+			CIMSymbolReference symref, INamedValues feature,
+			double scaleDenom = 0, CIMVisualVariable[] visualVariables = null)
+		{
+			if (symref is null) return null;
+
+			var symbol = MaterializeSymbol(symref, feature, scaleDenom, visualVariables);
+
+			return new CIMSymbolReference
+			       {
+				       SymbolName = symref.SymbolName,
+				       MinScale = symref.MinScale,
+				       MaxScale = symref.MaxScale,
+				       MinDistance = symref.MinDistance,
+				       MaxDistance = symref.MaxDistance,
+				       Symbol = symbol, // the now materialized symbol
+				       PrimitiveOverrides = null, // they have been applied
+				       ScaleDependentSizeVariation = null, // they have been applied
+				       StylePath = null // no longer from style
+			       };
+		}
+
 		private static CIMSymbol MaterializeSymbol(
 			CIMSymbolReference symref, INamedValues feature, double scaleDenom,
 			CIMVisualVariable[] visualVariables = null)
@@ -911,6 +1237,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			// - ScaleDependentSizeVariation: [{Scale, Size}]
 
 			// Make a clone, because we may modify it!
+
 			var symbol = (CIMSymbol) CIMObject.Clone(symref.Symbol);
 
 			if (feature != null && symref.PrimitiveOverrides is { Length: > 0 })
@@ -919,7 +1246,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				{
 					// - evaluate mapping.Expression (or Arcade: mapping.ValueExpressionInfo) against given feature
 					// - find primitive by mapping.PrimitiveName (see SymbolUtils on how to traverse a CIMSymbol)
-					// - replace primitive's mapping.PropertyName by expression value
+					// - set expression value on primitive's property named mapping.PropertyName
 
 					try
 					{
@@ -929,7 +1256,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 					{
 						var expr = mapping.ValueExpressionInfo?.Expression ??
 								   mapping.Expression ?? "(n/a)";
-						throw new Exception(
+						_msg.Warn(
 							$"Cannot apply primitive override (primitive {mapping.PrimitiveName}, " +
 							$"property {mapping.PropertyName}, value {expr}): {ex.Message}");
 					}
@@ -965,16 +1292,39 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			var property = primitive.GetType().GetProperty(mapping.PropertyName);
 			if (property is null)
 			{
-				throw new Exception(
-					$"Property '{mapping.PropertyName}' not found on {primitive.GetType().Name}");
+				throw new Exception($"Property '{mapping.PropertyName}' not found on {primitive.GetType().Name}");
 			}
 
 			object value = Evaluate(mapping.Expression, mapping.ValueExpressionInfo, feature);
-			if (value != null)
+			if (value != null && value != DBNull.Value)
 			{
 				property.SetValue(primitive, value);
 			}
 			// else: use symbol's default value
+		}
+
+		/// <summary>
+		/// Override the named property of the named primitive in the given symbol
+		/// with the given value. Evidently, this modifies the given symbol!
+		/// Caller's responsibility to ensure the given value is compatible
+		/// with the named property.
+		/// </summary>
+		public static void ApplyOverride(CIMSymbol symbol, string primitiveName,
+		                                 string propertyName, object value)
+		{
+			var primitive = FindPrimitiveByName<CIMObject>(symbol, primitiveName);
+			if (primitive is null)
+			{
+				throw new Exception($"Graphic primitive '{primitiveName}' not found in symbol");
+			}
+
+			var property = primitive.GetType().GetProperty(propertyName);
+			if (property is null)
+			{
+				throw new Exception($"Property '{propertyName}' not found on {primitive.GetType().Name}");
+			}
+
+			property.SetValue(primitive, value);
 		}
 
 		private static object Evaluate(
@@ -1000,7 +1350,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			if (arcade is { Expression.Length: > 0 })
 			{
 				// TODO handle the simple case: $feature.FIELDNAME
-
+				// TODO since Pro SDK 3.x there's an Arcade evaluator: use it (if dependencies are ok)
 				throw new NotImplementedException("Arcade expression evaluation is not yet implemented");
 			}
 
@@ -1008,6 +1358,119 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		}
 
 		private static readonly Regex _fieldExpressionRegex = new(@"^\s*\[\s*([ _\w]+)\s*\]\s*$");
+		private static readonly Regex _fieldArcadeRegex = new(@"^\s*\$feature\s*\.\s*([_\w]+)\s*$");
+
+		/// <summary>
+		/// Get the name of the field that the given primitive override
+		/// refers to, or null if the override does not immediately refer
+		/// to a field (an expression is considered not referring to a field).
+		/// </summary>
+		/// <returns>Field name or <c>null</c></returns>
+		public static string GetOverrideField(CIMPrimitiveOverride po)
+		{
+			if (po is null) return null;
+			var expression = po.Expression;
+			if (! string.IsNullOrWhiteSpace(expression))
+			{
+				var match = _fieldExpressionRegex.Match(expression);
+				if (match.Success)
+				{
+					string fieldName = match.Result("$1");
+					return fieldName;
+				}
+
+				return expression.Trim(); // assume expr is a field name TODO
+			}
+
+			var info = po.ValueExpressionInfo;
+			if (info is { Expression.Length: > 0 })
+			{
+				var match = _fieldArcadeRegex.Match(info.Expression);
+				if (match.Success)
+				{
+					string fieldName = match.Result("$1");
+					return fieldName;
+				}
+			}
+
+			return null; // not just a field name
+		}
+
+		#endregion
+
+		#region Line width
+
+		/// <summary>
+		/// Get the width of a line to the left and right of the shape.
+		/// Only line strokes are considered, markers along a line are
+		/// ignored. Any offset effects are taken into account, and may
+		/// be the cause for <paramref name="leftPoints"/> differing
+		/// from <paramref name="rightPoints"/> (asymmetric line symbol).
+		/// </summary>
+		/// <param name="symbol">The line symbol whose width to find
+		/// (you probably want this to be a symbol with overrides applied)</param>
+		/// <param name="leftPoints">Line width to the left of the shape in points</param>
+		/// <param name="rightPoints">Line width to the right of the shape in points</param>
+		/// <returns>True if there's at least one stroke layer, and thus
+		/// a line width could be derived; false otherwise.</returns>
+		/// <remarks>To get overall line width, add <paramref name="leftPoints"/>
+		/// and <paramref name="rightPoints"/> together.</remarks>
+		public static bool GetLineWidth(CIMLineSymbol symbol,
+		                                out double leftPoints, out double rightPoints)
+		{
+			leftPoints = rightPoints = double.NaN;
+			if (symbol is null) return false;
+
+			var symbolLayers = symbol.SymbolLayers;
+			if (symbolLayers is null) return false;
+
+			bool hasStroke = false;
+			double left = double.MaxValue;
+			double right = double.MinValue;
+
+			double globalOffset = GetOffset(symbol.Effects);
+
+			foreach (var layer in symbolLayers)
+			{
+				if (layer is CIMStroke stroke)
+				{
+					hasStroke = true;
+
+					double localOffset = GetOffset(stroke.Effects);
+					double width = stroke.Width;
+
+					double halfWidth = width / 2;
+					left = Math.Min(left, globalOffset + localOffset - halfWidth);
+					right = Math.Max(right, globalOffset + localOffset + halfWidth);
+				}
+				// else: skip this symbol layer; we look at line (stroke) width only
+			}
+
+			leftPoints = -left; // negate!
+			rightPoints = right; // don't!
+
+			return hasStroke;
+		}
+
+		/// <returns>cumulative offset over all offset effects
+		/// amongst those given; left is negative (for consistency
+		/// with <see cref="IGeometryEngine.Offset"/></returns>
+		private static double GetOffset(IEnumerable<CIMGeometricEffect> effects)
+		{
+			if (effects is null) return 0;
+
+			double offset = 0;
+
+			foreach (var effect in effects.OfType<CIMGeometricEffectOffset>())
+			{
+				offset += effect.Offset;
+			}
+
+			// invert: positive is left on the geometric effect,
+			// but we prefer negative for left for consistency
+			// with IGeometryEngine.Offset():
+			return -offset;
+		}
 
 		#endregion
 
@@ -1031,7 +1494,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		/// <remarks>
 		/// Usage: <c>foo.Array = AddOne(foo.Array, item)</c>
 		/// </remarks>
-		private static T[] AddOne<T>([CanBeNull] T[] array, T item)
+		public static T[] AddOne<T>([CanBeNull] T[] array, T item)
 		{
 			if (item == null)
 				throw new ArgumentNullException(nameof(item));

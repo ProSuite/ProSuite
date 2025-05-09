@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {

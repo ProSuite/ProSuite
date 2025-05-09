@@ -21,6 +21,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		public bool UseMinimumTolerance { get; set; }
 
+		public double? CustomTolerance { get; set; }
+
 		public SubcurveFilter SubcurveFilter { get; set; }
 
 		public IEnvelope ClipExtent { get; set; }
@@ -34,14 +36,11 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		public void Prepare(IEnumerable<IFeature> sourceFeatures,
 		                    IList<IFeature> targetFeatures,
 		                    IEnvelope processingExtent,
-		                    bool useMinimalTolerance,
 		                    ReshapeCurveFilterOptions filterOptions)
 		{
 			ClipExtent = processingExtent;
-			UseMinimumTolerance = useMinimalTolerance;
 
-			IList<IGeometry> sourceGeometries =
-				GdbObjectUtils.GetGeometries(sourceFeatures);
+			IList<IGeometry> sourceGeometries = GdbObjectUtils.GetGeometries(sourceFeatures);
 
 			// Consider remembering the pre-processed sources. But clipping is really fast.
 			List<IPolyline> preprocessedSource =
@@ -54,7 +53,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			var targetGeometries = GdbObjectUtils.GetGeometries(targetFeatures);
 
 			SubcurveFilter.PrepareFilter(
-				preprocessedSource, targetGeometries, useMinimalTolerance, filterOptions);
+				preprocessedSource, targetGeometries, UseMinimumTolerance, filterOptions);
 
 			foreach (IGeometry sourceGeometry in sourceGeometries)
 			{
@@ -256,7 +255,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// <param name="intersectionPoints"></param>
 		/// <param name="targetPolyline"></param>
 		/// <returns></returns>
-		private static IEnumerable<CutSubcurve> CalculateReshapeSubcurves(
+		private IEnumerable<CutSubcurve> CalculateReshapeSubcurves(
 			[NotNull] IPolyline sourcePolyline,
 			[NotNull] IGeometryCollection differences,
 			[NotNull] IPointCollection intersectionPoints,
@@ -298,7 +297,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// <param name="target"></param>
 		/// <returns></returns>
 		[NotNull]
-		private static IEnumerable<CutSubcurve> GetCutSubcurves(
+		private IEnumerable<CutSubcurve> GetCutSubcurves(
 			[NotNull] IGeometryCollection differences,
 			int differencePathIndexToSplit,
 			[NotNull] IGeometry cuttingGeometry,
@@ -309,8 +308,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			var curveToSplit = (IPath) differences.Geometry[differencePathIndexToSplit];
 
 			IGeometry highLevelCurveToSplit = GeometryUtils.GetHighLevelGeometry(
-				curveToSplit,
-				true);
+				curveToSplit, true);
 
 			// Enlarge search tolerance to avoid missing points because the intersection points are
 			// 'found' between the target vertex and the actual source-target intersection.
@@ -319,8 +317,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			// inaccurate by the two vertices being simplified (at data tolerance) into one intermediate.
 			double searchToleranceFactor = 2 * Math.Sqrt(2);
 			double stitchPointSearchTol =
-				GeometryUtils.GetXyTolerance((IGeometry) differences) *
-				searchToleranceFactor;
+				CustomTolerance ??
+				GeometryUtils.GetXyTolerance((IGeometry) differences) * searchToleranceFactor;
 
 			if (intersectionPoints.PointCount == 0 ||
 			    GeometryUtils.Disjoint(cuttingGeometry, highLevelCurveToSplit))
@@ -554,7 +552,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			IPolyline difference =
 				GetDifferencePolylineXyz(targetPolyline, sourcePolyline);
 
-			if (UseMinimumTolerance)
+			if (UseMinimumTolerance || CustomTolerance != null)
 			{
 				// Take the actual target segments from the actual target to avoid artificial part boundaries 
 				// (like stitch points) in the interior of segments where the source and the target are almost congruent.
@@ -590,13 +588,14 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[NotNull] IPolyline onPolyline,
 			[NotNull] IPolyline differentFrom)
 		{
-			double xyTolerance = GeometryUtils.GetXyTolerance(onPolyline);
+			double xyTolerance = CustomTolerance ?? GeometryUtils.GetXyTolerance(onPolyline);
 
 			// For the Geom-implementation, use resolution / 2 because it is based on actual Z
 			// differences without snapping intermediate results to spatial reference.
-			double zTolerance = UseMinimumTolerance
-				                    ? GeometryUtils.GetZResolution(differentFrom) / 2
-				                    : GeometryUtils.GetZTolerance(differentFrom);
+			double zTolerance =
+				CustomTolerance ?? (UseMinimumTolerance
+					                    ? GeometryUtils.GetZResolution(differentFrom) / 2
+					                    : GeometryUtils.GetZTolerance(differentFrom));
 
 			return ReshapeUtils.GetDifferencePolylineXyz(
 				onPolyline, differentFrom, xyTolerance, zTolerance);
@@ -612,12 +611,14 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// <param name="originalTolerance"></param>
 		/// <returns></returns>
 		[NotNull]
-		private static IPolyline GetTargetSegmentsAlong(
+		private IPolyline GetTargetSegmentsAlong(
 			[NotNull] IPolyline targetPolyline,
 			[NotNull] IPolyline alongPolyline,
 			double originalTolerance)
 		{
 			// NOTE: The targetPolyline must be simplified i.e. the adjacent parts should be merged.
+
+			double searchTolerance = CustomTolerance ?? originalTolerance;
 
 			var exactDifferences =
 				(IGeometryCollection) GeometryFactory.CreateEmptyGeometry(alongPolyline);
@@ -625,8 +626,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			foreach (IPath differencePath in GeometryUtils.GetPaths(alongPolyline))
 			{
 				IPath targetPath = GetUniqueTargetPathRunningAlong(
-					targetPolyline, differencePath,
-					originalTolerance);
+					targetPolyline, differencePath, searchTolerance);
 
 				// NOTE: Sometimes, especially with non-linear segments and non-micro-resolution, this logic does not work because
 				//       the difference between non-linear geometries can look extremely weird (i.e. incorrect multiparts)

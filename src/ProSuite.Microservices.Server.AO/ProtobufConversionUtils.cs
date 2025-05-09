@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
@@ -16,8 +15,10 @@ using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
+using ProSuite.Microservices.Client;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.Microservices.Server.AO.Geodatabase;
 using ProSuite.Microservices.Server.AO.QA;
 
@@ -60,11 +61,21 @@ namespace ProSuite.Microservices.Server.AO
 		{
 			var result = new Dictionary<long, GdbFeatureClass>();
 
+			// Create minimal workspace (for equality comparisons)
+			var workspaces = new Dictionary<long, GdbWorkspace>();
+
 			foreach (ObjectClassMsg classMsg in objectClassMsgs)
 			{
+				if (! workspaces.TryGetValue(classMsg.WorkspaceHandle, out GdbWorkspace workspace))
+				{
+					workspace = GdbWorkspace.CreateEmptyWorkspace(classMsg.WorkspaceHandle);
+					workspaces.Add(classMsg.WorkspaceHandle, workspace);
+				}
+
 				if (! result.ContainsKey(classMsg.ClassHandle))
 				{
-					GdbFeatureClass gdbTable = (GdbFeatureClass) FromObjectClassMsg(classMsg, null);
+					GdbFeatureClass gdbTable =
+						(GdbFeatureClass) FromObjectClassMsg(classMsg, workspace);
 
 					result.Add(classMsg.ClassHandle, gdbTable);
 				}
@@ -262,6 +273,22 @@ namespace ProSuite.Microservices.Server.AO
 						         ProtobufGeometryUtils.FromSpatialReferenceMsg(
 							         objectClassMsg.SpatialReference)
 				         };
+
+				if (objectClassMsg.Fields == null || objectClassMsg.Fields.Count == 0)
+				{
+					// The shape field can be important to determine Z/M awareness, etc:
+					ISpatialReference spatialReference = result.SpatialReference;
+
+					Assert.NotNull(spatialReference, "No spatial reference provided");
+
+					bool hasZ = spatialReference.HasZPrecision();
+					bool hasM = spatialReference.HasMPrecision();
+					IField shapeField = FieldUtils.CreateShapeField(
+						result.ShapeFieldName, geometryType, spatialReference,
+						0d, hasZ, hasM);
+
+					result.AddField(shapeField);
+				}
 			}
 
 			AddFields(objectClassMsg, result, geometryType);
@@ -349,7 +376,7 @@ namespace ProSuite.Microservices.Server.AO
 					xmlParameter = new XmlDatasetTestParameterValue()
 					               {
 						               TestParameterName = parameterMsg.Name,
-						               Value = parameterMsg.Value,
+						               Value = ProtobufGeomUtils.EmptyToNull(parameterMsg.Value),
 						               WorkspaceId = parameterMsg.WorkspaceId,
 						               WhereClause = parameterMsg.WhereClause
 					               };
@@ -359,7 +386,7 @@ namespace ProSuite.Microservices.Server.AO
 					xmlParameter = new XmlScalarTestParameterValue()
 					               {
 						               TestParameterName = parameterMsg.Name,
-						               Value = parameterMsg.Value
+						               Value = ProtobufGeomUtils.EmptyToNull(parameterMsg.Value)
 					               };
 				}
 
@@ -390,13 +417,20 @@ namespace ProSuite.Microservices.Server.AO
 		private static GdbFeature CreateGdbFeature(GdbObjectMsg gdbObjectMsg,
 		                                           GdbFeatureClass featureClass)
 		{
-			ISpatialReference classSpatialRef = DatasetUtils.GetSpatialReference(featureClass);
+			GdbFeature result = GdbFeature.Create((int) gdbObjectMsg.ObjectId, featureClass);
 
-			IGeometry shape =
-				ProtobufGeometryUtils.FromShapeMsg(gdbObjectMsg.Shape, classSpatialRef);
+			ShapeMsg shapeBuffer = gdbObjectMsg.Shape;
 
-			var result = GdbFeature.Create((int) gdbObjectMsg.ObjectId, featureClass);
-			result.Shape = shape;
+			if (shapeBuffer != null)
+			{
+				ISpatialReference classSpatialRef = DatasetUtils.GetSpatialReference(featureClass);
+
+				// NOTE: Setting the shape can be slow due to the Property-Set work-arounds
+				IGeometry shape =
+					ProtobufGeometryUtils.FromShapeMsg(shapeBuffer, classSpatialRef);
+
+				result.Shape = shape;
+			}
 
 			return result;
 		}
@@ -459,56 +493,25 @@ namespace ProSuite.Microservices.Server.AO
 			{
 				AttributeValue attributeValue = gdbObjectMsg.Values[index];
 
-				switch (attributeValue.ValueCase)
-				{
-					case AttributeValue.ValueOneofCase.None:
-						break;
-					case AttributeValue.ValueOneofCase.DbNull:
-						intoResult.set_Value(index, DBNull.Value);
-						break;
-					case AttributeValue.ValueOneofCase.ShortIntValue:
-						intoResult.set_Value(index, attributeValue.ShortIntValue);
-						break;
-					case AttributeValue.ValueOneofCase.LongIntValue:
-						intoResult.set_Value(index, attributeValue.LongIntValue);
-						break;
-					case AttributeValue.ValueOneofCase.FloatValue:
-						intoResult.set_Value(index, attributeValue.FloatValue);
-						break;
-					case AttributeValue.ValueOneofCase.DoubleValue:
-						intoResult.set_Value(index, attributeValue.DoubleValue);
-						break;
-					case AttributeValue.ValueOneofCase.StringValue:
-						intoResult.set_Value(index, attributeValue.StringValue);
-						break;
-					case AttributeValue.ValueOneofCase.DateTimeTicksValue:
-						intoResult.set_Value(
-							index, new DateTime(attributeValue.DateTimeTicksValue));
-						break;
-					case AttributeValue.ValueOneofCase.UuidValue:
-						var guid = new Guid(attributeValue.UuidValue.Value.ToByteArray());
-						IUID uid = UIDUtils.CreateUID(guid);
-						intoResult.set_Value(index, uid);
-						break;
-					case AttributeValue.ValueOneofCase.BlobValue:
-						intoResult.set_Value(index, attributeValue.BlobValue);
-						break;
-					default:
-						if (table.Fields.Field[index].Type == esriFieldType.esriFieldTypeGeometry)
-						{
-							// Leave empty, it is already assigned to the Shape property
-							break;
-						}
+				object valueObj = ProtoDataQualityUtils.FromAttributeValue(attributeValue);
 
-						throw new ArgumentOutOfRangeException();
+				// Special case:
+				if (valueObj is Guid guid)
+				{
+					valueObj = UIDUtils.CreateUID(guid);
+				}
+
+				if (valueObj != null)
+				{
+					intoResult.set_Value(index, valueObj);
 				}
 			}
 		}
 
-		private static DateTime? FromTicks(long ticks)
+		public static DateTime? FromTicks(long ticks)
 		{
 			DateTime? defaultCreationDate =
-				ticks == 0
+				ticks <= 0
 					? (DateTime?) null
 					: new DateTime(ticks);
 			return defaultCreationDate;

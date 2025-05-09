@@ -10,11 +10,11 @@ using CommandLine;
 using Grpc.Core;
 using Grpc.Health.V1;
 using Grpc.HealthCheck;
+using log4net.Util;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Text;
 using ProSuite.Commons.Xml;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Server.AO.QA;
@@ -343,6 +343,9 @@ namespace ProSuite.Microservices.Server.AO
 			_msg.InfoFormat("Logging configured for {0} ({1}) version {2}",
 			                exeAssembly.Location, bitness,
 			                executingAssembly.GetName().Version);
+
+			_msg.DebugFormat("Loaded log4net version: {0}",
+			                 typeof(GlobalContextProperties).Assembly.FullName);
 
 			string frameworkDescription = RuntimeInformation.FrameworkDescription;
 

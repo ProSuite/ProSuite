@@ -31,6 +31,12 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			set { _standardSubcurveCalculator.UseMinimumTolerance = value; }
 		}
 
+		public double? CustomTolerance
+		{
+			get { return _standardSubcurveCalculator.CustomTolerance; }
+			set { _standardSubcurveCalculator.CustomTolerance = value; }
+		}
+
 		public SubcurveFilter SubcurveFilter
 		{
 			get { return _standardSubcurveCalculator.SubcurveFilter; }
@@ -46,11 +52,10 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		public void Prepare(IEnumerable<IFeature> selectedFeatures,
 		                    IList<IFeature> targetFeatures,
 		                    IEnvelope processingExtent,
-		                    bool useMinimalTolerance,
 		                    ReshapeCurveFilterOptions filterOptions)
 		{
 			_standardSubcurveCalculator.Prepare(selectedFeatures, targetFeatures,
-			                                    processingExtent, useMinimalTolerance,
+			                                    processingExtent,
 			                                    filterOptions);
 		}
 

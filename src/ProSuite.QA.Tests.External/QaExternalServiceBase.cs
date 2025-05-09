@@ -17,9 +17,9 @@ using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.AO;
-using ProSuite.Microservices.Client.QualityTestService;
+using ProSuite.Microservices.Client.GrpcCore.QualityTestService;
 using ProSuite.Microservices.Definitions.QA.Test;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 

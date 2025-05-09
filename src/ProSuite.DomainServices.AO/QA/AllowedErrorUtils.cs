@@ -8,6 +8,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
@@ -61,9 +62,8 @@ namespace ProSuite.DomainServices.AO.QA
 				ITable table = pair.Key;
 				DatasetUtils.DeleteRows(table, oids);
 
-				_msg.VerboseDebug(
-					() =>
-						$"Deleted from {DatasetUtils.GetName(table)}: {StringUtils.Concatenate(oids, ", ")}");
+				_msg.Debug($"Deleted allowed errors from {DatasetUtils.GetName(table)}: " +
+				           $"{StringUtils.Concatenate(oids, ", ")}");
 
 				_msg.DebugStopTiming(watch, "Deleted {0} allowed errors in {1}",
 				                     oids.Count, DatasetUtils.GetName(table));
@@ -321,7 +321,7 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 			catch (InvolvedTableOpenException e)
 			{
-				_msg.WarnFormat(e.Message);
+				_msg.Warn(ExceptionUtils.FormatMessage(e));
 
 				// don't invalidate the allowed errors that involve a table which (currently?) can't be opened
 				return;
@@ -465,16 +465,14 @@ namespace ProSuite.DomainServices.AO.QA
 				string message;
 				if (involvedObjectDataset.Deleted)
 				{
-					message = string.Format(
-						"The dataset '{0}' referenced in allowed errors is registered as deleted, unable to open",
-						involvedObjectDataset.Name);
+					message = $"The dataset '{involvedObjectDataset.Name}' referenced in allowed " +
+					          "errors is registered as deleted, unable to open";
 				}
 				else
 				{
-					message = string.Format(
-						"Error opening dataset '{0}' referenced in allowed errors: {1}",
-						involvedObjectDataset.Name,
-						e.Message);
+					message =
+						$"Error opening dataset '{involvedObjectDataset.Name}' referenced in " +
+						$"allowed errors: {ExceptionUtils.FormatMessage(e)}";
 				}
 
 				throw new InvolvedTableOpenException(message, e);

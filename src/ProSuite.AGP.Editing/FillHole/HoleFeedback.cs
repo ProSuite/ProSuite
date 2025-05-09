@@ -4,8 +4,8 @@ using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole;
 
 namespace ProSuite.AGP.Editing.FillHole
 {

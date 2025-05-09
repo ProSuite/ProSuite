@@ -5,6 +5,7 @@ using ESRI.ArcGIS.DataSourcesRaster;
 #endif
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
@@ -49,7 +50,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
 			SpatialReferenceDescriptor spatialReferenceDescriptor =
-				(dataset.Model as Model)?.SpatialReferenceDescriptor;
+				dataset.Model?.SpatialReferenceDescriptor;
 
 			return (IObjectClass) _workspaceProxy.OpenTable(
 				GetGdbElementName(dataset),
@@ -57,11 +58,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 				spatialReferenceDescriptor);
 		}
 
-		public override ITopology OpenTopology(ITopologyDataset dataset)
+		public override TopologyReference OpenTopology(ITopologyDataset dataset)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
-			return _workspaceProxy.OpenTopology(GetGdbElementName(dataset));
+			ITopology topology = _workspaceProxy.OpenTopology(GetGdbElementName(dataset));
+
+			return new TopologyReference(topology);
 		}
 
 		public override RasterDatasetReference OpenRasterDataset(IDdxRasterDataset dataset)

@@ -14,7 +14,8 @@ using ProSuite.Commons.AO.Test;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
+using TestCategory = ProSuite.Commons.Test.TestCategory;
 
 namespace ProSuite.Microservices.Server.AO.Test
 {
@@ -87,7 +88,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.Performance)]
+		[Category(TestCategory.Performance)]
 		public void CanConvertPolygonToFromShapeMsgFastEnough()
 		{
 			string xmlFile = TestData.GetHugeLockergesteinPolygonPath();
@@ -322,7 +323,11 @@ namespace ProSuite.Microservices.Server.AO.Test
 			Assert.AreEqual(GdbObjectUtils.GetSubtypeCode(feature),
 			                GdbObjectUtils.GetSubtypeCode(rehydrated));
 
-			Assert.AreEqual(feature.Fields.FieldCount, rehydrated.Fields.FieldCount);
+			int newFieldCount = rehydrated.Fields.FieldCount;
+			// NOTE: We add the OID field explicitly to prevent functionality degradation
+			//       e.g. in expression filters.
+			Assert.IsTrue(newFieldCount >= feature.Fields.FieldCount);
+
 			Assert.AreEqual(feature.Class.ObjectClassID, rehydrated.Class.ObjectClassID);
 
 			Assert.IsTrue(GeometryUtils.AreEqual(feature.Shape, rehydrated.Shape));

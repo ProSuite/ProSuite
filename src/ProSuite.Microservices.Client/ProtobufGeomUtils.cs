@@ -1,13 +1,13 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Client
 {
 	public static class ProtobufGeomUtils
 	{
 		[CanBeNull]
-		public static EnvelopeMsg ToEnvelopeMsg([CanBeNull] EnvelopeXY envelope)
+		public static EnvelopeMsg ToEnvelopeMsg([CanBeNull] IBoundedXY envelope)
 		{
 			if (envelope == null)
 			{

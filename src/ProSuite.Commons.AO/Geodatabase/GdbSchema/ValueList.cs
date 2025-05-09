@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using ESRI.ArcGIS.esriSystem;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {

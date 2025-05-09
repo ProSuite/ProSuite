@@ -40,6 +40,43 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 		}
 
 		[Test]
+		public void CanGetIdList()
+		{
+			const string dsName1 = "SCHEMA.DATASET1";
+			const string dsName2 = "SCHEMA.DATASET2";
+			const string dsName3 = "SCHEMA.DATASET3";
+			DdxModel m = CreateModel();
+
+			ObjectDataset ds1 = CreateObjectDataset(dsName1);
+			ObjectDataset ds2 = CreateObjectDataset(dsName2);
+			ObjectDataset ds3 = CreateObjectDataset(dsName3);
+
+			m.AddDataset(ds1);
+			m.AddDataset(ds2);
+			m.AddDataset(ds3);
+
+			CreateSchema(m);
+
+			var idList = new List<int>
+			             {
+				             ds1.Id,
+				             ds2.Id
+			             };
+
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					Assert.IsFalse(UnitOfWork.HasChanges);
+
+					IList<Dataset> list = Repository.Get(idList);
+					Assert.AreEqual(2, list.Count);
+
+					Assert.IsTrue(list.Any(ds => ds.Name == dsName1));
+					Assert.IsTrue(list.Any(ds => ds.Name == dsName2));
+				});
+		}
+
+		[Test]
 		public void CanGetErrorDatasets()
 		{
 			const string dsPoints = "SCHEMA.ERROR_POINTS";

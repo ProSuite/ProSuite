@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using ProSuite.Commons.Progress;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Server.AO.QA.Distributed
 {

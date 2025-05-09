@@ -1,6 +1,6 @@
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 
@@ -20,7 +20,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		IObjectClass OpenObjectClass([NotNull] IObjectDataset dataset);
 
 		[CanBeNull]
-		ITopology OpenTopology([NotNull] ITopologyDataset dataset);
+		TopologyReference OpenTopology([NotNull] ITopologyDataset dataset);
 
 		[CanBeNull]
 		RasterDatasetReference OpenRasterDataset([NotNull] IDdxRasterDataset dataset);

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
@@ -95,7 +94,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 				foreach (long oid in involvedTable.ObjectIds)
 				{
 					involvedRows.Add(
-						new InvolvedRow(involvedTable.TableName, Convert.ToInt32(oid)));
+						new InvolvedRow(involvedTable.TableName, oid));
 				}
 			}
 

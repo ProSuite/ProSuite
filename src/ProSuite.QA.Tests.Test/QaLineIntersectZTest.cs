@@ -40,9 +40,9 @@ namespace ProSuite.QA.Tests.Test
 
 		private static void TestWithConstraint(IFeatureWorkspace ws)
 		{
-			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference
-			((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
-			 true);
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95,
+				WellKnownVerticalCS.LHN95);
 			SpatialReferenceUtils.SetZDomain(sr, 0, 1000, 0.001, 0.002);
 
 			IFieldsEdit fieldsBahn = new FieldsClass();
@@ -107,14 +107,24 @@ namespace ProSuite.QA.Tests.Test
 				new[] { ReadOnlyTableFactory.Create(fcBahn), ReadOnlyTableFactory.Create(fcStr) },
 				0.5, "U.Stufe > L.Stufe");
 
-			using (var testRunner = new QaTestRunner(test))
+			using (var testRunner = new QaTestRunner(test)
+			                        {
+				                        KeepGeometry = true
+			                        })
 			{
 				testRunner.Execute();
-				Assert.AreEqual(
-					6, testRunner.Errors.Count); // mirrored errors not eliminated
+
+				// Mirrored errors not eliminated:
+				Assert.AreEqual(6, testRunner.Errors.Count);
+
+				CheckSpatialReference(testRunner.ErrorGeometries[0], sr);
 			}
 
-			var ctr = new QaContainerTestRunner(1000, test);
+			var ctr = new QaContainerTestRunner(1000, test)
+			          {
+				          KeepGeometry = true
+			          };
+
 			ctr.Execute();
 			Assert.AreEqual(3, ctr.Errors.Count);
 			// mirrored errors eliminated by QaErrorAdministrator
@@ -128,6 +138,8 @@ namespace ProSuite.QA.Tests.Test
 			Assert.AreEqual(
 				"Strasse,3; Bahn,1: Constraint 'U.Stufe > L.Stufe' is not fulfilled: U.STUFE = 0; L.STUFE = 1 [LineIntersectZ.ConstraintNotFulfilled] {Shape}",
 				ctr.Errors[2].ToString());
+
+			CheckSpatialReference(ctr.ErrorGeometries[0], sr);
 		}
 
 		[Test]
@@ -138,9 +150,9 @@ namespace ProSuite.QA.Tests.Test
 
 		private static void TestMinimumMaximum(IFeatureWorkspace ws)
 		{
-			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference
-			((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
-			 true);
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95,
+				WellKnownVerticalCS.LHN95);
 			SpatialReferenceUtils.SetZDomain(sr, 0, 1000, 0.001, 0.002);
 
 			IFieldsEdit fieldsBahn = new FieldsClass();
@@ -194,19 +206,40 @@ namespace ProSuite.QA.Tests.Test
 			str3.Store();
 
 			var test = new QaLineIntersectZ(
-				new[] { ReadOnlyTableFactory.Create(fcBahn), ReadOnlyTableFactory.Create(fcStr) },
+				new List<IReadOnlyFeatureClass>
+				{ ReadOnlyTableFactory.Create(fcBahn), ReadOnlyTableFactory.Create(fcStr) },
 				0.5, 2.5, null);
-			using (var testRunner = new QaTestRunner(test))
+
+			using (var testRunner = new QaTestRunner(test)
+			                        {
+				                        KeepGeometry = true
+			                        })
 			{
 				testRunner.Execute();
-				Assert.AreEqual(
-					4, testRunner.Errors.Count); // mirrored errors not elimated
+
+				// Mirrored errors not eliminated:
+				Assert.AreEqual(4, testRunner.Errors.Count);
+
+				CheckSpatialReference(testRunner.Errors[0].Geometry, sr);
 			}
 
-			var ctr = new QaContainerTestRunner(1000, test);
+			var ctr = new QaContainerTestRunner(1000, test)
+			          {
+				          KeepGeometry = true
+			          };
+
 			ctr.Execute();
 			Assert.AreEqual(2, ctr.Errors.Count);
+			IGeometry geometry = ctr.Errors[0].Geometry;
+			CheckSpatialReference(geometry, sr);
 			// mirrored errors eliminated by QaErrorAdministrator
+		}
+
+		private static void CheckSpatialReference(IGeometry geometry, ISpatialReference sr)
+		{
+			Assert.NotNull(geometry);
+
+			Assert.IsTrue(SpatialReferenceUtils.AreEqual(sr, geometry.SpatialReference));
 		}
 
 		[Test]
@@ -217,9 +250,9 @@ namespace ProSuite.QA.Tests.Test
 
 		private static void TestMinimumMaximumExpressions(IFeatureWorkspace ws)
 		{
-			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference
-			((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
-			 true);
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95,
+				WellKnownVerticalCS.LHN95);
 			SpatialReferenceUtils.SetZDomain(sr, 0, 1000, 0.001, 0.002);
 
 			IFieldsEdit fieldsBahn = new FieldsClass();
@@ -285,17 +318,28 @@ namespace ProSuite.QA.Tests.Test
 				           MaximumZDifferenceExpression = "IIF(L.OBJECTID > 0, 2.5, 9999)"
 			           };
 
-			using (var testRunner = new QaTestRunner(test))
+			using (var testRunner = new QaTestRunner(test)
+			                        {
+				                        KeepGeometry = true
+			                        })
 			{
 				testRunner.Execute();
-				Assert.AreEqual(
-					4, testRunner.Errors.Count); // mirrored errors not elimated
+
+				// Mirrored errors not eliminated:
+				Assert.AreEqual(4, testRunner.Errors.Count);
+
+				CheckSpatialReference(testRunner.ErrorGeometries[0], sr);
 			}
 
-			var ctr = new QaContainerTestRunner(1000, test);
+			var ctr = new QaContainerTestRunner(1000, test)
+			          {
+				          KeepGeometry = true
+			          };
 			ctr.Execute();
 			Assert.AreEqual(2, ctr.Errors.Count);
 			// mirrored errors eliminated by QaErrorAdministrator
+
+			CheckSpatialReference(ctr.Errors[0].Geometry, sr);
 		}
 
 		[Test]
@@ -306,9 +350,9 @@ namespace ProSuite.QA.Tests.Test
 
 		private static void TestMultipleErrors(IFeatureWorkspace ws)
 		{
-			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference
-			((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
-			 true);
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95,
+				WellKnownVerticalCS.LHN95);
 			SpatialReferenceUtils.SetZDomain(sr, 0, 1000, 0.001, 0.002);
 
 			IFieldsEdit fieldsBahn = new FieldsClass();
@@ -364,11 +408,17 @@ namespace ProSuite.QA.Tests.Test
 				2.5);
 
 			var handler = new ErrorHandler();
-			var ctr = new QaContainerTestRunner(1000, test);
+			var ctr = new QaContainerTestRunner(1000, test)
+			          {
+				          KeepGeometry = true
+			          };
+
 			ctr.TestContainer.QaError += handler.QaError;
 			ctr.Execute();
 			Assert.IsTrue(ctr.Errors.Count == 2);
 			// mirrored errors eliminated by QaErrorAdministrator
+
+			CheckSpatialReference(ctr.ErrorGeometries[0], sr);
 		}
 
 		private class ErrorHandler

@@ -7,11 +7,11 @@ using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Globalization;
 using ProSuite.Commons.IO;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.QA.SpecificationReport;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.Geodatabase;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DomainModel.AO.Test.QA.SpecificationReport

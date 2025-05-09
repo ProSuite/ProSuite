@@ -14,7 +14,7 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
@@ -86,7 +86,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 						ISpatialReference sr = ProtobufGeometryUtils.FromSpatialReferenceMsg(
 							objectClassMsg.SpatialReference);
 
-						model.SpatialReferenceDescriptor = new SpatialReferenceDescriptor(sr);
+						model.SpatialReferenceDescriptor =
+							SpatialReferenceDescriptorExtensions.CreateFrom(sr);
 					}
 
 					model.AddDataset(dataset);
@@ -107,7 +108,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			if (spatialReference != null)
 			{
 				model.SpatialReferenceDescriptor =
-					new SpatialReferenceDescriptor(spatialReference);
+					SpatialReferenceDescriptorExtensions.CreateFrom(spatialReference);
 			}
 		}
 

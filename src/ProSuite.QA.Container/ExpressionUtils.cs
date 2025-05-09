@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -163,9 +164,8 @@ namespace ProSuite.QA.Container
 						string searchedDatasetName = pair.Key;
 						string replacedDatasetName = pair.Value;
 
-						string fieldName;
-						if (IsFieldReferenceBasedOn(match.Value, searchedDatasetName, out fieldName)
-						   )
+						if (IsFieldReferenceBasedOn(match.Value, searchedDatasetName,
+						                            out string fieldName))
 						{
 							return $"{replacedDatasetName}.{fieldName}";
 						}
@@ -197,46 +197,13 @@ namespace ProSuite.QA.Container
 
 			string remainder = token.Substring(fieldPrefix.Length);
 
-			if (! IsValidUnqualifiedFieldName(remainder))
+			if (! ModelElementNameUtils.IsValidUnqualifiedFieldName(remainder, out _))
 			{
 				fieldName = null;
 				return false;
 			}
 
 			fieldName = remainder;
-			return true;
-		}
-
-		private static bool IsValidUnqualifiedFieldName([NotNull] string value)
-		{
-			// See http://support.esri.com/en/technical-article/000005588: 
-			// FAQ: What characters should not be used in ArcGIS for field names and table names?
-
-			if (value.IndexOf('.') >= 0)
-			{
-				return false;
-			}
-
-			if (! char.IsLetter(value[0]))
-			{
-				return false;
-			}
-
-			for (var index = 0; index < value.Length; index++)
-			{
-				char c = value[index];
-
-				if (index == 0 && ! char.IsLetter(c))
-				{
-					return false;
-				}
-
-				if (! char.IsLetterOrDigit(c) && c != '_')
-				{
-					return false;
-				}
-			}
-
 			return true;
 		}
 
@@ -287,7 +254,6 @@ namespace ProSuite.QA.Container
 		                                   out string fieldName)
 		{
 			string trimmedExpr = expression.Trim();
-			string key;
 			string expr;
 			IList<string> parts = trimmedExpr.Split();
 			if (parts.Count >= 3 &&

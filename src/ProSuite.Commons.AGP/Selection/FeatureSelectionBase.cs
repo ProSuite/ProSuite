@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -8,27 +9,24 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Selection
 {
-	public abstract class FeatureSelectionBase
+	// todo daro rename to LayerSelection
+	public abstract class FeatureSelectionBase : TableSelection
 	{
-		protected FeatureSelectionBase([NotNull] BasicFeatureLayer basicFeatureLayer)
+		protected FeatureSelectionBase([NotNull] BasicFeatureLayer basicFeatureLayer) : base(basicFeatureLayer.GetFeatureClass())
 		{
-			FeatureClass = basicFeatureLayer.GetFeatureClass();
-			BasicFeatureLayer = basicFeatureLayer;
+			BasicFeatureLayer = basicFeatureLayer ??
+			                    throw new ArgumentNullException(nameof(basicFeatureLayer));
 		}
 
 		[NotNull]
-		public FeatureClass FeatureClass { get; }
+		public FeatureClass FeatureClass => (FeatureClass) Table;
 
 		[NotNull]
 		public BasicFeatureLayer BasicFeatureLayer { get; }
 
 		public int ShapeDimension => GeometryUtils.GetShapeDimension(GetShapeType());
 
-		public abstract IEnumerable<long> GetOids();
-
 		public abstract IEnumerable<Feature> GetFeatures();
-
-		public abstract int GetCount();
 
 		private GeometryType GetShapeType()
 		{

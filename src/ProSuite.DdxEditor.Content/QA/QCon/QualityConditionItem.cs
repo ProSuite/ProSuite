@@ -557,17 +557,12 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				return; // already reported by entity
 			}
 
-			foreach (TestParameterValue value in entity.ParameterValues)
+			// validation of test parameters (see #198)
+			foreach (var dsValue in entity.ParameterValues.OfType<DatasetTestParameterValue>())
 			{
-				var dsValue = value as DatasetTestParameterValue;
-				if (dsValue == null)
-				{
-					continue;
-				}
-
 				if (dsValue.DatasetValue == null && dsValue.ValueSource == null)
 				{
-					if (IsParameterOptional(entity, dsValue))
+					if (IsDatasetParameterOptional(entity, dsValue))
 					{
 						continue;
 					}
@@ -602,9 +597,9 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_newCreated = IsNew;
 		}
 
-		private static bool IsParameterOptional(
+		private static bool IsDatasetParameterOptional(
 			[NotNull] QualityCondition entity,
-			[NotNull] TestParameterValue parameterValue)
+			[NotNull] DatasetTestParameterValue parameterValue)
 		{
 			IInstanceInfo instanceInfo = GetInstanceInfo(entity);
 
@@ -613,13 +608,16 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				return false;
 			}
 
-			foreach (TestParameter testParameter in instanceInfo.Parameters)
+			TestParameter testParameter =
+				instanceInfo.GetParameter(parameterValue.TestParameterName);
+
+			if (testParameter != null)
 			{
-				if (testParameter.Name == parameterValue.TestParameterName)
-				{
-					// parameter found; it is optional if not a constructor parameter
-					return ! testParameter.IsConstructorParameter;
-				}
+				// non-constructor parameters are always optional
+				if (! testParameter.IsConstructorParameter) return true;
+
+				// a constructor parameter is optional, if it is a list parameter
+				if (testParameter.ArrayDimension > 0) return true;
 			}
 
 			return false;

@@ -26,7 +26,7 @@ namespace ProSuite.DomainModel.AO.Workflow.WorkspaceFilters
 		{
 			foreach (WorkspaceDbType dbType in GetWorkspaceDbTypes(workspace))
 			{
-				WorkspaceDbTypeInfo dbTypeInfo = GetWorspaceDbTypeInfo(dbType);
+				WorkspaceDbTypeInfo dbTypeInfo = GetWorkspaceDbTypeInfo(dbType);
 				if (dbTypeInfo == null)
 				{
 					continue;
@@ -45,7 +45,7 @@ namespace ProSuite.DomainModel.AO.Workflow.WorkspaceFilters
 		}
 
 		[CanBeNull]
-		private WorkspaceDbTypeInfo GetWorspaceDbTypeInfo(WorkspaceDbType dbType)
+		private WorkspaceDbTypeInfo GetWorkspaceDbTypeInfo(WorkspaceDbType dbType)
 		{
 			return _dbTypeInfos.FirstOrDefault(dbTypeInfo => dbTypeInfo.DBType == dbType);
 		}
@@ -67,6 +67,10 @@ namespace ProSuite.DomainModel.AO.Workflow.WorkspaceFilters
 					else if (WorkspaceUtils.IsPersonalGeodatabase(workspace))
 					{
 						yield return WorkspaceDbType.PersonalGeodatabase;
+					}
+					else if (WorkspaceUtils.IsMobileGeodatabase(workspace))
+					{
+						yield return WorkspaceDbType.MobileGeodatabase;
 					}
 
 					break;

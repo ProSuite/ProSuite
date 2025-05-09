@@ -10,20 +10,34 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 	{
 		private FilterHelper _filterHelper;
 
+		/// <summary>
+		/// The feature class whose features participate in the linear network.
+		/// </summary>
 		[NotNull]
 		public IFeatureClass FeatureClass { get; }
 
+		/// <summary>
+		/// The optional where clause that restricts the features of the feature class.
+		/// </summary>
 		[CanBeNull]
 		public string WhereClause { get; }
+
+		/// <summary>
+		/// Whether a junction shall split or an edge is split in case a junction intersects an
+		/// edge's interior.
+		/// </summary>
+		public bool Splitting { get; set; }
 
 		public esriGeometryType GeometryType { get; }
 
 		public LinearNetworkClassDef([NotNull] IFeatureClass featureClass,
-		                             [CanBeNull] string whereClause = null)
+		                             [CanBeNull] string whereClause = null,
+		                             bool splitting = true)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
 			esriGeometryType shapeType = featureClass.ShapeType;
+
 			Assert.True(
 				shapeType == esriGeometryType.esriGeometryPolyline ||
 				shapeType == esriGeometryType.esriGeometryPoint,
@@ -31,6 +45,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 
 			FeatureClass = featureClass;
 			WhereClause = whereClause;
+			Splitting = splitting;
 			GeometryType = shapeType;
 		}
 

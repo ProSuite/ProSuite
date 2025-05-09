@@ -18,17 +18,18 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 		/// The specified list of <see cref="LinearNetworkClassDef"/> defines a network of
 		/// junctions (points) and edges (polylines).
 		/// </summary>
-		/// <param name="linearNetworkClassDef">The list of <see cref="LinearNetworkClassDef"/>.</param>
+		/// <param name="linearNetworkClassDefinitions">The list of <see cref="LinearNetworkClassDef"/>.</param>
 		public LinearNetworkGdbFeatureFinder(
-			[NotNull] IList<LinearNetworkClassDef> linearNetworkClassDef)
+			[NotNull] IList<LinearNetworkClassDef> linearNetworkClassDefinitions)
 		{
-			Assert.ArgumentNotNull(linearNetworkClassDef, nameof(linearNetworkClassDef));
+			Assert.ArgumentNotNull(linearNetworkClassDefinitions,
+			                       nameof(linearNetworkClassDefinitions));
 
-			LinearNetworkClassDefs = linearNetworkClassDef;
+			LinearNetworkClassDefinitions = linearNetworkClassDefinitions;
 
 			SearchTolerance =
 				DatasetUtils.GetMaximumXyTolerance(
-					LinearNetworkClassDefs.Select(cd => cd.FeatureClass));
+					LinearNetworkClassDefinitions.Select(cd => cd.FeatureClass));
 		}
 
 		/// <summary>
@@ -45,19 +46,58 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 		}
 
 		[CanBeNull]
-		private IList<LinearNetworkClassDef> LinearNetworkClassDefs { get; }
+		private IList<LinearNetworkClassDef> LinearNetworkClassDefinitions { get; }
 
 		protected override IList<IFeature> ReadFeaturesCore(IGeometry searchGeometry,
 		                                                    ICollection<esriGeometryType>
 			                                                    geometryTypes)
 		{
-			return SearchFeatureClasses(Assert.NotNull(LinearNetworkClassDefs), searchGeometry,
+			return SearchFeatureClasses(Assert.NotNull(LinearNetworkClassDefinitions),
+			                            searchGeometry,
 			                            geometryTypes, _searchWorkspace);
 		}
 
 		public void SetVersion([CanBeNull] IWorkspace workspace)
 		{
 			_searchWorkspace = workspace;
+		}
+
+		public override ILinearNetworkFeatureFinder Union(ILinearNetworkFeatureFinder other)
+		{
+			LinearNetworkGdbFeatureFinder otherFeatureFinder =
+				other as LinearNetworkGdbFeatureFinder;
+
+			Assert.NotNull(otherFeatureFinder,
+			               "Both network feature finders must be of the same type");
+
+			if (LinearNetworkClassDefinitions != null)
+			{
+				var unionedNetworkClasses =
+					new List<LinearNetworkClassDef>(LinearNetworkClassDefinitions);
+
+				IList<LinearNetworkClassDef> otherClassDefs =
+					Assert.NotNull(otherFeatureFinder.LinearNetworkClassDefinitions);
+
+				foreach (LinearNetworkClassDef networkClassDef in otherClassDefs)
+				{
+					if (unionedNetworkClasses.Any(c => c.Equals(networkClassDef)))
+					{
+						continue;
+					}
+
+					unionedNetworkClasses.Add(networkClassDef);
+				}
+
+				return new LinearNetworkGdbFeatureFinder(unionedNetworkClasses);
+			}
+
+			if (TargetFeatureCandidates != null)
+			{
+				return new LinearNetworkGdbFeatureFinder(UnionTargetFeatureSet(otherFeatureFinder));
+			}
+
+			throw new AssertionException(
+				"Either the LinearNetworkClasses or the TargetFeatureCandidates must be non-null");
 		}
 	}
 }

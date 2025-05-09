@@ -19,5 +19,13 @@ namespace ProSuite.DomainModel.Core.DataModel.Repositories
 
 		[NotNull]
 		IList<T> GetAll<T>() where T : Association;
+
+		/// <summary>
+		/// Gets the association referencing a dataset with an id within the specified id set.
+		/// </summary>
+		/// <param name="datasetIds"></param>
+		/// <returns></returns>
+		[NotNull]
+		IList<Association> GetByReferencedDatasetIds(IList<int> datasetIds);
 	}
 }

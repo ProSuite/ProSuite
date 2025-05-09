@@ -1,0 +1,69 @@
+<UserControl x:Class="ProSuite.AGP.Editing.TargetFeatureSelectionControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ProSuite.AGP.Editing"
+             xmlns:geometryProcessing="clr-namespace:ProSuite.Commons.AGP.Core.GeometryProcessing;assembly=ProSuite.Commons.AGP.Core"
+             xmlns:managedOptionsUi="clr-namespace:ProSuite.Commons.UI.ManagedOptions;assembly=ProSuite.Commons.UI"
+             mc:Ignorable="d" 
+             d:DesignHeight="100.493"
+             d:DataContext="{d:DesignInstance Type=local:TargetFeatureSelectionViewModel}" Width="304">
+
+
+    <!--d:DataContext="{d:DesignInstance Type=managedOptions:CentralizableSettings}" -->
+
+    <UserControl.Resources>
+        <managedOptionsUi:OverrideToFontStyleConverter x:Key="OverrideToFontStyleConverter" />
+    </UserControl.Resources>
+    <StackPanel
+	    ToolTip="{Binding ToolTip}" ToolTipService.ShowOnDisabled="True" >
+        <StackPanel.Resources>
+            <local:ComparisonConverter x:Key="ComparisonConverter" />
+        </StackPanel.Resources>
+        <!--<RadioButton Template="{StaticResource CentralizableSettingRadioButton}"
+                     Content="Snap crack points within tolerance of"
+                     DataContext="{Binding Options.CentralizableSnapToTargetVertices}" />-->
+        <RadioButton Content="Features from the same class" 
+                     IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.SameClass}}"
+                     FontStyle="{Binding CentralizableSetting.HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" 
+                     IsEnabled="{Binding CentralizableSetting.CanOverrideLocally}" 
+                     Margin="6,6,0,2"/>
+
+        <RadioButton Content="Selected features" 
+                     Visibility="{Binding Path=SelectedFeaturesVisibility}"
+                     IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.SelectedFeatures}}"
+                     FontStyle="{Binding CentralizableSetting.HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" 
+                     IsEnabled="{Binding CentralizableSetting.CanOverrideLocally}"
+                     Margin="6,0,0,2"/>
+
+        <RadioButton Content="Visible features" 
+                     IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.VisibleFeatures}}"
+                     FontStyle="{Binding CentralizableSetting.HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" 
+                     IsEnabled="{Binding CentralizableSetting.CanOverrideLocally}" 
+                     Margin="6,0,0,2"/>
+
+        <RadioButton Content="Visible features from selectable layers" 
+                     IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.VisibleSelectableFeatures}}"
+                     FontStyle="{Binding CentralizableSetting.HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" 
+                     IsEnabled="{Binding CentralizableSetting.CanOverrideLocally}" 
+                     Margin="6,0,0,2"/>
+
+        <RadioButton Content="Visible features from editable layers" 
+                     IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.VisibleEditableFeatures}}"
+                     FontStyle="{Binding CentralizableSetting.HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" 
+                     IsEnabled="{Binding CentralizableSetting.CanOverrideLocally}" 
+                     Margin="6,0,0,2"/>
+
+        <RadioButton Content="Visible features from editable and selectable layers"
+                     Visibility="{Binding Path=EditableSelectableFeaturesVisibility}"
+                     IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.VisibleSelectableEditableFeatures}}"
+                     FontStyle="{Binding CentralizableSetting.HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" 
+                     IsEnabled="{Binding CentralizableSetting.CanOverrideLocally}" 
+                     Margin="6,0,0,6"/>
+
+
+
+    </StackPanel>
+
+</UserControl>

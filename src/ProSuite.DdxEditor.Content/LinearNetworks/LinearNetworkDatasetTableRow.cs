@@ -32,16 +32,22 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 
 		public string DatasetAliasName => _linearNetworkDataset.Dataset.AliasName;
 
-		public string WhereClause
-		{
-			get { return _linearNetworkDataset.WhereClause; }
-			set { _linearNetworkDataset.WhereClause = value; }
-		}
-
 		public bool IsDefaultJunction
 		{
 			get { return _linearNetworkDataset.IsDefaultJunction; }
 			set { _linearNetworkDataset.IsDefaultJunction = value; }
+		}
+
+		public bool Splitting
+		{
+			get { return _linearNetworkDataset.Splitting; }
+			set { _linearNetworkDataset.Splitting = value; }
+		}
+
+		public string WhereClause
+		{
+			get { return _linearNetworkDataset.WhereClause; }
+			set { _linearNetworkDataset.WhereClause = value; }
 		}
 	}
 }

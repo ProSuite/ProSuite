@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
+using System.Windows.Input;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ProSuite.AGP.Editing.Picker;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -26,10 +30,138 @@ namespace ProSuite.AGP.Editing.Test.Picker
 			}
 		}
 
-		public PickerMode GetPickerMode(IEnumerable<FeatureSelectionBase> orderedSelection,
-		                                bool areaSelect = false)
+		protected List<Key> PressedKeys { get; }
+
+		public IPickableItem PickBest(IEnumerable<IPickableItem> items)
 		{
-			return PickerMode.PickBest;
+			throw new NotImplementedException();
+		}
+
+		public int SelectionTolerance { get; set; }
+		public bool IsSingleClick { get; }
+		public bool AggregateItems { get; }
+		public Point PickerLocation { get; set; }
+
+		public SpatialRelationship SpatialRelationship { get; }
+		public SelectionCombinationMethod SelectionCombinationMethod { get; }
+		public bool NoMultiselection { get; set; }
+
+		public StandardPickerPrecedenceMock(List<Key> pressedKeys)
+		{
+			PressedKeys = pressedKeys;
+		}
+
+		public PickerMode GetPickerMode(List<int> orderedSelection)
+		{
+			PickerMode result = PickerMode.PickBest;
+
+			if (NoMultiselection)
+			{
+				result = PickerMode.ShowPicker;
+			}
+
+			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
+			{
+				result = PickerMode.ShowPicker;
+			}
+
+			if (orderedSelection.Count > 1)
+			{
+				result = PickerMode.ShowPicker;
+			}
+
+			if (!IsSingleClick)
+			{
+				result = PickerMode.PickAll;
+			}
+
+			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+			{
+				result = PickerMode.PickAll;
+			}
+
+			return result;
+		}
+
+		public PickerMode GetPickerMode(ICollection<FeatureSelectionBase> candidates)
+		{
+			PickerMode result = PickerMode.PickBest;
+
+			if (NoMultiselection)
+			{
+				result = PickerMode.ShowPicker;
+			}
+
+			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
+			{
+				result = PickerMode.ShowPicker;
+			}
+
+			if (CountLowestShapeDimension(candidates) > 1)
+			{
+				result = PickerMode.ShowPicker;
+			}
+
+			if (! IsSingleClick)
+			{
+				result = PickerMode.PickAll;
+			}
+
+			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+			{
+				result = PickerMode.PickAll;
+			}
+
+			return result;
+		}
+
+		protected static int CountLowestShapeDimension(
+			IEnumerable<FeatureSelectionBase> layerSelection)
+		{
+			var count = 0;
+
+			int? lastShapeDimension = null;
+
+			foreach (FeatureSelectionBase selection in layerSelection)
+			{
+				if (lastShapeDimension == null)
+				{
+					lastShapeDimension = selection.ShapeDimension;
+
+					count += selection.GetCount();
+
+					continue;
+				}
+
+				if (lastShapeDimension < selection.ShapeDimension)
+				{
+					continue;
+				}
+
+				count += selection.GetCount();
+			}
+
+			return count;
+		}
+
+		public void EnsureGeometryNonEmpty()
+		{
+			throw new NotImplementedException();
+		}
+
+		public Geometry GetSelectionGeometry()
+		{
+			return SelectionGeometry;
+		}
+
+		public IPickableItemsFactory CreateItemsFactory()
+		{
+			throw new NotImplementedException();
+		}
+
+		public IPickableItemsFactory CreateItemsFactory<T>() where T : IPickableItem
+		{
+			throw new NotImplementedException();
 		}
 
 		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
@@ -105,5 +237,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 		{
 			item.Score = Math.Round(score, 2);
 		}
+
+		public void Dispose() { }
 	}
 }

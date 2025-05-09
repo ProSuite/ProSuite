@@ -1,20 +1,25 @@
 using System;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Gdb
 {
-	// todo daro: check correct handle / instantiation of Uri
-	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>
+	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>,
+	                                     IComparable<GdbWorkspaceIdentity>,
+	                                     IDatastoreReference
 	{
 		[NotNull] private readonly DatastoreName _datastoreName;
 
 		public GdbWorkspaceIdentity([NotNull] Datastore datastore) :
 			this(datastore.GetConnector(), datastore.GetConnectionString()) { }
 
+		// TODO: Once we can re-create a valid connector from the connectionString, add overload just using connection string.
+		//       Missing functionality: Creating DatabaseConnectionProperties from connection string containing
+		//       an encrypted password (GOTOP-224).
 		public GdbWorkspaceIdentity([NotNull] Connector connector, string connectionString)
 		{
 			Assert.ArgumentNotNull(connector, nameof(connector));
@@ -25,8 +30,7 @@ namespace ProSuite.Commons.AGP.Gdb
 
 			switch (connector)
 			{
-				case DatabaseConnectionProperties connectionProperties:
-
+				case DatabaseConnectionProperties:
 					ConnectionString = connectionString;
 					WorkspaceFactory = WorkspaceFactory.SDE;
 					break;
@@ -37,6 +41,14 @@ namespace ProSuite.Commons.AGP.Gdb
 				case FileSystemConnectionPath fileSystemConnection:
 					ConnectionString = fileSystemConnection.Path.ToString();
 					WorkspaceFactory = WorkspaceFactory.Shapefile;
+					break;
+				case MobileGeodatabaseConnectionPath mobileGeodatabaseConnectionPath:
+					ConnectionString = mobileGeodatabaseConnectionPath.Path.ToString();
+					WorkspaceFactory = WorkspaceFactory.SQLite;
+					break;
+				case PluginDatasourceConnectionPath pluginDatasourceConnectionPath:
+					ConnectionString = pluginDatasourceConnectionPath.DatasourcePath.ToString();
+					WorkspaceFactory = WorkspaceFactory.Custom;
 					break;
 				default:
 					throw new NotImplementedException(
@@ -55,13 +67,19 @@ namespace ProSuite.Commons.AGP.Gdb
 			return (Geodatabase) OpenDatastore();
 		}
 
-		/// <summary>
-		/// Opens the associated datastore
-		/// </summary>
-		/// <returns></returns>
 		public Datastore OpenDatastore()
 		{
 			return _datastoreName.Open();
+		}
+
+		public bool References(Datastore datastore)
+		{
+			return _datastoreName.References(datastore);
+		}
+
+		public bool References(DatastoreName datastoreName)
+		{
+			return _datastoreName.Equals(datastoreName);
 		}
 
 		public override string ToString()
@@ -88,10 +106,17 @@ namespace ProSuite.Commons.AGP.Gdb
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				return _datastoreName.GetHashCode();
-			}
+			return _datastoreName.GetHashCode();
+		}
+
+		#endregion
+
+		#region IComparable<GdbWorkspaceIdentity> implementation
+
+		public int CompareTo(GdbWorkspaceIdentity other)
+		{
+			return string.Compare(ConnectionString, other.ConnectionString,
+			                      StringComparison.OrdinalIgnoreCase);
 		}
 
 		#endregion

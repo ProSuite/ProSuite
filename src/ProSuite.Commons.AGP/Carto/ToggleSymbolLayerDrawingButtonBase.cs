@@ -1,71 +1,59 @@
 using System;
 using System.Windows.Media.Imaging;
-using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto;
 
-// TODO derive from ButtonCommandBase? --> review LogEntry etc.
-public abstract class ToggleSymbolLayerDrawingButtonBase : Button
+public class ToggleSymbolLayerDrawingButtonBase : ToggleSymbolDisplayButtonBase
 {
 	private readonly BitmapImage _iconOn16 = GetImage("Images/SymbolLayerDrawingOn16.png");
 	private readonly BitmapImage _iconOff16 = GetImage("Images/SymbolLayerDrawingOff16.png");
 	private readonly BitmapImage _iconOn32 = GetImage("Images/SymbolLayerDrawingOn32.png");
 	private readonly BitmapImage _iconOff32 = GetImage("Images/SymbolLayerDrawingOff32.png");
+	private readonly BitmapImage _iconUnknown = GetImage("Images/SymbolLayerDrawingUnknown32.png");
+	private bool? _lastState;
 
-	private bool? _toggleState; // initially unknown
-
-	private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-	protected override async void OnClick()
+	protected override void UpdateCore()
 	{
-		Gateway.LogEntry(_msg);
+		var map = MapView.Active?.Map;
 
-		try
-		{
-			var map = MapView.Active?.Map;
-			if (map is null) return;
-
-			var desiredState = GetToggledState(_toggleState, false);
-
-			_msg.DebugFormat(
-				"Toggle Symbol Layer Drawing (SLD): current state is {0}, desired state is {1}",
-				Format(_toggleState), Format(desiredState));
-
-			await QueuedTask.Run(() => { ToggleSymbolLayerDrawing(map, desiredState); });
-
-			_toggleState = desiredState;
-		}
-		catch (Exception ex)
-		{
-			Gateway.HandleError(ex, _msg);
-		}
-	}
-
-	protected override void OnUpdate()
-	{
-		Enabled = MapView.Active != null;
-
+		Enabled = map != null;
 		IsChecked = false;
 
-		if (_toggleState.HasValue)
+		var state = Manager.QuickUsesSLD(map);
+
+		if (state == _lastState)
 		{
-			bool isOn = _toggleState.Value;
-			TooltipHeading = isOn ? "Turn off SLD" : "Turn on SLD";
+			return; // avoid overhead if state did not change
+		}
+
+		_lastState = state;
+
+		if (state.HasValue)
+		{
+			if (state.Value)
+			{
+				LargeImage = _iconOn32;
+				SmallImage = _iconOn16;
+				TooltipHeading = "Turn SLD off";
+			}
+			else
+			{
+				LargeImage = _iconOff32;
+				SmallImage = _iconOff16;
+				TooltipHeading = "Turn SLD on";
+			}
 		}
 		else
 		{
+			LargeImage = _iconUnknown;
+			SmallImage = _iconUnknown;
 			TooltipHeading = "Toggle Symbol Layer Drawing (SLD)";
 		}
-
-		SmallImage = _toggleState == false ? _iconOff16 : _iconOn16;
-		LargeImage = _toggleState == false ? _iconOff32 : _iconOn32;
 	}
 
-	private void ToggleSymbolLayerDrawing(Map map, bool turnOn)
+	protected override bool Toggle(Map map)
 	{
 		if (map is null)
 			throw new ArgumentNullException(nameof(map));
@@ -74,39 +62,19 @@ public abstract class ToggleSymbolLayerDrawingButtonBase : Button
 		if (undoStack is null)
 			throw new InvalidOperationException("Map's undo/redo stack is null");
 
-		var name = Caption; // use command's caption as operation name
-		if (string.IsNullOrEmpty(name))
-		{
-			name = $"Turn SLD {(turnOn ? "on" : "off")}";
-		}
+		const bool uncached = true;
+		bool turnOn = ! Manager.UsesSLD(map, uncached);
+		var name = turnOn ? "Turn SLD on" : "Turn SLD off";
 
-		var action = () => { DisplayUtils.ToggleSymbolLayerDrawing(map, turnOn); };
+		Gateway.CompositeOperation(
+			undoStack, name, () => Manager.ToggleSLD(map, turnOn));
 
-		undoStack.CreateCompositeOperation(action, name);
+		return turnOn;
 	}
 
-	private static bool GetToggledState(bool? state, bool firstState)
+	protected override bool GetInitialState(Map map)
 	{
-		if (!state.HasValue) return firstState;
-		return !state.Value;
-	}
-
-	private static string Format(bool? flag)
-	{
-		if (!flag.HasValue) return "unknown";
-		return flag.Value ? "on" : "off";
-	}
-
-	private static BitmapImage GetImage(string fileName)
-	{
-		return new BitmapImage(GetPackUri(fileName));
-	}
-
-	private static Uri GetPackUri(string fileName)
-	{
-		if (string.IsNullOrEmpty(fileName))
-			throw new ArgumentNullException(nameof(fileName));
-		var s = $"pack://application:,,,/ProSuite.Commons.AGP;component/{fileName}";
-		return new Uri(s);
+		const bool uncached = true;
+		return Manager.UsesSLD(map, uncached);
 	}
 }

@@ -7,12 +7,14 @@ namespace ProSuite.AGP.WorkList.Contracts
 	public interface IRowCache
 	{
 		void Invalidate();
-		
+
+		void Invalidate(IEnumerable<Table> tables);
+
 		void ProcessChanges([NotNull] Dictionary<Table, List<long>> inserts,
 		                    [NotNull] Dictionary<Table, List<long>> deletes,
 		                    [NotNull] Dictionary<Table, List<long>> updates);
-		
-		//bool CanContain([NotNull] Dataset dataset);
+
+		bool CanContain([NotNull] Table table);
 		//bool CanContain(Func<MapMember, bool> featuresModified);
 
 		//bool CanContain(MapMember member);

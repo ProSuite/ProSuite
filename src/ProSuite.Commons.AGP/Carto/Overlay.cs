@@ -23,14 +23,18 @@ namespace ProSuite.Commons.AGP.Carto
 			_symbolReference = symbol.MakeSymbolReference();
 		}
 
-		public async Task<IDisposable> AddToMapAsync(MapView mapView)
+		public async Task<IDisposable> AddToMapAsync(MapView mapView, bool useReferenceScale = false)
 		{
-			return await mapView.AddOverlayAsync(_geometry, _symbolReference);
+			return useReferenceScale
+				       ? await mapView.AddOverlayAsync(_geometry, _symbolReference, mapView.Map.ReferenceScale)
+				       : await mapView.AddOverlayAsync(_geometry, _symbolReference);
 		}
 
-		public IDisposable AddToMap(MapView mapView)
+		public IDisposable AddToMap(MapView mapView, bool useReferenceScale = false)
 		{
-			return mapView.AddOverlay(_geometry, _symbolReference);
+			return useReferenceScale
+				       ? mapView.AddOverlay(_geometry, _symbolReference, mapView.Map.ReferenceScale)
+				       : mapView.AddOverlay(_geometry, _symbolReference);
 		}
 	}
 }

@@ -21,6 +21,9 @@
 
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
+    <!-- .net framework: -->
+    <LangVersion>7.3</LangVersion>
+
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -58,6 +61,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\ProSuite.Shared\src\ProSuite.Shared.ArcGIS\ProSuite.Shared.ArcGIS.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AO.Licensing\ProSuite.Commons.AO.Licensing.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Test\ProSuite.Commons.Test.csproj" />

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Test
@@ -17,12 +19,23 @@ namespace ProSuite.AGP.WorkList.Test
 			_items = items;
 		}
 
+		public ItemRepositoryMock(List<Table> items, IWorkItemStateRepository stateRepository)
+		{
+			throw new NotImplementedException();
+		}
+
 		public int GetCount(QueryFilter filter = null)
 		{
 			throw new NotImplementedException();
 		}
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
+		{
+			return _items;
+		}
+
+		public IEnumerable<IWorkItem> GetItems(Geometry areaOfInterest,
+		                                       WorkItemStatus? statusFilter, bool recycle = true)
 		{
 			return _items;
 		}
@@ -75,7 +88,7 @@ namespace ProSuite.AGP.WorkList.Test
 			item.Visited = true;
 		}
 
-		public Task SetStatus(IWorkItem item, WorkItemStatus status)
+		public Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 		{
 			throw new NotImplementedException();
 		}
@@ -86,6 +99,35 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		public List<ISourceClass> SourceClasses { get; }
+
+		public string WorkListDefinitionFilePath { get; set; }
+
+		public IWorkItemStateRepository WorkItemStateRepository { get; }
+
+		public void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Row GetSourceRow(ISourceClass sourceClass, long oid)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void RefreshGeometry(IWorkItem item)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void RefreshGeometry2(IWorkItem item)
+		{
+			throw new NotImplementedException();
+		}
 
 		public void Dispose() { }
 	}

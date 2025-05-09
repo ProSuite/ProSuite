@@ -6,7 +6,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema.RowValues;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
@@ -353,15 +352,6 @@ namespace ProSuite.QA.Tests.Transformers
 				_msg.VerboseDebug(
 					() => $"Transformer {Resulting.Name}: Searching input table {_t0.Name}...");
 
-				if (filter is IFeatureClassFilter fc &&
-					fc.FilterGeometry?.SpatialReference != _t0.SpatialReference)
-				{
-					IFeatureClassFilter clone = (IFeatureClassFilter)fc.Clone();
-					IGeometry g = GeometryFactory.Clone(fc.FilterGeometry);
-					g.Project(_t0.SpatialReference);
-					clone.FilterGeometry = g;
-					filter = clone;
-				}
 
 				var involvedDict = new Dictionary<IReadOnlyFeature, Involved>();
 

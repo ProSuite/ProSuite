@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
@@ -56,6 +58,8 @@ namespace ProSuite.Microservices.Client.QA
 
 		public bool CanSaveIssues => _resultIssueCollector != null && VerificationMsg != null;
 
+		public int IssuesSaved { get; private set; } = -1;
+
 		public int SaveIssues(ErrorDeletionInPerimeter errorDeletion)
 		{
 			Assert.NotNull(_resultIssueCollector).ErrorDeletionInPerimeter = errorDeletion;
@@ -67,6 +71,25 @@ namespace ProSuite.Microservices.Client.QA
 			int issueCount = _resultIssueCollector.SaveIssues(verifiedConditions);
 
 			_msg.DebugStopTiming(watch, "Updated issues in verified context");
+
+			return issueCount;
+		}
+
+		public async Task<int> SaveIssuesAsync(
+			ErrorDeletionInPerimeter errorDeletion =
+				ErrorDeletionInPerimeter.VerifiedQualityConditions)
+		{
+			Assert.NotNull(_resultIssueCollector).ErrorDeletionInPerimeter = errorDeletion;
+
+			Stopwatch watch = _msg.DebugStartTiming(
+				"Replacing existing errors with new issues, deleting obsolete allowed errors...");
+
+			var verifiedConditions = GetVerifiedConditionIds(VerificationMsg).ToList();
+			int issueCount = await _resultIssueCollector.SaveIssuesAsync(verifiedConditions);
+
+			_msg.DebugStopTiming(watch, "Updated issues in verified context");
+
+			IssuesSaved = issueCount;
 
 			return issueCount;
 		}
@@ -92,6 +115,8 @@ namespace ProSuite.Microservices.Client.QA
 					{
 						if (VerificationMsg.SavedVerificationId >= 0)
 						{
+							_msg.DebugFormat("Getting verification details from DDX (<id> {0}).",
+							                 VerificationMsg.SavedVerificationId);
 							_qualityVerification =
 								_qualityVerificationRepository.Get(
 									VerificationMsg.SavedVerificationId);
@@ -105,6 +130,8 @@ namespace ProSuite.Microservices.Client.QA
 						}
 						else
 						{
+							_msg.DebugFormat(
+								"Using verification details provided from QA service.");
 							_qualityVerification = GetQualityVerificationTx(VerificationMsg);
 						}
 					});

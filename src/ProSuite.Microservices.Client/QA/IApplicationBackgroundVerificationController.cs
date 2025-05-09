@@ -95,6 +95,16 @@ namespace ProSuite.Microservices.Client.QA
 		                bool updateLatestTestDate);
 
 		/// <summary>
+		/// Save the issues found in this verification run. This might not be implemented in all platforms.
+		/// </summary>
+		/// <param name="verificationResult"></param>
+		/// <param name="errorDeletion"></param>
+		/// <param name="updateLatestTestDate"></param>
+		Task<int> SaveIssuesAsync([NotNull] IQualityVerificationResult verificationResult,
+		                          ErrorDeletionInPerimeter errorDeletion,
+		                          bool updateLatestTestDate);
+
+		/// <summary>
 		/// Whether saving the issues is possible or not.
 		/// </summary>
 		/// <param name="verificationResult"></param>

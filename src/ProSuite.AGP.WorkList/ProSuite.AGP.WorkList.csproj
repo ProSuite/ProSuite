@@ -12,9 +12,19 @@
     <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
+    <ArcGISProVersion Condition=" '$(ArcGISProVersion)' == '' ">3.0</ArcGISProVersion>
+
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
+    <!-- This can be changed to 12 once only .NET 8 (and Pro 3.2) support is dropped. -->
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.2 ">
+    <DefineConstants>DEBUG;TRACE;ARCGISPRO_GREATER_3_2</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
     <NoWarn>1591</NoWarn>
@@ -23,9 +33,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>false</Optimize>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="WorklistChangedEvent.cs" />
-  </ItemGroup>
+
   <ItemGroup>
     <Reference Include="ArcGIS.Core">
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
@@ -62,7 +70,6 @@
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
-    <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
   </ItemGroup>

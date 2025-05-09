@@ -10,10 +10,10 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
@@ -469,13 +469,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		/// <summary>
-		/// Appends the specified field name to <see cref="currentSubFields"/> if there are other fields
+		/// Appends the specified field name to <paramref name="currentSubFields"/> if there are other fields
 		/// already. In case it is null, empty or "*" the specified field name is returned (as single
-		/// sub-field). The <see cref="fieldName"/> can also be a comma-separated list of fields.
+		/// sub-field). The <paramref name="fieldName"/> can also be a comma-separated list of fields.
 		/// </summary>
-		/// <param name="currentSubFields"></param>
-		/// <param name="fieldName"></param>
-		/// <returns></returns>
 		public static string AppendToFieldList([CanBeNull] string currentSubFields,
 		                                       [NotNull] string fieldName)
 		{
@@ -1560,6 +1557,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return Count(objectClass, filter);
 		}
 
+		public static long Count([NotNull] ITable table,
+		                         [NotNull] IQueryFilter filter)
+		{
+			if (table is IFeatureClass featureClass)
+			{
+				return featureClass.FeatureCount(filter);
+			}
+
+			return table.RowCount(filter);
+		}
+
 		public static long Count([NotNull] IObjectClass objectClass,
 		                         [NotNull] IQueryFilter filter)
 		{
@@ -1693,6 +1701,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
+			// In some situations for (unregistered) PostGIS tables the Search() method changes the SubFields
+			// to the full list of attributes in escaped quotations marks, which makes subsequent queries
+			// using the same filter queries fail.
+			string subFieldsBefore = filter?.SubFields;
+
 			try
 			{
 				return featureClass.Search(filter, recycling);
@@ -1704,6 +1717,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 					string.Format(
 						"Error opening feature cursor for {0}: {1} (see log for detailed query parameters)",
 						DatasetUtils.GetName(featureClass), e.Message), e);
+			}
+			finally
+			{
+				if (subFieldsBefore != filter?.SubFields)
+				{
+					filter.SubFields = subFieldsBefore;
+				}
 			}
 		}
 
@@ -1724,6 +1744,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
+			// In some situations for (unregistered) PostGIS tables the Search() method changes the SubFields
+			// to the full list of attributes in escaped quotations marks, which makes subsequent queries
+			// using the same filter queries fail.
+			string subFieldsBefore = filter?.SubFields;
 			try
 			{
 				if (_msg.IsVerboseDebugEnabled)
@@ -1740,6 +1764,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 					string.Format(
 						"Error opening cursor for {0}: {1} (see log for detailed query parameters)",
 						DatasetUtils.GetName(table), e.Message), e);
+			}
+			finally
+			{
+				if (subFieldsBefore != filter?.SubFields)
+				{
+					filter.SubFields = subFieldsBefore;
+				}
 			}
 		}
 

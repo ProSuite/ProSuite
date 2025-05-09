@@ -1,12 +1,16 @@
 using System.Threading.Tasks;
+using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList
 {
 	public interface IWorkListOpener
 	{
-		Task OpenSelectionWorkListAsync();
+		bool CanUseProductionModelIssueSchema();
 
-		Task OpenIssueWorkListAsync(string issuesGdbPath = null,
-		                            bool removeExisting = false);
+		Task OpenProductionModelIssueWorkEnvironmentAsync([CanBeNull] Geometry areaOfInterest);
+
+		Task OpenFileGdbIssueWorkListAsync([CanBeNull] string issuesGdbPath = null,
+		                                   bool removeExisting = false);
 	}
 }

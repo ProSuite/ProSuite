@@ -63,9 +63,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] AdvancedReshapeToolCursor {
+        internal static byte[] AdvancedGeneralizeOverlay {
             get {
-                object obj = ResourceManager.GetObject("AdvancedReshapeToolCursor", resourceCulture);
+                object obj = ResourceManager.GetObject("AdvancedGeneralizeOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -73,29 +73,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] AdvancedReshapeToolCursorShift {
+        internal static byte[] AdvancedReshapeOverlay {
             get {
-                object obj = ResourceManager.GetObject("AdvancedReshapeToolCursorShift", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap CutPolygonAlongTool {
-            get {
-                object obj = ResourceManager.GetObject("CutPolygonAlongTool", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] CutPolygonAlongToolCursor {
-            get {
-                object obj = ResourceManager.GetObject("CutPolygonAlongToolCursor", resourceCulture);
+                object obj = ResourceManager.GetObject("AdvancedReshapeOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -103,9 +83,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] CutPolygonAlongToolCursorProcess {
+        internal static byte[] Arrow {
             get {
-                object obj = ResourceManager.GetObject("CutPolygonAlongToolCursorProcess", resourceCulture);
+                object obj = ResourceManager.GetObject("Arrow", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -113,9 +93,59 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] CutPolygonAlongToolCursorShift {
+        internal static byte[] ChopperOverlay {
             get {
-                object obj = ResourceManager.GetObject("CutPolygonAlongToolCursorShift", resourceCulture);
+                object obj = ResourceManager.GetObject("ChopperOverlay", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] CrackerOverlay {
+            get {
+                object obj = ResourceManager.GetObject("CrackerOverlay", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] CreateFeatureInPickedClassOverlay {
+            get {
+                object obj = ResourceManager.GetObject("CreateFeatureInPickedClassOverlay", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Cross {
+            get {
+                object obj = ResourceManager.GetObject("Cross", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] CutPolygonAlongOverlay {
+            get {
+                object obj = ResourceManager.GetObject("CutPolygonAlongOverlay", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] DestroyAndRebuildOverlay {
+            get {
+                object obj = ResourceManager.GetObject("DestroyAndRebuildOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -133,9 +163,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] EraseToolCursor {
+        internal static byte[] EraseOverlay {
             get {
-                object obj = ResourceManager.GetObject("EraseToolCursor", resourceCulture);
+                object obj = ResourceManager.GetObject("EraseOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -143,9 +173,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] EraseToolCursorShift {
+        internal static byte[] FillHoleOverlay {
             get {
-                object obj = ResourceManager.GetObject("EraseToolCursorShift", resourceCulture);
+                object obj = ResourceManager.GetObject("FillHoleOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -153,9 +183,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] FillHoleToolCursor {
+        internal static byte[] Lasso {
             get {
-                object obj = ResourceManager.GetObject("FillHoleToolCursor", resourceCulture);
+                object obj = ResourceManager.GetObject("Lasso", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -163,9 +193,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] FillHoleToolCursorProcess {
+        internal static byte[] Polygon {
             get {
-                object obj = ResourceManager.GetObject("FillHoleToolCursorProcess", resourceCulture);
+                object obj = ResourceManager.GetObject("Polygon", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -173,9 +203,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] FillHoleToolCursorShift {
+        internal static byte[] RemoveHoleOverlay {
             get {
-                object obj = ResourceManager.GetObject("FillHoleToolCursorShift", resourceCulture);
+                object obj = ResourceManager.GetObject("RemoveHoleOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -183,9 +213,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] PolygonDrawerCursor {
+        internal static byte[] RemoveOverlapsOverlay {
             get {
-                object obj = ResourceManager.GetObject("PolygonDrawerCursor", resourceCulture);
+                object obj = ResourceManager.GetObject("RemoveOverlapsOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -193,9 +223,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] RemoveHoleToolCursor {
+        internal static byte[] ReshapeAlongOverlay {
             get {
-                object obj = ResourceManager.GetObject("RemoveHoleToolCursor", resourceCulture);
+                object obj = ResourceManager.GetObject("ReshapeAlongOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -203,9 +233,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] RemoveHoleToolCursorProcess {
+        internal static byte[] SelectOverlay {
             get {
-                object obj = ResourceManager.GetObject("RemoveHoleToolCursorProcess", resourceCulture);
+                object obj = ResourceManager.GetObject("SelectOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -213,9 +243,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] RemoveHoleToolCursorShift {
+        internal static byte[] Shift {
             get {
-                object obj = ResourceManager.GetObject("RemoveHoleToolCursorShift", resourceCulture);
+                object obj = ResourceManager.GetObject("Shift", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -223,129 +253,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] RemoveOverlapsToolCursor {
+        internal static byte[] YReshapeOverlay {
             get {
-                object obj = ResourceManager.GetObject("RemoveOverlapsToolCursor", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] RemoveOverlapsToolCursorProcess {
-            get {
-                object obj = ResourceManager.GetObject("RemoveOverlapsToolCursorProcess", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] RemoveOverlapsToolCursorShift {
-            get {
-                object obj = ResourceManager.GetObject("RemoveOverlapsToolCursorShift", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] ReshapeAlongToolCursor {
-            get {
-                object obj = ResourceManager.GetObject("ReshapeAlongToolCursor", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] ReshapeAlongToolCursorProcess {
-            get {
-                object obj = ResourceManager.GetObject("ReshapeAlongToolCursorProcess", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] ReshapeAlongToolCursorProcessShift {
-            get {
-                object obj = ResourceManager.GetObject("ReshapeAlongToolCursorProcessShift", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] ReshapeAlongToolCursorShift {
-            get {
-                object obj = ResourceManager.GetObject("ReshapeAlongToolCursorShift", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] SelectionToolNormal {
-            get {
-                object obj = ResourceManager.GetObject("SelectionToolNormal", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] SelectionToolNormalShift {
-            get {
-                object obj = ResourceManager.GetObject("SelectionToolNormalShift", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] SelectionToolOriginal {
-            get {
-                object obj = ResourceManager.GetObject("SelectionToolOriginal", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] SelectionToolOriginalShift {
-            get {
-                object obj = ResourceManager.GetObject("SelectionToolOriginalShift", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] SelectionToolUser {
-            get {
-                object obj = ResourceManager.GetObject("SelectionToolUser", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] SelectionToolUserShift {
-            get {
-                object obj = ResourceManager.GetObject("SelectionToolUserShift", resourceCulture);
+                object obj = ResourceManager.GetObject("YReshapeOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }

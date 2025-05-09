@@ -4,8 +4,8 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 
 namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
@@ -48,8 +48,11 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 						                   ? _overlapPolygonSymbol
 						                   : (CIMSymbol) _overlapLineSymbol;
 
+					// Fully visible in 3D with show-through factor of 1.0
+					const double showThrough = 1.0;
 					IDisposable addedOverlay =
-						MapView.Active.AddOverlay(overlap, symbol.MakeSymbolReference());
+						MapView.Active.AddOverlay(overlap, symbol.MakeSymbolReference(), -1,
+						                          showThrough);
 
 					_overlays.Add(addedOverlay);
 				}

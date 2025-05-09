@@ -394,7 +394,8 @@ namespace ProSuite.DomainModel.Core.QA
 					continue;
 				}
 
-				foreach (Dataset dataset in datasetTestParameterValue.GetAllSourceDatasets())
+				foreach (Dataset dataset in datasetTestParameterValue.GetAllSourceDatasets(
+					         onlyIfNotUsedAsReferenceData))
 				{
 					if (verifiedDatasets.Contains(dataset))
 					{

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
@@ -19,6 +19,9 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 
 		[NotNull] private readonly VerifiedCategoriesBuilder _categoriesWithIssuesBuilder =
 			new VerifiedCategoriesBuilder();
+
+		[NotNull] private readonly List<XmlDataSourceDescription> _dataSourceDescriptions =
+			new List<XmlDataSourceDescription>();
 
 		[XmlAttribute("qualitySpecification")]
 		public string QualitySpecification { get; set; }
@@ -78,6 +81,11 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 		[NotNull]
 		public List<XmlVerifiedDataset> VerifiedDatasets => _verifiedDatasets;
 
+		[XmlArray("DataSourceDescriptions")]
+		[XmlArrayItem("DataSourceDescription")]
+		[NotNull]
+		public List<XmlDataSourceDescription> DataSourceDescriptions => _dataSourceDescriptions;
+
 		[XmlArray("ReportedIssues")]
 		[XmlArrayItem("Category")]
 		[CanBeNull]
@@ -112,6 +120,12 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			Assert.ArgumentNotNull(xmlCondition, nameof(xmlCondition));
 
 			_categoriesWithIssuesBuilder.AddVerifiedCondition(xmlCondition);
+		}
+
+		public void AddDataSourceDescription(string modelName, string dataSourceDescription)
+		{
+			_dataSourceDescriptions.Add(
+				new XmlDataSourceDescription(modelName, dataSourceDescription));
 		}
 	}
 }

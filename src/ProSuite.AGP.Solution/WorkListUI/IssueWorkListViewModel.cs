@@ -9,10 +9,10 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
@@ -131,7 +131,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					{
 						return;
 					}
-					
+
 					mapView.FlashFeature(GetInvolvedFeaturesByLayer());
 				});
 			}, _msg);
@@ -185,7 +185,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private Dictionary<BasicFeatureLayer, List<long>> GetInvolvedFeaturesByLayer()
 		{
 			var featuresByLayer = new Dictionary<BasicFeatureLayer, List<long>>();
-			
+
 			foreach (InvolvedObjectRow row in InvolvedObjectRows)
 			{
 				FeatureLayer layer =

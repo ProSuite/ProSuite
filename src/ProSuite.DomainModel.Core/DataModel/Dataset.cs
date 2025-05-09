@@ -4,6 +4,7 @@ using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
+	// TODO: Consider renaming to DdxDataset to avoid conflict with ArcGIS.Core.Data.Dataset
 	public abstract class Dataset : ModelElement, IDdxDataset, IDatasetDef
 	{
 		[UsedImplicitly] private string _aliasName;
@@ -83,6 +84,13 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public IDatasetContainer DbContainer => Model;
 
 		public abstract DatasetType DatasetType { get; }
+
+		/// <summary>
+		/// An optional type code indicating the actual dataset implementation in systems with
+		/// more branched dataset hierarchies.
+		/// </summary>
+		[CanBeNull]
+		public virtual DatasetImplementationType ImplementationType => null;
 
 		public bool Equals(IDatasetDef otherDataset)
 		{

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
@@ -17,7 +16,8 @@ namespace ProSuite.Commons
 		{
 			Assert.ArgumentNotNullOrEmpty(configFileName, nameof(configFileName));
 
-			List<string> paths = GetSearchPaths().ToList();
+			var paths = GetSearchPaths();
+			var misses = new List<string>();
 
 			foreach (string path in paths)
 			{
@@ -32,6 +32,8 @@ namespace ProSuite.Commons
 				{
 					return filePath;
 				}
+
+				misses.Add(path);
 			}
 
 			if (! required)
@@ -39,7 +41,7 @@ namespace ProSuite.Commons
 				return null;
 			}
 
-			throw CreateFileNotFoundException(configFileName, paths);
+			throw CreateFileNotFoundException(configFileName, misses);
 		}
 
 		[NotNull]
@@ -167,10 +169,7 @@ namespace ProSuite.Commons
 				sb.AppendLine();
 			}
 
-			sb.AppendLine();
-			sb.AppendLine(@"See examples in the installation directory under config\examples.");
-
-			return new FileNotFoundException(sb.ToString());
+			return new FileNotFoundException(sb.ToString(), configFileName);
 		}
 
 		[NotNull]

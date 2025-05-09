@@ -9,6 +9,9 @@ namespace ProSuite.Commons.AO.Test
 		private const string _filegdb93Name = "filegdb93.gdb";
 		private const string _gdb1Name = "gdb1.gdb.zip";
 		private const string _mdb1Name = "gdb1.mdb";
+		private const string _accessDbMdbName = "access_db.mdb";
+		private const string _mobileGdbName = "mobile.geodatabase";
+
 		private const string _filegdb_tableJoinUtils = "TableJoinUtilsTest.gdb.zip";
 		private const string _cartoMapImplTestMapName = "CartoMapImplTest.mxd";
 		private const string _bigForestPolygonFileName = "BigForestPolygon.xml";
@@ -61,6 +64,18 @@ namespace ProSuite.Commons.AO.Test
 			return TestDataPreparer.FromDirectory().GetPath(_mdb1Name);
 		}
 
+		[NotNull]
+		public static string GetNonGdbAccessDatabase()
+		{
+			var locator = new TestDataLocator();
+			return locator.GetPath(_accessDbMdbName);
+		}
+
+		public static string GetMobileGdbPath()
+		{
+			return TestDataPreparer.FromDirectory().GetPath(_mobileGdbName);
+		}
+		
 		public static string GetGdbTableJointUtilsPath()
 		{
 			return TestDataPreparer.ExtractZip(_filegdb_tableJoinUtils).GetPath();
@@ -122,13 +137,6 @@ namespace ProSuite.Commons.AO.Test
 		public static string GetInvertedRingPolygonPath()
 		{
 			return TestUtils.GetGeometryTestDataPath(_invertedRingPolygonFileName);
-		}
-
-		[NotNull]
-		public static string GetNonGdbAccessDatabase()
-		{
-			var locator = new TestDataLocator();
-			return locator.GetPath("access_db.mdb");
 		}
 
 		public static string GetBasodinoBorderGrat()

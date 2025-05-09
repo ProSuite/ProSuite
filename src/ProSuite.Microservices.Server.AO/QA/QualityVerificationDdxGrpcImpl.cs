@@ -23,7 +23,8 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Ddx;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using Quaestor.LoadReporting;
 
 namespace ProSuite.Microservices.Server.AO.QA
@@ -74,6 +75,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// The data dictionary facade that wraps the necessary repositories.
 		/// </summary>
 		public IVerificationDataDictionary<TModel> VerificationDdx { get; set; }
+
+		/// <summary>
+		/// The supported test descriptors for a fine-granular specification based off a condition list.
+		/// </summary>
+		[CanBeNull]
+		public ISupportedInstanceDescriptors SupportedInstanceDescriptors { get; set; }
 
 		/// <summary>
 		/// The default value to use if the environment variable that indicates whether or not the
@@ -210,8 +217,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 					watch, "Gotten quality specification for peer {0} (<id> {1})",
 					context.Peer, request.QualitySpecificationId);
 
-				_msg.InfoFormat("Returning quality specification {0} with {1} conditions",
-				                response.Specification.Name, response.Specification.Elements.Count);
+				ConditionListSpecificationMsg specificationMsg = response.Specification;
+
+				if (specificationMsg == null)
+				{
+					_msg.Warn("No specification found.");
+				}
+				else
+				{
+					_msg.InfoFormat("Returning quality specification {0} with {1} conditions",
+					                specificationMsg.Name, specificationMsg.Elements.Count);
+				}
 			}
 			catch (Exception e)
 			{
@@ -281,6 +297,56 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
+		public override async Task<GetDatasetDetailsResponse> GetDatasetDetails(
+			GetDatasetDetailsRequest request,
+			ServerCallContext context)
+		{
+			GetDatasetDetailsResponse response;
+
+			try
+			{
+				await StartRequestAsync(context.Peer, request);
+
+				Stopwatch watch = _msg.DebugStartTiming();
+
+				Func<ITrackCancel, GetDatasetDetailsResponse> func =
+					trackCancel => GetDatasetsCore(request);
+
+				using (_msg.IncrementIndentation("Getting {0} dataset details for {1}",
+				                                 request.DatasetIds.Count, context.Peer))
+				{
+					response =
+						await GrpcServerUtils.ExecuteServiceCall(
+							func, context, _staThreadScheduler, true) ??
+						new GetDatasetDetailsResponse();
+				}
+
+				_msg.DebugStopTiming(
+					watch, "Gotten {0} dataset details for peer {1}",
+					request.DatasetIds.Count, context.Peer);
+
+				_msg.InfoFormat("Returning dataset details for {0} datasets.",
+				                response.Datasets.Count);
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error getting quality specifications {request}", e);
+
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				{
+					ServiceUtils.SetUnhealthy(Health, GetType());
+				}
+
+				throw;
+			}
+			finally
+			{
+				EndRequest();
+			}
+
+			return response;
+		}
+
 		#endregion
 
 		private GetProjectWorkspacesResponse GetProjectWorkspacesCore(
@@ -303,14 +369,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces = null;
 
+			GetProjectWorkspacesResponse response = null;
 			_domainTransactions.UseTransaction(
 				() =>
 				{
 					projectWorkspaces =
 						verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
-				});
 
-			GetProjectWorkspacesResponse response = PackProjectWorkspaceResponse(projectWorkspaces);
+					response = PackProjectWorkspaceResponse(projectWorkspaces);
+				});
 
 			return response;
 		}
@@ -347,17 +414,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				TModel productionModel = project.ProductionModel;
 
-				var projectMsg =
-					new ProjectMsg
-					{
-						ProjectId = project.Id,
-						ModelId = productionModel.Id,
-						Name = project.Name,
-						ShortName = project.ShortName,
-						MinimumScaleDenominator = project.MinimumScaleDenominator,
-						ExcludeReadOnlyDatasetsFromProjectWorkspace =
-							project.ExcludeReadOnlyDatasetsFromProjectWorkspace
-					};
+				var projectMsg = ProtobufUtils.ToProjectMsg(project);
 
 				CallbackUtils.DoWithNonNull(
 					projectMsg.ToolConfigDirectory, s => project.ToolConfigDirectory = s);
@@ -366,7 +423,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				RepeatedField<DatasetMsg> responseDatasets = response.Datasets;
 
-				ModelMsg modelMsg = ToModelMsg(productionModel, responseDatasets);
+				ModelMsg modelMsg =
+					ToModelMsg(productionModel, responseDatasets);
 
 				response.Models.Add(modelMsg);
 			}
@@ -378,12 +436,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 		                                   ICollection<DatasetMsg> referencedDatasetMsgs)
 		{
 			SpatialReferenceMsg srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
-				productionModel.SpatialReferenceDescriptor.SpatialReference,
+				productionModel.SpatialReferenceDescriptor.GetSpatialReference(),
 				SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid);
 
 			ModelMsg modelMsg =
 				ProtoDataQualityUtils.ToDdxModelMsg(productionModel, srWkId, referencedDatasetMsgs);
 
+			modelMsg.UserConnection =
+				ProtobufGdbUtils.ToConnectionMsg(productionModel.UserConnectionProvider);
 			// If necessary, return the list of referenced workspaces
 			// However, this is currently not needed anywhere and requires opening workpaces, which is slow!
 
@@ -445,7 +505,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					ConditionListSpecificationMsg specificationMsg =
 						ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
-							qualitySpecification, null,
+							qualitySpecification, SupportedInstanceDescriptors,
 							out IDictionary<int, DdxModel> modelsById);
 
 					response.Specification = specificationMsg;
@@ -508,6 +568,75 @@ namespace ProSuite.Microservices.Server.AO.QA
 				});
 
 			return response;
+		}
+
+		private GetDatasetDetailsResponse GetDatasetsCore(GetDatasetDetailsRequest request)
+		{
+			var response = new GetDatasetDetailsResponse();
+
+			IVerificationDataDictionary<TModel> verificationDataDictionary =
+				Assert.NotNull(VerificationDdx,
+				               "Data Dictionary access has not been configured or failed.");
+
+			_domainTransactions.UseTransaction(
+				() =>
+				{
+					IList<Dataset> datasets =
+						verificationDataDictionary.GetDatasets(request.DatasetIds);
+
+					// TODO: Review batch size of lazy collections in mappings.
+
+					foreach (Dataset dataset in datasets)
+					{
+						DatasetMsg datasetMsg = ProtoDataQualityUtils.ToDatasetMsg(dataset, true);
+
+						response.Datasets.Add(datasetMsg);
+					}
+
+					IList<Association> associations =
+						verificationDataDictionary.GetAssociations(request.DatasetIds);
+
+					foreach (Association association in associations)
+					{
+						if (association.Deleted)
+						{
+							continue;
+						}
+
+						AssociationMsg associationMsg =
+							ProtoDataQualityUtils.ToAssociationMsg(association, true);
+
+						response.Associations.Add(associationMsg);
+
+						// And make sure all the referenced datasets are included in the response
+						EnsureDatasetAdded(association.End1.ObjectDataset, response.Datasets);
+						EnsureDatasetAdded(association.End2.ObjectDataset, response.Datasets);
+					}
+				});
+
+			return response;
+		}
+
+		private static void EnsureDatasetAdded([NotNull] ObjectDataset objectDataset,
+		                                       [NotNull]
+		                                       RepeatedField<DatasetMsg> toResponseDatasets)
+		{
+			if (toResponseDatasets.Any(rds => rds.DatasetId == objectDataset.Id))
+			{
+				return;
+			}
+
+			if (objectDataset.Deleted)
+			{
+				_msg.WarnFormat(
+					"Object dataset {0} has is marked as deleted and will not be included!",
+					objectDataset.Name);
+				return;
+			}
+
+			DatasetMsg datasetMsg = ProtoDataQualityUtils.ToDatasetMsg(objectDataset, true);
+
+			toResponseDatasets.Add(datasetMsg);
 		}
 
 		private async Task<bool> StartRequestAsync(string peerName, object request,

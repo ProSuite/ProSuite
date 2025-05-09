@@ -4,14 +4,14 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 	{
 		public ReshapeCurveFilterOptions(bool onlyInVisibleExtent = false,
 		                                 double excludeTolerance = 0,
-		                                 bool excludeOutsideSource = false,
+		                                 bool onlyResultingInRemovals = false,
 		                                 bool excludeResultingInOverlaps = false)
 		{
 			OnlyInVisibleExtent = onlyInVisibleExtent;
 
 			ExcludeTolerance = excludeTolerance;
 
-			ExcludeOutsideSource = excludeOutsideSource;
+			OnlyResultingInRemovals = onlyResultingInRemovals;
 			ExcludeResultingInOverlaps = excludeResultingInOverlaps;
 		}
 
@@ -30,7 +30,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		public double ExcludeTolerance { get; }
 
-		public bool ExcludeOutsideSource { get; }
+		public bool OnlyResultingInRemovals { get; }
 		public bool ExcludeResultingInOverlaps { get; }
 	}
 }

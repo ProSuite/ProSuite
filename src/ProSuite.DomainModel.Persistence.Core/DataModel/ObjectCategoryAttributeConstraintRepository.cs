@@ -45,6 +45,29 @@ namespace ProSuite.DomainModel.Persistence.Core.DataModel
 			}
 		}
 
+		public IList<T> Get<T>(DdxModel model)
+			where T : ObjectCategoryAttributeConstraint
+		{
+			Assert.ArgumentNotNull(model, nameof(model));
+
+			using (ISession session = OpenSession(true))
+			{
+				T objCatConstraintAlias = null;
+				ObjectCategory objCatAlias = null;
+				ObjectDataset datasetAlias = null;
+
+				var query =
+					session.QueryOver(() => objCatConstraintAlias)
+					       .JoinAlias(() => objCatConstraintAlias.ObjectCategory,
+					                  () => objCatAlias)
+					       .JoinAlias(() => objCatAlias.ObjectDataset,
+					                  () => datasetAlias)
+					       .Where(() => datasetAlias.Model.Id == model.Id);
+
+				return query.List();
+			}
+		}
+
 		#endregion
 	}
 }

@@ -187,7 +187,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 
 		[CanBeNull]
 		protected abstract VectorDataset CreateVectorDataset([NotNull] IDatasetName datasetName,
-		                                                     [NotNull] string modelName);
+		                                                     [NotNull] string name);
 
 		[CanBeNull]
 		protected abstract TableDataset CreateTableDataset([NotNull] IDatasetName datasetName,
@@ -197,8 +197,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 		protected abstract TopologyDataset CreateTopologyDataset([NotNull] string name);
 
 		[CanBeNull]
-		protected abstract RasterMosaicDataset CreateRasterMosaicDataset(
-			[NotNull] string name);
+		protected abstract RasterMosaicDataset CreateRasterMosaicDataset([NotNull] string name);
 
 		[CanBeNull]
 		protected abstract RasterDataset CreateRasterDataset([NotNull] string name);
@@ -207,8 +206,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 		{
 			string tableName = DatasetUtils.GetTableName(datasetName);
 
-			Type type;
-			if (! _typeMap.TryGetValue(tableName, out type))
+			if (! _typeMap.TryGetValue(tableName, out Type type))
 			{
 				return false;
 			}

@@ -1,5 +1,6 @@
 using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {

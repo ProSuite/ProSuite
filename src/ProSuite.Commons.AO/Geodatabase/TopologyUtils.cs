@@ -97,7 +97,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		/// <summary>
-		/// Checks if the given object class belongs to an topology.
+		/// Checks if the given object class belongs to a topology.
 		/// If it belongs to one, the topology is returned also.
 		/// </summary>
 		/// <param name="objectClass">ObjectClass to check</param>

@@ -10,11 +10,11 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.Validation;
 using ProSuite.DomainModel.AO.DataModel.Harvesting;
 using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.Geodatabase;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -25,8 +25,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		#region Fields
 
-		[UsedImplicitly] private bool _useDefaultDatabaseOnlyForSchema;
 		[UsedImplicitly] private bool _harvestQualifiedElementNames;
+		[UsedImplicitly] private bool _updateAliasNamesOnHarvest = true;
 		[UsedImplicitly] private DateTime? _lastHarvestedDate;
 		[UsedImplicitly] private string _lastHarvestedByUser;
 		[UsedImplicitly] private string _lastHarvestedConnectionString;
@@ -34,21 +34,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 		[UsedImplicitly] private bool _ignoreUnversionedDatasets;
 		[UsedImplicitly] private bool _ignoreUnregisteredTables;
 
-		[UsedImplicitly] private bool _updateAliasNamesOnHarvest = true;
 		[UsedImplicitly] private string _datasetInclusionCriteria;
 		[UsedImplicitly] private string _datasetExclusionCriteria;
 
-		[UsedImplicitly] private ConnectionProvider _userConnectionProvider;
-
-		[UsedImplicitly] private SdeDirectConnectionProvider
-			_repositoryOwnerConnectionProvider;
-
-		[UsedImplicitly] private ConnectionProvider _schemaOwnerConnectionProvider;
-
 		[UsedImplicitly] private ClassDescriptor _attributeConfiguratorFactoryClassDescriptor;
-
 		[UsedImplicitly] private ClassDescriptor _datasetListBuilderFactoryClassDescriptor;
-		[UsedImplicitly] private SpatialReferenceDescriptor _spatialReferenceDescriptor;
 
 		private bool _keepDatasetLocks;
 
@@ -78,22 +68,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		protected Model(string name) : base(name) { }
 
 		#endregion
-
-		/// <summary>
-		/// Gets or sets a value indicating whether the master database should be used only for schema information.
-		/// If <c>true</c>, the master database is never accessed as a fallback data source when a dataset is not 
-		/// present in the local workspace context.
-		/// </summary>
-		/// <value>
-		/// 	<c>true</c> if the master database should only be used for schema information; 
-		/// otherwise (the database contains useful data ancd, <c>false</c>.
-		/// </value>
-		[UsedImplicitly]
-		public bool UseDefaultDatabaseOnlyForSchema
-		{
-			get { return _useDefaultDatabaseOnlyForSchema; }
-			set { _useDefaultDatabaseOnlyForSchema = value; }
-		}
 
 		[UsedImplicitly]
 		public bool HarvestQualifiedElementNames
@@ -243,32 +217,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 				return _lastMasterDatabaseAccessError;
 			}
-		}
-
-		[Required]
-		public ConnectionProvider UserConnectionProvider
-		{
-			get { return _userConnectionProvider; }
-			set { _userConnectionProvider = value; }
-		}
-
-		public SdeDirectConnectionProvider RepositoryOwnerConnectionProvider
-		{
-			get { return _repositoryOwnerConnectionProvider; }
-			set { _repositoryOwnerConnectionProvider = value; }
-		}
-
-		public ConnectionProvider SchemaOwnerConnectionProvider
-		{
-			get { return _schemaOwnerConnectionProvider; }
-			set { _schemaOwnerConnectionProvider = value; }
-		}
-
-		[Required]
-		public SpatialReferenceDescriptor SpatialReferenceDescriptor
-		{
-			get { return _spatialReferenceDescriptor; }
-			set { _spatialReferenceDescriptor = value; }
 		}
 
 		/// <summary>
@@ -589,7 +537,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			// translate query class name (if it is one) to table name
 			string gdbDatasetName = ModelElementUtils.GetBaseTableName(
-				masterDatabaseDatasetName);
+				masterDatabaseDatasetName, MasterDatabaseWorkspaceContext);
 
 			return ElementNamesAreQualified
 				       ? gdbDatasetName // expected to be qualified also
@@ -660,8 +608,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		// ReSharper disable once VirtualMemberNeverOverridden.Global
 
 		// ReSharper disable once VirtualMemberNeverOverridden.Global
-		protected virtual SpatialReferenceDescriptor
-			CreateDefaultSpatialReferenceDescriptor()
+		protected virtual SpatialReferenceDescriptor CreateDefaultSpatialReferenceDescriptor()
 		{
 			return null;
 		}
@@ -699,20 +646,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 		private IAttributeConfigurator GetAttributeConfigurator(
 			[CanBeNull] IEnumerable<AttributeType> existingAttributeTypes)
 		{
-			IAttributeConfigurator attributeConfigurator;
 			if (_attributeConfiguratorFactoryClassDescriptor == null)
 			{
-				attributeConfigurator = null;
+				return null;
 			}
-			else
-			{
-				var attributeConfiguratorFactory =
-					(IAttributeConfiguratorFactory)
-					_attributeConfiguratorFactoryClassDescriptor.CreateInstance();
 
-				attributeConfigurator =
-					attributeConfiguratorFactory.Create(existingAttributeTypes);
-			}
+			var factory = (IAttributeConfiguratorFactory)
+				_attributeConfiguratorFactoryClassDescriptor.CreateInstance();
+
+			IAttributeConfigurator attributeConfigurator = factory.Create(existingAttributeTypes);
 
 			return attributeConfigurator;
 		}
@@ -850,8 +792,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				_msg.VerboseDebug(() => $"Checking existing dataset {dataset.Name}");
 
 				string gdbDatasetName = ModelElementUtils.GetGdbElementName(dataset, workspace,
-					DefaultDatabaseName,
-					DefaultDatabaseSchemaOwner);
+					DefaultDatabaseName, DefaultDatabaseSchemaOwner);
 
 				bool datasetExists = gdbDatasetNames.Contains(gdbDatasetName);
 

@@ -38,8 +38,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public BackgroundVerificationService(
 			[NotNull] IDomainTransactionManager domainTransactions,
-			[NotNull] IDatasetLookup datasetLookup) : base(
-			new GdbTransaction(), datasetLookup)
+			[NotNull] IDatasetLookup datasetLookup) : base(datasetLookup)
 		{
 			_domainTransactions = domainTransactions;
 		}
@@ -118,6 +117,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			// datasets of the background verification context. They are not added here.
 		}
 
+		protected override IGdbTransaction CreateGdbTransaction()
+		{
+			return _backgroundVerificationInputs.CreateGdbTransaction();
+		}
+
 		protected override QualityErrorRepositoryBase CreateQualityErrorRepository(
 			IVerificationContext verificationContext,
 			IDictionary<QualityCondition, IList<ITest>> qualityConditionTests,
@@ -182,7 +186,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		                                   [CanBeNull] ICollection<IObject> objectsToVerify)
 		{
 			ISpatialReference spatialReference =
-				verificationContext.SpatialReferenceDescriptor.SpatialReference;
+				verificationContext.SpatialReferenceDescriptor.GetSpatialReference();
 
 			if (objectsToVerify != null)
 			{
@@ -219,7 +223,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// The perimeter that was actually verified if it differs from the perimeter
 		/// provided (e.g. due to an object list which allowed shrinking the perimeter).
 		/// </summary>
-		public IEnvelope VerifiedPerimeter { get; private set; }
+		private IEnvelope VerifiedPerimeter { get; set; }
+
+		public IGeometry GetVerifiedPerimeter()
+		{
+			// Return the verified perimeter, if it is different from the desired test perimeter.
+			return VerifiedPerimeter ?? TestPerimeter;
+		}
 
 		public DistributedTestRunner DistributedTestRunner { get; set; }
 

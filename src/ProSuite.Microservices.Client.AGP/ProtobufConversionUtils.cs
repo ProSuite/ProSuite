@@ -8,15 +8,16 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using Google.Protobuf;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Gdb;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Geom.Wkb;
 using ProSuite.Commons.Logging;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.Microservices.Client.AGP
@@ -220,8 +221,8 @@ namespace ProSuite.Microservices.Client.AGP
 		{
 			var result = new GdbObjRefMsg();
 
-			result.ClassHandle = GetUniqueClassId(row);
-			result.ObjectId = (int) row.GetObjectID();
+			result.ClassHandle = GeometryProcessingUtils.GetUniqueClassId(row);
+			result.ObjectId = row.GetObjectID();
 
 			return result;
 		}
@@ -232,7 +233,9 @@ namespace ProSuite.Microservices.Client.AGP
 		{
 			Table table = feature.GetTable();
 
-			return ToGdbObjectMsg(feature, geometry, GetUniqueClassId(table), useSpatialRefWkId);
+			return ToGdbObjectMsg(feature, geometry,
+			                      GeometryProcessingUtils.GetUniqueClassId(table),
+			                      useSpatialRefWkId);
 		}
 
 		public static GdbObjectMsg ToGdbObjectMsg([NotNull] Row feature,
@@ -245,7 +248,7 @@ namespace ProSuite.Microservices.Client.AGP
 			// Or use handle?
 			result.ClassHandle = objectClassHandle;
 
-			result.ObjectId = (int) feature.GetObjectID();
+			result.ObjectId = feature.GetObjectID();
 
 			result.Shape = ToShapeMsg(geometry, useSpatialRefWkId);
 
@@ -282,7 +285,12 @@ namespace ProSuite.Microservices.Client.AGP
 			foreach (Feature feature in features)
 			{
 				FeatureClass featureClass = feature.GetTable();
-				int uniqueClassId = GetUniqueClassId(featureClass);
+				if (featureClass == null)
+				{
+					_msg.Debug($"Feature is null {GdbObjectUtils.ToString(feature)}");
+				}
+
+				long uniqueClassId = GeometryProcessingUtils.GetUniqueClassId(featureClass);
 
 				Geometry shape = feature.GetShape();
 
@@ -319,26 +327,6 @@ namespace ProSuite.Microservices.Client.AGP
 			_msg.DebugStopTiming(watch, "Converted {0} features to DTOs", resultGdbObjects.Count);
 		}
 
-		public static int GetUniqueClassId(Row row)
-		{
-			return GetUniqueClassId(row.GetTable());
-		}
-
-		public static int GetUniqueClassId(Table table)
-		{
-			// NOTE: We cannot use the table handle because it is a 64-bit integer!
-			// On the server side, it will be converted to a 32-bit integer which changes its value
-			// -> it cannot be used to re-associate the returned feature message with the local class!
-
-			// In theory, this could be non-unique and needs to be compared to a process-wide dictionary
-			// containing this ID and the table handle...
-			unchecked
-			{
-				return (table.GetID().GetHashCode() * 397) ^
-				       table.GetDatastore().Handle.GetHashCode();
-			}
-		}
-
 		/// <summary>
 		/// Turns the specified row into a <see cref="GdbObjectReference"/> with a (virtually)
 		/// unique 32-bit integer class id.
@@ -347,14 +335,14 @@ namespace ProSuite.Microservices.Client.AGP
 		/// <returns></returns>
 		public static GdbObjectReference ToObjectReferenceWithUniqueClassId(Row row)
 		{
-			int uniqueClassId = GetUniqueClassId(row);
+			long uniqueClassId = GeometryProcessingUtils.GetUniqueClassId(row);
 
 			return new GdbObjectReference(uniqueClassId, row.GetObjectID());
 		}
 
 		public static ObjectClassMsg ToObjectClassMsg(
 			[NotNull] Table objectClass,
-			int classHandle,
+			long classHandle,
 			[CanBeNull] SpatialReference spatialRef = null)
 		{
 			esriGeometryType geometryType = TranslateAGPShapeType(objectClass);
@@ -371,7 +359,7 @@ namespace ProSuite.Microservices.Client.AGP
 				new ObjectClassMsg()
 				{
 					Name = name,
-					Alias = aliasName,
+					Alias = aliasName ?? string.Empty,
 					ClassHandle = classHandle,
 					SpatialReference = ToSpatialReferenceMsg(
 						spatialRef, SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),

@@ -160,7 +160,7 @@
     <value>Edge matching</value>
   </data>
   <data name="Filter" xml:space="preserve">
-    <value>Filter</value>
+    <value>Input feature filter</value>
   </data>
   <data name="Table" xml:space="preserve">
     <value>Table</value>

@@ -7,7 +7,6 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
-using ProSuite.Commons.AGP;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -34,6 +33,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		[CanBeNull] private readonly Geometry _verifiedPerimeter;
 		[CanBeNull] private readonly SpatialReference _verificationSpatialReference;
 
+		private bool _issuesSaved;
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AgpBackgroundVerificationController"/> class.
 		/// </summary>
@@ -41,11 +42,15 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		/// <param name="mapView"></param>
 		/// <param name="verifiedPerimeter"></param>
 		/// <param name="verificationSpatialReference"></param>
+		/// <param name="saveAction"></param>
 		public AgpBackgroundVerificationController(
 			[NotNull] IWorkListOpener workListOpener,
 			[NotNull] MapView mapView,
 			[CanBeNull] Geometry verifiedPerimeter,
-			[CanBeNull] SpatialReference verificationSpatialReference)
+			[CanBeNull] SpatialReference verificationSpatialReference,
+			[CanBeNull]
+			Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>> saveAction =
+				null)
 		{
 			Assert.ArgumentNotNull(workListOpener, nameof(workListOpener));
 			Assert.ArgumentNotNull(mapView, nameof(mapView));
@@ -54,7 +59,13 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			_mapView = mapView;
 			_verifiedPerimeter = verifiedPerimeter;
 			_verificationSpatialReference = verificationSpatialReference;
+
+			SaveAction = saveAction;
 		}
+
+		[CanBeNull]
+		private Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
+			SaveAction { get; }
 
 		public void FlashProgress(IList<EnvelopeXY> tiles,
 		                          ServiceCallStatus currentProgressStep)
@@ -155,15 +166,30 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		public async Task OpenWorkList(IQualityVerificationResult verificationResult,
 		                               bool replaceExisting)
 		{
-			await ViewUtils.TryAsync(
-				_workListOpener.OpenIssueWorkListAsync(verificationResult.IssuesGdbPath,
-				                                       replaceExisting), _msg);
+			if (_workListOpener.CanUseProductionModelIssueSchema())
+			{
+				Envelope envelope = null;
+
+				_msg.Info("Opening production model issue work list...");
+
+				await _workListOpener.OpenProductionModelIssueWorkEnvironmentAsync(envelope);
+			}
+			else
+			{
+				_msg.InfoFormat("Opening issue geodatabase ({0}) work list...",
+				                verificationResult.IssuesGdbPath);
+				await ViewUtils.TryAsync(
+					_workListOpener.OpenFileGdbIssueWorkListAsync(verificationResult.IssuesGdbPath,
+						replaceExisting), _msg);
+			}
 		}
 
 		public bool CanOpenWorkList(ServiceCallStatus? currentProgressStep,
 		                            IQualityVerificationResult verificationResult,
 		                            out string reason)
 		{
+			// TODO: Access to error datasets in model context
+
 			if (verificationResult == null)
 			{
 				reason = "Dialog has not been fully initialized";
@@ -179,6 +205,20 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return false;
 			}
 
+			if (! verificationResult.HasIssues)
+			{
+				reason = "No issues";
+				return false;
+			}
+
+			if (_workListOpener.CanUseProductionModelIssueSchema())
+			{
+				reason =
+					"Open Issue Work List from project workspace using traditional error datasets";
+				return true;
+			}
+
+			// No production model issue schema, use IssueGdb:
 			if (string.IsNullOrEmpty(verificationResult.IssuesGdbPath))
 			{
 				reason = "No issue File Geodatabase has been created";
@@ -194,13 +234,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return false;
 			}
 
-			if (! verificationResult.HasIssues)
-			{
-				reason = "No issues";
-				return false;
-			}
-
-			reason = null;
+			reason = $"Open Issue Work List using {verificationResult.IssuesGdbPath}";
 			return true;
 		}
 
@@ -257,13 +291,66 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		                       ErrorDeletionInPerimeter errorDeletion,
 		                       bool updateLatestTestDate)
 		{
-			throw new NotImplementedException();
+			SaveAction?.Invoke(verificationResult, errorDeletion,
+			                   updateLatestTestDate);
+
+			_issuesSaved = verificationResult.IssuesSaved >= 0;
+		}
+
+		public async Task<int> SaveIssuesAsync(IQualityVerificationResult verificationResult,
+		                                       ErrorDeletionInPerimeter errorDeletion,
+		                                       bool updateLatestTestDate)
+		{
+			if (SaveAction == null)
+			{
+				return -1;
+			}
+
+			int savedIssueCount =
+				await SaveAction(verificationResult, errorDeletion, updateLatestTestDate);
+
+			_issuesSaved = savedIssueCount >= 0;
+
+			return savedIssueCount;
 		}
 
 		public bool CanSaveIssues(IQualityVerificationResult verificationResult, out string reason)
 		{
-			reason = "Saving issues in production model error datasets is not yet supported";
-			return false;
+			if (verificationResult == null)
+			{
+				reason = "Dialog has not been fully initialized";
+
+				return false;
+			}
+
+			if (SaveAction == null)
+			{
+				reason = "Storing issues in the model's issue datasets is not supported";
+				return false;
+			}
+
+			bool canUseProductionModelIssues = _workListOpener.CanUseProductionModelIssueSchema();
+
+			if (! canUseProductionModelIssues)
+			{
+				reason =
+					"Storing issues in the model's issue datasets is not enabled or the issue datasets are not registered in the data dictionary.";
+				return false;
+			}
+
+			if (_issuesSaved)
+			{
+				reason = "Issues have already been updated in the model's issue datasets";
+				return false;
+			}
+
+			bool result = verificationResult.CanSaveIssues;
+
+			reason = result
+				         ? "Replace existing issues in the model's issue datasets with the new issues found by this verification"
+				         : "No issues have been collected";
+
+			return result;
 		}
 
 		private async Task<bool> FlashProgressAsync([NotNull] IList<EnvelopeXY> tiles,

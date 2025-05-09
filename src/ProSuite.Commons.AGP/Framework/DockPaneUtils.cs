@@ -21,13 +21,13 @@ namespace ProSuite.Commons.AGP.Framework
 			}
 		}
 
-		public static void Toggle<T>([NotNull] string id) where T : DockPane
+		public static T Toggle<T>([NotNull] string id) where T : DockPane
 		{
 			EnsureDockPaneExists(id);
 
-			var pane = DockPaneManager.Find(id) as T;
+			T dockPane = DockPaneManager.Find(id) as T;
 
-			if (pane is DockPane dockPane)
+			if (dockPane != null)
 			{
 				if (dockPane.IsVisible)
 				{
@@ -38,6 +38,8 @@ namespace ProSuite.Commons.AGP.Framework
 					dockPane.Activate();
 				}
 			}
+
+			return dockPane;
 		}
 
 		private static void EnsureDockPaneExists([NotNull] string id)

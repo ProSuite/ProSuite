@@ -42,11 +42,14 @@ namespace ProSuite.AGP.QA.ProPlugins
 			VerificationPlugInController.GetInstance(SessionContext).Register(this);
 		}
 
-		protected abstract IMapBasedSessionContext SessionContext { get; }
+		protected abstract ISessionContext SessionContext { get; }
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
 
-		protected override Task<bool> OnClickCore()
+		protected virtual Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
+			SaveAction => null;
+
+		protected override Task<bool> OnClickAsyncCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
 			{
@@ -104,14 +107,15 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			var appController =
 				new AgpBackgroundVerificationController(WorkListOpener, mapView, perimeter,
-				                                        spatialRef);
+				                                        spatialRef, SaveAction);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
 					VerificationAction = () => Verify(perimeter, progressTracker, resultsPath),
-					ApplicationController = appController
+					ApplicationController = appController,
+					KeepPreviousIssuesDisabled = true
 				};
 
 			string actionTitle = $"{qualitySpecification.Name}: Verify Last Perimeter";

@@ -68,6 +68,9 @@ namespace ProSuite.DomainModel.Core.DataModel
 			[NotNull] string name,
 			[NotNull] IEnumerable<TerrainSourceDataset> sources)
 			: base(name, sources) { }
+
+		public override DatasetImplementationType ImplementationType =>
+			DatasetImplementationType.ModelSimpleTerrain;
 	}
 
 	// Open questions for later:

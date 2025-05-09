@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -65,6 +66,13 @@ namespace ProSuite.Commons.Text
 			}
 
 			return text;
+		}
+
+		[NotNull]
+		public static string RemoveWhiteSpaceCharacters([NotNull] string text)
+		{
+			return new string(text.Where(c => ! char.IsWhiteSpace(c))
+			                      .ToArray());
 		}
 
 		[NotNull]
@@ -176,9 +184,24 @@ namespace ProSuite.Commons.Text
 			return sb;
 		}
 
+		public static StringBuilder Trim(this StringBuilder sb)
+		{
+			if (sb is null) return null;
+
+			int i = 0;
+			while (i < sb.Length && char.IsWhiteSpace(sb[i])) i += 1;
+			if (i > 0) sb.Remove(0, i);
+
+			i = sb.Length;
+			while (i > 0 && char.IsWhiteSpace(sb[i - 1])) i -= 1;
+			if (i < sb.Length) sb.Remove(i, sb.Length - i);
+
+			return sb;
+		}
+
 		public static StringBuilder TrimEnd(this StringBuilder sb)
 		{
-			if (sb == null) return null;
+			if (sb is null) return null;
 
 			int index = sb.Length;
 
@@ -657,6 +680,55 @@ namespace ProSuite.Commons.Text
 		}
 
 		/// <summary>
+		/// Replaces special characters, i.e. non-letters and non-digits in the given text with
+		/// the specified replacement character.
+		/// Optionally all diacritics (accents) can be removed, such as è or â.
+		/// Ligatures, such as Œ are not removed!
+		/// </summary>
+		/// <param name="text"></param>
+		/// <param name="specialCharReplacement"></param>
+		/// <param name="removeDiacritics"></param>
+		/// <returns></returns>
+		public static string ReplaceSpecialCharacters(
+			[NotNull] string text,
+			char? specialCharReplacement = '_',
+			bool removeDiacritics = true)
+		{
+			// TODO: The proper solution would be doing the same as this:
+			// https://github.com/apache/lucenenet/blob/master/src/Lucene.Net.Analysis.Common/Analysis/Miscellaneous/ASCIIFoldingFilter.cs
+
+			var input = removeDiacritics ? text.Normalize(NormalizationForm.FormD) : text;
+
+			var resultBuilder = new StringBuilder();
+
+			foreach (char c in input)
+			{
+				UnicodeCategory unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+
+				if (removeDiacritics && unicodeCategory == UnicodeCategory.NonSpacingMark)
+				{
+					// Diacritic:
+					continue;
+				}
+
+				if (! char.IsLetterOrDigit(c))
+				{
+					// Replace other special characters (blank, ', ", etc.)
+					if (specialCharReplacement.HasValue)
+					{
+						resultBuilder.Append(specialCharReplacement.Value);
+					}
+				}
+				else
+				{
+					resultBuilder.Append(c);
+				}
+			}
+
+			return resultBuilder.ToString();
+		}
+
+		/// <summary>
 		/// Join the given strings into one string, separated by the
 		/// given separator string. 
 		/// </summary>
@@ -769,7 +841,7 @@ namespace ProSuite.Commons.Text
 		public static string FormatNonScientific(double value,
 		                                         [NotNull] IFormatProvider formatProvider)
 		{
-			decimal decimalValue = (decimal)value;
+			decimal decimalValue = (decimal) value;
 			string result = string.Format(formatProvider, "{0:F99}", decimalValue).TrimEnd('0');
 
 			if (result.Length == 0)
@@ -787,7 +859,7 @@ namespace ProSuite.Commons.Text
 			double value,
 			[NotNull] IFormatProvider formatProvider)
 		{
-			decimal valueDecimal = (decimal)value;
+			decimal valueDecimal = (decimal) value;
 			string result = string.Format(formatProvider, "{0:F99}", valueDecimal)
 			                      .TrimEnd('0');
 

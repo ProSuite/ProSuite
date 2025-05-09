@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -51,6 +52,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// should be verified.
 		/// </summary>
 		ICollection<IObject> VerifiedObjects { get; }
+
+		/// <summary>
+		/// The supported instance descriptors to be used for verifications.
+		/// </summary>
+		ISupportedInstanceDescriptors SupportedInstanceDescriptors { set; }
 
 		/// <summary>
 		/// Allows loading all required entities inside a transaction.
@@ -119,5 +125,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// <param name="verificationContext"></param>
 		/// <returns></returns>
 		IOpenDataset CreateDatasetOpener(IVerificationContext verificationContext);
+
+		/// <summary>
+		/// Creates the GDB transaction if errors are written to the verification context.
+		/// </summary>
+		/// <returns></returns>
+		[NotNull]
+		IGdbTransaction CreateGdbTransaction();
 	}
 }

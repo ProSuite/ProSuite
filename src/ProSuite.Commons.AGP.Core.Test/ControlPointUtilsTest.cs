@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Hosting;
 using System.Linq;
@@ -18,6 +19,51 @@ public class ControlPointUtilsTest
 	}
 
 	[Test]
+	public void CanCreateCircularArc()
+	{
+		// Due to the immutable geometries, setting a control point
+		// on a polygon or polyline means we have to recreate two
+		// segments. 
+		MapPoint right = MapPointBuilderEx.CreateMapPoint(1, 0);
+		MapPoint up = MapPointBuilderEx.CreateMapPoint(0, 1);
+		MapPoint left = MapPointBuilderEx.CreateMapPoint(-1, 0);
+		MapPoint down = MapPointBuilderEx.CreateMapPoint(0, -1);
+		Coordinate2D origin = new Coordinate2D(0, 0);
+		const ArcOrientation ccw = ArcOrientation.ArcCounterClockwise;
+
+		// quarter circle:
+
+		var arc = EllipticArcBuilderEx.CreateCircularArc(right, up, origin, ccw);
+
+		Assert.True(arc.IsCircular);
+		Assert.True(arc.IsMinor);
+
+		// half circle: considered major because central angle >= pi
+
+		arc = EllipticArcBuilderEx.CreateCircularArc(right, left, origin, ccw);
+
+		Assert.True(arc.IsCircular);
+		Assert.False(arc.IsMinor);
+		Assert.AreEqual(Math.PI, arc.CentralAngle, 1E-7);
+
+		// 3/4 circle:
+
+		arc = EllipticArcBuilderEx.CreateCircularArc(right, down, origin, ccw);
+
+		Assert.True(arc.IsCircular);
+		Assert.False(arc.IsMinor);
+		Assert.AreEqual(1.5 * Math.PI, arc.CentralAngle, 1E-7);
+
+		// full circle:
+
+		arc = EllipticArcBuilderEx.CreateCircularArc(right, right, origin, ccw);
+
+		Assert.True(arc.IsCircular);
+		Assert.False(arc.IsMinor);
+		Assert.AreEqual(2 * Math.PI, arc.CentralAngle, 1E-7);
+	}
+
+	[Test]
 	public void CanSetPointID()
 	{
 		var point = MapPointBuilderEx.CreateMapPoint(1.2, 3.4);
@@ -27,20 +73,17 @@ public class ControlPointUtilsTest
 		var point0 = ControlPointUtils.SetPointID(null, 42);
 		Assert.IsNull(point0);
 
-		var point1 = ControlPointUtils.SetPointID(point, null);
-		Assert.AreSame(point, point1);
+		var point1 = ControlPointUtils.SetPointID(point, 1);
+		Assert.IsTrue(point1.HasID);
+		Assert.AreEqual(1, point1.ID);
 
-		var point2 = ControlPointUtils.SetPointID(point, 1);
+		var point2 = ControlPointUtils.SetPointID(point, 123);
 		Assert.IsTrue(point2.HasID);
-		Assert.AreEqual(1, point2.ID);
+		Assert.AreEqual(123, point2.ID);
 
-		var point3 = ControlPointUtils.SetPointID(point, 123);
-		Assert.IsTrue(point3.HasID);
-		Assert.AreEqual(123, point3.ID);
-
-		var point4 = ControlPointUtils.SetPointID(point, 0);
-		Assert.IsTrue(point4.HasID);
-		Assert.AreEqual(0, point4.ID);
+		var point3 = ControlPointUtils.SetPointID(point, 0);
+		Assert.IsFalse(point3.HasID); // setting ID to zero clears HasID
+		Assert.AreEqual(0, point3.ID);
 	}
 
 	[Test]
@@ -122,32 +165,31 @@ public class ControlPointUtilsTest
 		var polygon = PolygonBuilderEx.CreatePolygon(
 			new[] { Pt(0, 0, 1), Pt(0, 3, 2), Pt(5, 5), Pt(5, 0, 1), Pt(0, 0, 1) });
 
-		var p1 = ControlPointUtils.ResetControlPoints(polygon, out int c1);
+		var p1 = ControlPointUtils.ResetControlPoints(polygon);
 		Assert.NotNull(p1);
-		Assert.AreEqual(3, c1); // first/last point count as one for this change
+		//Assert.AreEqual(3, c1); // first/last point count as one for this change
 		Assert.IsTrue(p1.Points.All(p => p.ID == 0));
 
-		var p2 = ControlPointUtils.ResetControlPoints(polygon, out int c2, 2);
+		var p2 = ControlPointUtils.ResetControlPoints(polygon, -1, 2);
 		Assert.NotNull(p2);
-		Assert.AreEqual(1, c2);
 		Assert.AreEqual(2, p2.Points.Count(p => p.ID == 0));
 		Assert.AreEqual(3, p2.Points.Count(p => p.ID == 1));
 
-		var p3 = ControlPointUtils.ResetControlPoints(polygon, out int c3, 1);
+		var p3 = ControlPointUtils.ResetControlPoints(polygon, -1, 1);
 		Assert.NotNull(p3);
-		Assert.AreEqual(2, c3); // first/last point count as one for this change
+		//Assert.AreEqual(2, c3); // first/last point count as one for this change
 		Assert.AreEqual(4, p3.Points.Count(p => p.ID == 0));
 		Assert.AreEqual(1, p3.Points.Count(p => p.ID == 2));
 
 		var polyline = PolylineBuilderEx.CreatePolyline(polygon);
 
-		var p4 = ControlPointUtils.ResetControlPoints(polyline, out int c4, 1);
+		var p4 = ControlPointUtils.ResetControlPoints(polyline, -1, 1);
 		Assert.NotNull(p4);
-		Assert.AreEqual(3, c4); // now first/last count as two because path (not ring)
+		//Assert.AreEqual(3, c4); // now first/last count as two because path (not ring)
 		Assert.AreEqual(4, p4.Points.Count(p => p.ID == 0));
 		Assert.AreEqual(1, p4.Points.Count(p => p.ID == 2));
 
-		Assert.IsNull(ControlPointUtils.ResetControlPoints((Polygon) null, out _));
+		Assert.IsNull(ControlPointUtils.ResetControlPoints((Polygon) null));
 
 		// It also works straight on a MultipartBuilderEx instance:
 		var builder = new PolylineBuilderEx(polyline);

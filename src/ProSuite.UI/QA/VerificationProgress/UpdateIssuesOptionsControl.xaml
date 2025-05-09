@@ -7,9 +7,9 @@
              xmlns:commonswpf="clr-namespace:ProSuite.Commons.UI.WPF;assembly=ProSuite.Commons.UI"
              d:DataContext="{d:DesignInstance Type=local:UpdateIssuesOptionsViewModel}"
              mc:Ignorable="d"
-             d:DesignHeight="200" d:DesignWidth="400">
+             d:DesignHeight="215" d:DesignWidth="400">
 
-    <DockPanel LastChildFill="False" Background="GhostWhite" Height="200" Width="400">
+    <DockPanel LastChildFill="False" Background="GhostWhite" Height="215" Width="400">
         <Grid DockPanel.Dock="Top" Margin="6">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -41,6 +41,7 @@
                 <CheckBox
                     Height="Auto" HorizontalAlignment="Left" Margin="4, 8"
                     IsChecked="{Binding Path=KeepPreviousIssues, Mode=TwoWay}"
+                    IsEnabled="{Binding Path= KeepPreviousIssuesEnabled}"
                     ToolTip="Determines filter date of 'Latest test' filter">
                     <TextBox
                         Text="Keep the issues from the previous test run and add newly found issues to the work list. By default the work list is filtered to the issues found by latest saved verification."

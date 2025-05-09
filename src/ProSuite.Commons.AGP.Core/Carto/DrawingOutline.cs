@@ -15,9 +15,10 @@ public static class DrawingOutline
 	{
 		public bool IgnoreErrors { get; set; } // and outline may be wrong
 		public bool IgnoreDashing { get; set; } // and assume solid lines
-		public bool IgnoreLineMarkers { get; set; } // TODO point markers still honored
-		public bool FillGlyphCounters { get; set; } // TODO dt. Punzen entfernen
-		public bool FillHoles { get; set; } // TODO probably want (relative) size limit
+		//public bool IgnoreLineMarkers { get; set; } // point markers still honored
+		//public bool FillGlyphCounters { get; set; } // dt. Punzen entfernen
+		//public bool FillHoles { get; set; } // probably want (relative) size limit
+		public ulong LayerMask { get; set; } // 0 = all, otherwise only bits set
 		public double MaxBufferDeviationPoints { get; set; } // see (Graphic)Buffer operation
 		public int MaxVerticesInFullCircle { get; set; } // see (Graphic)Buffer operation
 		public double ScaleFactor { get; set; } // to convert points to map units at reference scale!
@@ -27,28 +28,51 @@ public static class DrawingOutline
 			// Set defaults:
 			IgnoreErrors = false;
 			IgnoreDashing = false;
-			IgnoreLineMarkers = false;
-			FillGlyphCounters = false;
-			FillHoles = false;
+			//IgnoreLineMarkers = false;
+			//FillGlyphCounters = false;
+			//FillHoles = false;
+			LayerMask = 0;
 			MaxBufferDeviationPoints = 0.1; // about 0.03mm
 			MaxVerticesInFullCircle = 120;
 			ScaleFactor = 1.0;
 		}
 
-		public Options(Options options, double? scaleFactor = null)
+		public Options(Options options, ulong? layerMask = null, double? scaleFactor = null)
 		{
 			if (options is null)
 				throw new ArgumentNullException(nameof(options));
 
-			// Copy values:
+			// Copy "inheritable" values:
 			IgnoreErrors = options.IgnoreErrors;
 			IgnoreDashing = options.IgnoreDashing;
-			IgnoreLineMarkers = options.IgnoreLineMarkers;
-			FillGlyphCounters = options.FillGlyphCounters;
-			FillHoles = options.FillHoles;
+			//IgnoreLineMarkers = options.IgnoreLineMarkers;
+			//FillGlyphCounters = options.FillGlyphCounters;
+			//FillHoles = options.FillHoles;
 			MaxBufferDeviationPoints = options.MaxBufferDeviationPoints;
 			MaxVerticesInFullCircle = options.MaxVerticesInFullCircle;
+
+			// Copy only if not given:
+			LayerMask = layerMask ?? options.LayerMask;
 			ScaleFactor = scaleFactor ?? options.ScaleFactor;
+		}
+
+		public void OnlySymbolLayers(params int[] indices)
+		{
+			if (indices is null || indices.Length < 1)
+			{
+				LayerMask = 0; // all symbol layers
+			}
+			else
+			{
+				ulong mask = 0;
+
+				foreach (int i in indices)
+				{
+					mask |= 1ul << i; // ignore wrap in shift
+				}
+
+				LayerMask = mask; // only selected layers
+			}
 		}
 	}
 
@@ -149,7 +173,7 @@ public static class DrawingOutline
 			// seem to be ignored!
 
 			// As of Pro 3.0 none of those ScaleX properties is exposed
-			// in the UI and so it's probably save to ignore it here.
+			// in the UI and so it's probably safe to ignore it here.
 		}
 
 		var outline = RenderLayers(shape, symbol.SymbolLayers, options);
@@ -216,14 +240,27 @@ public static class DrawingOutline
 	{
 		var list = new List<Polygon>();
 
-		foreach (var symbolLayer in layers.Where(l => l.Enable))
+		var mask = options.LayerMask;
+
+		int n = layers?.Length ?? 0;
+		for (int i = 0; i < n; i++)
 		{
+			var layer = layers![i];
+			if (!layer.Enable) continue;
+
+			// ignore wrap in shift: in practice there
+			// are hardly ever more than 5 symbol layers:
+			if (mask > 0 && (mask & (1ul << (n - i - 1))) == 0)
+			{
+				continue; // symbol layer excluded by layer mask
+			}
+
 			try
 			{
-				var layerOutline = GetLayerOutline(shape, symbolLayer, options);
+				var layerOutline = GetLayerOutline(shape, layer, options);
 				if (layerOutline is null) continue;
-				// The simplify is to fix ring orientation; as here it is
-				// most likely already correct here, don't force the simplify:
+				// Simplify() is to fix ring orientation; as it is
+				// most likely already correct here, don't force it:
 				list.Add(GeometryUtils.Simplify(layerOutline));
 			}
 			catch (Exception ex)
@@ -261,13 +298,19 @@ public static class DrawingOutline
 
 		if (layer is CIMFill)
 		{
-			// Specific subtype (Solid, Gradient, etc) is irrelevant here:
+			// Specific subtype (Solid, Gradient, etc.) is irrelevant here:
 			// outline is always the input polygon shape
 			return shape as Polygon;
 		}
 
 		if (layer is CIMStroke stroke)
 		{
+			// Stroking a polygon draws along its boundary:
+			if (shape is Polygon polygon)
+			{
+				shape = GeometryUtils.Boundary(polygon);
+			}
+
 			// Specific subtype (Solid, Gradient, Picture) is irrelevant here
 			// Buffer all paths (if any) of the given shape:
 			double distance = stroke.Width * scaleFactor / 2;
@@ -432,13 +475,12 @@ public static class DrawingOutline
 		var frame = marker.Frame;
 		bool respectFrame = marker.RespectFrame; // TODO don't understand
 		//bool scaleStrokes = vectorMarker.ScaleSymbolsProportionally; // relative to Size=10pt ???
-		if (marker.ClippingPath?.Path != null)
-			throw new NotImplementedException(
-				$"{nameof(marker.ClippingPath)} on vector marker is not yet supported");
+		
 		var list = new List<Geometry>();
 		foreach (var graphic in graphics)
 		{
-			var innerOptions = new Options(options, 1.0);
+			// inner symbols: all layers, no scaling:
+			var innerOptions = new Options(options, 0, 1.0);
 			// simplify graphic's geometry to fix ring orientations
 			var graphicShape = GeometryUtils.Simplify(graphic.Geometry, true);
 			var graphicOutline = GetOutline(graphicShape, graphic.Symbol, innerOptions);
@@ -450,6 +492,28 @@ public static class DrawingOutline
 		}
 
 		var outline = GeometryUtils.Union(list);
+
+		var clippingPath = marker.ClippingPath?.Path;
+		if (clippingPath != null)
+		{
+			switch (marker.ClippingPath.ClippingType)
+			{
+				case ClippingType.Intersect:
+				{
+					outline = GeometryUtils.Intersection(outline, clippingPath);
+					break;
+				}
+
+				case ClippingType.Subtract:
+				{
+					outline = GeometryUtils.Difference(outline, clippingPath);
+					break;
+				}
+
+				default:
+					throw new ArgumentOutOfRangeException($"Unknow clipping type {marker.ClippingPath.ClippingType}");
+			}
+		}
 
 		var box = respectFrame ? frame : outline.Extent;
 		outline = GeometryUtils.Move(outline, -box.Center.X, -box.Center.Y);
@@ -508,7 +572,9 @@ public static class DrawingOutline
 	private static Geometry ApplyEffects(
 		Geometry shape, IEnumerable<CIMGeometricEffect> effects, Options options)
 	{
-		foreach (var effect in effects ?? Enumerable.Empty<CIMGeometricEffect>())
+		if (effects is null) return shape;
+
+		foreach (var effect in effects)
 		{
 			if (effect is CIMGeometricEffectDashes && options.IgnoreDashing) continue;
 
@@ -685,6 +751,9 @@ public static class DrawingOutline
 			case CIMMarkerPlacementAroundPolygon aroundPolygon:
 				return MarkerPlacements.AroundPolygon(
 					marker, reference, GetOptions(aroundPolygon, scaleFactor));
+			case CIMMarkerPlacementInsidePolygon insidePolygon:
+				return MarkerPlacements.InsidePolygon(
+					marker, reference, GetOptions(insidePolygon, scaleFactor));
 
 			// Stroke marker placements:
 
@@ -720,7 +789,7 @@ public static class DrawingOutline
 				MarkerPlacements.PolygonCenterType.Centroid,
 			PlacementPolygonCenterMethod.OnPolygon =>
 				MarkerPlacements.PolygonCenterType.LabelPoint,
-			_ => throw new ArgumentOutOfRangeException(nameof(cim.Method), cim.Method, "Unknown value")
+			_ => throw new ArgumentOutOfRangeException($"Unknown {nameof(PlacementPolygonCenterMethod)} {cim.Method}")
 		};
 
 		return new MarkerPlacements.PolygonCenterOptions
@@ -762,6 +831,41 @@ public static class DrawingOutline
 		       {
 			       Position = position,
 			       Offset = cim.Offset * scaleFactor
+		       };
+	}
+
+	private static MarkerPlacements.InsidePolygonOptions GetOptions(
+		CIMMarkerPlacementInsidePolygon cim, double scaleFactor = 1.0)
+	{
+		if (cim.GridType != PlacementGridType.Fixed)
+		{
+			throw new NotSupportedException("Randomized placement is not supported");
+		}
+
+		var clipping = cim.Clipping switch
+		{
+			PlacementClip.ClipAtBoundary =>
+				MarkerPlacements.PolygonMarkerClipping.ClipAtBoundary,
+			PlacementClip.RemoveIfCenterOutsideBoundary =>
+				MarkerPlacements.PolygonMarkerClipping.CenterInsideBoundary,
+			PlacementClip.DoNotTouchBoundary =>
+				MarkerPlacements.PolygonMarkerClipping.FullyInsideBoundary,
+			PlacementClip.DoNotClip =>
+				MarkerPlacements.PolygonMarkerClipping.DoNotClip,
+			_ => throw new ArgumentOutOfRangeException($"Unknown {nameof(PlacementClip)} {cim.Clipping}")
+		};
+
+		return new MarkerPlacements.InsidePolygonOptions
+		       {
+			       PlacePerPart = cim.PlacePerPart,
+
+			       StepX = cim.StepX * scaleFactor,
+			       StepY = cim.StepY * scaleFactor,
+			       GridAngle = cim.GridAngle,
+			       ShiftOddRows = cim.ShiftOddRows,
+			       OffsetX = cim.OffsetX * scaleFactor,
+			       OffsetY = cim.OffsetY * scaleFactor,
+				   Clipping = clipping
 		       };
 	}
 

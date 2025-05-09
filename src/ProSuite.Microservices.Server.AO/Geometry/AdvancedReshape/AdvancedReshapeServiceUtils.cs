@@ -14,9 +14,10 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 {
@@ -48,6 +49,12 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 				return NoReshapeResponse(notifications);
 			}
 
+			//foreach (KeyValuePair<IGeometry, NotificationCollection> reshapedGeometry in reshapedGeometries)
+			//{
+			//	IGeometry geometry = reshapedGeometry.Key;
+			//	DebugHelper.StoreNewFeature(geometry, "RingSegmentsTest.gdb", "PreResult");
+			//}
+
 			var response = new AdvancedReshapeResponse();
 
 			if (reshaper.ResultWithinOtherResultButNotInOriginal(
@@ -66,7 +73,13 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 			}
 
 			// Junction-move, updating of adjacent lines is performed in Save:
+			//hier wird die geometry final geändert
 			IList<IFeature> storedFeatures = reshaper.Save(reshapedGeometries);
+
+			//foreach (IFeature storedFeature in storedFeatures)
+			//{
+			//	DebugHelper.StoreNewFeature(storedFeature.ShapeCopy, "RingSegmentsTest.gdb", "PreResult2");
+			//}
 
 			response.OpenJawReshapeHappened = reshaper.OpenJawReshapeOcurred;
 			response.OpenJawIntersectionCount = reshaper.OpenJawIntersectionPointCount;

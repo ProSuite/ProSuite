@@ -1816,10 +1816,9 @@ namespace ProSuite.Commons.Geom
 
 		/// <summary>
 		/// Follows the indicated geometry along the indicated direction starting at 
-		/// <see cref="previousIntersection"/> to the next relevant intersection.
+		/// <paramref name="previousIntersection"/> to the next relevant intersection.
 		/// The visited intersections along the source will be removed from the provided
-		/// <see cref="startIntersections"/>.
-		/// intersections 
+		/// <paramref name="startIntersections"/>.
 		/// </summary>
 		/// <param name="previousIntersection">The start of the new subcurve</param>
 		/// <param name="continueOnSource">Whether the source should be followed or, if false, the

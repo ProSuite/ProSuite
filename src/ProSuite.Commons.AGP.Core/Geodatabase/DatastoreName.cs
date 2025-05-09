@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
@@ -35,54 +38,18 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			_connector = connector;
 		}
 
+		/// <summary>
+		/// Opens the associated datastore. This method must be run on the MCT.
+		/// </summary>
+		/// <returns></returns>
 		public Datastore Open()
 		{
-			try
-			{
-				switch (_connector)
-				{
-					case DatabaseConnectionFile dbConnection:
-						return new ArcGIS.Core.Data.Geodatabase(dbConnection);
+			return WorkspaceUtils.OpenDatastore(_connector);
+		}
 
-					case DatabaseConnectionProperties dbConnectionProps:
-						return new ArcGIS.Core.Data.Geodatabase(dbConnectionProps);
-
-					case FileGeodatabaseConnectionPath fileGdbConnection:
-						return new ArcGIS.Core.Data.Geodatabase(fileGdbConnection);
-
-					case FileSystemConnectionPath fileSystemConnection:
-						return new FileSystemDatastore(fileSystemConnection);
-
-					case MemoryConnectionProperties memoryConnectionProperties:
-						return new ArcGIS.Core.Data.Geodatabase(memoryConnectionProperties);
-
-					case MobileGeodatabaseConnectionPath mobileConnectionProperties:
-						return new ArcGIS.Core.Data.Geodatabase(mobileConnectionProperties);
-
-					case PluginDatasourceConnectionPath pluginConnectionPath:
-						return new PluginDatastore(pluginConnectionPath);
-
-					case RealtimeServiceConnectionProperties realtimeServiceConnection:
-						return new RealtimeDatastore(realtimeServiceConnection);
-
-					case ServiceConnectionProperties serviceConnection:
-						return new ArcGIS.Core.Data.Geodatabase(serviceConnection);
-
-					case SQLiteConnectionPath sqLiteConnection:
-						return new Database(sqLiteConnection);
-
-					default:
-						throw new ArgumentOutOfRangeException(
-							$"Unsupported workspace type: {_connector?.GetType()}");
-				}
-			}
-			catch (Exception e)
-			{
-				_msg.Debug(
-					$"Error opening datastore {WorkspaceUtils.GetDatastoreDisplayText(_connector)}",
-					e);
-				throw;
-			}
+		public bool References(Datastore datastore)
+		{
+			return Equals(datastore.GetConnector());
 		}
 
 		public string GetDisplayText()
@@ -92,64 +59,109 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				       : "<undefined connection>";
 		}
 
+		public IEnumerable<KeyValuePair<string, string>> ConnectionProperties
+		{
+			get
+			{
+				if (_connector is DatabaseConnectionProperties properties)
+				{
+					if (! string.IsNullOrEmpty(properties.Instance))
+						yield return new KeyValuePair<string, string>(
+							"INSTANCE", properties.Instance);
+
+					if (! string.IsNullOrEmpty(properties.DBMS.ToString()))
+						yield return new KeyValuePair<string, string>(
+							"DBMS", properties.DBMS.ToString());
+
+					if (! string.IsNullOrEmpty(properties.AuthenticationMode.ToString()))
+						yield return new KeyValuePair<string, string>(
+							"AUTHENTICATION_MODE", properties.AuthenticationMode.ToString());
+
+					if (! string.IsNullOrEmpty(properties.User))
+						yield return new KeyValuePair<string, string>("USER", properties.User);
+
+					if (! string.IsNullOrEmpty(properties.Password))
+						yield return new KeyValuePair<string, string>(
+							"PASSWORD", properties.Password);
+
+					if (! string.IsNullOrEmpty(properties.Database))
+						yield return new KeyValuePair<string, string>(
+							"DATABASE", properties.Database);
+
+					if (! string.IsNullOrEmpty(properties.ProjectInstance))
+						yield return new KeyValuePair<string, string>(
+							"PROJECT_INSTANCE", properties.ProjectInstance);
+
+					if (! string.IsNullOrEmpty(properties.Version))
+						yield return
+							new KeyValuePair<string, string>("VERSION", properties.Version);
+
+					if (! string.IsNullOrEmpty(properties.Branch))
+						yield return new KeyValuePair<string, string>("BRANCH", properties.Branch);
+				}
+
+				if (_connector is DatabaseConnectionFile sdeFile)
+				{
+					yield return new KeyValuePair<string, string>("PATH", sdeFile.Path.ToString());
+				}
+
+				if (_connector is FileGeodatabaseConnectionPath fgdbPath)
+				{
+					yield return new KeyValuePair<string, string>("PATH", fgdbPath.Path.ToString());
+				}
+
+				if (_connector is FileSystemConnectionPath fsPath)
+				{
+					yield return new KeyValuePair<string, string>("TYPE", fsPath.Type.ToString());
+					yield return new KeyValuePair<string, string>("PATH", fsPath.Path.ToString());
+				}
+
+				if (_connector is MemoryConnectionProperties memoryConnection)
+				{
+					yield return new KeyValuePair<string, string>("NAME", memoryConnection.Name);
+				}
+
+				if (_connector is MobileGeodatabaseConnectionPath mobilePath)
+				{
+					yield return new KeyValuePair<string, string>(
+						"PATH", mobilePath.Path.ToString());
+				}
+
+				if (_connector is PluginDatasourceConnectionPath pluginPath)
+				{
+					yield return new KeyValuePair<string, string>(
+						"PLUGIN_IDENTIFIER", pluginPath.PluginIdentifier);
+					yield return new KeyValuePair<string, string>(
+						"DATASOURCE_PATH", pluginPath.DatasourcePath.ToString());
+				}
+
+				if (_connector is RealtimeServiceConnectionProperties serviceConnection)
+				{
+					yield return new KeyValuePair<string, string>(
+						"URL", serviceConnection.URL.AbsolutePath);
+				}
+			}
+		}
+
+		public string ConnectionString
+		{
+			get
+			{
+				// TODO: Unit test, verify this logic. Currently just used for comparisons.
+				return StringUtils.Concatenate(
+					ConnectionProperties.Select(kvp => $"{kvp.Key}={kvp.Value}"), ";");
+			}
+		}
+
 		#region Equality members
 
 		public bool Equals(DatastoreName other)
 		{
 			if (other is null) return false;
-			if (_connector.GetType() != other._connector.GetType()) return false;
 
-			switch (_connector)
-			{
-				case DatabaseConnectionFile dbConnection:
-					var otherDbConnection = (DatabaseConnectionFile) other._connector;
-					return Equals(dbConnection.Path, otherDbConnection.Path);
+			Connector otherConnector = other._connector;
 
-				case DatabaseConnectionProperties dbConnectionProps:
-					return AreEqual(dbConnectionProps,
-					                (DatabaseConnectionProperties) other._connector);
-
-				case FileGeodatabaseConnectionPath fileGdbConnection:
-					var otherFgdbConnection = (FileGeodatabaseConnectionPath) other._connector;
-					return Equals(fileGdbConnection.Path, otherFgdbConnection.Path);
-
-				case FileSystemConnectionPath fileSystemConnection:
-					var otherFsConnection = (FileSystemConnectionPath) other._connector;
-					return fileSystemConnection.Type == otherFsConnection.Type &&
-					       Equals(fileSystemConnection.Path, otherFsConnection.Path);
-
-				case MemoryConnectionProperties memoryConnectionProperties:
-					var otherMemoryConnection = (MemoryConnectionProperties) other._connector;
-					return Equals(memoryConnectionProperties.Name, otherMemoryConnection.Name);
-
-				case MobileGeodatabaseConnectionPath mobileConnectionProperties:
-					var otherMobileConnection = (MobileGeodatabaseConnectionPath) other._connector;
-					return Equals(mobileConnectionProperties.Path, otherMobileConnection.Path);
-
-				case PluginDatasourceConnectionPath pluginConnectionPath:
-					var otherPluginConnection = (PluginDatasourceConnectionPath) other._connector;
-					return Equals(pluginConnectionPath.PluginIdentifier,
-					              otherPluginConnection.PluginIdentifier) &&
-					       Equals(pluginConnectionPath.DatasourcePath,
-					              otherPluginConnection.DatasourcePath);
-
-				case RealtimeServiceConnectionProperties serviceConnection:
-					var otherRealtimeServiceConnection =
-						(RealtimeServiceConnectionProperties) other._connector;
-
-					return AreEqual(serviceConnection, otherRealtimeServiceConnection);
-
-				case ServiceConnectionProperties serviceConnection:
-					var otherServiceConnection = (ServiceConnectionProperties) other._connector;
-					return AreEqual(serviceConnection, otherServiceConnection);
-
-				case SQLiteConnectionPath sqLiteConnection:
-					var otherSqliteConnection = (SQLiteConnectionPath) other._connector;
-					return Equals(sqLiteConnection.Path, otherSqliteConnection.Path);
-
-				default:
-					return false;
-			}
+			return Equals(otherConnector);
 		}
 
 		public override bool Equals(object obj)
@@ -223,6 +235,63 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		#endregion
+
+		private bool Equals(Connector otherConnector)
+		{
+			if (_connector.GetType() != otherConnector.GetType()) return false;
+
+			switch (_connector)
+			{
+				case DatabaseConnectionFile dbConnection:
+					var otherDbConnection = (DatabaseConnectionFile) otherConnector;
+					return Equals(dbConnection.Path, otherDbConnection.Path);
+
+				case DatabaseConnectionProperties dbConnectionProps:
+					return AreEqual(dbConnectionProps,
+					                (DatabaseConnectionProperties) otherConnector);
+
+				case FileGeodatabaseConnectionPath fileGdbConnection:
+					var otherFgdbConnection = (FileGeodatabaseConnectionPath) otherConnector;
+					return Equals(fileGdbConnection.Path, otherFgdbConnection.Path);
+
+				case FileSystemConnectionPath fileSystemConnection:
+					var otherFsConnection = (FileSystemConnectionPath) otherConnector;
+					return fileSystemConnection.Type == otherFsConnection.Type &&
+					       Equals(fileSystemConnection.Path, otherFsConnection.Path);
+
+				case MemoryConnectionProperties memoryConnectionProperties:
+					var otherMemoryConnection = (MemoryConnectionProperties) otherConnector;
+					return Equals(memoryConnectionProperties.Name, otherMemoryConnection.Name);
+
+				case MobileGeodatabaseConnectionPath mobileConnectionProperties:
+					var otherMobileConnection = (MobileGeodatabaseConnectionPath) otherConnector;
+					return Equals(mobileConnectionProperties.Path, otherMobileConnection.Path);
+
+				case PluginDatasourceConnectionPath pluginConnectionPath:
+					var otherPluginConnection = (PluginDatasourceConnectionPath) otherConnector;
+					return Equals(pluginConnectionPath.PluginIdentifier,
+					              otherPluginConnection.PluginIdentifier) &&
+					       Equals(pluginConnectionPath.DatasourcePath,
+					              otherPluginConnection.DatasourcePath);
+
+				case RealtimeServiceConnectionProperties serviceConnection:
+					var otherRealtimeServiceConnection =
+						(RealtimeServiceConnectionProperties) otherConnector;
+
+					return AreEqual(serviceConnection, otherRealtimeServiceConnection);
+
+				case ServiceConnectionProperties serviceConnection:
+					var otherServiceConnection = (ServiceConnectionProperties) otherConnector;
+					return AreEqual(serviceConnection, otherServiceConnection);
+
+				case SQLiteConnectionPath sqLiteConnection:
+					var otherSqliteConnection = (SQLiteConnectionPath) otherConnector;
+					return Equals(sqLiteConnection.Path, otherSqliteConnection.Path);
+
+				default:
+					return false;
+			}
+		}
 
 		private static int GetHashCode(DatabaseConnectionProperties dbConnectionProps)
 		{

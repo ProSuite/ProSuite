@@ -20,6 +20,7 @@ using ProSuite.QA.Tests.Network;
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
+	[InternallyUsedTest] //This shall be removed when the transformer is ready for use
 	[GeometryTransformer]
 	public class TrGetNodes : TableTransformer<TransformedFeatureClass>
 	{

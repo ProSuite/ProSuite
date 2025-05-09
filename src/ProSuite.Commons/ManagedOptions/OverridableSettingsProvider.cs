@@ -90,9 +90,9 @@ namespace ProSuite.Commons.ManagedOptions
 
 			var issueNotifications = new NotificationCollection();
 
-			if (ConfigurationExists(CentralConfigDirectory, ConfigFileName))
+			if (ManagedOptionsUtils.ConfigurationFileExists(CentralConfigDirectory, ConfigFileName))
 			{
-				_centralConfiguration = GetConfiguration(
+				_centralConfiguration = ManagedOptionsUtils.GetConfiguration<T>(
 					CentralConfigDirectory, ConfigFileName,
 					issueText => issueNotifications.Add(issueText));
 
@@ -115,9 +115,9 @@ namespace ProSuite.Commons.ManagedOptions
 			localConfiguration = null;
 
 			issueNotifications.Clear();
-			if (ConfigurationExists(LocalConfigDirectory, ConfigFileName))
+			if (ManagedOptionsUtils.ConfigurationFileExists(LocalConfigDirectory, ConfigFileName))
 			{
-				localConfiguration = GetConfiguration(
+				localConfiguration = ManagedOptionsUtils.GetConfiguration<T>(
 					LocalConfigDirectory, ConfigFileName,
 					issueText => issueNotifications.Add(issueText));
 
@@ -145,7 +145,7 @@ namespace ProSuite.Commons.ManagedOptions
 		{
 			string localFile;
 
-			if (ConfigurationExists(LocalConfigDirectory, ConfigFileName))
+			if (ManagedOptionsUtils.ConfigurationFileExists(LocalConfigDirectory, ConfigFileName))
 			{
 				localFile = Path.Combine(LocalConfigDirectory, ConfigFileName);
 			}
@@ -156,8 +156,9 @@ namespace ProSuite.Commons.ManagedOptions
 
 			string centralFile;
 
-			bool centralDefaultsExist = ConfigurationExists(CentralConfigDirectory,
-			                                                ConfigFileName);
+			bool centralDefaultsExist = ManagedOptionsUtils.ConfigurationFileExists(
+				CentralConfigDirectory,
+				ConfigFileName);
 
 			if (centralDefaultsExist)
 			{
@@ -183,63 +184,6 @@ namespace ProSuite.Commons.ManagedOptions
 			// string.Empty considers 2 null values equal
 			return ! string.Equals(CentralConfigDirectory, currentCentralConfigDir) ||
 			       ! string.Equals(LocalConfigDirectory, currentLocalConfigDir);
-		}
-
-		private static bool ConfigurationExists([CanBeNull] string configDirectory,
-		                                        [NotNull] string configFileName)
-		{
-			if (string.IsNullOrEmpty(configDirectory))
-			{
-				return false;
-			}
-
-			if (! Directory.Exists(configDirectory))
-			{
-				return false;
-			}
-
-			string fullConfigFileName = Path.Combine(configDirectory, configFileName);
-
-			return File.Exists(fullConfigFileName);
-		}
-
-		[CanBeNull]
-		private static T GetConfiguration([CanBeNull] string directory,
-		                                  [NotNull] string fileName,
-		                                  [CanBeNull] Action<string> receiveNotification)
-		{
-			Assert.ArgumentNotNullOrEmpty(fileName, nameof(fileName));
-
-			if (! ConfigurationExists(directory, fileName))
-			{
-				return default;
-			}
-
-			string fullConfigFileName = Path.Combine(Assert.NotNull(directory), fileName);
-
-			_msg.DebugFormat("Reading configuration file {0}...", fullConfigFileName);
-
-			try
-			{
-				var helper = new XmlSerializationHelper<T>();
-
-				return helper.ReadFromFile(fullConfigFileName, receiveNotification);
-			}
-			catch (InvalidOperationException e)
-			{
-				_msg.Debug("InvalidOperationException reading configuration file", e);
-
-				// e.g. if the class name changes:
-				receiveNotification?.Invoke(
-					$"The configuration file {fullConfigFileName} could not be read. The configuration must be stored again with the current software version.");
-
-				return default;
-			}
-			catch (Exception e)
-			{
-				_msg.Warn("Exception reading configuration file", e);
-				throw;
-			}
 		}
 	}
 }

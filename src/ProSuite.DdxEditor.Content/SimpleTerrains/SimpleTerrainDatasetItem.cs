@@ -53,9 +53,12 @@ namespace ProSuite.DdxEditor.Content.SimpleTerrains
 		protected override void IsValidForPersistenceCore(SimpleTerrainDataset entity,
 		                                                  Notification notification)
 		{
-			if (entity.Name == null)
+			string terrainName = entity.Name;
+
+			if (terrainName == null)
 			{
 				notification.RegisterMessage("Name", "Required field", Severity.Error);
+				return;
 			}
 
 			if (entity.Sources.Count == 0)
@@ -63,6 +66,47 @@ namespace ProSuite.DdxEditor.Content.SimpleTerrains
 				notification.RegisterMessage("Terrain Source Datasets",
 				                             "At least one source must be specified",
 				                             Severity.Error);
+				return;
+			}
+
+			bool nameIsQualified = ModelElementNameUtils.IsQualifiedName(terrainName);
+			string schemaOwner = entity.Model.DefaultDatabaseSchemaOwner + ".";
+
+			if (entity.Model.ElementNamesAreQualified)
+			{
+				string message =
+					$"The model uses qualified dataset names. The name must be qualified with the model's schema owner ({schemaOwner})";
+
+				if (! nameIsQualified)
+				{
+					notification.RegisterMessage("Name", message, Severity.Error);
+				}
+				else
+				{
+					if (! terrainName.StartsWith(schemaOwner))
+					{
+						notification.RegisterMessage("Name", message, Severity.Error);
+					}
+				}
+			}
+			else
+			{
+				if (nameIsQualified)
+				{
+					notification.RegisterMessage(
+						"Name",
+						"The model uses un-qualified dataset names. Name must not be qualified",
+						Severity.Error);
+				}
+			}
+
+			string unqualifiedName =
+				nameIsQualified ? terrainName.Remove(0, schemaOwner.Length) : terrainName;
+
+			if (! ModelElementNameUtils.IsValidUnqualifiedTableName(
+				    unqualifiedName, out string nameMessage))
+			{
+				notification.RegisterMessage("Name", nameMessage, Severity.Error);
 			}
 		}
 

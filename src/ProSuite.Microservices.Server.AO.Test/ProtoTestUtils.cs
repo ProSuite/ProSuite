@@ -5,7 +5,7 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Server.AO.Test
 {
@@ -47,7 +47,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 			{
 				// If persistent, use model id
 				ObjectClassMsg objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(
-					dataset, modelId, model.SpatialReferenceDescriptor.SpatialReference);
+					dataset, modelId, model.SpatialReferenceDescriptor.GetSpatialReference());
 
 				schemaMsg.ClassDefinitions.Add(objectClassMsg);
 			}

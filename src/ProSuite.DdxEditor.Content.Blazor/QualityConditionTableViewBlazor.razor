@@ -196,12 +196,13 @@
                             <DynamicComponent Type="viewModel.ComponentType" Parameters="viewModel.ComponentParameters"/>
                         </Template>
                     </RadzenDataGridColumn>
-
                     <RadzenDataGridColumn TItem="ViewModelBase" Property="FilterExpression" Title="Filter Expression">
                         <Template Context="viewModel">
                             @if (viewModel is DatasetTestParameterValueViewModel vm)
                             {
-	                            <RadzenTextBox @bind-Value="vm.FilterExpression" oninput="@(vm.OnInput)" />
+	                            <SqlExpressionBlazor @bind-value="vm.FilterExpression" 
+	                                                 QueryBuilderCallback="vm.ShowFilterExpressionBuilder" 
+	                                                 ExpressionChanged="vm.FilterExpressionChanged"></SqlExpressionBlazor>
                             }
                         </Template>
                     </RadzenDataGridColumn>

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,25 +10,29 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.AdvancedReshape;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.ManagedOptions;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI;
-using ProSuite.Microservices.Client.AGP;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
-	public abstract class AdvancedReshapeToolBase : ConstructionToolBase
+	public abstract class AdvancedReshapeToolBase : ConstructionToolBase, ISymbolizedSketchTool
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -36,34 +42,57 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		// - Make sure feedback microservices are called only once
 		// - Move to OnKeyUp in reshape side toggle
 		// - Options
-		// - Circumcision dialog
+		// - Circumcision dialog6
 		// - Reshape size change logging - use abbreviations for display units
 		// - R(estore) sketch
 		// - Connected lines reshape
 		// - Update feedback on toggle layer visibility
 
-		private AdvancedReshapeFeedback _feedback;
+		[CanBeNull] private AdvancedReshapeFeedback _feedback;
+		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
+
+		protected ReshapeToolOptions _advancedReshapeToolOptions;
+
+		[CanBeNull]
+		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
 
 		private Task<bool> _updateFeedbackTask;
 
 		private bool _nonDefaultSideMode;
 		private CancellationTokenSource _cancellationTokenSource;
 		private const Key _keyToggleNonDefaultSide = Key.S;
+		private const Key _keyToggleMoveEndJunction = Key.M;
+
+		protected virtual string OptionsFileName => "AdvancedReshapeToolOptions.xml";
+
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+
+		[CanBeNull]
+		protected virtual string CentralConfigDir => null;
+
+		/// <summary>
+		/// By default, the local configuration directory shall be in
+		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// </summary>
+		protected virtual string LocalConfigDir
+			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				AppDataFolder.Roaming, "ToolDefaults");
 
 		protected AdvancedReshapeToolBase()
 		{
-			// This is our property:
+			// important for SketchRecorder in base class
+			FireSketchEvents = true;
+
 			RequiresSelection = true;
 
-			SelectionCursor = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursorShift);
-
 			HandledKeys.Add(_keyToggleNonDefaultSide);
+			HandledKeys.Add(_keyToggleMoveEndJunction);
 		}
 
-		protected abstract GeometryProcessingClient MicroserviceClient { get; }
+		protected abstract IAdvancedReshapeService MicroserviceClient { get; }
 
-		protected override void OnUpdate()
+		protected override void OnUpdateCore()
 		{
 			Enabled = MicroserviceClient != null;
 
@@ -118,19 +147,109 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			       geometryType == GeometryType.Polygon;
 		}
 
-		protected override void OnToolActivatingCore()
+		protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer,
+		                                               NotificationCollection notifications)
 		{
-			_feedback = new AdvancedReshapeFeedback();
+			return layer is FeatureLayer;
+		}
 
-			base.OnToolActivatingCore();
+		protected override async Task OnToolActivatingCoreAsync()
+		{
+			_advancedReshapeToolOptions = InitializeOptions();
+			_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
+
+			await base.OnToolActivatingCoreAsync();
+		}
+
+		private ReshapeToolOptions InitializeOptions()
+		{
+			Stopwatch watch = _msg.DebugStartTiming();
+
+			// NOTE: by only reading the file locations we can save a couple of 100ms
+			string currentCentralConfigDir = CentralConfigDir;
+			string currentLocalConfigDir = LocalConfigDir;
+
+			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeToolOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
+
+			PartialReshapeToolOptions localConfiguration, centralConfiguration;
+
+			_settingsProvider.GetConfigurations(out localConfiguration,
+			                                    out centralConfiguration);
+
+			var result = new ReshapeToolOptions(centralConfiguration,
+			                                                     localConfiguration);
+
+			result.PropertyChanged -= _advancedReshapeToolOptions_PropertyChanged;
+			result.PropertyChanged += _advancedReshapeToolOptions_PropertyChanged;
+
+			_msg.DebugStopTiming(watch, "Advanced Reshape Options validated / initialized");
+
+			string optionsMessage = result.GetLocalOverridesMessage();
+
+			if (!string.IsNullOrEmpty(optionsMessage))
+			{
+				_msg.Info(optionsMessage);
+			}
+
+			return result;
+		}
+
+		private void _advancedReshapeToolOptions_PropertyChanged(object sender,
+		                                                         PropertyChangedEventArgs eventArgs)
+		{
+			try
+			{
+				QueuedTaskUtils.Run(() => ProcessSelection());
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating preview: {e.Message}", e);
+			}
+		}
+
+		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
+		{
+			_symbolizedSketch =
+				new SymbolizedSketchTypeBasedOnSelection(this);
+			_symbolizedSketch.SetSketchAppearanceBasedOnSelection();
+
+			return base.OnToolActivatedCore(hasMapViewChanged);
+		}
+
+		protected override void OnSelectionPhaseStarted()
+		{
+			base.OnSelectionPhaseStarted();
+			_symbolizedSketch?.ClearSketchSymbol();
+			_feedback?.Clear();
+			ActiveMapView.ClearSketchAsync();
+		}
+
+		protected override void OnSketchPhaseStarted()
+		{
+			try
+			{
+				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); });
+				QueuedTask.Run(() => { ActiveMapView.ClearSketchAsync(); });
+			}
+			catch (Exception ex)
+			{
+				_msg.Error(ex.Message, ex);
+			}
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_settingsProvider?.StoreLocalConfiguration(_advancedReshapeToolOptions.LocalOptions);
+
+			_symbolizedSketch?.Dispose();
 			_feedback?.Clear();
 			_feedback = null;
 
 			base.OnToolDeactivateCore(hasMapViewChanged);
+
+			HideOptionsPane();
 		}
 
 		protected override SketchGeometryType GetSketchGeometryType()
@@ -138,11 +257,15 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return SketchGeometryType.Line;
 		}
 
-		protected override async Task<bool> OnSketchModifiedAsync()
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
 		{
-			_msg.VerboseDebug(() => "OnSketchModifiedAsync");
+			return SketchGeometryType.Rectangle;
+		}
 
-			// Does it make any difference what the return value is?
+		protected override async Task<bool> OnSketchModifiedAsyncCore()
+		{
+			_msg.VerboseDebug(() => "OnSketchModifiedAsyncCore");
+
 			return await ViewUtils.TryAsync(TryUpdateFeedbackAsync(), _msg, true);
 		}
 
@@ -157,7 +280,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					_nonDefaultSideMode = ! _nonDefaultSideMode;
 
 					_msg.Info(_nonDefaultSideMode
-						          ? "Enabled non-default reshape mode. The next reshape to the inside of a polygon will remove the larger area. The next Y-Reshape will use the farther end-point."
+						          ? "Enabled non-default reshape mode. The next reshape to the inside of a polygon will remove the larger area. The next Y-Reshape will use the furthest end-point."
 						          : "Disabled non-default reshape mode");
 
 					if (_updateFeedbackTask != null)
@@ -167,6 +290,26 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					}
 
 					_updateFeedbackTask = UpdateFeedbackAsync(_nonDefaultSideMode);
+
+					await _updateFeedbackTask;
+				}
+
+				if (args.Key == _keyToggleMoveEndJunction)
+				{
+					_advancedReshapeToolOptions.MoveOpenJawEndJunction =
+						! _advancedReshapeToolOptions.MoveOpenJawEndJunction;
+
+					_updateFeedbackTask = UpdateFeedbackAsync(_nonDefaultSideMode);
+
+					bool currentState = _advancedReshapeToolOptions.MoveOpenJawEndJunction;
+					if (currentState)
+					{
+						_msg.Info("Enabled move end junction option for Y-Reshape");
+					}
+					else
+					{
+						_msg.Info("Disabled move end junction option for Y-Reshape");
+					}
 
 					await _updateFeedbackTask;
 				}
@@ -180,6 +323,46 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				_updateFeedbackTask = null;
 			}
 		}
+
+		#region Tool Options DockPane
+
+		[CanBeNull]
+		private DockPaneAdvancedReshapeViewModelBase GetAdvancedReshapeViewModel()
+		{
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
+
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneAdvancedReshapeViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+			                      OptionsDockPaneID);
+		}
+
+		protected override void ShowOptionsPane()
+		{
+			var viewModel = GetAdvancedReshapeViewModel();
+
+			if (viewModel == null)
+			{
+				return;
+			}
+
+			viewModel.Options = _advancedReshapeToolOptions;
+
+			viewModel.Activate(true);
+		}
+
+		protected override void HideOptionsPane()
+		{
+			var viewModel = GetAdvancedReshapeViewModel();
+			viewModel?.Hide();
+		}
+
+		#endregion
 
 		//protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		//{
@@ -223,90 +406,139 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		//	}
 		//}
 
+		public bool CanSelectFromLayer(Layer layer)
+		{
+			return base.CanSelectFromLayer(layer);
+		}
+
+		public bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+		{
+			return base.CanUseSelection(selectionByLayer);
+		}
+
+		public bool CanSetConstructionSketchSymbol(GeometryType geometryType)
+		{
+			bool result;
+			switch (geometryType)
+			{
+				case GeometryType.Polyline:
+					result = true;
+					break;
+				case GeometryType.Point:
+				case GeometryType.Polygon:
+				case GeometryType.Unknown:
+				case GeometryType.Envelope:
+				case GeometryType.Multipoint:
+				case GeometryType.Multipatch:
+				case GeometryType.GeometryBag:
+					result = false;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
+			}
+
+			return result && ! IsInSelectionPhaseAsync().Result;
+		}
+
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
 			Geometry sketchGeometry, EditingTemplate editTemplate, MapView activeView,
 			CancelableProgressor cancelableProgressor = null)
 		{
-			_feedback.Clear();
-
-			// TODO: cancel all running background tasks...
+			_feedback?.Clear();
 
 			var polyline = (Polyline) sketchGeometry;
 
-			List<Feature> selection;
+			SetCursor(Cursors.Wait);
 
-			bool success = await QueuedTaskUtils.Run(async () =>
+			bool success = false;
+			try
 			{
-				try
-				{
-					SetCursor(Cursors.Wait);
-
-					selection = GetApplicableSelectedFeatures(activeView).ToList();
-
-					var potentiallyAffectedFeatures =
-						GetAdjacentFeatures(selection, cancelableProgressor);
-
-					// This timeout should be enough even in extreme circumstances:
-					int timeout = selection.Count * 10000;
-					_cancellationTokenSource = new CancellationTokenSource(timeout);
-
-					ReshapeResult result = MicroserviceClient.Reshape(
-						selection, polyline, potentiallyAffectedFeatures, true, true,
-						_nonDefaultSideMode, _cancellationTokenSource.Token);
-
-					if (result == null)
-					{
-						return false;
-					}
-
-					if (result.ResultFeatures.Count == 0)
-					{
-						if (! string.IsNullOrEmpty(result.FailureMessage))
-						{
-							_msg.Warn(result.FailureMessage);
-							return false;
-						}
-					}
-
-					HashSet<long> editableClassHandles =
-						ToolUtils.GetEditableClassHandles(activeView);
-
-					Dictionary<Feature, Geometry> resultFeatures =
-						result.ResultFeatures
-						      .Where(r => GdbPersistenceUtils.CanChange(
-							             r, editableClassHandles, RowChangeType.Update))
-						      .ToDictionary(r => r.OriginalFeature, r => r.NewGeometry);
-
-					success = await SaveAsync(resultFeatures);
-
-					LogReshapeResults(result, selection.Count);
-
-					// At some point, hopefully, read-only operations on the CIM model can run in parallel
-					await ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures);
-
-					return success;
-				}
-				finally
-				{
-					// Anything but the Wait cursor
-					SetCursor(Cursors.Arrow);
-				}
-			});
-
-			_nonDefaultSideMode = false;
-
-			//if (!_advancedReshapeOptions.RemainInSketchMode)
+				success = await QueuedTaskUtils.Run(
+					          async () =>
+						          await Reshape(polyline, activeView, cancelableProgressor));
+			}
+			finally
 			{
-				StartSelectionPhase();
+				_nonDefaultSideMode = false;
+
+				if (success && ! _advancedReshapeToolOptions.RemainInSketchMode)
+				{
+					StartSelectionPhase();
+				}
+				else
+				{
+					await ClearSketchAsync();
+					StartSketchPhase();
+				}
 			}
 
-			return success; // taskSave.Result;
+			return success;
 		}
 
 		protected override void OnSketchResetCore()
 		{
-			_feedback.Clear();
+			_feedback?.Clear();
+
 			_nonDefaultSideMode = false;
+		}
+
+		private async Task<bool> Reshape(Polyline sketchLine, MapView activeView,
+		                                 CancelableProgressor cancelableProgressor)
+		{
+			Dictionary<MapMember, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection(activeView.Map);
+
+			List<Feature> selection =
+				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+					.ToList();
+
+			var potentiallyAffectedFeatures =
+				GetAdjacentFeatures(selection, cancelableProgressor);
+
+			// This timeout should be enough even in extreme circumstances:
+			int timeout = selection.Count * 10000;
+			_cancellationTokenSource = new CancellationTokenSource(timeout);
+
+			bool allowOpenJawReshape = _advancedReshapeToolOptions.AllowOpenJawReshape;
+
+			ReshapeResult result = MicroserviceClient.Reshape(
+				selection, sketchLine, potentiallyAffectedFeatures, allowOpenJawReshape, true,
+				_nonDefaultSideMode, _cancellationTokenSource.Token,
+				_advancedReshapeToolOptions.MoveOpenJawEndJunction);
+
+			if (result == null)
+			{
+				return false;
+			}
+
+			if (result.ResultFeatures.Count == 0)
+			{
+				if (! string.IsNullOrEmpty(result.FailureMessage))
+				{
+					_msg.Warn(result.FailureMessage);
+					{
+						return false;
+					}
+				}
+			}
+
+			HashSet<long> editableClassHandles =
+				ToolUtils.GetEditableClassHandles(activeView);
+
+			Dictionary<Feature, Geometry> resultFeatures =
+				result.ResultFeatures
+				      .Where(r => GdbPersistenceUtils.CanChange(
+					             r, editableClassHandles, RowChangeType.Update))
+				      .ToDictionary(r => r.OriginalFeature, r => r.NewGeometry);
+
+			bool success = await SaveAsync(resultFeatures);
+
+			LogReshapeResults(result, selection.Count);
+
+			// At some point, hopefully, read-only operations on the CIM model can run in parallel
+			await ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures);
+
+			return success;
 		}
 
 		private async Task<bool> TryUpdateFeedbackAsync()
@@ -409,7 +641,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			// TODO: Use linear network classes as defined in reshape options
 			TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection.SameClass;
 
-			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
+			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
+			                    {
+				                    ReturnUnJoinedFeatures = true
+			                    };
 
 			IEnumerable<FeatureSelectionBase> featureClassSelections =
 				featureFinder.FindIntersectingFeaturesByFeatureClass(
@@ -487,8 +722,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			[NotNull] Polyline sketchLine,
 			[NotNull] IList<Feature> polylineSelection)
 		{
-			// TODO: check options (allow/disallow)
-
 			MapPoint endPoint = null;
 
 			if (polylineSelection.Count == 1)
@@ -529,6 +762,54 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			return await QueuedTaskUtils.Run(
 				       () => _feedback?.UpdatePreview(reshapeResult?.ResultFeatures));
+		}
+
+		public void SetSketchSymbol(CIMSymbolReference symbolReference)
+		{
+			SketchSymbol = symbolReference;
+		}
+
+		protected override Cursor GetSelectionCursor()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay, null);
+		}
+
+		protected override Cursor GetSelectionCursorShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorLasso()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Lasso);
+		}
+
+		protected override Cursor GetSelectionCursorLassoShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Lasso,
+			                              Resources.Shift);
+		}
+
+		protected override Cursor GetSelectionCursorPolygon()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Polygon);
+		}
+
+		protected override Cursor GetSelectionCursorPolygonShift()
+		{
+			return ToolUtils.CreateCursor(Resources.Arrow,
+			                              Resources.AdvancedReshapeOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
 		}
 	}
 }

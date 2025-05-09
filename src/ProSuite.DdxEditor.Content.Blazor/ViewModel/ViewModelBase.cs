@@ -1,10 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
@@ -14,6 +21,7 @@ namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 public abstract class ViewModelBase : Observable
 {
 	[CanBeNull] private object _value;
+	private IDataContainer _uncachedContainer;
 
 	// todo daro refactor parameter order
 	protected ViewModelBase([NotNull] TestParameter parameter,
@@ -86,5 +94,45 @@ public abstract class ViewModelBase : Observable
 	protected virtual void ResetValueCore()
 	{
 		Value = null;
+	}
+
+	protected ITableSchemaDef GetTransformedTableSchemaDef(
+		[NotNull] TransformerConfiguration transformerConfiguration)
+	{
+		var datasetParameter =
+			transformerConfiguration.GetDatasetParameterValues(true, true)
+			                        .FirstOrDefault(d => d is IObjectDataset);
+
+		Assert.NotNull(datasetParameter, "No dataset parameter found");
+
+		Model dataModel = (Model) datasetParameter.Model;
+
+		if (! dataModel.IsMasterDatabaseAccessible)
+		{
+			throw new InvalidOperationException(
+				$"Master database is not accessible. Reason: {dataModel.MasterDatabaseNoAccessReason}");
+		}
+
+		IWorkspaceContext masterDbContext =
+			Assert.NotNull(dataModel.MasterDatabaseWorkspaceContext);
+
+		IOpenDataset datasetOpener = new SimpleDatasetOpener(masterDbContext);
+
+		IReadOnlyTable transformedTable = InstanceFactory.CreateTransformedTable(
+			transformerConfiguration, datasetOpener);
+
+		if (transformedTable is IReadOnlyFeatureClass fc && _uncachedContainer == null)
+		{
+			_uncachedContainer = new UncachedDataContainer(fc.Extent);
+		}
+
+		if (transformedTable is IDataContainerAware transformed)
+		{
+			transformed.DataContainer = _uncachedContainer;
+
+			TestUtils.SetContainer(_uncachedContainer, transformed.InvolvedTables);
+		}
+
+		return (ITableSchemaDef) transformedTable;
 	}
 }

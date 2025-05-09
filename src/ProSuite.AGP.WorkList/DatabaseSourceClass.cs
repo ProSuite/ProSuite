@@ -12,34 +12,33 @@ namespace ProSuite.AGP.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly WorkListStatusSchema _statusSchema;
-
-		public DatabaseSourceClass(GdbTableIdentity identity,
+		public DatabaseSourceClass(GdbTableIdentity tableIdentity,
 		                           [NotNull] WorkListStatusSchema statusSchema,
-		                           [NotNull] IAttributeReader attributeReader) : base(identity, attributeReader)
+		                           [CanBeNull] IAttributeReader attributeReader,
+		                           [CanBeNull] string definitionQuery)
+			: base(tableIdentity, attributeReader)
 		{
 			Assert.ArgumentNotNull(statusSchema, nameof(statusSchema));
-			Assert.ArgumentNotNull(attributeReader, nameof(attributeReader));
 
-			_statusSchema = statusSchema;
+			StatusSchema = statusSchema;
+			DefinitionQuery = definitionQuery;
 		}
 
-		[NotNull]
-		public string StatusFieldName => _statusSchema.FieldName;
-		
+		public WorkListStatusSchema StatusSchema { get; }
+
 		public WorkItemStatus GetStatus([NotNull] Row row)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 
 			try
 			{
-				object value = row[_statusSchema.FieldIndex];
+				object value = row[StatusSchema.FieldIndex];
 
 				return GetStatus(value);
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error get value from row {row} with index {_statusSchema.FieldIndex}",
+				_msg.Error($"Error get value from row {row} with index {StatusSchema.FieldIndex}",
 				           e);
 
 				return WorkItemStatus.Todo;
@@ -48,12 +47,12 @@ namespace ProSuite.AGP.WorkList
 
 		public WorkItemStatus GetStatus([CanBeNull] object value)
 		{
-			if (_statusSchema.TodoValue.Equals(value))
+			if (StatusSchema.TodoValue.Equals(value))
 			{
 				return WorkItemStatus.Todo;
 			}
 
-			if (_statusSchema.DoneValue.Equals(value))
+			if (StatusSchema.DoneValue.Equals(value))
 			{
 				return WorkItemStatus.Done;
 			}
@@ -64,15 +63,15 @@ namespace ProSuite.AGP.WorkList
 			return WorkItemStatus.Todo;
 		}
 
-		public virtual object GetValue(WorkItemStatus status)
+		public object GetValue(WorkItemStatus status)
 		{
 			switch (status)
 			{
 				case WorkItemStatus.Done:
-					return _statusSchema.DoneValue;
+					return StatusSchema.DoneValue;
 
 				case WorkItemStatus.Todo:
-					return _statusSchema.TodoValue;
+					return StatusSchema.TodoValue;
 
 				case WorkItemStatus.Unknown:
 					return DBNull.Value;
@@ -82,5 +81,39 @@ namespace ProSuite.AGP.WorkList
 						$@"Illegal status value: {status}", nameof(status));
 			}
 		}
+
+		#region Overrides of SourceClass
+
+		public override long GetUniqueTableId()
+		{
+			// NOTE: Currently DatabaseSourceClasses are supposed to all reside in the same
+			//       workspace (which is certainly the case for Issue Worklists).
+			//       Therefore, we can use the table ID as a unique identifier.
+			return ArcGISTableId;
+		}
+
+		protected override string CreateWhereClauseCore(WorkItemStatus? statusFilter)
+		{
+			string result = string.Empty;
+
+			if (statusFilter != null)
+			{
+				result = $"{StatusSchema.FieldName} = {GetValue(statusFilter.Value)}";
+			}
+
+			if (DefinitionQuery != null)
+			{
+				if (! string.IsNullOrEmpty(result))
+				{
+					result += " AND ";
+				}
+
+				result += DefinitionQuery;
+			}
+
+			return result;
+		}
+
+		#endregion
 	}
 }

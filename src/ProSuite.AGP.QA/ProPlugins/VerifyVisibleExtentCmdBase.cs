@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -9,7 +10,6 @@ using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
@@ -22,8 +22,6 @@ namespace ProSuite.AGP.QA.ProPlugins
 {
 	public abstract class VerifyVisibleExtentCmdBase : ButtonCommandBase
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		protected VerifyVisibleExtentCmdBase()
 		{
 			// Instead of wiring each single button and tool and calling SessionContext.CanVerifyQuality
@@ -36,11 +34,14 @@ namespace ProSuite.AGP.QA.ProPlugins
 			VerificationPlugInController.GetInstance(SessionContext).Register(this);
 		}
 
-		protected abstract IMapBasedSessionContext SessionContext { get; }
+		protected abstract ISessionContext SessionContext { get; }
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
 
-		protected override Task<bool> OnClickCore()
+		protected virtual Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
+			SaveAction => null;
+
+		protected override Task<bool> OnClickAsyncCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
 			{
@@ -84,14 +85,15 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			var appController =
 				new AgpBackgroundVerificationController(WorkListOpener, mapView, currentExtent,
-				                                        spatialRef);
+				                                        spatialRef, SaveAction);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
 					VerificationAction = () => Verify(currentExtent, progressTracker, resultsPath),
-					ApplicationController = appController
+					ApplicationController = appController,
+					KeepPreviousIssuesDisabled = true
 				};
 
 			string actionTitle = $"{qualitySpecification.Name}: Verify Visible Extent";

@@ -155,6 +155,11 @@ namespace ProSuite.DomainServices.AO.QA.HtmlReports
 
 		[NotNull]
 		[UsedImplicitly]
+		public string ColumnHeadingQualityConditions
+			=> HtmlReportResources.HtmlTexts_ColumnHeadingQualityConditions;
+
+		[NotNull]
+		[UsedImplicitly]
 		public string ColumnHeadingIssueDescription
 			=> HtmlReportResources.HtmlTexts_ColumnHeadingIssueDescription;
 
@@ -185,5 +190,17 @@ namespace ProSuite.DomainServices.AO.QA.HtmlReports
 		[NotNull]
 		[UsedImplicitly]
 		public string Total => HtmlReportResources.HtmlTexts_Total;
+
+		[NotNull]
+		[UsedImplicitly]
+		public string DataSources => HtmlReportResources.HtmlTexts_DataSources;
+
+		[NotNull]
+		[UsedImplicitly]
+		public string Description => HtmlReportResources.HtmlTexts_Description;
+
+		[NotNull]
+		[UsedImplicitly]
+		public string DatasetName => HtmlReportResources.HtmlTexts_DatasetName;
 	}
 }

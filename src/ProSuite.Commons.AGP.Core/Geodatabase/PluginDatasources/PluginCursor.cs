@@ -40,9 +40,9 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources
 			{
 				result = _enumerator.MoveNext();
 			}
-			catch (Exception e)
+			catch (Exception ex)
 			{
-				_msg.Error("Error getting next feature.", e);
+				_msg.Error($"Error getting next feature: {ex.Message}", ex);
 			}
 
 			return result;

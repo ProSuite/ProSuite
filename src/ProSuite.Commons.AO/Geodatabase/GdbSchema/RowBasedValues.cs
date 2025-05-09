@@ -1,4 +1,5 @@
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {

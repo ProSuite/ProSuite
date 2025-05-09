@@ -47,7 +47,8 @@ namespace ProSuite.DomainServices.AO.Test.QA
 
 			Assert.AreEqual(1, datasets.Count);
 
-			uowSubstitute.Received(1).Reattach(datasets);
+			uowSubstitute.Received(1)
+			             .Reattach(Arg.Is<ICollection<Dataset>>(x => x.Count == datasets.Count));
 		}
 
 		[Test]
@@ -95,7 +96,8 @@ namespace ProSuite.DomainServices.AO.Test.QA
 
 			Assert.AreEqual(2, datasets.Count);
 
-			uowSubstitute.Received(1).Reattach(datasets);
+			uowSubstitute.Received(1)
+			             .Reattach(Arg.Is<ICollection<Dataset>>(x => x.Count == datasets.Count));
 		}
 
 		private class MockModel : Model

@@ -73,9 +73,11 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			throw new NotImplementedException();
 		}
 
-		public ITopology OpenTopology(ITopologyDataset dataset)
+		public TopologyReference OpenTopology(ITopologyDataset dataset)
 		{
-			return TopologyUtils.OpenTopology(_workspace, dataset.Name);
+			ITopology topology = TopologyUtils.OpenTopology(_workspace, dataset.Name);
+
+			return new TopologyReference(topology);
 		}
 
 		public RasterDatasetReference OpenRasterDataset(IDdxRasterDataset dataset)

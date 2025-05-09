@@ -27,16 +27,18 @@ using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.Core.AttributeDependencies;
 using ProSuite.DomainModel.Core.AttributeDependencies.Repositories;
 using ProSuite.DomainModel.Core.AttributeDependencies.Xml;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
 using ProSuite.DomainModel.Core.DataModel.Xml;
+using ProSuite.DomainModel.Core.Geodatabase;
+using ProSuite.DomainModel.Core.Geodatabase.Repositories;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.DomainModel.Core.QA.Xml;
+using ProSuite.UI.QA;
 
 namespace ProSuite.DdxEditor.Content
 {
@@ -370,6 +372,11 @@ namespace ProSuite.DdxEditor.Content
 
 		public abstract ITestParameterDatasetProvider GetTestParameterDatasetProvider();
 
+		public virtual ISqlExpressionBuilder GetSqlExpressionBuilder()
+		{
+			return null;
+		}
+
 		public virtual C Resolve<C>()
 		{
 			// implement in project-specific subclass based on project registry
@@ -442,15 +449,18 @@ namespace ProSuite.DdxEditor.Content
 				                 .Select(qc => new RequiredDependingItem(qc, qc.Name))
 				                 .Cast<DependingItem>());
 
-			result.AddRange(
-				InstanceConfigurations.Get<TransformerConfiguration>(allCategories)
-				                 .Select(tr => new RequiredDependingItem(tr, tr.Name))
-				                 .Cast<DependingItem>());
+			if (SupportsTransformersAndFilters)
+			{
+				result.AddRange(
+					InstanceConfigurations.Get<TransformerConfiguration>(allCategories)
+					                      .Select(tr => new RequiredDependingItem(tr, tr.Name))
+					                      .Cast<DependingItem>());
 
-			result.AddRange(
-				InstanceConfigurations.Get<IssueFilterConfiguration>(allCategories)
-				                      .Select(iF=> new RequiredDependingItem(iF, iF.Name))
-				                      .Cast<DependingItem>());
+				result.AddRange(
+					InstanceConfigurations.Get<IssueFilterConfiguration>(allCategories)
+					                      .Select(iF => new RequiredDependingItem(iF, iF.Name))
+					                      .Cast<DependingItem>());
+			}
 
 			result.AddRange(
 				subCategories.Select(c => new DataQualityCategoryDependingItem(

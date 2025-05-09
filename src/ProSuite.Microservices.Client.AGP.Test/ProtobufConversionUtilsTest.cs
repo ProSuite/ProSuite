@@ -4,6 +4,7 @@ using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Hosting;
 using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Client.AGP.Test
 {

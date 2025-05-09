@@ -9,7 +9,7 @@ using System.Runtime.Versioning;
 [assembly: ComVisible(false)]
 
 #if NET6_0_OR_GREATER
-[assembly: SupportedOSPlatform("windows8.1")]
+[assembly: SupportedOSPlatform("windows")]
 #endif
 
 // This GUID is for the ID of the typelib if this project is exposed to COM:

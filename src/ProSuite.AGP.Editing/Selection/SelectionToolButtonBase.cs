@@ -49,7 +49,7 @@ namespace ProSuite.AGP.Editing.Selection
 			}
 			catch (Exception ex)
 			{
-				Gateway.HandleError(ex, _msg);
+				Gateway.ShowError(ex, _msg);
 			}
 		}
 
@@ -68,9 +68,9 @@ namespace ProSuite.AGP.Editing.Selection
 
 		private void WireEvents()
 		{
-			if (_activeToolChangedToken is null)
+			if (_activeToolChangedToken == null)
 			{
-				ActiveToolChangedEvent.Subscribe(OnActiveToolChanged);
+				_activeToolChangedToken = ActiveToolChangedEvent.Subscribe(OnActiveToolChanged);
 			}
 		}
 

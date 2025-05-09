@@ -91,6 +91,23 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
+		public static bool EnvelopeInteriorIntersects(
+			double boxXMin, double boxYMin, double boxXMax, double boxYMax,
+			double pointX, double pointY, double tolerance)
+		{
+			// x|y must be within the box minus the tolerance:
+
+			if (pointX > boxXMin + tolerance &&
+			    pointX < boxXMax - tolerance &&
+			    pointY > boxYMin + tolerance &&
+			    pointY < boxYMax - tolerance)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
 		public static bool AreBoundsEqual(
 			[NotNull] IBoundedXY geometry1,
 			[NotNull] IBoundedXY geometry2,

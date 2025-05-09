@@ -1,17 +1,12 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
-using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.AGP.Editing.Selection
 {
@@ -23,17 +18,12 @@ namespace ProSuite.AGP.Editing.Selection
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		// todo daro refactor
 		protected SelectionToolBase()
 		{
 			IsSketchTool = true;
 
-			SelectionCursor = ToolUtils.GetCursor(Resources.SelectionToolNormal);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.SelectionToolNormalShift);
-
 			SelectOnlyEditFeatures = false;
-
-			SetCursor(SelectionCursor);
+			UnJoinedSelection = false;
 		}
 
 		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
@@ -50,17 +40,12 @@ namespace ProSuite.AGP.Editing.Selection
 			await base.OnToolDeactivateAsync(hasMapViewChanged);
 		}
 
-		protected override bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			return true;
-		}
-
 		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftIsPressed)
 		{
 			return Task.FromResult(true);
 		}
 
-		protected override void AfterSelection(Map map, IList<Feature> selectedFeatures,
+		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			StartSelectionPhase();
@@ -71,7 +56,7 @@ namespace ProSuite.AGP.Editing.Selection
 			Task task = QueuedTask.Run(
 				() =>
 				{
-					SelectionUtils.ClearSelection();
+					ClearSelection();
 
 					StartSelectionPhase();
 				});
@@ -79,17 +64,14 @@ namespace ProSuite.AGP.Editing.Selection
 			await ViewUtils.TryAsync(task, _msg);
 		}
 
-		protected override void LogUsingCurrentSelection()
-		{
-			// throw new NotImplementedException();
-		}
+		protected override void LogUsingCurrentSelection() { }
 
 		protected override void LogPromptForSelection()
 		{
 			_msg.InfoFormat(LocalizableStrings.SelectionTool_LogPromptForSelection);
 		}
 
-		// todo daro: to DamlUtils?
+		// todo: daro to DamlUtils?
 		private static void SetCheckState(string damlId, bool isChecked)
 		{
 			IPlugInWrapper plugin =

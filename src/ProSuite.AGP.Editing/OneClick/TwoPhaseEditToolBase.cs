@@ -9,11 +9,13 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
-using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -21,18 +23,39 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private SketchAndCursorSetter _secondPhaseSketchCursor;
+
 		protected TwoPhaseEditToolBase()
 		{
 			IsSketchTool = true;
 		}
 
-		protected Cursor SecondPhaseCursor { get; set; }
+		protected override async Task OnToolActivatingCoreAsync()
+		{
+			await QueuedTaskUtils.Run(() =>
+			{
+				_secondPhaseSketchCursor =
+					SketchAndCursorSetter.Create(this,
+					                             GetSecondPhaseCursor(),
+					                             GetSecondPhaseCursorLasso(),
+					                             GetSecondPhaseCursorPolygon(),
+					                             GetSelectionSketchGeometryType(),
+					                             DefaultSketchTypeOnFinishSketch);
+
+				// NOTE daro: no shift cursors for second phase.
+			});
+		}
+
+		protected abstract Cursor GetSecondPhaseCursor();
+
+		protected abstract Cursor GetSecondPhaseCursorLasso();
+
+		protected abstract Cursor GetSecondPhaseCursorPolygon();
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
 			_msg.VerboseDebug(() => "OnMapSelectionChangedCore");
 
-			var map = args.Map;
 			var selection = args.Selection;
 
 			if (selection.Count == 0)
@@ -44,11 +67,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
 			Dictionary<MapMember, List<long>> selectionByLayer = selection.ToDictionary();
 
-			var applicableSelection = GetApplicableSelectedFeatures(selectionByLayer).ToList();
+			var applicableSelection =
+				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection).ToList();
 
 			if (applicableSelection.Count > 0)
 			{
-				AfterSelection(map, applicableSelection, GetCancelableProgressor());
+				using var source = GetProgressorSource();
+				var progressor = source?.Progressor;
+				AfterSelection(applicableSelection, progressor);
 			}
 
 			return true;
@@ -68,10 +94,23 @@ namespace ProSuite.AGP.Editing.OneClick
 					{
 						try
 						{
-							var selectedFeatures =
-								GetApplicableSelectedFeatures(ActiveMapView).ToList();
+							Dictionary<MapMember, List<long>> selectionByLayer =
+								SelectionUtils.GetSelection(ActiveMapView.Map);
 
-							CalculateDerivedGeometries(selectedFeatures, GetCancelableProgressor());
+							var selectedFeatures =
+								GetDistinctApplicableSelectedFeatures(selectionByLayer).ToList();
+
+							if (selectedFeatures.Count == 0)
+							{
+								ResetDerivedGeometries();
+								StartSelectionPhase();
+								return true;
+							}
+
+							using var source = GetProgressorSource();
+							var progressor = source?.Progressor;
+
+							CalculateDerivedGeometries(selectedFeatures, progressor);
 
 							return true;
 						}
@@ -87,8 +126,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return base.OnEditCompletedAsyncCore(args);
 		}
 
-		protected override void AfterSelection(Map map,
-		                                       IList<Feature> selectedFeatures,
+		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			CalculateDerivedGeometries(selectedFeatures, progressor);
@@ -104,23 +142,15 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				var selection = SelectionUtils.GetSelection(ActiveMapView.Map);
 
-				return SelectAndProcessDerivedGeometry(selection, sketchGeometry, progressor);
+				Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
+				Assert.NotNull(simpleGeometry, "Geometry is null");
+
+				return SelectAndProcessDerivedGeometry(selection, simpleGeometry, progressor);
 			});
 
+			StartSecondPhase();
+
 			return result;
-		}
-
-		protected override bool IsInSelectionPhase(bool shiftIsPressed)
-		{
-			if (shiftIsPressed)
-			{
-				return true;
-			}
-
-			var task = QueuedTask.Run(IsInSelectionPhaseQueued);
-
-			// This can dead-lock! Remove everywhere, use async overload
-			return task.Result;
 		}
 
 		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -137,10 +167,19 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task HandleEscapeAsync()
 		{
+			// Do not reset feedback in polygon sketch mode: Esc
+			// should only clear sketch not the feedback.
+			if (await NonEmptyPolygonSketchAsync() &&
+			    ! await IsInSelectionPhaseAsync())
+			{
+				await ClearSketchAsync();
+				return;
+			}
+
 			Task task = QueuedTask.Run(
 				() =>
 				{
-					SelectionUtils.ClearSelection();
+					ClearSelection();
 
 					ResetDerivedGeometries();
 
@@ -150,17 +189,50 @@ namespace ProSuite.AGP.Editing.OneClick
 			await ViewUtils.TryAsync(task, _msg);
 		}
 
-		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
+		protected override async Task ShiftReleasedCoreAsync()
 		{
-			if (KeyboardUtils.IsShiftKey(k.Key))
+			if (await IsInSelectionPhaseAsync())
 			{
-				Cursor = IsInSelectionPhase(true) ? SelectionCursor : SecondPhaseCursor;
+				await base.ShiftReleasedCoreAsync();
+			}
+			else
+			{
+				_secondPhaseSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
+			}
+		}
+
+		protected override async Task SetupLassoSketchAsync()
+		{
+			if (await IsInSelectionPhaseAsync())
+			{
+				await base.SetupLassoSketchAsync();
+			}
+			else
+			{
+				_secondPhaseSketchCursor.Toggle(SketchGeometryType.Lasso);
+			}
+		}
+
+		protected override async Task SetupPolygonSketchAsync()
+		{
+			if (await IsInSelectionPhaseAsync())
+			{
+				await base.SetupPolygonSketchAsync();
+			}
+			else
+			{
+				_secondPhaseSketchCursor.Toggle(SketchGeometryType.Polygon);
 			}
 		}
 
 		protected override void LogUsingCurrentSelection()
 		{
 			// using method LogDerivedGeometriesCalculated() for feedback
+		}
+
+		protected override SketchGeometryType GetSelectionSketchGeometryType()
+		{
+			return SketchGeometryType.Rectangle;
 		}
 
 		protected abstract void CalculateDerivedGeometries(
@@ -219,9 +291,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void StartSecondPhase()
 		{
-			Cursor = SecondPhaseCursor;
+			SetupSketch();
 
-			SetupSketch(SketchGeometryType.Rectangle);
+			_secondPhaseSketchCursor?.ResetOrDefault();
 		}
 	}
 }

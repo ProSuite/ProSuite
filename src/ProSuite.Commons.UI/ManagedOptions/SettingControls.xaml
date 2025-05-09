@@ -1,0 +1,72 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:managedOptions="clr-namespace:ProSuite.Commons.UI.ManagedOptions"
+                    >
+
+    <managedOptions:OverrideToFontStyleConverter x:Key="OverrideToFontStyleConverter" />
+
+    <ControlTemplate TargetType="CheckBox" x:Key="CentralizableSettingCheckbox">
+        <CheckBox Content="{TemplateBinding Content}"
+                  DataContext="{TemplateBinding DataContext}"
+                  IsChecked="{Binding CurrentValue}"
+                  IsEnabled="{Binding IsEnabled}"
+                  FontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}"
+                  ToolTipService.ShowOnDisabled="True"
+                  ToolTip="{Binding ToolTip}" 
+                  Margin="6"/>
+    </ControlTemplate>
+
+    <ControlTemplate TargetType="Control" x:Key="CentralizableSettingsSpinner">
+
+            <managedOptions:NumericSpinner 
+                DataContext="{TemplateBinding DataContext}"
+                IsEnabled="{Binding IsEnabled}" 
+                Margin="0, 2" 
+                Value="{Binding CurrentValue, Mode=TwoWay}" 
+                ToolTipService.ShowOnDisabled="True"
+                ToolTip="{Binding ToolTip}" 
+                TextFontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" />
+
+    </ControlTemplate>
+
+    <ControlTemplate TargetType="Control" x:Key="CentralizableSettingsLabel">
+
+            <Label 
+                DataContext="{TemplateBinding DataContext}"
+                IsEnabled="{Binding IsEnabled}" 
+                Content="meters"
+                HorizontalAlignment="Left"
+                ToolTipService.ShowOnDisabled="True"
+                ToolTip="{Binding ToolTip}" 
+                FontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" />
+    </ControlTemplate>
+
+    <ControlTemplate TargetType="Button" x:Key="RestoreDefaultsButton">
+        <Button
+            DataContext="{TemplateBinding DataContext}"
+            Command="{Binding RevertToDefaultsCommand}"
+            IsEnabled="{Binding IsRevertToDefaultsEnabled}"
+            Content="Restore Defaults" 
+            Width="120"
+            HorizontalAlignment="Left"
+            Margin="27,12,6,12"
+            Style="{DynamicResource Esri_Button}">
+        </Button>
+    </ControlTemplate>
+
+    <!--<ControlTemplate TargetType="RadioButton" x:Key="CentralizableSettingRadioButton">
+        <RadioButton DataContext="{TemplateBinding DataContext}"
+                     Content="Visible Editable Features" 
+                     IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={Binding Path="Tag" RelativeSource={RelativeSource Mode=Self}"
+                     FontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" 
+                     IsEnabled="{Binding CanOverrideLocally}"
+                     ToolTipService.ShowOnDisabled="True"
+                     ToolTip="{Binding ToolTip}" 
+                     Margin="6"/>
+
+    </ControlTemplate>-->
+</ResourceDictionary>
+
+
+
+

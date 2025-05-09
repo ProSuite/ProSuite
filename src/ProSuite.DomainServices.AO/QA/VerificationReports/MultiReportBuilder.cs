@@ -3,7 +3,6 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.Exceptions;
 using ProSuite.DomainServices.AO.QA.Issues;
@@ -34,11 +33,14 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 			}
 		}
 
-		public void AddVerifiedDataset(Dataset dataset)
+		public void AddVerifiedDataset(QualityVerificationDataset verificationDataset,
+		                               string workspaceDisplayText,
+		                               ISpatialReference spatialReference)
 		{
 			foreach (IVerificationReportBuilder builder in _reportBuilders)
 			{
-				builder.AddVerifiedDataset(dataset);
+				builder.AddVerifiedDataset(verificationDataset, workspaceDisplayText,
+				                           spatialReference);
 			}
 		}
 

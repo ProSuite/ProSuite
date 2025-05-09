@@ -266,6 +266,25 @@ namespace ProSuite.Commons.Test.Text
 		}
 
 		[Test]
+		public void CanTrim()
+		{
+			var sb = new StringBuilder(" \n\t foo\r\nbar \t\n\r\n ");
+			var o = sb.Trim();
+
+			Assert.AreEqual("foo\r\nbar", sb.ToString());
+			Assert.AreSame(sb, o);
+
+			sb = new StringBuilder(Environment.NewLine);
+			o = sb.Trim();
+			Assert.AreEqual(string.Empty, sb.ToString());
+			Assert.AreSame(sb, o);
+
+			sb = new StringBuilder("full");
+			sb.Trim();
+			Assert.AreEqual("full", sb.ToString());
+		}
+
+		[Test]
 		public void CanTrimEnd()
 		{
 			var sb = new StringBuilder("\tfoo \t\n ");
@@ -361,6 +380,31 @@ namespace ProSuite.Commons.Test.Text
 			                           }, true);
 		}
 
+		[Test]
+		public void CanRemoveSpecialCharacters()
+		{
+			string inputWithSpecialChars =
+				"Œ èâöüÄÖÜßâ'and?some`more_special(characters\\that\"might|cause*troubles$";
+
+			string resultWithoutDiacritics =
+				StringUtils.ReplaceSpecialCharacters(inputWithSpecialChars);
+			string resultWithDiacritics =
+				StringUtils.ReplaceSpecialCharacters(inputWithSpecialChars, '_', false);
+			string resultWithoutDiacriticsAndNoReplacement =
+				StringUtils.ReplaceSpecialCharacters(inputWithSpecialChars, null);
+
+			// NOTE: Ligatures such as Œ are not replaced by the method.
+			Assert.AreEqual(
+				"Œ_eaouAOUßa_and_some_more_special_characters_that_might_cause_troubles_",
+				resultWithoutDiacritics);
+			Assert.AreEqual(
+				"Œ_èâöüÄÖÜßâ_and_some_more_special_characters_that_might_cause_troubles_",
+				resultWithDiacritics);
+			Assert.AreEqual(
+				"ŒeaouAOUßaandsomemorespecialcharactersthatmightcausetroubles",
+				resultWithoutDiacriticsAndNoReplacement);
+		}
+
 		private static void AssertExpectedFormatResult(
 			double input,
 			[NotNull] IEnumerable<KeyValuePair<string, string>> expectedResults)
@@ -390,7 +434,6 @@ namespace ProSuite.Commons.Test.Text
 				// See https://devblogs.microsoft.com/dotnet/floating-point-parsing-and-formatting-improvements-in-net-core-3-0/
 
 				Assert.AreEqual(expected, formatResult);
-
 			}
 		}
 	}

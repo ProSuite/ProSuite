@@ -6,6 +6,7 @@ namespace ProSuite.AGP.WorkList
 {
 	public class SelectionItem : WorkItem
 	{
-		public SelectionItem(long id, [NotNull] Row row) : base(id, row) { }
+		public SelectionItem(long itemid, long uniqueTableId, [NotNull] Row row)
+			: base(itemid, uniqueTableId, row) { }
 	}
 }

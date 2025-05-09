@@ -7,57 +7,66 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
         mc:Ignorable="d"
-        Title="Message details" Height="300" Width="550" MinWidth="300" MinHeight="300"
-        WindowStartupLocation="CenterOwner"
+        Title="Message Details"
+        ResizeMode="CanResizeWithGrip"
+        SizeToContent="Height"
+        MinWidth="400" MinHeight="300" MaxWidth="1200" MaxHeight="1024"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         d:DataContext="{Binding Path=LogMessageDetailsViewModel}">
-    <controls:ProWindow.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </controls:ProWindow.Resources>
-    <controls:ProWindow.InputBindings>
-        <KeyBinding Command="{Binding CmdCancelDetails, Mode=OneWay}" CommandParameter="{Binding ElementName=detailsWindow}" Key="Escape"></KeyBinding>
-    </controls:ProWindow.InputBindings>
-    <Grid Margin="8">
-        <Grid Height="231" Margin="10,10,10,0" VerticalAlignment="Top">
-            <Grid.Resources>
-                <Style TargetType="TextBlock">
-                    <Setter Property="Foreground" Value="{DynamicResource Esri_TextStyleDefaultBrush}"/>
-                </Style>
-            </Grid.Resources>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="20" />
-                <RowDefinition Height="20" />
-                <RowDefinition Height="20" />
-                <RowDefinition Height="20" />
-                <RowDefinition Height="20" />
-                <RowDefinition Height="20" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <TextBlock Grid.Column="0" Grid.Row="0">Level</TextBlock>
-            <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding MessageType}"></TextBlock>
-            <TextBlock Grid.Column="0" Grid.Row="1">Date</TextBlock>
-            <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding MessageDate}"></TextBlock>
-            <TextBlock Grid.Column="0" Grid.Row="2">Time</TextBlock>
-            <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding MessageTime}"></TextBlock>
-            <TextBlock Grid.Column="0" Grid.Row="3">User</TextBlock>
-            <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding CurrentUser}"></TextBlock>
-            <TextBlock Grid.Column="0" Grid.Row="4">Source</TextBlock>
-            <TextBlock Grid.Column="1" Grid.Row="4" Text="{Binding LogItem.Source}"></TextBlock>
-            <TextBlock Grid.Column="0" Grid.Row="5"></TextBlock>
-            <TextBlock Grid.Column="1" Grid.Row="5"></TextBlock>
-            <TextBlock Grid.Column="0" Grid.Row="6">Message</TextBlock>
-            <TextBlock Grid.Column="1" Grid.Row="6" TextWrapping="WrapWithOverflow" Margin="0,0,0,0" Text="{Binding LogMessage}"></TextBlock>
-
-        </Grid>
-        <Button Content="Copy" Style="{DynamicResource Esri_Button}" Command="{Binding CmdCopyDetails, Mode=OneWay}" CommandParameter="{Binding ElementName=detailsWindow}" Margin="0,0,99,6" Height="24" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
-        <Button Content="Close" Style="{DynamicResource Esri_Button}" Command="{Binding CmdCancelDetails, Mode=OneWay}" CommandParameter="{Binding ElementName=detailsWindow}" IsDefault="True" IsCancel="True" Margin="0,0,10,6" Width="75" Height="24" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
-
-    </Grid>
+	<controls:ProWindow.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</controls:ProWindow.Resources>
+	<controls:ProWindow.InputBindings>
+		<KeyBinding Command="{Binding CmdCancelDetails, Mode=OneWay}" CommandParameter="{Binding ElementName=detailsWindow}" Key="Escape"></KeyBinding>
+	</controls:ProWindow.InputBindings>
+	<DockPanel Margin="8">
+		<DockPanel DockPanel.Dock="Bottom" Margin="8" LastChildFill="False">
+			<Button DockPanel.Dock="Right" Style="{DynamicResource Esri_Button}"
+			        Content="Close" IsCancel="True" IsDefault="True"
+			        Command="{Binding CmdCloseDialog}"
+			        CommandParameter="{Binding ElementName=detailsWindow}" />
+			<Separator DockPanel.Dock="Right" Width="10" Visibility="Hidden"/>
+			<Button DockPanel.Dock="Right" Style="{DynamicResource Esri_Button}"
+			        Content="Copy"
+			        Command="{Binding CmdCopyDetails}"
+			        ToolTip="Copy message details to clipboard"/>
+		</DockPanel>
+		<Grid Margin="8">
+			<Grid.Resources>
+				<Style TargetType="TextBlock">
+					<Setter Property="Foreground" Value="{DynamicResource Esri_TextStyleDefaultBrush}"/>
+				</Style>
+			</Grid.Resources>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto" MinWidth="72"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" MinHeight="12"/>
+				<RowDefinition Height="*" />
+			</Grid.RowDefinitions>
+			<TextBlock Grid.Row="0" Grid.Column="0" Margin="2">Level:</TextBlock>
+			<TextBlock Grid.Row="0" Grid.Column="1" Margin="2" Text="{Binding MessageType}" />
+			<TextBlock Grid.Row="1" Grid.Column="0" Margin="2">Date:</TextBlock>
+			<TextBlock Grid.Row="1" Grid.Column="1" Margin="2" Text="{Binding MessageDate}" />
+			<TextBlock Grid.Row="2" Grid.Column="0" Margin="2">Time:</TextBlock>
+			<TextBlock Grid.Row="2" Grid.Column="1" Margin="2" Text="{Binding MessageTime}" />
+			<TextBlock Grid.Row="3" Grid.Column="0" Margin="2">User:</TextBlock>
+			<TextBlock Grid.Row="3" Grid.Column="1" Margin="2" Text="{Binding CurrentUser}" />
+			<TextBlock Grid.Row="4" Grid.Column="0" Margin="2">Source:</TextBlock>
+			<TextBlock Grid.Row="4" Grid.Column="1" Margin="2" Text="{Binding MessageSource}"/>
+			<Separator Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"></Separator>
+			<TextBlock Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="2"
+			           TextWrapping="Wrap" Text="{Binding MessageText}"/>
+		</Grid>
+	</DockPanel>
 </controls:ProWindow>

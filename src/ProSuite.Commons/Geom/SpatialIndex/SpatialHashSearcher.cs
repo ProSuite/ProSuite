@@ -186,11 +186,14 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				gridSize = averageEnvLateralLength * 2;
 			}
 
-			double estimatedItemsPerTile = maxTileCount / values.Count;
+			double estimatedItemsPerTile = values.Count / maxTileCount;
+
+			// If maxTileCount is extremely large, it could be that there is an outlier in the items -> large empty space!
+			int dictAllocation = maxTileCount > int.MaxValue ? -1 : (int)maxTileCount;
 
 			var result =
 				new SpatialHashSearcher<T>(
-					fullExtent.XMin, fullExtent.YMin, gridSize, (int) maxTileCount,
+					fullExtent.XMin, fullExtent.YMin, gridSize, dictAllocation,
 					estimatedItemsPerTile);
 
 			// populate

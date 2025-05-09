@@ -261,12 +261,11 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 
 				if (involvedDatasetNames == null)
 				{
-					involvedDatasetNames =
-						involvedRows.Count != 0
-							? involvedRows.Select(row => row.TableName).ToList()
-							: qualityCondition.GetDatasetParameterValues(
-								includeSourceDatasets: true).Select(
-								dataset => dataset.Name).ToList();
+					// TOP-5903: Involved rows does not always contain everything (e.g. editable Terrain + non-editable vector dataset)
+					// -> Use datasets from condition parameters rather than from involved error rows
+					involvedDatasetNames = 
+						qualityCondition.GetDatasetParameterValues(includeSourceDatasets: true)
+						                .Select(dataset => dataset.Name).ToList();
 				}
 
 				if (! areaSpecification.IsAnyDatasetEditable(involvedDatasetNames))

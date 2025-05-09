@@ -70,13 +70,12 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			Model model,
 			IEnumerable<Dataset> usedDatasets)
 		{
-			ISpatialReference spatialReference = GetMainSpatialReference(
-				model, usedDatasets);
+			ISpatialReference spatialReference = GetMainSpatialReference(model, usedDatasets);
 
 			if (spatialReference != null)
 			{
 				model.SpatialReferenceDescriptor =
-					new SpatialReferenceDescriptor(spatialReference);
+					SpatialReferenceDescriptorExtensions.CreateFrom(spatialReference);
 			}
 		}
 

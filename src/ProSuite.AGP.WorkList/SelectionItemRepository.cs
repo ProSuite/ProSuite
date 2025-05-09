@@ -12,20 +12,18 @@ namespace ProSuite.AGP.WorkList
 {
 	public class SelectionItemRepository : GdbItemRepository
 	{
-		private readonly Dictionary<ISourceClass, List<long>> _oidsBySource =
+		private readonly IDictionary<ISourceClass, List<long>> _oidsBySource =
 			new Dictionary<ISourceClass, List<long>>();
 
-		// todo daro: refactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
-		public SelectionItemRepository(IEnumerable<Table> tables,
-		                               Dictionary<Table, List<long>> selection,
-		                               IRepository stateRepository) : base(
-			tables, stateRepository)
+		public SelectionItemRepository(Dictionary<Table, List<long>> selection,
+		                               IWorkItemStateRepository stateRepository) : base(
+			selection.Keys, stateRepository)
 		{
 			foreach (var pair in selection)
 			{
-				var id = new GdbTableIdentity(pair.Key);
+				var gdbTableIdentity = new GdbTableIdentity(pair.Key);
 				ISourceClass sourceClass =
-					SourceClasses.FirstOrDefault(s => s.Uses(id));
+					SourceClasses.FirstOrDefault(s => s.Uses(gdbTableIdentity));
 
 				if (sourceClass == null)
 				{
@@ -46,48 +44,63 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
+		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
 		{
-			long id = GetNextOid(row);
+			long rowId = GetNextOid(row);
 
-			return RefreshState(new SelectionItem(id, row));
+			long tableId = sourceClass.GetUniqueTableId();
+
+			var item = new SelectionItem(rowId, tableId, row);
+
+			return RefreshState(item);
 		}
 
-		protected override ISourceClass CreateSourceClassCore(
-			GdbTableIdentity identity,
-			IAttributeReader attributeReader,
-			WorkListStatusSchema statusSchema)
+		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
+		                                                      IAttributeReader attributeReader,
+		                                                      WorkListStatusSchema statusSchema,
+		                                                      string definitionQuery = null)
 		{
 			return new SelectionSourceClass(identity);
 		}
 
-		protected override IEnumerable<Row> GetRowsCore(ISourceClass sourceClass,
-		                                                QueryFilter filter, bool recycle)
+		protected override Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
+		{
+			WorkItemStateRepository.Update(item);
+
+			return Task.CompletedTask;
+		}
+
+		public override bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
+		{
+			// We can use anything, no schema dependency:
+			return true;
+		}
+
+		protected override void AdaptSourceFilter(QueryFilter filter,
+		                                          ISourceClass sourceClass)
 		{
 			Assert.True(_oidsBySource.TryGetValue(sourceClass, out List<long> oids),
 			            "unexpected source class");
 
-			if (filter == null)
-			{
-				filter = new QueryFilter { ObjectIDs = oids };
-			}
+			filter.ObjectIDs = oids;
 
 			if (filter is SpatialQueryFilter spatialFilter)
 			{
+				// Probably depends on the count of OIDs vs. the spatial filter's selectivity:
 				spatialFilter.SearchOrder = SearchOrder.Attribute;
 			}
-
-			return base.GetRowsCore(sourceClass, filter, recycle);
-		}
-
-		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
-		{
-			await Task.Run(() => WorkItemStateRepository.Update(item));
 		}
 
 		protected override void UpdateStateRepositoryCore(string path)
 		{
-			((XmlWorkItemStateRepository) WorkItemStateRepository).FilePath = path;
+			var xmlStateRepo = (XmlWorkItemStateRepository) WorkItemStateRepository;
+			xmlStateRepo.WorkListDefinitionFilePath = path;
+		}
+
+		public override void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
+		{
+			// No specific schema info is necessary/available
+			return;
 		}
 	}
 }

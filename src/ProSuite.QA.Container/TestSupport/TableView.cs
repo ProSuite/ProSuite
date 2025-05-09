@@ -77,6 +77,10 @@ namespace ProSuite.QA.Container.TestSupport
 					r[col] = "a";
 				else if (col.DataType == typeof(bool))
 					r[col] = true;
+				else if (col.DataType == typeof(DateTime))
+					r[col] = DateTime.Now;
+				else if (col.DataType == typeof(Guid))
+					r[col] = Guid.NewGuid();
 				else if (col.DataType == typeof(object))
 					r[col] = new object();
 				else

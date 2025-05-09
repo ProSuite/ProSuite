@@ -5,7 +5,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape;
 
 namespace ProSuite.Microservices.Server.AO.Test.Geometry

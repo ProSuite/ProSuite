@@ -7,16 +7,18 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
+	[GeometryTransformer]
+	[ZValuesTest]
 	public class TrZAssign : TrGeometryTransform
 	{
 		public enum AssignOption
@@ -42,10 +44,10 @@ namespace ProSuite.QA.Tests.Transformers
 			[DocTr(nameof(DocTrStrings.TrZAssign_featureClass))]
 			IReadOnlyFeatureClass featureClass,
 			[DocTr(nameof(DocTrStrings.TrZAssign_raster))]
-			IRasterDataset raster)
+			RasterDatasetReference raster)
 			: base(featureClass, featureClass.ShapeType)
 		{
-			_raster = new RasterDatasetReference((IRasterDataset2) raster);
+			_raster = raster;
 		}
 
 		[DocTr(nameof(DocTrStrings.TrZAssign_0))]
@@ -53,10 +55,10 @@ namespace ProSuite.QA.Tests.Transformers
 			[DocTr(nameof(DocTrStrings.TrZAssign_featureClass))]
 			IReadOnlyFeatureClass featureClass,
 			[DocTr(nameof(DocTrStrings.TrZAssign_rasterMosaic))]
-			SimpleRasterMosaic rasterMosaic)
+			MosaicRasterReference rasterMosaic)
 			: base(featureClass, featureClass.ShapeType)
 		{
-			_raster = new MosaicRasterReference(rasterMosaic);
+			_raster = rasterMosaic;
 		}
 
 		[TestParameter(_defaultZAssignOption)]

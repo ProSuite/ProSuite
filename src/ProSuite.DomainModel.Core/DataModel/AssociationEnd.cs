@@ -55,6 +55,31 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		#endregion
 
+		private int _cloneId = -1;
+
+		/// <summary>
+		/// The clone ID can be set if this instance is a (remote) clone of a persistent AssociationEnd.
+		/// </summary>
+		/// <param name="id"></param>
+		public void SetCloneId(int id)
+		{
+			Assert.True(base.Id < 0, "Persistent entity or already initialized clone.");
+			_cloneId = id;
+		}
+
+		public new int Id
+		{
+			get
+			{
+				if (base.Id < 0 && _cloneId != -1)
+				{
+					return _cloneId;
+				}
+
+				return base.Id;
+			}
+		}
+
 		protected void Redirect([NotNull] ObjectDataset objectDataset)
 		{
 			Assert.ArgumentNotNull(objectDataset, nameof(objectDataset));

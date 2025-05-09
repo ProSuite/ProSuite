@@ -4,6 +4,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Gdb;
 using ProSuite.Processing.AGP.Core.Domain;
 
 namespace ProSuite.Processing.AGP.Core.Utils

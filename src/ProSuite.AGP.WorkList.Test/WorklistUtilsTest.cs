@@ -1,11 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using ArcGIS.Core.Data;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Hosting;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Testing;
+using ProSuite.DomainModel.Core;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -24,6 +28,10 @@ namespace ProSuite.AGP.WorkList.Test
 		{
 			Commons.Test.Testing.TestUtils.ConfigureUnitTestLogging();
 
+			// Without adding the install dir to the PATH variable a weird exception occurs on startup:
+			//System.DllNotFoundException : Unable to load DLL 'CoreInterop.dll' or one of its dependencies:
+			//The specified module could not be found. (0x8007007E)
+			ProRuntimeUtils.AddBinDirectoryToPath(ProRuntimeUtils.GetProInstallDir());
 			CoreHostProxy.Initialize();
 		}
 
@@ -53,8 +61,23 @@ namespace ProSuite.AGP.WorkList.Test
 
 			XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(path);
 
-			IWorkItemRepository repository = WorkListUtils.CreateWorkItemRepository(definition);
-			Assert.NotNull(repository);
+			List<Table> tables = WorkListUtils.GetDistinctTables(
+				definition.Workspaces, definition.Name,
+				definition.Path, out NotificationCollection notifications);
+
+			var descriptor = new ClassDescriptor(definition.TypeName, definition.AssemblyName);
+			Type type = descriptor.GetInstanceType();
+
+			string name = definition.Name;
+			string filePath = definition.Path;
+			int currentIndex = definition.CurrentIndex;
+
+			IWorkItemStateRepository stateRepository =
+				WorkListUtils.CreateItemStateRepository(filePath, name, type, currentIndex);
+
+			IWorkItemRepository workItemRepository =
+				WorkListUtils.CreateWorkItemRepository(tables, type, stateRepository, definition);
+			Assert.NotNull(workItemRepository);
 
 			// This tries to load ArcGIS.Desktop.Framework. Why does WorkList needs this?
 			// Try to push work list further up, away from AGP Desktop.

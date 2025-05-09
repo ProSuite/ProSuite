@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Client.QA
 {
@@ -28,6 +29,7 @@ namespace ProSuite.Microservices.Client.QA
 
 		/// <summary>
 		/// Update the actually verified perimeter by the background process.
+		/// NOTE: This method can be called on an MTA thread!
 		/// </summary>
 		/// <param name="perimeterMsg"></param>
 		void SetVerifiedPerimeter([CanBeNull] ShapeMsg perimeterMsg);
@@ -44,5 +46,12 @@ namespace ProSuite.Microservices.Client.QA
 		/// <param name="verifiedConditionIds"></param>
 		/// <returns></returns>
 		int SaveIssues([NotNull] IEnumerable<int> verifiedConditionIds);
+
+		/// <summary>
+		/// Saves the found issues and deletes the obsolete exceptions.
+		/// </summary>
+		/// <param name="verifiedConditionIds"></param>
+		/// <returns></returns>
+		Task<int> SaveIssuesAsync([NotNull] IList<int> verifiedConditionIds);
 	}
 }

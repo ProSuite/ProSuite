@@ -12,9 +12,15 @@ namespace ProSuite.QA.Container
 			TestRunEnvelope = testRunEnvelope;
 		}
 
+		/// <summary>
+		/// The extent of the current tile.
+		/// </summary>
 		[CanBeNull]
 		public IEnvelope TileEnvelope { get; }
 
+		/// <summary>
+		/// The full extent of the test run.
+		/// </summary>
 		[CanBeNull]
 		public IEnvelope TestRunEnvelope { get; }
 	}

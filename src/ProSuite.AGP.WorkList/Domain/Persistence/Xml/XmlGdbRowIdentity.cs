@@ -7,11 +7,14 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 	{
 		public XmlGdbRowIdentity() { }
 
-		public XmlGdbRowIdentity(GdbRowIdentity row)
+		public XmlGdbRowIdentity(GdbRowIdentity row,
+		                         long uniqueTableId)
 		{
 			OID = row.ObjectId;
-			TableId = row.Table.Id;
+
 			TableName = row.Table.Name;
+
+			TableId = uniqueTableId;
 		}
 
 		[XmlAttribute("oid")]

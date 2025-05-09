@@ -16,7 +16,6 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.PointEnumerators;
 using ProSuite.QA.Tests.Properties;
-using SegmentUtils_ = ProSuite.QA.Container.Geometry.SegmentUtils_;
 
 namespace ProSuite.QA.Tests
 {
@@ -288,7 +287,7 @@ namespace ProSuite.QA.Tests
 								// ReSharper disable once ConvertToConstant.Local
 								double deltaZ = nearestVertex[2] - proximity.Point[2];
 								double zCoincidenceTolerance =
-									GetZCoincidenceTolerance(new[] {feature, nearFeature});
+									GetZCoincidenceTolerance(new[] { feature, nearFeature });
 
 								// get delta Z (also if is3D = false !!!!)
 								if (IsInvalidDeltaZ(deltaZ, zCoincidenceTolerance))
@@ -362,7 +361,7 @@ namespace ProSuite.QA.Tests
 				if (CheckZ)
 				{
 					double zCoincidenceTolerance =
-						GetZCoincidenceTolerance(new[] {feature, nearFeature});
+						GetZCoincidenceTolerance(new[] { feature, nearFeature });
 					if (IsInvalidDeltaZ(closestEdgeDeltaZ, zCoincidenceTolerance))
 					{
 						return ReportZDiffersCoincidentEdge(point, zCoincidenceTolerance,
@@ -418,7 +417,7 @@ namespace ProSuite.QA.Tests
 						{
 							double deltaZ = nearestVertex[2] - proximity.Point[2];
 							zCoincidenceTolerance = zCoincidenceTolerance ??
-							                        GetZCoincidenceTolerance(new[] {feature});
+							                        GetZCoincidenceTolerance(new[] { feature });
 							if (IsInvalidDeltaZ(deltaZ, zCoincidenceTolerance.Value))
 							{
 								return ReportZDiffersCoincidentVertex(
@@ -473,7 +472,7 @@ namespace ProSuite.QA.Tests
 				if (CheckZ)
 				{
 					zCoincidenceTolerance = zCoincidenceTolerance ??
-					                        GetZCoincidenceTolerance(new[] {feature});
+					                        GetZCoincidenceTolerance(new[] { feature });
 
 					if (IsInvalidDeltaZ(closestEdgeDeltaZ, zCoincidenceTolerance.Value))
 					{
@@ -523,7 +522,7 @@ namespace ProSuite.QA.Tests
 				InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>) features),
 				CreateErrorGeometry(point, spatialReference),
 				Codes[code], GetAffectedComponent(features),
-				values: new object[] {vertexDistance});
+				values: new object[] { vertexDistance });
 		}
 
 		private int ReportZDiffersCoincidentVertex(
@@ -553,7 +552,7 @@ namespace ProSuite.QA.Tests
 				InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>) features),
 				CreateErrorGeometry(point, spatialReference),
 				Codes[code], GetAffectedComponent(features),
-				values: new object[] {Math.Abs(deltaZ)});
+				values: new object[] { Math.Abs(deltaZ) });
 		}
 
 		private int ReportNearbyEdgeNotPassingThroughVertex(
@@ -591,7 +590,7 @@ namespace ProSuite.QA.Tests
 				description,
 				InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>) features),
 				CreateErrorGeometry(point, spatialReference),
-				Codes[code], GetAffectedComponent(features), values: new object[] {edgeDistance});
+				Codes[code], GetAffectedComponent(features), values: new object[] { edgeDistance });
 		}
 
 		private int ReportZDiffersCoincidentEdge(
@@ -621,7 +620,7 @@ namespace ProSuite.QA.Tests
 				InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>) features),
 				CreateErrorGeometry(point, spatialReference),
 				Codes[code], GetAffectedComponent(features),
-				values: new object[] {Math.Abs(deltaZ)});
+				values: new object[] { Math.Abs(deltaZ) });
 		}
 
 		private int ReportNoVertexOnNearbyEdge(
@@ -658,7 +657,7 @@ namespace ProSuite.QA.Tests
 				description,
 				InvolvedRowUtils.GetInvolvedRows((IEnumerable<IReadOnlyFeature>) features),
 				CreateErrorGeometry(point, spatialReference),
-				Codes[code], GetAffectedComponent(features), values: new object[] {edgeDistance});
+				Codes[code], GetAffectedComponent(features), values: new object[] { edgeDistance });
 		}
 
 		[CanBeNull]

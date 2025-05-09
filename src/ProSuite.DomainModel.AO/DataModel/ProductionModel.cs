@@ -69,25 +69,25 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		protected override void CheckAssignSpecialDatasetCore(Dataset dataset)
 		{
-			if (dataset is ErrorMultipointDataset)
+			if (dataset is ErrorMultipointDataset multipointDataset)
 			{
-				_errorMultipointDataset = (ErrorMultipointDataset) dataset;
+				_errorMultipointDataset = multipointDataset;
 			}
-			else if (dataset is ErrorLineDataset)
+			else if (dataset is ErrorLineDataset lineDataset)
 			{
-				_errorLineDataset = (ErrorLineDataset) dataset;
+				_errorLineDataset = lineDataset;
 			}
-			else if (dataset is ErrorPolygonDataset)
+			else if (dataset is ErrorPolygonDataset polygonDataset)
 			{
-				_errorPolygonDataset = (ErrorPolygonDataset) dataset;
+				_errorPolygonDataset = polygonDataset;
 			}
-			else if (dataset is ErrorMultiPatchDataset)
+			else if (dataset is ErrorMultiPatchDataset multiPatchDataset)
 			{
-				_errorMultiPatchDataset = (ErrorMultiPatchDataset) dataset;
+				_errorMultiPatchDataset = multiPatchDataset;
 			}
-			else if (dataset is ErrorTableDataset)
+			else if (dataset is ErrorTableDataset tableDataset)
 			{
-				_errorTableDataset = (ErrorTableDataset) dataset;
+				_errorTableDataset = tableDataset;
 			}
 		}
 	}

@@ -9,7 +9,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
-using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps;
 
 namespace ProSuite.Microservices.Server.AO.Test.Geometry
@@ -120,12 +120,15 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 		[Test]
 		public void CanRemoveOverlaps()
 		{
-			var fClass =
-				new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon);
-
 			var sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95,
 				WellKnownVerticalCS.LN02);
+
+			var fClass =
+				new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon)
+				{
+					SpatialReference = sr
+				};
 
 			IPolygon polygon1 = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600000, 1200000, sr),

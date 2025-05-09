@@ -167,7 +167,11 @@ In the resulting feature class, only attributes defined in 'Attributes' or 'Grou
   </data>
   <data name="TrIntersect_0" xml:space="preserve">
     <value>Transforms features of 'intersected' by intersecting them with features from 'intersecting'.
-If intersected is a line class and intersecting is a polygon class, then the resulting feature class has an attribute 'PartIntersected' which contains the (resultingFeature.Shape.Length / intersectedFeature.Shape.Length)</value>
+If ResultDimension is not specified, the result feature class has the same geometry dimension as the intersected feature class.
+When the result feature class matches the dimension of the intersected feature class, an IntersectionRatio attribute is added. This represents the ratio of the result geometry to the original intersected geometry:
+Polygons Features:  resultingFeature.Shape.Area / intersectedFeature.Shape.Area
+Line Features: resultingFeature.Shape.Length / intersectedFeature.Shape.Length
+(Mulit-)Point Features: resultingFeature.Shape.PointCount / intersectedFeature.Shape.PointCount</value>
   </data>
   <data name="TrIntersect_intersected" xml:space="preserve">
     <value>Feature class. The attributes of 'intersected' can be accessed by 't0.&lt;field&gt;' in the resulting featureClass</value>
@@ -207,7 +211,9 @@ If the table is part of the geodatabase and registered as versioned it will be o
     <value>The name of the database object to be created and made usable as table.</value>
   </data>
   <data name="TrCombinedFilter_0" xml:space="preserve">
-    <value>Creates a filtered feature class based on several other filters that use the same 'featureClassToFilter'.</value>
+    <value>This transformer is an input feature filter. Input feature filters use a spatial restriction to filter the rows of the input feature class 'featureClassToFilter'.
+
+Creates a filtered feature class based on several other input feature filters that use the same 'featureClassToFilter' as this transformer. Other input feature filters are transformers with name 'TrOnly...'.</value>
   </data>
   <data name="TrCombinedFilter_expression" xml:space="preserve">
     <value>An expression that allows combining input filters with AND or OR. An input filter which is passed by a feature evaluates to 'true', a filter that excludes a feature evaluates to 'false'. 
@@ -245,7 +251,9 @@ The transformed feature class has also the attributes of 'featureClass', which c
 -AllRings: converts all rings to polygons (Remark: polygons generated from outer rings: InnerRingIndex = -1)</value>
   </data>
   <data name="TrOnlyContainedFeatures_0" xml:space="preserve">
-    <value>Creates a filtered feature class containing only the features that are contained within features from 'containing'. The resulting feature class has the same properties and attributes as 'featureClassToFilter'.</value>
+    <value>This transformer is an input feature filter. Input feature filters use a spatial restriction to filter the rows of the input feature class 'featureClassToFilter'.
+
+Creates a filtered feature class containing only the features that are contained within features from 'containing'. The resulting feature class has the same properties and attributes as 'featureClassToFilter'.</value>
   </data>
   <data name="TrOnlyContainedFeatures_containing" xml:space="preserve">
     <value>The features used to check if they contain the features to be filtered.</value>
@@ -254,7 +262,9 @@ The transformed feature class has also the attributes of 'featureClass', which c
     <value>The feature class to be filtered.</value>
   </data>
   <data name="TrOnlyIntersectingFeatures_0" xml:space="preserve">
-    <value>Creates a filtered feature class containing only the features that intersect features from 'intersecting'.  The resulting feature class has the same properties and attributes as 'featureClassToFilter'.</value>
+    <value>This transformer is an input feature filter. Input feature filters use a spatial restriction to filter the rows of the input feature class 'featureClassToFilter'.
+
+Creates a filtered feature class containing only the features that intersect features from 'intersecting'.  The resulting feature class has the same properties and attributes as 'featureClassToFilter'.</value>
   </data>
   <data name="TrOnlyIntersectingFeatures_featureClassToFilter" xml:space="preserve">
     <value>The feature class to be filtered.</value>
@@ -357,7 +367,9 @@ See T1Attributes</value>
     <value>table to join with 'leftTable'</value>
   </data>
   <data name="TrOnlyDisjointFeatures_0" xml:space="preserve">
-    <value>Creates a filtered feature class containing only the features that are disjoint from features from 'disjoint'. Features that intersect any feature from 'disjoint' are filtered out. The resulting feature class has the same properties and attributes as 'featureClassToFilter'.</value>
+    <value>This transformer is an input feature filter. Input feature filters use a spatial restriction to filter the rows of the input feature class 'featureClassToFilter'.
+
+Creates a filtered feature class containing only the features that are disjoint from features from 'disjoint'. Features that intersect any feature from 'disjoint' are filtered out. The resulting feature class has the same properties and attributes as 'featureClassToFilter'.</value>
   </data>
   <data name="TrOnlyDisjointFeatures_disjoint" xml:space="preserve">
     <value>The features used to check if they are disjoint from the features to be filtered.</value>
@@ -397,5 +409,12 @@ In the resulting feature class, only attributes defined in 'Attributes' can be u
   </data>
   <data name="TrZAssign_ZAssignOption" xml:space="preserve">
     <value>whether the z-values shall be assigned to vertices within the current tile only or to all vertices (slower).</value>
+  </data>
+  <data name="TrIntersect_ResultDimension" xml:space="preserve">
+    <value>Specifies the dimensionality of the resulting intersection geometry.
+- -1 (default): Automatically determines the result dimension by using the dimension of the intersected feature class.
+- 0: Forces the result to be points (e.g., intersection points of polylines).
+- 1: Forces the result to be polylines (e.g., overlapping line segments or polygon boundaries).
+- 2: Forces the result to be polygons (e.g., overlapping areas of polygons).</value>
   </data>
 </root>

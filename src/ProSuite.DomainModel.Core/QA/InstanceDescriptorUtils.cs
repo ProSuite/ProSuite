@@ -286,9 +286,7 @@ namespace ProSuite.DomainModel.Core.QA
 				typeName = typeName.Replace(assemblyName, substituteAssembly);
 			}
 
-			const string definition = "Definition";
-
-			return $"{typeName}{definition}";
+			return InstanceUtils.GetAlgorithmDefinitionName(typeName);
 		}
 
 		private static string GetDefinitionsAssemblyName([NotNull] ClassDescriptor classDescriptor)

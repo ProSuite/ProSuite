@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -101,7 +100,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 				int segmentCount = _indexedSegments.GetPartSegmentCount(currentPart);
 
 				var partSegments = new List<SegmentProxy>(segmentCount)
-				                   {_segmentsEnum.Current};
+				                   { _segmentsEnum.Current };
 
 				while ((_enumValid = _segmentsEnum.MoveNext()) &&
 				       Assert.NotNull(_segmentsEnum.Current).PartIndex == currentPart)
@@ -186,7 +185,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 
 				int segmentCount = _indexedMultiPatch.GetPartSegmentCount(currentPart);
 				var surfaceSegments = new List<SegmentProxy>(segmentCount)
-				                      {_segmentsEnum.Current};
+				                      { _segmentsEnum.Current };
 
 				while ((_enumValid = _segmentsEnum.MoveNext()) &&
 				       Assert.NotNull(_segmentsEnum.Current).PartIndex <= endPart)

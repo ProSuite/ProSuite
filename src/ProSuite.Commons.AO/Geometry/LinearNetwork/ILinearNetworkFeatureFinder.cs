@@ -48,5 +48,13 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 		double SearchTolerance { get; }
 
 		void InvalidateTargetFeatureCache();
+
+		/// <summary>
+		/// Creates the union of the searched classes of this and the classes of the other specified
+		/// instance and creates a new network feature finder.
+		/// </summary>
+		/// <param name="other"></param>
+		/// <returns></returns>
+		ILinearNetworkFeatureFinder Union([NotNull] ILinearNetworkFeatureFinder other);
 	}
 }

@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Validation;
+using ProSuite.DomainModel.Core.Geodatabase;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
@@ -22,34 +23,39 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[UsedImplicitly] private bool _elementNamesAreQualified;
 		[UsedImplicitly] private string _defaultDatabaseName;
 		[UsedImplicitly] private string _defaultDatabaseSchemaOwner;
+		[UsedImplicitly] private string _schemaOwner;
+		[UsedImplicitly] private string _datasetPrefix;
+
+		[UsedImplicitly]
+		private SqlCaseSensitivity _sqlCaseSensitivity = SqlCaseSensitivity.SameAsDatabase;
+
+		[UsedImplicitly] private bool _useDefaultDatabaseOnlyForSchema;
+
 		[UsedImplicitly] private readonly IList<Dataset> _datasets = new List<Dataset>();
 
 		[UsedImplicitly]
 		private readonly IList<Association> _associations = new List<Association>();
 
-		[UsedImplicitly]
-		private SqlCaseSensitivity _sqlCaseSensitivity = SqlCaseSensitivity.SameAsDatabase;
+		[UsedImplicitly] private SpatialReferenceDescriptor _spatialReferenceDescriptor;
+
+		[UsedImplicitly] private ConnectionProvider _userConnectionProvider;
+
+		[UsedImplicitly] private SdeDirectConnectionProvider
+			_repositoryOwnerConnectionProvider;
+
+		[UsedImplicitly] private ConnectionProvider _schemaOwnerConnectionProvider;
+
+		[UsedImplicitly] private double _defaultMinimumSegmentLength = 2;
 
 		private bool _specialDatasetsAssigned;
+
 		private Dictionary<SimpleTerrainDataset, SimpleTerrainDataset> _terrainDatasets;
-
-		/// <summary>
-		/// Name of the schema owner, e.g. "TOPGIS_TLM"
-		/// </summary>
-		[UsedImplicitly] private string _schemaOwner;
-
-		/// <summary>
-		/// Prefix for individual datasets, e.g. "TLM_"
-		/// </summary>
-		[UsedImplicitly] private string _datasetPrefix;
 
 		[NotNull] private readonly Dictionary<string, Dataset> _datasetIndex =
 			new Dictionary<string, Dataset>(100, StringComparer.OrdinalIgnoreCase);
 
 		[NotNull] private readonly Dictionary<string, Association> _associationIndex =
 			new Dictionary<string, Association>(100, StringComparer.OrdinalIgnoreCase);
-
-		[UsedImplicitly] private double _defaultMinimumSegmentLength = 2;
 
 		#region Constructors
 
@@ -89,7 +95,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public bool ElementNamesAreQualified
 		{
 			get { return _elementNamesAreQualified; }
-			protected set { _elementNamesAreQualified = value; }
+			set { _elementNamesAreQualified = value; }
 		}
 
 		/// <summary>
@@ -108,7 +114,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public string DefaultDatabaseName
 		{
 			get { return _defaultDatabaseName; }
-			protected set { _defaultDatabaseName = value; }
+			set { _defaultDatabaseName = value; }
 		}
 
 		/// <summary>
@@ -128,7 +134,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public string DefaultDatabaseSchemaOwner
 		{
 			get { return _defaultDatabaseSchemaOwner; }
-			protected set { _defaultDatabaseSchemaOwner = value; }
+			set { _defaultDatabaseSchemaOwner = value; }
 		}
 
 		/// <summary>
@@ -163,6 +169,22 @@ namespace ProSuite.DomainModel.Core.DataModel
 		}
 
 		/// <summary>
+		/// Gets or sets a value indicating whether the master database should be used only for schema information.
+		/// If <c>true</c>, the master database is never accessed as a fallback data source when a dataset is not 
+		/// present in the local workspace context.
+		/// </summary>
+		/// <value>
+		/// 	<c>true</c> if the master database should only be used for schema information; 
+		/// otherwise (the database contains useful data ancd, <c>false</c>.
+		/// </value>
+		[UsedImplicitly]
+		public bool UseDefaultDatabaseOnlyForSchema
+		{
+			get { return _useDefaultDatabaseOnlyForSchema; }
+			set { _useDefaultDatabaseOnlyForSchema = value; }
+		}
+
+		/// <summary>
 		/// Gets all datasets (including deleted datasets)
 		/// </summary>
 		/// <value>The list of datasets (read-only).</value>
@@ -176,6 +198,32 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[NotNull]
 		public IList<Association> Associations =>
 			new ReadOnlyList<Association>(_associations);
+
+		[Required]
+		public SpatialReferenceDescriptor SpatialReferenceDescriptor
+		{
+			get { return _spatialReferenceDescriptor; }
+			set { _spatialReferenceDescriptor = value; }
+		}
+
+		[Required]
+		public ConnectionProvider UserConnectionProvider
+		{
+			get { return _userConnectionProvider; }
+			set { _userConnectionProvider = value; }
+		}
+
+		public SdeDirectConnectionProvider RepositoryOwnerConnectionProvider
+		{
+			get { return _repositoryOwnerConnectionProvider; }
+			set { _repositoryOwnerConnectionProvider = value; }
+		}
+
+		public ConnectionProvider SchemaOwnerConnectionProvider
+		{
+			get { return _schemaOwnerConnectionProvider; }
+			set { _schemaOwnerConnectionProvider = value; }
+		}
 
 		[UsedImplicitly]
 		public double DefaultMinimumSegmentLength
@@ -631,9 +679,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 				return GetDatasetFromIndex(name);
 			}
 
-			return _datasets.FirstOrDefault(
-				dataset => string.Equals(dataset.Name, name,
-				                         StringComparison.OrdinalIgnoreCase));
+			return _datasets.FirstOrDefault(dataset => string.Equals(dataset.Name, name,
+				                                StringComparison.OrdinalIgnoreCase));
 		}
 
 		[CanBeNull]
@@ -656,7 +703,11 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 			foreach (Dataset dataset in _datasets)
 			{
-				_datasetIndex.Add(dataset.Name, dataset);
+				// DPS #185: Ignore deleted datasets to avoid duplicate keys
+				if (! dataset.Deleted)
+				{
+					_datasetIndex.Add(dataset.Name, dataset);
+				}
 			}
 		}
 

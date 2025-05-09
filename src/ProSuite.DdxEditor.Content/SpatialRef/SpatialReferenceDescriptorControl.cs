@@ -13,6 +13,7 @@ using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.SpatialRef
 {
@@ -65,7 +66,7 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 			{
 				try
 				{
-					RenderSpatialReference(entity.SpatialReference);
+					RenderSpatialReference(entity.GetSpatialReference());
 				}
 				catch (Exception)
 				{

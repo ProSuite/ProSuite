@@ -23,10 +23,10 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
+using ProSuite.DomainModel.Core.Geodatabase;
 using Path = System.IO.Path;
 
 namespace ProSuite.DdxEditor.Content.Models
@@ -129,7 +129,7 @@ namespace ProSuite.DdxEditor.Content.Models
 		{
 			return FindConnectionProviderCore<ConnectionProvider>(
 				owner,
-				c => c is IOpenSdeWorkspace,
+				c => c is SdeConnectionProvider || c is ConnectionFileConnectionProvider,
 				new ColumnDescriptor("Name"),
 				new ColumnDescriptor("TypeDescription"),
 				new ColumnDescriptor("Description"));
@@ -545,8 +545,9 @@ namespace ProSuite.DdxEditor.Content.Models
 			var topologyDataset = dataset as TopologyDataset;
 			if (topologyDataset != null)
 			{
-				return Assert.NotNull(datasetContext.OpenTopology(topologyDataset))
-				             .FeatureDataset;
+				TopologyReference topologyReference = datasetContext.OpenTopology(topologyDataset);
+
+				return Assert.NotNull(topologyReference?.Topology).FeatureDataset;
 			}
 
 			return null;
@@ -565,7 +566,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			               "spatial reference descriptor is not defined");
 
 			ISpatialReference modelSpatialReference =
-				spatialReferenceDescriptor.SpatialReference;
+				spatialReferenceDescriptor.GetSpatialReference();
 
 			modelSpatialReferenceProperties =
 				new SpatialReferenceProperties(modelSpatialReference);

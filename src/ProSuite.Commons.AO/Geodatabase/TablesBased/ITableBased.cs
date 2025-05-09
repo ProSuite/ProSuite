@@ -15,7 +15,7 @@ namespace ProSuite.Commons.AO.Geodatabase.TablesBased
 		IList<IReadOnlyTable> GetInvolvedTables();
 
 		/// <summary>
-		/// Get the involved rows on which the <see cref="forTransformedRow"/> is based.
+		/// Get the involved rows on which the <paramref name="forTransformedRow"/> is based.
 		/// </summary>
 		/// <param name="forTransformedRow"></param>
 		/// <returns></returns>

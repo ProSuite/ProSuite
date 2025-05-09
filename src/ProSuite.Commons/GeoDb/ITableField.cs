@@ -1,3 +1,5 @@
+using ProSuite.Commons.Essentials.CodeAnnotations;
+
 namespace ProSuite.Commons.GeoDb
 {
 	/// <summary>
@@ -5,7 +7,11 @@ namespace ProSuite.Commons.GeoDb
 	/// </summary>
 	public interface ITableField
 	{
+		[NotNull]
 		string Name { get; }
+
+		[CanBeNull]
+		string AliasName { get; }
 
 		FieldType FieldType { get; }
 

@@ -151,7 +151,10 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				typeName == "IRasterDataset2" ||
 				typeName == "IMosaicDataset" ||
 				typeName == "TerrainReference" ||
+				typeName == "TopologyReference" ||
 				typeName == "SimpleRasterMosaic" ||
+				typeName == "MosaicRasterReference" ||
+				typeName == "RasterDatasetReference" ||
 				typeName == "IMosaicLayer" ||
 				typeName == "ITerrain" ||
 				typeName == "IGeometricNetwork";

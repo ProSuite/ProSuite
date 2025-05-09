@@ -99,17 +99,36 @@ namespace ProSuite.AGP.WorkList.Domain
 			return true;
 		}
 
-		public bool TryAdd(IWorkList worklist)
+		public bool WorklistExists(string name)
+		{
+			lock (_registryLock)
+			{
+				if (_map.TryGetValue(name, out IWorkListFactory factory))
+				{
+					// In this case the work list has been created.
+					// XmlBasedWorkListFactory would create it in a non-canonical way (no schema info etc.)
+					// which might be fine for layer display purposes, but not for the NavigatorView. 
+					return factory is WorkListFactory;
+				}
+
+				return false;
+			}
+		}
+
+		public bool AddOrReplace(IWorkList worklist)
 		{
 			lock (_registryLock)
 			{
 				if (_map.ContainsKey(worklist.Name))
 				{
-					return false;
+					_map[worklist.Name] = new WorkListFactory(worklist);
+				}
+				else
+				{
+					_map.Add(worklist.Name, new WorkListFactory(worklist));
 				}
 			}
 
-			Add(worklist);
 			return true;
 		}
 
@@ -144,7 +163,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public bool Exists(string name)
+		public bool Contains(string name)
 		{
 			lock (_registryLock)
 			{

@@ -1,13 +1,16 @@
 using System;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Contracts;
-using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
 
 namespace ProSuite.Commons.AGP.Framework
 {
 	public abstract class ButtonCommandBase : Button
 	{
+		private int _updateErrorCounter;
+		private const int MaxUpdateErrors = 10;
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Overrides of PlugIn
@@ -18,9 +21,20 @@ namespace ProSuite.Commons.AGP.Framework
 			{
 				OnUpdateCore();
 			}
-			catch (Exception e)
+			catch (Exception ex)
 			{
-				_msg.Error($"Error in {GetType().Name}.OnUpdate", e);
+				if (_updateErrorCounter < MaxUpdateErrors)
+				{
+					_msg.Error($"{GetType().Name}.{nameof(OnUpdate)}: {ex.Message}", ex);
+
+					_updateErrorCounter += 1;
+
+					if (_updateErrorCounter == MaxUpdateErrors)
+					{
+						_msg.Error("Will stop reporting errors here to avoid flooding the logs");
+					}
+				}
+				//else: silently ignore to avoid flooding the logs
 			}
 		}
 
@@ -30,20 +44,20 @@ namespace ProSuite.Commons.AGP.Framework
 
 		protected override async void OnClick()
 		{
+			_msg.Debug($"{Caption}.OnClick");
+
 			try
 			{
-				_msg.VerboseDebug(() => $"{GetType().Name}.OnClick");
-
-				bool success = await OnClickCore();
+				bool success = await OnClickAsyncCore();
 
 				if (! success)
 				{
-					_msg.Debug($"OnClickCore false for {Caption}");
+					_msg.Debug($"OnClickAsyncCore false for {Caption}");
 				}
 			}
-			catch (Exception e)
+			catch (Exception ex)
 			{
-				ErrorHandler.HandleError(e, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
@@ -51,9 +65,9 @@ namespace ProSuite.Commons.AGP.Framework
 
 		protected virtual void OnUpdateCore() { }
 
-		protected virtual async Task<bool> OnClickCore()
+		protected virtual Task<bool> OnClickAsyncCore()
 		{
-			return true;
+			return Task.FromResult(true);
 		}
 	}
 }

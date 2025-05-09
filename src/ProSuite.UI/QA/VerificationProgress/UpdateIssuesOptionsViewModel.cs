@@ -43,5 +43,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 				OnPropertyChanged();
 			}
 		}
+
+		public bool KeepPreviousIssuesEnabled { get; set; }
 	}
 }

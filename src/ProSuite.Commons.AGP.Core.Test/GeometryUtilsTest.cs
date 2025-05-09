@@ -17,82 +17,87 @@ public class GeometryUtilsTest
 	[OneTimeSetUp]
 	public void OneTimeSetUp()
 	{
+		// Helps core host apps (like unit tests) find dependencies like
+		// CoreInterop.dll, freetype.dll, etc. in the proper place and version
+		var installDir = ProRuntimeUtils.GetProInstallDir();
+		ProRuntimeUtils.AddBinDirectoryToPath(installDir);
+
 		CoreHostProxy.Initialize();
 	}
 
 	[Test]
-		public void Can_get_distance_between_geometries()
-		{
-			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
-			var polygon = GeometryFactory.CreatePolygon(envelope);
-			var mapPoint = MapPointBuilder.CreateMapPoint(50, 50);
+	public void Can_get_distance_between_geometries()
+	{
+		var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
+		var polygon = GeometryFactory.CreatePolygon(envelope);
+		var mapPoint = MapPointBuilder.CreateMapPoint(50, 50);
 
-			double distance = GeometryEngine.Instance.Distance(polygon, mapPoint);
-			Assert.AreEqual(0, distance);
-			Assert.False(GeometryUtils.Disjoint(polygon, mapPoint));
+		double distance = GeometryEngine.Instance.Distance(polygon, mapPoint);
+		Assert.AreEqual(0, distance);
+		Assert.False(GeometryUtils.Disjoint(polygon, mapPoint));
 
-			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
-			Assert.AreEqual(50, result.Distance);
+		ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
+		Assert.AreEqual(50, result.Distance);
 
-			mapPoint = MapPointBuilder.CreateMapPoint(110, 100);
+		mapPoint = MapPointBuilder.CreateMapPoint(110, 100);
 
-			distance = GeometryEngine.Instance.Distance(polygon, mapPoint);
-			Assert.AreEqual(10, distance);
-			Assert.True(GeometryUtils.Disjoint(polygon, mapPoint));
-		}
+		distance = GeometryEngine.Instance.Distance(polygon, mapPoint);
+		Assert.AreEqual(10, distance);
+		Assert.True(GeometryUtils.Disjoint(polygon, mapPoint));
+	}
 
-		[Test]
-		public void Can_get_nearest_point_to_geometry__point_inside_geometry()
-		{
-			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
-			var polygon = GeometryFactory.CreatePolygon(envelope);
-			var mapPoint = MapPointBuilder.CreateMapPoint(75, 50);
+	[Test]
+	public void Can_get_nearest_point_to_geometry__point_inside_geometry()
+	{
+		var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
+		var polygon = GeometryFactory.CreatePolygon(envelope);
+		var mapPoint = MapPointBuilder.CreateMapPoint(75, 50);
 
-			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
+		ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
 
-			Assert.NotNull(result);
-			Assert.AreEqual(25, result.Distance);
-			Assert.AreEqual(0, result.PartIndex);
-			Assert.AreEqual(100, result.Point.X);
-			Assert.AreEqual(50, result.Point.Y);
-			Assert.True(result.IsRightSide);
-		}
+		Assert.NotNull(result);
+		Assert.AreEqual(25, result.Distance);
+		Assert.AreEqual(0, result.PartIndex);
+		Assert.AreEqual(100, result.Point.X);
+		Assert.AreEqual(50, result.Point.Y);
+		Assert.True(result.IsRightSide);
+	}
 
-		[Test]
-		public void Can_get_nearest_point_to_geometry__point_outside_geometry()
-		{
-			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
-			var polygon = GeometryFactory.CreatePolygon(envelope);
-			var mapPoint = MapPointBuilder.CreateMapPoint(110, 100);
+	[Test]
+	public void Can_get_nearest_point_to_geometry__point_outside_geometry()
+	{
+		var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
+		var polygon = GeometryFactory.CreatePolygon(envelope);
+		var mapPoint = MapPointBuilder.CreateMapPoint(110, 100);
 
-			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
+		ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
 
-			Assert.NotNull(result);
-			Assert.AreEqual(10, result.Distance);
-			Assert.AreEqual(0, result.PartIndex);
-			Assert.AreEqual(100, result.Point.X);
-			Assert.AreEqual(100, result.Point.Y);
-			Assert.False(result.IsRightSide);
-		}
+		Assert.NotNull(result);
+		Assert.AreEqual(10, result.Distance);
+		Assert.AreEqual(0, result.PartIndex);
+		Assert.AreEqual(100, result.Point.X);
+		Assert.AreEqual(100, result.Point.Y);
+		Assert.False(result.IsRightSide);
+	}
 
-		[Test]
-		public void Can_get_nearest_point_to_geometry__point_on_geometry()
-		{
-			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
-			var polygon = GeometryFactory.CreatePolygon(envelope);
-			var mapPoint = MapPointBuilder.CreateMapPoint(100, 50);
+	[Test]
+	public void Can_get_nearest_point_to_geometry__point_on_geometry()
+	{
+		var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 100);
+		var polygon = GeometryFactory.CreatePolygon(envelope);
+		var mapPoint = MapPointBuilder.CreateMapPoint(100, 50);
 
-			ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
+		ProximityResult result = GeometryEngine.Instance.NearestPoint(polygon, mapPoint);
 
-			Assert.NotNull(result);
-			Assert.AreEqual(0, result.Distance);
-			Assert.AreEqual(0, result.PartIndex);
-			Assert.AreEqual(100, result.Point.X);
-			Assert.AreEqual(50, result.Point.Y);
-			Assert.False(result.IsRightSide);
-		}
+		Assert.NotNull(result);
+		Assert.AreEqual(0, result.Distance);
+		Assert.AreEqual(0, result.PartIndex);
+		Assert.AreEqual(100, result.Point.X);
+		Assert.AreEqual(50, result.Point.Y);
+		Assert.False(result.IsRightSide);
+	}
 
-		[Test]
+	[Test]
 	public void CheckLineSegmentAngle()
 	{
 		// About LineSegment.Angle property:
@@ -366,6 +371,322 @@ public class GeometryUtilsTest
 		Assert.AreEqual(p0.Y, p3.Y);
 	}
 
+	[Test]
+	public void CanGetPartAndPartCount()
+	{
+		var myPoint = Pt(1.2, 3.4);
+
+		Assert.AreEqual(1, GeometryUtils.GetPartCount(myPoint));
+		Assert.AreEqual(myPoint, GeometryUtils.GetPart(myPoint, 0));
+		Assert.Catch<ArgumentOutOfRangeException>(() => GeometryUtils.GetPart(myPoint, 1));
+
+		var myMultipoint = CreateMultipointXY(1.1, 1.2, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2);
+		Assert.AreEqual(4, GeometryUtils.GetPartCount(myMultipoint));
+		var p0 = GeometryUtils.GetPart(myMultipoint, 0);
+		Assert.IsInstanceOf<MapPoint>(p0);
+		Assert.AreEqual(1.1, ((MapPoint) p0).X);
+		var p3 = GeometryUtils.GetPart(myMultipoint, 3);
+		Assert.IsInstanceOf<MapPoint>(p3);
+		Assert.AreEqual(4.2, ((MapPoint) p3).Y);
+		Assert.Catch<ArgumentOutOfRangeException>(() => GeometryUtils.GetPart(myMultipoint, 4));
+
+		var myPolygon = CreateMultiPolygon();
+		Assert.AreEqual(7, GeometryUtils.GetPartCount(myPolygon));
+		Assert.IsInstanceOf<Polygon>(GeometryUtils.GetPart(myPolygon, 0));
+		Assert.IsInstanceOf<Polygon>(GeometryUtils.GetPart(myPolygon, 6));
+		Assert.Catch<ArgumentOutOfRangeException>(() => GeometryUtils.GetPart(myPolygon, 7));
+
+		Assert.Catch<ArgumentOutOfRangeException>(() => GeometryUtils.GetPart(myPoint, -1));
+	}
+
+	[Test]
+	public void CanAddVertex()
+	{
+		var emptyPolyline = CreatePolygonXY();
+		Assert.True(emptyPolyline.IsEmpty);
+		Assert.AreSame(emptyPolyline, GeometryUtils.AddVertex(emptyPolyline, Pt(0, 0)));
+		Assert.True(emptyPolyline.IsEmpty);
+
+		var polyline = CreatePolylineXY(0, 0, 2, 0, double.NaN, 1, 1, 3, 3);
+		Assert.AreEqual(4, polyline.PointCount);
+		var updatedPolyline = (Polyline) GeometryUtils.AddVertex(
+			polyline, Pt(2, 2), out int partIndex, out int vertexIndex);
+		Assert.AreEqual(5, updatedPolyline.PointCount);
+		Assert.AreEqual(2, updatedPolyline.PartCount);
+		Assert.AreEqual(1, partIndex);
+		Assert.AreEqual(1, vertexIndex);
+
+		var emptyMultipoint = CreateMultipointXY();
+		Assert.True(emptyMultipoint.IsEmpty);
+		var updatedMultipoint = (Multipoint) GeometryUtils.AddVertex(
+			emptyMultipoint, Pt(0, 0), out partIndex, out vertexIndex);
+		Assert.AreEqual(1, updatedMultipoint.PointCount);
+		Assert.AreEqual(0, partIndex);
+		Assert.AreEqual(0, vertexIndex);
+
+		var multipoint = CreateMultipointXY(1, 1, 2, 2);
+		Assert.AreEqual(2, multipoint.PointCount);
+		updatedMultipoint = (Multipoint) GeometryUtils.AddVertex(
+			multipoint, Pt(0, 0), out partIndex, out vertexIndex);
+		Assert.AreEqual(3, updatedMultipoint.PointCount);
+		Assert.AreEqual(2, partIndex);
+		Assert.AreEqual(2, vertexIndex);
+	}
+
+	[Test]
+	public void CanRemoveVertices_Polyline()
+	{
+		// Cannot remove anything from an empty builder:
+
+		var emptyPolyline = CreatePolylineXY();
+		Assert.True(emptyPolyline.IsEmpty);
+		var builder = emptyPolyline.ToBuilder();
+		Assert.True(builder.IsEmpty);
+		Assert.AreEqual(0, builder.PartCount);
+
+		Assert.Throws<InvalidOperationException>(() => GeometryUtils.RemoveVertices(builder, 0, 0));
+
+		var polyline = CreatePolylineXY(0, 0, 1, 1, 2, 2, 3, 3, double.NaN, 4, 4, 5, 5);
+
+		// Remove two vertices along the line:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 1, 2);
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(1, builder.GetSegmentCount(0));
+		Assert.AreEqual(0.0, builder.GetSegment(0, 0).StartCoordinate.X);
+		Assert.AreEqual(3.0, builder.GetSegment(0, 0).EndCoordinate.X);
+		Assert.AreEqual(1, builder.GetSegmentCount(1));
+
+		// Remove one vertex at beginning:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 0, 0); // remove first vertex
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(2, builder.GetSegmentCount(0));
+		Assert.AreEqual(1.0, builder.GetSegment(0, 0).StartCoordinate.X);
+		Assert.AreEqual(1, builder.GetSegmentCount(1));
+
+		// Remove three vertices (of four) -> remove part:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 0, 2);
+		Assert.AreEqual(1, builder.PartCount);
+		// formerly 2nd part becomes the 1st and only part:
+		Assert.AreEqual(4.0, builder.GetSegment(0, 0).StartCoordinate.X);
+
+		// Remove one vertex at end (leaving 3 vertices):
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 3, 3);
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(2, builder.GetSegmentCount(0));
+		Assert.AreEqual(2.0, builder.GetSegment(0, 1).EndCoordinate.X);
+
+		// Remove two vertices at end (leaving 2 vertices):
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 2, 3);
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(1, builder.GetSegmentCount(0));
+		Assert.AreEqual(1.0, builder.GetSegment(0, 0).EndCoordinate.X);
+
+		// Remove all vertices of 2nd part:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 1, 0, 1);
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(3.0, builder.GetSegment(0, 2).EndCoordinate.X);
+
+		// Remove vertices such that only ONE vertex remains:
+		builder = polyline.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 1, 1, 1);
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(3.0, builder.GetSegment(0, 2).EndCoordinate.X);
+
+		// Can catch invalid arguments:
+		builder = polyline.ToBuilder();
+		// part index out of range:
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(builder, 2, 0, 0));
+		// first/last vertex index out of range
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(builder, 1, 2, 2));
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(builder, 1, 0, 2));
+	}
+
+	[Test]
+	public void CanRemoveVertices_Polygon()
+	{
+		double sqrt2 = Math.Sqrt(2.0);
+		const double delta = 1e-6;
+
+		var emptyPolygon = CreatePolygonXY();
+		Assert.True(emptyPolygon.IsEmpty);
+		var builder = emptyPolygon.ToBuilder();
+		Assert.True(builder.IsEmpty);
+		Assert.AreEqual(0, builder.PartCount);
+		Assert.Throws<InvalidOperationException>(() => GeometryUtils.RemoveVertices(builder, 0, 0));
+
+		// 1---2
+		// |   |
+		// 0---3
+		var unitSquare = CreatePolygonXY(0, 0, 0, 1, 1, 1, 1, 0, 0, 0);
+		Assert.AreEqual(1.0, unitSquare.Area, delta);
+
+		builder = unitSquare.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 2); // remove "regular" vertex
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(3, builder.Parts[0].Count); // only 3 segments after removal
+		Assert.AreEqual(1.0 + 1.0 + sqrt2, builder.Parts[0].Sum(s => s.Length), delta);
+		Assert.AreEqual(0.0, builder.GetPoint(0, 0).X); // StartPoint didn't change
+
+		builder = unitSquare.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 0); // remove start=end vertex
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(3, builder.Parts[0].Count);
+		Assert.AreEqual(1.0 + 1.0 + sqrt2, builder.Parts[0].Sum(s => s.Length));
+		// here start=end vertex must have changed, but it's undefined how
+
+		// 1
+		// | \
+		// 0--2
+		var triangle = CreatePolygonXY(0, 0, 0, 1, 1, 0, 0, 0);
+		Assert.AreEqual(0.5, triangle.Area, delta);
+
+		builder = triangle.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 1);
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(2, builder.Parts[0].Count);
+		Assert.AreEqual(1.0 + 1.0, builder.Parts[0].Sum(s => s.Length));
+
+		// 0===1  (degenerate polygon)
+		var degenerate = CreatePolygonXY(0, 0, 1, 1);
+		Assert.AreEqual(0.0, degenerate.Area);
+		Assert.AreEqual(2 * sqrt2, degenerate.Length);
+
+		builder = degenerate.ToBuilder();
+		GeometryUtils.RemoveVertices(builder, 0, 1);
+		Assert.AreEqual(0, builder.PartCount);
+		Assert.True(builder.IsEmpty);
+
+		// 3 1--------2
+		// 2 |  3--2  |  1--2
+		//   |  |  |  |  |  |
+		// 1 |  0--1  |  0--3
+		// 0 0--------3
+		//   0  1  2  3  4  5
+		// Parts in order are: big outer, small inner, small outer
+		var polygon = GeometryFactory.CreatePolygonXY(
+			0, 0, 0, 3, 3, 3, 3, 0, 0, 0, double.NaN,
+			1, 1, 2, 1, 2, 2, 1, 2, 1, 1, double.NaN,
+			4, 1, 4, 2, 5, 2, 5, 1, 4, 1);
+
+		builder = polygon.ToBuilder();
+
+		// remove a vertex in last part
+		GeometryUtils.RemoveVertices(builder, 2, 2);
+		Assert.AreEqual(3, builder.PartCount);
+		Assert.AreEqual(3, builder.Parts[2].Count);
+
+		// remove another vertex in last part, which collapses to a line
+		GeometryUtils.RemoveVertices(builder, 2, 2);
+		Assert.AreEqual(3, builder.PartCount);
+		Assert.AreEqual(2, builder.Parts[2].Count);
+
+		// remove another vertex in last part removes the part
+		GeometryUtils.RemoveVertices(builder, 2, 1);
+		Assert.AreEqual(2, builder.PartCount);
+
+		// remove vertex in each of the remaining two parts
+		GeometryUtils.RemoveVertices(builder, 1, 0);
+		GeometryUtils.RemoveVertices(builder, 0, 0);
+		Assert.AreEqual(2, builder.PartCount);
+		Assert.AreEqual(1.0+1.0+sqrt2, builder.Parts[1].Sum(s => s.Length), delta);
+		Assert.AreEqual(3.0 + 3.0 + 3 * sqrt2, builder.Parts[0].Sum(s => s.Length), delta);
+
+		// remove two vertices in inner part removes that part:
+		GeometryUtils.RemoveVertices(builder, 1, 1);
+		GeometryUtils.RemoveVertices(builder, 1, 0);
+		Assert.AreEqual(1, builder.PartCount);
+		Assert.AreEqual(3.0 + 3.0 + 3 * sqrt2, builder.Parts[0].Sum(s => s.Length), delta);
+
+		// Can catch invalid arguments:
+		builder = polygon.ToBuilder();
+		// part index out of range
+		Assert.Throws<ArgumentOutOfRangeException>(
+			() => GeometryUtils.RemoveVertices(builder, 9, 0));
+		// with polygons, we treat vertex indices cyclically (mod N), so no exception here:
+		GeometryUtils.RemoveVertices(builder, 0, 99);
+	}
+
+	[Test]
+	public void CanGetLocalVertexIndex()
+	{
+		int part;
+		var polygon = CreateMultiPolygon();
+
+		// This polygon has 7 parts, each having 5 vertices, 35 in total:
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 1, out part));
+		Assert.AreEqual(0, part);
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 6, out part));
+		Assert.AreEqual(1, part);
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 11, out part));
+		Assert.AreEqual(2, part);
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 16, out part));
+		Assert.AreEqual(3, part);
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 21, out part));
+		Assert.AreEqual(4, part);
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 26, out part));
+		Assert.AreEqual(5, part);
+
+		Assert.AreEqual(1, GeometryUtils.GetLocalVertexIndex(polygon, 31, out part));
+		Assert.AreEqual(6, part);
+
+		// Can catch global index out of range:
+		Assert.Throws<ArgumentOutOfRangeException>(
+			() => GeometryUtils.GetLocalVertexIndex(polygon, 35, out part));
+	}
+
+	[Test]
+	public void CanGetGlobalVertexIndex()
+	{
+		var polygon = CreateMultiPolygon();
+
+		// This polygon has 7 parts, each having 5 vertices, 35 in total:
+
+		Assert.AreEqual(1, GeometryUtils.GetGlobalVertexIndex(polygon, 0, 1));
+		Assert.AreEqual(6, GeometryUtils.GetGlobalVertexIndex(polygon, 1, 1));
+		Assert.AreEqual(11, GeometryUtils.GetGlobalVertexIndex(polygon, 2, 1));
+		Assert.AreEqual(16, GeometryUtils.GetGlobalVertexIndex(polygon, 3, 1));
+		Assert.AreEqual(21, GeometryUtils.GetGlobalVertexIndex(polygon, 4, 1));
+		Assert.AreEqual(26, GeometryUtils.GetGlobalVertexIndex(polygon, 5, 1));
+		Assert.AreEqual(31, GeometryUtils.GetGlobalVertexIndex(polygon, 6, 1));
+
+		// Can catch part index out of range:
+		Assert.Throws<ArgumentOutOfRangeException>(
+			() => GeometryUtils.GetGlobalVertexIndex(polygon, 7, 1));
+
+		// Can catch local index out of range:
+		Assert.Throws<ArgumentOutOfRangeException>(
+			() => GeometryUtils.GetGlobalVertexIndex(polygon, 1, 6));
+	}
+
+	[Test]
+	public void CanGetMultipointIndex()
+	{
+		// first point:
+		Assert.AreEqual(0, GeometryUtils.GetMultipointIndex(0, 0));
+
+		// second point (index 1, either as part or as point):
+		Assert.AreEqual(1, GeometryUtils.GetMultipointIndex(1, 0));
+		Assert.AreEqual(1, GeometryUtils.GetMultipointIndex(0, 1));
+		Assert.AreEqual(1, GeometryUtils.GetMultipointIndex(-1, 1));
+		Assert.AreEqual(1, GeometryUtils.GetMultipointIndex(1, -1));
+		Assert.AreEqual(1, GeometryUtils.GetMultipointIndex(1, 1));
+
+		// part and point index must not be different:
+		Assert.Catch<ArgumentException>(() => GeometryUtils.GetMultipointIndex(1, 2));
+	}
+
 	#region Creating test geometries
 
 	private static MapPoint Pt(double x, double y)
@@ -387,6 +708,10 @@ public class GeometryUtilsTest
 		return builder.ToGeometry();
 	}
 
+	/// <summary>
+	/// Create a polygon of 7 parts, each having 5 vertices, 35 in total.
+	/// The parts are arranged as shown in the sketch within the method.
+	/// </summary>
 	private static Polygon CreateMultiPolygon()
 	{
 		// 5 . . . . . # # # # # # # . . .
@@ -418,6 +743,21 @@ public class GeometryUtilsTest
 		{
 			yield return new Coordinate2D(coords[i - 1], coords[i]);
 		}
+	}
+
+	private static Multipoint CreateMultipointXY(params double[] xys)
+	{
+		return GeometryFactory.CreateMultipointXY(xys);
+	}
+
+	private static Polyline CreatePolylineXY(params double[] xys)
+	{
+		return GeometryFactory.CreatePolylineXY(xys);
+	}
+
+	private static Polygon CreatePolygonXY(params double[] xys)
+	{
+		return GeometryFactory.CreatePolygonXY(xys);
 	}
 
 	#endregion

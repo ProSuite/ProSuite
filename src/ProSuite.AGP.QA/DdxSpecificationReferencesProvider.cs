@@ -11,11 +11,11 @@ namespace ProSuite.AGP.QA
 {
 	public class DdxSpecificationReferencesProvider : IQualitySpecificationReferencesProvider
 	{
-		[NotNull] private readonly IMapBasedSessionContext _sessionContext;
-		[NotNull] private readonly QualityVerificationServiceClient _client;
+		[NotNull] private readonly ISessionContext _sessionContext;
+		[NotNull] private readonly IQualityVerificationClient _client;
 
-		public DdxSpecificationReferencesProvider([NotNull] IMapBasedSessionContext sessionContext,
-		                                          [NotNull] QualityVerificationServiceClient client)
+		public DdxSpecificationReferencesProvider([NotNull] ISessionContext sessionContext,
+		                                          [NotNull] IQualityVerificationClient client)
 		{
 			_sessionContext = sessionContext;
 			_client = client;
@@ -29,8 +29,7 @@ namespace ProSuite.AGP.QA
 
 		public bool CanGetSpecifications()
 		{
-			return _sessionContext.ProjectWorkspace != null &&
-			       ! _sessionContext.DdxAccessDisabled;
+			return _sessionContext.ProjectWorkspace != null;
 		}
 
 		public async Task<IList<IQualitySpecificationReference>> GetQualitySpecifications()

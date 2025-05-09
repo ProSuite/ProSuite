@@ -4,10 +4,11 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.GeoDb;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
@@ -470,11 +471,11 @@ namespace ProSuite.QA.Tests
 
 			private readonly int _foreignKeyFieldIndex;
 
-			public ReferencingTableInfo([NotNull] IReadOnlyTable table,
+			public ReferencingTableInfo([NotNull] IReadOnlyTable referencingTable,
 			                            [NotNull] string relation,
 			                            [CanBeNull] string whereClause)
 			{
-				Table = GetQueryTable(table, relation, out _foreignKeyFieldName);
+				Table = GetJoinedTable(referencingTable, relation, out _foreignKeyFieldName);
 
 				Filter = new AoTableFilter { WhereClause = whereClause };
 
@@ -487,9 +488,9 @@ namespace ProSuite.QA.Tests
 			}
 
 			[NotNull]
-			private static IReadOnlyTable GetQueryTable([NotNull] IReadOnlyTable referencingTable,
-			                                            [NotNull] string relation,
-			                                            [NotNull] out string foreignKeyFieldName)
+			private static IReadOnlyTable GetJoinedTable([NotNull] IReadOnlyTable referencingTable,
+			                                             [NotNull] string relation,
+			                                             [NotNull] out string foreignKeyFieldName)
 			{
 				IList<string> relationTokens = ParseRelationTokens(relation);
 
@@ -507,11 +508,27 @@ namespace ProSuite.QA.Tests
 
 					string relationReferencedTableFK = relationTokens[1];
 					string relationTable = relationTokens[2];
-					string relationReferencingTableFK = relationTokens[3];
+					string relationToReferencingTableFK = relationTokens[3];
 					string referencingTablePK = relationTokens[4];
+
+					string resultTableName =
+						$"{referencingTableName}_{relationTable.Replace(".", "_")}";
+
+					foreignKeyFieldName = $"{relationTable}.{relationReferencedTableFK}";
 
 					var workspace =
 						(IFeatureWorkspace) referencingTable.Workspace;
+
+					bool useInMemoryJoin =
+						workspace is GdbWorkspace || workspace is VirtualWorkspace;
+
+					if (useInMemoryJoin)
+					{
+						return CreateJoinedTable(workspace, referencingTable, referencingTablePK,
+						                         relationTable, relationToReferencingTableFK,
+						                         resultTableName);
+					}
+
 					IQueryDef queryDef = workspace.CreateQueryDef();
 
 					queryDef.Tables =
@@ -527,7 +544,7 @@ namespace ProSuite.QA.Tests
 					                                     referencingTableName,
 					                                     referencingTablePK,
 					                                     relationTable,
-					                                     relationReferencingTableFK);
+					                                     relationToReferencingTableFK);
 
 					IQueryName2 queryName = new TableQueryNameClass
 					                        {
@@ -537,9 +554,8 @@ namespace ProSuite.QA.Tests
 
 					var name = (IDatasetName) queryName;
 					name.WorkspaceName = WorkspaceUtils.GetWorkspaceName(workspace);
-					name.Name = string.Format("{0}_{1}",
-					                          referencingTableName,
-					                          relationTable.Replace(".", "_"));
+
+					name.Name = resultTableName;
 
 					if (_msg.IsVerboseDebugEnabled)
 					{
@@ -550,9 +566,6 @@ namespace ProSuite.QA.Tests
 							LogQueryName(queryName);
 						}
 					}
-
-					foreignKeyFieldName = string.Format("{0}.{1}", relationTable,
-					                                    relationReferencedTableFK);
 
 					try
 					{
@@ -568,6 +581,33 @@ namespace ProSuite.QA.Tests
 				}
 
 				throw new InvalidConfigurationException($"Cannot parse relation: {relation}");
+			}
+
+			private static IReadOnlyTable CreateJoinedTable(
+				[NotNull] IFeatureWorkspace workspace,
+				[NotNull] IReadOnlyTable referencingTable,
+				[NotNull] string referencingTablePK,
+				[NotNull] string relationTable,
+				[NotNull] string relationToReferencingTableFK,
+				[NotNull] string resultTableName)
+			{
+				ITable bridgeTable = workspace.OpenTable(relationTable);
+
+				IReadOnlyTable relationTableReadOnly =
+					bridgeTable as IReadOnlyTable ??
+					ReadOnlyTableFactory.Create(bridgeTable);
+
+				// NOTE: The inner join is symmetric. Use the relationTable as the left table which
+				//       might contain fewer rows than the referencingTable.
+				AssociationDescription associationDescription =
+					new ForeignKeyAssociationDescription(
+						referencingTable, referencingTablePK,
+						relationTableReadOnly, relationToReferencingTableFK);
+
+				GdbTable joinedTable = TableJoinUtils.CreateJoinedGdbTable(
+					associationDescription, relationTableReadOnly, resultTableName, false);
+
+				return joinedTable;
 			}
 
 			private static void LogQueryName([NotNull] IQueryName2 queryName)

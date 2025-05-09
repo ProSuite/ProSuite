@@ -39,7 +39,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		private ICommand _cancelCommand;
 		private ICommand _showReportCommand;
-		private ICommand _saveErrorsCommand;
+		private RelayCommand<VerificationProgressViewModel> _saveErrorsCommand;
 		private string _statusText;
 		private Brush _statusTextColor = Brushes.Black;
 		private string _tileInfoText;
@@ -71,6 +71,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 			CancelButtonText = "Cancel";
 			DetailProgressVisible = Visibility.Hidden;
 			OverallProgressVisible = Visibility.Hidden;
+
+			UpdateOptions = new UpdateIssuesOptionsViewModel();
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -215,6 +217,11 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 				if (OverallCurrentStep <= OverallTotalSteps)
 				{
+					Assert.NotNull(_currentTile);
+
+					//TODO TileInfoText could be improved
+					//  maybe add TileSize or display Width+Height of the current tile
+					//  maybe use EnvelopeXY.ToString(CultureInfo.CurrentCulture)
 					string format = _currentTile.XMax < 400
 						                ? "Verifying tile {0} of {1}, (extent: {2:N4}, {3:N4}, {4:N4}, {5:N4})"
 						                : "Verifying tile {0} of {1}, (extent: {2:N0}, {3:N0}, {4:N0}, {5:N0})";
@@ -330,8 +337,16 @@ namespace ProSuite.UI.QA.VerificationProgress
 			}
 		}
 
-		public UpdateIssuesOptionsViewModel UpdateOptions { get; } =
-			new UpdateIssuesOptionsViewModel();
+		/// <summary>
+		/// Whether the save option to keep previous issues in the work list is disabled or not.
+		/// </summary>
+		public bool KeepPreviousIssuesDisabled
+		{
+			get => UpdateOptions.KeepPreviousIssuesEnabled;
+			set => UpdateOptions.KeepPreviousIssuesEnabled = ! value;
+		}
+
+		public UpdateIssuesOptionsViewModel UpdateOptions { get; }
 
 		#endregion
 
@@ -363,8 +378,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 					_saveErrorsCommand =
 						new RelayCommand<VerificationProgressViewModel>(
 							vm => SaveIssues(),
-							vm =>
-								CanSaveIssues());
+							vm => CanSaveIssues());
 				}
 
 				return _saveErrorsCommand;
@@ -443,8 +457,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 				if (_openWorkListCommand == null)
 				{
 					_openWorkListCommand = new RelayCommand<VerificationProgressViewModel>(
-						vm => ApplicationController.OpenWorkList(
-							Assert.NotNull(VerificationResult), false),
+						vm => OpenWorkList(),
 						vm => CanOpenWorkList());
 				}
 
@@ -598,8 +611,15 @@ namespace ProSuite.UI.QA.VerificationProgress
 				ViewUtils.RunOnUIThread(
 					() =>
 					{
-						ApplicationController.OpenWorkList(Assert.NotNull(VerificationResult),
-						                                   true);
+						try
+						{
+							ApplicationController.OpenWorkList(Assert.NotNull(VerificationResult),
+							                                   true);
+						}
+						catch (Exception ex)
+						{
+							ErrorHandler.HandleError(ex, _msg);
+						}
 					});
 			}
 
@@ -657,14 +677,34 @@ namespace ProSuite.UI.QA.VerificationProgress
 		private bool CanOpenWorkList()
 		{
 			string reason = null;
+			bool result = false;
+			try
+			{
+				result =
+					ApplicationController?.CanOpenWorkList(ProgressTracker.RemoteCallStatus,
+					                                       VerificationResult, out reason) ?? false;
 
-			bool result =
-				ApplicationController?.CanOpenWorkList(ProgressTracker.RemoteCallStatus,
-				                                       VerificationResult, out reason) ?? false;
-
-			OpenWorkListToolTip = reason ?? "Open Issue Work List";
+				OpenWorkListToolTip = reason ?? "Open Issue Work List";
+			}
+			catch (Exception e)
+			{
+				_msg.Error(e);
+			}
 
 			return result;
+		}
+
+		private async Task OpenWorkList()
+		{
+			try
+			{
+				await ApplicationController.OpenWorkList(
+					Assert.NotNull(VerificationResult), false);
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
 		}
 
 		private void CancelOrClose()
@@ -725,15 +765,29 @@ namespace ProSuite.UI.QA.VerificationProgress
 			return result;
 		}
 
-		private void SaveIssues()
+		private async void SaveIssues()
 		{
-			Try(nameof(SaveIssues),
-			    () =>
-			    {
-				    ApplicationController?.SaveIssues(Assert.NotNull(VerificationResult),
-				                                      UpdateOptions.ErrorDeletionType,
-				                                      ! UpdateOptions.KeepPreviousIssues);
-			    });
+			{
+				_msg.VerboseDebug(() => $"VerificationProgressViewModel.{nameof(SaveIssues)}");
+			}
+
+			try
+			{
+				if (ApplicationController == null)
+				{
+					return;
+				}
+
+				await ApplicationController.SaveIssuesAsync(Assert.NotNull(VerificationResult),
+				                                            UpdateOptions.ErrorDeletionType,
+				                                            ! UpdateOptions.KeepPreviousIssues);
+
+				_saveErrorsCommand?.RaiseCanExecuteChanged();
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
 		}
 
 		private void ShowReport()
