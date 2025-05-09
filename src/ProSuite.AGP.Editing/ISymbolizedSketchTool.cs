@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
@@ -8,7 +9,7 @@ namespace ProSuite.AGP.Editing;
 
 public interface ISymbolizedSketchTool : ISketchTool
 {
-	bool CanSetConstructionSketchSymbol(GeometryType geometryType);
+	Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType);
 
 	void SetSketchSymbol([CanBeNull] CIMSymbolReference symbolReference);
 
