@@ -45,22 +45,19 @@ namespace ProSuite.AGP.Editing.Selection
 			return Task.FromResult(true);
 		}
 
-		protected override Task AfterSelectionAsync(IList<Feature> selectedFeatures,
-		                                       CancelableProgressor progressor)
+		protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
+		                                                  CancelableProgressor progressor)
 		{
-			StartSelectionPhaseAsync();
-
-			return Task.CompletedTask;
+			await StartSelectionPhaseAsync();
 		}
 
 		protected override async Task HandleEscapeAsync()
 		{
-			Task task = QueuedTask.Run(
-				() =>
+			Task task = QueuedTask.Run(async () =>
 				{
 					ClearSelection();
 
-					StartSelectionPhaseAsync();
+					await StartSelectionPhaseAsync();
 				});
 
 			await ViewUtils.TryAsync(task, _msg);

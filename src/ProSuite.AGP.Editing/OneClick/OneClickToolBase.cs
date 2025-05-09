@@ -388,16 +388,16 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => $"OnSketchCompleteAsync ({Caption})");
 
-			if (IsDuplicateSketchCompleteInvocation(sketchGeometry))
-			{
-				return false;
-			}
-
 			try
 			{
 				sketchGeometry = GetSimplifiedSketch(sketchGeometry);
 
 				if (sketchGeometry == null)
+				{
+					return false;
+				}
+
+				if (IsDuplicateSketchCompleteInvocation(sketchGeometry))
 				{
 					return false;
 				}
